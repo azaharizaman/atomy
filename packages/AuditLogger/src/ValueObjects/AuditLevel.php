@@ -4,93 +4,74 @@ declare(strict_types=1);
 
 namespace Nexus\AuditLogger\ValueObjects;
 
-use Nexus\AuditLogger\Exceptions\InvalidAuditLevelException;
-
 /**
- * Immutable value object representing audit log severity level
+ * Audit Log Severity Level Enum
+ *
+ * Native PHP enum representing audit log severity levels.
  * Satisfies: BUS-AUD-0146
  *
  * @package Nexus\AuditLogger\ValueObjects
+ * @see https://www.php.net/manual/en/language.enumerations.backed.php
  */
-final class AuditLevel
+enum AuditLevel: int
 {
-    public const LOW = 1;
-    public const MEDIUM = 2;
-    public const HIGH = 3;
-    public const CRITICAL = 4;
-
-    private int $value;
+    case Low = 1;
+    case Medium = 2;
+    case High = 3;
+    case Critical = 4;
 
     /**
-     * @param int $value Must be 1 (Low), 2 (Medium), 3 (High), or 4 (Critical)
-     * @throws InvalidAuditLevelException
+     * Get human-readable label for the audit level
+     *
+     * @return string
      */
-    public function __construct(int $value)
+    public function label(): string
     {
-        if (!in_array($value, [self::LOW, self::MEDIUM, self::HIGH, self::CRITICAL], true)) {
-            throw new InvalidAuditLevelException($value);
-        }
-
-        $this->value = $value;
-    }
-
-    public function getValue(): int
-    {
-        return $this->value;
-    }
-
-    public function isLow(): bool
-    {
-        return $this->value === self::LOW;
-    }
-
-    public function isMedium(): bool
-    {
-        return $this->value === self::MEDIUM;
-    }
-
-    public function isHigh(): bool
-    {
-        return $this->value === self::HIGH;
-    }
-
-    public function isCritical(): bool
-    {
-        return $this->value === self::CRITICAL;
-    }
-
-    public function getLabel(): string
-    {
-        return match ($this->value) {
-            self::LOW => 'Low',
-            self::MEDIUM => 'Medium',
-            self::HIGH => 'High',
-            self::CRITICAL => 'Critical',
+        return match ($this) {
+            self::Low => 'Low',
+            self::Medium => 'Medium',
+            self::High => 'High',
+            self::Critical => 'Critical',
         };
     }
 
-    public function __toString(): string
+    /**
+     * Check if this is a low severity level
+     *
+     * @return bool
+     */
+    public function isLow(): bool
     {
-        return $this->getLabel();
+        return $this === self::Low;
     }
 
-    public static function low(): self
+    /**
+     * Check if this is a medium severity level
+     *
+     * @return bool
+     */
+    public function isMedium(): bool
     {
-        return new self(self::LOW);
+        return $this === self::Medium;
     }
 
-    public static function medium(): self
+    /**
+     * Check if this is a high severity level
+     *
+     * @return bool
+     */
+    public function isHigh(): bool
     {
-        return new self(self::MEDIUM);
+        return $this === self::High;
     }
 
-    public static function high(): self
+    /**
+     * Check if this is a critical severity level
+     *
+     * @return bool
+     */
+    public function isCritical(): bool
     {
-        return new self(self::HIGH);
-    }
-
-    public static function critical(): self
-    {
-        return new self(self::CRITICAL);
+        return $this === self::Critical;
     }
 }

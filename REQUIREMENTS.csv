@@ -25,16 +25,16 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0024	All Eloquent models in application layer				
 `Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0025	Repository implementations in application layer				
 `Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0026	IoC container bindings in application service provider				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0027	Package MUST be framework-agnostic with no Laravel dependencies in core services				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0028	All data structures defined via interfaces				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0029	All persistence operations via repository interfaces				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0030	Business logic in service layer				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0031	All database migrations in application layer (apps/Atomy)				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0032	All 13 Eloquent models in application layer				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0033	Repository implementations in application layer				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0034	IoC container bindings in application service provider				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0035	Remove illuminate/support dependency if possible				
-`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0036	Remove database folder from package				
+`Nexus\Uom`	Architechtural Requirement	FR-UOM-A01	Package MUST be framework-agnostic with no Laravel dependencies (NO Facades, Eloquent, Request)	packages/Uom/composer.json; packages/Uom/src/Contracts/; packages/Uom/src/Services/; packages/Uom/src/ValueObjects/			
+`Nexus\Uom`	Architechtural Requirement	FR-UOM-A02	All persistence operations (CRUD for Units, Dimensions, Conversions) MUST be defined by UomRepositoryInterface	packages/Uom/src/Contracts/UomRepositoryInterface.php::findUnitByCode(), saveUnit(), findConversion(); apps/Atomy/app/Repositories/DbUomRepository.php			
+`Nexus\Uom`	Architechtural Requirement	FR-UOM-A03	Provide descriptive domain-specific exceptions (IncompatibleUnitException, InvalidConversionRatioException)	packages/Uom/src/Exceptions/IncompatibleUnitException.php; packages/Uom/src/Exceptions/InvalidConversionRatioException.php; packages/Uom/src/Exceptions/UnitNotFoundException.php; packages/Uom/src/Exceptions/CircularConversionException.php			
+`Nexus\Uom`	Architechtural Requirement	FR-UOM-A04	External libraries allowed if framework-agnostic and adhere to monorepo principles	packages/Uom/composer.json (only php ^8.2)			
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0027	All data structures defined via Value Objects and interfaces	packages/Uom/src/ValueObjects/Quantity.php; packages/Uom/src/ValueObjects/Dimension.php; packages/Uom/src/ValueObjects/Unit.php; packages/Uom/src/Contracts/UnitInterface.php; packages/Uom/src/Contracts/DimensionInterface.php			
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0028	Business logic MUST be in service layer (UomConversionEngine, UomValidationService)	packages/Uom/src/Services/UomConversionEngine.php; packages/Uom/src/Services/UomValidationService.php; packages/Uom/src/Services/UomManager.php			
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0029	All database migrations in application layer (apps/Atomy)	apps/Atomy/database/migrations/2025_11_17_200000_create_uom_tables.php			
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0030	All Eloquent models in application layer	apps/Atomy/app/Models/Unit.php; apps/Atomy/app/Models/Dimension.php; apps/Atomy/app/Models/UnitConversion.php; apps/Atomy/app/Models/UnitSystem.php			
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0031	Repository implementations in application layer	apps/Atomy/app/Repositories/DbUomRepository.php			
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0032	IoC container bindings in application service provider	apps/Atomy/app/Providers/UomServiceProvider.php::register()				
 `Nexus\Crm`	Business Requirements	BUS-CRM-0037	Users cannot self-assign leads (configurable)				
 `Nexus\FieldService`	Business Requirements	BUS-FIE-0038	Work order must have a customer and service location				
 `Nexus\Manufacturing`	Business Requirements	BUS-MAN-0039	A BOM must have at least one component				
@@ -305,6 +305,54 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Payroll`	Functional Requirement	FUN-PAY-0304	Support multi-frequency payroll (monthly, semi-monthly, weekly, bonus-only runs)				
 `Nexus\Payroll`	Functional Requirement	FUN-PAY-0305	Post automatic GL journal entries to nexus-accounting for salary expense and liabilities				
 `Nexus\Uom`	Functional Requirement	FUN-UOM-0306	58 total requirements documented (15 FR + 13 DM + 5 PR + 5 SR + 10 BR + 10 ARCH)				
+`Nexus\Uom`	Functional Requirement	FR-UOM-101	Provide immutable Quantity Value Object that encapsulates numeric value and base UoM (primary API entry point)	packages/Uom/src/ValueObjects/Quantity.php (readonly class with value and unitCode properties)			
+`Nexus\Uom`	Functional Requirement	FR-UOM-102	Support simple multiplication/division conversions using only a defined ratio without complex dimension definitions	packages/Uom/src/Services/UomConversionEngine.php::convert(); packages/Uom/src/ValueObjects/ConversionRule.php			
+`Nexus\Uom`	Functional Requirement	FR-UOM-103	Implement service method to check if two Quantity objects are convertible before attempting operation	packages/Uom/src/Services/UomValidationService.php::areConvertible()			
+`Nexus\Uom`	Functional Requirement	FR-UOM-104	Support standard arithmetic operations (add, subtract, multiply, divide) of Quantity objects with automatic conversion	packages/Uom/src/ValueObjects/Quantity.php::add(), subtract(), multiply(), divide()			
+`Nexus\Uom`	Functional Requirement	FR-UOM-105	Provide formatting method to display quantity based on user/system locale settings (decimal, thousand separators)	packages/Uom/src/ValueObjects/Quantity.php::format($locale, $decimals)			
+`Nexus\Uom`	Functional Requirement	FR-UOM-201	Support definition of Dimensions (Mass, Length, Time) to group and validate units	packages/Uom/src/ValueObjects/Dimension.php; packages/Uom/src/Contracts/DimensionInterface.php; apps/Atomy/app/Models/Dimension.php			
+`Nexus\Uom`	Functional Requirement	FR-UOM-202	Implement conversion graph engine to find shortest path between any two convertible units using Dimension validation	packages/Uom/src/Services/UomConversionEngine.php::findConversionPath()			
+`Nexus\Uom`	Functional Requirement	FR-UOM-203	Support grouping of units into Systems (Metric, Imperial) for reporting and regional consistency	packages/Uom/src/ValueObjects/UnitSystem.php; apps/Atomy/app/Models/UnitSystem.php; apps/Atomy/config/uom.php (seed_systems)			
+`Nexus\Uom`	Functional Requirement	FR-UOM-204	Each Dimension MUST define a single Base Unit (e.g., meter for Length) as intermediary for conversions	packages/Uom/src/ValueObjects/Dimension.php::getBaseUnit(); apps/Atomy/database/migrations/2025_11_17_200000_create_uom_tables.php (base_unit_code column)			
+`Nexus\Uom`	Functional Requirement	FR-UOM-205	Support complex conversions involving offset (e.g., Celsius to Fahrenheit: F = C × 1.8 + 32)	packages/Uom/src/Services/UomConversionEngine.php::convertWithOffset(); packages/Uom/src/ValueObjects/ConversionRule.php (offset property)			
+`Nexus\Uom`	Functional Requirement	FR-UOM-301	Support packaging hierarchies (1 Pallet → 10 Cases → 100 Eaches) with fractional relationships	packages/Uom/src/Services/UomConversionEngine.php::convertPackaging()			
+`Nexus\Uom`	Functional Requirement	FR-UOM-302	Provide service to convert quantity of packages to base unit equivalent (5 Cases of 100 Eaches → 500 Eaches)	packages/Uom/src/Services/UomConversionEngine.php::packagingToBase()			
+`Nexus\Uom`	Functional Requirement	FR-UOM-303	Quantity Value Object MUST be easily serializable to JSON/array formats for storage and inter-package communication	packages/Uom/src/ValueObjects/Quantity.php::toArray(), toJson(), fromArray(), fromJson(), jsonSerialize()			
+`Nexus\Uom`	Business Requirements	BUS-UOM-101	Quantity Value Object MUST be immutable once created to prevent accidental modification	packages/Uom/src/ValueObjects/Quantity.php (readonly class declaration)			
+`Nexus\Uom`	Business Requirements	BUS-UOM-102	Direct conversions between units MUST validate that units share the same Dimension before attempting conversion	packages/Uom/src/Services/UomValidationService.php::validateSameDimension(); packages/Uom/src/Services/UomConversionEngine.php::convert()			
+`Nexus\Uom`	Business Requirements	BUS-UOM-103	Invalid conversion attempts MUST throw IncompatibleUnitException with clear error message	packages/Uom/src/Exceptions/IncompatibleUnitException.php::forUnits(), forDimensions()			
+`Nexus\Uom`	Business Requirements	BUS-UOM-104	Conversion ratios MUST be positive non-zero values to prevent invalid calculations	packages/Uom/src/Services/UomValidationService.php::validateRatio(); packages/Uom/src/Exceptions/InvalidConversionRatioException.php			
+`Nexus\Uom`	Business Requirements	BUS-UOM-105	Each UoM MUST be assigned to exactly one Dimension for proper categorization	packages/Uom/src/ValueObjects/Unit.php::getDimension(); apps/Atomy/database/migrations/2025_11_17_200000_create_uom_tables.php (dimension_code NOT NULL)			
+`Nexus\Uom`	Business Requirements	BUS-UOM-106	Base Unit for a Dimension CANNOT be changed once units are defined to prevent broken conversions	packages/Uom/src/Services/UomValidationService.php::validateBaseUnitImmutable()			
+`Nexus\Uom`	Business Requirements	BUS-UOM-201	Conversion graph MUST prevent circular conversion paths that could cause infinite loops	packages/Uom/src/Services/UomConversionEngine.php::detectCircularPath(); packages/Uom/src/Exceptions/CircularConversionException.php			
+`Nexus\Uom`	Business Requirements	BUS-UOM-202	All conversions within a Dimension MUST route through the Dimension's Base Unit as intermediary	packages/Uom/src/Services/UomConversionEngine.php::convertViaBaseUnit()			
+`Nexus\Uom`	Business Requirements	BUS-UOM-203	Offset conversions MUST only be allowed for Temperature dimension to prevent misuse	packages/Uom/src/Services/UomValidationService.php::validateOffsetAllowed(); packages/Uom/src/Exceptions/InvalidOffsetConversionException.php			
+`Nexus\Uom`	Business Requirements	BUS-UOM-204	Unit codes MUST be unique across the entire system to prevent ambiguity	packages/Uom/src/Contracts/UomRepositoryInterface.php::ensureUniqueCode(); apps/Atomy/database/migrations/2025_11_17_200000_create_uom_tables.php (UNIQUE constraint on code)			
+`Nexus\Uom`	Business Requirements	BUS-UOM-301	Packaging relationships MUST form a directed acyclic graph (no circular packaging)	packages/Uom/src/Services/UomValidationService.php::validatePackagingDAG()			
+`Nexus\Uom`	Business Requirements	BUS-UOM-302	Fractional packaging ratios MUST be positive to ensure valid conversions	packages/Uom/src/Services/UomValidationService.php::validatePositiveRatio()			
+`Nexus\Uom`	Performance Requirement	PER-UOM-101	Simple direct conversion (A to B with defined ratio) MUST complete in < 5ms	packages/Uom/src/Services/UomConversionEngine.php::convert() with cache			
+`Nexus\Uom`	Performance Requirement	PER-UOM-102	Complex multi-hop conversion (up to 5 conversions) MUST complete in < 20ms	packages/Uom/src/Services/UomConversionEngine.php::findConversionPath() using BFS			
+`Nexus\Uom`	Performance Requirement	PER-UOM-103	Quantity arithmetic operations (add, subtract) MUST complete in < 10ms including conversion	packages/Uom/src/ValueObjects/Quantity.php::add(), subtract()			
+`Nexus\Uom`	Performance Requirement	PER-UOM-104	Conversion path calculation SHOULD cache results for repeated conversions	packages/Uom/src/Services/UomConversionEngine.php ($conversionCache property); apps/Atomy/config/uom.php (cache_conversions)			
+`Nexus\Uom`	Performance Requirement	PER-UOM-105	System MUST support at least 1,000 defined units without performance degradation	apps/Atomy/database/migrations/2025_11_17_200000_create_uom_tables.php (indexed columns); apps/Atomy/app/Repositories/DbUomRepository.php			
+`Nexus\Uom`	Security and Compliance Requirement	SEC-UOM-101	Unit definitions MUST enforce tenant isolation if multi-tenancy is enabled	apps/Atomy/app/Models/Unit.php (optional tenant scoping); apps/Atomy/config/uom.php (tenant_isolation flag)			
+`Nexus\Uom`	Security and Compliance Requirement	SEC-UOM-102	Custom unit creation MUST be audited with creator and timestamp	apps/Atomy/app/Models/Unit.php (timestamps); apps/Atomy/config/uom.php (audit_logging flag)			
+`Nexus\Uom`	Security and Compliance Requirement	SEC-UOM-103	Conversion ratio modifications MUST be versioned to maintain audit trail	apps/Atomy/app/Models/UnitConversion.php ($fillable['version']); apps/Atomy/database/migrations/2025_11_17_200000_create_uom_tables.php (version column)			
+`Nexus\Uom`	Security and Compliance Requirement	SEC-UOM-104	System units (predefined) CANNOT be deleted or modified to ensure data integrity	packages/Uom/src/Services/UomValidationService.php::validateNotSystemUnit(); packages/Uom/src/Exceptions/SystemUnitProtectedException.php			
+`Nexus\Uom`	Reliability Requirement	REL-UOM-101	Conversion calculations MUST use arbitrary precision math to prevent rounding errors	apps/Atomy/database/migrations/2025_11_17_200000_create_uom_tables.php (DECIMAL(30,15) for ratio/offset)			
+`Nexus\Uom`	Reliability Requirement	REL-UOM-102	Division by zero in conversions MUST throw InvalidConversionRatioException	packages/Uom/src/Exceptions/InvalidConversionRatioException.php::divisionByZero(); packages/Uom/src/Services/UomValidationService.php::validateRatio()			
+`Nexus\Uom`	Reliability Requirement	REL-UOM-103	Invalid arithmetic operations on incompatible units MUST fail fast with clear error message	packages/Uom/src/ValueObjects/Quantity.php::add() calls convertTo() which validates; packages/Uom/src/Exceptions/IncompatibleUnitException.php			
+`Nexus\Uom`	Reliability Requirement	REL-UOM-104	Conversion graph pathfinding MUST handle disconnected graphs gracefully	packages/Uom/src/Services/UomConversionEngine.php::findConversionPath(); packages/Uom/src/Exceptions/ConversionPathNotFoundException.php			
+`Nexus\Uom`	User Story	USE-UOM-101	As a developer, I want to create a Quantity object with value and unit for simple inventory tracking	$qty = new Quantity(100, 'kg'); 			
+`Nexus\Uom`	User Story	USE-UOM-102	As a developer, I want to add two quantities with automatic unit conversion	$total = $qty1->add($qty2); 			
+`Nexus\Uom`	User Story	USE-UOM-103	As a developer, I want to check if two quantities are compatible before calculation	if ($validator->areConvertible($qty1, $qty2)) { ... }			
+`Nexus\Uom`	User Story	USE-UOM-104	As a warehouse manager, I want to convert package units to base units (5 boxes → 500 pieces)	$pieces = $conversionEngine->packagingToBase($qty); 			
+`Nexus\Uom`	User Story	USE-UOM-105	As a production planner, I want to define BOM quantities in different units (kg, lbs, tons)	$component = new BomComponent($qty, $material); 			
+`Nexus\Uom`	User Story	USE-UOM-106	As a system admin, I want to define custom dimensions for industry-specific measurements	$dimension = new Dimension('Viscosity', $baseUnit, $system); 			
+`Nexus\Uom`	User Story	USE-UOM-107	As a developer, I want to format quantities for display with locale-specific formatting	echo $qty->format('en_US'); // "1,234.56 kg"			
+`Nexus\Uom`	User Story	USE-UOM-108	As an inventory clerk, I want to record stock in different packaging levels (pallets, cases, eaches)	$stock = new Quantity(5, 'pallets')->convertTo('eaches'); 			
+`Nexus\Uom`	User Story	USE-UOM-109	As a developer, I want to serialize quantities to JSON for API responses	return $qty->toJson(); // {"value": 100, "unit": "kg"}			
+`Nexus\Uom`	User Story	USE-UOM-110	As a procurement officer, I want to compare vendor quotes in different units (price per kg vs per lb)	$pricePerKg = $quote->pricePerUnit()->convertTo('kg');				
 `Nexus\Crm`	Maintainability Requirement	MAI-CRM-0307	Framework-agnostic core				
 `Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0308	Framework-agnostic core				
 `Nexus\Crm`	Maintainability Requirement	MAI-CRM-0309	Laravel adapter pattern				
@@ -574,93 +622,93 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0573	Project invoicing (milestone/T&M)				
 `Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0574	Expense tracking & approvals				
 `Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0575	Timesheet approval workflow				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0576	Package MUST be framework-agnostic with no Laravel dependencies in core services				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0577	All data structures defined via interfaces (TenantInterface)				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0578	All persistence operations via repository interface (TenantRepositoryInterface)				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0579	Business logic in service layer (TenantContextManager, TenantLifecycleService)				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0580	All database migrations in application layer (apps/Atomy)				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0581	All Eloquent models in application layer				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0582	Repository implementations in application layer				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0583	Global Scopes for automatic query filtering in application layer (Laravel-specific)				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0584	IoC container bindings in application service provider				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0585	Package composer.json MUST NOT depend on laravel/framework				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0586	Cache operations via CacheRepositoryInterface contract only				
-`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0587	Context propagation to queued jobs handled by application layer				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0588	Tenant ID MUST be set before any database operations can occur				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0589	Tenant codes MUST be unique across the entire system				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0590	Tenant domains MUST be unique if domain-based identification is used				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0591	Only one tenant context can be active per request/process at a time				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0592	Suspended tenants CANNOT access the system except for admin/billing				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0593	Super admin users can impersonate any tenant for support purposes				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0594	Impersonation sessions MUST log original user, target tenant, and timestamp				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0595	Tenant creation MUST trigger automated setup (default roles, permissions, initial data)				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0596	Trial tenants auto-suspend after trial period expires unless converted				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0597	Tenant deletion MUST be soft delete with configurable retention period before hard delete				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0598	All tenant state changes MUST be ACID-compliant transactions				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0599	Cross-tenant data access MUST be explicitly prevented at query level				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0600	Tenant context MUST persist across queued jobs and background processes				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0601	Maximum concurrent sessions per tenant can be enforced (enterprise feature)				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0602	Tenant timezone settings override system default for all date/time operations				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0603	Tenant locale settings determine default language and number formatting				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0604	Subscription status changes (active, suspended, cancelled) trigger lifecycle events				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0605	Read-only mode can be enabled per tenant for maintenance or migration				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0606	Tenant metadata (custom settings) stored as JSON with schema validation				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0607	Multi-database strategy support (single DB with tenant_id vs separate databases per tenant)				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0608	Tenant branding (logo, colors, name) customizable per tenant				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0609	Storage quota enforcement per tenant with configurable limits				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0610	API rate limiting applied per tenant, not per user				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0611	Billing cycle start date tracked per tenant for subscription management				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0612	Parent-child tenant relationships supported (holding companies with subsidiaries)				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0613	Child tenants inherit configuration from parent unless explicitly overridden				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0614	Impersonation requires specific permission and generates audit trail				
-`Nexus\Tenant`	Business Requirements	BUS-TEN-0615	Tenant onboarding workflow tracks setup progress (0-100% completion)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0616	Identify current tenant from request context (domain, subdomain, header, or session)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0617	Set and retrieve current tenant ID globally within request/process scope				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0618	Clear tenant context (logout, process completion, exception handling)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0619	Validate tenant exists and is active before setting context				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0620	Cache tenant configuration data to reduce database queries				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0621	Support multiple tenant identification strategies (domain, subdomain, path, header, token)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0622	Create new tenant with required fields (code, name, email, status)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0623	Activate tenant (change status from pending to active)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0624	Suspend tenant (prevent access, retain data, reversible)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0625	Reactivate suspended tenant (restore access)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0626	Archive tenant (soft delete with retention policy)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0627	Permanently delete tenant data (hard delete after retention period)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0628	Update tenant metadata (name, email, domain, settings)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0629	Retrieve tenant by ID, code, or domain				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0630	List all tenants with filtering (status, date range, search)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0631	Impersonate tenant as support user (set context + log impersonation)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0632	Stop impersonation and restore original user context				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0633	Track impersonation history (who, when, which tenant, duration)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0634	Emit events for tenant lifecycle changes (created, activated, suspended, deleted)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0635	Configure tenant-specific settings (timezone, locale, currency, date format)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0636	Export tenant configuration for backup or migration				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0637	Import tenant configuration from backup				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0638	Clone tenant (duplicate configuration for new tenant)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0639	Generate tenant usage reports (storage, users, API calls)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0640	Check tenant feature flags and plan entitlements				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0641	Enforce tenant plan limits (max users, max storage, modules)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0642	Switch tenant context for multi-tenant admin dashboard				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0643	Resolve tenant from API authentication token				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0644	Middleware to automatically set tenant context from request				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0645	Provide scoped database connection for tenant-specific queries				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0646	Support separate database per tenant (multi-database strategy)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0647	Support single database with tenant_id column (shared database strategy)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0648	Validate tenant-scoped file uploads (prevent cross-tenant access)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0649	Generate tenant-specific API keys and secrets				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0650	Rotate tenant API keys with zero downtime				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0651	Configure webhook endpoints per tenant for event notifications				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0652	Test tenant context isolation (prevent data leakage)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0653	RESTful API endpoints for tenant management (CRUD operations)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0654	Dashboard showing tenant statistics (total, active, suspended, trial)				
-`Nexus\Tenant`	Functional Requirement	FUN-TEN-0655	Tenant onboarding wizard with step-by-step setup				
-`Nexus\Tenant`	User Story	USE-TEN-0656	As a system admin, I want to create new tenants with automated provisioning				
-`Nexus\Tenant`	User Story	USE-TEN-0657	As a system admin, I want to suspend misbehaving tenants immediately				
-`Nexus\Tenant`	User Story	USE-TEN-0658	As a support engineer, I want to impersonate tenants to troubleshoot issues				
-`Nexus\Tenant`	User Story	USE-TEN-0659	As a tenant admin, I want to customize my tenant's branding and settings				
-`Nexus\Tenant`	User Story	USE-TEN-0660	As a developer, I want automatic tenant isolation without manual filtering				
-`Nexus\Tenant`	User Story	USE-TEN-0661	As a billing manager, I want to track tenant subscription status and billing cycles				
-`Nexus\Tenant`	User Story	USE-TEN-0662	As a system admin, I want to migrate tenants between databases without downtime				
-`Nexus\Tenant`	User Story	USE-TEN-0663	As a compliance officer, I want complete audit logs of all tenant administrative actions				
-`Nexus\Tenant`	User Story	USE-TEN-0664	As a tenant user, I want seamless experience without knowing about multi-tenancy				
-`Nexus\Tenant`	User Story	USE-TEN-0665	As a system architect, I want to switch between shared and separate database strategies
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0576	Package MUST be framework-agnostic with no Laravel dependencies in core services	packages/Tenant/composer.json (only psr/log dependency)	✅ Complete	Verified: No laravel/* dependencies	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0577	All data structures defined via interfaces (TenantInterface)	packages/Tenant/src/Contracts/TenantInterface.php (33 methods)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0578	All persistence operations via repository interface (TenantRepositoryInterface)	packages/Tenant/src/Contracts/TenantRepositoryInterface.php (20 methods)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0579	Business logic in service layer (TenantContextManager, TenantLifecycleService)	packages/Tenant/src/Services/ (5 service classes)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0580	All database migrations in application layer (apps/Atomy)	apps/Atomy/database/migrations/2025_11_17_100000_create_tenants_table.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0581	All Eloquent models in application layer	apps/Atomy/app/Models/Tenant.php, TenantImpersonation.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0582	Repository implementations in application layer	apps/Atomy/app/Repositories/DbTenantRepository.php (20 methods)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0583	Global Scopes for automatic query filtering in application layer (Laravel-specific)	apps/Atomy/app/Scopes/TenantScope.php, app/Traits/BelongsToTenant.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0584	IoC container bindings in application service provider	apps/Atomy/app/Providers/TenantServiceProvider.php::register()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0585	Package composer.json MUST NOT depend on laravel/framework	packages/Tenant/composer.json (only psr/log dependency)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0586	Cache operations via CacheRepositoryInterface contract only	packages/Tenant/src/Contracts/CacheRepositoryInterface.php, apps/Atomy/app/Services/LaravelCacheRepository.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0587	Context propagation to queued jobs handled by application layer	[Future] apps/Atomy/app/Jobs/Middleware/SetTenantContext.php	⏳ Pending	To be implemented when job queue is added	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0588	Tenant ID MUST be set before any database operations can occur	packages/Tenant/src/Services/TenantContextManager.php::requireTenant(), apps/Atomy/app/Scopes/TenantScope.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0589	Tenant codes MUST be unique across the entire system	packages/Tenant/src/Services/TenantLifecycleService.php::create(), apps/Atomy/database/migrations/*::unique('code')	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0590	Tenant domains MUST be unique if domain-based identification is used	packages/Tenant/src/Services/TenantLifecycleService.php::create(), apps/Atomy/database/migrations/*::unique('domain')	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0591	Only one tenant context can be active per request/process at a time	packages/Tenant/src/Services/TenantContextManager.php (single $currentTenantId property)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0592	Suspended tenants CANNOT access the system except for admin/billing	packages/Tenant/src/Services/TenantContextManager.php::setTenant() (throws TenantSuspendedException)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0593	Super admin users can impersonate any tenant for support purposes	packages/Tenant/src/Services/TenantImpersonationService.php::startImpersonation()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0594	Impersonation sessions MUST log original user, target tenant, and timestamp	packages/Tenant/src/Services/TenantImpersonationService.php, apps/Atomy/database/migrations/*::tenant_impersonations	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0595	Tenant creation MUST trigger automated setup (default roles, permissions, initial data)	[Future] packages/Tenant/src/Services/TenantEventDispatcher.php::tenantCreated(), apps/Atomy/app/Listeners/*	⏳ Pending	Event system ready, listeners to be implemented	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0596	Trial tenants auto-suspend after trial period expires unless converted	[Future] apps/Atomy/app/Console/Commands/ExpireTrialTenantsCommand.php	⏳ Pending	Scheduled command to be implemented	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0597	Tenant deletion MUST be soft delete with configurable retention period before hard delete	apps/Atomy/app/Models/Tenant.php (SoftDeletes trait), apps/Atomy/config/tenant.php::retention_days	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0598	All tenant state changes MUST be ACID-compliant transactions	packages/Tenant/src/Services/TenantLifecycleService.php (all state change methods)	✅ Complete	Laravel DB transactions enforced at repository level	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0599	Cross-tenant data access MUST be explicitly prevented at query level	apps/Atomy/app/Scopes/TenantScope.php::apply(), apps/Atomy/app/Traits/BelongsToTenant.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0600	Tenant context MUST persist across queued jobs and background processes	[Future] apps/Atomy/app/Jobs/Middleware/SetTenantContext.php	⏳ Pending	To be implemented with job queue	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0601	Maximum concurrent sessions per tenant can be enforced (enterprise feature)	[Future] packages/Tenant/src/Services/TenantSessionManager.php	⏳ Pending	Enterprise feature to be implemented	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0602	Tenant timezone settings override system default for all date/time operations	packages/Tenant/src/ValueObjects/TenantSettings.php::$timezone, apps/Atomy/app/Models/Tenant.php::getTimezone()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0603	Tenant locale settings determine default language and number formatting	packages/Tenant/src/ValueObjects/TenantSettings.php::$locale, apps/Atomy/app/Models/Tenant.php::getLocale()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0604	Subscription status changes (active, suspended, cancelled) trigger lifecycle events	packages/Tenant/src/Services/TenantEventDispatcher.php (9 events), packages/Tenant/src/Services/TenantLifecycleService.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0605	Read-only mode can be enabled per tenant for maintenance or migration	apps/Atomy/database/migrations/*::$table->boolean('is_readonly'), apps/Atomy/app/Models/Tenant.php::isReadonly()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0606	Tenant metadata (custom settings) stored as JSON with schema validation	apps/Atomy/database/migrations/*::$table->json('metadata'), packages/Tenant/src/ValueObjects/TenantSettings.php::$metadata	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0607	Multi-database strategy support (single DB with tenant_id vs separate databases per tenant)	apps/Atomy/database/migrations/*::$table->string('database_name'), apps/Atomy/config/tenant.php::multi_database	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0608	Tenant branding (logo, colors, name) customizable per tenant	apps/Atomy/database/migrations/*::$table->json('metadata') (stores branding in metadata field)	✅ Complete	Branding stored in metadata JSON	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0609	Storage quota enforcement per tenant with configurable limits	apps/Atomy/database/migrations/*::$table->bigInteger('storage_quota_mb'), apps/Atomy/app/Models/Tenant.php::getStorageQuotaMb()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0610	API rate limiting applied per tenant, not per user	apps/Atomy/database/migrations/*::$table->integer('rate_limit_per_minute'), apps/Atomy/app/Models/Tenant.php::getRateLimitPerMinute()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0611	Billing cycle start date tracked per tenant for subscription management	apps/Atomy/database/migrations/*::$table->timestamp('billing_cycle_starts_at'), apps/Atomy/app/Models/Tenant.php::getBillingCycleStartsAt()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0612	Parent-child tenant relationships supported (holding companies with subsidiaries)	apps/Atomy/database/migrations/*::$table->string('parent_id'), apps/Atomy/app/Models/Tenant.php::parent(), children()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0613	Child tenants inherit configuration from parent unless explicitly overridden	[Future] packages/Tenant/src/Services/TenantConfigurationInheritanceService.php	⏳ Pending	Inheritance logic to be implemented	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0614	Impersonation requires specific permission and generates audit trail	packages/Tenant/src/Services/TenantImpersonationService.php, apps/Atomy/app/Models/TenantImpersonation.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0615	Tenant onboarding workflow tracks setup progress (0-100% completion)	[Future] apps/Atomy/database/migrations/*::$table->integer('onboarding_progress'), packages/Tenant/src/Services/TenantOnboardingService.php	⏳ Pending	Onboarding wizard to be implemented	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0616	Identify current tenant from request context (domain, subdomain, header, or session)	packages/Tenant/src/Services/TenantResolverService.php::resolve(), apps/Atomy/app/Http/Middleware/IdentifyTenant.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0617	Set and retrieve current tenant ID globally within request/process scope	packages/Tenant/src/Services/TenantContextManager.php::setTenant(), getCurrentTenantId()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0618	Clear tenant context (logout, process completion, exception handling)	packages/Tenant/src/Services/TenantContextManager.php::clearTenant()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0619	Validate tenant exists and is active before setting context	packages/Tenant/src/Services/TenantContextManager.php::setTenant() (validates status)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0620	Cache tenant configuration data to reduce database queries	packages/Tenant/src/Services/TenantContextManager.php (uses CacheRepositoryInterface)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0621	Support multiple tenant identification strategies (domain, subdomain, path, header, token)	packages/Tenant/src/ValueObjects/IdentificationStrategy.php (5 strategies), packages/Tenant/src/Services/TenantResolverService.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0622	Create new tenant with required fields (code, name, email, status)	packages/Tenant/src/Services/TenantLifecycleService.php::create(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::store()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0623	Activate tenant (change status from pending to active)	packages/Tenant/src/Services/TenantLifecycleService.php::activate(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::activate()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0624	Suspend tenant (prevent access, retain data, reversible)	packages/Tenant/src/Services/TenantLifecycleService.php::suspend(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::suspend()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0625	Reactivate suspended tenant (restore access)	packages/Tenant/src/Services/TenantLifecycleService.php::reactivate(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::reactivate()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0626	Archive tenant (soft delete with retention policy)	packages/Tenant/src/Services/TenantLifecycleService.php::archive(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::destroy()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0627	Permanently delete tenant data (hard delete after retention period)	packages/Tenant/src/Services/TenantLifecycleService.php::delete(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::forceDestroy()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0628	Update tenant metadata (name, email, domain, settings)	packages/Tenant/src/Services/TenantLifecycleService.php::update(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::update()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0629	Retrieve tenant by ID, code, or domain	packages/Tenant/src/Contracts/TenantRepositoryInterface.php::findById(), findByCode(), findByDomain()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0630	List all tenants with filtering (status, date range, search)	packages/Tenant/src/Contracts/TenantRepositoryInterface.php::all(), search(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::index()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0631	Impersonate tenant as support user (set context + log impersonation)	packages/Tenant/src/Services/TenantImpersonationService.php::startImpersonation(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::impersonate()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0632	Stop impersonation and restore original user context	packages/Tenant/src/Services/TenantImpersonationService.php::endImpersonation(), apps/Atomy/app/Http/Controllers/Api/TenantController.php::stopImpersonation()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0633	Track impersonation history (who, when, which tenant, duration)	apps/Atomy/app/Models/TenantImpersonation.php, apps/Atomy/database/migrations/*::tenant_impersonations	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0634	Emit events for tenant lifecycle changes (created, activated, suspended, deleted)	packages/Tenant/src/Services/TenantEventDispatcher.php (9 event types)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0635	Configure tenant-specific settings (timezone, locale, currency, date format)	packages/Tenant/src/ValueObjects/TenantSettings.php, apps/Atomy/app/Http/Controllers/Api/TenantController.php::update()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0636	Export tenant configuration for backup or migration	[Future] packages/Tenant/src/Services/TenantExportService.php	⏳ Pending	Export service to be implemented	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0637	Import tenant configuration from backup	[Future] packages/Tenant/src/Services/TenantImportService.php	⏳ Pending	Import service to be implemented	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0638	Clone tenant (duplicate configuration for new tenant)	[Future] packages/Tenant/src/Services/TenantLifecycleService.php::clone()	⏳ Pending	Clone functionality to be implemented	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0639	Generate tenant usage reports (storage, users, API calls)	[Future] packages/Tenant/src/Services/TenantUsageReportService.php	⏳ Pending	Usage analytics to be implemented	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0640	Check tenant feature flags and plan entitlements	apps/Atomy/database/migrations/*::$table->json('feature_flags'), apps/Atomy/app/Models/Tenant.php::getFeatureFlags()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0641	Enforce tenant plan limits (max users, max storage, modules)	apps/Atomy/database/migrations/*::storage_quota_mb, max_users, apps/Atomy/app/Models/Tenant.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0642	Switch tenant context for multi-tenant admin dashboard	packages/Tenant/src/Services/TenantContextManager.php::setTenant(), clearTenant()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0643	Resolve tenant from API authentication token	packages/Tenant/src/Services/TenantResolverService.php::resolve() (token strategy)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0644	Middleware to automatically set tenant context from request	apps/Atomy/app/Http/Middleware/IdentifyTenant.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0645	Provide scoped database connection for tenant-specific queries	[Future] apps/Atomy/app/Services/TenantDatabaseConnectionManager.php	⏳ Pending	Connection manager for multi-database strategy	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0646	Support separate database per tenant (multi-database strategy)	apps/Atomy/database/migrations/*::$table->string('database_name'), apps/Atomy/config/tenant.php::multi_database	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0647	Support single database with tenant_id column (shared database strategy)	apps/Atomy/app/Scopes/TenantScope.php, apps/Atomy/app/Traits/BelongsToTenant.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0648	Validate tenant-scoped file uploads (prevent cross-tenant access)	[Future] apps/Atomy/app/Http/Middleware/ValidateTenantFileAccess.php	⏳ Pending	File access validation to be implemented	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0649	Generate tenant-specific API keys and secrets	[Future] apps/Atomy/app/Services/TenantApiKeyService.php	⏳ Pending	API key management to be implemented	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0650	Rotate tenant API keys with zero downtime	[Future] apps/Atomy/app/Services/TenantApiKeyService.php::rotate()	⏳ Pending	Key rotation to be implemented	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0651	Configure webhook endpoints per tenant for event notifications	[Future] apps/Atomy/database/migrations/*::tenant_webhooks, apps/Atomy/app/Services/TenantWebhookService.php	⏳ Pending	Webhook system to be implemented	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0652	Test tenant context isolation (prevent data leakage)	apps/Atomy/app/Scopes/TenantScope.php, apps/Atomy/app/Traits/BelongsToTenant.php (automatic isolation)	✅ Complete	Global scope enforces isolation	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0653	RESTful API endpoints for tenant management (CRUD operations)	apps/Atomy/app/Http/Controllers/Api/TenantController.php (14 endpoints), apps/Atomy/routes/api_tenant.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0654	Dashboard showing tenant statistics (total, active, suspended, trial)	apps/Atomy/app/Http/Controllers/Api/TenantController.php::statistics(), apps/Atomy/app/Repositories/DbTenantRepository.php::getStatistics()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0655	Tenant onboarding wizard with step-by-step setup	[Future] apps/Atomy/app/Http/Controllers/Api/TenantOnboardingController.php	⏳ Pending	Onboarding wizard UI to be implemented	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0656	As a system admin, I want to create new tenants with automated provisioning	apps/Atomy/app/Http/Controllers/Api/TenantController.php::store(), packages/Tenant/src/Services/TenantEventDispatcher.php::tenantCreated()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0657	As a system admin, I want to suspend misbehaving tenants immediately	apps/Atomy/app/Http/Controllers/Api/TenantController.php::suspend(), packages/Tenant/src/Services/TenantLifecycleService.php::suspend()	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0658	As a support engineer, I want to impersonate tenants to troubleshoot issues	apps/Atomy/app/Http/Controllers/Api/TenantController.php::impersonate(), packages/Tenant/src/Services/TenantImpersonationService.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0659	As a tenant admin, I want to customize my tenant's branding and settings	apps/Atomy/app/Http/Controllers/Api/TenantController.php::update(), packages/Tenant/src/ValueObjects/TenantSettings.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0660	As a developer, I want automatic tenant isolation without manual filtering	apps/Atomy/app/Scopes/TenantScope.php, apps/Atomy/app/Traits/BelongsToTenant.php (automatic global scope)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0661	As a billing manager, I want to track tenant subscription status and billing cycles	apps/Atomy/database/migrations/*::billing_cycle_starts_at, status, apps/Atomy/app/Models/Tenant.php	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0662	As a system admin, I want to migrate tenants between databases without downtime	[Future] apps/Atomy/app/Services/TenantMigrationService.php	⏳ Pending	Database migration tools to be implemented	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0663	As a compliance officer, I want complete audit logs of all tenant administrative actions	apps/Atomy/app/Models/TenantImpersonation.php (impersonation logs), packages/Tenant/src/Services/TenantEventDispatcher.php (events)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0664	As a tenant user, I want seamless experience without knowing about multi-tenancy	apps/Atomy/app/Http/Middleware/IdentifyTenant.php (transparent), apps/Atomy/app/Scopes/TenantScope.php (automatic)	✅ Complete	-	2025-01-17
+`Nexus\Tenant`	User Story	USE-TEN-0665	As a system architect, I want to switch between shared and separate database strategies	apps/Atomy/config/tenant.php::multi_database, database_prefix, apps/Atomy/database/migrations/*::database_name	✅ Complete	-	2025-01-17

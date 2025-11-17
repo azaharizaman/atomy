@@ -79,11 +79,11 @@ class AuditLogManager
         if ($level === null) {
             $level = $subjectType 
                 ? $this->config->getDefaultLevelForEntity($subjectType)
-                : AuditLevel::MEDIUM;
+                : AuditLevel::Medium->value;
         }
 
         // Validate level per BUS-AUD-0146
-        new AuditLevel($level);
+        AuditLevel::tryFrom($level) ?? throw new InvalidAuditLevelException($level);
 
         // Mask sensitive data per FUN-AUD-0192
         $properties = $this->masker->maskSensitiveData($properties);
@@ -216,7 +216,7 @@ class AuditLogManager
             causerType: $causerType,
             causerId: $causerId,
             event: 'accessed',
-            level: AuditLevel::LOW,
+            level: AuditLevel::Low->value,
             ...$context
         );
     }
@@ -238,7 +238,7 @@ class AuditLogManager
             causerType: null,  // System activities have null causer per BUS-AUD-0148
             causerId: null,
             properties: $properties,
-            level: $level ?? AuditLevel::MEDIUM,
+            level: $level ?? AuditLevel::Medium->value,
             ...$context
         );
     }

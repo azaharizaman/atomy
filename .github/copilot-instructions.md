@@ -306,6 +306,16 @@ The following packages are planned or under development in this monorepo:
 - Validate inputs in services before processing
 - Throw descriptive exceptions for error cases
 
+## ✨ Modern PHP 8.x Standards (Targeting 8.3+)
+
+The coding agent MUST strictly adhere to these modern conventions to reduce boilerplate, enhance type safety, and enforce immutability:
+
+1.  **Constructor Property Promotion:** Use for all injected dependencies and properties initialized in `__construct`.
+2.  **`readonly` Modifier:** All properties (especially in Services, Managers, Repositories, and Value Objects) defined via property promotion MUST be declared as `readonly`.
+3.  **Native PHP Enums:** Use native `enum` (backed by `int` or `string`) instead of defining constants within classes for fixed value sets (statuses, levels, types).
+4.  **`match` Expression:** Use the `match` expression exclusively instead of the traditional `switch` statement.
+5.  **New/Throw in Expressions:** Use `new` and `throw` within expressions for simplified conditional object creation and exception handling (e.g., `?? throw new Exception()`).
+
 ## Testing Approach
 
 - Package tests should be unit tests (no database)
