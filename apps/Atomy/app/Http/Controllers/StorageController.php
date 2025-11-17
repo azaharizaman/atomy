@@ -245,7 +245,7 @@ class StorageController
         ]);
 
         try {
-            $expiration = $request->input('expiration', 3600);
+            $expiration = $request->input('expiration', config('storage.temporary_urls.default_expiration', 3600));
             $url = $this->urlGenerator->getTemporaryUrl($path, $expiration);
 
             return response()->json([
