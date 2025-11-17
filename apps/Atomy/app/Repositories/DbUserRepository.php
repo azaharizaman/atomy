@@ -180,7 +180,7 @@ final readonly class DbUserRepository implements UserRepositoryInterface
         $user = User::findOrFail($userId);
         $metadata = $user->metadata ?? [];
         $metadata['lock_reason'] = $reason;
-        $metadata['locked_at'] = now()->toISOString();
+        $metadata['locked_at'] = now()->format('c');
         
         $user->update([
             'status' => UserStatus::LOCKED->value,
