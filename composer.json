@@ -26,6 +26,18 @@
         {
             "type": "path",
             "url": "./packages/Workflow"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Hrm"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Payroll"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Backoffice"
         }
     ],
     "minimum-stability": "dev",

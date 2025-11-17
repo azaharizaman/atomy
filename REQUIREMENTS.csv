@@ -9,14 +9,14 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0008	Traits and Observers in application layer (Laravel-specific)				
 `Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0009	IoC container bindings in application service provider				
 `Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0010	Package composer.json MUST NOT depend on laravel/framework				
-`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0011	Package must be framework-agnostic with no Laravel dependencies				
-`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0012	All data structures defined via interfaces				
-`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0013	All persistence operations via repository interfaces				
-`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0014	Business logic in service layer				
-`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0015	All database migrations in application layer				
-`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0016	All Eloquent models in application layer				
-`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0017	Repository implementations in application layer				
-`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0018	IoC container bindings in application service provider				
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0011	Package must be framework-agnostic with no Laravel dependencies		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0012	All data structures defined via interfaces		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0013	All persistence operations via repository interfaces		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0014	Business logic in service layer		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0015	All database migrations in application layer		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0016	All Eloquent models in application layer		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0017	Repository implementations in application layer		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0018	IoC container bindings in application service provider		✅ Skeleton	Package and application structure completed	2025-11-17
 `Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0019	Package must be framework-agnostic with no Laravel dependencies	packages/Sequencing/composer.json, packages/Sequencing/src/	✅ Completed	Fully implemented and tested	2025-11-17
 `Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0020	All data structures defined via interfaces	packages/Sequencing/src/Contracts/	✅ Completed	Fully implemented and tested	2025-11-17
 `Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0021	All persistence operations via repository interfaces	packages/Sequencing/src/Contracts/*RepositoryInterface.php	✅ Completed	Fully implemented and tested	2025-11-17
@@ -150,16 +150,16 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\AuditLogger`	Business Requirements	BUS-AUD-0149	High-value entity changes (users, roles, permissions, financial records) default to Critical level				
 `Nexus\AuditLogger`	Business Requirements	BUS-AUD-0150	Batch operations MUST use a single batch_uuid to group related logs				
 `Nexus\AuditLogger`	Business Requirements	BUS-AUD-0151	Expired logs (past retention period) are purged automatically via scheduled job				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0152	Parent company must be active to have active children				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0153	Office hierarchy cannot exceed company boundaries				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0154	Department hierarchy independent of office structure				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0155	Staff can only have one primary supervisor per company				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0156	Supervisor must be in same or parent organizational unit				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0157	Staff transfer requires approval from authorized users				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0158	Transfer effective dates cannot be retroactive beyond 30 days				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0159	Unit membership transcends traditional hierarchy boundaries				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0160	Staff codes must be unique system-wide				
-`Nexus\Backoffice`	Business Requirements	BUS-BAC-0161	Company codes must be unique across the system				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0152	Parent company must be active to have active children		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0153	Office hierarchy cannot exceed company boundaries		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0154	Department hierarchy independent of office structure		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0155	Staff can only have one primary supervisor per company		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0156	Supervisor must be in same or parent organizational unit		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0157	Staff transfer requires approval from authorized users		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0158	Transfer effective dates cannot be retroactive beyond 30 days		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0159	Unit membership transcends traditional hierarchy boundaries		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0160	Staff codes must be unique system-wide		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0161	Company codes must be unique across the system		✅ Skeleton	Package and application structure completed	2025-11-17
 `Nexus\Hrm`	Business Requirements	BUS-HRM-0162	Employees MUST have active contract before leave accrual begins				
 `Nexus\Hrm`	Business Requirements	BUS-HRM-0163	Leave requests CANNOT exceed available balance unless negative balance policy enabled				
 `Nexus\Hrm`	Business Requirements	BUS-HRM-0164	Probation completion required before permanent leave entitlements activate				
@@ -199,15 +199,15 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0198	RESTful API endpoints for log retrieval, search, and export				
 `Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0199	Activity statistics and reporting (total counts, counts by log name, trends over time)				
 `Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0200	43 total requirements documented (15 FR + 5 PR + 6 SR + 7 BR + 10 ARCH)				
-`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0201	Company hierarchy management with multi-level parent-child relationships				
-`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0202	Department structure management independent of physical office locations				
-`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0203	Staff management with flexible assignment to offices and/or departments				
-`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0204	Unit and matrix organization for cross-functional staff groupings				
-`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0205	Staff transfer management with approval workflows and effective date scheduling				
-`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0206	Organizational chart generation with multiple visualization formats				
-`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0207	Position and role management within organizational structure				
-`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0208	Office type categorization and management				
-`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0209	Circular reference prevention in hierarchies				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0201	Company hierarchy management with multi-level parent-child relationships		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0202	Department structure management independent of physical office locations		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0203	Staff management with flexible assignment to offices and/or departments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0204	Unit and matrix organization for cross-functional staff groupings		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0205	Staff transfer management with approval workflows and effective date scheduling		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0206	Organizational chart generation with multiple visualization formats		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0207	Position and role management within organizational structure		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0208	Office type categorization and management		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0209	Circular reference prevention in hierarchies		✅ Skeleton	Package and application structure completed	2025-11-17
 `Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0210	Provide a framework-agnostic core (Nexus\Sequencing\Core) containing all generation and counter logic	packages/Sequencing/src/Services/	✅ Completed	Fully implemented and tested	2025-11-17
 `Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0211	Implement atomic number generation using database-level locking (SELECT FOR UPDATE)	apps/Atomy/app/Repositories/DbCounterRepository.php::getCurrentValueWithLock()	✅ Completed	Fully implemented and tested	2025-11-17
 `Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0212	Ensure generation is transaction-safe and rolls back counter increment if calling transaction fails	apps/Atomy/app/Repositories/DbCounterRepository.php	✅ Completed	Fully implemented and tested	2025-11-17
@@ -363,12 +363,216 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0314	Module independence				
 `Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0315	Documentation				
 `Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0316	Code style				
-`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0317	Performance - Organizational chart generation < 2 seconds for 10,000 staff				
-`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0318	Performance - Staff search and filtering < 500ms				
-`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0319	Scalability - Support up to 100,000 staff records per company				
-`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0320	Reliability - ACID compliance for critical operations				
-`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0321	Security - Audit trail for all organizational changes				
-`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0322	Maintainability - Framework-agnostic architecture				
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0317	Performance - Organizational chart generation < 2 seconds for 10,000 staff		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0318	Performance - Staff search and filtering < 500ms		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0319	Scalability - Support up to 100,000 staff records per company		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0320	Reliability - ACID compliance for critical operations		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0321	Security - Audit trail for all organizational changes		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0322	Maintainability - Framework-agnostic architecture		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0703	Package composer.json must not depend on laravel/framework		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0704	Support multi-tenancy via tenant context injection		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0705	All entities must implement CompanyInterface, OfficeInterface, DepartmentInterface, StaffInterface, UnitInterface		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0706	Repository layer must support nested set model for hierarchical queries		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0707	Service layer must expose BackofficeManager as main public API		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0708	Support event-driven architecture for organizational changes		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0709	Provide TransferManagerInterface for staff transfer workflows		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0710	Company registration number must be unique when provided		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0711	Parent company relationship cannot create circular references		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0712	Inactive companies cannot have new staff assignments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0713	Office codes must be unique within the same company		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0714	Office cannot be deleted if it has active staff assignments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0715	Office address must include country and postal code		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0716	Head office designation: only one head office per company		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0717	Branch offices must have parent office or company		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0718	Department codes must be unique within the same parent department		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0719	Department cannot be deleted if it has active staff or sub-departments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0720	Department hierarchy depth recommended maximum is 8 levels		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0721	Cost center code must be unique within company when provided		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0722	Staff employee ID must be unique across entire system		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0723	Staff email address must be unique within company when provided		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0724	Staff can be assigned to multiple departments with different roles		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0725	Staff primary assignment determines default department and office		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0726	Staff assignment effective dates cannot overlap for same department		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0727	Staff termination date must be after hire date		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0728	Terminated staff cannot have active assignments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0729	Supervisor assignment requires both supervisor and subordinate to be active		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0730	Staff cannot be their own supervisor (direct or indirect)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0731	Supervisor chain cannot exceed 15 levels		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0732	Unit codes must be unique within the same company		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0733	Unit membership can span across departments and offices (matrix structure)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0734	Unit leader must be a member of the unit		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0735	Unit type categorization (project team, committee, task force, working group)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0736	Transfer requests require source and destination authorization		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0737	Transfer effective date must be future date or within 30 days past		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0738	Pending transfer blocks new transfers for same staff		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0739	Transfer approval requires authorized approver at source and destination		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0740	Rejected transfer maintains staff in current assignment		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0741	Provide BackofficeManager as main orchestration service		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0742	Support company CRUD operations with validation		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0743	Support company group management for holding companies		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0744	Track company registration details (number, date, jurisdiction)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0745	Support company status (active, inactive, suspended, dissolved)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0746	Track company financial year start date		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0747	Support company metadata (industry, size, tax ID)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0748	Provide method to get all subsidiary companies		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0749	Provide method to get parent company chain		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0750	Support office CRUD operations with location data		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0751	Support office types (head office, branch, regional, satellite, virtual)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0752	Support office status (active, inactive, temporary, closed)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0753	Track office contact details (phone, email, fax)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0754	Track office operating hours and timezone		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0755	Support office capacity tracking (staff capacity, floor area)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0756	Provide method to get all offices within company		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0757	Provide method to get offices by location or region		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0758	Support department CRUD operations with hierarchical structure		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0759	Support department types (functional, divisional, matrix, project-based)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0760	Track department head (manager) assignment		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0761	Track department cost center for financial reporting		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0762	Support department budget allocation tracking		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0763	Provide method to get all sub-departments (descendants)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0764	Provide method to get parent department chain		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0765	Provide method to move department within hierarchy		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0766	Support staff CRUD operations with comprehensive profile data		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0767	Support staff types (permanent, contract, temporary, intern, consultant)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0768	Support staff status (active, inactive, on leave, terminated)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0769	Track staff personal details (name, ID, contact, emergency contact)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0770	Track staff employment details (hire date, position, grade, salary band)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0771	Track staff probation period and confirmation date		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0772	Support staff photo and document attachments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0773	Support staff skills and competencies tracking		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0774	Support staff qualifications and certifications		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0775	Provide method to assign staff to department with role		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0776	Provide method to assign staff to office with effective date		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0777	Provide method to get staff current assignments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0778	Provide method to get staff assignment history		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0779	Support supervisor-subordinate relationship management		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0780	Support dotted-line reporting relationships		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0781	Provide method to get direct reports for supervisor		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0782	Provide method to get all reports (entire chain) for supervisor		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0783	Provide method to get reporting hierarchy up to CEO		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0784	Support unit CRUD operations for cross-functional teams		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0785	Support unit types (project team, committee, task force, working group, CoE)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0786	Support unit status (active, inactive, completed, disbanded)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0787	Track unit start and end dates for temporary units		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0788	Track unit purpose and objectives		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0789	Support unit leader and deputy leader assignments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0790	Provide method to add/remove staff from unit		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0791	Provide method to get all unit members with roles		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0792	Support unit member roles (leader, member, secretary, advisor)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0793	Provide TransferManager for staff transfer workflows		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0794	Support transfer request creation with reason and effective date		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0795	Support transfer types (promotion, lateral move, demotion, relocation)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0796	Support transfer status (pending, approved, rejected, cancelled, completed)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0797	Implement transfer approval workflow with multi-level authorization		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0798	Track transfer approval history and comments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0799	Automatic assignment update upon transfer approval		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0800	Support transfer rollback for incorrect transfers		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0801	Generate organizational chart for entire company		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0802	Generate organizational chart for specific department		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0803	Generate organizational chart for specific office		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0804	Support org chart formats (hierarchical tree, matrix view, circle pack)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0805	Export org chart data in JSON, XML, or GraphML format		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0806	Generate headcount reports by company, office, department		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0807	Generate headcount reports by staff type and status		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0808	Generate staff directory with search and filter capabilities		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0809	Generate vacancy reports showing unfilled positions		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0810	Generate turnover reports with retention metrics		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0811	Generate span of control reports (reports per manager)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0812	Support staff search by name, employee ID, email, phone		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0813	Support advanced filtering (department, office, status, type, skills)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0814	Support sorting and pagination for large datasets		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0815	Support bulk import of organizational data from CSV/Excel		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0816	Support bulk export of organizational data to CSV/Excel		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0817	Validate data integrity before bulk import		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0818	Support organizational restructuring with effective date		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0819	Track all organizational changes in audit log		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0820	Support organizational snapshots at specific point in time		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0821	Provide RESTful API endpoints for all CRUD operations		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0822	Provide GraphQL API for complex organizational queries		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0823	Support webhooks for organizational change notifications		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0824	Integrate with HR systems via standardized data exchange		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0825	Integrate with payroll system for staff data synchronization		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0826	Integrate with access control systems for role provisioning		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0827	Support custom fields for company-specific data requirements		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0828	Support tagging and labeling for flexible categorization		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0829	Support comments and notes on all entities		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0830	Support file attachments (org charts, policy docs, photos)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Performance Requirement	PERF-BAC-0831	Organizational chart generation must execute in < 2 seconds for 10,000 staff		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Performance Requirement	PERF-BAC-0832	Staff search must return results in < 500ms for 100,000 records		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Performance Requirement	PERF-BAC-0833	Hierarchical queries (ancestors/descendants) must execute in < 100ms		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Performance Requirement	PERF-BAC-0834	Reporting relationship queries must use indexed queries		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Performance Requirement	PERF-BAC-0835	Bulk import must process 10,000 records in < 5 minutes		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Performance Requirement	PERF-BAC-0836	API response time must be < 200ms for 95th percentile		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0837	Tenant isolation enforced at repository level for all queries		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0838	Role-based access control for organizational management operations		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0839	Field-level security for sensitive staff information (salary, SSN)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0840	Audit logging for all create, update, delete operations		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0841	Data encryption at rest for sensitive personal information		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0842	Data encryption in transit using TLS 1.3+		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0843	Support data masking for non-authorized users		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0844	Implement rate limiting for API endpoints		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0845	Validate and sanitize all user inputs		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Security Requirement	SEC-BAC-0846	Prevent SQL injection via parameterized queries		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Compliance Requirement	COMP-BAC-0847	Support GDPR compliance for employee data (right to erasure, portability)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Compliance Requirement	COMP-BAC-0848	Support data retention policies with automatic archival		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Compliance Requirement	COMP-BAC-0849	Support consent management for data processing		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Compliance Requirement	COMP-BAC-0850	Generate compliance reports for data protection authorities		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Usability Requirement	USAB-BAC-0851	Simple API for basic operations (create, read, update, delete)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Usability Requirement	USAB-BAC-0852	Comprehensive documentation with code examples		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Usability Requirement	USAB-BAC-0853	Interactive org chart with drag-and-drop for restructuring		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Usability Requirement	USAB-BAC-0854	Mobile-responsive UI for staff directory and org charts		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	Usability Requirement	USAB-BAC-0855	Support multiple languages for international deployments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0856	As a novice developer, I want to set up basic company structure in 15 minutes		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0857	As a developer, I want fluent API: $manager->createCompany($data)->addOffice($data)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0858	As a developer, I want to query hierarchy: $company->offices(), $office->departments()		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0859	As a developer, I want to assign staff: $manager->assignStaff($staff, $department, $role)		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0860	As an HR admin, I want to create new company with head office in one form		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0861	As an HR admin, I want to add branch office with address and contact details		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0862	As an HR admin, I want to create department hierarchy with drag-and-drop		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0863	As an HR admin, I want to onboard new employee with complete profile		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0864	As an HR admin, I want to assign employee to department and set supervisor		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0865	As an HR admin, I want to transfer employee between departments with approval workflow		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0866	As an HR admin, I want to view pending transfer requests and approve/reject them		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0867	As an HR admin, I want to terminate employee and record termination details		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0868	As an HR admin, I want to create cross-functional project team with members from different departments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0869	As an HR admin, I want to generate organizational chart for entire company		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0870	As an HR admin, I want to export org chart to PDF for management presentation		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0871	As an HR admin, I want to generate headcount report by department and location		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0872	As an HR admin, I want to search employee directory by name, department, or skills		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0873	As an HR admin, I want to bulk import employee data from Excel spreadsheet		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0874	As an HR admin, I want to track employee certifications and renewal dates		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0875	As an HR admin, I want to plan organizational restructuring with future effective date		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0876	As an HR manager, I want to view my team structure including indirect reports		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0877	As an HR manager, I want to approve staff transfer requests from/to my department		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0878	As an HR manager, I want to view staff assignment history for audit purposes		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0879	As a department head, I want to view all staff in my department with their roles		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0880	As a department head, I want to request staff transfer to my department		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0881	As a department head, I want to view department budget allocation and headcount		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0882	As an office manager, I want to view all staff assigned to my office location		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0883	As an office manager, I want to track office capacity utilization		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0884	As a manager, I want to view my direct and indirect reports in org chart		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0885	As a manager, I want to see span of control metrics for my team		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0886	As an employee, I want to view my current department and supervisor		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0887	As an employee, I want to view organizational chart to find colleagues		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0888	As an employee, I want to search staff directory by department or skills		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0889	As an employee, I want to view my assignment history and career progression		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0890	As a project manager, I want to create temporary project team unit		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0891	As a project manager, I want to add/remove team members from project unit		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0892	As a project manager, I want to close project unit after project completion		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0893	As an IT admin, I want to integrate with Active Directory for staff synchronization		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0894	As an IT admin, I want to provision user accounts based on staff assignments		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0895	As an IT admin, I want to revoke access when staff is terminated		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0896	As an analyst, I want to export all organizational data for external analysis		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0897	As an analyst, I want to generate turnover reports with retention metrics		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0898	As an analyst, I want to analyze organizational structure efficiency metrics		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0899	As a compliance officer, I want to audit all organizational changes in last 90 days		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0900	As a compliance officer, I want to generate GDPR data portability report for employee		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0901	As a small business owner, I want simple 2-level structure (company → departments) setup in minutes		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0902	As a small business owner, I want to manage 10-50 employees with basic org chart		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0903	As an enterprise HR director, I want to manage multi-company group with 10,000+ employees		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0904	As an enterprise HR director, I want to manage complex matrix organization with multiple reporting lines		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0905	As an enterprise HR director, I want to coordinate global organizational restructuring across 20 countries		✅ Skeleton	Package and application structure completed	2025-11-17
+`Nexus\Backoffice`	User Story	USE-BAC-0906	As a multinational corporation, I want to manage organizational structure across multiple legal entities and jurisdictions		✅ Skeleton	Package and application structure completed	2025-11-17
 `Nexus\Crm`	Performance Requirement	PER-CRM-0323	Action execution time				
 `Nexus\FieldService`	Performance Requirement	PER-FIE-0324	Mobile app startup time				
 `Nexus\Manufacturing`	Performance Requirement	PER-MAN-0325	BOM explosion (10-level deep, 500 components)				
@@ -925,4 +1129,708 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Workflow`	User Story	USE-WOR-0581	As a manager, I want to delegate my task inbox to an assistant for specific date ranges		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	User Story	USE-WOR-0582	As a developer, I want to define compensation/rollback logic for failed workflows		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	User Story	USE-WOR-0583	As an admin, I want to configure approval matrices based on amount thresholds without code changes		Skeleton Created	Complete package and application skeleton created	2025-11-17
-`Nexus\Workflow`	User Story	USE-WOR-0584	As a developer, I want to track and report on SLA compliance rates per workflow type		Skeleton Created	Complete package and application skeleton created	2025-11-17
+`Nexus\Workflow`	User Story	USE-WOR-0584	As a developer, I want to track and report on SLA compliance rates per workflow type			Skeleton Created	Complete package and application skeleton created	2025-11-17
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0585	Package must be framework-agnostic with no Laravel dependencies				
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0586	All data structures defined via interfaces (OrgUnitInterface, PositionInterface, AssignmentInterface)				
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0587	All persistence operations via repository interfaces				
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0588	Business logic in service layer (OrgStructureManager, PositionManager, AssignmentManager)				
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0589	All database migrations in application layer (apps/Atomy)				
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0590	All Eloquent models in application layer				
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0591	Repository implementations in application layer				
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0592	IoC container bindings in application service provider				
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0593	Package composer.json must not depend on laravel/framework				
+`Nexus\OrgStructure`	Architechtural Requirement	ARC-ORG-0594	Support extensible directory sync adapters via DirectorySyncInterface				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0595	Organizational unit codes must be unique within the same parent				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0596	Organizational units cannot be deleted if they have active positions or child units				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0597	Position codes must be unique within the same organizational unit				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0598	An employee can have multiple position assignments with non-overlapping date ranges				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0599	An employee can have only one primary position at any given time				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0600	Position assignments must have effective_from date; effective_until is optional				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0601	Manager assignments must reference valid employee position assignments				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0602	Circular reporting relationships are not allowed (employee cannot be their own manager in chain)				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0603	A position can have at most one manager (direct supervisor)				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0604	Organizational hierarchy depth is unlimited but recommended maximum is 10 levels				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0605	Position level (rank) must be numeric and consistent within hierarchy				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0606	Inactive organizational units cannot have new position assignments				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0607	Directory sync must maintain audit trail of all synchronization operations				
+`Nexus\OrgStructure`	Business Requirements	BUS-ORG-0608	Directory sync conflicts require manual resolution (never auto-delete)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0609	Provide OrgStructureManager as main public API for organizational operations				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0610	Support nested set model for efficient hierarchical queries				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0611	Provide methods to get all ancestors of an organizational unit				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0612	Provide methods to get all descendants of an organizational unit				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0613	Provide method to move organizational units within the hierarchy				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0614	Support organizational unit types (department, division, branch, team, etc.)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0615	Support position types (permanent, contract, temporary, part-time)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0616	Support position status (active, inactive, frozen, abolished)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0617	Track position headcount (authorized, filled, vacant)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0618	Support position attributes (grade, level, salary band reference)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0619	Support temporal position assignments with effective date ranges				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0620	Support assignment status (active, pending, expired, terminated)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0621	Track assignment reason (promotion, transfer, new hire, acting, temporary)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0622	Support primary position flag for employees with multiple assignments				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0623	Provide method to get current position(s) for an employee				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0624	Provide method to get position assignment history for an employee				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0625	Support manager-subordinate reporting relationships with effective dates				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0626	Provide method to get direct reports for a manager				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0627	Provide method to get indirect reports (entire reporting chain) for a manager				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0628	Provide method to get reporting hierarchy up to top executive				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0629	Support reporting relationship types (direct, dotted line, functional)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0630	Generate organizational chart data in JSON/array format				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0631	Generate headcount reports by organizational unit				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0632	Generate headcount reports by position type				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0633	Generate vacancy reports showing unfilled positions				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0634	Support organizational unit search by code, name, or path				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0635	Support position search by title, code, or organizational unit				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0636	Provide DirectorySyncInterface for implementing custom sync adapters				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0637	Implement LDAP/AD sync adapter with configurable mapping				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0638	Support sync field mapping (LDAP attribute → OrgStructure field)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0639	Support sync filters to include/exclude specific OUs or users				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0640	Support dry-run mode for sync operations (preview changes without applying)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0641	Log all sync operations with timestamps, changes, and errors				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0642	Support incremental sync (only changed records since last sync)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0643	Support full sync (rebuild entire structure from directory)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0644	Handle sync conflicts with configurable resolution strategies				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0645	Support scheduled sync via Laravel scheduler integration				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0646	Provide sync status dashboard (last sync time, records synced, errors)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0647	Support manual sync trigger via API or command				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0648	Validate organizational structure integrity after sync				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0649	Support organizational unit metadata (cost center, location, manager email)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0650	Support position metadata (job description, requirements, reports to)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0651	Provide RESTful API endpoints for organizational structure CRUD operations				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0652	Provide RESTful API endpoints for position management				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0653	Provide RESTful API endpoints for assignment operations				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0654	Provide RESTful API endpoints for reporting relationship queries				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0655	Support bulk import of organizational structure from CSV/Excel				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0656	Support bulk export of organizational structure to CSV/Excel				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0657	Validate hierarchical consistency before bulk import				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0658	Support organizational restructuring with effective date				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0659	Track organizational changes history (what changed, when, by whom)				
+`Nexus\OrgStructure`	Functional Requirement	FUN-ORG-0660	Support organizational snapshots at point in time				
+`Nexus\OrgStructure`	Performance Requirement	PERF-ORG-0661	Hierarchical queries (ancestors/descendants) must execute in < 100ms for 10,000 units				
+`Nexus\OrgStructure`	Performance Requirement	PERF-ORG-0662	Org chart generation must execute in < 500ms for 1,000 units				
+`Nexus\OrgStructure`	Performance Requirement	PERF-ORG-0663	Directory sync must process 10,000 users in < 5 minutes				
+`Nexus\OrgStructure`	Performance Requirement	PERF-ORG-0664	Position assignment queries must execute in < 50ms				
+`Nexus\OrgStructure`	Performance Requirement	PERF-ORG-0665	Reporting relationship queries must use indexed queries for large datasets				
+`Nexus\OrgStructure`	Security Requirement	SEC-ORG-0666	Tenant isolation must be enforced at repository level for all queries				
+`Nexus\OrgStructure`	Security Requirement	SEC-ORG-0667	Directory sync credentials must be encrypted at rest				
+`Nexus\OrgStructure`	Security Requirement	SEC-ORG-0668	Audit all organizational structure changes (create, update, delete)				
+`Nexus\OrgStructure`	Security Requirement	SEC-ORG-0669	Implement role-based access control for organizational management operations				
+`Nexus\OrgStructure`	Security Requirement	SEC-ORG-0670	Validate manager assignment permissions (can only assign valid managers)				
+`Nexus\OrgStructure`	Security Requirement	SEC-ORG-0671	Prevent unauthorized access to organizational hierarchy data				
+`Nexus\OrgStructure`	Maintainability Requirement	MAINT-ORG-0672	Framework-agnostic core (zero Laravel dependencies in packages/OrgStructure/src/)				
+`Nexus\OrgStructure`	Maintainability Requirement	MAINT-ORG-0673	Clear separation of concerns (org units, positions, assignments, sync are independent)				
+`Nexus\OrgStructure`	Maintainability Requirement	MAINT-ORG-0674	Comprehensive test coverage (> 80% code coverage, > 90% for core logic)				
+`Nexus\OrgStructure`	Maintainability Requirement	MAINT-ORG-0675	Support multiple database backends (MySQL, PostgreSQL, SQLite)				
+`Nexus\OrgStructure`	Maintainability Requirement	MAINT-ORG-0676	Provide comprehensive documentation with usage examples				
+`Nexus\OrgStructure`	User Story	USE-ORG-0677	As a novice developer, I want to install the package and create basic org structure in 10 minutes				
+`Nexus\OrgStructure`	User Story	USE-ORG-0678	As a developer, I want simple fluent API: $manager->createOrgUnit($data)				
+`Nexus\OrgStructure`	User Story	USE-ORG-0679	As a developer, I want to query org hierarchy: $unit->ancestors(), $unit->descendants()				
+`Nexus\OrgStructure`	User Story	USE-ORG-0680	As a developer, I want to assign employees: $manager->assignPosition($employee, $position, $effectiveDate)				
+`Nexus\OrgStructure`	User Story	USE-ORG-0681	As a developer, I want to query employees: $employee->currentPosition(), $employee->assignmentHistory()				
+`Nexus\OrgStructure`	User Story	USE-ORG-0682	As a developer, I want reporting queries: $manager->directReports(), $manager->allReports()				
+`Nexus\OrgStructure`	User Story	USE-ORG-0683	As an HR admin, I want to move departments to different parent units with drag-and-drop UI				
+`Nexus\OrgStructure`	User Story	USE-ORG-0684	As an HR admin, I want to bulk import organizational structure from Excel template				
+`Nexus\OrgStructure`	User Story	USE-ORG-0685	As an HR admin, I want to view organizational chart with expandable/collapsible nodes				
+`Nexus\OrgStructure`	User Story	USE-ORG-0686	As an HR admin, I want to track position vacancies and generate vacancy reports				
+`Nexus\OrgStructure`	User Story	USE-ORG-0687	As an HR admin, I want to plan organizational restructuring with effective date in future				
+`Nexus\OrgStructure`	User Story	USE-ORG-0688	As an HR admin, I want to view historical organizational structure at specific date				
+`Nexus\OrgStructure`	User Story	USE-ORG-0689	As an IT admin, I want to configure LDAP sync with attribute mapping via config file				
+`Nexus\OrgStructure`	User Story	USE-ORG-0690	As an IT admin, I want to run dry-run sync to preview changes before applying				
+`Nexus\OrgStructure`	User Story	USE-ORG-0691	As an IT admin, I want to schedule automatic daily sync at 2 AM				
+`Nexus\OrgStructure`	User Story	USE-ORG-0692	As an IT admin, I want to review sync logs and resolve conflicts				
+`Nexus\OrgStructure`	User Story	USE-ORG-0693	As a manager, I want to view my team structure including indirect reports				
+`Nexus\OrgStructure`	User Story	USE-ORG-0694	As a manager, I want to see who reports to me and their contact information				
+`Nexus\OrgStructure`	User Story	USE-ORG-0695	As an employee, I want to view my current position and organizational unit				
+`Nexus\OrgStructure`	User Story	USE-ORG-0696	As an employee, I want to view my manager and their contact information				
+`Nexus\OrgStructure`	User Story	USE-ORG-0697	As an employee, I want to view organizational directory with search functionality				
+`Nexus\OrgStructure`	User Story	USE-ORG-0698	As an analyst, I want to generate headcount reports by department, location, or position type				
+`Nexus\OrgStructure`	User Story	USE-ORG-0699	As an analyst, I want to export organizational data to Excel for external analysis				
+`Nexus\OrgStructure`	User Story	USE-ORG-0700	As a small business owner, I want to set up simple 3-level hierarchy (company → department → team) in minutes				
+`Nexus\OrgStructure`	User Story	USE-ORG-0701	As an enterprise HR manager, I want to manage complex matrix organization with multiple reporting lines				
+`Nexus\OrgStructure`	User Story	USE-ORG-0702	As an enterprise IT admin, I want to integrate with multiple LDAP servers for different business units				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0703	Package MUST be framework-agnostic with no Laravel dependencies in core services				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0704	All data structures defined via interfaces (EmployeeInterface, ContractInterface, LeaveInterface, AttendanceInterface, PerformanceReviewInterface)				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0705	All persistence operations via repository interfaces				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0706	Business logic in service layer (EmployeeManager, LeaveManager, AttendanceManager, PerformanceManager, DisciplinaryManager, TrainingManager)				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0707	All database migrations in application layer (apps/Atomy)				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0708	All Eloquent models in application layer				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0709	Repository implementations in application layer				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0710	IoC container bindings in application service provider				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0711	Package composer.json MUST NOT depend on laravel/framework				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0712	Support integration with Nexus\Backoffice via OrganizationServiceContract				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0713	Support integration with Nexus\Workflow for leave approvals and disciplinary workflows				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0714	Support integration with Nexus\AuditLogger for comprehensive change tracking				
+`Nexus\Hrm`	Architechtural Requirement	ARC-HRM-0715	Provide event-driven architecture for HR lifecycle events				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0716	Employee probation period completion triggers permanent status promotion				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0717	Employee cannot have overlapping employment contracts				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0718	Contract end date must be after start date				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0719	Leave entitlement calculation based on length of service and contract type				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0720	Leave balance cannot be negative unless carry-forward policy allows				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0721	Leave requests require approval from direct manager or authorized delegate				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0722	Emergency leave can be applied retroactively within 48 hours				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0723	Medical leave requires supporting documentation for more than 2 consecutive days				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0724	Annual leave requests require minimum 3 days advance notice (configurable)				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0725	Clock-in must occur before clock-out for same day				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0726	Overtime calculation applies only after minimum threshold hours (e.g., 8 hours per day)				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0727	Break time deducted from total working hours based on company policy				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0728	Late clock-in triggers automatic deduction or warning based on policy				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0729	Performance review cycles must be defined per company with start/end dates				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0730	Self-assessment must be completed before manager review				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0731	360-degree feedback requires minimum 3 peer reviewers				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0732	Performance ratings must follow configured rating scale (e.g., 1-5, A-E)				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0733	Disciplinary actions must follow progressive discipline policy				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0734	Employee must be notified in writing of disciplinary action within 24 hours				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0735	Employee has right to respond to disciplinary charge within configured timeframe				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0736	Investigation must be completed before final disciplinary decision				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0737	Training enrollment requires manager approval for external/paid training				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0738	Training completion must be recorded within 7 days of course end				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0739	Mandatory training compliance tracked per employee and department				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0740	Certification expiry triggers automatic renewal reminder 30/60/90 days before				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0741	Employee cannot be terminated while under disciplinary investigation				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0742	Resignation requires minimum notice period based on contract terms				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0743	Final settlement calculation includes unused leave encashment				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0744	Employee personal information changes require document verification				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0745	Salary information visible only to HR, manager, and employee themselves				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0746	All HR state changes must be ACID-compliant transactions				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0747	Provide EmployeeManager as main orchestration service				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0748	Support employee CRUD operations with personal information				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0749	Track employee demographics (date of birth, gender, nationality, marital status)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0750	Track employee contact information (personal email, phone, address)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0751	Track emergency contacts with relationship and contact details				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0752	Track employee dependents for benefits and tax purposes				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0753	Track employee identification documents (passport, IC, work permit)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0754	Track employee educational qualifications with institution and date				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0755	Track employee professional certifications with expiry tracking				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0756	Track employee work experience history before joining				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0757	Support employee photo upload with file size and format validation				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0758	Support employment contract creation with start date, end date, probation period				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0759	Support contract types (permanent, fixed-term, probation, internship, consultant)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0760	Track contract position, department, reporting manager				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0761	Track contract work schedule (full-time, part-time, shift)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0762	Support contract renewal with version tracking				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0763	Support contract amendment for position/salary changes				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0764	Automatic contract expiry notification to HR and manager				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0765	Implement employee lifecycle states (applicant → hired → active → probation → confirmed → notice → resigned → terminated)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0766	Track lifecycle state transitions with effective dates and reasons				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0767	Automatic probation completion check based on contract probation period				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0768	Support probation extension with reason and approval				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0769	Support employment confirmation with confirmation date				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0770	Track position change history with effective dates				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0771	Track department transfer history with reasons				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0772	Track promotion history with old and new positions				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0773	Track demotion history with reasons and approvals				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0774	Track salary change history (amount, effective date, reason)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0775	Integrate with Nexus\Backoffice for organizational hierarchy via OrganizationServiceContract				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0776	Query employee manager from organizational structure				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0777	Query employee direct reports from organizational structure				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0778	Query employee department and office from organizational structure				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0779	Support document management with categories (contract, ID, certificate, form)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0780	Support document version control for updated documents				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0781	Track document expiry dates with automatic reminders				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0782	Secure document storage with access control				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0783	Document audit trail (who uploaded, when, who viewed)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0784	Define leave types with entitlement rules (annual, sick, unpaid, maternity, paternity, compassionate)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0785	Configure leave accrual rules (monthly, yearly, upon confirmation)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0786	Configure leave carry-forward rules with maximum carry-forward days				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0787	Configure leave proration for mid-year joiners				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0788	Calculate leave entitlement based on service length and contract type				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0789	Track leave balances (entitled, used, pending, remaining)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0790	Support leave request creation with date range and reason				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0791	Support half-day and hourly leave requests				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0792	Validate leave balance before submission				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0793	Integrate with Nexus\Workflow for multi-level leave approval				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0794	Support leave approval/rejection with comments				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0795	Support leave cancellation before start date				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0796	Support retroactive leave application for emergency situations				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0797	Automatic leave deduction upon approval				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0798	Leave calendar view showing team availability				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0799	Leave conflict detection (minimum staff coverage)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0800	Annual leave carry-forward processing at year-end				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0801	Leave encashment calculation for unused leave				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0802	Medical leave tracking with medical certificate upload				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0803	Support attendance clock-in/clock-out recording				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0804	Track attendance location via GPS coordinates (for mobile clock-in)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0805	Support multiple clock-in/out for shift workers				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0806	Track break start and end times				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0807	Calculate total working hours per day				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0808	Calculate overtime hours based on configured threshold				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0809	Support overtime types (regular, weekend, public holiday) with different rates				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0810	Track late arrival with duration and reason				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0811	Track early departure with duration and reason				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0812	Support attendance regularization for missed clock-in/out				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0813	Attendance approval workflow for regularization requests				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0814	Generate monthly attendance summaries per employee				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0815	Generate departmental attendance reports				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0816	Track attendance anomalies (multiple clock-ins, no clock-out)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0817	Support shift scheduling integration				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0818	Support public holiday calendar configuration				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0819	Automatic absent marking for no-show without leave				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0820	Attendance dashboard showing real-time present/absent/on-leave status				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0821	Define performance review cycles (annual, semi-annual, quarterly)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0822	Define review templates with competencies and KPIs				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0823	Support rating scales (numeric 1-5, letter A-E, custom labels)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0824	Support goal setting and tracking during review cycle				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0825	Support self-assessment submission by employee				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0826	Support manager assessment with rating and comments				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0827	Support 360-degree feedback from peers, subordinates, and manager				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0828	Support calibration sessions for normalizing ratings across departments				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0829	Generate performance distribution reports (bell curve analysis)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0830	Track performance improvement plans (PIP) with milestones				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0831	Generate performance trend reports for career development				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0832	Link performance ratings to salary increment recommendations				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0833	Link performance ratings to promotion eligibility				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0834	Performance review notification workflow (reminder, overdue alerts)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0835	Performance review approval workflow with HR validation				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0836	Historical performance review access for employees and managers				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0837	Support disciplinary case creation with case type and severity				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0838	Define disciplinary case types (misconduct, policy violation, attendance, performance)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0839	Define severity levels (minor, major, severe, gross misconduct)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0840	Track case lifecycle (reported → investigation → hearing → decision → closed)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0841	Record incident details with date, time, location, witnesses				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0842	Assign investigator to case with timeline				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0843	Record investigation findings and evidence				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0844	Issue show-cause notice to employee				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0845	Record employee response to charges				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0846	Conduct disciplinary hearing with panel members				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0847	Record disciplinary actions (verbal warning, written warning, suspension, termination)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0848	Track warning expiry dates (e.g., warnings valid for 12 months)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0849	Progressive discipline tracking (escalation from verbal to written to termination)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0850	Generate disciplinary letters and notices				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0851	Support appeal process for disciplinary decisions				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0852	Disciplinary case confidentiality with restricted access				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0853	Disciplinary history report for HR compliance				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0854	Integration with Nexus\Workflow for disciplinary approval workflow				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0855	Define training programs with objectives and target audience				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0856	Define training categories (technical, soft skills, compliance, leadership)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0857	Define training types (internal, external, online, workshop, seminar)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0858	Track training providers and instructors				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0859	Schedule training sessions with date, time, location, capacity				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0860	Support training enrollment with manager approval workflow				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0861	Track training enrollment status (pending, approved, rejected, enrolled, cancelled)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0862	Automatic enrollment confirmation email to participants				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0863	Track training attendance with clock-in/out				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0864	Record training completion with completion date				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0865	Record training feedback and evaluation scores				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0866	Issue training certificates upon completion				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0867	Track certification validity and expiry dates				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0868	Automatic certification renewal reminders				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0869	Track mandatory training compliance per employee				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0870	Generate training reports (completion rates, costs, effectiveness)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0871	Training needs analysis reports by department				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0872	Training history per employee for career development				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0873	Training budget tracking and cost allocation				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0874	Training ROI calculation and effectiveness metrics				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0875	Support resignation processing with resignation date and reason				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0876	Calculate notice period based on contract terms				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0877	Track last working day and exit date				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0878	Support termination processing with termination type (voluntary, involuntary, retirement)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0879	Exit clearance checklist with multiple departments				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0880	Exit interview scheduling and recording				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0881	Calculate final settlement (unpaid salary, leave encashment, deductions)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0882	Generate final settlement statement				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0883	Generate employment verification letters				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0884	Generate service certificates				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0885	Track re-hire eligibility status				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0886	Employee self-service portal for viewing personal information				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0887	Employee self-service for leave requests and balance inquiry				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0888	Employee self-service for viewing attendance records				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0889	Employee self-service for viewing payslips (integration with Nexus\Payroll)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0890	Employee self-service for updating contact information				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0891	Employee self-service for document download				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0892	Manager dashboard showing team structure and direct reports				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0893	Manager dashboard showing pending leave approvals				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0894	Manager dashboard showing team attendance summary				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0895	Manager dashboard showing team performance review status				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0896	HR dashboard showing company-wide headcount and demographics				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0897	HR dashboard showing leave utilization and trends				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0898	HR dashboard showing attendance compliance rates				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0899	HR dashboard showing upcoming contract expirations				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0900	HR dashboard showing probation completion and confirmation due dates				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0901	HR dashboard showing training compliance and certification expirations				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0902	Generate employee directory with search and filters				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0903	Generate headcount reports by department, position, employment type				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0904	Generate turnover analysis reports with reasons				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0905	Generate demographics reports (age, gender, tenure distribution)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0906	Generate absence reports with patterns and trends				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0907	Generate overtime reports with cost implications				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0908	Generate performance rating distribution reports				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0909	Generate training investment reports				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0910	Export all reports to Excel, PDF, CSV formats				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0911	Provide RESTful API endpoints for all CRUD operations				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0912	Provide GraphQL API for complex employee queries				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0913	Support webhooks for HR event notifications				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0914	Support bulk employee import from CSV/Excel				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0915	Support bulk leave balance adjustment				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0916	Support data anonymization for GDPR compliance				
+`Nexus\Hrm`	Performance Requirement	PERF-HRM-0917	Employee directory search with filters < 200ms for 100K records				
+`Nexus\Hrm`	Performance Requirement	PERF-HRM-0918	Leave balance calculation with accrual rules < 50ms per employee				
+`Nexus\Hrm`	Performance Requirement	PERF-HRM-0919	Monthly attendance summary generation < 2 seconds for 1000 employees				
+`Nexus\Hrm`	Performance Requirement	PERF-HRM-0920	Performance review aggregation < 1 second for department of 200 employees				
+`Nexus\Hrm`	Performance Requirement	PERF-HRM-0921	Real-time leave balance check < 20ms for approval validation				
+`Nexus\Hrm`	Performance Requirement	PERF-HRM-0922	Dashboard metrics calculation < 500ms for company of 10K employees				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0923	Implement field-level encryption for sensitive data (IC number, passport, salary)				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0924	Enforce data masking for non-authorized viewers (show only last 4 digits of IC)				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0925	Implement row-level security (employees can only view own data unless authorized)				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0926	Enforce manager-subordinate data access boundaries				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0927	Require additional authentication for sensitive operations (salary change, termination)				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0928	Implement document access control with role-based permissions				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0929	Track document access audit trail (who viewed, when, from where)				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0930	Support data retention policies with automated data purging				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0931	Support right to be forgotten (GDPR Article 17)				
+`Nexus\Hrm`	Security Requirement	SEC-HRM-0932	Implement secure file upload with virus scanning				
+`Nexus\Hrm`	Reliability Requirement	REL-HRM-0933	All leave balance transactions must be ACID-compliant				
+`Nexus\Hrm`	Reliability Requirement	REL-HRM-0934	Attendance clock-in/out must handle concurrent requests without data loss				
+`Nexus\Hrm`	Reliability Requirement	REL-HRM-0935	Leave accrual batch job must be idempotent (safe to re-run)				
+`Nexus\Hrm`	Reliability Requirement	REL-HRM-0936	Contract expiry notifications must use reliable queue system				
+`Nexus\Hrm`	Reliability Requirement	REL-HRM-0937	Performance review workflow must handle delegation during employee absence				
+`Nexus\Hrm`	Reliability Requirement	REL-HRM-0938	System must recover gracefully from third-party integration failures				
+`Nexus\Hrm`	Maintainability Requirement	MAINT-HRM-0939	Framework-agnostic core with zero Laravel dependencies in packages/Hrm/src/				
+`Nexus\Hrm`	Maintainability Requirement	MAINT-HRM-0940	Clear separation between business logic (services) and persistence (repositories)				
+`Nexus\Hrm`	Maintainability Requirement	MAINT-HRM-0941	Comprehensive test coverage (>80% code coverage, >90% for critical paths)				
+`Nexus\Hrm`	Maintainability Requirement	MAINT-HRM-0942	Support multiple database backends (MySQL, PostgreSQL)				
+`Nexus\Hrm`	Maintainability Requirement	MAINT-HRM-0943	Provide comprehensive API documentation with examples				
+`Nexus\Hrm`	Maintainability Requirement	MAINT-HRM-0944	Support plugin architecture for custom leave policies				
+`Nexus\Hrm`	Maintainability Requirement	MAINT-HRM-0945	Support plugin architecture for custom attendance rules				
+`Nexus\Hrm`	User Story	USE-HRM-0946	As an HR admin, I want to onboard new employee with complete profile in one workflow				
+`Nexus\Hrm`	User Story	USE-HRM-0947	As an HR admin, I want to track employment contracts with automatic expiry alerts				
+`Nexus\Hrm`	User Story	USE-HRM-0948	As an HR admin, I want to configure leave policies per employment type				
+`Nexus\Hrm`	User Story	USE-HRM-0949	As an HR admin, I want to process annual leave carry-forward at year-end automatically				
+`Nexus\Hrm`	User Story	USE-HRM-0950	As an employee, I want to apply for leave and see my balance instantly				
+`Nexus\Hrm`	User Story	USE-HRM-0951	As an employee, I want to view my leave history and upcoming leave				
+`Nexus\Hrm`	User Story	USE-HRM-0952	As an employee, I want to clock in/out using mobile app with GPS verification				
+`Nexus\Hrm`	User Story	USE-HRM-0953	As an employee, I want to view my monthly attendance summary and overtime hours				
+`Nexus\Hrm`	User Story	USE-HRM-0954	As an employee, I want to request attendance regularization for missed clock-in				
+`Nexus\Hrm`	User Story	USE-HRM-0955	As a manager, I want to approve/reject leave requests from my team				
+`Nexus\Hrm`	User Story	USE-HRM-0956	As a manager, I want to view team leave calendar to ensure coverage				
+`Nexus\Hrm`	User Story	USE-HRM-0957	As a manager, I want to view real-time attendance of my team				
+`Nexus\Hrm`	User Story	USE-HRM-0958	As a manager, I want to conduct performance reviews with guided workflow				
+`Nexus\Hrm`	User Story	USE-HRM-0959	As a manager, I want to track probation completion for my team members				
+`Nexus\Hrm`	User Story	USE-HRM-0960	As a manager, I want to nominate team members for training programs				
+`Nexus\Hrm`	User Story	USE-HRM-0961	As an HR manager, I want to configure performance review cycles company-wide				
+`Nexus\Hrm`	User Story	USE-HRM-0962	As an HR manager, I want to track performance review completion across departments				
+`Nexus\Hrm`	User Story	USE-HRM-0963	As an HR manager, I want to analyze performance rating distribution for calibration				
+`Nexus\Hrm`	User Story	USE-HRM-0964	As an HR manager, I want to initiate disciplinary cases with investigation workflow				
+`Nexus\Hrm`	User Story	USE-HRM-0965	As an HR manager, I want to track progressive discipline for compliance				
+`Nexus\Hrm`	User Story	USE-HRM-0966	As an HR manager, I want to schedule training programs with enrollment management				
+`Nexus\Hrm`	User Story	USE-HRM-0967	As an HR manager, I want to track training completion and certification expiry				
+`Nexus\Hrm`	User Story	USE-HRM-0968	As an HR manager, I want to track mandatory training compliance				
+`Nexus\Hrm`	User Story	USE-HRM-0969	As an HR manager, I want to process employee resignations with exit clearance				
+`Nexus\Hrm`	User Story	USE-HRM-0970	As an HR manager, I want to calculate final settlement for terminated employees				
+`Nexus\Hrm`	User Story	USE-HRM-0971	As an HR manager, I want to generate employment verification letters automatically				
+`Nexus\Hrm`	User Story	USE-HRM-0972	As an HR director, I want dashboard showing company-wide HR metrics				
+`Nexus\Hrm`	User Story	USE-HRM-0973	As an HR director, I want turnover analysis with retention insights				
+`Nexus\Hrm`	User Story	USE-HRM-0974	As an HR director, I want workforce planning reports (headcount trends, demographics)				
+`Nexus\Hrm`	User Story	USE-HRM-0975	As an HR director, I want to analyze leave utilization patterns by department				
+`Nexus\Hrm`	User Story	USE-HRM-0976	As an HR director, I want to track overtime costs and trends				
+`Nexus\Hrm`	User Story	USE-HRM-0977	As an HR director, I want to measure training ROI and effectiveness				
+`Nexus\Hrm`	User Story	USE-HRM-0978	As a developer, I want to integrate HRM with payroll for salary processing				
+`Nexus\Hrm`	User Story	USE-HRM-0979	As a developer, I want to integrate HRM with workflow for approval processes				
+`Nexus\Hrm`	User Story	USE-HRM-0980	As a developer, I want to integrate HRM with organizational structure automatically				
+`Nexus\Hrm`	User Story	USE-HRM-0981	As a system admin, I want to configure leave policies without code changes				
+`Nexus\Hrm`	User Story	USE-HRM-0982	As a system admin, I want to configure attendance rules and overtime calculations				
+`Nexus\Hrm`	User Story	USE-HRM-0983	As a system admin, I want to configure performance review templates and rating scales				
+`Nexus\Hrm`	User Story	USE-HRM-0984	As a system admin, I want to configure disciplinary action types and severity levels				
+`Nexus\Hrm`	User Story	USE-HRM-0985	As a compliance officer, I want to audit all employee data changes				
+`Nexus\Hrm`	User Story	USE-HRM-0986	As a compliance officer, I want to ensure data retention policies are enforced				
+`Nexus\Hrm`	User Story	USE-HRM-0987	As a compliance officer, I want to generate compliance reports for labor authorities				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0988	Package MUST be framework-agnostic with no Laravel dependencies in core services				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0989	Package MUST be country-agnostic with no hardcoded statutory calculation logic				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0990	All statutory calculations MUST be performed via StatutoryCalculatorInterface contract				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0991	All data structures defined via interfaces (PayRunInterface, PaySlipInterface, PayrollComponentInterface)				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0992	All persistence operations via repository interfaces				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0993	Business logic in service layer (PayrollManager, GrossPayCalculator, NetPayCalculator)				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0994	All database migrations in application layer (apps/Atomy)				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0995	All Eloquent models in application layer				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0996	Repository implementations in application layer				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0997	IoC container bindings in application service provider				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0998	Package composer.json MUST NOT depend on laravel/framework				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-0999	Support integration with Nexus\Hrm for employee data via EmployeeDataContract				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-1000	Support integration with Nexus\Accounting for journal posting via AccountingInterface				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-1001	Support integration with Nexus\AuditLogger for payroll change tracking				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-1002	Provide event-driven architecture for payroll lifecycle events				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-1003	StatutoryCalculatorInterface MUST define contract for all country-specific implementations				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-1004	StatutoryCalculatorInterface MUST accept PayloadInterface and return array of DeductionResultInterface				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-1005	Country-specific packages MUST be separate composer packages (e.g., payroll-mys-statutory, payroll-sgp-statutory)				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-1006	Application layer binds specific StatutoryCalculatorInterface implementation at runtime				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-1007	Support multi-country deployment by binding different calculators per tenant				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1008	Pay run must be locked before payslips can be generated				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1009	Locked pay runs cannot be edited or deleted				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1010	Only locked pay runs can post GL journal entries				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1011	Pay run dates cannot overlap for same payroll group				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1012	Employee must have active employment during pay period to be included				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1013	Payroll components require effective date range validation				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1014	Recurring components must have start date; end date is optional				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1015	Variable components must be linked to specific pay run				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1016	Gross pay cannot be negative				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1017	Net pay can be negative if deductions exceed gross (e.g., final settlement)				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1018	Statutory deductions calculated via injected StatutoryCalculatorInterface only				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1019	YTD calculations must include all locked pay runs in fiscal year				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1020	Payslip data must be immutable once generated				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1021	Payslip regeneration creates new version with audit trail				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1022	Pro-rata salary calculation for mid-month joiners/leavers				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1023	Unpaid leave deductions calculated based on daily rate				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1024	Overtime payment based on hourly rate with configurable multipliers				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1025	Additional remuneration (bonus, commission) processed separately from regular pay				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1026	Retroactive pay adjustments require new pay run or amendment				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1027	Final settlement includes all outstanding payments and deductions				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1028	Payroll processing requires appropriate authorization permissions				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1029	All payroll state changes must be ACID-compliant transactions				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1030	Payroll data retention must comply with statutory requirements (minimum 7 years)				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1031	Employee can only access own payslips unless authorized				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1032	Payroll reports visible only to authorized HR and finance personnel				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-1033	Payslip delivery method configurable (email, portal, print)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1034	Provide PayrollManager as main orchestration service				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1035	Support payroll group definition with frequency and calendar settings				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1036	Support payroll frequencies (monthly, semi-monthly, bi-weekly, weekly, ad-hoc)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1037	Support payroll calendars with pay period start/end and payment dates				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1038	Support public holiday calendar integration for working days calculation				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1039	Assign employees to payroll groups with effective dates				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1040	Support multiple payroll groups per company (e.g., monthly staff, weekly workers)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1041	Define payroll component types (earnings, deductions, employer contributions, reimbursements)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1042	Define payroll component categories (basic salary, allowance, overtime, bonus, statutory, loan, advance)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1043	Support calculation methods (fixed amount, percentage of basic, percentage of gross, formula-based)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1044	Support formula-based components with arithmetic expressions				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1045	Support component dependency (e.g., allowance calculated after basic)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1046	Support component rounding rules (round up, down, nearest)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1047	Support taxable/non-taxable flag for components				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1048	Support statutory contribution flag for components				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1049	Support employer contribution tracking separate from employee deductions				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1050	Create recurring payroll components with start/end dates per employee				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1051	Support recurring component types (monthly allowance, fixed deduction, loan installment)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1052	Automatic activation/deactivation of recurring components based on dates				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1053	Track loan balances with automatic deduction and repayment schedule				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1054	Track advance payments with automatic recovery schedule				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1055	Support loan early settlement with interest adjustment				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1056	Create variable payroll inputs for specific pay run (overtime, claims, bonuses)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1057	Support bulk import of variable inputs from CSV/Excel				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1058	Validate variable inputs against employee active status				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1059	Support overtime input with hours and overtime type				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1060	Support claims input with amount and claim type				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1061	Support commission input with amount and commission type				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1062	Support bonus input with amount and bonus type				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1063	Support unpaid leave deduction based on leave days from Nexus\Hrm				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1064	Create pay run for specific payroll group and period				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1065	Automatic pay run creation based on payroll calendar schedule				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1066	Support pay run types (regular, bonus, final settlement, off-cycle)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1067	Support pay run status (draft, calculating, calculated, locked, posted, cancelled)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1068	Validate no overlapping pay runs for same group before creation				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1069	Calculate gross pay for all employees in pay run				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1070	GrossPayCalculator aggregates basic salary + recurring components + variable inputs				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1071	Support pro-rata calculation for partial month employment				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1072	Calculate working days in period excluding weekends and public holidays				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1073	Calculate daily rate (monthly salary / working days)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1074	Calculate hourly rate (monthly salary / standard working hours)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1075	Apply overtime multipliers (1.5x for weekday OT, 2.0x for weekend, 3.0x for holiday)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1076	Invoke StatutoryCalculatorInterface with PayloadInterface containing gross pay and employee data				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1077	Receive array of DeductionResultInterface from statutory calculator				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1078	Store statutory deductions with type, amount, and employee/employer split				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1079	PayloadInterface provides employee attributes (age, marital status, tax status, etc.)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1080	PayloadInterface provides gross earnings breakdown (basic, allowances, OT, bonuses)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1081	PayloadInterface provides YTD amounts for progressive calculations				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1082	DeductionResultInterface specifies deduction type identifier				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1083	DeductionResultInterface specifies employee amount and employer amount				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1084	DeductionResultInterface specifies calculation metadata for audit				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1085	Calculate net pay (gross - employee deductions + reimbursements)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1086	NetPayCalculator aggregates all deductions from multiple sources				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1087	Apply rounding rules to final net pay amount				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1088	Calculate total employer cost (gross + employer contributions)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1089	Calculate YTD totals for gross, deductions, net, and employer cost				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1090	Update cumulative YTD amounts upon pay run locking				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1091	Support YTD reset at fiscal year end				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1092	Store calculation audit trail (formulas, rates, amounts)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1093	Lock pay run to prevent further changes				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1094	Unlock pay run with authorization for corrections				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1095	Validate all calculations complete before locking				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1096	Store lock timestamp and user for audit				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1097	Generate payslips for all employees in locked pay run				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1098	Payslip contains employee details, pay period, earnings breakdown, deductions breakdown, net pay				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1099	Payslip contains YTD totals for all categories				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1100	Payslip contains employer contributions for transparency				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1101	Payslip includes company branding and footer text				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1102	Generate payslip PDF with configurable template				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1103	Support payslip template customization per company				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1104	Store payslip data with cryptographic hash for integrity verification				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1105	Payslip regeneration creates new version without deleting original				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1106	Distribute payslips via email with password-protected PDF				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1107	Distribute payslips via employee self-service portal				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1108	Track payslip delivery status (sent, opened, downloaded)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1109	Support payslip re-send on employee request				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1110	Generate GL journal entries from locked pay run				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1111	Map payroll components to GL accounts via configuration				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1112	Support multi-dimensional accounting (department, cost center, project)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1113	Journal entry includes salary expense, statutory liabilities, and payable				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1114	Post journal entries to Nexus\Accounting via AccountingInterface				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1115	Support journal entry reversal for pay run corrections				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1116	Generate payroll summary report by pay run				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1117	Generate departmental payroll cost analysis				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1118	Generate payroll register with all employee details				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1119	Generate statutory contribution summary by type				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1120	Generate bank transfer file in configurable format (CSV, NACHA, SEPA, GIRO)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1121	Validate bank account details before generating payment file				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1122	Support split payment (multiple bank accounts per employee)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1123	Track payment status (pending, sent to bank, cleared, failed)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1124	Generate payroll variance report comparing periods				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1125	Generate payroll audit report with all changes and approvals				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1126	Generate cost center allocation report				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1127	Generate headcount and payroll cost trends				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1128	Export all reports to Excel, PDF, CSV formats				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1129	Support retroactive salary changes with automatic recalculation				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1130	Calculate retroactive difference (arrears or recovery)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1131	Create adjustment pay run for retroactive payments				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1132	Recalculate statutory deductions on retroactive gross				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1133	Update YTD amounts for affected periods				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1134	Support one-time payments outside regular pay cycle				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1135	Support off-cycle pay runs for urgent payments				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1136	Process final settlement for terminated employees				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1137	Calculate pro-rata salary for partial month				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1138	Calculate leave encashment from Nexus\Hrm				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1139	Apply outstanding loan/advance recoveries in full				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1140	Apply notice period recovery if applicable				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1141	Generate final settlement statement				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1142	Support pay run comparison across periods				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1143	Highlight variances and flag anomalies				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1144	Support pre-payroll validation checks				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1145	Validate employee bank details completeness				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1146	Validate no duplicate employee in pay run				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1147	Validate component formulas for syntax errors				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1148	Generate validation report with issues and warnings				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1149	Support approval workflow for pay run locking via Nexus\Workflow				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1150	Support multi-level approval based on payroll amount thresholds				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1151	Track approval history with comments				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1152	Notify approvers via email/notification system				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1153	Support payroll simulation without creating actual pay run				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1154	Simulate what-if scenarios for salary changes				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1155	Compare simulation results with historical data				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1156	Support payroll data export for external systems				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1157	Support payroll data import from external systems				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1158	Provide RESTful API endpoints for all payroll operations				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1159	Provide webhook notifications for payroll events				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1160	Support batch processing for large payrolls (10,000+ employees)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1161	Support parallel calculation for performance optimization				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1162	Employee self-service portal to view payslips				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1163	Employee self-service to download payslip history				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1164	Employee self-service to view YTD summaries				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1165	Employee self-service to update bank account details				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1166	Employee self-service to view tax documents				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1167	Manager dashboard showing team payroll summary				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1168	Manager dashboard showing payroll cost trends for team				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1169	Payroll admin dashboard showing all active pay runs				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1170	Payroll admin dashboard showing pending approvals				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1171	Payroll admin dashboard showing payment status				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1172	Payroll admin dashboard showing statutory payment deadlines				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1173	Finance dashboard showing payroll liabilities and expenses				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1174	Finance dashboard showing cash flow projection for payroll				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1175	Support payroll year-end processing				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1176	Generate year-end tax forms via country-specific implementation				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1177	Generate year-end summary reports for all employees				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1178	Archive year-end data with compliance retention				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-1179	Support payroll calendar rollover to new fiscal year				
+`Nexus\Payroll`	Performance Requirement	PERF-PAY-1180	Pay run calculation for 1,000 employees < 2 minutes				
+`Nexus\Payroll`	Performance Requirement	PERF-PAY-1181	Pay run calculation for 10,000 employees < 15 minutes with parallel processing				
+`Nexus\Payroll`	Performance Requirement	PERF-PAY-1182	Statutory calculator invocation < 50ms per employee				
+`Nexus\Payroll`	Performance Requirement	PERF-PAY-1183	Payslip generation for 1,000 employees < 3 minutes				
+`Nexus\Payroll`	Performance Requirement	PERF-PAY-1184	Payslip PDF generation < 500ms per document				
+`Nexus\Payroll`	Performance Requirement	PERF-PAY-1185	Employee payslip retrieval from portal < 200ms				
+`Nexus\Payroll`	Performance Requirement	PERF-PAY-1186	Payroll report generation < 5 seconds for 1,000 employees				
+`Nexus\Payroll`	Performance Requirement	PERF-PAY-1187	Dashboard metrics calculation < 1 second for company of 10,000 employees				
+`Nexus\Payroll`	Performance Requirement	PERF-PAY-1188	Support concurrent pay run processing for different payroll groups				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1189	Encrypt all payroll data at rest using AES-256				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1190	Encrypt payslip PDFs with employee-specific password				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1191	Store payslip hash for integrity verification (prevent tampering)				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1192	Implement row-level security (employees can only view own payslips)				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1193	Enforce role-based access control for payroll operations				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1194	Require two-factor authentication for payroll locking and posting				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1195	Mask sensitive data in logs and audit trails				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1196	Implement secure token-based API authentication				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1197	Track IP address and user agent for all payroll access				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1198	Generate security alerts for suspicious payroll activities				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1199	Support data export encryption for external transfers				
+`Nexus\Payroll`	Security Requirement	SEC-PAY-1200	Comply with data protection regulations (GDPR, PDPA)				
+`Nexus\Payroll`	Reliability Requirement	REL-PAY-1201	All payroll transactions must be ACID-compliant				
+`Nexus\Payroll`	Reliability Requirement	REL-PAY-1202	Pay run calculation must be idempotent (safe to re-run)				
+`Nexus\Payroll`	Reliability Requirement	REL-PAY-1203	Support pay run calculation rollback on error				
+`Nexus\Payroll`	Reliability Requirement	REL-PAY-1204	Handle StatutoryCalculatorInterface failures gracefully with error messages				
+`Nexus\Payroll`	Reliability Requirement	REL-PAY-1205	Prevent duplicate payslip generation via database constraints				
+`Nexus\Payroll`	Reliability Requirement	REL-PAY-1206	Support automatic retry for transient failures in external integrations				
+`Nexus\Payroll`	Reliability Requirement	REL-PAY-1207	Maintain data consistency across Nexus\Hrm and Nexus\Accounting integrations				
+`Nexus\Payroll`	Reliability Requirement	REL-PAY-1208	Generate automated backups before pay run locking				
+`Nexus\Payroll`	Reliability Requirement	REL-PAY-1209	Support disaster recovery with point-in-time restore				
+`Nexus\Payroll`	Scalability Requirement	SCL-PAY-1210	Support horizontal scaling for calculation workloads				
+`Nexus\Payroll`	Scalability Requirement	SCL-PAY-1211	Support queue-based processing for large payrolls				
+`Nexus\Payroll`	Scalability Requirement	SCL-PAY-1212	Support multi-tenant deployment with tenant isolation				
+`Nexus\Payroll`	Scalability Requirement	SCL-PAY-1213	Support processing multiple payroll groups concurrently				
+`Nexus\Payroll`	Scalability Requirement	SCL-PAY-1214	Optimize database queries with proper indexing on pay_run_id, employee_id, period				
+`Nexus\Payroll`	Scalability Requirement	SCL-PAY-1215	Support caching for frequently accessed configuration data				
+`Nexus\Payroll`	Scalability Requirement	SCL-PAY-1216	Support partitioning of historical payroll data by year				
+`Nexus\Payroll`	Scalability Requirement	SCL-PAY-1217	Support archival of old payroll data to cold storage				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1218	Framework-agnostic core with zero Laravel dependencies in packages/Payroll/src/				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1219	Country-agnostic core with zero hardcoded statutory logic				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1220	Clear contract definitions in src/Contracts/ for extensibility				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1221	Comprehensive test coverage (>85% code coverage, >95% for calculation logic)				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1222	Support plugin architecture for custom payroll components				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1223	Support multiple database backends (MySQL, PostgreSQL)				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1224	Provide comprehensive API documentation with examples				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1225	Provide sample country-specific calculator implementation				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1226	Clear separation between business logic and persistence layers				
+`Nexus\Payroll`	Maintainability Requirement	MAINT-PAY-1227	Use value objects for domain concepts (PaySlip, PayrollComponent, DeductionResult)				
+`Nexus\Payroll`	Compliance Requirement	COMP-PAY-1228	Support statutory record retention (minimum 7 years)				
+`Nexus\Payroll`	Compliance Requirement	COMP-PAY-1229	Generate audit trail for all payroll modifications				
+`Nexus\Payroll`	Compliance Requirement	COMP-PAY-1230	Support regulatory reporting requirements via country-specific implementations				
+`Nexus\Payroll`	Compliance Requirement	COMP-PAY-1231	Generate submission files for statutory authorities (format defined by country package)				
+`Nexus\Payroll`	Compliance Requirement	COMP-PAY-1232	Track submission history and acknowledgments				
+`Nexus\Payroll`	Compliance Requirement	COMP-PAY-1233	Support data anonymization for analytics while preserving audit trail				
+`Nexus\Payroll`	Compliance Requirement	COMP-PAY-1234	Support right to access (employees can request payroll data)				
+`Nexus\Payroll`	Compliance Requirement	COMP-PAY-1235	Support right to rectification (correct erroneous payroll data)				
+`Nexus\Payroll`	Compliance Requirement	COMP-PAY-1236	Generate compliance reports for internal and external audits				
+`Nexus\Payroll`	User Story	USE-PAY-1237	As a payroll admin, I want to configure payroll groups and calendars without code changes				
+`Nexus\Payroll`	User Story	USE-PAY-1238	As a payroll admin, I want to create monthly pay runs automatically based on calendar				
+`Nexus\Payroll`	User Story	USE-PAY-1239	As a payroll admin, I want to import overtime and variable inputs from Excel				
+`Nexus\Payroll`	User Story	USE-PAY-1240	As a payroll admin, I want to run payroll calculation for all employees in one click				
+`Nexus\Payroll`	User Story	USE-PAY-1241	As a payroll admin, I want to review calculation results before locking				
+`Nexus\Payroll`	User Story	USE-PAY-1242	As a payroll admin, I want to lock pay run after validation				
+`Nexus\Payroll`	User Story	USE-PAY-1243	As a payroll admin, I want to generate and distribute payslips automatically				
+`Nexus\Payroll`	User Story	USE-PAY-1244	As a payroll admin, I want to generate bank transfer file for salary payment				
+`Nexus\Payroll`	User Story	USE-PAY-1245	As a payroll admin, I want to post payroll journal entries to accounting				
+`Nexus\Payroll`	User Story	USE-PAY-1246	As a payroll admin, I want to unlock pay run for corrections when needed				
+`Nexus\Payroll`	User Story	USE-PAY-1247	As a payroll admin, I want to process retroactive salary changes across multiple months				
+`Nexus\Payroll`	User Story	USE-PAY-1248	As a payroll admin, I want to process final settlement for resigned employees				
+`Nexus\Payroll`	User Story	USE-PAY-1249	As a payroll admin, I want to manage employee loans and track repayments				
+`Nexus\Payroll`	User Story	USE-PAY-1250	As a payroll admin, I want to manage salary advances and recovery schedules				
+`Nexus\Payroll`	User Story	USE-PAY-1251	As an HR manager, I want to configure recurring payroll components per employee				
+`Nexus\Payroll`	User Story	USE-PAY-1252	As an HR manager, I want to set up salary structures for different positions				
+`Nexus\Payroll`	User Story	USE-PAY-1253	As an HR manager, I want to track employer contributions separately from employee deductions				
+`Nexus\Payroll`	User Story	USE-PAY-1254	As an employee, I want to view my current payslip from self-service portal				
+`Nexus\Payroll`	User Story	USE-PAY-1255	As an employee, I want to download payslip history for loan applications				
+`Nexus\Payroll`	User Story	USE-PAY-1256	As an employee, I want to view YTD earnings and deductions				
+`Nexus\Payroll`	User Story	USE-PAY-1257	As an employee, I want to update my bank account details securely				
+`Nexus\Payroll`	User Story	USE-PAY-1258	As an employee, I want to receive email notification when payslip is ready				
+`Nexus\Payroll`	User Story	USE-PAY-1259	As a finance manager, I want to view payroll cost breakdown by department				
+`Nexus\Payroll`	User Story	USE-PAY-1260	As a finance manager, I want to track statutory liabilities for payment				
+`Nexus\Payroll`	User Story	USE-PAY-1261	As a finance manager, I want to reconcile payroll expenses with GL accounts				
+`Nexus\Payroll`	User Story	USE-PAY-1262	As a finance manager, I want cash flow projection for upcoming payroll				
+`Nexus\Payroll`	User Story	USE-PAY-1263	As a CFO, I want dashboard showing company-wide payroll metrics				
+`Nexus\Payroll`	User Story	USE-PAY-1264	As a CFO, I want payroll cost trend analysis over time				
+`Nexus\Payroll`	User Story	USE-PAY-1265	As a CFO, I want average salary and headcount reports				
+`Nexus\Payroll`	User Story	USE-PAY-1266	As a CFO, I want payroll variance analysis comparing periods				
+`Nexus\Payroll`	User Story	USE-PAY-1267	As a department manager, I want to view my team's payroll summary (if authorized)				
+`Nexus\Payroll`	User Story	USE-PAY-1268	As a department manager, I want to track payroll costs against budget				
+`Nexus\Payroll`	User Story	USE-PAY-1269	As a compliance officer, I want to audit all payroll changes and approvals				
+`Nexus\Payroll`	User Story	USE-PAY-1270	As a compliance officer, I want to generate statutory submission files				
+`Nexus\Payroll`	User Story	USE-PAY-1271	As a compliance officer, I want to track statutory payment deadlines				
+`Nexus\Payroll`	User Story	USE-PAY-1272	As a compliance officer, I want to verify payroll data retention compliance				
+`Nexus\Payroll`	User Story	USE-PAY-1273	As a developer, I want to implement country-specific StatutoryCalculatorInterface				
+`Nexus\Payroll`	User Story	USE-PAY-1274	As a developer, I want to receive PayloadInterface with all required employee data				
+`Nexus\Payroll`	User Story	USE-PAY-1275	As a developer, I want to return DeductionResultInterface array from my calculator				
+`Nexus\Payroll`	User Story	USE-PAY-1276	As a developer, I want to bind my calculator implementation in application service provider				
+`Nexus\Payroll`	User Story	USE-PAY-1277	As a developer, I want to test my calculator with mock PayloadInterface				
+`Nexus\Payroll`	User Story	USE-PAY-1278	As a developer, I want to integrate payroll with HRM for employee data				
+`Nexus\Payroll`	User Story	USE-PAY-1279	As a developer, I want to integrate payroll with accounting for GL posting				
+`Nexus\Payroll`	User Story	USE-PAY-1280	As a developer, I want to integrate payroll with workflow for approval processes				
+`Nexus\Payroll`	User Story	USE-PAY-1281	As a system admin, I want to configure payroll component formulas without code changes				
+`Nexus\Payroll`	User Story	USE-PAY-1282	As a system admin, I want to configure GL account mapping for payroll components				
+`Nexus\Payroll`	User Story	USE-PAY-1283	As a system admin, I want to configure payroll approval thresholds and workflows				
+`Nexus\Payroll`	User Story	USE-PAY-1284	As a system admin, I want to configure bank file format for salary transfers				
+`Nexus\Payroll`	User Story	USE-PAY-1285	As a system admin, I want to set up multi-country payroll with different calculators per country				
+`Nexus\Payroll`	User Story	USE-PAY-1286	As an auditor, I want to review payroll calculation audit trails				
+`Nexus\Payroll`	User Story	USE-PAY-1287	As an auditor, I want to verify payslip integrity using cryptographic hashes				
+`Nexus\Payroll`	User Story	USE-PAY-1288	As an auditor, I want to export complete payroll history for specific period
