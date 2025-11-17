@@ -20,8 +20,7 @@ return new class extends Migration
             $table->timestamp('expires_at')->nullable()->index();
             $table->text('refresh_token')->nullable(); // Encrypted
             $table->boolean('is_active')->default(true)->index();
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamps();
 
             // Ensure unique service per tenant
             $table->unique(['service_name', 'tenant_id']);

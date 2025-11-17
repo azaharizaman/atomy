@@ -37,12 +37,7 @@ final readonly class TwilioSmsAdapter implements SmsServiceConnectorInterface
         //
         // return $twilioMessage->sid;
 
-        // Placeholder for demonstration
-        \Log::info("TwilioSmsAdapter: Sending SMS to {$phoneNumber}", [
-            'message' => substr($message, 0, 50),
-            'from' => $this->fromNumber,
-        ]);
-
+        // Placeholder for demonstration - returns mock message ID
         return 'SM' . bin2hex(random_bytes(16)); // Mock message ID
     }
 

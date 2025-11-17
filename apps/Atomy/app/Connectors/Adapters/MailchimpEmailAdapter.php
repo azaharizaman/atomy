@@ -44,11 +44,6 @@ final readonly class MailchimpEmailAdapter implements EmailServiceConnectorInter
         // return $response[0]['status'] === 'sent';
 
         // Placeholder for demonstration
-        \Log::info("MailchimpEmailAdapter: Sending email to {$recipient}", [
-            'subject' => $subject,
-            'from' => $this->fromEmail,
-        ]);
-
         return true;
     }
 

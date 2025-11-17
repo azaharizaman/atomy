@@ -6,7 +6,8 @@ namespace Nexus\Connector\Services;
 
 use Nexus\Connector\Contracts\{CredentialProviderInterface, IntegrationLoggerInterface};
 use Nexus\Connector\Exceptions\{CircuitBreakerOpenException, ConnectionException};
-use Nexus\Connector\ValueObjects\{CircuitBreakerState, Endpoint, HttpMethod, IntegrationLog, IntegrationStatus};
+use Nexus\Connector\ValueObjects\{CircuitBreakerState, CircuitState, Endpoint, HttpMethod, IntegrationLog, IntegrationStatus};
+use Symfony\Component\Uid\Ulid;
 
 /**
  * Central manager for external API connectivity with resilience patterns.
@@ -155,7 +156,7 @@ final class ConnectorManager
         $circuit = $this->circuitStates[$serviceName];
 
         // Transition to half-open if timeout has passed
-        if ($circuit->state->value === 'open' && $circuit->shouldAttemptReset()) {
+        if ($circuit->state === CircuitState::OPEN && $circuit->shouldAttemptReset()) {
             $circuit = $circuit->halfOpen();
             $this->circuitStates[$serviceName] = $circuit;
         }
@@ -200,17 +201,10 @@ final class ConnectorManager
     }
 
     /**
-     * Generate unique log ID (ULID-style).
+     * Generate unique log ID (ULID).
      */
     private function generateLogId(): string
     {
-        return sprintf(
-            '%08x%04x%04x%04x%012x',
-            time(),
-            random_int(0, 0xffff),
-            random_int(0, 0xffff),
-            random_int(0, 0xffff),
-            random_int(0, 0xffffffffffff)
-        );
+        return (string) new Ulid();
     }
 }

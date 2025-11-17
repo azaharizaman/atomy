@@ -87,6 +87,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Monitored Services
+    |--------------------------------------------------------------------------
+    |
+    | List of services to monitor in the status endpoint.
+    | This should match the service names used in your integrations.
+    |
+    */
+    'monitored_services' => [
+        'mailchimp',
+        'sendgrid',
+        'twilio',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Service-Specific Endpoints
     |--------------------------------------------------------------------------
     |

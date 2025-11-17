@@ -41,11 +41,6 @@ final readonly class SendGridEmailAdapter implements EmailServiceConnectorInterf
         // return $response->statusCode() === 202;
 
         // Placeholder for demonstration
-        \Log::info("SendGridEmailAdapter: Sending email to {$recipient}", [
-            'subject' => $subject,
-            'from' => $this->fromEmail,
-        ]);
-
         return true;
     }
 

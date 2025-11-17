@@ -15,7 +15,7 @@ use Nexus\Connector\Contracts\IntegrationLoggerInterface;
 */
 
 // Integration Logs
-Route::prefix('connector')->group(function () {
+Route::prefix('connector')->middleware(['auth:sanctum'])->group(function () {
     
     // List integration logs with filtering
     Route::get('logs', function (Request $request, IntegrationLoggerInterface $logger) {
@@ -37,8 +37,15 @@ Route::prefix('connector')->group(function () {
 
     // Get metrics for a specific service
     Route::get('metrics/{service}', function (string $service, Request $request, IntegrationLoggerInterface $logger) {
-        $from = new \DateTimeImmutable($request->get('from', '-7 days'));
-        $to = new \DateTimeImmutable($request->get('to', 'now'));
+        try {
+            $from = new \DateTimeImmutable($request->get('from', '-7 days'));
+            $to = new \DateTimeImmutable($request->get('to', 'now'));
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Invalid date format',
+                'message' => 'Please provide dates in ISO 8601 format'
+            ], 400);
+        }
 
         $metrics = $logger->getMetrics($service, $from, $to);
 
@@ -66,7 +73,7 @@ Route::prefix('connector')->group(function () {
 
     // Service status overview
     Route::get('status', function (IntegrationLoggerInterface $logger) {
-        $services = ['mailchimp', 'sendgrid', 'twilio']; // Could be dynamic
+        $services = config('connector.monitored_services', ['mailchimp', 'sendgrid', 'twilio']);
         $from = new \DateTimeImmutable('-24 hours');
         $to = new \DateTimeImmutable('now');
 

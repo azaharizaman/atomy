@@ -24,8 +24,7 @@ return new class extends Migration
             $table->json('response_data')->nullable();
             $table->text('error_message')->nullable();
             $table->integer('attempt_number')->default(1);
-            $table->timestamp('created_at')->index();
-            $table->timestamp('updated_at');
+            $table->timestamps();
 
             // Composite indexes for common queries
             $table->index(['service_name', 'created_at']);
