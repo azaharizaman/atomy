@@ -53,7 +53,7 @@ class StorageController
                 'max:' . (config('storage.uploads.max_size') / 1024), // Convert bytes to KB
                 'mimetypes:' . implode(',', config('storage.uploads.allowed_mime_types', [])),
             ],
-            'path' => 'required|string',
+            'path' => ['required', 'string', 'regex:/^[a-zA-Z0-9\/_-]+(\.[a-zA-Z0-9]+)?$/'],
             'visibility' => 'sometimes|in:public,private',
         ]);
 
