@@ -6,7 +6,8 @@
     "require": {
         "php": "^8.3",
         "nexus/payroll-mys-statutory": "*@dev",
-        "nexus/storage": "*@dev"
+        "nexus/storage": "*@dev",
+        "nexus/identity": "*@dev"
     },
     "repositories": [
         {
@@ -52,6 +53,10 @@
         {
             "type": "path"
             "url": "./packages/Storage"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Identity"
         }
     ],
     "minimum-stability": "dev",

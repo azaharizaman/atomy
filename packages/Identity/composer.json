@@ -1,0 +1,24 @@
+{
+    "name": "nexus/identity",
+    "description": "Framework-agnostic Identity and Access Management package for Nexus ERP",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Identity\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Nexus Development Team"
+        }
+    ],
+    "require": {
+        "php": "^8.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
