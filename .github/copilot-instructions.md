@@ -333,6 +333,326 @@ The agent **MUST** use native PHP Attributes for all metadata configuration, esp
 * **Laravel Attributes:** When working in `apps/Atomy`, use Laravel's native PHP 8 Attributes for routing, validation, and model casting instead of DocBlock annotations.
 * **No DocBlock Annotations:** Avoid using DocBlock annotations for metadata purposes; reserve DocBlocks for descriptive comments only.
 
+-----
+
+## 🚫 Strict Anti-Pattern: Facade & Global Helper Prohibition
+
+The use of Laravel Facades (`Log::`, `Cache::`, `DB::`) and global helpers (`now()`, `config()`, `dd()`, `app()`) is **strictly forbidden** in all code within the `packages/` directory.
+
+### 1. 🛑 Absolute Prohibitions (Zero Tolerance)
+
+The following must **NEVER** appear in any file within the `packages/` directory:
+
+| Forbidden Laravel Artifact | Atomic Replacement Principle |
+| :--- | :--- |
+| **`Log::...`** (Facade) | Must use an **injected `LoggerInterface`** (from PSR-3). |
+| **`Cache::...`** (Facade) | Must use an **injected `CacheRepositoryInterface`** (from package Contracts). |
+| **`DB::...`** or **`\Illuminate\Database\...`** | Must use an **injected Repository Interface** (e.g., `UserRepositoryInterface`). |
+| **`Config::...`** (Facade) | Must use an **injected `SettingsManager`** (from `Nexus\Setting`). |
+| **`Mail::...`** (Facade) | Must use an **injected `NotifierInterface`** (from `Nexus\Notifier`). |
+| **`Storage::...`** (Facade) | Must use an **injected `StorageInterface`** (from `Nexus\Storage`). |
+| **`Event::...`** (Facade) | Must use an **injected `EventDispatcherInterface`** (PSR-14 or package-specific). |
+| **`Queue::...`** (Facade) | Must use an **injected `QueueInterface`** (from package Contracts). |
+| **Global Helpers** (`now()`, `today()`, `config()`, `app()`, `dd()`, `response()`, `abort()`, `redirect()`, `session()`, `request()`, `auth()`, `bcrypt()`, `collect()`, `env()`, `old()`, `route()`, `url()`, `view()`) | Must use injected services or native PHP functions/classes. |
+
+-----
+
+### 2. ✅ Required Replacements (The "How To")
+
+When the agent attempts to use a forbidden artifact, it must immediately stop and refactor the code to use the following dependency injection pattern:
+
+#### A. Logging Example
+
+**❌ WRONG (Forbidden):**
+```php
+use Illuminate\Support\Facades\Log;
+
+public function processData(array $data): void
+{
+    Log::info('Processing data', ['count' => count($data)]);
+}
+```
+
+**✅ CORRECT (Framework-Agnostic):**
+
+1. **Modify Constructor:** Inject the required interface.
+    ```php
+    use Psr\Log\LoggerInterface;
+
+    public function __construct(
+        private readonly LoggerInterface $logger // Must be PSR-3 compliant
+    ) {}
+    ```
+
+2. **Use Injected Dependency:**
+    ```php
+    public function processData(array $data): void
+    {
+        $this->logger->info('Processing data', ['count' => count($data)]);
+    }
+    ```
+
+#### B. Caching Example
+
+**❌ WRONG (Forbidden):**
+```php
+use Illuminate\Support\Facades\Cache;
+
+public function getTenantConfig(string $tenantId): array
+{
+    return Cache::remember("tenant.{$tenantId}", 3600, function() use ($tenantId) {
+        return $this->fetchFromDatabase($tenantId);
+    });
+}
+```
+
+**✅ CORRECT (Framework-Agnostic):**
+
+1. **Define Contract in Package:**
+    ```php
+    namespace Nexus\YourPackage\Contracts;
+
+    interface CacheRepositoryInterface
+    {
+        public function get(string $key, mixed $default = null): mixed;
+        public function put(string $key, mixed $value, int $ttl): bool;
+        public function remember(string $key, int $ttl, callable $callback): mixed;
+        public function forget(string $key): bool;
+    }
+    ```
+
+2. **Inject and Use in Service:**
+    ```php
+    use Nexus\YourPackage\Contracts\CacheRepositoryInterface;
+
+    public function __construct(
+        private readonly CacheRepositoryInterface $cache
+    ) {}
+
+    public function getTenantConfig(string $tenantId): array
+    {
+        return $this->cache->remember(
+            "tenant.{$tenantId}",
+            3600,
+            fn() => $this->fetchFromDatabase($tenantId)
+        );
+    }
+    ```
+
+3. **Implement in Atomy (`apps/Atomy/app/Repositories/LaravelCacheRepository.php`):**
+    ```php
+    namespace App\Repositories;
+
+    use Illuminate\Support\Facades\Cache;
+    use Nexus\YourPackage\Contracts\CacheRepositoryInterface;
+
+    final class LaravelCacheRepository implements CacheRepositoryInterface
+    {
+        public function remember(string $key, int $ttl, callable $callback): mixed
+        {
+            return Cache::remember($key, $ttl, $callback);
+        }
+        // ... implement other methods
+    }
+    ```
+
+#### C. Time/Date Example
+
+**❌ WRONG (Forbidden):**
+```php
+public function isExpired(): bool
+{
+    return $this->expiresAt < now(); // 'now()' is a Laravel helper
+}
+```
+
+**✅ CORRECT (Framework-Agnostic):**
+
+1. **Define Clock Contract (Recommended Pattern):**
+    ```php
+    namespace Nexus\YourPackage\Contracts;
+
+    interface ClockInterface
+    {
+        public function getCurrentTime(): \DateTimeImmutable;
+        public function getCurrentDate(): \DateTimeImmutable;
+    }
+    ```
+
+2. **Inject and Use in Service:**
+    ```php
+    use Nexus\YourPackage\Contracts\ClockInterface;
+
+    public function __construct(
+        private readonly ClockInterface $clock
+    ) {}
+
+    public function isExpired(\DateTimeImmutable $expiresAt): bool
+    {
+        return $expiresAt < $this->clock->getCurrentTime();
+    }
+    ```
+
+3. **Or Use Native PHP (Simpler for Basic Cases):**
+    ```php
+    public function isExpired(\DateTimeImmutable $expiresAt): bool
+    {
+        return $expiresAt < new \DateTimeImmutable('now');
+    }
+    ```
+
+**Note:** The `ClockInterface` pattern is crucial for testing time-sensitive logic without relying on the system clock.
+
+#### D. Configuration Example
+
+**❌ WRONG (Forbidden):**
+```php
+use Illuminate\Support\Facades\Config;
+
+public function getMaxRetries(): int
+{
+    return config('services.api.max_retries', 3); // Global helper
+}
+```
+
+**✅ CORRECT (Framework-Agnostic):**
+
+1. **Inject Settings Manager:**
+    ```php
+    use Nexus\Setting\Services\SettingsManager;
+
+    public function __construct(
+        private readonly SettingsManager $settings
+    ) {}
+    ```
+
+2. **Use Injected Dependency:**
+    ```php
+    public function getMaxRetries(): int
+    {
+        return $this->settings->getInt('services.api.max_retries', 3);
+    }
+    ```
+
+#### E. Database Query Example
+
+**❌ WRONG (Forbidden):**
+```php
+use Illuminate\Support\Facades\DB;
+
+public function getUserCount(): int
+{
+    return DB::table('users')->count();
+}
+```
+
+**✅ CORRECT (Framework-Agnostic):**
+
+1. **Define Repository Contract:**
+    ```php
+    namespace Nexus\YourPackage\Contracts;
+
+    interface UserRepositoryInterface
+    {
+        public function count(): int;
+        public function findById(string $id): ?UserInterface;
+    }
+    ```
+
+2. **Inject and Use in Service:**
+    ```php
+    use Nexus\YourPackage\Contracts\UserRepositoryInterface;
+
+    public function __construct(
+        private readonly UserRepositoryInterface $userRepository
+    ) {}
+
+    public function getUserCount(): int
+    {
+        return $this->userRepository->count();
+    }
+    ```
+
+#### F. Collection Helper Example
+
+**❌ WRONG (Acceptable but Discouraged):**
+```php
+$items = collect([1, 2, 3])->map(fn($n) => $n * 2); // Laravel helper
+```
+
+**✅ CORRECT (Framework-Agnostic):**
+```php
+use Illuminate\Support\Collection;
+
+$items = new Collection([1, 2, 3]);
+$result = $items->map(fn($n) => $n * 2);
+```
+
+**Note:** If using `Illuminate\Support\Collection` directly, ensure `illuminate/collections` is listed in the package's `composer.json` as a dependency. For ultimate framework agnosticism, use native PHP arrays with `array_map()`, `array_filter()`, etc.
+
+-----
+
+### 3. 🔍 Detection and Self-Correction Protocol
+
+Before committing any code to the `packages/` directory, the agent MUST run this mental checklist:
+
+1. **Facade Scan:** Does the code contain any class name ending in `::` that is not a static method call on a package-owned class?
+   - If YES → **STOP. Refactor using dependency injection.**
+
+2. **Global Helper Scan:** Does the code contain any of these function calls: `now()`, `config()`, `app()`, `dd()`, `dump()`, `abort()`, `redirect()`, `session()`, `request()`, `auth()`, `bcrypt()`, `collect()`, `env()`, `old()`, `route()`, `url()`, `view()`?
+   - If YES → **STOP. Replace with injected services or native PHP.**
+
+3. **Illuminate Namespace Scan:** Does the code import any class from `Illuminate\` **except** `Illuminate\Support\Collection` (and only if it's in `composer.json`)?
+   - If YES → **STOP. Replace with PSR interfaces or package contracts.**
+
+4. **Repository Pattern Check:** Does the code directly query a database (e.g., using PDO, Eloquent, or any ORM)?
+   - If YES → **STOP. Define a repository interface and inject it.**
+
+5. **Configuration Hardcoding Check:** Does the code contain any hardcoded configuration values that should be externalized?
+   - If YES → **Inject `SettingsManager` and retrieve the value dynamically.**
+
+-----
+
+### 4. 📋 Quick Reference: Common Violations and Fixes
+
+| Violation | Forbidden Code | Correct Replacement |
+|-----------|----------------|---------------------|
+| **Logging** | `Log::info('message')` | `$this->logger->info('message')` (Inject `LoggerInterface`) |
+| **Caching** | `Cache::get('key')` | `$this->cache->get('key')` (Inject `CacheRepositoryInterface`) |
+| **Database** | `DB::table('users')->get()` | `$this->repository->getAll()` (Inject `RepositoryInterface`) |
+| **Config** | `config('app.timezone')` | `$this->settings->getString('app.timezone')` (Inject `SettingsManager`) |
+| **Time** | `now()` | `$this->clock->getCurrentTime()` (Inject `ClockInterface`) or `new \DateTimeImmutable()` |
+| **Collections** | `collect([1,2,3])` | `new Collection([1,2,3])` (Import and list in `composer.json`) |
+| **Environment** | `env('APP_ENV')` | `$this->settings->getString('app.env')` (Inject `SettingsManager`) |
+| **Request Data** | `request()->input('name')` | Pass as method parameter: `public function process(string $name)` |
+| **Auth** | `auth()->user()` | `$this->authContext->getCurrentUser()` (Inject `AuthContextInterface`) |
+| **Storage** | `Storage::put('file.txt', 'content')` | `$this->storage->write('file.txt', 'content')` (Inject `StorageInterface`) |
+
+-----
+
+### 5. ⚠️ Acceptable Exceptions (Rare Cases)
+
+The following are the **ONLY** acceptable uses of Laravel-specific code in packages:
+
+1. **`Illuminate\Support\Collection`** - Only if explicitly listed in the package's `composer.json` dependencies.
+2. **`Illuminate\Contracts\Support\Arrayable`** - For compatibility with Laravel's array conversion.
+3. **Package Service Provider** - A package MAY include a `ServiceProvider.php` for Laravel integration, but this file must **only** register bindings and should not contain business logic.
+
+-----
+
+### 6. 🎯 Golden Rule Summary
+
+**If you're working in `packages/`, ask yourself:**
+> "Could this code run in Symfony, Slim, or even a plain PHP CLI script without any modifications?"
+
+**If the answer is NO, you're violating the framework-agnostic principle.**
+
+The correct approach is:
+1. **Define the need** (via an Interface in `src/Contracts/`)
+2. **Use the need** (via constructor injection in `src/Services/`)
+3. **Implement the need** (in `apps/Atomy/app/Repositories/` or `app/Services/`)
+
+By explicitly defining these forbidden patterns and providing the precise, contract-driven replacements, the agent will significantly improve its adherence to the framework-agnostic architecture.
 
 -----
 
