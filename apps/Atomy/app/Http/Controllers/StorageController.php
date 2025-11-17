@@ -61,15 +61,14 @@ class StorageController
 
             // Get file stream
             $stream = fopen($file->getRealPath(), 'r');
-
-            $this->storageDriver->put($path, $stream, $visibility);
-
-            if (is_resource($stream)) {
-                fclose($stream);
+            try {
+                $this->storageDriver->put($path, $stream, $visibility);
+                $metadata = $this->storageDriver->getMetadata($path);
+            } finally {
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
             }
-
-            $metadata = $this->storageDriver->getMetadata($path);
-
             return response()->json([
                 'success' => true,
                 'message' => 'File uploaded successfully',
