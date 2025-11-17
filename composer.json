@@ -22,6 +22,10 @@
         {
             "type": "path",
             "url": "./packages/Sequencing"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Workflow"
         }
     ],
     "minimum-stability": "dev",

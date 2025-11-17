@@ -1,0 +1,45 @@
+# Laravel
+/apps/Atomy/vendor/
+/apps/Atomy/node_modules/
+/apps/Atomy/public/hot
+/apps/Atomy/public/storage
+/apps/Atomy/storage/*.key
+/apps/Atomy/.env
+/apps/Atomy/.env.backup
+/apps/Atomy/.phpunit.result.cache
+/apps/Atomy/Homestead.json
+/apps/Atomy/Homestead.yaml
+/apps/Atomy/npm-debug.log
+/apps/Atomy/yarn-error.log
+
+# Edward (Terminal UI)
+/apps/Edward/vendor/
+/apps/Edward/.env
+
+# Package vendors
+/packages/*/vendor/
+
+# IDEs
+/.idea
+/.vscode
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Composer
+/vendor/
+composer.lock
+
+# Testing
+/coverage/
+.phpunit.cache
+.phpunit.result.cache
+
+# Build artifacts
+/build/
+/dist/
+
+# Logs
+*.log
+/storage/logs/
