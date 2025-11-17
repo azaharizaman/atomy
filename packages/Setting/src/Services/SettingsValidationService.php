@@ -76,6 +76,14 @@ class SettingsValidationService
     {
         $rules = $schema['validation_rules'] ?? $schema['validationRules'] ?? [];
 
+        // Validate required (not null) - check this first before other validations
+        if (isset($rules['required']) && $rules['required'] === true && $value === null) {
+            throw new SettingValidationException(
+                $key,
+                "Value is required and cannot be null"
+            );
+        }
+
         // Validate minimum value/length
         if (isset($rules['min'])) {
             if (is_numeric($value) && $value < $rules['min']) {
@@ -143,14 +151,6 @@ class SettingsValidationService
                     "Value must be one of: {$allowed}"
                 );
             }
-        }
-
-        // Validate required (not null)
-        if (isset($rules['required']) && $rules['required'] === true && $value === null) {
-            throw new SettingValidationException(
-                $key,
-                "Value is required and cannot be null"
-            );
         }
     }
 }

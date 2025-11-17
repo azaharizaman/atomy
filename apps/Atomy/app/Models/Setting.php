@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -42,7 +43,6 @@ class Setting extends Model
     ];
 
     protected $casts = [
-        'value' => 'json',
         'validation_rules' => 'array',
         'is_readonly' => 'boolean',
         'is_protected' => 'boolean',
@@ -106,39 +106,45 @@ class Setting extends Model
     /**
      * Get the setting history.
      */
-    public function history()
+    public function history(): HasMany
     {
         return $this->hasMany(SettingHistory::class, 'setting_id');
     }
 
     /**
-     * Get the decrypted value if encrypted.
+     * Get the value attribute with proper JSON decoding and decryption.
      */
-    public function getDecryptedValue(): mixed
+    public function getValueAttribute($value): mixed
     {
-        if ($this->is_encrypted && is_string($this->value)) {
-            return decrypt($this->value);
+        // Decode JSON first
+        $decoded = json_decode($value, true);
+        
+        // If encrypted, decrypt the decoded value
+        if ($this->is_encrypted && $decoded !== null) {
+            return decrypt($decoded);
         }
 
-        return $this->value;
+        return $decoded;
     }
 
     /**
-     * Set the value with optional encryption.
+     * Set the value attribute with proper encryption and JSON encoding.
      */
-    public function setEncryptedValue(mixed $value): void
+    public function setValueAttribute($value): void
     {
+        // Encrypt first if needed
         if ($this->is_encrypted) {
-            $this->value = encrypt($value);
-        } else {
-            $this->value = $value;
+            $value = encrypt($value);
         }
+
+        // Then JSON encode
+        $this->attributes['value'] = json_encode($value);
     }
 
     /**
      * Boot the model.
      */
-    protected static function boot()
+    protected static function boot(): void
     {
         parent::boot();
 

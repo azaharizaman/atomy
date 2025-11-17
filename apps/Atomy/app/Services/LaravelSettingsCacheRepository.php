@@ -15,6 +15,8 @@ use Nexus\Setting\Contracts\SettingsCacheInterface;
  */
 class LaravelSettingsCacheRepository implements SettingsCacheInterface
 {
+    private const CACHE_KEYS_REGISTRY = '_all_setting_keys';
+
     /**
      * Retrieve a value from cache.
      */
@@ -28,6 +30,9 @@ class LaravelSettingsCacheRepository implements SettingsCacheInterface
      */
     public function set(string $key, mixed $value, ?int $ttl = null): void
     {
+        // Add key to registry
+        $this->addKeyToRegistry($key);
+
         if ($ttl === null) {
             Cache::forever($key, $value);
         } else {
@@ -41,6 +46,7 @@ class LaravelSettingsCacheRepository implements SettingsCacheInterface
     public function forget(string $key): void
     {
         Cache::forget($key);
+        $this->removeKeyFromRegistry($key);
     }
 
     /**
@@ -57,6 +63,8 @@ class LaravelSettingsCacheRepository implements SettingsCacheInterface
     public function flush(): void
     {
         Cache::flush();
+        // Clear registry as well
+        Cache::forget(self::CACHE_KEYS_REGISTRY);
     }
 
     /**
@@ -64,6 +72,9 @@ class LaravelSettingsCacheRepository implements SettingsCacheInterface
      */
     public function remember(string $key, callable $callback, ?int $ttl = null): mixed
     {
+        // Add key to registry
+        $this->addKeyToRegistry($key);
+
         if ($ttl === null) {
             return Cache::rememberForever($key, $callback);
         }
@@ -77,17 +88,39 @@ class LaravelSettingsCacheRepository implements SettingsCacheInterface
     public function forgetPattern(string $pattern): void
     {
         // Convert glob pattern to regex (e.g., 'setting:user:*' -> 'setting:user:.*')
-        $regex = str_replace('*', '.*', $pattern);
+        $regex = '/^' . str_replace(['*', ':'], ['.*', '\:'], preg_quote($pattern, '/')) . '$/';
 
-        // Get all cache keys (note: this is driver-dependent)
-        // For Redis, we can use keys() pattern
-        // For other drivers, this may not be efficient
-        $keys = Cache::get('_all_setting_keys', []);
+        // Get all cache keys from registry
+        $keys = Cache::get(self::CACHE_KEYS_REGISTRY, []);
 
         foreach ($keys as $key) {
-            if (preg_match("/{$regex}/", $key)) {
+            if (preg_match($regex, $key)) {
                 Cache::forget($key);
+                $this->removeKeyFromRegistry($key);
             }
         }
+    }
+
+    /**
+     * Add a key to the registry for pattern-based invalidation.
+     */
+    private function addKeyToRegistry(string $key): void
+    {
+        $keys = Cache::get(self::CACHE_KEYS_REGISTRY, []);
+        
+        if (!in_array($key, $keys, true)) {
+            $keys[] = $key;
+            Cache::forever(self::CACHE_KEYS_REGISTRY, $keys);
+        }
+    }
+
+    /**
+     * Remove a key from the registry.
+     */
+    private function removeKeyFromRegistry(string $key): void
+    {
+        $keys = Cache::get(self::CACHE_KEYS_REGISTRY, []);
+        $keys = array_filter($keys, fn($k) => $k !== $key);
+        Cache::forever(self::CACHE_KEYS_REGISTRY, array_values($keys));
     }
 }

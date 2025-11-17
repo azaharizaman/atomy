@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\DB;
 use Nexus\Setting\Contracts\SettingRepositoryInterface;
 use Nexus\Setting\Exceptions\ReadOnlySettingException;
 
@@ -154,7 +155,7 @@ class DbUserSettingsRepository implements SettingRepositoryInterface
      */
     public function bulkSet(array $settings): void
     {
-        \DB::transaction(function () use ($settings) {
+        DB::transaction(function () use ($settings) {
             foreach ($settings as $key => $value) {
                 $this->set($key, $value);
             }

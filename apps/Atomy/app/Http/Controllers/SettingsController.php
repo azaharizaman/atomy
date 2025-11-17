@@ -118,7 +118,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'key' => 'required|string',
-            'value' => 'required',
+            'value' => 'present',
         ]);
 
         $userId = $request->user()->id;
@@ -158,7 +158,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'key' => 'required|string',
-            'value' => 'required',
+            'value' => 'present',
         ]);
 
         $tenantId = $request->user()->tenant_id;

@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Setting history model for tracking setting changes.
@@ -43,7 +44,7 @@ class SettingHistory extends Model
     /**
      * Get the setting this history entry belongs to.
      */
-    public function setting()
+    public function setting(): BelongsTo
     {
         return $this->belongsTo(Setting::class, 'setting_id');
     }
