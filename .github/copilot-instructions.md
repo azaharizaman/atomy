@@ -34,7 +34,12 @@ nexus/
 │   ├── Sequencing/        # Auto-numbering
 │   ├── Tenant/            # Multi-tenancy (if applicable)
 │   ├── Uom/               # Unit of measurement
+|   ├── Inventory/         # Inventory management
+│   ├── Setting/                # Setting management
+│   ├── Storage/         # Storage engine (if applicable)
+|   ├── Document/          # Document engine (if applicable)
 │   └── Workflow/          # Workflow engine (if applicable)
+|   
 └── apps/
     ├── Atomy/             # Headless Laravel ERP backend
     └── Edward/            # Terminal UI client (TUI)
