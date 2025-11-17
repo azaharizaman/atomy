@@ -1,0 +1,666 @@
+Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or Class/Methods Responible to deliver this requirements	Status	Notes on Status	Date Last Updated
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0001	Package MUST be framework-agnostic with no Laravel dependencies in core services				
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0002	All data structures defined via interfaces (AuditLogInterface)				
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0003	All persistence operations via repository interface				
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0004	Business logic in service layer (AuditLogManager)				
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0005	All database migrations in application layer (apps/Atomy)				
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0006	All Eloquent models in application layer				
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0007	Repository implementations in application layer				
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0008	Traits and Observers in application layer (Laravel-specific)				
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0009	IoC container bindings in application service provider				
+`Nexus\AuditLogger`	Architechtural Requirement	ARC-AUD-0010	Package composer.json MUST NOT depend on laravel/framework				
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0011	Package must be framework-agnostic with no Laravel dependencies				
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0012	All data structures defined via interfaces				
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0013	All persistence operations via repository interfaces				
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0014	Business logic in service layer				
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0015	All database migrations in application layer				
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0016	All Eloquent models in application layer				
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0017	Repository implementations in application layer				
+`Nexus\Backoffice`	Architechtural Requirement	ARC-BAC-0018	IoC container bindings in application service provider				
+`Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0019	Package must be framework-agnostic with no Laravel dependencies				
+`Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0020	All data structures defined via interfaces				
+`Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0021	All persistence operations via repository interfaces				
+`Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0022	Business logic in service layer				
+`Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0023	All database migrations in application layer				
+`Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0024	All Eloquent models in application layer				
+`Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0025	Repository implementations in application layer				
+`Nexus\Sequencing`	Architechtural Requirement	ARC-SEQ-0026	IoC container bindings in application service provider				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0027	Package MUST be framework-agnostic with no Laravel dependencies in core services				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0028	All data structures defined via interfaces				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0029	All persistence operations via repository interfaces				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0030	Business logic in service layer				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0031	All database migrations in application layer (apps/Atomy)				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0032	All 13 Eloquent models in application layer				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0033	Repository implementations in application layer				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0034	IoC container bindings in application service provider				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0035	Remove illuminate/support dependency if possible				
+`Nexus\Uom`	Architechtural Requirement	ARC-UOM-0036	Remove database folder from package				
+`Nexus\Crm`	Business Requirements	BUS-CRM-0037	Users cannot self-assign leads (configurable)				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0038	Work order must have a customer and service location				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0039	A BOM must have at least one component				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0040	Campaigns cannot target same lead more than once per day (configurable)				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0041	A requisition MUST have at least one line item				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0042	A project MUST have a project manager assigned				
+`Nexus\Sequencing`	Business Requirements	BUS-SEQ-0043	The sequence name/ID is unique per scope_identifier (composite key)				
+`Nexus\Crm`	Business Requirements	BUS-CRM-0044	All state changes must be ACID-compliant				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0045	Cannot assign work order to technician without required skills				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0046	BOM components cannot reference the parent product (circular BOM prevention)				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0047	All state changes must be ACID transactions				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0048	Requisition total estimate MUST equal sum of line item estimates				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0049	A task MUST belong to a project				
+`Nexus\Sequencing`	Business Requirements	BUS-SEQ-0050	A generated number must be immutable. Once generated and consumed, it cannot be changed				
+`Nexus\Crm`	Business Requirements	BUS-CRM-0051	Stale leads auto-escalate after configured timeout				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0052	Cannot start work order without assignment to technician				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0053	Only one BOM per product can be active at a time				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0054	Low ROI campaigns auto-escalate after configured threshold				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0055	Approved requisitions cannot be edited (only cancelled)				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0056	Timesheet hours cannot be negative or exceed 24 hours per day per user				
+`Nexus\Sequencing`	Business Requirements	BUS-SEQ-0057	Pattern variables must be padded if a padding size is specified in the pattern (e.g., {COUNTER:5})				
+`Nexus\Crm`	Business Requirements	BUS-CRM-0058	Compensation activities execute in reverse order				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0059	Work order can only be completed if all critical checklist items pass				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0060	Work order quantity completed + quantity scrapped cannot exceed quantity ordered				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0061	Compensation actions execute in reverse order of original actions				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0062	A purchase order MUST reference an approved requisition OR be explicitly marked as direct PO				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0063	Approved timesheets are immutable (cannot be edited or deleted)				
+`Nexus\Sequencing`	Business Requirements	BUS-SEQ-0064	The manual override of a sequence value must be greater than the last generated number				
+`Nexus\Crm`	Business Requirements	BUS-CRM-0065	Delegation chain maximum depth: 3 levels				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0066	Parts consumption auto-deducts from technician van stock first, then warehouse				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0067	Materials can only be issued to work orders in "released" or "in_production" status				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0068	Delegation chain maximum depth: 3 levels				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0069	PO total amount MUST NOT exceed requisition approved amount by more than 10% without re-approval				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0070	A task's actual hours MUST equal the sum of all approved timesheet hours for that task				
+`Nexus\Sequencing`	Business Requirements	BUS-SEQ-0071	The counter is only incremented *after* a successful database lock and generation, not during preview				
+`Nexus\Crm`	Business Requirements	BUS-CRM-0072	Level 1 code remains compatible after Level 2/3 upgrades				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0073	Service report can only be generated after work order is completed				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0074	Work order cannot be completed if material allocations are not fulfilled				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0075	Phase 1 configurations remain compatible with Phase 2/3				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0076	GRN quantity cannot exceed PO quantity for any line item				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0077	Milestone billing amount cannot exceed remaining project budget (for fixed-price projects)				
+`Nexus\Sequencing`	Business Requirements	BUS-SEQ-0078	The package is only responsible for the Unique Base Identifier. Sub-identifiers (copies, versions, spawns) are the responsibility of the application layer				
+`Nexus\Crm`	Business Requirements	BUS-CRM-0079	One CRM instance per subject model				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0080	Customer signature is required before work order can be marked verified				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0081	Operation sequence must be sequential (operation 10 before operation 20)				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0082	One marketing instance per model/entity				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0083	3-way match tolerance rules are configurable per tenant				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0084	Resource allocation percentage cannot exceed 100% per user per day				
+`Nexus\Crm`	Business Requirements	BUS-CRM-0085	Parallel branches must all complete before proceeding				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0086	SLA deadlines calculated from service contract terms				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0087	Inspection must pass before work order can be completed				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0088	Parallel channels must all complete before proceeding				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0089	Payment authorization requires successful 3-way match OR manual override by authorized user				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0090	Task dependencies must not create circular references				
+`Nexus\Crm`	Business Requirements	BUS-CRM-0091	Assignment checks delegation chain first				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0092	SLA breach triggers escalation workflow (notify manager, auto-reassign)				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0093	Quarantined batches cannot be used in production or sold				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0094	Campaign assignment checks delegation chain first				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0095	Requester cannot approve their own requisition				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0096	Project status cannot be "completed" if there are incomplete tasks				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0097	Preventive maintenance work orders auto-generated 7 days before due date				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0098	Standard cost must be calculated before work order release				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0099	Multi-team approval uses configured strategy				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0100	PO creator cannot create GRN for the same PO				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0101	Timesheet billing rate defaults to resource allocation rate for the project				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0102	Cannot schedule technician beyond their daily capacity (8 hours default)				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0103	MRP must consider safety stock levels when calculating net requirements				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0104	GDPR consent required for EU leads				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0105	GRN creator cannot authorize payment for the same PO				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0106	Client stakeholders can view only their own projects				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0107	GPS location capture required when starting/ending job				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0108	Batch genealogy must be captured for all regulated products (pharma, food)				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0109	Unsubscribe respected across all campaigns				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0110	Blanket PO releases cannot exceed blanket PO total committed value				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0111	Revenue recognition for fixed-price projects based on % completion or milestone approval				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0112	Asset must have maintenance schedule if covered by service contract				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0113	Lot/serial numbers must be unique across all tenants (globally unique)				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0114	Lead scoring updates trigger segment recalculation				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0115	Vendor quote must be submitted before RFQ deadline to be considered valid				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0116	Earned value calculations require baseline (planned) values to be set				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0117	Expired service contracts prevent new work order creation (unless emergency)				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0118	Work center capacity cannot be exceeded without approval				
+`Nexus\Marketing`	Business Requirements	BUS-MAR-0119	A/B test traffic distribution must total 100%				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0120	Tax calculation based on vendor jurisdiction and tax codes from nexus-tax-management				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0121	Lessons learned can only be created after project status = completed or cancelled				
+`Nexus\FieldService`	Business Requirements	BUS-FIE-0122	Route optimization respects job time windows (scheduled start/end times)				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0123	Routing operations must reference active work centers				
+`Nexus\Procurement`	Business Requirements	BUS-PRO-0124	All procurement amounts must be in tenant's base currency OR converted at transaction date exchange rate				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0125	Timesheet approval requires user to have approve-timesheet permission for the project				
+`Nexus\Accounting`	Business Requirements	BUS-ACC-0126	All journal entries MUST be balanced (debit = credit) before posting				
+`Nexus\Accounting`	Business Requirements	BUS-ACC-0127	Posted entries cannot be modified; only reversed with offsetting entries				
+`Nexus\Accounting`	Business Requirements	BUS-ACC-0128	Prevent deletion of accounts with associated transactions or child accounts				
+`Nexus\Accounting`	Business Requirements	BUS-ACC-0129	Account codes MUST be unique within tenant scope				
+`Nexus\Accounting`	Business Requirements	BUS-ACC-0130	Only leaf accounts (no children) can have transactions posted to them				
+`Nexus\Accounting`	Business Requirements	BUS-ACC-0131	Entries can only be posted to active fiscal periods; closed periods reject entries				
+`Nexus\Accounting`	Business Requirements	BUS-ACC-0132	Foreign currency transactions MUST record both base and foreign amounts with exchange rate				
+`Nexus\Accounting`	Business Requirements	BUS-ACC-0133	Three-way matching required for vendor invoice posting (PO, GR, Invoice)				
+`Nexus\Accounting`	Business Requirements	BUS-ACC-0134	Customer payments MUST be allocated to specific invoices for proper aging tracking				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0135	Users cannot view sensitive data about themselves				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0136	All query executions MUST use ACID transactions				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0137	Predictive model drift MUST trigger automatic alerts				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0138	Failed queries MUST use compensation actions for reversal				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0139	Delegation chains limited to maximum 3 levels depth				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0140	Level 1 definitions MUST remain compatible after L2/3 upgrade				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0141	Each model instance has one analytics instance				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0142	Parallel data sources MUST complete all before returning results				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0143	Delegated access MUST check delegation chain for permissions				
+`Nexus\Analytics`	Business Requirements	BUS-ANA-0144	Multi-role sharing follows configured strategy (unison/selective)				
+`Nexus\AuditLogger`	Business Requirements	BUS-AUD-0145	Audit logs MUST include log_name, description, and timestamp at minimum				
+`Nexus\AuditLogger`	Business Requirements	BUS-AUD-0146	Audit level MUST be one of: 1 (Low), 2 (Medium), 3 (High), 4 (Critical)				
+`Nexus\AuditLogger`	Business Requirements	BUS-AUD-0147	Retention days CANNOT be negative; default retention is 90 days				
+`Nexus\AuditLogger`	Business Requirements	BUS-AUD-0148	System activities (cron jobs, queue workers, CLI commands) are logged with causer_type = null				
+`Nexus\AuditLogger`	Business Requirements	BUS-AUD-0149	High-value entity changes (users, roles, permissions, financial records) default to Critical level				
+`Nexus\AuditLogger`	Business Requirements	BUS-AUD-0150	Batch operations MUST use a single batch_uuid to group related logs				
+`Nexus\AuditLogger`	Business Requirements	BUS-AUD-0151	Expired logs (past retention period) are purged automatically via scheduled job				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0152	Parent company must be active to have active children				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0153	Office hierarchy cannot exceed company boundaries				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0154	Department hierarchy independent of office structure				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0155	Staff can only have one primary supervisor per company				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0156	Supervisor must be in same or parent organizational unit				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0157	Staff transfer requires approval from authorized users				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0158	Transfer effective dates cannot be retroactive beyond 30 days				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0159	Unit membership transcends traditional hierarchy boundaries				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0160	Staff codes must be unique system-wide				
+`Nexus\Backoffice`	Business Requirements	BUS-BAC-0161	Company codes must be unique across the system				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0162	Employees MUST have active contract before leave accrual begins				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0163	Leave requests CANNOT exceed available balance unless negative balance policy enabled				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0164	Probation completion required before permanent leave entitlements activate				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0165	Attendance records MUST NOT overlap for same employee (prevent duplicate clock-ins)				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0166	Performance reviews MUST be conducted by employee's direct manager or authorized delegate				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0167	Disciplinary actions require documented evidence and approval workflow completion				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0168	Training certifications with expiry dates trigger automatic reminders 30 days before expiry				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-0169	Employee termination MUST trigger automatic leave balance calculation and final settlement				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-0170	PCB calculations MUST use exact LHDN rounding rules (to nearest sen) to match tax department calculations				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-0171	Pay runs MUST be locked after completion to prevent accidental modifications				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-0172	Only locked pay runs can generate payslips and post to accounting				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-0173	Retroactive recalculations MUST recalculate all months from change date forward				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-0174	EPF contributions CANNOT exceed statutory ceiling (RM5,000 salary base as of 2025)				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-0175	SOCSO eligibility ends at age 60 for new contributors (existing contributors continue)				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-0176	EIS contributions required for employees earning below RM4,000 per month				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-0177	Payslip data MUST be immutable once generated (regeneration creates new record)				
+`Nexus\Payroll`	Business Requirements	BUS-PAY-0178	Additional remuneration MUST use special PCB calculation tables from LHDN				
+`Nexus\Accounting`	Functional Requirement	FUN-ACC-0179	Maintain hierarchical chart of accounts with unlimited depth using nested set model				
+`Nexus\Accounting`	Functional Requirement	FUN-ACC-0180	Support 5 standard account types (Asset, Liability, Equity, Revenue, Expense) with type inheritance				
+`Nexus\Accounting`	Functional Requirement	FUN-ACC-0181	Allow tagging accounts by category and reporting group for financial statement organization				
+`Nexus\Accounting`	Functional Requirement	FUN-ACC-0182	Support flexible account code format (e.g., 1000-00, 1.1.1) per tenant configuration				
+`Nexus\Accounting`	Functional Requirement	FUN-ACC-0183	Provide account activation/deactivation without deletion to preserve history				
+`Nexus\Accounting`	Functional Requirement	FUN-ACC-0184	Support account templates for quick COA setup (manufacturing, retail, services)				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0185	Automatically capture CRUD operations (create, read, update, delete) for auditable models				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0186	Record before/after state for all model updates				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0187	Capture user context (who performed the action) with IP address, user agent, and timestamp				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0188	Support tenant-based isolation of audit logs				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0189	Provide full-text search across descriptions and properties				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0190	Filter logs by date range, user, entity type, entity ID, and event type				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0191	Export audit logs to CSV, JSON, and PDF formats				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0192	Mask sensitive fields (passwords, tokens, secrets) automatically				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0193	Support batch operations with UUID grouping for related activities				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0194	Configurable retention policies with automated purging of expired logs				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0195	Support multiple audit levels (Low, Medium, High, Critical) for risk-based filtering				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0196	Asynchronous logging via queue to prevent performance impact				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0197	Event-driven architecture with notifications for high-value activities				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0198	RESTful API endpoints for log retrieval, search, and export				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0199	Activity statistics and reporting (total counts, counts by log name, trends over time)				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0200	43 total requirements documented (15 FR + 5 PR + 6 SR + 7 BR + 10 ARCH)				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0201	Company hierarchy management with multi-level parent-child relationships				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0202	Department structure management independent of physical office locations				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0203	Staff management with flexible assignment to offices and/or departments				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0204	Unit and matrix organization for cross-functional staff groupings				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0205	Staff transfer management with approval workflows and effective date scheduling				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0206	Organizational chart generation with multiple visualization formats				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0207	Position and role management within organizational structure				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0208	Office type categorization and management				
+`Nexus\Backoffice`	Functional Requirement	FUN-BAC-0209	Circular reference prevention in hierarchies				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0210	Provide a framework-agnostic core (Nexus\Sequencing\Core) containing all generation and counter logic				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0211	Implement atomic number generation using database-level locking (SELECT FOR UPDATE)				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0212	Ensure generation is transaction-safe and rolls back counter increment if calling transaction fails				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0213	Support built-in pattern variables (e.g., {YEAR}, {MONTH}, {COUNTER}) and custom context variables (e.g., {DEPARTMENT})				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0214	Implement the ability to preview the next number without consuming the counter				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0215	Implement logic for Daily, Monthly, Yearly, and Never counter resets				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0216	Implement a ValidateSerialNumberService to check if a given number matches a pattern's Regex and inherent variable formats				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0217	Sequence definition must allow configuring a step_size (defaulting to 1) for custom counter increments				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0218	Sequence definition must support a reset_limit (integer) for custom counter resets based on count, not time				
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0219	Preview Service must expose the remaining count until the next reset period or limit is reached				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0220	Custom integrations				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0221	Custom conditions				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0222	Custom strategies				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0223	Custom triggers				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0224	Custom storage				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0225	Manage employee master data with personal information, emergency contacts, and dependents				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0226	Track employment contracts with start date, probation period, position, and employment type				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0227	Implement employee lifecycle states (prospect â†’ active â†’ probation â†’ permanent â†’ notice â†’ terminated)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0228	Support automatic org hierarchy integration via OrganizationServiceContract (manager, subordinates, department queries)				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0229	Track employment history with position changes, transfers, and promotions				
+`Nexus\Hrm`	Functional Requirement	FUN-HRM-0230	Manage employee documents with secure storage, version control, and expiry tracking				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0231	HasCrm trait for models				
+`Nexus\Analytics`	Functional Requirement	FUN-ANA-0232	Provide HasAnalytics trait for models				
+`Nexus\FieldService`	Functional Requirement	FUN-FIE-0233	Create work order				
+`Nexus\Manufacturing`	Functional Requirement	FUN-MAN-0234	Define Bill of Materials (BOM)				
+`Nexus\Procurement`	Functional Requirement	FUN-PRO-0235	Create purchase requisition with line items				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0236	Create project with basic details				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0237	In-model contact definitions				
+`Nexus\Analytics`	Functional Requirement	FUN-ANA-0238	Support in-model query definitions				
+`Nexus\FieldService`	Functional Requirement	FUN-FIE-0239	Technician assignment				
+`Nexus\Manufacturing`	Functional Requirement	FUN-MAN-0240	Multi-level BOM support				
+`Nexus\Procurement`	Functional Requirement	FUN-PRO-0241	Requisition approval workflow				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0242	Create and manage tasks				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0243	`crm()->addContact($data)` method				
+`Nexus\Analytics`	Functional Requirement	FUN-ANA-0244	Implement analytics()->runQuery($name) method				
+`Nexus\FieldService`	Functional Requirement	FUN-FIE-0245	Technician daily schedule				
+`Nexus\Manufacturing`	Functional Requirement	FUN-MAN-0246	Create work order				
+`Nexus\Procurement`	Functional Requirement	FUN-PRO-0247	Convert requisition to purchase order				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0248	Task assignment and notifications				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0249	`crm()->can($action)` method				
+`Nexus\Analytics`	Functional Requirement	FUN-ANA-0250	Implement analytics()->can($action) method				
+`Nexus\FieldService`	Functional Requirement	FUN-FIE-0251	Mobile job execution				
+`Nexus\Manufacturing`	Functional Requirement	FUN-MAN-0252	Material issue (backflush vs manual)				
+`Nexus\Procurement`	Functional Requirement	FUN-PRO-0253	Direct purchase order creation				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0254	Time tracking and timesheet entry				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0255	`crm()->history()` method				
+`Nexus\Analytics`	Functional Requirement	FUN-ANA-0256	Implement analytics()->history() method				
+`Nexus\FieldService`	Functional Requirement	FUN-FIE-0257	Parts/materials consumption				
+`Nexus\Manufacturing`	Functional Requirement	FUN-MAN-0258	Production reporting				
+`Nexus\Procurement`	Functional Requirement	FUN-PRO-0259	Goods receipt note (GRN) creation				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0260	My Tasks view				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0261	Guard conditions on actions				
+`Nexus\Analytics`	Functional Requirement	FUN-ANA-0262	Support guard conditions on queries				
+`Nexus\FieldService`	Functional Requirement	FUN-FIE-0263	Customer signature capture				
+`Nexus\Manufacturing`	Functional Requirement	FUN-MAN-0264	Work order completion				
+`Nexus\Procurement`	Functional Requirement	FUN-PRO-0265	3-way matching (PO-GRN-Invoice)				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0266	Project dashboard				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0267	Hooks (before/after)				
+`Nexus\Analytics`	Functional Requirement	FUN-ANA-0268	Provide before/after hooks				
+`Nexus\FieldService`	Functional Requirement	FUN-FIE-0269	Auto-generate service report				
+`Nexus\Manufacturing`	Functional Requirement	FUN-MAN-0270	Work order tracking dashboard				
+`Nexus\Procurement`	Functional Requirement	FUN-PRO-0271	Purchase requisition status tracking				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0272	Time report by project				
+`Nexus\FieldService`	Functional Requirement	FUN-FIE-0273	Work order status tracking				
+`Nexus\Analytics`	Functional Requirement	FUN-ANA-0274	Support DB-driven analytics definitions (JSON)				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0275	Database-driven CRM definitions (JSON)				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0276	Lead/Opportunity stages				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0277	Conditional pipelines				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0278	Parallel campaigns				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0279	Inclusive gateways				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0280	Multi-user assignment strategies				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0281	Dashboard API/Service				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0282	Actions (convert, close, etc.)				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0283	Data validation				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0284	Plugin integrations				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0285	Escalation rules				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0286	SLA tracking				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0287	Delegation with date ranges				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0288	Rollback logic				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0289	Custom fields configuration				
+`Nexus\Crm`	Functional Requirement	FUN-CRM-0290	Timer system				
+`Nexus\Marketing`	Functional Requirement	FUN-MAR-0291	HasMarketing trait for models				
+`Nexus\Marketing`	Functional Requirement	FUN-MAR-0292	In-model campaign definitions				
+`Nexus\Marketing`	Functional Requirement	FUN-MAR-0293	marketing()->launchCampaign($data) method				
+`Nexus\Marketing`	Functional Requirement	FUN-MAR-0294	marketing()->can($action) permission check				
+`Nexus\Marketing`	Functional Requirement	FUN-MAR-0295	marketing()->history() audit trail				
+`Nexus\Marketing`	Functional Requirement	FUN-MAR-0296	Guard conditions on actions				
+`Nexus\Marketing`	Functional Requirement	FUN-MAR-0297	Lifecycle hooks (before/after)				
+`Nexus\Marketing`	Functional Requirement	FUN-MAR-0298	Basic validation rules				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-0299	Execute monthly payroll runs for all active employees with automatic component calculation				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-0300	Support recurring payroll components (fixed allowances, deductions, employer contributions)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-0301	Process variable payroll items (overtime, claims, bonuses, commissions, unpaid leave deductions)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-0302	Calculate Year-to-Date (YTD) tracking for all earnings, deductions, and statutory contributions				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-0303	Implement pay run locking to prevent duplicate processing and enable rollback on errors				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-0304	Support multi-frequency payroll (monthly, semi-monthly, weekly, bonus-only runs)				
+`Nexus\Payroll`	Functional Requirement	FUN-PAY-0305	Post automatic GL journal entries to nexus-accounting for salary expense and liabilities				
+`Nexus\Uom`	Functional Requirement	FUN-UOM-0306	58 total requirements documented (15 FR + 13 DM + 5 PR + 5 SR + 10 BR + 10 ARCH)				
+`Nexus\Crm`	Maintainability Requirement	MAI-CRM-0307	Framework-agnostic core				
+`Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0308	Framework-agnostic core				
+`Nexus\Crm`	Maintainability Requirement	MAI-CRM-0309	Laravel adapter pattern				
+`Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0310	Laravel adapter separation				
+`Nexus\Crm`	Maintainability Requirement	MAI-CRM-0311	Orchestration policy				
+`Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0312	Test coverage				
+`Nexus\Crm`	Maintainability Requirement	MAI-CRM-0313	Domain separation				
+`Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0314	Module independence				
+`Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0315	Documentation				
+`Nexus\Marketing`	Maintainability Requirement	MAI-MAR-0316	Code style				
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0317	Performance - Organizational chart generation < 2 seconds for 10,000 staff				
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0318	Performance - Staff search and filtering < 500ms				
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0319	Scalability - Support up to 100,000 staff records per company				
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0320	Reliability - ACID compliance for critical operations				
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0321	Security - Audit trail for all organizational changes				
+`Nexus\Backoffice`	Non-Functional Requirement	NON-BAC-0322	Maintainability - Framework-agnostic architecture				
+`Nexus\Crm`	Performance Requirement	PER-CRM-0323	Action execution time				
+`Nexus\FieldService`	Performance Requirement	PER-FIE-0324	Mobile app startup time				
+`Nexus\Manufacturing`	Performance Requirement	PER-MAN-0325	BOM explosion (10-level deep, 500 components)				
+`Nexus\Marketing`	Performance Requirement	PER-MAR-0326	Campaign launch time				
+`Nexus\Procurement`	Performance Requirement	PER-PRO-0327	Requisition creation and save				
+`Nexus\ProjectManagement`	Performance Requirement	PER-PRO-0328	Project creation and save				
+`Nexus\Sequencing`	Performance Requirement	PER-SEQ-0329	Generation time < 50ms (p95)				
+`Nexus\Crm`	Performance Requirement	PER-CRM-0330	Dashboard query (1,000 items)				
+`Nexus\FieldService`	Performance Requirement	PER-FIE-0331	Work order list loading (100 jobs)				
+`Nexus\Manufacturing`	Performance Requirement	PER-MAN-0332	Work order creation and material allocation				
+`Nexus\Marketing`	Performance Requirement	PER-MAR-0333	Dashboard query (1,000 active campaigns)				
+`Nexus\Procurement`	Performance Requirement	PER-PRO-0334	PO generation from requisition				
+`Nexus\ProjectManagement`	Performance Requirement	PER-PRO-0335	Task creation and assignment				
+`Nexus\Sequencing`	Performance Requirement	PER-SEQ-0336	Must pass 100 simultaneous requests with zero duplicate numbers or deadlocks				
+`Nexus\Crm`	Performance Requirement	PER-CRM-0337	SLA check (10,000 active)				
+`Nexus\FieldService`	Performance Requirement	PER-FIE-0338	Service report generation (with photos)				
+`Nexus\Manufacturing`	Performance Requirement	PER-MAN-0339	Production reporting (backflush 50 components)				
+`Nexus\Marketing`	Performance Requirement	PER-MAR-0340	ROI calculation (10,000 campaigns)				
+`Nexus\Procurement`	Performance Requirement	PER-PRO-0341	3-way match processing				
+`Nexus\ProjectManagement`	Performance Requirement	PER-PRO-0342	Timesheet entry and save				
+`Nexus\Crm`	Performance Requirement	PER-CRM-0343	CRM initialization				
+`Nexus\FieldService`	Performance Requirement	PER-FIE-0344	Route optimization (20 jobs, 5 technicians)				
+`Nexus\Manufacturing`	Performance Requirement	PER-MAN-0345	MRP calculation (1000 SKUs, 10,000 transactions)				
+`Nexus\Marketing`	Performance Requirement	PER-MAR-0346	Campaign initialization				
+`Nexus\Procurement`	Performance Requirement	PER-PRO-0347	Vendor quote comparison loading				
+`Nexus\ProjectManagement`	Performance Requirement	PER-PRO-0348	Gantt chart rendering (100 tasks)				
+`Nexus\Crm`	Performance Requirement	PER-CRM-0349	Parallel gateway synchronization (10 branches)				
+`Nexus\FieldService`	Performance Requirement	PER-FIE-0350	Auto-assignment algorithm				
+`Nexus\Manufacturing`	Performance Requirement	PER-MAN-0351	Shop floor dashboard (100 active work orders)				
+`Nexus\Marketing`	Performance Requirement	PER-MAR-0352	Parallel channel synchronization (10 channels)				
+`Nexus\Procurement`	Performance Requirement	PER-PRO-0353	Procurement analytics dashboard				
+`Nexus\ProjectManagement`	Performance Requirement	PER-PRO-0354	Portfolio dashboard loading				
+`Nexus\FieldService`	Performance Requirement	PER-FIE-0355	Offline mobile capability				
+`Nexus\Marketing`	Performance Requirement	PER-MAR-0356	Lead scoring update				
+`Nexus\ProjectManagement`	Performance Requirement	PER-PRO-0357	Resource allocation view				
+`Nexus\Marketing`	Performance Requirement	PER-MAR-0358	Segment recalculation (100,000 leads)				
+`Nexus\Accounting`	Performance Requirement	PER-ACC-0359	Trial balance generation for 100K transactions				
+`Nexus\Accounting`	Performance Requirement	PER-ACC-0360	Account balance inquiry with drill-down				
+`Nexus\Accounting`	Performance Requirement	PER-ACC-0361	Bank reconciliation for 10K transactions				
+`Nexus\Accounting`	Performance Requirement	PER-ACC-0362	Aging report generation (30/60/90 days)				
+`Nexus\Accounting`	Performance Requirement	PER-ACC-0363	Chart of accounts hierarchical query performance				
+`Nexus\Analytics`	Performance Requirement	PER-ANA-0364	Query execution time				
+`Nexus\Analytics`	Performance Requirement	PER-ANA-0365	Dashboard load (1,000 metrics)				
+`Nexus\Analytics`	Performance Requirement	PER-ANA-0366	ML prediction (10,000 records)				
+`Nexus\Analytics`	Performance Requirement	PER-ANA-0367	Analytics initialization				
+`Nexus\Analytics`	Performance Requirement	PER-ANA-0368	Parallel data merge (10 sources)				
+`Nexus\Analytics`	Performance Requirement	PER-ANA-0369	Analytics history persisting				
+`Nexus\AuditLogger`	Performance Requirement	PER-AUD-0370	Audit log creation time < 50ms (p95) when processed asynchronously				
+`Nexus\AuditLogger`	Performance Requirement	PER-AUD-0371	Search query response time < 500ms for 100K+ log entries with proper indexing				
+`Nexus\AuditLogger`	Performance Requirement	PER-AUD-0372	Export generation time < 5 seconds for 10,000 log entries in CSV format				
+`Nexus\AuditLogger`	Performance Requirement	PER-AUD-0373	Support 1M+ audit log entries per tenant without degradation				
+`Nexus\AuditLogger`	Performance Requirement	PER-AUD-0374	Purge operation < 10 seconds for 100K expired entries using batch deletion				
+`Nexus\Hrm`	Performance Requirement	PER-HRM-0375	Employee search across 100K records				
+`Nexus\Hrm`	Performance Requirement	PER-HRM-0376	Leave balance calculation with complex rules				
+`Nexus\Hrm`	Performance Requirement	PER-HRM-0377	Monthly attendance report generation (1000 employees)				
+`Nexus\Hrm`	Performance Requirement	PER-HRM-0378	Performance review data aggregation (department-level)				
+`Nexus\Hrm`	Performance Requirement	PER-HRM-0379	Real-time leave balance check during request submission				
+`Nexus\Payroll`	Performance Requirement	PER-PAY-0380	Process monthly payroll for 5,000 employees				
+`Nexus\Payroll`	Performance Requirement	PER-PAY-0381	Generate single payslip PDF				
+`Nexus\Payroll`	Performance Requirement	PER-PAY-0382	Retroactive recalculation (12 months, 1,000 employees)				
+`Nexus\Payroll`	Performance Requirement	PER-PAY-0383	PCB calculation with all reliefs				
+`Nexus\Payroll`	Performance Requirement	PER-PAY-0384	EA Form generation for 5,000 employees				
+`Nexus\Crm`	Reliability Requirement	REL-CRM-0385	ACID guarantees for state changes				
+`Nexus\FieldService`	Reliability Requirement	REL-FIE-0386	Mobile app offline mode				
+`Nexus\Manufacturing`	Reliability Requirement	REL-MAN-0387	All inventory transactions MUST be ACID-compliant				
+`Nexus\Marketing`	Reliability Requirement	REL-MAR-0388	ACID transactions for state changes				
+`Nexus\Procurement`	Reliability Requirement	REL-PRO-0389	All financial transactions MUST be ACID-compliant				
+`Nexus\ProjectManagement`	Reliability Requirement	REL-PRO-0390	All financial calculations MUST be ACID-compliant				
+`Nexus\Crm`	Reliability Requirement	REL-CRM-0391	Failed integrations don't block progress				
+`Nexus\FieldService`	Reliability Requirement	REL-FIE-0392	Data sync conflict resolution				
+`Nexus\Manufacturing`	Reliability Requirement	REL-MAN-0393	Production reporting MUST prevent double-counting				
+`Nexus\Marketing`	Reliability Requirement	REL-MAR-0394	Failed channels don't block campaign				
+`Nexus\Procurement`	Reliability Requirement	REL-PRO-0395	3-way match MUST prevent payment authorization if discrepancies exceed tolerance				
+`Nexus\ProjectManagement`	Reliability Requirement	REL-PRO-0396	Timesheet approval MUST prevent double-billing				
+`Nexus\Crm`	Reliability Requirement	REL-CRM-0397	Concurrency control				
+`Nexus\FieldService`	Reliability Requirement	REL-FIE-0398	Service report generation resilience				
+`Nexus\Manufacturing`	Reliability Requirement	REL-MAN-0399	Work order state changes MUST be resumable after failure				
+`Nexus\Marketing`	Reliability Requirement	REL-MAR-0400	Concurrency control				
+`Nexus\Procurement`	Reliability Requirement	REL-PRO-0401	Approval workflows MUST be resumable after system failure				
+`Nexus\ProjectManagement`	Reliability Requirement	REL-PRO-0402	Resource allocation MUST prevent double-booking				
+`Nexus\Crm`	Reliability Requirement	REL-CRM-0403	Data corruption protection				
+`Nexus\FieldService`	Reliability Requirement	REL-FIE-0404	GPS tracking fault tolerance				
+`Nexus\Manufacturing`	Reliability Requirement	REL-MAN-0405	BOM explosion MUST handle circular references				
+`Nexus\Marketing`	Reliability Requirement	REL-MAR-0406	Data corruption protection				
+`Nexus\Procurement`	Reliability Requirement	REL-PRO-0407	Concurrency control for PO approval				
+`Nexus\ProjectManagement`	Reliability Requirement	REL-PRO-0408	Milestone approval workflow MUST be resumable after failure				
+`Nexus\Crm`	Reliability Requirement	REL-CRM-0409	Retry failed transient operations				
+`Nexus\FieldService`	Reliability Requirement	REL-FIE-0410	Notification delivery guarantee				
+`Nexus\Marketing`	Reliability Requirement	REL-MAR-0411	Retry transient failures				
+`Nexus\Marketing`	Reliability Requirement	REL-MAR-0412	Idempotent operations				
+`Nexus\Marketing`	Reliability Requirement	REL-MAR-0413	Dead letter queue				
+`Nexus\Analytics`	Reliability Requirement	REL-ANA-0414	ACID compliance for queries				
+`Nexus\Analytics`	Reliability Requirement	REL-ANA-0415	Failed data sources don't block				
+`Nexus\Analytics`	Reliability Requirement	REL-ANA-0416	Concurrency control				
+`Nexus\Analytics`	Reliability Requirement	REL-ANA-0417	Data corruption protection				
+`Nexus\Analytics`	Reliability Requirement	REL-ANA-0418	Retry transient failures				
+`Nexus\AuditLogger`	Reliability Requirement	REL-AUD-0419	Failed audit log writes MUST NOT cause application failures (graceful degradation)				
+`Nexus\AuditLogger`	Reliability Requirement	REL-AUD-0420	Queue-based logging with automatic retry on transient failures (3 attempts with exponential backoff)				
+`Nexus\AuditLogger`	Reliability Requirement	REL-AUD-0421	Database transaction safety - audit logs committed atomically with related entity changes				
+`Nexus\AuditLogger`	Reliability Requirement	REL-AUD-0422	Backup and archival strategy for long-term log retention (beyond database)				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0423	Asynchronous integrations				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0424	Horizontal scaling				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0425	Horizontal timer scaling				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0426	Handle 100,000+ active campaigns				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0427	Efficient query performance				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0428	Handle 1,000,000+ leads				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0429	Support 100,000+ active instances				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0430	Concurrent campaign processing				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0431	Efficient query performance				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0432	Caching strategy				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0433	Async aggregations				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0434	Horizontal scaling for timers				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0435	Efficient database queries				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0436	Support 100,000+ reports				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0437	Unauthorized action prevention				
+`Nexus\FieldService`	Security and Compliance Requirement	SEC-FIE-0438	Tenant data isolation				
+`Nexus\Manufacturing`	Security and Compliance Requirement	SEC-MAN-0439	Tenant data isolation				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0440	Prevent unauthorized campaign actions				
+`Nexus\Procurement`	Security and Compliance Requirement	SEC-PRO-0441	Tenant data isolation				
+`Nexus\ProjectManagement`	Security and Compliance Requirement	SEC-PRO-0442	Tenant data isolation				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0443	Expression sanitization				
+`Nexus\FieldService`	Security and Compliance Requirement	SEC-FIE-0444	Role-based access control				
+`Nexus\Manufacturing`	Security and Compliance Requirement	SEC-MAN-0445	Role-based access control				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0446	Sanitize user expressions				
+`Nexus\Procurement`	Security and Compliance Requirement	SEC-PRO-0447	Role-based access control				
+`Nexus\ProjectManagement`	Security and Compliance Requirement	SEC-PRO-0448	Role-based access control				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0449	Tenant isolation				
+`Nexus\FieldService`	Security and Compliance Requirement	SEC-FIE-0450	Mobile app authentication				
+`Nexus\Manufacturing`	Security and Compliance Requirement	SEC-MAN-0451	Production data integrity				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0452	Multi-tenant data isolation				
+`Nexus\Procurement`	Security and Compliance Requirement	SEC-PRO-0453	Vendor data encryption				
+`Nexus\ProjectManagement`	Security and Compliance Requirement	SEC-PRO-0454	Client portal access				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0455	Plugin sandboxing				
+`Nexus\FieldService`	Security and Compliance Requirement	SEC-FIE-0456	Customer signature security				
+`Nexus\Manufacturing`	Security and Compliance Requirement	SEC-MAN-0457	Traceability compliance				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0458	Sandbox plugin execution				
+`Nexus\Procurement`	Security and Compliance Requirement	SEC-PRO-0459	Audit trail completeness				
+`Nexus\ProjectManagement`	Security and Compliance Requirement	SEC-PRO-0460	Timesheet integrity				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0461	Audit change tracking				
+`Nexus\FieldService`	Security and Compliance Requirement	SEC-FIE-0462	GPS data privacy				
+`Nexus\Manufacturing`	Security and Compliance Requirement	SEC-MAN-0463	Quality data protection				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0464	Audit all campaign changes				
+`Nexus\Procurement`	Security and Compliance Requirement	SEC-PRO-0465	Separation of duties				
+`Nexus\ProjectManagement`	Security and Compliance Requirement	SEC-PRO-0466	Financial data protection				
+`Nexus\Crm`	Security and Compliance Requirement	SEC-CRM-0467	RBAC integration				
+`Nexus\FieldService`	Security and Compliance Requirement	SEC-FIE-0468	Service report integrity				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0469	RBAC integration				
+`Nexus\Procurement`	Security and Compliance Requirement	SEC-PRO-0470	Document access control				
+`Nexus\ProjectManagement`	Security and Compliance Requirement	SEC-PRO-0471	Audit trail completeness				
+`Nexus\FieldService`	Security and Compliance Requirement	SEC-FIE-0472	Customer portal access control				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0473	API authentication				
+`Nexus\Marketing`	Security and Compliance Requirement	SEC-MAR-0474	Rate limiting per tenant				
+`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0475	Implement audit logging for all GL postings using ActivityLoggerContract				
+`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0476	Enforce tenant isolation for all accounting data via tenant scoping				
+`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0477	Support authorization policies through contract-based permission system				
+`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0478	Validate business rules at domain layer (before orchestration)				
+`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0479	Implement immutable posting (entries cannot be modified once posted)				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0480	Prevent unauthorized query execution				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0481	Sanitize all filter expressions				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0482	Enforce tenant isolation				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0483	Sandbox plugin execution				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0484	Immutable audit trail				
+`Nexus\Analytics`	Security and Compliance Requirement	SEC-ANA-0485	RBAC integration				
+`Nexus\AuditLogger`	Security and Compliance Requirement	SEC-AUD-0486	Immutable audit logs - once created, logs cannot be modified or deleted (append-only)				
+`Nexus\AuditLogger`	Security and Compliance Requirement	SEC-AUD-0487	Enforce strict tenant isolation - logs can only be accessed by their owning tenant				
+`Nexus\AuditLogger`	Security and Compliance Requirement	SEC-AUD-0488	Automatic masking of sensitive fields (passwords, tokens, API keys, credit cards)				
+`Nexus\AuditLogger`	Security and Compliance Requirement	SEC-AUD-0489	Role-based access control for audit log viewing and export operations				
+`Nexus\AuditLogger`	Security and Compliance Requirement	SEC-AUD-0490	Cryptographic verification of log integrity (hash chain or digital signatures)				
+`Nexus\AuditLogger`	Security and Compliance Requirement	SEC-AUD-0491	Audit the audit system - log all access to audit logs (meta-auditing)				
+`Nexus\Hrm`	Security and Compliance Requirement	SEC-HRM-0492	Implement audit logging for all employee data changes using ActivityLoggerContract				
+`Nexus\Hrm`	Security and Compliance Requirement	SEC-HRM-0493	Enforce tenant isolation for all HR data via tenant scoping				
+`Nexus\Hrm`	Security and Compliance Requirement	SEC-HRM-0494	Support authorization policies through contract-based permission system				
+`Nexus\Hrm`	Security and Compliance Requirement	SEC-HRM-0495	Encrypt sensitive employee data (personal information, salary details) at rest				
+`Nexus\Hrm`	Security and Compliance Requirement	SEC-HRM-0496	Implement field-level access control (HR managers see salary, line managers don't)				
+`Nexus\Payroll`	Security and Compliance Requirement	SEC-PAY-0497	Encrypt all payroll data (salary, tax reliefs) at rest using Laravel encryption				
+`Nexus\Payroll`	Security and Compliance Requirement	SEC-PAY-0498	Implement immutable payslip records with cryptographic hash verification				
+`Nexus\Payroll`	Security and Compliance Requirement	SEC-PAY-0499	Enforce role-based access control for payroll processing operations				
+`Nexus\Payroll`	Security and Compliance Requirement	SEC-PAY-0500	Audit all payroll changes using ActivityLoggerContract				
+`Nexus\Payroll`	Security and Compliance Requirement	SEC-PAY-0501	Support tenant isolation via automatic scoping				
+`Nexus\Payroll`	Security and Compliance Requirement	SEC-PAY-0502	Implement secure payslip access with employee-level authorization				
+`Nexus\Crm`	User Story	USE-CRM-0503	As a developer, I want to add the `HasCrm` trait to my model to manage contacts without migrations				
+`Nexus\FieldService`	User Story	USE-FIE-0504	As a service manager, I want to create work orders specifying service location, work type, and priority				
+`Nexus\Manufacturing`	User Story	USE-MAN-0505	As a production planner, I want to define a bill of materials (BOM) for a finished product listing all required components				
+`Nexus\Marketing`	User Story	USE-MAR-0506	As a developer, I want to add HasMarketing trait to my model to enable campaign tracking				
+`Nexus\OrgStructure`	User Story	USE-ORG-0507	As an HR admin, I want to create hierarchical organizational units (departments, divisions)				
+`Nexus\Procurement`	User Story	USE-PRO-0508	As a requester, I want to create a purchase requisition for items I need, specifying quantity, description, and estimated cost				
+`Nexus\ProjectManagement`	User Story	USE-PRO-0509	As a project manager, I want to create a project with basic details (name, client, start/end dates, budget)				
+`Nexus\Crm`	User Story	USE-CRM-0510	As a developer, I want to define contact fields as an array in my model without external dependencies				
+`Nexus\FieldService`	User Story	USE-FIE-0511	As a dispatcher, I want to assign work orders to available technicians based on skills and location				
+`Nexus\Manufacturing`	User Story	USE-MAN-0512	As a production planner, I want to create a work order specifying what to produce, quantity, and due date				
+`Nexus\Marketing`	User Story	USE-MAR-0513	As a developer, I want to define campaigns as an array in my model				
+`Nexus\OrgStructure`	User Story	USE-ORG-0514	As an HR admin, I want to define positions within organizational units				
+`Nexus\Procurement`	User Story	USE-PRO-0515	As a department manager, I want to approve or reject requisitions from my team members with comments				
+`Nexus\ProjectManagement`	User Story	USE-PRO-0516	As a project manager, I want to create tasks within a project with descriptions, assignees, and due dates				
+`Nexus\Crm`	User Story	USE-CRM-0517	As a developer, I want to call `$model->crm()->addContact($data)` to create a new contact				
+`Nexus\FieldService`	User Story	USE-FIE-0518	As a field technician, I want to view my assigned jobs for the day on my mobile device				
+`Nexus\Manufacturing`	User Story	USE-MAN-0519	As a shop floor supervisor, I want to release a work order to the floor and issue raw materials to production				
+`Nexus\Marketing`	User Story	USE-MAR-0520	As a developer, I want to call $model->marketing()->launchCampaign($data) to start a campaign				
+`Nexus\OrgStructure`	User Story	USE-ORG-0521	As an HR admin, I want to assign employees to positions with effective dates				
+`Nexus\Procurement`	User Story	USE-PRO-0522	As a procurement officer, I want to convert an approved requisition into a purchase order, selecting a vendor and negotiating final price				
+`Nexus\ProjectManagement`	User Story	USE-PRO-0523	As a team member, I want to view all tasks assigned to me across all projects in one place				
+`Nexus\Crm`	User Story	USE-CRM-0524	As a developer, I want to call `$model->crm()->can('edit')` to check permissions declaratively				
+`Nexus\FieldService`	User Story	USE-FIE-0525	As a field technician, I want to start a job, capture time spent, and upload before/after photos				
+`Nexus\Manufacturing`	User Story	USE-MAN-0526	As a machine operator, I want to report production output (quantity completed, quantity scrapped)				
+`Nexus\Marketing`	User Story	USE-MAR-0527	As a developer, I want to call $model->marketing()->can($action) to check permissions				
+`Nexus\OrgStructure`	User Story	USE-ORG-0528	As an HR admin, I want to establish manager-subordinate reporting relationships				
+`Nexus\Procurement`	User Story	USE-PRO-0529	As a procurement officer, I want to create purchase orders directly (without requisition) for regular/recurring purchases				
+`Nexus\ProjectManagement`	User Story	USE-PRO-0530	As a team member, I want to log time against tasks (hours worked, date, description)				
+`Nexus\Crm`	User Story	USE-CRM-0531	As a developer, I want to call `$model->crm()->history()` to view audit logs				
+`Nexus\FieldService`	User Story	USE-FIE-0532	As a field technician, I want to record parts/materials used during service				
+`Nexus\Manufacturing`	User Story	USE-MAN-0533	As a machine operator, I want to record material consumption (actual qty used vs BOM standard)				
+`Nexus\Marketing`	User Story	USE-MAR-0534	As a developer, I want to call $model->marketing()->history() to view campaign history				
+`Nexus\OrgStructure`	User Story	USE-ORG-0535	As a manager, I want to view my direct and indirect reports				
+`Nexus\Procurement`	User Story	USE-PRO-0536	As warehouse staff, I want to record goods receipt against a PO, noting actual quantity received and any discrepancies				
+`Nexus\ProjectManagement`	User Story	USE-PRO-0537	As a project manager, I want to view time logged by team members to track project progress				
+`Nexus\FieldService`	User Story	USE-FIE-0538	As a field technician, I want to capture customer signature upon job completion				
+`Nexus\Manufacturing`	User Story	USE-MAN-0539	As a shop floor supervisor, I want to complete a work order and move finished goods to inventory				
+`Nexus\Marketing`	User Story	USE-MAR-0540	As a developer, I want to define guard conditions on actions				
+`Nexus\OrgStructure`	User Story	USE-ORG-0541	As an analyst, I want to generate organizational charts and headcount reports				
+`Nexus\Procurement`	User Story	USE-PRO-0542	As AP clerk, I want to match a vendor invoice against the PO and GRN (3-way match) before authorizing payment				
+`Nexus\ProjectManagement`	User Story	USE-PRO-0543	As a project manager, I want to mark tasks as complete and track project completion percentage				
+`Nexus\FieldService`	User Story	USE-FIE-0544	As a field technician, I want the system to auto-generate a service report (PDF) for customer				
+`Nexus\Manufacturing`	User Story	USE-MAN-0545	As a production manager, I want to view work order status (planned, released, in production, completed)				
+`Nexus\Marketing`	User Story	USE-MAR-0546	As a developer, I want hooks (before/after) for campaign lifecycle events				
+`Nexus\OrgStructure`	User Story	USE-ORG-0547	As an IT admin, I want to configure directory synchronization settings				
+`Nexus\Procurement`	User Story	USE-PRO-0548	As a requester, I want to view the status of my requisitions (pending, approved, converted to PO, delivered)				
+`Nexus\ProjectManagement`	User Story	USE-PRO-0549	As a team member, I want to receive notifications when tasks are assigned to me or deadlines are approaching				
+`Nexus\FieldService`	User Story	USE-FIE-0550	As a customer, I want to receive a service completion report via email with photos and technician notes				
+`Nexus\FieldService`	User Story	USE-FIE-0551	As a service manager, I want to view work order status (new, scheduled, in progress, completed, verified)				
+`Nexus\Crm`	User Story	USE-CRM-0552	As a developer, I want to promote to database-driven CRM without changing Level 1 code				
+`Nexus\Crm`	User Story	USE-CRM-0553	As a developer, I want to define leads and opportunities with customizable stages				
+`Nexus\Crm`	User Story	USE-CRM-0554	As a developer, I want to use conditional pipelines (e.g., if score > 50, promote to qualified)				
+`Nexus\Crm`	User Story	USE-CRM-0555	As a developer, I want to run parallel campaigns (email + phone calls simultaneously)				
+`Nexus\Crm`	User Story	USE-CRM-0556	As a developer, I want multi-user assignments with approval strategies (unison, majority, quorum)				
+`Nexus\Crm`	User Story	USE-CRM-0557	As a sales manager, I want a unified dashboard showing all pending leads and opportunities				
+`Nexus\Crm`	User Story	USE-CRM-0558	As a sales rep, I want to log interactions with notes and file attachments				
+`Nexus\Crm`	User Story	USE-CRM-0559	As a sales manager, I want stale leads to auto-escalate after a configured time period				
+`Nexus\Crm`	User Story	USE-CRM-0560	As a sales manager, I want SLA tracking for lead response times with breach notifications				
+`Nexus\Crm`	User Story	USE-CRM-0561	As a sales rep, I want to delegate my leads to a colleague during vacation with auto-routing				
+`Nexus\Crm`	User Story	USE-CRM-0562	As a developer, I want to rollback failed campaigns with compensation logic				
+`Nexus\Crm`	User Story	USE-CRM-0563	As a system admin, I want to configure custom fields through an admin interface				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0564	Create project with basic details (name, client, start/end, budget)				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0565	Create and manage tasks with assignees + priority				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0566	Time tracking and timesheet entry				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0567	My Tasks (view all tasks assigned to user)				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0568	Project dashboard (overview, % complete)				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0569	Milestones with approvals and deliverables				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0570	Task dependencies (predecessor) & Gantt-support (calc)				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0571	Resource allocation & overallocation checks				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0572	Budget tracking (planned vs actual)				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0573	Project invoicing (milestone/T&M)				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0574	Expense tracking & approvals				
+`Nexus\ProjectManagement`	Functional Requirement	FUN-PRO-0575	Timesheet approval workflow				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0576	Package MUST be framework-agnostic with no Laravel dependencies in core services				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0577	All data structures defined via interfaces (TenantInterface)				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0578	All persistence operations via repository interface (TenantRepositoryInterface)				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0579	Business logic in service layer (TenantContextManager, TenantLifecycleService)				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0580	All database migrations in application layer (apps/Atomy)				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0581	All Eloquent models in application layer				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0582	Repository implementations in application layer				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0583	Global Scopes for automatic query filtering in application layer (Laravel-specific)				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0584	IoC container bindings in application service provider				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0585	Package composer.json MUST NOT depend on laravel/framework				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0586	Cache operations via CacheRepositoryInterface contract only				
+`Nexus\Tenant`	Architechtural Requirement	ARC-TEN-0587	Context propagation to queued jobs handled by application layer				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0588	Tenant ID MUST be set before any database operations can occur				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0589	Tenant codes MUST be unique across the entire system				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0590	Tenant domains MUST be unique if domain-based identification is used				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0591	Only one tenant context can be active per request/process at a time				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0592	Suspended tenants CANNOT access the system except for admin/billing				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0593	Super admin users can impersonate any tenant for support purposes				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0594	Impersonation sessions MUST log original user, target tenant, and timestamp				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0595	Tenant creation MUST trigger automated setup (default roles, permissions, initial data)				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0596	Trial tenants auto-suspend after trial period expires unless converted				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0597	Tenant deletion MUST be soft delete with configurable retention period before hard delete				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0598	All tenant state changes MUST be ACID-compliant transactions				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0599	Cross-tenant data access MUST be explicitly prevented at query level				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0600	Tenant context MUST persist across queued jobs and background processes				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0601	Maximum concurrent sessions per tenant can be enforced (enterprise feature)				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0602	Tenant timezone settings override system default for all date/time operations				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0603	Tenant locale settings determine default language and number formatting				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0604	Subscription status changes (active, suspended, cancelled) trigger lifecycle events				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0605	Read-only mode can be enabled per tenant for maintenance or migration				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0606	Tenant metadata (custom settings) stored as JSON with schema validation				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0607	Multi-database strategy support (single DB with tenant_id vs separate databases per tenant)				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0608	Tenant branding (logo, colors, name) customizable per tenant				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0609	Storage quota enforcement per tenant with configurable limits				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0610	API rate limiting applied per tenant, not per user				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0611	Billing cycle start date tracked per tenant for subscription management				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0612	Parent-child tenant relationships supported (holding companies with subsidiaries)				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0613	Child tenants inherit configuration from parent unless explicitly overridden				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0614	Impersonation requires specific permission and generates audit trail				
+`Nexus\Tenant`	Business Requirements	BUS-TEN-0615	Tenant onboarding workflow tracks setup progress (0-100% completion)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0616	Identify current tenant from request context (domain, subdomain, header, or session)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0617	Set and retrieve current tenant ID globally within request/process scope				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0618	Clear tenant context (logout, process completion, exception handling)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0619	Validate tenant exists and is active before setting context				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0620	Cache tenant configuration data to reduce database queries				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0621	Support multiple tenant identification strategies (domain, subdomain, path, header, token)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0622	Create new tenant with required fields (code, name, email, status)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0623	Activate tenant (change status from pending to active)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0624	Suspend tenant (prevent access, retain data, reversible)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0625	Reactivate suspended tenant (restore access)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0626	Archive tenant (soft delete with retention policy)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0627	Permanently delete tenant data (hard delete after retention period)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0628	Update tenant metadata (name, email, domain, settings)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0629	Retrieve tenant by ID, code, or domain				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0630	List all tenants with filtering (status, date range, search)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0631	Impersonate tenant as support user (set context + log impersonation)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0632	Stop impersonation and restore original user context				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0633	Track impersonation history (who, when, which tenant, duration)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0634	Emit events for tenant lifecycle changes (created, activated, suspended, deleted)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0635	Configure tenant-specific settings (timezone, locale, currency, date format)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0636	Export tenant configuration for backup or migration				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0637	Import tenant configuration from backup				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0638	Clone tenant (duplicate configuration for new tenant)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0639	Generate tenant usage reports (storage, users, API calls)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0640	Check tenant feature flags and plan entitlements				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0641	Enforce tenant plan limits (max users, max storage, modules)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0642	Switch tenant context for multi-tenant admin dashboard				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0643	Resolve tenant from API authentication token				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0644	Middleware to automatically set tenant context from request				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0645	Provide scoped database connection for tenant-specific queries				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0646	Support separate database per tenant (multi-database strategy)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0647	Support single database with tenant_id column (shared database strategy)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0648	Validate tenant-scoped file uploads (prevent cross-tenant access)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0649	Generate tenant-specific API keys and secrets				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0650	Rotate tenant API keys with zero downtime				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0651	Configure webhook endpoints per tenant for event notifications				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0652	Test tenant context isolation (prevent data leakage)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0653	RESTful API endpoints for tenant management (CRUD operations)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0654	Dashboard showing tenant statistics (total, active, suspended, trial)				
+`Nexus\Tenant`	Functional Requirement	FUN-TEN-0655	Tenant onboarding wizard with step-by-step setup				
+`Nexus\Tenant`	User Story	USE-TEN-0656	As a system admin, I want to create new tenants with automated provisioning				
+`Nexus\Tenant`	User Story	USE-TEN-0657	As a system admin, I want to suspend misbehaving tenants immediately				
+`Nexus\Tenant`	User Story	USE-TEN-0658	As a support engineer, I want to impersonate tenants to troubleshoot issues				
+`Nexus\Tenant`	User Story	USE-TEN-0659	As a tenant admin, I want to customize my tenant's branding and settings				
+`Nexus\Tenant`	User Story	USE-TEN-0660	As a developer, I want automatic tenant isolation without manual filtering				
+`Nexus\Tenant`	User Story	USE-TEN-0661	As a billing manager, I want to track tenant subscription status and billing cycles				
+`Nexus\Tenant`	User Story	USE-TEN-0662	As a system admin, I want to migrate tenants between databases without downtime				
+`Nexus\Tenant`	User Story	USE-TEN-0663	As a compliance officer, I want complete audit logs of all tenant administrative actions				
+`Nexus\Tenant`	User Story	USE-TEN-0664	As a tenant user, I want seamless experience without knowing about multi-tenancy				
+`Nexus\Tenant`	User Story	USE-TEN-0665	As a system architect, I want to switch between shared and separate database strategies
