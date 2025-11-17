@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use Nexus\Workflow\Core\StateEngine;
+use App\Repositories\DbTaskRepository;
+use App\Repositories\DbTimerRepository;
+use Illuminate\Support\ServiceProvider;
+use Nexus\Workflow\Services\SlaService;
+use Nexus\Workflow\Core\ConditionEngine;
+use Nexus\Workflow\Services\TaskManager;
+use App\Repositories\DbHistoryRepository;
+use Nexus\Workflow\Services\InboxService;
 use App\Repositories\DbWorkflowRepository;
 use App\Repositories\DbDefinitionRepository;
-use App\Repositories\DbTaskRepository;
 use App\Repositories\DbDelegationRepository;
-use App\Repositories\DbTimerRepository;
-use App\Repositories\DbHistoryRepository;
-use Illuminate\Support\ServiceProvider;
-use Nexus\Workflow\Contracts\WorkflowRepositoryInterface;
-use Nexus\Workflow\Contracts\DefinitionRepositoryInterface;
+use Nexus\Workflow\Services\WorkflowManager;
+use Nexus\Workflow\Services\DelegationService;
+use Nexus\Workflow\Services\EscalationService;
 use Nexus\Workflow\Contracts\TaskRepositoryInterface;
-use Nexus\Workflow\Contracts\DelegationRepositoryInterface;
 use Nexus\Workflow\Contracts\TimerRepositoryInterface;
 use Nexus\Workflow\Contracts\HistoryRepositoryInterface;
 use Nexus\Workflow\Contracts\ConditionEvaluatorInterface;
-use Nexus\Workflow\Services\WorkflowManager;
-use Nexus\Workflow\Services\TaskManager;
-use Nexus\Workflow\Services\InboxService;
-use Nexus\Workflow\Services\DelegationService;
-use Nexus\Workflow\Services\SlaService;
-use Nexus\Workflow\Services\EscalationService;
-use Nexus\Workflow\Core\StateEngine;
-use Nexus\Workflow\Core\ConditionEngine;
+use Nexus\Workflow\Contracts\WorkflowRepositoryInterface;
+use Nexus\Workflow\Contracts\DefinitionRepositoryInterface;
+use Nexus\Workflow\Contracts\DelegationRepositoryInterface;
 
 /**
  * Workflow Service Provider
