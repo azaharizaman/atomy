@@ -13,14 +13,16 @@ return new class extends Migration
             $table->ulid('tenant_id')->index();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->ulid('parent_id')->nullable();
-            $table->boolean('is_system')->default(false);
+            $table->ulid('parent_role_id')->nullable();
+            $table->boolean('is_system_role')->default(false);
+            $table->boolean('is_super_admin')->default(false);
+            $table->boolean('requires_mfa')->default(false);
             $table->json('metadata')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
             $table->unique(['tenant_id', 'name']);
-            $table->foreign('parent_id')->references('id')->on('roles')->onDelete('set null');
+            $table->foreign('parent_role_id')->references('id')->on('roles')->onDelete('set null');
         });
     }
 

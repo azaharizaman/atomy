@@ -35,7 +35,7 @@ final readonly class IdentityAuthorize
 
         // Check if user has all required permissions
         foreach ($permissions as $permission) {
-            if (!$this->permissionChecker->hasPermission($user->getId(), $permission)) {
+            if (!$this->permissionChecker->hasPermission($user, $permission)) {
                 return response()->json([
                     'error' => 'Forbidden',
                     'message' => 'Insufficient permissions',

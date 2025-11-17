@@ -12,7 +12,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->ulid('tenant_id')->index();
             $table->string('email')->unique();
-            $table->string('password');
+            $table->string('password_hash');
             $table->string('name');
             $table->string('status', 20)->default('active');
             $table->timestamp('email_verified_at')->nullable();
@@ -20,6 +20,8 @@ return new class extends Migration
             $table->boolean('require_password_change')->default(false);
             $table->unsignedInteger('failed_login_attempts')->default(0);
             $table->timestamp('locked_until')->nullable();
+            $table->boolean('mfa_enabled')->default(false);
+            $table->timestamp('last_login_at')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
             $table->softDeletes();

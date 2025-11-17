@@ -24,7 +24,8 @@ final readonly class LaravelPasswordValidator implements PasswordValidatorInterf
         $errors = [];
 
         if (!$this->meetsMinimumLength($password)) {
-            $errors[] = 'Password must be at least 8 characters long';
+            $minLength = config('identity.password.min_length', 8);
+            $errors[] = "Password must be at least {$minLength} characters long";
         }
 
         if (!$this->hasRequiredComplexity($password)) {
@@ -49,23 +50,27 @@ final readonly class LaravelPasswordValidator implements PasswordValidatorInterf
 
     public function hasRequiredComplexity(string $password): bool
     {
-        $requiresComplexity = config('identity.password.require_complexity', true);
+        $requireUppercase = config('identity.password.require_uppercase', false);
+        $requireLowercase = config('identity.password.require_lowercase', false);
+        $requireNumbers = config('identity.password.require_numbers', false);
+        $requireSpecialChars = config('identity.password.require_special_chars', false);
 
-        if (!$requiresComplexity) {
+        // If no requirements set, pass by default
+        if (!$requireUppercase && !$requireLowercase && !$requireNumbers && !$requireSpecialChars) {
             return true;
         }
 
-        $hasUppercase = preg_match('/[A-Z]/', $password);
-        $hasLowercase = preg_match('/[a-z]/', $password);
-        $hasNumbers = preg_match('/[0-9]/', $password);
-        $hasSpecial = preg_match('/[^A-Za-z0-9]/', $password);
+        $hasUppercase = !$requireUppercase || preg_match('/[A-Z]/', $password);
+        $hasLowercase = !$requireLowercase || preg_match('/[a-z]/', $password);
+        $hasNumbers = !$requireNumbers || preg_match('/[0-9]/', $password);
+        $hasSpecial = !$requireSpecialChars || preg_match('/[^A-Za-z0-9]/', $password);
 
         return $hasUppercase && $hasLowercase && $hasNumbers && $hasSpecial;
     }
 
     public function isCompromised(string $password): bool
     {
-        $checkBreaches = config('identity.password.check_breaches', false);
+        $checkBreaches = config('identity.password.breach_check_enabled', false);
 
         if (!$checkBreaches) {
             return false;

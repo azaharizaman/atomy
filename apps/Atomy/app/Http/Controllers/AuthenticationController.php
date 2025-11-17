@@ -11,7 +11,7 @@ use Nexus\Identity\Contracts\TokenManagerInterface;
 use Nexus\Identity\Contracts\UserAuthenticatorInterface;
 use Nexus\Identity\Contracts\UserManagerInterface;
 use Nexus\Identity\Exceptions\InvalidCredentialsException;
-use Nexus\Identity\Exceptions\UserLockedException;
+use Nexus\Identity\Exceptions\AccountLockedException;
 use Nexus\Identity\ValueObjects\Credentials;
 
 final readonly class AuthenticationController
@@ -50,8 +50,8 @@ final readonly class AuthenticationController
 
             return response()->json([
                 'message' => 'Login successful',
-                'session_token' => $sessionToken->getToken(),
-                'expires_at' => $sessionToken->getExpiresAt()->format('c'),
+                'session_token' => $sessionToken->token,
+                'expires_at' => $sessionToken->expiresAt->format('c'),
                 'user' => [
                     'id' => $user->getId(),
                     'email' => $user->getEmail(),
@@ -63,7 +63,7 @@ final readonly class AuthenticationController
                 'error' => 'Invalid credentials',
                 'message' => $e->getMessage(),
             ], 401);
-        } catch (UserLockedException $e) {
+        } catch (AccountLockedException $e) {
             return response()->json([
                 'error' => 'Account locked',
                 'message' => $e->getMessage(),
@@ -104,11 +104,11 @@ final readonly class AuthenticationController
 
         return response()->json([
             'message' => 'Token created successfully',
-            'token' => $apiToken->getToken(),
-            'token_id' => $apiToken->getId(),
-            'name' => $apiToken->getName(),
-            'scopes' => $apiToken->getScopes(),
-            'expires_at' => $apiToken->getExpiresAt()?->format('c'),
+            'token' => $apiToken->token,
+            'token_id' => $apiToken->id,
+            'name' => $apiToken->name,
+            'scopes' => $apiToken->scopes,
+            'expires_at' => $apiToken->expiresAt?->format('c'),
         ], 201);
     }
 

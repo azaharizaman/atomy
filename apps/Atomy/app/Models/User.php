@@ -42,6 +42,7 @@ class User extends Model implements UserInterface
         'email_verified_at',
         'password_changed_at',
         'mfa_enabled',
+        'metadata',
     ];
 
     protected $casts = [
@@ -50,6 +51,7 @@ class User extends Model implements UserInterface
         'last_login_at' => 'datetime',
         'mfa_enabled' => 'boolean',
         'failed_login_attempts' => 'integer',
+        'metadata' => 'array',
     ];
 
     protected $hidden = [
@@ -175,5 +177,10 @@ class User extends Model implements UserInterface
     public function hasMfaEnabled(): bool
     {
         return $this->mfa_enabled;
+    }
+
+    public function getMetadata(): ?array
+    {
+        return $this->metadata;
     }
 }

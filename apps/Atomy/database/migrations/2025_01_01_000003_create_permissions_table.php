@@ -12,6 +12,8 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->ulid('tenant_id')->index();
             $table->string('name');
+            $table->string('resource');
+            $table->string('action');
             $table->text('description')->nullable();
             $table->boolean('is_system')->default(false);
             $table->json('metadata')->nullable();

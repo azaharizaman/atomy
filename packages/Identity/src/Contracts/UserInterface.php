@@ -82,4 +82,11 @@ interface UserInterface
      * Check if the user has MFA enabled
      */
     public function hasMfaEnabled(): bool;
+
+    /**
+     * Get the user's metadata
+     * 
+     * @return array<string, mixed>|null
+     */
+    public function getMetadata(): ?array;
 }

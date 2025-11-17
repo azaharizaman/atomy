@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('login_attempts', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->ulid('user_id');
+            $table->ulid('user_id')->nullable();
+            $table->string('email');
             $table->string('ip_address', 45);
             $table->text('user_agent')->nullable();
             $table->boolean('successful')->default(false);
@@ -20,6 +21,7 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->index(['user_id', 'attempted_at']);
             $table->index(['user_id', 'successful']);
+            $table->index('email');
         });
     }
 
