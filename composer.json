@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "nexus/connector": "*@dev",
         "nexus/payroll-mys-statutory": "*@dev",
         "nexus/storage": "*@dev"
     },
@@ -50,8 +51,12 @@
             "url": "./packages/Setting"
         },
         {
-            "type": "path"
+            "type": "path",
             "url": "./packages/Storage"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Connector"
         }
     ],
     "minimum-stability": "dev",
