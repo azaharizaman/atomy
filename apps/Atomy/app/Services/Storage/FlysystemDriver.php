@@ -246,7 +246,10 @@ readonly class FlysystemDriver implements StorageDriverInterface
             throw InvalidPathException::directoryTraversal($path);
         }
 
-        // Check for absolute paths (we want relative paths only)
+        // Absolute path validation ordering:
+        // - Windows absolute paths with backslashes (e.g., "C:\path") are rejected by the normalization check below.
+        // - The regex here catches drive-letter absolute paths (e.g., "C:/path" or "C:").
+        // - This ordering is intentional to ensure all absolute paths are rejected, regardless of separator.
         if (str_starts_with($path, '/') || preg_match('/^[a-zA-Z]:/', $path)) {
             throw InvalidPathException::absolutePathNotAllowed($path);
         }
