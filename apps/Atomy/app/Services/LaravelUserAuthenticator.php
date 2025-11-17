@@ -55,7 +55,7 @@ final readonly class LaravelUserAuthenticator implements UserAuthenticatorInterf
             $this->recordFailedAttempt($user->getId(), $credentials->email, 'Invalid password');
 
             // Lock account after threshold
-            $lockoutThreshold = config('identity.security.lockout_threshold', 5);
+            $lockoutThreshold = config('identity.lockout.threshold', 5);
             if ($failedAttempts >= $lockoutThreshold) {
                 $this->userRepository->lockAccount($user->getId(), 'Too many failed login attempts');
                 throw new AccountLockedException('Account has been locked due to too many failed login attempts');
@@ -89,12 +89,6 @@ final readonly class LaravelUserAuthenticator implements UserAuthenticatorInterf
 
     public function canAuthenticate(UserInterface $user): bool
     {
-        // Check if email is verified (if required)
-        $requireEmailVerification = config('identity.security.require_email_verification', true);
-        if ($requireEmailVerification && !$user->isEmailVerified()) {
-            return false;
-        }
-
         // Check if account is active
         return $user->isActive();
     }

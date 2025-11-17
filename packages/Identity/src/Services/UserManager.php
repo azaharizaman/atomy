@@ -144,8 +144,14 @@ final readonly class UserManager
      */
     public function suspendUser(string $userId, string $reason): void
     {
+        $user = $this->userRepository->findById($userId);
+        $metadata = $user->getMetadata() ?? [];
+        $metadata['suspension_reason'] = $reason;
+        $metadata['suspended_at'] = (new \DateTimeImmutable())->format('c');
+        
         $this->userRepository->update($userId, [
             'status' => UserStatus::SUSPENDED->value,
+            'metadata' => $metadata,
         ]);
     }
 

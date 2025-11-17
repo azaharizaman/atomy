@@ -177,8 +177,14 @@ final readonly class DbUserRepository implements UserRepositoryInterface
 
     public function lockAccount(string $userId, string $reason): void
     {
-        User::where('id', $userId)->update([
+        $user = User::findOrFail($userId);
+        $metadata = $user->metadata ?? [];
+        $metadata['lock_reason'] = $reason;
+        $metadata['locked_at'] = now()->toISOString();
+        
+        $user->update([
             'status' => UserStatus::LOCKED->value,
+            'metadata' => $metadata,
         ]);
     }
 
