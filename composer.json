@@ -4,7 +4,8 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": "^8.3"
+        "php": "^8.3",
+        "nexus/payroll-mys-statutory": "*@dev"
     },
     "repositories": [
         {
@@ -38,6 +39,10 @@
         {
             "type": "path",
             "url": "./packages/Backoffice"
+        },
+        {
+            "type": "path",
+            "url": "./packages/PayrollMysStatutory"
         }
     ],
     "minimum-stability": "dev",
