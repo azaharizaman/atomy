@@ -36,6 +36,7 @@ nexus/
 │   ├── Uom/               # Unit of measurement
 │   ├── Inventory/         # Inventory management
 │   ├── Setting/           # Setting management
+│   ├── Connector/         # Connector as integration hub engine (if applicable)
 │   ├── Storage/           # Storage engine (if applicable)
 │   ├── Document/          # Document engine (if applicable)
 │   └── Workflow/          # Workflow engine (if applicable)

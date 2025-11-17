@@ -2235,3 +2235,113 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\Document`	User Story	USE-DOC-013	As an end-user, I want to see who accessed my documents and when via audit logs				
 `Nexus\Document`	User Story	USE-DOC-014	As a developer, I want to generate temporary public URLs with $urlGenerator->getTemporaryUrl($storagePath, 3600) for secure sharing				
 `Nexus\Document`	User Story	USE-DOC-015	As a system integrator, I want to swap storage backends without changing document management code, only Atomy bindings				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0001	Package MUST be framework-agnostic with no Laravel dependencies in core services				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0002	All external communication defined via domain-specific interfaces (EmailServiceConnectorInterface, PaymentGatewayConnectorInterface)				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0003	All credential retrieval via CredentialProviderInterface contract				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0004	All integration logging via IntegrationLoggerInterface contract				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0005	Business logic (retry, circuit breaker, rate limiting) in service layer				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0006	All vendor adapters implemented in application layer (apps/Atomy)				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0007	All vendor SDK dependencies in application composer.json, NOT package composer.json				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0008	Adapter binding to contracts via configuration in application service provider				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0009	Package composer.json MUST NOT depend on any vendor SDK (Mailchimp, SendGrid, Stripe, etc.)				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0010	Support plugin/adapter pattern for vendor swapping via configuration				
+`Nexus\Connector`	Business Requirements	BUS-CON-0001	All external API calls MUST be logged with request/response data for audit trail				
+`Nexus\Connector`	Business Requirements	BUS-CON-0002	Failed requests MUST be retried with exponential backoff strategy (max 3 retries by default)				
+`Nexus\Connector`	Business Requirements	BUS-CON-0003	Circuit breaker MUST open after 5 consecutive failures and remain open for 60 seconds				
+`Nexus\Connector`	Business Requirements	BUS-CON-0004	Rate limiting MUST respect vendor-specific limits (e.g., Mailchimp 10 req/sec, Stripe 100 req/sec)				
+`Nexus\Connector`	Business Requirements	BUS-CON-0005	Timeout values MUST be configurable per endpoint (default 30 seconds)				
+`Nexus\Connector`	Business Requirements	BUS-CON-0006	Sensitive data (API keys, tokens, secrets) MUST NOT be logged in integration history				
+`Nexus\Connector`	Business Requirements	BUS-CON-0007	Webhook signatures MUST be verified before processing incoming webhook requests				
+`Nexus\Connector`	Business Requirements	BUS-CON-0008	OAuth token refresh MUST happen automatically when access token expires				
+`Nexus\Connector`	Business Requirements	BUS-CON-0009	Each integration MUST track success rate, average response time, and error rate metrics				
+`Nexus\Connector`	Business Requirements	BUS-CON-0010	Failed requests with 429 (rate limit) status MUST use vendor-specific retry-after headers				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0001	Provide domain-specific contracts (EmailServiceConnectorInterface, SmsServiceConnectorInterface, PaymentGatewayConnectorInterface)				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0002	Define standardized request/response value objects for each domain				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0003	Support synchronous and asynchronous request execution				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0004	Implement exponential backoff retry strategy with configurable max attempts				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0005	Implement circuit breaker pattern with configurable failure threshold and timeout				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0006	Implement rate limiting with token bucket algorithm per endpoint				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0007	Record all integration attempts with IntegrationLoggerInterface (timestamp, endpoint, status, duration, error)				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0008	Provide CredentialProviderInterface for retrieving API keys, tokens, secrets from secure storage				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0009	Support multiple authentication methods (API Key, Bearer Token, OAuth 2.0, Basic Auth)				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0010	Provide webhook verification interface for validating incoming webhook signatures				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0011	Support request/response transformation hooks for custom data mapping				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0012	Provide endpoint configuration value objects (url, method, headers, timeout, retry policy)				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0013	Support batch operations for services that allow bulk API calls				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0014	Emit events for successful requests, failed requests, and circuit breaker state changes				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0015	Provide connection health check interface for monitoring external service availability				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0016	Support request idempotency keys for safe retry of non-idempotent operations				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0017	Provide request queueing mechanism for rate-limited endpoints				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0018	Support multi-region endpoints with automatic failover				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0019	Provide metrics aggregation for monitoring dashboards (success rate, latency percentiles, error counts)				
+`Nexus\Connector`	Functional Requirement	FUN-CON-0020	Support conditional requests with ETag/If-Modified-Since headers for caching				
+`Nexus\Connector`	Performance Requirement	PER-CON-0001	Request execution overhead < 10ms for connection initialization				
+`Nexus\Connector`	Performance Requirement	PER-CON-0002	Circuit breaker state check < 1ms for hot path				
+`Nexus\Connector`	Performance Requirement	PER-CON-0003	Rate limiter decision < 5ms per request				
+`Nexus\Connector`	Performance Requirement	PER-CON-0004	Integration log persistence < 50ms (async) without blocking request				
+`Nexus\Connector`	Performance Requirement	PER-CON-0005	Connection pool reuse to minimize TLS handshake overhead				
+`Nexus\Connector`	Performance Requirement	PER-CON-0006	Support 1000+ concurrent requests with proper connection pooling				
+`Nexus\Connector`	Performance Requirement	PER-CON-0007	Credential cache hit rate > 95% to avoid repeated vault lookups				
+`Nexus\Connector`	Performance Requirement	PER-CON-0008	Metrics collection overhead < 2ms per request				
+`Nexus\Connector`	Reliability Requirement	REL-CON-0001	Failed requests MUST NOT crash the application (graceful error handling)				
+`Nexus\Connector`	Reliability Requirement	REL-CON-0002	Circuit breaker prevents cascading failures to dependent services				
+`Nexus\Connector`	Reliability Requirement	REL-CON-0003	Retry logic with exponential backoff prevents thundering herd problem				
+`Nexus\Connector`	Reliability Requirement	REL-CON-0004	Connection timeouts prevent indefinite blocking of application threads				
+`Nexus\Connector`	Reliability Requirement	REL-CON-0005	Request idempotency keys prevent duplicate processing on retry				
+`Nexus\Connector`	Reliability Requirement	REL-CON-0006	Credential refresh failures trigger alerts but don't block cached credentials				
+`Nexus\Connector`	Reliability Requirement	REL-CON-0007	Webhook signature verification prevents unauthorized request processing				
+`Nexus\Connector`	Reliability Requirement	REL-CON-0008	Multi-region failover maintains service availability during regional outages				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0001	Credentials MUST be retrieved via CredentialProviderInterface, never hardcoded				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0002	API keys and tokens MUST be masked in logs (show only first 4 and last 4 characters)				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0003	All HTTPS connections MUST verify SSL certificates (no insecure bypass)				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0004	Webhook payloads MUST be validated with HMAC signatures before processing				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0005	OAuth tokens MUST be stored encrypted at rest via CredentialProviderInterface				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0006	Request/response bodies containing PII MUST be sanitized before logging				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0007	Integration audit logs MUST be tamper-proof (append-only, immutable)				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0008	Support tenant isolation for multi-tenant credential storage				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0009	Rate limiting MUST prevent abuse of external APIs (cost control)				
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0010	Expose integration metrics only to authorized users with proper RBAC				
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0001	All interfaces MUST use strict PHP 8.3+ type hints with readonly properties				
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0002	Custom exceptions MUST be defined for all error scenarios (ConnectionException, RateLimitException, AuthenticationException)				
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0003	Service orchestration logic MUST be separated from adapter implementations				
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0004	Value Objects MUST be created for Endpoint, Credentials, IntegrationLog, RetryPolicy				
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0005	Package README MUST include architecture diagrams and vendor adapter examples				
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0006	All public methods MUST have comprehensive docblocks with usage examples				
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0007	Adapter implementations MUST follow consistent naming convention (VendorNameServiceTypeAdapter)				
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0008	Configuration schema MUST be documented with validation rules				
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0001	Support horizontal scaling via stateless connector design (no in-memory state except cache)				
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0002	Integration log queries MUST use indexed fields (tenant_id, endpoint, status, created_at)				
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0003	Credential cache MUST use distributed cache (Redis) for multi-server deployments				
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0004	Rate limiter MUST use distributed storage for accurate limiting across servers				
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0005	Circuit breaker state MUST be shared across application instances				
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0006	Support asynchronous request execution via queue workers for background processing				
+`Nexus\Connector`	User Story	USE-CON-0001	As a developer, I want to call $emailConnector->sendTransactionalEmail($recipient, $subject, $body) without knowing the vendor implementation				
+`Nexus\Connector`	User Story	USE-CON-0002	As a developer, I want to swap email vendors from Mailchimp to SendGrid by changing a config value and binding				
+`Nexus\Connector`	User Story	USE-CON-0003	As a developer, I want failed API calls to retry automatically with exponential backoff				
+`Nexus\Connector`	User Story	USE-CON-0004	As a developer, I want circuit breaker to prevent repeated failures from cascading to my application				
+`Nexus\Connector`	User Story	USE-CON-0005	As a system administrator, I want to view integration health metrics (success rate, latency, error rate) in monitoring dashboard				
+`Nexus\Connector`	User Story	USE-CON-0006	As a system administrator, I want to configure rate limits per vendor to prevent exceeding API quotas				
+`Nexus\Connector`	User Story	USE-CON-0007	As a security officer, I want all external API calls logged for audit compliance				
+`Nexus\Connector`	User Story	USE-CON-0008	As a developer, I want webhook requests verified with signatures before processing to prevent spoofing				
+`Nexus\Connector`	User Story	USE-CON-0009	As a developer, I want OAuth tokens refreshed automatically when they expire				
+`Nexus\Connector`	User Story	USE-CON-0010	As a developer, I want to implement a new vendor adapter by creating a class that implements the domain interface				
+`Nexus\Connector`	User Story	USE-CON-0011	As a system integrator, I want credentials stored securely and retrieved via CredentialProviderInterface				
+`Nexus\Connector`	User Story	USE-CON-0012	As a developer, I want sensitive data masked in logs automatically (API keys, tokens)				
+`Nexus\Connector`	User Story	USE-CON-0013	As a developer, I want to handle payment processing via $paymentGateway->charge($amount, $card) with vendor abstraction				
+`Nexus\Connector`	User Story	USE-CON-0014	As a developer, I want to send SMS via $smsConnector->send($phone, $message) regardless of provider (Twilio, Nexmo)				
+`Nexus\Connector`	User Story	USE-CON-0015	As a system administrator, I want alerts when circuit breaker opens or integration error rate exceeds threshold				
+`Nexus\Connector`	Integration Requirement	INT-CON-0001	MUST integrate with Nexus\AuditLogger for comprehensive audit trails of all external communications				
+`Nexus\Connector`	Integration Requirement	INT-CON-0002	MUST integrate with Nexus\Setting for retrieving endpoint configurations and credentials				
+`Nexus\Connector`	Integration Requirement	INT-CON-0003	SHOULD integrate with Nexus\Tenant for multi-tenant credential isolation				
+`Nexus\Connector`	Integration Requirement	INT-CON-0004	MAY integrate with Nexus\Workflow for orchestrating multi-step integration workflows				
+`Nexus\Connector`	Integration Requirement	INT-CON-0005	MUST support event dispatching for integration with application-level monitoring				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0001	EmailServiceConnectorInterface MUST define sendTransactionalEmail, sendBulkEmail, validateAddress methods				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0002	SmsServiceConnectorInterface MUST define send, sendBulk, validatePhoneNumber, checkBalance methods				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0003	PaymentGatewayConnectorInterface MUST define charge, refund, captureAuthorization, createPaymentIntent methods				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0004	CloudStorageConnectorInterface MUST define upload, download, delete, generateSignedUrl methods				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0005	ShippingProviderConnectorInterface MUST define createShipment, trackShipment, calculateRates, cancelShipment methods				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0006	CalendarConnectorInterface MUST define createEvent, updateEvent, deleteEvent, listEvents, addAttendees methods				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0007	NotificationServiceConnectorInterface MUST define sendPushNotification, sendInAppNotification, registerDevice methods				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0008	VideoConferencingConnectorInterface MUST define createMeeting, startMeeting, endMeeting, getRecordings methods				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0009	MapServiceConnectorInterface MUST define geocode, reverseGeocode, calculateDistance, getDirections methods				
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0010	AnalyticsServiceConnectorInterface MUST define trackEvent, trackPageView, identifyUser, getReport methods				
