@@ -15,6 +15,7 @@ use Nexus\Payroll\Services\PayslipManager;
 use App\Repositories\Payroll\EloquentComponentRepository;
 use App\Repositories\Payroll\EloquentPayslipRepository;
 use App\Services\Payroll\TenantAwareStatutoryCalculator;
+use Nexus\PayrollMysStatutory\Calculators\MalaysiaStatutoryCalculator;
 
 /**
  * Payroll Service Provider
@@ -36,7 +37,21 @@ class PayrollServiceProvider extends ServiceProvider
         // Bind StatutoryCalculatorInterface to tenant-aware implementation
         // This implementation will load the correct country-specific calculator
         // based on tenant configuration (e.g., Malaysia EPF/SOCSO/EIS/PCB, Singapore CPF/SDL)
-        $this->app->singleton(StatutoryCalculatorInterface::class, TenantAwareStatutoryCalculator::class);
+        $this->app->singleton(StatutoryCalculatorInterface::class, function ($app) {
+            $tenantCalculator = new TenantAwareStatutoryCalculator();
+            
+            // Register Malaysia statutory calculator
+            $tenantCalculator->registerCalculator('MY', new MalaysiaStatutoryCalculator());
+            
+            // Set Malaysia as default country (can be configured per tenant)
+            $tenantCalculator->setDefaultCountryCode('MY');
+            
+            // Future: Register other country calculators here
+            // $tenantCalculator->registerCalculator('SG', new SingaporeStatutoryCalculator());
+            // $tenantCalculator->registerCalculator('ID', new IndonesiaStatutoryCalculator());
+            
+            return $tenantCalculator;
+        });
 
         // Bind service managers (auto-resolvable via constructor injection)
         $this->app->singleton(PayrollEngine::class);
