@@ -241,7 +241,7 @@ class StorageController
     public function temporaryUrl(Request $request, string $path): JsonResponse
     {
         $request->validate([
-            'expiration' => 'sometimes|integer|min:60|max:86400',
+            'expiration' => 'sometimes|integer|min:60|max:' . config('storage.temporary_urls.max_expiration', 86400),
         ]);
 
         try {
