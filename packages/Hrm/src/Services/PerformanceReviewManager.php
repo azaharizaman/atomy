@@ -44,7 +44,7 @@ readonly class PerformanceReviewManager
         
         return $this->reviewRepository->update($id, [
             'status' => ReviewStatus::PENDING->value,
-            'submitted_at' => now(),
+            'submitted_at' => new \DateTime(),
         ]);
     }
     
@@ -59,7 +59,7 @@ readonly class PerformanceReviewManager
         return $this->reviewRepository->update($id, [
             'status' => ReviewStatus::COMPLETED->value,
             'overall_score' => $overallScore,
-            'completed_at' => now(),
+            'completed_at' => new \DateTime(),
         ]);
     }
     

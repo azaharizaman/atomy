@@ -43,7 +43,7 @@ readonly class AttendanceManager
         $attendanceData = array_merge($data, [
             'employee_id' => $employeeId,
             'date' => $today->format('Y-m-d'),
-            'clock_in_time' => now(),
+            'clock_in_time' => new \DateTime(),
             'status' => AttendanceStatus::PRESENT->value,
         ]);
         
@@ -83,7 +83,7 @@ readonly class AttendanceManager
         }
         
         $updateData = array_merge($data, [
-            'clock_out_time' => now(),
+            'clock_out_time' => new \DateTime(),
         ]);
         
         // Extract location data if provided

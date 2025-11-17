@@ -56,7 +56,7 @@ readonly class LeaveManager
         
         // Set default status
         $data['status'] ??= LeaveStatus::PENDING->value;
-        $data['submitted_at'] ??= now();
+        $data['submitted_at'] ??= new \DateTime();
         
         return $this->leaveRepository->create($data);
     }
@@ -81,7 +81,7 @@ readonly class LeaveManager
         $updatedLeave = $this->leaveRepository->update($id, [
             'status' => LeaveStatus::APPROVED->value,
             'approved_by' => $approverId,
-            'approved_at' => now(),
+            'approved_at' => new \DateTime(),
         ]);
         
         // Deduct from leave balance
@@ -115,7 +115,7 @@ readonly class LeaveManager
         return $this->leaveRepository->update($id, [
             'status' => LeaveStatus::REJECTED->value,
             'approved_by' => $approverId,
-            'approved_at' => now(),
+            'approved_at' => new \DateTime(),
             'rejection_reason' => $reason,
         ]);
     }
@@ -148,7 +148,7 @@ readonly class LeaveManager
         
         return $this->leaveRepository->update($id, [
             'status' => LeaveStatus::CANCELLED->value,
-            'cancelled_at' => now(),
+            'cancelled_at' => new \DateTime(),
             'cancellation_reason' => $reason,
         ]);
     }

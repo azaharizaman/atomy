@@ -23,7 +23,7 @@ readonly class DisciplinaryManager
     public function createCase(array $data): DisciplinaryInterface
     {
         $data['status'] ??= DisciplinaryStatus::REPORTED->value;
-        $data['reported_date'] ??= now();
+        $data['reported_date'] ??= new \DateTime();
         
         return $this->disciplinaryRepository->create($data);
     }
@@ -57,7 +57,7 @@ readonly class DisciplinaryManager
             'status' => DisciplinaryStatus::RESOLVED->value,
             'resolution' => $resolution,
             'action_taken' => $actionTaken,
-            'investigation_completed_at' => now(),
+            'investigation_completed_at' => new \DateTime(),
         ]);
     }
     

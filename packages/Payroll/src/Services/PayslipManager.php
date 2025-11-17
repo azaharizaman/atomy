@@ -42,7 +42,7 @@ readonly class PayslipManager
         return $this->payslipRepository->update($id, [
             'status' => PayslipStatus::APPROVED->value,
             'approved_by' => $approvedBy,
-            'approved_at' => now(),
+            'approved_at' => new \DateTime(),
         ]);
     }
     

@@ -58,7 +58,7 @@ readonly class TrainingManager
             'training_id' => $trainingId,
             'employee_id' => $employeeId,
             'status' => EnrollmentStatus::ENROLLED->value,
-            'enrolled_at' => now(),
+            'enrolled_at' => new \DateTime(),
         ]);
     }
     
@@ -70,7 +70,7 @@ readonly class TrainingManager
             'status' => $isPassed ? EnrollmentStatus::PASSED->value : EnrollmentStatus::FAILED->value,
             'score' => $score,
             'is_passed' => $isPassed,
-            'completed_at' => now(),
+            'completed_at' => new \DateTime(),
         ]);
     }
     
@@ -84,7 +84,7 @@ readonly class TrainingManager
         
         return $this->enrollmentRepository->update($enrollmentId, [
             'certificate_issued' => true,
-            'certificate_issued_at' => now(),
+            'certificate_issued_at' => new \DateTime(),
         ]);
     }
     

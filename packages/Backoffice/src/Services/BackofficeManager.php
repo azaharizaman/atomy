@@ -472,7 +472,43 @@ class BackofficeManager implements BackofficeManagerInterface
             }
         }
 
-                // Validate unique staff code if changed\n        if (isset($data['staff_code']) && !empty($staff->getStaffCode()) && $data['staff_code'] !== $staff->getStaffCode()) {\n            if (!empty($data['staff_code']) && $this->staffRepository->staffCodeExists($data['staff_code'], $id)) {\n                throw new DuplicateCodeException('Staff code', $data['staff_code']);\n            }\n        }\n\n        // Validate email uniqueness within company if changed\n        if (isset($data['email']) && isset($data['company_id']) && !empty($data['email'])) {\n            if ($this->staffRepository->emailExists($data['company_id'], $data['email'], $id)) {\n                throw new \\InvalidArgumentException('Email already exists in company');\n            }\n        }\n\n        // Validate supervisor if provided\n        if (isset($data['supervisor_id']) && !empty($data['supervisor_id'])) {\n            $supervisor = $this->staffRepository->findById($data['supervisor_id']);\n            if (!$supervisor) {\n                throw new StaffNotFoundException($data['supervisor_id']);\n            }\n\n            // Prevent self-supervision\n            if ($data['supervisor_id'] === $id) {\n                throw new \\InvalidArgumentException('Staff cannot be their own supervisor');\n            }\n\n            // Validate no circular supervisor chain\n            if ($this->staffRepository->hasCircularSupervisor($id, $data['supervisor_id'])) {\n                throw new CircularReferenceException('Staff', $id, $data['supervisor_id']);\n            }\n\n            // Validate supervisor chain depth (max 15 levels)\n            $depth = $this->staffRepository->getSupervisorChainDepth($data['supervisor_id']);\n            if ($depth >= 15) {\n                throw new InvalidHierarchyException('Maximum supervisor chain depth (15 levels) exceeded');\n            }\n        }
+        // Validate unique staff code if changed
+        if (isset($data['staff_code']) && !empty($staff->getStaffCode()) && $data['staff_code'] !== $staff->getStaffCode()) {
+            if (!empty($data['staff_code']) && $this->staffRepository->staffCodeExists($data['staff_code'], $id)) {
+                throw new DuplicateCodeException('Staff code', $data['staff_code']);
+            }
+        }
+
+        // Validate email uniqueness within company if changed
+        if (isset($data['email']) && isset($data['company_id']) && !empty($data['email'])) {
+            if ($this->staffRepository->emailExists($data['company_id'], $data['email'], $id)) {
+                throw new \InvalidArgumentException('Email already exists in company');
+            }
+        }
+
+        // Validate supervisor if provided
+        if (isset($data['supervisor_id']) && !empty($data['supervisor_id'])) {
+            $supervisor = $this->staffRepository->findById($data['supervisor_id']);
+            if (!$supervisor) {
+                throw new StaffNotFoundException($data['supervisor_id']);
+            }
+
+            // Prevent self-supervision
+            if ($data['supervisor_id'] === $id) {
+                throw new \InvalidArgumentException('Staff cannot be their own supervisor');
+            }
+
+            // Validate no circular supervisor chain
+            if ($this->staffRepository->hasCircularSupervisor($id, $data['supervisor_id'])) {
+                throw new CircularReferenceException('Staff', $id, $data['supervisor_id']);
+            }
+
+            // Validate supervisor chain depth (max 15 levels)
+            $depth = $this->staffRepository->getSupervisorChainDepth($data['supervisor_id']);
+            if ($depth >= 15) {
+                throw new InvalidHierarchyException('Maximum supervisor chain depth (15 levels) exceeded');
+            }
+        }
 
         return $this->staffRepository->update($id, $data);
     }
