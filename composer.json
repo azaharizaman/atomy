@@ -43,6 +43,10 @@
         {
             "type": "path",
             "url": "./packages/PayrollMysStatutory"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Setting"
         }
     ],
     "minimum-stability": "dev",

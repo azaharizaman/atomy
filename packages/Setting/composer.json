@@ -1,0 +1,29 @@
+{
+    "name": "nexus/setting",
+    "description": "Framework-agnostic settings management engine with hierarchical resolution across user, tenant, and application layers",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "nexus",
+        "settings",
+        "configuration",
+        "multi-tenant",
+        "hierarchical",
+        "php"
+    ],
+    "authors": [
+        {
+            "name": "Nexus Team"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Setting\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
