@@ -16,6 +16,7 @@ use Nexus\Setting\Contracts\SettingsCacheInterface;
 class LaravelSettingsCacheRepository implements SettingsCacheInterface
 {
     private const CACHE_KEYS_REGISTRY = '_all_setting_keys';
+    private const REGISTRY_LOCK_TIMEOUT = 5; // seconds
 
     /**
      * Retrieve a value from cache.
@@ -87,8 +88,10 @@ class LaravelSettingsCacheRepository implements SettingsCacheInterface
      */
     public function forgetPattern(string $pattern): void
     {
-        // Convert glob pattern to regex (e.g., 'setting:user:*' -> 'setting:user:.*')
-        $regex = '/^' . str_replace(['*', ':'], ['.*', '\:'], preg_quote($pattern, '/')) . '$/';
+        // Correctly convert glob pattern to regex: escape all except '*', then replace '*' with '.*'
+        $quoted = preg_quote($pattern, '/');
+        // Restore '*' wildcards (preg_quote turns '*' into '\*')
+        $regex = '/^' . str_replace('\*', '.*', $quoted) . '$/';
 
         // Get all cache keys from registry
         $keys = Cache::get(self::CACHE_KEYS_REGISTRY, []);
@@ -103,24 +106,44 @@ class LaravelSettingsCacheRepository implements SettingsCacheInterface
 
     /**
      * Add a key to the registry for pattern-based invalidation.
+     * Uses cache locking to prevent race conditions.
      */
     private function addKeyToRegistry(string $key): void
     {
-        $keys = Cache::get(self::CACHE_KEYS_REGISTRY, []);
-        
-        if (!in_array($key, $keys, true)) {
-            $keys[] = $key;
-            Cache::forever(self::CACHE_KEYS_REGISTRY, $keys);
+        $lock = Cache::lock(self::CACHE_KEYS_REGISTRY . '_lock', self::REGISTRY_LOCK_TIMEOUT);
+
+        try {
+            // Attempt to acquire lock with blocking
+            $lock->block(self::REGISTRY_LOCK_TIMEOUT);
+
+            $keys = Cache::get(self::CACHE_KEYS_REGISTRY, []);
+            
+            if (!in_array($key, $keys, true)) {
+                $keys[] = $key;
+                Cache::forever(self::CACHE_KEYS_REGISTRY, $keys);
+            }
+        } finally {
+            $lock->release();
         }
     }
 
     /**
      * Remove a key from the registry.
+     * Uses cache locking to prevent race conditions.
      */
     private function removeKeyFromRegistry(string $key): void
     {
-        $keys = Cache::get(self::CACHE_KEYS_REGISTRY, []);
-        $keys = array_filter($keys, fn($k) => $k !== $key);
-        Cache::forever(self::CACHE_KEYS_REGISTRY, array_values($keys));
+        $lock = Cache::lock(self::CACHE_KEYS_REGISTRY . '_lock', self::REGISTRY_LOCK_TIMEOUT);
+
+        try {
+            // Attempt to acquire lock with blocking
+            $lock->block(self::REGISTRY_LOCK_TIMEOUT);
+
+            $keys = Cache::get(self::CACHE_KEYS_REGISTRY, []);
+            $keys = array_filter($keys, fn($k) => $k !== $key);
+            Cache::forever(self::CACHE_KEYS_REGISTRY, array_values($keys));
+        } finally {
+            $lock->release();
+        }
     }
 }

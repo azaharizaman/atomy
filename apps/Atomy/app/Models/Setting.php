@@ -114,10 +114,22 @@ class Setting extends Model
     /**
      * Get the value attribute with proper JSON decoding and decryption.
      */
-    public function getValueAttribute($value): mixed
+    public function getValueAttribute(?string $value): mixed
     {
+        // Handle null values
+        if ($value === null) {
+            return null;
+        }
+
         // Decode JSON first
         $decoded = json_decode($value, true);
+        
+        // Check for JSON decode errors
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            // If JSON decode failed and it's not encrypted, return the raw value
+            // This handles edge cases where value might not be JSON
+            return $this->is_encrypted ? null : $value;
+        }
         
         // If encrypted, decrypt the decoded value
         if ($this->is_encrypted && $decoded !== null) {
@@ -130,7 +142,7 @@ class Setting extends Model
     /**
      * Set the value attribute with proper encryption and JSON encoding.
      */
-    public function setValueAttribute($value): void
+    public function setValueAttribute(mixed $value): void
     {
         // Encrypt first if needed
         if ($this->is_encrypted) {
