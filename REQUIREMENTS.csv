@@ -114,17 +114,17 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0201	Provide TimelineFeedInterface for displaying chronological activity feed on entity pages				
 `Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0202	Support rich event context with actor name, action verb, target entity, and human-readable description				
 `Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0203	Generate timeline entries with icon/badge hints for visual categorization (status change, approval, payment)				
-`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0204	Support aggregation of related events (e.g., "5 line items added" vs individual logs)				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0204	"Support aggregation of related events (e.g., ""5 line items added"" vs individual logs)"				
 `Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0205	Provide feed filtering by event category (financial, approval, status, data change)				
-`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0206	Display relative timestamps (e.g., "2 hours ago", "yesterday") with absolute fallback				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0206	"Display relative timestamps (e.g., ""2 hours ago"", ""yesterday"") with absolute fallback"				
 `Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0207	Support pagination and infinite scroll for long activity feeds				
-`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0208	Generate entity-specific feed view (e.g., "Show all changes to Invoice #INV-2024-001")				
-`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0209	Support user-specific feed view (e.g., "Show all actions by Azahari Zaman")				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0208	"Generate entity-specific feed view (e.g., ""Show all changes to Invoice #INV-2024-001"")"				
+`Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0209	"Support user-specific feed view (e.g., ""Show all actions by Azahari Zaman"")"				
 `Nexus\AuditLogger`	Functional Requirement	FUN-AUD-0210	Provide real-time feed updates via WebSocket/Server-Sent Events for live monitoring				
 `Nexus\AuditLogger`	Business Requirements	BUS-AUD-0152	Timeline feeds MUST display the result of actions, not the underlying technical events				
 `Nexus\AuditLogger`	Business Requirements	BUS-AUD-0153	Feed entries MUST be consumable by non-technical users with business-friendly language				
 `Nexus\AuditLogger`	Business Requirements	BUS-AUD-0154	Critical events (payment processed, approval granted) highlighted prominently in feed				
-`Nexus\AuditLogger`	Business Requirements	BUS-AUD-0155	Feed view separate from full audit trail (feed shows "what happened", audit shows "how it happened")				
+`Nexus\AuditLogger`	Business Requirements	BUS-AUD-0155	"Feed view separate from full audit trail (feed shows ""what happened"", audit shows ""how it happened"")"				
 `Nexus\AuditLogger`	Integration Requirement	INT-AUD-0492	Provide TimelineFeedInterface for consumption by all domain packages (Finance, Payable, Receivable, Hrm)				
 `Nexus\AuditLogger`	Integration Requirement	INT-AUD-0493	Support feed enrichment via EventEnricherInterface for custom display formatting				
 `Nexus\AuditLogger`	Usability Requirement	USA-AUD-0494	Timeline feed loads < 1s for 100 recent events with lazy loading				
@@ -1009,7 +1009,7 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\Manufacturing`	Business Requirements	BUS-MAN-0046	BOM components cannot reference the parent product (circular BOM prevention)				
 `Nexus\Manufacturing`	Business Requirements	BUS-MAN-0053	Only one BOM per product can be active at a time				
 `Nexus\Manufacturing`	Business Requirements	BUS-MAN-0060	Work order quantity completed + quantity scrapped cannot exceed quantity ordered				
-`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0067	Materials can only be issued to work orders in "released" or "in_production" status				
+`Nexus\Manufacturing`	Business Requirements	BUS-MAN-0067	"Materials can only be issued to work orders in ""released"" or ""in_production"" status"				
 `Nexus\Manufacturing`	Business Requirements	BUS-MAN-0074	Work order cannot be completed if material allocations are not fulfilled				
 `Nexus\Manufacturing`	Business Requirements	BUS-MAN-0081	Operation sequence must be sequential (operation 10 before operation 20)				
 `Nexus\Manufacturing`	Business Requirements	BUS-MAN-0087	Inspection must pass before work order can be completed				
@@ -1616,7 +1616,7 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0077	Milestone billing amount cannot exceed remaining project budget (for fixed-price projects)				
 `Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0084	Resource allocation percentage cannot exceed 100% per user per day				
 `Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0090	Task dependencies must not create circular references				
-`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0096	Project status cannot be "completed" if there are incomplete tasks				
+`Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0096	"Project status cannot be ""completed"" if there are incomplete tasks"				
 `Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0101	Timesheet billing rate defaults to resource allocation rate for the project				
 `Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0106	Client stakeholders can view only their own projects				
 `Nexus\ProjectManagement`	Business Requirements	BUS-PRO-0111	Revenue recognition for fixed-price projects based on % completion or milestone approval				
@@ -1695,9 +1695,9 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0220	Package must detect when counter approaches maximum value (configurable threshold, e.g., 90%)	packages/Sequencing/src/Services/ExhaustionMonitor.php	✅ Completed	Fully implemented and tested	2025-11-17
 `Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0221	Package must provide overflow behavior options: throw exception, switch pattern, or extend padding	packages/Sequencing/src/ValueObjects/OverflowBehavior.php	✅ Completed	Fully implemented and tested	2025-11-17
 `Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0222	Package must support automatic pattern migration (e.g., INV-{COUNTER:4} → INV-A-{COUNTER:4})	packages/Sequencing/src/Services/PatternMigrationService.php	✅ Completed	Fully implemented and tested	2025-11-17
-`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0223	Sequence definition must support gap_policy: "allow_gaps" | "fill_gaps" | "report_gaps_only"	packages/Sequencing/src/ValueObjects/GapPolicy.php	✅ Completed	Fully implemented and tested	2025-11-17
-`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0224	When gap_policy="fill_gaps", package must track voided/cancelled numbers and reuse them	packages/Sequencing/src/Services/GapManager.php::reclaimGap()	✅ Completed	Fully implemented and tested	2025-11-17
-`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0225	When gap_policy="report_gaps_only", package must expose a service to detect missing sequences	packages/Sequencing/src/Services/GapManager.php::getGapReport()	✅ Completed	Fully implemented and tested	2025-11-17
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0223	"Sequence definition must support gap_policy: ""allow_gaps"" | ""fill_gaps"" | ""report_gaps_only"""	packages/Sequencing/src/ValueObjects/GapPolicy.php	✅ Completed	Fully implemented and tested	2025-11-17
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0224	"When gap_policy=""fill_gaps"", package must track voided/cancelled numbers and reuse them"	packages/Sequencing/src/Services/GapManager.php::reclaimGap()	✅ Completed	Fully implemented and tested	2025-11-17
+`Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0225	"When gap_policy=""report_gaps_only"", package must expose a service to detect missing sequences"	packages/Sequencing/src/Services/GapManager.php::getGapReport()	✅ Completed	Fully implemented and tested	2025-11-17
 `Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0227	Package must support reserve(count: int) to reserve N numbers without finalizing them	packages/Sequencing/src/Services/SequenceManager.php::reserve()	✅ Completed	Fully implemented and tested	2025-11-17
 `Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0228	Package must support release(numbers: array) to return reserved but unused numbers to the pool	packages/Sequencing/src/Services/SequenceManager.php::release()	✅ Completed	Fully implemented and tested	2025-11-17
 `Nexus\Sequencing`	Functional Requirement	FUN-SEQ-0229	Reserved numbers must have configurable TTL (time-to-live) before auto-release	packages/Sequencing/src/Services/ReservationService.php, apps/Atomy/database/migrations/2025_11_17_300000_create_sequencing_tables.php	✅ Completed	Fully implemented and tested	2025-11-17
@@ -1971,9 +1971,9 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\Uom`	User Story	USE-UOM-104	As a warehouse manager, I want to convert package units to base units (5 boxes → 500 pieces)	$pieces = $conversionEngine->packagingToBase($qty); 			
 `Nexus\Uom`	User Story	USE-UOM-105	As a production planner, I want to define BOM quantities in different units (kg, lbs, tons)	$component = new BomComponent($qty, $material); 			
 `Nexus\Uom`	User Story	USE-UOM-106	As a system admin, I want to define custom dimensions for industry-specific measurements	$dimension = new Dimension('Viscosity', $baseUnit, $system); 			
-`Nexus\Uom`	User Story	USE-UOM-107	As a developer, I want to format quantities for display with locale-specific formatting	echo $qty->format('en_US'); // "1,234.56 kg"			
+`Nexus\Uom`	User Story	USE-UOM-107	As a developer, I want to format quantities for display with locale-specific formatting	"echo $qty->format('en_US'); // ""1,234.56 kg"""			
 `Nexus\Uom`	User Story	USE-UOM-108	As an inventory clerk, I want to record stock in different packaging levels (pallets, cases, eaches)	$stock = new Quantity(5, 'pallets')->convertTo('eaches'); 			
-`Nexus\Uom`	User Story	USE-UOM-109	As a developer, I want to serialize quantities to JSON for API responses	return $qty->toJson(); // {"value": 100, "unit": "kg"}			
+`Nexus\Uom`	User Story	USE-UOM-109	As a developer, I want to serialize quantities to JSON for API responses	"return $qty->toJson(); // {""value"": 100, ""unit"": ""kg""}"			
 `Nexus\Uom`	User Story	USE-UOM-110	As a procurement officer, I want to compare vendor quotes in different units (price per kg vs per lb)	$pricePerKg = $quote->pricePerUnit()->convertTo('kg');				
 `Nexus\Workflow`	Architechtural Requirement	ARC-WOR-0405	Package must be framework-agnostic with no Laravel dependencies in core services		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	Architechtural Requirement	ARC-WOR-0406	All data structures defined via interfaces (WorkflowInterface, TaskInterface)		Skeleton Created	Complete package and application skeleton created	2025-11-17
@@ -2067,13 +2067,13 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\Workflow`	Functional Requirement	FUN-WOR-0494	Built-in plugins: email, Slack, webhook, database update		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	Functional Requirement	FUN-WOR-0495	Extensible via ActivityContract		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	Functional Requirement	FUN-WOR-0496	Define automation.escalation array in state		Skeleton Created	Complete package and application skeleton created	2025-11-17
-`Nexus\Workflow`	Functional Requirement	FUN-WOR-0497	Support after: "48 hours" - time threshold		Skeleton Created	Complete package and application skeleton created	2025-11-17
-`Nexus\Workflow`	Functional Requirement	FUN-WOR-0498	Support action: "notify" - send reminder		Skeleton Created	Complete package and application skeleton created	2025-11-17
-`Nexus\Workflow`	Functional Requirement	FUN-WOR-0499	Support action: "reassign" - change task assignee		Skeleton Created	Complete package and application skeleton created	2025-11-17
+`Nexus\Workflow`	Functional Requirement	FUN-WOR-0497	"Support after: ""48 hours"" - time threshold"		Skeleton Created	Complete package and application skeleton created	2025-11-17
+`Nexus\Workflow`	Functional Requirement	FUN-WOR-0498	"Support action: ""notify"" - send reminder"		Skeleton Created	Complete package and application skeleton created	2025-11-17
+`Nexus\Workflow`	Functional Requirement	FUN-WOR-0499	"Support action: ""reassign"" - change task assignee"		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	Functional Requirement	FUN-WOR-0500	Store escalation history		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	Functional Requirement	FUN-WOR-0501	Process via scheduled command		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	Functional Requirement	FUN-WOR-0502	Define automation.sla in state or workflow root		Skeleton Created	Complete package and application skeleton created	2025-11-17
-`Nexus\Workflow`	Functional Requirement	FUN-WOR-0503	Support duration: "3 days" - total allowed time		Skeleton Created	Complete package and application skeleton created	2025-11-17
+`Nexus\Workflow`	Functional Requirement	FUN-WOR-0503	"Support duration: ""3 days"" - total allowed time"		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	Functional Requirement	FUN-WOR-0504	Support onBreach - actions to fire (notifications, etc.)		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	Functional Requirement	FUN-WOR-0505	Track SLA status: on_track, at_risk, breached		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	Functional Requirement	FUN-WOR-0506	Calculate based on business hours (configurable)		Skeleton Created	Complete package and application skeleton created	2025-11-17
@@ -2143,9 +2143,9 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\Workflow`	User Story	USE-WOR-0570	As a developer, I want to call $model->workflow()->can('transition') to check if a transition is allowed for UI logic		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	User Story	USE-WOR-0571	As a developer, I want to call $model->workflow()->history() to see all state transitions		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	User Story	USE-WOR-0572	As a developer, I want to promote my in-model workflow to a database-driven JSON definition without refactoring code		Skeleton Created	Complete package and application skeleton created	2025-11-17
-`Nexus\Workflow`	User Story	USE-WOR-0573	As a developer, I want to define "User Task" steps that halt the workflow and assign tasks to specific users or roles		Skeleton Created	Complete package and application skeleton created	2025-11-17
-`Nexus\Workflow`	User Story	USE-WOR-0574	As a developer, I want to use conditional routing (e.g., "if amount > 10,000, add Director approval")		Skeleton Created	Complete package and application skeleton created	2025-11-17
-`Nexus\Workflow`	User Story	USE-WOR-0575	As a developer, I want parallel approval flows (e.g., "Finance AND HR must both approve")		Skeleton Created	Complete package and application skeleton created	2025-11-17
+`Nexus\Workflow`	User Story	USE-WOR-0573	"As a developer, I want to define ""User Task"" steps that halt the workflow and assign tasks to specific users or roles"		Skeleton Created	Complete package and application skeleton created	2025-11-17
+`Nexus\Workflow`	User Story	USE-WOR-0574	"As a developer, I want to use conditional routing (e.g., ""if amount > 10,000, add Director approval"")"		Skeleton Created	Complete package and application skeleton created	2025-11-17
+`Nexus\Workflow`	User Story	USE-WOR-0575	"As a developer, I want parallel approval flows (e.g., ""Finance AND HR must both approve"")"		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	User Story	USE-WOR-0576	As a developer, I want to configure multi-approver strategies (unison vote, majority vote, quorum) for a single step		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	User Story	USE-WOR-0577	As an end-user, I want one inbox showing all my pending tasks across all workflows		Skeleton Created	Complete package and application skeleton created	2025-11-17
 `Nexus\Workflow`	User Story	USE-WOR-0578	As an end-user, I want to approve/reject tasks with comments and attachments		Skeleton Created	Complete package and application skeleton created	2025-11-17
@@ -2253,116 +2253,116 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\Document`	User Story	USE-DOC-013	As an end-user, I want to see who accessed my documents and when via audit logs				
 `Nexus\Document`	User Story	USE-DOC-014	As a developer, I want to generate temporary public URLs with $urlGenerator->getTemporaryUrl($storagePath, 3600) for secure sharing				
 `Nexus\Document`	User Story	USE-DOC-015	As a system integrator, I want to swap storage backends without changing document management code, only Atomy bindings				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0001	Package MUST be framework-agnostic with no Laravel dependencies in core services				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0002	All external communication defined via domain-specific interfaces (EmailServiceConnectorInterface, PaymentGatewayConnectorInterface)				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0003	All credential retrieval via CredentialProviderInterface contract				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0004	All integration logging via IntegrationLoggerInterface contract				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0005	Business logic (retry, circuit breaker, rate limiting) in service layer				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0006	All vendor adapters implemented in application layer (apps/Atomy)				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0007	All vendor SDK dependencies in application composer.json, NOT package composer.json				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0008	Adapter binding to contracts via configuration in application service provider				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0009	Package composer.json MUST NOT depend on any vendor SDK (Mailchimp, SendGrid, Stripe, etc.)				
-`Nexus\Connector`	Architechtural Requirement	ARC-CON-0010	Support plugin/adapter pattern for vendor swapping via configuration				
-`Nexus\Connector`	Business Requirements	BUS-CON-0001	All external API calls MUST be logged with request/response data for audit trail				
-`Nexus\Connector`	Business Requirements	BUS-CON-0002	Failed requests MUST be retried with exponential backoff strategy (max 3 retries by default)				
-`Nexus\Connector`	Business Requirements	BUS-CON-0003	Circuit breaker MUST open after 5 consecutive failures and remain open for 60 seconds				
-`Nexus\Connector`	Business Requirements	BUS-CON-0004	Rate limiting MUST respect vendor-specific limits (e.g., Mailchimp 10 req/sec, Stripe 100 req/sec)				
-`Nexus\Connector`	Business Requirements	BUS-CON-0005	Timeout values MUST be configurable per endpoint (default 30 seconds)				
-`Nexus\Connector`	Business Requirements	BUS-CON-0006	Sensitive data (API keys, tokens, secrets) MUST NOT be logged in integration history				
-`Nexus\Connector`	Business Requirements	BUS-CON-0007	Webhook signatures MUST be verified before processing incoming webhook requests				
-`Nexus\Connector`	Business Requirements	BUS-CON-0008	OAuth token refresh MUST happen automatically when access token expires				
-`Nexus\Connector`	Business Requirements	BUS-CON-0009	Each integration MUST track success rate, average response time, and error rate metrics				
-`Nexus\Connector`	Business Requirements	BUS-CON-0010	Failed requests with 429 (rate limit) status MUST use vendor-specific retry-after headers				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0001	Provide domain-specific contracts (EmailServiceConnectorInterface, SmsServiceConnectorInterface, PaymentGatewayConnectorInterface)				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0002	Define standardized request/response value objects for each domain				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0003	Support synchronous and asynchronous request execution				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0004	Implement exponential backoff retry strategy with configurable max attempts				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0005	Implement circuit breaker pattern with configurable failure threshold and timeout				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0006	Implement rate limiting with token bucket algorithm per endpoint				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0007	Record all integration attempts with IntegrationLoggerInterface (timestamp, endpoint, status, duration, error)				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0008	Provide CredentialProviderInterface for retrieving API keys, tokens, secrets from secure storage				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0009	Support multiple authentication methods (API Key, Bearer Token, OAuth 2.0, Basic Auth)				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0010	Provide webhook verification interface for validating incoming webhook signatures				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0011	Support request/response transformation hooks for custom data mapping				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0012	Provide endpoint configuration value objects (url, method, headers, timeout, retry policy)				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0013	Support batch operations for services that allow bulk API calls				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0014	Emit events for successful requests, failed requests, and circuit breaker state changes				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0015	Provide connection health check interface for monitoring external service availability				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0016	Support request idempotency keys for safe retry of non-idempotent operations				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0017	Provide request queueing mechanism for rate-limited endpoints				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0018	Support multi-region endpoints with automatic failover				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0019	Provide metrics aggregation for monitoring dashboards (success rate, latency percentiles, error counts)				
-`Nexus\Connector`	Functional Requirement	FUN-CON-0020	Support conditional requests with ETag/If-Modified-Since headers for caching				
-`Nexus\Connector`	Performance Requirement	PER-CON-0001	Request execution overhead < 10ms for connection initialization				
-`Nexus\Connector`	Performance Requirement	PER-CON-0002	Circuit breaker state check < 1ms for hot path				
-`Nexus\Connector`	Performance Requirement	PER-CON-0003	Rate limiter decision < 5ms per request				
-`Nexus\Connector`	Performance Requirement	PER-CON-0004	Integration log persistence < 50ms (async) without blocking request				
-`Nexus\Connector`	Performance Requirement	PER-CON-0005	Connection pool reuse to minimize TLS handshake overhead				
-`Nexus\Connector`	Performance Requirement	PER-CON-0006	Support 1000+ concurrent requests with proper connection pooling				
-`Nexus\Connector`	Performance Requirement	PER-CON-0007	Credential cache hit rate > 95% to avoid repeated vault lookups				
-`Nexus\Connector`	Performance Requirement	PER-CON-0008	Metrics collection overhead < 2ms per request				
-`Nexus\Connector`	Reliability Requirement	REL-CON-0001	Failed requests MUST NOT crash the application (graceful error handling)				
-`Nexus\Connector`	Reliability Requirement	REL-CON-0002	Circuit breaker prevents cascading failures to dependent services				
-`Nexus\Connector`	Reliability Requirement	REL-CON-0003	Retry logic with exponential backoff prevents thundering herd problem				
-`Nexus\Connector`	Reliability Requirement	REL-CON-0004	Connection timeouts prevent indefinite blocking of application threads				
-`Nexus\Connector`	Reliability Requirement	REL-CON-0005	Request idempotency keys prevent duplicate processing on retry				
-`Nexus\Connector`	Reliability Requirement	REL-CON-0006	Credential refresh failures trigger alerts but don't block cached credentials				
-`Nexus\Connector`	Reliability Requirement	REL-CON-0007	Webhook signature verification prevents unauthorized request processing				
-`Nexus\Connector`	Reliability Requirement	REL-CON-0008	Multi-region failover maintains service availability during regional outages				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0001	Credentials MUST be retrieved via CredentialProviderInterface, never hardcoded				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0002	API keys and tokens MUST be masked in logs (show only first 4 and last 4 characters)				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0003	All HTTPS connections MUST verify SSL certificates (no insecure bypass)				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0004	Webhook payloads MUST be validated with HMAC signatures before processing				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0005	OAuth tokens MUST be stored encrypted at rest via CredentialProviderInterface				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0006	Request/response bodies containing PII MUST be sanitized before logging				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0007	Integration audit logs MUST be tamper-proof (append-only, immutable)				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0008	Support tenant isolation for multi-tenant credential storage				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0009	Rate limiting MUST prevent abuse of external APIs (cost control)				
-`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0010	Expose integration metrics only to authorized users with proper RBAC				
-`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0001	All interfaces MUST use strict PHP 8.3+ type hints with readonly properties				
-`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0002	Custom exceptions MUST be defined for all error scenarios (ConnectionException, RateLimitException, AuthenticationException)				
-`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0003	Service orchestration logic MUST be separated from adapter implementations				
-`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0004	Value Objects MUST be created for Endpoint, Credentials, IntegrationLog, RetryPolicy				
-`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0005	Package README MUST include architecture diagrams and vendor adapter examples				
-`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0006	All public methods MUST have comprehensive docblocks with usage examples				
-`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0007	Adapter implementations MUST follow consistent naming convention (VendorNameServiceTypeAdapter)				
-`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0008	Configuration schema MUST be documented with validation rules				
-`Nexus\Connector`	Scalability Requirement	SCL-CON-0001	Support horizontal scaling via stateless connector design (no in-memory state except cache)				
-`Nexus\Connector`	Scalability Requirement	SCL-CON-0002	Integration log queries MUST use indexed fields (tenant_id, endpoint, status, created_at)				
-`Nexus\Connector`	Scalability Requirement	SCL-CON-0003	Credential cache MUST use distributed cache (Redis) for multi-server deployments				
-`Nexus\Connector`	Scalability Requirement	SCL-CON-0004	Rate limiter MUST use distributed storage for accurate limiting across servers				
-`Nexus\Connector`	Scalability Requirement	SCL-CON-0005	Circuit breaker state MUST be shared across application instances				
-`Nexus\Connector`	Scalability Requirement	SCL-CON-0006	Support asynchronous request execution via queue workers for background processing				
-`Nexus\Connector`	User Story	USE-CON-0001	As a developer, I want to call $emailConnector->sendTransactionalEmail($recipient, $subject, $body) without knowing the vendor implementation				
-`Nexus\Connector`	User Story	USE-CON-0002	As a developer, I want to swap email vendors from Mailchimp to SendGrid by changing a config value and binding				
-`Nexus\Connector`	User Story	USE-CON-0003	As a developer, I want failed API calls to retry automatically with exponential backoff				
-`Nexus\Connector`	User Story	USE-CON-0004	As a developer, I want circuit breaker to prevent repeated failures from cascading to my application				
-`Nexus\Connector`	User Story	USE-CON-0005	As a system administrator, I want to view integration health metrics (success rate, latency, error rate) in monitoring dashboard				
-`Nexus\Connector`	User Story	USE-CON-0006	As a system administrator, I want to configure rate limits per vendor to prevent exceeding API quotas				
-`Nexus\Connector`	User Story	USE-CON-0007	As a security officer, I want all external API calls logged for audit compliance				
-`Nexus\Connector`	User Story	USE-CON-0008	As a developer, I want webhook requests verified with signatures before processing to prevent spoofing				
-`Nexus\Connector`	User Story	USE-CON-0009	As a developer, I want OAuth tokens refreshed automatically when they expire				
-`Nexus\Connector`	User Story	USE-CON-0010	As a developer, I want to implement a new vendor adapter by creating a class that implements the domain interface				
-`Nexus\Connector`	User Story	USE-CON-0011	As a system integrator, I want credentials stored securely and retrieved via CredentialProviderInterface				
-`Nexus\Connector`	User Story	USE-CON-0012	As a developer, I want sensitive data masked in logs automatically (API keys, tokens)				
-`Nexus\Connector`	User Story	USE-CON-0013	As a developer, I want to handle payment processing via $paymentGateway->charge($amount, $card) with vendor abstraction				
-`Nexus\Connector`	User Story	USE-CON-0014	As a developer, I want to send SMS via $smsConnector->send($phone, $message) regardless of provider (Twilio, Nexmo)				
-`Nexus\Connector`	User Story	USE-CON-0015	As a system administrator, I want alerts when circuit breaker opens or integration error rate exceeds threshold				
-`Nexus\Connector`	Integration Requirement	INT-CON-0001	MUST integrate with Nexus\AuditLogger for comprehensive audit trails of all external communications				
-`Nexus\Connector`	Integration Requirement	INT-CON-0002	MUST integrate with Nexus\Setting for retrieving endpoint configurations and credentials				
-`Nexus\Connector`	Integration Requirement	INT-CON-0003	SHOULD integrate with Nexus\Tenant for multi-tenant credential isolation				
-`Nexus\Connector`	Integration Requirement	INT-CON-0004	MAY integrate with Nexus\Workflow for orchestrating multi-step integration workflows				
-`Nexus\Connector`	Integration Requirement	INT-CON-0005	MUST support event dispatching for integration with application-level monitoring				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0001	EmailServiceConnectorInterface MUST define sendTransactionalEmail, sendBulkEmail, validateAddress methods				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0002	SmsServiceConnectorInterface MUST define send, sendBulk, validatePhoneNumber, checkBalance methods				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0003	PaymentGatewayConnectorInterface MUST define charge, refund, captureAuthorization, createPaymentIntent methods				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0004	CloudStorageConnectorInterface MUST define upload, download, delete, generateSignedUrl methods				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0005	ShippingProviderConnectorInterface MUST define createShipment, trackShipment, calculateRates, cancelShipment methods				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0006	CalendarConnectorInterface MUST define createEvent, updateEvent, deleteEvent, listEvents, addAttendees methods				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0007	NotificationServiceConnectorInterface MUST define sendPushNotification, sendInAppNotification, registerDevice methods				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0008	VideoConferencingConnectorInterface MUST define createMeeting, startMeeting, endMeeting, getRecordings methods				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0009	MapServiceConnectorInterface MUST define geocode, reverseGeocode, calculateDistance, getDirections methods				
-`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0010	AnalyticsServiceConnectorInterface MUST define trackEvent, trackPageView, identifyUser, getReport methods				
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0001	Package MUST be framework-agnostic with no Laravel dependencies in core services	packages/Connector/src;packages/Connector/composer.json	✅ Complete	Package code remains framework-agnostic with no Laravel imports.	2025-11-18
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0002	All external communication defined via domain-specific interfaces (EmailServiceConnectorInterface, PaymentGatewayConnectorInterface)	packages/Connector/src/Contracts	✅ Complete	Contracts provide email, SMS, payment, storage, and shipping interfaces.	2025-11-18
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0003	All credential retrieval via CredentialProviderInterface contract	packages/Connector/src/Contracts/CredentialProviderInterface.php;apps/Atomy/app/Repositories/LaravelCredentialProvider.php	✅ Complete	Credentials resolved exclusively through CredentialProviderInterface bindings.	2025-11-18
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0004	All integration logging via IntegrationLoggerInterface contract	packages/Connector/src/Contracts/IntegrationLoggerInterface.php;apps/Atomy/app/Repositories/DbIntegrationLogger.php	✅ Complete	Integration logging routed via IntegrationLoggerInterface and database repository.	2025-11-18
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0005	Business logic (retry, circuit breaker, rate limiting) in service layer	packages/Connector/src/Services/ConnectorManager.php;packages/Connector/src/Services/RetryHandler.php;packages/Connector/src/ValueObjects/CircuitBreakerState.php	⚠️ Partial	Retry and circuit breaker live in services but rate limiting logic is not implemented yet.	2025-11-18
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0006	All vendor adapters implemented in application layer (apps/Atomy)	apps/Atomy/app/Connectors/Adapters	✅ Complete	Vendor adapters (Mailchimp, SendGrid, Twilio) exist in the application layer.	2025-11-18
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0007	All vendor SDK dependencies in application composer.json, NOT package composer.json	apps/Atomy/composer.json;packages/Connector/composer.json	✅ Complete	Vendor SDK dependencies remain in the app; package composer stays lean.	2025-11-18
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0008	Adapter binding to contracts via configuration in application service provider	apps/Atomy/app/Providers/ConnectorServiceProvider.php	✅ Complete	ConnectorServiceProvider binds adapters to contracts via configuration.	2025-11-18
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0009	Package composer.json MUST NOT depend on any vendor SDK (Mailchimp, SendGrid, Stripe, etc.)	packages/Connector/composer.json	✅ Complete	Package composer.json omits vendor SDK dependencies.	2025-11-18
+`Nexus\Connector`	Architechtural Requirement	ARC-CON-0010	Support plugin/adapter pattern for vendor swapping via configuration	apps/Atomy/config/connector.php;apps/Atomy/app/Providers/ConnectorServiceProvider.php	✅ Complete	Config-driven adapter swapping enabled by service provider bindings.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0001	All external API calls MUST be logged with request/response data for audit trail	packages/Connector/src/Services/ConnectorManager.php;packages/Connector/src/ValueObjects/IntegrationLog.php;apps/Atomy/app/Repositories/DbIntegrationLogger.php	✅ Complete	All executions log request/response metadata through IntegrationLogger.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0002	Failed requests MUST be retried with exponential backoff strategy (max 3 retries by default)	packages/Connector/src/Services/RetryHandler.php;packages/Connector/src/ValueObjects/RetryPolicy.php	✅ Complete	RetryHandler applies exponential backoff with configurable attempts.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0003	Circuit breaker MUST open after 5 consecutive failures and remain open for 60 seconds	packages/Connector/src/ValueObjects/CircuitBreakerState.php;packages/Connector/src/Services/ConnectorManager.php	✅ Complete	Circuit breaker opens after threshold failures and auto resets after timeout.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0004	Rate limiting MUST respect vendor-specific limits (e.g., Mailchimp 10 req/sec, Stripe 100 req/sec)	packages/Connector/src/ValueObjects/RateLimitConfig.php	❌ Missing	Rate limiter objects exist but are not wired into request execution.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0005	Timeout values MUST be configurable per endpoint (default 30 seconds)	packages/Connector/src/ValueObjects/Endpoint.php;packages/Connector/src/Services/ConnectorManager.php	⚠️ Partial	Endpoint captures timeout values but sendRequest placeholder does not enforce them yet.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0006	Sensitive data (API keys, tokens, secrets) MUST NOT be logged in integration history	packages/Connector/src/Services/ConnectorManager.php	✅ Complete	sanitizeData masks sensitive keys prior to logging.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0007	Webhook signatures MUST be verified before processing incoming webhook requests	packages/Connector/src/Services/WebhookVerifier.php	✅ Complete	WebhookVerifier validates signatures using HMAC comparisons.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0008	OAuth token refresh MUST happen automatically when access token expires	apps/Atomy/app/Repositories/LaravelCredentialProvider.php	❌ Missing	refreshCredentials() is still a TODO and does not perform automatic refresh.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0009	Each integration MUST track success rate, average response time, and error rate metrics	packages/Connector/src/Contracts/IntegrationLoggerInterface.php;apps/Atomy/app/Repositories/DbIntegrationLogger.php	✅ Complete	IntegrationLogger::getMetrics exposes success, failure, rate, and duration metrics.	2025-11-18
+`Nexus\Connector`	Business Requirements	BUS-CON-0010	Failed requests with 429 (rate limit) status MUST use vendor-specific retry-after headers	packages/Connector/src/Services/RetryHandler.php	❌ Missing	Retry logic ignores Retry-After/vendor-specific throttling headers.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0001	Provide domain-specific contracts (EmailServiceConnectorInterface, SmsServiceConnectorInterface, PaymentGatewayConnectorInterface)	packages/Connector/src/Contracts	✅ Complete	Email, SMS, payment, storage, and shipping connector interfaces are published.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0002	Define standardized request/response value objects for each domain	packages/Connector/src/Contracts	❌ Missing	Standardized per-domain request/response value objects have not been defined.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0003	Support synchronous and asynchronous request execution	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	Only synchronous execute() flow exists; no async queue integration yet.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0004	Implement exponential backoff retry strategy with configurable max attempts	packages/Connector/src/Services/RetryHandler.php;packages/Connector/src/ValueObjects/RetryPolicy.php	✅ Complete	Exponential backoff implemented through RetryPolicy.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0005	Implement circuit breaker pattern with configurable failure threshold and timeout	packages/Connector/src/ValueObjects/CircuitBreakerState.php;packages/Connector/src/ValueObjects/CircuitState.php	✅ Complete	Circuit breaker pattern tracks state, timeout, and transitions.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0006	Implement rate limiting with token bucket algorithm per endpoint	packages/Connector/src/ValueObjects/RateLimitConfig.php	❌ Missing	Token bucket or other rate limiter enforcement not implemented.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0007	Record all integration attempts with IntegrationLoggerInterface (timestamp, endpoint, status, duration, error)	packages/Connector/src/ValueObjects/IntegrationLog.php;apps/Atomy/app/Repositories/DbIntegrationLogger.php	✅ Complete	All attempts recorded via IntegrationLog value object and repository.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0008	Provide CredentialProviderInterface for retrieving API keys, tokens, secrets from secure storage	packages/Connector/src/Contracts/CredentialProviderInterface.php;apps/Atomy/app/Repositories/LaravelCredentialProvider.php	✅ Complete	CredentialProviderInterface governs secure credential retrieval.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0009	Support multiple authentication methods (API Key, Bearer Token, OAuth 2.0, Basic Auth)	packages/Connector/src/ValueObjects/Credentials.php;packages/Connector/src/ValueObjects/AuthMethod.php	✅ Complete	Credentials value object supports API key, bearer, OAuth2, and basic auth.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0010	Provide webhook verification interface for validating incoming webhook signatures	packages/Connector/src/Contracts/WebhookVerifierInterface.php;packages/Connector/src/Services/WebhookVerifier.php	✅ Complete	Webhook verifier contract and default HMAC implementation provided.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0011	Support request/response transformation hooks for custom data mapping	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	No transformation hooks before/after request execution.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0012	Provide endpoint configuration value objects (url, method, headers, timeout, retry policy)	packages/Connector/src/ValueObjects/Endpoint.php;packages/Connector/src/ValueObjects/RetryPolicy.php	✅ Complete	Endpoint value object captures URL, method, headers, timeout, and retry policy.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0013	Support batch operations for services that allow bulk API calls	packages/Connector/src/Contracts	❌ Missing	Batch operation orchestration has not been implemented in services.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0014	Emit events for successful requests, failed requests, and circuit breaker state changes	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	No events emitted for success, failure, or circuit changes.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0015	Provide connection health check interface for monitoring external service availability	packages/Connector/src/Contracts	❌ Missing	Connection health check interface not defined.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0016	Support request idempotency keys for safe retry of non-idempotent operations	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	Idempotency key handling not supported in execute() flow.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0017	Provide request queueing mechanism for rate-limited endpoints	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	No request queueing/backpressure mechanism exists.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0018	Support multi-region endpoints with automatic failover	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	Multi-region endpoint failover not implemented.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0019	Provide metrics aggregation for monitoring dashboards (success rate, latency percentiles, error counts)	apps/Atomy/app/Repositories/DbIntegrationLogger.php;apps/Atomy/routes/api_connector.php	⚠️ Partial	Basic metrics exposed via repository API; percentile/aggregation dashboards not yet provided.	2025-11-18
+`Nexus\Connector`	Functional Requirement	FUN-CON-0020	Support conditional requests with ETag/If-Modified-Since headers for caching	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	Conditional ETag/If-Modified-Since handling absent.	2025-11-18
+`Nexus\Connector`	Performance Requirement	PER-CON-0001	Request execution overhead < 10ms for connection initialization		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Performance Requirement	PER-CON-0002	Circuit breaker state check < 1ms for hot path		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Performance Requirement	PER-CON-0003	Rate limiter decision < 5ms per request		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Performance Requirement	PER-CON-0004	Integration log persistence < 50ms (async) without blocking request		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Performance Requirement	PER-CON-0005	Connection pool reuse to minimize TLS handshake overhead		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Performance Requirement	PER-CON-0006	Support 1000+ concurrent requests with proper connection pooling		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Performance Requirement	PER-CON-0007	Credential cache hit rate > 95% to avoid repeated vault lookups		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Performance Requirement	PER-CON-0008	Metrics collection overhead < 2ms per request		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Reliability Requirement	REL-CON-0001	Failed requests MUST NOT crash the application (graceful error handling)	packages/Connector/src/Services/ConnectorManager.php	⚠️ Partial	Errors are logged, but execute() still throws upstream without graceful fallback.	2025-11-18
+`Nexus\Connector`	Reliability Requirement	REL-CON-0002	Circuit breaker prevents cascading failures to dependent services	packages/Connector/src/ValueObjects/CircuitBreakerState.php	✅ Complete	Circuit breaker halts requests after repeated failures.	2025-11-18
+`Nexus\Connector`	Reliability Requirement	REL-CON-0003	Retry logic with exponential backoff prevents thundering herd problem	packages/Connector/src/Services/RetryHandler.php;packages/Connector/src/ValueObjects/RetryPolicy.php	✅ Complete	RetryPolicy limits retries and exponential backoff prevents thundering herd.	2025-11-18
+`Nexus\Connector`	Reliability Requirement	REL-CON-0004	Connection timeouts prevent indefinite blocking of application threads	packages/Connector/src/ValueObjects/Endpoint.php	❌ Missing	Timeout configuration is unused because HTTP client integration is absent.	2025-11-18
+`Nexus\Connector`	Reliability Requirement	REL-CON-0005	Request idempotency keys prevent duplicate processing on retry		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Reliability Requirement	REL-CON-0006	Credential refresh failures trigger alerts but don't block cached credentials	apps/Atomy/app/Repositories/LaravelCredentialProvider.php	❌ Missing	Expired credentials cause exceptions; no alerting or fallback to cached values.	2025-11-18
+`Nexus\Connector`	Reliability Requirement	REL-CON-0007	Webhook signature verification prevents unauthorized request processing	packages/Connector/src/Services/WebhookVerifier.php	✅ Complete	Webhook signature verification prevents spoofed requests.	2025-11-18
+`Nexus\Connector`	Reliability Requirement	REL-CON-0008	Multi-region failover maintains service availability during regional outages		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0001	Credentials MUST be retrieved via CredentialProviderInterface, never hardcoded	packages/Connector/src/Contracts/CredentialProviderInterface.php;apps/Atomy/app/Repositories/LaravelCredentialProvider.php	✅ Complete	Credentials are always accessed through the provider contract.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0002	API keys and tokens MUST be masked in logs (show only first 4 and last 4 characters)	packages/Connector/src/Services/ConnectorManager.php	⚠️ Partial	Sensitive fields are fully redacted but do not retain first/last four characters.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0003	All HTTPS connections MUST verify SSL certificates (no insecure bypass)	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	HTTP client layer not implemented; SSL verification controls unavailable.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0004	Webhook payloads MUST be validated with HMAC signatures before processing	packages/Connector/src/Services/WebhookVerifier.php	✅ Complete	HMAC-based webhook validation enforced.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0005	OAuth tokens MUST be stored encrypted at rest via CredentialProviderInterface	apps/Atomy/app/Models/ConnectorCredential.php	✅ Complete	credential_data and refresh_token columns use Laravel encrypted casts.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0006	Request/response bodies containing PII MUST be sanitized before logging	packages/Connector/src/Services/ConnectorManager.php	✅ Complete	sanitizeData recursively removes sensitive payload values prior to logging.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0007	Integration audit logs MUST be tamper-proof (append-only, immutable)	apps/Atomy/database/migrations/2025_11_18_012021_create_integration_logs_table.php	❌ Missing	Integration logs stored in DB without append-only enforcement or tamper safeguards.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0008	Support tenant isolation for multi-tenant credential storage	apps/Atomy/app/Models/ConnectorCredential.php;apps/Atomy/app/Repositories/LaravelCredentialProvider.php	✅ Complete	Credential queries scope by tenant where provided.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0009	Rate limiting MUST prevent abuse of external APIs (cost control)		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Security and Compliance Requirement	SEC-CON-0010	Expose integration metrics only to authorized users with proper RBAC	apps/Atomy/routes/api_connector.php	⚠️ Partial	Endpoints require Sanctum auth but lack granular RBAC checks.	2025-11-18
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0001	All interfaces MUST use strict PHP 8.3+ type hints with readonly properties	packages/Connector/src	✅ Complete	Strict types and readonly promoted properties used throughout.	2025-11-18
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0002	Custom exceptions MUST be defined for all error scenarios (ConnectionException, RateLimitException, AuthenticationException)	packages/Connector/src/Exceptions	✅ Complete	Dedicated exceptions cover authentication, rate limiting, and connection errors.	2025-11-18
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0003	Service orchestration logic MUST be separated from adapter implementations	packages/Connector/src/Services;apps/Atomy/app/Connectors/Adapters	✅ Complete	Service orchestration resides in package; adapters live in app layer.	2025-11-18
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0004	Value Objects MUST be created for Endpoint, Credentials, IntegrationLog, RetryPolicy	packages/Connector/src/ValueObjects	✅ Complete	Endpoint, Credentials, IntegrationLog, RetryPolicy implemented as value objects.	2025-11-18
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0005	Package README MUST include architecture diagrams and vendor adapter examples	packages/Connector/README.md	✅ Complete	README documents architecture with ASCII diagram and adapter examples.	2025-11-18
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0006	All public methods MUST have comprehensive docblocks with usage examples	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	Docblocks describe behavior but lack usage examples for public APIs.	2025-11-18
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0007	Adapter implementations MUST follow consistent naming convention (VendorNameServiceTypeAdapter)	apps/Atomy/app/Connectors/Adapters	⚠️ Partial	Existing adapters follow naming convention, but coverage is limited to sample vendors.	2025-11-18
+`Nexus\Connector`	Maintainability Requirement	MAINT-CON-0008	Configuration schema MUST be documented with validation rules	apps/Atomy/config/connector.php;packages/Connector/README.md	⚠️ Partial	Config file lists options but validation rules and schema documentation are minimal.	2025-11-18
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0001	Support horizontal scaling via stateless connector design (no in-memory state except cache)		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0002	Integration log queries MUST use indexed fields (tenant_id, endpoint, status, created_at)	apps/Atomy/database/migrations/2025_11_18_012021_create_integration_logs_table.php	✅ Complete	Integration log table indexes tenant_id, service_name, status, and created_at.	2025-11-18
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0003	Credential cache MUST use distributed cache (Redis) for multi-server deployments		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0004	Rate limiter MUST use distributed storage for accurate limiting across servers		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0005	Circuit breaker state MUST be shared across application instances		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Scalability Requirement	SCL-CON-0006	Support asynchronous request execution via queue workers for background processing		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0001	As a developer, I want to call $emailConnector->sendTransactionalEmail($recipient, $subject, $body) without knowing the vendor implementation	packages/Connector/src/Contracts/EmailServiceConnectorInterface.php;apps/Atomy/app/Connectors/Adapters/MailchimpEmailAdapter.php	✅ Complete	Developers call email connector interfaces without referencing vendor SDKs.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0002	As a developer, I want to swap email vendors from Mailchimp to SendGrid by changing a config value and binding	apps/Atomy/config/connector.php;apps/Atomy/app/Providers/ConnectorServiceProvider.php	✅ Complete	Swapping email vendors is configuration-driven.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0003	As a developer, I want failed API calls to retry automatically with exponential backoff	packages/Connector/src/Services/RetryHandler.php	✅ Complete	RetryHandler automatically retries failed calls with exponential backoff.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0004	As a developer, I want circuit breaker to prevent repeated failures from cascading to my application	packages/Connector/src/ValueObjects/CircuitBreakerState.php	✅ Complete	Circuit breaker halts repeated failures before impacting callers.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0005	As a system administrator, I want to view integration health metrics (success rate, latency, error rate) in monitoring dashboard	apps/Atomy/routes/api_connector.php;apps/Atomy/app/Repositories/DbIntegrationLogger.php	⚠️ Partial	Basic success rate and latency metrics available; dashboards/alerts pending.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0006	As a system administrator, I want to configure rate limits per vendor to prevent exceeding API quotas		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0007	As a security officer, I want all external API calls logged for audit compliance	packages/Connector/src/Services/ConnectorManager.php	✅ Complete	Every external call is logged for audit compliance.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0008	As a developer, I want webhook requests verified with signatures before processing to prevent spoofing	packages/Connector/src/Services/WebhookVerifier.php	✅ Complete	Webhook verification ensures authenticity prior to processing.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0009	As a developer, I want OAuth tokens refreshed automatically when they expire		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0010	As a developer, I want to implement a new vendor adapter by creating a class that implements the domain interface	packages/Connector/src/Contracts;apps/Atomy/app/Connectors/Adapters	✅ Complete	Implementing interfaces is all that is required for new vendor adapters.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0011	As a system integrator, I want credentials stored securely and retrieved via CredentialProviderInterface	apps/Atomy/app/Repositories/LaravelCredentialProvider.php;apps/Atomy/app/Models/ConnectorCredential.php	✅ Complete	Credentials stored encrypted and retrieved through provider contract.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0012	As a developer, I want sensitive data masked in logs automatically (API keys, tokens)	packages/Connector/src/Services/ConnectorManager.php	✅ Complete	Logging redacts sensitive information before persisting.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0013	As a developer, I want to handle payment processing via $paymentGateway->charge($amount, $card) with vendor abstraction	packages/Connector/src/Contracts/PaymentGatewayConnectorInterface.php	⚠️ Partial	Interface exists but no concrete payment gateway adapter is wired yet.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0014	As a developer, I want to send SMS via $smsConnector->send($phone, $message) regardless of provider (Twilio, Nexmo)	packages/Connector/src/Contracts/SmsServiceConnectorInterface.php;apps/Atomy/app/Connectors/Adapters/TwilioSmsAdapter.php	⚠️ Partial	Sample adapter demonstrates usage but real API calls are marked TODO.	2025-11-18
+`Nexus\Connector`	User Story	USE-CON-0015	As a system administrator, I want alerts when circuit breaker opens or integration error rate exceeds threshold	packages/Connector/src/Services/ConnectorManager.php	❌ Missing	No alerting or eventing when circuit breaker opens or error rate spikes.	2025-11-18
+`Nexus\Connector`	Integration Requirement	INT-CON-0001	MUST integrate with Nexus\AuditLogger for comprehensive audit trails of all external communications		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Integration Requirement	INT-CON-0002	MUST integrate with Nexus\Setting for retrieving endpoint configurations and credentials	apps/Atomy/config/connector.php	⚠️ Partial	Configuration lives in app config; direct Nexus\Setting integration not done.	2025-11-18
+`Nexus\Connector`	Integration Requirement	INT-CON-0003	SHOULD integrate with Nexus\Tenant for multi-tenant credential isolation	packages/Connector/src/Services/ConnectorManager.php	⚠️ Partial	Tenant ID is accepted but not automatically resolved from Nexus\Tenant context.	2025-11-18
+`Nexus\Connector`	Integration Requirement	INT-CON-0004	MAY integrate with Nexus\Workflow for orchestrating multi-step integration workflows		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Integration Requirement	INT-CON-0005	MUST support event dispatching for integration with application-level monitoring		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0001	EmailServiceConnectorInterface MUST define sendTransactionalEmail, sendBulkEmail, validateAddress methods	packages/Connector/src/Contracts/EmailServiceConnectorInterface.php	✅ Complete	Interface defines transactional, bulk, validation, and statistics methods.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0002	SmsServiceConnectorInterface MUST define send, sendBulk, validatePhoneNumber, checkBalance methods	packages/Connector/src/Contracts/SmsServiceConnectorInterface.php	✅ Complete	Interface covers send, bulk send, phone validation, and balance checks.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0003	PaymentGatewayConnectorInterface MUST define charge, refund, captureAuthorization, createPaymentIntent methods	packages/Connector/src/Contracts/PaymentGatewayConnectorInterface.php	✅ Complete	Interface defines charge, refund, intent, and capture operations.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0004	CloudStorageConnectorInterface MUST define upload, download, delete, generateSignedUrl methods	packages/Connector/src/Contracts/CloudStorageConnectorInterface.php	✅ Complete	Interface defines upload, download, delete, and signed URL methods.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0005	ShippingProviderConnectorInterface MUST define createShipment, trackShipment, calculateRates, cancelShipment methods	packages/Connector/src/Contracts/ShippingProviderConnectorInterface.php	✅ Complete	Interface covers create, track, rate calculation, and cancel shipment.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0006	CalendarConnectorInterface MUST define createEvent, updateEvent, deleteEvent, listEvents, addAttendees methods		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0007	NotificationServiceConnectorInterface MUST define sendPushNotification, sendInAppNotification, registerDevice methods		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0008	VideoConferencingConnectorInterface MUST define createMeeting, startMeeting, endMeeting, getRecordings methods		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0009	MapServiceConnectorInterface MUST define geocode, reverseGeocode, calculateDistance, getDirections methods		❌ Missing	Implementation not available in current codebase.	2025-11-18
+`Nexus\Connector`	Domain Interface Requirement	DOM-CON-0010	AnalyticsServiceConnectorInterface MUST define trackEvent, trackPageView, identifyUser, getReport methods		❌ Missing	Implementation not available in current codebase.	2025-11-18
 `Nexus\Notifier`	Business Requirements	BUS-NOT-0001	All notifications MUST be deliverable across multiple channels (Email, SMS, Push, In-App) without modifying business logic				
 `Nexus\Notifier`	Business Requirements	BUS-NOT-0002	Notification content MUST remain consistent across all channels for a single event				
 `Nexus\Notifier`	Business Requirements	BUS-NOT-0003	Failed notification delivery MUST be logged and retryable without user intervention				
@@ -2480,7 +2480,7 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\Period`	Functional Requirement	FR-PER-113	Support fiscal year assignment and tracking per period
 `Nexus\Period`	Functional Requirement	FR-PER-114	Provide listPeriods(PeriodType $type, ?string $fiscalYear): array method
 `Nexus\Period`	Functional Requirement	FR-PER-115	Support soft-deletion of periods without associated transactions
-`Nexus\Period`	Functional Requirement	FR-PER-116	Implement period name generation based on configurable patterns (e.g., "JAN-2024", "2024-Q1")
+`Nexus\Period`	Functional Requirement	FR-PER-116	"Implement period name generation based on configurable patterns (e.g., ""JAN-2024"", ""2024-Q1"")"
 `Nexus\Period`	Functional Requirement	FR-PER-117	Support period templates for quick setup (Monthly, Quarterly, Semi-Annual, Annual)
 `Nexus\Period`	Functional Requirement	FR-PER-118	Provide getPeriodStatistics(string $periodId): array for transaction counts and amounts
 `Nexus\Period`	Functional Requirement	FR-PER-119	Support period locking to prevent all modifications (stronger than closed)
@@ -2543,7 +2543,7 @@ ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidate
 `Nexus\Period`	User Story	USE-PER-1006	As a Compliance Officer, I want to view full audit trail of who closed/reopened periods and why
 `Nexus\Period`	User Story	USE-PER-1007	As a CFO, I want to reopen the previous period for year-end adjustments with proper authorization
 `Nexus\Period`	User Story	USE-PER-1008	As a Developer, I want period validation to be fast (<5ms) since it's called for every transaction
-`Nexus\Period`	User Story	USE-PER-1009	As a System Administrator, I want to configure period naming patterns per tenant (e.g., "2024-Q1" vs "Q1-FY2024")
+`Nexus\Period`	User Story	USE-PER-1009	"As a System Administrator, I want to configure period naming patterns per tenant (e.g., ""2024-Q1"" vs ""Q1-FY2024"")"
 `Nexus\Period`	User Story	USE-PER-1010	As an Auditor, I want to ensure periods cannot be deleted if transactions exist
 `Nexus\Period`	User Story	USE-PER-1011	As a Finance Director, I want automatic rollover to next period when current period is closed
 `Nexus\Period`	User Story	USE-PER-1012	As a Developer, I want to implement new period types without modifying core package code
