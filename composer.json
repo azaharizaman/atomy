@@ -8,7 +8,8 @@
         "nexus/connector": "*@dev",
         "nexus/payroll-mys-statutory": "*@dev",
         "nexus/storage": "*@dev",
-        "nexus/identity": "*@dev"
+        "nexus/identity": "*@dev",
+        "nexus/notifier": "*@dev"
     },
     "repositories": [
         {
@@ -62,6 +63,10 @@
         {
             "type": "path",
             "url": "./packages/Identity"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Notifier"
         }
     ],
     "minimum-stability": "dev",
