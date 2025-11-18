@@ -98,6 +98,14 @@ final class EloquentPeriodRepository implements PeriodRepositoryInterface
     /**
      * {@inheritDoc}
      */
+    public function create(array $data): PeriodInterface
+    {
+        return Period::create($data);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function save(PeriodInterface $period): void
     {
         if ($period instanceof Period) {
