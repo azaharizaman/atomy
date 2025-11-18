@@ -1,0 +1,16 @@
+{
+    "name": "nexus/event-stream",
+    "description": "Nexus EventStream Package - Event sourcing for critical domains (Finance GL, Inventory)",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nexus\\EventStream\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.3"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
