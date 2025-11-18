@@ -147,20 +147,20 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Architechtural Requirement	ARC-ACC-2013	Use Value Objects for ReportingPeriod, StatementLineItem, ComplianceStandard				
 `Nexus\Accounting`	Architechtural Requirement	ARC-ACC-2014	Separate Core/ folder for report generation engine (ReportBuilder, StatementCompiler)				
 `Nexus\Accounting`	Architechtural Requirement	ARC-ACC-2015	Define internal contracts in Core/Contracts/ (ReportBuilderInterface, StatementFormatterInterface)				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0126	All journal entries MUST be balanced (debit = credit) before posting				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0127	Posted entries cannot be modified; only reversed with offsetting entries				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0128	Prevent deletion of accounts with associated transactions or child accounts				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0129	Account codes MUST be unique within tenant scope				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0130	Only leaf accounts (no children) can have transactions posted to them				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0131	Entries can only be posted to active fiscal periods; closed periods reject entries				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0132	Foreign currency transactions MUST record both base and foreign amounts with exchange rate				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0133	Three-way matching required for vendor invoice posting (PO, GR, Invoice)				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0134	Customer payments MUST be allocated to specific invoices for proper aging tracking				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0126	All journal entries MUST be balanced (debit = credit) before posting				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0127	Posted entries cannot be modified; only reversed with offsetting entries				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0128	Prevent deletion of accounts with associated transactions or child accounts				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0129	Account codes MUST be unique within tenant scope				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0130	Only leaf accounts (no children) can have transactions posted to them				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0131	Entries can only be posted to active fiscal periods; closed periods reject entries				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0132	Foreign currency transactions MUST record both base and foreign amounts with exchange rate				
+`Nexus\Payable`	Business Requirements	BUS-ACC-0133	Three-way matching required for vendor invoice posting (PO, GR, Invoice)				
+`Nexus\Receivable`	Business Requirements	BUS-ACC-0134	Customer payments MUST be allocated to specific invoices for proper aging tracking				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2101	Financial statements MUST reflect data as of specific point in time (reporting date)				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2102	Balance Sheet MUST balance (Assets = Liabilities + Equity)				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2103	Income Statement MUST show Net Income = Revenue - Expenses				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2104	Cash Flow Statement MUST reconcile to cash account changes				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-2105	Trial Balance MUST show total debits = total credits				
+`Nexus\Finance`	Business Requirements	BUS-ACC-2105	Trial Balance MUST show total debits = total credits				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2106	Fiscal period closing MUST validate all entries are balanced before lock				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2107	Year-end close MUST transfer net income to retained earnings				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2108	Month-end close MUST calculate and post accruals automatically				
@@ -174,18 +174,18 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2116	Large enterprise: Consolidated statements, segment reporting, intercompany eliminations				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2117	Support multiple reporting currencies for multinational enterprises				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2118	Financial statements must be version-controlled for restatements				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-0179	Maintain hierarchical chart of accounts with unlimited depth using nested set model				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-0180	Support 5 standard account types (Asset, Liability, Equity, Revenue, Expense) with type inheritance				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-0179	Maintain hierarchical chart of accounts with unlimited depth using nested set model				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-0180	Support 5 standard account types (Asset, Liability, Equity, Revenue, Expense) with type inheritance				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-0181	Allow tagging accounts by category and reporting group for financial statement organization				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-0182	Support flexible account code format (e.g., 1000-00, 1.1.1) per tenant configuration				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-0183	Provide account activation/deactivation without deletion to preserve history				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-0183	Provide account activation/deactivation without deletion to preserve history				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-0184	Support account templates for quick COA setup (manufacturing, retail, services)				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2201	Generate Balance Sheet with Assets, Liabilities, and Equity sections				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2202	Generate Income Statement (P&L) with Revenue and Expense sections				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2203	Generate Statement of Cash Flows using direct or indirect method				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2204	Generate Statement of Changes in Equity				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-2205	Generate Trial Balance with account-level detail				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-2206	Generate General Ledger report with transaction details				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-2205	Generate Trial Balance with account-level detail				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-2206	Generate General Ledger report with transaction details				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2207	Generate Chart of Accounts report with hierarchical structure				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2208	Support comparative financial statements (side-by-side periods)				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2209	Support consolidated financial statements across multiple entities				
@@ -197,7 +197,7 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2215	Generate budget vs actual variance reports				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2216	Support budget import from Nexus\Analytics forecasts				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2217	Calculate key financial ratios (current ratio, debt-to-equity, ROA, ROE)				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-2218	Generate aging reports (AR and AP)				
+`Nexus\Receivable`	Functional Requirement	FUN-ACC-2218	Generate aging reports (AR and AP)				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2219	Generate account reconciliation worksheets				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2220	Support drill-down from statement line items to source transactions				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2221	Export financial statements to PDF, Excel, CSV formats				
@@ -218,15 +218,15 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2236	Schedule automated report generation and distribution				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2237	Support report subscriptions with email delivery				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2238	Provide financial dashboard with key metrics and trends				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0359	Trial balance generation for 100K transactions < 3 seconds				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0360	Account balance inquiry with drill-down < 1 second				
+`Nexus\Finance`	Performance Requirement	PER-ACC-0359	Trial balance generation for 100K transactions < 3 seconds				
+`Nexus\Finance`	Performance Requirement	PER-ACC-0360	Account balance inquiry with drill-down < 1 second				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-0361	Bank reconciliation for 10K transactions < 2 seconds				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0362	Aging report generation (30/60/90 days) < 2 seconds				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0363	Chart of accounts hierarchical query performance < 500ms				
+`Nexus\Receivable`	Performance Requirement	PER-ACC-0362	Aging report generation (30/60/90 days) < 2 seconds				
+`Nexus\Finance`	Performance Requirement	PER-ACC-0363	Chart of accounts hierarchical query performance < 500ms				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2301	Balance Sheet generation < 5 seconds for 1K accounts				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2302	Income Statement generation < 5 seconds for 1K accounts				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2303	Cash Flow Statement generation < 10 seconds using indirect method				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-2304	Trial Balance generation < 3 seconds for 100K transactions				
+`Nexus\Finance`	Performance Requirement	PER-ACC-2304	Trial Balance generation < 3 seconds for 100K transactions				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2305	Comparative statements (2 periods) < 8 seconds				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2306	Consolidated statements (10 entities) < 30 seconds				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2307	Budget variance report < 5 seconds for 1K accounts				
@@ -246,11 +246,11 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Reliability Requirement	REL-ACC-2408	Support parallel report generation for multi-entity consolidation				
 `Nexus\Accounting`	Reliability Requirement	REL-ACC-2409	Implement circuit breaker for external data source failures				
 `Nexus\Accounting`	Reliability Requirement	REL-ACC-2410	Archive financial statements for historical compliance				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0475	Implement audit logging for all GL postings using ActivityLoggerContract				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0476	Enforce tenant isolation for all accounting data via tenant scoping				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0477	Support authorization policies through contract-based permission system				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0478	Validate business rules at domain layer (before orchestration)				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0479	Implement immutable posting (entries cannot be modified once posted)				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0475	Implement audit logging for all GL postings using ActivityLoggerContract				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0476	Enforce tenant isolation for all accounting data via tenant scoping				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0477	Support authorization policies through contract-based permission system				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0478	Validate business rules at domain layer (before orchestration)				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0479	Implement immutable posting (entries cannot be modified once posted)				
 `Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-2501	Implement audit logging for period close and financial statement generation				
 `Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-2502	Support role-based access control for financial reports (viewer, preparer, approver)				
 `Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-2503	Encrypt sensitive financial reports at rest				

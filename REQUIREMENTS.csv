@@ -1,29 +1,29 @@
 Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or Class/Methods Responible to deliver this requirements	Status	Notes on Status	Date Last Updated
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0126	All journal entries MUST be balanced (debit = credit) before posting				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0127	Posted entries cannot be modified; only reversed with offsetting entries				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0128	Prevent deletion of accounts with associated transactions or child accounts				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0129	Account codes MUST be unique within tenant scope				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0130	Only leaf accounts (no children) can have transactions posted to them				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0131	Entries can only be posted to active fiscal periods; closed periods reject entries				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0132	Foreign currency transactions MUST record both base and foreign amounts with exchange rate				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0133	Three-way matching required for vendor invoice posting (PO, GR, Invoice)				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0134	Customer payments MUST be allocated to specific invoices for proper aging tracking				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-0179	Maintain hierarchical chart of accounts with unlimited depth using nested set model				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-0180	Support 5 standard account types (Asset, Liability, Equity, Revenue, Expense) with type inheritance				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0126	All journal entries MUST be balanced (debit = credit) before posting				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0127	Posted entries cannot be modified; only reversed with offsetting entries				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0128	Prevent deletion of accounts with associated transactions or child accounts				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0129	Account codes MUST be unique within tenant scope				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0130	Only leaf accounts (no children) can have transactions posted to them				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0131	Entries can only be posted to active fiscal periods; closed periods reject entries				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0132	Foreign currency transactions MUST record both base and foreign amounts with exchange rate				
+`Nexus\Payable`	Business Requirements	BUS-ACC-0133	Three-way matching required for vendor invoice posting (PO, GR, Invoice)				
+`Nexus\Receivable`	Business Requirements	BUS-ACC-0134	Customer payments MUST be allocated to specific invoices for proper aging tracking				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-0179	Maintain hierarchical chart of accounts with unlimited depth using nested set model				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-0180	Support 5 standard account types (Asset, Liability, Equity, Revenue, Expense) with type inheritance				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-0181	Allow tagging accounts by category and reporting group for financial statement organization				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-0182	Support flexible account code format (e.g., 1000-00, 1.1.1) per tenant configuration				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-0183	Provide account activation/deactivation without deletion to preserve history				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-0183	Provide account activation/deactivation without deletion to preserve history				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-0184	Support account templates for quick COA setup (manufacturing, retail, services)				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0359	Trial balance generation for 100K transactions				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0360	Account balance inquiry with drill-down				
+`Nexus\Finance`	Performance Requirement	PER-ACC-0359	Trial balance generation for 100K transactions				
+`Nexus\Finance`	Performance Requirement	PER-ACC-0360	Account balance inquiry with drill-down				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-0361	Bank reconciliation for 10K transactions				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-0362	Aging report generation (30/60/90 days)				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0363	Chart of accounts hierarchical query performance				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0475	Implement audit logging for all GL postings using ActivityLoggerContract				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0476	Enforce tenant isolation for all accounting data via tenant scoping				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0477	Support authorization policies through contract-based permission system				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0478	Validate business rules at domain layer (before orchestration)				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0479	Implement immutable posting (entries cannot be modified once posted)				
+`Nexus\Finance`	Performance Requirement	PER-ACC-0363	Chart of accounts hierarchical query performance				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0475	Implement audit logging for all GL postings using ActivityLoggerContract				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0476	Enforce tenant isolation for all accounting data via tenant scoping				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0477	Support authorization policies through contract-based permission system				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0478	Validate business rules at domain layer (before orchestration)				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0479	Implement immutable posting (entries cannot be modified once posted)				
 `Nexus\Analytics`	Business Requirements	BUS-ANA-0135	Users cannot view sensitive data about themselves				
 `Nexus\Analytics`	Business Requirements	BUS-ANA-0136	All query executions MUST use ACID transactions				
 `Nexus\Analytics`	Business Requirements	BUS-ANA-0137	Predictive model drift MUST trigger automatic alerts				

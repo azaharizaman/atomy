@@ -61,6 +61,25 @@ use Nexus\Notifier\Contracts\NotificationRendererInterface;
 use Nexus\Notifier\Contracts\NotificationHistoryRepositoryInterface;
 use Nexus\Notifier\Contracts\NotificationTemplateRepositoryInterface;
 use Nexus\Notifier\Contracts\NotificationPreferenceRepositoryInterface;
+use Nexus\Finance\Contracts\FinanceManagerInterface;
+use Nexus\Finance\Contracts\AccountRepositoryInterface;
+use Nexus\Finance\Contracts\JournalEntryRepositoryInterface;
+use Nexus\Finance\Contracts\LedgerRepositoryInterface;
+use App\Repositories\EloquentAccountRepository;
+use App\Repositories\EloquentJournalEntryRepository;
+use App\Repositories\EloquentLedgerRepository;
+use Nexus\Finance\Services\FinanceManager;
+use Nexus\Accounting\Contracts\StatementRepositoryInterface;
+use Nexus\Accounting\Contracts\StatementBuilderInterface;
+use Nexus\Accounting\Contracts\PeriodCloseServiceInterface;
+use Nexus\Accounting\Contracts\ConsolidationEngineInterface;
+use Nexus\Accounting\Contracts\VarianceCalculatorInterface;
+use Nexus\Accounting\Services\AccountingManager;
+use Nexus\Accounting\Core\Engine\StatementBuilder;
+use Nexus\Accounting\Core\Engine\PeriodCloseService;
+use Nexus\Accounting\Core\Engine\ConsolidationEngine;
+use Nexus\Accounting\Core\Engine\VarianceCalculator;
+use App\Repositories\EloquentStatementRepository;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -129,6 +148,30 @@ final class AppServiceProvider extends ServiceProvider
 
         // Package Services (Essential - Interface to Package Default)
         $this->app->singleton(PeriodManagerInterface::class, PeriodManager::class);
+
+        // Finance Package Bindings
+
+        // Repositories (Essential - Interface to Concrete)
+        $this->app->singleton(AccountRepositoryInterface::class, EloquentAccountRepository::class);
+        $this->app->singleton(JournalEntryRepositoryInterface::class, EloquentJournalEntryRepository::class);
+        $this->app->singleton(LedgerRepositoryInterface::class, EloquentLedgerRepository::class);
+
+        // Package Services (Essential - Interface to Package Default)
+        $this->app->singleton(FinanceManagerInterface::class, FinanceManager::class);
+
+        // Accounting Package Bindings
+
+        // Repositories (Essential - Interface to Concrete)
+        $this->app->singleton(StatementRepositoryInterface::class, EloquentStatementRepository::class);
+
+        // Core Engines (Essential - Interface to Package Default)
+        $this->app->singleton(StatementBuilderInterface::class, StatementBuilder::class);
+        $this->app->singleton(PeriodCloseServiceInterface::class, PeriodCloseService::class);
+        $this->app->singleton(ConsolidationEngineInterface::class, ConsolidationEngine::class);
+        $this->app->singleton(VarianceCalculatorInterface::class, VarianceCalculator::class);
+
+        // Package Services (Essential - Singleton)
+        $this->app->singleton(AccountingManager::class);
     }
 
     /**
