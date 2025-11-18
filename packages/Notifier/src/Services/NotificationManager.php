@@ -305,7 +305,7 @@ final readonly class NotificationManager implements NotificationManagerInterface
     {
         return sprintf(
             'notif_%s_%s',
-            date('YmdHis'),
+            (new \DateTimeImmutable())->format('YmdHis'),
             bin2hex(random_bytes(8))
         );
     }

@@ -88,12 +88,6 @@ final class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NotificationPreferenceRepositoryInterface::class, DbNotificationPreferenceRepository::class);
         $this->app->singleton(NotificationQueueInterface::class, DbNotificationQueue::class);
 
-        // Channels (Essential - Interface to Concrete)
-        $this->app->singleton(EmailChannelInterface::class, EmailChannel::class);
-        $this->app->singleton(SmsChannelInterface::class, SmsChannel::class);
-        $this->app->singleton(PushChannelInterface::class, PushChannel::class);
-        $this->app->singleton(InAppChannelInterface::class, InAppChannel::class);
-
         // Renderer (Essential - Interface to Concrete)
         $this->app->singleton(NotificationRendererInterface::class, NotificationRenderer::class);
 
@@ -101,10 +95,10 @@ final class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NotificationManagerInterface::class, function ($app) {
             return new NotificationManager(
                 channels: [
-                    $app->make(EmailChannelInterface::class),
-                    $app->make(SmsChannelInterface::class),
-                    $app->make(PushChannelInterface::class),
-                    $app->make(InAppChannelInterface::class),
+                    $app->make(EmailChannel::class),
+                    $app->make(SmsChannel::class),
+                    $app->make(PushChannel::class),
+                    $app->make(InAppChannel::class),
                 ],
                 queue: $app->make(NotificationQueueInterface::class),
                 history: $app->make(NotificationHistoryRepositoryInterface::class),

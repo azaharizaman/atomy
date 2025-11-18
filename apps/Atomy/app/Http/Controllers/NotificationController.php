@@ -93,7 +93,7 @@ final class NotificationController extends Controller
             );
 
             $notificationIds = $this->notificationManager->sendBatch(
-                notifiables: $notifiables,
+                recipients: $notifiables,
                 notification: $notification
             );
 
@@ -143,7 +143,7 @@ final class NotificationController extends Controller
             $notificationId = $this->notificationManager->schedule(
                 notifiable: new SimpleNotifiable($validated['recipient_id']),
                 notification: $notification,
-                sendAt: $scheduledAt
+                scheduledAt: $scheduledAt
             );
 
             return response()->json([
@@ -291,7 +291,7 @@ final class SimpleNotifiable implements \Nexus\Notifier\Contracts\NotifiableInte
         private readonly string $id
     ) {}
 
-    public function getNotifiableId(): string
+    public function getNotificationIdentifier(): string
     {
         return $this->id;
     }

@@ -31,10 +31,10 @@ enum Priority: string
     public function getWeight(): int
     {
         return match ($this) {
-            self::Low => 1,
-            self::Normal => 5,
-            self::High => 10,
-            self::Critical => 100,
+            self::Low => 10,
+            self::Normal => 20,
+            self::High => 30,
+            self::Critical => 40,
         };
     }
 }
