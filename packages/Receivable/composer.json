@@ -1,0 +1,17 @@
+{
+    "name": "nexus/receivable",
+    "description": "Nexus Receivable Package - Framework-agnostic accounts receivable management",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Receivable\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.3",
+        "nexus/finance": "*@dev"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

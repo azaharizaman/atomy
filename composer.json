@@ -67,6 +67,34 @@
         {
             "type": "path",
             "url": "./packages/Notifier"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Period"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Finance"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Accounting"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Payable"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Receivable"
+        },
+        {
+            "type": "path",
+            "url": "./packages/DataProcessor"
+        },
+        {
+            "type": "path",
+            "url": "./packages/EventStream"
         }
     ],
     "minimum-stability": "dev",
