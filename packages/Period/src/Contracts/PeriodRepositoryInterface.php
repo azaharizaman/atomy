@@ -59,6 +59,14 @@ interface PeriodRepositoryInterface
     public function findByStatus(PeriodStatus $status, PeriodType $type): array;
 
     /**
+     * Create a new period from data array
+     * 
+     * @param array<string, mixed> $data Period data including type, status, dates, etc.
+     * @return PeriodInterface The newly created period
+     */
+    public function create(array $data): PeriodInterface;
+
+    /**
      * Save a period (create or update)
      */
     public function save(PeriodInterface $period): void;

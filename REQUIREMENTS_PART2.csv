@@ -147,20 +147,20 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Architechtural Requirement	ARC-ACC-2013	Use Value Objects for ReportingPeriod, StatementLineItem, ComplianceStandard				
 `Nexus\Accounting`	Architechtural Requirement	ARC-ACC-2014	Separate Core/ folder for report generation engine (ReportBuilder, StatementCompiler)				
 `Nexus\Accounting`	Architechtural Requirement	ARC-ACC-2015	Define internal contracts in Core/Contracts/ (ReportBuilderInterface, StatementFormatterInterface)				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0126	All journal entries MUST be balanced (debit = credit) before posting				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0127	Posted entries cannot be modified; only reversed with offsetting entries				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0128	Prevent deletion of accounts with associated transactions or child accounts				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0129	Account codes MUST be unique within tenant scope				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0130	Only leaf accounts (no children) can have transactions posted to them				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0131	Entries can only be posted to active fiscal periods; closed periods reject entries				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0132	Foreign currency transactions MUST record both base and foreign amounts with exchange rate				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0133	Three-way matching required for vendor invoice posting (PO, GR, Invoice)				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-0134	Customer payments MUST be allocated to specific invoices for proper aging tracking				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0126	All journal entries MUST be balanced (debit = credit) before posting				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0127	Posted entries cannot be modified; only reversed with offsetting entries				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0128	Prevent deletion of accounts with associated transactions or child accounts				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0129	Account codes MUST be unique within tenant scope				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0130	Only leaf accounts (no children) can have transactions posted to them				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0131	Entries can only be posted to active fiscal periods; closed periods reject entries				
+`Nexus\Finance`	Business Requirements	BUS-ACC-0132	Foreign currency transactions MUST record both base and foreign amounts with exchange rate				
+`Nexus\Payable`	Business Requirements	BUS-ACC-0133	Three-way matching required for vendor invoice posting (PO, GR, Invoice)				
+`Nexus\Receivable`	Business Requirements	BUS-ACC-0134	Customer payments MUST be allocated to specific invoices for proper aging tracking				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2101	Financial statements MUST reflect data as of specific point in time (reporting date)				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2102	Balance Sheet MUST balance (Assets = Liabilities + Equity)				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2103	Income Statement MUST show Net Income = Revenue - Expenses				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2104	Cash Flow Statement MUST reconcile to cash account changes				
-`Nexus\Accounting`	Business Requirements	BUS-ACC-2105	Trial Balance MUST show total debits = total credits				
+`Nexus\Finance`	Business Requirements	BUS-ACC-2105	Trial Balance MUST show total debits = total credits				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2106	Fiscal period closing MUST validate all entries are balanced before lock				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2107	Year-end close MUST transfer net income to retained earnings				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2108	Month-end close MUST calculate and post accruals automatically				
@@ -174,18 +174,18 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2116	Large enterprise: Consolidated statements, segment reporting, intercompany eliminations				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2117	Support multiple reporting currencies for multinational enterprises				
 `Nexus\Accounting`	Business Requirements	BUS-ACC-2118	Financial statements must be version-controlled for restatements				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-0179	Maintain hierarchical chart of accounts with unlimited depth using nested set model				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-0180	Support 5 standard account types (Asset, Liability, Equity, Revenue, Expense) with type inheritance				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-0179	Maintain hierarchical chart of accounts with unlimited depth using nested set model				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-0180	Support 5 standard account types (Asset, Liability, Equity, Revenue, Expense) with type inheritance				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-0181	Allow tagging accounts by category and reporting group for financial statement organization				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-0182	Support flexible account code format (e.g., 1000-00, 1.1.1) per tenant configuration				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-0183	Provide account activation/deactivation without deletion to preserve history				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-0183	Provide account activation/deactivation without deletion to preserve history				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-0184	Support account templates for quick COA setup (manufacturing, retail, services)				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2201	Generate Balance Sheet with Assets, Liabilities, and Equity sections				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2202	Generate Income Statement (P&L) with Revenue and Expense sections				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2203	Generate Statement of Cash Flows using direct or indirect method				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2204	Generate Statement of Changes in Equity				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-2205	Generate Trial Balance with account-level detail				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-2206	Generate General Ledger report with transaction details				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-2205	Generate Trial Balance with account-level detail				
+`Nexus\Finance`	Functional Requirement	FUN-ACC-2206	Generate General Ledger report with transaction details				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2207	Generate Chart of Accounts report with hierarchical structure				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2208	Support comparative financial statements (side-by-side periods)				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2209	Support consolidated financial statements across multiple entities				
@@ -197,7 +197,7 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2215	Generate budget vs actual variance reports				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2216	Support budget import from Nexus\Analytics forecasts				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2217	Calculate key financial ratios (current ratio, debt-to-equity, ROA, ROE)				
-`Nexus\Accounting`	Functional Requirement	FUN-ACC-2218	Generate aging reports (AR and AP)				
+`Nexus\Receivable`	Functional Requirement	FUN-ACC-2218	Generate aging reports (AR and AP)				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2219	Generate account reconciliation worksheets				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2220	Support drill-down from statement line items to source transactions				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2221	Export financial statements to PDF, Excel, CSV formats				
@@ -218,15 +218,15 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2236	Schedule automated report generation and distribution				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2237	Support report subscriptions with email delivery				
 `Nexus\Accounting`	Functional Requirement	FUN-ACC-2238	Provide financial dashboard with key metrics and trends				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0359	Trial balance generation for 100K transactions < 3 seconds				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0360	Account balance inquiry with drill-down < 1 second				
+`Nexus\Finance`	Performance Requirement	PER-ACC-0359	Trial balance generation for 100K transactions < 3 seconds				
+`Nexus\Finance`	Performance Requirement	PER-ACC-0360	Account balance inquiry with drill-down < 1 second				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-0361	Bank reconciliation for 10K transactions < 2 seconds				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0362	Aging report generation (30/60/90 days) < 2 seconds				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-0363	Chart of accounts hierarchical query performance < 500ms				
+`Nexus\Receivable`	Performance Requirement	PER-ACC-0362	Aging report generation (30/60/90 days) < 2 seconds				
+`Nexus\Finance`	Performance Requirement	PER-ACC-0363	Chart of accounts hierarchical query performance < 500ms				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2301	Balance Sheet generation < 5 seconds for 1K accounts				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2302	Income Statement generation < 5 seconds for 1K accounts				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2303	Cash Flow Statement generation < 10 seconds using indirect method				
-`Nexus\Accounting`	Performance Requirement	PER-ACC-2304	Trial Balance generation < 3 seconds for 100K transactions				
+`Nexus\Finance`	Performance Requirement	PER-ACC-2304	Trial Balance generation < 3 seconds for 100K transactions				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2305	Comparative statements (2 periods) < 8 seconds				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2306	Consolidated statements (10 entities) < 30 seconds				
 `Nexus\Accounting`	Performance Requirement	PER-ACC-2307	Budget variance report < 5 seconds for 1K accounts				
@@ -246,11 +246,11 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Accounting`	Reliability Requirement	REL-ACC-2408	Support parallel report generation for multi-entity consolidation				
 `Nexus\Accounting`	Reliability Requirement	REL-ACC-2409	Implement circuit breaker for external data source failures				
 `Nexus\Accounting`	Reliability Requirement	REL-ACC-2410	Archive financial statements for historical compliance				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0475	Implement audit logging for all GL postings using ActivityLoggerContract				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0476	Enforce tenant isolation for all accounting data via tenant scoping				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0477	Support authorization policies through contract-based permission system				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0478	Validate business rules at domain layer (before orchestration)				
-`Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-0479	Implement immutable posting (entries cannot be modified once posted)				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0475	Implement audit logging for all GL postings using ActivityLoggerContract				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0476	Enforce tenant isolation for all accounting data via tenant scoping				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0477	Support authorization policies through contract-based permission system				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0478	Validate business rules at domain layer (before orchestration)				
+`Nexus\Finance`	Security and Compliance Requirement	SEC-ACC-0479	Implement immutable posting (entries cannot be modified once posted)				
 `Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-2501	Implement audit logging for period close and financial statement generation				
 `Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-2502	Support role-based access control for financial reports (viewer, preparer, approver)				
 `Nexus\Accounting`	Security and Compliance Requirement	SEC-ACC-2503	Encrypt sensitive financial reports at rest				
@@ -806,3 +806,215 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\EventStream`	Usability Requirement	USA-EVS-7706	Display concurrency conflict warnings with resolution guidance				
 `Nexus\EventStream`	Usability Requirement	USA-EVS-7707	Show event stream health metrics (throughput, size, version distribution)				
 `Nexus\EventStream`	Usability Requirement	USA-EVS-7708	Support event payload inspection with pretty-printed JSON/YAML				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8001	Package MUST be framework-agnostic with no Laravel dependencies in core services				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8002	All compliance scheme definitions via interfaces (ComplianceSchemeInterface)				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8003	All configuration validation via CheckerInterface contract				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8004	Business logic in service layer (ComplianceManager, ConfigurationAuditor)				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8005	All database migrations in application layer (apps/Atomy)				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8006	All Eloquent models in application layer implementing package interfaces				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8007	IoC container bindings in application service provider with conditional loading				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8008	Package composer.json MUST NOT depend on laravel/framework				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8009	MUST inject SettingsManagerInterface from Nexus\Setting for configuration checks				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8010	MUST inject AuditLoggerInterface from Nexus\AuditLogger for compliance audit trail				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8011	Support feature composition through ComplianceSchemeInterface contract				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8012	Define Segregation of Duties (SOD) via SodRuleInterface contract				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8013	Compliance scheme adapters MUST be separate packages (e.g., compliance-iso14001, compliance-sox)				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8014	Application layer binds specific ComplianceSchemeInterface implementation based on feature flags				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8015	Use Value Objects for ComplianceLevel, RuleViolation, AuditCheckpoint				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8016	Separate Core/ folder for internal engine (RuleEngine, ValidationPipeline)				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8017	Define internal contracts in Core/Contracts/ (RuleEngineInterface, ValidationPipelineInterface)				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8018	MUST NOT contain any statutory reporting logic (delegated to Nexus\Statutory)				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8019	Support multi-compliance deployment by binding different schemes per tenant				
+`Nexus\Compliance`	Architechtural Requirement	ARC-CMP-8020	Provide event-driven architecture for compliance state changes (violations, approvals)				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8021	Package MUST be framework-agnostic with no Laravel dependencies in core services				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8022	All statutory report definitions via interfaces (TaxonomyReportGeneratorInterface, PayrollStatutoryInterface)				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8023	All report metadata via ReportMetadataInterface contract				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8024	Business logic in service layer (StatutoryReportManager, FilingCoordinator)				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8025	All database migrations in application layer (apps/Atomy)				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8026	All Eloquent models in application layer implementing package interfaces				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8027	IoC container bindings in application service provider with conditional loading				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8028	Package composer.json MUST NOT depend on laravel/framework				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8029	MUST include DefaultAccountingAdapter for basic P&L and Balance Sheet generation				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8030	MUST include DefaultPayrollStatutoryAdapter (zero deductions) as fallback				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8031	Country-specific implementations MUST be separate packages (e.g., statutory-payroll-mys, statutory-accounting-ssm)				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8032	Application layer binds specific TaxonomyReportGeneratorInterface based on feature flags and tenant country				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8033	Use Value Objects for TaxonomyTag, FilingFrequency, ReportFormat				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8034	Separate Core/ folder for internal engine (SchemaValidator, XBRLGenerator)				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8035	Define internal contracts in Core/Contracts/ (SchemaValidatorInterface, FormatGeneratorInterface)				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8036	MUST NOT contain operational compliance logic (delegated to Nexus\Compliance)				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8037	Support multi-country deployment by binding different adapters per tenant				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8038	Provide event-driven architecture for filing lifecycle events (generated, submitted, accepted, rejected)				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8039	ReportMetadataInterface MUST define getSchemaIdentifier(), getSchemaVersion(), getMappingTemplate()				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8040	ReportMetadataInterface MUST define getSubmissionFrequency(), getReportingBody(), getRecipientSystemURL()				
+`Nexus\Statutory`	Architechtural Requirement	ARC-STT-8041	ReportMetadataInterface MUST define getOutputFormat(), getMimeType(), getValidationRules()				
+`Nexus\Statutory.Payroll.MYS`	Architechtural Requirement	ARC-SPM-8042	Package MUST implement PayrollStatutoryInterface from Nexus\Statutory				
+`Nexus\Statutory.Payroll.MYS`	Architechtural Requirement	ARC-SPM-8043	Package is open source and free to download				
+`Nexus\Statutory.Payroll.MYS`	Architechtural Requirement	ARC-SPM-8044	MUST implement MYSStatutoryCalculator for EPF, SOCSO, EIS, PCB calculations				
+`Nexus\Statutory.Payroll.MYS`	Architechtural Requirement	ARC-SPM-8045	MUST implement MYSFilingAdapter for EPF Form A, SOCSO Borang 8A, LHDN EA forms				
+`Nexus\Statutory.Payroll.MYS`	Architechtural Requirement	ARC-SPM-8046	Use Value Objects for EPFRate, SOCSORateBracket, PCBRate, EISRate				
+`Nexus\Statutory.Payroll.MYS`	Architechtural Requirement	ARC-SPM-8047	Support rate versioning with effective dates for statutory rate changes				
+`Nexus\Statutory.Accounting.MYS.Prop`	Architechtural Requirement	ARC-SAP-8048	Package MUST implement TaxonomyReportGeneratorInterface from Nexus\Statutory				
+`Nexus\Statutory.Accounting.MYS.Prop`	Architechtural Requirement	ARC-SAP-8049	Package is open source and free for proprietorship/partnership				
+`Nexus\Statutory.Accounting.MYS.Prop`	Architechtural Requirement	ARC-SAP-8050	MUST implement ProprietorshipReportAdapter for simplified financial statements				
+`Nexus\Statutory.Accounting.MYS.Prop`	Architechtural Requirement	ARC-SAP-8051	Support PDF output format only (no XBRL requirement)				
+`Nexus\Atomy`	Architechtural Requirement	ARC-ATM-8052	MUST implement feature flag system for compliance and statutory modules				
+`Nexus\Atomy`	Architechtural Requirement	ARC-ATM-8053	MUST conditionally bind compliance schemes based on config('features.compliance_scheme')				
+`Nexus\Atomy`	Architechtural Requirement	ARC-ATM-8054	MUST conditionally bind statutory adapters based on config('features.statutory_enabled') and tenant country				
+`Nexus\Atomy`	Architechtural Requirement	ARC-ATM-8055	If paid statutory package is absent, bind DefaultAccountingAdapter from Nexus\Statutory				
+`Nexus\Atomy`	Architechtural Requirement	ARC-ATM-8056	If paid statutory package is absent, bind DefaultPayrollStatutoryAdapter from Nexus\Statutory				
+`Nexus\Atomy`	Architechtural Requirement	ARC-ATM-8057	MUST use private Composer repository for paid compliance/statutory packages				
+`Nexus\Atomy`	Architechtural Requirement	ARC-ATM-8058	Support dynamic composer.json modification for feature activation				
+`Nexus\Atomy`	Architechtural Requirement	ARC-ATM-8059	Provide StatutoryServiceProvider for all statutory bindings				
+`Nexus\Atomy`	Architechtural Requirement	ARC-ATM-8060	Provide ComplianceServiceProvider for all compliance scheme bindings				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-8061	MUST remove all country-specific statutory calculation logic				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-8062	MUST only call injected PayrollStatutoryInterface for all deduction calculations				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-8063	PayloadInterface MUST contain only generic fields (grossSalary, employmentStatus, employeeId)				
+`Nexus\Payroll`	Architechtural Requirement	ARC-PAY-8064	MUST NOT contain country-specific field references (e.g., epfNumber, socsoNumber)				
+`Nexus\Accounting`	Architechtural Requirement	ARC-ACC-8065	MUST remove all country-specific reporting logic				
+`Nexus\Accounting`	Architechtural Requirement	ARC-ACC-8066	MUST only call injected TaxonomyReportGeneratorInterface for statutory reports				
+`Nexus\Accounting`	Architechtural Requirement	ARC-ACC-8067	Standard financial reports (P&L, Balance Sheet, Cash Flow) remain in Nexus\Accounting				
+`Nexus\Accounting`	Architechtural Requirement	ARC-ACC-8068	Statutory-tagged reports delegated to TaxonomyReportGeneratorInterface				
+`Nexus\Finance`	Architechtural Requirement	ARC-FIN-8069	MUST ensure Chart of Accounts supports taxonomy mapping via metadata fields				
+`Nexus\Finance`	Architechtural Requirement	ARC-FIN-8070	MUST respect period lock enforcement when generating statutory reports				
+`Nexus\Finance`	Architechtural Requirement	ARC-FIN-8071	Trial Balance data MUST be consumable by TaxonomyReportGeneratorInterface				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8101	Compliance schemes MUST be explicitly enabled via Settings before activation				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8102	Configuration audit failures MUST prevent compliance scheme activation				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8103	SOD violations MUST be logged at Critical audit level				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8104	Creator and approver roles MUST be different users for Critical level transactions				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8105	ISO 14001 scheme MUST enforce environmental fields on Asset and Inventory modules				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8106	ISO 14001 scheme MUST enforce Management Review Meeting scheduling				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8107	Compliance scheme changes MUST be audited with before/after state				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8108	Feature composition rules MUST be validated before activating compliance scheme				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8109	Compliance violations MUST trigger notification to compliance officer				
+`Nexus\Compliance`	Business Requirements	BUS-CMP-8110	Delegation chains for compliance approval limited to 3 levels maximum				
+`Nexus\Statutory`	Business Requirements	BUS-STT-8111	Statutory report generation MUST use period-locked financial data only				
+`Nexus\Statutory`	Business Requirements	BUS-STT-8112	Generated statutory reports MUST be immutable (append-only)				
+`Nexus\Statutory`	Business Requirements	BUS-STT-8113	Schema validation MUST pass before file generation				
+`Nexus\Statutory`	Business Requirements	BUS-STT-8114	Filing frequency MUST match regulatory body requirements (monthly, quarterly, annual)				
+`Nexus\Statutory`	Business Requirements	BUS-STT-8115	Report versioning MUST support schema updates without breaking historical reports				
+`Nexus\Statutory`	Business Requirements	BUS-STT-8116	Failed report generation MUST log detailed error with field-level validation results				
+`Nexus\Statutory`	Business Requirements	BUS-STT-8117	Default adapters MUST return safe, non-compliant placeholder output				
+`Nexus\Statutory`	Business Requirements	BUS-STT-8118	Paid adapters MUST produce fully compliant, submittable files				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8119	EPF employee contribution rate is 11% for salary <= RM5,000				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8120	EPF employer contribution rate is 12% or 13% based on employee age				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8121	SOCSO eligibility ends at age 60 for new contributors				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8122	EIS contribution is 0.2% each for employer and employee (total 0.4%)				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8123	EIS applies only to employees earning below RM4,000 per month				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8124	PCB calculation MUST use exact LHDN tax tables with monthly/daily schedules				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8125	PCB rounding MUST follow LHDN rules (to nearest sen)				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8126	EPF/SOCSO/EIS rates MUST be versioned with effective dates				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8127	Foreign workers on temporary passes are exempt from EPF				
+`Nexus\Statutory.Payroll.MYS`	Business Requirements	BUS-SPM-8128	Additional remuneration (bonuses, commissions) use separate PCB tables				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-8129	EPF Number field MUST be mandatory when Malaysia Payroll Statutory is enabled				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-8130	SOCSO Number field MUST be mandatory when Malaysia Payroll Statutory is enabled				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-8131	Income Tax Number field MUST be mandatory when Malaysia Payroll Statutory is enabled				
+`Nexus\Hrm`	Business Requirements	BUS-HRM-8132	Compliance-driven validation rules MUST be injected by Nexus\Compliance				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8201	Define ComplianceSchemeInterface with methods: getId(), getName(), getRequiredFeatures(), getRequiredConfiguration()				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8202	Implement ComplianceManager service with methods: activateScheme(), deactivateScheme(), auditConfiguration()				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8203	Implement ConfigurationAuditor with method: validate(schemeId): array of violations				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8204	Implement SodRuleEngine with method: checkViolation(userId, action, resourceId): bool				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8205	Provide FeatureComposer service to manage required package bindings				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8206	Support ISO 14001 compliance scheme as premium package				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8207	Support SOX compliance scheme as premium package				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8208	Provide ComplianceViolationEvent for integration with Nexus\Notifier				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8209	Support compliance dashboard showing active schemes and violation counts				
+`Nexus\Compliance`	Functional Requirement	FUN-CMP-8210	Provide compliance audit report generation (violations, resolutions, timelines)				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8211	Define TaxonomyReportGeneratorInterface with method: generate(taxonomyId, trialBalanceData): string				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8212	Define PayrollStatutoryInterface with method: calculate(payload): array of DeductionResult				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8213	Define ReportMetadataInterface with all required metadata methods				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8214	Implement DefaultAccountingAdapter generating basic P&L and Balance Sheet (no taxonomy tags)				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8215	Implement DefaultPayrollStatutoryAdapter returning zero deductions				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8216	Implement StatutoryReportManager service with methods: generateReport(), validateReport(), submitReport()				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8217	Support statutory report archival with immutable storage				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8218	Provide StatutoryReportGeneratedEvent for integration with workflow				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8219	Support report versioning and historical retrieval				
+`Nexus\Statutory`	Functional Requirement	FUN-STT-8220	Provide statutory filing dashboard showing due dates and submission status				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8221	Implement MYSStatutoryCalculator calculating EPF, SOCSO, EIS, PCB based on payload				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8222	Implement MYSFilingAdapter generating EPF Form A (Borang A) in required format				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8223	Implement MYSFilingAdapter generating SOCSO Borang 8A				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8224	Implement MYSFilingAdapter generating LHDN EA Form				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8225	Support EPF e-Caruman file format for direct submission				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8226	Support SOCSO Assist Portal file format				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8227	Provide PCB monthly summary report for LHDN submission				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8228	Support CP39 (annual tax estimate) generation				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8229	Provide year-end EA form bulk generation for all employees				
+`Nexus\Statutory.Payroll.MYS`	Functional Requirement	FUN-SPM-8230	Support statutory rate updates via configuration (not code changes)				
+`Nexus\Statutory.Accounting.SSM`	Functional Requirement	FUN-SAS-8231	Implement SSMBRSTaxonomyAdapter for XBRL generation using SSMxT_2022 schema				
+`Nexus\Statutory.Accounting.SSM`	Functional Requirement	FUN-SAS-8232	Map Chart of Accounts to SSM taxonomy tags				
+`Nexus\Statutory.Accounting.SSM`	Functional Requirement	FUN-SAS-8233	Generate fully compliant MBRS XBRL files for submission				
+`Nexus\Statutory.Accounting.SSM`	Functional Requirement	FUN-SAS-8234	Validate XBRL against SSM schema before file generation				
+`Nexus\Statutory.Accounting.SSM`	Functional Requirement	FUN-SAS-8235	Support different entity types (Private, Public, LLP, Foreign) with type-specific disclosures				
+`Nexus\Statutory.Accounting.SSM`	Functional Requirement	FUN-SAS-8236	Provide taxonomy mapping UI for account-to-tag assignment				
+`Nexus\Statutory.Accounting.SSM`	Functional Requirement	FUN-SAS-8237	Support schema versioning for SSM taxonomy updates				
+`Nexus\Statutory.Accounting.MYS.Prop`	Functional Requirement	FUN-SAP-8238	Implement ProprietorshipReportAdapter generating simplified P&L				
+`Nexus\Statutory.Accounting.MYS.Prop`	Functional Requirement	FUN-SAP-8239	Implement ProprietorshipReportAdapter generating simplified Balance Sheet				
+`Nexus\Statutory.Accounting.MYS.Prop`	Functional Requirement	FUN-SAP-8240	Generate PDF output only (no XBRL requirement)				
+`Nexus\Atomy`	Functional Requirement	FUN-ATM-8241	Provide feature management UI for enabling/disabling compliance schemes				
+`Nexus\Atomy`	Functional Requirement	FUN-ATM-8242	Provide feature management UI for enabling/disabling statutory modules				
+`Nexus\Atomy`	Functional Requirement	FUN-ATM-8243	Display compliance scheme status and configuration audit results				
+`Nexus\Atomy`	Functional Requirement	FUN-ATM-8244	Provide statutory report generation UI with parameter selection				
+`Nexus\Atomy`	Functional Requirement	FUN-ATM-8245	Display statutory filing calendar with due dates and submission status				
+`Nexus\Atomy`	Functional Requirement	FUN-ATM-8246	Support multi-tenant statutory configuration (different countries per tenant)				
+`Nexus\Compliance`	Performance Requirement	PER-CMP-8301	Configuration audit completion time < 2 seconds for 50+ configuration checks				
+`Nexus\Compliance`	Performance Requirement	PER-CMP-8302	SOD rule evaluation time < 100ms per check				
+`Nexus\Compliance`	Performance Requirement	PER-CMP-8303	Compliance dashboard load time < 500ms				
+`Nexus\Statutory`	Performance Requirement	PER-STT-8304	Statutory report generation time < 5 seconds for 10,000 transactions				
+`Nexus\Statutory`	Performance Requirement	PER-STT-8305	XBRL validation time < 2 seconds				
+`Nexus\Statutory.Payroll.MYS`	Performance Requirement	PER-SPM-8306	EPF/SOCSO/EIS calculation time < 50ms per employee				
+`Nexus\Statutory.Payroll.MYS`	Performance Requirement	PER-SPM-8307	PCB calculation time < 100ms per employee				
+`Nexus\Statutory.Payroll.MYS`	Performance Requirement	PER-SPM-8308	Bulk filing file generation (1,000 employees) < 10 seconds				
+`Nexus\Compliance`	Reliability Requirement	REL-CMP-8401	Compliance scheme activation uses database transactions (ACID compliance)				
+`Nexus\Compliance`	Reliability Requirement	REL-CMP-8402	Configuration audit failures rollback scheme activation				
+`Nexus\Compliance`	Reliability Requirement	REL-CMP-8403	SOD violation checks must complete before transaction commit				
+`Nexus\Statutory`	Reliability Requirement	REL-STT-8404	Statutory report generation uses database transactions (ACID compliance)				
+`Nexus\Statutory`	Reliability Requirement	REL-STT-8405	Schema validation failures prevent file generation				
+`Nexus\Statutory`	Reliability Requirement	REL-STT-8406	Generated reports stored immutably (append-only)				
+`Nexus\Statutory.Payroll.MYS`	Reliability Requirement	REL-SPM-8407	Calculation engine uses exact arithmetic (no floating point errors)				
+`Nexus\Statutory.Payroll.MYS`	Reliability Requirement	REL-SPM-8408	Rate version conflicts prevent payroll calculation				
+`Nexus\Compliance`	Security and Compliance Requirement	SEC-CMP-8501	Implement audit logging for all compliance scheme changes using AuditLoggerContract				
+`Nexus\Compliance`	Security and Compliance Requirement	SEC-CMP-8502	Enforce tenant isolation for all compliance data via tenant scoping				
+`Nexus\Compliance`	Security and Compliance Requirement	SEC-CMP-8503	Support role-based access control for compliance configuration				
+`Nexus\Compliance`	Security and Compliance Requirement	SEC-CMP-8504	Encrypt sensitive compliance data at rest				
+`Nexus\Compliance`	Security and Compliance Requirement	SEC-CMP-8505	SOD violation logs MUST be immutable and tamper-proof				
+`Nexus\Compliance`	Security and Compliance Requirement	SEC-CMP-8506	Compliance officer role separation enforced at application layer				
+`Nexus\Statutory`	Security and Compliance Requirement	SEC-STT-8507	Implement audit logging for all statutory report generation using AuditLoggerContract				
+`Nexus\Statutory`	Security and Compliance Requirement	SEC-STT-8508	Enforce tenant isolation for all statutory data via tenant scoping				
+`Nexus\Statutory`	Security and Compliance Requirement	SEC-STT-8509	Support role-based access control for statutory report access				
+`Nexus\Statutory`	Security and Compliance Requirement	SEC-STT-8510	Encrypt statutory reports at rest				
+`Nexus\Statutory`	Security and Compliance Requirement	SEC-STT-8511	Generated reports MUST be digitally signed for authenticity				
+`Nexus\Statutory`	Security and Compliance Requirement	SEC-STT-8512	Prevent unauthorized modification of taxonomy mappings				
+`Nexus\Statutory.Payroll.MYS`	Security and Compliance Requirement	SEC-SPM-8513	Mask employee statutory numbers in logs (show only last 4 digits)				
+`Nexus\Statutory.Payroll.MYS`	Security and Compliance Requirement	SEC-SPM-8514	Filing file access restricted to authorized personnel only				
+`Nexus\Compliance`	Integration Requirement	INT-CMP-8601	Integrate with Nexus\Setting for feature flag and configuration management				
+`Nexus\Compliance`	Integration Requirement	INT-CMP-8602	Integrate with Nexus\AuditLogger for compliance audit trail				
+`Nexus\Compliance`	Integration Requirement	INT-CMP-8603	Integrate with Nexus\Notifier for compliance violation notifications				
+`Nexus\Compliance`	Integration Requirement	INT-CMP-8604	Integrate with Nexus\Identity for SOD user role checks				
+`Nexus\Compliance`	Integration Requirement	INT-CMP-8605	Integrate with Nexus\Workflow for compliance approval workflows				
+`Nexus\Statutory`	Integration Requirement	INT-STT-8606	Integrate with Nexus\Finance for trial balance data retrieval				
+`Nexus\Statutory`	Integration Requirement	INT-STT-8607	Integrate with Nexus\Accounting for financial statement data				
+`Nexus\Statutory`	Integration Requirement	INT-STT-8608	Integrate with Nexus\Payroll for payroll summary data				
+`Nexus\Statutory`	Integration Requirement	INT-STT-8609	Integrate with Nexus\Period for period lock validation				
+`Nexus\Statutory`	Integration Requirement	INT-STT-8610	Integrate with Nexus\AuditLogger for statutory operation audit trail				
+`Nexus\Statutory`	Integration Requirement	INT-STT-8611	Integrate with Nexus\Storage for immutable report archival				
+`Nexus\Statutory.Payroll.MYS`	Integration Requirement	INT-SPM-8612	Integrate with Nexus\Hrm for employee statutory data (EPF/SOCSO/Tax numbers)				
+`Nexus\Statutory.Payroll.MYS`	Integration Requirement	INT-SPM-8613	Consume PayloadInterface from Nexus\Payroll for calculation input				
+`Nexus\Statutory.Accounting.SSM`	Integration Requirement	INT-SAS-8614	Consume trial balance from Nexus\Finance via FinanceInterface				
+`Nexus\Statutory.Accounting.SSM`	Integration Requirement	INT-SAS-8615	Consume account metadata from Nexus\Finance for taxonomy mapping				
+`Nexus\Compliance`	User Story	USE-CMP-8701	As a System Admin, I want to enable ISO 14001 compliance scheme so that environmental management requirements are enforced				
+`Nexus\Compliance`	User Story	USE-CMP-8702	As a Compliance Officer, I want to view compliance configuration audit results so that I can fix violations before scheme activation				
+`Nexus\Compliance`	User Story	USE-CMP-8703	As a Compliance Officer, I want to receive notifications for SOD violations so that I can investigate potential fraud				
+`Nexus\Compliance`	User Story	USE-CMP-8704	As a System Admin, I want to view active compliance schemes per tenant so that I can manage multi-tenant compliance configurations				
+`Nexus\Compliance`	User Story	USE-CMP-8705	As an Auditor, I want to generate compliance audit reports so that I can verify adherence to policies				
+`Nexus\Statutory`	User Story	USE-STT-8706	As an Accountant, I want to generate MBRS XBRL files so that I can submit to SSM digitally				
+`Nexus\Statutory`	User Story	USE-STT-8707	As an Accountant, I want to map Chart of Accounts to SSM taxonomy tags so that reports are compliant				
+`Nexus\Statutory`	User Story	USE-STT-8708	As an Accountant, I want to validate XBRL before submission so that I can fix errors before filing				
+`Nexus\Statutory`	User Story	USE-STT-8709	As an Accountant, I want to retrieve historical statutory reports so that I can respond to audit queries				
+`Nexus\Statutory`	User Story	USE-STT-8710	As a System Admin, I want to view statutory filing calendar so that I can ensure timely submissions				
+`Nexus\Statutory.Payroll.MYS`	User Story	USE-SPM-8711	As an HR Manager, I want to generate EPF Form A so that I can submit employee contributions to KWSP				
+`Nexus\Statutory.Payroll.MYS`	User Story	USE-SPM-8712	As an HR Manager, I want to generate SOCSO Borang 8A so that I can submit to Perkeso				
+`Nexus\Statutory.Payroll.MYS`	User Story	USE-SPM-8713	As an HR Manager, I want to generate EA forms for all employees so that they can file income tax				
+`Nexus\Statutory.Payroll.MYS`	User Story	USE-SPM-8714	As an HR Manager, I want EPF/SOCSO/EIS calculations to be accurate so that I comply with Malaysian labor laws				
+`Nexus\Statutory.Payroll.MYS`	User Story	USE-SPM-8715	As a Payroll Admin, I want to update statutory rates without code changes so that I can respond to government rate changes quickly				
+`Nexus\Atomy`	User Story	USE-ATM-8716	As a System Admin, I want to enable/disable compliance features via UI so that I can manage licensed features				
+`Nexus\Atomy`	User Story	USE-ATM-8717	As a System Admin, I want to enable/disable statutory modules per tenant so that I can configure country-specific requirements				
+`Nexus\Atomy`	User Story	USE-ATM-8718	As a Developer, I want clear separation between compliance and statutory so that I can maintain each independently				

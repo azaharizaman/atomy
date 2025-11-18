@@ -24,7 +24,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->unique(['name', 'scope_identifier']);
+            $table->unique(['name', 'scope_identifier'], 'idx_sequences_name_scope');
+            $table->index(['is_active', 'is_locked']);
         });
 
         // Counter state table
@@ -38,7 +39,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
-            $table->unique('sequence_id');
+            $table->unique('sequence_id', 'idx_counters_sequence_lock');
         });
 
         // Reservations table
@@ -54,7 +55,8 @@ return new class extends Migration
 
             $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
             $table->index(['sequence_id', 'status']);
-            $table->index(['expires_at', 'status']);
+            $table->index(['expires_at', 'status'], 'idx_reservations_expires_at');
+            $table->index(['reservation_id']);
         });
 
         // Gaps table
@@ -83,10 +85,25 @@ return new class extends Migration
             $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
             $table->index(['sequence_id', 'effective_from', 'effective_until']);
         });
+
+        // Audit log table for sequence operations
+        Schema::create('sequence_audits', function (Blueprint $table) {
+            $table->string('id', 26)->primary();
+            $table->string('sequence_id', 26);
+            $table->string('event_type'); // pattern_created, pattern_modified, counter_reset, etc.
+            $table->text('event_data'); // JSON payload with event details
+            $table->string('performed_by')->nullable(); // User identifier
+            $table->timestamps();
+
+            $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
+            $table->index(['sequence_id', 'event_type']);
+            $table->index(['sequence_id', 'created_at']);
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('sequence_audits');
         Schema::dropIfExists('sequence_pattern_versions');
         Schema::dropIfExists('sequence_gaps');
         Schema::dropIfExists('sequence_reservations');

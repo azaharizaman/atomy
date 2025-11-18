@@ -9,7 +9,8 @@
         "nexus/payroll-mys-statutory": "*@dev",
         "nexus/storage": "*@dev",
         "nexus/identity": "*@dev",
-        "nexus/notifier": "*@dev"
+        "nexus/notifier": "*@dev",
+        "nexus/period": "*@dev"
     },
     "repositories": [
         {

@@ -46,6 +46,8 @@ nexus/
 │   ├── Storage/           # Storage engine (if applicable)
 │   ├── Document/          # Document engine (if applicable)
 │   ├── Identity/          # Identity engine (if applicable)
+│   ├── Statutory/         # Statutory reporting engine (if applicable)
+│   ├── Compliance/          # Compliance engine (if applicable)
 │   ├── Notifier/          # Notification engine (if applicable)
 │   ├── Connector/         # Connector as integration hub engine (if applicable)
 │   └── Workflow/          # Workflow engine (if applicable)
@@ -163,7 +165,6 @@ $balance = $this->eventStream->getStateAt($accountId, '2024-10-15');
 - **Storage overhead** (every event is stored forever)
 - **Performance tuning required** (partitioning, snapshots for large streams)
 
------
 
 ### Decision Matrix: When to Use Which Approach
 
@@ -182,6 +183,65 @@ $balance = $this->eventStream->getStateAt($accountId, '2024-10-15');
 **Rule of Thumb:**
 - **Use AuditLogger** if you only need to show "a timeline of changes" to users
 - **Use EventStream** if you need to answer: *"What was the exact state of this entity on [date]?"* for compliance/legal reasons
+-----
+
+# 🛡️ Statutory and Compliance Architecture: Decoupling Governance and Reporting
+
+This section defines the architecture for handling all mandatory legal, tax, quality, and reporting requirements. The design principle is the strict **decoupling of Process Enforcement from Output Formatting** to ensure agility in response to global regulatory changes.
+
+---
+
+## 1. 🎯 Architectural Goals
+
+The design is engineered to meet the following objectives:
+
+* **Risk Mitigation:** The system must prevent posting transactions (e.g., in `Nexus\Finance`) to closed periods, ensuring all financial records are final and auditable.
+* **Feature Gating & Monetization:** Core domain packages (like `Payroll`) must function neutrally, allowing proprietary, paid compliance adapters (e.g., `Nexus\Statutory.Payroll.SGP`) to be plugged in only when enabled and purchased.
+* **Zero Refactoring Debt:** Core packages (`Nexus\Payroll`, `Nexus\Accounting`) are decoupled from country-specific logic and should never be refactored when a country's tax rate changes.
+
+---
+
+## 2. 🧩 Separation of Concerns: The Two Pillars
+
+All compliance activities are divided into two distinct, atomic, and non-overlapping packages, reflecting the difference between **What the company *does*** (Process) and **What the company *reports*** (Data).
+
+### A. 🛡️ `Nexus\Compliance` (The Orchestrator & Rulebook)
+
+This package manages **Operational Compliance** and the **System's internal governance**. It deals with the mandatory *behavior* and *configuration* required by a scheme (e.g., ISO, internal policy).
+
+| Focus | Responsibility | Example Action |
+| :--- | :--- | :--- |
+| **Process Enforcement** | Enforces internal controls (e.g., Segregation of Duties). | If ISO 14001 is active, the adapter forces the addition of **Hazardous Material fields** onto assets in the `Nexus\Asset` package. |
+| **Feature Composition** | Manages which concrete service implementations are active based on user licensing/feature flags. | Binds the `ISO14001AuditLogFormatter` to the `AuditLogFormatterInterface`, hijacking the system's default behavior. |
+| **Configuration Audit** | Audits the ERP's settings to ensure all features required by a scheme are configured (e.g., checking if the mandatory **Management Review Meeting** auto-planner is enabled). |
+
+### B. 💰 `Nexus\Statutory` (The Contract Hub & Reporter)
+
+This package manages **Reporting Compliance** and the specific formats mandated by a legal authority. It deals with the data tags, schemas, and logistical metadata required for filing.
+
+| Focus | Responsibility | Example Action |
+| :--- | :--- | :--- |
+| **Reporting Contracts** | Defines interfaces like `TaxonomyReportGeneratorInterface` and `PayrollStatutoryInterface`. | Provides the generic method `$calculator->calculate()` that `Nexus\Payroll` calls, regardless of the country. |
+| **Metadata Management** | Defines the mandatory structure for reporting schemas (e.g., `ReportMetadataInterface`). | Requires implementations (e.g., `SSMBRSTaxonomyAdapter`) to define the **Filing Frequency**, **Output Format (XBRL)**, and **Recipient**. |
+| **Default Services** | Provides safe, open-source default implementations (e.g., **`DefaultAccountingAdapter`** for P&L/BS, **`DefaultPayrollCalculator`** for zero-deductions). |
+
+---
+
+## 3. 🔄 System Flow: Pluggable Architecture
+
+The system operates on a **Default-Override** mechanism managed by the **`Nexus\Atomy`** orchestrator.
+
+1.  **Default Binding:** In `Nexus\Atomy`, the IoC container always binds the **Default Adapter** (from `Nexus\Statutory`) to the interface.
+    * *Example:* `PayrollStatutoryInterface` $\rightarrow$ `DefaultStatutoryCalculator`.
+2.  **Feature Check:** The `Nexus\Compliance` orchestrator checks the active compliance schemes and user licenses.
+3.  **Override (If Paid/Enabled):** If a compliance package is enabled (e.g., `Nexus\Statutory.Payroll.MYS`), `Nexus\Atomy` **overrides** the default binding with the specific implementation.
+    * *Example:* `PayrollStatutoryInterface` $\rightarrow$ `MYSStatutoryCalculator`.
+4.  **Transaction:** `Nexus\Payroll` executes a pay run. It calls the generic `PayrollStatutoryInterface` and is unaware if it's running the default or the full Malaysian logic.
+
+This design ensures that any future regulatory body or compliance scheme can be added as a self-contained, atomic package without touching any existing core ERP logic. 
+
+____
+
 
 -----
 
