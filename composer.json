@@ -98,6 +98,10 @@
         {
             "type": "path",
             "url": "./packages/Statutory"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Analytics"
         }
     ],
     "minimum-stability": "dev",
