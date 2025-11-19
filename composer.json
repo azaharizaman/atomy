@@ -109,6 +109,10 @@
         },
         {
             "type": "path",
+            "url": "./packages/Import"
+        {
+        },
+            "type": "path",
             "url": "./packages/Scheduler"
         }
     ],
