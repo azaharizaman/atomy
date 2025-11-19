@@ -102,6 +102,10 @@
         {
             "type": "path",
             "url": "./packages/Analytics"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Export"
         }
     ],
     "minimum-stability": "dev",

@@ -17,6 +17,7 @@
         "nexus/connector": "*@dev",
         "nexus/data-processor": "*@dev",
         "nexus/event-stream": "*@dev",
+        "nexus/export": "*@dev",
         "nexus/finance": "*@dev",
         "nexus/hrm": "*@dev",
         "nexus/identity": "*@dev",
@@ -140,6 +141,10 @@
         {
             "type": "path",
             "url": "../../packages/DataProcessor"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Export"
         }
     ],
     "scripts": {
