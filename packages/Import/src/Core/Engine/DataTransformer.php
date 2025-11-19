@@ -39,8 +39,7 @@ final class DataTransformer implements TransformerInterface
                     field: $fieldName,
                     severity: ErrorSeverity::ERROR,
                     message: "Transformation '{$rule}' failed: {$e->getMessage()}",
-                    originalValue: $value,
-                    transformationRule: $rule
+                    context: ['original_value' => $value, 'transformation_rule' => $rule]
                 );
                 
                 // Return original value on transformation failure

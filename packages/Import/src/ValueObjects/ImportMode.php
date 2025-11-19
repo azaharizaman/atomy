@@ -80,7 +80,7 @@ enum ImportMode: string
      */
     public function canCreate(): bool
     {
-        return in_array($this, [self::CREATE, self::UPSERT, self::SYNC]);
+        return $this->createsRecords();
     }
 
     /**
@@ -88,7 +88,7 @@ enum ImportMode: string
      */
     public function canUpdate(): bool
     {
-        return in_array($this, [self::UPDATE, self::UPSERT, self::SYNC]);
+        return $this->updatesRecords();
     }
 
     /**

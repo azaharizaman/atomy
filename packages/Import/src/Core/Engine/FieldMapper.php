@@ -58,7 +58,7 @@ final readonly class FieldMapper implements FieldMapperInterface
                     field: $mapping->targetField,
                     severity: ErrorSeverity::ERROR,
                     message: "Required field '{$mapping->targetField}' is missing or empty",
-                    originalValue: $sourceValue
+                    context: ['original_value' => $sourceValue]
                 );
             }
 

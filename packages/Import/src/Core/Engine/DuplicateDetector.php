@@ -43,10 +43,10 @@ final class DuplicateDetector implements DuplicateDetectorInterface
                         $this->internalHashes[$hash],
                         implode(', ', $uniqueKeyFields)
                     ),
-                    originalValue: json_encode(array_intersect_key(
+                    context: ['duplicate_values' => array_intersect_key(
                         $row,
                         array_flip($uniqueKeyFields)
-                    ))
+                    )]
                 );
             } else {
                 $this->internalHashes[$hash] = $rowNumber;
@@ -81,7 +81,7 @@ final class DuplicateDetector implements DuplicateDetectorInterface
                     implode(', ', array_keys($uniqueData)),
                     implode(', ', array_values($uniqueData))
                 ),
-                originalValue: json_encode($uniqueData)
+                context: ['existing_values' => $uniqueData]
             );
         }
 

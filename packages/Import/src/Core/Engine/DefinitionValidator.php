@@ -34,7 +34,7 @@ final class DefinitionValidator implements ImportValidatorInterface
                     field: $rule->field,
                     severity: ErrorSeverity::ERROR,
                     message: $rule->getErrorMessage(),
-                    originalValue: $value
+                    context: ['original_value' => $value]
                 );
             }
         }

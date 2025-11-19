@@ -137,7 +137,7 @@ readonly class ImportDefinition
         
         $metadata = new ImportMetadata(
             originalFileName: $metadataData['file_name'],
-            fileSize: $metadataData['file_size'],
+            fileSize: $metadataData['file_size_bytes'],
             mimeType: $metadataData['mime_type'],
             uploadedAt: new \DateTimeImmutable($metadataData['uploaded_at']),
             uploadedBy: $metadataData['uploaded_by'] ?? null,

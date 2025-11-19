@@ -70,8 +70,8 @@ final class CustomerImportHandler implements ImportHandlerInterface
                     rowNumber: null,
                     field: $field,
                     severity: ErrorSeverity::ERROR,
-                    code: 'REQUIRED_FIELD_MISSING',
                     message: "Field '{$field}' is required",
+                    code: 'REQUIRED_FIELD_MISSING',
                     context: []
                 );
             }
