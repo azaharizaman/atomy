@@ -16,7 +16,19 @@
 		8080
 	],
 	"features": {
-		"ghcr.io/devcontainers/features/github-cli:1": {}
+		"ghcr.io/devcontainers/features/github-cli:1": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-bcmath:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-composer:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-gd:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-pgsql:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-intl:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-ldap:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-pcntl:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-redis:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-soap:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-xdebug:0": {},
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-zip:0": {},
+		"ghcr.io/devcontainers-extra/features/composer:1": {}
 	}
 
 	// Use 'postCreateCommand' to run commands after the container is created.

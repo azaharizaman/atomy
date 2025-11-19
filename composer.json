@@ -110,6 +110,10 @@
         {
             "type": "path",
             "url": "./packages/Import"
+        {
+        },
+            "type": "path",
+            "url": "./packages/Scheduler"
         }
     ],
     "minimum-stability": "dev",

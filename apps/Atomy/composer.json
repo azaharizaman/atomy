@@ -26,6 +26,7 @@
         "nexus/payroll": "*@dev",
         "nexus/payroll-mys-statutory": "*@dev",
         "nexus/period": "*@dev",
+        "nexus/scheduler": "*@dev",
         "nexus/sequencing": "*@dev",
         "nexus/setting": "*@dev",
         "nexus/statutory": "*@dev",
@@ -150,6 +151,10 @@
         {
             "type": "path",
             "url": "../../packages/Import"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Scheduler"
         }
     ],
     "scripts": {
