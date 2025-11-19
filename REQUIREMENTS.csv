@@ -821,7 +821,6 @@ Package Namespace	Requiremets Type	Code	Requirement Statements	Files/Folders/ or
 `Nexus\Identity`	Business Requirements	BUS-IDE-1315	Locked accounts require administrator intervention to unlock				
 `Nexus\Identity`	Business Requirements	BUS-IDE-1316	Failed login attempts MUST be tracked and trigger account lockout after threshold				
 `Nexus\Identity`	Business Requirements	BUS-IDE-1317	Password reset tokens MUST expire after configured duration (default 1 hour)				
-`Nexus\Identity`	Businegit pull						
 ss Requirements	BUS-IDE-1318	Password reset tokens are single-use and invalidated after consumption					
 `Nexus\Identity`	Business Requirements	BUS-IDE-1319	User cannot reuse last N passwords (configurable, default 5)				
 `Nexus\Identity`	Business Requirements	BUS-IDE-1320	Session tokens MUST be cryptographically secure and unpredictable				
