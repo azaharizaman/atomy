@@ -110,10 +110,14 @@
         {
             "type": "path",
             "url": "./packages/Import"
-        {
         },
+        {
             "type": "path",
             "url": "./packages/Scheduler"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Currency"
         }
     ],
     "minimum-stability": "dev",
