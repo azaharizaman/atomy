@@ -106,6 +106,10 @@
         {
             "type": "path",
             "url": "./packages/Export"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Scheduler"
         }
     ],
     "minimum-stability": "dev",

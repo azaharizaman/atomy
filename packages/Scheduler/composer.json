@@ -1,0 +1,20 @@
+{
+    "name": "nexus/scheduler",
+    "description": "Framework-agnostic job scheduling engine for managing future-dated instructions with handler-based execution",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Scheduler\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.3",
+        "psr/log": "^3.0"
+    },
+    "suggest": {
+        "dragonmantank/cron-expression": "Required for cron-based recurrence scheduling"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
