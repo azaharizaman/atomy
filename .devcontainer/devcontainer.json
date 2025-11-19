@@ -18,7 +18,7 @@
 	"features": {
 		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"ghcr.io/devcontainers-extra/features/composer:1": {},
-		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-bcmath:0": {}
+		"ghcr.io/cirolosapio/devcontainers-features/alpine-php-intl:0": {}
 	}
 
 	// Use 'postCreateCommand' to run commands after the container is created.
