@@ -26,13 +26,13 @@ final class PayPalPaymentAdapter implements PaymentGatewayConnectorInterface
      * @param bool $sandbox Use sandbox environment
      */
     public function __construct(
-        string $clientId,
-        string $clientSecret,
+        private readonly string $clientId,
+        private readonly string $clientSecret,
         private readonly bool $sandbox = false
     ) {
         $environment = $this->sandbox
-            ? new SandboxEnvironment($clientId, $clientSecret)
-            : new ProductionEnvironment($clientId, $clientSecret);
+            ? new SandboxEnvironment($this->clientId, $this->clientSecret)
+            : new ProductionEnvironment($this->clientId, $this->clientSecret);
 
         $this->client = new PayPalHttpClient($environment);
     }

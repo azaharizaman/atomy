@@ -25,16 +25,16 @@ final class AwsSnsAdapter implements SmsServiceConnectorInterface
      * @param string $region AWS region (default: us-east-1)
      */
     public function __construct(
-        string $accessKeyId,
-        string $secretAccessKey,
+        private readonly string $accessKeyId,
+        private readonly string $secretAccessKey,
         private readonly string $region = 'us-east-1'
     ) {
         $this->client = new SnsClient([
             'version' => 'latest',
             'region' => $this->region,
             'credentials' => [
-                'key' => $accessKeyId,
-                'secret' => $secretAccessKey,
+                'key' => $this->accessKeyId,
+                'secret' => $this->secretAccessKey,
             ],
         ]);
     }

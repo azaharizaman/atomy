@@ -81,11 +81,10 @@ final readonly class GuzzleHttpClient implements HttpClientInterface
                 : null;
 
             throw ConnectionException::requestFailed(
-                $endpoint->url,
-                $statusCode,
-                $e->getMessage(),
-                $responseBody,
-                $e
+                message: "Request to {$endpoint->url} failed: {$e->getMessage()}" . 
+                    ($responseBody ? " Response: {$responseBody}" : ""),
+                httpStatusCode: $statusCode,
+                previous: $e
             );
         }
     }

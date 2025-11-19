@@ -23,11 +23,11 @@ final class StripePaymentAdapter implements PaymentGatewayConnectorInterface
      * @param string $apiVersion Stripe API version (default: latest)
      */
     public function __construct(
-        string $apiKey,
+        private readonly string $apiKey,
         private readonly string $apiVersion = '2023-10-16'
     ) {
         $this->client = new StripeClient([
-            'api_key' => $apiKey,
+            'api_key' => $this->apiKey,
             'stripe_version' => $this->apiVersion,
         ]);
     }

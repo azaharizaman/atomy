@@ -92,10 +92,9 @@ class ConnectorServiceProvider extends ServiceProvider
                     fromNumber: $config['from_number']
                 ),
                 'aws_sns' => new AwsSnsAdapter(
-                    region: $config['region'],
-                    key: $config['key'],
-                    secret: $config['secret'],
-                    senderId: $config['sender_id'] ?? null
+                    accessKeyId: $config['key'],
+                    secretAccessKey: $config['secret'],
+                    region: $config['region']
                 ),
                 default => throw new \InvalidArgumentException("Unsupported SMS vendor: {$vendor}")
             };
@@ -108,12 +107,12 @@ class ConnectorServiceProvider extends ServiceProvider
 
             return match ($vendor) {
                 'stripe' => new StripePaymentAdapter(
-                    secretKey: $config['secret_key']
+                    apiKey: $config['secret_key']
                 ),
                 'paypal' => new PayPalPaymentAdapter(
-                    mode: $config['mode'],
                     clientId: $config['client_id'],
-                    clientSecret: $config['client_secret']
+                    clientSecret: $config['client_secret'],
+                    sandbox: $config['mode'] === 'sandbox'
                 ),
                 default => throw new \InvalidArgumentException("Unsupported payment vendor: {$vendor}")
             };

@@ -13,7 +13,7 @@ use Nexus\Connector\ValueObjects\{Credentials, Endpoint, HttpMethod};
  *
  * Handles automatic token refresh when access tokens expire.
  */
-final class OAuthTokenRefresher
+final readonly class OAuthTokenRefresher
 {
     public function __construct(
         private readonly HttpClientInterface $httpClient,
