@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Budget\ValueObjects;
 
-use Nexus\Uom\ValueObjects\Money;
+use Nexus\Finance\ValueObjects\Money;
 
 /**
  * Budget Forecast value object

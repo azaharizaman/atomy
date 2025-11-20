@@ -6,7 +6,7 @@ namespace Nexus\Budget\Contracts;
 
 use DateTimeImmutable;
 use Nexus\Budget\Enums\TransactionType;
-use Nexus\Uom\ValueObjects\Money;
+use Nexus\Finance\ValueObjects\Money;
 
 /**
  * Budget transaction entity contract

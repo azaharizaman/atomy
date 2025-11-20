@@ -11,7 +11,7 @@ use Nexus\Budget\Enums\BudgetingMethodology;
 use Nexus\Budget\Enums\RolloverPolicy;
 use Nexus\Budget\Enums\VarianceInvestigationStatus;
 use Nexus\Budget\Enums\ApprovalLevel;
-use Nexus\Uom\ValueObjects\Money;
+use Nexus\Finance\ValueObjects\Money;
 
 /**
  * Budget entity contract

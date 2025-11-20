@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Budget\ValueObjects;
 
 use Nexus\Budget\Enums\AlertSeverity;
+use Nexus\Finance\ValueObjects\Money;
 
 /**
  * Utilization Alert value object
@@ -14,20 +15,50 @@ use Nexus\Budget\Enums\AlertSeverity;
 final readonly class UtilizationAlert
 {
     public function __construct(
-        private float $currentUtilization,
-        private float $threshold,
-        private AlertSeverity $severity,
-        private string $message
+        public string $budgetId,
+        public string $budgetName,
+        public string $periodId,
+        public float $utilizationPercentage,
+        public Money $allocatedAmount,
+        public Money $actualAmount,
+        public Money $committedAmount,
+        public AlertSeverity $severity,
+        public \DateTimeImmutable $triggeredAt
     ) {}
 
-    public function getCurrentUtilization(): float
+    public function getBudgetId(): string
     {
-        return $this->currentUtilization;
+        return $this->budgetId;
     }
 
-    public function getThreshold(): float
+    public function getBudgetName(): string
     {
-        return $this->threshold;
+        return $this->budgetName;
+    }
+
+    public function getPeriodId(): string
+    {
+        return $this->periodId;
+    }
+
+    public function getUtilizationPercentage(): float
+    {
+        return $this->utilizationPercentage;
+    }
+
+    public function getAllocatedAmount(): Money
+    {
+        return $this->allocatedAmount;
+    }
+
+    public function getActualAmount(): Money
+    {
+        return $this->actualAmount;
+    }
+
+    public function getCommittedAmount(): Money
+    {
+        return $this->committedAmount;
     }
 
     public function getSeverity(): AlertSeverity
@@ -35,17 +66,27 @@ final readonly class UtilizationAlert
         return $this->severity;
     }
 
-    public function getMessage(): string
+    public function getTriggeredAt(): \DateTimeImmutable
     {
-        return $this->message;
+        return $this->triggeredAt;
     }
 
     /**
-     * Check if threshold was exceeded
+     * Get available amount (allocated - actual - committed)
      */
-    public function isThresholdExceeded(): bool
+    public function getAvailableAmount(): Money
     {
-        return $this->currentUtilization >= $this->threshold;
+        return $this->allocatedAmount
+            ->subtract($this->actualAmount)
+            ->subtract($this->committedAmount);
+    }
+
+    /**
+     * Check if budget is exceeded
+     */
+    public function isBudgetExceeded(): bool
+    {
+        return $this->utilizationPercentage >= 100.0;
     }
 
     /**
@@ -54,11 +95,13 @@ final readonly class UtilizationAlert
     public function getFormattedMessage(): string
     {
         return sprintf(
-            '[%s] Budget utilization at %.2f%% (threshold: %.2f%%) - %s',
+            '[%s] Budget "%s" utilization at %.2f%% - Allocated: %s, Actual: %s, Committed: %s',
             $this->severity->label(),
-            $this->currentUtilization,
-            $this->threshold,
-            $this->message
+            $this->budgetName,
+            $this->utilizationPercentage,
+            (string) $this->allocatedAmount,
+            (string) $this->actualAmount,
+            (string) $this->committedAmount
         );
     }
 }
