@@ -80,6 +80,26 @@ use Nexus\Accounting\Core\Engine\PeriodCloseService;
 use Nexus\Accounting\Core\Engine\ConsolidationEngine;
 use Nexus\Accounting\Core\Engine\VarianceCalculator;
 use App\Repositories\EloquentStatementRepository;
+use Nexus\Sales\Contracts\QuotationRepositoryInterface;
+use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
+use Nexus\Sales\Contracts\PriceListRepositoryInterface;
+use Nexus\Sales\Contracts\TaxCalculatorInterface;
+use Nexus\Sales\Contracts\CreditLimitCheckerInterface;
+use Nexus\Sales\Contracts\InvoiceManagerInterface;
+use Nexus\Sales\Contracts\StockReservationInterface;
+use Nexus\Sales\Contracts\SalesReturnInterface;
+use App\Repositories\DbQuotationRepository;
+use App\Repositories\DbSalesOrderRepository;
+use App\Repositories\DbPriceListRepository;
+use Nexus\Sales\Services\SimpleTaxCalculator;
+use Nexus\Sales\Services\NoOpCreditLimitChecker;
+use Nexus\Sales\Services\StubInvoiceManager;
+use Nexus\Sales\Services\StubStockReservation;
+use Nexus\Sales\Services\StubSalesReturnManager;
+use Nexus\Sales\Services\PricingEngine;
+use Nexus\Sales\Services\QuotationManager;
+use Nexus\Sales\Services\SalesOrderManager;
+use Nexus\Sales\Services\QuoteToOrderConverter;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -172,6 +192,43 @@ final class AppServiceProvider extends ServiceProvider
 
         // Package Services (Essential - Singleton)
         $this->app->singleton(AccountingManager::class);
+
+        // Sales Package Bindings
+
+        // Repositories (Essential - Interface to Concrete)
+        $this->app->singleton(QuotationRepositoryInterface::class, DbQuotationRepository::class);
+        $this->app->singleton(SalesOrderRepositoryInterface::class, DbSalesOrderRepository::class);
+        $this->app->singleton(PriceListRepositoryInterface::class, DbPriceListRepository::class);
+
+        // Tax Calculator (V1 - Simple flat rate implementation)
+        $this->app->singleton(TaxCalculatorInterface::class, function ($app) {
+            return new SimpleTaxCalculator(
+                logger: $app->make(\Psr\Log\LoggerInterface::class),
+                defaultTaxRate: 6.0 // 6% SST for Malaysia
+            );
+        });
+
+        // Credit Limit Checker (V1 - No-op stub, always approves)
+        $this->app->singleton(CreditLimitCheckerInterface::class, function ($app) {
+            return new NoOpCreditLimitChecker(
+                logger: $app->make(\Psr\Log\LoggerInterface::class)
+            );
+        });
+
+        // Invoice Manager (V1 - Stub, throws exception)
+        $this->app->singleton(InvoiceManagerInterface::class, StubInvoiceManager::class);
+
+        // Stock Reservation (V1 - Stub, throws exception)
+        $this->app->singleton(StockReservationInterface::class, StubStockReservation::class);
+
+        // Sales Return Manager (V1 - Stub, throws exception)
+        $this->app->singleton(SalesReturnInterface::class, StubSalesReturnManager::class);
+
+        // Package Services (Essential - Singletons)
+        $this->app->singleton(PricingEngine::class);
+        $this->app->singleton(QuotationManager::class);
+        $this->app->singleton(SalesOrderManager::class);
+        $this->app->singleton(QuoteToOrderConverter::class);
     }
 
     /**

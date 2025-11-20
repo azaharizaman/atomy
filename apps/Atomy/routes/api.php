@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 use Atomy\Http\Controllers\Api\VendorController;
 use Atomy\Http\Controllers\Api\BillController;
 use Atomy\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\QuotationController;
+use App\Http\Controllers\Api\SalesOrderController;
+use App\Http\Controllers\Api\PricingController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -39,5 +42,33 @@ Route::middleware('auth:sanctum')->prefix('payable')->group(function () {
         Route::post('/', [PaymentController::class, 'store']);
         Route::post('/{paymentId}/allocate', [PaymentController::class, 'allocate']);
         Route::post('/{paymentId}/void', [PaymentController::class, 'void']);
+    });
+});
+
+// Sales API routes
+Route::middleware('auth:sanctum')->prefix('sales')->group(function () {
+    // Quotations
+    Route::prefix('quotations')->group(function () {
+        Route::get('/', [QuotationController::class, 'index']);
+        Route::get('/{id}', [QuotationController::class, 'show']);
+        Route::post('/{id}/send', [QuotationController::class, 'send']);
+        Route::post('/{id}/accept', [QuotationController::class, 'accept']);
+        Route::post('/{id}/reject', [QuotationController::class, 'reject']);
+    });
+
+    // Sales Orders
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [SalesOrderController::class, 'index']);
+        Route::get('/{id}', [SalesOrderController::class, 'show']);
+        Route::post('/from-quote/{quotationId}', [SalesOrderController::class, 'convertFromQuote']);
+        Route::post('/{id}/confirm', [SalesOrderController::class, 'confirm']);
+        Route::post('/{id}/cancel', [SalesOrderController::class, 'cancel']);
+        Route::post('/{id}/ship', [SalesOrderController::class, 'ship']);
+        Route::post('/{id}/generate-invoice', [SalesOrderController::class, 'generateInvoice']);
+    });
+
+    // Pricing
+    Route::prefix('pricing')->group(function () {
+        Route::post('/get-price', [PricingController::class, 'getPrice']);
     });
 });
