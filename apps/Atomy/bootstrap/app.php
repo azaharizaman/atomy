@@ -18,8 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withProviders([
+        App\Providers\IdentityServiceProvider::class,
         App\Providers\CryptoServiceProvider::class,
         App\Providers\SchedulerServiceProvider::class,
+        App\Providers\IntelligenceServiceProvider::class,
         App\Providers\ProcurementServiceProvider::class,
         App\Providers\PayableServiceProvider::class,
         App\Providers\PartyServiceProvider::class,

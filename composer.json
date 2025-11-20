@@ -4,9 +4,14 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": "^8.3"
+        "php": "^8.3",
+        "nexus/intelligence": "*@dev"
     },
     "repositories": [
+        {
+            "type": "path",
+            "url": "packages/Intelligence"
+        },
         {
             "type": "path",
             "url": "./packages/AuditLogger"

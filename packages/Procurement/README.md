@@ -55,6 +55,96 @@ composer require nexus/procurement
 - **Nexus\Currency**: Multi-currency support
 - **Nexus\Workflow**: Requisition approval workflows
 - **Nexus\AuditLogger**: Comprehensive change tracking
+- **Nexus\Intelligence**: AI-powered anomaly detection and predictive analytics
+
+## AI Intelligence Features
+
+The `Nexus\Procurement` package includes **6 production-ready feature extractors** for AI-powered procurement optimization:
+
+### 1. VendorFraudDetectionExtractor (25 features)
+**Purpose:** Real-time fraud screening on PO creation and payment requests  
+**Key Features:**
+- Duplicate vendor pattern detection (name similarity, same bank account, contact info)
+- Behavioral anomaly detection (price volatility, RFQ win rate, budget proximity)
+- Relationship red flags (requester-vendor frequency, after-hours submissions, split orders)
+- Document integrity checks (missing certifications, invoice gaps, metadata anomalies)
+
+**Business Impact:** Prevents fraud, ensures compliance, protects assets
+
+### 2. VendorPricingAnomalyExtractor (22 features)
+**Purpose:** Cost optimization through pricing validation  
+**Key Features:**
+- Historical vendor pricing analysis (avg, std, min, max)
+- Market benchmark comparison across all vendors
+- Competitive quote ranking and analysis
+- Contract pricing compliance validation
+- Volume discount verification (expected vs actual)
+- Currency volatility and geographic variance
+
+**Business Impact:** Prevents overpayment, identifies kickback schemes, ensures contract compliance
+
+### 3. RequisitionApprovalRiskExtractor (20 features)
+**Purpose:** Predict approval delays and prioritize critical requisitions  
+**Key Features:**
+- Requester historical performance (approval rate, avg duration, rejection reasons)
+- Department budget analysis (utilization, velocity, remaining budget)
+- Approval chain complexity (levels, approver workload, cross-department flag)
+- Urgency scoring (delivery timeline vs approval duration)
+- Compliance requirements and technical complexity
+
+**Business Impact:** Reduces procurement cycle time, improves cash flow planning
+
+### 4. BudgetOverrunPredictionExtractor (16 features)
+**Purpose:** Prevent budget violations before approval  
+**Key Features:**
+- Current budget status (allocated, committed, actual, pending)
+- Historical burn rate and spending pattern consistency
+- Period analysis (days remaining, progress percentage)
+- Seasonality factors and emergency purchase frequency
+- Budget amendment history tracking
+
+**Business Impact:** Prevents budget violations, enables proactive reallocation
+
+### 5. GRNDiscrepancyPredictionExtractor (18 features)
+**Purpose:** Predict goods receipt issues before delivery  
+**Key Features:**
+- Vendor delivery performance (accuracy, damage rate, defect rate)
+- Lead time reliability (variance, promised vs actual)
+- Quality metrics (inspection fail rate, packaging adequacy)
+- Transit risk calculation (distance, method, fragile goods)
+- Seasonal demand spike detection
+
+**Business Impact:** Proactive quality control, better inventory planning, vendor performance improvement
+
+### 6. POConversionEfficiencyExtractor (14 features)
+**Purpose:** Predict requisition-to-PO conversion time  
+**Key Features:**
+- Vendor catalog availability and coverage scoring
+- Specification completeness assessment
+- Procurement officer capacity and workload tracking
+- Multi-vendor and custom product complexity
+- Weekend/holiday processing offset
+
+**Business Impact:** Improved cycle time, accurate delivery date prediction, resource optimization
+
+### Integration Example
+
+```php
+use Nexus\Procurement\Intelligence\VendorFraudDetectionExtractor;
+use Nexus\Intelligence\Services\IntelligenceManager;
+
+// Extract features
+$features = $this->fraudExtractor->extract($poTransaction);
+
+// Evaluate with AI
+$result = $this->intelligence->evaluate('procurement_fraud_check', $features);
+
+// Act on result
+if ($result->isFlagged() && $result->getSeverity() === SeverityLevel::CRITICAL) {
+    $this->auditLogger->log($poId, 'fraud_flag', $result->getReason());
+    throw new FraudDetectedException($result->getReason());
+}
+```
 
 ## Usage
 
