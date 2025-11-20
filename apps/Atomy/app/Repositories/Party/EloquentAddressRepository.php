@@ -57,8 +57,7 @@ final readonly class EloquentAddressRepository implements AddressRepositoryInter
 
     public function save(array $data): AddressInterface
     {
-        $address = new PartyAddress($data);
-        $address->save();
+        $address = PartyAddress::create($data);
         return $address;
     }
 
