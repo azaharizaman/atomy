@@ -130,6 +130,10 @@
         {
             "type": "path",
             "url": "./packages/Party"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Product"
         }
     ],
     "minimum-stability": "dev",
