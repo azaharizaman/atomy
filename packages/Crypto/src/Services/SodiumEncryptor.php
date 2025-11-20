@@ -27,10 +27,12 @@ final readonly class SodiumEncryptor implements SymmetricEncryptorInterface
         SymmetricAlgorithm $algorithm = SymmetricAlgorithm::AES256GCM,
         ?EncryptionKey $key = null
     ): EncryptedData {
-        // Generate or retrieve key
-        $keyBinary = $key !== null
-            ? $key->getKeyBinary()
-            : $this->getDefaultKey();
+        // Require explicit key
+        if ($key === null) {
+            throw EncryptionException::failed("Encryption key is required");
+        }
+        
+        $keyBinary = $key->getKeyBinary();
         
         // Validate key length
         $expectedLength = $algorithm->getKeyLength();
@@ -65,10 +67,12 @@ final readonly class SodiumEncryptor implements SymmetricEncryptorInterface
      */
     public function decrypt(EncryptedData $encrypted, ?EncryptionKey $key = null): string
     {
-        // Get key
-        $keyBinary = $key !== null
-            ? $key->getKeyBinary()
-            : $this->getDefaultKey();
+        // Require explicit key
+        if ($key === null) {
+            throw DecryptionException::failed("Decryption key is required");
+        }
+        
+        $keyBinary = $key->getKeyBinary();
         
         // Decode components
         $ciphertext = $encrypted->getCiphertextBinary();
@@ -217,19 +221,4 @@ final readonly class SodiumEncryptor implements SymmetricEncryptorInterface
         return $plaintext;
     }
     
-    /**
-     * Get default application encryption key
-     *
-     * In real implementation, this would retrieve from KeyStorage or config.
-     * For now, derive from a master secret.
-     */
-    private function getDefaultKey(): string
-    {
-        // This is a placeholder - in production, inject KeyStorageInterface
-        // and retrieve a proper encryption key
-        $masterSecret = getenv('APP_KEY') ?: 'default-insecure-key-change-me';
-        
-        // Derive 32-byte key from master secret
-        return hash('sha256', $masterSecret, true);
-    }
 }

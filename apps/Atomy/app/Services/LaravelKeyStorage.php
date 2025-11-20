@@ -18,7 +18,7 @@ use Nexus\Crypto\ValueObjects\EncryptionKey;
  * Implementation of KeyStorageInterface using Laravel database backend.
  * Stores encryption keys using envelope encryption (master key encrypts DEKs).
  */
-final readonly class LaravelKeyStorage implements KeyStorageInterface
+final class LaravelKeyStorage implements KeyStorageInterface
 {
     private string $table;
     private string $historyTable;

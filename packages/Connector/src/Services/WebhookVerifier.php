@@ -19,9 +19,11 @@ final class WebhookVerifier implements WebhookVerifierInterface
 {
     /**
      * @param AsymmetricSignerInterface|null $signer Optional Nexus\Crypto signer (injected when available)
+     * @param bool $legacyMode Whether to use legacy cryptography (default: true for safety)
      */
     public function __construct(
-        private readonly ?AsymmetricSignerInterface $signer = null
+        private readonly ?AsymmetricSignerInterface $signer = null,
+        private readonly bool $legacyMode = true,
     ) {}
     
     /**
@@ -96,14 +98,7 @@ final class WebhookVerifier implements WebhookVerifierInterface
      */
     private function isLegacyMode(): bool
     {
-        // Check config if available (Laravel environment)
-        if (function_exists('config')) {
-            return config('crypto.legacy_mode', true);
-        }
-        
-        // Check environment variable
-        $legacyMode = getenv('CRYPTO_LEGACY_MODE');
-        return $legacyMode === false || $legacyMode === 'true' || $legacyMode === '1';
+        return $this->legacyMode;
     }
 }
 

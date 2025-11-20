@@ -37,6 +37,7 @@ final readonly class SnapshotManager
         private LoggerInterface $logger,
         private int $snapshotThreshold = 100,
         private ?HasherInterface $hasher = null,
+        private bool $legacyMode = true,
     ) {
     }
 
@@ -128,14 +129,7 @@ final readonly class SnapshotManager
      */
     private function isLegacyMode(): bool
     {
-        // Check config if available (Laravel environment)
-        if (function_exists('config')) {
-            return config('crypto.legacy_mode', true);
-        }
-        
-        // Check environment variable
-        $legacyMode = getenv('CRYPTO_LEGACY_MODE');
-        return $legacyMode === false || $legacyMode === 'true' || $legacyMode === '1';
+        return $this->legacyMode;
     }
 }
 
