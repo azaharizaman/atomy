@@ -143,9 +143,7 @@ final readonly class EloquentPartyRelationshipRepository implements PartyRelatio
 
     public function save(array $data): PartyRelationshipInterface
     {
-        $relationship = new PartyRelationship($data);
-        $relationship->save();
-        return $relationship;
+        return PartyRelationship::create($data);
     }
 
     public function update(string $id, array $data): PartyRelationshipInterface
