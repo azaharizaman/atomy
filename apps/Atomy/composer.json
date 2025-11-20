@@ -27,7 +27,11 @@
         "nexus/payroll": "*@dev",
         "nexus/payroll-mys-statutory": "*@dev",
         "nexus/period": "*@dev",
+        "nexus/party": "*@dev",
+        "nexus/payable": "*@dev",
+        "nexus/product": "*@dev",
         "nexus/procurement": "*@dev",
+        "nexus/receivable": "*@dev",
         "nexus/scheduler": "*@dev",
         "nexus/sequencing": "*@dev",
         "nexus/setting": "*@dev",
@@ -165,6 +169,30 @@
         {
             "type": "path",
             "url": "../../packages/Procurement"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Party"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Payable"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Receivable"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Product"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Currency"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Analytics"
         }
     ],
     "scripts": {

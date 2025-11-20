@@ -29,7 +29,18 @@ interface PurchaseOrderLineInterface
     public function getLineReference(): string;
 
     /**
+     * Get product variant ID (from Nexus\Product package).
+     *
+     * Null for legacy data migrated before product integration.
+     *
+     * @return string|null
+     */
+    public function getProductVariantId(): ?string;
+
+    /**
      * Get item description.
+     *
+     * Fallback for display when product variant is not linked.
      *
      * @return string
      */
