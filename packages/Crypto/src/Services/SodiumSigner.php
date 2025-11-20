@@ -118,15 +118,6 @@ final readonly class SodiumSigner implements AsymmetricSignerInterface
     }
     
     /**
-     * Verify HMAC-SHA256 signature
-     */
-    private function verifyHmacInternal(string $data, string $signature, string $secret): bool
-    {
-        $expected = hash_hmac('sha256', $data, $secret);
-        return hash_equals($expected, $signature);
-    }
-    
-    /**
      * Sign with Ed25519 using Sodium
      */
     private function signEd25519(string $data, string $privateKey): string

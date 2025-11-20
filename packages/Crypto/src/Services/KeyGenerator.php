@@ -74,6 +74,11 @@ final readonly class KeyGenerator implements KeyGeneratorInterface
             throw new \InvalidArgumentException("Length must be positive");
         }
         
+        // Prevent memory exhaustion attacks (max 1MB)
+        if ($length > 1048576) {
+            throw new \InvalidArgumentException("Length must not exceed 1MB (1048576 bytes)");
+        }
+        
         return base64_encode(random_bytes($length));
     }
     

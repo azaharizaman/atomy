@@ -22,13 +22,12 @@ final class LaravelKeyStorage implements KeyStorageInterface
 {
     private string $table;
     private string $historyTable;
-    private KeyGenerator $keyGenerator;
     
-    public function __construct()
-    {
+    public function __construct(
+        private readonly KeyGenerator $keyGenerator
+    ) {
         $this->table = config('crypto.key_storage.table', 'encryption_keys');
         $this->historyTable = config('crypto.key_storage.rotation_history_table', 'key_rotation_history');
-        $this->keyGenerator = new KeyGenerator();
     }
     
     /**
@@ -89,28 +88,46 @@ final class LaravelKeyStorage implements KeyStorageInterface
      */
     public function rotate(string $keyId): EncryptionKey
     {
-        $oldKey = $this->retrieve($keyId);
-        
-        // Generate new key with same algorithm
-        $expirationDays = config('crypto.rotation.default_expiration_days', 90);
-        $newKey = $this->keyGenerator->generateSymmetricKey(
-            $oldKey->algorithm,
-            $expirationDays
-        );
-        
-        // Store new key
-        $this->store($keyId, $newKey);
-        
-        // Log rotation in history table
-        DB::table($this->historyTable)->insert([
-            'key_id' => $keyId,
-            'old_version' => $this->getCurrentVersion($keyId) - 1,
-            'new_version' => $this->getCurrentVersion($keyId),
-            'rotated_at' => now(),
-            'reason' => 'automated_rotation',
-        ]);
-        
-        return $newKey;
+        return DB::transaction(function () use ($keyId) {
+            $oldKey = $this->retrieve($keyId);
+            
+            // Get current version with lock to prevent race conditions
+            $currentVersion = $this->getCurrentVersion($keyId);
+            
+            // Generate new key with same algorithm
+            $expirationDays = config('crypto.rotation.default_expiration_days', 90);
+            $newKey = $this->keyGenerator->generateSymmetricKey(
+                $oldKey->algorithm,
+                $expirationDays
+            );
+            
+            // Encrypt key with master key (envelope encryption)
+            $encryptedKey = $this->encryptWithMasterKey($newKey->key);
+            
+            $newVersion = $currentVersion + 1;
+            
+            // Store new key version atomically
+            DB::table($this->table)->insert([
+                'key_id' => $keyId,
+                'encrypted_key' => $encryptedKey,
+                'algorithm' => $newKey->algorithm->value,
+                'version' => $newVersion,
+                'created_at' => $newKey->createdAt->format('Y-m-d H:i:s'),
+                'expires_at' => $newKey->expiresAt?->format('Y-m-d H:i:s'),
+                'updated_at' => now(),
+            ]);
+            
+            // Log rotation in history table
+            DB::table($this->historyTable)->insert([
+                'key_id' => $keyId,
+                'old_version' => $currentVersion,
+                'new_version' => $newVersion,
+                'rotated_at' => now(),
+                'reason' => 'automated_rotation',
+            ]);
+            
+            return $newKey;
+        });
     }
     
     /**
@@ -159,12 +176,13 @@ final class LaravelKeyStorage implements KeyStorageInterface
     }
     
     /**
-     * Get current version for key ID
+     * Get current version for key ID with pessimistic lock
      */
     private function getCurrentVersion(string $keyId): int
     {
         return (int) DB::table($this->table)
             ->where('key_id', $keyId)
+            ->lockForUpdate()
             ->max('version') ?? 0;
     }
     

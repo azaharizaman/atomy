@@ -110,6 +110,6 @@ final readonly class EncryptionKey
         }
         
         $diff = $now->diff($this->expiresAt);
-        return $diff->invert ? 0 : $diff->days;
+        return $diff->invert ? 0 : (int) $diff->days;
     }
 }

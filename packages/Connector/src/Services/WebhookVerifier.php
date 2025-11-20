@@ -60,7 +60,7 @@ final class WebhookVerifier implements WebhookVerifierInterface
     private function verifyLegacy(string $payload, string $signature, string $secret): bool
     {
         // Remove common signature prefixes (e.g., "sha256=")
-        $signature = preg_replace('/^(sha256|sha1)=/', '', $signature) ?? $signature;
+        $signature = $this->removeSignaturePrefix($signature);
 
         // Try multiple algorithms
         $algorithms = ['sha256', 'sha1'];
@@ -87,10 +87,18 @@ final class WebhookVerifier implements WebhookVerifierInterface
         }
         
         // Remove common signature prefixes
-        $signature = preg_replace('/^(sha256|sha1)=/', '', $signature) ?? $signature;
+        $signature = $this->removeSignaturePrefix($signature);
         
         // Verify using Nexus\Crypto
         return $this->signer->verifyHmac($payload, $signature, $secret, AsymmetricAlgorithm::HMACSHA256);
+    }
+    
+    /**
+     * Remove common signature prefixes (e.g., "sha256=", "sha1=")
+     */
+    private function removeSignaturePrefix(string $signature): string
+    {
+        return preg_replace('/^(sha256|sha1)=/', '', $signature) ?? $signature;
     }
     
     /**

@@ -103,6 +103,14 @@ final readonly class SodiumEncryptor implements SymmetricEncryptorInterface
     /**
      * Encrypt with AES-256-GCM using Sodium
      *
+     * Note: Sodium's AES-GCM implementation returns ciphertext with tag appended.
+     * We extract the tag (last 16 bytes) separately for consistent API with other algorithms.
+     * 
+     * Edge case: For empty plaintexts (0 bytes), the ciphertext may be shorter than
+     * the tag. However, Sodium guarantees ciphertext length >= plaintext length, so this
+     * is not a practical concern. The minimum ciphertext size is always >= 16 bytes after
+     * encryption due to AEAD properties.
+     *
      * @return array{ciphertext: string, tag: string}
      */
     private function encryptAesGcm(string $plaintext, string $key, string $nonce): array

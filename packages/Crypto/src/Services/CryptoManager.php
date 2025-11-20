@@ -112,6 +112,13 @@ final readonly class CryptoManager
      */
     public function decryptWithKey(EncryptedData $encrypted, string $keyId): string
     {
+        // Validate key ID matches metadata if present
+        if (isset($encrypted->metadata['keyId']) && $encrypted->metadata['keyId'] !== $keyId) {
+            throw new \InvalidArgumentException(
+                "Key ID mismatch: expected '{$encrypted->metadata['keyId']}', got '{$keyId}'"
+            );
+        }
+        
         $key = $this->keyStorage->retrieve($keyId);
         
         $this->logger->debug('Decrypting with key', ['keyId' => $keyId]);
