@@ -142,6 +142,23 @@ final readonly class Quantity implements JsonSerializable
     }
 
     /**
+     * Format with locale-aware formatting using NumberFormatter.
+     *
+     * @param \Nexus\Localization\ValueObjects\Locale $locale Target locale
+     * @param \Nexus\Localization\Services\NumberFormatter $formatter Number formatter service
+     * @param int $decimals Number of decimal places (default: 2)
+     * @return string Localized quantity with unit (e.g., "1.234,56 kg" for de_DE)
+     */
+    public function formatLocalized(
+        \Nexus\Localization\ValueObjects\Locale $locale,
+        \Nexus\Localization\Services\NumberFormatter $formatter,
+        int $decimals = 2
+    ): string {
+        $formattedValue = $formatter->format($this->value, $locale, null);
+        return "{$formattedValue} {$this->unitCode}";
+    }
+
+    /**
      * Compare if this quantity equals another (after conversion).
      *
      * @param self $other The quantity to compare

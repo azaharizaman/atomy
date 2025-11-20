@@ -19,5 +19,6 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withProviders([
         App\Providers\SchedulerServiceProvider::class,
+        App\Providers\LocalizationServiceProvider::class,
     ])
     ->create();

@@ -202,6 +202,22 @@ final readonly class Money
         return number_format($this->toFloat(), $decimals, '.', ',') . ' ' . $this->currency;
     }
 
+    /**
+     * Format with locale-aware formatting using CurrencyFormatter.
+     *
+     * @param \Nexus\Localization\ValueObjects\Locale $locale Target locale
+     * @param \Nexus\Localization\Services\CurrencyFormatter $formatter Currency formatter service
+     * @param int $decimals Number of decimal places (default: 2)
+     * @return string Localized currency amount (e.g., "RM 1,234.56" for ms_MY)
+     */
+    public function formatLocalized(
+        \Nexus\Localization\ValueObjects\Locale $locale,
+        \Nexus\Localization\Services\CurrencyFormatter $formatter,
+        int $decimals = 2
+    ): string {
+        return $formatter->format($this->amount, $this->currency, $locale, $decimals);
+    }
+
     public function __toString(): string
     {
         return $this->amount . ' ' . $this->currency;
