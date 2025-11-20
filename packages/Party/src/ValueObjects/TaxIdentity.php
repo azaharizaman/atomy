@@ -68,8 +68,9 @@ final readonly class TaxIdentity
     /**
      * Check if the tax identity is expired.
      */
-    public function isExpired(\DateTimeImmutable $asOf = new \DateTimeImmutable()): bool
+    public function isExpired(?\DateTimeImmutable $asOf = null): bool
     {
+        $asOf = $asOf ?? new \DateTimeImmutable();
         return $this->expiryDate !== null && $this->expiryDate < $asOf;
     }
     

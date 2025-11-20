@@ -13,18 +13,7 @@ use Nexus\Party\ValueObjects\TaxIdentity;
 
 final readonly class EloquentPartyRepository implements PartyRepositoryInterface
 {
-    public function findById(string $id): PartyInterface
-    {
-        $party = Party::find($id);
-
-        if (!$party) {
-            throw PartyNotFoundException::forId($id);
-        }
-
-        return $party;
-    }
-
-    public function findByIdOrNull(string $id): ?PartyInterface
+    public function findById(string $id): ?PartyInterface
     {
         return Party::find($id);
     }
@@ -36,56 +25,81 @@ final readonly class EloquentPartyRepository implements PartyRepositoryInterface
             ->first();
     }
 
-    public function findByTaxIdentity(string $tenantId, TaxIdentity $taxIdentity): ?PartyInterface
+    public function findByTaxIdentity(string $tenantId, string $country, string $taxNumber): ?PartyInterface
     {
         return Party::where('tenant_id', $tenantId)
-            ->whereJsonContains('tax_identity->country', $taxIdentity->country)
-            ->whereJsonContains('tax_identity->number', $taxIdentity->number)
+            ->whereJsonContains('tax_identity->country', $country)
+            ->whereJsonContains('tax_identity->number', $taxNumber)
             ->first();
     }
 
-    public function searchByName(string $tenantId, string $query, int $limit = 50): array
+    public function searchByName(string $tenantId, string $searchTerm, int $limit = 50): array
     {
         return Party::where('tenant_id', $tenantId)
-            ->where(function ($q) use ($query) {
-                $q->where('legal_name', 'LIKE', "%{$query}%")
-                  ->orWhere('display_name', 'LIKE', "%{$query}%");
+            ->where(function ($q) use ($searchTerm) {
+                $q->where('legal_name', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('display_name', 'LIKE', "%{$searchTerm}%");
             })
             ->limit($limit)
             ->get()
             ->all();
     }
 
-    public function findByType(string $tenantId, PartyType $type, int $limit = 100): array
+    public function getAll(string $tenantId, array $filters = []): array
+    {
+        $query = Party::where('tenant_id', $tenantId);
+        
+        if (isset($filters['party_type'])) {
+            $query->where('party_type', $filters['party_type']);
+        }
+        
+        if (isset($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('legal_name', 'LIKE', "%{$filters['search']}%")
+                  ->orWhere('display_name', 'LIKE', "%{$filters['search']}%");
+            });
+        }
+        
+        return $query->limit($filters['limit'] ?? 1000)->get()->all();
+    }
+
+    public function getByType(string $tenantId, PartyType $type): array
     {
         return Party::where('tenant_id', $tenantId)
             ->where('party_type', $type->value)
-            ->limit($limit)
             ->get()
             ->all();
     }
 
-    public function save(PartyInterface $party): void
+    public function save(array $data): PartyInterface
     {
-        if ($party instanceof Party) {
-            $party->save();
-        }
+        $party = new Party($data);
+        $party->save();
+        return $party;
     }
 
-    public function update(PartyInterface $party): void
-    {
-        if ($party instanceof Party) {
-            $party->save();
-        }
-    }
-
-    public function delete(string $id): void
+    public function update(string $id, array $data): PartyInterface
     {
         $party = Party::find($id);
-
-        if ($party) {
-            $party->delete();
+        
+        if (!$party) {
+            throw PartyNotFoundException::forId($id);
         }
+        
+        $party->fill($data);
+        $party->save();
+        return $party;
+    }
+
+    public function delete(string $id): bool
+    {
+        $party = Party::find($id);
+        
+        if (!$party) {
+            return false;
+        }
+        
+        return (bool) $party->delete();
     }
 
     public function findPotentialDuplicates(

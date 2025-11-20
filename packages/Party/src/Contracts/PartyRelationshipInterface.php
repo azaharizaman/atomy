@@ -60,7 +60,7 @@ interface PartyRelationshipInterface
     /**
      * Check if this relationship is currently active.
      */
-    public function isActive(\DateTimeInterface $asOf = new \DateTimeImmutable()): bool;
+    public function isActive(?\DateTimeInterface $asOf = null): bool;
     
     /**
      * Get the role/title in this relationship (e.g., "CEO", "Primary Contact").

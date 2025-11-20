@@ -12,18 +12,12 @@ use Nexus\Party\Exceptions\AddressNotFoundException;
 
 final readonly class EloquentAddressRepository implements AddressRepositoryInterface
 {
-    public function findById(string $id): AddressInterface
+    public function findById(string $id): ?AddressInterface
     {
-        $address = PartyAddress::find($id);
-
-        if (!$address) {
-            throw AddressNotFoundException::forId($id);
-        }
-
-        return $address;
+        return PartyAddress::find($id);
     }
 
-    public function findByPartyId(string $partyId): array
+    public function getByPartyId(string $partyId): array
     {
         return PartyAddress::where('party_id', $partyId)
             ->orderBy('is_primary', 'desc')
@@ -32,49 +26,71 @@ final readonly class EloquentAddressRepository implements AddressRepositoryInter
             ->all();
     }
 
-    public function findByType(string $partyId, AddressType $type): array
+    public function getPrimaryAddress(string $partyId, ?AddressType $type = null): ?AddressInterface
     {
+        $query = PartyAddress::where('party_id', $partyId)
+            ->where('is_primary', true);
+            
+        if ($type !== null) {
+            $query->where('address_type', $type->value);
+        }
+        
+        return $query->first();
+    }
+
+    public function getActiveAddresses(string $partyId, ?\DateTimeInterface $asOf = null): array
+    {
+        $asOf = $asOf ?? new \DateTimeImmutable();
+        $date = $asOf->format('Y-m-d');
+        
         return PartyAddress::where('party_id', $partyId)
-            ->where('address_type', $type->value)
-            ->orderBy('is_primary', 'desc')
+            ->where(function ($query) use ($date) {
+                $query->where('effective_from', '<=', $date)
+                      ->where(function ($q) use ($date) {
+                          $q->whereNull('effective_to')
+                            ->orWhere('effective_to', '>=', $date);
+                      });
+            })
             ->get()
             ->all();
     }
 
-    public function getPrimaryAddress(string $partyId): ?AddressInterface
+    public function save(array $data): AddressInterface
     {
-        return PartyAddress::where('party_id', $partyId)
-            ->where('is_primary', true)
-            ->first();
+        $address = new PartyAddress($data);
+        $address->save();
+        return $address;
     }
 
-    public function clearPrimaryFlag(string $partyId): void
-    {
-        PartyAddress::where('party_id', $partyId)
-            ->where('is_primary', true)
-            ->update(['is_primary' => false]);
-    }
-
-    public function save(AddressInterface $address): void
-    {
-        if ($address instanceof PartyAddress) {
-            $address->save();
-        }
-    }
-
-    public function update(AddressInterface $address): void
-    {
-        if ($address instanceof PartyAddress) {
-            $address->save();
-        }
-    }
-
-    public function delete(string $id): void
+    public function update(string $id, array $data): AddressInterface
     {
         $address = PartyAddress::find($id);
-
-        if ($address) {
-            $address->delete();
+        
+        if (!$address) {
+            throw AddressNotFoundException::forId($id);
         }
+        
+        $address->fill($data);
+        $address->save();
+        return $address;
+    }
+
+    public function delete(string $id): bool
+    {
+        $address = PartyAddress::find($id);
+        
+        if (!$address) {
+            return false;
+        }
+        
+        return (bool) $address->delete();
+    }
+
+    public function clearPrimaryFlag(string $partyId, AddressType $type): void
+    {
+        PartyAddress::where('party_id', $partyId)
+            ->where('address_type', $type->value)
+            ->where('is_primary', true)
+            ->update(['is_primary' => false]);
     }
 }

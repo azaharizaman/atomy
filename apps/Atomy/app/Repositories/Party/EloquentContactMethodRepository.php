@@ -12,18 +12,12 @@ use Nexus\Party\Exceptions\ContactMethodNotFoundException;
 
 final readonly class EloquentContactMethodRepository implements ContactMethodRepositoryInterface
 {
-    public function findById(string $id): ContactMethodInterface
+    public function findById(string $id): ?ContactMethodInterface
     {
-        $contactMethod = PartyContactMethod::find($id);
-
-        if (!$contactMethod) {
-            throw ContactMethodNotFoundException::forId($id);
-        }
-
-        return $contactMethod;
+        return PartyContactMethod::find($id);
     }
 
-    public function findByPartyId(string $partyId): array
+    public function getByPartyId(string $partyId): array
     {
         return PartyContactMethod::where('party_id', $partyId)
             ->orderBy('is_primary', 'desc')
@@ -32,10 +26,10 @@ final readonly class EloquentContactMethodRepository implements ContactMethodRep
             ->all();
     }
 
-    public function findByType(string $partyId, ContactMethodType $type): array
+    public function getByType(string $partyId, ContactMethodType $type): array
     {
         return PartyContactMethod::where('party_id', $partyId)
-            ->where('contact_type', $type->value)
+            ->where('type', $type->value)
             ->orderBy('is_primary', 'desc')
             ->get()
             ->all();
@@ -44,39 +38,57 @@ final readonly class EloquentContactMethodRepository implements ContactMethodRep
     public function getPrimaryContactMethod(string $partyId, ContactMethodType $type): ?ContactMethodInterface
     {
         return PartyContactMethod::where('party_id', $partyId)
-            ->where('contact_type', $type->value)
+            ->where('type', $type->value)
             ->where('is_primary', true)
             ->first();
+    }
+
+    public function findByValue(string $tenantId, ContactMethodType $type, string $value): ?ContactMethodInterface
+    {
+        return PartyContactMethod::whereHas('party', function ($query) use ($tenantId) {
+                $query->where('tenant_id', $tenantId);
+            })
+            ->where('type', $type->value)
+            ->where('value', $value)
+            ->first();
+    }
+
+    public function save(array $data): ContactMethodInterface
+    {
+        $contactMethod = new PartyContactMethod($data);
+        $contactMethod->save();
+        return $contactMethod;
+    }
+
+    public function update(string $id, array $data): ContactMethodInterface
+    {
+        $contactMethod = PartyContactMethod::find($id);
+        
+        if (!$contactMethod) {
+            throw ContactMethodNotFoundException::forId($id);
+        }
+        
+        $contactMethod->fill($data);
+        $contactMethod->save();
+        return $contactMethod;
+    }
+
+    public function delete(string $id): bool
+    {
+        $contactMethod = PartyContactMethod::find($id);
+        
+        if (!$contactMethod) {
+            return false;
+        }
+        
+        return (bool) $contactMethod->delete();
     }
 
     public function clearPrimaryFlag(string $partyId, ContactMethodType $type): void
     {
         PartyContactMethod::where('party_id', $partyId)
-            ->where('contact_type', $type->value)
+            ->where('type', $type->value)
             ->where('is_primary', true)
             ->update(['is_primary' => false]);
-    }
-
-    public function save(ContactMethodInterface $contactMethod): void
-    {
-        if ($contactMethod instanceof PartyContactMethod) {
-            $contactMethod->save();
-        }
-    }
-
-    public function update(ContactMethodInterface $contactMethod): void
-    {
-        if ($contactMethod instanceof PartyContactMethod) {
-            $contactMethod->save();
-        }
-    }
-
-    public function delete(string $id): void
-    {
-        $contactMethod = PartyContactMethod::find($id);
-
-        if ($contactMethod) {
-            $contactMethod->delete();
-        }
     }
 }

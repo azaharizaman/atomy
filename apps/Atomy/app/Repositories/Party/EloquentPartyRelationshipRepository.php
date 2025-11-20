@@ -13,70 +13,84 @@ use Nexus\Party\Exceptions\RelationshipNotFoundException;
 
 final readonly class EloquentPartyRelationshipRepository implements PartyRelationshipRepositoryInterface
 {
-    public function findById(string $id): PartyRelationshipInterface
+    public function findById(string $id): ?PartyRelationshipInterface
     {
-        $relationship = PartyRelationship::find($id);
+        return PartyRelationship::find($id);
+    }
 
-        if (!$relationship) {
-            throw RelationshipNotFoundException::forId($id);
+    public function getRelationshipsFrom(string $partyId, ?RelationshipType $type = null): array
+    {
+        $query = PartyRelationship::where('from_party_id', $partyId);
+        
+        if ($type !== null) {
+            $query->where('relationship_type', $type->value);
         }
-
-        return $relationship;
+        
+        return $query->get()->all();
     }
 
-    public function findByParties(string $fromPartyId, string $toPartyId): array
+    public function getRelationshipsTo(string $partyId, ?RelationshipType $type = null): array
     {
-        return PartyRelationship::where('from_party_id', $fromPartyId)
-            ->where('to_party_id', $toPartyId)
-            ->get()
-            ->all();
+        $query = PartyRelationship::where('to_party_id', $partyId);
+        
+        if ($type !== null) {
+            $query->where('relationship_type', $type->value);
+        }
+        
+        return $query->get()->all();
     }
 
-    public function findActiveRelationships(string $partyId): array
+    public function getActiveRelationships(string $partyId, ?\DateTimeInterface $asOf = null): array
     {
-        $now = new \DateTimeImmutable('now');
+        $asOf = $asOf ?? new \DateTimeImmutable();
+        $date = $asOf->format('Y-m-d');
 
         return PartyRelationship::where(function ($query) use ($partyId) {
                 $query->where('from_party_id', $partyId)
                       ->orWhere('to_party_id', $partyId);
             })
-            ->where(function ($query) use ($now) {
-                $query->where('effective_from', '<=', $now->format('Y-m-d'))
-                      ->where(function ($q) use ($now) {
+            ->where(function ($query) use ($date) {
+                $query->where('effective_from', '<=', $date)
+                      ->where(function ($q) use ($date) {
                           $q->whereNull('effective_to')
-                            ->orWhere('effective_to', '>=', $now->format('Y-m-d'));
+                            ->orWhere('effective_to', '>=', $date);
                       });
             })
             ->get()
             ->all();
     }
 
-    public function findByType(string $partyId, RelationshipType $type): array
+    public function getCurrentEmployer(string $individualPartyId, ?\DateTimeInterface $asOf = null): ?PartyRelationshipInterface
     {
-        return PartyRelationship::where(function ($query) use ($partyId) {
-                $query->where('from_party_id', $partyId)
-                      ->orWhere('to_party_id', $partyId);
-            })
-            ->where('relationship_type', $type->value)
-            ->get()
-            ->all();
-    }
-
-    public function getCurrentEmployer(string $individualPartyId): ?PartyRelationshipInterface
-    {
-        $now = new \DateTimeImmutable('now');
+        $asOf = $asOf ?? new \DateTimeImmutable();
+        $date = $asOf->format('Y-m-d');
 
         return PartyRelationship::where('from_party_id', $individualPartyId)
             ->where('relationship_type', RelationshipType::EMPLOYMENT_AT->value)
-            ->where('effective_from', '<=', $now->format('Y-m-d'))
-            ->where(function ($query) use ($now) {
+            ->where('effective_from', '<=', $date)
+            ->where(function ($query) use ($date) {
                 $query->whereNull('effective_to')
-                      ->orWhere('effective_to', '>=', $now->format('Y-m-d'));
+                      ->orWhere('effective_to', '>=', $date);
             })
             ->first();
     }
 
-    public function getOrganizationalChain(string $partyId, int $maxDepth = 10): array
+    public function getParentOrganization(string $subsidiaryPartyId): ?PartyRelationshipInterface
+    {
+        return PartyRelationship::where('from_party_id', $subsidiaryPartyId)
+            ->where('relationship_type', RelationshipType::SUBSIDIARY_OF->value)
+            ->first();
+    }
+
+    public function getSubsidiaries(string $parentPartyId): array
+    {
+        return PartyRelationship::where('to_party_id', $parentPartyId)
+            ->where('relationship_type', RelationshipType::SUBSIDIARY_OF->value)
+            ->get()
+            ->all();
+    }
+
+    public function getOrganizationalChain(string $partyId, int $maxDepth = 50): array
     {
         // Use recursive CTE to get the complete organizational hierarchy
         $results = DB::select("
@@ -117,7 +131,7 @@ final readonly class EloquentPartyRelationshipRepository implements PartyRelatio
             SELECT * FROM org_chain ORDER BY depth
         ", [
             'party_id' => $partyId,
-            'rel_type' => RelationshipType::PART_OF->value,
+            'rel_type' => RelationshipType::SUBSIDIARY_OF->value,
             'max_depth' => $maxDepth,
         ]);
 
@@ -127,26 +141,34 @@ final readonly class EloquentPartyRelationshipRepository implements PartyRelatio
         }, $results);
     }
 
-    public function save(PartyRelationshipInterface $relationship): void
+    public function save(array $data): PartyRelationshipInterface
     {
-        if ($relationship instanceof PartyRelationship) {
-            $relationship->save();
-        }
+        $relationship = new PartyRelationship($data);
+        $relationship->save();
+        return $relationship;
     }
 
-    public function update(PartyRelationshipInterface $relationship): void
-    {
-        if ($relationship instanceof PartyRelationship) {
-            $relationship->save();
-        }
-    }
-
-    public function delete(string $id): void
+    public function update(string $id, array $data): PartyRelationshipInterface
     {
         $relationship = PartyRelationship::find($id);
-
-        if ($relationship) {
-            $relationship->delete();
+        
+        if (!$relationship) {
+            throw RelationshipNotFoundException::forId($id);
         }
+        
+        $relationship->fill($data);
+        $relationship->save();
+        return $relationship;
+    }
+
+    public function delete(string $id): bool
+    {
+        $relationship = PartyRelationship::find($id);
+        
+        if (!$relationship) {
+            return false;
+        }
+        
+        return (bool) $relationship->delete();
     }
 }

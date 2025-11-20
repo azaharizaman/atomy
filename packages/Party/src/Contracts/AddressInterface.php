@@ -52,7 +52,7 @@ interface AddressInterface
     /**
      * Check if this address is currently active.
      */
-    public function isActive(\DateTimeInterface $asOf = new \DateTimeImmutable()): bool;
+    public function isActive(?\DateTimeInterface $asOf = null): bool;
     
     /**
      * Get additional metadata as key-value pairs.
