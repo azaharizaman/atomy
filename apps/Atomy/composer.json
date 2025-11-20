@@ -15,6 +15,7 @@
         "nexus/backoffice": "*@dev",
         "nexus/compliance": "*@dev",
         "nexus/connector": "*@dev",
+        "nexus/crypto": "*@dev",
         "nexus/data-processor": "*@dev",
         "nexus/event-stream": "*@dev",
         "nexus/export": "*@dev",
