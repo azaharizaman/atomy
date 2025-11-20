@@ -49,7 +49,11 @@ final readonly class EncryptionKey
      */
     public function getKeyBinary(): string
     {
-        return base64_decode($this->key, true) ?: '';
+        $decoded = base64_decode($this->key, true);
+        if ($decoded === false) {
+            throw new \InvalidArgumentException('Invalid base64-encoded key material');
+        }
+        return $decoded;
     }
     
     /**

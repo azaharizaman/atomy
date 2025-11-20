@@ -84,7 +84,11 @@ final readonly class EncryptedData
      */
     public function getCiphertextBinary(): string
     {
-        return base64_decode($this->ciphertext, true) ?: '';
+        $decoded = base64_decode($this->ciphertext, true);
+        if ($decoded === false) {
+            throw new \InvalidArgumentException('Invalid base64-encoded ciphertext');
+        }
+        return $decoded;
     }
     
     /**
@@ -92,7 +96,11 @@ final readonly class EncryptedData
      */
     public function getIVBinary(): string
     {
-        return base64_decode($this->iv, true) ?: '';
+        $decoded = base64_decode($this->iv, true);
+        if ($decoded === false) {
+            throw new \InvalidArgumentException('Invalid base64-encoded IV');
+        }
+        return $decoded;
     }
     
     /**
@@ -100,6 +108,10 @@ final readonly class EncryptedData
      */
     public function getTagBinary(): string
     {
-        return base64_decode($this->tag, true) ?: '';
+        $decoded = base64_decode($this->tag, true);
+        if ($decoded === false) {
+            throw new \InvalidArgumentException('Invalid base64-encoded tag');
+        }
+        return $decoded;
     }
 }

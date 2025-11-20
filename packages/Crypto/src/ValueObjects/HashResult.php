@@ -59,7 +59,11 @@ final readonly class HashResult
      */
     public function getBinary(): string
     {
-        return hex2bin($this->hash) ?: '';
+        $binary = hex2bin($this->hash);
+        if ($binary === false) {
+            throw new \InvalidArgumentException('Invalid hex-encoded hash');
+        }
+        return $binary;
     }
     
     /**

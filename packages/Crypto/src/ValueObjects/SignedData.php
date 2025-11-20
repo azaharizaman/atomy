@@ -88,7 +88,11 @@ final readonly class SignedData
      */
     public function getSignatureBinary(): string
     {
-        return base64_decode($this->signature, true) ?: '';
+        $decoded = base64_decode($this->signature, true);
+        if ($decoded === false) {
+            throw new \InvalidArgumentException('Invalid base64-encoded signature');
+        }
+        return $decoded;
     }
     
     /**
@@ -100,6 +104,10 @@ final readonly class SignedData
             return null;
         }
         
-        return base64_decode($this->publicKey, true) ?: null;
+        $decoded = base64_decode($this->publicKey, true);
+        if ($decoded === false) {
+            throw new \InvalidArgumentException('Invalid base64-encoded public key');
+        }
+        return $decoded;
     }
 }

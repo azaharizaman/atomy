@@ -67,7 +67,11 @@ final readonly class KeyPair
      */
     public function getPublicKeyBinary(): string
     {
-        return base64_decode($this->publicKey, true) ?: '';
+        $decoded = base64_decode($this->publicKey, true);
+        if ($decoded === false) {
+            throw new \InvalidArgumentException('Invalid base64-encoded public key');
+        }
+        return $decoded;
     }
     
     /**
@@ -75,7 +79,11 @@ final readonly class KeyPair
      */
     public function getPrivateKeyBinary(): string
     {
-        return base64_decode($this->privateKey, true) ?: '';
+        $decoded = base64_decode($this->privateKey, true);
+        if ($decoded === false) {
+            throw new \InvalidArgumentException('Invalid base64-encoded private key');
+        }
+        return $decoded;
     }
     
     /**
