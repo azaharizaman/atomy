@@ -17,7 +17,8 @@ final class LaravelAuthContext implements AuthContextInterface
 {
     public function getCurrentUserId(): ?string
     {
-        return Auth::id();
+        $id = Auth::id();
+        return $id !== null ? (string) $id : null;
     }
 
     public function isAuthenticated(): bool
