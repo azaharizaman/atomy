@@ -139,6 +139,10 @@
         {
             "type": "path",
             "url": "./packages/Product"
+        },
+        {
+            "type": "path",
+            "url": "./packages/CashManagement"
         }
     ],
     "minimum-stability": "dev",
