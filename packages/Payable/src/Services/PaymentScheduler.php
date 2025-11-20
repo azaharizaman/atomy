@@ -8,6 +8,7 @@ use Nexus\Payable\Contracts\PaymentSchedulerInterface;
 use Nexus\Payable\Contracts\VendorBillRepositoryInterface;
 use Nexus\Payable\Contracts\VendorRepositoryInterface;
 use Nexus\Payable\Contracts\PaymentScheduleInterface;
+use Nexus\Payable\Contracts\PaymentScheduleRepositoryInterface;
 use Nexus\Payable\Enums\PaymentTerm;
 use Nexus\Payable\Enums\PaymentStatus;
 use Nexus\Payable\Exceptions\BillNotFoundException;
@@ -22,7 +23,7 @@ final class PaymentScheduler implements PaymentSchedulerInterface
     public function __construct(
         private readonly VendorBillRepositoryInterface $billRepository,
         private readonly VendorRepositoryInterface $vendorRepository,
-        private readonly object $paymentScheduleRepository, // PaymentScheduleRepositoryInterface
+        private readonly PaymentScheduleRepositoryInterface $paymentScheduleRepository,
         private readonly LoggerInterface $logger
     ) {}
 

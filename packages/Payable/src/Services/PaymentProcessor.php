@@ -7,6 +7,7 @@ namespace Nexus\Payable\Services;
 use Nexus\Payable\Contracts\PaymentAllocationInterface;
 use Nexus\Payable\Contracts\VendorBillRepositoryInterface;
 use Nexus\Payable\Contracts\PaymentInterface;
+use Nexus\Payable\Contracts\PaymentRepositoryInterface;
 use Nexus\Payable\Enums\BillStatus;
 use Nexus\Payable\Enums\PaymentStatus;
 use Nexus\Payable\Exceptions\InvalidBillStateException;
@@ -23,7 +24,7 @@ final class PaymentProcessor implements PaymentAllocationInterface
 {
     public function __construct(
         private readonly VendorBillRepositoryInterface $billRepository,
-        private readonly object $paymentRepository, // PaymentRepositoryInterface
+        private readonly PaymentRepositoryInterface $paymentRepository,
         private readonly FinanceManagerInterface $financeManager,
         private readonly RateProviderInterface $currencyRateProvider,
         private readonly AuditLoggerInterface $auditLogger,

@@ -151,9 +151,9 @@ final class EloquentVendorBillRepository implements VendorBillRepositoryInterfac
     /**
      * {@inheritdoc}
      */
-    public function delete(string $billId): void
+    public function delete(string $billId): bool
     {
-        VendorBill::destroy($billId);
+        return VendorBill::destroy($billId) > 0;
     }
 
     /**

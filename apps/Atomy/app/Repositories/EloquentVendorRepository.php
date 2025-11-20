@@ -92,9 +92,9 @@ final class EloquentVendorRepository implements VendorRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function delete(string $vendorId): void
+    public function delete(string $vendorId): bool
     {
-        Vendor::destroy($vendorId);
+        return Vendor::destroy($vendorId) > 0;
     }
 
     /**

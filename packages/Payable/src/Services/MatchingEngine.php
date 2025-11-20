@@ -10,6 +10,8 @@ use Nexus\Payable\Contracts\VendorInterface;
 use Nexus\Payable\Contracts\MatchingResultInterface;
 use Nexus\Payable\Contracts\MatchingToleranceInterface;
 use Nexus\Payable\Contracts\VendorBillLineInterface;
+use Nexus\Payable\Contracts\PurchaseOrderRepositoryInterface;
+use Nexus\Payable\Contracts\GoodsReceivedRepositoryInterface;
 use Nexus\Payable\Enums\MatchingStatus;
 use Nexus\Payable\Exceptions\MatchingFailedException;
 use Nexus\Payable\ValueObjects\MatchingTolerance;
@@ -23,8 +25,8 @@ use Psr\Log\LoggerInterface;
 final class MatchingEngine implements ThreeWayMatcherInterface
 {
     public function __construct(
-        private readonly object $purchaseOrderRepository, // PurchaseOrderRepositoryInterface from Nexus\Procurement
-        private readonly object $goodsReceivedRepository, // GoodsReceivedRepositoryInterface from Nexus\Inventory
+        private readonly PurchaseOrderRepositoryInterface $purchaseOrderRepository,
+        private readonly GoodsReceivedRepositoryInterface $goodsReceivedRepository,
         private readonly LoggerInterface $logger
     ) {}
 
