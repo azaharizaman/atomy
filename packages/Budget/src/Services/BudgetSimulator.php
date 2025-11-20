@@ -13,7 +13,7 @@ use Nexus\Budget\Exceptions\BudgetNotFoundException;
 use Nexus\Budget\Exceptions\SimulationNotEditableException;
 use Nexus\Budget\ValueObjects\BudgetSimulationResult;
 use Nexus\Budget\ValueObjects\BudgetAllocation;
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Finance\ValueObjects\Money;
 use Psr\Log\LoggerInterface;
 
 /**
