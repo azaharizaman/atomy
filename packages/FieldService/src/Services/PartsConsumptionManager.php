@@ -9,6 +9,7 @@ use Nexus\FieldService\Events\PartsConsumedEvent;
 use Nexus\Inventory\Contracts\StockManagerInterface;
 use Nexus\Inventory\Enums\IssueReason;
 use Nexus\Warehouse\Contracts\WarehouseRepositoryInterface;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 use Psr\Log\LoggerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -24,6 +25,7 @@ final readonly class PartsConsumptionManager
         private PartsConsumptionRepositoryInterface $consumptionRepository,
         private StockManagerInterface $stockManager,
         private WarehouseRepositoryInterface $warehouseRepository,
+        private TenantContextInterface $tenantContext,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger
     ) {
@@ -136,9 +138,12 @@ final readonly class PartsConsumptionManager
      */
     private function getPrimaryWarehouseId(): string
     {
+        // Get tenant ID from context
+        $tenantId = $this->tenantContext->getCurrentTenantId() ?? 'default';
+        
         // Get the first active warehouse as primary
         // In production, this should be configurable via settings
-        $warehouses = $this->warehouseRepository->findByTenant('default'); // Tenant context will be injected
+        $warehouses = $this->warehouseRepository->findByTenant($tenantId);
         
         foreach ($warehouses as $warehouse) {
             if ($warehouse->isActive()) {

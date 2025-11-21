@@ -11,12 +11,12 @@ namespace Nexus\FieldService\ValueObjects;
  *
  * @example new SkillSet(['HVAC', 'Electrical', 'Plumbing'])
  */
-final readonly class SkillSet
+final class SkillSet
 {
     /**
      * @var array<string>
      */
-    private array $skills;
+    private readonly array $skills;
 
     /**
      * @param array<string> $skills

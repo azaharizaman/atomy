@@ -26,6 +26,7 @@ final readonly class DefaultAssignmentStrategy implements TechnicianAssignmentSt
 {
     private const float MAX_DAILY_HOURS = 8.0;
     private const int MAX_SCORE = 100;
+    private const int METERS_PER_KILOMETER = 1000;
 
     public function __construct(
         private WorkOrderRepositoryInterface $workOrderRepository,
@@ -213,7 +214,7 @@ final readonly class DefaultAssignmentStrategy implements TechnicianAssignmentSt
             // 5-20 km: 80 points
             // 20-50 km: 50 points
             // 50+ km: 20 points
-            $kilometers = $distance->meters / 1000;
+            $kilometers = $distance->meters / self::METERS_PER_KILOMETER;
             
             return match(true) {
                 $kilometers <= 5 => 100.0,
