@@ -8,6 +8,10 @@ use Atomy\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\QuotationController;
 use App\Http\Controllers\Api\SalesOrderController;
 use App\Http\Controllers\Api\PricingController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\ReceivablePaymentController;
+use App\Http\Controllers\Api\CreditLimitController;
+use App\Http\Controllers\Api\AgingController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -70,5 +74,44 @@ Route::middleware('auth:sanctum')->prefix('sales')->group(function () {
     // Pricing
     Route::prefix('pricing')->group(function () {
         Route::post('/get-price', [PricingController::class, 'getPrice']);
+    });
+});
+
+// Receivable API routes
+Route::middleware('auth:sanctum')->prefix('receivable')->group(function () {
+    // Invoices
+    Route::prefix('invoices')->group(function () {
+        Route::post('/', [InvoiceController::class, 'create']);
+        Route::get('/{id}', [InvoiceController::class, 'show']);
+        Route::post('/{id}/post', [InvoiceController::class, 'post']);
+        Route::post('/{id}/void', [InvoiceController::class, 'void']);
+        Route::post('/{id}/write-off', [InvoiceController::class, 'writeOff']);
+        Route::get('/customer/{customerId}', [InvoiceController::class, 'index']);
+        Route::get('/overdue', [InvoiceController::class, 'overdue']);
+    });
+
+    // Payment Receipts
+    Route::prefix('payments')->group(function () {
+        Route::post('/', [ReceivablePaymentController::class, 'create']);
+        Route::get('/{id}', [ReceivablePaymentController::class, 'show']);
+        Route::post('/{id}/allocate', [ReceivablePaymentController::class, 'allocate']);
+        Route::post('/{id}/void', [ReceivablePaymentController::class, 'void']);
+        Route::get('/customer/{customerId}/unapplied', [ReceivablePaymentController::class, 'unapplied']);
+    });
+
+    // Credit Limit
+    Route::prefix('credit-limit')->group(function () {
+        Route::post('/customer/{customerId}/check', [CreditLimitController::class, 'check']);
+        Route::get('/customer/{customerId}/available', [CreditLimitController::class, 'available']);
+        Route::get('/customer/{customerId}/exceeded', [CreditLimitController::class, 'exceeded']);
+        Route::get('/group/{customerGroupId}/available', [CreditLimitController::class, 'groupAvailable']);
+    });
+
+    // Aging & Collections
+    Route::prefix('aging')->group(function () {
+        Route::get('/customer/{customerId}', [AgingController::class, 'calculate']);
+        Route::get('/all', [AgingController::class, 'all']);
+        Route::post('/dunning/send', [AgingController::class, 'sendDunning']);
+        Route::get('/dunning/levels', [AgingController::class, 'dunningLevels']);
     });
 });

@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Providers\IntelligenceServiceProvider::class,
         App\Providers\ProcurementServiceProvider::class,
         App\Providers\PayableServiceProvider::class,
+        App\Providers\ReceivableServiceProvider::class,
         App\Providers\PartyServiceProvider::class,
         App\Providers\ProductServiceProvider::class,
         App\Providers\BudgetServiceProvider::class,
