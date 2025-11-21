@@ -10,7 +10,7 @@
         "geocoder-php/google-maps-provider": "^4.7",
         "geocoder-php/nominatim-provider": "^5.7",
         "guzzlehttp/guzzle": "^7.8",
-        "laravel/framework": "*",
+        "laravel/framework": "^12.0",
         "laravel/tinker": "^2.9",
         "nexus/accounting": "*@dev",
         "nexus/audit-logger": "*@dev",

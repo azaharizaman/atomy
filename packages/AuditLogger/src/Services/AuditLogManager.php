@@ -6,6 +6,7 @@ namespace Nexus\AuditLogger\Services;
 
 use Nexus\AuditLogger\Contracts\AuditConfigInterface;
 use Nexus\AuditLogger\Contracts\AuditLogInterface;
+use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Nexus\AuditLogger\Exceptions\InvalidAuditLevelException;
 use Nexus\AuditLogger\Exceptions\MissingRequiredFieldException;
@@ -18,7 +19,7 @@ use Nexus\AuditLogger\ValueObjects\RetentionPolicy;
  *
  * @package Nexus\AuditLogger\Services
  */
-class AuditLogManager
+class AuditLogManager implements AuditLogManagerInterface
 {
     private AuditLogRepositoryInterface $repository;
     private AuditConfigInterface $config;
@@ -138,7 +139,11 @@ class AuditLogManager
             causerId: $causerId,
             properties: ['attributes' => $properties],
             event: 'created',
-            ...$context
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 
@@ -168,7 +173,11 @@ class AuditLogManager
                 'changes' => $this->getChanges($oldAttributes, $newAttributes),
             ],
             event: 'updated',
-            ...$context
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 
@@ -193,7 +202,11 @@ class AuditLogManager
             causerId: $causerId,
             properties: ['attributes' => $properties],
             event: 'deleted',
-            ...$context
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 
@@ -217,7 +230,11 @@ class AuditLogManager
             causerId: $causerId,
             event: 'accessed',
             level: AuditLevel::Low->value,
-            ...$context
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 
@@ -239,7 +256,11 @@ class AuditLogManager
             causerId: null,
             properties: $properties,
             level: $level ?? AuditLevel::Medium->value,
-            ...$context
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Analytics\Services;
 
+use Nexus\Analytics\Contracts\AnalyticsManagerInterface;
 use Nexus\Analytics\Contracts\AnalyticsRepositoryInterface;
 use Nexus\Analytics\Contracts\AnalyticsAuthorizerInterface;
 use Nexus\Analytics\Contracts\AnalyticsContextInterface;
@@ -20,7 +21,7 @@ use Nexus\Analytics\Exceptions\AnalyticsInstanceNotFoundException;
  * 
  * Coordinates query execution, permission checking, and history management
  */
-final readonly class AnalyticsManager
+final readonly class AnalyticsManager implements AnalyticsManagerInterface
 {
     public function __construct(
         private AnalyticsRepositoryInterface $repository,

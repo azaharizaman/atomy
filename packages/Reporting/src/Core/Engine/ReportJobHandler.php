@@ -9,9 +9,9 @@ use Nexus\Reporting\Contracts\ReportGeneratorInterface;
 use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 use Nexus\Reporting\Exceptions\ReportNotFoundException;
 use Nexus\Scheduler\Contracts\JobHandlerInterface;
+use Nexus\Scheduler\Enums\JobType;
 use Nexus\Scheduler\ValueObjects\JobResult;
 use Nexus\Scheduler\ValueObjects\JobStatus;
-use Nexus\Scheduler\ValueObjects\JobType;
 use Nexus\Scheduler\ValueObjects\ScheduledJob;
 use Psr\Log\LoggerInterface;
 

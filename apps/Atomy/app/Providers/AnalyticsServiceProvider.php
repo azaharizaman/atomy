@@ -9,6 +9,7 @@ use App\Services\Analytics\LaravelAnalyticsAuthorizer;
 use App\Services\Analytics\LaravelAnalyticsContext;
 use App\Services\Analytics\LaravelTransactionManager;
 use Illuminate\Support\ServiceProvider;
+use Nexus\Analytics\Contracts\AnalyticsManagerInterface;
 use Nexus\Analytics\Contracts\AnalyticsRepositoryInterface;
 use Nexus\Analytics\Contracts\AnalyticsAuthorizerInterface;
 use Nexus\Analytics\Contracts\AnalyticsContextInterface;
@@ -49,6 +50,9 @@ class AnalyticsServiceProvider extends ServiceProvider
 
         // Bind query executor
         $this->app->singleton(QueryExecutorInterface::class, QueryExecutor::class);
+
+        // Bind main manager
+        $this->app->singleton(AnalyticsManagerInterface::class, AnalyticsManager::class);
     }
 
     /**

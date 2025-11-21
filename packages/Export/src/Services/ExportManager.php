@@ -7,6 +7,7 @@ namespace Nexus\Export\Services;
 use Generator;
 use Nexus\Export\Contracts\DefinitionValidatorInterface;
 use Nexus\Export\Contracts\ExportFormatterInterface;
+use Nexus\Export\Contracts\ExportManagerInterface;
 use Nexus\Export\Contracts\TemplateEngineInterface;
 use Nexus\Export\Exceptions\UnsupportedDestinationException;
 use Nexus\Export\Exceptions\UnsupportedFormatException;
@@ -28,7 +29,7 @@ use Psr\Log\LoggerInterface;
  * 
  * This is the primary public API for the Export package.
  */
-final readonly class ExportManager
+final readonly class ExportManager implements ExportManagerInterface
 {
     /**
      * @param array<ExportFormat, ExportFormatterInterface> $formatters Format-to-formatter mapping

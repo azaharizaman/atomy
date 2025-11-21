@@ -7,7 +7,9 @@ namespace App\Providers;
 use App\Repositories\DbAuditLogRepository;
 use Illuminate\Support\ServiceProvider;
 use Nexus\AuditLogger\Contracts\AuditConfigInterface;
+use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
+use Nexus\AuditLogger\Services\AuditLogManager;
 use App\Services\AuditConfig;
 
 /**
@@ -34,6 +36,9 @@ class AuditLoggerServiceProvider extends ServiceProvider
             AuditConfigInterface::class,
             AuditConfig::class
         );
+
+        // Bind manager interface
+        $this->app->singleton(AuditLogManagerInterface::class, AuditLogManager::class);
 
         // Register package services as singletons
         $this->app->singleton(\Nexus\AuditLogger\Services\AuditLogManager::class);
