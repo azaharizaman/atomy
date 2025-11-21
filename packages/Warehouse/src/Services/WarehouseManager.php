@@ -34,6 +34,13 @@ final readonly class WarehouseManager implements WarehouseManagerInterface
         throw new \RuntimeException('Warehouse creation not yet implemented - requires factory pattern');
     }
     
+    /**
+     * Get warehouse details
+     * 
+     * @param string $warehouseId Warehouse unique identifier
+     * @return array Warehouse data
+     * @throws WarehouseNotFoundException When warehouse is not found
+     */
     public function getWarehouse(string $warehouseId): array
     {
         $warehouse = $this->repository->findById($warehouseId);
