@@ -312,22 +312,35 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                 $successCount++;
 
                 // Update distribution log status to success
-                $this->reportRepository->updateDistributionLog($log['id'], [
-                    'status' => DistributionStatus::SENT->value,
-                    'notification_id' => $notificationId,
-                    'error' => null,
-                ]);
+                try {
+                    $this->reportRepository->updateDistributionLog($log['id'], [
+                        'status' => DistributionStatus::SENT->value,
+                        'notification_id' => $notificationId,
+                        'error' => null,
+                    ]);
+                } catch (\Throwable $dbEx) {
+                    $this->logger->error('Failed to update distribution log after successful retry', [
+                        'log_id' => $log['id'],
+                        'error' => $dbEx->getMessage(),
+                    ]);
+                }
 
             } catch (\Throwable $ex) {
                 $errors[] = "Failed to retry distribution for log ID {$log['id']}: " . $ex->getMessage();
                 $failureCount++;
 
                 // Update distribution log to reflect retry failure
-                $this->reportRepository->updateDistributionLog($log['id'], [
-                    'status' => DistributionStatus::FAILED->value,
-                    'error' => $ex->getMessage(),
-                ]);
-            }
+                try {
+                    $this->reportRepository->updateDistributionLog($log['id'], [
+                        'status' => DistributionStatus::FAILED->value,
+                        'error' => $ex->getMessage(),
+                    ]);
+                } catch (\Throwable $dbEx) {
+                    $this->logger->error('Failed to update distribution log after retry failure', [
+                        'log_id' => $log['id'],
+                        'error' => $dbEx->getMessage(),
+                    ]);
+                }
         }
 
         $this->logger->info('Retry distribution completed', [
