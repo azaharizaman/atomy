@@ -77,8 +77,8 @@ interface DocumentVersionRepositoryInterface
     /**
      * Create a new document version record.
      *
-     * @param array $data Key-value data for the new version (document_id, version_number, etc.)
+     * @param array $attributes Key-value data for the new version (document_id, version_number, etc.)
      * @return DocumentVersionInterface
      */
-    public function create(array $data): DocumentVersionInterface;
+    public function create(array $attributes): DocumentVersionInterface;
 }

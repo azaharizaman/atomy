@@ -66,9 +66,9 @@ final readonly class DbDocumentVersionRepository implements DocumentVersionRepos
             ->delete();
     }
 
-    public function create(array $data): DocumentVersionInterface
+    public function create(array $attributes): DocumentVersionInterface
     {
-        $version = new DocumentVersion($data);
+        $version = new DocumentVersion($attributes);
         $version->save();
         return $version;
     }
