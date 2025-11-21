@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Nexus\Party\ValueObjects;
 
+use Nexus\Geo\ValueObjects\Coordinates;
+
 /**
  * Postal Address value object.
  * 
- * Represents a physical address with validation.
+ * Represents a physical address with optional geolocation coordinates.
  * Immutable to ensure data integrity.
  */
 final readonly class PostalAddress
@@ -23,6 +25,7 @@ final readonly class PostalAddress
      * @param string|null $streetLine3 Additional address line
      * @param string|null $state State, province, or region
      * @param string|null $district District or county
+     * @param Coordinates|null $coordinates Optional geolocation coordinates for routing/mapping
      * 
      * @throws \InvalidArgumentException If validation fails
      */
@@ -34,7 +37,8 @@ final readonly class PostalAddress
         public ?string $streetLine2 = null,
         public ?string $streetLine3 = null,
         public ?string $state = null,
-        public ?string $district = null
+        public ?string $district = null,
+        public ?Coordinates $coordinates = null
     ) {
         $this->validateStreetLine1($streetLine1);
         $this->validateCity($city);
@@ -193,9 +197,35 @@ final readonly class PostalAddress
     }
     
     /**
+     * Check if address has geolocation coordinates
+     */
+    public function hasCoordinates(): bool
+    {
+        return $this->coordinates !== null;
+    }
+
+    /**
+     * Create a new instance with coordinates
+     */
+    public function withCoordinates(Coordinates $coordinates): self
+    {
+        return new self(
+            streetLine1: $this->streetLine1,
+            city: $this->city,
+            postalCode: $this->postalCode,
+            country: $this->country,
+            streetLine2: $this->streetLine2,
+            streetLine3: $this->streetLine3,
+            state: $this->state,
+            district: $this->district,
+            coordinates: $coordinates
+        );
+    }
+
+    /**
      * Convert to array representation.
      * 
-     * @return array<string, string|null>
+     * @return array<string, string|array|null>
      */
     public function toArray(): array
     {
@@ -208,6 +238,7 @@ final readonly class PostalAddress
             'state' => $this->state,
             'postal_code' => $this->postalCode,
             'country' => $this->country,
+            'coordinates' => $this->coordinates?->toArray(),
         ];
     }
 }
