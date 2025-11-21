@@ -7,6 +7,7 @@ namespace Nexus\Warehouse\Services;
 use Nexus\Warehouse\Contracts\PickingOptimizerInterface;
 use Nexus\Warehouse\Contracts\PickRouteResult;
 use Nexus\Warehouse\Contracts\BinLocationRepositoryInterface;
+use Nexus\Warehouse\Contracts\BinLocationInterface;
 use Nexus\Warehouse\Exceptions\BinLocationNotFoundException;
 use Nexus\Routing\Contracts\RouteOptimizerInterface;
 use Nexus\Routing\ValueObjects\RouteStop;

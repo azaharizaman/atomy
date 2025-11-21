@@ -6,6 +6,7 @@ namespace Nexus\Warehouse\Services;
 
 use Nexus\Warehouse\Contracts\WarehouseManagerInterface;
 use Nexus\Warehouse\Contracts\WarehouseRepositoryInterface;
+use Nexus\Warehouse\Contracts\WarehouseInterface;
 use Psr\Log\LoggerInterface;
 
 /**
