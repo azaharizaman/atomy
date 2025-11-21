@@ -281,8 +281,9 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                     continue;
                 }
 
-                // Build a NotifiableInterface stub
-                // Actual implementation should be provided by app-level recipient resolver
+                // TODO: This should be replaced with a proper RecipientResolverInterface
+                // that can hydrate full NotifiableInterface instances from recipient IDs.
+                // For now, we use a minimal stub to enable basic retry functionality.
                 $recipient = new class($log['recipient_id']) implements NotifiableInterface {
                     public function __construct(private readonly string $id) {}
                     public function getId(): string { return $this->id; }
@@ -417,17 +418,10 @@ final readonly class ReportDistributor implements ReportDistributorInterface
     /**
      * Generate a unique ULID for distribution log entries.
      *
-     * Framework-agnostic implementation following Scheduler package pattern.
+     * Framework-agnostic implementation using symfony/uid package.
      */
     private function generateLogId(): string
     {
-        // Timestamp part (10 characters)
-        $timestamp = (int)(microtime(true) * 1000);
-        $timestampPart = base_convert((string)$timestamp, 10, 32);
-        
-        // Random part (16 characters)
-        $randomPart = bin2hex(random_bytes(10));
-        
-        return strtoupper(str_pad($timestampPart, 10, '0', STR_PAD_LEFT) . substr($randomPart, 0, 16));
+        return (string) new \Symfony\Component\Uid\Ulid();
     }
 }

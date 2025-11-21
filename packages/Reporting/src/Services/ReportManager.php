@@ -440,17 +440,10 @@ final readonly class ReportManager
     /**
      * Generate a unique ULID for report definition.
      *
-     * Framework-agnostic implementation following Scheduler package pattern.
+     * Framework-agnostic implementation using symfony/uid package.
      */
     private function generateUlid(): string
     {
-        // Timestamp part (10 characters)
-        $timestamp = (int)(microtime(true) * 1000);
-        $timestampPart = base_convert((string)$timestamp, 10, 32);
-        
-        // Random part (16 characters)
-        $randomPart = bin2hex(random_bytes(10));
-        
-        return strtoupper(str_pad($timestampPart, 10, '0', STR_PAD_LEFT) . substr($randomPart, 0, 16));
+        return (string) new \Symfony\Component\Uid\Ulid();
     }
 }
