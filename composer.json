@@ -121,6 +121,10 @@
         },
         {
             "type": "path",
+            "url": "./packages/Assets"
+        },
+        {
+            "type": "path",
             "url": "./packages/Export"
         },
         {
