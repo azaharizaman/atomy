@@ -99,4 +99,17 @@ final readonly class DbDocumentRepository implements DocumentRepositoryInterface
             ->get()
             ->all();
     }
+
+    /**
+     * Create and persist a new Document.
+     *
+     * @param array $attributes
+     * @return DocumentInterface
+     */
+    public function create(array $attributes): DocumentInterface
+    {
+        $document = new Document($attributes);
+        $document->save();
+        return $document;
+    }
 }
