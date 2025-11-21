@@ -448,9 +448,558 @@ The Analytics package is designed to be configuration-free at the package level.
 - **Nexus\AuditLogger**: Query executions can be logged for compliance
 - **Nexus\Identity**: User and role information for authorization
 - **Nexus\Connector**: Analytics data sources can integrate with external APIs
+- **Nexus\Reporting**: ✅ **INTEGRATED** - Analytics queries are consumed by Reporting package for multi-format output
 
 ### Extension Points
 - **Custom Query Types**: Extend `QueryExecutor` to support new query types
 - **Custom Guards**: Add new guard types in `GuardEvaluator`
 - **Custom Data Sources**: Extend `DataSourceAggregator` for new source types
 - **ML Models**: Integrate predictive models for forecasting (BUS-ANA-0137)
+
+---
+
+## 🔗 Nexus\Reporting Integration (Phase 1 Complete)
+
+**Status:** ✅ **PRODUCTION READY** (November 21, 2025)  
+**Integration Type:** Presentation Layer Consumer  
+**Branch:** `feature/nexus-reporting-implementation`
+
+### Integration Architecture
+
+The **Nexus\Reporting** package acts as a **Presentation Layer Orchestrator** that consumes Analytics query results and transforms them into distributable, scheduled reports with automated lifecycle management.
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                   User Request Flow                         │
+└────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+    ┌──────────────────────────────────────────────┐
+    │      Nexus\Reporting (Orchestrator)          │
+    │   - ReportManager (Public API)               │
+    │   - ReportGenerator (Engine)                 │
+    │   - ReportDistributor (Engine)               │
+    │   - ReportRetentionManager (Engine)          │
+    └──────────────────────────────────────────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+        ▼                   ▼                   ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│   Analytics  │   │    Export    │   │   Notifier   │
+│  (QUERY)     │   │  (RENDER)    │   │ (DISTRIBUTE) │
+│              │   │              │   │              │
+│ executeQuery │──▶│ render()     │──▶│ send()       │
+│              │   │              │   │              │
+└──────────────┘   └──────────────┘   └──────────────┘
+       │
+       │ Returns QueryResultInterface
+       ▼
+┌──────────────────────────────────────────────────────────┐
+│  QueryResult Data → Export Rendering → PDF/Excel/CSV     │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Key Integration Contracts
+
+#### 1. AnalyticsManagerInterface
+
+**Methods Used by Reporting:**
+```php
+namespace Nexus\Analytics\Contracts;
+
+interface AnalyticsManagerInterface
+{
+    /**
+     * Execute an Analytics query and return results.
+     * 
+     * @param string $queryId Query definition UUID
+     * @param array $parameters Runtime parameters (filters, date ranges, etc.)
+     * @param string $tenantId Tenant context
+     * @return QueryResultInterface Query execution result with data and metadata
+     * @throws QueryNotFoundException If query ID not found
+     * @throws QueryExecutionException If execution fails
+     */
+    public function executeQuery(
+        string $queryId,
+        array $parameters,
+        string $tenantId
+    ): QueryResultInterface;
+    
+    /**
+     * Get the authorizer service for permission checks.
+     * 
+     * @return AnalyticsAuthorizerInterface Authorization service
+     */
+    public function getAuthorizer(): AnalyticsAuthorizerInterface;
+}
+```
+
+**Usage in Reporting:**
+```php
+// In ReportGenerator::generate()
+$queryResult = $this->analyticsManager->executeQuery(
+    $report->getQueryId(),
+    ['tenant_id' => $tenantId],
+    $tenantId
+);
+
+// QueryResult contains:
+// - $queryResult->getData(): array (raw result set for rendering)
+// - $queryResult->getMetadata(): array (column types, row count, execution time)
+// - $queryResult->isSuccessful(): bool
+```
+
+#### 2. QueryResultInterface
+
+**Methods Used by Reporting:**
+```php
+namespace Nexus\Analytics\Contracts;
+
+interface QueryResultInterface
+{
+    /**
+     * Get the raw query result data.
+     * 
+     * @return array Result set (array of rows)
+     */
+    public function getData(): array;
+    
+    /**
+     * Get query execution metadata.
+     * 
+     * @return array Metadata including:
+     *               - row_count: int
+     *               - column_names: array
+     *               - column_types: array
+     *               - execution_time_ms: int
+     *               - query_hash: string
+     */
+    public function getMetadata(): array;
+    
+    /**
+     * Check if query executed successfully.
+     * 
+     * @return bool True if successful
+     */
+    public function isSuccessful(): bool;
+    
+    /**
+     * Get error message if failed.
+     * 
+     * @return string|null Error message or null
+     */
+    public function getError(): ?string;
+}
+```
+
+**Usage in Reporting:**
+```php
+// In ReportGenerator::generate() - after Analytics execution
+if (!$queryResult->isSuccessful()) {
+    throw new ReportGenerationException(
+        "Analytics query failed: {$queryResult->getError()}"
+    );
+}
+
+// Pass data to Export package for rendering
+$filePath = $this->exportManager->render(
+    $queryResult->getData(),        // Raw result set
+    $report->getFormat(),           // PDF, Excel, CSV, JSON, HTML
+    $report->getTemplateConfig()    // Logo, colors, header/footer
+);
+```
+
+#### 3. AnalyticsAuthorizerInterface
+
+**Methods Used by Reporting:**
+```php
+namespace Nexus\Analytics\Contracts;
+
+interface AnalyticsAuthorizerInterface
+{
+    /**
+     * Check if user can perform action on query.
+     * 
+     * @param string $userId User ID
+     * @param string $queryId Query definition UUID
+     * @param string $action Action to check ('execute', 'view', 'modify', 'delete')
+     * @return bool True if authorized
+     */
+    public function can(
+        string $userId,
+        string $queryId,
+        string $action
+    ): bool;
+}
+```
+
+**Usage in Reporting (Security Enforcement):**
+```php
+// In ReportManager::generateReport() - BEFORE Analytics execution
+$report = $this->repository->findById($reportId);
+
+// Defense-in-depth: Check tenant isolation first
+if ($report->getTenantId() !== $tenantId) {
+    throw new UnauthorizedReportException("Cross-tenant access denied");
+}
+
+// Permission Inheritance: Check Analytics query permission (SEC-REP-0401)
+if (!$this->analyticsManager->getAuthorizer()->can($userId, $report->getQueryId(), 'execute')) {
+    throw new UnauthorizedReportException(
+        "User {$userId} lacks permission to execute Analytics query {$report->getQueryId()}"
+    );
+}
+
+// Only after both checks pass, proceed with generation
+$queryResult = $this->analyticsManager->executeQuery(/* ... */);
+```
+
+### Security Model: Permission Inheritance (SEC-REP-0401)
+
+**Principle:** A user can generate/distribute a report **if and only if** they have permission to execute the underlying Analytics query.
+
+**Enforcement Flow:**
+```
+1. User requests report generation via ReportManager::generateReport()
+2. Reporting fetches ReportDefinition (contains query_id)
+3. Reporting calls AnalyticsAuthorizer::can($userId, $queryId, 'execute')
+4. Analytics checks:
+   a. Direct permission in analytics_permissions table
+   b. Role-based permission (if user has role with permission)
+   c. Delegation chain (if permission delegated, max 3 levels)
+5. If authorized → Reporting calls AnalyticsManager::executeQuery()
+6. If unauthorized → Throw UnauthorizedReportException (HTTP 403)
+```
+
+**Database Linkage:**
+```sql
+-- Report definitions store reference to Analytics queries
+SELECT 
+    rd.id AS report_id,
+    rd.name AS report_name,
+    aqd.id AS query_id,
+    aqd.name AS query_name,
+    ap.actions AS user_permissions
+FROM reports_definitions rd
+JOIN analytics_query_definitions aqd ON rd.query_id = aqd.id
+LEFT JOIN analytics_permissions ap ON ap.query_id = aqd.id 
+    AND ap.subject_type = 'user' 
+    AND ap.subject_id = :user_id
+WHERE rd.id = :report_id;
+```
+
+**Re-validation on Distribution:**
+```php
+// In ReportDistributor::distribute()
+// Permission check is performed AGAIN before distribution
+// This prevents privilege escalation if permissions changed between generation and distribution
+
+$report = $this->repository->findById($reportGeneratedId);
+
+// Re-check permission (even if report was already generated)
+if (!$this->analyticsManager->getAuthorizer()->can($userId, $report->getQueryId(), 'execute')) {
+    throw new UnauthorizedReportException(
+        "User permissions revoked since report generation"
+    );
+}
+```
+
+### Data Flow Example: Monthly Sales Report
+
+**Scenario:** Generate a monthly sales report as PDF and email to recipients.
+
+```php
+// Step 1: Create Report Definition (links to Analytics query)
+$reportId = $reportManager->createReport(
+    tenantId: 'tenant-123',
+    name: 'Monthly Sales Report',
+    queryId: 'analytics-query-456', // Reference to Analytics query
+    format: ReportFormat::PDF,
+    schedule: ReportSchedule::monthly(dayOfMonth: 1, time: '09:00'),
+    recipients: ['user-789', 'user-101'],
+    templateConfig: [
+        'logo_url' => '/storage/logos/company.png',
+        'primary_color' => '#007bff',
+        'header_text' => 'Confidential Sales Report',
+    ]
+);
+
+// Step 2: Scheduler triggers report generation (automated)
+// ReportJobHandler calls ReportGenerator::generate()
+
+// Step 3: Inside ReportGenerator::generate()
+// 3.1: Check permission
+if (!$this->analyticsManager->getAuthorizer()->can($userId, $report->getQueryId(), 'execute')) {
+    throw new UnauthorizedReportException("Permission denied");
+}
+
+// 3.2: Execute Analytics query
+$queryResult = $this->analyticsManager->executeQuery(
+    $report->getQueryId(),
+    [
+        'start_date' => '2025-11-01',
+        'end_date' => '2025-11-30',
+        'tenant_id' => $tenantId,
+    ],
+    $tenantId
+);
+
+// 3.3: QueryResult contains data like:
+// [
+//     ['product' => 'Widget A', 'revenue' => 15000, 'units_sold' => 300],
+//     ['product' => 'Widget B', 'revenue' => 22000, 'units_sold' => 440],
+//     ...
+// ]
+
+// 3.4: Pass to Export package for PDF rendering
+$filePath = $this->exportManager->render(
+    $queryResult->getData(),
+    ReportFormat::PDF,
+    $report->getTemplateConfig()
+);
+// Returns: /storage/reports/2025/11/monthly-sales-abc123.pdf
+
+// 3.5: Store metadata in reports_generated table
+$reportGenerated = $this->repository->storeGeneratedReport([
+    'report_definition_id' => $report->getId(),
+    'query_result_id' => $queryResult->getId(), // Link back to Analytics execution
+    'file_path' => $filePath,
+    'file_size_bytes' => filesize($filePath),
+    'format' => 'PDF',
+    'retention_tier' => 'ACTIVE',
+    'duration_ms' => $queryResult->getMetadata()['execution_time_ms'],
+]);
+
+// Step 4: Auto-distribution (if recipients configured)
+$this->reportDistributor->distribute(
+    $reportGenerated->getId(),
+    $report->getRecipients(),
+    $tenantId
+);
+
+// Step 5: Notifier sends email with PDF attachment
+// Email subject: "Scheduled Report: Monthly Sales Report"
+// Email body: "Your report is ready. See attachment."
+// Attachment: monthly-sales-abc123.pdf
+```
+
+### Database Relationships
+
+```sql
+-- Link between Reporting and Analytics
+reports_definitions.query_id → analytics_query_definitions.id
+
+-- Track which Analytics execution produced which report
+reports_generated.query_result_id → analytics_query_results.id
+
+-- Permission enforcement
+-- Before generating report with reports_definitions.query_id = 'abc-123'
+-- Check analytics_permissions WHERE query_id = 'abc-123' AND subject_id = :user_id
+```
+
+### Performance Considerations
+
+**PER-REP-0301: Queue Offloading**
+- Reports taking >5 seconds are automatically queued via `Nexus\Scheduler`
+- Analytics queries inherently may take time (aggregations, predictions)
+- ReportJobHandler processes jobs asynchronously
+- **Benefit:** Users don't wait for slow Analytics queries in web requests
+
+**Batch Concurrency Limiting**
+- `ReportManager::generateBatch()` enforces **10 concurrent jobs per tenant**
+- Prevents resource exhaustion when multiple Analytics queries run simultaneously
+- **Example:** If tenant tries to queue 20 reports, throws `InvalidReportScheduleException`
+
+**Large Dataset Streaming** (Future Enhancement)
+- Analytics queries returning >10,000 rows should use streaming
+- Export package will support `render()` with generator/iterator
+- **TODO:** Extend `QueryResultInterface` to support streaming data
+
+### Error Handling & Resilience
+
+**Analytics Query Failures:**
+```php
+// In ReportGenerator::generate()
+try {
+    $queryResult = $this->analyticsManager->executeQuery($queryId, $params, $tenantId);
+} catch (QueryExecutionException $e) {
+    // Log failure to AuditLogger
+    $this->auditLogger->log(
+        $reportId,
+        'analytics_query_failed',
+        $e->getMessage(),
+        AuditLevel::HIGH
+    );
+    
+    // Throw reporting-specific exception
+    throw new ReportGenerationException(
+        "Analytics query execution failed: {$e->getMessage()}",
+        previous: $e
+    );
+}
+```
+
+**Retry Strategy:**
+- **Transient Analytics errors** (timeout, connection refused): Retry via Scheduler (5m, 15m, 1h backoff)
+- **Permanent Analytics errors** (invalid query, missing permissions): Fail immediately, notify owner
+- **Classification in ReportJobHandler:**
+  ```php
+  private function isTransientError(\Exception $e): bool
+  {
+      return match (true) {
+          $e instanceof QueryTimeoutException => true,
+          str_contains($e->getMessage(), 'timeout') => true,
+          str_contains($e->getMessage(), 'connection refused') => true,
+          default => false
+      };
+  }
+  ```
+
+### Audit Trail Integration
+
+Both packages maintain separate but linked audit trails:
+
+**Analytics Audit (analytics_query_results):**
+- Records **query execution** details
+- Stores `executed_by`, `executed_at`, `duration_ms`, `is_successful`
+- Immutable append-only log
+
+**Reporting Audit (reports_generated + AuditLogger):**
+- Records **report generation** details
+- Links to Analytics execution via `query_result_id`
+- Tracks distribution, retention transitions, failures
+
+**Combined Query for Compliance:**
+```sql
+-- Trace report back to original Analytics query execution
+SELECT 
+    rg.id AS report_generated_id,
+    rg.file_path,
+    rg.generated_at,
+    rg.duration_ms AS report_generation_time,
+    aqr.id AS analytics_query_result_id,
+    aqr.executed_by,
+    aqr.executed_at AS query_executed_at,
+    aqr.duration_ms AS query_execution_time,
+    aqr.result_data
+FROM reports_generated rg
+JOIN analytics_query_results aqr ON rg.query_result_id = aqr.id
+WHERE rg.id = :report_id;
+```
+
+### Next Phase Recommendations
+
+#### Phase 2: Advanced Analytics Query Parameterization
+
+**Current State:** Reporting passes static parameters to Analytics queries.
+
+**Enhancement:** Dynamic parameter injection based on report context.
+
+**Use Cases:**
+1. **Date Range Variables:**
+   - Report schedule: Daily at 9 AM
+   - Analytics query should automatically use `start_date = YESTERDAY, end_date = YESTERDAY`
+   - Current: Manual parameter passing
+   - Future: `ReportGenerator` auto-populates date ranges based on schedule type
+
+2. **Recipient-Specific Filters:**
+   - Sales manager gets only their region's data
+   - Current: Single query for all recipients
+   - Future: `ReportGenerator::generatePerRecipient()` calls Analytics with user-specific filters
+
+**Implementation:**
+```php
+// In ReportGenerator::generate()
+$parameters = $this->buildDynamicParameters($report, $schedule);
+// Returns: ['start_date' => '2025-11-20', 'end_date' => '2025-11-20', 'region' => 'APAC']
+
+$queryResult = $this->analyticsManager->executeQuery(
+    $report->getQueryId(),
+    $parameters,
+    $tenantId
+);
+```
+
+#### Phase 3: Analytics Query Performance Monitoring
+
+**Objective:** Track which Analytics queries are slow when used in reports.
+
+**Metrics to Collect:**
+- Average/median/p95 execution time per query
+- Failure rate by query ID
+- Most frequently used queries in reports
+- Queries causing timeout errors
+
+**Database Schema:**
+```sql
+CREATE TABLE analytics_query_performance (
+    id UUID PRIMARY KEY,
+    query_id UUID REFERENCES analytics_query_definitions(id),
+    report_definition_id UUID REFERENCES reports_definitions(id),
+    avg_duration_ms INT,
+    p95_duration_ms INT,
+    failure_rate DECIMAL(5,2),
+    total_executions INT,
+    period_start TIMESTAMP,
+    period_end TIMESTAMP
+);
+```
+
+**Usage:**
+- ReportManager displays "This query averages 12 seconds" warning when creating reports
+- Analytics team optimizes slow queries (add indexes, rewrite SQL)
+- Scheduler adjusts timeout based on historical performance
+
+#### Phase 4: Cached Analytics Results
+
+**Objective:** Avoid re-executing expensive Analytics queries for identical parameters.
+
+**Mechanism:**
+```php
+// In ReportGenerator::generate()
+$cacheKey = "analytics:{$queryId}:" . md5(json_encode($parameters));
+
+if ($this->cache->has($cacheKey)) {
+    $queryResult = $this->cache->get($cacheKey);
+} else {
+    $queryResult = $this->analyticsManager->executeQuery($queryId, $parameters, $tenantId);
+    $this->cache->put($cacheKey, $queryResult, ttl: 3600); // 1 hour
+}
+```
+
+**Benefits:**
+- Daily reports with same query can reuse results
+- Reduces database load
+- Faster report generation
+
+**Challenges:**
+- Cache invalidation (if underlying data changes)
+- Storage overhead for large result sets
+- Stale data risk
+
+**Recommendation:** Start with TTL-based caching, later integrate with `Nexus\EventStream` for event-based invalidation.
+
+---
+
+## 📊 Integration Summary
+
+| Aspect | Details |
+|--------|---------|
+| **Integration Type** | Consumer (Reporting uses Analytics query results) |
+| **Primary Contract** | `AnalyticsManagerInterface::executeQuery()` |
+| **Security Model** | Permission Inheritance (SEC-REP-0401) - Reporting enforces Analytics permissions |
+| **Data Flow** | Analytics Query → QueryResult → Export Rendering → PDF/Excel/CSV → Distribution |
+| **Database Linkage** | `reports_definitions.query_id → analytics_query_definitions.id` |
+| **Audit Trail** | Linked via `reports_generated.query_result_id → analytics_query_results.id` |
+| **Performance** | Queue offloading for >5s queries, batch concurrency limits (10/tenant) |
+| **Error Handling** | Retry transient Analytics failures, fail permanently on invalid queries |
+| **Future Enhancements** | Dynamic parameterization, performance monitoring, result caching |
+
+**Implementation Status:** ✅ **COMPLETE** (3 commits, 23 files, ready for production)
+
+**Branch:** `feature/nexus-reporting-implementation`  
+**Documentation:** `docs/REPORTING_IMPLEMENTATION_SUMMARY.md`  
+**Next Steps:** Merge PR, deploy to production, monitor Analytics query performance in reports
+
+````
