@@ -8,6 +8,7 @@ use Nexus\FieldService\Contracts\WorkOrderInterface;
 use Nexus\FieldService\Contracts\WorkOrderRepositoryInterface;
 use Nexus\FieldService\Contracts\PartsConsumptionRepositoryInterface;
 use Nexus\FieldService\Contracts\ServiceReportInterface;
+use Nexus\FieldService\Contracts\ServiceReportFactoryInterface;
 use Nexus\FieldService\Exceptions\WorkOrderNotFoundException;
 use Nexus\Document\Contracts\DocumentManagerInterface;
 use Nexus\Document\Contracts\ContentProcessorInterface;
@@ -25,6 +26,7 @@ final readonly class ServiceReportGenerator
     public function __construct(
         private WorkOrderRepositoryInterface $workOrderRepository,
         private PartsConsumptionRepositoryInterface $partsConsumptionRepository,
+        private ServiceReportFactoryInterface $serviceReportFactory,
         private DocumentManagerInterface $documentManager,
         private ContentProcessorInterface $contentProcessor,
         private LoggerInterface $logger
@@ -52,13 +54,31 @@ final readonly class ServiceReportGenerator
             DocumentFormat::PDF
         );
 
+        // Store the PDF document
+        $documentPath = $this->documentManager->store(
+            $pdfContent,
+            "service_report_{$workOrder->getNumber()->toString()}.pdf",
+            DocumentFormat::PDF
+        );
+
+        // Create service report entity via factory
+        $serviceReport = $this->serviceReportFactory->create([
+            'work_order_id' => $workOrderId,
+            'document_path' => $documentPath,
+            'generated_at' => new \DateTimeImmutable(),
+            'metadata' => [
+                'work_order_number' => $workOrder->getNumber()->toString(),
+                'total_cost' => ($data['labor_cost'] ?? 0) + ($data['total_parts_cost'] ?? 0),
+            ],
+        ]);
+
         $this->logger->info('Service report generated', [
             'work_order_id' => $workOrderId,
             'work_order_number' => $workOrder->getNumber()->toString(),
+            'document_path' => $documentPath,
         ]);
 
-        // Implementation will be completed in application layer
-        throw new \LogicException('ServiceReport creation must be implemented in application layer');
+        return $serviceReport;
     }
 
     /**
