@@ -51,6 +51,7 @@ final readonly class RetentionPolicy
         
         $now = $now ?? new \DateTimeImmutable();
         $expiresAt = $this->calculateExpirationDate($createdAt);
+        assert($expiresAt !== null, 'Permanent retention should be handled above');
         return $now >= $expiresAt;
     }
 
