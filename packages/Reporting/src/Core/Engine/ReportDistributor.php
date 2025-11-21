@@ -287,6 +287,12 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                 $recipient = new class($log['recipient_id']) implements NotifiableInterface {
                     public function __construct(private readonly string $id) {}
                     public function getId(): string { return $this->id; }
+                    public function getNotificationEmail(): ?string { return null; }
+                    public function getNotificationPhone(): ?string { return null; }
+                    public function getNotificationDeviceTokens(): array { return []; }
+                    public function getNotificationLocale(): ?string { return null; }
+                    public function getNotificationTimezone(): ?string { return null; }
+                    public function getNotificationIdentifier(): string { return $this->id; }
                 };
 
                 // Build notification options from log (if available)
