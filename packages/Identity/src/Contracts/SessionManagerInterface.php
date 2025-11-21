@@ -67,4 +67,39 @@ interface SessionManagerInterface
      * Clean up expired sessions
      */
     public function cleanupExpiredSessions(): int;
+
+    /**
+     * Update session activity timestamp
+     * 
+     * @param string $sessionId Session identifier
+     * @return void
+     */
+    public function updateActivity(string $sessionId): void;
+
+    /**
+     * Enforce maximum number of sessions for a user
+     * Terminates oldest sessions if limit exceeded
+     * 
+     * @param string $userId User identifier
+     * @param int $max Maximum allowed sessions
+     * @return void
+     */
+    public function enforceMaxSessions(string $userId, int $max): void;
+
+    /**
+     * Terminate all sessions for a specific device fingerprint
+     * 
+     * @param string $userId User identifier
+     * @param string $fingerprint Device fingerprint hash
+     * @return void
+     */
+    public function terminateByDeviceId(string $userId, string $fingerprint): void;
+
+    /**
+     * Clean up inactive sessions based on last activity
+     * 
+     * @param int $inactivityThresholdDays Days of inactivity before cleanup
+     * @return int Number of sessions cleaned up
+     */
+    public function cleanupInactiveSessions(int $inactivityThresholdDays = 7): int;
 }
