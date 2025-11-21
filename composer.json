@@ -182,6 +182,10 @@
         {
             "type": "path",
             "url": "./packages/Document"
+        },
+        {
+            "type": "path",
+            "url": "./packages/FieldService"
         }
     ],
     "minimum-stability": "dev",

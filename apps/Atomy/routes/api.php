@@ -14,6 +14,10 @@ use App\Http\Controllers\Api\CreditLimitController;
 use App\Http\Controllers\Api\AgingController;
 use App\Http\Controllers\GeoController;
 use App\Http\Controllers\RoutingController;
+use App\Http\Controllers\Api\FieldService\WorkOrderController;
+use App\Http\Controllers\Api\FieldService\ServiceContractController;
+use App\Http\Controllers\Api\FieldService\TechnicianDispatchController;
+use App\Http\Controllers\Api\FieldService\MobileWorkOrderController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -134,4 +138,46 @@ Route::middleware('auth:sanctum')->prefix('routing')->group(function () {
     Route::post('/vrp', [RoutingController::class, 'optimizeVrp']);
     Route::get('/cache-metrics', [RoutingController::class, 'getCacheMetrics']);
     Route::delete('/cache', [RoutingController::class, 'clearCache']);
+});
+
+// Field Service API routes
+Route::middleware('auth:sanctum')->prefix('field-service')->group(function () {
+    // Work Orders
+    Route::prefix('work-orders')->group(function () {
+        Route::get('/', [WorkOrderController::class, 'index']);
+        Route::get('/{id}', [WorkOrderController::class, 'show']);
+        Route::post('/', [WorkOrderController::class, 'store']);
+        Route::post('/{id}/assign', [WorkOrderController::class, 'assign']);
+        Route::post('/{id}/start', [WorkOrderController::class, 'start']);
+        Route::post('/{id}/complete', [WorkOrderController::class, 'complete']);
+        Route::post('/{id}/verify', [WorkOrderController::class, 'verify']);
+        Route::post('/{id}/cancel', [WorkOrderController::class, 'cancel']);
+        Route::get('/sla/status', [WorkOrderController::class, 'slaStatus']);
+    });
+
+    // Service Contracts
+    Route::prefix('contracts')->group(function () {
+        Route::get('/', [ServiceContractController::class, 'index']);
+        Route::get('/{id}', [ServiceContractController::class, 'show']);
+        Route::post('/', [ServiceContractController::class, 'store']);
+        Route::put('/{id}', [ServiceContractController::class, 'update']);
+        Route::get('/expiring/soon', [ServiceContractController::class, 'expiring']);
+        Route::get('/maintenance/due', [ServiceContractController::class, 'dueForMaintenance']);
+    });
+
+    // Technician Dispatch
+    Route::prefix('dispatch')->group(function () {
+        Route::post('/find-best', [TechnicianDispatchController::class, 'findBest']);
+        Route::post('/auto-assign/{workOrderId}', [TechnicianDispatchController::class, 'autoAssign']);
+        Route::post('/optimize-route/{technicianId}', [TechnicianDispatchController::class, 'optimizeRoute']);
+    });
+
+    // Mobile App Endpoints
+    Route::prefix('mobile')->group(function () {
+        Route::get('/my-work-orders', [MobileWorkOrderController::class, 'myWorkOrders']);
+        Route::post('/{workOrderId}/signature', [MobileWorkOrderController::class, 'captureSignature']);
+        Route::post('/{workOrderId}/consume-parts', [MobileWorkOrderController::class, 'consumeParts']);
+        Route::post('/sync', [MobileWorkOrderController::class, 'sync']);
+        Route::post('/sync/resolve-conflict', [MobileWorkOrderController::class, 'resolveConflict']);
+    });
 });
