@@ -93,6 +93,15 @@ interface ReportRepositoryInterface
     public function getDistributionLogs(string $reportGeneratedId): array;
 
     /**
+     * Update a distribution log entry.
+     *
+     * @param string $logId The distribution log ID
+     * @param array<string, mixed> $data Fields to update
+     * @return bool True if updated successfully
+     */
+    public function updateDistributionLog(string $logId, array $data): bool;
+
+    /**
      * Find reports in a specific retention tier that are ready for transition.
      *
      * @param string $tier The current tier (active, archived)
