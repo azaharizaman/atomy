@@ -10,7 +10,6 @@ use Nexus\FieldService\Contracts\WorkOrderInterface;
 use Nexus\FieldService\Contracts\WorkOrderRepositoryInterface;
 use Nexus\FieldService\ValueObjects\SkillSet;
 use Nexus\Geo\Contracts\DistanceCalculatorInterface;
-use Nexus\Geo\Contracts\GeoRepositoryInterface;
 use Nexus\Geo\ValueObjects\Coordinates;
 use Psr\Log\LoggerInterface;
 
@@ -31,7 +30,6 @@ final readonly class DefaultAssignmentStrategy implements TechnicianAssignmentSt
     public function __construct(
         private WorkOrderRepositoryInterface $workOrderRepository,
         private DistanceCalculatorInterface $distanceCalculator,
-        private GeoRepositoryInterface $geoRepository,
         private LoggerInterface $logger
     ) {
     }
