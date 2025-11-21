@@ -373,10 +373,12 @@ final readonly class ReportGenerator implements ReportGeneratorInterface
 
     /**
      * Generate a unique report ID (ULID).
+     *
+     * Framework-agnostic implementation using symfony/uid package.
      */
     private function generateReportId(): string
     {
-        return (string) \Illuminate\Support\Str::ulid();
+        return (string) new \Symfony\Component\Uid\Ulid();
     }
 
     /**

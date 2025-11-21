@@ -135,6 +135,18 @@ final class DbReportRepository implements ReportRepositoryInterface
     }
 
     /**
+     * Update a distribution log entry.
+     *
+     * @param string $logId
+     * @param array<string, mixed> $data
+     * @return bool
+     */
+    public function updateDistributionLog(string $logId, array $data): bool
+    {
+        return ReportDistributionLog::where('id', $logId)->update($data) > 0;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getDistributionLogs(string $reportGeneratedId): array
@@ -255,10 +267,12 @@ final class DbReportRepository implements ReportRepositoryInterface
             return false;
         }
 
-        // Full cron evaluation would require a library like dragonmantank/cron-expression
-        // For now, this is a simplified placeholder
-        // In production, use: (new CronExpression($cronExpression))->isDue($now)
-
-        return true; // Placeholder
+        // Full cron evaluation requires dragonmantank/cron-expression library
+        // This is not implemented in v1 to avoid adding dependencies
+        // Reports with cron schedules should use the Scheduler package's cron support instead
+        throw new \BadMethodCallException(
+            'Cron expression evaluation is not implemented in DbReportRepository. ' .
+            'Use ScheduleType::DAILY, WEEKLY, or MONTHLY instead, or integrate with Scheduler package for cron support.'
+        );
     }
 }

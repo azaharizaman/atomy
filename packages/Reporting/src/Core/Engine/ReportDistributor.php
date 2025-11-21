@@ -91,7 +91,7 @@ final readonly class ReportDistributor implements ReportDistributorInterface
 
                 // Store distribution log
                 $this->reportRepository->storeDistributionLog([
-                    'id' => (string) \Illuminate\Support\Str::ulid(),
+                    'id' => $this->generateLogId(),
                     'report_generated_id' => $result->reportId,
                     'recipient_id' => $this->getRecipientId($recipient),
                     'notification_id' => $notificationId,
@@ -116,7 +116,7 @@ final readonly class ReportDistributor implements ReportDistributorInterface
 
                 // Store failure log
                 $this->reportRepository->storeDistributionLog([
-                    'id' => (string) \Illuminate\Support\Str::ulid(),
+                    'id' => $this->generateLogId(),
                     'report_generated_id' => $result->reportId,
                     'recipient_id' => $this->getRecipientId($recipient),
                     'notification_id' => null,
@@ -265,15 +265,99 @@ final readonly class ReportDistributor implements ReportDistributorInterface
             isSuccessful: $generatedReport['is_successful'],
         );
 
-        // Retry distribution (implementation would need recipient resolution)
-        // For now, this is a placeholder that would need recipient lookup logic
+        // Attempt to retry each failed distribution
+        $notificationIds = [];
+        $errors = [];
+        $successCount = 0;
+        $failureCount = 0;
 
-        $this->logger->warning('Retry distribution requires recipient resolution logic', [
+        foreach ($failedLogs as $log) {
+            try {
+                // Attempt to resolve recipient from log data
+                // If recipient info is not available, skip and log error
+                if (empty($log['recipient_id'])) {
+                    $errors[] = "Missing recipient_id for failed distribution log ID {$log['id']}";
+                    $failureCount++;
+                    continue;
+                }
+
+                // TODO: This should be replaced with a proper RecipientResolverInterface
+                // that can hydrate full NotifiableInterface instances from recipient IDs.
+                // For now, we use a minimal stub to enable basic retry functionality.
+                $recipient = new class($log['recipient_id']) implements NotifiableInterface {
+                    public function __construct(private readonly string $id) {}
+                    public function getId(): string { return $this->id; }
+                    public function getNotificationEmail(): ?string { return null; }
+                    public function getNotificationPhone(): ?string { return null; }
+                    public function getNotificationDeviceTokens(): array { return []; }
+                    public function getNotificationLocale(): ?string { return null; }
+                    public function getNotificationTimezone(): ?string { return null; }
+                    public function getNotificationIdentifier(): string { return $this->id; }
+                };
+
+                // Build notification options from log (if available)
+                $options = [
+                    'channel' => $log['channel_type'] ?? ChannelType::EMAIL->value,
+                    'priority' => Priority::NORMAL->value,
+                ];
+
+                $notification = $this->buildNotification($result, $options);
+                $notificationId = $this->notificationManager->send(
+                    $recipient,
+                    $notification,
+                    [ChannelType::from($options['channel'])]
+                );
+
+                $notificationIds[] = $notificationId;
+                $successCount++;
+
+                // Update distribution log status to success
+                try {
+                    $this->reportRepository->updateDistributionLog($log['id'], [
+                        'status' => DistributionStatus::SENT->value,
+                        'notification_id' => $notificationId,
+                        'error' => null,
+                    ]);
+                } catch (\Throwable $dbEx) {
+                    $this->logger->error('Failed to update distribution log after successful retry', [
+                        'log_id' => $log['id'],
+                        'error' => $dbEx->getMessage(),
+                    ]);
+                }
+
+            } catch (\Throwable $ex) {
+                $errors[] = "Failed to retry distribution for log ID {$log['id']}: " . $ex->getMessage();
+                $failureCount++;
+
+                // Update distribution log to reflect retry failure
+                try {
+                    $this->reportRepository->updateDistributionLog($log['id'], [
+                        'status' => DistributionStatus::FAILED->value,
+                        'error' => $ex->getMessage(),
+                    ]);
+                } catch (\Throwable $dbEx) {
+                    $this->logger->error('Failed to update distribution log after retry failure', [
+                        'log_id' => $log['id'],
+                        'error' => $dbEx->getMessage(),
+                    ]);
+                }
+        }
+
+        $this->logger->info('Retry distribution completed', [
             'report_id' => $reportGeneratedId,
-            'failed_count' => count($failedLogs),
+            'success_count' => $successCount,
+            'failure_count' => $failureCount,
+            'errors' => $errors,
         ]);
 
-        throw new \RuntimeException('Retry distribution not fully implemented - requires recipient resolution');
+        return new DistributionResult(
+            reportId: $reportGeneratedId,
+            notificationIds: $notificationIds,
+            successCount: $successCount,
+            failureCount: $failureCount,
+            errors: $errors,
+            distributedAt: new \DateTimeImmutable()
+        );
     }
 
     /**
@@ -348,5 +432,15 @@ final readonly class ReportDistributor implements ReportDistributorInterface
     {
         // Placeholder - actual implementation depends on Notifiable structure
         return method_exists($recipient, 'getId') ? $recipient->getId() : 'unknown';
+    }
+
+    /**
+     * Generate a unique ULID for distribution log entries.
+     *
+     * Framework-agnostic implementation using symfony/uid package.
+     */
+    private function generateLogId(): string
+    {
+        return (string) new \Symfony\Component\Uid\Ulid();
     }
 }

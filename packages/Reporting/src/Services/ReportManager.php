@@ -83,7 +83,7 @@ final readonly class ReportManager
         }
 
         $reportId = $this->reportRepository->save([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => $this->generateUlid(),
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'query_id' => $data['query_id'],
@@ -435,5 +435,15 @@ final readonly class ReportManager
             endsAt: $schedule->endsAt,
             maxOccurrences: $schedule->maxOccurrences,
         );
+    }
+
+    /**
+     * Generate a unique ULID for report definition.
+     *
+     * Framework-agnostic implementation using symfony/uid package.
+     */
+    private function generateUlid(): string
+    {
+        return (string) new \Symfony\Component\Uid\Ulid();
     }
 }

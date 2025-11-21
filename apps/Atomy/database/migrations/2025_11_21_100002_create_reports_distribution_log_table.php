@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('reports_distribution_log', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('report_generated_id')->index(); // References reports_generated
-            $table->uuid('recipient_id')->index(); // NotifiableInterface ID
+            $table->uuid('report_generated_id'); // References reports_generated
+            $table->uuid('recipient_id'); // NotifiableInterface ID
             $table->uuid('notification_id')->nullable(); // From Notifier package
             $table->string('channel_type', 20); // email, sms, in_app
             $table->string('status', 20)->default('pending'); // pending, sent, delivered, failed

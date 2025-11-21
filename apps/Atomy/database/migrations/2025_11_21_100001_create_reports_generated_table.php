@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('file_path', 500)->nullable(); // storage:// URI
             $table->bigInteger('file_size_bytes')->default(0);
             $table->string('retention_tier', 20)->default('active'); // active, archived, purged
-            $table->timestamp('generated_at')->index();
+            $table->timestamp('generated_at'); // Indexed via composite indexes below
             $table->integer('duration_ms');
             $table->boolean('is_successful')->default(true);
             $table->text('error')->nullable();
@@ -29,7 +29,6 @@ return new class extends Migration
 
             // Indexes for performance
             $table->index(['report_definition_id', 'generated_at']);
-            $table->index('generated_at');
             $table->index(['retention_tier', 'generated_at']); // For cleanup queries
             $table->index(['tenant_id', 'generated_at']);
         });

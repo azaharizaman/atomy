@@ -39,7 +39,7 @@ enum RetentionTier: string
     {
         return match ($this) {
             self::ACTIVE => 90,
-            self::ARCHIVED => 2555, // ~7 years (365 * 7)
+            self::ARCHIVED => 2555, // ~7 years (365 * 7 = 2555 days, ignoring leap years)
             self::PURGED => null,   // Terminal state
         };
     }
