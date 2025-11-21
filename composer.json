@@ -170,6 +170,10 @@
         {
             "type": "path",
             "url": "./packages/Warehouse"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Document"
         }
     ],
     "minimum-stability": "dev",

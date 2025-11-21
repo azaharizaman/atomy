@@ -19,6 +19,7 @@
         "nexus/connector": "*@dev",
         "nexus/crypto": "*@dev",
         "nexus/data-processor": "*@dev",
+        "nexus/document": "*@dev",
         "nexus/event-stream": "*@dev",
         "nexus/export": "*@dev",
         "nexus/finance": "*@dev",
@@ -157,6 +158,10 @@
         {
             "type": "path",
             "url": "../../packages/DataProcessor"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Document"
         },
         {
             "type": "path",
