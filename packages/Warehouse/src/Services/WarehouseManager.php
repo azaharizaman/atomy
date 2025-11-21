@@ -7,6 +7,7 @@ namespace Nexus\Warehouse\Services;
 use Nexus\Warehouse\Contracts\WarehouseManagerInterface;
 use Nexus\Warehouse\Contracts\WarehouseRepositoryInterface;
 use Nexus\Warehouse\Contracts\WarehouseInterface;
+use Nexus\Warehouse\Exceptions\WarehouseNotFoundException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,7 +39,7 @@ final readonly class WarehouseManager implements WarehouseManagerInterface
         $warehouse = $this->repository->findById($warehouseId);
         
         if ($warehouse === null) {
-            return [];
+            throw WarehouseNotFoundException::withId($warehouseId);
         }
         
         return $this->convertToArray($warehouse);
