@@ -28,5 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Providers\PartyServiceProvider::class,
         App\Providers\ProductServiceProvider::class,
         App\Providers\BudgetServiceProvider::class,
+        App\Providers\InventoryServiceProvider::class,
+        App\Providers\WarehouseServiceProvider::class,
     ])
     ->create();

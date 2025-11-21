@@ -13,14 +13,11 @@ final class GeoCachePrune extends Command
     
     protected $description = 'Remove expired geocoding cache entries';
 
-    public function __construct(
-        private readonly GeoRepositoryInterface $geoRepository
-    ) {
-        parent::__construct();
-    }
-
     public function handle(): int
     {
+        // Resolve from container to avoid constructor injection issues during service discovery
+        $geoRepository = $this->laravel->make(GeoRepositoryInterface::class);
+        
         $tenantId = $this->option('tenant');
         $dryRun = $this->option('dry-run');
 
@@ -28,7 +25,7 @@ final class GeoCachePrune extends Command
             $this->info('DRY RUN: No entries will be deleted');
         }
 
-        $metrics = $this->geoRepository->getCacheMetrics($tenantId);
+        $metrics = $geoRepository->getCacheMetrics($tenantId);
         $expiredCount = $metrics['expired_entries'];
 
         if ($expiredCount === 0) {
@@ -44,7 +41,7 @@ final class GeoCachePrune extends Command
         }
 
         if ($this->confirm('Proceed with deletion?', true)) {
-            $deleted = $this->geoRepository->pruneCacheEntries($tenantId);
+            $deleted = $geoRepository->pruneCacheEntries($tenantId);
             $this->info("✓ Deleted {$deleted} expired cache entries");
             return Command::SUCCESS;
         }

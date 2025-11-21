@@ -13,20 +13,17 @@ final class RoutingCacheMetrics extends Command
     
     protected $description = 'Display route optimization cache performance metrics';
 
-    public function __construct(
-        private readonly RouteCacheInterface $routeCache
-    ) {
-        parent::__construct();
-    }
-
     public function handle(): int
     {
+        // Resolve from container to avoid constructor injection issues during service discovery
+        $routeCache = $this->laravel->make(RouteCacheInterface::class);
+        
         $tenantId = $this->option('tenant');
 
         $this->info("Route Cache Metrics for Tenant: {$tenantId}");
         $this->newLine();
 
-        $metrics = $this->routeCache->getCacheMetrics($tenantId);
+        $metrics = $routeCache->getCacheMetrics($tenantId);
 
         $this->table(
             ['Metric', 'Value'],

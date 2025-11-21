@@ -13,14 +13,11 @@ final class RoutingCachePrune extends Command
     
     protected $description = 'Remove expired route cache entries';
 
-    public function __construct(
-        private readonly RouteCacheInterface $routeCache
-    ) {
-        parent::__construct();
-    }
-
     public function handle(): int
     {
+        // Resolve from container to avoid constructor injection issues during service discovery
+        $routeCache = $this->laravel->make(RouteCacheInterface::class);
+        
         $tenantId = $this->option('tenant');
         $dryRun = $this->option('dry-run');
         $clearAll = $this->option('all');
@@ -29,7 +26,7 @@ final class RoutingCachePrune extends Command
             $this->info('DRY RUN: No entries will be deleted');
         }
 
-        $metrics = $this->routeCache->getCacheMetrics($tenantId);
+        $metrics = $routeCache->getCacheMetrics($tenantId);
 
         if ($clearAll) {
             $totalCount = $metrics['total_entries'];
@@ -47,7 +44,7 @@ final class RoutingCachePrune extends Command
             }
 
             if ($this->confirm('Are you sure? This will clear the entire route cache.', false)) {
-                $deleted = $this->routeCache->clearAllCache($tenantId);
+                $deleted = $routeCache->clearAllCache($tenantId);
                 $this->info("✓ Deleted {$deleted} cache entries");
                 return Command::SUCCESS;
             }
@@ -74,7 +71,7 @@ final class RoutingCachePrune extends Command
         }
 
         if ($this->confirm('Proceed with deletion?', true)) {
-            $deleted = $this->routeCache->pruneCacheEntries($tenantId);
+            $deleted = $routeCache->pruneCacheEntries($tenantId);
             $this->info("✓ Deleted {$deleted} expired cache entries");
             return Command::SUCCESS;
         }

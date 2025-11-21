@@ -5,7 +5,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/intelligence": "*@dev"
+        "nexus/intelligence": "*@dev",
+        "nexus/geo": "*@dev",
+        "nexus/routing": "*@dev",
+        "nexus/inventory": "*@dev",
+        "nexus/warehouse": "*@dev",
+        "symfony/http-client": "^7.3",
+        "nyholm/psr7": "^1.8",
+        "psr/http-client": "^1.0"
     },
     "repositories": [
         {
@@ -147,8 +154,29 @@
         {
             "type": "path",
             "url": "./packages/CashManagement"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Geo"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Routing"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Inventory"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Warehouse"
         }
     ],
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
 }

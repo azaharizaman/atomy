@@ -13,20 +13,17 @@ final class GeoCacheMetrics extends Command
     
     protected $description = 'Display geocoding cache performance metrics';
 
-    public function __construct(
-        private readonly GeoRepositoryInterface $geoRepository
-    ) {
-        parent::__construct();
-    }
-
     public function handle(): int
     {
+        // Resolve from container to avoid constructor injection issues during service discovery
+        $geoRepository = $this->laravel->make(GeoRepositoryInterface::class);
+        
         $tenantId = $this->option('tenant');
 
         $this->info("Geocoding Cache Metrics for Tenant: {$tenantId}");
         $this->newLine();
 
-        $metrics = $this->geoRepository->getCacheMetrics($tenantId);
+        $metrics = $geoRepository->getCacheMetrics($tenantId);
 
         $this->table(
             ['Metric', 'Value'],
