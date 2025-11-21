@@ -73,4 +73,12 @@ interface DocumentVersionRepositoryInterface
      * @return int Number of versions deleted
      */
     public function deleteOlderThan(string $documentId, int $keepFromVersion): int;
+
+    /**
+     * Create a new document version record.
+     *
+     * @param array $data Key-value data for the new version (document_id, version_number, etc.)
+     * @return DocumentVersionInterface
+     */
+    public function create(array $data): DocumentVersionInterface;
 }
