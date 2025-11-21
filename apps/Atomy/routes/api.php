@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ReceivablePaymentController;
 use App\Http\Controllers\Api\CreditLimitController;
 use App\Http\Controllers\Api\AgingController;
+use App\Http\Controllers\GeoController;
+use App\Http\Controllers\RoutingController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -114,4 +116,22 @@ Route::middleware('auth:sanctum')->prefix('receivable')->group(function () {
         Route::post('/dunning/send', [AgingController::class, 'sendDunning']);
         Route::get('/dunning/levels', [AgingController::class, 'dunningLevels']);
     });
+});
+
+// Geo API routes
+Route::middleware('auth:sanctum')->prefix('geo')->group(function () {
+    Route::post('/geocode', [GeoController::class, 'geocode']);
+    Route::post('/reverse-geocode', [GeoController::class, 'reverseGeocode']);
+    Route::post('/distance', [GeoController::class, 'calculateDistance']);
+    Route::post('/geofence/check', [GeoController::class, 'checkGeofence']);
+    Route::get('/regions', [GeoController::class, 'listRegions']);
+    Route::get('/cache-metrics', [GeoController::class, 'getCacheMetrics']);
+});
+
+// Routing API routes
+Route::middleware('auth:sanctum')->prefix('routing')->group(function () {
+    Route::post('/tsp', [RoutingController::class, 'optimizeTsp']);
+    Route::post('/vrp', [RoutingController::class, 'optimizeVrp']);
+    Route::get('/cache-metrics', [RoutingController::class, 'getCacheMetrics']);
+    Route::delete('/cache', [RoutingController::class, 'clearCache']);
 });

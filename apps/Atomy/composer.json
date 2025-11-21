@@ -7,6 +7,8 @@
     "require": {
         "php": "^8.3",
         "aws/aws-sdk-php": "^3.300",
+        "geocoder-php/google-maps-provider": "^4.7",
+        "geocoder-php/nominatim-provider": "^5.7",
         "guzzlehttp/guzzle": "^7.8",
         "laravel/framework": "*",
         "laravel/tinker": "^2.9",
@@ -20,6 +22,7 @@
         "nexus/event-stream": "*@dev",
         "nexus/export": "*@dev",
         "nexus/finance": "*@dev",
+        "nexus/geo": "*@dev",
         "nexus/hrm": "*@dev",
         "nexus/identity": "*@dev",
         "nexus/import": "*@dev",
@@ -32,6 +35,7 @@
         "nexus/product": "*@dev",
         "nexus/procurement": "*@dev",
         "nexus/receivable": "*@dev",
+        "nexus/routing": "*@dev",
         "nexus/scheduler": "*@dev",
         "nexus/sequencing": "*@dev",
         "nexus/setting": "*@dev",
@@ -193,6 +197,18 @@
         {
             "type": "path",
             "url": "../../packages/Analytics"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Geo"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Routing"
+        },
+        {
+            "type": "path",
+            "url": "../../packages/Sales"
         }
     ],
     "scripts": {

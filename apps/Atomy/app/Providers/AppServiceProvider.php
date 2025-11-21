@@ -100,6 +100,22 @@ use Nexus\Sales\Services\PricingEngine;
 use Nexus\Sales\Services\QuotationManager;
 use Nexus\Sales\Services\SalesOrderManager;
 use Nexus\Sales\Services\QuoteToOrderConverter;
+use Nexus\Geo\Contracts\GeocoderInterface;
+use Nexus\Geo\Contracts\GeoRepositoryInterface;
+use Nexus\Geo\Contracts\GeofenceInterface;
+use Nexus\Geo\Contracts\PolygonSimplifierInterface;
+use Nexus\Geo\Contracts\DistanceCalculatorInterface;
+use Nexus\Geo\Contracts\BearingCalculatorInterface;
+use Nexus\Geo\Contracts\TravelTimeInterface;
+use App\Repositories\DbGeoRepository;
+use App\Services\LaravelGeocoder;
+use App\Services\LaravelGeofence;
+use Nexus\Geo\Services\PolygonSimplifier;
+use Nexus\Geo\Services\DistanceCalculator;
+use Nexus\Geo\Services\BearingCalculator;
+use Nexus\Geo\Services\TravelTimeEstimator;
+use Nexus\Routing\Contracts\RouteCacheInterface;
+use App\Repositories\DbRouteCacheRepository;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -229,6 +245,41 @@ final class AppServiceProvider extends ServiceProvider
         $this->app->singleton(QuotationManager::class);
         $this->app->singleton(SalesOrderManager::class);
         $this->app->singleton(QuoteToOrderConverter::class);
+
+        // Geo Package Bindings
+
+        // Repositories (Essential - Interface to Concrete)
+        $this->app->singleton(GeoRepositoryInterface::class, DbGeoRepository::class);
+
+        // Geocoder (Essential - Interface to Laravel Implementation with Google Maps + Nominatim)
+        $this->app->singleton(GeocoderInterface::class, function ($app) {
+            return new LaravelGeocoder(
+                connectorManager: $app->make(\Nexus\Connector\Services\ConnectorManager::class),
+                logger: $app->make(\Psr\Log\LoggerInterface::class),
+                googleMapsApiKey: config('geo.google_maps_api_key'),
+                nominatimUserAgent: config('geo.nominatim_user_agent', 'Nexus/1.0')
+            );
+        });
+
+        // Geofence (Essential - Interface to Laravel Implementation)
+        $this->app->singleton(GeofenceInterface::class, LaravelGeofence::class);
+
+        // Polygon Simplifier (Essential - Interface to Package Default)
+        $this->app->singleton(PolygonSimplifierInterface::class, PolygonSimplifier::class);
+
+        // Distance Calculator (Essential - Interface to Package Default)
+        $this->app->singleton(DistanceCalculatorInterface::class, DistanceCalculator::class);
+
+        // Bearing Calculator (Essential - Interface to Package Default)
+        $this->app->singleton(BearingCalculatorInterface::class, BearingCalculator::class);
+
+        // Travel Time Estimator (Essential - Interface to Package Default)
+        $this->app->singleton(TravelTimeInterface::class, TravelTimeEstimator::class);
+
+        // Routing Package Bindings
+
+        // Route Cache (Essential - Interface to Concrete)
+        $this->app->singleton(RouteCacheInterface::class, DbRouteCacheRepository::class);
     }
 
     /**
