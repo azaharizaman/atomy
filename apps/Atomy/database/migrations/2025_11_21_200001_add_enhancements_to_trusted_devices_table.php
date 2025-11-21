@@ -14,6 +14,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('trusted_devices', function (Blueprint $table) {
+            // Add tenant_id for multi-tenancy isolation
+            $table->ulid('tenant_id')->nullable()->after('user_id');
+            
             // Add trust status flag
             $table->boolean('is_trusted')->default(false)->after('device_name');
             
@@ -29,7 +32,8 @@ return new class extends Migration
             // Add last used timestamp
             $table->timestamp('last_used_at')->nullable()->after('trusted_at');
             
-            // Add index for trusted devices query
+            // Add indexes for performance
+            $table->index('tenant_id');
             $table->index(['user_id', 'is_trusted']);
             $table->index('last_used_at');
         });
@@ -43,8 +47,10 @@ return new class extends Migration
         Schema::table('trusted_devices', function (Blueprint $table) {
             $table->dropIndex(['user_id', 'is_trusted']);
             $table->dropIndex(['last_used_at']);
+            $table->dropIndex('tenant_id');
             
             $table->dropColumn([
+                'tenant_id',
                 'is_trusted',
                 'geographic_location',
                 'metadata',

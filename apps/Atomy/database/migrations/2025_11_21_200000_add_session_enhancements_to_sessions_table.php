@@ -14,6 +14,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sessions', function (Blueprint $table) {
+            // Add tenant_id for multi-tenancy isolation
+            $table->ulid('tenant_id')->nullable()->after('user_id');
+            
             // Add device fingerprint for device tracking
             $table->string('device_fingerprint', 64)->nullable()->after('metadata');
             
@@ -24,6 +27,7 @@ return new class extends Migration
             $table->timestamp('last_activity_at')->nullable()->after('geographic_location');
             
             // Add indexes for performance
+            $table->index('tenant_id');
             $table->index('device_fingerprint');
             $table->index('last_activity_at');
             
@@ -41,8 +45,10 @@ return new class extends Migration
             $table->dropIndex(['user_id', 'device_fingerprint']);
             $table->dropIndex(['device_fingerprint']);
             $table->dropIndex(['last_activity_at']);
+            $table->dropIndex('tenant_id');
             
             $table->dropColumn([
+                'tenant_id',
                 'device_fingerprint',
                 'geographic_location',
                 'last_activity_at',

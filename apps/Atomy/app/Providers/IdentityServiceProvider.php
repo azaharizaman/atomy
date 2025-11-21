@@ -7,10 +7,12 @@ namespace App\Providers;
 use App\Services\LaravelAuthContext;
 use App\Services\LaravelSessionManager;
 use App\Repositories\DbTrustedDeviceRepository;
+use App\Factories\TrustedDeviceFactory;
 use Illuminate\Support\ServiceProvider;
 use Nexus\Identity\Contracts\AuthContextInterface;
 use Nexus\Identity\Contracts\SessionManagerInterface;
 use Nexus\Identity\Contracts\TrustedDeviceRepositoryInterface;
+use Nexus\Identity\Contracts\TrustedDeviceFactoryInterface;
 use Nexus\Identity\Services\TrustedDeviceManager;
 use Nexus\Crypto\Contracts\KeyGeneratorInterface;
 use Nexus\Crypto\Contracts\HasherInterface;
@@ -42,6 +44,12 @@ class IdentityServiceProvider extends ServiceProvider
         $this->app->singleton(
             TrustedDeviceRepositoryInterface::class,
             DbTrustedDeviceRepository::class
+        );
+
+        // Bind TrustedDeviceFactoryInterface
+        $this->app->singleton(
+            TrustedDeviceFactoryInterface::class,
+            TrustedDeviceFactory::class
         );
 
         // Bind TrustedDeviceManager

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\Identity\ValueObjects;
 
+use Nexus\Crypto\Contracts\HasherInterface;
+
 /**
  * Device fingerprint value object
  * 
@@ -40,9 +42,10 @@ final readonly class DeviceFingerprint
      * Create fingerprint from HTTP request data
      * 
      * @param array<string, mixed> $requestData Request data including user_agent, accept_language, etc.
+     * @param HasherInterface $hasher Hasher for creating fingerprint hash
      * @return self
      */
-    public static function fromRequest(array $requestData): self
+    public static function fromRequest(array $requestData, HasherInterface $hasher): self
     {
         $userAgent = $requestData['user_agent'] ?? 'Unknown';
         $acceptLanguage = $requestData['accept_language'] ?? '';
@@ -56,7 +59,8 @@ final readonly class DeviceFingerprint
             $acceptEncoding,
         ];
 
-        $hash = hash('sha256', implode('|', array_filter($components)));
+        $hashResult = $hasher->hash(implode('|', array_filter($components)));
+        $hash = $hashResult->hash;
 
         // Parse platform and browser from user agent
         [$platform, $browser] = self::parseUserAgent($userAgent);

@@ -39,7 +39,7 @@ interface TrustedDeviceInterface
     /**
      * Get when device was first trusted
      */
-    public function getTrustedAt(): \DateTimeInterface;
+    public function getTrustedAt(): ?\DateTimeInterface;
 
     /**
      * Get when device was last used

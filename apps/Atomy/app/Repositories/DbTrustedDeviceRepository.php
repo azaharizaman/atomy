@@ -15,9 +15,12 @@ final readonly class DbTrustedDeviceRepository implements TrustedDeviceRepositor
 {
     public function save(TrustedDeviceInterface $device): void
     {
-        if ($device instanceof TrustedDevice) {
-            $device->save();
+        if (!($device instanceof TrustedDevice)) {
+            throw new \InvalidArgumentException(
+                'DbTrustedDeviceRepository only supports saving instances of TrustedDevice.'
+            );
         }
+        $device->save();
     }
 
     public function findById(string $id): ?TrustedDeviceInterface
@@ -28,6 +31,20 @@ final readonly class DbTrustedDeviceRepository implements TrustedDeviceRepositor
     public function findByFingerprint(string $fingerprint): ?TrustedDeviceInterface
     {
         return TrustedDevice::where('device_fingerprint', $fingerprint)->first();
+    }
+
+    /**
+     * Find a trusted device by user ID and fingerprint.
+     *
+     * @param string $userId
+     * @param string $fingerprint
+     * @return TrustedDeviceInterface|null
+     */
+    public function findByUserIdAndFingerprint(string $userId, string $fingerprint): ?TrustedDeviceInterface
+    {
+        return TrustedDevice::where('user_id', $userId)
+            ->where('device_fingerprint', $fingerprint)
+            ->first();
     }
 
     public function findByUserId(string $userId): array
@@ -42,11 +59,7 @@ final readonly class DbTrustedDeviceRepository implements TrustedDeviceRepositor
     {
         return TrustedDevice::where('user_id', $userId)
             ->where('is_trusted', true)
-            ->where(function ($query) {
-                $query->whereNull('revoked_at')
-                    ->orWhere('revoked_at', '>', now());
-            })
-            ->where('expires_at', '>', now())
+            ->valid()
             ->orderBy('last_used_at', 'desc')
             ->get()
             ->all();

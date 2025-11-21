@@ -30,6 +30,7 @@ class Session extends Model
 
     protected $fillable = [
         'user_id',
+        'tenant_id',
         'token',
         'metadata',
         'device_fingerprint',
@@ -96,12 +97,8 @@ class Session extends Model
     /**
      * Get relationship to device
      */
-    public function device(): ?BelongsTo
+    public function device(): BelongsTo
     {
-        if ($this->device_fingerprint === null) {
-            return null;
-        }
-
         return $this->belongsTo(TrustedDevice::class, 'device_fingerprint', 'device_fingerprint');
     }
 }

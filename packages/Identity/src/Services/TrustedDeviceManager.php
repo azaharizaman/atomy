@@ -6,6 +6,7 @@ namespace Nexus\Identity\Services;
 
 use Nexus\Identity\Contracts\TrustedDeviceInterface;
 use Nexus\Identity\Contracts\TrustedDeviceRepositoryInterface;
+use Nexus\Identity\Contracts\TrustedDeviceFactoryInterface;
 use Nexus\Identity\ValueObjects\DeviceFingerprint;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -19,6 +20,7 @@ final readonly class TrustedDeviceManager
 {
     public function __construct(
         private TrustedDeviceRepositoryInterface $repository,
+        private TrustedDeviceFactoryInterface $factory,
         private LoggerInterface $logger = new NullLogger()
     ) {
     }
@@ -39,7 +41,7 @@ final readonly class TrustedDeviceManager
         array $location = []
     ): TrustedDeviceInterface {
         // Check if device already exists
-        $existing = $this->repository->findByFingerprint($fingerprint->hash);
+        $existing = $this->repository->findByUserIdAndFingerprint($userId, $fingerprint->hash);
         
         if ($existing !== null) {
             $this->logger->info('Device already registered', [
@@ -50,15 +52,9 @@ final readonly class TrustedDeviceManager
             return $existing;
         }
 
-        // Create new device record
-        $device = new \stdClass(); // Will be replaced by actual implementation
-        $device->user_id = $userId;
-        $device->fingerprint = $fingerprint->hash;
-        $device->device_name = $fingerprint->getDescription();
-        $device->is_trusted = $trustImmediately;
-        $device->metadata = $fingerprint->toArray();
-        $device->geographic_location = $location;
-
+        // Create new device record using factory
+        $device = $this->factory->create($userId, $fingerprint, $trustImmediately, $location);
+        
         $this->repository->save($device);
 
         $this->logger->info('Device registered', [
@@ -79,13 +75,21 @@ final readonly class TrustedDeviceManager
     }
 
     /**
+     * Find device by user ID and fingerprint
+     */
+    public function findByUserIdAndFingerprint(string $userId, string $fingerprint): ?TrustedDeviceInterface
+    {
+        return $this->repository->findByUserIdAndFingerprint($userId, $fingerprint);
+    }
+
+    /**
      * Check if device is trusted for user
      */
     public function isDeviceTrusted(string $userId, string $fingerprint): bool
     {
-        $device = $this->repository->findByFingerprint($fingerprint);
+        $device = $this->repository->findByUserIdAndFingerprint($userId, $fingerprint);
         
-        if ($device === null || $device->getUserId() !== $userId) {
+        if ($device === null) {
             return false;
         }
 

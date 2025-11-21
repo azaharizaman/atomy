@@ -33,15 +33,16 @@ final readonly class TrackSessionActivity
     {
         $response = $next($request);
 
-        // Only track activity for authenticated requests
-        if (!$request->attributes->has('session_id')) {
+        // Extract session ID from authenticated user's session
+        // This requires the authentication middleware to set the session_id attribute
+        $sessionId = $request->attributes->get('session_id');
+        
+        if (empty($sessionId)) {
             return $response;
         }
 
-        $sessionId = $request->attributes->get('session_id');
-
         try {
-            // Update activity timestamp asynchronously if possible
+            // Update activity timestamp
             $this->sessionManager->updateActivity($sessionId);
         } catch (\Exception $e) {
             // Log error but don't fail the request

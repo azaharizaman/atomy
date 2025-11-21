@@ -32,6 +32,13 @@ final readonly class SessionActivity
 
     /**
      * Create activity record for current time
+     * 
+     * Convenience factory for creating a session activity record with the current timestamp.
+     * 
+     * @param string $sessionId Session identifier
+     * @param string|null $activityType Type of activity (e.g., READ_INVOICE, UPDATE_PROFILE)
+     * @param array<string, mixed> $metadata Additional activity metadata
+     * @return self
      */
     public static function now(string $sessionId, ?string $activityType = null, array $metadata = []): self
     {

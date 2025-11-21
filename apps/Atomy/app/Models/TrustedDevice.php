@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Nexus\Identity\Contracts\TrustedDeviceInterface;
+use App\Scopes\TenantScope;
 
 /**
  * Trusted Device model
  * 
  * @property string $id
  * @property string $user_id
+ * @property string|null $tenant_id
  * @property string $device_fingerprint
  * @property string|null $device_name
  * @property bool $is_trusted
@@ -36,6 +38,7 @@ class TrustedDevice extends Model implements TrustedDeviceInterface
 
     protected $fillable = [
         'user_id',
+        'tenant_id',
         'device_fingerprint',
         'device_name',
         'is_trusted',
@@ -59,6 +62,15 @@ class TrustedDevice extends Model implements TrustedDeviceInterface
         'revoked_at' => 'datetime',
     ];
 
+    /**
+     * Boot the model
+     */
+    protected static function booted(): void
+    {
+        // Apply tenant scope for multi-tenancy isolation
+        static::addGlobalScope(new TenantScope());
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -77,6 +89,17 @@ class TrustedDevice extends Model implements TrustedDeviceInterface
     public function isValid(): bool
     {
         return !$this->isExpired() && !$this->isRevoked();
+    }
+
+    /**
+     * Scope a query to only include valid devices
+     */
+    public function scopeValid($query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('revoked_at')
+                ->orWhere('revoked_at', '>', now());
+        })->where('expires_at', '>', now());
     }
 
     // ============================================
@@ -108,9 +131,9 @@ class TrustedDevice extends Model implements TrustedDeviceInterface
         return $this->is_trusted ?? false;
     }
 
-    public function getTrustedAt(): \DateTimeInterface
+    public function getTrustedAt(): ?\DateTimeInterface
     {
-        return $this->trusted_at ?? $this->created_at;
+        return $this->trusted_at;
     }
 
     public function getLastUsedAt(): ?\DateTimeInterface

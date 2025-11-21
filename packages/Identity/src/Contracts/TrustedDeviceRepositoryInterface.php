@@ -27,6 +27,11 @@ interface TrustedDeviceRepositoryInterface
     public function findByFingerprint(string $fingerprint): ?TrustedDeviceInterface;
 
     /**
+     * Find device by user ID and fingerprint
+     */
+    public function findByUserIdAndFingerprint(string $userId, string $fingerprint): ?TrustedDeviceInterface;
+
+    /**
      * Find all devices for a user
      * 
      * @return array<TrustedDeviceInterface>
