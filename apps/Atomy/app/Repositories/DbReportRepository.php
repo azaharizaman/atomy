@@ -270,7 +270,7 @@ final class DbReportRepository implements ReportRepositoryInterface
         // Full cron evaluation requires dragonmantank/cron-expression library
         // This is not implemented in v1 to avoid adding dependencies
         // Reports with cron schedules should use the Scheduler package's cron support instead
-        throw new \RuntimeException(
+        throw new \BadMethodCallException(
             'Cron expression evaluation is not implemented in DbReportRepository. ' .
             'Use ScheduleType::DAILY, WEEKLY, or MONTHLY instead, or integrate with Scheduler package for cron support.'
         );
