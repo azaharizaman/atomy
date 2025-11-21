@@ -5,7 +5,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/intelligence": "*@dev"
+        "nexus/intelligence": "*@dev",
+        "nexus/geo": "*@dev",
+        "nexus/routing": "*@dev",
+        "nexus/inventory": "*@dev",
+        "nexus/warehouse": "*@dev"
     },
     "repositories": [
         {
@@ -147,6 +151,22 @@
         {
             "type": "path",
             "url": "./packages/CashManagement"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Geo"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Routing"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Inventory"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Warehouse"
         }
     ],
     "minimum-stability": "dev",
