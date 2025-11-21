@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Nexus\Identity\Contracts\TrustedDeviceInterface;
+use App\Scopes\TenantScope;
 
 /**
  * Trusted Device model
  * 
  * @property string $id
  * @property string $user_id
+ * @property string|null $tenant_id
  * @property string $device_fingerprint
  * @property string|null $device_name
  * @property bool $is_trusted
@@ -36,6 +38,7 @@ class TrustedDevice extends Model implements TrustedDeviceInterface
 
     protected $fillable = [
         'user_id',
+        'tenant_id',
         'device_fingerprint',
         'device_name',
         'is_trusted',
@@ -58,6 +61,15 @@ class TrustedDevice extends Model implements TrustedDeviceInterface
         'expires_at' => 'datetime',
         'revoked_at' => 'datetime',
     ];
+
+    /**
+     * Boot the model
+     */
+    protected static function booted(): void
+    {
+        // Apply tenant scope for multi-tenancy isolation
+        static::addGlobalScope(new TenantScope());
+    }
 
     public function user(): BelongsTo
     {
