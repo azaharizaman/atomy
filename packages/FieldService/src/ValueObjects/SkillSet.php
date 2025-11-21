@@ -29,8 +29,10 @@ final class SkillSet
             $skills
         );
         
-        $this->skills = array_values(array_unique($normalized));
-        sort($this->skills);
+        $normalized = array_values(array_unique($normalized));
+        sort($normalized);
+        
+        $this->skills = $normalized;
     }
 
     /**
