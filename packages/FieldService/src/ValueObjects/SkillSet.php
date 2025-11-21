@@ -14,11 +14,15 @@ namespace Nexus\FieldService\ValueObjects;
 final readonly class SkillSet
 {
     /**
+     * @var array<string>
+     */
+    private array $skills;
+
+    /**
      * @param array<string> $skills
      */
-    private function __construct(
-        private array $skills
-    ) {
+    private function __construct(array $skills)
+    {
         // Normalize skills: trim, uppercase, remove duplicates, sort
         $normalized = array_map(
             fn(string $skill) => strtoupper(trim($skill)),

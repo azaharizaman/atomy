@@ -23,6 +23,7 @@
     "require": {
         "php": "^8.3",
         "psr/log": "^3.0",
+        "psr/event-dispatcher": "^1.0",
         "nexus/party": "*@dev",
         "nexus/backoffice": "*@dev",
         "nexus/inventory": "*@dev",

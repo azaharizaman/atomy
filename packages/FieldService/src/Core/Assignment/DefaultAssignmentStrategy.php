@@ -9,7 +9,9 @@ use Nexus\FieldService\Contracts\TechnicianAssignmentStrategyInterface;
 use Nexus\FieldService\Contracts\WorkOrderInterface;
 use Nexus\FieldService\Contracts\WorkOrderRepositoryInterface;
 use Nexus\FieldService\ValueObjects\SkillSet;
-use Nexus\Geo\Services\ProximityService;
+use Nexus\Geo\Contracts\DistanceCalculatorInterface;
+use Nexus\Geo\Contracts\GeoRepositoryInterface;
+use Nexus\Geo\ValueObjects\Coordinates;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -27,7 +29,8 @@ final readonly class DefaultAssignmentStrategy implements TechnicianAssignmentSt
 
     public function __construct(
         private WorkOrderRepositoryInterface $workOrderRepository,
-        private ProximityService $proximityService,
+        private DistanceCalculatorInterface $distanceCalculator,
+        private GeoRepositoryInterface $geoRepository,
         private LoggerInterface $logger
     ) {
     }
@@ -171,9 +174,61 @@ final readonly class DefaultAssignmentStrategy implements TechnicianAssignmentSt
             return 50.0;
         }
 
-        // TODO: Get technician current location and calculate distance
-        // For now, return neutral score
-        return 50.0;
+        // Get work order location from metadata
+        $workOrderMetadata = $workOrder->getMetadata();
+        if (!isset($workOrderMetadata['service_location_coordinates'])) {
+            return 50.0;
+        }
+
+        $serviceCoords = $workOrderMetadata['service_location_coordinates'];
+        if (!isset($serviceCoords['latitude']) || !isset($serviceCoords['longitude'])) {
+            return 50.0;
+        }
+
+        // Get technician current location from metadata
+        $technicianMetadata = $technician->getMetadata();
+        if (!isset($technicianMetadata['current_location'])) {
+            return 50.0; // No location data available
+        }
+
+        $techCoords = $technicianMetadata['current_location'];
+        if (!isset($techCoords['latitude']) || !isset($techCoords['longitude'])) {
+            return 50.0;
+        }
+
+        try {
+            $serviceLocation = new Coordinates(
+                (float) $serviceCoords['latitude'],
+                (float) $serviceCoords['longitude']
+            );
+            $technicianLocation = new Coordinates(
+                (float) $techCoords['latitude'],
+                (float) $techCoords['longitude']
+            );
+
+            $distance = $this->distanceCalculator->calculate($technicianLocation, $serviceLocation);
+            
+            // Score based on distance: closer = higher score
+            // 0-5 km: 100 points
+            // 5-20 km: 80 points
+            // 20-50 km: 50 points
+            // 50+ km: 20 points
+            $kilometers = $distance->meters / 1000;
+            
+            return match(true) {
+                $kilometers <= 5 => 100.0,
+                $kilometers <= 20 => 80.0,
+                $kilometers <= 50 => 50.0,
+                default => 20.0,
+            };
+        } catch (\Exception $e) {
+            $this->logger->warning('Failed to calculate proximity score', [
+                'error' => $e->getMessage(),
+                'work_order_id' => $workOrder->getId(),
+                'technician_id' => $technician->getId(),
+            ]);
+            return 50.0;
+        }
     }
 
     /**
@@ -218,9 +273,32 @@ final readonly class DefaultAssignmentStrategy implements TechnicianAssignmentSt
      */
     private function getTechnicianSkills(StaffInterface $technician): SkillSet
     {
-        // TODO: Get skills from Nexus\Backoffice staff competencies
-        // For now, return empty skill set
-        return SkillSet::empty();
+        $metadata = $technician->getMetadata();
+        
+        if (!isset($metadata['skills']) && !isset($metadata['competencies'])) {
+            return SkillSet::empty();
+        }
+
+        // Try 'skills' first, then fallback to 'competencies'
+        $skillsData = $metadata['skills'] ?? $metadata['competencies'] ?? [];
+        
+        if (!is_array($skillsData)) {
+            return SkillSet::empty();
+        }
+
+        // Extract skill names if array of objects/arrays
+        $skillNames = [];
+        foreach ($skillsData as $skill) {
+            if (is_string($skill)) {
+                $skillNames[] = $skill;
+            } elseif (is_array($skill) && isset($skill['name'])) {
+                $skillNames[] = $skill['name'];
+            } elseif (is_array($skill) && isset($skill['skill'])) {
+                $skillNames[] = $skill['skill'];
+            }
+        }
+
+        return SkillSet::fromArray($skillNames);
     }
 
     /**
