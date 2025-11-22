@@ -23,6 +23,7 @@ use Nexus\Finance\ValueObjects\Money;
 use Nexus\Finance\Events\JournalEntryReversedEvent;
 use Nexus\Finance\Events\AccountDebitedEvent;
 use Nexus\Finance\Events\AccountCreditedEvent;
+use Nexus\Finance\Contracts\CacheInterface;
 use Nexus\EventStream\Contracts\EventStoreInterface;
 use Nexus\Period\Contracts\PeriodManagerInterface;
 use Symfony\Component\Uid\Ulid;
@@ -40,7 +41,8 @@ final class FinanceManager implements FinanceManagerInterface
         private readonly AccountRepositoryInterface $accountRepository,
         private readonly LedgerRepositoryInterface $ledgerRepository,
         private readonly PeriodManagerInterface $periodManager,
-        private readonly EventStoreInterface $eventStore
+        private readonly EventStoreInterface $eventStore,
+        private readonly CacheInterface $cache
     ) {}
 
     /**
@@ -476,5 +478,136 @@ final class FinanceManager implements FinanceManagerInterface
         $nextFiscalYear = (string) ((int) $fiscalYear + 1);
 
         return $this->periodManager->getFiscalYearStartDate($nextFiscalYear);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAccountTree(array $filters = []): array
+    {
+        $cacheKey = 'finance:accounts:tree:' . md5(json_encode($filters));
+
+        return $this->cache->remember($cacheKey, 300, function () use ($filters) {
+            // Get all accounts matching filters
+            $accounts = $this->accountRepository->findAll($filters);
+
+            // Build hierarchical tree structure
+            return $this->buildAccountTree($accounts);
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRecentEntries(int $limit = 10, array $filters = []): array
+    {
+        $cacheKey = 'finance:entries:recent:' . md5(json_encode(['limit' => $limit, 'filters' => $filters]));
+
+        return $this->cache->remember($cacheKey, 300, function () use ($limit, $filters) {
+            // Add limit and descending order to filters
+            $filters['limit'] = $limit;
+            $filters['order_by'] = 'entry_date';
+            $filters['order_direction'] = 'desc';
+
+            return $this->journalEntryRepository->findAll($filters);
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function generateTrialBalance(DateTimeImmutable $asOfDate): array
+    {
+        $cacheKey = 'finance:trial_balance:' . $asOfDate->format('Y-m-d');
+
+        return $this->cache->remember($cacheKey, 300, function () use ($asOfDate) {
+            // Get all accounts
+            $accounts = $this->accountRepository->findAll(['is_active' => true]);
+
+            $accountBalances = [];
+            $totalDebit = '0';
+            $totalCredit = '0';
+
+            foreach ($accounts as $account) {
+                $balance = $this->getAccountBalance($account->getId(), $asOfDate);
+                $debitBalance = '0';
+                $creditBalance = '0';
+
+                // Determine if balance goes in debit or credit column based on account type
+                // Assets (1xxx), Expenses (5xxx): positive balance = debit
+                // Liabilities (2xxx), Equity (3xxx), Revenue (4xxx): positive balance = credit
+                $accountCode = $account->getCode();
+                $isDebitNormalBalance = str_starts_with($accountCode, '1') || str_starts_with($accountCode, '5');
+
+                if ($isDebitNormalBalance) {
+                    // Assets, Expenses: positive balance = debit
+                    if (bccomp($balance, '0', 2) >= 0) {
+                        $debitBalance = $balance;
+                    } else {
+                        // Negative balance for debit normal balance account = credit
+                        $creditBalance = bcmul($balance, '-1', 2);
+                    }
+                } else {
+                    // Liabilities, Equity, Revenue: positive balance = credit
+                    if (bccomp($balance, '0', 2) >= 0) {
+                        $creditBalance = $balance;
+                    } else {
+                        // Negative balance for credit normal balance account = debit
+                        $debitBalance = bcmul($balance, '-1', 2);
+                    }
+                }
+
+                // Only include accounts with non-zero balances
+                if (bccomp($debitBalance, '0', 2) !== 0 || bccomp($creditBalance, '0', 2) !== 0) {
+                    $accountBalances[] = [
+                        'id' => $account->getId(),
+                        'code' => $account->getCode(),
+                        'name' => $account->getName(),
+                        'debit' => $debitBalance,
+                        'credit' => $creditBalance,
+                    ];
+
+                    $totalDebit = bcadd($totalDebit, $debitBalance, 2);
+                    $totalCredit = bcadd($totalCredit, $creditBalance, 2);
+                }
+            }
+
+            return [
+                'accounts' => $accountBalances,
+                'totals' => [
+                    'total_debit' => $totalDebit,
+                    'total_credit' => $totalCredit,
+                    'balanced' => bccomp($totalDebit, $totalCredit, 2) === 0,
+                ],
+            ];
+        });
+    }
+
+    /**
+     * Build hierarchical account tree from flat array
+     * 
+     * @param array<AccountInterface> $accounts
+     * @return array<array{id: string, code: string, name: string, children: array}>
+     */
+    private function buildAccountTree(array $accounts, ?string $parentId = null): array
+    {
+        $tree = [];
+
+        foreach ($accounts as $account) {
+            if ($account->getParentId() === $parentId) {
+                $node = [
+                    'id' => $account->getId(),
+                    'code' => $account->getCode(),
+                    'name' => $account->getName(),
+                    'type' => $account->getType(),
+                    'is_header' => $account->isHeader(),
+                    'children' => $this->buildAccountTree($accounts, $account->getId()),
+                ];
+
+                $tree[] = $node;
+            }
+        }
+
+        return $tree;
     }
 }

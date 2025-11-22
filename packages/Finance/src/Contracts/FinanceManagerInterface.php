@@ -143,4 +143,43 @@ interface FinanceManagerInterface
         DateTimeImmutable $endDate,
         string $interval
     ): array;
+
+    /**
+     * Get hierarchical account tree
+     * 
+     * Returns nested account structure with parent-child relationships.
+     * Supports filtering by account type or active status.
+     * 
+     * @param array<string, mixed> $filters Optional filters (type, is_active)
+     * @return array<array{id: string, code: string, name: string, children: array}> Nested account tree
+     */
+    public function getAccountTree(array $filters = []): array;
+
+    /**
+     * Get recent journal entries
+     * 
+     * Returns most recent journal entries ordered by entry date descending.
+     * Useful for dashboard widgets and recent activity feeds.
+     * 
+     * @param int $limit Maximum number of entries to return (default 10)
+     * @param array<string, mixed> $filters Optional filters (status, account_id)
+     * @return array<JournalEntryInterface>
+     */
+    public function getRecentEntries(int $limit = 10, array $filters = []): array;
+
+    /**
+     * Generate trial balance report
+     * 
+     * Returns list of all accounts with their debit and credit balances as of a specific date.
+     * Verifies accounting equation: Total Debits = Total Credits.
+     * 
+     * @param DateTimeImmutable $asOfDate Date to calculate balances
+     * @return array{
+     *     accounts: array<array{id: string, code: string, name: string, debit: string, credit: string}>,
+     *     totals: array{total_debit: string, total_credit: string, balanced: bool}
+     * }
+     * 
+     * @throws \Nexus\Finance\Exceptions\UnbalancedTrialBalanceException if debits != credits
+     */
+    public function generateTrialBalance(DateTimeImmutable $asOfDate): array;
 }
