@@ -116,6 +116,11 @@ use Nexus\Geo\Services\BearingCalculator;
 use Nexus\Geo\Services\TravelTimeEstimator;
 use Nexus\Routing\Contracts\RouteCacheInterface;
 use App\Repositories\DbRouteCacheRepository;
+use Nexus\EventStream\Contracts\EventStoreInterface;
+use Nexus\EventStream\Contracts\StreamReaderInterface;
+use Nexus\EventStream\Contracts\SnapshotRepositoryInterface;
+use App\Repositories\Infrastructure\EloquentEventStore;
+use App\Repositories\Infrastructure\EloquentSnapshotRepository;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -282,6 +287,15 @@ final class AppServiceProvider extends ServiceProvider
 
         // Route Cache (Essential - Interface to Concrete)
         $this->app->singleton(RouteCacheInterface::class, DbRouteCacheRepository::class);
+
+        // EventStream Package Bindings
+
+        // Event Store (Essential - Interface to Concrete)
+        $this->app->singleton(EventStoreInterface::class, EloquentEventStore::class);
+        $this->app->singleton(StreamReaderInterface::class, EloquentEventStore::class);
+
+        // Snapshot Repository (Essential - Interface to Concrete)
+        $this->app->singleton(SnapshotRepositoryInterface::class, EloquentSnapshotRepository::class);
     }
 
     /**
