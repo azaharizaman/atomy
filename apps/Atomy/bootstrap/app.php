@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withProviders([
+        App\Providers\EventServiceProvider::class,
         App\Providers\IdentityServiceProvider::class,
         App\Providers\CryptoServiceProvider::class,
         App\Providers\SchedulerServiceProvider::class,
@@ -28,9 +29,14 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Providers\PartyServiceProvider::class,
         App\Providers\ProductServiceProvider::class,
         App\Providers\BudgetServiceProvider::class,
-        App\Providers\ReportingServiceProvider::class,
+        App\Providers\AnalyticsServiceProvider::class,
+        // App\Providers\ReportingServiceProvider::class,  // TODO: Complete Export/Import packages first
         App\Providers\InventoryServiceProvider::class,
         App\Providers\WarehouseServiceProvider::class,
         App\Providers\FieldServiceProvider::class,
+        App\Providers\FinanceServiceProvider::class,
+        // Filament Panels
+        App\Providers\Filament\AdminPanelProvider::class,
+        App\Providers\Filament\FinancePanelProvider::class,
     ])
     ->create();
