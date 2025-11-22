@@ -6,6 +6,7 @@ namespace Nexus\FieldService\Services;
 
 use Nexus\FieldService\Contracts\WorkOrderInterface;
 use Nexus\FieldService\Contracts\WorkOrderRepositoryInterface;
+use Nexus\FieldService\Contracts\WorkOrderFactoryInterface;
 use Nexus\FieldService\Contracts\ServiceContractRepositoryInterface;
 use Nexus\FieldService\Contracts\ChecklistRepositoryInterface;
 use Nexus\FieldService\Contracts\GpsTrackerInterface;
@@ -43,6 +44,7 @@ final readonly class WorkOrderManager
 {
     public function __construct(
         private WorkOrderRepositoryInterface $workOrderRepository,
+        private WorkOrderFactoryInterface $workOrderFactory,
         private ServiceContractRepositoryInterface $contractRepository,
         private ChecklistRepositoryInterface $checklistRepository,
         private GpsTrackerInterface $gpsTracker,
@@ -102,28 +104,51 @@ final readonly class WorkOrderManager
             }
         }
 
-        // Create work order (implementation will be in Atomy)
-        // For now, we just validate and prepare the data
+        // Prepare data for factory
+        $factoryData = [
+            'number' => $workOrderNumber,
+            'customer_party_id' => $data['customer_party_id'],
+            'service_location_id' => $data['service_location_id'] ?? null,
+            'asset_id' => $data['asset_id'] ?? null,
+            'service_contract_id' => $data['service_contract_id'] ?? null,
+            'service_type' => $data['service_type'] instanceof ServiceType 
+                ? $data['service_type']->value 
+                : $data['service_type'],
+            'priority' => $data['priority'] instanceof WorkOrderPriority 
+                ? $data['priority']->value 
+                : $data['priority'],
+            'description' => $data['description'],
+            'scheduled_start' => $data['scheduled_start'] ?? null,
+            'scheduled_end' => $data['scheduled_end'] ?? null,
+            'sla_deadline' => $slaDeadline,
+            'metadata' => $data['metadata'] ?? [],
+        ];
+
+        // Create work order entity via factory
+        $workOrder = $this->workOrderFactory->create($factoryData);
+        
+        // Persist the entity
+        $this->workOrderRepository->save($workOrder);
         
         $this->logger->info('Work order created', [
+            'id' => $workOrder->getId(),
             'number' => $workOrderNumber->toString(),
             'customer_party_id' => $data['customer_party_id'],
-            'service_type' => $data['service_type'] instanceof ServiceType ? $data['service_type']->value : $data['service_type'],
+            'service_type' => $factoryData['service_type'],
         ]);
 
         // Dispatch event
         $event = new WorkOrderCreatedEvent(
-            'wo-id', // Will be actual ID from repository
+            $workOrder->getId(),
             $data['customer_party_id'],
-            $data['service_type'] instanceof ServiceType ? $data['service_type']->value : $data['service_type'],
-            $data['priority'] instanceof WorkOrderPriority ? $data['priority']->value : $data['priority'],
+            $factoryData['service_type'],
+            $factoryData['priority'],
             new \DateTimeImmutable()
         );
         
         $this->eventDispatcher->dispatch($event);
 
-        // Return will be implemented in Atomy
-        throw new \LogicException('WorkOrder creation must be implemented in application layer');
+        return $workOrder;
     }
 
     /**

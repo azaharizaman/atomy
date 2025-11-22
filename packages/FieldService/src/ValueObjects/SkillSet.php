@@ -11,22 +11,28 @@ namespace Nexus\FieldService\ValueObjects;
  *
  * @example new SkillSet(['HVAC', 'Electrical', 'Plumbing'])
  */
-final readonly class SkillSet
+final class SkillSet
 {
+    /**
+     * @var array<string>
+     */
+    private readonly array $skills;
+
     /**
      * @param array<string> $skills
      */
-    private function __construct(
-        private array $skills
-    ) {
+    private function __construct(array $skills)
+    {
         // Normalize skills: trim, uppercase, remove duplicates, sort
         $normalized = array_map(
             fn(string $skill) => strtoupper(trim($skill)),
             $skills
         );
         
-        $this->skills = array_values(array_unique($normalized));
-        sort($this->skills);
+        $normalized = array_values(array_unique($normalized));
+        sort($normalized);
+        
+        $this->skills = $normalized;
     }
 
     /**

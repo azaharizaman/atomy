@@ -7,7 +7,9 @@ namespace Nexus\FieldService\Services;
 use Nexus\FieldService\Contracts\PartsConsumptionRepositoryInterface;
 use Nexus\FieldService\Events\PartsConsumedEvent;
 use Nexus\Inventory\Contracts\StockManagerInterface;
-use Nexus\Warehouse\Contracts\LocationManagerInterface;
+use Nexus\Inventory\Enums\IssueReason;
+use Nexus\Warehouse\Contracts\WarehouseRepositoryInterface;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 use Psr\Log\LoggerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -22,7 +24,8 @@ final readonly class PartsConsumptionManager
     public function __construct(
         private PartsConsumptionRepositoryInterface $consumptionRepository,
         private StockManagerInterface $stockManager,
-        private LocationManagerInterface $warehouseManager,
+        private WarehouseRepositoryInterface $warehouseRepository,
+        private TenantContextInterface $tenantContext,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger
     ) {
@@ -125,9 +128,9 @@ final readonly class PartsConsumptionManager
      */
     private function getTechnicianVanWarehouseId(string $technicianId): string
     {
-        // TODO: Get van warehouse from Nexus\Warehouse
-        // For now, return placeholder
-        return "van-{$technicianId}";
+        // Van warehouses are identified by code pattern: VAN-{TECHNICIAN_ID}
+        // The application layer should create these virtual warehouses for each technician
+        return "VAN-{$technicianId}";
     }
 
     /**
@@ -135,8 +138,21 @@ final readonly class PartsConsumptionManager
      */
     private function getPrimaryWarehouseId(): string
     {
-        // TODO: Get primary warehouse from settings
-        return 'primary-warehouse';
+        // Get tenant ID from context
+        $tenantId = $this->tenantContext->getCurrentTenantId() ?? 'default';
+        
+        // Get the first active warehouse as primary
+        // In production, this should be configurable via settings
+        $warehouses = $this->warehouseRepository->findByTenant($tenantId);
+        
+        foreach ($warehouses as $warehouse) {
+            if ($warehouse->isActive()) {
+                return $warehouse->getId();
+            }
+        }
+        
+        // Fallback to a conventional primary warehouse code
+        return 'PRIMARY';
     }
 
     /**
@@ -144,9 +160,7 @@ final readonly class PartsConsumptionManager
      */
     private function getStockLevel(string $warehouseId, string $productVariantId): float
     {
-        // TODO: Call Nexus\Inventory\StockManager
-        // For now, return 0
-        return 0.0;
+        return $this->stockManager->getCurrentStock($productVariantId, $warehouseId);
     }
 
     /**
@@ -157,7 +171,14 @@ final readonly class PartsConsumptionManager
         string $productVariantId,
         float $quantity
     ): void {
-        // TODO: Call Nexus\Inventory\StockManager::issueStock()
-        // Implementation will be in application layer
+        // Use PRODUCTION as the closest match for field service consumption
+        // In production, IssueReason enum should be extended with FIELD_SERVICE case
+        $this->stockManager->issueStock(
+            $productVariantId,
+            $warehouseId,
+            $quantity,
+            IssueReason::PRODUCTION,
+            null // Work order ID will be set in application layer via metadata
+        );
     }
 }

@@ -139,8 +139,44 @@ final readonly class TechnicianDispatcher
      */
     private function getAvailableTechnicians(?array $technicianIds = null): array
     {
-        // TODO: Filter by active technicians only
-        // For now, return empty array - implementation in Atomy
-        return [];
+        if ($technicianIds !== null && !empty($technicianIds)) {
+            // Get specific technicians by IDs
+            $technicians = [];
+            foreach ($technicianIds as $id) {
+                $staff = $this->staffRepository->findById($id);
+                if ($staff !== null && $this->isActiveTechnician($staff)) {
+                    $technicians[] = $staff;
+                }
+            }
+            return $technicians;
+        }
+
+        // Get all technicians using search with type filter
+        // The application layer will implement proper filtering
+        $allStaff = $this->staffRepository->search(['type' => 'TECHNICIAN']);
+        
+        return array_filter($allStaff, fn(StaffInterface $staff) => $this->isActiveTechnician($staff));
+    }
+
+    /**
+     * Check if a staff member is an active technician.
+     */
+    private function isActiveTechnician(StaffInterface $staff): bool
+    {
+        // Check if staff is active
+        if (!$staff->isActive()) {
+            return false;
+        }
+
+        // Check if staff metadata indicates they're a field technician
+        $metadata = $staff->getMetadata();
+        
+        // If metadata has 'is_field_technician' flag, use it
+        if (isset($metadata['is_field_technician'])) {
+            return (bool) $metadata['is_field_technician'];
+        }
+
+        // Otherwise, check if they have any skills (technicians should have skills)
+        return isset($metadata['skills']) || isset($metadata['competencies']);
     }
 }
