@@ -86,4 +86,53 @@ interface PeriodManagerInterface
      * @throws \Nexus\Period\Exceptions\PeriodNotFoundException
      */
     public function findById(string $periodId): PeriodInterface;
-}
+
+    /**
+     * Get the fiscal year start month (1-12)
+     * 
+     * Returns the month number (1 for January, 12 for December) when the fiscal year begins.
+     * This is configurable per implementation and defaults to 1 (January = calendar year).
+     * 
+     * @return int Month number (1-12)
+     */
+    public function getFiscalYearStartMonth(): int;
+
+    /**
+     * Get the period that contains a specific date (alias for getCurrentPeriodForDate)
+     * 
+     * Convenience method for Finance integration to find which period a transaction belongs to.
+     * 
+     * @param DateTimeImmutable $date The date to check
+     * @param PeriodType $type The period type to search within
+     * 
+     * @return PeriodInterface|null Returns null if no period exists for the date
+     */
+    public function getPeriodForDate(DateTimeImmutable $date, PeriodType $type): ?PeriodInterface;
+
+    /**
+     * Get the fiscal year for a specific date
+     * 
+     * Determines which fiscal year a date falls into based on the fiscal year start month.
+     * For example, if fiscal year starts in July:
+     * - 2024-06-30 → FY-2024 (belongs to fiscal year ending in 2024)
+     * - 2024-07-01 → FY-2025 (belongs to fiscal year ending in 2025)
+     * 
+     * @param DateTimeImmutable $date The date to check
+     * 
+     * @return string Fiscal year (e.g., "2024", "2025")
+     */
+    public function getFiscalYearForDate(DateTimeImmutable $date): string;
+
+    /**
+     * Get the start date of a fiscal year
+     * 
+     * Returns the first day of the specified fiscal year.
+     * For example, if fiscal year starts in July:
+     * - getFiscalYearStartDate("2024") → 2023-07-01 (FY-2024 starts July 1, 2023)
+     * - getFiscalYearStartDate("2025") → 2024-07-01 (FY-2025 starts July 1, 2024)
+     * 
+     * @param string $fiscalYear The fiscal year (e.g., "2024")
+     * 
+     * @return DateTimeImmutable First day of the fiscal year
+     */
+    public function getFiscalYearStartDate(string $fiscalYear): DateTimeImmutable;
