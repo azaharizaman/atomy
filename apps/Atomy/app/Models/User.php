@@ -60,7 +60,7 @@ class User extends Model implements UserInterface
 
     protected static function booted(): void
     {
-        static::addGlobalScope(new TenantScope());
+        static::addGlobalScope(app(TenantScope::class));
     }
 
     // Relationships
