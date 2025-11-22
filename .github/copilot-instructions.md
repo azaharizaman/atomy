@@ -1251,3 +1251,844 @@ Before committing code to the repository, verify:
 - ALL new package must have REQUIREMENTS_PACKAGE_NAME.md file in docs folder
 - All new addition or deletion to packages must be reflected in its respective REQUIREMENTS and IMPLEMENTATION_SUMMARY files
 - All postponed implementation or planned implementation must have the placeholder methods/classes/properties with proper docblock in the respective package service class commented out and marked with `// TODO: Implement ...`
+
+---
+
+## 🔢 Migration Numbering: 5-Digit Stepped Format with Domain Buffers
+
+All database migrations in `apps/Atomy/database/migrations/` follow a **5-digit stepped numbering convention** to support 99 domains with room for insertions between existing migrations.
+
+### Format Specification
+
+**Pattern:** `YYYY_MM_DD_NNNNN_migration_description.php`
+
+Where:
+- `YYYY_MM_DD` = Date (standard Laravel format)
+- `NNNNN` = 5-digit domain-based number
+- `NNNNN` = `(Domain * 1000) + (Step * 10)`
+- **Domain**: 2-digit number (11-99) representing logical package grouping
+- **Step**: Sequential number (000-099) within domain, incremented by 10
+
+### Domain Allocation Strategy
+
+Domains are allocated **gradually as packages are implemented** with **10-domain buffer zones** between major subsystems for future expansion.
+
+**Format:** `Domain DD (DDDDD-DDDDD): Package Name(s)`
+
+**Currently Allocated Domains:**
+
+| Domain | Range | Package(s) | Status |
+|--------|-------|-----------|---------|
+| **11** | 11000-11990 | Infrastructure (EventStream, Tenant, Setting, Sequencing, Period, UOM, AuditLogger) | ✅ Allocated |
+| 12-19 | 12000-19990 | **RESERVED (Buffer before Finance)** | 🔒 Reserved |
+| **21** | 21000-21990 | Finance Core (General Ledger, Accounting) | ✅ Allocated |
+| **22** | 22000-22990 | Finance Extended (CashManagement) | ✅ Allocated |
+| **23** | 23000-23990 | Finance Extended (Currency, Budget) | ✅ Allocated |
+| 24-30 | 24000-30990 | Finance Extended (Future: Treasury, Consolidation, etc.) | 📋 Planned |
+| **31** | 31000-31990 | Assets (Fixed Assets, Depreciation, Maintenance) | ✅ Allocated |
+| 32-39 | 32000-39990 | **RESERVED (Buffer before HR)** | 🔒 Reserved |
+| 41-49 | 41000-49990 | Human Resources (HRM, Payroll, Backoffice, OrgStructure) | 📋 Planned |
+| 51-59 | 51000-59990 | Inventory & Supply Chain (Inventory, Warehouse, Product) | 📋 Planned |
+| 61-69 | 61000-69990 | Sales & CRM (Sales, Party, CRM, Marketing) | 📋 Planned |
+| 71-79 | 71000-79990 | Operations (Procurement, FieldService, Manufacturing, ProjectManagement) | 📋 Planned |
+| 81-89 | 81000-89990 | Compliance & Governance (Compliance, Statutory, Workflow) | 📋 Planned |
+| 91-99 | 91000-99990 | Reporting & Analytics (Reporting, Analytics, Export, Import, Intelligence) | 📋 Planned |
+
+### Stepping Pattern
+
+Migrations within a domain increment by **10**, allowing **9 insertions** between any two existing migrations if needed.
+
+**Example (Domain 11 - Infrastructure):**
+- `2024_11_22_11000_create_event_streams_table.php`
+- `2024_11_22_11010_create_event_snapshots_table.php`
+- `2024_11_22_11020_create_event_projections_table.php`
+- Future insertion possible: `11005`, `11015`, `11025`, etc.
+
+### Migration Insertion Policy
+
+**MANDATORY RULE:** Never insert migrations **before** already-deployed migrations in the same domain.
+
+- ✅ **ALLOWED:** Insert after the highest deployed migration (e.g., add `11030` after `11020`)
+- ✅ **ALLOWED:** Use insertion slots between migrations during development (e.g., `11005` between `11000` and `11010`)
+- ❌ **FORBIDDEN:** Insert `11005` if `11010` is already deployed to production
+- **Reason:** Prevents migration ordering conflicts and rollback issues in production
+
+### Adding New Migrations
+
+1. Identify the appropriate domain for your migration
+2. Find the highest existing migration number in that domain
+3. Add 10 to create the next migration number
+4. If domain is full (reached X990), use next available domain in buffer zone
+5. Update this registry when allocating new domains
+
+### Example Migration Names
+
+```php
+// Infrastructure Domain (11)
+2024_11_22_11000_create_event_streams_table.php
+2024_11_22_11010_create_event_snapshots_table.php
+
+// Finance Core Domain (21)
+2024_11_22_21000_create_accounts_table.php
+2024_11_22_21010_create_journal_entries_table.php
+2024_11_22_21020_create_journal_entry_lines_table.php
+
+// CashManagement Domain (22)
+2024_11_22_22000_create_bank_accounts_table.php
+2024_11_22_22010_create_bank_statements_table.php
+
+// Assets Domain (31)
+2024_11_22_31000_create_asset_categories_table.php
+2024_11_22_31010_create_assets_table.php
+```
+
+### Benefits
+
+- **Scalability:** Supports up to 99 domains with 99 migrations each (9,801 total migrations possible)
+- **Flexibility:** 9 insertion slots between each migration for urgent fixes or forgotten requirements
+- **Organization:** Clear domain-based grouping makes finding related migrations easy
+- **Buffer Zones:** 10-domain gaps between major subsystems allow future expansion without renumbering
+- **Human-Readable:** Easier to understand migration order compared to timestamps
+
+---
+
+## 🚩 Feature Flag Architecture: Hierarchical with Runtime Inheritance
+
+The Nexus monorepo uses a **3-level hierarchical feature flag system** with **runtime inheritance** to enable gradual feature rollouts and tenant-specific customization.
+
+### Hierarchy Structure
+
+```
+features.{package}.*                    # Level 1: Package Wildcard
+  ├─ features.{package}.{resource}.*    # Level 2: Resource Wildcard  
+  │   ├─ features.{package}.{resource}.{action}  # Level 3: Endpoint Flag
+```
+
+**Example (Finance Package):**
+```
+features.finance.*                          # Package wildcard (controls all finance features)
+  ├─ features.finance.journal_entry.*       # Resource wildcard (controls all journal entry endpoints)
+  │   ├─ features.finance.journal_entry.create
+  │   ├─ features.finance.journal_entry.read
+  │   ├─ features.finance.journal_entry.post
+  │   └─ features.finance.journal_entry.reverse
+  ├─ features.finance.account.*             # Resource wildcard (controls all account endpoints)
+  │   ├─ features.finance.account.read
+  │   └─ features.finance.account.balance
+```
+
+### Inheritance Rules (Runtime Evaluation)
+
+Feature flag evaluation follows **strict parent-to-child inheritance** at request time:
+
+| Parent State | Child State | Effective Result | Explanation |
+|--------------|-------------|------------------|-------------|
+| `false` (disabled) | `true` (enabled) | **BLOCKED** | Parent disabled blocks all children |
+| `false` (disabled) | `null` (inherit) | **BLOCKED** | Child inherits parent's disabled state |
+| `true` (enabled) | `null` (inherit) | **ALLOWED** | Child inherits parent's enabled state |
+| `true` (enabled) | `false` (disabled) | **BLOCKED** | Child explicitly disabled |
+| `true` (enabled) | `true` (enabled) | **ALLOWED** | Both enabled |
+
+**Key Principle:** Disabling a parent flag effectively disables all children, but **does NOT modify database values**. This allows safe temporary feature toggles without data loss.
+
+### Safe Cascade Behavior
+
+When an administrator disables a parent flag:
+1. **Database:** Child flags retain their stored values (`true`, `false`, or `null`)
+2. **Runtime:** `CheckFeatureFlag` middleware evaluates inheritance chain and blocks access
+3. **Data Safety:** No automatic deletion of data created via now-disabled features
+4. **Audit Trail:** `FeatureFlagObserver` logs flag changes via `AuditLogger`
+
+**Example:**
+```php
+// Admin disables package-level flag
+POST /v1/admin/features/finance/disable
+
+// Database state (unchanged):
+features.finance.* = false
+features.finance.journal_entry.* = null
+features.finance.journal_entry.create = true  // Stored value unchanged
+
+// Runtime evaluation (CheckFeatureFlag middleware):
+// Request to POST /v1/journal-entries
+// 1. Check features.finance.journal_entry.create = true ✓
+// 2. Check features.finance.journal_entry.* = null → inherit from parent
+// 3. Check features.finance.* = false → BLOCK REQUEST ✗
+// Result: 403 Forbidden (parent disabled)
+```
+
+### Feature Flag Storage
+
+Flags are stored in the `settings` table using the `Nexus\Setting` package:
+
+```php
+// Default values (FeatureFlagSeeder)
+'features.finance.*' => false,                      // Package disabled by default
+'features.finance.journal_entry.*' => null,         // Inherit from parent
+'features.finance.journal_entry.create' => null,    // Inherit from parent
+```
+
+### Admin API for Flag Management
+
+All flag changes are managed via Admin API (requires `admin` role):
+
+```php
+// Enable a specific endpoint
+POST /v1/admin/features/finance.journal_entry.create/enable
+
+// Disable entire package (affects all children at runtime)
+POST /v1/admin/features/finance/disable
+
+// Check effective state after inheritance
+GET /v1/admin/features/finance.journal_entry.create/check
+
+// View audit history
+GET /v1/admin/features/finance/audit
+```
+
+### Orphaned Data Management
+
+When features are disabled, associated data is **NOT automatically deleted**. Instead:
+
+**Default Policy (Manual Review):**
+- Data remains in database indefinitely
+- Admin reviews via `php artisan feature:orphans` command
+- Manual archival decision: `php artisan feature:archive {flag}`
+
+**Optional Policy (Automatic Archival):**
+- Admin enables: `settings.archival.enabled = true`
+- Admin sets: `settings.archival.retention_days >= 90` (minimum enforced)
+- Scheduled task runs daily: `php artisan archival:purge`
+- Moves data to `{table}_archived` after retention period
+
+**Configuration API:**
+```php
+// Get current archival policy
+GET /v1/admin/archival-policy
+
+// Enable auto-archival with 90-day retention (minimum)
+PUT /v1/admin/archival-policy
+{
+  "enabled": true,
+  "retention_days": 90  // Minimum: 90, rejects if less
+}
+
+// Disable auto-archival (keep indefinitely)
+PUT /v1/admin/archival-policy
+{
+  "enabled": false,
+  "retention_days": null
+}
+```
+
+### Middleware Implementation
+
+The `CheckFeatureFlag` middleware evaluates flags at request time:
+
+```php
+namespace App\Http\Middleware;
+
+use Nexus\Setting\Services\SettingsManager;
+
+class CheckFeatureFlag
+{
+    public function __construct(
+        private readonly SettingsManager $settings
+    ) {}
+    
+    public function handle(Request $request, Closure $next, string $flag): Response
+    {
+        if (!$this->isEnabled($flag)) {
+            abort(403, "Feature {$flag} is disabled");
+        }
+        
+        return $next($request);
+    }
+    
+    private function isEnabled(string $flag): bool
+    {
+        // Check endpoint flag
+        $endpointFlag = $this->settings->get($flag);
+        if ($endpointFlag === false) return false;
+        if ($endpointFlag === true) return $this->checkParents($flag);
+        
+        // Null = inherit, check parents
+        return $this->checkParents($flag);
+    }
+    
+    private function checkParents(string $flag): bool
+    {
+        $parts = explode('.', $flag);
+        
+        // Check resource wildcard (features.finance.journal_entry.*)
+        if (count($parts) === 4) {
+            $resourceFlag = "{$parts[0]}.{$parts[1]}.{$parts[2]}.*";
+            $resourceValue = $this->settings->get($resourceFlag);
+            if ($resourceValue === false) return false;
+            if ($resourceValue === null) {
+                // Check package wildcard
+                return $this->checkPackageWildcard($parts);
+            }
+        }
+        
+        return $this->checkPackageWildcard($parts);
+    }
+    
+    private function checkPackageWildcard(array $parts): bool
+    {
+        $packageFlag = "{$parts[0]}.{$parts[1]}.*";
+        $packageValue = $this->settings->get($packageFlag);
+        return $packageValue !== false; // false blocks, true/null allows
+    }
+}
+```
+
+---
+
+## 🏭 Factory State Pattern Requirements
+
+All Laravel Model Factories in `apps/Atomy/database/factories/` must follow strict state pattern requirements to ensure testability and consistency.
+
+### Mandatory Requirements
+
+1. **State Method Signature:** All state methods MUST return `static` for chainability
+2. **DocBlock Annotation:** All state methods MUST have `@return static` docblock
+3. **Dedicated Tests:** Every factory MUST have a corresponding test in `apps/Atomy/tests/Unit/Factories/`
+4. **CI Enforcement:** GitHub Actions MUST fail if factory added without corresponding test file
+
+### State Method Patterns
+
+```php
+namespace Database\Factories\Finance;
+
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class AccountFactory extends Factory
+{
+    /**
+     * Mark account as an asset account.
+     * 
+     * @return static
+     */
+    public function asset(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'account_type' => AccountType::Asset,
+            'normal_balance' => NormalBalance::Debit,
+        ]);
+    }
+    
+    /**
+     * Set account balance.
+     * 
+     * @param string $amount Decimal amount (e.g., '1000.00')
+     * @return static
+     */
+    public function withBalance(string $amount): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'balance' => $amount,
+        ]);
+    }
+    
+    /**
+     * Mark account as active.
+     * 
+     * @return static
+     */
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => true,
+        ]);
+    }
+    
+    /**
+     * Mark account as inactive.
+     * 
+     * @return static
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
+    }
+}
+```
+
+### Factory State Test Requirements
+
+Every factory test MUST verify:
+1. **State method returns correct attributes**
+2. **State methods are chainable**
+3. **State methods return new instance (immutability)**
+4. **Combined states work correctly**
+
+```php
+namespace Tests\Unit\Factories\Finance;
+
+use Tests\TestCase;
+use App\Models\Finance\Account;
+use Database\Factories\Finance\AccountFactory;
+
+class AccountFactoryTest extends TestCase
+{
+    /** @test */
+    public function it_creates_asset_account_with_correct_attributes(): void
+    {
+        $account = Account::factory()->asset()->make();
+        
+        $this->assertEquals(AccountType::Asset, $account->account_type);
+        $this->assertEquals(NormalBalance::Debit, $account->normal_balance);
+    }
+    
+    /** @test */
+    public function it_chains_state_methods_correctly(): void
+    {
+        $account = Account::factory()
+            ->asset()
+            ->withBalance('5000.00')
+            ->active()
+            ->make();
+        
+        $this->assertEquals(AccountType::Asset, $account->account_type);
+        $this->assertEquals('5000.00', $account->balance);
+        $this->assertTrue($account->is_active);
+    }
+    
+    /** @test */
+    public function it_returns_new_instance_for_chaining(): void
+    {
+        $factory1 = Account::factory();
+        $factory2 = $factory1->asset();
+        
+        $this->assertNotSame($factory1, $factory2);
+        $this->assertInstanceOf(AccountFactory::class, $factory2);
+    }
+}
+```
+
+### CI/CD Enforcement
+
+The `.github/workflows/tests.yml` includes a check for factory test coverage:
+
+```yaml
+- name: Check Factory Test Coverage
+  run: |
+    # Find all factory files
+    FACTORIES=$(find apps/Atomy/database/factories -name '*Factory.php' | wc -l)
+    
+    # Find all factory test files
+    FACTORY_TESTS=$(find apps/Atomy/tests/Unit/Factories -name '*FactoryTest.php' | wc -l)
+    
+    # Fail if mismatch
+    if [ "$FACTORIES" -ne "$FACTORY_TESTS" ]; then
+      echo "Factory test coverage mismatch: $FACTORIES factories but $FACTORY_TESTS tests"
+      exit 1
+    fi
+```
+
+### Common Factory State Patterns
+
+| Domain | Common States | Example |
+|--------|---------------|---------|
+| **Finance** | `asset()`, `liability()`, `posted()`, `draft()`, `withBalance()` | `Account::factory()->asset()->active()` |
+| **Assets** | `active()`, `disposed()`, `fullyDepreciated()`, `inMaintenance()` | `Asset::factory()->fullyDepreciated()` |
+| **CashMgmt** | `reconciled()`, `pending()`, `approved()`, `rejected()` | `BankStatement::factory()->imported()->processed()` |
+| **Workflow** | `pending()`, `approved()`, `rejected()`, `completed()` | `Approval::factory()->pending()` |
+| **Inventory** | `inStock()`, `reserved()`, `shipped()`, `received()` | `StockMovement::factory()->shipped()` |
+
+### Consolidated Factory Documentation
+
+All factory states are documented in a single reference file:
+
+**Location:** `docs/FACTORY_STATE_REFERENCE.md`
+
+**Generated by:** `php artisan factory:document`
+
+**Structure:**
+```markdown
+# Factory State Reference
+
+## Infrastructure Domain
+
+### EventStreamFactory
+- `forAggregate(string $id)`: Set aggregate ID
+- `withVersion(int $version)`: Set event version
+- `published()`: Mark as published
+- `pending()`: Mark as pending
+
+## Finance Domain
+
+### AccountFactory
+- `asset()`: Mark as asset account (debit normal balance)
+- `liability()`: Mark as liability account (credit normal balance)
+...
+```
+
+---
+
+## 🗄️ Orphaned Data Archival Policy
+
+When feature flags are disabled, associated data created via those features requires careful handling to balance data safety with compliance requirements.
+
+### Default Policy: Manual Review (Keep Indefinitely)
+
+**Behavior:**
+- Data remains in primary tables indefinitely
+- No automatic deletion or archival
+- Admin must manually review and decide
+
+**Commands:**
+```bash
+# List all orphaned data
+php artisan feature:orphans
+
+# Output example:
+# Feature: features.finance.journal_entry.create (disabled)
+# Orphaned Records: 42 journal entries created while feature was enabled
+# Last Access: 2024-10-15 14:23:00
+# Recommendation: Review and archive or keep
+
+# Manually archive orphaned data
+php artisan feature:archive features.finance.journal_entry.create
+
+# Moves data to journal_entries_archived table
+```
+
+### Optional Policy: Automatic Archival (Admin-Configured)
+
+**Requirements:**
+- Admin must explicitly enable: `settings.archival.enabled = true`
+- Admin must set retention period: `settings.archival.retention_days >= 90` (minimum enforced)
+- System validates retention period cannot be less than 90 days
+
+**Behavior:**
+- Scheduled task runs daily (`php artisan schedule:run`)
+- Identifies orphaned data older than retention period
+- Moves data to `{table}_archived` tables
+- Logs archival action to `AuditLogger`
+- Retains foreign key relationships
+
+**Configuration:**
+```php
+// Enable auto-archival with 90-day minimum retention
+PUT /v1/admin/archival-policy
+{
+  "enabled": true,
+  "retention_days": 90  // Minimum enforced by validation
+}
+
+// Attempt to set below minimum (REJECTED)
+PUT /v1/admin/archival-policy
+{
+  "enabled": true,
+  "retention_days": 30  // Validation error: "retention_days must be >= 90"
+}
+```
+
+**Scheduled Task (apps/Atomy/app/Console/Kernel.php):**
+```php
+protected function schedule(Schedule $schedule): void
+{
+    // Only run if auto-archival enabled
+    if (config('settings.archival.enabled', false)) {
+        $schedule->command('archival:purge')
+            ->daily()
+            ->at('02:00')  // 2 AM
+            ->appendOutputTo(storage_path('logs/archival.log'));
+    }
+}
+```
+
+**Command Implementation:**
+```bash
+# Dry run to preview what would be archived
+php artisan archival:purge --dry-run
+
+# Output:
+# [DRY RUN] Would archive 12 records from journal_entries (disabled since 2024-08-15, > 90 days)
+# [DRY RUN] Would archive 5 records from bank_statements (disabled since 2024-09-01, > 90 days)
+# Total records to archive: 17
+
+# Actual archival
+php artisan archival:purge
+
+# Output:
+# Archived 12 records from journal_entries to journal_entries_archived
+# Archived 5 records from bank_statements to bank_statements_archived
+# Total records archived: 17
+# Archival logged to AuditLogger
+```
+
+### Archival Table Structure
+
+Archived data is moved to mirror tables with `_archived` suffix:
+
+```php
+// Original table: journal_entries
+// Archived table: journal_entries_archived
+
+Schema::create('journal_entries_archived', function (Blueprint $table) {
+    // Same structure as journal_entries
+    $table->ulid('id')->primary();
+    $table->string('entry_number');
+    // ... all original columns
+    
+    // Additional archival metadata
+    $table->timestamp('archived_at');
+    $table->string('archived_by');  // User who triggered archival
+    $table->string('archive_reason');  // "feature_disabled" or "manual"
+});
+```
+
+### Archival vs Deletion
+
+**Nexus NEVER automatically deletes data.** Only two options:
+1. **Keep in primary table** (default, indefinite retention)
+2. **Archive to `{table}_archived`** (manual or auto, retains all data)
+
+**Why no deletion?**
+- **Compliance:** Financial regulations (SOX, IFRS) require audit trails
+- **Legal:** Potential litigation discovery requirements
+- **Safety:** Prevents accidental data loss from temporary feature toggles
+- **Reversibility:** Archived data can be restored if feature re-enabled
+
+### Restoring Archived Data
+
+```bash
+# Restore archived data when feature is re-enabled
+php artisan feature:restore features.finance.journal_entry.create
+
+# Moves data from journal_entries_archived back to journal_entries
+# Logs restoration action to AuditLogger
+```
+
+### Admin API for Archival Management
+
+```php
+// Get current archival policy
+GET /v1/admin/archival-policy
+// Response: { "enabled": false, "retention_days": null }
+
+// Enable auto-archival with minimum 90-day retention
+PUT /v1/admin/archival-policy
+{
+  "enabled": true,
+  "retention_days": 90
+}
+
+// Get orphaned data summary
+GET /v1/admin/features/orphans
+// Response: [
+//   {
+//     "feature": "features.finance.journal_entry.create",
+//     "status": "disabled",
+//     "orphaned_count": 42,
+//     "last_access": "2024-10-15T14:23:00Z",
+//     "age_days": 120
+//   }
+// ]
+
+// Manually trigger archival for specific feature
+POST /v1/admin/features/orphans/archive
+{
+  "feature": "features.finance.journal_entry.create",
+  "reason": "Compliance review completed"
+}
+```
+
+### Audit Logging for Archival Actions
+
+All archival actions are logged via `Nexus\AuditLogger`:
+
+```php
+// Auto-archival log entry
+$this->auditLogger->log(
+    entityId: 'archival_policy',
+    action: 'auto_archive',
+    description: "Archived 12 journal entries (feature: features.finance.journal_entry.create, retention: 90 days)",
+    metadata: [
+        'feature' => 'features.finance.journal_entry.create',
+        'record_count' => 12,
+        'table' => 'journal_entries',
+        'retention_days' => 90,
+        'triggered_by' => 'scheduled_task'
+    ]
+);
+
+// Manual archival log entry
+$this->auditLogger->log(
+    entityId: 'archival_policy',
+    action: 'manual_archive',
+    description: "Admin manually archived 42 journal entries (feature: features.finance.journal_entry.create)",
+    metadata: [
+        'feature' => 'features.finance.journal_entry.create',
+        'record_count' => 42,
+        'table' => 'journal_entries',
+        'triggered_by' => auth()->user()->id,
+        'reason' => 'Compliance review completed'
+    ]
+);
+```
+
+---
+
+## 📊 CI/CD Quality Gates
+
+All code committed to the Nexus monorepo must pass strict quality gates enforced by GitHub Actions.
+
+### Coverage Requirements
+
+| Scope | Minimum Coverage | Enforcement |
+|-------|------------------|-------------|
+| **Package Code** (`packages/*/src/`) | 95% | CI fails if below threshold |
+| **Atomy Application** (`apps/Atomy/app/`, `apps/Atomy/tests/`) | 85% | CI fails if below threshold |
+| **Factory Tests** | 100% (all factories must have tests) | CI fails if factory without test |
+| **Migration Numbering** | 100% compliance with 5-digit format | Pre-commit hook fails |
+
+### GitHub Actions Workflow
+
+**File:** `.github/workflows/tests.yml`
+
+```yaml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: xdebug
+      
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist
+      
+      - name: Run Package Tests with Coverage
+        run: |
+          vendor/bin/phpunit --configuration packages/*/phpunit.xml --coverage-clover coverage.xml
+          
+      - name: Check Package Coverage (95% minimum)
+        run: |
+          COVERAGE=$(php -r "echo round((simplexml_load_file('coverage.xml')->project->metrics['coveredstatements'] / simplexml_load_file('coverage.xml')->project->metrics['statements']) * 100, 2);")
+          if (( $(echo "$COVERAGE < 95" | bc -l) )); then
+            echo "Package coverage ($COVERAGE%) is below 95% threshold"
+            exit 1
+          fi
+      
+      - name: Run Atomy Tests with Coverage
+        working-directory: apps/Atomy
+        run: vendor/bin/phpunit --coverage-clover coverage.xml
+      
+      - name: Check Atomy Coverage (85% minimum)
+        working-directory: apps/Atomy
+        run: |
+          COVERAGE=$(php -r "echo round((simplexml_load_file('coverage.xml')->project->metrics['coveredstatements'] / simplexml_load_file('coverage.xml')->project->metrics['statements']) * 100, 2);")
+          if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+            echo "Atomy coverage ($COVERAGE%) is below 85% threshold"
+            exit 1
+          fi
+      
+      - name: Check Factory Test Coverage
+        run: |
+          FACTORIES=$(find apps/Atomy/database/factories -name '*Factory.php' | wc -l)
+          FACTORY_TESTS=$(find apps/Atomy/tests/Unit/Factories -name '*FactoryTest.php' | wc -l)
+          
+          if [ "$FACTORIES" -ne "$FACTORY_TESTS" ]; then
+            echo "Factory test coverage mismatch: $FACTORIES factories but $FACTORY_TESTS tests"
+            echo "Every factory must have a corresponding test file"
+            exit 1
+          fi
+      
+      - name: Upload Coverage Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: |
+            coverage.xml
+            apps/Atomy/coverage.xml
+```
+
+### Pre-Commit Hook (Migration Validation)
+
+**File:** `.git/hooks/pre-commit` (created by setup script)
+
+```bash
+#!/bin/bash
+
+# Check for staged migration files
+STAGED_MIGRATIONS=$(git diff --cached --name-only | grep 'apps/Atomy/database/migrations/.*\.php$')
+
+if [ -z "$STAGED_MIGRATIONS" ]; then
+  exit 0  # No migrations, skip validation
+fi
+
+echo "Validating migration numbering..."
+
+for MIGRATION in $STAGED_MIGRATIONS; do
+  # Extract filename
+  FILENAME=$(basename "$MIGRATION")
+  
+  # Check 5-digit format: YYYY_MM_DD_NNNNN_description.php
+  if ! [[ "$FILENAME" =~ ^[0-9]{4}_[0-9]{2}_[0-9]{2}_[0-9]{5}_.+\.php$ ]]; then
+    echo "ERROR: Migration $FILENAME does not follow 5-digit format"
+    echo "Expected: YYYY_MM_DD_NNNNN_description.php"
+    echo "See .github/copilot-instructions.md for migration numbering rules"
+    exit 1
+  fi
+  
+  # Extract 5-digit number
+  NUMBER=$(echo "$FILENAME" | sed -E 's/^[0-9]{4}_[0-9]{2}_[0-9]{2}_([0-9]{5})_.+\.php$/\1/')
+  
+  # Verify number ends in 0 (stepped by 10)
+  LAST_DIGIT="${NUMBER: -1}"
+  if [ "$LAST_DIGIT" != "0" ]; then
+    echo "ERROR: Migration number $NUMBER does not end in 0"
+    echo "Migration numbers must increment by 10: ...11000, 11010, 11020..."
+    exit 1
+  fi
+done
+
+echo "✓ All migrations follow 5-digit stepped format"
+exit 0
+```
+
+### Coverage Badge Configuration
+
+**File:** `README.md` (root)
+
+```markdown
+# Nexus ERP Monorepo
+
+[![Package Coverage](https://img.shields.io/badge/coverage-packages-95%25-brightgreen.svg)](tests/coverage/packages)
+[![Atomy Coverage](https://img.shields.io/badge/coverage-atomy-85%25-green.svg)](tests/coverage/atomy)
+[![Factory Tests](https://img.shields.io/badge/factories-100%25_tested-brightgreen.svg)](tests/coverage/factories)
+```
+
+### Automatic Documentation Update Checks
+
+```yaml
+- name: Check Documentation Updates
+  run: |
+    # Find changed package files
+    CHANGED_PACKAGES=$(git diff --name-only HEAD^ HEAD | grep '^packages/.*src/' | cut -d'/' -f2 | sort -u)
+    
+    for PACKAGE in $CHANGED_PACKAGES; do
+      # Check if corresponding implementation summary was updated
+      if ! git diff --name-only HEAD^ HEAD | grep -q "docs/${PACKAGE}_IMPLEMENTATION_SUMMARY.md"; then
+        echo "ERROR: Package $PACKAGE modified but docs/${PACKAGE}_IMPLEMENTATION_SUMMARY.md not updated"
+        exit 1
+      fi
+    done
+```
+
+---

@@ -1,0 +1,76 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: xdebug
+      
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist
+      
+      - name: Run Package Tests with Coverage
+        run: |
+          vendor/bin/phpunit --configuration packages/*/phpunit.xml --coverage-clover coverage.xml
+          
+      - name: Check Package Coverage (95% minimum)
+        run: |
+          COVERAGE=$(php -r "echo round((simplexml_load_file('coverage.xml')->project->metrics['coveredstatements'] / simplexml_load_file('coverage.xml')->project->metrics['statements']) * 100, 2);")
+          if (( $(echo "$COVERAGE < 95" | bc -l) )); then
+            echo "Package coverage ($COVERAGE%) is below 95% threshold"
+            exit 1
+          fi
+      
+      - name: Run Atomy Tests with Coverage
+        working-directory: apps/Atomy
+        run: vendor/bin/phpunit --coverage-clover coverage.xml
+      
+      - name: Check Atomy Coverage (85% minimum)
+        working-directory: apps/Atomy
+        run: |
+          COVERAGE=$(php -r "echo round((simplexml_load_file('coverage.xml')->project->metrics['coveredstatements'] / simplexml_load_file('coverage.xml')->project->metrics['statements']) * 100, 2);")
+          if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+            echo "Atomy coverage ($COVERAGE%) is below 85% threshold"
+            exit 1
+          fi
+      
+      - name: Check Factory Test Coverage
+        run: |
+          FACTORIES=$(find apps/Atomy/database/factories -name '*Factory.php' | wc -l)
+          FACTORY_TESTS=$(find apps/Atomy/tests/Unit/Factories -name '*FactoryTest.php' | wc -l)
+          
+          if [ "$FACTORIES" -ne "$FACTORY_TESTS" ]; then
+            echo "Factory test coverage mismatch: $FACTORIES factories but $FACTORY_TESTS tests"
+            echo "Every factory must have a corresponding test file"
+            exit 1
+          fi
+      
+      - name: Check Documentation Updates
+        run: |
+          # Find changed package files
+          CHANGED_PACKAGES=$(git diff --name-only HEAD^ HEAD | grep '^packages/.*src/' | cut -d'/' -f2 | sort -u)
+          
+          for PACKAGE in $CHANGED_PACKAGES; do
+            # Check if corresponding implementation summary was updated
+            if ! git diff --name-only HEAD^ HEAD | grep -q "docs/${PACKAGE}_IMPLEMENTATION_SUMMARY.md"; then
+              echo "ERROR: Package $PACKAGE modified but docs/${PACKAGE}_IMPLEMENTATION_SUMMARY.md not updated"
+              exit 1
+            fi
+          done
+      
+      - name: Upload Coverage Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: |
+            coverage.xml
+            apps/Atomy/coverage.xml
