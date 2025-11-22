@@ -82,19 +82,51 @@
 ---
 
 ### Phase 2: EventStream Infrastructure (PostgreSQL Partitioning)
-**Status:** ⏳ Not Started
+**Status:** ✅ Complete
 
-- [ ] Configure Redis queue for `finance-projections`
-- [ ] Add `hot-accounts` Redis sorted set connection
-- [ ] Create migration `2024_11_22_11040_create_event_streams_partitioned_table.php`
-  - [ ] Parent table with `PARTITION BY RANGE (occurred_at)`
-  - [ ] Initial partitions: `event_streams_2024`, `event_streams_2025`
-  - [ ] GIN indexes on JSONB columns
-  - [ ] BRIN index on `occurred_at`
-- [ ] Create `CreateNextYearPartitionCommand` (30-day pre-creation)
-- [ ] Create `ArchiveOldPartitionsCommand` (7-year retention)
-- [ ] Create migrations for reversal tracking, projections, snapshots
-- [ ] Commit: "feat(eventstream): Implement PostgreSQL fiscal year partitioning with lifecycle"
+#### Completed Tasks:
+- [x] Configure Redis queue for `finance-projections`
+  - [x] Added to `config/queue.php` with `after_commit=true`
+  - [x] Queue name: `finance-projections`, block_for: 5 seconds
+  
+- [x] Add `hot-accounts` Redis sorted set connection
+  - [x] Added to `config/database.php` using DB 2
+  - [x] Supports ZINCRBY for LRU access tracking
+  
+- [x] Create migration `2024_11_22_11040_create_event_streams_partitioned_table.php`
+  - [x] Parent table with `PARTITION BY RANGE (occurred_at)`
+  - [x] Initial partitions: `event_streams_2024`, `event_streams_2025`, `event_streams_2026`
+  - [x] GIN indexes on JSONB columns (payload, metadata)
+  - [x] BRIN index on `occurred_at` for partition pruning
+  - [x] Unique constraint on (aggregate_id, aggregate_type, event_version)
+  
+- [x] Create migration `2024_11_22_11050_create_event_snapshots_table.php`
+  - [x] Dynamic snapshot threshold support
+  - [x] JSONB snapshot_data with GIN index
+  - [x] Unique per aggregate version
+  
+- [x] Create migration `2024_11_22_11060_create_event_projections_table.php`
+  - [x] Projection rebuild tracking
+  - [x] Lag monitoring support
+  - [x] Status enum: active, rebuilding, failed, paused
+  
+- [x] Create `CreateNextYearPartitionCommand` (30-day pre-creation)
+  - [x] Scheduled daily check
+  - [x] Creates partition when within 30-day window
+  - [x] Dry-run mode support
+  
+- [x] Create `ArchiveOldPartitionsCommand` (7-year retention)
+  - [x] Monthly archival to S3/Azure Blob
+  - [x] JSONL export, gzip compression, partition detach/drop
+  - [x] Configurable retention period
+
+#### Commit:
+- ✅ `fb41617` - feat(eventstream): Implement PostgreSQL fiscal year partitioning with lifecycle
+
+---
+
+### Phase 3: Core Business Logic (Journal Entry Reversal)
+**Status:** ⏳ Not Started
 
 ### Phase 3: Core Business Logic (Journal Entry Reversal)
 **Status:** ⏳ Pending
