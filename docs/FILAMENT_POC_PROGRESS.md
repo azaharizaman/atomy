@@ -642,9 +642,40 @@ Filament Form → CreateAccountDto (validation) → toArray() → FinanceManager
 **Commit:** ✅ Ready for commit with message: "fix(filament): Fix Filament v4 compatibility issues"
 
 ### Phase 16: Audit Trail & Performance Benchmarking
-**Status:** ⏳ Pending
+**Status:** ✅ Complete (Audit Trail) / ⏳ Pending (Benchmarking)
 
-- [ ] Create `AuditLogResource`
+**Completed:**
+- [x] Created `AuditLogResource` (read-only audit log viewer)
+  - [x] **Filament v4 Schema pattern:** Uses `Schema` class instead of `Form` for consistency
+  - [x] Navigation: System group, clipboard icon, sort order 99
+  - [x] Static properties using correct enum types:
+    - `$navigationIcon`: `string | BackedEnum | null` (Filament v4 requirement)
+    - `$navigationGroup`: `string | UnitEnum | null` (Filament v4 requirement)
+  - [x] Form schema: Empty (read-only resource, no create/edit)
+  - [x] Table columns:
+    - log_name (badge, searchable, sortable)
+    - description (searchable)
+    - subject_type/subject_id (with null handling)
+    - causer name (with "System" default)
+    - created_at (datetime, sortable)
+  - [x] Filters:
+    - log_name select (distinct values from DB)
+    - subject_type select
+    - date range filter
+  - [x] Infolist (view page):
+    - Audit Log Details section (2 columns): log_name, description, subject_type/id, causer, created_at
+    - Properties section (collapsible): JSON-formatted event data
+  - [x] Permissions: All mutation methods return false (canCreate, canEdit, canDelete, canDeleteAny)
+  - [x] Pages:
+    - `ListAuditLogs` (no create action)
+    - `ViewAuditLog` (no edit/delete actions)
+
+**Architecture Insights:**
+- **Schema vs Form:** Filament v4 uses `Filament\Schemas\Schema` for both `form()` and `infolist()` methods, not `Filament\Forms\Form`
+- **Union Types Required:** Static properties must use union type syntax (`string | BackedEnum | null`), not nullable shorthand (`?string`)
+- **Enum Distinction:** Different properties require different enum base types (BackedEnum vs UnitEnum)
+
+**Pending:**
 - [ ] Test audit creation via Filament
 - [ ] Install Blackfire and create config
 - [ ] Profile complex pages
@@ -671,8 +702,8 @@ Filament Form → CreateAccountDto (validation) → toArray() → FinanceManager
 **PR #5:** Projection Optimization (Phase 7-8)  
 **PR #6:** Filament Installation & Resources (Phase 9-12)  
 **PR #7:** UI & UX (Phase 13-14)  
-**PR #8:** Security & Performance (Phase 15-16)  
-**PR #9:** Testing & Deployment (Phase 17)
+**PR #8:** Security & Performance (Phase 15-15.5) - **✅ Created #66** (https://github.com/azaharizaman/atomy/pull/66)  
+**PR #9:** Testing & Deployment (Phase 16-17) - ⏳ Pending
 
 ## Technical Debt Tracking
 
