@@ -2092,3 +2092,540 @@ exit 0
 ```
 
 ---
+
+## 🎨 Filament UI Implementation Rules & Guidelines
+
+!ALWAYS!! USE FILAMENT V4.X DOCUMENTATION
+
+These rules establish the architectural boundary between the Atomy Application Layer (where Filament lives) and the Nexus Domain Core. **Filament is the Presentation Layer** and must never be aware of data persistence methods or contain core ERP business logic.
+
+### Core Principle: Filament as Presentation Layer Only
+
+**Filament Resources, Pages, and Actions are UI components only.** All domain logic must be delegated to Nexus Service Managers through their interfaces.
+
+---
+
+## Rule 1: Service Layer Mandatory (Read/Write)
+
+Every non-trivial operation (Create, Update, Delete, or complex Read queries) performed by a Filament Resource **MUST** be executed by calling a method on a **`Nexus\*ManagerInterface`**. Direct interaction with Eloquent models for state mutation is strictly forbidden.
+
+| Operation | **❌ INCORRECT (Shortcut)** | **✅ CORRECT (Architectural)** |
+|:----------|:---------------------------|:------------------------------|
+| **Create** | `public static function create(array $data): Model { return Model::create($data); }` | Call `$this->manager->createAccount($dto);` in the form handler. |
+| **Update** | `$record->update($data);` in a form handler or action. | Call `$this->manager->updateAccount($record->id, $dto);` in the form handler. |
+| **Delete** | `$record->delete();` directly in an action. | Call `$this->manager->deleteAccount($record->id);` in the action handler. |
+| **Complex Query** | `Account::query()->where(...)` for complex data (e.g., Trial Balance). | Call `$this->manager->generateTrialBalance($periodId);` in a custom page/widget. |
+
+**Examples:**
+
+**❌ WRONG - Direct Eloquent manipulation:**
+```php
+use Filament\Resources\Resource;
+use App\Models\Finance\Account;
+
+class AccountResource extends Resource
+{
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            // ... fields
+        ]);
+    }
+    
+    // BAD: Directly manipulating Eloquent model
+    protected function handleRecordCreation(array $data): Model
+    {
+        return Account::create($data);
+    }
+}
+```
+
+**✅ CORRECT - Service layer delegation:**
+```php
+use Filament\Resources\Resource;
+use App\Models\Finance\Account;
+use Nexus\Finance\Contracts\FinanceManagerInterface;
+use App\DataTransferObjects\Finance\CreateAccountDto;
+
+class AccountResource extends Resource
+{
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            // ... fields
+        ]);
+    }
+    
+    // GOOD: Delegate to service manager
+    protected function handleRecordCreation(array $data): Model
+    {
+        /** @var FinanceManagerInterface $financeManager */
+        $financeManager = app(FinanceManagerInterface::class);
+        
+        // Convert form data to DTO
+        $dto = CreateAccountDto::fromArray($data);
+        
+        // Delegate to domain service
+        $accountId = $financeManager->createAccount($dto);
+        
+        // Return the created model for Filament
+        return Account::findOrFail($accountId);
+    }
+}
+```
+
+---
+
+## Rule 2: Interface Injection Mandatory
+
+Filament Resources, Pages, Actions, and Widgets must always inject the **Interface** from the Nexus package, never the concrete service class.
+
+| Context | **❌ INCORRECT** | **✅ CORRECT** |
+|:--------|:----------------|:--------------|
+| **Resource** | `public function __construct(FinanceManager $manager) {}` | `public function __construct(FinanceManagerInterface $manager) {}` |
+| **Page** | `public function __construct(AccountingService $service) {}` | `public function __construct(AccountingManagerInterface $service) {}` |
+| **Action** | `protected function setUp(): void { $this->manager = app(TenantManager::class); }` | `protected function setUp(): void { $this->manager = app(TenantManagerInterface::class); }` |
+| **Widget** | `private FinanceManager $financeManager;` | `private FinanceManagerInterface $financeManager;` |
+
+**Example - Custom Page:**
+
+**❌ WRONG:**
+```php
+namespace App\Filament\Finance\Pages;
+
+use Filament\Pages\Page;
+use Nexus\Finance\Services\FinanceManager; // Concrete class!
+
+class TrialBalancePage extends Page
+{
+    public function __construct(
+        private readonly FinanceManager $financeManager // WRONG
+    ) {}
+}
+```
+
+**✅ CORRECT:**
+```php
+namespace App\Filament\Finance\Pages;
+
+use Filament\Pages\Page;
+use Nexus\Finance\Contracts\FinanceManagerInterface; // Interface
+
+class TrialBalancePage extends Page
+{
+    public function __construct(
+        private readonly FinanceManagerInterface $financeManager // CORRECT
+    ) {}
+    
+    public function getTrialBalanceData(): array
+    {
+        return $this->financeManager->generateTrialBalance(
+            periodId: $this->selectedPeriod
+        );
+    }
+}
+```
+
+---
+
+## Rule 3: Data Transfer Object (DTO) Enforcement
+
+All data flowing *into* a Nexus Service Manager from the Filament UI must be encapsulated in a **DTO** defined in the **Atomy Application Layer**.
+
+### DTO Requirements:
+
+- **Location:** DTOs must live in `apps/Atomy/app/DataTransferObjects/{Domain}/` (e.g., `App\DataTransferObjects\Finance\CreateAccountDto`)
+- **Purpose:** The DTO performs **type casting and validation** (converting form input strings to **`Nexus\ValueObjects`** or `\DateTime` objects) before the data reaches the service layer
+- **Immutability:** DTOs should be `readonly` classes with all properties promoted in constructor
+- **Factory Method:** DTOs must provide a static `fromArray()` method for easy construction from form data
+
+**DTO Structure Example:**
+
+```php
+namespace App\DataTransferObjects\Finance;
+
+use Nexus\Finance\ValueObjects\AccountType;
+use Nexus\Finance\ValueObjects\NormalBalance;
+
+final readonly class CreateAccountDto
+{
+    public function __construct(
+        public string $accountCode,
+        public string $accountName,
+        public AccountType $accountType,
+        public NormalBalance $normalBalance,
+        public ?string $parentAccountId = null,
+        public bool $isActive = true,
+    ) {}
+    
+    /**
+     * Create DTO from Filament form data.
+     * 
+     * @param array<string, mixed> $data
+     * @return self
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            accountCode: $data['account_code'],
+            accountName: $data['account_name'],
+            accountType: AccountType::from($data['account_type']),
+            normalBalance: NormalBalance::from($data['normal_balance']),
+            parentAccountId: $data['parent_account_id'] ?? null,
+            isActive: $data['is_active'] ?? true,
+        );
+    }
+}
+```
+
+**Usage in Resource:**
+
+```php
+protected function handleRecordCreation(array $data): Model
+{
+    $financeManager = app(FinanceManagerInterface::class);
+    
+    // Convert form data to DTO (validation happens here)
+    $dto = CreateAccountDto::fromArray($data);
+    
+    // Pass DTO to service manager
+    $accountId = $financeManager->createAccount($dto);
+    
+    return Account::findOrFail($accountId);
+}
+```
+
+---
+
+## Rule 4: Exception Handling for UX
+
+When the Nexus service layer throws a domain exception (e.g., `PeriodLockedException`, `InsufficientBalanceException`), the Filament component must gracefully catch it and transform it into a user-friendly, consistent **Filament Notification**.
+
+**Action:** Do not allow the exception to trigger a generic Livewire error page. Use `try/catch` and `Filament\Notifications\Notification::make()` to provide clear feedback.
+
+**Example - Table Action:**
+
+**❌ WRONG - Unhandled exception:**
+```php
+use Filament\Tables\Actions\Action;
+
+Action::make('post')
+    ->action(function (Account $record) {
+        $financeManager = app(FinanceManagerInterface::class);
+        
+        // If period is locked, this throws PeriodLockedException
+        // User sees generic error page - BAD UX
+        $financeManager->postJournalEntry($record->id);
+    })
+```
+
+**✅ CORRECT - Graceful exception handling:**
+```php
+use Filament\Tables\Actions\Action;
+use Filament\Notifications\Notification;
+use Nexus\Period\Exceptions\PeriodLockedException;
+
+Action::make('post')
+    ->action(function (Account $record) {
+        $financeManager = app(FinanceManagerInterface::class);
+        
+        try {
+            $financeManager->postJournalEntry($record->id);
+            
+            Notification::make()
+                ->title('Journal Entry Posted')
+                ->success()
+                ->send();
+                
+        } catch (PeriodLockedException $e) {
+            Notification::make()
+                ->title('Cannot Post Entry')
+                ->body('The accounting period is locked. Please contact your administrator.')
+                ->danger()
+                ->send();
+        }
+    })
+```
+
+---
+
+## 💻 Filament Resource Coding Guidelines
+
+### 1. Resource Location and Naming
+
+- **Panel Specificity:** All Resources must be placed in a directory corresponding to their panel (e.g., `app/Filament/FinancePanel/Resources/`)
+- **Namespace Convention:** Use panel-specific namespaces (e.g., `App\Filament\Finance\Resources\AccountResource`)
+- **File Organization:**
+  ```
+  app/Filament/
+  ├── Admin/                    # Admin panel resources
+  │   ├── Resources/
+  │   └── Pages/
+  ├── Finance/                  # Finance panel resources
+  │   ├── Resources/
+  │   │   ├── AccountResource.php
+  │   │   ├── AccountResource/
+  │   │   │   ├── Pages/
+  │   │   │   └── Widgets/
+  │   └── Pages/
+  └── Hrm/                      # HRM panel resources
+      ├── Resources/
+      └── Pages/
+  ```
+
+### 2. Form Schema Integrity
+
+- **Separation of Validation:** Use **Filament's built-in validation rules** (e.g., `->required()`, `->numeric()`) for basic input validation
+- **Business Logic Validation:** Complex business logic validation (e.g., "Account Code must be unique across the tenant and cannot be '9999'") must be confirmed by the Nexus Service Layer *after* the form is submitted
+- **Data Keys:** Ensure form field names precisely match the property names defined in the corresponding **DTO** for easy mapping
+
+**Example:**
+
+```php
+public static function form(Form $form): Form
+{
+    return $form
+        ->schema([
+            Forms\Components\TextInput::make('account_code')
+                ->required()
+                ->maxLength(20)
+                ->unique(ignoreRecord: true), // Basic validation
+            
+            Forms\Components\TextInput::make('account_name')
+                ->required()
+                ->maxLength(255),
+            
+            Forms\Components\Select::make('account_type')
+                ->required()
+                ->options(AccountType::class),
+            
+            Forms\Components\Select::make('normal_balance')
+                ->required()
+                ->options(NormalBalance::class),
+            
+            // Field names match CreateAccountDto properties
+        ]);
+}
+```
+
+### 3. Custom Actions and Logic
+
+- **Actions are Entry Points:** Use **Actions** (Table Actions, Bulk Actions, Form Actions) as the primary entry point to call the Nexus Service Manager
+- **Action Logic (The Handler):** The `handle()` or `action()` method of any Action must contain the following sequence:
+  1. Resolve DTO from form data/request
+  2. Call `NexusManagerInterface` method
+  3. Emit `Filament Notification` (Success/Failure)
+
+**Example - Bulk Action:**
+
+```php
+use Filament\Tables\Actions\BulkAction;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Collection;
+
+BulkAction::make('activate')
+    ->label('Activate Accounts')
+    ->icon('heroicon-o-check-circle')
+    ->requiresConfirmation()
+    ->action(function (Collection $records) {
+        $financeManager = app(FinanceManagerInterface::class);
+        
+        try {
+            $activatedCount = 0;
+            
+            foreach ($records as $account) {
+                $financeManager->activateAccount($account->id);
+                $activatedCount++;
+            }
+            
+            Notification::make()
+                ->title("Activated {$activatedCount} accounts")
+                ->success()
+                ->send();
+                
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Activation Failed')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    })
+```
+
+### 4. Read Operations (Widgets and Pages)
+
+- **Calculated Data:** Widgets and Custom Pages must call the Nexus Service Manager for all calculated, aggregated, or filtered data (e.g., Trial Balance, Aged Payables chart)
+- **Caching:** If a widget displays heavy data (`financeManager->getAccountTree()`), it must call the **cached version** of the manager method. The widget itself should never contain caching logic
+- **Read-Only Principle:** Widgets should be purely read-only display components
+
+**Example - Custom Widget:**
+
+```php
+namespace App\Filament\Finance\Widgets;
+
+use Filament\Widgets\Widget;
+use Nexus\Finance\Contracts\FinanceManagerInterface;
+
+class TrialBalanceWidget extends Widget
+{
+    protected static string $view = 'filament.finance.widgets.trial-balance';
+    
+    public ?string $selectedPeriod = null;
+    
+    public function __construct(
+        private readonly FinanceManagerInterface $financeManager
+    ) {}
+    
+    public function getTrialBalanceData(): array
+    {
+        if (!$this->selectedPeriod) {
+            return [];
+        }
+        
+        // Delegate to cached service method
+        return $this->financeManager->getCachedTrialBalance(
+            periodId: $this->selectedPeriod
+        );
+    }
+}
+```
+
+### 5. Eloquent Relationship Managers
+
+- **Lazy Loading:** Eloquent relationship managers are acceptable for simple nested data (e.g., showing `DepreciationRecords` on an `AssetResource`)
+- **Mutation Rule:** The **creation, update, or deletion** of the related model via the relation manager must still be handled by the relevant **Nexus Manager** (e.g., `assetManager->recordDepreciation()`)
+
+**Example - Relation Manager:**
+
+```php
+namespace App\Filament\Finance\Resources\AccountResource\RelationManagers;
+
+use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables;
+use Nexus\Finance\Contracts\FinanceManagerInterface;
+use App\DataTransferObjects\Finance\CreateJournalEntryDto;
+
+class JournalEntriesRelationManager extends RelationManager
+{
+    protected static string $relationship = 'journalEntries';
+    
+    public function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('entry_number'),
+                Tables\Columns\TextColumn::make('description'),
+                Tables\Columns\TextColumn::make('amount'),
+            ])
+            ->actions([
+                Tables\Actions\CreateAction::make()
+                    ->using(function (array $data, string $model): Model {
+                        $financeManager = app(FinanceManagerInterface::class);
+                        
+                        // Convert to DTO
+                        $dto = CreateJournalEntryDto::fromArray($data);
+                        
+                        // Delegate to service
+                        $entryId = $financeManager->createJournalEntry($dto);
+                        
+                        return $model::findOrFail($entryId);
+                    }),
+            ]);
+    }
+}
+```
+
+---
+
+## 🔍 Filament Code Quality Checklist
+
+Before committing Filament code, verify:
+
+### For Filament Resources (`app/Filament/*/Resources/`)
+- [ ] All create/update/delete operations delegate to `Nexus\*ManagerInterface`
+- [ ] All constructor dependencies are interfaces, not concrete classes
+- [ ] Form field names match DTO property names
+- [ ] DTOs are used for all data transfer to service layer
+- [ ] Exceptions are caught and converted to Filament Notifications
+- [ ] No direct Eloquent model manipulation for state changes
+- [ ] Complex queries delegate to service manager methods
+
+### For Filament Pages (`app/Filament/*/Pages/`)
+- [ ] Service interfaces injected via constructor
+- [ ] All calculated data retrieved from service managers
+- [ ] No business logic in page classes (only presentation logic)
+- [ ] Exception handling with user-friendly notifications
+
+### For Filament Actions
+- [ ] Action handler follows: DTO → Service Call → Notification
+- [ ] Try/catch blocks for domain exceptions
+- [ ] Success and failure notifications implemented
+- [ ] No direct database queries in action handlers
+
+### For Filament Widgets
+- [ ] Read-only data display (no mutations)
+- [ ] Data retrieved from service manager methods
+- [ ] Cached methods used for heavy queries
+- [ ] No caching logic in widget itself
+
+### For DTOs (`app/DataTransferObjects/`)
+- [ ] Located in correct domain directory
+- [ ] All properties are `readonly`
+- [ ] Static `fromArray()` factory method provided
+- [ ] Type casting to Nexus ValueObjects performed
+- [ ] Immutable (no setters)
+
+---
+
+## 📋 Common Filament Anti-Patterns to Avoid
+
+| Anti-Pattern | Why It's Wrong | Correct Approach |
+|:-------------|:---------------|:-----------------|
+| **Direct Model Create** | `Account::create($data)` in Resource | Use `$financeManager->createAccount($dto)` |
+| **Direct Model Update** | `$record->update($data)` in Action | Use `$financeManager->updateAccount($id, $dto)` |
+| **Raw Queries** | `DB::table('accounts')->where(...)` in Widget | Use `$financeManager->getAccountsByType($type)` |
+| **Business Logic in Form** | `->rules([new UniqueAccountCode()])` | Validation in service manager, not form |
+| **Concrete Injection** | `__construct(FinanceManager $manager)` | `__construct(FinanceManagerInterface $manager)` |
+| **Unhandled Exceptions** | Domain exception crashes Livewire | Wrap in try/catch, emit Notification |
+| **No DTO** | `$manager->create($request->all())` | `$manager->create(CreateDto::fromArray($data))` |
+| **Caching in Widget** | `Cache::remember()` in widget method | Use `$manager->getCachedData()` |
+| **Model Logic** | Custom methods on Eloquent models called from Resources | Logic belongs in service managers |
+
+---
+
+## 🎯 Filament Architecture Summary
+
+**The Golden Rule:** Filament components are **presentation layer only**. They orchestrate UI interactions and delegate all domain logic to Nexus service managers through interfaces.
+
+**Flow Diagram:**
+```
+User Interaction (Filament UI)
+    ↓
+Filament Resource/Page/Action
+    ↓
+DTO Creation (fromArray)
+    ↓
+Service Manager Interface Call
+    ↓
+Nexus Package (Business Logic)
+    ↓
+Repository Interface (Data Persistence)
+    ↓
+Eloquent Model (Database)
+    ↓
+Return Result
+    ↓
+Filament Notification (Success/Error)
+    ↓
+User Feedback
+```
+
+**Remember:**
+1. **Never** manipulate Eloquent models directly in Filament components
+2. **Always** inject interfaces, not concrete classes
+3. **Always** use DTOs for data transfer to service layer
+4. **Always** handle exceptions gracefully with notifications
+5. **Always** delegate business logic to Nexus service managers
+
+---
