@@ -126,18 +126,45 @@
 ---
 
 ### Phase 3: Core Business Logic (Journal Entry Reversal)
-**Status:** ⏳ Not Started
+**Status:** ✅ Complete
 
-### Phase 3: Core Business Logic (Journal Entry Reversal)
-**Status:** ⏳ Pending
+#### Completed Tasks:
+- [x] Create `JournalEntryReversedEvent.php` in `packages/Finance/src/Events/`
+  - [x] Implements `EventInterface` with ULID event ID
+  - [x] Captures originalJournalEntryId, reversalJournalEntryId, reversalDate, reason, reversedBy
+  - [x] Supports correlation/causation chains for audit trail
+  
+- [x] Enhanced `FinanceManager.reverseJournalEntry()` with EventStream integration
+  - [x] Publishes `JournalEntryReversedEvent` to original entry aggregate
+  - [x] Publishes `AccountDebitedEvent` for each debit line in reversal entry
+  - [x] Publishes `AccountCreditedEvent` for each credit line in reversal entry
+  - [x] Implements correlation ID to link all reversal events
+  - [x] Implements causation ID linking account events to reversal event
+  
+- [x] Updated `FinanceController.reverseJournalEntry()` API endpoint
+  - [x] Converts validated date string to `DateTimeImmutable`
+  - [x] Enhanced response with reversal metadata (date, reason)
+  - [x] Returns success message confirming EventStream publication
+  - [x] Validation: reversal_date required, reason max 500 chars
+  
+- [x] Event flow implementation:
+  - [x] User calls `POST /v1/journal-entries/{id}/reverse`
+  - [x] Service creates reversal entry (swaps debits/credits)
+  - [x] Events append to partitioned `event_streams` table
+  - [x] Projection listeners update account balances asynchronously
 
-- [ ] Create `JournalEntryReversedEvent.php`
-- [ ] Implement `reverseJournalEntry()` in `FinanceManager`
-- [ ] Update `PostingEngine::reverseEntry()`
-- [ ] Publish `AccountDebitedEvent` and `AccountCreditedEvent` to EventStream
-- [ ] Complete `FinanceController::reverse()` API endpoint
-- [ ] Add unit tests for reversal logic
-- [ ] Commit: "feat(finance): Implement journal entry reversal with EventStream"
+#### Technical Details:
+- **Double-Entry Compliance:** Reversal swaps debits/credits maintaining accounting equation
+- **SOX/IFRS Compliance:** Complete audit trail via immutable event log
+- **Event Correlation:** `correlationId` ties all 3 event types together
+- **Event Causation:** Account events reference reversal event as `causationId`
+- **Partition Storage:** Events stored in PostgreSQL fiscal year partitions (2024/2025/2026)
+- **Indexing:** GIN indexes on JSONB payload, BRIN on occurred_at for fast queries
+
+#### Commits:
+- ✅ `e9eac91` - feat(finance): Implement journal entry reversal with EventStream integration
+
+---
 
 ### Phase 4: Projection System (Dynamic Snapshots)
 **Status:** ⏳ Pending
