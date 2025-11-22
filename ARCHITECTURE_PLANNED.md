@@ -24,9 +24,9 @@ While maintaining full API capabilities, the planned architecture introduces **F
   * Allowed to depend on other atomic packages in the monorepo
       (e.g., `nexus/uom` can be required by `nexus/inventory`).
   * Allowed to require framework-agnostic libraries (e.g., `psr/log`).
-  * Allowed to require low evel libra for Laravel support (e.g., `illuminate/support`). But should avoid framework-specific code.
+  * Allowed to require low-level library for Laravel support (e.g., `illuminate/support`). Should be limited to non-invasive helpers (Collections, support functions) and avoid other Illuminate namespaces.
   * Is mostly engine and logic processing thus persistence agnostic. It does not care how data is stored. It only provides the interfaces. Most case it does not provide any model traits or classes.
-  * All auto-incrementing primary keys are ULIDs (UUID v4) strings.
+  * All primary keys are ULIDs (26-character Crockford base32 strings, sortable and distributed-friendly).
 
 ## Package Inventory (50+ Atomic Packages)
 
@@ -101,11 +101,65 @@ While maintaining full API capabilities, the planned architecture introduces **F
 50. **Nexus\ProjectManagement** - Projects, tasks, timesheets, milestones
 
 **Package Dependencies:** Packages may depend on other packages (e.g., `Inventory` requires `Uom`, `Receivable` requires `Finance`, `Sales`, `Party`). All dependencies must be explicit in `composer.json`.
+
+## Getting Started & Roadmap
+
+### Current Implementation Status
+
+**MVP Packages (Production-Ready):**
+- Foundation: Tenant, Sequencing, Period, Uom, AuditLogger, Setting
+- Finance Core: Finance, Accounting, Currency
+- Sales & Operations: Sales, Party, Product
+- Integration: Connector, Notifier, Storage, Document
+
+**In Development:**
+- Receivable (Phase 3), Payable, Inventory, Warehouse
+- Hrm, Payroll (with Malaysia statutory adapter)
+- FieldService, Workflow, EventStream
+
+**Planned:**
+- Manufacturing, Procurement, ProjectManagement
+- Analytics, Intelligence, Reporting
+- Marketing, Crm, Backoffice, OrgStructure
+
+**Publishing Strategy:** Start with ~15 core packages. Consolidate small, tightly-coupled packages to reduce operational overhead until CI/release automation is mature.
+
+### Quick Start for New Contributors
+
+1. **Clone and Setup:**
+   ```bash
+   git clone <repo-url> nexus
+   cd nexus
+   composer install
+   ```
+
+2. **Run Atomy Locally:**
+   ```bash
+   cd apps/Atomy
+   cp .env.example .env
+   php artisan key:generate
+   php artisan migrate
+   php artisan serve
+   ```
+
+3. **Enable Filament Admin (Optional):**
+   ```bash
+   # In apps/Atomy/.env
+   ADMIN_UI_ENABLED=true
    
+   # Install Filament
+   composer require filament/filament:"^4.0"
+   php artisan filament:install --panels
+   npm install && npm run build
+   ```
+
+4. **Create Your First Package:** See Section 5 (Developer Workflow)
+   
+
 
 ## Applications:
 
-   There are two tyes of application in this monorepo:
+   There are two types of application in this monorepo:
 
 ### **Headless-First Orchestrator (`apps/Atomy`):**
 
@@ -421,6 +475,61 @@ When a new business domain is required (e.g., `Nexus\Crm` or `Nexus\AuditLogger`
 6.  **Implement in Atomy:** Go back to `apps/Atomy` and create the necessary migrations, models (`App\Models\AuditLog`), and repositories (`DbAuditLogRepository`) that implement the contracts from `Nexus\AuditLogger`.
 7.  **Bind Implementation:** Bind the interface to the concrete implementation in `apps/Atomy/app/Providers/AppServiceProvider.php`.
 
+**Example Package `composer.json`:**
+```json
+{
+  "name": "nexus/uom",
+  "type": "library",
+  "description": "Unit of measurement management and conversions",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Nexus\\Uom\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=8.3",
+    "psr/log": "^3.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.0"
+  }
+}
+```
+
+**Example Service Provider Binding:**
+```php
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        // Rule A: Bind package interfaces to application implementations
+        $this->app->bind(
+            \Nexus\Uom\Contracts\UomRepositoryInterface::class,
+            \App\Repositories\DbUomRepository::class
+        );
+        
+        $this->app->bind(
+            \Nexus\Tenant\Contracts\TenantRepositoryInterface::class,
+            \App\Repositories\DbTenantRepository::class
+        );
+        
+        // Rule B: Bind to package-provided concrete classes
+        $this->app->singleton(
+            \Nexus\Tenant\Contracts\TenantContextInterface::class,
+            \Nexus\Tenant\Services\TenantContextManager::class
+        );
+        
+        // Rule C: DO NOT bind concrete package services (auto-resolved)
+        // $this->app->singleton(\Nexus\Tenant\Services\TenantManager::class); // ❌ REMOVE
+    }
+}
+```
+
 -----
 
 ## 6. 🏛️ Architectural Patterns & Principles
@@ -574,15 +683,18 @@ The Filament admin panel in `apps/Atomy` follows strict architectural constraint
 3. **No Business Logic in UI:** Filament resources are purely presentation and user input handlers
 4. **Package Ignorance:** Filament code exists only in `apps/Atomy`; packages remain unaware of Filament
 
+**Engineering Cost Note:** Filament's scaffolding expects Eloquent models. Enforcing service-layer-only access requires custom resource pages, Livewire actions, and DTO mapping. Budget additional development time for custom forms and table actions compared to default Filament usage.
+
 #### Resource Architecture Pattern
 
-**✅ CORRECT - Service-driven Filament resource:**
+**✅ CORRECT - Service-driven Filament resource with DTO:**
 ```php
 namespace App\Filament\Resources;
 
 use Filament\Resources\Resource;
 use Nexus\Receivable\Contracts\ReceivableManagerInterface;
 use Nexus\Party\Contracts\CustomerRepositoryInterface;
+use App\DataTransferObjects\CreateInvoiceDto;
 
 class InvoiceResource extends Resource
 {
@@ -593,12 +705,16 @@ class InvoiceResource extends Resource
     
     public function create(array $data): void
     {
-        // Use service layer, not Eloquent
-        $this->receivableManager->createInvoice(
+        // Map Filament form data to DTO (decouples UI from persistence)
+        $dto = new CreateInvoiceDto(
             customerId: $data['customer_id'],
             items: $data['items'],
-            dueDate: new \DateTimeImmutable($data['due_date'])
+            dueDate: new \DateTimeImmutable($data['due_date']),
+            notes: $data['notes'] ?? null
         );
+        
+        // Use service layer with DTO, not Eloquent
+        $this->receivableManager->createInvoiceFromDto($dto);
     }
     
     public function getFormSchema(): array
@@ -803,6 +919,383 @@ class InvoiceResourceTest extends TestCase
 
 **Key Constraint:** Existing API must remain unchanged; Filament is additive only.
 
+#### Filament Integration Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Filament as Filament Resource
+    participant DTO as Data Transfer Object
+    participant Service as Package Service
+    participant Repo as Repository
+    participant DB as Database
+    
+    User->>Filament: Submit form (create invoice)
+    Filament->>DTO: Map form data to CreateInvoiceDto
+    Filament->>Service: receivableManager->createInvoiceFromDto(dto)
+    Service->>Service: Validate business rules
+    Service->>Repo: invoiceRepository->save(invoice)
+    Repo->>DB: INSERT INTO customer_invoices
+    DB-->>Repo: ULID returned
+    Repo-->>Service: Invoice entity
+    Service->>Service: auditLogger->log("Invoice created")
+    Service-->>Filament: Invoice ULID
+    Filament->>Filament: Redirect to view page
+    Filament-->>User: Success notification
+```
+
+**Flow Explanation:**
+1. **User submits Filament form** → Form validation in Filament resource
+2. **Filament maps to DTO** → Decouples UI from domain model
+3. **Service receives DTO** → Business logic in package service
+4. **Service validates** → Domain rules enforced (period open, permissions, etc.)
+5. **Repository persists** → Eloquent repository writes to database
+6. **Audit logged** → AuditLogger records action
+7. **Response flows back** → Filament displays success, redirects
+
+**Key Principle:** Filament never touches Eloquent directly. All operations flow through service layer, ensuring API and admin UI use identical business logic.
+
+#### Service → API → Filament Lifecycle Comparison
+
+**Same Operation, Two Interfaces:**
+
+**Via API (External Client):**
+```http
+POST /api/v1/invoices HTTP/1.1
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "customer_id": "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+  "items": [
+    {"product_id": "01ARZ...", "quantity": 5, "unit_price": "100.00"}
+  ],
+  "due_date": "2024-12-31"
+}
+```
+
+**Controller:**
+```php
+class InvoiceController extends Controller
+{
+    public function __construct(
+        private readonly ReceivableManagerInterface $receivableManager
+    ) {}
+    
+    public function store(CreateInvoiceRequest $request): JsonResponse
+    {
+        $dto = CreateInvoiceDto::fromArray($request->validated());
+        $invoiceId = $this->receivableManager->createInvoiceFromDto($dto);
+        
+        return response()->json([
+            'id' => $invoiceId,
+            'message' => 'Invoice created successfully'
+        ], 201);
+    }
+}
+```
+
+**Via Filament Admin UI (Internal User):**
+```php
+class InvoiceResource extends Resource
+{
+    public function __construct(
+        private readonly ReceivableManagerInterface $receivableManager
+    ) {}
+    
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            Forms\Components\Select::make('customer_id')
+                ->relationship('customer', 'name')
+                ->required(),
+            Forms\Components\Repeater::make('items')
+                ->schema([
+                    Forms\Components\Select::make('product_id'),
+                    Forms\Components\TextInput::make('quantity')->numeric(),
+                    Forms\Components\TextInput::make('unit_price')->numeric(),
+                ]),
+            Forms\Components\DatePicker::make('due_date')->required(),
+        ]);
+    }
+    
+    public static function create(array $data): void
+    {
+        $dto = CreateInvoiceDto::fromArray($data);
+        app(ReceivableManagerInterface::class)->createInvoiceFromDto($dto);
+    }
+}
+```
+
+**Identical Flow:**
+1. Request validation (API: `CreateInvoiceRequest`, Filament: form validation)
+2. Map to DTO (`CreateInvoiceDto::fromArray`)
+3. Call service (`receivableManager->createInvoiceFromDto`)
+4. Service orchestrates business logic (same code path)
+5. Repository persists (same Eloquent repository)
+6. Response (API: JSON 201, Filament: redirect with notification)
+
+**Result:** Both interfaces use **identical business logic** via service layer. No duplicate code, no divergence risk.
+
+#### Converting API Controller to Filament Resource (Step-by-Step)
+
+**Scenario:** You have a working API endpoint. Now add Filament admin UI for internal users.
+
+**Example: Invoice CRUD**
+
+**Step 1: Identify the Service Layer**
+
+Existing API Controller:
+```php
+// app/Http/Controllers/Api/InvoiceController.php
+class InvoiceController extends Controller
+{
+    public function __construct(
+        private readonly ReceivableManagerInterface $receivableManager,
+        private readonly CustomerRepositoryInterface $customerRepository
+    ) {}
+    
+    public function index(): JsonResponse
+    {
+        $invoices = $this->receivableManager->getAllInvoices();
+        return response()->json($invoices);
+    }
+    
+    public function store(CreateInvoiceRequest $request): JsonResponse
+    {
+        $dto = CreateInvoiceDto::fromArray($request->validated());
+        $invoiceId = $this->receivableManager->createInvoiceFromDto($dto);
+        return response()->json(['id' => $invoiceId], 201);
+    }
+    
+    public function show(string $id): JsonResponse
+    {
+        $invoice = $this->receivableManager->getInvoiceById($id);
+        return response()->json($invoice);
+    }
+}
+```
+
+**Step 2: Create Filament Resource**
+
+```bash
+php artisan make:filament-resource Invoice --generate
+```
+
+**Step 3: Inject Services (Not Models)**
+
+```php
+// app/Filament/Resources/InvoiceResource.php
+namespace App\Filament\Resources;
+
+use Filament\Resources\Resource;
+use Nexus\Receivable\Contracts\ReceivableManagerInterface;
+use Nexus\Party\Contracts\CustomerRepositoryInterface;
+use App\DataTransferObjects\CreateInvoiceDto;
+
+class InvoiceResource extends Resource
+{
+    protected static ?string $model = Invoice::class; // For Filament scaffolding only
+    
+    // Inject services, not repositories
+    public function __construct(
+        private readonly ReceivableManagerInterface $receivableManager,
+        private readonly CustomerRepositoryInterface $customerRepository
+    ) {}
+```
+
+**Step 4: Map API Logic to Filament Methods**
+
+| API Method | Filament Equivalent | Service Call |
+|-----------|-------------------|-------------|
+| `index()` | `table()` | `receivableManager->getAllInvoices()` |
+| `store()` | `create()` in CreateInvoice page | `receivableManager->createInvoiceFromDto()` |
+| `show()` | `view()` in ViewInvoice page | `receivableManager->getInvoiceById()` |
+| `update()` | `edit()` in EditInvoice page | `receivableManager->updateInvoiceFromDto()` |
+| `destroy()` | `delete()` action | `receivableManager->deleteInvoice()` |
+
+**Step 5: Implement Table (Index)**
+
+```php
+public static function table(Table $table): Table
+{
+    return $table
+        ->columns([
+            Tables\Columns\TextColumn::make('invoice_number')
+                ->searchable()
+                ->sortable(),
+            Tables\Columns\TextColumn::make('customer.name')
+                ->getStateUsing(function (Invoice $record) {
+                    // Use service to get customer name
+                    $customer = app(CustomerRepositoryInterface::class)
+                        ->findById($record->customer_id);
+                    return $customer->getName();
+                }),
+            Tables\Columns\TextColumn::make('total')
+                ->getStateUsing(function (Invoice $record) {
+                    // Calculate via service, not model accessor
+                    return app(ReceivableManagerInterface::class)
+                        ->calculateInvoiceTotal($record->id);
+                })
+                ->money('MYR'),
+        ])
+        ->actions([
+            Tables\Actions\ViewAction::make(),
+            Tables\Actions\EditAction::make(),
+        ]);
+}
+```
+
+**Step 6: Implement Form (Create/Edit)**
+
+```php
+public static function form(Form $form): Form
+{
+    return $form->schema([
+        Forms\Components\Select::make('customer_id')
+            ->label('Customer')
+            ->options(function () {
+                // Use service to get customer options
+                return app(CustomerRepositoryInterface::class)
+                    ->getAllActive()
+                    ->mapWithKeys(fn($c) => [$c->getId() => $c->getName()]);
+            })
+            ->searchable()
+            ->required(),
+            
+        Forms\Components\Repeater::make('items')
+            ->schema([
+                Forms\Components\Select::make('product_id')
+                    ->options(function () {
+                        return app(ProductRepositoryInterface::class)
+                            ->getAll()
+                            ->mapWithKeys(fn($p) => [$p->getId() => $p->getName()]);
+                    }),
+                Forms\Components\TextInput::make('quantity')->numeric()->required(),
+                Forms\Components\TextInput::make('unit_price')->numeric()->required(),
+            ]),
+            
+        Forms\Components\DatePicker::make('due_date')->required(),
+        Forms\Components\Textarea::make('notes'),
+    ]);
+}
+```
+
+**Step 7: Override Create Logic (Custom Page)**
+
+```php
+// app/Filament/Resources/InvoiceResource/Pages/CreateInvoice.php
+namespace App\Filament\Resources\InvoiceResource\Pages;
+
+use Filament\Resources\Pages\CreateRecord;
+use App\DataTransferObjects\CreateInvoiceDto;
+use Nexus\Receivable\Contracts\ReceivableManagerInterface;
+
+class CreateInvoice extends CreateRecord
+{
+    protected static string $resource = InvoiceResource::class;
+    
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        // Map to DTO
+        $dto = CreateInvoiceDto::fromArray($data);
+        
+        // Call service layer (same as API controller)
+        $invoiceId = app(ReceivableManagerInterface::class)
+            ->createInvoiceFromDto($dto);
+        
+        // Return minimal data for Filament record tracking
+        return ['id' => $invoiceId];
+    }
+}
+```
+
+**Step 8: Add Custom Actions (Business Logic)**
+
+```php
+public static function table(Table $table): Table
+{
+    return $table
+        ->actions([
+            Tables\Actions\Action::make('approve')
+                ->icon('heroicon-o-check-circle')
+                ->requiresConfirmation()
+                ->action(function (Invoice $record) {
+                    // Call service method (same as API endpoint)
+                    app(ReceivableManagerInterface::class)
+                        ->approveInvoice($record->id);
+                })
+                ->successNotification('Invoice approved successfully'),
+                
+            Tables\Actions\Action::make('void')
+                ->icon('heroicon-o-x-circle')
+                ->requiresConfirmation()
+                ->action(function (Invoice $record) {
+                    app(ReceivableManagerInterface::class)
+                        ->voidInvoice($record->id);
+                })
+                ->color('danger'),
+        ]);
+}
+```
+
+**Step 9: Test Dual Interface**
+
+```php
+// tests/Feature/InvoiceCreationTest.php
+class InvoiceCreationTest extends TestCase
+{
+    public function test_invoice_creation_via_api()
+    {
+        $response = $this->postJson('/api/v1/invoices', [
+            'customer_id' => $this->customer->id,
+            'items' => [['product_id' => $this->product->id, 'quantity' => 5]],
+            'due_date' => '2024-12-31',
+        ]);
+        
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('customer_invoices', [
+            'customer_id' => $this->customer->id,
+        ]);
+    }
+    
+    public function test_invoice_creation_via_filament()
+    {
+        Livewire::test(InvoiceResource\Pages\CreateInvoice::class)
+            ->fillForm([
+                'customer_id' => $this->customer->id,
+                'items' => [['product_id' => $this->product->id, 'quantity' => 5]],
+                'due_date' => '2024-12-31',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+        
+        // Same database assertion
+        $this->assertDatabaseHas('customer_invoices', [
+            'customer_id' => $this->customer->id,
+        ]);
+    }
+}
+```
+
+**Checklist:**
+- [ ] Identified all service layer dependencies from API controller
+- [ ] Injected services into Filament resource (not Eloquent models)
+- [ ] Mapped API methods to Filament equivalents (table, form, actions)
+- [ ] Created DTOs for form data mapping
+- [ ] Overrode create/edit logic to call services
+- [ ] Added custom actions for business operations
+- [ ] Tested both API and Filament produce identical database state
+- [ ] Verified no direct Eloquent queries in Filament resource
+
+**Common Pitfalls to Avoid:**
+- ❌ Using `Invoice::create($data)` in Filament (bypasses service layer)
+- ❌ Accessing model relationships directly (use service methods)
+- ❌ Duplicating validation logic (use shared DTOs)
+- ❌ Different business rules for API vs Filament (must be identical)
+
+**Result:** API and Filament admin UI are now **equivalent interfaces** consuming the same business logic, ensuring consistency and preventing divergence.
+
 -----
 
 ## 7. 🔒 Architectural Constraints & Guardrails
@@ -825,15 +1318,17 @@ class InvoiceResourceTest extends TestCase
 ### 7.2 Data Sovereignty
 
 **Primary Keys:**
-- All primary keys use ULIDs (26-character UUID v4 strings)
+- All primary keys use ULIDs (26-character Crockford base32 strings)
 - Never use auto-incrementing integers
-- Benefits: Distributed generation, no collisions, sortable by creation time
+- Benefits: Sortable, distributed generation without central coordination, URL-safe, case-insensitive
+- Format: `01ARZ3NDEKTSV4RRFFQ69G5FAV` (timestamp-prefixed for natural ordering)
 
 **Multi-Tenancy:**
-- All business entities include `tenant_id` column
-- Automatic tenant scoping via global scopes
-- Queue jobs preserve tenant context
-- Row-level security enforced
+- All business entities include `tenant_id` column (ULID reference)
+- Automatic tenant scoping via Eloquent global scopes
+- Queue jobs preserve tenant context via serialized metadata
+- **Row-level security:** For PostgreSQL deployments, consider enabling Row-Level Security (RLS) policies for defense-in-depth data isolation
+- Database-level tenant constraints enforced via foreign keys and check constraints
 
 ### 7.3 Technology Constraints
 
@@ -850,11 +1345,17 @@ class InvoiceResourceTest extends TestCase
 
 ### 7.4 Performance Guardrails
 
-**Critical Paths:**
-- Period validation: < 5ms (cached lookups)
-- Tenant context resolution: < 2ms (cached)
-- Sequence generation: Atomic with SELECT FOR UPDATE
-- API response times: Target < 200ms for read, < 500ms for write
+**Critical Paths (Target SLOs):**
+- Period validation: < 5ms (cached lookups, measured via APM traces)
+- Tenant context resolution: < 2ms (cached, measured per request)
+- Sequence generation: Atomic with SELECT FOR UPDATE (< 10ms, measured at P99)
+- API response times: Target < 200ms for read, < 500ms for write (excluding network latency)
+
+**Measurement Strategy:**
+- Benchmark on staging with production-like data volumes
+- Use OpenTelemetry traces for critical flows
+- Profile with Blackfire or XDebug on staging
+- Set up Prometheus metrics and Grafana dashboards for SLO tracking
 
 **Caching Strategy:**
 - Period data cached with 1-hour TTL
@@ -875,12 +1376,25 @@ class InvoiceResourceTest extends TestCase
 - Wildcard permissions (users.*, reports.*.view)
 - Permission inheritance through role hierarchy
 - Tenant-scoped permissions
+- **Permission caching:** Cache permission checks with configurable TTL (default 5 minutes), invalidate on role changes
+- **Audit failed checks:** Log all permission denials with user, resource, and timestamp
+
+**Data Protection:**
+- **Encryption at rest:** Encrypt sensitive fields (PII, financial data) using Laravel's encrypted casts
+- **Key management:** Use AWS KMS, Azure Key Vault, or HashiCorp Vault for encryption key storage
+- **Key rotation:** Quarterly rotation schedule with re-encryption jobs for active data
+- **Secrets management:** Never commit secrets to version control; use environment variables and secret managers
+
+**Compliance:**
+- **GDPR/PDPA support:** Right to access (export), right to erasure (pseudonymization), data portability
+- **Data retention:** Configurable retention policies per entity type
+- **Audit logging:** Immutable audit trails for all data access and modifications
 
 **Audit:**
 - All state changes logged via AuditLogger
-- Failed authentication attempts tracked
-- Permission checks logged (configurable)
-- Immutable audit trail
+- Failed authentication attempts tracked (rate limiting after 5 failures)
+- Permission checks logged (configurable verbosity)
+- Immutable audit trail (append-only tables or WORM storage)
 
 -----
 
@@ -1088,12 +1602,47 @@ COPY --from=asset-builder /app/public/build /var/www/html/public/build
 - User attribution for actions
 - Timestamp and metadata capture
 - Retention policies enforced
+- **Immutable Storage:** Append-only database tables or WORM (Write-Once-Read-Many) storage for compliance
+- **Anonymization:** Support for GDPR/PDPA erasure requests with pseudonymization of audit trails
 
 **EventStream (Critical Domains):**
 - Immutable event log for Finance GL
 - Immutable event log for Inventory
 - Temporal queries for compliance
 - Snapshot management for performance
+
+**Operational Requirements:**
+- **Retention Policy:** Indefinite retention for compliance domains (Finance GL, Inventory), 7-year minimum
+- **Snapshot Frequency:** Create snapshots every 100 events or 24 hours (whichever comes first)
+- **Projection Rebuilding:** Support full replay from event 0 or from latest snapshot
+- **Storage Sizing:** Plan for ~1KB per event, partition by aggregate ID and year
+- **Backup Strategy:** Daily incremental backups to WORM storage (write-once-read-many) for audit compliance
+
+### 10.3 Observability & Metrics
+
+**OpenTelemetry Integration:**
+- Distributed tracing for critical flows (invoice creation, period close, payroll runs)
+- Custom spans for package service calls
+- Trace context propagation across queue jobs
+
+**Prometheus Metrics:**
+- Request latency histograms (P50, P90, P99)
+- Worker queue depth and processing time
+- Sequence generation latency
+- Cache hit/miss ratios
+- Database query counts per request
+
+**Grafana Dashboards:**
+- Real-time SLO compliance (99.9% of reads < 200ms)
+- Error rate trends by endpoint
+- Tenant-specific performance metrics
+- EventStream projection lag
+
+**Alerting Thresholds:**
+- API latency P99 > 1s (warning), > 2s (critical)
+- Error rate > 1% (warning), > 5% (critical)
+- Queue processing lag > 5 minutes (warning), > 15 minutes (critical)
+- Database connection pool exhaustion (critical)
 
 -----
 
@@ -1217,15 +1766,279 @@ class InvoiceResourceTest extends TestCase
 ### 12.3 Package Publishing
 
 **Before Publishing:**
-- Complete test coverage
-- Comprehensive README
-- Semantic versioning
-- License file included
+- Complete test coverage (>95% for packages)
+- Comprehensive README with usage examples
+- Semantic versioning (MAJOR.MINOR.PATCH)
+- License file included (MIT recommended)
 - No application dependencies
+- CHANGELOG.md with release notes
 
 **Publishing Workflow:**
-1. Tag release in monorepo
-2. Extract subtree for package
-3. Publish to Packagist
+1. Tag release in monorepo (`git tag nexus/uom-v1.2.0`)
+2. Extract subtree for package (`git subtree split`)
+3. Publish to Packagist (automated via GitHub Actions)
 4. Update CHANGELOG
-5. Create GitHub release
+5. Create GitHub release with notes
+
+**Publishing Cadence:** Start with ~15 core packages. Consolidate small, tightly-coupled packages until CI/release automation is mature. Avoid publishing 50+ packages initially to reduce operational overhead.
+
+-----
+
+## 13. 🔧 CI/CD & Automation Requirements
+
+### 13.1 Continuous Integration Pipeline
+
+**GitHub Actions Workflows:**
+
+**Package Unit Tests (Parallel Matrix):**
+```yaml
+jobs:
+  package-tests:
+    strategy:
+      matrix:
+        package: [Tenant, Uom, Period, Sequencing, Finance, Receivable, ...]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Package Tests
+        run: |
+          cd packages/${{ matrix.package }}
+          composer install
+          vendor/bin/phpunit --coverage-clover coverage.xml
+      - name: Check Coverage (95% minimum)
+        run: |
+          COVERAGE=$(php coverage-parser.php coverage.xml)
+          if (( $(echo "$COVERAGE < 95" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below 95%"
+            exit 1
+          fi
+```
+
+**Static Analysis:**
+```yaml
+- name: PHPStan
+  run: vendor/bin/phpstan analyse --level=max packages/
+  
+- name: Psalm
+  run: vendor/bin/psalm --show-info=false
+  
+- name: PHP CS Fixer
+  run: vendor/bin/php-cs-fixer fix --dry-run --diff
+```
+
+**Atomy Integration Tests:**
+```yaml
+- name: Atomy Feature Tests
+  run: |
+    cd apps/Atomy
+    php artisan migrate --seed
+    vendor/bin/phpunit --testsuite=Feature
+```
+
+**API Contract Testing:**
+- Generate OpenAPI spec from routes
+- Run Dredd or Pact contract tests
+- Validate response schemas
+- Test authentication flows
+
+### 13.2 Pre-Commit Hooks
+
+```bash
+#!/bin/bash
+# .git/hooks/pre-commit
+
+# Run PHPStan on staged files
+git diff --cached --name-only --diff-filter=ACM | grep '\.php$' | xargs vendor/bin/phpstan analyse
+
+# Run PHP CS Fixer
+vendor/bin/php-cs-fixer fix --dry-run
+
+# Run package tests for changed packages
+CHANGED_PACKAGES=$(git diff --cached --name-only | grep '^packages/' | cut -d'/' -f2 | sort -u)
+for package in $CHANGED_PACKAGES; do
+  cd packages/$package && vendor/bin/phpunit
+done
+```
+
+### 13.3 Continuous Deployment
+
+**Deployment Pipeline:**
+1. **Build:** Compile assets, optimize autoloader
+2. **Test:** Run full test suite on staging
+3. **Deploy to Staging:** Blue-green deployment
+4. **Smoke Tests:** Verify critical flows (login, invoice creation, period close)
+5. **Deploy to Production:** Rolling update with health checks
+6. **Monitor:** Track error rates and latency for 1 hour post-deployment
+
+**Rollback Strategy:**
+- Database migrations: Include `down()` methods, test rollbacks in staging
+- Application code: Keep previous release for instant rollback
+- Monitoring: Auto-rollback if error rate > 5% or latency P99 > 2s
+
+-----
+
+## 14. 📚 Glossary
+
+**ULID (Universally Unique Lexicographically Sortable Identifier):**
+26-character Crockford base32 string (e.g., `01ARZ3NDEKTSV4RRFFQ69G5FAV`). Sortable by creation time, URL-safe, case-insensitive. Used for all primary keys in Nexus.
+
+**Atomic Package:**
+A self-contained, publishable PHP package in the `packages/` directory. Contains only business logic, no persistence. Defines needs via interfaces (Contracts).
+
+**Contract (Interface):**
+PHP interface defining dependencies (e.g., `UomRepositoryInterface`). Packages define contracts; applications implement them.
+
+**Headless-First:**
+Architecture approach where API is primary interface, with optional admin UI (Filament) consuming the same API/service layer. Contrast with pure headless (API-only).
+
+**EventStream:**
+Event sourcing engine (`Nexus\EventStream`) for critical domains (Finance GL, Inventory). Append-only immutable event log enabling state reconstruction at any point in history.
+
+**AuditLogger:**
+Timeline feed engine (`Nexus\AuditLogger`) for user-facing "what happened" timelines. Logs outcomes after transaction commit (95% of use cases).
+
+**Service Layer:**
+Business logic layer in packages (`src/Services/`). Contains managers and orchestrators (e.g., `TenantManager`, `FinanceManager`). Must be injected via interfaces.
+
+**DTO (Data Transfer Object):**
+Immutable object carrying data between Filament UI and service layer. Decouples presentation from persistence shapes.
+
+**Tenant:**
+Isolated customer/organization in multi-tenant system. All business entities scoped to `tenant_id`. Context propagated via `TenantContextInterface`.
+
+**Projection:**
+Read model rebuilt from EventStream events. Optimized for queries (e.g., account balances). Rebuilt by replaying events.
+
+**WORM Storage:**
+Write-Once-Read-Many storage for immutable audit logs. Prevents tampering with compliance records.
+
+**SLO (Service Level Objective):**
+Target performance metric (e.g., "99.9% of API reads < 200ms"). Measured via APM and Prometheus.
+
+-----
+
+## 15. 🤝 Contributing Guidelines
+
+### Package Addition Checklist
+
+**Before Creating a Package:**
+- [ ] Package solves a single, well-defined domain problem
+- [ ] No existing package can be extended to solve this problem
+- [ ] Package can be published independently (no app dependencies)
+- [ ] Team consensus on package scope and contracts
+
+**Package Requirements:**
+- [ ] `composer.json` with `php: >=8.3` and PSR-4 autoloading
+- [ ] `README.md` with usage examples
+- [ ] `LICENSE` file (MIT recommended)
+- [ ] All interfaces in `src/Contracts/`
+- [ ] All business logic in `src/Services/`
+- [ ] Custom exceptions in `src/Exceptions/`
+- [ ] Unit tests with >95% coverage
+- [ ] No Laravel facades or global helpers
+- [ ] No direct database access
+
+**Pull Request Checklist:**
+- [ ] All tests passing (CI green)
+- [ ] PHPStan level max passing
+- [ ] Code coverage >95% for packages, >85% for Atomy
+- [ ] Documentation updated (README, CHANGELOG)
+- [ ] Migration guide if breaking changes
+- [ ] Reviewed by at least 2 team members
+
+### Issue Templates
+
+**Bug Report:**
+- Environment (PHP version, Laravel version, package version)
+- Steps to reproduce
+- Expected vs actual behavior
+- Error messages and stack traces
+
+**Feature Request:**
+- Problem statement (what pain point does this solve?)
+- Proposed solution
+- Alternatives considered
+- Package scope (which package should own this feature?)
+
+**Package Proposal:**
+- Domain problem description
+- Proposed contracts (interfaces)
+- Dependency graph (which packages will this depend on?)
+- Publishing timeline (MVP vs planned features)
+
+-----
+
+## 16. 📊 Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    External Consumers                        │
+│   (Mobile Apps, Web Clients, Edward TUI, 3rd Party APIs)   │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+                     ▼
+         ┌───────────────────────┐
+         │   Load Balancer       │
+         └───────────┬───────────┘
+                     │
+        ┌────────────┼────────────┐
+        ▼            ▼            ▼
+    ┌─────────┐ ┌─────────┐ ┌─────────┐
+    │ Atomy   │ │ Atomy   │ │ Atomy   │  (Horizontal scaling)
+    │Instance1│ │Instance2│ │Instance3│
+    └────┬────┘ └────┬────┘ └────┬────┘
+         │           │           │
+         └───────────┼───────────┘
+                     │
+        ┌────────────┴────────────┐
+        │                         │
+        ▼                         ▼
+┌──────────────┐          ┌──────────────┐
+│   API Layer  │          │ Admin UI     │ (Filament)
+│ (REST/Graph) │          │ (Livewire)   │
+└──────┬───────┘          └──────┬───────┘
+       │                         │
+       └────────────┬────────────┘
+                    │
+       ┌────────────┴────────────┐
+       │   Service Layer         │
+       │ (Domain Managers)       │
+       │ - ReceivableManager     │
+       │ - FinanceManager        │
+       │ - TenantManager         │
+       └────────────┬────────────┘
+                    │
+       ┌────────────┴────────────┐
+       │                         │
+       ▼                         ▼
+┌──────────────┐          ┌──────────────┐
+│  Packages    │          │ Repositories │
+│ (Business    │◄─────────┤ (Eloquent)   │
+│  Logic)      │          │              │
+│              │          │              │
+│ - Finance    │          │ - DbAccount  │
+│ - Receivable │          │ - DbInvoice  │
+│ - Tenant     │          │ - DbTenant   │
+│ - Period     │          │              │
+└──────────────┘          └──────┬───────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    │                         │
+                    ▼                         ▼
+            ┌──────────────┐          ┌──────────────┐
+            │  PostgreSQL  │          │   Redis      │
+            │  (Primary)   │          │  (Cache/     │
+            │              │          │   Queue/     │
+            │  + Replicas  │          │   Session)   │
+            └──────────────┘          └──────────────┘
+```
+
+**Data Flow Example (Create Invoice):**
+1. External client → POST /api/v1/invoices
+2. Load balancer → Atomy Instance
+3. API Controller → ReceivableManager (service layer)
+4. ReceivableManager → FinanceManager, SequencingManager (packages)
+5. Repositories → PostgreSQL
+6. AuditLogger → Audit trail
+7. Response → Client (201 Created with invoice JSON)
+
+-----
