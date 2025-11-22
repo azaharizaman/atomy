@@ -95,10 +95,10 @@ final class MetricTest extends TestCase
     public function it_rejects_invalid_metric_name_format(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('must contain only alphanumeric characters and underscores');
+        $this->expectExceptionMessage('must contain only alphanumeric characters');
 
         new Metric(
-            name: 'invalid-metric-name',
+            name: 'invalid metric with spaces',
             type: MetricType::COUNTER,
             value: 1.0,
             tags: [],

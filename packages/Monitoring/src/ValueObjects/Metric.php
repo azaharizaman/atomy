@@ -101,9 +101,10 @@ final readonly class Metric
             throw new InvalidArgumentException('Metric name cannot be empty');
         }
 
-        if (!preg_match('/^[a-z0-9_]+$/i', $name)) {
+        // Allow alphanumeric, dots, underscores, hyphens (common in Prometheus, Datadog, etc.)
+        if (!preg_match('/^[a-z0-9._-]+$/i', $name)) {
             throw new InvalidArgumentException(
-                'Metric name must contain only alphanumeric characters and underscores: ' . $name
+                'Metric name must contain only alphanumeric characters, dots, underscores, and hyphens: ' . $name
             );
         }
     }
