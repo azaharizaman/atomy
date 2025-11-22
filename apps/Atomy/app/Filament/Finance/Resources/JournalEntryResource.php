@@ -81,7 +81,11 @@ class JournalEntryResource extends Resource
                                             ->toArray();
                                     })
                                     ->preload()
-                                    ->columnSpan(2),
+                                    ->columnSpan([
+                                        'default' => 2,
+                                        'md' => 2,
+                                        'lg' => 2,
+                                    ]),
 
                                 Forms\Components\TextInput::make('amount')
                                     ->required()
@@ -90,7 +94,12 @@ class JournalEntryResource extends Resource
                                     ->step(0.01)
                                     ->prefix('RM')
                                     ->label('Amount')
-                                    ->placeholder('0.00'),
+                                    ->placeholder('0.00')
+                                    ->columnSpan([
+                                        'default' => 1,
+                                        'md' => 1,
+                                        'lg' => 1,
+                                    ]),
 
                                 Forms\Components\ToggleButtons::make('is_debit')
                                     ->label('Type')
@@ -109,15 +118,28 @@ class JournalEntryResource extends Resource
                                         true => 'heroicon-o-plus-circle',
                                         false => 'heroicon-o-minus-circle',
                                     ])
-                                    ->inline(),
+                                    ->inline()
+                                    ->columnSpan([
+                                        'default' => 1,
+                                        'md' => 1,
+                                        'lg' => 1,
+                                    ]),
 
                                 Forms\Components\TextInput::make('description')
                                     ->maxLength(255)
                                     ->label('Line Description')
                                     ->placeholder('Optional')
-                                    ->columnSpan(2),
+                                    ->columnSpan([
+                                        'default' => 2,
+                                        'md' => 2,
+                                        'lg' => 2,
+                                    ]),
                             ])
-                            ->columns(6)
+                            ->columns([
+                                'default' => 2,
+                                'md' => 4,
+                                'lg' => 6,
+                            ])
                             ->minItems(2)
                             ->defaultItems(2)
                             ->addActionLabel('Add Line')
