@@ -64,10 +64,8 @@ use Nexus\Notifier\Contracts\NotificationPreferenceRepositoryInterface;
 use Nexus\Finance\Contracts\FinanceManagerInterface;
 use Nexus\Finance\Contracts\AccountRepositoryInterface;
 use Nexus\Finance\Contracts\JournalEntryRepositoryInterface;
-use Nexus\Finance\Contracts\LedgerRepositoryInterface;
-use App\Repositories\EloquentAccountRepository;
-use App\Repositories\EloquentJournalEntryRepository;
-use App\Repositories\EloquentLedgerRepository;
+use App\Repositories\Finance\EloquentAccountRepository;
+use App\Repositories\Finance\EloquentJournalEntryRepository;
 use Nexus\Finance\Services\FinanceManager;
 use Nexus\Accounting\Contracts\StatementRepositoryInterface;
 use Nexus\Accounting\Contracts\StatementBuilderInterface;
@@ -196,10 +194,11 @@ final class AppServiceProvider extends ServiceProvider
         // Repositories (Essential - Interface to Concrete)
         $this->app->singleton(AccountRepositoryInterface::class, EloquentAccountRepository::class);
         $this->app->singleton(JournalEntryRepositoryInterface::class, EloquentJournalEntryRepository::class);
-        $this->app->singleton(LedgerRepositoryInterface::class, EloquentLedgerRepository::class);
 
         // Package Services (Essential - Interface to Package Default)
-        $this->app->singleton(FinanceManagerInterface::class, FinanceManager::class);
+        // Note: FinanceManager binding commented out - depends on LedgerRepositoryInterface and PostingEngine
+        // TODO: Implement EloquentLedgerRepository and bind FinanceManager when ready
+        // $this->app->singleton(FinanceManagerInterface::class, FinanceManager::class);
 
         // Accounting Package Bindings
 
