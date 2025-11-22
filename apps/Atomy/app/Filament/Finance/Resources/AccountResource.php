@@ -7,13 +7,15 @@ namespace App\Filament\Finance\Resources;
 use App\Filament\Finance\Resources\AccountResource\Pages;
 use App\DataTransferObjects\Finance\CreateAccountDto;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Nexus\Finance\Contracts\FinanceManagerInterface;
 use Nexus\Finance\ValueObjects\AccountType;
 use Nexus\Finance\ValueObjects\NormalBalance;
+use BackedEnum;
+use UnitEnum;
 
 /**
  * Account Resource
@@ -23,16 +25,16 @@ use Nexus\Finance\ValueObjects\NormalBalance;
  */
 class AccountResource extends Resource
 {
-    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+    protected static BackedEnum | string | null $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?string $navigationGroup = 'General Ledger';
+    protected static string | UnitEnum | null $navigationGroup = 'General Ledger';
 
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Forms\Components\Section::make('Account Information')
                     ->schema([
                         Forms\Components\TextInput::make('account_number')

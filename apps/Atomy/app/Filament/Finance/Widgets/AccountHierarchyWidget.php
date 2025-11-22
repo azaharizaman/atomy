@@ -15,7 +15,7 @@ use Nexus\Finance\Contracts\FinanceManagerInterface;
  */
 class AccountHierarchyWidget extends Widget
 {
-    protected static string $view = 'filament.finance.widgets.account-hierarchy';
+    protected string $view = 'filament.finance.widgets.account-hierarchy';
 
     protected int | string | array $columnSpan = 'full';
 

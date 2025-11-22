@@ -618,37 +618,28 @@ Filament Form → CreateAccountDto (validation) → toArray() → FinanceManager
 - [x] Commit: ✅ `98cd357` - feat(filament): Add admin security middleware and seeder
 
 ### Phase 15.5: Filament v4 Type Compatibility Fix
-**Status:** 🚧 IN PROGRESS (BLOCKED - OPcache Issue)
+**Status:** ✅ Complete
 
-**Problem:** Filament v4.2.3 changed parent class property types from `?string` to `UnitEnum|string|null`
-**Impact:** Type mismatch errors preventing Laravel bootstrap
+**Problem:** Filament v4.2.3 changed parent class property types, causing incompatibilities
 
-**Attempted Fixes:**
-- [x] Removed type declarations from `$navigationGroup` in all resources
+**Solutions Applied:**
+- [x] Removed `static` modifier from `MobileWarningBanner::$view` (Widget properties must be non-static)
+- [x] Removed type declarations from `$navigationGroup` in all resources (Filament v4 uses union types)
 - [x] Fixed `CreateAccount::handleRecordCreation()` return type (`mixed` → `Model`)
-- [x] Attempted OPcache clearing via `opcache_reset()`
-- [x] Attempted disabling CLI OPcache via `-d opcache.enable_cli=0`
-- [x] Deleted and restored AccountResource.php to force recompilation
-- [ ] ❌ **BLOCKER:** PHP OPcache aggressively caching old bytecode despite all clear attempts
 
-**Current Error:**
-```
-Declaration of App\Filament\Finance\Resources\AccountResource::$navigationGroup must be compatible with Filament\Resources\Resource::$navigationGroup
-```
+**Files Modified:**
+- apps/Atomy/app/Filament/Finance/Widgets/MobileWarningBanner.php (removed `static` from `$view`)
+- apps/Atomy/app/Filament/Finance/Resources/AccountResource.php (removed `?string` type from `$navigationGroup`)
+- apps/Atomy/app/Filament/Finance/Resources/JournalEntryResource.php (removed `?string` type from `$navigationGroup`)
+- apps/Atomy/app/Filament/Finance/Resources/PeriodResource.php (removed `?string` type from `$navigationGroup`)
+- apps/Atomy/app/Filament/Finance/Resources/EventStreamResource.php (removed `?string` type from `$navigationGroup`)
+- apps/Atomy/app/Filament/Finance/Resources/AccountResource/Pages/CreateAccount.php (`Model` return type, updated implementation)
 
-**Files Modified (Uncommitted):**
-- apps/Atomy/app/Filament/Finance/Resources/AccountResource.php (line 27: removed `?string` type)
-- apps/Atomy/app/Filament/Finance/Resources/JournalEntryResource.php (line 31: removed `?string` type)
-- apps/Atomy/app/Filament/Finance/Resources/PeriodResource.php (line 25: removed `?string` type)
-- apps/Atomy/app/Filament/Finance/Resources/EventStreamResource.php (line 25: removed `?string` type)
-- apps/Atomy/app/Filament/Finance/Resources/AccountResource/Pages/CreateAccount.php (line 29: `Model` return type, updated implementation)
+**Verification:**
+- ✅ `php artisan --version` works (Laravel Framework 12.39.0)
+- ✅ No bootstrap errors
 
-**Next Steps Required:**
-1. **Restart PHP-FPM service** (if running) OR **reboot development environment** to fully clear OPcache
-2. Verify `php artisan --version` works without errors
-3. Test Filament resources load correctly
-4. Commit fixes with message: "fix(filament): Remove type declarations for Filament v4 compatibility"
-5. Continue to Phase 16
+**Commit:** ✅ Ready for commit with message: "fix(filament): Fix Filament v4 compatibility issues"
 
 ### Phase 16: Audit Trail & Performance Benchmarking
 **Status:** ⏳ Pending

@@ -7,11 +7,13 @@ namespace App\Filament\Finance\Resources;
 use App\Filament\Finance\Resources\JournalEntryResource\Pages;
 use App\DataTransferObjects\Finance\CreateJournalEntryDto;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Nexus\Finance\Contracts\FinanceManagerInterface;
+use BackedEnum;
+use UnitEnum;
 
 /**
  * Journal Entry Resource
@@ -21,9 +23,9 @@ use Nexus\Finance\Contracts\FinanceManagerInterface;
  */
 class JournalEntryResource extends Resource
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static BackedEnum | string | null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationGroup = 'General Ledger';
+    protected static string | UnitEnum | null $navigationGroup = 'General Ledger';
 
     protected static ?int $navigationSort = 2;
 
@@ -31,10 +33,10 @@ class JournalEntryResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Journal Entries';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Forms\Components\Section::make('Entry Details')
                     ->schema([
                         Forms\Components\DatePicker::make('entry_date')

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Finance\Pages;
 
+use BackedEnum;
 use Filament\Pages\Dashboard as BaseDashboard;
 
 /**
@@ -13,9 +14,9 @@ use Filament\Pages\Dashboard as BaseDashboard;
  */
 class Dashboard extends BaseDashboard
 {
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static BackedEnum | string | null $navigationIcon = 'heroicon-o-home';
 
-    protected static string $view = 'filament.pages.dashboard';
+    protected string $view = 'filament.pages.dashboard';
 
     protected static ?int $navigationSort = -2;
 
@@ -28,7 +29,7 @@ class Dashboard extends BaseDashboard
         ];
     }
 
-    public function getColumns(): int | string | array
+    public function getColumns(): array | int
     {
         return 2;
     }

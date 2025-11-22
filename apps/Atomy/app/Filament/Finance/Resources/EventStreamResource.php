@@ -7,10 +7,12 @@ namespace App\Filament\Finance\Resources;
 use App\Filament\Finance\Resources\EventStreamResource\Pages;
 use App\Models\EventStream;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use BackedEnum;
+use UnitEnum;
 
 /**
  * EventStream Resource
@@ -22,9 +24,9 @@ class EventStreamResource extends Resource
 {
     protected static ?string $model = EventStream::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static BackedEnum | string | null $navigationIcon = 'heroicon-o-clock';
 
-    protected static ?string $navigationGroup = 'Reporting';
+    protected static string | UnitEnum | null $navigationGroup = 'Reporting';
 
     protected static ?int $navigationSort = 2;
 
@@ -32,10 +34,10 @@ class EventStreamResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Event Stream';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Forms\Components\TextInput::make('event_id')
                     ->label('Event ID')
                     ->disabled(),

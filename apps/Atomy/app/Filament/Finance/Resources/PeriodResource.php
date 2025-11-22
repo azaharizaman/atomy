@@ -7,12 +7,14 @@ namespace App\Filament\Finance\Resources;
 use App\Filament\Finance\Resources\PeriodResource\Pages;
 use App\Models\Period;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Nexus\Period\Enums\PeriodType;
 use Nexus\Period\Enums\PeriodStatus;
+use BackedEnum;
+use UnitEnum;
 
 /**
  * Period Resource
@@ -23,9 +25,9 @@ class PeriodResource extends Resource
 {
     protected static ?string $model = Period::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    protected static BackedEnum | string | null $navigationIcon = 'heroicon-o-calendar';
 
-    protected static ?string $navigationGroup = 'Configuration';
+    protected static string | UnitEnum | null $navigationGroup = 'Configuration';
 
     protected static ?int $navigationSort = 1;
 
@@ -33,10 +35,10 @@ class PeriodResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Periods';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Forms\Components\Section::make('Period Information')
                     ->schema([
                         Forms\Components\Select::make('type')

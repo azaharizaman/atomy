@@ -2095,7 +2095,7 @@ exit 0
 
 ## 🎨 Filament UI Implementation Rules & Guidelines
 
-!ALWAYS!! USE FILAMENT V4.X DOCUMENTATION
+!WARNING! FILAMENT V4 HAS INTRODUCE BREAKING CHANGE. ALWAYS USER CONTEXT7 MCP TO GET THE LATEST V4.X DOCUMENTATION AND LARAVEL V12.X DOCUMENTATION EVERYTHIME WORKING WITH FILAMENT.
 
 These rules establish the architectural boundary between the Atomy Application Layer (where Filament lives) and the Nexus Domain Core. **Filament is the Presentation Layer** and must never be aware of data persistence methods or contain core ERP business logic.
 

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Finance\Pages;
 
+use BackedEnum;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Nexus\Finance\Contracts\FinanceManagerInterface;
+use UnitEnum;
 
 /**
  * Trial Balance Report
@@ -17,11 +19,11 @@ use Nexus\Finance\Contracts\FinanceManagerInterface;
  */
 class TrialBalance extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-calculator';
+    protected static BackedEnum | string | null $navigationIcon = 'heroicon-o-calculator';
 
-    protected static string $view = 'filament.finance.pages.trial-balance';
+    protected string $view = 'filament.finance.pages.trial-balance';
 
-    protected static ?string $navigationGroup = 'Reporting';
+    protected static string | UnitEnum | null $navigationGroup = 'Reporting';
 
     protected static ?int $navigationSort = 1;
 

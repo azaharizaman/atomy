@@ -14,7 +14,7 @@ use Filament\Widgets\Widget;
  */
 class MobileWarningBanner extends Widget
 {
-    protected static string $view = 'filament.finance.widgets.mobile-warning-banner';
+    protected string $view = 'filament.finance.widgets.mobile-warning-banner';
 
     protected int | string | array $columnSpan = 'full';
 
