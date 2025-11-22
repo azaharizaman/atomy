@@ -11,8 +11,6 @@ use Nexus\Finance\Contracts\FinanceManagerInterface;
 use Nexus\Finance\Contracts\JournalEntryInterface;
 use Nexus\Finance\Contracts\JournalEntryRepositoryInterface;
 use Nexus\Finance\Contracts\LedgerRepositoryInterface;
-use Nexus\Finance\Core\Engine\BalanceCalculator;
-use Nexus\Finance\Core\Engine\PostingEngine;
 use Nexus\Finance\Enums\JournalEntryStatus;
 use Nexus\Finance\Exceptions\AccountNotFoundException;
 use Nexus\Finance\Exceptions\DuplicateAccountCodeException;
@@ -21,11 +19,14 @@ use Nexus\Finance\Exceptions\JournalEntryNotFoundException;
 use Nexus\Finance\Exceptions\JournalEntryNotPostedException;
 use Nexus\Finance\ValueObjects\AccountCode;
 use Nexus\Finance\ValueObjects\JournalEntryNumber;
+use Nexus\EventStream\Contracts\EventStoreInterface;
+use Nexus\Period\Contracts\PeriodManagerInterface;
 
 /**
  * Finance Manager Service
  * 
  * Main service for general ledger and journal entry operations.
+ * Integrates with EventStream for SOX compliance audit trail.
  */
 final class FinanceManager implements FinanceManagerInterface
 {
@@ -33,8 +34,8 @@ final class FinanceManager implements FinanceManagerInterface
         private readonly JournalEntryRepositoryInterface $journalEntryRepository,
         private readonly AccountRepositoryInterface $accountRepository,
         private readonly LedgerRepositoryInterface $ledgerRepository,
-        private readonly PostingEngine $postingEngine,
-        private readonly BalanceCalculator $balanceCalculator
+        private readonly PeriodManagerInterface $periodManager,
+        private readonly EventStoreInterface $eventStore
     ) {}
 
     /**
@@ -74,11 +75,65 @@ final class FinanceManager implements FinanceManagerInterface
             );
         }
 
-        // Validate and post using the posting engine
-        $this->postingEngine->post($entry);
+        // Check if period is locked
+        // $this->periodManager->validatePeriodIsOpen($entry->getDate()); // TODO: Implement period validation
+
+        // Publish JournalEntryPostedEvent to EventStream for SOX compliance
+        $journalEntryPostedEvent = new \Nexus\Finance\Events\JournalEntryPostedEvent(
+            journalEntryId: $entry->getId(),
+            entryNumber: new \Nexus\Finance\ValueObjects\JournalEntryNumber($entry->getEntryNumber()),
+            entryDate: $entry->getDate(),
+            description: $entry->getDescription(),
+            totalDebit: \Nexus\Finance\ValueObjects\Money::of($entry->getTotalDebit(), 'MYR'), // TODO: Get currency from entry
+            totalCredit: \Nexus\Finance\ValueObjects\Money::of($entry->getTotalCredit(), 'MYR'), // TODO: Get currency from entry
+            postedAt: new DateTimeImmutable(),
+            postedBy: 'system', // TODO: Get from auth context
+            tenantId: 'default' // TODO: Get from tenant context
+        );
+
+        $this->eventStore->append(
+            $entry->getId(),
+            $journalEntryPostedEvent
+        );
+
+        // Publish account-level events for each line (enables temporal queries)
+        foreach ($entry->getLines() as $line) {
+            if ($line->isDebit()) {
+                $accountDebitedEvent = new \Nexus\Finance\Events\AccountDebitedEvent(
+                    accountId: $line->getAccountId(),
+                    accountCode: new \Nexus\Finance\ValueObjects\AccountCode($line->getAccountId()), // TODO: Get actual account code
+                    amount: $line->getDebitAmount(),
+                    journalEntryId: $entry->getId(),
+                    entryNumber: new \Nexus\Finance\ValueObjects\JournalEntryNumber($entry->getEntryNumber()),
+                    occurredAt: new DateTimeImmutable(),
+                    tenantId: 'default' // TODO: Get from tenant context
+                );
+
+                $this->eventStore->append(
+                    $line->getAccountId(),
+                    $accountDebitedEvent
+                );
+            } else {
+                $accountCreditedEvent = new \Nexus\Finance\Events\AccountCreditedEvent(
+                    accountId: $line->getAccountId(),
+                    accountCode: new \Nexus\Finance\ValueObjects\AccountCode($line->getAccountId()), // TODO: Get actual account code
+                    amount: $line->getCreditAmount(),
+                    journalEntryId: $entry->getId(),
+                    entryNumber: new \Nexus\Finance\ValueObjects\JournalEntryNumber($entry->getEntryNumber()),
+                    occurredAt: new DateTimeImmutable(),
+                    tenantId: 'default' // TODO: Get from tenant context
+                );
+
+                $this->eventStore->append(
+                    $line->getAccountId(),
+                    $accountCreditedEvent
+                );
+            }
+        }
 
         // The repository should handle updating the status to Posted
         // and setting the posted_at timestamp
+        // $this->journalEntryRepository->save($entry); // TODO: Update entry status
     }
 
     /**
