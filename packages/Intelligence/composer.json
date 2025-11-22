@@ -13,9 +13,17 @@
         "php": "^8.3",
         "psr/log": "^3.0"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
     "autoload": {
         "psr-4": {
             "Nexus\\Intelligence\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Intelligence\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "dev",
