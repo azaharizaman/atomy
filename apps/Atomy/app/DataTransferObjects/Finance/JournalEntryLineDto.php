@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Finance\DTOs;
+namespace App\DataTransferObjects\Finance;
 
 /**
  * Data Transfer Object for journal entry lines.
  * 
- * Represents a single debit or credit line in a journal entry.
- * Used to decouple Filament repeater forms from domain entities.
+ * APPLICATION LAYER CONTRACT: Lives in Atomy, not in Nexus\Finance package.
+ * 
+ * Purpose:
+ * - Represent a single debit or credit line in a journal entry
+ * - Decouple Filament repeater forms from domain entities
+ * - Used within CreateJournalEntryDto to build complete journal entry structure
  */
 final readonly class JournalEntryLineDto
 {

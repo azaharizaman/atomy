@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Finance\DTOs;
+namespace App\DataTransferObjects\Finance;
 
 use Nexus\Finance\ValueObjects\AccountType;
 use Nexus\Finance\ValueObjects\NormalBalance;
@@ -10,8 +10,15 @@ use Nexus\Finance\ValueObjects\NormalBalance;
 /**
  * Data Transfer Object for creating accounts.
  * 
- * Used to decouple Filament forms from domain entities.
- * Provides validation-friendly structure for UI layer.
+ * APPLICATION LAYER CONTRACT: Lives in Atomy, not in Nexus\Finance package.
+ * 
+ * Purpose:
+ * - Decouple Filament forms from domain entities
+ * - Provide validation-friendly structure for UI layer
+ * - Convert to array before passing to FinanceManagerInterface::createAccount()
+ * 
+ * Architecture:
+ * Filament Form → CreateAccountDto (validation) → toArray() → FinanceManager (domain logic)
  */
 final readonly class CreateAccountDto
 {

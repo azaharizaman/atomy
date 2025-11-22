@@ -2,15 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Finance\DTOs;
+namespace App\DataTransferObjects\Finance;
 
 use DateTimeImmutable;
 
 /**
  * Data Transfer Object for creating journal entries.
  * 
- * Used to decouple Filament forms from domain entities.
- * Provides validation-friendly structure for UI layer with repeater support.
+ * APPLICATION LAYER CONTRACT: Lives in Atomy, not in Nexus\Finance package.
+ * 
+ * Purpose:
+ * - Decouple Filament forms from domain entities
+ * - Provide validation-friendly structure for UI layer with repeater support
+ * - Validate double-entry accounting rules before domain layer
+ * - Convert to array before passing to FinanceManagerInterface::createJournalEntry()
+ * 
+ * Architecture:
+ * Filament Form → CreateJournalEntryDto (validation) → toArray() → FinanceManager (domain logic)
  */
 final readonly class CreateJournalEntryDto
 {
