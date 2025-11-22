@@ -19,8 +19,13 @@ use Nexus\Finance\Exceptions\JournalEntryNotFoundException;
 use Nexus\Finance\Exceptions\JournalEntryNotPostedException;
 use Nexus\Finance\ValueObjects\AccountCode;
 use Nexus\Finance\ValueObjects\JournalEntryNumber;
+use Nexus\Finance\ValueObjects\Money;
+use Nexus\Finance\Events\JournalEntryReversedEvent;
+use Nexus\Finance\Events\AccountDebitedEvent;
+use Nexus\Finance\Events\AccountCreditedEvent;
 use Nexus\EventStream\Contracts\EventStoreInterface;
 use Nexus\Period\Contracts\PeriodManagerInterface;
+use Symfony\Component\Uid\Ulid;
 
 /**
  * Finance Manager Service
@@ -151,6 +156,9 @@ final class FinanceManager implements FinanceManagerInterface
             throw JournalEntryNotPostedException::forEntry($journalEntryId);
         }
 
+        // Check if period is open for reversal date
+        // $this->periodManager->validatePeriodIsOpen($reversalDate);
+
         // Create reversal entry (swap debits and credits)
         $reversalData = [
             'date' => $reversalDate,
@@ -172,6 +180,63 @@ final class FinanceManager implements FinanceManagerInterface
 
         // Auto-post the reversal entry
         $this->postJournalEntry($reversalEntry->getId());
+
+        // Publish JournalEntryReversedEvent to EventStream
+        $correlationId = (string) new Ulid();
+        $occurredAt = new DateTimeImmutable();
+        $userId = 'system'; // TODO: Get from auth context
+
+        $reversedEvent = new JournalEntryReversedEvent(
+            originalJournalEntryId: $originalEntry->getId(),
+            originalEntryNumber: new JournalEntryNumber($originalEntry->getEntryNumber()),
+            reversalJournalEntryId: $reversalEntry->getId(),
+            reversalEntryNumber: new JournalEntryNumber($reversalEntry->getEntryNumber()),
+            reversalDate: $reversalDate,
+            reason: $reason,
+            reversedBy: $userId,
+            tenantId: 'default', // TODO: Get from tenant context
+            occurredAt: $occurredAt,
+            correlationId: $correlationId
+        );
+
+        $this->eventStore->append($originalEntry->getId(), $reversedEvent);
+
+        // Publish AccountDebitedEvent and AccountCreditedEvent for each line in reversal
+        foreach ($reversalEntry->getLines() as $line) {
+            $accountId = $line->getAccountId();
+            $account = $this->findAccount($accountId);
+            $accountCode = new AccountCode($account->getCode());
+            
+            if ($line->getDebitAmount()->getAmount() !== '0') {
+                $debitEvent = new AccountDebitedEvent(
+                    accountId: $accountId,
+                    accountCode: $accountCode,
+                    amount: Money::of($line->getDebitAmount()->getAmount(), 'MYR'),
+                    journalEntryId: $reversalEntry->getId(),
+                    entryNumber: new JournalEntryNumber($reversalEntry->getEntryNumber()),
+                    occurredAt: $occurredAt,
+                    tenantId: 'default',
+                    causationId: $reversedEvent->getEventId(),
+                    correlationId: $correlationId
+                );
+                $this->eventStore->append($accountId, $debitEvent);
+            }
+
+            if ($line->getCreditAmount()->getAmount() !== '0') {
+                $creditEvent = new AccountCreditedEvent(
+                    accountId: $accountId,
+                    accountCode: $accountCode,
+                    amount: Money::of($line->getCreditAmount()->getAmount(), 'MYR'),
+                    journalEntryId: $reversalEntry->getId(),
+                    entryNumber: new JournalEntryNumber($reversalEntry->getEntryNumber()),
+                    occurredAt: $occurredAt,
+                    tenantId: 'default',
+                    causationId: $reversedEvent->getEventId(),
+                    correlationId: $correlationId
+                );
+                $this->eventStore->append($accountId, $creditEvent);
+            }
+        }
 
         return $reversalEntry;
     }

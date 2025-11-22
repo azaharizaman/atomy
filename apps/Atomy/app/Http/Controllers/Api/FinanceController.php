@@ -217,6 +217,9 @@ class FinanceController extends Controller
 
     /**
      * Reverse a journal entry
+     * 
+     * Creates a reversal entry that swaps debits and credits,
+     * publishes events to EventStream for SOX compliance.
      */
     public function reverseJournalEntry(string $id, Request $request): JsonResponse
     {
@@ -228,7 +231,7 @@ class FinanceController extends Controller
         try {
             $reversalEntry = $this->financeManager->reverseJournalEntry(
                 $id,
-                $validated['reversal_date'],
+                new \DateTimeImmutable($validated['reversal_date']),
                 $validated['reason']
             );
 
@@ -237,7 +240,10 @@ class FinanceController extends Controller
                 'data' => [
                     'reversal_entry_id' => $reversalEntry->getId(),
                     'reversal_entry_number' => $reversalEntry->getEntryNumber(),
-                ]
+                    'reversal_date' => $validated['reversal_date'],
+                    'reason' => $validated['reason'],
+                ],
+                'message' => 'Journal entry reversed successfully. Events published to EventStream.'
             ]);
         } catch (FinanceException $e) {
             return response()->json([
