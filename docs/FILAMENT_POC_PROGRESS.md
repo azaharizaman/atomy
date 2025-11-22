@@ -167,15 +167,56 @@
 ---
 
 ### Phase 4: Projection System (Dynamic Snapshots)
-**Status:** ⏳ Pending
+**Status:** ✅ Complete
 
-- [ ] Create `AccountBalanceProjection` model
-- [ ] Create `AccountBalanceSnapshot` model with dynamic threshold
-- [ ] Implement `UpdateAccountBalanceProjection` listener (queued)
-- [ ] Implement optimistic locking with `updated_at` version check
-- [ ] Integrate hot account tracking (`ZINCRBY`)
-- [ ] Register event listeners
-- [ ] Commit: "feat(finance): Implement projection system with dynamic snapshots"
+#### Completed Tasks:
+- [x] Create `AccountBalanceProjection` model (migration 11070)
+  - [x] Optimistic locking via `updated_at` timestamp versioning
+  - [x] Event versioning to prevent duplicate processing (`last_event_version`)
+  - [x] Hot account tracking (`access_count` for Redis ZINCRBY)
+  - [x] LRU eviction support (`last_accessed_at`)
+  - [x] Helper methods: `addDebit()`, `addCredit()`, `markAccessed()`
+  
+- [x] Create `AccountBalanceSnapshot` model (migration 11080)
+  - [x] Dynamic snapshot thresholds based on account activity
+  - [x] JSONB `snapshot_data` with GIN index for fast queries
+  - [x] Auto-adjusts threshold: hot accounts (50 events), normal (100), cold (500)
+  - [x] Helper methods: `shouldCreateSnapshot()`, `adjustThreshold()`, `createFromProjection()`
+  
+- [x] Implement `UpdateAccountBalanceProjection` listener
+  - [x] Queued processing on `finance-projections` queue (`after_commit=true`)
+  - [x] Optimistic locking with retry logic (3 attempts, exponential backoff)
+  - [x] Idempotency check via event versioning
+  - [x] Redis ZINCRBY for hot account tracking
+  - [x] Dynamic snapshot creation when threshold exceeded
+  - [x] Handles both `AccountDebitedEvent` and `AccountCreditedEvent`
+  
+- [x] Create `EventServiceProvider`
+  - [x] Registered `AccountDebitedEvent` → `UpdateAccountBalanceProjection`
+  - [x] Registered `AccountCreditedEvent` → `UpdateAccountBalanceProjection`
+  - [x] Added to `bootstrap/app.php`
+
+#### Technical Highlights:
+- **Queue Configuration:** `finance-projections` queue with `after_commit=true` ensures events only trigger listeners after DB commit
+- **Optimistic Locking:** PostgreSQL row-level lock + `updated_at` version check prevents lost updates
+- **Retry Logic:** 3 attempts with exponential backoff (100ms → 200ms → 400ms) on serialization conflicts
+- **Dynamic Snapshots:** Thresholds adjust based on account activity (hot: 50, normal: 100, cold: 500 events)
+- **Hot Account Tracking:** Redis sorted set (`hot-accounts` DB 2) tracks access frequency via ZINCRBY
+- **Idempotency:** Event version tracking prevents duplicate processing during retries
+
+#### Event Flow:
+1. Journal entry posted → `AccountDebitedEvent`/`AccountCreditedEvent` published to EventStream
+2. Events stored in partitioned `event_streams` table (PostgreSQL)
+3. `UpdateAccountBalanceProjection` listener triggered asynchronously on `finance-projections` queue
+4. Projection updated with optimistic locking (row lock + version check)
+5. Redis `hot-accounts` sorted set updated (ZINCRBY)
+6. Snapshot created if `events_since_snapshot >= threshold`
+7. Threshold auto-adjusts based on `access_count` from projection
+
+#### Commits:
+- ✅ `5297f8c` - feat(finance): Implement projection system with dynamic snapshots
+
+---
 
 ### Phase 5: Period Package Extension (Fiscal Year Support)
 **Status:** ⏳ Pending
