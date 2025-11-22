@@ -47,6 +47,7 @@ final class FinancePanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 \Filament\Http\Middleware\Authenticate::class,
+                \App\Http\Middleware\CheckAdminRole::class,
             ])
             ->navigationGroups([
                 NavigationGroup::make('General Ledger')
