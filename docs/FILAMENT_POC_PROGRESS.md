@@ -464,22 +464,130 @@ Filament Form → CreateAccountDto (validation) → toArray() → FinanceManager
 ---
 
 ### Phase 11: Redis Caching (Service Layer)
-**Status:** ⏳ Pending
+**Status:** ✅ Complete
 
-- [ ] Implement `getAccountTree()` caching
-- [ ] Implement `getRecentEntries()` caching
-- [ ] Implement `generateTrialBalance()` caching
-- [ ] Document granular invalidation in technical debt
-- [ ] Commit: "feat(finance): Add Redis caching with 5-minute TTL"
+#### Completed Tasks:
+- [x] Created `CacheInterface` in package layer
+  - [x] Framework-agnostic contract with 5 methods
+  - [x] Methods: `get()`, `put()`, `remember()`, `forget()`, `forgetByPattern()`
+  
+- [x] Created `RedisCacheAdapter` in application layer
+  - [x] Laravel-specific implementation using Cache and Redis facades
+  - [x] Pattern matching via `Redis::keys()` for bulk invalidation
+  
+- [x] Created `FinanceServiceProvider`
+  - [x] Binds all Finance package contracts to Atomy implementations
+  - [x] Registered in `bootstrap/app.php`
+  - [x] Bindings:
+    - AccountRepositoryInterface → DbAccountRepository
+    - JournalEntryRepositoryInterface → DbJournalEntryRepository
+    - LedgerRepositoryInterface → DbLedgerRepository
+    - CacheInterface → RedisCacheAdapter
+    - FinanceManagerInterface → FinanceManager (auto-resolves all deps)
+  
+- [x] Implemented 3 cached methods in FinanceManager
+  - [x] `getAccountTree(array $filters)` - Cache key: `finance:accounts:tree:{md5(filters)}`, TTL: 300s
+    - Builds hierarchical tree via recursive `buildAccountTree()` method
+    - Returns nested structure: id, code, name, type, is_header, children
+  - [x] `getRecentEntries(int $limit, array $filters)` - Cache key: `finance:entries:recent:{md5(params)}`, TTL: 300s
+    - Orders by entry_date DESC
+    - Configurable limit (default 10)
+  - [x] `generateTrialBalance(DateTimeImmutable $asOfDate)` - Cache key: `finance:trial_balance:{date}`, TTL: 300s
+    - Determines debit/credit placement by account code prefix (1xxx/5xxx = debit)
+    - Returns accounts array + totals (total_debit, total_credit, balanced boolean)
+
+#### Technical Details:
+- **TTL:** 5-minute (300s) cache for all methods
+- **Cache Keys:** Use md5 hashing for complex filters to prevent key collisions
+- **Invalidation:** `forgetByPattern('finance:*')` for granular invalidation
+- **Technical Debt:** Granular invalidation by parent_id path documented for optimization
+
+#### Commits:
+- ✅ `852d382` - feat(finance): Add Redis caching with 5-minute TTL
+
+---
 
 ### Phase 12: Filament Resources (Service-Layer-Only)
-**Status:** ⏳ Pending
+**Status:** ✅ Complete
 
-- [ ] Create `AccountResource` with service injection
-- [ ] Create `JournalEntryResource` with DTO mapping
-- [ ] Create `PostJournalEntryAction` with error handling
-- [ ] Create `ReverseJournalEntryAction` with reason input
-- [ ] Commit: "feat(filament): Add Finance resources with service-layer pattern"
+#### Completed Tasks:
+- [x] Created `AccountResource` with service-layer pattern
+  - [x] Navigation: General Ledger group, banknotes icon, sort order 1
+  - [x] Form schema:
+    - Account number (unique, max 20, required)
+    - Account name (max 255, required)
+    - Account type select (Asset/Liability/Equity/Revenue/Expense from ValueObject enum)
+    - Normal balance select (Debit/Credit from ValueObject enum with helper text)
+    - Parent account (searchable relationship, nullable)
+    - Description (textarea, max 500, optional)
+    - Active toggle (default true)
+  - [x] Table columns: code, name with type description, type badge (colored), is_active icon, created_at (hidden)
+  - [x] Filters: type select, is_active ternary
+  - [x] Actions: View, Edit, Delete bulk
+  - [x] Pages: List, Create, View, Edit
+  
+- [x] Created `CreateAccount` page with DTO → Service flow
+  - [x] Overrides `handleRecordCreation(array $data)`
+  - [x] Step 1: `CreateAccountDto::fromArray($data)` - Convert Filament form to DTO
+  - [x] Step 2: `$financeManager->createAccount($dto->toArray())` - Call domain service
+  - [x] Step 3: Return account ID for redirect
+  - [x] No direct Eloquent model usage
+  
+- [x] Created `JournalEntryResource` with Filament v4 Repeater
+  - [x] Navigation: General Ledger group, document icon, sort order 2
+  - [x] Form schema:
+    - Entry details: entry_date, reference_number, description, notes
+    - **Repeater component** for journal entry lines (double-entry):
+      - Account select (searchable, options formatted as "CODE - NAME")
+      - Amount input (decimal, prefix "RM", min 0.01)
+      - Type toggle buttons (Debit/Credit with icons and colors)
+      - Line description (optional)
+    - Real-time balance validation:
+      - Total Debits placeholder
+      - Total Credits placeholder
+      - Balance Check placeholder (✓ Balanced / ✗ Out of Balance with diff)
+  - [x] Table columns: entry_number, entry_date, description, amount, status badge
+  - [x] Filters: status select (draft/posted/reversed), date range
+  - [x] Actions:
+    - View (all entries)
+    - Edit (draft only)
+    - **Post action** (draft only, inline, confirmation modal)
+    - **Reverse action** (posted only, modal with reversal_date and reason inputs)
+  - [x] Bulk actions: Delete (draft only)
+  
+- [x] Created `CreateJournalEntry` page with validation
+  - [x] Overrides `handleRecordCreation(array $data)`
+  - [x] Step 1: `CreateJournalEntryDto::fromArray($data)` - Convert form to DTO
+  - [x] Step 2: `$dto->isBalanced()` - Validate debits = credits
+  - [x] Step 3: `$financeManager->createJournalEntry($dto->toArray())` - Call domain service
+  - [x] Error handling: Catches `UnbalancedJournalEntryException` and shows Filament notification
+  
+- [x] Implemented Post and Reverse actions
+  - [x] Post action:
+    - Visible only for draft entries
+    - Inline table action
+    - Confirmation modal
+    - Calls: `$financeManager->postJournalEntry($record->id)`
+    - Success notification
+  - [x] Reverse action:
+    - Visible only for posted entries
+    - Modal with 2 inputs: reversal_date (DatePicker), reason (Textarea max 500)
+    - Calls: `$financeManager->reverseJournalEntry($record->id, $date, $reason)`
+    - Success notification
+
+#### Technical Highlights:
+- **Service-Layer-Only:** All operations use `FinanceManagerInterface`, zero direct Eloquent usage
+- **Filament v4 Repeater:** Dynamic line items with real-time validation
+- **DTO Pattern:** Forms → DTOs → Service layer (maintains architectural boundaries)
+- **Toggle Buttons:** Debit (green, plus icon) vs Credit (red, minus icon)
+- **Status-Based Visibility:** Edit/Delete for drafts, Post for drafts, Reverse for posted
+- **Balance Validation:** Real-time calculation in form, server-side validation on submit
+
+#### Commits:
+- ✅ `512e87b` - feat(filament): Add AccountResource with service-layer pattern (Phase 12 partial)
+- ✅ `db76e16` - feat(filament): Add JournalEntryResource with Repeater pattern (Phase 12 complete)
+
+---
 
 ### Phase 13: Mobile Responsiveness & Period Integration
 **Status:** ⏳ Pending
