@@ -327,4 +327,154 @@ final class FinanceManager implements FinanceManagerInterface
     {
         return $this->journalEntryRepository->findAll($filters);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function generateBalanceTimeseries(
+        string $accountId,
+        DateTimeImmutable $startDate,
+        DateTimeImmutable $endDate,
+        string $interval
+    ): array {
+        // Validate account exists
+        $account = $this->findAccount($accountId);
+
+        // Validate interval
+        $validIntervals = ['day', 'week', 'month', 'quarter', 'year'];
+        if (!in_array($interval, $validIntervals, true)) {
+            throw new \InvalidArgumentException(
+                "Invalid interval '{$interval}'. Must be one of: " . implode(', ', $validIntervals)
+            );
+        }
+
+        // Validate date range
+        if ($startDate > $endDate) {
+            throw new \InvalidArgumentException(
+                "Start date must be before or equal to end date"
+            );
+        }
+
+        // Generate date points based on interval
+        $datePoints = $this->generateDatePoints($startDate, $endDate, $interval);
+
+        // Build timeseries by getting balance at each date point
+        $timeseries = [];
+        foreach ($datePoints as $date) {
+            $balance = $this->getAccountBalance($accountId, $date);
+            $fiscalYear = $this->periodManager->getFiscalYearForDate($date);
+
+            $timeseries[] = [
+                'date' => $date->format('Y-m-d'),
+                'balance' => $balance,
+                'fiscal_year' => $fiscalYear,
+            ];
+        }
+
+        return $timeseries;
+    }
+
+    /**
+     * Generate array of DateTimeImmutable points based on interval
+     * 
+     * @return array<DateTimeImmutable>
+     */
+    private function generateDatePoints(
+        DateTimeImmutable $startDate,
+        DateTimeImmutable $endDate,
+        string $interval
+    ): array {
+        $points = [];
+        $currentDate = $startDate;
+
+        while ($currentDate <= $endDate) {
+            // For each interval, use the last day of the period
+            $periodEnd = match ($interval) {
+                'day' => $currentDate,
+                'week' => $this->getEndOfWeek($currentDate),
+                'month' => $this->getEndOfMonth($currentDate),
+                'quarter' => $this->getEndOfQuarter($currentDate),
+                'year' => $this->getEndOfFiscalYear($currentDate),
+            };
+
+            // Only include if period end is within range
+            if ($periodEnd <= $endDate) {
+                $points[] = $periodEnd;
+            }
+
+            // Advance to next period
+            $currentDate = match ($interval) {
+                'day' => $currentDate->modify('+1 day'),
+                'week' => $currentDate->modify('+1 week'),
+                'month' => $currentDate->modify('first day of next month'),
+                'quarter' => $currentDate->modify('first day of +3 months'),
+                'year' => $this->getStartOfNextFiscalYear($currentDate),
+            };
+        }
+
+        // Always include the end date if not already included
+        if (empty($points) || end($points)->format('Y-m-d') !== $endDate->format('Y-m-d')) {
+            $points[] = $endDate;
+        }
+
+        return $points;
+    }
+
+    /**
+     * Get the last day of the week containing the given date
+     */
+    private function getEndOfWeek(DateTimeImmutable $date): DateTimeImmutable
+    {
+        // Week ends on Sunday
+        return $date->modify('sunday this week');
+    }
+
+    /**
+     * Get the last day of the month containing the given date
+     */
+    private function getEndOfMonth(DateTimeImmutable $date): DateTimeImmutable
+    {
+        return $date->modify('last day of this month');
+    }
+
+    /**
+     * Get the last day of the quarter containing the given date
+     */
+    private function getEndOfQuarter(DateTimeImmutable $date): DateTimeImmutable
+    {
+        $month = (int) $date->format('n');
+        $year = (int) $date->format('Y');
+
+        // Determine which quarter we're in (1-4)
+        $quarter = (int) ceil($month / 3);
+
+        // Last month of the quarter
+        $lastMonthOfQuarter = $quarter * 3;
+
+        return (new DateTimeImmutable("{$year}-{$lastMonthOfQuarter}-01"))
+            ->modify('last day of this month');
+    }
+
+    /**
+     * Get the last day of the fiscal year containing the given date
+     */
+    private function getEndOfFiscalYear(DateTimeImmutable $date): DateTimeImmutable
+    {
+        $fiscalYear = $this->periodManager->getFiscalYearForDate($date);
+        $fiscalYearStartDate = $this->periodManager->getFiscalYearStartDate($fiscalYear);
+
+        // Fiscal year ends one day before next fiscal year starts
+        return $fiscalYearStartDate->modify('+1 year')->modify('-1 day');
+    }
+
+    /**
+     * Get the first day of the next fiscal year after the given date
+     */
+    private function getStartOfNextFiscalYear(DateTimeImmutable $date): DateTimeImmutable
+    {
+        $fiscalYear = $this->periodManager->getFiscalYearForDate($date);
+        $nextFiscalYear = (string) ((int) $fiscalYear + 1);
+
+        return $this->periodManager->getFiscalYearStartDate($nextFiscalYear);
+    }
 }

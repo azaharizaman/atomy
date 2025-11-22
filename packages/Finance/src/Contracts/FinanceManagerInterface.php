@@ -107,4 +107,40 @@ interface FinanceManagerInterface
      * @return array<JournalEntryInterface>
      */
     public function listJournalEntries(array $filters = []): array;
+
+    /**
+     * Generate account balance timeseries for multiple periods
+     * 
+     * Returns an array of balance snapshots at specified intervals between start and end dates.
+     * Supports fiscal-year-aware intervals (quarter, year) via Period package integration.
+     * 
+     * @param string $accountId The account ID
+     * @param DateTimeImmutable $startDate Start of timeseries
+     * @param DateTimeImmutable $endDate End of timeseries
+     * @param string $interval Interval: 'day', 'week', 'month', 'quarter', 'year'
+     * 
+     * @return array<array{date: string, balance: string, fiscal_year: string}> Array of balance snapshots
+     * 
+     * @throws \Nexus\Finance\Exceptions\AccountNotFoundException
+     * @throws \InvalidArgumentException for invalid interval
+     * 
+     * @example
+     * $timeseries = $manager->generateBalanceTimeseries(
+     *     '01HGK...',
+     *     new \DateTimeImmutable('2024-01-01'),
+     *     new \DateTimeImmutable('2024-12-31'),
+     *     'month'
+     * );
+     * // Returns: [
+     * //   ['date' => '2024-01-31', 'balance' => '10000.00', 'fiscal_year' => '2024'],
+     * //   ['date' => '2024-02-29', 'balance' => '15000.00', 'fiscal_year' => '2024'],
+     * //   ...
+     * // ]
+     */
+    public function generateBalanceTimeseries(
+        string $accountId,
+        DateTimeImmutable $startDate,
+        DateTimeImmutable $endDate,
+        string $interval
+    ): array;
 }

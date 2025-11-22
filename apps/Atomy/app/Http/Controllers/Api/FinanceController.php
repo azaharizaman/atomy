@@ -77,12 +77,47 @@ class FinanceController extends Controller
 
     /**
      * Get account balance
+     * 
+     * Query params:
+     * - as_of_date: Date to calculate balance (Y-m-d format)
+     * - start_date: For timeseries (Y-m-d format)
+     * - end_date: For timeseries (Y-m-d format)
+     * - interval: For timeseries ('day', 'week', 'month', 'quarter', 'year')
      */
     public function getAccountBalance(string $id, Request $request): JsonResponse
     {
         try {
+            // Check if timeseries is requested
+            if ($request->has(['start_date', 'end_date', 'interval'])) {
+                $validated = $request->validate([
+                    'start_date' => 'required|date',
+                    'end_date' => 'required|date|after_or_equal:start_date',
+                    'interval' => 'required|in:day,week,month,quarter,year',
+                ]);
+
+                $timeseries = $this->financeManager->generateBalanceTimeseries(
+                    $id,
+                    new \DateTimeImmutable($validated['start_date']),
+                    new \DateTimeImmutable($validated['end_date']),
+                    $validated['interval']
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'account_id' => $id,
+                        'start_date' => $validated['start_date'],
+                        'end_date' => $validated['end_date'],
+                        'interval' => $validated['interval'],
+                        'timeseries' => $timeseries,
+                        'data_points' => count($timeseries),
+                    ]
+                ]);
+            }
+
+            // Single balance query
             $asOfDate = $request->query('as_of_date');
-            $balance = $this->financeManager->getAccountBalance($id, $asOfDate);
+            $balance = $this->financeManager->getAccountBalance($id, new \DateTimeImmutable($asOfDate));
 
             return response()->json([
                 'success' => true,
@@ -97,6 +132,11 @@ class FinanceController extends Controller
                 'success' => false,
                 'error' => $e->getMessage()
             ], 404);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 422);
         }
     }
 
