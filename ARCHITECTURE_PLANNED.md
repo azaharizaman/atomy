@@ -1,6 +1,8 @@
-# Nexus Architecture: Nexus Monorepo Architectural Guidelines & Rules
+# Nexus Architecture (Planned): Nexus Monorepo with Headless-First Approach
 
-This document outlines the architecture of the `nexus` monorepo. Its purpose is to enforce a clean, scalable, and decoupled component structure. Adhering to these rules is mandatory for all development.
+**Document Status:** PLANNED - Future architectural direction with Filament PHP v4 admin UI
+
+This document outlines the **planned evolution** of the `nexus` monorepo architecture. It maintains the core philosophy of decoupling while introducing a **Headless-First** approach that includes an admin UI alongside the API.
 
 **The Core Philosophy: "Logic in Packages, Implementation in Applications."**
 
@@ -8,6 +10,10 @@ Our architecture is built on one primary concept: **Decoupling**.
 
   * **`📦 packages/`** contain pure, framework-agnostic business logic. They are the "engines."
   * **`🚀 apps/`** are the runnable applications. They are the "cars" that use the engines.
+
+**The Planned Evolution: Headless-First**
+
+While maintaining full API capabilities, the planned architecture introduces **Filament PHP v4** as an optional admin UI layer, enabling both headless API consumption and traditional web-based administration.
 
 ## Packages:
 
@@ -101,13 +107,15 @@ Our architecture is built on one primary concept: **Decoupling**.
 
    There are two tyes of application in this monorepo:
 
-### **Headless Orchestrator (`apps/Atomy`):**
+### **Headless-First Orchestrator (`apps/Atomy`):**
 
-**Atomy** is the main ERP backend built with Laravel 12. It is the tangible product and primary deliverable of this monorepo.
+**Atomy** is the main ERP backend built with Laravel 12, offering **dual interfaces**: a comprehensive RESTful API for headless consumption and a Filament PHP v4 admin panel for web-based administration.
 
 **Architectural Principles:**
-- **Pure Headless Architecture:** All functionality exposed exclusively via RESTful API and GraphQL endpoints
-- **No Frontend UI:** The `resources/views` directory remains empty; Atomy is API-only
+- **Headless-First Design:** API remains the primary interface; admin UI is a consumer of the same APIs
+- **Dual Interface Strategy:** Both API and admin UI access the same business logic layer
+- **API Supremacy:** All admin UI operations must go through published APIs (no direct model access in Filament)
+- **Optional UI:** Admin panel can be disabled entirely for pure headless deployments
 - **Contract Implementation Layer:** Implements all interfaces defined by atomic packages
 - **Persistence Provider:** Contains all database migrations and Eloquent models
 - **Service Orchestration:** Combines atomic packages into higher-level business workflows
@@ -117,20 +125,87 @@ Our architecture is built on one primary concept: **Decoupling**.
 2. **Provide Persistence:** Houses all database migrations and Eloquent models that fulfill package persistence contracts
 3. **Orchestrate Business Logic:** Creates domain services by composing multiple packages (e.g., `ReceivableManager` uses Finance, Sales, Party, Sequencing)
 4. **Expose APIs:** Publishes RESTful and GraphQL endpoints for all ERP capabilities
-5. **Dependency Injection:** Binds package interfaces to concrete implementations in `AppServiceProvider.php`
+5. **Provide Admin UI:** Offers Filament-based admin panel that consumes the same APIs
+6. **Dependency Injection:** Binds package interfaces to concrete implementations in `AppServiceProvider.php`
 
 **Technology Stack:**
 - Laravel 12 (PHP 8.3+)
+- Filament PHP v4 (Admin Panel)
 - PostgreSQL/MySQL for persistence
 - Redis for caching and queues
 - RESTful API (JSON)
 - GraphQL (optional)
+- Livewire (Filament dependency)
+
+**Admin UI Architecture:**
+
+**Filament Integration Pattern:**
+```
+app/Filament/
+├── Resources/              # Admin CRUD interfaces
+│   ├── CustomerResource.php
+│   ├── InvoiceResource.php
+│   └── ProductResource.php
+├── Pages/                  # Custom admin pages
+│   ├── Dashboard.php
+│   └── Reports/
+├── Widgets/                # Dashboard widgets
+│   └── RevenueChart.php
+└── Actions/                # Custom actions
+    └── ApproveInvoiceAction.php
+```
+
+**Filament Resources Use Services (Not Models):**
+```php
+namespace App\Filament\Resources;
+
+use Filament\Resources\Resource;
+use Nexus\Receivable\Contracts\ReceivableManagerInterface;
+
+class InvoiceResource extends Resource
+{
+    // Inject service interface, not Eloquent model
+    public function __construct(
+        private readonly ReceivableManagerInterface $receivableManager
+    ) {}
+    
+    // All operations go through service layer
+    public function create(array $data): void
+    {
+        $this->receivableManager->createInvoiceFromOrder($data['order_id']);
+    }
+}
+```
 
 **Design Constraints:**
-- Must remain headless (API-only)
-- No embedded frontend frameworks
-- All UI rendering delegated to client applications
-- Stateless API design for horizontal scalability
+- Admin UI must never bypass the API layer
+- Filament resources must use package services, not Eloquent directly
+- All business logic remains in packages
+- UI layer is purely presentation and user input
+- API-first: All features must work via API before UI implementation
+- UI can be fully disabled via configuration for pure headless deployments
+
+**Deployment Modes:**
+1. **Headless-Only Mode:** API-only, Filament disabled (original architecture)
+2. **Headless-First Mode:** API + Admin UI both available (planned architecture)
+3. **Hybrid Mode:** API for external consumers, Admin UI for internal users
+
+**Configuration:**
+```php
+// config/atomy.php
+return [
+    'admin_ui' => [
+        'enabled' => env('ADMIN_UI_ENABLED', true),
+        'route_prefix' => env('ADMIN_UI_PREFIX', 'admin'),
+        'middleware' => ['web', 'auth', 'verified'],
+    ],
+    'api' => [
+        'enabled' => env('API_ENABLED', true),
+        'route_prefix' => env('API_PREFIX', 'api'),
+        'rate_limiting' => true,
+    ],
+];
+```
 
 ### **Terminal Client (`apps/Edward`):**
 
@@ -203,18 +278,33 @@ nexus/
 │       └── src/
 │
 └── 🚀 apps/                      # Deployable applications
-    ├── Atomy/                    # Nexus\Atomy (Headless Laravel Orchestrator)
+    ├── Atomy/                    # Nexus\Atomy (Headless-First Orchestrator with Admin UI)
     │   ├── .env.example
     │   ├── artisan
-    │   ├── composer.json         # Requires all 'nexus/*' packages
+    │   ├── composer.json         # Requires all 'nexus/*' packages + filament/filament
     │   ├── /app
     │   │   ├── /Console
-    │   │   ├── /Http/Controllers/Api/
+    │   │   ├── /Filament/        # Admin UI layer (Filament resources, pages, widgets)
+    │   │   │   ├── /Resources/   # CRUD interfaces (CustomerResource, InvoiceResource)
+    │   │   │   ├── /Pages/       # Custom admin pages (Dashboard, Reports)
+    │   │   │   ├── /Widgets/     # Dashboard widgets (RevenueChart, StockAlert)
+    │   │   │   └── /Actions/     # Custom admin actions (ApproveInvoice, CloseBooks)
+    │   │   ├── /Http/
+    │   │   │   ├── /Controllers/Api/  # RESTful API controllers
+    │   │   │   └── /Resources/   # API response resources
     │   │   ├── /Models           # Eloquent Models (implements package Contracts)
-    │   │   └── /Repositories     # Concrete Repository implementations
-    │   ├── /config/features.php
+    │   │   ├── /Repositories     # Concrete Repository implementations
+    │   │   └── /Services         # Application-layer services (domain managers, adapters)
+    │   ├── /config/
+    │   │   ├── features.php      # Feature flags (admin_ui, api)
+    │   │   └── filament.php      # Filament admin panel configuration
     │   ├── /database/migrations/ # ALL migrations for the ERP
-    │   └── /routes/api.php
+    │   ├── /resources/
+    │   │   ├── /views/           # Blade views (Filament panels)
+    │   │   └── /css/             # Admin UI styles
+    │   └── /routes/
+    │       ├── api.php           # RESTful API routes
+    │       └── web.php           # Admin UI routes (Filament)
     └── Edward/                   # Edward (Terminal Client)
         ├── .env.example
         ├── artisan
@@ -473,9 +563,248 @@ src/
 - Contains value objects used only by engine
 - Main service is merely an orchestrator
 
+### 6.7 Filament Admin UI Integration Pattern (Headless-First Approach)
+
+The Filament admin panel in `apps/Atomy` follows strict architectural constraints to maintain API supremacy and package decoupling.
+
+#### Core Principles
+
+1. **API-First Architecture:** All admin UI operations must flow through the same service layer used by the API
+2. **Service Layer Dependency:** Filament resources must inject package service interfaces, never Eloquent models directly
+3. **No Business Logic in UI:** Filament resources are purely presentation and user input handlers
+4. **Package Ignorance:** Filament code exists only in `apps/Atomy`; packages remain unaware of Filament
+
+#### Resource Architecture Pattern
+
+**✅ CORRECT - Service-driven Filament resource:**
+```php
+namespace App\Filament\Resources;
+
+use Filament\Resources\Resource;
+use Nexus\Receivable\Contracts\ReceivableManagerInterface;
+use Nexus\Party\Contracts\CustomerRepositoryInterface;
+
+class InvoiceResource extends Resource
+{
+    public function __construct(
+        private readonly ReceivableManagerInterface $receivableManager,
+        private readonly CustomerRepositoryInterface $customerRepository
+    ) {}
+    
+    public function create(array $data): void
+    {
+        // Use service layer, not Eloquent
+        $this->receivableManager->createInvoice(
+            customerId: $data['customer_id'],
+            items: $data['items'],
+            dueDate: new \DateTimeImmutable($data['due_date'])
+        );
+    }
+    
+    public function getFormSchema(): array
+    {
+        return [
+            Forms\Components\Select::make('customer_id')
+                ->label('Customer')
+                ->options($this->customerRepository->getAllActive())
+                ->required(),
+            // ... other fields
+        ];
+    }
+}
+```
+
+**❌ WRONG - Direct Eloquent access:**
+```php
+use App\Models\Invoice;  // Bypasses service layer!
+
+class InvoiceResource extends Resource
+{
+    protected static ?string $model = Invoice::class;
+    
+    public function create(array $data): void
+    {
+        Invoice::create($data);  // Violates API-first principle!
+    }
+}
+```
+
+#### Filament Directory Structure
+
+```
+app/Filament/
+├── Resources/              # CRUD interfaces for entities
+│   ├── CustomerResource.php
+│   ├── InvoiceResource.php
+│   ├── ProductResource.php
+│   └── PayrollResource.php
+├── Pages/                  # Custom admin pages
+│   ├── Dashboard.php       # Main dashboard
+│   ├── Reports/            # Domain-specific reports
+│   │   ├── FinancialStatements.php
+│   │   └── InventoryValuation.php
+│   └── Settings/           # Admin configuration pages
+├── Widgets/                # Dashboard widgets
+│   ├── RevenueChart.php
+│   ├── StockAlerts.php
+│   └── PendingApprovals.php
+└── Actions/                # Custom bulk/row actions
+    ├── ApproveInvoiceAction.php
+    ├── ClosePeriodAction.php
+    └── GeneratePayslipAction.php
+```
+
+#### Integration with Package Services
+
+**Pattern 1: Form Data Preparation**
+```php
+// Filament resource prepares UI data
+public function getFormSchema(): array
+{
+    return [
+        Forms\Components\Select::make('uom_id')
+            ->label('Unit of Measurement')
+            ->options(function () {
+                // Call package service to get available UOMs
+                return $this->uomManager->getAllUnits()
+                    ->mapWithKeys(fn($uom) => [$uom->getId() => $uom->getName()]);
+            })
+    ];
+}
+```
+
+**Pattern 2: Action Execution**
+```php
+// Custom action calls service layer
+use Filament\Tables\Actions\Action;
+
+public static function table(Table $table): Table
+{
+    return $table->actions([
+        Action::make('approve')
+            ->action(function (Invoice $record) {
+                // Call package service, not model method
+                app(ReceivableManagerInterface::class)->approveInvoice($record->id);
+            })
+    ]);
+}
+```
+
+**Pattern 3: Data Display (Read Operations)**
+```php
+// Table column transformations use services
+use Filament\Tables\Columns\TextColumn;
+
+public static function table(Table $table): Table
+{
+    return $table->columns([
+        TextColumn::make('balance')
+            ->getStateUsing(function (Invoice $record) {
+                // Calculate via service, not raw SQL or model accessors
+                return app(ReceivableManagerInterface::class)
+                    ->getInvoiceBalance($record->id);
+            })
+    ]);
+}
+```
+
+#### Configuration and Feature Flags
+
+**Disable Admin UI for Pure Headless Mode:**
+```php
+// config/atomy.php
+return [
+    'admin_ui' => [
+        'enabled' => env('ADMIN_UI_ENABLED', true),
+        'route_prefix' => env('ADMIN_UI_PREFIX', 'admin'),
+        'middleware' => ['web', 'auth', 'verified', 'tenant.context'],
+    ],
+];
+
+// config/filament.php
+'enabled' => config('atomy.admin_ui.enabled'),
+```
+
+**Service Provider Conditional Registration:**
+```php
+// app/Providers/FilamentServiceProvider.php
+public function register(): void
+{
+    if (!config('atomy.admin_ui.enabled')) {
+        return; // Skip Filament registration entirely
+    }
+    
+    // Register Filament resources and panels
+}
+```
+
+#### Deployment Modes
+
+**Mode 1: API-Only (Pure Headless)**
+```env
+ADMIN_UI_ENABLED=false
+API_ENABLED=true
+```
+- Atomy runs as pure API backend
+- Filament routes and assets not loaded
+- Minimal resource consumption
+
+**Mode 2: Headless-First (API + Admin UI)**
+```env
+ADMIN_UI_ENABLED=true
+API_ENABLED=true
+```
+- Both API and admin panel available
+- Internal users use Filament admin
+- External consumers use API
+
+**Mode 3: Admin-Only (Internal Systems)**
+```env
+ADMIN_UI_ENABLED=true
+API_ENABLED=false
+```
+- Only admin panel accessible
+- API routes disabled
+- For isolated internal deployments
+
+#### Testing Filament Resources
+
+**Use Service Mocks, Not Database:**
+```php
+use Tests\TestCase;
+use Nexus\Receivable\Contracts\ReceivableManagerInterface;
+
+class InvoiceResourceTest extends TestCase
+{
+    public function test_create_invoice_calls_service(): void
+    {
+        $mock = $this->mock(ReceivableManagerInterface::class);
+        $mock->shouldReceive('createInvoice')
+            ->once()
+            ->with('customer-id', Mockery::any(), Mockery::any());
+        
+        // Test Filament resource action
+        $this->actingAs($this->adminUser)
+            ->post('/admin/invoices', [...]);
+    }
+}
+```
+
+**Principle:** Filament tests should verify correct service calls, not database state.
+
+#### Migration Path from Pure Headless to Headless-First
+
+1. **Install Filament:** `composer require filament/filament:^4.0`
+2. **Create Panel:** `php artisan make:filament-panel admin`
+3. **Generate Resources:** Reference existing API controllers for service injection patterns
+4. **Configure Feature Flag:** Add `ADMIN_UI_ENABLED` to `.env`
+5. **Test Dual Mode:** Verify both API and admin UI work independently
+6. **Deploy:** Use feature flag to enable admin UI in production when ready
+
+**Key Constraint:** Existing API must remain unchanged; Filament is additive only.
+
 -----
 
-## 7. 🔒 Architectural Constraints & Guardrails
 ## 7. 🔒 Architectural Constraints & Guardrails
 
 ### 7.1 Package Isolation Rules
@@ -631,19 +960,110 @@ src/
 - SQLite or PostgreSQL
 - Redis for local caching
 - Hot reload for rapid development
+- Filament asset hot-reloading via Vite
 
 **Staging:**
 - Mirrors production architecture
 - Anonymized production data
 - Full integration testing
 - Performance profiling
+- Compiled Filament assets
 
 **Production:**
 - Multi-instance deployment
 - PostgreSQL with replication
 - Redis Cluster
-- CDN for static assets
+- CDN for static assets (API responses, Filament assets)
 - Background job workers (separate instances)
+- Compiled and versioned Filament assets
+
+### 9.3 Asset Management (Headless-First Mode)
+
+**Pure Headless Deployment (API-Only):**
+- No asset compilation required
+- `npm` dependencies not needed
+- Minimal container size
+- Fast build times
+
+**Headless-First Deployment (API + Admin UI):**
+- Filament requires Livewire + Alpine.js assets
+- Build pipeline: `npm install && npm run build`
+- Compiled assets served via CDN or app server
+- Asset versioning for cache busting
+
+**Build Configuration:**
+```javascript
+// vite.config.js (for Filament assets)
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true,
+        }),
+    ],
+    build: {
+        manifest: true,
+        outDir: 'public/build',
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'filament': ['@filament/support'],
+                }
+            }
+        }
+    }
+});
+```
+
+**Deployment Script:**
+```bash
+#!/bin/bash
+# Production deployment for headless-first mode
+
+# Install dependencies
+composer install --no-dev --optimize-autoloader
+
+# Build Filament assets (only if admin UI enabled)
+if [ "$ADMIN_UI_ENABLED" = "true" ]; then
+    npm ci --production=false
+    npm run build
+fi
+
+# Cache optimization
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache  # For Filament blade views
+php artisan filament:cache-components  # Filament-specific cache
+
+# Database migrations
+php artisan migrate --force
+
+# Clear application cache
+php artisan optimize:clear
+```
+
+**CDN Integration:**
+- Serve Filament assets from CDN for reduced latency
+- Use Laravel Mix or Vite asset versioning
+- Configure `ASSET_URL` environment variable
+- Separate CDN subdomain (e.g., `assets.atomy.app`)
+
+**Container Optimization:**
+```dockerfile
+# Multi-stage build for headless-first deployment
+FROM node:20-alpine AS asset-builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY resources ./resources
+COPY vite.config.js ./
+RUN npm run build
+
+FROM php:8.3-fpm-alpine
+# Copy compiled assets only
+COPY --from=asset-builder /app/public/build /var/www/html/public/build
+# API-only containers skip this stage
+```
 
 -----
 
@@ -700,10 +1120,79 @@ src/
 - API endpoints (feature tests)
 - Queue job execution
 
+**Filament Admin UI Tests (Headless-First Mode):**
+- Test resource CRUD operations via service layer
+- Verify form validation and data transformation
+- Test custom actions and bulk operations
+- Ensure service calls, not direct model access
+
+**Example Filament Test:**
+```php
+use Tests\TestCase;
+use Nexus\Receivable\Contracts\ReceivableManagerInterface;
+use Livewire\Livewire;
+use App\Filament\Resources\InvoiceResource;
+
+class InvoiceResourceTest extends TestCase
+{
+    public function test_create_invoice_uses_service_layer(): void
+    {
+        // Mock the service
+        $mock = $this->mock(ReceivableManagerInterface::class);
+        $mock->shouldReceive('createInvoice')
+            ->once()
+            ->with('customer-123', Mockery::any(), Mockery::any())
+            ->andReturn('invoice-456');
+        
+        // Test Filament resource
+        $this->actingAs($this->adminUser);
+        
+        Livewire::test(InvoiceResource\Pages\CreateInvoice::class)
+            ->fillForm([
+                'customer_id' => 'customer-123',
+                'items' => [['product_id' => 'prod-1', 'quantity' => 5]],
+                'due_date' => '2024-12-31',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+        
+        // Verify service was called, not database directly
+    }
+    
+    public function test_approve_action_calls_service(): void
+    {
+        $mock = $this->mock(ReceivableManagerInterface::class);
+        $mock->shouldReceive('approveInvoice')
+            ->once()
+            ->with('invoice-789');
+        
+        $invoice = Invoice::factory()->create(['id' => 'invoice-789']);
+        
+        Livewire::test(InvoiceResource\Pages\ListInvoices::class)
+            ->callTableAction('approve', $invoice);
+    }
+}
+```
+
 **Performance Tests:**
 - Benchmark critical paths
-- Load testing for scalability
+- Load testing for scalability (API endpoints)
 - Stress testing for limits
+- Admin UI responsiveness under load
+
+### 11.3 End-to-End Testing
+
+**API Client Tests:**
+- Test Edward consuming Atomy API
+- Verify API contracts between systems
+- Test authentication flows
+- Error handling and retry logic
+
+**Dual-Interface Tests (Headless-First):**
+- Same operation via API and admin UI
+- Verify identical results
+- Ensure admin UI doesn't bypass API layer
+- Test feature flag toggling
 
 -----
 
