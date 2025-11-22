@@ -17,8 +17,8 @@ use App\Services\Channels\InAppChannel;
 use App\Services\LaravelPasswordHasher;
 use App\Services\LaravelSessionManager;
 use Illuminate\Support\ServiceProvider;
-use Nexus\Identity\Services\RoleManager;
-use Nexus\Identity\Services\UserManager;
+// use Nexus\Identity\Services\RoleManager; // TODO: Uncomment when RoleManagerInterface exists
+// use Nexus\Identity\Services\UserManager; // TODO: Uncomment when UserManagerInterface exists
 use Nexus\Period\Services\PeriodManager;
 use App\Repositories\DbNotificationQueue;
 use App\Services\LaravelPasswordValidator;
@@ -28,12 +28,12 @@ use App\Repositories\DbPermissionRepository;
 use App\Services\PeriodAuthorizationService;
 use App\Repositories\EloquentPeriodRepository;
 use Nexus\Identity\Services\PermissionChecker;
-use Nexus\Identity\Services\PermissionManager;
+// use Nexus\Identity\Services\PermissionManager; // TODO: Uncomment when PermissionManagerInterface exists
 use Nexus\Notifier\Services\NotificationManager;
 use Nexus\Period\Contracts\AuditLoggerInterface;
 use Nexus\Notifier\Contracts\SmsChannelInterface;
-use Nexus\Identity\Contracts\RoleManagerInterface;
-use Nexus\Identity\Contracts\UserManagerInterface;
+// use Nexus\Identity\Contracts\RoleManagerInterface; // TODO: Interface not implemented yet
+// use Nexus\Identity\Contracts\UserManagerInterface; // TODO: Interface not implemented yet
 use Nexus\Identity\Services\AuthenticationService;
 use Nexus\Notifier\Contracts\PushChannelInterface;
 use Nexus\Period\Contracts\AuthorizationInterface;
@@ -52,7 +52,7 @@ use App\Repositories\DbNotificationTemplateRepository;
 use App\Repositories\DbNotificationPreferenceRepository;
 use Nexus\Identity\Contracts\PasswordValidatorInterface;
 use Nexus\Identity\Contracts\PermissionCheckerInterface;
-use Nexus\Identity\Contracts\PermissionManagerInterface;
+// use Nexus\Identity\Contracts\PermissionManagerInterface; // TODO: Interface not implemented yet
 use Nexus\Identity\Contracts\UserAuthenticatorInterface;
 use Nexus\Notifier\Contracts\NotificationQueueInterface;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
@@ -73,12 +73,12 @@ use Nexus\Accounting\Contracts\StatementRepositoryInterface;
 use Nexus\Accounting\Contracts\StatementBuilderInterface;
 use Nexus\Accounting\Contracts\PeriodCloseServiceInterface;
 use Nexus\Accounting\Contracts\ConsolidationEngineInterface;
-use Nexus\Accounting\Contracts\VarianceCalculatorInterface;
+// use Nexus\Accounting\Contracts\VarianceCalculatorInterface; // TODO: Interface not implemented yet
 use Nexus\Accounting\Services\AccountingManager;
 use Nexus\Accounting\Core\Engine\StatementBuilder;
 use Nexus\Accounting\Core\Engine\PeriodCloseService;
 use Nexus\Accounting\Core\Engine\ConsolidationEngine;
-use Nexus\Accounting\Core\Engine\VarianceCalculator;
+// use Nexus\Accounting\Core\Engine\VarianceCalculator; // TODO: Uncomment when interface exists
 use App\Repositories\EloquentStatementRepository;
 use Nexus\Sales\Contracts\QuotationRepositoryInterface;
 use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
@@ -139,9 +139,10 @@ final class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TokenManagerInterface::class, LaravelTokenManager::class);
 
         // Package Services (Essential - Interface to Package Default)
-        $this->app->singleton(UserManagerInterface::class, UserManager::class);
-        $this->app->singleton(RoleManagerInterface::class, RoleManager::class);
-        $this->app->singleton(PermissionManagerInterface::class, PermissionManager::class);
+        // TODO: Uncomment when interfaces are implemented in Identity package
+        // $this->app->singleton(UserManagerInterface::class, UserManager::class);
+        // $this->app->singleton(RoleManagerInterface::class, RoleManager::class);
+        // $this->app->singleton(PermissionManagerInterface::class, PermissionManager::class);
         $this->app->singleton(PermissionCheckerInterface::class, PermissionChecker::class);
         $this->app->singleton(AuthenticationService::class);
 
@@ -204,7 +205,8 @@ final class AppServiceProvider extends ServiceProvider
         $this->app->singleton(StatementBuilderInterface::class, StatementBuilder::class);
         $this->app->singleton(PeriodCloseServiceInterface::class, PeriodCloseService::class);
         $this->app->singleton(ConsolidationEngineInterface::class, ConsolidationEngine::class);
-        $this->app->singleton(VarianceCalculatorInterface::class, VarianceCalculator::class);
+        // TODO: Uncomment when VarianceCalculatorInterface is implemented in Accounting package
+        // $this->app->singleton(VarianceCalculatorInterface::class, VarianceCalculator::class);
 
         // Package Services (Essential - Singleton)
         $this->app->singleton(AccountingManager::class);

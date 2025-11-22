@@ -521,6 +521,8 @@ Generate:
 - Custom exceptions extending base PHP exceptions
 - Framework-agnostic validation logic
 - Pure PHP business rules
+- Value Objects for specific data types
+- Unit tests using PHPUnit
 
 ### When I Ask for Atomy Code
 
@@ -992,3 +994,7 @@ $this->app->singleton(TenantLifecycleService::class);
 - Architecture guidelines (`ARCHITECTURE.md`)
 - Requirements and implementation docs in `docs/` folder
 - Consolidated Requirements in `REQUIREMENTS.csv`
+- All package implementation must have  its PACKAGE_NAME_IMPLEMENTATION_SUMMARY.md file in docs folder
+- ALL new package must have REQUIREMENTS_PACKAGE_NAME.md file in docs folder
+- All new addition or deletion to packages must be reflected in its respective REQUIREMENTS and IMPLEMENTATION_SUMMARY files
+- All postponed implementation or planned implementation must have the placeholder methods/classes/properties with proper docblock in the respective package service class commented out and marked with `// TODO: Implement ...`
