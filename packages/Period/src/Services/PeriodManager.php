@@ -32,12 +32,28 @@ final class PeriodManager implements PeriodManagerInterface
     private const CACHE_PREFIX = 'period:';
     private const CACHE_TTL = 3600; // 1 hour
 
+    /**
+     * Fiscal year start month (1 = January, 7 = July, etc.)
+     * Override this in application layer via dependency injection config
+     */
+    private int $fiscalYearStartMonth = 1; // Default: Calendar year
+
     public function __construct(
         private readonly PeriodRepositoryInterface $repository,
         private readonly CacheRepositoryInterface $cache,
         private readonly AuthorizationInterface $authorization,
-        private readonly AuditLoggerInterface $auditLogger
-    ) {}
+        private readonly AuditLoggerInterface $auditLogger,
+        ?int $fiscalYearStartMonth = null
+    ) {
+        if ($fiscalYearStartMonth !== null) {
+            if ($fiscalYearStartMonth < 1 || $fiscalYearStartMonth > 12) {
+                throw new \InvalidArgumentException(
+                    "Fiscal year start month must be between 1 and 12, got {$fiscalYearStartMonth}"
+                );
+            }
+            $this->fiscalYearStartMonth = $fiscalYearStartMonth;
+        }
+    }
 
     /**
      * {@inheritDoc}
@@ -242,12 +258,15 @@ final class PeriodManager implements PeriodManagerInterface
     
     /**
      * Determine the fiscal year for a period
+     * 
+     * Uses the getFiscalYearForDate() method to determine which fiscal year
+     * the period belongs to based on its end date.
      */
     private function determineFiscalYear(DateTimeImmutable $startDate, DateTimeImmutable $endDate): string
     {
-        // Use the year of the end date as the fiscal year
-        // This handles cases where the period spans multiple calendar years
-        return $endDate->format('Y');
+        // Use the end date to determine fiscal year
+        // This ensures periods are grouped by the fiscal year they close in
+        return $this->getFiscalYearForDate($endDate);
     }
     
     /**
@@ -317,5 +336,59 @@ final class PeriodManager implements PeriodManagerInterface
     {
         $cacheKey = self::CACHE_PREFIX . "open:{$type->value}";
         $this->cache->forget($cacheKey);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFiscalYearStartMonth(): int
+    {
+        return $this->fiscalYearStartMonth;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getPeriodForDate(DateTimeImmutable $date, PeriodType $type): ?PeriodInterface
+    {
+        return $this->getCurrentPeriodForDate($date, $type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFiscalYearForDate(DateTimeImmutable $date): string
+    {
+        $month = (int) $date->format('n'); // 1-12
+        $year = (int) $date->format('Y');
+
+        // If we're before the fiscal year start month, we're in the previous fiscal year
+        // Example: FY starts in July (month 7)
+        // - 2024-06-30 (month 6 < 7) → FY-2024 (fiscal year that ends in 2024)
+        // - 2024-07-01 (month 7 >= 7) → FY-2025 (fiscal year that ends in 2025)
+        if ($month < $this->fiscalYearStartMonth) {
+            return (string) $year;
+        }
+
+        return (string) ($year + 1);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFiscalYearStartDate(string $fiscalYear): DateTimeImmutable
+    {
+        $fiscalYearInt = (int) $fiscalYear;
+
+        // Fiscal year starts in the previous calendar year if start month > 1
+        // Example: FY-2024 with July start → 2023-07-01
+        // Example: FY-2024 with January start → 2024-01-01
+        $calendarYear = $this->fiscalYearStartMonth > 1
+            ? $fiscalYearInt - 1
+            : $fiscalYearInt;
+
+        return new DateTimeImmutable(
+            sprintf('%04d-%02d-01', $calendarYear, $this->fiscalYearStartMonth)
+        );
     }
 }

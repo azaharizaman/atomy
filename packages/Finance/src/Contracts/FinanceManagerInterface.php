@@ -107,4 +107,79 @@ interface FinanceManagerInterface
      * @return array<JournalEntryInterface>
      */
     public function listJournalEntries(array $filters = []): array;
+
+    /**
+     * Generate account balance timeseries for multiple periods
+     * 
+     * Returns an array of balance snapshots at specified intervals between start and end dates.
+     * Supports fiscal-year-aware intervals (quarter, year) via Period package integration.
+     * 
+     * @param string $accountId The account ID
+     * @param DateTimeImmutable $startDate Start of timeseries
+     * @param DateTimeImmutable $endDate End of timeseries
+     * @param string $interval Interval: 'day', 'week', 'month', 'quarter', 'year'
+     * 
+     * @return array<array{date: string, balance: string, fiscal_year: string}> Array of balance snapshots
+     * 
+     * @throws \Nexus\Finance\Exceptions\AccountNotFoundException
+     * @throws \InvalidArgumentException for invalid interval
+     * 
+     * @example
+     * $timeseries = $manager->generateBalanceTimeseries(
+     *     '01HGK...',
+     *     new \DateTimeImmutable('2024-01-01'),
+     *     new \DateTimeImmutable('2024-12-31'),
+     *     'month'
+     * );
+     * // Returns: [
+     * //   ['date' => '2024-01-31', 'balance' => '10000.00', 'fiscal_year' => '2024'],
+     * //   ['date' => '2024-02-29', 'balance' => '15000.00', 'fiscal_year' => '2024'],
+     * //   ...
+     * // ]
+     */
+    public function generateBalanceTimeseries(
+        string $accountId,
+        DateTimeImmutable $startDate,
+        DateTimeImmutable $endDate,
+        string $interval
+    ): array;
+
+    /**
+     * Get hierarchical account tree
+     * 
+     * Returns nested account structure with parent-child relationships.
+     * Supports filtering by account type or active status.
+     * 
+     * @param array<string, mixed> $filters Optional filters (type, is_active)
+     * @return array<array{id: string, code: string, name: string, children: array}> Nested account tree
+     */
+    public function getAccountTree(array $filters = []): array;
+
+    /**
+     * Get recent journal entries
+     * 
+     * Returns most recent journal entries ordered by entry date descending.
+     * Useful for dashboard widgets and recent activity feeds.
+     * 
+     * @param int $limit Maximum number of entries to return (default 10)
+     * @param array<string, mixed> $filters Optional filters (status, account_id)
+     * @return array<JournalEntryInterface>
+     */
+    public function getRecentEntries(int $limit = 10, array $filters = []): array;
+
+    /**
+     * Generate trial balance report
+     * 
+     * Returns list of all accounts with their debit and credit balances as of a specific date.
+     * Verifies accounting equation: Total Debits = Total Credits.
+     * 
+     * @param DateTimeImmutable $asOfDate Date to calculate balances
+     * @return array{
+     *     accounts: array<array{id: string, code: string, name: string, debit: string, credit: string}>,
+     *     totals: array{total_debit: string, total_credit: string, balanced: bool}
+     * }
+     * 
+     * @throws \Nexus\Finance\Exceptions\UnbalancedTrialBalanceException if debits != credits
+     */
+    public function generateTrialBalance(DateTimeImmutable $asOfDate): array;
 }

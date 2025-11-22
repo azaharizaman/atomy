@@ -2,17 +2,24 @@
     "name": "nexus/atomy",
     "type": "project",
     "description": "Nexus ERP - Headless Laravel Backend (Atomy)",
-    "keywords": ["nexus", "erp", "laravel", "headless"],
+    "keywords": [
+        "nexus",
+        "erp",
+        "laravel",
+        "headless"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.3",
         "aws/aws-sdk-php": "^3.300",
+        "filament/filament": "^4.2.3",
         "geocoder-php/google-maps-provider": "^4.7",
         "geocoder-php/nominatim-provider": "^5.7",
         "guzzlehttp/guzzle": "^7.8",
         "laravel/framework": "*",
         "laravel/tinker": "^2.9",
         "nexus/accounting": "*@dev",
+        "nexus/analytics": "*@dev",
         "nexus/audit-logger": "*@dev",
         "nexus/backoffice": "*@dev",
         "nexus/compliance": "*@dev",
@@ -28,13 +35,13 @@
         "nexus/identity": "*@dev",
         "nexus/import": "*@dev",
         "nexus/notifier": "*@dev",
+        "nexus/party": "*@dev",
+        "nexus/payable": "*@dev",
         "nexus/payroll": "*@dev",
         "nexus/payroll-mys-statutory": "*@dev",
         "nexus/period": "*@dev",
-        "nexus/party": "*@dev",
-        "nexus/payable": "*@dev",
-        "nexus/product": "*@dev",
         "nexus/procurement": "*@dev",
+        "nexus/product": "*@dev",
         "nexus/receivable": "*@dev",
         "nexus/reporting": "*@dev",
         "nexus/routing": "*@dev",
@@ -224,7 +231,8 @@
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"

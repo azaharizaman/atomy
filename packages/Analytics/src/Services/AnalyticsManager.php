@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Analytics\Services;
 
+use Nexus\Analytics\Contracts\AnalyticsManagerInterface;
 use Nexus\Analytics\Contracts\AnalyticsRepositoryInterface;
 use Nexus\Analytics\Contracts\AnalyticsAuthorizerInterface;
 use Nexus\Analytics\Contracts\AnalyticsContextInterface;
@@ -20,7 +21,7 @@ use Nexus\Analytics\Exceptions\AnalyticsInstanceNotFoundException;
  * 
  * Coordinates query execution, permission checking, and history management
  */
-final readonly class AnalyticsManager
+final readonly class AnalyticsManager implements AnalyticsManagerInterface
 {
     public function __construct(
         private AnalyticsRepositoryInterface $repository,
@@ -186,5 +187,56 @@ final readonly class AnalyticsManager
     {
         $userId = $this->context->getUserId() ?? 'system';
         return $this->authorizer->getPermissions($userId, $queryId);
+    }
+
+    /**
+     * Save a query definition for later execution.
+     * 
+     * TODO: Implement proper query persistence
+     *
+     * @param QueryDefinitionInterface $query The query to save
+     * @return string The saved query ID
+     */
+    public function saveQuery(QueryDefinitionInterface $query): string
+    {
+        throw new \BadMethodCallException('Method saveQuery() not yet implemented in AnalyticsManager');
+    }
+
+    /**
+     * Retrieve a saved query by ID.
+     * 
+     * TODO: Implement proper query retrieval
+     *
+     * @param string $queryId The query ID
+     * @return QueryDefinitionInterface|null The query definition or null if not found
+     */
+    public function getQuery(string $queryId): ?QueryDefinitionInterface
+    {
+        return null;
+    }
+
+    /**
+     * Delete a saved query.
+     * 
+     * TODO: Implement proper query deletion
+     *
+     * @param string $queryId The query ID to delete
+     * @return bool True if deleted, false if not found
+     */
+    public function deleteQuery(string $queryId): bool
+    {
+        return false;
+    }
+
+    /**
+     * List all saved queries.
+     * 
+     * TODO: Implement proper query listing
+     *
+     * @return array<QueryDefinitionInterface> Array of query definitions
+     */
+    public function listQueries(): array
+    {
+        return [];
     }
 }
