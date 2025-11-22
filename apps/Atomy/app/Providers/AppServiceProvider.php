@@ -116,6 +116,9 @@ use Nexus\Geo\Services\BearingCalculator;
 use Nexus\Geo\Services\TravelTimeEstimator;
 use Nexus\Routing\Contracts\RouteCacheInterface;
 use App\Repositories\DbRouteCacheRepository;
+use App\Repositories\VendorPaymentAnalyticsRepository;
+use App\Repositories\PaymentHistoryRepository;
+use App\Repositories\InventoryAnalyticsRepository;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -282,6 +285,77 @@ final class AppServiceProvider extends ServiceProvider
 
         // Route Cache (Essential - Interface to Concrete)
         $this->app->singleton(RouteCacheInterface::class, DbRouteCacheRepository::class);
+
+        // Intelligence Package Bindings (Wave 1)
+
+        // Analytics Repositories (Essential - Interface to Concrete)
+        $this->app->singleton(
+            \Nexus\Payable\Contracts\VendorPaymentAnalyticsRepositoryInterface::class,
+            function ($app) {
+                return new \App\Repositories\VendorPaymentAnalyticsRepository(
+                    tenantId: $app->make('tenant')->getId()
+                );
+            }
+        );
+
+        $this->app->singleton(
+            \Nexus\Receivable\Contracts\PaymentHistoryRepositoryInterface::class,
+            function ($app) {
+                return new \App\Repositories\PaymentHistoryRepository(
+                    tenantId: $app->make('tenant')->getId()
+                );
+            }
+        );
+
+        $this->app->singleton(
+            \Nexus\Inventory\Contracts\InventoryAnalyticsRepositoryInterface::class,
+            function ($app) {
+                return new \App\Repositories\InventoryAnalyticsRepository(
+                    tenantId: $app->make('tenant')->getId()
+                );
+            }
+        );
+
+        // Feature Extractors (Wave 1 - Singleton with instrumentation decorator)
+        $this->app->singleton('intelligence.extractor.payable.duplicate_detection', function ($app) {
+            $baseExtractor = new \Nexus\Payable\Intelligence\DuplicatePaymentDetectionExtractor(
+                analytics: $app->make(\Nexus\Payable\Contracts\VendorPaymentAnalyticsRepositoryInterface::class),
+                logger: $app->make(\Psr\Log\LoggerInterface::class)
+            );
+
+            // Wrap with instrumentation decorator for cost tracking
+            return new \Nexus\Intelligence\Services\InstrumentedFeatureExtractor(
+                extractor: $baseExtractor,
+                usageTracking: $app->make(\Nexus\Intelligence\Contracts\UsageTrackingRepositoryInterface::class),
+                logger: $app->make(\Psr\Log\LoggerInterface::class)
+            );
+        });
+
+        $this->app->singleton('intelligence.extractor.receivable.payment_prediction', function ($app) {
+            $baseExtractor = new \Nexus\Receivable\Intelligence\CustomerPaymentPredictionExtractor(
+                paymentHistory: $app->make(\Nexus\Receivable\Contracts\PaymentHistoryRepositoryInterface::class),
+                logger: $app->make(\Psr\Log\LoggerInterface::class)
+            );
+
+            return new \Nexus\Intelligence\Services\InstrumentedFeatureExtractor(
+                extractor: $baseExtractor,
+                usageTracking: $app->make(\Nexus\Intelligence\Contracts\UsageTrackingRepositoryInterface::class),
+                logger: $app->make(\Psr\Log\LoggerInterface::class)
+            );
+        });
+
+        $this->app->singleton('intelligence.extractor.inventory.demand_forecast', function ($app) {
+            $baseExtractor = new \Nexus\Inventory\Intelligence\DemandForecastExtractor(
+                analytics: $app->make(\Nexus\Inventory\Contracts\InventoryAnalyticsRepositoryInterface::class),
+                logger: $app->make(\Psr\Log\LoggerInterface::class)
+            );
+
+            return new \Nexus\Intelligence\Services\InstrumentedFeatureExtractor(
+                extractor: $baseExtractor,
+                usageTracking: $app->make(\Nexus\Intelligence\Contracts\UsageTrackingRepositoryInterface::class),
+                logger: $app->make(\Psr\Log\LoggerInterface::class)
+            );
+        });
     }
 
     /**
