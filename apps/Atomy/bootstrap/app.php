@@ -34,5 +34,8 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Providers\InventoryServiceProvider::class,
         App\Providers\WarehouseServiceProvider::class,
         App\Providers\FieldServiceProvider::class,
+        // Filament Panels
+        App\Providers\Filament\AdminPanelProvider::class,
+        App\Providers\Filament\FinancePanelProvider::class,
     ])
     ->create();

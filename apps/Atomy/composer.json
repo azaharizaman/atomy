@@ -2,11 +2,17 @@
     "name": "nexus/atomy",
     "type": "project",
     "description": "Nexus ERP - Headless Laravel Backend (Atomy)",
-    "keywords": ["nexus", "erp", "laravel", "headless"],
+    "keywords": [
+        "nexus",
+        "erp",
+        "laravel",
+        "headless"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.3",
         "aws/aws-sdk-php": "^3.300",
+        "filament/filament": "^4.2.3",
         "geocoder-php/google-maps-provider": "^4.7",
         "geocoder-php/nominatim-provider": "^5.7",
         "guzzlehttp/guzzle": "^7.8",
@@ -225,7 +231,8 @@
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
