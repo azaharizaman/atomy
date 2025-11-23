@@ -108,4 +108,89 @@ interface MfaEnrollmentRepositoryInterface
      * @return array<MfaEnrollmentInterface> Enrollments needing reminder
      */
     public function findUnverifiedOlderThan(int $hoursOld): array;
+
+    /**
+     * Create a new enrollment.
+     *
+     * @param array $data Enrollment data
+     * @return array Created enrollment data
+     */
+    public function create(array $data): array;
+
+    /**
+     * Find pending (unverified) enrollment by user and method.
+     *
+     * @param string $userId User identifier
+     * @param string $method MFA method
+     * @return array|null Enrollment data or null
+     */
+    public function findPendingByUserAndMethod(string $userId, string $method): ?array;
+
+    /**
+     * Find active enrollment by user and method.
+     *
+     * @param string $userId User identifier
+     * @param string $method MFA method
+     * @return array|null Enrollment data or null
+     */
+    public function findActiveByUserAndMethod(string $userId, string $method): ?array;
+
+    /**
+     * Activate a pending enrollment.
+     *
+     * @param string $enrollmentId Enrollment identifier
+     * @return bool True if activated
+     */
+    public function activate(string $enrollmentId): bool;
+
+    /**
+     * Revoke an enrollment.
+     *
+     * @param string $enrollmentId Enrollment identifier
+     * @return bool True if revoked
+     */
+    public function revoke(string $enrollmentId): bool;
+
+    /**
+     * Revoke all enrollments by user and method.
+     *
+     * @param string $userId User identifier
+     * @param string $method MFA method
+     * @return int Number of enrollments revoked
+     */
+    public function revokeByUserAndMethod(string $userId, string $method): int;
+
+    /**
+     * Revoke all enrollments for a user.
+     *
+     * @param string $userId User identifier
+     * @return int Number of enrollments revoked
+     */
+    public function revokeAllByUserId(string $userId): int;
+
+    /**
+     * Find active backup codes for a user.
+     *
+     * @param string $userId User identifier
+     * @return array Array of backup code enrollments
+     */
+    public function findActiveBackupCodes(string $userId): array;
+
+    /**
+     * Mark a backup code as consumed.
+     *
+     * @param string $enrollmentId Enrollment identifier
+     * @param \DateTimeImmutable $consumedAt Consumption timestamp
+     * @return bool True if marked as consumed
+     */
+    public function consumeBackupCode(string $enrollmentId, \DateTimeImmutable $consumedAt): bool;
+
+    /**
+     * Update last used timestamp for an enrollment.
+     *
+     * @param string $enrollmentId Enrollment identifier
+     * @param \DateTimeImmutable $lastUsedAt Last used timestamp
+     * @return bool True if updated
+     */
+    public function updateLastUsed(string $enrollmentId, \DateTimeImmutable $lastUsedAt): bool;
 }
