@@ -183,5 +183,14 @@ Route::middleware('auth:sanctum')->prefix('field-service')->group(function () {
     });
 });
 
+// Feature Flags API routes
+Route::middleware(['auth:sanctum', 'tenant.identify'])->prefix('feature-flags')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\FeatureFlagController::class, 'index']);
+    Route::get('/{name}', [\App\Http\Controllers\Api\FeatureFlagController::class, 'show']);
+    Route::post('/', [\App\Http\Controllers\Api\FeatureFlagController::class, 'store']);
+    Route::put('/{name}', [\App\Http\Controllers\Api\FeatureFlagController::class, 'update']);
+    Route::delete('/{name}', [\App\Http\Controllers\Api\FeatureFlagController::class, 'destroy']);
+});
+
 // Metrics endpoint for Prometheus scraping (no auth required for monitoring)
 Route::get('/metrics/prometheus', [PrometheusMetricsController::class, 'metrics']);

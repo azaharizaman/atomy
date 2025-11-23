@@ -191,6 +191,10 @@
         {
             "type": "path",
             "url": "./packages/FieldService"
+        },
+        {
+            "type": "path",
+            "url": "./packages/FeatureFlags"
         }
     ],
     "minimum-stability": "dev",

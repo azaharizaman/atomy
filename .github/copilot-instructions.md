@@ -608,26 +608,27 @@ The following packages are implemented or under development in this monorepo:
 30. **Nexus\Compliance** - Process enforcement and operational compliance
 31. **Nexus\Statutory** - Reporting compliance and statutory filing
 32. **Nexus\PayrollMysStatutory** - Malaysian payroll statutory calculations (EPF, SOCSO, PCB)
+33. **Nexus\FeatureFlags** - Production-grade feature flag management with 5 evaluation strategies (system-wide, percentage rollout, tenant list, user list, custom), tenant inheritance, checksum-validated caching, fail-closed security, kill switches (FORCE_ON/FORCE_OFF), and comprehensive test coverage (235+ test methods, 400+ assertions)
 
 ### 🚧 In Development
-33. **Nexus\Hrm** - Human resource management, leave, attendance, performance reviews
-34. **Nexus\Payroll** - Payroll processing framework
-35. **Nexus\Inventory** - Inventory and stock management with lot/serial tracking
-36. **Nexus\Warehouse** - Warehouse management and operations
-37. **Nexus\FieldService** - Work orders, technicians, service contracts, SLA management
-38. **Nexus\Workflow** - Workflow engine, process automation, state machines
-39. **Nexus\EventStream** - Event sourcing engine for critical domains (Finance GL, Inventory)
-40. **Nexus\DataProcessor** - Data processing capability (OCR, ETL, etc.) - Interface-only package
-41. **Nexus\Analytics** - Business intelligence, predictive models, data analytics
-42. **Nexus\Backoffice** - Company structure, offices, departments, staff organizational units
-43. **Nexus\OrgStructure** - Organizational hierarchy and structure management
-44. **Nexus\Crm** - Customer relationship management, leads, opportunities, sales pipeline
-45. **Nexus\Marketing** - Campaigns, lead nurturing, A/B testing, GDPR compliance
-46. **Nexus\Manufacturing** - Bill of materials, work orders, production planning, MRP
-47. **Nexus\Procurement** - Purchase requisitions, POs, goods receipt, 3-way matching
-48. **Nexus\ProjectManagement** - Projects, tasks, timesheets, milestones, resource allocation
-49. **Nexus\Audit** - Advanced audit capabilities (extends AuditLogger)
-50. **Nexus\Crypto** - Cryptographic operations and key management
+34. **Nexus\Hrm** - Human resource management, leave, attendance, performance reviews
+35. **Nexus\Payroll** - Payroll processing framework
+36. **Nexus\Inventory** - Inventory and stock management with lot/serial tracking
+37. **Nexus\Warehouse** - Warehouse management and operations
+38. **Nexus\FieldService** - Work orders, technicians, service contracts, SLA management
+39. **Nexus\Workflow** - Workflow engine, process automation, state machines
+40. **Nexus\EventStream** - Event sourcing engine for critical domains (Finance GL, Inventory)
+41. **Nexus\DataProcessor** - Data processing capability (OCR, ETL, etc.) - Interface-only package
+42. **Nexus\Analytics** - Business intelligence, predictive models, data analytics
+43. **Nexus\Backoffice** - Company structure, offices, departments, staff organizational units
+44. **Nexus\OrgStructure** - Organizational hierarchy and structure management
+45. **Nexus\Crm** - Customer relationship management, leads, opportunities, sales pipeline
+46. **Nexus\Marketing** - Campaigns, lead nurturing, A/B testing, GDPR compliance
+47. **Nexus\Manufacturing** - Bill of materials, work orders, production planning, MRP
+48. **Nexus\Procurement** - Purchase requisitions, POs, goods receipt, 3-way matching
+49. **Nexus\ProjectManagement** - Projects, tasks, timesheets, milestones, resource allocation
+50. **Nexus\Audit** - Advanced audit capabilities (extends AuditLogger)
+51. **Nexus\Crypto** - Cryptographic operations and key management
 
 ## Quality Standards
 
