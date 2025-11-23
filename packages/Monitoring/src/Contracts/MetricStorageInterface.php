@@ -52,4 +52,30 @@ interface MetricStorageInterface
      * @return int Number of metrics purged
      */
     public function purgeMetricsBefore(DateTimeInterface $before): int;
+
+    /**
+     * Delete metrics older than specified timestamp.
+     *
+     * @param int $cutoffTimestamp Unix timestamp cutoff (exclusive)
+     * @param int|null $batchSize Maximum number of metrics to delete
+     * @return int Number of metrics deleted
+     */
+    public function deleteMetricsOlderThan(int $cutoffTimestamp, ?int $batchSize = null): int;
+
+    /**
+     * Delete metrics for specific key older than timestamp.
+     *
+     * @param string $metricKey Metric key to delete
+     * @param int $cutoffTimestamp Unix timestamp cutoff (exclusive)
+     * @return int Number of metrics deleted
+     */
+    public function deleteMetric(string $metricKey, int $cutoffTimestamp): int;
+
+    /**
+     * Count metrics older than specified timestamp.
+     *
+     * @param int $cutoffTimestamp Unix timestamp cutoff (exclusive)
+     * @return int Number of metrics
+     */
+    public function countMetricsOlderThan(int $cutoffTimestamp): int;
 }
