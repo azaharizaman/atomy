@@ -106,14 +106,16 @@ final readonly class WebAuthnManager implements WebAuthnManagerInterface
             $excludeCredentialIds
         );
 
-        return WebAuthnRegistrationOptions::create(
+        return new WebAuthnRegistrationOptions(
             challenge: $challenge,
             rpId: $this->rpId,
             rpName: $this->rpName,
             userId: base64_encode($userId),
             userName: $userName,
             userDisplayName: $userDisplayName,
-            authenticatorSelection: $authenticatorSelection
+            pubKeyCredParams: WebAuthnRegistrationOptions::defaultAlgorithms(),
+            authenticatorSelection: $authenticatorSelection,
+            excludeCredentials: $excludeCredentials
         );
     }
 
@@ -232,7 +234,10 @@ final readonly class WebAuthnManager implements WebAuthnManagerInterface
             $requestOptions = PublicKeyCredentialRequestOptions::create(
                 $expectedChallenge
             )->allowCredential(
-                PublicKeyCredentialDescriptor::create($storedCredential->credentialId)
+                \Webauthn\PublicKeyCredentialDescriptor::create(
+                    'public-key',
+                    base64_decode($storedCredential->credentialId)
+                )
             );
 
             // Verify the assertion

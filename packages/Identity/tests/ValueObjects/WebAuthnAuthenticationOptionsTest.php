@@ -60,7 +60,7 @@ final class WebAuthnAuthenticationOptionsTest extends TestCase
     public function it_throws_exception_for_too_short_timeout(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Timeout must be at least 30 seconds');
+        $this->expectExceptionMessage('Timeout must be at least 30000ms (30 seconds)');
 
         new WebAuthnAuthenticationOptions(
             challenge: $this->validChallenge(),
@@ -72,7 +72,7 @@ final class WebAuthnAuthenticationOptionsTest extends TestCase
     public function it_throws_exception_for_too_long_timeout(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Timeout must not exceed 10 minutes');
+        $this->expectExceptionMessage('Timeout must not exceed 600000ms (10 minutes)');
 
         new WebAuthnAuthenticationOptions(
             challenge: $this->validChallenge(),

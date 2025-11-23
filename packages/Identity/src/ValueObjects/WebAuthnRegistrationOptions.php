@@ -83,11 +83,11 @@ final readonly class WebAuthnRegistrationOptions
         }
 
         if ($this->timeout < 30000) {
-            throw new InvalidArgumentException('Timeout must be at least 30 seconds (30000ms)');
+            throw new InvalidArgumentException('Timeout must be at least 30000ms (30 seconds)');
         }
 
         if ($this->timeout > 600000) {
-            throw new InvalidArgumentException('Timeout must not exceed 10 minutes (600000ms)');
+            throw new InvalidArgumentException('Timeout must not exceed 600000ms (10 minutes)');
         }
 
         foreach ($this->excludeCredentials as $credential) {
