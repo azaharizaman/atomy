@@ -1,8 +1,8 @@
 # Nexus ERP: Progress Charter
 
 **Last Updated:** November 23, 2025  
-**Overall Completion:** 69% (31 of 45 packages production-ready)  
-**Total Codebase:** ~116,000 lines (PHP + Documentation)
+**Overall Completion:** 70% (32 of 46 packages production-ready)  
+**Total Codebase:** ~120,000 lines (PHP + Documentation)
 
 | Business/ERP Domain | Package Name/Namespace | Description | Major Milestones Completed | Major Milestones In Progress | % Complete | Total LOC | Planned Major Milestones | Criticality |
 |---------------------|------------------------|-------------|----------------------------|------------------------------|------------|-----------|-------------------------|-------------|
@@ -14,6 +14,8 @@
 | Audit Trails | `Nexus\AuditLogger` | CRUD tracking with timeline feeds, retention policies, and user attribution for compliance. | Event logging, Retention policies, Timeline queries | Advanced filtering | 90% | 1,520 | Real-time feeds, Archival | Medium - Deterrent |
 | Event Sourcing | `Nexus\EventStream` | Immutable event log for GL and inventory with temporal queries and projection rebuilding. | Core contracts, Value objects, Exceptions, Engines, Test suite (76% coverage) | Snapshot repository, Stream reader impl | 85% | 3,200 | Upcasters, Sharding | Medium - Deterrent |
 | Configuration | `Nexus\Setting` | Hierarchical settings management with tenant overrides and type-safe access. | CRUD operations, Tenant scoping, Type casting, Caching | - | 95% | 1,894 | Setting groups | Low - Debt |
+| **Observability & Monitoring** |
+| Monitoring | `Nexus\Monitoring` | Production-grade observability with telemetry, health checks, alerting, SLO tracking, and automated retention. | Telemetry tracking, Health checks (4 built-in), Alerting, SLO wrapper, Retention service, 188 tests (100% passing) | - | 100% | 4,000 | Prometheus exporter, Grafana dashboards | Medium - Deterrent |
 | **Identity & Security** |
 | Authentication | `Nexus\Identity` | User authentication with MFA, session management, RBAC, and wildcard permissions. | RBAC, MFA, Session mgmt, Token scopes | OAuth2 integration | 95% | 3,685 | SSO, Biometrics | High - Blocking |
 | Encryption | `Nexus\Crypto` | Field-level encryption with key rotation and HSM integration for sensitive data protection. | AES encryption, Key rotation, Hash verification | HSM integration | 85% | 3,750 | Tokenization | Medium - Deterrent |
@@ -67,9 +69,9 @@
 | Criticality Level | Package Count | Total LOC | Avg Completion | Key Blockers |
 |-------------------|---------------|-----------|----------------|--------------|
 | **High - Blocking** | 6 packages | 16,193 | 87% | Inventory (50%), Finance/Identity complete |
-| **Medium - Deterrent** | 18 packages | 57,631 | 80% | EventStream (85%), Receivable (75%), Payable (70%) |
+| **Medium - Deterrent** | 19 packages | 61,631 | 82% | EventStream (85%), Receivable (75%), Monitoring complete |
 | **Low - Debt** | 21 packages | 42,176 | 57% | Workflows (30%), Backoffice (20%) |
-| **TOTAL** | **45 packages** | **116,000** | **69%** | - |
+| **TOTAL** | **46 packages** | **120,000** | **70%** | - |
 
 ---
 

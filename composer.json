@@ -121,6 +121,10 @@
         },
         {
             "type": "path",
+            "url": "./packages/Monitoring"
+        },
+        {
+            "type": "path",
             "url": "./packages/Assets"
         },
         {
@@ -164,7 +168,7 @@
             "url": "./packages/Reporting"
         },
         {
-            "type'": "path",    
+            "type": "path",    
             "url": "./packages/Geo"
         },
         {

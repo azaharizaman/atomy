@@ -31,6 +31,7 @@ Located in `packages/`, these are self-contained units of functionality. They ar
 | | `Nexus\AuditLogger` | CRUD operation tracking with user context and retention policies. |
 | | `Nexus\Period` | Fiscal period management and transaction validation. |
 | | `Nexus\Crypto` | Cryptographic operations and data encryption. |
+| | `Nexus\Monitoring` | Telemetry, health checks, alerting, SLO tracking, automated retention. |
 | **Finance & Accounting** | `Nexus\Accounting` | Double-entry bookkeeping and general ledger. |
 | | `Nexus\Finance` | Financial management and reporting. |
 | | `Nexus\Currency` | Currency management and exchange rates. |

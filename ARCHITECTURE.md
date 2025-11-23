@@ -22,9 +22,9 @@ Our architecture is built on one primary concept: **Decoupling**.
   * Is mostly engine and logic processing thus persistence agnostic. It does not care how data is stored. It only provides the interfaces. Most case it does not provide any model traits or classes.
   * All auto-incrementing primary keys are ULIDs (UUID v4) strings.
 
-## Package Inventory (50+ Atomic Packages)
+## Package Inventory (51+ Atomic Packages)
 
-### Foundation & Infrastructure (7 packages)
+### Foundation & Infrastructure (8 packages)
 1. **Nexus\Tenant** - Multi-tenancy context and isolation with queue propagation
 2. **Nexus\Sequencing** - Auto-numbering with atomic counter management
 3. **Nexus\Period** - Fiscal period management for compliance
@@ -32,67 +32,68 @@ Our architecture is built on one primary concept: **Decoupling**.
 5. **Nexus\AuditLogger** - Timeline feeds and audit trails
 6. **Nexus\EventStream** - Event sourcing for critical domains (Finance GL, Inventory)
 7. **Nexus\Setting** - Application settings management
+8. **Nexus\Monitoring** - Observability with telemetry, health checks, alerting, SLO tracking
 
 ### Identity & Security (3 packages)
-8. **Nexus\Identity** - Authentication, RBAC, MFA, session/token management
-9. **Nexus\Crypto** - Cryptographic operations and key management
-10. **Nexus\Audit** - Advanced audit capabilities (extends AuditLogger)
+9. **Nexus\Identity** - Authentication, RBAC, MFA, session/token management
+10. **Nexus\Crypto** - Cryptographic operations and key management
+11. **Nexus\Audit** - Advanced audit capabilities (extends AuditLogger)
 
 ### Finance & Accounting (7 packages)
-11. **Nexus\Finance** - General ledger, journal entries, double-entry bookkeeping
-12. **Nexus\Accounting** - Financial statements, period close, consolidation
-13. **Nexus\Receivable** - Customer invoicing, collections, credit control
-14. **Nexus\Payable** - Vendor bills, payment processing, 3-way matching
-15. **Nexus\CashManagement** - Bank reconciliation, cash flow forecasting
-16. **Nexus\Budget** - Budget planning and variance tracking
-17. **Nexus\Assets** - Fixed asset management, depreciation
+12. **Nexus\Finance** - General ledger, journal entries, double-entry bookkeeping
+13. **Nexus\Accounting** - Financial statements, period close, consolidation
+14. **Nexus\Receivable** - Customer invoicing, collections, credit control
+15. **Nexus\Payable** - Vendor bills, payment processing, 3-way matching
+16. **Nexus\CashManagement** - Bank reconciliation, cash flow forecasting
+17. **Nexus\Budget** - Budget planning and variance tracking
+18. **Nexus\Assets** - Fixed asset management, depreciation
 
 ### Sales & Operations (6 packages)
-18. **Nexus\Sales** - Quotation-to-order lifecycle, pricing engine
-19. **Nexus\Inventory** - Stock management with lot/serial tracking (depends on Uom)
-20. **Nexus\Warehouse** - Warehouse operations and bin management
-21. **Nexus\Procurement** - Purchase requisitions, POs, goods receipt
-22. **Nexus\Manufacturing** - Bill of materials, work orders, MRP
-23. **Nexus\Product** - Product catalog, pricing, categorization
+19. **Nexus\Sales** - Quotation-to-order lifecycle, pricing engine
+20. **Nexus\Inventory** - Stock management with lot/serial tracking (depends on Uom)
+21. **Nexus\Warehouse** - Warehouse operations and bin management
+22. **Nexus\Procurement** - Purchase requisitions, POs, goods receipt
+23. **Nexus\Manufacturing** - Bill of materials, work orders, MRP
+24. **Nexus\Product** - Product catalog, pricing, categorization
 
 ### Human Resources (3 packages)
-24. **Nexus\Hrm** - Leave, attendance, performance reviews
-25. **Nexus\Payroll** - Payroll processing framework
-26. **Nexus\PayrollMysStatutory** - Malaysian statutory calculations (EPF, SOCSO, PCB)
+25. **Nexus\Hrm** - Leave, attendance, performance reviews
+26. **Nexus\Payroll** - Payroll processing framework
+27. **Nexus\PayrollMysStatutory** - Malaysian statutory calculations (EPF, SOCSO, PCB)
 
 ### Customer & Partner Management (4 packages)
-27. **Nexus\Party** - Customers, vendors, employees, contacts
-28. **Nexus\Crm** - Leads, opportunities, sales pipeline
-29. **Nexus\Marketing** - Campaigns, A/B testing, GDPR compliance
-30. **Nexus\FieldService** - Work orders, technicians, service contracts
+28. **Nexus\Party** - Customers, vendors, employees, contacts
+29. **Nexus\Crm** - Leads, opportunities, sales pipeline
+30. **Nexus\Marketing** - Campaigns, A/B testing, GDPR compliance
+31. **Nexus\FieldService** - Work orders, technicians, service contracts
 
 ### Integration & Automation (7 packages)
-31. **Nexus\Connector** - Integration hub with circuit breaker, OAuth
-32. **Nexus\Workflow** - Process automation, state machines
-33. **Nexus\Notifier** - Multi-channel notifications (email, SMS, push, in-app)
-34. **Nexus\Scheduler** - Task scheduling and job management
-35. **Nexus\DataProcessor** - OCR, ETL interfaces (interface-only package)
-36. **Nexus\Intelligence** - AI-assisted automation and predictions
-37. **Nexus\Geo** - Geocoding, geofencing, routing
+32. **Nexus\Connector** - Integration hub with circuit breaker, OAuth
+33. **Nexus\Workflow** - Process automation, state machines
+34. **Nexus\Notifier** - Multi-channel notifications (email, SMS, push, in-app)
+35. **Nexus\Scheduler** - Task scheduling and job management
+36. **Nexus\DataProcessor** - OCR, ETL interfaces (interface-only package)
+37. **Nexus\Intelligence** - AI-assisted automation and predictions
+38. **Nexus\Geo** - Geocoding, geofencing, routing
 
 ### Reporting & Data (6 packages)
-38. **Nexus\Reporting** - Report definition and execution engine
-39. **Nexus\Export** - Multi-format export (PDF, Excel, CSV, JSON)
-40. **Nexus\Import** - Data import with validation and transformation
-41. **Nexus\Analytics** - Business intelligence, predictive models
-42. **Nexus\Currency** - Multi-currency management, exchange rates
-43. **Nexus\Document** - Document management with versioning
+39. **Nexus\Reporting** - Report definition and execution engine
+40. **Nexus\Export** - Multi-format export (PDF, Excel, CSV, JSON)
+41. **Nexus\Import** - Data import with validation and transformation
+42. **Nexus\Analytics** - Business intelligence, predictive models
+43. **Nexus\Currency** - Multi-currency management, exchange rates
+44. **Nexus\Document** - Document management with versioning
 
 ### Compliance & Governance (4 packages)
-44. **Nexus\Compliance** - Process enforcement, operational compliance
-45. **Nexus\Statutory** - Reporting compliance, statutory filing
-46. **Nexus\Backoffice** - Company structure, offices, departments
-47. **Nexus\OrgStructure** - Organizational hierarchy management
+45. **Nexus\Compliance** - Process enforcement, operational compliance
+46. **Nexus\Statutory** - Reporting compliance, statutory filing
+47. **Nexus\Backoffice** - Company structure, offices, departments
+48. **Nexus\OrgStructure** - Organizational hierarchy management
 
 ### Support & Utilities (3 packages)
-48. **Nexus\Storage** - File storage abstraction layer
-49. **Nexus\Routing** - Route optimization and caching
-50. **Nexus\ProjectManagement** - Projects, tasks, timesheets, milestones
+49. **Nexus\Storage** - File storage abstraction layer
+50. **Nexus\Routing** - Route optimization and caching
+51. **Nexus\ProjectManagement** - Projects, tasks, timesheets, milestones
 
 **Package Dependencies:** Packages may depend on other packages (e.g., `Inventory` requires `Uom`, `Receivable` requires `Finance`, `Sales`, `Party`). All dependencies must be explicit in `composer.json`.
    
