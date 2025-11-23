@@ -119,13 +119,13 @@ This document tracks the implementation of the Nexus\EventStream package enhance
 3. **SnapshotManager** - Snapshot creation/validation ✅
 4. **JsonEventSerializer** - JSON serialization ✅
 
-### New Services - PR1 (1)
+### New Services - PR1 (2)
 5. **AggregateScenarioTester** - Testing utility 🔄
+6. **DefaultStreamNameGenerator** - Stream naming ✅
 
-### New Services - PR2 (4)
-6. **EventUpcaster** - Upcasting orchestrator ⏳
-7. **StreamQueryEngine** - Query execution ⏳
-8. **DefaultStreamNameGenerator** - Stream naming ⏳
+### New Services - PR2 (3)
+7. **EventUpcaster** - Upcasting orchestrator ⏳
+8. **StreamQueryEngine** - Query execution ⏳
 9. **CursorEncoder** - Cursor encoding/validation ⏳
 
 ### New Services - PR3 (3)
