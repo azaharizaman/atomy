@@ -1,14 +1,14 @@
 # Architectural Compliance Review: EventStream & Monitoring Integration
 
 **Date:** November 23, 2025  
-**Issue:** PrometheusMetricsCollector architectural violation  
+**Issue:** Custom metrics collector architectural violation  
 **Status:** ✅ Resolved
 
 ---
 
 ## 🚨 Problem Identified
 
-The `apps/Atomy/app/Services/EventStream/PrometheusMetricsCollector.php` implementation violated Nexus architectural principles:
+A custom metrics collector implementation violated Nexus architectural principles:
 
 ### Violations
 
@@ -19,7 +19,7 @@ The `apps/Atomy/app/Services/EventStream/PrometheusMetricsCollector.php` impleme
 
 2. **Infrastructure Coupling in Package**
    - EventStream package shouldn't define Prometheus-specific implementations
-   - Violates "Logic in Packages, Implementation in Applications" principle
+   - Violates "Pure Business Logic, Framework Independent" principle
 
 3. **Interface-Driven Design Bypass**
    - Should have injected `TelemetryTrackerInterface` from `Nexus\Monitoring`
@@ -30,8 +30,8 @@ The `apps/Atomy/app/Services/EventStream/PrometheusMetricsCollector.php` impleme
 ## ✅ Resolution Actions Taken
 
 ### 1. Removed Violating Code
-- ✅ Deleted `packages/EventStream/src/Contracts/MetricsCollectorInterface.php` (already removed)
-- ✅ Deleted `apps/Atomy/app/Services/EventStream/PrometheusMetricsCollector.php` (already removed)
+- ✅ Deleted `packages/EventStream/src/Contracts/MetricsCollectorInterface.php`
+- ✅ Deleted custom PrometheusMetricsCollector implementation
 - ✅ Verified no references remain in codebase
 
 ### 2. Created Comprehensive Package Reference Guide
@@ -99,10 +99,10 @@ final readonly class EventStreamManager
 }
 ```
 
-### Service Provider Binding
+### Consuming Application Binding
 
 ```php
-// apps/Atomy/app/Providers/EventStreamServiceProvider.php
+// Consuming Application Service Provider (e.g., Laravel)
 $this->app->singleton(EventStreamManager::class, function ($app) {
     return new EventStreamManager(
         eventStore: $app->make(EventStoreInterface::class),
@@ -154,8 +154,8 @@ $this->app->singleton(EventStreamManager::class, function ($app) {
 
 ## 🔍 Verification Checklist
 
-- [x] PrometheusMetricsCollector.php removed from Atomy
-- [x] MetricsCollectorInterface.php removed from EventStream package
+- [x] Custom PrometheusMetricsCollector removed
+- [x] MetricsCollectorInterface removed from EventStream package
 - [x] No references to removed interfaces in codebase
 - [x] EventStreamManager can optionally inject TelemetryTrackerInterface
 - [x] Documentation updated with correct patterns
@@ -170,8 +170,8 @@ If EventStream services need to use monitoring (not required immediately):
 
 1. Update EventStreamManager constructor to accept optional `TelemetryTrackerInterface`
 2. Add metric tracking to key operations (append, temporal query, projection)
-3. Update EventStreamServiceProvider binding
-4. Configure monitoring in `config/eventstream.php`
+3. Update consuming application's service provider binding
+4. Configure monitoring in application configuration
 5. Create Grafana dashboard for EventStream metrics
 
 **Note:** These are optional enhancements. EventStream currently works correctly without monitoring integration.

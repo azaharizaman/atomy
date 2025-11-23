@@ -1,26 +1,24 @@
-# Nexus Architecture: Nexus Monorepo Architectural Guidelines & Rules
+# Nexus Architecture: Package-Only Monorepo Architectural Guidelines
 
-This document outlines the architecture of the `nexus` monorepo. Its purpose is to enforce a clean, scalable, and decoupled component structure. Adhering to these rules is mandatory for all development.
+This document outlines the architecture of the **Nexus** package monorepo. Its purpose is to enforce a clean, scalable, and framework-agnostic package structure. Adhering to these rules is mandatory for all development.
 
-**The Core Philosophy: "Logic in Packages, Implementation in Applications."**
+**The Core Philosophy: "Pure Business Logic in Framework-Agnostic Packages"**
 
-Our architecture is built on one primary concept: **Decoupling**.
+Our architecture is built on one primary concept: **Framework Agnosticism**.
 
-  * **`📦 packages/`** contain pure, framework-agnostic business logic. They are the "engines."
-  * **`🚀 apps/`** are the runnable applications. They are the "cars" that use the engines.
+  * **`📦 packages/`** contain pure, framework-agnostic business logic packages
+  * These packages can be integrated into **any PHP framework** (Laravel, Symfony, Slim, etc.)
+  * Consuming applications provide concrete implementations via dependency injection
 
-## Packages:
+## What is Nexus?
 
-  * Must be atomic, self-contained units of functionality.
-  * Must define their persistence needs via **Contracts (Interfaces)**.
-  * Must not contain any database logic or framework-specific code.
-  * Must be publishable to Packagist independently.
-  * Allowed to depend on other atomic packages in the monorepo
-      (e.g., `nexus/uom` can be required by `nexus/inventory`).
-  * Allowed to require framework-agnostic libraries (e.g., `psr/log`).
-  * Allowed to require low evel libra for Laravel support (e.g., `illuminate/support`). But should avoid framework-specific code.
-  * Is mostly engine and logic processing thus persistence agnostic. It does not care how data is stored. It only provides the interfaces. Most case it does not provide any model traits or classes.
-  * All auto-incrementing primary keys are ULIDs (UUID v4) strings.
+Nexus is a **package-only monorepo** containing 50+ atomic, reusable PHP packages for building ERP systems. Each package is:
+
+- **Framework-agnostic** - Works with Laravel, Symfony, or any PHP framework
+- **Publishable** - Can be published to Packagist independently
+- **Contract-driven** - Defines needs via interfaces, consumers provide implementations
+- **Stateless** - No session state, all long-term state externalized
+- **Testable** - Pure business logic with mockable dependencies
 
 ## Package Inventory (51+ Atomic Packages)
 
@@ -96,648 +94,455 @@ Our architecture is built on one primary concept: **Decoupling**.
 51. **Nexus\ProjectManagement** - Projects, tasks, timesheets, milestones
 
 **Package Dependencies:** Packages may depend on other packages (e.g., `Inventory` requires `Uom`, `Receivable` requires `Finance`, `Sales`, `Party`). All dependencies must be explicit in `composer.json`.
-   
 
-## Applications:
+---
 
-   There are two tyes of application in this monorepo:
+## 1. 🌲 Monorepo Structure
 
-### **Headless Orchestrator (`apps/Atomy`):**
-
-**Atomy** is the main ERP backend built with Laravel 12. It is the tangible product and primary deliverable of this monorepo.
-
-**Architectural Principles:**
-- **Pure Headless Architecture:** All functionality exposed exclusively via RESTful API and GraphQL endpoints
-- **No Frontend UI:** The `resources/views` directory remains empty; Atomy is API-only
-- **Contract Implementation Layer:** Implements all interfaces defined by atomic packages
-- **Persistence Provider:** Contains all database migrations and Eloquent models
-- **Service Orchestration:** Combines atomic packages into higher-level business workflows
-
-**Core Responsibilities:**
-1. **Implement Package Contracts:** Provides concrete implementations (e.g., `app/Repositories/DbUomRepository.php` implements `UomRepositoryInterface`)
-2. **Provide Persistence:** Houses all database migrations and Eloquent models that fulfill package persistence contracts
-3. **Orchestrate Business Logic:** Creates domain services by composing multiple packages (e.g., `ReceivableManager` uses Finance, Sales, Party, Sequencing)
-4. **Expose APIs:** Publishes RESTful and GraphQL endpoints for all ERP capabilities
-5. **Dependency Injection:** Binds package interfaces to concrete implementations in `AppServiceProvider.php`
-
-**Technology Stack:**
-- Laravel 12 (PHP 8.3+)
-- PostgreSQL/MySQL for persistence
-- Redis for caching and queues
-- RESTful API (JSON)
-- GraphQL (optional)
-
-**Design Constraints:**
-- Must remain headless (API-only)
-- No embedded frontend frameworks
-- All UI rendering delegated to client applications
-- Stateless API design for horizontal scalability
-
-### **Terminal Client (`apps/Edward`):**
-
-**Edward** is a Terminal User Interface (TUI) client that demonstrates headless consumption of Atomy's API.
-
-**Architectural Principles:**
-- **Complete Decoupling:** Treats Atomy as a remote API service
-- **API-Only Communication:** Uses HTTP client to consume Atomy endpoints
-- **Zero Direct Database Access:** Never connects to Atomy's database
-- **Package Isolation:** Never requires atomic packages directly
-
-**Core Responsibilities:**
-1. **API Client:** Implements `AtomyApiClient` for HTTP communication with Atomy
-2. **Console UI:** Builds user interface using Laravel Artisan commands
-3. **Data Presentation:** Formats API responses for terminal display
-4. **User Input:** Validates and transforms user input before API calls
-
-**Technology Stack:**
-- Laravel Artisan Commands
-- Guzzle HTTP Client
-- Terminal formatting libraries
-
-**Design Constraints:**
-- Must never access Atomy database directly
-- Must never require any `nexus/*` packages
-- All functionality via API consumption
-- Can be deployed separately from Atomy
-
-**Purpose:** Serves as reference implementation showing how any client (web, mobile, desktop) can consume Atomy's API.
-
-
------
-
-## 1\. 🌲 Proposed Monorepo Structure
-
-This visual map illustrates the physical layout of the monorepo. The **`Nexus\Tenant`** package is expanded to serve as the template for all other atomic packages.
-
-```md
+```
 nexus/
 ├── .gitignore
-├── composer.json               # Root monorepo workspace configuration (defines 'path' repositories)
+├── composer.json               # Root monorepo workspace (defines 'path' repositories)
 ├── ARCHITECTURE.md             # (This document)
 ├── README.md
 │
-├── 📦 packages/                  # Atomic, publishable PHP packages
-│   ├── Hrm/                      # Nexus\Hrm
-│   │   ├── composer.json
-│   │   └── src/
-│   ├── Inventory/                # Nexus\Inventory (Requires 'nexus/uom')
-│   │   ├── composer.json
-│   │   └── src/
-│   ├── Tenant/                   # Nexus\Tenant (The Expanded Template)
-│   │   ├── composer.json         # Defines 'nexus/tenant', autoloading
-│   │   ├── README.md             # Package-specific documentation
-│   │   ├── LICENSE               # Package licensing file
-│   │   └── src/                  # The source code root
-│   │       ├── Contracts/        # REQUIRED: Interfaces defining persistence needs and data structures
-│   │       │   ├── TenantInterface.php         # Data structure contract (What a Tenant IS)
-│   │       │   └── TenantRepositoryInterface.php # Persistence contract (How to SAVE/FIND a Tenant)
-│   │       ├── Exceptions/       # REQUIRED: Domain-specific exceptions
-│   │       │   └── TenantNotFoundException.php
-│   │       ├── Services/         # REQUIRED: Core business logic (The "Engine")
-│   │       │   └── TenantManager.php           # e.g., createNewTenant(data), switchTenant(id)
-│   │       └── NexusTenantServiceProvider.php  # OPTIONAL: Laravel integration point
-│   ├── Uom/                      # Nexus\Uom
-│   │   ├── composer.json
-│   │   └── src/
-│   └── Workflow/                 # Nexus\Workflow
-│       ├── composer.json
-│       └── src/
-│
-└── 🚀 apps/                      # Deployable applications
-    ├── Atomy/                    # Nexus\Atomy (Headless Laravel Orchestrator)
-    │   ├── .env.example
-    │   ├── artisan
-    │   ├── composer.json         # Requires all 'nexus/*' packages
-    │   ├── /app
-    │   │   ├── /Console
-    │   │   ├── /Http/Controllers/Api/
-    │   │   ├── /Models           # Eloquent Models (implements package Contracts)
-    │   │   └── /Repositories     # Concrete Repository implementations
-    │   ├── /config/features.php
-    │   ├── /database/migrations/ # ALL migrations for the ERP
-    │   └── /routes/api.php
-    └── Edward/                   # Edward (Terminal Client)
-        ├── .env.example
-        ├── artisan
-        ├── composer.json
-        ├── /app/Console/Commands/
-        └── /app/Http/Clients/AtomyApiClient.php
-
+└── 📦 packages/                  # 50+ Atomic, publishable PHP packages
+    ├── Tenant/                   # Nexus\Tenant (Example Package Structure)
+    │   ├── composer.json         # Package metadata, dependencies, autoloading
+    │   ├── README.md             # Package documentation with usage examples
+    │   ├── LICENSE               # MIT License
+    │   └── src/                  # Source code root
+    │       ├── Contracts/        # REQUIRED: Interfaces
+    │       │   ├── TenantInterface.php         # Entity contract
+    │       │   ├── TenantRepositoryInterface.php # Persistence contract
+    │       │   └── TenantContextInterface.php  # Service contract
+    │       ├── Exceptions/       # REQUIRED: Domain exceptions
+    │       │   ├── TenantNotFoundException.php
+    │       │   └── InvalidTenantException.php
+    │       ├── Services/         # REQUIRED: Business logic
+    │       │   ├── TenantContextManager.php
+    │       │   └── TenantLifecycleService.php
+    │       ├── Enums/            # RECOMMENDED: Native PHP enums
+    │       │   └── TenantStatus.php
+    │       └── ValueObjects/     # RECOMMENDED: Immutable domain objects
+    │           └── TenantConfiguration.php
+    │
+    ├── Inventory/                # More complex package with Core/
+    │   ├── composer.json
+    │   ├── README.md
+    │   ├── LICENSE
+    │   └── src/
+    │       ├── Contracts/        # Public API contracts
+    │       ├── Services/         # Public API services (orchestrators)
+    │       ├── Core/             # Internal engine (hidden from consumers)
+    │       │   ├── Engine/       # Complex business logic
+    │       │   ├── ValueObjects/ # Internal immutable objects
+    │       │   └── Contracts/    # Internal interfaces
+    │       ├── Exceptions/
+    │       ├── Enums/
+    │       └── ValueObjects/
+    │
+    ├── Finance/
+    ├── Receivable/
+    ├── Payable/
+    └── [... 48 more packages]
 ```
 
------
+---
 
-## 2\. 📦 The "Packages" Directory (The Logic)
+## 2. 📦 Package Development Rules
 
-This is the most strictly controlled part of the monorepo. All code in this directory must follow these rules.
+### The Golden Rule: Framework Agnosticism
 
-> **The Golden Rule:** A package must **never** depend on an application. Applications **always** depend on packages. `Nexus\Tenant` can *never* know what `Nexus\Atomy` is.
+> A package must be a **pure PHP engine** that works with any framework.
 
-### Rules of Atomicity
+**NEVER:**
+- Use Laravel-specific classes (`Illuminate\Database\Eloquent\Model`, `Illuminate\Http\Request`, facades)
+- Include database migrations or schema definitions
+- Use global helpers (`config()`, `app()`, `now()`, `dd()`, `env()`)
+- Reference framework components (`Route::`, `DB::`, `Cache::`, `Log::`)
+- Depend on application-specific code
 
-1.  **Must Be Framework-Agnostic:**
+**ALWAYS:**
+- Write pure PHP 8.3+ code
+- Define persistence needs via **Contracts (Interfaces)**
+- Use dependency injection via constructor
+- Use `readonly` properties for injected dependencies
+- Use constructor property promotion
+- Use `declare(strict_types=1);` at top of every file
+- Make packages publishable (include composer.json, LICENSE, README.md)
 
-      * Packages must be "pure PHP" or, at most, depend on framework-agnostic libraries (e.g., `psr/log`).
-      * **DO NOT** use Laravel-specific classes like `Illuminate\Database\Eloquent\Model`, `Illuminate\Http\Request`, or `Illuminate\Support\Facades\Route`.
-      * A light dependency on `illuminate/support` (for Collections, Contracts, etc.) is acceptable if needed, but it should be avoided if possible.
+**ACCEPTABLE:**
+- PSR interfaces (`psr/log`, `psr/http-client`, `psr/cache`)
+- Light dependency on `illuminate/support` for Collections (avoid if possible)
+- Requiring other Nexus packages (explicit in composer.json)
 
-2.  **Must NOT Have Persistence (The "Contract-Driven" Pattern):**
+### Package Structure Requirements
 
-      * Packages **must not** contain database migrations.
-      * Packages **must not** contain Eloquent Models or any concrete database logic.
-      * Instead, a package *defines its need for persistence* by providing **interfaces (Contracts)** (e.g., `Nexus\Uom\Contracts\UomRepositoryInterface`).
+**REQUIRED Components:**
+1. **`src/Contracts/`** - All interfaces (Repository, Manager, Entity)
+2. **`src/Services/`** - Business logic (Managers, Coordinators)
+3. **`src/Exceptions/`** - Domain-specific exceptions
+4. **`composer.json`** - Package metadata, require `"php": "^8.3"`
+5. **`README.md`** - Usage examples and documentation
+6. **`LICENSE`** - MIT License
 
-3.  **Must Define Explicit Dependencies:**
+**RECOMMENDED Components:**
+1. **`src/Enums/`** - Native PHP enums for statuses, types, levels
+2. **`src/ValueObjects/`** - Immutable domain objects (Money, Period, etc.)
 
-      * If a package requires another atomic package, it must be explicitly defined in its own `packages/MyPackage/composer.json`.
-      * **Example:** `packages/Inventory/composer.json` must contain `"require": { "nexus/uom": "^1.0" }`.
+**OPTIONAL Components:**
+1. **`src/Core/`** - Internal engine for complex packages (see below)
 
-4.  **Must Be Publishable:**
+### When to Use `Core/` Folder
 
-      * Every package must be a complete, self-contained unit that *could* be published to Packagist at any time. It must have its own `composer.json`, `LICENSE`, and `README.md`.
+Create `src/Core/` when your package is complex and has internal components consumers shouldn't access:
 
------
+**Use `Core/` when:**
+- Package has > 10 files
+- Main service class > 300 lines
+- Internal contracts for engine components needed
+- Value Objects only used internally
+- Main Manager is merely an orchestrator
 
-## 3\. 🚀 The "Apps" Directory (The Implementation)
+**Skip `Core/` when:**
+- Package has < 10 files
+- Simple business logic
+- All components are public API
 
-Applications are the consumers of the packages. They provide the "glue" that connects the logic, the database, and the user.
+---
 
-### Nexus\\Atomy (The Headless Orchestrator)
+## 3. 🏛️ Architectural Patterns
 
-`Atomy` is the central "headless" ERP backend. It assembles the atomic packages into a single, cohesive application.
+### 3.1 Contract-Driven Design
 
-  * **Its Job is to Implement Contracts:** `Atomy` contains the *concrete implementations* of the interfaces defined in the packages (e.g., `app/Repositories/DbUomRepository.php`).
-  * **Its Job is to Provide Persistence:** `Atomy` is where all **`database/migrations`** and **Eloquent `app/Models`** live. It defines the schema that fulfills the needs of the packages.
-  * **Its Job is to Orchestrate Logic:** `Atomy` creates new, higher-level services by combining one or more atomic packages (e.g., `StaffLeaveApprovalWorkflow` using `Nexus\Workflow` and `Nexus\Hrm`).
-  * **Its Job is to Be Headless:** All functionality must be exposed via **API/GraphQL**. The `resources/views` directory must remain empty.
+All external dependencies must be defined as interfaces:
 
-### Edward (The Terminal Client)
+```php
+// Package defines what it needs
+namespace Nexus\Receivable\Contracts;
 
-`Edward` is a TUI (Terminal User Interface) client. It is a consumer of `Atomy`.
+interface GeneralLedgerIntegrationInterface
+{
+    public function postJournalEntry(JournalEntry $entry): void;
+}
 
-  * **Golden Rule:** `Edward` **must never** access the `Atomy` database directly. It **must never** `require` any of the atomic packages (like `nexus/tenant`).
-  * **It is Fully Decoupled:** Treat `Edward` as if it were a React frontend or a native mobile app. Its *only* connection to the system is the API provided by `Atomy`.
-  * **It is API-Driven:** All its functionality is built on top of an API client (e.g., `app/Http/Clients/AtomyApiClient.php`) that consumes `Atomy`'s endpoints.
-  * **Its UI is the Console:** The entire user interface is built using Laravel Artisan commands (e.g., `php artisan edward:dashboard`).
+// Consumer application implements using another package
+namespace App\Services\Receivable;
 
------
+use Nexus\Finance\Contracts\GeneralLedgerManagerInterface;
 
-## 4\. 🗺️ Developer Workflow: How to Implement an Atomy Feature
-
-When given a user story for `Atomy`, follow this decision-making process.
-
-**User Story Example:** "As a staff member, I want to view the current stock level of a product in kilograms."
-
-1.  **Question 1: Is the *core logic* missing?**
-
-      * *Analysis:* The core logic for stock management (`StockManager`) and UoM conversion (`UomConverter`) already exists in **`packages/Inventory`** and **`packages/Uom`**. No new atomic package code needed.
-
-2.  **Question 2: How is this logic *stored*?**
-
-      * *Analysis:* We need the `Product` and `Unit` models (which implement the package interfaces). These must exist in `Atomy`.
-      * *Action:* Verify that `apps/Atomy/database/migrations/` has the tables and `apps/Atomy/app/Models/` has the corresponding Eloquent models (`Product.php`, `Unit.php`) and Repositories that bind the contracts.
-
-3.  **Question 3: How is this logic *orchestrated*?**
-
-      * *Analysis:* No complex orchestration is needed here; the service call is direct.
-      * *Action:* Define a simple service or use the `StockManager` directly in a controller.
-
-4.  **Question 4: How is this logic *exposed*?**
-
-      * *Action:* Go to `apps/Atomy`.
-      * Add a new endpoint in `routes/api.php`:
-        `Route::get('/v1/inventory/products/{sku}/stock', [InventoryController::class, 'getStock']);`
-      * The `InventoryController` will inject the `StockManager` and return the result via JSON.
-
-5.  **Question 5: How does the *user access* this?**
-
-      * *Action:* Go to `apps/Edward`.
-      * Add a `getStockLevel` method to `app/Http/Clients/AtomyApiClient.php` to call the new endpoint.
-      * Create a new command `app/Console/Commands/ViewStockCommand.php` that uses the client and formats the green text output.
-
------
-
-## 5\. 🏗️ Developer Workflow: How to Create a New Atomic Package
-
-When a new business domain is required (e.g., `Nexus\Crm` or `Nexus\AuditLogger`), follow these steps, using the structure of `Nexus\Tenant` as a reference.
-
-1.  **Create Directory:** Create the `packages/AuditLogger` folder.
-2.  **Init Composer:** `cd packages/AuditLogger` and run `composer init`.
-      * Set the name to `nexus/audit-logger`.
-      * Define the PSR-4 autoloader: `"Nexus\\AuditLogger\\": "src/"`.
-3.  **Define Contracts:** Define all persistence and model needs as interfaces in `packages/AuditLogger/src/Contracts/`.
-      * *Example:* `AuditLogEntryInterface.php`, `AuditLogRepositoryInterface.php`.
-4.  **Update Monorepo Root:** Go to the root `nexus/` directory and add your new package to the `repositories` path array.
-5.  **Install in Atomy:** `cd apps/Atomy` and run `composer require nexus/audit-logger:"*@dev"`.
-6.  **Implement in Atomy:** Go back to `apps/Atomy` and create the necessary migrations, models (`App\Models\AuditLog`), and repositories (`DbAuditLogRepository`) that implement the contracts from `Nexus\AuditLogger`.
-7.  **Bind Implementation:** Bind the interface to the concrete implementation in `apps/Atomy/app/Providers/AppServiceProvider.php`.
-
------
-
-## 6. 🏛️ Architectural Patterns & Principles
-
-### 6.1 The Hybrid Event Architecture
-
-The monorepo implements a **dual-track event system** for different use cases:
-
-#### Timeline Feed Pattern: `Nexus\AuditLogger` (95% of use cases)
-- **Purpose:** User-facing timeline showing "what happened" on entity pages
-- **Use Cases:** Customer records, HR data, settings, inventory adjustments, workflows
-- **Mechanism:** Logs outcomes after transaction commit
-- **Query Pattern:** Simple chronological display
-- **Storage:** Outcome-based records (e.g., "Invoice status changed to Paid")
-
-#### Event Sourcing Pattern: `Nexus\EventStream` (Critical domains only)
-- **Purpose:** State reconstruction at any point in history for compliance
-- **Use Cases:** 
-  - Finance GL (SOX/IFRS compliance - MANDATORY)
-  - Inventory (Stock accuracy verification - MANDATORY)
-  - Large Enterprise AP/AR (Optional)
-- **Mechanism:** Append-only immutable event log
-- **Query Pattern:** Temporal queries ("What was the balance on 2024-10-15?")
-- **Storage:** Event-based records with projections for read models
-
-**Decision Rule:** Use EventStream only when you need to answer: *"What was the exact state of this entity on [specific date]?"* for legal/compliance reasons.
-
-### 6.2 Stateless Package Architecture
-
-All atomic packages must be **stateless** across execution cycles to enable horizontal scaling:
-
-#### The State Management Problem
-- **Anti-Pattern:** Storing application state in package instance properties (e.g., `private array $circuitStates = []`)
-- **Impact:** State isolated to single PHP-FPM worker; other workers remain unaware
-- **Consequence:** Circuit breakers, rate limiters, and caches fail in distributed environments
-
-#### The Solution: Dependency Inversion for State
-- **Pattern:** Delegate state to shared, persistent stores (Redis, Database)
-- **Implementation:** Packages define `StorageInterface` contracts; applications provide implementations
-- **Examples:**
-  - `CircuitBreakerStorageInterface` for Connector package
-  - `CacheRepositoryInterface` for Period package
-  - `SessionStorageInterface` for Identity package
-
-**Principle:** If state must persist across requests or be visible to multiple workers, it must be externalized via an injected interface.
-
-### 6.3 Compliance & Statutory Architecture
-
-The system separates **process enforcement** from **output formatting** for regulatory agility:
-
-#### Two Pillar Design
-
-**Pillar A: `Nexus\Compliance` (Process Enforcement)**
-- Enforces internal controls (e.g., segregation of duties)
-- Manages feature composition via licensing/flags
-- Audits system configuration for scheme requirements
-- Example: ISO 14001 adapter forces hazardous material fields on assets
-
-**Pillar B: `Nexus\Statutory` (Reporting Compliance)**
-- Defines reporting interface contracts (e.g., `PayrollStatutoryInterface`)
-- Manages filing metadata (frequency, format, recipient)
-- Provides default implementations (e.g., `DefaultPayrollCalculator` with zero deductions)
-- Example: Malaysian adapter implements EPF/SOCSO/PCB calculations
-
-#### Pluggable Architecture Flow
-1. Atomy binds default adapter to interface (e.g., `PayrollStatutoryInterface` → `DefaultStatutoryCalculator`)
-2. Compliance orchestrator checks active schemes and licenses
-3. If enabled, Atomy overrides with specific adapter (e.g., `MYSStatutoryCalculator`)
-4. Core packages call generic interface, unaware of implementation
-
-**Benefit:** New regulations added as self-contained packages without touching core logic.
-
-### 6.4 Cross-Package Integration Pattern
-
-When Package A needs Package B's functionality, use the **Adapter Pattern** in the application layer:
-
-**Structure:**
-```
-packages/Sales/src/Contracts/InvoiceCreatorInterface.php  # Sales defines need
-apps/Atomy/app/Services/Sales/ReceivableInvoiceAdapter.php  # Atomy bridges packages
+final readonly class FinanceGLAdapter implements GeneralLedgerIntegrationInterface
+{
+    public function __construct(
+        private GeneralLedgerManagerInterface $glManager
+    ) {}
+    
+    public function postJournalEntry(JournalEntry $entry): void
+    {
+        $this->glManager->post($entry);
+    }
+}
 ```
 
-**Implementation:**
-- Sales package defines what it needs (`InvoiceCreatorInterface`)
-- Atomy implements interface using Receivable package (`ReceivableManager`)
-- Sales package remains ignorant of Receivable implementation details
+### 3.2 Stateless Package Architecture
 
-**Benefits:**
-- Maintains package independence
-- Enables package substitution
-- Facilitates testing with mocks
+Packages must be stateless across execution cycles:
 
-### 6.5 Service Provider Binding Strategy
-
-Application service providers follow strict binding rules:
-
-**Rule A: Essential Bindings (MANDATORY)**
-- Bind package interfaces to application implementations
-- Example: `TenantRepositoryInterface` → `DbTenantRepository`
-
-**Rule B: Package Defaults (MANDATORY)**
-- Bind interfaces to package-provided concrete classes
-- Example: `TenantContextInterface` → `TenantContextManager`
-
-**Rule C: Redundant Bindings (REMOVE)**
-- Never bind concrete package classes (Laravel auto-resolves)
-- Example: Don't bind `TenantLifecycleService` (redundant)
-
-**Rule D: Application Utilities (OPTIONAL)**
-- Bind only if complex constructor or singleton required
-- Example: `FileUploader` if needs shared state
-
-**Principle:** Only bind interfaces. Laravel's IoC container auto-resolves concrete classes.
-
-### 6.6 Package Organization Patterns
-
-#### Simple Packages (< 10 files)
-```
-src/
-├── Contracts/
-├── Exceptions/
-└── Services/
+**WRONG:**
+```php
+// ❌ State stored in package class
+final class CircuitBreaker
+{
+    private array $states = []; // Lost when instance destroyed!
+}
 ```
 
-#### Complex Packages (> 10 files, internal engine)
+**CORRECT:**
+```php
+// ✅ State externalized via interface
+final readonly class CircuitBreaker
+{
+    public function __construct(
+        private CircuitBreakerStorageInterface $storage // Redis, Database, etc.
+    ) {}
+    
+    public function getState(string $connectionId): string
+    {
+        return $this->storage->get("circuit:{$connectionId}");
+    }
+}
 ```
-src/
-├── Contracts/          # Public API interfaces
-├── Services/           # Public API services (orchestrators)
-├── Core/               # Internal engine (hidden from consumers)
-│   ├── Engine/         # Complex business logic
-│   ├── ValueObjects/   # Immutable domain objects
-│   └── Contracts/      # Internal interfaces
-└── Exceptions/
+
+**Rule:** Any long-term state (cache, counters, flags) must be delegated to an injected `StorageInterface`.
+
+### 3.3 Hybrid Event Architecture
+
+Nexus uses two event patterns for different needs:
+
+**A. Timeline Feed (`Nexus\AuditLogger`) - 95% of use cases**
+- User-facing activity timelines
+- Records outcomes ("Invoice paid")
+- Simple chronological display
+- Used for: HR, Settings, Workflows, Customer records
+
+**B. Event Sourcing (`Nexus\EventStream`) - Critical domains only**
+- Immutable event log for compliance
+- State reconstruction at any point in time
+- Used for: Finance GL (SOX/IFRS), Inventory (stock accuracy)
+
+**Decision Rule:** Use EventStream only when you need temporal queries for legal compliance.
+
+### 3.4 Compliance & Statutory Separation
+
+**`Nexus\Compliance`** - Process Enforcement
+- Controls system behavior (e.g., mandatory approvals)
+- Feature composition via flags/licenses
+- Example: ISO 14001 forces environmental fields
+
+**`Nexus\Statutory`** - Reporting Compliance
+- Defines report formats for authorities
+- Pluggable country-specific implementations
+- Example: Malaysian EPF/SOCSO/PCB calculations
+
+---
+
+## 4. 🔒 Architectural Constraints
+
+### 4.1 Forbidden Artifacts in Packages
+
+| Forbidden | Use Instead |
+|-----------|-------------|
+| `Log::...` | Inject `Psr\Log\LoggerInterface` |
+| `Cache::...` | Inject `CacheRepositoryInterface` |
+| `DB::...` | Inject `RepositoryInterface` |
+| `Config::...` | Inject `SettingsManagerInterface` |
+| `Storage::...` | Inject `StorageInterface` |
+| `now()` | Inject `ClockInterface` or use `new \DateTimeImmutable()` |
+| `config()` | Inject `SettingsManagerInterface` |
+| `dd()`, `dump()` | Use PSR-3 Logger or throw exceptions |
+
+### 4.2 PHP 8.3+ Requirements
+
+**MUST use:**
+1. Constructor property promotion
+2. `readonly` modifier for all injected dependencies
+3. Native PHP enums (not class constants)
+4. `match` expression (not `switch`)
+5. Type hints for all parameters and returns
+6. `declare(strict_types=1);` at top of file
+
+**Example:**
+```php
+declare(strict_types=1);
+
+namespace Nexus\Inventory\Services;
+
+use Nexus\Inventory\Contracts\StockRepositoryInterface;
+use Psr\Log\LoggerInterface;
+
+final readonly class StockManager
+{
+    public function __construct(
+        private StockRepositoryInterface $repository,
+        private LoggerInterface $logger
+    ) {}
+    
+    public function addStock(string $productId, float $quantity): void
+    {
+        // Implementation
+    }
+}
 ```
 
-**Decision Rule:** Use `Core/` folder when:
-- Package exceeds 300 lines in main service
-- Requires internal contracts for dependency injection
-- Contains value objects used only by engine
-- Main service is merely an orchestrator
-
------
-
-## 7. 🔒 Architectural Constraints & Guardrails
-## 7. 🔒 Architectural Constraints & Guardrails
-
-### 7.1 Package Isolation Rules
-
-**FORBIDDEN in Packages:**
-- Direct database access (no Eloquent, no query builders)
-- Laravel facades (Log::, Cache::, DB::, Config::, etc.)
-- Global helpers (now(), config(), app(), dd(), etc.)
-- Application code references (never import from `apps/` directory)
-- Concrete framework classes (Illuminate\Http\Request, etc.)
-
-**REQUIRED in Packages:**
-- Interface-driven dependencies (all constructor parameters must be interfaces)
-- Explicit package dependencies in composer.json
-- PSR-compliant interfaces (PSR-3 LoggerInterface, PSR-14 EventDispatcherInterface)
-- Native PHP alternatives (DateTimeImmutable instead of now())
-
-### 7.2 Data Sovereignty
+### 4.3 Data Sovereignty
 
 **Primary Keys:**
 - All primary keys use ULIDs (26-character UUID v4 strings)
 - Never use auto-incrementing integers
-- Benefits: Distributed generation, no collisions, sortable by creation time
+- Benefits: Distributed generation, no collisions, sortable
 
 **Multi-Tenancy:**
-- All business entities include `tenant_id` column
-- Automatic tenant scoping via global scopes
-- Queue jobs preserve tenant context
-- Row-level security enforced
+- All business entities should support tenant_id (defined in consumer migrations)
+- Packages define need via contracts, consumers implement isolation
+- Queue jobs should preserve tenant context (defined in consumer implementations)
 
-### 7.3 Technology Constraints
+---
 
-**Required Stack:**
-- PHP 8.3+ (required in all package composer.json)
-- Laravel 12 (application layer only)
-- PostgreSQL or MySQL (recommended: PostgreSQL for JSON support)
-- Redis (caching, queues, sessions)
+## 5. 📐 Package Dependencies
 
-**Forbidden:**
-- PHP versions below 8.3
-- Symfony-specific code in packages
-- Framework-specific code in packages (except illuminate/support with constraints)
+### 5.1 Dependency Graph
 
-### 7.4 Performance Guardrails
-
-**Critical Paths:**
-- Period validation: < 5ms (cached lookups)
-- Tenant context resolution: < 2ms (cached)
-- Sequence generation: Atomic with SELECT FOR UPDATE
-- API response times: Target < 200ms for read, < 500ms for write
-
-**Caching Strategy:**
-- Period data cached with 1-hour TTL
-- Tenant configuration cached per request
-- Sequence counters never cached (atomic operations)
-- Permission checks cached with configurable TTL
-
-### 7.5 Security Requirements
-
-**Authentication:**
-- Multi-factor authentication support (TOTP, SMS, Email)
-- Session management with expiration
-- API token management with scopes
-- Trusted device tracking
-
-**Authorization:**
-- Role-based access control (RBAC)
-- Wildcard permissions (users.*, reports.*.view)
-- Permission inheritance through role hierarchy
-- Tenant-scoped permissions
-
-**Audit:**
-- All state changes logged via AuditLogger
-- Failed authentication attempts tracked
-- Permission checks logged (configurable)
-- Immutable audit trail
-
------
-
-## 8. 📐 Dependency Management Strategy
-
-### 8.1 Package Dependency Graph
-
-**Foundation Layer (Zero Dependencies):**
-- Tenant, Sequencing, Uom, Setting
+**Foundation Layer (Zero internal dependencies):**
+- Tenant, Sequencing, Uom, Setting, Crypto
 
 **Core Business Layer:**
-- Period → (depends on Tenant, Sequencing, AuditLogger)
-- Finance → (depends on Period, Currency, Party, Sequencing, AuditLogger)
-- Identity → (depends on Tenant)
+- Period → Tenant, Sequencing, AuditLogger
+- Finance → Period, Currency, Party, Sequencing
+- Identity → Tenant
 
 **Domain Layer:**
-- Accounting → (depends on Finance, Period, Analytics, Setting)
-- Receivable → (depends on Finance, Sales, Party, Currency, Period, Sequencing, AuditLogger)
-- Payable → (depends on Finance, Party, Currency, Period, Sequencing, AuditLogger)
-- Sales → (depends on Party, Product, Uom, Currency, Finance, Sequencing, Period, AuditLogger)
+- Receivable → Finance, Sales, Party, Currency, Period, Sequencing
+- Payable → Finance, Party, Currency, Period, Sequencing
+- Inventory → Uom, EventStream (optional)
 
 **Integration Layer:**
-- Connector → (depends on Crypto, Storage, AuditLogger)
-- Notifier → (depends on Connector, Identity, AuditLogger)
-- Reporting → (depends on Analytics, Export)
+- Connector → Crypto, Storage, AuditLogger
+- Notifier → Connector, Identity
 
-### 8.2 Circular Dependency Prevention
+### 5.2 Circular Dependency Prevention
 
 **Rule:** Package A cannot depend on Package B if B already depends on A.
 
-**Violation Example:**
+**Solution:** Use interfaces and adapter pattern in consuming application:
+```php
+// Finance defines interface
+namespace Nexus\Finance\Contracts;
+interface GLManagerInterface { }
+
+// Receivable depends on interface (not concrete Finance package)
+namespace Nexus\Receivable\Contracts;
+interface GLIntegrationInterface extends GLManagerInterface { }
+
+// Consumer application binds them together
+// App\Providers\AppServiceProvider
+$this->app->bind(GLIntegrationInterface::class, FinanceGLManager::class);
 ```
-❌ Finance depends on Receivable
-❌ Receivable depends on Finance
-```
 
-**Solution:** Use interfaces and adapter pattern in application layer:
-```
-✅ Finance defines GLManagerInterface
-✅ Receivable depends on GLManagerInterface (not Finance directly)
-✅ Atomy binds GLManagerInterface to Finance's implementation
-```
+---
 
-### 8.3 Dependency Version Constraints
+## 6. 🧪 Testing Strategy
 
-**Internal Packages:**
-- Use `"*@dev"` for monorepo development
-- Use semantic versioning for published packages
+### 6.1 Package Unit Tests
 
-**External Dependencies:**
-- PSR interfaces: Use exact PSR version (e.g., `"psr/log": "^3.0"`)
-- Avoid framework-specific versions in packages
-- Lock versions in application composer.lock
-
------
-
-## 9. 🚀 Deployment Architecture
-
-### 9.1 Horizontal Scalability
-
-**Stateless Design:**
-- No session state in application instances
-- All state externalized to Redis/Database
-- Queue jobs can run on any worker
-- API requests routable to any instance
-
-**Scaling Strategy:**
-- Load balancer distributes requests across Atomy instances
-- Redis Cluster for cache and session sharing
-- Database read replicas for query optimization
-- Queue workers scale independently
-
-### 9.2 Environment Separation
-
-**Development:**
-- Local Docker containers
-- SQLite or PostgreSQL
-- Redis for local caching
-- Hot reload for rapid development
-
-**Staging:**
-- Mirrors production architecture
-- Anonymized production data
-- Full integration testing
-- Performance profiling
-
-**Production:**
-- Multi-instance deployment
-- PostgreSQL with replication
-- Redis Cluster
-- CDN for static assets
-- Background job workers (separate instances)
-
------
-
-## 10. 📊 Monitoring & Observability
-
-### 10.1 Logging Strategy
-
-**Package Layer:**
-- All packages inject PSR-3 `LoggerInterface`
-- Log business events (not infrastructure)
-- Structured logging with context
-
-**Application Layer:**
-- Infrastructure logging (database queries, HTTP requests)
-- Error tracking with stack traces
-- Performance metrics
-
-### 10.2 Audit Requirements
-
-**AuditLogger Integration:**
-- All state-changing operations logged
-- User attribution for actions
-- Timestamp and metadata capture
-- Retention policies enforced
-
-**EventStream (Critical Domains):**
-- Immutable event log for Finance GL
-- Immutable event log for Inventory
-- Temporal queries for compliance
-- Snapshot management for performance
-
------
-
-## 11. 🧪 Testing Strategy
-
-### 11.1 Package Testing
-
-**Unit Tests:**
+**Requirements:**
 - Test business logic in isolation
-- Mock all external dependencies
-- No database required
+- Mock all external dependencies (use interfaces)
+- No database or framework required
 - Fast execution (< 1 second per test)
 
-**Contract Tests:**
-- Verify interface compliance
-- Test value object validation
-- Exception handling coverage
+**Example:**
+```php
+final class StockManagerTest extends TestCase
+{
+    public function test_add_stock_increases_quantity(): void
+    {
+        $repository = $this->createMock(StockRepositoryInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        
+        $manager = new StockManager($repository, $logger);
+        
+        // Test business logic
+    }
+}
+```
 
-### 11.2 Application Testing
+### 6.2 Consumer Integration Tests
 
-**Integration Tests:**
-- Test repository implementations
+Consuming applications test:
+- Repository implementations
 - Database migrations
-- API endpoints (feature tests)
-- Queue job execution
+- API endpoints
+- Cross-package integration
 
-**Performance Tests:**
-- Benchmark critical paths
-- Load testing for scalability
-- Stress testing for limits
+---
 
------
+## 7. 🚀 Development Workflow
 
-## 12. 🔄 Migration & Evolution Strategy
+### Creating a New Package
 
-### 12.1 Database Schema Evolution
+1. **Create directory:** `packages/NewPackage/`
+2. **Initialize composer:** `cd packages/NewPackage && composer init`
+   - Name: `nexus/new-package`
+   - Require: `"php": "^8.3"`
+   - PSR-4: `"Nexus\\NewPackage\\": "src/"`
+3. **Create structure:**
+   - `src/Contracts/` - Define interfaces
+   - `src/Services/` - Implement business logic
+   - `src/Exceptions/` - Domain exceptions
+   - `src/Enums/` - Status enums
+   - `README.md` - Usage documentation
+   - `LICENSE` - MIT License
+4. **Update root composer.json:** Add to repositories array
+5. **Install in monorepo:** `composer require nexus/new-package:"*@dev"`
 
-**Migration Principles:**
-- Migrations in Atomy only (never in packages)
-- Backward-compatible changes preferred
-- Blue-green deployments for breaking changes
-- Rollback strategy required
+### Adding a Feature to Existing Package
 
-### 12.2 API Versioning
+1. **Check NEXUS_PACKAGES_REFERENCE.md** - Avoid duplication
+2. **Define contracts** - Create/update interfaces
+3. **Implement services** - Add business logic
+4. **Create exceptions** - Domain-specific errors
+5. **Write tests** - Unit tests for all logic
+6. **Document** - Update README.md
 
-**Strategy:**
-- URL versioning (/api/v1/, /api/v2/)
-- Maintain previous version for 6 months
-- Deprecation warnings in headers
-- Migration guides for major versions
+---
 
-### 12.3 Package Publishing
+## 8. 📊 Code Quality Checklist
 
-**Before Publishing:**
-- Complete test coverage
-- Comprehensive README
-- Semantic versioning
-- License file included
-- No application dependencies
+Before committing to any package:
 
-**Publishing Workflow:**
-1. Tag release in monorepo
-2. Extract subtree for package
-3. Publish to Packagist
-4. Update CHANGELOG
-5. Create GitHub release
+- [ ] Consulted `docs/NEXUS_PACKAGES_REFERENCE.md`
+- [ ] No framework facades or global helpers
+- [ ] All dependencies are interfaces
+- [ ] All properties are `readonly`
+- [ ] Native enums used for fixed values
+- [ ] `declare(strict_types=1);` present
+- [ ] Complete docblocks on public methods
+- [ ] Custom exceptions for domain errors
+- [ ] No direct database access
+- [ ] Package has valid composer.json
+- [ ] Package has comprehensive README.md
+- [ ] Package has LICENSE file
+- [ ] Unit tests written and passing
+
+---
+
+## 9. 📚 Documentation Requirements
+
+Each package must include:
+
+**README.md:**
+- Package purpose and capabilities
+- Installation instructions
+- Usage examples with code
+- Contract descriptions
+- Integration guide for consumers
+- Available enums and value objects
+
+**Inline Documentation:**
+- DocBlocks on all public methods
+- `@param`, `@return`, `@throws` annotations
+- Description of business logic
+- Examples for complex methods
+
+---
+
+## 10. 🔄 Publishing Workflow
+
+Before publishing a package to Packagist:
+
+1. **Complete test coverage** - All business logic tested
+2. **Comprehensive README** - Usage examples included
+3. **Semantic versioning** - Follow SemVer (1.0.0, 1.1.0, 2.0.0)
+4. **License file** - MIT License included
+5. **No application dependencies** - Only PSR and other Nexus packages
+6. **Git tag** - Tag release in repository
+7. **CHANGELOG.md** - Document all changes
+
+---
+
+## 11. Key Principles Summary
+
+1. **Packages are pure engines** - Logic only, no persistence or framework coupling
+2. **Interfaces define needs** - Every dependency is an interface
+3. **Consumers provide implementations** - Applications bind contracts to concrete classes
+4. **Framework agnostic** - Works with Laravel, Symfony, or any PHP framework
+5. **Stateless design** - Long-term state externalized via interfaces
+6. **PHP 8.3+ modern** - Use latest language features
+7. **Always check NEXUS_PACKAGES_REFERENCE.md** - Avoid reinventing functionality
+
+---
+
+**Last Updated:** November 24, 2025  
+**Maintained By:** Nexus Architecture Team  
+**Enforcement:** Mandatory for all developers

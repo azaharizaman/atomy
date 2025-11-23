@@ -9,7 +9,7 @@
 
 ## 🎯 Golden Rule for Implementation
 
-> **BEFORE implementing ANY feature in `apps/Atomy/`, ALWAYS check this guide first.**
+> **BEFORE implementing ANY feature, ALWAYS check this guide first.**
 >
 > If a first-party Nexus package already provides the capability, you MUST use it via dependency injection. Creating a new implementation is an **architectural violation** unless the package doesn't exist or doesn't cover the use case.
 
@@ -152,7 +152,7 @@ final class CustomSamlHandler {
 **Integration with Identity:**
 ```php
 // Nexus\SSO defines UserProvisioningInterface
-// Nexus\Identity implements it in Atomy layer
+// Consuming application implements it using Nexus\Identity
 namespace App\Services\SSO;
 
 use Nexus\SSO\Contracts\UserProvisioningInterface;
@@ -1323,7 +1323,7 @@ interface GeneralLedgerIntegrationInterface
     public function postJournalEntry(JournalEntry $entry): void;
 }
 
-// Atomy implements using Package B
+// Consuming application implements using Package B
 namespace App\Services\Receivable;
 
 use Nexus\Receivable\Contracts\GeneralLedgerIntegrationInterface;
@@ -1400,10 +1400,10 @@ final readonly class ManualAllocationStrategy implements PaymentAllocationStrate
     }
 }
 
-// Service provider binds based on config
+// Consuming application's service provider binds based on config
 $this->app->singleton(
     PaymentAllocationStrategyInterface::class,
-    fn() => match (config('receivable.allocation_strategy')) {
+    fn() => match ($this->getConfig('receivable.allocation_strategy')) {
         'fifo' => new FIFOAllocationStrategy(),
         'manual' => new ManualAllocationStrategy(),
         default => new FIFOAllocationStrategy(),
@@ -1415,17 +1415,17 @@ $this->app->singleton(
 
 ## ✅ Pre-Implementation Checklist
 
-Before writing ANY new service or feature in `apps/Atomy/`, ask yourself:
+Before writing ANY new package feature, ask yourself:
 
 - [ ] **Does a Nexus package already provide this capability?** (Check this document)
 - [ ] **Am I injecting interfaces, not concrete classes?**
-- [ ] **Am I using Laravel facades or global helpers in package code?** (❌ Forbidden in `packages/`)
-- [ ] **Have I checked for existing implementations in Atomy?** (Avoid duplication)
-- [ ] **Does my implementation follow the Service Layer Patterns?**
-- [ ] **Am I logging important actions?** (Use `AuditLogManagerInterface`)
-- [ ] **Am I tracking metrics?** (Use `TelemetryTrackerInterface`)
-- [ ] **Is tenant context being respected?** (Use `TenantContextInterface`)
-- [ ] **Am I validating against business rules?** (e.g., Period validation, Authorization)
+- [ ] **Am I using framework facades or global helpers in package code?** (❌ Strictly forbidden in `packages/`)
+- [ ] **Have I checked for existing implementations in other packages?** (Avoid duplication)
+- [ ] **Does my implementation follow framework-agnostic patterns?**
+- [ ] **Am I defining logging needs via interface?** (Use `LoggerInterface` from PSR-3)
+- [ ] **Am I defining metrics tracking via interface?** (Use `TelemetryTrackerInterface`)
+- [ ] **Is tenant context defined via interface?** (Use `TenantContextInterface`)
+- [ ] **Am I defining business rule validation via interfaces?** (e.g., `PeriodValidatorInterface`, `AuthorizationInterface`)
 
 ---
 
@@ -1463,7 +1463,7 @@ public function __construct(
     private readonly GeneralLedgerManager $glManager
 ) {}
 
-// ✅ CORRECT: Package defines interface, Atomy wires implementation
+// ✅ CORRECT: Package defines interface, consuming app wires implementation
 use Nexus\Receivable\Contracts\GeneralLedgerIntegrationInterface;
 
 public function __construct(
@@ -1554,15 +1554,15 @@ Before implementing ANY feature, run this mental checklist:
 
 1. **Package Scan**: Does a first-party Nexus package provide this capability?
    - If YES → Use the package's interface via dependency injection
-   - If NO → Proceed with custom implementation
+   - If NO → Proceed with new package implementation
 
 2. **Interface Check**: Are ALL constructor dependencies interfaces?
    - If NO → Refactor to use interfaces
 
-3. **Framework Check**: Am I in `packages/` and using Laravel-specific code?
-   - If YES → **STOP. This is a violation.** Use PSR interfaces or package contracts
+3. **Framework Check**: Am I in `packages/` and using framework-specific code?
+   - If YES → **STOP. This is a violation.** Use PSR interfaces or define package contracts
 
-4. **Duplication Check**: Does similar functionality exist in Atomy?
+4. **Duplication Check**: Does similar functionality exist in other packages?
    - If YES → Reuse or refactor, don't duplicate
 
 5. **Multi-Tenancy Check**: Does this feature need tenant scoping?

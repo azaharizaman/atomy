@@ -1,80 +1,102 @@
-# Nexus ERP Monorepo
+# Nexus - Framework-Agnostic PHP Packages for ERP Systems
 
-Nexus is a modern, modular, and headless ERP (Enterprise Resource Planning) system designed with a strict separation of concerns. It leverages a monorepo architecture to decouple pure business logic from framework implementations, ensuring scalability, maintainability, and testability.
+Nexus is a **package-only monorepo** containing 50+ atomic, reusable PHP packages for building Enterprise Resource Planning (ERP) systems. Each package is framework-agnostic, making them usable with Laravel, Symfony, Slim, or any other PHP framework.
 
-## 📖 The Story: "Logic in Packages, Implementation in Applications"
+## 📖 The Philosophy: "Pure Business Logic, Framework Independent"
 
-The core philosophy of Nexus is **Decoupling**. We believe that business rules should not be tightly bound to a specific framework or database implementation.
+The core philosophy of Nexus is **Framework Agnosticism**. Business logic should be portable and reusable across different frameworks and applications.
 
-- **Atomic Packages (`packages/`)**: These are the "engines." They contain pure, framework-agnostic business logic. They define *what* needs to be done and *what* data is needed via **Contracts (Interfaces)**, but they don't care *how* it's stored.
-- **Applications (`apps/`)**: These are the "cars." They consume the packages, implement the persistence contracts (using Eloquent, etc.), and expose the functionality to the world via APIs.
+- **🎯 Pure Business Logic**: Packages contain only business rules and domain logic
+- **🔌 Interface-Driven**: All external dependencies defined as contracts
+- **📦 Atomic & Publishable**: Each package can be published independently to Packagist
+- **🧪 Testable**: Pure PHP logic with mockable dependencies
+- **🌍 Framework-Agnostic**: Works with Laravel, Symfony, or any PHP framework
 
 ## 🏗️ Architecture
 
 ### 📦 Atomic Packages
-Located in `packages/`, these are self-contained units of functionality. They are designed to be:
-- **Framework-Agnostic:** Pure PHP logic.
-- **Persistence-Agnostic:** No migrations or models. Data access is defined via Interfaces.
-- **Publishable:** Each package can be published independently to Packagist.
 
-**Available Packages:**
+All packages in `packages/` are self-contained units of functionality designed to be:
 
-| Domain | Package | Description |
-| :--- | :--- | :--- |
-| **Core Infrastructure** | `Nexus\Tenant` | Multi-tenancy context and isolation engine. |
-| | `Nexus\Setting` | Global and tenant-specific configuration management. |
-| | `Nexus\Identity` | User identity, authentication, and authorization contracts. |
-| | `Nexus\Notifier` | Notification dispatching and management. |
-| | `Nexus\Scheduler` | Task scheduling and background job management. |
-| | `Nexus\EventStream` | Event sourcing and stream processing capabilities. |
-| | `Nexus\Audit` | Cryptographically-verified, immutable audit trails for compliance. |
-| | `Nexus\AuditLogger` | CRUD operation tracking with user context and retention policies. |
-| | `Nexus\Period` | Fiscal period management and transaction validation. |
-| | `Nexus\Crypto` | Cryptographic operations and data encryption. |
-| | `Nexus\Monitoring` | Telemetry, health checks, alerting, SLO tracking, automated retention. |
-| **Finance & Accounting** | `Nexus\Accounting` | Double-entry bookkeeping and general ledger. |
-| | `Nexus\Finance` | Financial management and reporting. |
-| | `Nexus\Currency` | Currency management and exchange rates. |
-| | `Nexus\Payable` | Accounts payable management. |
-| | `Nexus\Receivable` | Accounts receivable management. |
-| | `Nexus\Budget` | Budget allocation, commitment tracking, and variance analysis. |
-| | `Nexus\CashManagement` | Bank account management, reconciliation, and cash flow forecasting. |
-| **HR & Payroll** | `Nexus\Hrm` | Human Resource Management (Employees, Departments). |
-| | `Nexus\Payroll` | Payroll processing engine. |
-| | `Nexus\PayrollMysStatutory` | Malaysian statutory payroll calculations (EPF, SOCSO, PCB). |
-| **Operations & Supply Chain** | `Nexus\Inventory` | Inventory and stock management with lot/serial tracking. |
-| | `Nexus\Product` | Product catalog management with template-variant architecture. |
-| | `Nexus\Procurement` | Purchase requisitions, orders, and goods receipt. |
-| | `Nexus\Sales` | Sales quotations, orders, and pricing engine. |
-| | `Nexus\Uom` | Unit of Measurement management and conversion. |
-| | `Nexus\Warehouse` | Warehouse management and picking optimization. |
-| | `Nexus\Routing` | Route optimization and Vehicle Routing Problem (VRP) solver. |
-| | `Nexus\Geo` | Geocoding, geofencing, and geospatial calculations. |
-| | `Nexus\Assets` | Fixed asset management with progressive delivery tiers. |
-| **Workflow & Process** | `Nexus\Workflow` | Workflow engine for process automation and approvals. |
-| | `Nexus\Sequencing` | Number sequence generation (e.g., Invoice #). |
-| **Data & Integration** | `Nexus\Connector` | External system integration and API connectors. |
-| | `Nexus\Import` | Data import utilities with transformation and validation. |
-| | `Nexus\Export` | Data export utilities with multi-format generation. |
-| | `Nexus\DataProcessor` | ETL and data transformation logic. |
-| | `Nexus\Document` | Enterprise document management with versioning. |
-| | `Nexus\Storage` | File and asset storage abstraction. |
-| | `Nexus\Intelligence` | AI-powered anomaly detection and predictive analytics. |
-| **Organization & Master Data** | `Nexus\Backoffice` | Company structure, offices, and departments. |
-| | `Nexus\Party` | Master data management for individuals and organizations. |
-| **Reporting & Analytics** | `Nexus\Analytics` | Business intelligence and data analysis. |
-| | `Nexus\Reporting` | Scheduled report generation and distribution. |
-| **Compliance & Governance** | `Nexus\Compliance` | Regulatory compliance and process enforcement. |
-| | `Nexus\Statutory` | Statutory reporting and tax requirements. |
+- **Framework-Agnostic:** Pure PHP 8.3+ logic with no framework dependencies
+- **Persistence-Agnostic:** No migrations or models - data access defined via interfaces
+- **Publishable:** Each package can be published independently to Packagist
+- **Contract-Driven:** All external dependencies injected as interfaces
+- **Stateless:** Long-term state externalized via storage interfaces
 
-### 🚀 Applications
-Located in `apps/`, these are the deployable units.
+## 📦 Available Packages (51 packages)
 
-- **Atomy (`apps/Atomy`)**: The Headless Orchestrator.
-    - Built with **Laravel**.
-    - Implements all package Contracts (Repositories, Models).
-    - Manages the Database and Migrations.
-    - Exposes a unified **API** for clients.
+### Core Infrastructure (8 packages)
+- **`Nexus\Tenant`** - Multi-tenancy context and isolation engine
+- **`Nexus\Setting`** - Global and tenant-specific configuration management
+- **`Nexus\Sequencing`** - Auto-numbering with atomic counter management
+- **`Nexus\Period`** - Fiscal period management and transaction validation
+- **`Nexus\AuditLogger`** - Timeline feeds and audit trails
+- **`Nexus\EventStream`** - Event sourcing for critical domains (Finance GL, Inventory)
+- **`Nexus\Uom`** - Unit of measurement management and conversion
+- **`Nexus\Monitoring`** - Observability with telemetry, health checks, alerting, SLO tracking
+
+### Identity & Security (3 packages)
+- **`Nexus\Identity`** - Authentication, RBAC, MFA, session/token management
+- **`Nexus\Crypto`** - Cryptographic operations and key management
+- **`Nexus\Audit`** - Advanced audit capabilities (extends AuditLogger)
+
+### Finance & Accounting (7 packages)
+- **`Nexus\Finance`** - General ledger, journal entries, double-entry bookkeeping
+- **`Nexus\Accounting`** - Financial statements, period close, consolidation
+- **`Nexus\Receivable`** - Customer invoicing, collections, credit control
+- **`Nexus\Payable`** - Vendor bills, payment processing, 3-way matching
+- **`Nexus\CashManagement`** - Bank reconciliation, cash flow forecasting
+- **`Nexus\Budget`** - Budget planning and variance tracking
+- **`Nexus\Assets`** - Fixed asset management, depreciation
+- **`Nexus\Currency`** - Multi-currency management and exchange rates
+
+### Sales & Operations (6 packages)
+- **`Nexus\Sales`** - Quotation-to-order lifecycle, pricing engine
+- **`Nexus\Inventory`** - Stock management with lot/serial tracking
+- **`Nexus\Warehouse`** - Warehouse operations and bin management
+- **`Nexus\Procurement`** - Purchase requisitions, POs, goods receipt
+- **`Nexus\Manufacturing`** - Bill of materials, work orders, MRP
+- **`Nexus\Product`** - Product catalog, pricing, categorization
+
+### Human Resources (3 packages)
+- **`Nexus\Hrm`** - Leave, attendance, performance reviews
+- **`Nexus\Payroll`** - Payroll processing framework
+- **`Nexus\PayrollMysStatutory`** - Malaysian statutory calculations (EPF, SOCSO, PCB)
+
+### Customer & Partner Management (4 packages)
+- **`Nexus\Party`** - Customers, vendors, employees, contacts
+- **`Nexus\Crm`** - Leads, opportunities, sales pipeline
+- **`Nexus\Marketing`** - Campaigns, A/B testing, GDPR compliance
+- **`Nexus\FieldService`** - Work orders, technicians, service contracts
+
+### Integration & Automation (7 packages)
+- **`Nexus\Connector`** - Integration hub with circuit breaker, OAuth
+- **`Nexus\Workflow`** - Process automation, state machines
+- **`Nexus\Notifier`** - Multi-channel notifications (email, SMS, push, in-app)
+- **`Nexus\Scheduler`** - Task scheduling and job management
+- **`Nexus\DataProcessor`** - OCR, ETL interfaces (interface-only package)
+- **`Nexus\Intelligence`** - AI-assisted automation and predictions
+- **`Nexus\Geo`** - Geocoding, geofencing, routing
+- **`Nexus\Routing`** - Route optimization and caching
+
+### Reporting & Data (5 packages)
+- **`Nexus\Reporting`** - Report definition and execution engine
+- **`Nexus\Export`** - Multi-format export (PDF, Excel, CSV, JSON)
+- **`Nexus\Import`** - Data import with validation and transformation
+- **`Nexus\Analytics`** - Business intelligence, predictive models
+- **`Nexus\Document`** - Document management with versioning
+
+### Compliance & Governance (4 packages)
+- **`Nexus\Compliance`** - Process enforcement, operational compliance
+- **`Nexus\Statutory`** - Reporting compliance, statutory filing
+- **`Nexus\Backoffice`** - Company structure, offices, departments
+- **`Nexus\OrgStructure`** - Organizational hierarchy management
+
+### Support & Utilities (3 packages)
+- **`Nexus\Storage`** - File storage abstraction layer
+- **`Nexus\ProjectManagement`** - Projects, tasks, timesheets, milestones
+- **`Nexus\FeatureFlags`** - Feature flag management
 
 ## 🛠️ Getting Started
 
@@ -84,31 +106,169 @@ Located in `apps/`, these are the deployable units.
 
 ### Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url> nexus
-    cd nexus
-    ```
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url> nexus
+   cd nexus
+   ```
 
-2.  **Install Monorepo Dependencies:**
-    ```bash
-    composer install
-    ```
+2. **Install Dependencies:**
+   ```bash
+   composer install
+   ```
 
-3.  **Setup Atomy (The Application):**
-    ```bash
-    cd apps/Atomy
-    cp .env.example .env
-    composer install
-    php artisan key:generate
-    php artisan migrate
-    ```
+3. **Explore Packages:**
+   ```bash
+   # Browse available packages
+   ls packages/
+   
+   # Read package documentation
+   cat packages/Tenant/README.md
+   cat packages/Finance/README.md
+   ```
 
-## 🤝 Contribution
+## 📚 Usage
 
-Please refer to [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architectural guidelines and rules for creating new packages or features.
+### Installing a Package
+
+Each package can be installed independently in your PHP application:
+
+```bash
+# In your Laravel, Symfony, or other PHP application
+composer require nexus/tenant
+composer require nexus/finance
+composer require nexus/receivable
+```
+
+### Implementing Package Contracts
+
+Packages define interfaces, your application provides implementations:
+
+```php
+// Package defines the interface
+namespace Nexus\Tenant\Contracts;
+
+interface TenantRepositoryInterface
+{
+    public function findById(string $id): ?TenantInterface;
+    public function save(TenantInterface $tenant): void;
+}
+
+// Your Laravel application implements it
+namespace App\Repositories;
+
+use Nexus\Tenant\Contracts\TenantRepositoryInterface;
+use Nexus\Tenant\Contracts\TenantInterface;
+use App\Models\Tenant;
+
+final class EloquentTenantRepository implements TenantRepositoryInterface
+{
+    public function findById(string $id): ?TenantInterface
+    {
+        return Tenant::find($id);
+    }
+    
+    public function save(TenantInterface $tenant): void
+    {
+        Tenant::updateOrCreate(['id' => $tenant->getId()], [
+            'name' => $tenant->getName(),
+            'status' => $tenant->getStatus()->value,
+        ]);
+    }
+}
+
+// Bind in service provider
+$this->app->bind(
+    TenantRepositoryInterface::class,
+    EloquentTenantRepository::class
+);
+```
+
+### Using Package Services
+
+```php
+use Nexus\Tenant\Contracts\TenantContextInterface;
+use Nexus\Finance\Contracts\GeneralLedgerManagerInterface;
+
+class InvoiceController
+{
+    public function __construct(
+        private readonly TenantContextInterface $tenantContext,
+        private readonly GeneralLedgerManagerInterface $glManager
+    ) {}
+    
+    public function store(Request $request)
+    {
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+        
+        // Use package business logic
+        $this->glManager->postJournalEntry($journalEntry);
+    }
+}
+```
+
+## 🏛️ Architectural Principles
+
+### 1. Framework Agnosticism
+- No Laravel, Symfony, or framework-specific code in packages
+- Use PSR interfaces (`psr/log`, `psr/http-client`, `psr/cache`)
+- All framework integration happens in consuming applications
+
+### 2. Contract-Driven Design
+- Packages define needs via interfaces
+- Consuming applications provide implementations
+- Dependency injection for all external dependencies
+
+### 3. Stateless Design
+- No session state in package classes
+- Long-term state externalized via storage interfaces
+- Horizontally scalable by design
+
+### 4. Modern PHP Standards
+- PHP 8.3+ with strict types
+- Constructor property promotion
+- Readonly properties for dependencies
+- Native enums for fixed value sets
+- Match expressions over switch statements
+
+## 📖 Documentation
+
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Architectural guidelines and rules
+- **[docs/NEXUS_PACKAGES_REFERENCE.md](docs/NEXUS_PACKAGES_REFERENCE.md)** - Complete package capabilities reference
+- **[.github/copilot-instructions.md](.github/copilot-instructions.md)** - Development guidelines
+- **Package READMEs** - Individual package documentation (e.g., `packages/Finance/README.md`)
+
+## 🤝 Contributing
+
+Please refer to [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architectural guidelines.
 
 ### Key Rules:
-1.  **Packages** must never depend on **Applications**.
-2.  **Packages** must define persistence needs via **Contracts**.
-3.  **Applications** implement the Contracts and provide the Database.
+1. **Packages must be framework-agnostic** - No Laravel, Symfony, or framework-specific code
+2. **Packages define persistence needs via Contracts** - No migrations or models in packages
+3. **All dependencies must be interfaces** - Use dependency injection
+4. **Modern PHP 8.3+ standards** - Use latest language features
+5. **Consult NEXUS_PACKAGES_REFERENCE.md** - Avoid reimplementing existing functionality
+
+### Creating a New Package
+
+1. Create `packages/NewPackage/` directory
+2. Run `composer init` (require `"php": "^8.3"`)
+3. Define PSR-4 autoloader: `"Nexus\\NewPackage\\": "src/"`
+4. Create `src/Contracts/`, `src/Services/`, `src/Exceptions/`
+5. Write comprehensive `README.md` with usage examples
+6. Add MIT `LICENSE` file
+7. Update root `composer.json` repositories array
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Links
+
+- **Package Reference Guide**: [docs/NEXUS_PACKAGES_REFERENCE.md](docs/NEXUS_PACKAGES_REFERENCE.md)
+- **Architecture Documentation**: [ARCHITECTURE.md](ARCHITECTURE.md)
+- **Implementation Summaries**: `docs/*_IMPLEMENTATION_SUMMARY.md`
+
+---
+
+**Nexus** - Building the future of modular ERP systems with framework-agnostic PHP packages.

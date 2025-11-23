@@ -1,7 +1,7 @@
 {
     "name": "nexus/monorepo",
-    "description": "Nexus ERP Monorepo",
-    "type": "project",
+    "description": "Nexus - Framework-Agnostic PHP Packages for ERP Systems",
+    "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.3",
