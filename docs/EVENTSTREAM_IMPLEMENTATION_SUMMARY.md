@@ -4,34 +4,47 @@
 
 This document tracks the implementation of the Nexus\EventStream package enhancement from 20% to 90%+ production readiness, implementing production-grade event sourcing for critical ERP domains (Finance GL, Inventory).
 
-**Status**: In Progress - PR1 Foundation  
-**Current Test Coverage**: 86 tests, 180 assertions, 78/86 passing (90.7% pass rate)  
+**Status**: In Progress - PR1 Foundation (60% Complete)  
+**Current Test Coverage**: 122 tests, 267 assertions, 122/122 passing (100% pass rate) ✅  
 **Target**: 95%+ test coverage, 132 satisfied requirements
 
 ## Implementation Phases
 
-### Phase 1: Core Contracts & Foundation (PR1) - IN PROGRESS
+### Phase 1: Core Contracts & Foundation (PR1) - 60% COMPLETE
 **Objective**: Fix core value objects, add event publishing, stream naming, and aggregate testing utilities
 
 #### Completed
 - ✅ Branch created: `feature/eventstream-enhancement`
-- ✅ PHPUnit 11.5 installed
+- ✅ PHPUnit 11.5.44 installed (27 dependencies)
 - ✅ EventVersion: All methods implemented (first(), isGreaterThan(), isLessThan(), __toString())
 - ✅ EventId: ULID validation implemented  
 - ✅ AggregateId: Empty string validation implemented
 - ✅ StreamId: Empty string validation implemented
 - ✅ ConcurrencyException: Public readonly properties with getters
+- ✅ **EventPublisherInterface** - Contract for publishing events post-commit with transaction rollback
+- ✅ **PublisherException** - Publisher failure exception with queueUnavailable(), dispatchFailed() factories
+- ✅ **StreamNameGeneratorInterface** - Canonical stream naming with validation (255 char, alphanumeric+hyphens)
+- ✅ **InvalidStreamNameException** - Stream naming validation exception (tooLong(), invalidCharacters(), emptyComponent())
+- ✅ **DefaultStreamNameGenerator** - Default implementation with lowercase conversion, regex validation
+- ✅ **AggregateTesterInterface** - Given-When-Then testing utilities (given(), when(), then(), thenThrows())
+- ✅ **AggregateTester** - Framework-agnostic aggregate testing implementation
+- ✅ **Fixed 12 failing baseline tests** - 100% pass rate achieved (was 90.7%)
+
+**Tests Added**:
+- DefaultStreamNameGeneratorTest: 18 tests, 30 assertions ✅
+- AggregateTesterTest: 18 tests, 27 assertions ✅
+- Exception fixes: ExceptionHierarchyTest (11 tests), EventStreamManagerTest (10 tests)
+
+**Commits**:
+1. `feat(eventstream): Add EventPublisher and StreamNameGenerator contracts` (8 files, 738 insertions)
+2. `feat(eventstream): Add AggregateTester for Given-When-Then testing` (3 files, 561 insertions)
+3. `fix(eventstream): Fix 12 failing baseline tests to achieve 100% pass rate` (6 files, 101 insertions, 64 deletions)
 
 #### In Progress
-- 🔄 Fix failing tests (4 failures, 8 errors)
-- 🔄 EventPublisherInterface contract
-- 🔄 StreamNameGeneratorInterface + DefaultStreamNameGenerator
-- 🔄 AggregateTesterInterface + AggregateScenarioTester
+- 🔄 Update TEST_SUITE_SUMMARY.md with new test metrics
 
 #### Planned
-- ⏳ Comprehensive unit tests for all new contracts
-- ⏳ Update TEST_SUITE_SUMMARY.md
-- ⏳ First commit and GitHub PR
+- ⏳ Create GitHub PR1: Foundation
 
 ### Phase 2: Advanced Features (PR2) - PLANNED
 - Event Upcasting (fail-fast, mandatory testing)
@@ -59,11 +72,13 @@ This document tracks the implementation of the Nexus\EventStream package enhance
 7. **StreamInterface** - Event stream representation ✅
 8. **EventSerializerInterface** - Event serialization ✅
 
-### New Contracts - PR1 (4)
-9. **EventPublisherInterface** - Publish events post-commit 🔄
-10. **StreamNameGeneratorInterface** - Canonical stream naming 🔄
-11. **AggregateTesterInterface** - Given-When-Then testing 🔄
-12. **PublisherException** - Publisher failure exception 🔄
+### New Contracts - PR1 (6) - COMPLETED ✅
+9. **EventPublisherInterface** - Publish events post-commit with transaction rollback ✅
+10. **PublisherException** - Publisher failure exception (queueUnavailable, dispatchFailed) ✅
+11. **StreamNameGeneratorInterface** - Canonical stream naming with validation ✅
+12. **InvalidStreamNameException** - Stream naming validation failures ✅
+13. **AggregateTesterInterface** - Given-When-Then testing utilities ✅
+14. **AggregateTester** - Testing implementation (placed in src/Testing/) ✅
 
 ### New Contracts - PR2 (10)
 13. **EventUpcasterInterface** - Schema migration orchestration ⏳
