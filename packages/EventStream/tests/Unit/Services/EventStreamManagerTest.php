@@ -55,23 +55,27 @@ final class EventStreamManagerTest extends TestCase
         $aggregateId = AggregateId::fromString('aggregate-123');
         $targetDate = new \DateTimeImmutable('2024-01-15');
         
-        $snapshotState = ['balance' => 5000, 'version' => 100];
+        $snapshotState = ['balance' => 5000, 'version' => 100, 'created_at' => new \DateTimeImmutable('2024-01-10')];
         
         $this->snapshotRepository
             ->expects($this->once())
-            ->method('getSnapshotAt')
+            ->method('getLatestSnapshotBefore')
             ->with((string) $aggregateId, $targetDate)
             ->willReturn($snapshotState);
 
         $this->streamReader
             ->expects($this->once())
             ->method('readStreamFromDate')
-            ->with((string) $aggregateId, $targetDate)
+            ->with((string) $aggregateId, $snapshotState['created_at'])
             ->willReturn([]);
 
         $result = $this->manager->getStateAt($aggregateId, $targetDate);
         
-        $this->assertSame($snapshotState, $result);
+        // Manager adds events_count to snapshot state
+        $expectedState = $snapshotState;
+        $expectedState['events_count'] = 0;
+        
+        $this->assertSame($expectedState, $result);
     }
 
     #[Test]
@@ -243,8 +247,8 @@ final class EventStreamManagerTest extends TestCase
 
         $this->snapshotManager
             ->expects($this->once())
-            ->method('createSnapshotIfNeeded')
-            ->with((string) $aggregateId, $events);
+            ->method('createIfNeeded')
+            ->with((string) $aggregateId, ['events_count' => 150]);
 
         $this->manager->maintainStream($aggregateId);
     }

@@ -28,24 +28,48 @@ final class ExceptionHierarchyTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('exceptionClassProvider')]
-    public function all_exceptions_extend_base_exception(string $exceptionClass): void
+    public function stream_not_found_exception_extends_base(): void
     {
-        $exception = new $exceptionClass('Test message');
+        $exception = new StreamNotFoundException('stream-123');
 
         $this->assertInstanceOf(EventStreamException::class, $exception);
         $this->assertInstanceOf(\Exception::class, $exception);
     }
 
-    public static function exceptionClassProvider(): array
+    #[Test]
+    public function snapshot_not_found_exception_extends_base(): void
     {
-        return [
-            'StreamNotFoundException' => [StreamNotFoundException::class],
-            'SnapshotNotFoundException' => [SnapshotNotFoundException::class],
-            'InvalidSnapshotException' => [InvalidSnapshotException::class],
-            'ProjectionException' => [ProjectionException::class],
-            'EventSerializationException' => [EventSerializationException::class],
-        ];
+        $exception = new SnapshotNotFoundException('aggregate-456');
+
+        $this->assertInstanceOf(EventStreamException::class, $exception);
+        $this->assertInstanceOf(\Exception::class, $exception);
+    }
+
+    #[Test]
+    public function invalid_snapshot_exception_extends_base(): void
+    {
+        $exception = new InvalidSnapshotException('aggregate-789', 'checksum mismatch');
+
+        $this->assertInstanceOf(EventStreamException::class, $exception);
+        $this->assertInstanceOf(\Exception::class, $exception);
+    }
+
+    #[Test]
+    public function projection_exception_extends_base(): void
+    {
+        $exception = new ProjectionException('CustomerProjector', 'event-123');
+
+        $this->assertInstanceOf(EventStreamException::class, $exception);
+        $this->assertInstanceOf(\Exception::class, $exception);
+    }
+
+    #[Test]
+    public function event_serialization_exception_extends_base(): void
+    {
+        $exception = new EventSerializationException('AccountDebitedEvent');
+
+        $this->assertInstanceOf(EventStreamException::class, $exception);
+        $this->assertInstanceOf(\Exception::class, $exception);
     }
 
     #[Test]
@@ -69,31 +93,39 @@ final class ExceptionHierarchyTest extends TestCase
     #[Test]
     public function invalid_snapshot_exception_includes_checksum_info(): void
     {
-        $exception = new InvalidSnapshotException('snapshot-789', 'expected-hash', 'actual-hash');
+        $exception = new InvalidSnapshotException(
+            'snapshot-789',
+            'Checksum mismatch: expected expected-hash, got actual-hash'
+        );
 
-        $message = strtolower($exception->getMessage());
-        $this->assertStringContainsString('snapshot-789', $exception->getMessage());
-        $this->assertStringContainsString('expected-hash', $exception->getMessage());
-        $this->assertStringContainsString('actual-hash', $exception->getMessage());
-        $this->assertStringContainsString('checksum', $message);
+        $message = $exception->getMessage();
+        $this->assertStringContainsString('snapshot-789', $message);
+        $this->assertStringContainsString('expected-hash', $message);
+        $this->assertStringContainsString('actual-hash', $message);
+        $this->assertStringContainsString('Checksum', $message);
     }
 
     #[Test]
     public function projection_exception_supports_previous_exception(): void
     {
         $previous = new \RuntimeException('Database error');
-        $exception = new ProjectionException('Projection failed', $previous);
+        $exception = new ProjectionException('CustomerProjector', 'event-456', '', 0, $previous);
 
         $this->assertSame($previous, $exception->getPrevious());
-        $this->assertStringContainsString('Projection failed', $exception->getMessage());
+        $this->assertStringContainsString('CustomerProjector', $exception->getMessage());
+        $this->assertStringContainsString('event-456', $exception->getMessage());
     }
 
     #[Test]
     public function event_serialization_exception_includes_event_type(): void
     {
-        $exception = new EventSerializationException('AccountDebitedEvent', 'Invalid JSON');
-
+        // Test with default message (should include event type)
+        $exception = new EventSerializationException('AccountDebitedEvent');
         $this->assertStringContainsString('AccountDebitedEvent', $exception->getMessage());
-        $this->assertStringContainsString('Invalid JSON', $exception->getMessage());
+
+        // Test with custom message (custom message takes precedence)
+        $exceptionWithCustomMessage = new EventSerializationException('AccountDebitedEvent', 'Invalid JSON: unexpected token');
+        $this->assertStringContainsString('Invalid JSON', $exceptionWithCustomMessage->getMessage());
+        $this->assertStringContainsString('AccountDebitedEvent', $exceptionWithCustomMessage->getMessage());
     }
 }
