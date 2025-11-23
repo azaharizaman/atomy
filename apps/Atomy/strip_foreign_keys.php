@@ -59,7 +59,7 @@
  * This approach ensures all tables exist before any foreign key references them,
  * eliminating circular dependency errors in PostgreSQL.
  *
- * @see docs/ARCHITECTURAL_COMPLIANCE_SUMMARY.md - Migration refactor rationale
+ * @see ARCHITECTURAL_COMPLIANCE_SUMMARY.md - Migration refactor rationale
  * @see database/migrations/2025_12_31_999999_add_all_foreign_keys_and_indexes.php
  */
 
