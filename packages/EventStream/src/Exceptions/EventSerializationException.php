@@ -21,6 +21,9 @@ class EventSerializationException extends EventStreamException
     ) {
         if (empty($message)) {
             $message = sprintf('Failed to serialize/deserialize event of type "%s"', $eventType);
+        } else {
+            // Prepend event type to custom message for context
+            $message = sprintf('[%s] %s', $eventType, $message);
         }
 
         parent::__construct($message, $code, $previous);

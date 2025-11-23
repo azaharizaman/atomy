@@ -205,7 +205,8 @@ final readonly class EventStreamManager
         $aggregateIdStr = is_object($aggregateId) ? (string) $aggregateId : $aggregateId;
         $events = $this->streamReader->readStream($aggregateIdStr);
 
-        $this->snapshotManager->createSnapshotIfNeeded($aggregateIdStr, $events);
+        // For now, pass empty state - will be enhanced when aggregate replay is implemented
+        $this->snapshotManager->createIfNeeded($aggregateIdStr, ['events_count' => count($events)]);
     }
 
     /**

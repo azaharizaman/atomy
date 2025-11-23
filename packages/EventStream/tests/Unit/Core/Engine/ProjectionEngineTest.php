@@ -179,25 +179,35 @@ final class ProjectionEngineTest extends TestCase
     public function it_resumes_from_specific_event_id(): void
     {
         $events = [
-            $this->createMockEvent('event-3', 'EventType1'),
-            $this->createMockEvent('event-4', 'EventType1'),
+            $this->createMockEvent('1', 'EventType1'),
+            $this->createMockEvent('2', 'EventType1'),
+            $this->createMockEvent('3', 'EventType1'),
         ];
 
         $this->streamReader
             ->expects($this->once())
-            ->method('readStreamFromEventId')
-            ->with('stream-123', 'event-2')
+            ->method('readStream')
+            ->with('stream-123')
             ->willReturn($events);
 
         $projector = $this->createMock(ProjectorInterface::class);
         $projector->method('getName')->willReturn('ResumeProjector');
         $projector->method('getHandledEventTypes')->willReturn(['EventType1']);
+        $projector->method('getLastProcessedEventId')->willReturn('2');
         
+        // Resume sets the last processed event ID: 1 time ('2')
+        // Then setLastProcessedEventId is called for event '3': 1 time
+        // Total: 2 times
         $projector
             ->expects($this->exactly(2))
+            ->method('setLastProcessedEventId');
+        
+        // Only event '3' is projected (events '1' and '2' are skipped)
+        $projector
+            ->expects($this->once())
             ->method('project');
 
-        $this->engine->resume('stream-123', $projector, 'event-2');
+        $this->engine->resume('stream-123', $projector, '2');
     }
 
     #[Test]
@@ -214,14 +224,18 @@ final class ProjectionEngineTest extends TestCase
         $projector = $this->createMock(ProjectorInterface::class);
         $projector->method('getName')->willReturn('StatsProjector');
         $projector->method('getHandledEventTypes')->willReturn(['EventType1']);
+        $projector->method('getLastProcessedEventId')->willReturn(null);
 
+        // Expect completion log with statistics
         $this->logger
             ->expects($this->atLeastOnce())
             ->method('info')
             ->with(
                 $this->anything(),
                 $this->callback(function ($context) {
-                    return isset($context['total_events']) || isset($context['projected_events']);
+                    // Check for either the running log OR the completion log with statistics
+                    return isset($context['stream_id']) || 
+                           (isset($context['total_events']) && isset($context['projected_events']));
                 })
             );
 

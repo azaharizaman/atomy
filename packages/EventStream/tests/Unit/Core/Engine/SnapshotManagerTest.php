@@ -127,15 +127,10 @@ final class SnapshotManagerTest extends TestCase
     public function it_validates_snapshot_checksum_in_legacy_mode(): void
     {
         $aggregateId = 'agg-123';
-        $data = ['balance' => 1000.00];
-        $expectedChecksum = hash('sha256', json_encode($data));
+        $state = ['balance' => 1000.00];
+        $expectedChecksum = hash('sha256', json_encode($state));
 
-        $snapshot = $this->createMock(SnapshotInterface::class);
-        $snapshot->method('getAggregateId')->willReturn($aggregateId);
-        $snapshot->method('getData')->willReturn($data);
-        $snapshot->method('getChecksum')->willReturn($expectedChecksum);
-
-        $result = $this->snapshotManager->validateSnapshot($snapshot);
+        $result = $this->snapshotManager->validateChecksum($aggregateId, $state, $expectedChecksum);
 
         $this->assertTrue($result);
     }
@@ -144,25 +139,19 @@ final class SnapshotManagerTest extends TestCase
     public function it_throws_exception_for_invalid_checksum(): void
     {
         $aggregateId = 'agg-123';
-        $data = ['balance' => 1000.00];
+        $state = ['balance' => 1000.00];
         $invalidChecksum = 'wrong-checksum';
 
-        $snapshot = $this->createMock(SnapshotInterface::class);
-        $snapshot->method('getAggregateId')->willReturn($aggregateId);
-        $snapshot->method('getData')->willReturn($data);
-        $snapshot->method('getChecksum')->willReturn($invalidChecksum);
+        // validateChecksum returns false for invalid checksum (doesn't throw)
+        $result = $this->snapshotManager->validateChecksum($aggregateId, $state, $invalidChecksum);
 
-        $this->expectException(InvalidSnapshotException::class);
-        $this->expectExceptionMessage('Snapshot checksum validation failed');
-
-        $this->snapshotManager->validateSnapshot($snapshot);
+        $this->assertFalse($result);
     }
 
     #[Test]
     public function it_calculates_checksum_correctly_for_complex_data(): void
     {
-        $aggregateId = 'agg-456';
-        $data = [
+        $state = [
             'balance' => 5000.00,
             'currency' => 'MYR',
             'transactions' => [
@@ -171,16 +160,10 @@ final class SnapshotManagerTest extends TestCase
             ],
         ];
         
-        $expectedChecksum = hash('sha256', json_encode($data));
+        $expectedChecksum = hash('sha256', json_encode($state));
+        $actualChecksum = $this->snapshotManager->calculateChecksum($state);
 
-        $snapshot = $this->createMock(SnapshotInterface::class);
-        $snapshot->method('getAggregateId')->willReturn($aggregateId);
-        $snapshot->method('getData')->willReturn($data);
-        $snapshot->method('getChecksum')->willReturn($expectedChecksum);
-
-        $result = $this->snapshotManager->validateSnapshot($snapshot);
-
-        $this->assertTrue($result);
+        $this->assertSame($expectedChecksum, $actualChecksum);
     }
 
     #[Test]
