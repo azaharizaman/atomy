@@ -43,11 +43,11 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
-            $table->index(['budget_id', 'is_active']);
-            $table->index('forecast_date');
+            // $table->index(['budget_id', 'is_active']);
+            // $table->index('forecast_date');
             
             // Foreign keys
-            // $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
+            // // $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
         });
     }
 

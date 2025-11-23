@@ -40,9 +40,9 @@ return new class extends Migration
             
             $table->timestamps();
 
-            $table->unique(['tenant_id', 'order_number']);
-            $table->index(['tenant_id', 'status', 'order_date']);
-            $table->index(['tenant_id', 'customer_id', 'status']);
+            // $table->unique(['tenant_id', 'order_number']);
+            // $table->index(['tenant_id', 'status', 'order_date']);
+            // $table->index(['tenant_id', 'customer_id', 'status']);
         });
 
         Schema::create('sales_order_lines', function (Blueprint $table) {
@@ -60,10 +60,10 @@ return new class extends Migration
             $table->text('line_notes')->nullable();
             $table->integer('line_sequence')->default(0);
 
-            $table->foreign('sales_order_id')
-                ->references('id')
-                ->on('sales_orders')
-                ->onDelete('cascade');
+            // $table->foreign('sales_order_id')
+                // ->references('id')
+                // ->on('sales_orders')
+                // ->onDelete('cascade');
         });
     }
 

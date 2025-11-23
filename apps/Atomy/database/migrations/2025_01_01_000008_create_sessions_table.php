@@ -17,9 +17,9 @@ return new class extends Migration
             $table->timestamp('revoked_at')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->index(['user_id', 'revoked_at', 'expires_at']);
-            $table->index('token');
+            // // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // // $table->index(['user_id', 'revoked_at', 'expires_at']);
+            // // $table->index('token');
         });
     }
 

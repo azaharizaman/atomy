@@ -24,20 +24,20 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->timestamps();
 
-            $table->unique(['journal_entry_id', 'line_number']);
-            $table->index('journal_entry_id');
-            $table->index('account_id');
-            $table->index(['account_id', 'journal_entry_id']);
+            // $table->unique(['journal_entry_id', 'line_number']);
+            // $table->index('journal_entry_id');
+            // $table->index('account_id');
+            // $table->index(['account_id', 'journal_entry_id']);
 
-            $table->foreign('journal_entry_id')
-                ->references('id')
-                ->on('journal_entries')
-                ->onDelete('cascade');
+            // $table->foreign('journal_entry_id')
+                // ->references('id')
+                // ->on('journal_entries')
+                // ->onDelete('cascade');
 
-            $table->foreign('account_id')
-                ->references('id')
-                ->on('accounts')
-                ->onDelete('restrict');
+            // $table->foreign('account_id')
+                // ->references('id')
+                // ->on('accounts')
+                // ->onDelete('restrict');
         });
     }
 

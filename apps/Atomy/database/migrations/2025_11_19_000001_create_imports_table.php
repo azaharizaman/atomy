@@ -25,8 +25,8 @@ return new class extends Migration
             $table->timestampTz('completed_at')->nullable();
             $table->timestampsTz();
 
-            $table->index(['tenant_id', 'uploaded_at']);
-            $table->index(['status', 'uploaded_at']);
+            // $table->index(['tenant_id', 'uploaded_at']);
+            // $table->index(['status', 'uploaded_at']);
         });
     }
 

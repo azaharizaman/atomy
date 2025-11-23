@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('requisition_lines', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('requisition_id')->constrained('requisitions')->onDelete('cascade');
+            // $table->foreignUlid('requisition_id')->constrained('requisitions')->onDelete('cascade');
             $table->integer('line_number');
             $table->string('item_code')->index();
             $table->text('description');
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->index(['requisition_id', 'line_number']);
+            // $table->index(['requisition_id', 'line_number']);
         });
     }
 

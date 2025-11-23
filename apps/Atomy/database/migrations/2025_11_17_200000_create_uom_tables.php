@@ -29,7 +29,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index('code');
+            // // $table->index('code');
         });
 
         // Unit systems table
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index('code');
+            // // $table->index('code');
         });
 
         // Units table
@@ -59,20 +59,20 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index('code');
-            $table->index('dimension_code');
-            $table->index('system_code');
-            $table->index(['dimension_code', 'is_base_unit']);
+            // // $table->index('code');
+            // // $table->index('dimension_code');
+            // // $table->index('system_code');
+            // // $table->index(['dimension_code', 'is_base_unit']);
 
-            $table->foreign('dimension_code')
-                ->references('code')
-                ->on('dimensions')
-                ->onDelete('restrict');
+            // // $table->foreign('dimension_code')
+                // // ->references('code')
+                // // ->on('dimensions')
+                // // ->onDelete('restrict');
 
-            $table->foreign('system_code')
-                ->references('code')
-                ->on('unit_systems')
-                ->onDelete('set null');
+            // // $table->foreign('system_code')
+                // // ->references('code')
+                // // ->on('unit_systems')
+                // // ->onDelete('set null');
         });
 
         // Unit conversions table
@@ -88,27 +88,27 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['from_unit_code', 'to_unit_code']);
-            $table->index('to_unit_code');
-            $table->unique(['from_unit_code', 'to_unit_code', 'deleted_at']);
+            // // $table->index(['from_unit_code', 'to_unit_code']);
+            // // $table->index('to_unit_code');
+            // // $table->unique(['from_unit_code', 'to_unit_code', 'deleted_at']);
 
-            $table->foreign('from_unit_code')
-                ->references('code')
-                ->on('units')
-                ->onDelete('cascade');
+            // // $table->foreign('from_unit_code')
+                // // ->references('code')
+                // // ->on('units')
+                // // ->onDelete('cascade');
 
-            $table->foreign('to_unit_code')
-                ->references('code')
-                ->on('units')
-                ->onDelete('cascade');
+            // // $table->foreign('to_unit_code')
+                // // ->references('code')
+                // // ->on('units')
+                // // ->onDelete('cascade');
         });
 
         // Update base_unit_code foreign key on dimensions after units table created
         Schema::table('dimensions', function (Blueprint $table) {
-            $table->foreign('base_unit_code')
-                ->references('code')
-                ->on('units')
-                ->onDelete('restrict');
+            // // $table->foreign('base_unit_code')
+                // // ->references('code')
+                // // ->on('units')
+                // // ->onDelete('restrict');
         });
     }
 

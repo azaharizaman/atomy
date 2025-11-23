@@ -24,9 +24,9 @@ return new class extends Migration
             $table->ulid('created_by')->nullable();
             $table->timestamps();
             
-            $table->foreign('from_warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
-            $table->foreign('to_warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
-            $table->index(['status', 'created_at']);
+            // $table->foreign('from_warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
+            // $table->foreign('to_warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
+            // $table->index(['status', 'created_at']);
         });
     }
 

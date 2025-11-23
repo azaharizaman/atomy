@@ -25,11 +25,11 @@ return new class extends Migration
             $table->timestamp('created_at');
 
             // Foreign key to SOD rules
-            $table->foreign('rule_id')->references('id')->on('sod_rules')->onDelete('cascade');
+            // $table->foreign('rule_id')->references('id')->on('sod_rules')->onDelete('cascade');
 
             // Index for reporting and queries
-            $table->index(['tenant_id', 'violated_at']);
-            $table->index(['tenant_id', 'rule_id']);
+            // $table->index(['tenant_id', 'violated_at']);
+            // $table->index(['tenant_id', 'rule_id']);
         });
     }
 

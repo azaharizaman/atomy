@@ -30,10 +30,10 @@ return new class extends Migration
             $table->timestamps();
             
             // Composite indexes for common queries
-            $table->index(['status', 'run_at']);
-            $table->index(['job_type', 'status']);
-            $table->index(['target_id', 'job_type']);
-            $table->index(['status', 'priority', 'run_at']);
+            // $table->index(['status', 'run_at']);
+            // $table->index(['job_type', 'status']);
+            // $table->index(['target_id', 'job_type']);
+            // $table->index(['status', 'priority', 'run_at']);
         });
     }
     

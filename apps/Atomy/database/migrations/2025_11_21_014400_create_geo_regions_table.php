@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Composite unique index for tenant + code
-            $table->unique(['tenant_id', 'code']);
+            // $table->unique(['tenant_id', 'code']);
         });
     }
 

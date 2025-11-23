@@ -16,10 +16,10 @@ return new class extends Migration
 
             // Reference to setting
             $table->ulid('setting_id')->index();
-            $table->foreign('setting_id')
-                ->references('id')
-                ->on('settings')
-                ->cascadeOnDelete();
+            // // $table->foreign('setting_id')
+                // // ->references('id')
+                // // ->on('settings')
+                // // ->cascadeOnDelete();
 
             // Scope information (denormalized for easier querying)
             $table->string('scope', 20);
@@ -38,11 +38,11 @@ return new class extends Migration
             $table->timestamp('changed_at')->useCurrent();
 
             // Indexes for history queries
-            $table->index(['setting_id', 'changed_at'], 'history_setting_time');
-            $table->index(['scope', 'scope_id'], 'history_scope_lookup');
-            $table->index('key', 'history_key_lookup');
-            $table->index('changed_by', 'history_actor_lookup');
-            $table->index('changed_at', 'history_time_lookup');
+            // // $table->index(['setting_id', 'changed_at'], 'history_setting_time');
+            // // $table->index(['scope', 'scope_id'], 'history_scope_lookup');
+            // // $table->index('key', 'history_key_lookup');
+            // // $table->index('changed_by', 'history_actor_lookup');
+            // // $table->index('changed_at', 'history_time_lookup');
         });
     }
 

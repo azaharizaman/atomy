@@ -25,8 +25,8 @@ return new class extends Migration
             $table->timestamps();
 
             // Composite indexes for common queries
-            $table->index(['entity_id', 'period_id', 'statement_type']);
-            $table->index(['entity_id', 'statement_type', 'version']);
+            // $table->index(['entity_id', 'period_id', 'statement_type']);
+            // $table->index(['entity_id', 'statement_type', 'version']);
         });
     }
 

@@ -19,9 +19,9 @@ return new class extends Migration
             $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->index(['user_id', 'revoked_at']);
-            $table->index('token_hash');
+            // // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // // $table->index(['user_id', 'revoked_at']);
+            // // $table->index('token_hash');
         });
     }
 

@@ -26,16 +26,16 @@ return new class extends Migration
             $table->timestamps();
 
             // Foreign key
-            $table->foreign('document_id')
-                ->references('id')
-                ->on('documents')
-                ->onDelete('cascade');
+            // // $table->foreign('document_id')
+                // // ->references('id')
+                // // ->on('documents')
+                // // ->onDelete('cascade');
 
             // Unique constraint
-            $table->unique(['document_id', 'version_number']);
+            // // $table->unique(['document_id', 'version_number']);
 
             // Indexes
-            $table->index('created_at');
+            // // $table->index('created_at');
         });
     }
 

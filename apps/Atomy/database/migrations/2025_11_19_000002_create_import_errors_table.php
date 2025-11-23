@@ -21,13 +21,13 @@ return new class extends Migration
             $table->json('context')->nullable();
             $table->timestampsTz();
 
-            $table->foreign('import_id')
-                ->references('id')
-                ->on('imports')
-                ->onDelete('cascade');
+            // $table->foreign('import_id')
+                // ->references('id')
+                // ->on('imports')
+                // ->onDelete('cascade');
 
-            $table->index(['import_id', 'severity']);
-            $table->index(['import_id', 'row_number']);
+            // $table->index(['import_id', 'severity']);
+            // $table->index(['import_id', 'row_number']);
         });
     }
 

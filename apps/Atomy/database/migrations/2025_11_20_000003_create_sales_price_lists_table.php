@@ -20,8 +20,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->index(['tenant_id', 'is_active', 'valid_from']);
-            $table->index(['tenant_id', 'customer_id', 'is_active']);
+            // $table->index(['tenant_id', 'is_active', 'valid_from']);
+            // $table->index(['tenant_id', 'customer_id', 'is_active']);
         });
 
         Schema::create('price_list_items', function (Blueprint $table) {
@@ -31,12 +31,12 @@ return new class extends Migration
             $table->decimal('base_price', 19, 4);
             $table->json('discount_rule')->nullable();
 
-            $table->foreign('price_list_id')
-                ->references('id')
-                ->on('sales_price_lists')
-                ->onDelete('cascade');
+            // $table->foreign('price_list_id')
+                // ->references('id')
+                // ->on('sales_price_lists')
+                // ->onDelete('cascade');
 
-            $table->unique(['price_list_id', 'product_variant_id']);
+            // $table->unique(['price_list_id', 'product_variant_id']);
         });
 
         Schema::create('price_tiers', function (Blueprint $table) {
@@ -47,12 +47,12 @@ return new class extends Migration
             $table->decimal('unit_price', 19, 4);
             $table->decimal('discount_percentage', 5, 2)->nullable();
 
-            $table->foreign('price_list_item_id')
-                ->references('id')
-                ->on('price_list_items')
-                ->onDelete('cascade');
+            // $table->foreign('price_list_item_id')
+                // ->references('id')
+                // ->on('price_list_items')
+                // ->onDelete('cascade');
 
-            $table->index(['price_list_item_id', 'min_quantity', 'max_quantity']);
+            // $table->index(['price_list_item_id', 'min_quantity', 'max_quantity']);
         });
     }
 

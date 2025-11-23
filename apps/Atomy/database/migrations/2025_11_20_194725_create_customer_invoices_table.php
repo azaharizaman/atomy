@@ -31,8 +31,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->timestamps();
 
-            $table->unique(['tenant_id', 'customer_id', 'invoice_number'], 'unique_invoice_number');
-            $table->foreign('customer_id')->references('id')->on('parties')->onDelete('restrict');
+            // $table->unique(['tenant_id', 'customer_id', 'invoice_number'], 'unique_invoice_number');
+            // $table->foreign('customer_id')->references('id')->on('parties')->onDelete('restrict');
         });
     }
 

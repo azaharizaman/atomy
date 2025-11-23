@@ -23,10 +23,10 @@ return new class extends Migration
             $table->dateTime('expires_at')->index();
 
             // Composite unique index for tenant + address
-            $table->unique(['tenant_id', 'address']);
+            // $table->unique(['tenant_id', 'address']);
             
             // Index for coordinate-based queries
-            $table->index(['latitude', 'longitude']);
+            // $table->index(['latitude', 'longitude']);
         });
     }
 

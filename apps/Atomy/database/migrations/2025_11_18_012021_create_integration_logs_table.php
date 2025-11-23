@@ -27,9 +27,9 @@ return new class extends Migration
             $table->timestamps();
 
             // Composite indexes for common queries
-            $table->index(['service_name', 'created_at']);
-            $table->index(['service_name', 'status', 'created_at']);
-            $table->index(['tenant_id', 'service_name', 'created_at']);
+            // // $table->index(['service_name', 'created_at']);
+            // // $table->index(['service_name', 'status', 'created_at']);
+            // // $table->index(['tenant_id', 'service_name', 'created_at']);
         });
     }
 

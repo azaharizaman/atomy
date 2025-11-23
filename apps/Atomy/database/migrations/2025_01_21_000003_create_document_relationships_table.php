@@ -23,21 +23,21 @@ return new class extends Migration
             $table->timestamps();
 
             // Foreign keys
-            $table->foreign('source_document_id')
-                ->references('id')
-                ->on('documents')
-                ->onDelete('cascade');
+            // // $table->foreign('source_document_id')
+                // // ->references('id')
+                // // ->on('documents')
+                // // ->onDelete('cascade');
 
-            $table->foreign('target_document_id')
-                ->references('id')
-                ->on('documents')
-                ->onDelete('cascade');
+            // // $table->foreign('target_document_id')
+                // // ->references('id')
+                // // ->on('documents')
+                // // ->onDelete('cascade');
 
             // Unique constraint (prevent duplicate relationships)
-            $table->unique(['source_document_id', 'target_document_id', 'type'], 'unique_relationship');
+            // // $table->unique(['source_document_id', 'target_document_id', 'type'], 'unique_relationship');
 
             // Indexes
-            $table->index('type');
+            // // $table->index('type');
         });
     }
 

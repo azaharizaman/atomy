@@ -25,8 +25,8 @@ return new class extends Migration
             $table->string('sales_order_line_reference', 100)->nullable()->index();
             $table->timestamps();
 
-            $table->unique(['invoice_id', 'line_number'], 'unique_invoice_line');
-            $table->foreign('invoice_id')->references('id')->on('customer_invoices')->onDelete('cascade');
+            // $table->unique(['invoice_id', 'line_number'], 'unique_invoice_line');
+            // $table->foreign('invoice_id')->references('id')->on('customer_invoices')->onDelete('cascade');
         });
     }
 

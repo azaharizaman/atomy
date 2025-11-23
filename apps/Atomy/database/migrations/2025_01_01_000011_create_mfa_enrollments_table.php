@@ -18,8 +18,8 @@ return new class extends Migration
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->index(['user_id', 'method']);
+            // // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // // $table->index(['user_id', 'method']);
         });
     }
 

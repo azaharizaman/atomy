@@ -22,8 +22,8 @@ return new class extends Migration
             $table->timestamp('fulfilled_at')->nullable();
             $table->timestamps();
             
-            $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
-            $table->index(['product_id', 'warehouse_id', 'status']);
+            // $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
+            // $table->index(['product_id', 'warehouse_id', 'status']);
         });
     }
 

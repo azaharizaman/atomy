@@ -24,8 +24,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->unique(['name', 'scope_identifier'], 'idx_sequences_name_scope');
-            $table->index(['is_active', 'is_locked']);
+            // // $table->unique(['name', 'scope_identifier'], 'idx_sequences_name_scope');
+            // // $table->index(['is_active', 'is_locked']);
         });
 
         // Counter state table
@@ -38,8 +38,8 @@ return new class extends Migration
             $table->timestamp('last_generated_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
-            $table->unique('sequence_id', 'idx_counters_sequence_lock');
+            // // $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
+            // // $table->unique('sequence_id', 'idx_counters_sequence_lock');
         });
 
         // Reservations table
@@ -53,10 +53,10 @@ return new class extends Migration
             $table->timestamp('finalized_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
-            $table->index(['sequence_id', 'status']);
-            $table->index(['expires_at', 'status'], 'idx_reservations_expires_at');
-            $table->index(['reservation_id']);
+            // // $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
+            // // $table->index(['sequence_id', 'status']);
+            // // $table->index(['expires_at', 'status'], 'idx_reservations_expires_at');
+            // // $table->index(['reservation_id']);
         });
 
         // Gaps table
@@ -69,8 +69,8 @@ return new class extends Migration
             $table->timestamp('filled_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
-            $table->index(['sequence_id', 'status']);
+            // // $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
+            // // $table->index(['sequence_id', 'status']);
         });
 
         // Pattern versions table
@@ -82,8 +82,8 @@ return new class extends Migration
             $table->timestamp('effective_until')->nullable();
             $table->timestamps();
 
-            $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
-            $table->index(['sequence_id', 'effective_from', 'effective_until']);
+            // // $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
+            // // $table->index(['sequence_id', 'effective_from', 'effective_until']);
         });
 
         // Audit log table for sequence operations
@@ -95,9 +95,9 @@ return new class extends Migration
             $table->string('performed_by')->nullable(); // User identifier
             $table->timestamps();
 
-            $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
-            $table->index(['sequence_id', 'event_type']);
-            $table->index(['sequence_id', 'created_at']);
+            // // $table->foreign('sequence_id')->references('id')->on('sequences')->onDelete('cascade');
+            // // $table->index(['sequence_id', 'event_type']);
+            // // $table->index(['sequence_id', 'created_at']);
         });
     }
 

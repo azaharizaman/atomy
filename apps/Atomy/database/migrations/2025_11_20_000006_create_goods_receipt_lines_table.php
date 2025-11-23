@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('goods_receipt_lines', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('goods_receipt_note_id')->constrained('goods_receipt_notes')->onDelete('cascade');
+            // $table->foreignUlid('goods_receipt_note_id')->constrained('goods_receipt_notes')->onDelete('cascade');
             $table->integer('line_number');
             $table->string('po_line_reference')->index();
             $table->decimal('quantity_received', 19, 4);
@@ -19,8 +19,8 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->foreign('po_line_reference')->references('line_reference')->on('purchase_order_lines')->onDelete('cascade');
-            $table->index(['goods_receipt_note_id', 'line_number']);
+            // $table->foreign('po_line_reference')->references('line_reference')->on('purchase_order_lines')->onDelete('cascade');
+            // $table->index(['goods_receipt_note_id', 'line_number']);
         });
     }
 

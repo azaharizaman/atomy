@@ -17,7 +17,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             
             // Tenant scoping
-            $table->foreignUlid('tenant_id')->constrained('tenants')->cascadeOnDelete();
+            // $table->foreignUlid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             
             // Template identification
             $table->string('code', 100)->comment('Unique code within tenant');
@@ -26,7 +26,7 @@ return new class extends Migration
             
             // Classification
             $table->string('category_code', 100)->nullable();
-            $table->foreign('category_code')->references('code')->on('categories')->nullOnDelete();
+            // $table->foreign('category_code')->references('code')->on('categories')->nullOnDelete();
             
             // Status
             $table->boolean('is_active')->default(true);
@@ -39,9 +39,9 @@ return new class extends Migration
             $table->softDeletes();
             
             // Indexes
-            $table->unique(['tenant_id', 'code'], 'templates_tenant_code_unique');
-            $table->index(['tenant_id', 'is_active'], 'templates_tenant_active_index');
-            $table->index(['tenant_id', 'category_code'], 'templates_category_index');
+            // $table->unique(['tenant_id', 'code'], 'templates_tenant_code_unique');
+            // $table->index(['tenant_id', 'is_active'], 'templates_tenant_active_index');
+            // $table->index(['tenant_id', 'category_code'], 'templates_category_index');
         });
     }
 

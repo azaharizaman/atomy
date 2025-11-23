@@ -12,7 +12,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->string('tenant_id')->index();
             $table->string('number')->unique();
-            $table->foreignUlid('purchase_order_id')->constrained('purchase_orders')->onDelete('cascade');
+            // $table->foreignUlid('purchase_order_id')->constrained('purchase_orders')->onDelete('cascade');
             $table->string('receiver_id')->index();
             $table->date('received_date');
             $table->enum('status', ['draft', 'confirmed', 'payment_authorized'])->default('draft')->index();
@@ -24,8 +24,8 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['tenant_id', 'status']);
-            $table->index(['tenant_id', 'purchase_order_id']);
+            // $table->index(['tenant_id', 'status']);
+            // $table->index(['tenant_id', 'purchase_order_id']);
         });
     }
 

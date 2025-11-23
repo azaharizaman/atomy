@@ -73,4 +73,26 @@ return [
         'payable' => env('EVENTSTREAM_PAYABLE_ENABLED', false),   // Large enterprise only
         'receivable' => env('EVENTSTREAM_RECEIVABLE_ENABLED', false), // Large enterprise only
     ],
+
+    /**
+     * Metrics Configuration (Prometheus)
+     */
+    'metrics' => [
+        // Storage backend for metrics (redis or memory)
+        'storage' => env('EVENTSTREAM_METRICS_STORAGE', 'redis'),
+
+        // Redis connection for metrics (shared across workers)
+        'redis' => [
+            'host' => env('EVENTSTREAM_METRICS_REDIS_HOST', '127.0.0.1'),
+            'port' => env('EVENTSTREAM_METRICS_REDIS_PORT', 63971),
+            'database' => env('EVENTSTREAM_METRICS_REDIS_DATABASE', 0),
+            'timeout' => 2.0,
+        ],
+
+        // Histogram buckets (milliseconds) for event append/read operations
+        'event_operation_buckets' => [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000],
+
+        // Histogram buckets (milliseconds) for projection processing
+        'projection_processing_buckets' => [1, 10, 50, 100, 500, 1000, 2500, 5000, 10000, 30000],
+    ],
 ];

@@ -22,7 +22,7 @@ return new class extends Migration
             // Model reference (polymorphic)
             $table->string('model_type')->index();
             $table->string('model_id');
-            $table->unique(['model_type', 'model_id'], 'model_unique');
+            // $table->unique(['model_type', 'model_id'], 'model_unique');
             
             // Analytics metadata
             $table->json('configuration')->nullable(); // Analytics settings
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->timestamps();
             
             // Index
-            $table->index('created_at');
+            // $table->index('created_at');
         });
     }
 

@@ -24,8 +24,8 @@ return new class extends Migration
             $table->ulid('applied_to_invoice_id')->nullable();
             $table->timestamps();
 
-            $table->foreign('customer_id')->references('id')->on('parties')->onDelete('restrict');
-            $table->foreign('receipt_id')->references('id')->on('payment_receipts')->onDelete('restrict');
+            // $table->foreign('customer_id')->references('id')->on('parties')->onDelete('restrict');
+            // $table->foreign('receipt_id')->references('id')->on('payment_receipts')->onDelete('restrict');
         });
     }
 

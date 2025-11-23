@@ -21,8 +21,8 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
-            $table->index(['tenant_id', 'legal_name']);
-            $table->index(['tenant_id', 'party_type']);
+            // $table->index(['tenant_id', 'legal_name']);
+            // $table->index(['tenant_id', 'party_type']);
         });
     }
 

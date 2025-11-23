@@ -40,12 +40,12 @@ return new class extends Migration
             $table->softDeletes();
 
             // Unique constraint: scope + scope_id + key
-            $table->unique(['scope', 'scope_id', 'key'], 'settings_scope_key_unique');
+            // // $table->unique(['scope', 'scope_id', 'key'], 'settings_scope_key_unique');
 
             // Indexes for performance
-            $table->index(['scope', 'scope_id'], 'settings_scope_lookup');
-            $table->index(['key', 'scope'], 'settings_key_scope_lookup');
-            $table->index('group', 'settings_group_lookup');
+            // // $table->index(['scope', 'scope_id'], 'settings_scope_lookup');
+            // // $table->index(['key', 'scope'], 'settings_key_scope_lookup');
+            // // $table->index('group', 'settings_group_lookup');
         });
     }
 

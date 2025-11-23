@@ -39,9 +39,9 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
-            $table->unique(['aggregate_id', 'version']); // One snapshot per version
-            $table->index(['tenant_id', 'aggregate_id']); // Tenant isolation
-            $table->index('created_at'); // For cleanup/archival
+            // $table->unique(['aggregate_id', 'version']); // One snapshot per version
+            // $table->index(['tenant_id', 'aggregate_id']); // Tenant isolation
+            // $table->index('created_at'); // For cleanup/archival
         });
     }
 

@@ -22,10 +22,10 @@ return new class extends Migration
             $table->timestamp('updated_at');
             
             // Composite index for key_id + version (latest version first)
-            $table->index(['key_id', 'version']);
+            // $table->index(['key_id', 'version']);
             
             // Index for finding expiring keys
-            $table->index('expires_at');
+            // $table->index('expires_at');
         });
         
         Schema::create('key_rotation_history', function (Blueprint $table) {
@@ -39,7 +39,7 @@ return new class extends Migration
             $table->text('notes')->nullable()->comment('Additional rotation notes');
             
             // Index for audit queries
-            $table->index(['key_id', 'rotated_at']);
+            // $table->index(['key_id', 'rotated_at']);
         });
     }
 

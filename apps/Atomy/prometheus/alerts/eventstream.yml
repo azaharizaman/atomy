@@ -1,0 +1,114 @@
+# EventStream Alert Rules for Prometheus
+
+groups:
+  - name: eventstream_alerts
+    interval: 30s
+    rules:
+      # High Event Append Latency
+      - alert: HighEventAppendLatency
+        expr: histogram_quantile(0.95, rate(eventstream_event_append_duration_milliseconds_bucket[5m])) > 50
+        for: 5m
+        labels:
+          severity: warning
+          component: eventstream
+        annotations:
+          summary: "High event append latency detected"
+          description: "Event append p95 latency is {{ $value }}ms for stream {{ $labels.stream_name }}"
+
+      # Critical Event Append Latency
+      - alert: CriticalEventAppendLatency
+        expr: histogram_quantile(0.95, rate(eventstream_event_append_duration_milliseconds_bucket[5m])) > 100
+        for: 2m
+        labels:
+          severity: critical
+          component: eventstream
+        annotations:
+          summary: "Critical event append latency"
+          description: "Event append p95 latency is {{ $value }}ms for stream {{ $labels.stream_name }}"
+
+      # High Projection Lag
+      - alert: HighProjectionLag
+        expr: eventstream_projection_lag_seconds > 300
+        for: 5m
+        labels:
+          severity: warning
+          component: eventstream
+        annotations:
+          summary: "Projection lag is high"
+          description: "Projection {{ $labels.projector }} is {{ $value }}s behind"
+
+      # Critical Projection Lag
+      - alert: CriticalProjectionLag
+        expr: eventstream_projection_lag_seconds > 600
+        for: 2m
+        labels:
+          severity: critical
+          component: eventstream
+        annotations:
+          summary: "Critical projection lag"
+          description: "Projection {{ $labels.projector }} is {{ $value }}s behind (>10 minutes)"
+
+      # Projection Errors
+      - alert: ProjectionErrors
+        expr: rate(eventstream_projection_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: eventstream
+        annotations:
+          summary: "Projection errors detected"
+          description: "Projection {{ $labels.projector }} has {{ $value }} errors/sec (type: {{ $labels.error_type }})"
+
+      # High Lock Contention
+      - alert: HighLockContention
+        expr: |
+          (
+            rate(eventstream_lock_attempts_total{result="failed"}[5m]) 
+            / 
+            rate(eventstream_lock_attempts_total[5m])
+          ) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          component: eventstream
+        annotations:
+          summary: "High lock contention detected"
+          description: "Lock contention rate for {{ $labels.projector }} is {{ $value | humanizePercentage }}"
+
+      # Critical Lock Contention
+      - alert: CriticalLockContention
+        expr: |
+          (
+            rate(eventstream_lock_attempts_total{result="failed"}[5m]) 
+            / 
+            rate(eventstream_lock_attempts_total[5m])
+          ) > 0.5
+        for: 2m
+        labels:
+          severity: critical
+          component: eventstream
+        annotations:
+          summary: "Critical lock contention"
+          description: "Lock contention rate for {{ $labels.projector }} is {{ $value | humanizePercentage }} (>50%)"
+
+      # No Events Being Processed
+      - alert: ProjectionStalled
+        expr: rate(eventstream_projection_events_processed_total[10m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+          component: eventstream
+        annotations:
+          summary: "Projection appears stalled"
+          description: "No events processed by {{ $labels.projector }} in the last 10 minutes"
+
+      # High Projection Processing Duration
+      - alert: SlowProjectionProcessing
+        expr: histogram_quantile(0.95, rate(eventstream_projection_processing_duration_milliseconds_bucket[5m])) > 5000
+        for: 5m
+        labels:
+          severity: warning
+          component: eventstream
+        annotations:
+          summary: "Slow projection processing"
+          description: "Projection {{ $labels.projector }} p95 duration is {{ $value }}ms"

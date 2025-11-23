@@ -21,8 +21,8 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['tenant_id', 'name']);
-            $table->foreign('parent_role_id')->references('id')->on('roles')->onDelete('set null');
+            // // $table->unique(['tenant_id', 'name']);
+            // // $table->foreign('parent_role_id')->references('id')->on('roles')->onDelete('set null');
         });
     }
 

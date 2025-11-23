@@ -24,13 +24,13 @@ return new class extends Migration
             $table->timestamp('created_at');
 
             // Foreign key to statutory_reports
-            $table->foreign('report_id')->references('id')->on('statutory_reports')->onDelete('cascade');
+            // $table->foreign('report_id')->references('id')->on('statutory_reports')->onDelete('cascade');
 
             // Unique version per report
-            $table->unique(['report_id', 'version']);
+            // $table->unique(['report_id', 'version']);
 
             // Index for queries
-            $table->index(['report_id', 'generated_at']);
+            // $table->index(['report_id', 'generated_at']);
         });
     }
 

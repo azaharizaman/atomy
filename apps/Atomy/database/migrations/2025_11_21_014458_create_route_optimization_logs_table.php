@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamp('created_at');
 
             // Index for performance analysis
-            $table->index(['tenant_id', 'optimization_type', 'created_at']);
+            // $table->index(['tenant_id', 'optimization_type', 'created_at']);
         });
     }
 

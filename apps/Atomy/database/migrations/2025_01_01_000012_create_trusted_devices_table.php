@@ -17,8 +17,8 @@ return new class extends Migration
             $table->timestamp('trusted_at')->useCurrent();
             $table->timestamp('expires_at')->nullable();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->index(['user_id', 'device_fingerprint']);
+            // // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // // $table->index(['user_id', 'device_fingerprint']);
         });
     }
 

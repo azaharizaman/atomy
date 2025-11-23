@@ -14,8 +14,8 @@ return new class extends Migration
             $table->string('password_hash');
             $table->timestamp('created_at')->useCurrent();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->index(['user_id', 'created_at']);
+            // // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // // $table->index(['user_id', 'created_at']);
         });
     }
 

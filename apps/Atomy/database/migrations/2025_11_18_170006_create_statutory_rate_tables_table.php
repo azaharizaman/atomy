@@ -23,10 +23,10 @@ return new class extends Migration
             $table->timestamps();
 
             // Ensure no overlapping date ranges for same country/deduction
-            $table->index(['country_code', 'deduction_type', 'effective_from', 'effective_to']);
+            // $table->index(['country_code', 'deduction_type', 'effective_from', 'effective_to']);
 
             // Index for current rate lookups
-            $table->index(['country_code', 'deduction_type', 'effective_to']);
+            // $table->index(['country_code', 'deduction_type', 'effective_to']);
         });
     }
 

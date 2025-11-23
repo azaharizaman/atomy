@@ -22,8 +22,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             
-            $table->index(['type', 'locale']);
-            $table->index('is_active');
+            // // $table->index(['type', 'locale']);
+            // // $table->index('is_active');
         });
 
         Schema::create('notification_history', function (Blueprint $table) {
@@ -46,10 +46,10 @@ return new class extends Migration
             $table->timestamp('failed_at')->nullable();
             $table->timestamps();
             
-            $table->index(['recipient_id', 'created_at']);
-            $table->index(['notification_id', 'channel']);
-            $table->index(['status', 'scheduled_at']);
-            $table->index('created_at');
+            // // $table->index(['recipient_id', 'created_at']);
+            // // $table->index(['notification_id', 'channel']);
+            // // $table->index(['status', 'scheduled_at']);
+            // // $table->index('created_at');
         });
 
         Schema::create('notification_preferences', function (Blueprint $table) {
@@ -61,7 +61,7 @@ return new class extends Migration
             $table->boolean('global_opt_out')->default(false);
             $table->timestamps();
             
-            $table->index('recipient_id');
+            // // $table->index('recipient_id');
         });
 
         Schema::create('notification_queue', function (Blueprint $table) {
@@ -77,8 +77,8 @@ return new class extends Migration
             $table->integer('attempts')->default(0);
             $table->timestamps();
             
-            $table->index(['status', 'scheduled_at', 'priority']);
-            $table->index('notification_id');
+            // // $table->index(['status', 'scheduled_at', 'priority']);
+            // // $table->index('notification_id');
         });
     }
 

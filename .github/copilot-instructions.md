@@ -2,6 +2,24 @@
 
 # GitHub Copilot Instructions for Nexus Monorepo
 
+## 🚨 MANDATORY PRE-IMPLEMENTATION CHECKLIST
+
+**BEFORE implementing ANY feature in `apps/Atomy/`, you MUST:**
+
+1. **Consult [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md)** - This document lists all 40+ available first-party packages and their capabilities
+2. **Use existing packages FIRST** - If a Nexus package provides the functionality, you MUST use it via dependency injection
+3. **Never reimplement package functionality** - Creating custom implementations when packages exist is an architectural violation
+
+**Example Violations to Avoid:**
+- ❌ Creating `PrometheusMetricsCollector` when `Nexus\Monitoring` exists
+- ❌ Building custom audit logger when `Nexus\AuditLogger` exists  
+- ❌ Implementing file storage when `Nexus\Storage` exists
+- ❌ Creating notification system when `Nexus\Notifier` exists
+
+**See [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md) for the complete "I Need To..." decision matrix.**
+
+---
+
 ## Project Overview
 
 You are working on **Nexus**, a modular PHP monorepo for an ERP system built on Laravel 12. This project follows a strict architectural pattern: **"Logic in Packages, Implementation in Applications."**
@@ -552,6 +570,8 @@ Generate:
 - **Exceptions**: Descriptive with `Exception` suffix (e.g., `TenantNotFoundException`)
 
 ## Available Packages
+
+**📚 COMPREHENSIVE GUIDE:** See [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md) for detailed capabilities, interfaces, and usage examples for ALL packages.
 
 The following packages are implemented or under development in this monorepo:
 
@@ -1188,6 +1208,153 @@ if (config('features.malaysia_payroll')) {
 }
 ```
 
+### 4. Observability Integration Pattern (Monitoring)
+
+**CRITICAL:** The `Nexus\Monitoring` package provides universal observability contracts. **NEVER** create custom metrics collectors or monitoring interfaces.
+
+#### The Correct Pattern
+
+**Package Layer (Framework-Agnostic):**
+```php
+namespace Nexus\EventStream\Services;
+
+use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
+
+final readonly class EventStreamManager
+{
+    public function __construct(
+        private EventStoreInterface $eventStore,
+        private ?TelemetryTrackerInterface $telemetry = null  // Optional dependency
+    ) {}
+    
+    public function appendEvent(string $stream, EventInterface $event): void
+    {
+        $startTime = microtime(true);
+        
+        $this->eventStore->append($stream, $event);
+        
+        // Track metrics using universal interface
+        $this->telemetry?->timing(
+            'event_append_duration_ms',
+            (microtime(true) - $startTime) * 1000,
+            ['stream_name' => $stream]
+        );
+        
+        $this->telemetry?->increment(
+            'events_appended_total',
+            1,
+            ['stream_name' => $stream]
+        );
+    }
+}
+```
+
+**Application Layer (Vendor-Specific Adapter):**
+```php
+namespace App\Services\Monitoring;
+
+use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
+use Prometheus\CollectorRegistry;
+
+final readonly class PrometheusTelemetryAdapter implements TelemetryTrackerInterface
+{
+    public function __construct(
+        private CollectorRegistry $registry
+    ) {}
+    
+    public function timing(string $key, float $ms, array $tags = [], ...): void
+    {
+        $histogram = $this->registry->getOrRegisterHistogram(
+            'eventstream',
+            $key,
+            'Timing metric',
+            array_keys($tags)
+        );
+        $histogram->observe($ms, array_values($tags));
+    }
+    
+    public function increment(string $key, float $value = 1.0, array $tags = [], ...): void
+    {
+        $counter = $this->registry->getOrRegisterCounter(
+            'eventstream',
+            $key,
+            'Counter metric',
+            array_keys($tags)
+        );
+        $counter->incBy($value, array_values($tags));
+    }
+    
+    // ... implement other methods
+}
+```
+
+**Service Provider Binding:**
+```php
+namespace App\Providers;
+
+class MonitoringServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        // Bind universal interface to vendor-specific implementation
+        $this->app->singleton(
+            TelemetryTrackerInterface::class,
+            PrometheusTelemetryAdapter::class
+        );
+    }
+}
+```
+
+#### Key Benefits
+
+1. **Vendor Independence**: Switching from Prometheus to DataDog/New Relic only requires changing the adapter
+2. **Package Purity**: Domain packages have zero knowledge of monitoring vendor
+3. **Testability**: Inject null or mock `TelemetryTrackerInterface` in tests
+4. **Consistency**: All packages use the same observability interface
+
+#### Common Violations to Avoid
+
+❌ **WRONG:** Creating package-specific metrics interfaces
+```php
+namespace Nexus\EventStream\Contracts;
+
+interface MetricsCollectorInterface  // ❌ Duplicates Nexus\Monitoring
+{
+    public function recordEventAppended(...);
+}
+```
+
+❌ **WRONG:** Coupling package to specific monitoring vendor
+```php
+use Prometheus\Counter;  // ❌ Vendor-specific in package layer
+
+class EventStreamManager
+{
+    public function __construct(private Counter $counter) {}
+}
+```
+
+✅ **CORRECT:** Use universal interface with optional injection
+```php
+use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
+
+class EventStreamManager
+{
+    public function __construct(
+        private ?TelemetryTrackerInterface $telemetry = null
+    ) {}
+}
+```
+
+#### Observability Best Practices
+
+1. **Make telemetry optional**: Use `?TelemetryTrackerInterface $telemetry = null` for optional dependency
+2. **Use null-safe operator**: `$this->telemetry?->increment(...)` prevents errors when monitoring disabled
+3. **Tag everything**: Always include relevant tags (tenant_id, stream_name, operation_type)
+4. **Measure durations**: Track timing for performance-sensitive operations
+5. **Count events**: Increment counters for business metrics (events_appended, errors_total)
+6. **Set gauges**: Record point-in-time values (projection_lag_seconds, queue_size)
+
 -----
 
 ## 🔍 Code Quality Checklist
@@ -1195,6 +1362,7 @@ if (config('features.malaysia_payroll')) {
 Before committing code to the repository, verify:
 
 ### For Packages (`packages/*/src/`)
+- [ ] **Consulted [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md)** to avoid reimplementing existing functionality
 - [ ] No Laravel facades used (`Log::`, `Cache::`, `DB::`, etc.)
 - [ ] No global helpers used (`now()`, `config()`, `app()`, `dd()`, etc.)
 - [ ] All dependencies injected via constructor as **interfaces**
@@ -1204,6 +1372,7 @@ Before committing code to the repository, verify:
 - [ ] All public methods have complete docblocks
 - [ ] Custom exceptions thrown for domain errors
 - [ ] No direct database access (use Repository interfaces)
+- [ ] If tracking metrics, uses `TelemetryTrackerInterface` from `Nexus\Monitoring` (never custom metrics interface)
 
 ### For Application Layer (`apps/Atomy/`)
 - [ ] All package interfaces implemented with concrete classes

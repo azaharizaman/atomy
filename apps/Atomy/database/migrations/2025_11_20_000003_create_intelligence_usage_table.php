@@ -20,8 +20,8 @@ return new class extends Migration
             $table->timestamp('created_at');
 
             // Composite index for efficient aggregation queries
-            $table->index(['tenant_id', 'period_month', 'model_name', 'domain_context'], 'usage_aggregate_idx');
-            $table->index(['period_month', 'model_name']);
+            // $table->index(['tenant_id', 'period_month', 'model_name', 'domain_context'], 'usage_aggregate_idx');
+            // $table->index(['period_month', 'model_name']);
         });
     }
 

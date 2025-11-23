@@ -1,0 +1,250 @@
+{
+  "dashboard": {
+    "title": "EventStream Monitoring",
+    "tags": ["eventstream", "cqrs", "event-sourcing"],
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Event Throughput (Events/sec)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(eventstream_events_appended_total[5m])",
+            "legendFormat": "Appended - {{stream_name}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(eventstream_events_read_total[5m])",
+            "legendFormat": "Read - {{stream_name}}",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Events/sec"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true, "alignAsTable": true, "values": true, "current": true}
+      },
+      {
+        "id": 2,
+        "title": "Event Append Duration (p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(eventstream_event_append_duration_milliseconds_bucket[5m]))",
+            "legendFormat": "p95 - {{stream_name}}",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(eventstream_event_append_duration_milliseconds_bucket[5m]))",
+            "legendFormat": "p99 - {{stream_name}}",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Duration"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [50], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "type": "query"
+            }
+          ],
+          "name": "High event append latency"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Projection Lag (seconds)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "eventstream_projection_lag_seconds",
+            "legendFormat": "{{projector}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Lag"},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 60, "colorMode": "critical", "op": "gt"},
+          {"value": 30, "colorMode": "warning", "op": "gt"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [300], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "type": "query"
+            }
+          ],
+          "name": "Projection lag too high (>5 minutes)"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Projection Processing Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(eventstream_projection_events_processed_total[5m])",
+            "legendFormat": "{{projector}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Events/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Projection Errors",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(eventstream_projection_errors_total[5m])",
+            "legendFormat": "{{projector}} - {{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [1], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "type": "query"
+            }
+          ],
+          "name": "Projection errors detected"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Lock Contention Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(eventstream_lock_attempts_total{result=\"failed\"}[5m]) / rate(eventstream_lock_attempts_total[5m])",
+            "legendFormat": "{{projector}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "Contention Rate", "max": 1},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 0.5, "colorMode": "critical", "op": "gt"},
+          {"value": 0.2, "colorMode": "warning", "op": "gt"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0.3], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "type": "query"
+            }
+          ],
+          "name": "High lock contention (>30%)"
+        }
+      },
+      {
+        "id": 7,
+        "title": "Projection Processing Duration (p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(eventstream_projection_processing_duration_milliseconds_bucket[5m]))",
+            "legendFormat": "p95 - {{projector}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Duration"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Total Events by Stream",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "eventstream_events_appended_total",
+            "legendFormat": "{{stream_name}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "orientation": "auto"
+        }
+      },
+      {
+        "id": 9,
+        "title": "Snapshots Created",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 24},
+        "targets": [
+          {
+            "expr": "rate(eventstream_snapshots_created_total[5m])",
+            "legendFormat": "{{aggregate_type}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "datasource",
+          "type": "datasource",
+          "query": "prometheus",
+          "current": {"value": "Prometheus", "text": "Prometheus"}
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Prometheus",
+          "enable": true,
+          "iconColor": "green"
+        }
+      ]
+    },
+    "time": {"from": "now-6h", "to": "now"},
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h"]
+    }
+  }
+}

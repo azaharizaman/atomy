@@ -19,8 +19,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             
-            $table->unique(['tenant_id', 'lot_number']);
-            $table->index(['product_id', 'expiry_date']); // For FEFO queries
+            // $table->unique(['tenant_id', 'lot_number']);
+            // $table->index(['product_id', 'expiry_date']); // For FEFO queries
         });
         
         Schema::create('lot_stock_levels', function (Blueprint $table) {
@@ -30,9 +30,9 @@ return new class extends Migration
             $table->decimal('quantity', 15, 4)->default(0);
             $table->timestamps();
             
-            $table->foreign('lot_id')->references('id')->on('lots')->onDelete('cascade');
-            $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
-            $table->unique(['lot_id', 'warehouse_id']);
+            // $table->foreign('lot_id')->references('id')->on('lots')->onDelete('cascade');
+            // $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
+            // $table->unique(['lot_id', 'warehouse_id']);
         });
     }
 

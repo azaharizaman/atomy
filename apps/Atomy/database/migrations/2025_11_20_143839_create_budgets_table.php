@@ -59,15 +59,15 @@ return new class extends Migration
             $table->softDeletes();
             
             // Indexes for performance
-            $table->index(['period_id', 'status']);
-            $table->index(['department_id', 'period_id']);
-            $table->index(['budget_type', 'status']);
+            // $table->index(['period_id', 'status']);
+            // $table->index(['department_id', 'period_id']);
+            // $table->index(['budget_type', 'status']);
             
             // Foreign keys (would be defined when those tables exist)
-            // $table->foreign('period_id')->references('id')->on('periods')->onDelete('restrict');
-            // $table->foreign('department_id')->references('id')->on('departments')->onDelete('restrict');
-            // $table->foreign('account_id')->references('id')->on('accounts')->onDelete('set null');
-            // $table->foreign('parent_budget_id')->references('id')->on('budgets')->onDelete('cascade');
+            // // $table->foreign('period_id')->references('id')->on('periods')->onDelete('restrict');
+            // // $table->foreign('department_id')->references('id')->on('departments')->onDelete('restrict');
+            // // $table->foreign('account_id')->references('id')->on('accounts')->onDelete('set null');
+            // // $table->foreign('parent_budget_id')->references('id')->on('budgets')->onDelete('cascade');
         });
     }
 

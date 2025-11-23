@@ -26,8 +26,8 @@ return new class extends Migration
             $table->timestamps();
 
             // Index for efficient queries
-            $table->index(['tenant_id', 'report_type', 'status']);
-            $table->index(['tenant_id', 'start_date', 'end_date']);
+            // $table->index(['tenant_id', 'report_type', 'status']);
+            // $table->index(['tenant_id', 'start_date', 'end_date']);
         });
     }
 

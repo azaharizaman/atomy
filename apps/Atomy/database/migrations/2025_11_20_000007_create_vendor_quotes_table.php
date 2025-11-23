@@ -12,7 +12,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->string('tenant_id')->index();
             $table->string('rfq_number')->index();
-            $table->foreignUlid('requisition_id')->constrained('requisitions')->onDelete('cascade');
+            // $table->foreignUlid('requisition_id')->constrained('requisitions')->onDelete('cascade');
             $table->string('vendor_id')->index();
             $table->string('quote_reference');
             $table->date('quoted_date');
@@ -29,9 +29,9 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['tenant_id', 'status']);
-            $table->index(['tenant_id', 'vendor_id']);
-            $table->unique(['tenant_id', 'rfq_number', 'vendor_id', 'quote_reference']);
+            // $table->index(['tenant_id', 'status']);
+            // $table->index(['tenant_id', 'vendor_id']);
+            // $table->unique(['tenant_id', 'rfq_number', 'vendor_id', 'quote_reference']);
         });
     }
 

@@ -20,14 +20,14 @@ return new class extends Migration
             $table->timestamps();
             
             // Foreign key
-            $table->foreign('party_id')
-                  ->references('id')
-                  ->on('parties')
-                  ->onDelete('cascade');
+            // $table->foreign('party_id')
+                  // ->references('id')
+                  // ->on('parties')
+                  // ->onDelete('cascade');
             
             // Indexes
-            $table->index(['party_id', 'address_type']);
-            $table->index(['party_id', 'is_primary']);
+            // $table->index(['party_id', 'address_type']);
+            // $table->index(['party_id', 'is_primary']);
         });
     }
 

@@ -26,8 +26,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->timestamps();
 
-            $table->unique(['tenant_id', 'vendor_id', 'bill_number']);
-            $table->foreign('vendor_id')->references('id')->on('vendors')->onDelete('restrict');
+            // // $table->unique(['tenant_id', 'vendor_id', 'bill_number']);
+            // // $table->foreign('vendor_id')->references('id')->on('vendors')->onDelete('restrict');
         });
     }
 

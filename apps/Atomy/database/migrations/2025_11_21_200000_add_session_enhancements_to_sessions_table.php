@@ -27,12 +27,12 @@ return new class extends Migration
             $table->timestamp('last_activity_at')->nullable()->after('geographic_location');
             
             // Add indexes for performance
-            $table->index('tenant_id');
-            $table->index('device_fingerprint');
-            $table->index('last_activity_at');
+            // $table->index('tenant_id');
+            // $table->index('device_fingerprint');
+            // $table->index('last_activity_at');
             
             // Composite index for user + device queries
-            $table->index(['user_id', 'device_fingerprint']);
+            // $table->index(['user_id', 'device_fingerprint']);
         });
     }
 

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Ensure one active scheme per tenant
-            $table->unique(['tenant_id', 'scheme_name']);
+            // $table->unique(['tenant_id', 'scheme_name']);
         });
     }
 

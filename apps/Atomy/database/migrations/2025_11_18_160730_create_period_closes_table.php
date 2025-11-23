@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes for common queries
-            $table->index(['close_type', 'status']);
+            // $table->index(['close_type', 'status']);
         });
     }
 

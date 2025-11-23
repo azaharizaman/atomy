@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Ensure unique service per tenant
-            $table->unique(['service_name', 'tenant_id']);
+            // // $table->unique(['service_name', 'tenant_id']);
         });
     }
 

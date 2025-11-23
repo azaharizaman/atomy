@@ -27,10 +27,10 @@ return new class extends Migration
             $table->timestamps();
 
             // Foreign key to compliance schemes
-            $table->foreign('scheme_id')->references('id')->on('compliance_schemes')->onDelete('cascade');
+            // $table->foreign('scheme_id')->references('id')->on('compliance_schemes')->onDelete('cascade');
 
             // Index for efficient queries
-            $table->index(['tenant_id', 'scheme_id', 'status']);
+            // $table->index(['tenant_id', 'scheme_id', 'status']);
         });
     }
 

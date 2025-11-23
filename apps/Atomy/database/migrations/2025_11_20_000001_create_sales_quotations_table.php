@@ -29,8 +29,8 @@ return new class extends Migration
             $table->string('converted_to_order_id', 26)->nullable()->index();
             $table->timestamps();
 
-            $table->unique(['tenant_id', 'quote_number']);
-            $table->index(['tenant_id', 'status', 'quote_date']);
+            // $table->unique(['tenant_id', 'quote_number']);
+            // $table->index(['tenant_id', 'status', 'quote_date']);
         });
 
         Schema::create('sales_quotation_lines', function (Blueprint $table) {
@@ -48,10 +48,10 @@ return new class extends Migration
             $table->text('line_notes')->nullable();
             $table->integer('line_sequence')->default(0);
 
-            $table->foreign('quotation_id')
-                ->references('id')
-                ->on('sales_quotations')
-                ->onDelete('cascade');
+            // $table->foreign('quotation_id')
+                // ->references('id')
+                // ->on('sales_quotations')
+                // ->onDelete('cascade');
         });
     }
 

@@ -13,7 +13,7 @@ return new class extends Migration
             Schema::table('goods_receipt_note_lines', function (Blueprint $table) {
                 if (!Schema::hasColumn('goods_receipt_note_lines', 'warehouse_id')) {
                     $table->ulid('warehouse_id')->nullable()->after('unit');
-                    $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('set null');
+                    // $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('set null');
                 }
             });
         }

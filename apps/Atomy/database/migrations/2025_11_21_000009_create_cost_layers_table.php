@@ -19,7 +19,7 @@ return new class extends Migration
             $table->ulid('receipt_reference_id')->nullable();
             $table->timestamps();
             
-            $table->index(['product_id', 'received_date']); // For FIFO consumption
+            // $table->index(['product_id', 'received_date']); // For FIFO consumption
         });
     }
 

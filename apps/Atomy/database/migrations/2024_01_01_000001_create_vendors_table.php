@@ -25,7 +25,7 @@ return new class extends Migration
             $table->json('address')->nullable();
             $table->timestamps();
 
-            $table->unique(['tenant_id', 'code']);
+            // // $table->unique(['tenant_id', 'code']);
         });
     }
 

@@ -18,10 +18,10 @@ return new class extends Migration
             $table->string('failure_reason')->nullable();
             $table->timestamp('attempted_at')->useCurrent();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->index(['user_id', 'attempted_at']);
-            $table->index(['user_id', 'successful']);
-            $table->index('email');
+            // // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // // $table->index(['user_id', 'attempted_at']);
+            // // $table->index(['user_id', 'successful']);
+            // // $table->index('email');
         });
     }
 

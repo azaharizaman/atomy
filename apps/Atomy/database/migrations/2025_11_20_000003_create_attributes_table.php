@@ -18,7 +18,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             
             // Tenant scoping
-            $table->foreignUlid('tenant_id')->constrained('tenants')->cascadeOnDelete();
+            // $table->foreignUlid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             
             // Attribute identification
             $table->string('code', 100)->comment('Unique code within tenant (e.g., COLOR, SIZE)');
@@ -39,8 +39,8 @@ return new class extends Migration
             $table->softDeletes();
             
             // Indexes
-            $table->unique(['tenant_id', 'code'], 'attributes_tenant_code_unique');
-            $table->index(['tenant_id', 'is_active'], 'attributes_tenant_active_index');
+            // $table->unique(['tenant_id', 'code'], 'attributes_tenant_code_unique');
+            // $table->index(['tenant_id', 'is_active'], 'attributes_tenant_active_index');
         });
     }
 

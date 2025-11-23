@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('number')->unique();
             $table->string('vendor_id')->index();
             $table->string('creator_id')->index();
-            $table->foreignUlid('requisition_id')->nullable()->constrained('requisitions')->onDelete('set null');
+            // $table->foreignUlid('requisition_id')->nullable()->constrained('requisitions')->onDelete('set null');
             $table->enum('status', ['draft', 'pending_approval', 'approved', 'partially_received', 'fully_received', 'closed', 'cancelled'])->default('draft')->index();
             $table->enum('po_type', ['standard', 'blanket', 'release'])->default('standard')->index();
             $table->string('blanket_po_id')->nullable()->index();
@@ -32,9 +32,9 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['tenant_id', 'status']);
-            $table->index(['tenant_id', 'vendor_id']);
-            $table->index(['tenant_id', 'po_type']);
+            // $table->index(['tenant_id', 'status']);
+            // $table->index(['tenant_id', 'vendor_id']);
+            // $table->index(['tenant_id', 'po_type']);
         });
     }
 

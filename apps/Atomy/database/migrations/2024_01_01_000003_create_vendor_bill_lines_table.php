@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('po_line_reference', 100)->nullable()->index();
             $table->string('grn_line_reference', 100)->nullable()->index();
 
-            $table->unique(['bill_id', 'line_number']);
-            $table->foreign('bill_id')->references('id')->on('vendor_bills')->onDelete('cascade');
+            // // $table->unique(['bill_id', 'line_number']);
+            // // $table->foreign('bill_id')->references('id')->on('vendor_bills')->onDelete('cascade');
         });
     }
 

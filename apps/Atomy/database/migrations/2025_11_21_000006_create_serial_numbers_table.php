@@ -20,9 +20,9 @@ return new class extends Migration
             $table->timestamp('issued_at')->nullable();
             $table->timestamps();
             
-            $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('set null');
-            $table->foreign('lot_id')->references('id')->on('lots')->onDelete('set null');
-            $table->unique(['tenant_id', 'serial_number']);
+            // $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('set null');
+            // $table->foreign('lot_id')->references('id')->on('lots')->onDelete('set null');
+            // $table->unique(['tenant_id', 'serial_number']);
         });
     }
 

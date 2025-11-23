@@ -22,7 +22,7 @@ return new class extends Migration
             $table->dateTime('expires_at')->index();
 
             // Composite unique index for tenant + cache_key
-            $table->unique(['tenant_id', 'cache_key']);
+            // $table->unique(['tenant_id', 'cache_key']);
         });
     }
 

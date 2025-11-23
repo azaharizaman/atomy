@@ -33,11 +33,11 @@ return new class extends Migration
             $table->softDeletes();
 
             // Indexes
-            $table->index(['tenant_id', 'owner_id']);
-            $table->index(['tenant_id', 'type']);
-            $table->index(['tenant_id', 'state']);
-            $table->index('created_at');
-            $table->index('purge_at');
+            // // $table->index(['tenant_id', 'owner_id']);
+            // // $table->index(['tenant_id', 'type']);
+            // // $table->index(['tenant_id', 'state']);
+            // // $table->index('created_at');
+            // // $table->index('purge_at');
         });
     }
 

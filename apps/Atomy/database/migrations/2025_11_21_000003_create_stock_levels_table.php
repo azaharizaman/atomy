@@ -21,8 +21,8 @@ return new class extends Migration
             $table->timestamp('last_movement_at')->nullable();
             $table->timestamps();
             
-            $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
-            $table->unique(['tenant_id', 'product_id', 'warehouse_id']);
+            // $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
+            // $table->unique(['tenant_id', 'product_id', 'warehouse_id']);
         });
     }
 

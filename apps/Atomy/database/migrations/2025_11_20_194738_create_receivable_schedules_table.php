@@ -25,8 +25,8 @@ return new class extends Migration
             $table->string('currency', 3)->default('MYR');
             $table->timestamps();
 
-            $table->foreign('invoice_id')->references('id')->on('customer_invoices')->onDelete('restrict');
-            $table->foreign('customer_id')->references('id')->on('parties')->onDelete('restrict');
+            // $table->foreign('invoice_id')->references('id')->on('customer_invoices')->onDelete('restrict');
+            // $table->foreign('customer_id')->references('id')->on('parties')->onDelete('restrict');
         });
     }
 

@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # Prometheus - Metrics Collection & Alerting
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: atomy-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Grafana - Visualization & Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: atomy-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana:/etc/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Redis - For Prometheus metrics storage (shared across workers)
+  redis-metrics:
+    image: redis:7-alpine
+    container_name: atomy-redis-metrics
+    ports:
+      - "63971:6379"
+    volumes:
+      - redis-metrics-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # PostgreSQL - Database for testing
+  postgres:
+    image: postgres:16-alpine
+    container_name: atomy-postgres
+    ports:
+      - "54320:5432"
+    environment:
+      - POSTGRES_DB=atomy_test
+      - POSTGRES_USER=atomy
+      - POSTGRES_PASSWORD=atomy_secret
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  redis-metrics-data:
+  postgres-data:

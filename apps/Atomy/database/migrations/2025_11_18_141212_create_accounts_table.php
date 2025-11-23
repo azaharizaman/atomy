@@ -25,16 +25,16 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->timestamps();
 
-            $table->index('code');
-            $table->index('type');
-            $table->index('parent_id');
-            $table->index('is_active');
-            $table->index(['type', 'is_active']);
+            // // $table->index('code');
+            // // $table->index('type');
+            // // $table->index('parent_id');
+            // // $table->index('is_active');
+            // // $table->index(['type', 'is_active']);
 
-            $table->foreign('parent_id')
-                ->references('id')
-                ->on('accounts')
-                ->onDelete('restrict');
+            // // $table->foreign('parent_id')
+                // // ->references('id')
+                // // ->on('accounts')
+                // // ->onDelete('restrict');
         });
     }
 

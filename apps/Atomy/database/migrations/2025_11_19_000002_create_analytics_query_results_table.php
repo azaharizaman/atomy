@@ -25,7 +25,7 @@ return new class extends Migration
             // Model association
             $table->string('model_type');
             $table->string('model_id');
-            $table->index(['model_type', 'model_id'], 'query_results_model_index');
+            // $table->index(['model_type', 'model_id'], 'query_results_model_index');
             
             // Execution metadata
             $table->string('executed_by')->nullable()->index();
@@ -46,8 +46,8 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes for performance queries
-            $table->index('created_at');
-            $table->index(['query_id', 'executed_at']);
+            // $table->index('created_at');
+            // $table->index(['query_id', 'executed_at']);
         });
     }
 

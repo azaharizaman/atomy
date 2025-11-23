@@ -31,12 +31,12 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes for performance
-            $table->index(['type', 'status'], 'idx_type_status');
-            $table->index(['type', 'start_date', 'end_date'], 'idx_type_date_range');
-            $table->index(['type', 'fiscal_year'], 'idx_type_fiscal_year');
+            // // $table->index(['type', 'status'], 'idx_type_status');
+            // // $table->index(['type', 'start_date', 'end_date'], 'idx_type_date_range');
+            // // $table->index(['type', 'fiscal_year'], 'idx_type_fiscal_year');
             
             // Unique constraint: No overlapping periods of the same type
-            $table->unique(['type', 'start_date', 'end_date'], 'uq_type_date_range');
+            // // $table->unique(['type', 'start_date', 'end_date'], 'uq_type_date_range');
         });
     }
 

@@ -23,8 +23,8 @@ return new class extends Migration
             $table->string('currency', 3)->default('MYR');
             $table->timestamps();
 
-            $table->foreign('bill_id')->references('id')->on('vendor_bills')->onDelete('restrict');
-            $table->foreign('vendor_id')->references('id')->on('vendors')->onDelete('restrict');
+            // // $table->foreign('bill_id')->references('id')->on('vendor_bills')->onDelete('restrict');
+            // // $table->foreign('vendor_id')->references('id')->on('vendors')->onDelete('restrict');
         });
     }
 

@@ -34,7 +34,7 @@ return new class extends Migration
             
             // Enterprise features
             $table->ulid('parent_id')->nullable()->comment('Parent tenant ID for subsidiaries');
-            $table->foreign('parent_id')->references('id')->on('tenants')->onDelete('set null');
+            // // $table->foreign('parent_id')->references('id')->on('tenants')->onDelete('set null');
             $table->bigInteger('storage_quota')->nullable()->comment('Storage limit in bytes (null = unlimited)');
             $table->bigInteger('storage_used')->default(0)->comment('Current storage usage in bytes');
             $table->integer('max_users')->nullable()->comment('Maximum users allowed (null = unlimited)');
@@ -50,17 +50,17 @@ return new class extends Migration
             $table->softDeletes()->comment('Soft delete timestamp for archival');
             
             // Indexes
-            $table->index('status');
-            $table->index('parent_id');
-            $table->index('trial_ends_at');
-            $table->index(['status', 'created_at']);
+            // // $table->index('status');
+            // // $table->index('parent_id');
+            // // $table->index('trial_ends_at');
+            // // $table->index(['status', 'created_at']);
         });
 
         // Impersonation log table
         Schema::create('tenant_impersonations', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->ulid('tenant_id');
-            $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
+            // // $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
             $table->string('original_user_id')->comment('User who initiated impersonation');
             $table->text('reason')->nullable()->comment('Reason for impersonation');
             $table->timestamp('started_at');
@@ -69,9 +69,9 @@ return new class extends Migration
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             
-            $table->index('tenant_id');
-            $table->index('original_user_id');
-            $table->index('started_at');
+            // // $table->index('tenant_id');
+            // // $table->index('original_user_id');
+            // // $table->index('started_at');
         });
     }
 

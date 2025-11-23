@@ -25,7 +25,7 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->foreign('parent_company_id')->references('id')->on('companies')->onDelete('set null');
+            // // $table->foreign('parent_company_id')->references('id')->on('companies')->onDelete('set null');
         });
 
         // Offices table
@@ -53,9 +53,9 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->unique(['company_id', 'code']);
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
-            $table->foreign('parent_office_id')->references('id')->on('offices')->onDelete('set null');
+            // // $table->unique(['company_id', 'code']);
+            // // $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            // // $table->foreign('parent_office_id')->references('id')->on('offices')->onDelete('set null');
         });
 
         // Departments table
@@ -74,9 +74,9 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->unique(['company_id', 'code', 'parent_department_id']);
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
-            $table->foreign('parent_department_id')->references('id')->on('departments')->onDelete('set null');
+            // // $table->unique(['company_id', 'code', 'parent_department_id']);
+            // // $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            // // $table->foreign('parent_department_id')->references('id')->on('departments')->onDelete('set null');
         });
 
         // Staff table
@@ -105,7 +105,7 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->index(['email', 'status']);
+            // // $table->index(['email', 'status']);
         });
 
         // Staff department assignments table
@@ -120,8 +120,8 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
-            $table->foreign('department_id')->references('id')->on('departments')->onDelete('cascade');
+            // // $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
+            // // $table->foreign('department_id')->references('id')->on('departments')->onDelete('cascade');
         });
 
         // Staff office assignments table
@@ -134,8 +134,8 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
-            $table->foreign('office_id')->references('id')->on('offices')->onDelete('cascade');
+            // // $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
+            // // $table->foreign('office_id')->references('id')->on('offices')->onDelete('cascade');
         });
 
         // Staff supervisor relationships table
@@ -150,8 +150,8 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
-            $table->foreign('supervisor_id')->references('id')->on('staff')->onDelete('cascade');
+            // // $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
+            // // $table->foreign('supervisor_id')->references('id')->on('staff')->onDelete('cascade');
         });
 
         // Backoffice units table
@@ -171,10 +171,10 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->unique(['company_id', 'code']);
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
-            $table->foreign('leader_staff_id')->references('id')->on('staff')->onDelete('set null');
-            $table->foreign('deputy_leader_staff_id')->references('id')->on('staff')->onDelete('set null');
+            // // $table->unique(['company_id', 'code']);
+            // // $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            // // $table->foreign('leader_staff_id')->references('id')->on('staff')->onDelete('set null');
+            // // $table->foreign('deputy_leader_staff_id')->references('id')->on('staff')->onDelete('set null');
         });
 
         // Unit members table
@@ -188,9 +188,9 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->unique(['unit_id', 'staff_id']);
-            $table->foreign('unit_id')->references('id')->on('backoffice_units')->onDelete('cascade');
-            $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
+            // // $table->unique(['unit_id', 'staff_id']);
+            // // $table->foreign('unit_id')->references('id')->on('backoffice_units')->onDelete('cascade');
+            // // $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
         });
 
         // Staff transfers table
@@ -216,16 +216,16 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
-            $table->foreign('from_department_id')->references('id')->on('departments')->onDelete('set null');
-            $table->foreign('to_department_id')->references('id')->on('departments')->onDelete('set null');
-            $table->foreign('from_office_id')->references('id')->on('offices')->onDelete('set null');
-            $table->foreign('to_office_id')->references('id')->on('offices')->onDelete('set null');
+            // // $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
+            // // $table->foreign('from_department_id')->references('id')->on('departments')->onDelete('set null');
+            // // $table->foreign('to_department_id')->references('id')->on('departments')->onDelete('set null');
+            // // $table->foreign('from_office_id')->references('id')->on('offices')->onDelete('set null');
+            // // $table->foreign('to_office_id')->references('id')->on('offices')->onDelete('set null');
         });
 
         // Add foreign key for department manager after staff table is created
         Schema::table('departments', function (Blueprint $table) {
-            $table->foreign('manager_staff_id')->references('id')->on('staff')->onDelete('set null');
+            // // $table->foreign('manager_staff_id')->references('id')->on('staff')->onDelete('set null');
         });
     }
 

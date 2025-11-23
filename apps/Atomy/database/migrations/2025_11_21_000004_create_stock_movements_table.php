@@ -23,8 +23,8 @@ return new class extends Migration
             $table->ulid('created_by')->nullable();
             $table->timestamps();
             
-            $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
-            $table->index(['product_id', 'created_at']);
+            // $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
+            // $table->index(['product_id', 'created_at']);
         });
     }
 

@@ -48,10 +48,10 @@ return new class extends Migration
             $table->timestamps(); // Laravel created_at (immutable after creation)
             
             // Indexes for performance
-            $table->unique(['aggregate_id', 'version']); // Optimistic concurrency
-            $table->index(['event_type', 'occurred_at']); // Query by event type
-            $table->index(['tenant_id', 'aggregate_id']); // Tenant isolation
-            $table->index('occurred_at'); // Temporal queries
+            // $table->unique(['aggregate_id', 'version']); // Optimistic concurrency
+            // $table->index(['event_type', 'occurred_at']); // Query by event type
+            // $table->index(['tenant_id', 'aggregate_id']); // Tenant isolation
+            // $table->index('occurred_at'); // Temporal queries
         });
     }
 

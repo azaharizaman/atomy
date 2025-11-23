@@ -42,8 +42,8 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
-            $table->index('status');
-            $table->index('last_processed_at'); // For lag monitoring
+            // $table->index('status');
+            // $table->index('last_processed_at'); // For lag monitoring
         });
     }
 

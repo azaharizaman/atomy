@@ -44,12 +44,12 @@ return new class extends Migration
             $table->timestamps();
             
             // Indexes
-            $table->index(['budget_id', 'transaction_type']);
-            $table->index(['source_document_id', 'transaction_type']);
-            $table->index('created_at');
+            // $table->index(['budget_id', 'transaction_type']);
+            // $table->index(['source_document_id', 'transaction_type']);
+            // $table->index('created_at');
             
             // Foreign keys
-            // $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
+            // // $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
         });
     }
 

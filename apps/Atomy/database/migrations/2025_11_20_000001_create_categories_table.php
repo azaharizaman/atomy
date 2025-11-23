@@ -17,7 +17,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             
             // Tenant scoping
-            $table->foreignUlid('tenant_id')->constrained('tenants')->cascadeOnDelete();
+            // $table->foreignUlid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             
             // Category identification
             $table->string('code', 100)->comment('Unique code within tenant');
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             
             // Hierarchical structure (adjacency list)
-            $table->foreignUlid('parent_id')->nullable()->constrained('categories')->nullOnDelete();
+            // $table->foreignUlid('parent_id')->nullable()->constrained('categories')->nullOnDelete();
             
             // Display ordering
             $table->integer('sort_order')->default(0);
@@ -38,11 +38,11 @@ return new class extends Migration
             $table->softDeletes();
             
             // Indexes
-            $table->unique(['tenant_id', 'code'], 'categories_tenant_code_unique');
-            $table->index(['tenant_id', 'parent_id'], 'categories_hierarchy_index');
-            $table->index(['tenant_id', 'is_active'], 'categories_tenant_active_index');
-            $table->index('parent_id');
-            $table->index('sort_order');
+            // $table->unique(['tenant_id', 'code'], 'categories_tenant_code_unique');
+            // $table->index(['tenant_id', 'parent_id'], 'categories_hierarchy_index');
+            // $table->index(['tenant_id', 'is_active'], 'categories_tenant_active_index');
+            // $table->index('parent_id');
+            // $table->index('sort_order');
         });
     }
 

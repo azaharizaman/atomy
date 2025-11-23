@@ -18,10 +18,10 @@ return new class extends Migration
             $table->ulid('id')->primary();
             
             // Tenant scoping
-            $table->foreignUlid('tenant_id')->constrained('tenants')->cascadeOnDelete();
+            // $table->foreignUlid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             
             // Template relationship (nullable for standalone products)
-            $table->foreignUlid('template_id')->nullable()->constrained('product_templates')->cascadeOnDelete();
+            // $table->foreignUlid('template_id')->nullable()->constrained('product_templates')->cascadeOnDelete();
             
             // Unique identifiers
             $table->string('sku', 100)->comment('Stock Keeping Unit - unique within tenant');
@@ -44,7 +44,7 @@ return new class extends Migration
             
             // Classification
             $table->string('category_code', 100)->nullable();
-            $table->foreign('category_code')->references('code')->on('categories')->nullOnDelete();
+            // $table->foreign('category_code')->references('code')->on('categories')->nullOnDelete();
             
             // Default GL account codes (strings, resolved at application layer)
             $table->string('default_revenue_account_code', 50)->nullable();
@@ -68,16 +68,16 @@ return new class extends Migration
             $table->softDeletes();
             
             // Indexes
-            $table->unique(['tenant_id', 'sku'], 'variants_tenant_sku_unique');
-            $table->unique(['tenant_id', 'barcode_value'], 'variants_tenant_barcode_unique');
-            $table->index(['tenant_id', 'template_id'], 'variants_template_index');
-            $table->index(['tenant_id', 'category_code'], 'variants_category_index');
-            $table->index(['tenant_id', 'type'], 'variants_type_index');
-            $table->index(['tenant_id', 'is_active'], 'variants_tenant_active_index');
-            $table->index(['tenant_id', 'is_saleable'], 'variants_saleable_index');
-            $table->index(['tenant_id', 'is_purchaseable'], 'variants_purchaseable_index');
-            $table->index('sku');
-            $table->index('barcode_value');
+            // $table->unique(['tenant_id', 'sku'], 'variants_tenant_sku_unique');
+            // $table->unique(['tenant_id', 'barcode_value'], 'variants_tenant_barcode_unique');
+            // $table->index(['tenant_id', 'template_id'], 'variants_template_index');
+            // $table->index(['tenant_id', 'category_code'], 'variants_category_index');
+            // $table->index(['tenant_id', 'type'], 'variants_type_index');
+            // $table->index(['tenant_id', 'is_active'], 'variants_tenant_active_index');
+            // $table->index(['tenant_id', 'is_saleable'], 'variants_saleable_index');
+            // $table->index(['tenant_id', 'is_purchaseable'], 'variants_purchaseable_index');
+            // $table->index('sku');
+            // $table->index('barcode_value');
         });
     }
 

@@ -23,14 +23,14 @@ return new class extends Migration
             $table->timestamps();
 
             // Foreign key
-            $table->foreign('parent_statement_id')
-                  ->references('id')
-                  ->on('financial_statements')
-                  ->onDelete('cascade');
+            // $table->foreign('parent_statement_id')
+                  // ->references('id')
+                  // ->on('financial_statements')
+                  // ->onDelete('cascade');
 
             // Composite indexes for intercompany queries
-            $table->index(['source_entity_id', 'target_entity_id']);
-            $table->index(['rule_type', 'source_entity_id']);
+            // $table->index(['source_entity_id', 'target_entity_id']);
+            // $table->index(['rule_type', 'source_entity_id']);
         });
     }
 

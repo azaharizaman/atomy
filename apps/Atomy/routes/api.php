@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\CreditLimitController;
 use App\Http\Controllers\Api\AgingController;
 use App\Http\Controllers\GeoController;
 use App\Http\Controllers\RoutingController;
+use App\Http\Controllers\PrometheusMetricsController;
 use App\Http\Controllers\Api\FieldService\WorkOrderController;
 use App\Http\Controllers\Api\FieldService\ServiceContractController;
 use App\Http\Controllers\Api\FieldService\TechnicianDispatchController;
@@ -181,3 +182,6 @@ Route::middleware('auth:sanctum')->prefix('field-service')->group(function () {
         Route::post('/sync/resolve-conflict', [MobileWorkOrderController::class, 'resolveConflict']);
     });
 });
+
+// Metrics endpoint for Prometheus scraping (no auth required for monitoring)
+Route::get('/metrics/prometheus', [PrometheusMetricsController::class, 'metrics']);

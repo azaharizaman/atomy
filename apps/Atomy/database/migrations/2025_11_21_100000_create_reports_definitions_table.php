@@ -28,10 +28,10 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes for performance
-            $table->index('owner_id');
-            $table->index('query_id');
-            $table->index(['is_active', 'schedule_type']); // For findDueForGeneration()
-            $table->index(['tenant_id', 'is_active']);
+            // $table->index('owner_id');
+            // $table->index('query_id');
+            // $table->index(['is_active', 'schedule_type']); // For findDueForGeneration()
+            // $table->index(['tenant_id', 'is_active']);
         });
     }
 

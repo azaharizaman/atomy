@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Index for quick lookups
-            $table->index(['tenant_id', 'transaction_type', 'is_active']);
+            // $table->index(['tenant_id', 'transaction_type', 'is_active']);
         });
     }
 

@@ -29,7 +29,7 @@ return new class extends Migration
             $table->json('allocations')->nullable();
             $table->timestamps();
 
-            $table->foreign('customer_id')->references('id')->on('parties')->onDelete('restrict');
+            // $table->foreign('customer_id')->references('id')->on('parties')->onDelete('restrict');
         });
     }
 

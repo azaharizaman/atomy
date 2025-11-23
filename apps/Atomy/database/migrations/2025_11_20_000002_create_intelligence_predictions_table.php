@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('intelligence_predictions', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->string('job_id', 50)->nullable()->index();
-            $table->foreignUlid('model_id')->constrained('intelligence_models')->onDelete('cascade');
+            // $table->foreignUlid('model_id')->constrained('intelligence_models')->onDelete('cascade');
             $table->string('model_version', 20)->nullable();
             $table->json('features_json');
             $table->string('features_hash', 64)->index();
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->integer('deployment_age_hours')->nullable(); // for rollback tracking
             $table->timestamps();
 
-            $table->index(['model_id', 'created_at']);
+            // $table->index(['model_id', 'created_at']);
         });
     }
 

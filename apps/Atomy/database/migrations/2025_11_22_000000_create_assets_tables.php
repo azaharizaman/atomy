@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('default_salvage_rate', 5, 2)->default(0)->comment('Percentage 0-100');
             $table->timestamps();
             
-            $table->index('code');
+            // $table->index('code');
         });
 
         // Assets (main table with hybrid location field)
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('asset_tag')->unique();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->foreignUlid('category_id')->nullable()->constrained('asset_categories')->nullOnDelete();
+            // $table->foreignUlid('category_id')->nullable()->constrained('asset_categories')->nullOnDelete();
             
             // Financial fields
             $table->decimal('cost', 15, 2);
@@ -44,7 +44,7 @@ return new class extends Migration
             
             // Location (Hybrid for backward compatibility)
             $table->string('location')->nullable()->comment('Tier 1: string location');
-            $table->foreignUlid('location_id')->nullable()->comment('Tier 2/3: FK to locations table');
+            // $table->foreignUlid('location_id')->nullable()->comment('Tier 2/3: FK to locations table');
             
             // Status
             $table->string('status')->default('active');
@@ -63,16 +63,16 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
-            $table->index(['status', 'depreciation_method']);
-            $table->index('acquisition_date');
-            $table->index('category_id');
-            $table->index('location_id');
+            // $table->index(['status', 'depreciation_method']);
+            // $table->index('acquisition_date');
+            // $table->index('category_id');
+            // $table->index('location_id');
         });
 
         // Depreciation Records
         Schema::create('depreciation_records', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('asset_id')->constrained()->cascadeOnDelete();
+            // $table->foreignUlid('asset_id')->constrained()->cascadeOnDelete();
             $table->date('period_start');
             $table->date('period_end');
             $table->decimal('depreciation_amount', 15, 2);
@@ -85,18 +85,18 @@ return new class extends Migration
             $table->decimal('units_consumed', 15, 2)->nullable();
             
             // GL Integration (Tier 3)
-            $table->foreignUlid('journal_entry_id')->nullable()->comment('Link to posted JE');
+            // $table->foreignUlid('journal_entry_id')->nullable()->comment('Link to posted JE');
             
             $table->timestamps();
             
-            $table->index(['asset_id', 'period_start']);
-            $table->unique(['asset_id', 'period_start', 'period_end']);
+            // $table->index(['asset_id', 'period_start']);
+            // $table->unique(['asset_id', 'period_start', 'period_end']);
         });
 
         // Maintenance Records (Tier 2)
         Schema::create('maintenance_records', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('asset_id')->constrained()->cascadeOnDelete();
+            // $table->foreignUlid('asset_id')->constrained()->cascadeOnDelete();
             $table->string('type'); // preventive, corrective, emergency, upgrade
             $table->text('description');
             $table->date('scheduled_date')->nullable();
@@ -104,17 +104,17 @@ return new class extends Migration
             $table->decimal('cost', 15, 2)->default(0);
             $table->string('vendor')->nullable();
             $table->text('notes')->nullable();
-            $table->foreignUlid('performed_by')->nullable()->comment('User ID who performed');
+            // $table->foreignUlid('performed_by')->nullable()->comment('User ID who performed');
             $table->timestamps();
             
-            $table->index(['asset_id', 'type']);
-            $table->index('scheduled_date');
+            // $table->index(['asset_id', 'type']);
+            // $table->index('scheduled_date');
         });
 
         // Warranty Records (Tier 2)
         Schema::create('warranty_records', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('asset_id')->constrained()->cascadeOnDelete();
+            // $table->foreignUlid('asset_id')->constrained()->cascadeOnDelete();
             $table->string('provider');
             $table->date('start_date');
             $table->date('expiry_date');
@@ -123,7 +123,7 @@ return new class extends Migration
             $table->decimal('cost', 15, 2)->default(0);
             $table->timestamps();
             
-            $table->index('expiry_date');
+            // $table->index('expiry_date');
         });
 
         // Physical Audit Logs (Tier 3)
@@ -144,23 +144,23 @@ return new class extends Migration
         Schema::create('physical_audit_verifications', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->string('audit_id');
-            $table->foreignUlid('asset_id')->constrained();
+            // $table->foreignUlid('asset_id')->constrained();
             $table->timestamp('verified_at');
             $table->boolean('location_match')->default(false);
             $table->string('expected_location')->nullable();
             $table->string('actual_location')->nullable();
             $table->string('condition')->nullable();
             $table->text('notes')->nullable();
-            $table->foreignUlid('verified_by')->nullable()->comment('User ID');
+            // $table->foreignUlid('verified_by')->nullable()->comment('User ID');
             $table->timestamps();
             
-            $table->index(['audit_id', 'asset_id']);
+            // $table->index(['audit_id', 'asset_id']);
         });
 
         Schema::create('physical_audit_discrepancies', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->string('audit_id');
-            $table->foreignUlid('asset_id')->nullable();
+            // $table->foreignUlid('asset_id')->nullable();
             $table->string('asset_tag')->nullable();
             $table->string('type'); // missing_asset, extra_asset, location_mismatch
             $table->string('expected_location')->nullable();
@@ -169,7 +169,7 @@ return new class extends Migration
             $table->timestamp('detected_at');
             $table->timestamps();
             
-            $table->index(['audit_id', 'type']);
+            // $table->index(['audit_id', 'type']);
         });
     }
 

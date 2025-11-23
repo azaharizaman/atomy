@@ -29,8 +29,8 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['tenant_id', 'status']);
-            $table->index(['tenant_id', 'requester_id']);
+            // $table->index(['tenant_id', 'status']);
+            // $table->index(['tenant_id', 'requester_id']);
         });
     }
 

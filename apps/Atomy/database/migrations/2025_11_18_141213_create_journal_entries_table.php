@@ -29,23 +29,23 @@ return new class extends Migration
             $table->ulid('reversal_of_id')->nullable();
             $table->timestamps();
 
-            $table->index('entry_number');
-            $table->index('entry_date');
-            $table->index('status');
-            $table->index('period_id');
-            $table->index('reversal_of_id');
-            $table->index(['status', 'entry_date']);
-            $table->index(['period_id', 'status']);
+            // // $table->index('entry_number');
+            // // $table->index('entry_date');
+            // // $table->index('status');
+            // // $table->index('period_id');
+            // // $table->index('reversal_of_id');
+            // // $table->index(['status', 'entry_date']);
+            // // $table->index(['period_id', 'status']);
 
-            $table->foreign('period_id')
-                ->references('id')
-                ->on('periods')
-                ->onDelete('restrict');
+            // // $table->foreign('period_id')
+                // // ->references('id')
+                // // ->on('periods')
+                // // ->onDelete('restrict');
 
-            $table->foreign('reversal_of_id')
-                ->references('id')
-                ->on('journal_entries')
-                ->onDelete('restrict');
+            // // $table->foreign('reversal_of_id')
+                // // ->references('id')
+                // // ->on('journal_entries')
+                // // ->onDelete('restrict');
         });
     }
 

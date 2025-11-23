@@ -22,13 +22,13 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['is_active']);
+            // // $table->index(['is_active']);
         });
 
         // Workflow instances table
         Schema::create('workflow_instances', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('definition_id')->constrained('workflow_definitions');
+            // // $table->foreignUlid('definition_id')->constrained('workflow_definitions');
             $table->string('current_state');
             $table->string('subject_type'); // Polymorphic: model class name
             $table->ulid('subject_id'); // Polymorphic: model ID
@@ -39,17 +39,17 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['definition_id']);
-            $table->index(['current_state']);
-            $table->index(['subject_type', 'subject_id']);
-            $table->index(['status']);
-            $table->index(['is_locked']);
+            // // $table->index(['definition_id']);
+            // // $table->index(['current_state']);
+            // // $table->index(['subject_type', 'subject_id']);
+            // // $table->index(['status']);
+            // // $table->index(['is_locked']);
         });
 
         // Workflow history (audit trail)
         Schema::create('workflow_history', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('workflow_id')->constrained('workflow_instances')->cascadeOnDelete();
+            // // $table->foreignUlid('workflow_id')->constrained('workflow_instances')->cascadeOnDelete();
             $table->string('transition')->nullable();
             $table->string('from_state');
             $table->string('to_state');
@@ -58,15 +58,15 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamp('created_at');
 
-            $table->index(['workflow_id']);
-            $table->index(['actor_id']);
-            $table->index(['created_at']);
+            // // $table->index(['workflow_id']);
+            // // $table->index(['actor_id']);
+            // // $table->index(['created_at']);
         });
 
         // Workflow tasks table
         Schema::create('workflow_tasks', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('workflow_id')->constrained('workflow_instances')->cascadeOnDelete();
+            // // $table->foreignUlid('workflow_id')->constrained('workflow_instances')->cascadeOnDelete();
             $table->string('state_name');
             $table->string('title');
             $table->text('description')->nullable();
@@ -82,12 +82,12 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            $table->index(['workflow_id']);
-            $table->index(['assigned_user_id']);
-            $table->index(['assigned_role']);
-            $table->index(['status']);
-            $table->index(['priority']);
-            $table->index(['due_at']);
+            // // $table->index(['workflow_id']);
+            // // $table->index(['assigned_user_id']);
+            // // $table->index(['assigned_role']);
+            // // $table->index(['status']);
+            // // $table->index(['priority']);
+            // // $table->index(['due_at']);
         });
 
         // Workflow delegations table
@@ -101,16 +101,16 @@ return new class extends Migration
             $table->integer('chain_depth')->default(1);
             $table->timestamps();
 
-            $table->index(['delegator_id']);
-            $table->index(['delegatee_id']);
-            $table->index(['is_active']);
-            $table->index(['starts_at', 'ends_at']);
+            // // $table->index(['delegator_id']);
+            // // $table->index(['delegatee_id']);
+            // // $table->index(['is_active']);
+            // // $table->index(['starts_at', 'ends_at']);
         });
 
         // Workflow timers table
         Schema::create('workflow_timers', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('workflow_id')->constrained('workflow_instances')->cascadeOnDelete();
+            // // $table->foreignUlid('workflow_id')->constrained('workflow_instances')->cascadeOnDelete();
             $table->string('type', 50); // escalation, sla_check, reminder, scheduled_task
             $table->timestamp('trigger_at');
             $table->json('action'); // Action definition
@@ -118,9 +118,9 @@ return new class extends Migration
             $table->timestamp('fired_at')->nullable();
             $table->timestamps();
 
-            $table->index(['workflow_id']);
-            $table->index(['type']);
-            $table->index(['trigger_at', 'is_fired']);
+            // // $table->index(['workflow_id']);
+            // // $table->index(['type']);
+            // // $table->index(['trigger_at', 'is_fired']);
         });
 
         // Approval matrix table (optional, for threshold-based routing)
@@ -132,7 +132,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->index(['is_active']);
+            // // $table->index(['is_active']);
         });
     }
 

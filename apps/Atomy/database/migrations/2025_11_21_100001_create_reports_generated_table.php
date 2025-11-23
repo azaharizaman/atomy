@@ -28,9 +28,9 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes for performance
-            $table->index(['report_definition_id', 'generated_at']);
-            $table->index(['retention_tier', 'generated_at']); // For cleanup queries
-            $table->index(['tenant_id', 'generated_at']);
+            // $table->index(['report_definition_id', 'generated_at']);
+            // $table->index(['retention_tier', 'generated_at']); // For cleanup queries
+            // $table->index(['tenant_id', 'generated_at']);
         });
     }
 

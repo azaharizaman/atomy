@@ -23,10 +23,10 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes for performance
-            $table->index('report_generated_id');
-            $table->index('recipient_id');
-            $table->index(['status', 'created_at']);
-            $table->index('notification_id');
+            // $table->index('report_generated_id');
+            // $table->index('recipient_id');
+            // $table->index(['status', 'created_at']);
+            // $table->index('notification_id');
         });
     }
 

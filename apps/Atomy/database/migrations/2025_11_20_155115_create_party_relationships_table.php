@@ -21,23 +21,23 @@ return new class extends Migration
             $table->timestamps();
             
             // Foreign keys
-            $table->foreign('from_party_id')
-                  ->references('id')
-                  ->on('parties')
-                  ->onDelete('cascade');
+            // $table->foreign('from_party_id')
+                  // ->references('id')
+                  // ->on('parties')
+                  // ->onDelete('cascade');
             
-            $table->foreign('to_party_id')
-                  ->references('id')
-                  ->on('parties')
-                  ->onDelete('cascade');
+            // $table->foreign('to_party_id')
+                  // ->references('id')
+                  // ->on('parties')
+                  // ->onDelete('cascade');
             
             // Indexes
-            $table->index(['tenant_id', 'from_party_id']);
-            $table->index(['tenant_id', 'to_party_id']);
-            $table->index(['from_party_id', 'relationship_type']);
-            $table->index(['to_party_id', 'relationship_type']);
-            $table->index('effective_from');
-            $table->index('effective_to');
+            // $table->index(['tenant_id', 'from_party_id']);
+            // $table->index(['tenant_id', 'to_party_id']);
+            // $table->index(['from_party_id', 'relationship_type']);
+            // $table->index(['to_party_id', 'relationship_type']);
+            // $table->index('effective_from');
+            // $table->index('effective_to');
         });
     }
 

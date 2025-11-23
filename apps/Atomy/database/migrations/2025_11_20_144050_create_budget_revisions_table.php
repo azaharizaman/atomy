@@ -42,11 +42,11 @@ return new class extends Migration
             $table->timestamp('created_at');
             
             // Indexes
-            $table->index(['budget_id', 'revision_number']);
-            $table->index('created_at');
+            // $table->index(['budget_id', 'revision_number']);
+            // $table->index('created_at');
             
             // Foreign keys
-            // $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
+            // // $table->foreign('budget_id')->references('id')->on('budgets')->onDelete('cascade');
         });
     }
 
