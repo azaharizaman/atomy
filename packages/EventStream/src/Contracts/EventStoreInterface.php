@@ -70,4 +70,35 @@ interface EventStoreInterface
      * @return bool
      */
     public function streamExists(string $aggregateId): bool;
+
+    /**
+     * Query events with filters, ordering, and pagination.
+     *
+     * @param array<string, mixed> $filters WHERE conditions (e.g., ['aggregate_id' => '...'])
+     * @param array<string, array<int|string>> $inFilters WHERE IN conditions
+     * @param string $orderByField Sort field (e.g., 'sequence', 'occurred_at')
+     * @param string $orderDirection Sort direction ('asc' or 'desc')
+     * @param int $limit Maximum number of events to return
+     * @param array{event_id: string, sequence: int}|null $cursorData Cursor for pagination
+     * @return EventInterface[] Array of events matching criteria
+     * @throws EventStreamException If query fails
+     */
+    public function query(
+        array $filters,
+        array $inFilters,
+        string $orderByField,
+        string $orderDirection,
+        int $limit,
+        ?array $cursorData = null
+    ): array;
+
+    /**
+     * Count events matching filters.
+     *
+     * @param array<string, mixed> $filters WHERE conditions
+     * @param array<string, array<int|string>> $inFilters WHERE IN conditions
+     * @return int Total count of matching events
+     * @throws EventStreamException If count fails
+     */
+    public function count(array $filters, array $inFilters): int;
 }
