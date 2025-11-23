@@ -10,7 +10,7 @@
 ## Test Execution Summary
 
 ```
-Tests: 167, Assertions: 399
+Tests: 188, Assertions: 476
 Time: ~2 seconds
 Memory: 6.00 MB
 Status: ✅ ALL PASSING
@@ -40,9 +40,9 @@ Status: ✅ ALL PASSING
 - **Components:** 14 interfaces defined (added CacheRepositoryInterface)
 
 #### Services
-- **Total Tests:** 46
+- **Total Tests:** 58
 - **Status:** ✅ Passing
-- **Assertions:** 116
+- **Assertions:** 193
 - **Coverage:** 100%
 - **Components:**
   - TelemetryTracker (17 tests)
@@ -64,6 +64,13 @@ Status: ✅ ALL PASSING
     - Metadata enrichment (stack trace, exception details)
     - Graceful dispatcher failure handling
     - Comprehensive logging (dispatch, deduplication)
+  - MetricRetentionService (12 tests)
+    - Automated metric pruning with batch support
+    - Metric-specific cleanup operations
+    - Retention statistics reporting
+    - Threshold-based cleanup detection
+    - Comprehensive error handling and logging
+    - Policy-driven cutoff time calculations
 
 #### Core/HealthChecks
 - **Total Tests:** 41
@@ -98,9 +105,9 @@ Status: ✅ ALL PASSING
     - Default cache TTL: 30 seconds
 
 #### Core Utilities
-- **Total Tests:** 12
+- **Total Tests:** 21
 - **Status:** ✅ Passing
-- **Assertions:** 51
+- **Assertions:** 102
 - **Coverage:** 100%
 - **Components:**
   - SLOWrapper (12 tests)
@@ -109,6 +116,12 @@ Status: ✅ ALL PASSING
     - Tag merging and operation naming
     - Static factory method
     - Graceful exception re-throw
+  - TimeBasedRetentionPolicy (9 tests)
+    - Factory methods: days(), hours()
+    - Positive period validation
+    - Time-based retention logic
+    - Metric key agnostic behavior
+    - Edge case handling (exact cutoff, future timestamps)
 
 #### Exceptions
 - **Total Tests:** 11
@@ -176,14 +189,14 @@ Status: ✅ ALL PASSING
 
 ## TDD Progress
 
-### Red-Green-Refactor Cycles Completed: 10
+### Red-Green-Refactor Cycles Completed: 11
 
 **Current Phase:** Core Package Complete (Ready for PR)
 
 **Completed Cycles:**
 1. ✅ Package Foundation & Structure
 2. ✅ Value Objects Implementation (5 VOs, 46 tests)
-3. ✅ Core Contracts Definition (14 interfaces)
+3. ✅ Core Contracts Definition (15 interfaces)
 4. ✅ TelemetryTracker Service (17 tests)
 5. ✅ HealthCheckRunner Service (14 tests)
 6. ✅ AlertEvaluator Service (15 tests)
@@ -191,6 +204,7 @@ Status: ✅ ALL PASSING
 8. ✅ SLOWrapper Utility (12 tests)
 9. ✅ Custom Exceptions (11 tests, 5 exception classes)
 10. ✅ MonitoringAwareTrait (11 tests)
+11. ✅ MetricRetentionService (21 tests, service + policy)
 
 ---
 
