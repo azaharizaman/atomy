@@ -74,7 +74,7 @@ interface EventStoreInterface
     /**
      * Query events with filters, ordering, and pagination.
      *
-     * @param array<string, mixed> $filters WHERE conditions (e.g., ['aggregate_id' => '...'])
+     * @param array<string, array{operator: string, value: mixed}> $filters WHERE conditions with operators (e.g., ['aggregate_id' => ['operator' => '=', 'value' => '...']])
      * @param array<string, array<int|string>> $inFilters WHERE IN conditions
      * @param string $orderByField Sort field (e.g., 'sequence', 'occurred_at')
      * @param string $orderDirection Sort direction ('asc' or 'desc')

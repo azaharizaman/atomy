@@ -44,9 +44,19 @@ use Nexus\EventStream\Exceptions\UpcasterFailedException;
 final class DefaultEventUpcaster implements EventUpcasterInterface
 {
     /**
-     * @var array<string, UpcasterInterface[]>
+     * Registered upcasters (stored as flat array for simplicity).
+     *
+     * @var UpcasterInterface[]
      */
     private array $upcasters = [];
+
+    /**
+     * Memoization cache for upcasters by event type.
+     * Maps event type to filtered and sorted array of upcasters.
+     *
+     * @var array<string, UpcasterInterface[]>
+     */
+    private array $upcasterCache = [];
 
     public function upcastEvent(string $eventType, int $currentVersion, array $eventData): array
     {
@@ -100,22 +110,27 @@ final class DefaultEventUpcaster implements EventUpcasterInterface
 
     public function registerUpcaster(UpcasterInterface $upcaster): self
     {
-        // Get all event types this upcaster supports by checking common event types
-        // In practice, this would be determined by metadata or convention
-        // For now, we'll store upcasters and filter them in getUpcastersForEventType()
         $this->upcasters[] = $upcaster;
+        
+        // Clear cache when new upcaster is registered to ensure fresh lookup
+        $this->upcasterCache = [];
 
         return $this;
     }
 
     public function getUpcastersForEventType(string $eventType): array
     {
+        // Return cached result if available
+        if (isset($this->upcasterCache[$eventType])) {
+            return $this->upcasterCache[$eventType];
+        }
+
         $filtered = [];
 
         foreach ($this->upcasters as $upcaster) {
             // Check if this upcaster supports any version of this event type
-            // We'll check versions 1-100 (reasonable range)
-            for ($version = 1; $version <= 100; $version++) {
+            // We probe versions 1-10 (reasonable range for event schema versioning)
+            for ($version = 1; $version <= 10; $version++) {
                 if ($upcaster->supports($eventType, $version)) {
                     $filtered[] = $upcaster;
                     break;
@@ -125,6 +140,9 @@ final class DefaultEventUpcaster implements EventUpcasterInterface
 
         // Sort by target version
         usort($filtered, fn($a, $b) => $a->getTargetVersion() <=> $b->getTargetVersion());
+
+        // Cache the result for subsequent calls
+        $this->upcasterCache[$eventType] = $filtered;
 
         return $filtered;
     }
