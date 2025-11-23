@@ -53,12 +53,14 @@ interface WebAuthnCredentialRepositoryInterface
      *
      * @param string $credentialId The credential ID
      * @param int $newSignCount The new sign count
+     * @param \DateTimeImmutable $lastUsedAt Last used timestamp
      * @param string|null $deviceFingerprint The device fingerprint
      * @return bool True if updated successfully
      */
     public function updateAfterAuthentication(
         string $credentialId,
         int $newSignCount,
+        \DateTimeImmutable $lastUsedAt,
         ?string $deviceFingerprint = null
     ): bool;
 
@@ -106,4 +108,36 @@ interface WebAuthnCredentialRepositoryInterface
      * @return array<WebAuthnCredential> Array of dormant credentials
      */
     public function findNotUsedSince(\DateTimeImmutable $since): array;
+
+    /**
+     * Create a new credential.
+     *
+     * @param array $data Credential data
+     * @return array Created credential data
+     */
+    public function create(array $data): array;
+
+    /**
+     * Revoke a credential.
+     *
+     * @param string $credentialId Credential ID
+     * @return bool True if revoked
+     */
+    public function revoke(string $credentialId): bool;
+
+    /**
+     * Revoke all credentials for a user.
+     *
+     * @param string $userId User identifier
+     * @return int Number of credentials revoked
+     */
+    public function revokeAllByUserId(string $userId): int;
+
+    /**
+     * Find resident keys (discoverable credentials) for a user.
+     *
+     * @param string $userId User identifier
+     * @return array Array of resident key credentials
+     */
+    public function findResidentKeysByUserId(string $userId): array;
 }

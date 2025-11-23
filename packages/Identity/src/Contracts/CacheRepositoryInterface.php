@@ -121,4 +121,12 @@ interface CacheRepositoryInterface
      * @return bool True if cleared
      */
     public function flush(): bool;
+
+    /**
+     * Get the TTL (time-to-live) remaining for a cache key.
+     *
+     * @param string $key The cache key
+     * @return int Seconds remaining until expiration, 0 if expired or not found
+     */
+    public function getTtl(string $key): int;
 }
