@@ -123,7 +123,7 @@ final readonly class DatabaseAuditStorage implements AuditStorageInterface
             $record->getPreviousHash()?->toString() ?? null,
             $record->getRecordHash()->toString(),
             $record->getSignature()?->signature ?? null,
-            $record->getSignature()?->getSignedBy() ?? null,
+            $record->getSignature()?->signedBy ?? null,
             json_encode($record->getMetadata()),
             $record->getCreatedAt()->format('Y-m-d H:i:s'),
         ]);
