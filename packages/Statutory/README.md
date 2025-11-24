@@ -256,6 +256,38 @@ composer test
 
 This package follows PSR-12 coding standards.
 
+---
+
+## 📖 Documentation
+
+### Quick Links
+- 📘 [Getting Started Guide](docs/getting-started.md) - Setup, core concepts, and first integration
+- 📚 [API Reference](docs/api-reference.md) - Complete interface and service documentation
+- 🔧 [Integration Guide](docs/integration-guide.md) - Laravel and Symfony integration examples
+- 💡 [Basic Examples](docs/examples/basic-usage.php) - Report generation basics
+- 🚀 [Advanced Examples](docs/examples/advanced-usage.php) - Country adapters, XBRL, multi-format
+
+### Package Documentation
+- 📋 [Requirements](REQUIREMENTS.md) - Detailed requirements specifications (61 requirements)
+- 📊 [Implementation Summary](IMPLEMENTATION_SUMMARY.md) - Development progress and metrics
+- ✅ [Test Suite Summary](TEST_SUITE_SUMMARY.md) - Test coverage and strategy (55 tests planned)
+- 💰 [Valuation Matrix](VALUATION_MATRIX.md) - Package valuation and ROI analysis ($95K)
+
+### Additional Resources
+- 🏗️ [Architecture Guidelines](../../ARCHITECTURE.md) - Nexus architecture principles
+- 📖 [Package Reference](../../docs/NEXUS_PACKAGES_REFERENCE.md) - All Nexus packages overview
+- 📑 [Compliance/Statutory Analysis](../../docs/COMPLIANCE_STATUTORY_READINESS_ANALYSIS.md) - Package separation rationale
+
+## Integration with Other Packages
+
+This package integrates with:
+- **Nexus\Finance** - Financial data extraction (GL accounts, trial balance)
+- **Nexus\Period** - Period validation and fiscal year management
+- **Nexus\Tenant** - Multi-tenancy context
+- **Nexus\Payroll** - Payroll statutory calculation delegation
+- **Nexus\Accounting** - Financial statement generation
+- **Nexus\Compliance** - Operational compliance (separate from statutory reporting)
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) file for details.

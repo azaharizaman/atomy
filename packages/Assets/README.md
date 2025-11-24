@@ -245,6 +245,29 @@ return [
 - Batch depreciation (1000 assets): < 60 seconds
 - TCO analysis: < 200ms with 100 maintenance records
 
+---
+
+## Documentation
+
+### Quick Links
+- **[Getting Started](docs/getting-started.md)** - Installation and first asset creation
+- **[API Reference](docs/api-reference.md)** - Complete API documentation
+- **[Integration Guide](docs/integration-guide.md)** - Laravel & Symfony integration
+- **[Examples](docs/examples/)** - Working code examples
+
+### Package Documentation
+- **[Requirements](REQUIREMENTS.md)** - Comprehensive requirements (147 total)
+- **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - Development progress and metrics
+- **[Test Suite Summary](TEST_SUITE_SUMMARY.md)** - Test plan and coverage (93 tests planned)
+- **[Valuation Matrix](VALUATION_MATRIX.md)** - Package valuation ($375,000)
+
+### Additional Resources
+- **Tier Upgrade Guide:** See root `docs/ASSETS_TIER_UPGRADE_GUIDE.md`
+- **Architecture Overview:** See root `ARCHITECTURE.md`
+- **Compliance Standards:** GAAP/IFRS-compliant depreciation methods
+
+---
+
 ## License
 
 MIT License - See LICENSE file for details

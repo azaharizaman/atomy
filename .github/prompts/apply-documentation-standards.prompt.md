@@ -1465,7 +1465,7 @@ A successfully compliant package should have:
 - **2+ working code examples**
 - **Framework integration guides** (Laravel + Symfony)
 - **VALUATION_MATRIX.md** with estimated value
-- **No documentation duplication**
+- **No documentation duplication** Documents that you referred to to complete this task must be removed when they no longer serve a purpose or become redundant if they exist elsewhere.
 - **Clean directory structure**
 
 ---
