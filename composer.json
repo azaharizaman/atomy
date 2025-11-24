@@ -5,7 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/intelligence": "*@dev",
+        "nexus/machine-learning": "*@dev",
         "nexus/geo": "*@dev",
         "nexus/routing": "*@dev",
         "nexus/inventory": "*@dev",
@@ -19,7 +19,7 @@
     "repositories": [
         {
             "type": "path",
-            "url": "packages/Intelligence"
+            "url": "packages/MachineLearning"
         },
         {
             "type": "path",

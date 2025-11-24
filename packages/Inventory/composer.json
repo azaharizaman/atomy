@@ -15,7 +15,7 @@
     },
     "suggest": {
         "nexus/event-stream": "Event sourcing for stock replay and temporal queries (recommended for large enterprises)",
-        "nexus/intelligence": "Demand forecasting and stock optimization (requires minimum 90 days of historical data)"
+        "nexus/machine-learning": "Demand forecasting and stock optimization (requires minimum 90 days of historical data)"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

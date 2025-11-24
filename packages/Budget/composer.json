@@ -19,7 +19,7 @@
         "nexus/workflow": "*@dev",
         "nexus/currency": "*@dev",
         "nexus/uom": "*@dev",
-        "nexus/intelligence": "*@dev",
+        "nexus/machine-learning": "*@dev",
         "nexus/audit-logger": "*@dev",
         "nexus/notifier": "*@dev",
         "nexus/setting": "*@dev",

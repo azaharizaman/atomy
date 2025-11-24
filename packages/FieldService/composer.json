@@ -45,7 +45,7 @@
     },
     "suggest": {
         "nexus/assets": "Enable preventive maintenance scheduling and asset tracking",
-        "nexus/intelligence": "AI-powered technician assignment and demand forecasting",
+        "nexus/machine-learning": "AI-powered technician assignment and demand forecasting",
         "nexus/crypto": "Cryptographic timestamp signing for customer signatures (Tier 3 compliance)",
         "nexus/event-stream": "Work order state replay for compliance auditing"
     },
