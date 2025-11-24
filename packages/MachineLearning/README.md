@@ -1,144 +1,179 @@
-# Nexus\Intelligence
+# Nexus\MachineLearning
 
-A framework-agnostic AI orchestration engine providing resilient anomaly detection and predictive analytics for ERP systems.
+**Version:** 2.0.0 (formerly `Nexus\Intelligence`)  
+**Status:** Production Ready
+
+A framework-agnostic machine learning orchestration engine providing:
+- **Anomaly Detection** via external AI providers (OpenAI, Anthropic, Gemini)
+- **Local Model Inference** via PyTorch, ONNX, remote serving (MLflow, TensorFlow Serving)
+- **MLflow Integration** for model registry and experiment tracking
+- **Provider Strategy Pattern** for flexible AI/ML backend selection
 
 ## Purpose
 
-The Intelligence package enables domain packages (Procurement, Sales, Finance) to leverage external AI services (OpenAI, Anthropic, Gemini) for real-time anomaly detection and predictive analytics while maintaining strict architectural decoupling and enterprise-grade reliability.
+The MachineLearning package enables domain packages (Receivable, Payable, Procurement, etc.) to:
+
+1. **Detect Anomalies** using external AI services or local ML models
+2. **Load and Execute Models** from MLflow registry or filesystem
+3. **Track Experiments** with automated metric logging
+4. **Manage Feature Schemas** with versioning and compatibility checking
+5. **Optimize Costs** by selecting appropriate AI providers per domain
 
 ## Key Features
 
-### Core Capabilities
-- **Anomaly Detection**: Synchronous evaluation (<200ms SLA) for real-time process intervention
-- **Predictive Analytics**: Asynchronous forecasting and classification
-- **Feature Extraction**: Standardized interface for domain-specific feature engineering
-- **Provider Agnosticism**: Swappable AI providers (OpenAI, Anthropic, Gemini)
+### v2.0 New Capabilities
 
-### Enterprise Features
-- **Circuit Breaker Fallback**: Automatic degradation to rule-based engine on provider failure
-- **Feature Versioning**: Schema-based compatibility checking for model evolution
-- **Training Data Collection**: GDPR-compliant supervised learning dataset building
-- **Granular Cost Tracking**: Per-tenant, per-model, per-domain usage monitoring
-- **Model Drift Detection**: Automated 30-day rolling accuracy monitoring
-- **Audit Logging**: Complete decision trail for regulatory compliance (GDPR Article 22)
-- **Explainable AI**: Feature importance scores (SHAP values) for transparency
+**Provider Strategy Pattern:**
+- Configure AI provider per domain (receivable, payable, procurement, etc.)
+- Fallback chains for resilience (OpenAI → Anthropic → Rule-Based)
+- Per-tenant API key configuration via settings
 
-### Advanced Features
-- **A/B Testing**: Multi-model comparison with statistical significance testing
-- **Human-in-the-Loop**: Review queue for low-confidence predictions
-- **Tenant-Specific Fine-Tuning**: Custom model training with tenant data
-- **Automated Confidence Calibration**: Monthly isotonic regression on historical outcomes
-- **Adversarial Robustness Testing**: Quarterly vulnerability assessment
-- **Blue-Green Model Deployments**: Atomic version promotion with auto-rollback
-- **Cost Optimization**: Automated recommendations for cheaper model alternatives
+**External AI Providers:**
+- **OpenAI Provider:** GPT-4 with fine-tuning support
+- **Anthropic Provider:** Claude 3.5 Sonnet
+- **Google Gemini Provider:** Gemini Pro
+- **Rule-Based Provider:** Statistical fallback (Z-score anomaly detection)
+
+**Inference Engines:**
+- **PyTorch Engine:** Execute .pth/.pt models via Python subprocess
+- **ONNX Engine:** Cross-platform .onnx models via onnxruntime
+- **Remote API Engine:** MLflow Serving, TensorFlow Serving, TorchServe
+
+**MLflow Integration:**
+- Load models from MLflow model registry
+- Automatic model versioning (production, staging, archived stages)
+- Experiment tracking (metrics, parameters, artifacts)
+- Model format auto-detection (PyTorch, ONNX, TensorFlow)
+
+### Core Capabilities (v1.x + v2.0)
+
+- **Anomaly Detection**: Synchronous evaluation (<200ms SLA) for real-time intervention
+- **Feature Extraction**: Standardized interface for domain-specific features
+- **Feature Versioning**: Schema-based compatibility checking
+- **Usage Tracking**: Per-domain, per-tenant cost and token monitoring
+- **Audit Logging**: Complete decision trail for compliance (GDPR Article 22)
 
 ## Architecture
 
-### Package Structure
+### Package Structure (v2.0)
 
 ```
-packages/Intelligence/
+packages/MachineLearning/
 ├── src/
-│   ├── Contracts/              # Public API (30 interfaces)
-│   │   ├── FeatureExtractorInterface.php
-│   │   ├── FeatureSetInterface.php
+│   ├── Contracts/              # Public API (23 interfaces)
 │   │   ├── AnomalyDetectionServiceInterface.php
-│   │   ├── PredictionServiceInterface.php
-│   │   ├── ModelRepositoryInterface.php
-│   │   ├── ReviewQueueInterface.php
-│   │   ├── ModelHealthMonitorInterface.php
-│   │   ├── ConfidenceCalibratorInterface.php
-│   │   ├── ModelRetrainingInterface.php
-│   │   ├── AdversarialTestingInterface.php
-│   │   ├── ModelVersionManagerInterface.php
-│   │   ├── CostOptimizerInterface.php
+│   │   ├── FeatureExtractorInterface.php
+│   │   ├── FeatureVersionManagerInterface.php
+│   │   ├── ProviderStrategyInterface.php
+│   │   ├── HttpClientInterface.php
+│   │   ├── ModelLoaderInterface.php
+│   │   ├── InferenceEngineInterface.php
+│   │   ├── ModelCacheInterface.php
+│   │   ├── MLflowClientInterface.php
 │   │   └── ...
 │   ├── Core/                   # Internal engine
-│   │   ├── Engine/
-│   │   │   ├── PromptEngine.php
-│   │   │   ├── ResponseParser.php
-│   │   │   ├── QuotaTracker.php
-│   │   │   ├── ConfidenceCalibrator.php
-│   │   │   └── AdversarialGenerator.php
-│   │   ├── Adapters/
-│   │   │   ├── OpenAIAdapter.php
-│   │   │   ├── AnthropicAdapter.php
-│   │   │   ├── GeminiAdapter.php
-│   │   │   └── RuleBasedAnomalyEngine.php
-│   │   └── Contracts/
-│   │       └── ProviderInterface.php
-│   ├── Services/               # Orchestrators (10 services)
-│   │   ├── IntelligenceManager.php
-│   │   ├── ModelHealthMonitor.php
-│   │   ├── ModelComparisonService.php
-│   │   ├── ModelTrainingService.php
-│   │   ├── PredictionService.php
-│   │   ├── ReviewQueueService.php
-│   │   ├── ConfidenceCalibrationService.php
-│   │   ├── ModelRetrainingService.php
-│   │   ├── ModelVersionManager.php
-│   │   ├── AdversarialTestingService.php
-│   │   └── CostOptimizerService.php
-│   ├── ValueObjects/           # Immutable DTOs (20 VOs)
+│   │   ├── Providers/          # AI Provider implementations
+│   │   │   ├── OpenAIProvider.php
+│   │   │   ├── AnthropicProvider.php
+│   │   │   ├── GeminiProvider.php
+│   │   │   └── RuleBasedProvider.php
+│   │   └── Engines/            # Inference engines
+│   │       ├── PyTorchInferenceEngine.php
+│   │       ├── ONNXInferenceEngine.php
+│   │       └── RemoteAPIInferenceEngine.php
+│   ├── Services/               # Orchestrators
+│   │   ├── MLModelManager.php
+│   │   ├── FeatureVersionManager.php
+│   │   ├── DomainProviderStrategy.php
+│   │   ├── MLflowClient.php
+│   │   └── MLflowModelLoader.php
+│   ├── ValueObjects/           # Immutable DTOs
 │   │   ├── FeatureSet.php
 │   │   ├── AnomalyResult.php
-│   │   ├── PredictionResult.php
-│   │   ├── ModelVersion.php
-│   │   ├── AdversarialTestResult.php
-│   │   ├── CostRecommendation.php
-│   │   └── ...
+│   │   ├── UsageMetrics.php
+│   │   ├── ProviderConfig.php
+│   │   └── Model.php
 │   ├── Enums/                  # PHP 8.3 native enums
-│   │   ├── ModelProvider.php
 │   │   ├── TaskType.php
 │   │   ├── SeverityLevel.php
-│   │   ├── ModelHealthStatus.php
-│   │   ├── ReviewStatus.php
-│   │   ├── DeploymentStrategy.php
-│   │   └── CostOptimizationAction.php
-│   └── Exceptions/             # Domain errors (16 exceptions)
-│       ├── IntelligenceException.php
-│       ├── FeatureVersionMismatchException.php
-│       ├── QuotaExceededException.php
-│       ├── AdversarialAttackDetectedException.php
-│       └── ...
+│   │   └── ModelProvider.php
 ```
 
-## Usage Example
+## Installation
 
-### 1. Define Feature Extractor (in Domain Package)
+```bash
+composer require nexus/machinelearning:"^2.0"
+```
+
+**Requirements:**
+- PHP 8.3+
+- For local inference: Python 3.8+, PyTorch or ONNX Runtime
+- For MLflow: MLflow server accessible via HTTP
+
+## Quick Start
+
+### 1. Configure Provider Strategy
 
 ```php
-// In packages/Procurement/src/Intelligence/ProcurementPOQtyExtractor.php
-use Nexus\Intelligence\Contracts\FeatureExtractorInterface;
-use Nexus\Intelligence\Contracts\FeatureSetInterface;
-use Nexus\Intelligence\ValueObjects\FeatureSet;
+// In your Laravel/Symfony service provider
+use Nexus\MachineLearning\Contracts\ProviderStrategyInterface;
+use Nexus\MachineLearning\Services\DomainProviderStrategy;
+use Nexus\MachineLearning\Contracts\SettingsManagerInterface;
 
-final class ProcurementPOQtyExtractor implements FeatureExtractorInterface
+$this->app->singleton(ProviderStrategyInterface::class, function ($app) {
+    return new DomainProviderStrategy(
+        $app->make(SettingsManagerInterface::class)
+    );
+});
+
+// Configure via settings
+$settings->set('machinelearning.providers.receivable', [
+    'primary' => 'openai',
+    'fallback' => ['anthropic', 'rule_based'],
+    'api_keys' => [
+        'openai' => env('OPENAI_API_KEY'),
+        'anthropic' => env('ANTHROPIC_API_KEY'),
+    ],
+    'parameters' => [
+        'openai' => ['model' => 'gpt-4', 'temperature' => 0.1],
+    ],
+]);
+```
+
+### 2. Define Feature Extractor (in Domain Package)
+
+```php
+// In packages/Receivable/src/MachineLearning/InvoiceAnomalyExtractor.php
+use Nexus\MachineLearning\Contracts\FeatureExtractorInterface;
+use Nexus\MachineLearning\ValueObjects\FeatureSet;
+
+final readonly class InvoiceAnomalyExtractor implements FeatureExtractorInterface
 {
     public function __construct(
-        private readonly HistoricalDataRepositoryInterface $historicalRepo
+        private HistoricalDataRepositoryInterface $historicalRepo
     ) {}
 
-    public function extract(object $poLine): FeatureSetInterface
+    public function extract(object $invoice): FeatureSet
     {
-        $currentQty = $poLine->getQuantity()->getValue();
-        $avgQty = $this->historicalRepo->getAverageQty($poLine->getProductId());
+        $avgAmount = $this->historicalRepo->getAverageInvoiceAmount(
+            $invoice->getCustomerId()
+        );
         
         return new FeatureSet(
             features: [
-                'quantity_ordered' => (float) $currentQty,
-                'historical_avg_qty' => (float) $avgQty,
-                'qty_ratio_to_avg' => $currentQty / max(1, $avgQty),
-                'vendor_transaction_count' => $this->historicalRepo->getTransactionCountByVendor($poLine->getVendorPartyId()),
+                'amount' => (float) $invoice->getAmount()->getValue(),
+                'historical_avg_amount' => (float) $avgAmount,
+                'amount_ratio' => $invoice->getAmount()->getValue() / max(1, $avgAmount),
+                'days_until_due' => $invoice->getDueDate()->diff(new \DateTimeImmutable())->days,
             ],
             schemaVersion: '1.0',
-            metadata: ['entity_type' => 'purchase_order_line']
+            metadata: ['customer_id' => $invoice->getCustomerId()]
         );
     }
 
     public function getFeatureKeys(): array
     {
-        return ['quantity_ordered', 'historical_avg_qty', 'qty_ratio_to_avg', 'vendor_transaction_count'];
+        return ['amount', 'historical_avg_amount', 'amount_ratio', 'days_until_due'];
     }
 
     public function getSchemaVersion(): string
@@ -148,132 +183,220 @@ final class ProcurementPOQtyExtractor implements FeatureExtractorInterface
 }
 ```
 
-### 2. Use in Event Listener
+### 3. Use in Event Listener
 
 ```php
-// In packages/Procurement/src/Listeners/PurchaseOrderLineCreatingListener.php
-use Nexus\Intelligence\Contracts\AnomalyDetectionServiceInterface;
+// In packages/Receivable/src/Listeners/InvoiceCreatingListener.php
+use Nexus\MachineLearning\Contracts\AnomalyDetectionServiceInterface;
+use Nexus\MachineLearning\Exceptions\AllProvidersUnavailableException;
 
-final class PurchaseOrderLineCreatingListener
+final readonly class InvoiceCreatingListener
 {
     public function __construct(
-        private readonly AnomalyDetectionServiceInterface $intelligence,
-        private readonly ProcurementPOQtyExtractor $extractor
+        private AnomalyDetectionServiceInterface $mlService,
+        private InvoiceAnomalyExtractor $extractor
     ) {}
 
-    public function handle(PurchaseOrderLineCreatingEvent $event): void
+    public function handle(InvoiceCreatingEvent $event): void
     {
-        $features = $this->extractor->extract($event->poLine);
-        $result = $this->intelligence->evaluate('procurement_po_qty_check', $features);
-        
-        if ($result->requiresHumanReview()) {
-            // Create PO with "pending_ai_review" status
-            $event->poLine->markForReview($result->getReason());
-            return;
-        }
-        
-        if ($result->isFlagged() 
-            && $result->getSeverity()->value >= SeverityLevel::CRITICAL->value 
-            && $result->getCalibratedConfidence() >= 0.85
-        ) {
-            throw new AnomalyDetectedException(
-                "Purchase blocked by AI: {$result->getReason()}. " .
-                "Top factors: " . implode(', ', array_keys(array_slice($result->getFeatureImportance(), 0, 3))) .
-                ". Confidence: {$result->getCalibratedConfidence()}"
-            );
+        try {
+            $features = $this->extractor->extract($event->invoice);
+            $result = $this->mlService->detectAnomalies('receivable', $features);
+            
+            if ($result->isAnomaly() && $result->getConfidence() >= 0.85) {
+                throw new AnomalyDetectedException(
+                    "Invoice blocked: {$result->getReason()}. " .
+                    "Confidence: {$result->getConfidence()}"
+                );
+            }
+        } catch (AllProvidersUnavailableException $e) {
+            // Fail gracefully - allow invoice creation
+            Log::warning('ML providers unavailable, skipping anomaly check');
         }
     }
 }
 ```
 
-## Configuration
+## Usage Examples
 
-### Model Configuration (via Atomy)
+### Using External AI Providers
 
 ```php
-// Database seeder or admin UI
-IntelligenceModel::create([
-    'tenant_id' => $tenant->id,
-    'name' => 'procurement_po_qty_check',
-    'type' => 'anomaly_detection',
-    'provider' => ModelProvider::OPENAI,
-    'endpoint_url' => 'https://api.openai.com/v1/chat/completions',
-    'expected_feature_version' => '1.0',
-    'drift_threshold' => 0.15,
-    'ab_test_enabled' => true,
-    'ab_test_model_b' => 'anthropic_claude',
-    'ab_test_weight' => 0.5,
-    'calibration_enabled' => true,
-    'adversarial_testing_enabled' => true,
-]);
+use Nexus\MachineLearning\Contracts\AnomalyDetectionServiceInterface;
+
+$mlService = app(AnomalyDetectionServiceInterface::class);
+
+// Detect anomalies using configured provider (OpenAI, Anthropic, etc.)
+$result = $mlService->detectAnomalies('receivable', $features);
+
+if ($result->isAnomaly()) {
+    echo "Anomaly detected: " . $result->getReason();
+    echo "\nConfidence: " . $result->getConfidence();
+    echo "\nSeverity: " . $result->getSeverity()->value;
+}
 ```
 
-### Settings (via Nexus\Setting)
+### Using Local ML Models with MLflow
 
 ```php
-// API keys (encrypted via Nexus\Crypto)
-$crypto->encryptWithKey($apiKey, "tenant-{$tenantId}-intelligence-openai");
+use Nexus\MachineLearning\Contracts\ModelLoaderInterface;
+use Nexus\MachineLearning\Contracts\InferenceEngineInterface;
 
-// Feature flags
-intelligence.training_consent = true
-intelligence.training_retention_days = 365
-intelligence.ab_testing.enabled = true
-intelligence.cost_optimization.enabled = true
+$loader = app(ModelLoaderInterface::class);
+$engine = app(InferenceEngineInterface::class);
+
+// Load model from MLflow registry (production stage)
+$model = $loader->load('invoice_anomaly_detector', version: null, stage: 'production');
+
+// Run inference
+$prediction = $engine->predict($model, [
+    'amount' => 10000.0,
+    'historical_avg_amount' => 5000.0,
+    'amount_ratio' => 2.0,
+    'days_until_due' => 30,
+]);
+
+// Batch predictions
+$predictions = $engine->batchPredict($model, $batchData);
+```
+
+### Fine-Tuning OpenAI Models
+
+```php
+use Nexus\MachineLearning\Core\Providers\OpenAIProvider;
+use Nexus\MachineLearning\ValueObjects\ProviderConfig;
+
+$provider = new OpenAIProvider(
+    httpClient: $httpClient,
+    config: ProviderConfig::create(
+        name: 'openai',
+        apiKey: env('OPENAI_API_KEY'),
+        parameters: ['model' => 'gpt-4']
+    ),
+    logger: $logger
+);
+
+// Submit fine-tuning job
+$jobId = $provider->submitFineTuningJob(
+    trainingFileId: 'file-xyz123',
+    modelName: 'gpt-4',
+    suffix: 'receivable-anomaly'
+);
+```
+
+### Managing Feature Schemas
+
+```php
+use Nexus\MachineLearning\Contracts\FeatureVersionManagerInterface;
+
+$versionManager = app(FeatureVersionManagerInterface::class);
+
+// Register feature schema
+$versionManager->registerSchema('1.0', [
+    'amount' => 'float',
+    'historical_avg_amount' => 'float',
+    'amount_ratio' => 'float',
+    'days_until_due' => 'int',
+]);
+
+// Validate compatibility
+if (!$versionManager->isCompatible('1.0', $features->getFeatureKeys())) {
+    throw new FeatureVersionMismatchException('Feature schema incompatible');
+}
+```
+
+## Configuration
+
+### Provider Configuration (via Settings)
+
+```php
+// Configure OpenAI provider for receivable domain
+$settings->set('machinelearning.providers.receivable', [
+    'primary' => 'openai',
+    'fallback' => ['anthropic', 'gemini', 'rule_based'],
+    'api_keys' => [
+        'openai' => env('OPENAI_API_KEY'),
+        'anthropic' => env('ANTHROPIC_API_KEY'),
+        'gemini' => env('GEMINI_API_KEY'),
+    ],
+    'parameters' => [
+        'openai' => [
+            'model' => 'gpt-4',
+            'temperature' => 0.1,
+            'max_tokens' => 1000,
+        ],
+        'anthropic' => [
+            'model' => 'claude-3-5-sonnet-20241022',
+            'max_tokens' => 1000,
+        ],
+        'gemini' => [
+            'model' => 'gemini-pro',
+            'temperature' => 0.1,
+        ],
+    ],
+]);
+
+// MLflow configuration
+$settings->set('machinelearning.mlflow.tracking_uri', 'http://localhost:5000');
+$settings->set('machinelearning.inference.timeout', 30);
+
+// Feature schema storage
+$settings->set('machinelearning.feature_schema.v1', [
+    'amount' => 'float',
+    'historical_avg_amount' => 'float',
+    'amount_ratio' => 'float',
+    'days_until_due' => 'int',
+]);
 ```
 
 ## Integration with Nexus Packages
 
 ### Dependencies
-- **Nexus\Connector**: HTTP resilience (circuit breaker, retry, rate limiting)
-- **Nexus\Crypto**: API key encryption
-- **Nexus\Setting**: Configuration management
+- **Nexus\Setting**: Configuration and feature schema storage
 - **Nexus\AuditLogger**: Decision audit trail (GDPR compliance)
+- **Nexus\Storage**: Model artifact storage (for MLflow downloads)
+- **Nexus\Crypto** (optional): API key encryption
+- **Nexus\Monitoring** (optional): Metrics tracking
 
 ### Domain Package Integration
-- **Nexus\Procurement**: PO quantity anomaly detection
-- **Nexus\Sales**: Sales forecast prediction
-- **Nexus\Finance**: Unusual transaction detection
-- **Nexus\Payable**: Duplicate payment detection
+- **Nexus\Receivable**: Invoice anomaly detection (InvoiceAnomalyExtractor)
+- **Nexus\Payable**: Vendor bill validation (VendorBillExtractor)
+- **Nexus\Procurement**: PO quantity anomaly detection (ProcurementPOQtyExtractor)
+- **Nexus\Sales**: Sales forecast prediction (SalesOpportunityExtractor)
+- **Nexus\Inventory**: Stock level anomaly detection (StockLevelExtractor)
 
-## Scheduled Commands
+## Migration from v1.x
+
+**See:** `docs/MIGRATION_INTELLIGENCE_TO_MACHINELEARNING.md`
+
+**Summary of Breaking Changes:**
+- Package namespace: `Nexus\Intelligence` → `Nexus\MachineLearning`
+- Composer package: `nexus/intelligence` → `nexus/machinelearning`
+- Service names: `IntelligenceManager` → `MLModelManager`, `SchemaVersionManager` → `FeatureVersionManager`
+- Configuration keys: `intelligence.schema.*` → `machinelearning.feature_schema.*`
+
+**Migration effort:** Medium (namespace updates, service bindings, configuration migration)
+
+## Testing
 
 ```bash
-# Daily health monitoring
-php artisan intelligence:monitor-health
+# Run package tests
+./vendor/bin/phpunit packages/MachineLearning/tests
 
-# Monthly confidence calibration
-php artisan intelligence:calibrate-confidence
-
-# Quarterly adversarial testing
-php artisan intelligence:test-adversarial
-
-# Monthly cost optimization
-php artisan intelligence:optimize-costs
-
-# Weekly training data cleanup (respects retention policies)
-php artisan intelligence:cleanup-training-data
-
-# Hourly rollback check (for new deployments)
-php artisan intelligence:check-rollback
-
-# Manual version promotion
-php artisan intelligence:version-promote {model} {version}
+# Run with coverage
+./vendor/bin/phpunit --coverage-html coverage packages/MachineLearning/tests
 ```
 
-## GraphQL API (via Atomy)
+## License
 
-```graphql
-# Get decision explanation
-query {
-  intelligenceDecisionExplanation(predictionId: "abc123") {
-    featureImportance
-    reason
-    modelVersion
-    confidence
-    calibratedConfidence
-    reviewStatus
-  }
-}
+MIT License - See LICENSE file for details.
+
+---
+
+**Package Version:** 2.0.0  
+**Last Updated:** November 2025  
+**Maintainer:** Nexus Architecture Team
+
 
 # Get review queue
 query {
