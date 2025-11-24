@@ -146,6 +146,30 @@ To use in Laravel (Atomy app):
 
 See `apps/Atomy/` for implementation examples.
 
+## Documentation
+
+### Quick Links
+
+- **[Getting Started Guide](docs/getting-started.md)** - Installation and basic configuration
+- **[API Reference](docs/api-reference.md)** - Complete API documentation
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+- **[Examples](docs/examples/)** - Runnable code examples
+
+### Package Documentation
+
+- **[Requirements](REQUIREMENTS.md)** - Comprehensive requirements traceability
+- **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - Package structure and metrics
+- **[Test Suite Summary](TEST_SUITE_SUMMARY.md)** - Test coverage and strategy
+- **[Valuation Matrix](VALUATION_MATRIX.md)** - Package valuation and ROI analysis
+
+### Additional Resources
+
+- **Package Overview**: User-friendly audit logging for CRUD tracking and compliance
+- **Key Differentiator**: Search/export/retention focus vs Nexus\Audit's cryptographic verification
+- **Total Files**: 14 PHP files, 1,363 lines of code
+- **Test Coverage**: 58 tests planned (unit, integration, feature)
+- **Package Value**: $65,000 (158% ROI, compliance infrastructure)
+
 ## Testing
 
 ```bash

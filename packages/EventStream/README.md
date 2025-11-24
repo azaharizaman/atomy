@@ -149,9 +149,19 @@ class CurrentBalanceProjector implements ProjectorInterface
 
 ## 📖 Documentation
 
-- See `docs/EVENTSTREAM_IMPLEMENTATION.md` for complete implementation guide
-- See `ARCHITECTURE.md` section "Hybrid Approach: Feed vs. Replay"
-- See `REQUIREMENTS_PART2.csv` for detailed requirements
+### Package Documentation
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites, concepts, and first integration
+- **[API Reference](docs/api-reference.md)** - Complete documentation of all interfaces, value objects, and exceptions
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple event publishing and reading patterns
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Snapshots, temporal queries, and concurrency control
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress and metrics (122 tests, 100% pass rate)
+- `REQUIREMENTS.md` - 104 detailed requirements across 7 categories
+- `TEST_SUITE_SUMMARY.md` - Test coverage and results
+- `VALUATION_MATRIX.md` - Package valuation metrics (estimated value: $85,296)
+- See root `ARCHITECTURE.md` section "Hybrid Approach: Feed vs. Replay"
 
 ## 🤝 Integration Points
 

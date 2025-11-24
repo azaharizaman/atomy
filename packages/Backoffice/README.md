@@ -251,6 +251,36 @@ The package supports multi-tenancy via tenant context injection. All operations 
 
 MIT License. See LICENSE file for details.
 
+## Documentation
+
+### Quick Links
+- 📘 [Getting Started Guide](docs/getting-started.md) - Comprehensive setup and usage tutorial
+- 📚 [API Reference](docs/api-reference.md) - Complete interface and service documentation
+- 🔧 [Integration Guide](docs/integration-guide.md) - Laravel and Symfony integration examples
+- 💡 [Basic Examples](docs/examples/basic-usage.php) - Company, office, department setup examples
+- 🚀 [Advanced Examples](docs/examples/advanced-usage.php) - Hierarchies, matrix organizations, transfer workflows
+
+### Package Documentation
+- 📋 [Requirements](REQUIREMENTS.md) - Detailed requirements specifications (474 requirements)
+- 📊 [Implementation Summary](IMPLEMENTATION_SUMMARY.md) - Development progress and metrics
+- ✅ [Test Suite Summary](TEST_SUITE_SUMMARY.md) - Test coverage and strategy (95 tests planned)
+- 💰 [Valuation Matrix](VALUATION_MATRIX.md) - Package valuation and ROI analysis ($120K)
+
+### Additional Resources
+- 🏗️ [Architecture Guidelines](../../ARCHITECTURE.md) - Nexus architecture principles
+- 📖 [Package Reference](../../docs/NEXUS_PACKAGES_REFERENCE.md) - All Nexus packages overview
+
+## Integration with Other Packages
+
+This package integrates with:
+- **Nexus\Tenant** - Multi-tenancy context
+- **Nexus\Identity** - Authorization and role management
+- **Nexus\AuditLogger** - Organizational change tracking
+- **Nexus\Monitoring** - Performance metrics and health checks
+- **Nexus\Hrm** - Human resources management
+- **Nexus\Payroll** - Payroll processing (staff assignment data)
+- **Nexus\Finance** - Cost center and budget management
+
 ## Contributing
 
 This package is part of the Nexus monorepo. Please refer to the main repository for contribution guidelines.

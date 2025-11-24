@@ -243,13 +243,31 @@ This package follows strict architectural guidelines:
 
 MIT License. See [LICENSE](LICENSE) for details.
 
+## 📖 Documentation
+
+### Package Documentation
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites, concepts, and first integration
+- **[API Reference](docs/api-reference.md)** - Complete documentation of all interfaces, value objects, and exceptions
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple usage patterns
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Advanced scenarios and patterns
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress and metrics
+- `REQUIREMENTS.md` - Detailed requirements (139 requirements)
+- `TEST_SUITE_SUMMARY.md` - Test coverage and results
+- `VALUATION_MATRIX.md` - Package valuation metrics ($350K+ value)
+- See root `ARCHITECTURE.md` for overall system architecture
+
+---
+
 ## Roadmap
 
 - [x] Phase 1: Foundation Layer (Contracts, Value Objects, Enums, Exceptions)
 - [x] Phase 2: Core Engines (Statement Builder, Period Close, Consolidation, Variance)
-- [ ] Phase 3: Service Layer (AccountingManager)
-- [ ] Phase 4: Application Layer (Models, Migrations, Repositories)
-- [ ] Phase 5: API Layer (Controllers, Routes)
+- [x] Phase 3: Service Layer (AccountingManager - 15 public APIs)
+- [x] Phase 4: Application Layer (Models, Migrations, Repositories)
+- [ ] Phase 5: Test Suite (185+ tests planned - December 2024)
 
 ## Support
 

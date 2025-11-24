@@ -63,3 +63,21 @@ See `docs/ANALYTICS_IMPLEMENTATION.md` for complete implementation details.
 ## License
 
 MIT License - see LICENSE file for details.
+
+## Documentation
+
+### Package Documentation
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start and basic usage
+- **[API Reference](docs/api-reference.md)** - Complete interface documentation
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+
+### Package Specifications
+- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Implementation progress and architecture decisions
+- **[REQUIREMENTS.md](REQUIREMENTS.md)** - Detailed package requirements (84 requirements)
+- **[TEST_SUITE_SUMMARY.md](TEST_SUITE_SUMMARY.md)** - Test coverage plan (135+ tests planned)
+- **[VALUATION_MATRIX.md](VALUATION_MATRIX.md)** - Package valuation ($250K, 2,083% ROI)
+
+### Code Examples
+- **[Basic Usage](docs/examples/basic-usage.php)** - Simple queries and common use cases
+- **[Advanced Usage](docs/examples/advanced-usage.php)** - Multi-dimensional analysis, cohort analysis
+

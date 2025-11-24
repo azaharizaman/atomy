@@ -130,6 +130,29 @@ $verifier->verifyRecord($record); // Throws AuditTamperedException if invalid
 - **Nexus\Identity** - Critical identity events logged via Audit
 - **Nexus\Finance** - Financial transactions logged synchronously
 
+## Documentation
+
+### Quick Links
+
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide for new users
+- **[API Reference](docs/api-reference.md)** - Complete API documentation
+- **[Integration Guide](docs/integration-guide.md)** - Framework integration examples (Laravel, Symfony)
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple invoice audit workflow
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Digital signatures, async logging, retention policies
+
+### Package Documentation
+
+- **[Requirements](REQUIREMENTS.md)** - Comprehensive requirements traceability (98 requirements)
+- **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - Implementation progress and metrics
+- **[Test Suite Summary](TEST_SUITE_SUMMARY.md)** - Test coverage and strategy (77 tests planned)
+- **[Valuation Matrix](VALUATION_MATRIX.md)** - Package valuation and ROI analysis ($200K valuation)
+
+### Additional Resources
+
+- **Architecture:** Cryptographic hash chains with SHA-256, Ed25519 signatures, per-tenant isolation
+- **Compliance:** SOX, GDPR, HIPAA audit requirements
+- **Security:** Tamper detection, forensic investigation, non-repudiation
+
 ## License
 
 MIT License - See LICENSE file for details

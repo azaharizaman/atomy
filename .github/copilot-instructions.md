@@ -20,6 +20,24 @@
 
 ---
 
+## 🚨 MANDATORY PRE-IMPLEMENTATION CHECKLIST
+
+**BEFORE implementing ANY feature, you MUST:**
+
+1. **Consult [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md)** - This document lists all 50+ available first-party packages and their capabilities
+2. **Use existing packages FIRST** - If a Nexus package provides the functionality, you MUST use it via dependency injection
+3. **Never reimplement package functionality** - Creating custom implementations when packages exist is an architectural violation
+
+**Example Violations to Avoid:**
+- ❌ Creating custom metrics collector when `Nexus\Monitoring` exists
+- ❌ Building custom audit logger when `Nexus\AuditLogger` exists  
+- ❌ Implementing file storage when `Nexus\Storage` exists
+- ❌ Creating notification system when `Nexus\Notifier` exists
+
+**See [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md) for the complete "I Need To..." decision matrix.**
+
+---
+
 ## Project Overview
 
 You are working on **Nexus**, a **package-only monorepo** containing 50+ framework-agnostic PHP packages for ERP systems. This project is strictly focused on **atomic, reusable packages** that can be integrated into any PHP framework (Laravel, Symfony, Slim, etc.).
@@ -225,31 +243,62 @@ All packages **must be stateless** across execution cycles. An instance of a ser
 - **Internal Dependencies are Fine:** A package can require another Nexus package
 - **NEVER Depend on Framework Code:** No Laravel, Symfony, or framework-specific dependencies
 
+## 📦 Package Documentation Standards
+
+**When creating a new package, refer to:** [`.github/prompts/create-package-instruction.prompt.md`](prompts/create-package-instruction.prompt.md)
+
+### Required Package Files (Summary)
+
+Every package MUST include:
+- `composer.json`, `LICENSE`, `.gitignore`
+- `README.md` - Comprehensive usage guide with examples
+- `IMPLEMENTATION_SUMMARY.md` - Progress tracking and metrics
+- `REQUIREMENTS.md` - Standardized requirements table
+- `TEST_SUITE_SUMMARY.md` - Test coverage and results
+- `VALUATION_MATRIX.md` - Package valuation for funding assessment
+- `docs/` folder - User documentation (getting-started, api-reference, integration-guide, examples)
+- `src/` folder - Source code (Contracts, Services, Exceptions, etc.)
+- `tests/` folder - Unit and feature tests
+
+### Documentation Anti-Patterns (FORBIDDEN)
+
+❌ **Do NOT create:**
+- Duplicate README files in subdirectories
+- TODO.md files (use IMPLEMENTATION_SUMMARY.md)
+- Random markdown files without clear purpose
+- Migration/deployment guides (packages are libraries)
+- Status update files (use IMPLEMENTATION_SUMMARY.md)
+
+**Principle:** Each document serves a **unique, non-overlapping purpose**. No duplication.
+
 ## Package Structure Template
 
 ```
 packages/NewPackage/
-├── composer.json              # Package definition (require "php": "^8.3")
-├── README.md                  # Package documentation
-├── LICENSE                    # MIT License
-└── src/
-    ├── Contracts/             # REQUIRED: Interfaces
-    │   ├── EntityInterface.php
-    │   ├── RepositoryInterface.php
-    │   └── ManagerInterface.php
-    ├── Exceptions/            # REQUIRED: Domain exceptions
-    │   └── EntityNotFoundException.php
-    ├── Services/              # REQUIRED: Business logic
-    │   └── EntityManager.php
-    ├── Enums/                 # RECOMMENDED: Native PHP enums
-    │   └── EntityStatus.php
-    ├── ValueObjects/          # RECOMMENDED: Immutable domain data
-    │   └── Money.php
-    ├── Core/                  # OPTIONAL: Internal engine
-    │   ├── Engine/
-    │   ├── ValueObjects/
-    │   └── Entities/
-    └── ServiceProvider.php    # OPTIONAL: Framework integration helper
+├── composer.json              # REQUIRED: Package definition
+├── LICENSE                    # REQUIRED: MIT License
+├── .gitignore                 # REQUIRED: Package ignores
+├── README.md                  # REQUIRED: Main documentation
+├── IMPLEMENTATION_SUMMARY.md  # REQUIRED: Progress tracking
+├── REQUIREMENTS.md            # REQUIRED: Detailed requirements
+├── TEST_SUITE_SUMMARY.md      # REQUIRED: Test documentation
+├── docs/                      # REQUIRED: User documentation
+│   ├── getting-started.md
+│   ├── api-reference.md
+│   ├── integration-guide.md
+│   └── examples/
+│       ├── basic-usage.php
+│       └── advanced-usage.php
+├── src/                       # REQUIRED: Source code
+│   ├── Contracts/             # REQUIRED: Interfaces
+│   ├── Exceptions/            # REQUIRED: Exceptions
+│   ├── Services/              # REQUIRED: Business logic
+│   ├── Enums/                 # RECOMMENDED: Enums
+│   ├── ValueObjects/          # RECOMMENDED: Value objects
+│   └── Core/                  # OPTIONAL: Internal engine
+└── tests/                     # REQUIRED: Test suite
+    ├── Unit/
+    └── Feature/
 ```
 
 ## Package Organization: When to Use `Core/` Folder
@@ -381,26 +430,46 @@ Before committing code to any package, verify:
 
 ### Creating a New Package
 
-1. Create `packages/PackageName/` directory
-2. Run `composer init` (set name to `nexus/package-name`, require `php: ^8.3`)
-3. Define PSR-4 autoloader: `"Nexus\\PackageName\\": "src/"`
-4. Create Contracts in `src/Contracts/`
-5. Create Services in `src/Services/`
-6. Create Enums in `src/Enums/` (if needed)
-7. Create Value Objects in `src/ValueObjects/` (if needed)
-8. Update root `composer.json` repositories array
-9. Install in monorepo: `composer require nexus/package-name:"*@dev"`
-10. Write comprehensive README.md with usage examples
-11. Write unit tests in `tests/`
+**📌 For complete package creation instructions, see:** [`.github/prompts/create-package-instruction.prompt.md`](prompts/create-package-instruction.prompt.md)
+
+**Quick checklist:**
+
+1. **Initialize Structure** - composer.json, LICENSE, .gitignore
+2. **Create Documentation FIRST** - REQUIREMENTS.md, IMPLEMENTATION_SUMMARY.md, README.md, TEST_SUITE_SUMMARY.md, docs/
+3. **Implement Code** - Contracts, Services, Exceptions, Enums, ValueObjects
+4. **Write Tests** - Unit and feature tests
+5. **Update Documentation** - Keep all docs in sync with implementation
+6. **Register in Monorepo** - Update root composer.json
+7. **Validate** - Run tests, verify documentation completeness
 
 ### Implementing a New Feature
 
-1. **Check if logic exists** → Consult NEXUS_PACKAGES_REFERENCE.md
-2. **Define contracts** → Create interfaces in appropriate package
-3. **Implement services** → Create manager/service classes
-4. **Create exceptions** → Define domain-specific errors
-5. **Write tests** → Unit tests for all business logic
-6. **Document** → Update README.md with examples
+**Always update documentation alongside code changes.**
+
+1. **Requirements Analysis**
+   - Check if logic exists → Consult `docs/NEXUS_PACKAGES_REFERENCE.md`
+   - Add new requirements to `REQUIREMENTS.md` with proper codes
+   - Update `IMPLEMENTATION_SUMMARY.md` with feature plan
+
+2. **Implementation**
+   - Define contracts → Create/update interfaces in `src/Contracts/`
+   - Implement services → Create/update manager/service classes
+   - Create exceptions → Define domain-specific errors
+   - Update `docs/api-reference.md` with new interfaces/methods
+
+3. **Testing**
+   - Write tests → Unit tests for all business logic
+   - Update `TEST_SUITE_SUMMARY.md` with new tests and coverage
+
+4. **Documentation**
+   - Update `README.md` with new feature examples
+   - Add examples to `docs/examples/` if applicable
+   - Update `docs/getting-started.md` if feature affects setup
+   - Update `docs/integration-guide.md` with new integration patterns
+   - Mark requirements as Complete in `REQUIREMENTS.md`
+   - Update metrics in `IMPLEMENTATION_SUMMARY.md`
+
+**Remember:** A feature is not complete until all documentation is updated.
 
 ## Naming Conventions
 
@@ -426,6 +495,32 @@ Before committing code to any package, verify:
 - Throw descriptive exceptions for error cases
 - **All dependencies must be interfaces, never concrete classes**
 
+## 🔍 Code Quality Checklist
+
+Before committing code to any package, verify:
+
+### For All Packages
+- [ ] **Consulted [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md)** to avoid reimplementing functionality
+- [ ] No framework facades used (`Log::`, `Cache::`, `DB::`, etc.)
+- [ ] No global helpers used (`now()`, `config()`, `app()`, `dd()`, etc.)
+- [ ] All dependencies injected via constructor as **interfaces**
+- [ ] All properties are `readonly` (for PHP 8.3+)
+- [ ] Native enums used instead of class constants
+- [ ] `declare(strict_types=1);` at top of every file
+- [ ] All public methods have complete docblocks
+- [ ] Custom exceptions thrown for domain errors
+- [ ] No direct database access (use Repository interfaces)
+- [ ] If tracking metrics, uses `TelemetryTrackerInterface` from `Nexus\Monitoring`
+- [ ] Package has `composer.json` with proper autoloading
+- [ ] Package has `README.md` with usage examples
+- [ ] Package has `LICENSE` file
+
+### Testing
+- Package tests should be unit tests (no database, no framework)
+- Mock repository implementations in package tests
+- Test contract implementations separately
+- Use PHPUnit for all tests
+
 ## Available Packages (50+)
 
 See [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md) for the complete list with capabilities, interfaces, and usage examples.
@@ -444,6 +539,21 @@ See [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md) fo
 - `Nexus\Workflow` - Process automation
 - `Nexus\Compliance` - Compliance enforcement
 - `Nexus\Statutory` - Statutory reporting
+
+## Key Reminders
+
+1. **Packages are pure engines**: Pure logic, no persistence, no framework coupling
+2. **Interfaces define needs**: Every external dependency is an interface
+3. **Consumers provide implementations**: Applications bind concrete classes to interfaces
+4. **Always check NEXUS_PACKAGES_REFERENCE.md** before creating new functionality
+5. **When in doubt, inject an interface**
+
+## Important Documentation
+
+- **Package Reference:** [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md) - **MANDATORY READ**
+- **Architecture Guidelines:** `ARCHITECTURE.md`
+- **Package Requirements:** `docs/REQUIREMENTS_*.md`
+- **Implementation Summaries:** `docs/*_IMPLEMENTATION_SUMMARY.md`
 
 ---
 

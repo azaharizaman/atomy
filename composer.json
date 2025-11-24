@@ -13,7 +13,8 @@
         "symfony/http-client": "^7.3",
         "nyholm/psr7": "^1.8",
         "psr/http-client": "^1.0",
-        "nexus/event-stream": "*@dev"
+        "nexus/event-stream": "*@dev",
+        "nexus/tax": "*@dev"
     },
     "repositories": [
         {
@@ -195,6 +196,10 @@
         {
             "type": "path",
             "url": "./packages/FeatureFlags"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Tax"
         }
     ],
     "minimum-stability": "dev",

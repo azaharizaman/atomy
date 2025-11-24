@@ -192,10 +192,22 @@ $featureManager->isEnabled('multi_currency_banking')
 composer require nexus/cash-management:"*@dev"
 ```
 
+## 📖 Documentation
+
+### Package Documentation
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites, concepts, and first integration
+- **[API Reference](docs/api-reference.md)** - Complete documentation of all interfaces, value objects, enums, and exceptions
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples with complete setup
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Import statement, auto-reconcile, approve/reject adjustments
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Cash flow forecasting, AI feedback, high-value workflows, multi-currency
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress, metrics, and architecture details
+- `REQUIREMENTS.md` - Detailed requirements (58 requirements, 96.6% complete)
+- `TEST_SUITE_SUMMARY.md` - Test coverage strategy and recommendations
+- `VALUATION_MATRIX.md` - Package valuation metrics ($140,576 estimated value)
+- See root `ARCHITECTURE.md` for overall system architecture
+
 ## License
 
 MIT License. See LICENSE file for details.
-
-## Architecture Documentation
-
-See `docs/CASH_MANAGEMENT_IMPLEMENTATION_SUMMARY.md` for comprehensive implementation details.

@@ -197,6 +197,23 @@ Contributions are welcome! Please follow the Nexus architecture principles:
 4. Place all business logic in services
 5. No database access or migrations in this package
 
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with basic setup
+- **[API Reference](docs/api-reference.md)** - Complete API documentation for all interfaces and services
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+- **[Basic Usage Examples](docs/examples/basic-usage.php)** - Simple use cases
+- **[Advanced Usage Examples](docs/examples/advanced-usage.php)** - Complex scenarios
+
+### Additional Resources
+
+- **[Requirements](REQUIREMENTS.md)** - Detailed requirements traceability (62 requirements)
+- **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - Implementation progress and design decisions
+- **[Test Suite Summary](TEST_SUITE_SUMMARY.md)** - Test coverage and testing strategy
+- **[Valuation Matrix](VALUATION_MATRIX.md)** - Package valuation and ROI analysis
+
 ## Support
 
 For issues, questions, or contributions, please refer to the main Nexus monorepo documentation.

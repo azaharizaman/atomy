@@ -369,6 +369,23 @@ class UserManagerTest extends TestCase
 }
 ```
 
+## 📖 Documentation
+
+### Package Documentation
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites, core concepts, and first integration
+- **[API Reference](docs/api-reference.md)** - Complete documentation of all 28 interfaces, 10 services, 20 value objects, and 19 exceptions
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples with complete setup instructions
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple usage patterns for authentication, authorization, and MFA
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Advanced scenarios including WebAuthn, passwordless auth, and complex workflows
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress, metrics, and key design decisions
+- `REQUIREMENTS.md` - All 401 requirements with status tracking
+- `TEST_SUITE_SUMMARY.md` - Test coverage metrics and test inventory (331+ tests, 95%+ coverage)
+- `VALUATION_MATRIX.md` - Package valuation metrics for funding assessment ($300K+ estimated value)
+- See root `../../ARCHITECTURE.md` for overall system architecture
+- See `../../docs/NEXUS_PACKAGES_REFERENCE.md` for package ecosystem reference
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) file for details.
