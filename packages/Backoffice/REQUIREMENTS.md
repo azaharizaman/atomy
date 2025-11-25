@@ -1,9 +1,13 @@
 # Requirements: Backoffice
 
-Total Requirements: 474
+Total Requirements: 478
 
 | Package Namespace | Requirements Type | Code | Requirement Statements | Files/Folders | Status | Notes on Status | Date Last Updated |
 |-------------------|-------------------|------|------------------------|---------------|--------|-----------------|-------------------|
+| `Nexus\Backoffice` | Architechtural Requirement | ARC-BAC-0001 | Repository interfaces must follow ISP (Interface Segregation Principle) | src/Contracts/Persistence/, src/Contracts/Query/, src/Contracts/Validation/ | ✅ Complete | Refactored in v1.1.0 - all repositories split into 3 focused interfaces | 2025-11-25 |
+| `Nexus\Backoffice` | Architechtural Requirement | ARC-BAC-0002 | Repository interfaces must follow CQRS (Command Query Responsibility Segregation) | src/Contracts/Persistence/, src/Contracts/Query/ | ✅ Complete | Persistence (commands) separated from Query (reads) | 2025-11-25 |
+| `Nexus\Backoffice` | Architechtural Requirement | ARC-BAC-0003 | Service classes must be final and readonly (stateless architecture) | src/Services/ | ✅ Complete | All services marked final readonly | 2025-11-25 |
+| `Nexus\Backoffice` | Architechtural Requirement | ARC-BAC-0004 | Business logic must be in domain services, not repositories | src/Services/*Service.php | ✅ Complete | 5 domain services created | 2025-11-25 |
 | `Nexus\Backoffice` | Architechtural Requirement | ARC-BAC-0011 | Package must be framework-agnostic with no Laravel dependencies |  | ✅ Skeleton | Package and application structure completed | 2025-11-17 |
 | `Nexus\Backoffice` | Architechtural Requirement | ARC-BAC-0012 | All data structures defined via interfaces |  | ✅ Skeleton | Package and application structure completed | 2025-11-17 |
 | `Nexus\Backoffice` | Architechtural Requirement | ARC-BAC-0013 | All persistence operations via repository interfaces |  | ✅ Skeleton | Package and application structure completed | 2025-11-17 |

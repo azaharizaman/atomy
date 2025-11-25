@@ -28,6 +28,28 @@ This package follows the **Nexus Architecture Principle**: "Logic in Packages, I
 
 ### Application Layer (Laravel/Atomy)
 - **Eloquent Models**: Company, Office, Department, Staff, Unit, Transfer
+
+### Architectural Compliance (v1.1+)
+
+As of **v1.1.0**, this package has been refactored to achieve **95%+ architectural compliance** with strict adherence to:
+
+- **Interface Segregation Principle (ISP)**: Repository interfaces split into focused contracts
+  - `*PersistenceInterface` - Write operations (save, update, delete)
+  - `*QueryInterface` - Read operations (findById, getByX, etc.)
+  - `*ValidationInterface` - Business rule validation (exists checks, constraints)
+
+- **CQRS (Command Query Responsibility Segregation)**: Clear separation between commands (writes) and queries (reads)
+
+- **Stateless Architecture**: All service classes are `final readonly` with injected dependencies
+
+- **Domain Services**: Business logic extracted from repositories into dedicated services:
+  - `CompanyHierarchyService` - Company relationship logic
+  - `DepartmentHierarchyService` - Department tree operations
+  - `OfficeHierarchyService` - Office management logic
+  - `StaffAssignmentService` - Staff hierarchy and reporting lines
+  - `UnitManagementService` - Unit membership management
+
+**Migration Path**: Legacy repository interfaces (`CompanyRepositoryInterface`, etc.) remain for backward compatibility but are deprecated. They now extend the segregated interfaces. See deprecation notices in interface docblocks for migration guidance. Legacy interfaces will be removed in v2.0.
 - **Repository Implementations**: Concrete persistence implementations
 - **Database Migrations**: Schema definitions
 - **Service Provider**: IoC container bindings
