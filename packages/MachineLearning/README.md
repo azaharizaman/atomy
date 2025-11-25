@@ -465,6 +465,32 @@ MIT License - See LICENSE file for details.
 4. Automatic retraining request creation
 5. Manual approval workflow
 
+---
+
+## 📖 Documentation
+
+Comprehensive documentation is available in the `docs/` folder:
+
+### Getting Started
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start, prerequisites, basic configuration
+- **[Migration from v1.x](MIGRATION_INTELLIGENCE_TO_MACHINELEARNING.md)** - Upgrade guide for existing users
+
+### Technical Reference
+- **[API Reference](docs/api-reference.md)** - Complete interface and method documentation
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+- **[Requirements](REQUIREMENTS.md)** - Detailed requirements specification (52 requirements)
+
+### Code Examples
+- **[Basic Usage](docs/examples/basic-usage.php)** - Simple anomaly detection examples
+- **[Advanced Usage](docs/examples/advanced-usage.php)** - MLflow, custom providers, batch processing
+
+### Project Documentation
+- **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - Development progress, metrics, decisions
+- **[Test Suite Summary](TEST_SUITE_SUMMARY.md)** - Test coverage, results, strategy
+- **[Valuation Matrix](VALUATION_MATRIX.md)** - Package value assessment and ROI analysis
+
+---
+
 ## License
 
 MIT License - see LICENSE file for details.
