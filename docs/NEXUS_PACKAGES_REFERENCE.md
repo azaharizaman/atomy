@@ -1,9 +1,20 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.0  
-**Last Updated:** November 23, 2025  
+**Version:** 1.1  
+**Last Updated:** November 25, 2025  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
+
+**Recent Updates:**
+- Added `Nexus\FeatureFlags` - Feature flag management system
+- Added `Nexus\SSO` - Single Sign-On integration (SAML, OAuth2, OIDC)
+- Added `Nexus\Tax` - Tax calculation and compliance engine
+- Added `Nexus\Messaging` - Message queue abstraction
+- Added `Nexus\Content` - Content management system
+- Added `Nexus\Audit` - Advanced audit trail management
+- Added `Nexus\Backoffice` - Company structure and organizational management
+- Added `Nexus\DataProcessor` - OCR, ETL, and data processing engine
+- Refactored `Nexus\Intelligence` → `Nexus\MachineLearning` (v2.0)
 
 ---
 
@@ -296,6 +307,60 @@ public function updateInvoiceStatus(string $invoiceId, string $newStatus): void
 
 ---
 
+#### **Nexus\Audit**
+**Capabilities:**
+- Advanced audit trail management (extends AuditLogger)
+- Change data capture (before/after snapshots)
+- Audit trail search and filtering
+- Compliance report generation
+- Audit event replay
+- Configurable retention policies
+- Tamper-proof audit logs
+
+**When to Use:**
+- ✅ Detailed change tracking with full snapshots
+- ✅ Compliance audits requiring historical data reconstruction
+- ✅ Forensic analysis of data changes
+- ✅ Regulatory compliance (HIPAA, SOX, GDPR)
+- ✅ Advanced audit reporting
+
+**Key Interfaces:**
+```php
+use Nexus\Audit\Contracts\AuditTrailManagerInterface;
+use Nexus\Audit\Contracts\ChangeTrackerInterface;
+use Nexus\Audit\Contracts\AuditReportGeneratorInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Track detailed changes with before/after snapshots
+public function __construct(
+    private readonly ChangeTrackerInterface $changeTracker
+) {}
+
+public function updateCustomer(string $customerId, array $updates): void
+{
+    $customer = $this->repository->findById($customerId);
+    $beforeSnapshot = $customer->toArray();
+    
+    $customer->update($updates);
+    $this->repository->save($customer);
+    
+    $afterSnapshot = $customer->toArray();
+    
+    // Track with full before/after comparison
+    $this->changeTracker->trackChange(
+        entityType: 'customer',
+        entityId: $customerId,
+        before: $beforeSnapshot,
+        after: $afterSnapshot,
+        changedBy: $this->getCurrentUserId()
+    );
+}
+```
+
+---
+
 ### 🔔 **3. Communication**
 
 #### **Nexus\Notifier**
@@ -475,7 +540,108 @@ public function getBalanceAt(string $accountId, \DateTimeImmutable $timestamp): 
 
 ---
 
+#### **Nexus\DataProcessor**
+**Capabilities:**
+- OCR (Optical Character Recognition) integration
+- Document text extraction
+- ETL (Extract, Transform, Load) pipelines
+- Data transformation and normalization
+- Image processing and analysis
+- PDF parsing and extraction
+- Batch data processing
+
+**When to Use:**
+- ✅ Extract text from scanned documents/images
+- ✅ Process uploaded invoices/receipts via OCR
+- ✅ Transform data between formats
+- ✅ Build ETL data pipelines
+- ✅ Parse and extract data from PDFs
+- ✅ Batch process large datasets
+
+**Key Interfaces:**
+```php
+use Nexus\DataProcessor\Contracts\OcrProcessorInterface;
+use Nexus\DataProcessor\Contracts\DocumentExtractorInterface;
+use Nexus\DataProcessor\Contracts\EtlPipelineInterface;
+use Nexus\DataProcessor\Contracts\DataTransformerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Extract data from uploaded invoice image
+public function __construct(
+    private readonly OcrProcessorInterface $ocrProcessor
+) {}
+
+public function processInvoiceImage(string $imagePath): array
+{
+    $extractedData = $this->ocrProcessor->process(
+        filePath: $imagePath,
+        options: [
+            'language' => 'eng',
+            'extract_fields' => ['invoice_number', 'date', 'total', 'vendor'],
+        ]
+    );
+    
+    return [
+        'invoice_number' => $extractedData['invoice_number'],
+        'invoice_date' => $extractedData['date'],
+        'total_amount' => $extractedData['total'],
+        'vendor_name' => $extractedData['vendor'],
+        'confidence' => $extractedData['confidence_score'],
+    ];
+}
+```
+
+---
+
 ### 🏢 **5. Multi-Tenancy & Context**
+
+#### **Nexus\Backoffice**
+**Capabilities:**
+- Company structure management
+- Multi-entity organizational hierarchy
+- Branch and department management
+- Cost center and profit center tracking
+- Inter-company relationships
+- Organizational unit configuration
+
+**When to Use:**
+- ✅ Manage company organizational structure
+- ✅ Define branches, departments, divisions
+- ✅ Set up cost centers and profit centers
+- ✅ Configure inter-company relationships
+- ✅ Hierarchical organizational reporting
+
+**Key Interfaces:**
+```php
+use Nexus\Backoffice\Contracts\CompanyManagerInterface;
+use Nexus\Backoffice\Contracts\BranchManagerInterface;
+use Nexus\Backoffice\Contracts\DepartmentManagerInterface;
+use Nexus\Backoffice\Contracts\CostCenterManagerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Get organizational hierarchy
+public function __construct(
+    private readonly CompanyManagerInterface $companyManager
+) {}
+
+public function getCompanyStructure(string $companyId): array
+{
+    $company = $this->companyManager->findById($companyId);
+    
+    return [
+        'company' => $company,
+        'branches' => $company->getBranches(),
+        'departments' => $company->getDepartments(),
+        'cost_centers' => $company->getCostCenters(),
+    ];
+}
+```
+
+---
 
 #### **Nexus\Tenant**
 **Capabilities:**
@@ -810,6 +976,60 @@ use Nexus\Assets\Contracts\DepreciationCalculatorInterface;
 
 ---
 
+#### **Nexus\Tax**
+**Capabilities:**
+- Multi-jurisdiction tax calculation
+- Tax rate management (VAT, GST, sales tax)
+- Tax exemption handling
+- Tax reporting and filing
+- Reverse charge mechanism
+- Withholding tax calculation
+- Tax group and composite tax support
+
+**When to Use:**
+- ✅ Calculate sales tax on transactions
+- ✅ Multi-jurisdiction tax compliance
+- ✅ VAT/GST calculation and reporting
+- ✅ Tax exemption management
+- ✅ Withholding tax processing
+- ✅ Tax audit trail
+
+**Key Interfaces:**
+```php
+use Nexus\Tax\Contracts\TaxCalculatorInterface;
+use Nexus\Tax\Contracts\TaxRateManagerInterface;
+use Nexus\Tax\Contracts\TaxReportGeneratorInterface;
+use Nexus\Tax\Contracts\TaxExemptionManagerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Calculate tax on invoice line item
+public function __construct(
+    private readonly TaxCalculatorInterface $taxCalculator
+) {}
+
+public function calculateInvoiceTax(Invoice $invoice): Money
+{
+    $totalTax = Money::zero('MYR');
+    
+    foreach ($invoice->getLineItems() as $lineItem) {
+        $tax = $this->taxCalculator->calculate(
+            amount: $lineItem->getAmount(),
+            taxCode: $lineItem->getTaxCode(),
+            jurisdiction: $invoice->getShipToAddress()->getCountry(),
+            date: $invoice->getInvoiceDate()
+        );
+        
+        $totalTax = $totalTax->add($tax);
+    }
+    
+    return $totalTax;
+}
+```
+
+---
+
 ### 🛒 **8. Sales & Procurement**
 
 #### **Nexus\Party**
@@ -1049,6 +1269,55 @@ public function syncCustomer(string $customerId): void
 
 ---
 
+#### **Nexus\Messaging**
+**Capabilities:**
+- Message queue abstraction (RabbitMQ, Redis, AWS SQS, Azure Service Bus)
+- Publish/subscribe patterns
+- Message routing and exchange management
+- Dead letter queue handling
+- Message retry logic
+- Priority queues
+
+**When to Use:**
+- ✅ Asynchronous job processing
+- ✅ Event-driven architecture
+- ✅ Microservice communication
+- ✅ Long-running background tasks
+- ✅ Message-based integration
+
+**Key Interfaces:**
+```php
+use Nexus\Messaging\Contracts\MessagePublisherInterface;
+use Nexus\Messaging\Contracts\MessageConsumerInterface;
+use Nexus\Messaging\Contracts\QueueManagerInterface;
+use Nexus\Messaging\Contracts\MessageRouterInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Publish message to queue
+public function __construct(
+    private readonly MessagePublisherInterface $publisher
+) {}
+
+public function createInvoice(Invoice $invoice): void
+{
+    $this->repository->save($invoice);
+    
+    // Publish invoice created event
+    $this->publisher->publish(
+        queue: 'invoice.created',
+        message: new InvoiceCreatedMessage(
+            invoiceId: $invoice->getId(),
+            customerId: $invoice->getCustomerId(),
+            amount: $invoice->getTotal()
+        )
+    );
+}
+```
+
+---
+
 #### **Nexus\Workflow**
 **Capabilities:**
 - Workflow engine
@@ -1106,16 +1375,107 @@ use Nexus\Export\Contracts\ExporterInterface;
 
 #### **Nexus\Import**
 **Capabilities:**
-- Data import from multiple formats
-- Validation and transformation
-- Import templates
-- Error handling and reporting
+- Multi-format data import (CSV, JSON, XML, Excel)
+- Field mapping with transformations (13 built-in rules)
+- Validation engine (required, email, numeric, date, length, min/max)
+- Duplicate detection (internal and external)
+- Transaction strategies (TRANSACTIONAL, BATCH, STREAM)
+- Import modes (CREATE, UPDATE, UPSERT, DELETE, SYNC)
+- Comprehensive error reporting (row-level, severity-based)
+- Memory-efficient streaming for large datasets
+
+**When to Use:**
+- ✅ Bulk data import from CSV/Excel files
+- ✅ Customer, product, or inventory imports
+- ✅ Data migration from external systems
+- ✅ Field transformation and validation
+- ✅ Duplicate detection within import or against database
+- ✅ Transaction management (all-or-nothing vs partial success)
 
 **Key Interfaces:**
 ```php
-use Nexus\Import\Contracts\ImportManagerInterface;
-use Nexus\Import\Contracts\ImporterInterface;
+use Nexus\Import\Contracts\ImportParserInterface;
+use Nexus\Import\Contracts\TransactionManagerInterface;
+use Nexus\Import\Contracts\ImportHandlerInterface;
+use Nexus\Import\Contracts\ImportProcessorInterface;
+use Nexus\Import\Contracts\TransformerInterface;
+use Nexus\Import\Contracts\FieldMapperInterface;
+use Nexus\Import\Contracts\ImportValidatorInterface;
+use Nexus\Import\Contracts\DuplicateDetectorInterface;
 ```
+
+**Example:**
+```php
+// ✅ CORRECT: Import customers with validation and duplicate detection
+public function __construct(
+    private readonly ImportManager $importManager,
+    private readonly CustomerImportHandler $handler
+) {}
+
+public function importCustomers(string $filePath): ImportResult
+{
+    $result = $this->importManager->import(
+        filePath: $filePath,
+        format: ImportFormat::CSV,
+        handler: $this->handler,
+        mappings: [
+            new FieldMapping(
+                sourceField: 'customer_name',
+                targetField: 'name',
+                required: true,
+                transformations: ['trim', 'capitalize']
+            ),
+            new FieldMapping(
+                sourceField: 'email_address',
+                targetField: 'email',
+                required: true,
+                transformations: ['trim', 'lower']
+            ),
+        ],
+        mode: ImportMode::UPSERT,
+        strategy: ImportStrategy::BATCH,
+        validationRules: [
+            new ValidationRule('email', 'email', 'Invalid email format'),
+            new ValidationRule('name', 'required', 'Name is required'),
+        ]
+    );
+    
+    // Get detailed results
+    $successCount = $result->successCount;
+    $errorsByField = $result->getErrorsByField();
+    $successRate = $result->getSuccessRate();
+    
+    return $result;
+}
+```
+
+**❌ WRONG:**
+```php
+// Creating custom CSV parser violates DRY principle
+final class CustomCsvParser {
+    public function parse(string $file): array {
+        // ... duplicates Nexus\Import functionality
+    }
+}
+
+// Creating custom field transformer
+final class CustomFieldTransformer {
+    public function transform(array $data): array {
+        // ... should use FieldMapping with built-in transformations
+    }
+}
+```
+
+**Built-in Transformations:**
+- String: `trim`, `upper`, `lower`, `capitalize`, `slug`
+- Type: `to_bool`, `to_int`, `to_float`, `to_string`
+- Date: `parse_date:format`, `date_format:format`
+- Utility: `default:value`, `coalesce:val1,val2`
+
+**Transaction Strategies:**
+- **TRANSACTIONAL**: Single transaction, rollback on any error (critical imports)
+- **BATCH**: Transaction per batch, continue on failure (large imports)
+- **STREAM**: Row-by-row, no transaction wrapper (memory-efficient)
 
 ---
 
@@ -1239,7 +1599,61 @@ use Nexus\Routing\Contracts\RouteCacheInterface;
 
 ---
 
-### ⚖️ **15. Compliance & Statutory**
+### 📝 **15. Content Management**
+
+#### **Nexus\Content**
+**Capabilities:**
+- Content management system (CMS)
+- Content versioning and publishing
+- Multi-language content support
+- Content templates and layouts
+- Media library management
+- SEO metadata management
+- Content workflow (draft, review, publish)
+
+**When to Use:**
+- ✅ Website content management
+- ✅ Product descriptions and catalogs
+- ✅ Marketing content
+- ✅ Help documentation
+- ✅ Knowledge base articles
+- ✅ Multi-language content
+
+**Key Interfaces:**
+```php
+use Nexus\Content\Contracts\ContentManagerInterface;
+use Nexus\Content\Contracts\ContentRepositoryInterface;
+use Nexus\Content\Contracts\MediaManagerInterface;
+use Nexus\Content\Contracts\ContentPublisherInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Publish multi-language product description
+public function __construct(
+    private readonly ContentManagerInterface $contentManager
+) {}
+
+public function publishProductContent(string $productId, array $translations): void
+{
+    foreach ($translations as $locale => $content) {
+        $this->contentManager->publish(
+            entityType: 'product',
+            entityId: $productId,
+            locale: $locale,
+            content: $content,
+            metadata: [
+                'seo_title' => $content['seo_title'],
+                'seo_description' => $content['seo_description'],
+            ]
+        );
+    }
+}
+```
+
+---
+
+### ⚖️ **16. Compliance & Statutory**
 
 #### **Nexus\Compliance**
 **Capabilities:**
@@ -1285,7 +1699,7 @@ use Nexus\Statutory\Contracts\TaxonomyAdapterInterface;
 
 ---
 
-### ⚙️ **16. System Utilities**
+### ⚙️ **17. System Utilities**
 
 #### **Nexus\Setting**
 **Capabilities:**
@@ -1317,6 +1731,48 @@ public function __construct(
 public function getMaxRetries(): int
 {
     return $this->settings->getInt('api.max_retries', 3);
+}
+```
+
+---
+
+#### **Nexus\FeatureFlags**
+**Capabilities:**
+- Feature flag management (enable/disable features)
+- Percentage-based rollouts
+- User/tenant-specific flags
+- A/B testing support
+- Feature flag versioning
+- Scheduled feature releases
+
+**When to Use:**
+- ✅ Gradual feature rollout
+- ✅ A/B testing new features
+- ✅ Toggle features per tenant or user
+- ✅ Emergency feature kill-switch
+- ✅ Canary deployments
+
+**Key Interfaces:**
+```php
+use Nexus\FeatureFlags\Contracts\FeatureFlagManagerInterface;
+use Nexus\FeatureFlags\Contracts\FeatureFlagRepositoryInterface;
+use Nexus\FeatureFlags\Contracts\FeatureEvaluatorInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Check if feature is enabled
+public function __construct(
+    private readonly FeatureFlagManagerInterface $featureFlags
+) {}
+
+public function processOrder(Order $order): void
+{
+    if ($this->featureFlags->isEnabled('advanced_pricing', $order->getCustomerId())) {
+        $this->applyAdvancedPricing($order);
+    } else {
+        $this->applyStandardPricing($order);
+    }
 }
 ```
 
@@ -1575,6 +2031,9 @@ public function getInvoices(): array {
 |--------------|------------------|---------------------|
 | Track metrics/performance | `Nexus\Monitoring` | `TelemetryTrackerInterface` |
 | Log user actions | `Nexus\AuditLogger` | `AuditLogManagerInterface` |
+| **Manage company structure** | **`Nexus\Backoffice`** | **`CompanyManagerInterface`** |
+| **Extract text from documents/OCR** | **`Nexus\DataProcessor`** | **`OcrProcessorInterface`** |
+| **Build ETL pipelines** | **`Nexus\DataProcessor`** | **`EtlPipelineInterface`** |
 | Send notifications | `Nexus\Notifier` | `NotificationManagerInterface` |
 | Store files | `Nexus\Storage` | `StorageInterface` |
 | Manage documents | `Nexus\Document` | `DocumentManagerInterface` |
@@ -1601,11 +2060,21 @@ public function getInvoices(): array {
 | **Execute ML model inference** | **`Nexus\MachineLearning`** | **`InferenceEngineInterface`** |
 | **Configure AI provider per domain** | **`Nexus\MachineLearning`** | **`ProviderStrategyInterface`** |
 | **Manage feature schemas** | **`Nexus\MachineLearning`** | **`FeatureVersionManagerInterface`** |
+| **Import data from CSV/Excel** | **`Nexus\Import`** | **`ImportParserInterface`, `ImportHandlerInterface`** |
+| **Validate imported data** | **`Nexus\Import`** | **`ImportValidatorInterface`** |
+| **Transform import fields** | **`Nexus\Import`** | **`TransformerInterface`, `FieldMapperInterface`** |
+| **Detect import duplicates** | **`Nexus\Import`** | **`DuplicateDetectorInterface`** |
+| **Manage import transactions** | **`Nexus\Import`** | **`TransactionManagerInterface`** |
 | Export to Excel | `Nexus\Export` | `ExportManagerInterface` |
 | Generate reports | `Nexus\Reporting` | `ReportManagerInterface` |
 | Event sourcing (GL/Inventory) | `Nexus\EventStream` | `EventStoreInterface` |
 | Encrypt data | `Nexus\Crypto` | `EncryptionManagerInterface` |
 | Get/set app config | `Nexus\Setting` | `SettingsManagerInterface` |
+| **Manage feature flags** | **`Nexus\FeatureFlags`** | **`FeatureFlagManagerInterface`** |
+| **Calculate taxes** | **`Nexus\Tax`** | **`TaxCalculatorInterface`** |
+| **Publish/consume messages** | **`Nexus\Messaging`** | **`MessagePublisherInterface`, `MessageConsumerInterface`** |
+| **Manage content/CMS** | **`Nexus\Content`** | **`ContentManagerInterface`** |
+| **Track detailed changes** | **`Nexus\Audit`** | **`ChangeTrackerInterface`** |
 
 ---
 
@@ -1646,6 +2115,6 @@ Before implementing ANY feature, run this mental checklist:
 
 ---
 
-**Last Updated:** November 23, 2025  
+**Last Updated:** November 25, 2025  
 **Maintained By:** Nexus Architecture Team  
 **Enforcement:** Mandatory for all coding agents and developers
