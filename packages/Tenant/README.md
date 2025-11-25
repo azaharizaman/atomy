@@ -1,7 +1,7 @@
 # Nexus\Tenant
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
+[![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue)](https://php.net)
 
 Framework-agnostic multi-tenancy context and isolation engine for the Nexus ERP system.
 
@@ -57,7 +57,7 @@ composer require nexus/tenant:"*@dev"
 
 ## Requirements
 
-- PHP 8.2 or higher
+- PHP 8.3 or higher
 - PSR-3 Logger implementation (optional)
 
 ## Basic Usage

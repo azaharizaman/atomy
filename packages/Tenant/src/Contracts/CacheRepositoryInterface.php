@@ -8,7 +8,7 @@ namespace Nexus\Tenant\Contracts;
  * Cache Repository Interface
  *
  * Defines caching operations for tenant data.
- * This interface must be implemented by the application layer using Laravel's cache.
+ * This interface must be implemented by the application layer.
  *
  * @package Nexus\Tenant\Contracts
  */

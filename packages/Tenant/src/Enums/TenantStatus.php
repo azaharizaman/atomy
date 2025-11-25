@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Tenant\ValueObjects;
+namespace Nexus\Tenant\Enums;
 
 /**
  * Tenant Status Enum
@@ -10,7 +10,7 @@ namespace Nexus\Tenant\ValueObjects;
  * Native PHP enum representing tenant lifecycle statuses.
  * Defines valid states and allowed transitions between states.
  *
- * @package Nexus\Tenant\ValueObjects
+ * @package Nexus\Tenant\Enums
  * @see https://www.php.net/manual/en/language.enumerations.backed.php
  */
 enum TenantStatus: string

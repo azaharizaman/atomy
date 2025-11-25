@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Tenant\Services;
 
 use Nexus\Tenant\Contracts\TenantRepositoryInterface;
-use Nexus\Tenant\ValueObjects\IdentificationStrategy;
+use Nexus\Tenant\Enums\IdentificationStrategy;
 
 /**
  * Tenant Resolver Service

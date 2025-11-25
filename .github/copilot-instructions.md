@@ -239,6 +239,103 @@ This summary ensures that your developer instructions will proactively address t
 
 ---
 
+## 🔍 Architectural Violation Detection Rules
+
+**BEFORE merging any package code, run through this checklist:**
+
+### ISP (Interface Segregation Principle) Violations
+
+❌ **REJECT if:**
+- Any interface has more than 7-10 methods
+- Interface name ends in "RepositoryInterface" but contains business logic methods (e.g., `getExpiredTrials()`, `calculateTotal()`)
+- Single interface mixes write operations (create, update, delete) with read operations (find, get, all)
+- Interface contains both persistence operations and validation operations
+- DocBlock says "This interface handles X, Y, and Z" (multiple responsibilities)
+
+✅ **ACCEPT if:**
+- Each interface has single, focused responsibility
+- Write operations in `*PersistenceInterface`
+- Read operations in `*QueryInterface`
+- Validation in `*ValidationInterface`
+- Business logic in domain service classes, not interfaces
+
+### CQRS Violations
+
+❌ **REJECT if:**
+- Repository interface contains both `create()` and `findById()` methods (mixed command/query)
+- Domain layer interface has pagination parameters (`int $page`, `int $perPage`)
+- Method returns paginated result object (`PaginatedResult`, `LengthAwarePaginator`)
+- Repository has reporting methods (`getAgingReport()`, `getStatistics()`)
+
+✅ **ACCEPT if:**
+- Commands (write) separated from queries (read)
+- Query methods return raw arrays (`array<TenantInterface>`)
+- Pagination handled in application layer
+- Reporting queries in application-specific read models
+
+### Stateless Architecture Violations
+
+❌ **REJECT if:**
+- Service class has private properties storing state (e.g., `private array $cache = []`)
+- Constructor stores non-interface dependencies
+- Service class is NOT `readonly`
+- Long-term state (session, impersonation, circuit breaker) stored in-memory
+- Properties declared without `readonly` modifier (except request-scoped state in context managers)
+
+✅ **ACCEPT if:**
+- All dependencies are `readonly` and injected via constructor
+- Class declared as `final readonly class`
+- Long-term state externalized via `*StorageInterface`
+- Only request-scoped ephemeral state allowed (e.g., `TenantContextManager::$currentTenantId`)
+
+### Framework Agnosticism Violations
+
+❌ **REJECT if:**
+- DocBlock mentions "Eloquent", "Laravel", "Symfony", "Doctrine" (framework names)
+- Method type-hints framework classes (`Illuminate\Http\Request`, `Symfony\Component\HttpFoundation\Request`)
+- Uses framework facades (`DB::`, `Cache::`, `Log::`, `Event::`)
+- Uses global helpers (`now()`, `config()`, `app()`, `dd()`, `env()`)
+- composer.json requires framework packages (`laravel/framework`, `symfony/symfony`)
+
+✅ **ACCEPT if:**
+- DocBlock says "consuming application provides implementation"
+- All dependencies are PSR interfaces or Nexus package interfaces
+- No framework-specific code or terminology
+- composer.json only requires `php: ^8.3`, PSR packages, or other Nexus packages
+
+### Quick Violation Scan (Red Flags)
+
+**Scan package code for these patterns:**
+
+```bash
+# ISP Violations
+grep -r "RepositoryInterface" | grep -E "(get|calculate|find|validate|create)" 
+# If one interface matches multiple verbs → ISP violation
+
+# Framework References
+grep -ri "eloquent\|laravel\|symfony" src/
+# Any matches in src/ → Framework coupling violation
+
+# Global Helpers
+grep -r "now()\|config()\|app()\|dd()\|env()" src/
+# Any matches → Global helper violation
+
+# CQRS Violations  
+grep -r "paginate\|PaginatedResult\|LengthAwarePaginator" src/Contracts/
+# Any matches in Contracts/ → CQRS violation
+
+# Stateless Violations
+grep -r "private array\|private int\|private string" src/Services/ | grep -v "readonly"
+# Non-readonly properties in services → Stateless violation
+```
+
+**Auto-Rejection Criteria:**
+- Package has > 3 violations from above scans → REJECT, request refactoring
+- Any violation in `src/Contracts/` → REJECT immediately (contracts define architecture)
+- Framework references in docblocks → REJECT (leaky abstraction)
+
+---
+
 ## 🛡️ Statutory and Compliance Architecture
 
 All compliance activities are divided into two distinct packages:

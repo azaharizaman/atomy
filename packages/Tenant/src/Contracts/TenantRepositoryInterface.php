@@ -8,7 +8,14 @@ namespace Nexus\Tenant\Contracts;
  * Tenant Repository Interface
  *
  * Defines all persistence operations for tenant entities.
- * This interface must be implemented by the application layer using Eloquent.
+ * This interface must be implemented by the application layer.
+ *
+ * @deprecated This interface violates Interface Segregation Principle (ISP).
+ *             Use the focused interfaces instead:
+ *             - TenantPersistenceInterface for CRUD operations
+ *             - TenantQueryInterface for read operations
+ *             - TenantValidationInterface for validation
+ *             - TenantStatusService for business logic (getActive, getSuspended, etc.)
  *
  * @package Nexus\Tenant\Contracts
  */

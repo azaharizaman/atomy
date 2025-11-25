@@ -450,7 +450,381 @@ Consuming applications test:
 
 ---
 
-## 7. 🚀 Development Workflow
+## 7. 🚨 Architectural Violations & Prevention
+
+This section documents common architectural violations discovered in the codebase and provides guidance for prevention.
+
+### 7.1 Interface Segregation Principle (ISP) Violations
+
+**Problem:** "Fat" interfaces with too many responsibilities force consumers to implement methods they don't need.
+
+#### ❌ VIOLATION EXAMPLE: Fat Repository Interface
+
+```php
+// WRONG: Single interface with 15+ methods covering 5 responsibilities
+interface TenantRepositoryInterface
+{
+    // CRUD operations (Persistence)
+    public function create(array $data): TenantInterface;
+    public function update(string $id, array $data): TenantInterface;
+    public function delete(string $id): bool;
+    
+    // Query operations (Read)
+    public function findById(string $id): ?TenantInterface;
+    public function findByCode(string $code): ?TenantInterface;
+    public function all(): array;
+    
+    // Validation (Business logic)
+    public function codeExists(string $code): bool;
+    public function domainExists(string $domain): bool;
+    
+    // Business logic filtering (Domain service)
+    public function getExpiredTrials(): array;
+    public function getSuspendedTenants(): array;
+    public function getStatistics(): array;
+    
+    // Pagination (Read model)
+    public function paginate(int $page, int $perPage): array;
+}
+```
+
+**Problems with this design:**
+1. **Violation of Single Responsibility:** Mixes write, read, validation, business logic, and pagination
+2. **Tight Coupling:** Changes to one responsibility affect all consumers
+3. **Cannot Mock Granularly:** Test doubles must implement all 15+ methods
+4. **CQRS Violation:** No separation between commands (write) and queries (read)
+
+#### ✅ CORRECT: Split into Focused Interfaces (ISP Compliant)
+
+```php
+// WRITE OPERATIONS ONLY (CQRS Command Model)
+interface TenantPersistenceInterface
+{
+    public function create(array $data): TenantInterface;
+    public function update(string $id, array $data): TenantInterface;
+    public function delete(string $id): bool;
+    public function forceDelete(string $id): bool;
+    public function restore(string $id): bool;
+}
+
+// READ OPERATIONS ONLY (CQRS Query Model)
+interface TenantQueryInterface
+{
+    public function findById(string $id): ?TenantInterface;
+    public function findByCode(string $code): ?TenantInterface;
+    public function findByDomain(string $domain): ?TenantInterface;
+    public function findBySubdomain(string $subdomain): ?TenantInterface;
+    public function all(): array; // Returns raw array, no pagination in domain layer
+    public function getChildren(string $parentId): array;
+}
+
+// VALIDATION OPERATIONS ONLY
+interface TenantValidationInterface
+{
+    public function codeExists(string $code, ?string $excludeId = null): bool;
+    public function domainExists(string $domain, ?string $excludeId = null): bool;
+}
+
+// BUSINESS LOGIC (Domain Service - NOT in repository)
+final readonly class TenantStatusService
+{
+    public function __construct(
+        private TenantQueryInterface $query
+    ) {}
+    
+    public function getExpiredTrials(): array
+    {
+        // Business logic filtering using query interface
+        $trials = array_filter(
+            $this->query->all(),
+            fn($t) => $t->isTrial() && $this->isExpired($t)
+        );
+        return array_values($trials);
+    }
+    
+    public function getSuspendedTenants(): array { /* ... */ }
+    public function getStatistics(): array { /* ... */ }
+}
+```
+
+**Benefits:**
+- **Single Responsibility:** Each interface has one clear purpose
+- **Loose Coupling:** Services inject only what they need
+- **Testability:** Mock only the interface methods you're testing
+- **CQRS Compliance:** Clear separation between write and read models
+- **Maintainability:** Changes to validation don't affect persistence
+
+#### Service Usage Example
+
+```php
+// Service only needs write operations
+final readonly class TenantLifecycleService
+{
+    public function __construct(
+        private TenantPersistenceInterface $persistence, // Only write ops
+        private TenantQueryInterface $query,              // Only read ops
+        private TenantValidationInterface $validation,    // Only validation
+        private EventDispatcherInterface $eventDispatcher,
+        private LoggerInterface $logger = new NullLogger()
+    ) {}
+    
+    public function createTenant(string $code, string $name, ...): TenantInterface
+    {
+        // Validate (uses TenantValidationInterface)
+        if ($this->validation->codeExists($code)) {
+            throw new DuplicateTenantCodeException();
+        }
+        
+        // Persist (uses TenantPersistenceInterface)
+        $tenant = $this->persistence->create(['code' => $code, 'name' => $name]);
+        
+        // Dispatch event
+        $this->eventDispatcher->dispatch(new TenantCreatedEvent($tenant));
+        
+        return $tenant;
+    }
+}
+```
+
+---
+
+### 7.2 CQRS (Command Query Responsibility Segregation) Violations
+
+**Problem:** Mixing write operations (commands) with read operations (queries) in the same interface/service.
+
+#### ❌ VIOLATION EXAMPLE: Mixed Read/Write in Repository
+
+```php
+// WRONG: Single interface handles both commands and queries
+interface InvoiceRepositoryInterface
+{
+    // Commands (Write Model)
+    public function create(array $data): InvoiceInterface;
+    public function update(string $id, array $data): InvoiceInterface;
+    
+    // Queries (Read Model)
+    public function findById(string $id): ?InvoiceInterface;
+    public function findOverdue(): array;
+    
+    // VIOLATION: Pagination in domain layer
+    public function paginate(int $page, int $perPage, array $filters): array;
+    
+    // VIOLATION: Reporting query with joins
+    public function getAgingReport(string $tenantId): array;
+}
+```
+
+**Problems:**
+1. **No Clear Separation:** Write and read operations intermingled
+2. **Pagination in Domain Layer:** Domain layer should return raw collections
+3. **Reporting Logic in Repository:** Complex queries belong in read models
+
+#### ✅ CORRECT: Separate Write and Read Models
+
+```php
+// WRITE MODEL (Commands)
+interface InvoicePersistenceInterface
+{
+    public function create(array $data): InvoiceInterface;
+    public function update(string $id, array $data): InvoiceInterface;
+    public function delete(string $id): bool;
+}
+
+// READ MODEL (Queries)
+interface InvoiceQueryInterface
+{
+    public function findById(string $id): ?InvoiceInterface;
+    public function findByNumber(string $number): ?InvoiceInterface;
+    public function all(): array; // Raw array, no pagination
+}
+
+// APPLICATION LAYER: Read Model for Reporting (outside package)
+interface InvoiceReadModelInterface
+{
+    // Pagination is application layer concern
+    public function paginate(int $page, int $perPage, array $filters): PaginatedResult;
+    
+    // Complex reporting queries
+    public function getAgingReport(string $tenantId): array;
+    public function getRevenueByMonth(string $tenantId, int $year): array;
+}
+```
+
+**Rule:** Domain layer (package) provides raw operations. Application layer adds pagination, filtering, reporting.
+
+---
+
+### 7.3 Stateful Service Violations
+
+**Problem:** Services storing state in-memory that should persist across requests/processes.
+
+#### ❌ VIOLATION EXAMPLE: In-Memory State
+
+```php
+// WRONG: Impersonation state stored in service instance
+final class TenantImpersonationService
+{
+    private ?string $originalTenantId = null;      // Lost when instance destroyed!
+    private ?string $impersonatedTenantId = null;
+    private ?string $impersonatorId = null;
+    
+    public function impersonate(string $tenantId, string $userId): void
+    {
+        $this->originalTenantId = $this->contextManager->getCurrentTenantId();
+        $this->impersonatedTenantId = $tenantId;
+        $this->impersonatorId = $userId;
+        
+        $this->contextManager->setTenant($tenantId);
+    }
+    
+    public function stopImpersonation(): void
+    {
+        // PROBLEM: What if service instance was destroyed and recreated?
+        $this->contextManager->setTenant($this->originalTenantId);
+    }
+}
+```
+
+**Problems:**
+1. **State Lost on Destruction:** PHP services can be recreated between requests
+2. **Not Scalable:** Won't work across load-balanced servers
+3. **No Queue Support:** Background jobs can't access impersonation context
+
+#### ✅ CORRECT: Externalized State via Interface
+
+```php
+// Define storage contract
+interface ImpersonationStorageInterface
+{
+    public function store(string $key, string $originalTenantId, string $targetTenantId, ?string $impersonatorId): void;
+    public function retrieve(string $key): ?array;
+    public function clear(string $key): void;
+    public function isActive(string $key): bool;
+}
+
+// Stateless service
+final readonly class TenantImpersonationService
+{
+    public function __construct(
+        private TenantQueryInterface $tenantQuery,
+        private TenantContextManager $contextManager,
+        private ImpersonationStorageInterface $storage, // State externalized
+        private EventDispatcherInterface $eventDispatcher,
+        private LoggerInterface $logger = new NullLogger()
+    ) {}
+    
+    public function impersonate(string $storageKey, string $tenantId, string $impersonatorId): void
+    {
+        $originalTenantId = $this->contextManager->getCurrentTenantId();
+        $targetTenant = $this->tenantQuery->findById($tenantId);
+        
+        // Store state externally (session, cache, database)
+        $this->storage->store($storageKey, $originalTenantId, $tenantId, $impersonatorId);
+        
+        $this->contextManager->setTenant($tenantId);
+        
+        $this->eventDispatcher->dispatch(
+            new ImpersonationStartedEvent($originalTenant, $targetTenant, $impersonatorId)
+        );
+    }
+    
+    public function stopImpersonation(string $storageKey): void
+    {
+        $data = $this->storage->retrieve($storageKey);
+        
+        if ($data) {
+            $this->contextManager->setTenant($data['original_tenant_id']);
+            $this->storage->clear($storageKey);
+        }
+    }
+}
+```
+
+**Benefits:**
+- **Persistent State:** Survives service recreation
+- **Scalable:** Works across load-balanced servers
+- **Queue-Compatible:** Background jobs can access context
+- **Testable:** Storage can be mocked
+
+---
+
+### 7.4 Framework References in Docblocks
+
+**Problem:** Package code references framework-specific implementations in comments.
+
+#### ❌ VIOLATION EXAMPLE
+
+```php
+/**
+ * This interface must be implemented using Eloquent models.
+ * 
+ * @see \Illuminate\Database\Eloquent\Model
+ */
+interface TenantRepositoryInterface
+{
+    /**
+     * Uses Laravel's cache system.
+     */
+    public function findById(string $id): ?TenantInterface;
+}
+```
+
+#### ✅ CORRECT: Framework-Agnostic Documentation
+
+```php
+/**
+ * Defines contract for tenant data persistence operations.
+ * 
+ * Consuming applications must provide concrete implementation
+ * using their chosen ORM (Doctrine, Eloquent, etc.).
+ */
+interface TenantPersistenceInterface
+{
+    /**
+     * Creates a new tenant.
+     * 
+     * @param array $data Tenant data
+     * @return TenantInterface Created tenant entity
+     * @throws \RuntimeException If creation fails
+     */
+    public function create(array $data): TenantInterface;
+}
+```
+
+---
+
+### 7.5 Checklist: Preventing Architectural Violations
+
+Before committing package code, verify:
+
+#### ISP Compliance
+- [ ] No interface has more than 7 methods
+- [ ] Each interface has single, clear responsibility
+- [ ] Write operations separated from read operations
+- [ ] Validation operations in separate interface
+- [ ] Business logic in domain services, not repositories
+
+#### CQRS Compliance
+- [ ] Write operations (create, update, delete) in `*PersistenceInterface`
+- [ ] Read operations (find, get, all) in `*QueryInterface`
+- [ ] No pagination in domain layer (returns raw arrays)
+- [ ] Reporting queries in application layer read models
+
+#### Stateless Architecture
+- [ ] No private properties storing long-term state
+- [ ] All persistent state externalized via `*StorageInterface`
+- [ ] Services are `readonly` (all dependencies immutable)
+- [ ] Request-scoped state (e.g., current tenant) is acceptable
+
+#### Framework Agnosticism
+- [ ] No framework references in docblocks
+- [ ] No framework facades or global helpers
+- [ ] All dependencies injected as interfaces
+- [ ] Package works with any PHP framework
+
+---
+
+## 8. 🚀 Development Workflow
 
 ### Creating a New Package
 
@@ -480,7 +854,7 @@ Consuming applications test:
 
 ---
 
-## 8. 📊 Code Quality Checklist
+## 9. 📊 Code Quality Checklist
 
 Before committing to any package:
 
@@ -500,7 +874,7 @@ Before committing to any package:
 
 ---
 
-## 9. 📚 Documentation Requirements
+## 10. 📚 Documentation Requirements
 
 Each package must include:
 
@@ -520,7 +894,7 @@ Each package must include:
 
 ---
 
-## 10. 🔄 Publishing Workflow
+## 11. 🔄 Publishing Workflow
 
 Before publishing a package to Packagist:
 
@@ -534,7 +908,7 @@ Before publishing a package to Packagist:
 
 ---
 
-## 11. Key Principles Summary
+## 12. Key Principles Summary
 
 1. **Packages are pure engines** - Logic only, no persistence or framework coupling
 2. **Interfaces define needs** - Every dependency is an interface

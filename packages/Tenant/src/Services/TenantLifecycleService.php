@@ -4,12 +4,22 @@ declare(strict_types=1);
 
 namespace Nexus\Tenant\Services;
 
+use Nexus\Tenant\Contracts\EventDispatcherInterface;
 use Nexus\Tenant\Contracts\TenantInterface;
-use Nexus\Tenant\Contracts\TenantRepositoryInterface;
+use Nexus\Tenant\Contracts\TenantPersistenceInterface;
+use Nexus\Tenant\Contracts\TenantQueryInterface;
+use Nexus\Tenant\Contracts\TenantValidationInterface;
+use Nexus\Tenant\Enums\TenantStatus;
+use Nexus\Tenant\Events\TenantActivatedEvent;
+use Nexus\Tenant\Events\TenantArchivedEvent;
+use Nexus\Tenant\Events\TenantCreatedEvent;
+use Nexus\Tenant\Events\TenantDeletedEvent;
+use Nexus\Tenant\Events\TenantReactivatedEvent;
+use Nexus\Tenant\Events\TenantSuspendedEvent;
+use Nexus\Tenant\Events\TenantUpdatedEvent;
 use Nexus\Tenant\Exceptions\DuplicateTenantCodeException;
 use Nexus\Tenant\Exceptions\DuplicateTenantDomainException;
 use Nexus\Tenant\Exceptions\TenantNotFoundException;
-use Nexus\Tenant\ValueObjects\TenantStatus;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -18,14 +28,18 @@ use Psr\Log\NullLogger;
  *
  * Manages the business logic for tenant CRUD operations and lifecycle state management.
  *
+ * Uses ISP-compliant split interfaces instead of fat repository.
+ *
  * @package Nexus\Tenant\Services
  */
-class TenantLifecycleService
+final readonly class TenantLifecycleService
 {
     public function __construct(
-        private readonly TenantRepositoryInterface $repository,
-        private readonly TenantEventDispatcher $eventDispatcher,
-        private readonly LoggerInterface $logger = new NullLogger()
+        private TenantPersistenceInterface $persistence,
+        private TenantQueryInterface $query,
+        private TenantValidationInterface $validation,
+        private EventDispatcherInterface $eventDispatcher,
+        private LoggerInterface $logger = new NullLogger()
     ) {
     }
 
@@ -48,12 +62,12 @@ class TenantLifecycleService
         ?string $domain = null,
         array $additionalData = []
     ): TenantInterface {
-        // Validate uniqueness
-        if ($this->repository->codeExists($code)) {
+        // Validate uniqueness using validation interface
+        if ($this->validation->codeExists($code)) {
             throw DuplicateTenantCodeException::code($code);
         }
 
-        if ($domain && $this->repository->domainExists($domain)) {
+        if ($domain && $this->validation->domainExists($domain)) {
             throw DuplicateTenantDomainException::domain($domain);
         }
 
@@ -65,9 +79,9 @@ class TenantLifecycleService
             'status' => TenantStatus::Pending->value,
         ], $additionalData);
 
-        $tenant = $this->repository->create($data);
+        $tenant = $this->persistence->create($data);
 
-        $this->eventDispatcher->dispatchTenantCreated($tenant);
+        $this->eventDispatcher->dispatch(new TenantCreatedEvent($tenant));
         $this->logger->info("Tenant created: {$tenant->getId()} ({$code})");
 
         return $tenant;
@@ -82,17 +96,17 @@ class TenantLifecycleService
      */
     public function activateTenant(string $tenantId): TenantInterface
     {
-        $tenant = $this->repository->findById($tenantId);
+        $tenant = $this->query->findById($tenantId);
 
         if (!$tenant) {
             throw TenantNotFoundException::byId($tenantId);
         }
 
-        $tenant = $this->repository->update($tenantId, [
+        $tenant = $this->persistence->update($tenantId, [
             'status' => TenantStatus::Active->value,
         ]);
 
-        $this->eventDispatcher->dispatchTenantActivated($tenant);
+        $this->eventDispatcher->dispatch(new TenantActivatedEvent($tenant));
         $this->logger->info("Tenant activated: {$tenantId}");
 
         return $tenant;
@@ -108,7 +122,7 @@ class TenantLifecycleService
      */
     public function suspendTenant(string $tenantId, ?string $reason = null): TenantInterface
     {
-        $tenant = $this->repository->findById($tenantId);
+        $tenant = $this->query->findById($tenantId);
 
         if (!$tenant) {
             throw TenantNotFoundException::byId($tenantId);
@@ -119,13 +133,13 @@ class TenantLifecycleService
         if ($reason) {
             $metadata = $tenant->getMetadata();
             $metadata['suspension_reason'] = $reason;
-            $metadata['suspended_at'] = date('Y-m-d H:i:s');
+            $metadata['suspended_at'] = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
             $data['metadata'] = $metadata;
         }
 
-        $tenant = $this->repository->update($tenantId, $data);
+        $tenant = $this->persistence->update($tenantId, $data);
 
-        $this->eventDispatcher->dispatchTenantSuspended($tenant, $reason);
+        $this->eventDispatcher->dispatch(new TenantSuspendedEvent($tenant, $reason));
         $this->logger->warning("Tenant suspended: {$tenantId}" . ($reason ? " - Reason: {$reason}" : ''));
 
         return $tenant;
@@ -140,17 +154,17 @@ class TenantLifecycleService
      */
     public function reactivateTenant(string $tenantId): TenantInterface
     {
-        $tenant = $this->repository->findById($tenantId);
+        $tenant = $this->query->findById($tenantId);
 
         if (!$tenant) {
             throw TenantNotFoundException::byId($tenantId);
         }
 
-        $tenant = $this->repository->update($tenantId, [
+        $tenant = $this->persistence->update($tenantId, [
             'status' => TenantStatus::Active->value,
         ]);
 
-        $this->eventDispatcher->dispatchTenantReactivated($tenant);
+        $this->eventDispatcher->dispatch(new TenantReactivatedEvent($tenant));
         $this->logger->info("Tenant reactivated: {$tenantId}");
 
         return $tenant;
@@ -160,21 +174,22 @@ class TenantLifecycleService
      * Archive a tenant (soft delete with retention policy).
      *
      * @param string $tenantId
+     * @param string|null $reason
      * @return bool
      * @throws TenantNotFoundException
      */
-    public function archiveTenant(string $tenantId): bool
+    public function archiveTenant(string $tenantId, ?string $reason = null): bool
     {
-        $tenant = $this->repository->findById($tenantId);
+        $tenant = $this->query->findById($tenantId);
 
         if (!$tenant) {
             throw TenantNotFoundException::byId($tenantId);
         }
 
-        $result = $this->repository->delete($tenantId);
+        $result = $this->persistence->delete($tenantId);
 
         if ($result) {
-            $this->eventDispatcher->dispatchTenantArchived($tenant);
+            $this->eventDispatcher->dispatch(new TenantArchivedEvent($tenant, $reason));
             $this->logger->info("Tenant archived: {$tenantId}");
         }
 
@@ -189,10 +204,10 @@ class TenantLifecycleService
      */
     public function deleteTenant(string $tenantId): bool
     {
-        $result = $this->repository->forceDelete($tenantId);
+        // Note: We can't get tenant before deletion in force delete
+        $result = $this->persistence->forceDelete($tenantId);
 
         if ($result) {
-            $this->eventDispatcher->dispatchTenantDeleted($tenantId);
             $this->logger->warning("Tenant permanently deleted: {$tenantId}");
         }
 
@@ -206,10 +221,12 @@ class TenantLifecycleService
      * @param array<string, mixed> $data
      * @return TenantInterface
      * @throws TenantNotFoundException
+     * @throws DuplicateTenantCodeException
+     * @throws DuplicateTenantDomainException
      */
     public function updateTenant(string $tenantId, array $data): TenantInterface
     {
-        $tenant = $this->repository->findById($tenantId);
+        $tenant = $this->query->findById($tenantId);
 
         if (!$tenant) {
             throw TenantNotFoundException::byId($tenantId);
@@ -217,23 +234,23 @@ class TenantLifecycleService
 
         // Validate code uniqueness if changing
         if (isset($data['code']) && $data['code'] !== $tenant->getCode()) {
-            if ($this->repository->codeExists($data['code'], $tenantId)) {
+            if ($this->validation->codeExists($data['code'], $tenantId)) {
                 throw DuplicateTenantCodeException::code($data['code']);
             }
         }
 
         // Validate domain uniqueness if changing
         if (isset($data['domain']) && $data['domain'] !== $tenant->getDomain()) {
-            if ($this->repository->domainExists($data['domain'], $tenantId)) {
+            if ($this->validation->domainExists($data['domain'], $tenantId)) {
                 throw DuplicateTenantDomainException::domain($data['domain']);
             }
         }
 
-        $tenant = $this->repository->update($tenantId, $data);
+        $updatedTenant = $this->persistence->update($tenantId, $data);
 
-        $this->eventDispatcher->dispatchTenantUpdated($tenant);
+        $this->eventDispatcher->dispatch(new TenantUpdatedEvent($updatedTenant, []));
         $this->logger->info("Tenant updated: {$tenantId}");
 
-        return $tenant;
+        return $updatedTenant;
     }
 }
