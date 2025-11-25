@@ -18,26 +18,36 @@ use Psr\Log\LoggerInterface;
  *
  * Handles automatic and manual resolution of capacity constraints.
  */
-final readonly class CapacityResolver implements CapacityResolverInterface
+final class CapacityResolver implements CapacityResolverInterface
 {
+    /** @var array<string, int> */
+    private array $preferences = [];
+
     public function __construct(
-        private CapacityPlannerInterface $capacityPlanner,
-        private WorkCenterManagerInterface $workCenterManager,
-        private WorkOrderManagerInterface $workOrderManager,
-        private ?LoggerInterface $logger = null,
+        private readonly CapacityPlannerInterface $capacityPlanner,
+        private readonly WorkCenterManagerInterface $workCenterManager,
+        private readonly WorkOrderManagerInterface $workOrderManager,
+        private readonly ?LoggerInterface $logger = null,
     ) {
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getSuggestions(string $workCenterId, PlanningHorizon $horizon): array
-    {
+    public function getSuggestions(
+        string $workCenterId,
+        \DateTimeImmutable $constraintDate,
+        float $overloadHours
+    ): array {
+        $horizon = new PlanningHorizon(
+            startDate: $constraintDate,
+            endDate: $constraintDate->modify('+30 days'),
+        );
         return $this->capacityPlanner->suggestResolutions($workCenterId, $horizon);
     }
 
     /**
-     * {@inheritdoc}
+     * Apply a resolution suggestion.
      */
     public function applySuggestion(CapacityResolutionSuggestion $suggestion, array $context = []): bool
     {
@@ -72,9 +82,24 @@ final readonly class CapacityResolver implements CapacityResolverInterface
     /**
      * {@inheritdoc}
      */
-    public function autoResolve(string $workCenterId, PlanningHorizon $horizon): array
-    {
-        $suggestions = $this->getSuggestions($workCenterId, $horizon);
+    public function autoResolve(
+        string $workCenterId,
+        \DateTimeImmutable $date,
+        bool $simulate = false
+    ): array {
+        $horizon = new PlanningHorizon(
+            startDate: $date,
+            endDate: $date->modify('+30 days'),
+        );
+        $suggestions = $this->getSuggestions($workCenterId, $date, 0.0);
+
+        if ($simulate) {
+            return [
+                'resolved' => false,
+                'actions' => $suggestions,
+            ];
+        }
+
         $applied = [];
         $remainingExcess = $this->calculateExcessCapacity($workCenterId, $horizon);
 
@@ -99,11 +124,14 @@ final readonly class CapacityResolver implements CapacityResolverInterface
             }
         }
 
-        return $applied;
+        return [
+            'resolved' => $remainingExcess <= 0,
+            'actions' => $applied,
+        ];
     }
 
     /**
-     * {@inheritdoc}
+     * Validate a resolution suggestion.
      */
     public function validateSuggestion(CapacityResolutionSuggestion $suggestion, array $context = []): array
     {
@@ -125,7 +153,7 @@ final readonly class CapacityResolver implements CapacityResolverInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Estimate impact of a resolution suggestion.
      */
     public function estimateImpact(CapacityResolutionSuggestion $suggestion, array $context = []): array
     {
@@ -416,7 +444,7 @@ final readonly class CapacityResolver implements CapacityResolverInterface
         }
 
         try {
-            $workOrder = $this->workOrderManager->findById($workOrderId);
+            $workOrder = $this->workOrderManager->getById($workOrderId);
             if (!$workOrder->getStatus()->canTransitionTo(\Nexus\Manufacturing\Enums\WorkOrderStatus::CANCELLED)) {
                 $errors[] = 'Work order cannot be cancelled in current status';
             }
@@ -430,7 +458,7 @@ final readonly class CapacityResolver implements CapacityResolverInterface
      */
     private function calculateExcessCapacity(string $workCenterId, PlanningHorizon $horizon): float
     {
-        $profile = $this->capacityPlanner->calculateLoad($workCenterId, $horizon);
+        $profile = $this->capacityPlanner->getCapacityProfile($workCenterId, $horizon);
         return max(0, $profile->totalLoadedCapacity - $profile->totalAvailableCapacity);
     }
 
@@ -467,5 +495,135 @@ final readonly class CapacityResolver implements CapacityResolverInterface
             'affectedOrders' => count($context['affectedWorkOrders'] ?? []),
             'cascadeRisk' => $suggestion->daysDelayed > 7 ? 'High' : ($suggestion->daysDelayed > 3 ? 'Medium' : 'Low'),
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function suggestAlternativeWorkCenters(
+        string $workCenterId,
+        \DateTimeImmutable $date,
+        float $requiredHours
+    ): array {
+        $suggestions = [];
+        $alternatives = $this->workCenterManager->findAlternatives($workCenterId);
+
+        foreach ($alternatives as $alternative) {
+            $availableHours = $this->workCenterManager->getAvailableHours($alternative->getId(), $date);
+            if ($availableHours >= $requiredHours) {
+                $suggestions[] = CapacityResolutionSuggestion::alternativeWorkCenter(
+                    alternativeWorkCenterId: $alternative->getId(),
+                    resolvesHours: min($requiredHours, $availableHours),
+                    additionalCost: 0.0
+                );
+            }
+        }
+
+        return $suggestions;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function suggestOvertime(
+        string $workCenterId,
+        \DateTimeImmutable $date,
+        float $overloadHours
+    ): array {
+        $maxOvertimeHours = 4.0; // Configurable
+        $overtimeHours = min($overloadHours, $maxOvertimeHours);
+        $overtimeCostPerHour = 75.0; // Configurable
+
+        return [
+            CapacityResolutionSuggestion::overtime(
+                overtimeHours: $overtimeHours,
+                overtimeCostPerHour: $overtimeCostPerHour
+            ),
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function suggestReschedule(
+        string $workCenterId,
+        \DateTimeImmutable $constraintStart,
+        \DateTimeImmutable $constraintEnd
+    ): array {
+        $suggestions = [];
+        // Find first available date after constraint period
+        $searchDate = $constraintEnd->modify('+1 day');
+
+        for ($i = 0; $i < 30; $i++) {
+            $availableHours = $this->workCenterManager->getAvailableHours($workCenterId, $searchDate);
+            if ($availableHours > 0) {
+                $suggestions[] = CapacityResolutionSuggestion::reschedule(
+                    newDate: $searchDate,
+                    resolvesHours: $availableHours,
+                    daysDelayed: (int) $constraintStart->diff($searchDate)->days
+                );
+                break;
+            }
+            $searchDate = $searchDate->modify('+1 day');
+        }
+
+        return $suggestions;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function suggestSubcontracting(
+        string $workCenterId,
+        float $overloadHours
+    ): array {
+        return [
+            new CapacityResolutionSuggestion(
+                action: ResolutionAction::SUBCONTRACT,
+                description: "Subcontract {$overloadHours} hours of work",
+                resolvesHours: $overloadHours,
+                priority: ResolutionAction::SUBCONTRACT->getDefaultPriority(),
+                estimatedCost: $overloadHours * 100.0, // Estimate
+                requiresApproval: true,
+                canAutoApply: false,
+                reason: 'Subcontracting can fully resolve capacity shortage',
+            ),
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function suggestOrderSplitting(
+        string $workCenterId,
+        \DateTimeImmutable $date
+    ): array {
+        return [
+            new CapacityResolutionSuggestion(
+                action: ResolutionAction::SPLIT,
+                description: 'Split orders across multiple periods or work centers',
+                resolvesHours: 0.0, // Unknown until applied
+                priority: ResolutionAction::SPLIT->getDefaultPriority(),
+                requiresApproval: true,
+                canAutoApply: false,
+                reason: 'Order splitting allows parallel processing',
+            ),
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setPreferences(array $preferences): void
+    {
+        $this->preferences = $preferences;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPreferences(): array
+    {
+        return $this->preferences;
     }
 }

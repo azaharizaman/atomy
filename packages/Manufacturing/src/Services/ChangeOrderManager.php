@@ -30,16 +30,29 @@ final readonly class ChangeOrderManager implements ChangeOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function create(array $data): ChangeOrderInterface
-    {
-        $this->validateChangeOrderData($data);
+    public function create(
+        string $productId,
+        string $description,
+        array $affectedBomIds = [],
+        array $affectedRoutingIds = [],
+        ?\DateTimeImmutable $effectiveDate = null
+    ): ChangeOrderInterface {
+        $data = [
+            'productId' => $productId,
+            'description' => $description,
+            'affectedBomIds' => $affectedBomIds,
+            'affectedRoutingIds' => $affectedRoutingIds,
+            'effectiveDate' => $effectiveDate,
+            'status' => 'draft',
+        ];
 
         $changeOrder = $this->repository->create($data);
 
         $this->logger?->info('Change order created', [
             'id' => $changeOrder->getId(),
-            'number' => $changeOrder->getNumber(),
-            'type' => $data['type'] ?? 'general',
+            'productId' => $productId,
+            'affectedBomIds' => $affectedBomIds,
+            'affectedRoutingIds' => $affectedRoutingIds,
         ]);
 
         return $changeOrder;
@@ -48,7 +61,7 @@ final readonly class ChangeOrderManager implements ChangeOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function findById(string $id): ChangeOrderInterface
+    public function getById(string $id): ChangeOrderInterface
     {
         $changeOrder = $this->repository->findById($id);
 
@@ -62,7 +75,7 @@ final readonly class ChangeOrderManager implements ChangeOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function findByNumber(string $number): ChangeOrderInterface
+    public function getByNumber(string $number): ChangeOrderInterface
     {
         $changeOrder = $this->repository->findByNumber($number);
 
@@ -76,108 +89,79 @@ final readonly class ChangeOrderManager implements ChangeOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function update(string $id, array $data): ChangeOrderInterface
+    public function submit(string $changeOrderId): void
     {
-        $changeOrder = $this->findById($id);
-
-        // Cannot update approved or implemented change orders
-        if (in_array($changeOrder->getStatus(), ['approved', 'implemented'], true)) {
-            throw new \RuntimeException("Cannot update change order in status: {$changeOrder->getStatus()}");
-        }
-
-        $updated = $this->repository->update($id, $data);
-
-        $this->logger?->info('Change order updated', [
-            'id' => $id,
-            'changes' => array_keys($data),
-        ]);
-
-        return $updated;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function submit(string $id): ChangeOrderInterface
-    {
-        $changeOrder = $this->findById($id);
+        $changeOrder = $this->getById($changeOrderId);
 
         if ($changeOrder->getStatus() !== 'draft') {
             throw new \RuntimeException('Only draft change orders can be submitted');
         }
 
-        $updated = $this->repository->update($id, [
+        $this->repository->update($changeOrderId, [
             'status' => 'pending_approval',
             'submittedAt' => new \DateTimeImmutable(),
         ]);
 
         $this->logger?->info('Change order submitted for approval', [
-            'id' => $id,
-            'number' => $changeOrder->getNumber(),
+            'id' => $changeOrderId,
+            'number' => $changeOrder->getOrderNumber(),
         ]);
-
-        return $updated;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function approve(string $id, string $approverId, ?string $comments = null): ChangeOrderInterface
+    public function approve(string $changeOrderId, string $approvedBy): void
     {
-        $changeOrder = $this->findById($id);
+        $changeOrder = $this->getById($changeOrderId);
 
         if ($changeOrder->getStatus() !== 'pending_approval') {
             throw new \RuntimeException('Only pending change orders can be approved');
         }
 
-        $updated = $this->repository->update($id, [
+        $this->repository->update($changeOrderId, [
             'status' => 'approved',
             'approvedAt' => new \DateTimeImmutable(),
-            'approvedBy' => $approverId,
-            'approvalComments' => $comments,
+            'approvedBy' => $approvedBy,
         ]);
 
         $this->logger?->info('Change order approved', [
-            'id' => $id,
-            'approvedBy' => $approverId,
+            'id' => $changeOrderId,
+            'approvedBy' => $approvedBy,
         ]);
-
-        return $updated;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function reject(string $id, string $rejectorId, string $reason): ChangeOrderInterface
+    public function reject(string $changeOrderId, string $rejectedBy, string $reason): void
     {
-        $changeOrder = $this->findById($id);
+        $changeOrder = $this->getById($changeOrderId);
 
         if ($changeOrder->getStatus() !== 'pending_approval') {
             throw new \RuntimeException('Only pending change orders can be rejected');
         }
 
-        $updated = $this->repository->update($id, [
+        $this->repository->update($changeOrderId, [
             'status' => 'rejected',
             'rejectedAt' => new \DateTimeImmutable(),
-            'rejectedBy' => $rejectorId,
+            'rejectedBy' => $rejectedBy,
             'rejectionReason' => $reason,
         ]);
 
         $this->logger?->info('Change order rejected', [
-            'id' => $id,
-            'rejectedBy' => $rejectorId,
+            'id' => $changeOrderId,
+            'rejectedBy' => $rejectedBy,
             'reason' => $reason,
         ]);
-
-        return $updated;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function implement(string $id): ChangeOrderInterface
+    public function implement(string $changeOrderId): void
     {
-        $changeOrder = $this->findById($id);
+        $changeOrder = $this->getById($changeOrderId);
 
         if ($changeOrder->getStatus() !== 'approved') {
             throw new \RuntimeException('Only approved change orders can be implemented');
@@ -186,90 +170,86 @@ final readonly class ChangeOrderManager implements ChangeOrderManagerInterface
         // Apply changes to BOMs and/or Routings
         $this->applyChanges($changeOrder);
 
-        $updated = $this->repository->update($id, [
+        $this->repository->update($changeOrderId, [
             'status' => 'implemented',
             'implementedAt' => new \DateTimeImmutable(),
         ]);
 
         $this->logger?->info('Change order implemented', [
-            'id' => $id,
-            'number' => $changeOrder->getNumber(),
+            'id' => $changeOrderId,
+            'number' => $changeOrder->getOrderNumber(),
         ]);
-
-        return $updated;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function cancel(string $id, string $reason): ChangeOrderInterface
+    public function cancel(string $changeOrderId, string $reason): void
     {
-        $changeOrder = $this->findById($id);
+        $changeOrder = $this->getById($changeOrderId);
 
         if (in_array($changeOrder->getStatus(), ['implemented', 'cancelled'], true)) {
             throw new \RuntimeException("Cannot cancel change order in status: {$changeOrder->getStatus()}");
         }
 
-        $updated = $this->repository->update($id, [
+        $this->repository->update($changeOrderId, [
             'status' => 'cancelled',
             'cancelledAt' => new \DateTimeImmutable(),
             'cancellationReason' => $reason,
         ]);
 
         $this->logger?->info('Change order cancelled', [
-            'id' => $id,
+            'id' => $changeOrderId,
             'reason' => $reason,
         ]);
-
-        return $updated;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addBomChange(string $id, array $bomChange): ChangeOrderInterface
+    public function addBomChange(string $changeOrderId, array $change): void
     {
-        $changeOrder = $this->findById($id);
+        $changeOrder = $this->getById($changeOrderId);
 
         if ($changeOrder->getStatus() !== 'draft') {
             throw new \RuntimeException('Can only add changes to draft change orders');
         }
 
         $existingChanges = $changeOrder->getBomChanges();
-        $existingChanges[] = $this->validateBomChange($bomChange);
+        $existingChanges[] = $this->validateBomChange($change);
 
-        return $this->repository->update($id, ['bomChanges' => $existingChanges]);
+        $this->repository->update($changeOrderId, ['bomChanges' => $existingChanges]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addRoutingChange(string $id, array $routingChange): ChangeOrderInterface
+    public function addRoutingChange(string $changeOrderId, array $change): void
     {
-        $changeOrder = $this->findById($id);
+        $changeOrder = $this->getById($changeOrderId);
 
         if ($changeOrder->getStatus() !== 'draft') {
             throw new \RuntimeException('Can only add changes to draft change orders');
         }
 
         $existingChanges = $changeOrder->getRoutingChanges();
-        $existingChanges[] = $this->validateRoutingChange($routingChange);
+        $existingChanges[] = $this->validateRoutingChange($change);
 
-        return $this->repository->update($id, ['routingChanges' => $existingChanges]);
+        $this->repository->update($changeOrderId, ['routingChanges' => $existingChanges]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function findPending(): array
+    public function getPendingForProduct(string $productId): array
     {
-        return $this->repository->findByStatus('pending_approval');
+        return $this->repository->findPendingByProduct($productId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function findByProduct(string $productId): array
+    public function getHistory(string $productId): array
     {
         return $this->repository->findByProduct($productId);
     }
@@ -277,62 +257,42 @@ final readonly class ChangeOrderManager implements ChangeOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function findByDateRange(\DateTimeImmutable $startDate, \DateTimeImmutable $endDate): array
+    public function validate(string $changeOrderId): array
     {
-        return $this->repository->findByDateRange($startDate, $endDate);
-    }
+        $changeOrder = $this->getById($changeOrderId);
+        $errors = [];
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getImpactAnalysis(string $id): array
-    {
-        $changeOrder = $this->findById($id);
-        $impact = [
-            'affectedBoms' => [],
-            'affectedRoutings' => [],
-            'affectedWorkOrders' => [],
-            'costImpact' => 0.0,
-            'timeImpact' => 0.0,
-        ];
-
-        // Analyze BOM changes
-        foreach ($changeOrder->getBomChanges() as $bomChange) {
+        // Validate BOM changes
+        foreach ($changeOrder->getBomChanges() as $index => $bomChange) {
             $bomId = $bomChange['bomId'] ?? null;
             if ($bomId) {
                 try {
-                    $bom = $this->bomManager->findById($bomId);
-                    $impact['affectedBoms'][] = [
-                        'bomId' => $bomId,
-                        'productId' => $bom->getProductId(),
-                        'version' => $bom->getVersion(),
-                        'changeType' => $bomChange['changeType'] ?? 'modify',
-                    ];
+                    $this->bomManager->getById($bomId);
                 } catch (\Exception) {
-                    // BOM not found
+                    $errors[] = "BOM change [{$index}]: BOM '{$bomId}' not found";
                 }
             }
         }
 
-        // Analyze Routing changes
-        foreach ($changeOrder->getRoutingChanges() as $routingChange) {
+        // Validate Routing changes
+        foreach ($changeOrder->getRoutingChanges() as $index => $routingChange) {
             $routingId = $routingChange['routingId'] ?? null;
             if ($routingId) {
                 try {
-                    $routing = $this->routingManager->findById($routingId);
-                    $impact['affectedRoutings'][] = [
-                        'routingId' => $routingId,
-                        'productId' => $routing->getProductId(),
-                        'version' => $routing->getVersion(),
-                        'changeType' => $routingChange['changeType'] ?? 'modify',
-                    ];
+                    $this->routingManager->getById($routingId);
                 } catch (\Exception) {
-                    // Routing not found
+                    $errors[] = "Routing change [{$index}]: Routing '{$routingId}' not found";
                 }
             }
         }
 
-        return $impact;
+        // Validate effective date
+        $effectiveDate = $changeOrder->getEffectiveFrom();
+        if ($effectiveDate !== null && $effectiveDate < new \DateTimeImmutable()) {
+            $errors[] = 'Effective date cannot be in the past';
+        }
+
+        return $errors;
     }
 
     /**
@@ -408,20 +368,6 @@ final readonly class ChangeOrderManager implements ChangeOrderManagerInterface
             ]),
             default => null,
         };
-    }
-
-    /**
-     * Validate change order data.
-     */
-    private function validateChangeOrderData(array $data): void
-    {
-        $required = ['number', 'description', 'productId'];
-
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
-                throw new \InvalidArgumentException("Field '{$field}' is required for change order");
-            }
-        }
     }
 
     /**

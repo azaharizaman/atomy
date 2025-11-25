@@ -10,6 +10,7 @@
         "nexus/routing": "*@dev",
         "nexus/inventory": "*@dev",
         "nexus/warehouse": "*@dev",
+        "nexus/manufacturing": "*@dev",
         "symfony/http-client": "^7.3",
         "nyholm/psr7": "^1.8",
         "psr/http-client": "^1.0",
@@ -20,6 +21,10 @@
         {
             "type": "path",
             "url": "packages/MachineLearning"
+        },
+        {
+            "type": "path",
+            "url": "./packages/Manufacturing"
         },
         {
             "type": "path",
@@ -224,5 +229,8 @@
         "allow-plugins": {
             "php-http/discovery": true
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
     }
 }

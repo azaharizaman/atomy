@@ -28,9 +28,10 @@ final readonly class RoutingManager implements RoutingManagerInterface
      */
     public function create(
         string $productId,
-        array $operations,
-        string $version = '1.0',
-        ?\DateTimeImmutable $effectiveFrom = null
+        string $version,
+        array $operations = [],
+        ?\DateTimeImmutable $effectiveFrom = null,
+        ?\DateTimeImmutable $effectiveTo = null
     ): RoutingInterface {
         // Sort operations by operation number
         usort($operations, fn (Operation $a, Operation $b) => $a->operationNumber <=> $b->operationNumber);
@@ -40,6 +41,7 @@ final readonly class RoutingManager implements RoutingManagerInterface
             'version' => $version,
             'operations' => array_map(fn (Operation $op) => $op->toArray(), $operations),
             'effectiveFrom' => $effectiveFrom?->format('Y-m-d'),
+            'effectiveTo' => $effectiveTo?->format('Y-m-d'),
             'status' => 'draft',
         ]);
     }
@@ -47,7 +49,7 @@ final readonly class RoutingManager implements RoutingManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function findById(string $id): RoutingInterface
+    public function getById(string $id): RoutingInterface
     {
         $routing = $this->repository->findById($id);
 
@@ -61,13 +63,13 @@ final readonly class RoutingManager implements RoutingManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function findByProductId(string $productId, ?\DateTimeImmutable $effectiveDate = null): RoutingInterface
+    public function getEffective(string $productId, ?\DateTimeImmutable $asOfDate = null): RoutingInterface
     {
-        $routing = $this->repository->findByProductId($productId, $effectiveDate);
+        $routing = $this->repository->findByProductId($productId, $asOfDate);
 
         if ($routing === null) {
-            if ($effectiveDate !== null) {
-                throw RoutingNotFoundException::noEffectiveRouting($productId, $effectiveDate->format('Y-m-d'));
+            if ($asOfDate !== null) {
+                throw RoutingNotFoundException::noEffectiveRouting($productId, $asOfDate->format('Y-m-d'));
             }
             throw RoutingNotFoundException::withProductId($productId);
         }
@@ -80,7 +82,7 @@ final readonly class RoutingManager implements RoutingManagerInterface
      */
     public function update(string $id, array $data): RoutingInterface
     {
-        $routing = $this->findById($id);
+        $routing = $this->getById($id);
 
         if ($routing->getStatus() === 'released') {
             throw InvalidRoutingVersionException::cannotModify($id, 'released');
@@ -99,9 +101,9 @@ final readonly class RoutingManager implements RoutingManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function addOperation(string $routingId, Operation $operation): RoutingInterface
+    public function addOperation(string $routingId, Operation $operation): void
     {
-        $routing = $this->findById($routingId);
+        $routing = $this->getById($routingId);
 
         if ($routing->getStatus() === 'released') {
             throw InvalidRoutingVersionException::cannotModify($routingId, 'released');
@@ -113,7 +115,7 @@ final readonly class RoutingManager implements RoutingManagerInterface
         // Sort by operation number
         usort($operations, fn (Operation $a, Operation $b) => $a->operationNumber <=> $b->operationNumber);
 
-        return $this->repository->update($routingId, [
+        $this->repository->update($routingId, [
             'operations' => array_map(fn (Operation $op) => $op->toArray(), $operations),
         ]);
     }
@@ -121,9 +123,9 @@ final readonly class RoutingManager implements RoutingManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function removeOperation(string $routingId, int $operationNumber): RoutingInterface
+    public function removeOperation(string $routingId, int $operationNumber): void
     {
-        $routing = $this->findById($routingId);
+        $routing = $this->getById($routingId);
 
         if ($routing->getStatus() === 'released') {
             throw InvalidRoutingVersionException::cannotModify($routingId, 'released');
@@ -134,7 +136,7 @@ final readonly class RoutingManager implements RoutingManagerInterface
             fn (Operation $op) => $op->operationNumber !== $operationNumber
         );
 
-        return $this->repository->update($routingId, [
+        $this->repository->update($routingId, [
             'operations' => array_map(fn (Operation $op) => $op->toArray(), array_values($operations)),
         ]);
     }
@@ -142,9 +144,9 @@ final readonly class RoutingManager implements RoutingManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function createVersion(string $routingId, string $newVersion, ?\DateTimeImmutable $effectiveFrom = null): RoutingInterface
+    public function createVersion(string $sourceRoutingId, string $newVersion, ?\DateTimeImmutable $effectiveFrom = null): RoutingInterface
     {
-        $sourceRouting = $this->findById($routingId);
+        $sourceRouting = $this->getById($sourceRoutingId);
         $productId = $sourceRouting->getProductId();
 
         // Check if version already exists
@@ -161,52 +163,49 @@ final readonly class RoutingManager implements RoutingManagerInterface
             'operations' => array_map(fn (Operation $op) => $op->toArray(), $sourceRouting->getOperations()),
             'effectiveFrom' => $effectiveFrom?->format('Y-m-d'),
             'status' => 'draft',
-            'previousVersionId' => $routingId,
+            'previousVersionId' => $sourceRoutingId,
         ]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function release(string $routingId, \DateTimeImmutable $effectiveFrom): RoutingInterface
+    public function release(string $routingId): void
     {
-        $routing = $this->findById($routingId);
+        $routing = $this->getById($routingId);
 
         if (count($routing->getOperations()) === 0) {
             throw InvalidRoutingVersionException::cannotRelease($routingId, 'Routing has no operations');
         }
 
-        return $this->repository->update($routingId, [
+        $this->repository->update($routingId, [
             'status' => 'released',
-            'effectiveFrom' => $effectiveFrom->format('Y-m-d'),
         ]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function obsolete(string $routingId, \DateTimeImmutable $effectiveTo): RoutingInterface
+    public function obsolete(string $routingId): void
     {
-        $this->findById($routingId);
+        $this->getById($routingId);
 
-        return $this->repository->update($routingId, [
+        $this->repository->update($routingId, [
             'status' => 'obsolete',
-            'effectiveTo' => $effectiveTo->format('Y-m-d'),
         ]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function calculateLeadTime(string $productId, float $quantity = 1.0, ?\DateTimeImmutable $effectiveDate = null): float
+    public function calculateLeadTime(string $routingId, float $quantity): float
     {
-        $routing = $this->findByProductId($productId, $effectiveDate);
-        $effectiveOperations = $this->getEffectiveOperations($routing->getId(), $effectiveDate);
+        $routing = $this->getById($routingId);
 
         $totalMinutes = 0.0;
         $previousOverlap = 0.0;
 
-        foreach ($effectiveOperations as $operation) {
+        foreach ($routing->getOperations() as $operation) {
             $operationTime = $operation->calculateTotalTime($quantity);
 
             // Apply overlap from previous operation
@@ -224,55 +223,84 @@ final readonly class RoutingManager implements RoutingManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function calculateCapacityRequirement(string $productId, float $quantity, ?\DateTimeImmutable $effectiveDate = null): array
+    public function calculateCost(string $routingId, float $quantity): array
     {
-        $routing = $this->findByProductId($productId, $effectiveDate);
-        $effectiveOperations = $this->getEffectiveOperations($routing->getId(), $effectiveDate);
+        $routing = $this->getById($routingId);
 
-        $requirements = [];
+        $laborCost = 0.0;
+        $machineCost = 0.0;
+        $overheadCost = 0.0;
 
-        foreach ($effectiveOperations as $operation) {
-            $workCenterId = $operation->workCenterId;
+        foreach ($routing->getOperations() as $operation) {
             $hours = $operation->getCapacityTimeHours($quantity);
-
-            if (!isset($requirements[$workCenterId])) {
-                $requirements[$workCenterId] = [
-                    'workCenterId' => $workCenterId,
-                    'totalHours' => 0.0,
-                    'setupHours' => 0.0,
-                    'runHours' => 0.0,
-                    'operations' => [],
-                ];
-            }
-
-            $requirements[$workCenterId]['totalHours'] += $hours;
-            $requirements[$workCenterId]['setupHours'] += $operation->setupTimeMinutes / 60;
-            $requirements[$workCenterId]['runHours'] += ($operation->runTimeMinutes * $quantity) / 60;
-            $requirements[$workCenterId]['operations'][] = $operation->operationNumber;
+            $laborCost += $hours * ($operation->laborRate ?? 0.0);
+            $machineCost += $hours * ($operation->machineRate ?? 0.0);
+            $overheadCost += $hours * ($operation->overheadRate ?? 0.0);
         }
 
-        return array_values($requirements);
+        return [
+            'labor' => $laborCost,
+            'machine' => $machineCost,
+            'overhead' => $overheadCost,
+            'total' => $laborCost + $machineCost + $overheadCost,
+        ];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getEffectiveOperations(string $routingId, ?\DateTimeImmutable $effectiveDate = null): array
+    public function validate(string $routingId): array
     {
-        $routing = $this->findById($routingId);
-        $effectiveDate ??= new \DateTimeImmutable();
+        $routing = $this->getById($routingId);
+        $errors = [];
 
-        return array_filter(
-            $routing->getOperations(),
-            fn (Operation $operation) => $operation->isEffectiveAt($effectiveDate)
-        );
+        // Validate routing has operations
+        if (count($routing->getOperations()) === 0) {
+            $errors[] = 'Routing must have at least one operation';
+        }
+
+        // Validate operation sequence
+        $operationNumbers = [];
+        foreach ($routing->getOperations() as $operation) {
+            if (in_array($operation->operationNumber, $operationNumbers, true)) {
+                $errors[] = "Duplicate operation number: {$operation->operationNumber}";
+            }
+            $operationNumbers[] = $operation->operationNumber;
+        }
+
+        return $errors;
     }
 
     /**
+     * Add updateOperation method from interface.
+     *
      * {@inheritdoc}
      */
-    public function getWorkCenterOperations(string $workCenterId, ?\DateTimeImmutable $effectiveDate = null): array
+    public function updateOperation(string $routingId, int $operationNumber, Operation $operation): void
     {
-        return $this->repository->findOperationsByWorkCenter($workCenterId, $effectiveDate);
+        $routing = $this->getById($routingId);
+
+        if ($routing->getStatus() === 'released') {
+            throw InvalidRoutingVersionException::cannotModify($routingId, 'released');
+        }
+
+        $operations = $routing->getOperations();
+        $updated = false;
+
+        foreach ($operations as $index => $existingOp) {
+            if ($existingOp->operationNumber === $operationNumber) {
+                $operations[$index] = $operation;
+                $updated = true;
+                break;
+            }
+        }
+
+        if (!$updated) {
+            throw new \InvalidArgumentException("Operation number {$operationNumber} not found");
+        }
+
+        $this->repository->update($routingId, [
+            'operations' => array_map(fn (Operation $op) => $op->toArray(), $operations),
+        ]);
     }
 }

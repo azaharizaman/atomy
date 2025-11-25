@@ -7,7 +7,6 @@ namespace Nexus\Manufacturing\Services;
 use Nexus\Manufacturing\Contracts\WorkCenterManagerInterface;
 use Nexus\Manufacturing\Contracts\WorkCenterRepositoryInterface;
 use Nexus\Manufacturing\Contracts\WorkCenterInterface;
-use Nexus\Manufacturing\Enums\WorkCenterType;
 use Nexus\Manufacturing\Exceptions\WorkCenterNotFoundException;
 
 /**
@@ -28,22 +27,24 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     public function create(
         string $code,
         string $name,
-        WorkCenterType $type,
-        float $capacityPerHour,
-        float $hoursPerDay = 8.0,
-        int $daysPerWeek = 5,
-        float $efficiency = 100.0,
-        float $utilization = 100.0
+        float $capacityHoursPerDay,
+        float $efficiency = 1.0,
+        float $utilization = 1.0,
+        float $laborRate = 0.0,
+        float $machineRate = 0.0,
+        float $overheadRate = 0.0,
+        ?string $costCenterId = null
     ): WorkCenterInterface {
         return $this->repository->create([
             'code' => $code,
             'name' => $name,
-            'type' => $type->value,
-            'capacityPerHour' => $capacityPerHour,
-            'hoursPerDay' => $hoursPerDay,
-            'daysPerWeek' => $daysPerWeek,
+            'capacityHoursPerDay' => $capacityHoursPerDay,
             'efficiency' => $efficiency,
             'utilization' => $utilization,
+            'laborRate' => $laborRate,
+            'machineRate' => $machineRate,
+            'overheadRate' => $overheadRate,
+            'costCenterId' => $costCenterId,
             'isActive' => true,
         ]);
     }
@@ -51,7 +52,7 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function findById(string $id): WorkCenterInterface
+    public function getById(string $id): WorkCenterInterface
     {
         $workCenter = $this->repository->findById($id);
 
@@ -65,7 +66,7 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function findByCode(string $code): WorkCenterInterface
+    public function getByCode(string $code): WorkCenterInterface
     {
         $workCenter = $this->repository->findByCode($code);
 
@@ -79,63 +80,60 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function update(string $id, array $data): WorkCenterInterface
+    public function update(string $workCenterId, array $data): void
     {
-        $this->findById($id);
+        $this->getById($workCenterId);
 
-        return $this->repository->update($id, $data);
+        $this->repository->update($workCenterId, $data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function deactivate(string $id): WorkCenterInterface
+    public function deactivate(string $workCenterId): void
     {
-        $this->findById($id);
+        $this->getById($workCenterId);
 
-        return $this->repository->update($id, ['isActive' => false]);
+        $this->repository->update($workCenterId, ['isActive' => false]);
     }
 
     /**
-     * {@inheritdoc}
+     * Activate a work center.
      */
-    public function activate(string $id): WorkCenterInterface
+    public function activate(string $id): void
     {
-        $this->findById($id);
+        $this->getById($id);
 
-        return $this->repository->update($id, ['isActive' => true]);
+        $this->repository->update($id, ['isActive' => true]);
     }
 
     /**
-     * {@inheritdoc}
+     * Calculate daily capacity.
      */
     public function calculateDailyCapacity(string $id): float
     {
-        $workCenter = $this->findById($id);
+        $workCenter = $this->getById($id);
 
-        return $workCenter->getCapacityPerHour()
-            * $workCenter->getHoursPerDay()
-            * ($workCenter->getEfficiency() / 100)
-            * ($workCenter->getUtilization() / 100);
+        return $workCenter->getCapacityHoursPerDay()
+            * $workCenter->getEfficiency()
+            * $workCenter->getUtilization();
     }
 
     /**
-     * {@inheritdoc}
+     * Calculate weekly capacity.
      */
     public function calculateWeeklyCapacity(string $id): float
     {
-        $workCenter = $this->findById($id);
         $dailyCapacity = $this->calculateDailyCapacity($id);
-
-        return $dailyCapacity * $workCenter->getDaysPerWeek();
+        return $dailyCapacity * 5; // Assuming 5-day work week
     }
 
     /**
-     * {@inheritdoc}
+     * Get available hours for a specific date.
      */
     public function getAvailableHours(string $id, \DateTimeImmutable $date): float
     {
-        $workCenter = $this->findById($id);
+        $workCenter = $this->getById($id);
 
         // Check if date is a working day
         $dayOfWeek = (int) $date->format('N'); // 1 (Monday) to 7 (Sunday)
@@ -153,13 +151,13 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
         }
 
         // Apply efficiency and utilization
-        return $workCenter->getHoursPerDay()
-            * ($workCenter->getEfficiency() / 100)
-            * ($workCenter->getUtilization() / 100);
+        return $workCenter->getCapacityHoursPerDay()
+            * $workCenter->getEfficiency()
+            * $workCenter->getUtilization();
     }
 
     /**
-     * {@inheritdoc}
+     * Get available hours for a period.
      */
     public function getAvailableHoursForPeriod(string $id, \DateTimeImmutable $startDate, \DateTimeImmutable $endDate): float
     {
@@ -175,11 +173,11 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Add closure to work center.
      */
     public function addClosure(string $id, \DateTimeImmutable $date, string $reason, float $hoursUnavailable = 0.0): void
     {
-        $this->findById($id);
+        $this->getById($id);
 
         $this->repository->addClosure($id, [
             'date' => $date->format('Y-m-d'),
@@ -189,43 +187,43 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Remove closure from work center.
      */
     public function removeClosure(string $id, \DateTimeImmutable $date): void
     {
-        $this->findById($id);
+        $this->getById($id);
 
         $this->repository->removeClosure($id, $date);
     }
 
     /**
-     * {@inheritdoc}
+     * Set alternative work centers.
      */
-    public function setAlternatives(string $id, array $alternativeIds): WorkCenterInterface
+    public function setAlternatives(string $id, array $alternativeIds): void
     {
-        $this->findById($id);
+        $this->getById($id);
 
         // Validate all alternatives exist
         foreach ($alternativeIds as $altId) {
-            $this->findById($altId);
+            $this->getById($altId);
         }
 
-        return $this->repository->update($id, ['alternativeIds' => $alternativeIds]);
+        $this->repository->update($id, ['alternativeIds' => $alternativeIds]);
     }
 
     /**
-     * {@inheritdoc}
+     * Get alternative work centers.
      */
     public function getAlternatives(string $id): array
     {
-        $workCenter = $this->findById($id);
+        $workCenter = $this->getById($id);
 
         $alternativeIds = $workCenter->getAlternativeIds();
         $alternatives = [];
 
         foreach ($alternativeIds as $altId) {
             try {
-                $alt = $this->findById($altId);
+                $alt = $this->getById($altId);
                 if ($alt->isActive()) {
                     $alternatives[] = $alt;
                 }
@@ -238,18 +236,135 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Find work centers by type.
      */
-    public function findByType(WorkCenterType $type): array
+    public function findByType(string $type): array
     {
         return $this->repository->findByType($type);
     }
 
     /**
-     * {@inheritdoc}
+     * Find active work centers.
      */
     public function findActive(): array
     {
         return $this->repository->findActive();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setCalendar(
+        string $workCenterId,
+        \DateTimeImmutable $date,
+        array $periods,
+        bool $isWorkingDay = true
+    ): void {
+        $this->getById($workCenterId);
+
+        $this->repository->setCalendar($workCenterId, [
+            'date' => $date->format('Y-m-d'),
+            'periods' => $periods,
+            'isWorkingDay' => $isWorkingDay,
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function copyCalendar(
+        string $workCenterId,
+        \DateTimeImmutable $sourceStart,
+        \DateTimeImmutable $sourceEnd,
+        \DateTimeImmutable $targetStart
+    ): void {
+        $this->getById($workCenterId);
+
+        $this->repository->copyCalendar($workCenterId, $sourceStart, $sourceEnd, $targetStart);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAvailableCapacity(
+        string $workCenterId,
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate
+    ): array {
+        $this->getById($workCenterId);
+
+        $capacity = [];
+        $current = $startDate;
+
+        while ($current <= $endDate) {
+            $dateKey = $current->format('Y-m-d');
+            $capacity[$dateKey] = $this->getAvailableHours($workCenterId, $current);
+            $current = $current->modify('+1 day');
+        }
+
+        return $capacity;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getLoadedCapacity(
+        string $workCenterId,
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate
+    ): array {
+        $this->getById($workCenterId);
+
+        return $this->repository->getLoadedCapacity($workCenterId, $startDate, $endDate);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getUtilization(
+        string $workCenterId,
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate
+    ): array {
+        $available = $this->getAvailableCapacity($workCenterId, $startDate, $endDate);
+        $loaded = $this->getLoadedCapacity($workCenterId, $startDate, $endDate);
+
+        $utilization = [];
+        foreach ($available as $date => $availableHours) {
+            $loadedHours = $loaded[$date] ?? 0.0;
+            $utilization[$date] = $availableHours > 0 ? ($loadedHours / $availableHours) * 100 : 0;
+        }
+
+        return $utilization;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function calculateCost(
+        string $workCenterId,
+        float $setupHours,
+        float $runHours
+    ): array {
+        $workCenter = $this->getById($workCenterId);
+
+        $laborCost = ($setupHours + $runHours) * $workCenter->getLaborRate();
+        $machineCost = ($setupHours + $runHours) * $workCenter->getMachineRate();
+        $overheadCost = ($setupHours + $runHours) * $workCenter->getOverheadRate();
+
+        return [
+            'labor' => $laborCost,
+            'machine' => $machineCost,
+            'overhead' => $overheadCost,
+            'total' => $laborCost + $machineCost + $overheadCost,
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findAlternatives(string $workCenterId): array
+    {
+        return $this->getAlternatives($workCenterId);
     }
 }

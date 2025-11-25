@@ -37,8 +37,9 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
         float $quantity,
         \DateTimeImmutable $plannedStartDate,
         \DateTimeImmutable $plannedEndDate,
-        ?string $salesOrderId = null,
-        ?string $parentWorkOrderId = null
+        ?string $bomId = null,
+        ?string $routingId = null,
+        ?string $sourceReference = null
     ): WorkOrderInterface {
         // Get BOM lines for materials
         $materialLines = $this->generateMaterialLines($productId, $quantity);
@@ -53,8 +54,9 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
             'quantity' => $quantity,
             'plannedStartDate' => $plannedStartDate->format('Y-m-d'),
             'plannedEndDate' => $plannedEndDate->format('Y-m-d'),
-            'salesOrderId' => $salesOrderId,
-            'parentWorkOrderId' => $parentWorkOrderId,
+            'bomId' => $bomId,
+            'routingId' => $routingId,
+            'sourceReference' => $sourceReference,
             'status' => WorkOrderStatus::PLANNED->value,
             'lines' => array_map(fn (WorkOrderLine $line) => $line->toArray(), $lines),
             'completedQuantity' => 0.0,
@@ -65,7 +67,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function findById(string $id): WorkOrderInterface
+    public function getById(string $id): WorkOrderInterface
     {
         $workOrder = $this->repository->findById($id);
 
@@ -79,7 +81,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function findByNumber(string $number): WorkOrderInterface
+    public function getByNumber(string $number): WorkOrderInterface
     {
         $workOrder = $this->repository->findByNumber($number);
 
@@ -93,9 +95,9 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function release(string $workOrderId): WorkOrderInterface
+    public function release(string $workOrderId): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if ($currentStatus !== WorkOrderStatus::PLANNED) {
@@ -106,7 +108,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
             );
         }
 
-        return $this->repository->update($workOrderId, [
+        $this->repository->update($workOrderId, [
             'status' => WorkOrderStatus::RELEASED->value,
             'releasedAt' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
         ]);
@@ -115,9 +117,9 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function start(string $workOrderId): WorkOrderInterface
+    public function start(string $workOrderId, ?\DateTimeImmutable $actualStartDate = null): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if ($currentStatus !== WorkOrderStatus::RELEASED) {
@@ -128,18 +130,18 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
             );
         }
 
-        return $this->repository->update($workOrderId, [
+        $this->repository->update($workOrderId, [
             'status' => WorkOrderStatus::IN_PROGRESS->value,
-            'actualStartDate' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            'actualStartDate' => ($actualStartDate ?? new \DateTimeImmutable())->format('Y-m-d H:i:s'),
         ]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function complete(string $workOrderId, float $completedQuantity, float $scrapQuantity = 0.0): WorkOrderInterface
+    public function complete(string $workOrderId, ?\DateTimeImmutable $actualEndDate = null): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if ($currentStatus !== WorkOrderStatus::IN_PROGRESS) {
@@ -150,29 +152,18 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
             );
         }
 
-        $newCompletedQuantity = $workOrder->getCompletedQuantity() + $completedQuantity;
-        $newScrapQuantity = $workOrder->getScrapQuantity() + $scrapQuantity;
-
-        $updates = [
-            'completedQuantity' => $newCompletedQuantity,
-            'scrapQuantity' => $newScrapQuantity,
-        ];
-
-        // Check if fully complete
-        if ($newCompletedQuantity >= $workOrder->getQuantity()) {
-            $updates['status'] = WorkOrderStatus::COMPLETED->value;
-            $updates['actualEndDate'] = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
-        }
-
-        return $this->repository->update($workOrderId, $updates);
+        $this->repository->update($workOrderId, [
+            'status' => WorkOrderStatus::COMPLETED->value,
+            'actualEndDate' => ($actualEndDate ?? new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+        ]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function close(string $workOrderId): WorkOrderInterface
+    public function close(string $workOrderId): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if (!in_array($currentStatus, [WorkOrderStatus::COMPLETED, WorkOrderStatus::IN_PROGRESS], true)) {
@@ -183,7 +174,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
             );
         }
 
-        return $this->repository->update($workOrderId, [
+        $this->repository->update($workOrderId, [
             'status' => WorkOrderStatus::CLOSED->value,
             'closedAt' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
         ]);
@@ -192,9 +183,9 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function cancel(string $workOrderId, string $reason): WorkOrderInterface
+    public function cancel(string $workOrderId, string $reason): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if (!$currentStatus->canCancel()) {
@@ -205,7 +196,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
             );
         }
 
-        return $this->repository->update($workOrderId, [
+        $this->repository->update($workOrderId, [
             'status' => WorkOrderStatus::CANCELLED->value,
             'cancelledAt' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
             'cancellationReason' => $reason,
@@ -213,11 +204,11 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Put work order on hold.
      */
-    public function putOnHold(string $workOrderId, string $reason): WorkOrderInterface
+    public function putOnHold(string $workOrderId, string $reason): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if (!in_array($currentStatus, [WorkOrderStatus::RELEASED, WorkOrderStatus::IN_PROGRESS], true)) {
@@ -228,7 +219,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
             );
         }
 
-        return $this->repository->update($workOrderId, [
+        $this->repository->update($workOrderId, [
             'status' => WorkOrderStatus::ON_HOLD->value,
             'holdReason' => $reason,
             'previousStatus' => $currentStatus->value,
@@ -236,11 +227,11 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Resume work order from hold.
      */
-    public function resumeFromHold(string $workOrderId): WorkOrderInterface
+    public function resumeFromHold(string $workOrderId): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if ($currentStatus !== WorkOrderStatus::ON_HOLD) {
@@ -254,7 +245,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
         // Resume to previous status or IN_PROGRESS
         $previousStatus = $workOrder->getPreviousStatus() ?? WorkOrderStatus::IN_PROGRESS;
 
-        return $this->repository->update($workOrderId, [
+        $this->repository->update($workOrderId, [
             'status' => $previousStatus->value,
             'holdReason' => null,
             'previousStatus' => null,
@@ -262,11 +253,11 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Issue material to work order.
      */
-    public function issueMaterial(string $workOrderId, int $lineNumber, float $quantity, ?string $lotNumber = null): WorkOrderInterface
+    public function issueMaterial(string $workOrderId, int $lineNumber, float $quantity, ?string $lotNumber = null): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if (!$currentStatus->canIssueMaterial()) {
@@ -295,7 +286,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
             throw new \InvalidArgumentException("Material line {$lineNumber} not found");
         }
 
-        return $this->repository->update($workOrderId, [
+        $this->repository->update($workOrderId, [
             'lines' => array_map(fn (WorkOrderLine $l) => $l->toArray(), $lines),
         ]);
     }
@@ -303,9 +294,9 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function reportOperationCompletion(string $workOrderId, OperationCompletion $completion): WorkOrderInterface
+    public function reportOperation(string $workOrderId, OperationCompletion $completion): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if (!in_array($currentStatus, [WorkOrderStatus::RELEASED, WorkOrderStatus::IN_PROGRESS], true)) {
@@ -341,15 +332,15 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
         $updates['completedQuantity'] = $workOrder->getCompletedQuantity() + $completion->quantityCompleted;
         $updates['scrapQuantity'] = $workOrder->getScrapQuantity() + $completion->scrapQuantity;
 
-        return $this->repository->update($workOrderId, $updates);
+        $this->repository->update($workOrderId, $updates);
     }
 
     /**
-     * {@inheritdoc}
+     * Reschedule work order.
      */
-    public function reschedule(string $workOrderId, \DateTimeImmutable $newStartDate, \DateTimeImmutable $newEndDate): WorkOrderInterface
+    public function reschedule(string $workOrderId, \DateTimeImmutable $newStartDate, \DateTimeImmutable $newEndDate): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if (!$currentStatus->canReschedule()) {
@@ -360,18 +351,18 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
             );
         }
 
-        return $this->repository->update($workOrderId, [
+        $this->repository->update($workOrderId, [
             'plannedStartDate' => $newStartDate->format('Y-m-d'),
             'plannedEndDate' => $newEndDate->format('Y-m-d'),
         ]);
     }
 
     /**
-     * {@inheritdoc}
+     * Change work order quantity.
      */
-    public function changeQuantity(string $workOrderId, float $newQuantity): WorkOrderInterface
+    public function changeQuantity(string $workOrderId, float $newQuantity): void
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $currentStatus = $workOrder->getStatus();
 
         if (!$currentStatus->canModify()) {
@@ -393,7 +384,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
         $operationLines = $this->generateOperationLines($workOrder->getProductId(), $newQuantity);
         $lines = [...$materialLines, ...$operationLines];
 
-        return $this->repository->update($workOrderId, [
+        $this->repository->update($workOrderId, [
             'quantity' => $newQuantity,
             'lines' => array_map(fn (WorkOrderLine $line) => $line->toArray(), $lines),
         ]);
@@ -402,9 +393,176 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     /**
      * {@inheritdoc}
      */
+    public function reportMaterialConsumption(
+        string $workOrderId,
+        string $productId,
+        float $quantity,
+        ?string $lotNumber = null,
+        ?string $warehouseId = null
+    ): void {
+        $workOrder = $this->getById($workOrderId);
+        $currentStatus = $workOrder->getStatus();
+
+        if (!in_array($currentStatus, [WorkOrderStatus::RELEASED, WorkOrderStatus::IN_PROGRESS], true)) {
+            throw InvalidWorkOrderStatusException::cannotPerformAction(
+                $workOrderId,
+                'report material consumption',
+                $currentStatus
+            );
+        }
+
+        $lines = $workOrder->getLines();
+        $updated = false;
+
+        foreach ($lines as $index => $line) {
+            if ($line->isMaterial() && $line->productId === $productId) {
+                $lines[$index] = $line->withIssuedQuantity($line->issuedQuantity + $quantity);
+                $updated = true;
+                break;
+            }
+        }
+
+        if (!$updated) {
+            throw new \InvalidArgumentException("Material {$productId} not found in work order");
+        }
+
+        $this->repository->update($workOrderId, [
+            'lines' => array_map(fn (WorkOrderLine $l) => $l->toArray(), $lines),
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function reportOutput(
+        string $workOrderId,
+        float $quantity,
+        float $scrapQuantity = 0.0,
+        ?string $warehouseId = null
+    ): void {
+        $workOrder = $this->getById($workOrderId);
+        $currentStatus = $workOrder->getStatus();
+
+        if ($currentStatus !== WorkOrderStatus::IN_PROGRESS) {
+            throw InvalidWorkOrderStatusException::cannotPerformAction(
+                $workOrderId,
+                'report output',
+                $currentStatus
+            );
+        }
+
+        $newCompletedQuantity = $workOrder->getCompletedQuantity() + $quantity;
+        $newScrapQuantity = $workOrder->getScrapQuantity() + $scrapQuantity;
+
+        $this->repository->update($workOrderId, [
+            'completedQuantity' => $newCompletedQuantity,
+            'scrapQuantity' => $newScrapQuantity,
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function split(string $workOrderId, float $splitQuantity): WorkOrderInterface
+    {
+        $workOrder = $this->getById($workOrderId);
+        $currentStatus = $workOrder->getStatus();
+
+        if (!in_array($currentStatus, [WorkOrderStatus::PLANNED, WorkOrderStatus::RELEASED], true)) {
+            throw InvalidWorkOrderStatusException::cannotPerformAction(
+                $workOrderId,
+                'split',
+                $currentStatus
+            );
+        }
+
+        if ($splitQuantity >= $workOrder->getQuantity()) {
+            throw new \InvalidArgumentException('Split quantity must be less than original quantity');
+        }
+
+        // Create new work order with split quantity
+        $newWorkOrder = $this->create(
+            $workOrder->getProductId(),
+            $splitQuantity,
+            $workOrder->getPlannedStartDate(),
+            $workOrder->getPlannedEndDate()
+        );
+
+        // Reduce original work order quantity
+        $remainingQuantity = $workOrder->getQuantity() - $splitQuantity;
+        $this->changeQuantity($workOrderId, $remainingQuantity);
+
+        return $newWorkOrder;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function calculateVariance(string $workOrderId): array
+    {
+        $workOrder = $this->getById($workOrderId);
+
+        $plannedMaterial = 0.0;
+        $actualMaterial = 0.0;
+        $plannedLabor = 0.0;
+        $actualLabor = 0.0;
+
+        foreach ($workOrder->getLines() as $line) {
+            if ($line->isMaterial()) {
+                $plannedMaterial += $line->plannedQuantity;
+                $actualMaterial += $line->issuedQuantity;
+            } elseif ($line->isOperation()) {
+                $plannedLabor += $line->plannedSetupHours + $line->plannedRunHours;
+                $actualLabor += $line->actualSetupHours + $line->actualRunHours;
+            }
+        }
+
+        return [
+            'material' => $actualMaterial - $plannedMaterial,
+            'labor' => $actualLabor - $plannedLabor,
+            'overhead' => 0.0, // Would need cost data
+            'total' => ($actualMaterial - $plannedMaterial) + ($actualLabor - $plannedLabor),
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getProgress(string $workOrderId): array
+    {
+        $workOrder = $this->getById($workOrderId);
+
+        $completedOperations = 0;
+        $totalOperations = 0;
+
+        foreach ($workOrder->getLines() as $line) {
+            if ($line->isOperation()) {
+                $totalOperations++;
+                if ($line->isComplete()) {
+                    $completedOperations++;
+                }
+            }
+        }
+
+        $producedQuantity = $workOrder->getCompletedQuantity();
+        $plannedQuantity = $workOrder->getQuantity();
+
+        return [
+            'completedOperations' => $completedOperations,
+            'totalOperations' => $totalOperations,
+            'producedQuantity' => $producedQuantity,
+            'plannedQuantity' => $plannedQuantity,
+            'scrapQuantity' => $workOrder->getScrapQuantity(),
+            'percentComplete' => $plannedQuantity > 0 ? ($producedQuantity / $plannedQuantity) * 100 : 0,
+        ];
+    }
+
+    /**
+     * Get material shortages for work order.
+     */
     public function getMaterialShortages(string $workOrderId): array
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $shortages = [];
 
         foreach ($workOrder->getLines() as $line) {
@@ -427,11 +585,11 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Get operation progress for work order.
      */
     public function getOperationProgress(string $workOrderId): array
     {
-        $workOrder = $this->findById($workOrderId);
+        $workOrder = $this->getById($workOrderId);
         $progress = [];
 
         foreach ($workOrder->getLines() as $line) {
@@ -454,7 +612,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Find work orders by status.
      */
     public function findByStatus(WorkOrderStatus $status, ?string $productId = null): array
     {
@@ -462,7 +620,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Find work orders by date range.
      */
     public function findByDateRange(\DateTimeImmutable $startDate, \DateTimeImmutable $endDate, ?WorkOrderStatus $status = null): array
     {
@@ -513,7 +671,7 @@ final readonly class WorkOrderManager implements WorkOrderManagerInterface
         $lineNumber = 100; // Start at 100 for operations
 
         try {
-            $routing = $this->routingManager->findByProductId($productId);
+            $routing = $this->routingManager->getEffective($productId);
             foreach ($routing->getOperations() as $operation) {
                 if ($operation->isEffectiveAt(new \DateTimeImmutable())) {
                     $lines[] = new WorkOrderLine(

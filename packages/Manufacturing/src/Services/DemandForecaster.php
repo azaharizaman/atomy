@@ -19,20 +19,38 @@ use Psr\Log\LoggerInterface;
  * Integrates with Nexus\MachineLearning for AI-powered demand forecasting
  * with graceful fallback to historical data when ML is unavailable.
  */
-final readonly class DemandForecaster implements DemandForecastInterface
+final class DemandForecaster implements DemandForecastInterface
 {
+    /**
+     * @var array{enabled: bool, method: string, periods: int, publishEvent: bool}
+     */
+    private array $fallbackConfig = [
+        'enabled' => true,
+        'method' => 'historical_average',
+        'periods' => 12,
+        'publishEvent' => true,
+    ];
+
     public function __construct(
-        private ?ForecastProviderInterface $mlProvider = null,
-        private ?ForecastFallbackInterface $fallbackProvider = null,
-        private ?LoggerInterface $logger = null,
+        private readonly ?ForecastProviderInterface $mlProvider = null,
+        private readonly ?ForecastFallbackInterface $fallbackProvider = null,
+        private readonly ?LoggerInterface $logger = null,
     ) {
     }
 
     /**
      * {@inheritdoc}
      */
-    public function forecast(string $productId, PlanningHorizon $horizon): DemandForecast
-    {
+    public function forecast(
+        string $productId,
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate
+    ): DemandForecast {
+        $horizon = new PlanningHorizon(
+            startDate: $startDate,
+            endDate: $endDate,
+        );
+
         // Try ML provider first
         if ($this->mlProvider !== null) {
             try {
@@ -64,9 +82,6 @@ final readonly class DemandForecaster implements DemandForecastInterface
                     'confidence' => $forecast->confidence->value,
                 ]);
 
-                // Publish event to notify that fallback was used
-                // In real implementation, this would dispatch ForecastFallbackUsedEvent
-
                 return $forecast;
             } catch (\Exception $e) {
                 $this->logger?->error('Fallback forecast also failed', [
@@ -82,14 +97,17 @@ final readonly class DemandForecaster implements DemandForecastInterface
     /**
      * {@inheritdoc}
      */
-    public function forecastMultiple(array $productIds, PlanningHorizon $horizon): array
-    {
+    public function forecastMultiple(
+        array $productIds,
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate
+    ): array {
         $forecasts = [];
         $failed = [];
 
         foreach ($productIds as $productId) {
             try {
-                $forecasts[$productId] = $this->forecast($productId, $horizon);
+                $forecasts[$productId] = $this->forecast($productId, $startDate, $endDate);
             } catch (\Exception $e) {
                 $failed[$productId] = $e->getMessage();
             }
@@ -142,7 +160,7 @@ final readonly class DemandForecaster implements DemandForecastInterface
     /**
      * {@inheritdoc}
      */
-    public function isMLAvailable(): bool
+    public function isMlAvailable(): bool
     {
         if ($this->mlProvider === null) {
             return false;
@@ -294,5 +312,160 @@ final readonly class DemandForecaster implements DemandForecastInterface
         }
 
         return array_unique($algorithms);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function forecastByCategory(
+        string $categoryId,
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate
+    ): DemandForecast {
+        $horizon = new PlanningHorizon(
+            startDate: $startDate,
+            endDate: $endDate,
+        );
+
+        // Try ML provider first for category-level forecast
+        if ($this->mlProvider !== null) {
+            try {
+                $forecast = $this->mlProvider->generateCategoryForecast($categoryId, $horizon);
+
+                $this->logger?->info('ML category forecast generated', [
+                    'categoryId' => $categoryId,
+                    'horizon' => $horizon->getTotalDays() . ' days',
+                    'confidence' => $forecast->confidence->value,
+                ]);
+
+                return $forecast;
+            } catch (\Exception $e) {
+                $this->logger?->warning('ML category forecast failed, falling back', [
+                    'categoryId' => $categoryId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Fall back to aggregating individual product forecasts
+        if ($this->fallbackProvider !== null) {
+            try {
+                $forecast = $this->fallbackProvider->generateCategoryFromHistory($categoryId, $horizon);
+
+                $this->logger?->info('Historical fallback category forecast generated', [
+                    'categoryId' => $categoryId,
+                    'horizon' => $horizon->getTotalDays() . ' days',
+                    'confidence' => $forecast->confidence->value,
+                ]);
+
+                return $forecast;
+            } catch (\Exception $e) {
+                $this->logger?->error('Fallback category forecast also failed', [
+                    'categoryId' => $categoryId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        throw ForecastUnavailableException::noProviderAvailable($categoryId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAccuracyMetrics(string $productId, int $periods = 12): array
+    {
+        if ($this->fallbackProvider === null) {
+            return [
+                'mape' => 0.0,
+                'rmse' => 0.0,
+                'bias' => 0.0,
+            ];
+        }
+
+        // Get historical forecasts and actuals
+        $endDate = new \DateTimeImmutable();
+        $startDate = $endDate->modify("-{$periods} months");
+
+        $actualDemand = $this->fallbackProvider->getHistoricalData($productId, $startDate, $endDate);
+
+        if (empty($actualDemand)) {
+            return [
+                'mape' => 0.0,
+                'rmse' => 0.0,
+                'bias' => 0.0,
+            ];
+        }
+
+        // Calculate accuracy metrics
+        $totalForecast = 0.0;
+        $totalActual = 0.0;
+        $sumAbsoluteError = 0.0;
+        $sumSquaredError = 0.0;
+        $count = 0;
+
+        foreach ($actualDemand as $period) {
+            $actual = (float) ($period['quantity'] ?? 0);
+            $forecast = (float) ($period['forecasted'] ?? $actual);
+
+            $totalActual += $actual;
+            $totalForecast += $forecast;
+
+            if ($actual > 0) {
+                $error = $forecast - $actual;
+                $sumAbsoluteError += abs($error / $actual);
+                $sumSquaredError += $error ** 2;
+                $count++;
+            }
+        }
+
+        $mape = $count > 0 ? ($sumAbsoluteError / $count) * 100 : 0.0;
+        $rmse = $count > 0 ? sqrt($sumSquaredError / $count) : 0.0;
+        $bias = $totalForecast - $totalActual;
+
+        return [
+            'mape' => round($mape, 2),
+            'rmse' => round($rmse, 2),
+            'bias' => round($bias, 2),
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function recordActual(
+        string $productId,
+        \DateTimeImmutable $period,
+        float $actualDemand
+    ): void {
+        if ($this->fallbackProvider !== null) {
+            $this->fallbackProvider->recordActualDemand($productId, $period, $actualDemand);
+        }
+
+        $this->logger?->info('Actual demand recorded', [
+            'productId' => $productId,
+            'period' => $period->format('Y-m-d'),
+            'actualDemand' => $actualDemand,
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setFallbackConfig(array $config): void
+    {
+        $this->fallbackConfig = array_merge($this->fallbackConfig, $config);
+
+        $this->logger?->info('Fallback configuration updated', [
+            'config' => $this->fallbackConfig,
+        ]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getFallbackConfig(): array
+    {
+        return $this->fallbackConfig;
     }
 }
