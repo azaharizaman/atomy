@@ -74,21 +74,25 @@ final readonly class StaffAssignmentService
     public function getSupervisorChain(string $staffId): array
     {
         $chain = [];
+        $visited = [$staffId => true]; // Track visited IDs
         $currentStaff = $this->staffQuery->findById($staffId);
 
         while ($currentStaff !== null && $currentStaff->getSupervisorId() !== null) {
-            $supervisor = $this->staffQuery->findById($currentStaff->getSupervisorId());
+            $supervisorId = $currentStaff->getSupervisorId();
+
+            // Detect circular reference immediately
+            if (isset($visited[$supervisorId])) {
+                break;
+            }
+
+            $supervisor = $this->staffQuery->findById($supervisorId);
             if ($supervisor === null) {
                 break;
             }
 
             $chain[] = $supervisor;
+            $visited[$supervisorId] = true;
             $currentStaff = $supervisor;
-
-            // Prevent infinite loop in case of circular reference
-            if (count($chain) > 100) {
-                break;
-            }
         }
 
         return $chain;

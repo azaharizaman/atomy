@@ -14,7 +14,7 @@ use Nexus\Backoffice\ValueObjects\CompanyStatus;
  * Extracted from CompanyRepositoryInterface to follow ISP and proper layering.
  * Business logic belongs in services, not repositories.
  */
-final class CompanyHierarchyService
+final readonly class CompanyHierarchyService
 {
     public function __construct(
         private readonly CompanyQueryInterface $companyQuery,

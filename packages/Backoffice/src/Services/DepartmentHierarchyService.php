@@ -14,7 +14,7 @@ use Nexus\Backoffice\ValueObjects\DepartmentStatus;
  * Extracted from DepartmentRepositoryInterface to follow ISP and proper layering.
  * Business logic belongs in services, not repositories.
  */
-final class DepartmentHierarchyService
+final readonly class DepartmentHierarchyService
 {
     public function __construct(
         private readonly DepartmentQueryInterface $departmentQuery,
