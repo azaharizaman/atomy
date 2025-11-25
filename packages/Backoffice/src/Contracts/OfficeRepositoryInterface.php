@@ -4,10 +4,22 @@ declare(strict_types=1);
 
 namespace Nexus\Backoffice\Contracts;
 
+use Nexus\Backoffice\Contracts\Persistence\OfficePersistenceInterface;
+use Nexus\Backoffice\Contracts\Query\OfficeQueryInterface;
+use Nexus\Backoffice\Contracts\Validation\OfficeValidationInterface;
+
 /**
  * Repository interface for Office persistence operations.
+ *
+ * @deprecated This interface violates ISP and CQRS principles.
+ *             Use segregated interfaces instead:
+ *             - OfficePersistenceInterface for write operations
+ *             - OfficeQueryInterface for read operations
+ *             - OfficeValidationInterface for validation operations
+ *             - OfficeHierarchyService for business logic
+ *             This interface will be removed in v2.0.
  */
-interface OfficeRepositoryInterface
+interface OfficeRepositoryInterface extends OfficePersistenceInterface, OfficeQueryInterface, OfficeValidationInterface
 {
     public function findById(string $id): ?OfficeInterface;
 
@@ -19,31 +31,18 @@ interface OfficeRepositoryInterface
     public function getByCompany(string $companyId): array;
 
     /**
+     * Get all active offices for a company.
+     *
+     * @deprecated Use OfficeHierarchyService::getActiveByCompany() instead
      * @return array<OfficeInterface>
      */
     public function getActiveByCompany(string $companyId): array;
 
     /**
-     * @return array<OfficeInterface>
+     * Get the head office for a company.
+     *
+     * @deprecated Use OfficeHierarchyService::getHeadOffice() instead
      */
-    public function getByLocation(string $country, ?string $city = null): array;
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    public function save(array $data): OfficeInterface;
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    public function update(string $id, array $data): OfficeInterface;
-
-    public function delete(string $id): bool;
-
-    public function codeExists(string $companyId, string $code, ?string $excludeId = null): bool;
-
-    public function hasActiveStaff(string $officeId): bool;
-
     public function getHeadOffice(string $companyId): ?OfficeInterface;
 
     public function hasHeadOffice(string $companyId, ?string $excludeId = null): bool;

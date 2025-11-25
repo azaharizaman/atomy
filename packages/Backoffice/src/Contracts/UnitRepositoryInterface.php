@@ -4,10 +4,22 @@ declare(strict_types=1);
 
 namespace Nexus\Backoffice\Contracts;
 
+use Nexus\Backoffice\Contracts\Persistence\UnitPersistenceInterface;
+use Nexus\Backoffice\Contracts\Query\UnitQueryInterface;
+use Nexus\Backoffice\Contracts\Validation\UnitValidationInterface;
+
 /**
  * Repository interface for Unit persistence operations.
+ *
+ * @deprecated This interface violates ISP and CQRS principles.
+ *             Use segregated interfaces instead:
+ *             - UnitPersistenceInterface for write operations
+ *             - UnitQueryInterface for read operations
+ *             - UnitValidationInterface for validation operations
+ *             - UnitManagementService for business logic
+ *             This interface will be removed in v2.0.
  */
-interface UnitRepositoryInterface
+interface UnitRepositoryInterface extends UnitPersistenceInterface, UnitQueryInterface, UnitValidationInterface
 {
     public function findById(string $id): ?UnitInterface;
 
@@ -19,11 +31,16 @@ interface UnitRepositoryInterface
     public function getByCompany(string $companyId): array;
 
     /**
+     * Get all active units for a company.
+     *
+     * @deprecated Use UnitManagementService::getActiveByCompany() instead
      * @return array<UnitInterface>
      */
     public function getActiveByCompany(string $companyId): array;
 
     /**
+     * Get units by type within a company.
+     *
      * @return array<UnitInterface>
      */
     public function getByType(string $companyId, string $type): array;
