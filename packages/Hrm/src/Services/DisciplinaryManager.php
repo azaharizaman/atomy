@@ -67,7 +67,7 @@ readonly class DisciplinaryManager
         
         return $this->disciplinaryRepository->update($id, [
             'status' => DisciplinaryStatus::CLOSED->value,
-            'closed_at' => now(),
+            'closed_at' => new \DateTimeImmutable(),
             'closed_by' => $closedBy,
         ]);
     }
