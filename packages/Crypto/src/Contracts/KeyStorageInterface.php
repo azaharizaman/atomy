@@ -10,7 +10,7 @@ use Nexus\Crypto\ValueObjects\EncryptionKey;
  * Key Storage Interface
  *
  * Manages persistent storage and retrieval of encryption keys.
- * Implemented by the application layer (e.g., LaravelKeyStorage with database backend).
+ * Implemented by the application layer (e.g., DatabaseKeyStorage with encrypted storage backend).
  *
  * Keys are stored encrypted using envelope encryption:
  * - Data Encryption Keys (DEKs) encrypt application data
