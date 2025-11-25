@@ -16,6 +16,13 @@ use Nexus\Manufacturing\Exceptions\WorkCenterNotFoundException;
  */
 final readonly class WorkCenterManager implements WorkCenterManagerInterface
 {
+    /**
+     * Default number of working days per week.
+     *
+     * Used for capacity calculations when no calendar is configured.
+     */
+    private const int DEFAULT_DAYS_PER_WEEK = 5;
+
     public function __construct(
         private WorkCenterRepositoryInterface $repository,
     ) {
@@ -125,7 +132,7 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     public function calculateWeeklyCapacity(string $id): float
     {
         $dailyCapacity = $this->calculateDailyCapacity($id);
-        return $dailyCapacity * 5; // Assuming 5-day work week
+        return $dailyCapacity * self::DEFAULT_DAYS_PER_WEEK;
     }
 
     /**
@@ -135,12 +142,11 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     {
         $workCenter = $this->getById($id);
 
-        // Check if date is a working day
+        // Check if date is a working day (weekends are non-working days by default)
         $dayOfWeek = (int) $date->format('N'); // 1 (Monday) to 7 (Sunday)
-        $daysPerWeek = 5; // Assuming 5-day work week, consistent with calculateWeeklyCapacity
 
-        // Assume work days are Monday to Friday for 5-day week, etc.
-        if ($dayOfWeek > $daysPerWeek) {
+        // Assume work days are Monday to Friday for default 5-day week
+        if ($dayOfWeek > self::DEFAULT_DAYS_PER_WEEK) {
             return 0.0;
         }
 
@@ -339,6 +345,12 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     }
 
     /**
+     * Calculate cost for an operation at this work center.
+     *
+     * Note: Machine cost is calculated as 0.0 since the WorkCenterInterface
+     * does not currently expose a machine rate. For accurate machine costing,
+     * extend the interface or use a dedicated costing service.
+     *
      * {@inheritdoc}
      */
     public function calculateCost(
@@ -348,9 +360,10 @@ final readonly class WorkCenterManager implements WorkCenterManagerInterface
     ): array {
         $workCenter = $this->getById($workCenterId);
 
-        // Use hourly rate for labor cost (getHourlyRate is the standard labor rate)
+        // Labor cost uses the standard hourly rate from the work center
         $laborCost = ($setupHours + $runHours) * $workCenter->getHourlyRate();
-        // Machine cost not available in interface - set to 0
+        // Machine cost is not available in WorkCenterInterface
+        // For accurate machine costing, extend the interface with getMachineRate()
         $machineCost = 0.0;
         $overheadCost = ($setupHours + $runHours) * $workCenter->getOverheadRate();
 

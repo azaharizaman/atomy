@@ -221,6 +221,13 @@ final readonly class RoutingManager implements RoutingManagerInterface
     }
 
     /**
+     * Calculate routing cost for a given quantity.
+     *
+     * Note: This method only calculates subcontract costs from operation data.
+     * Labor, machine, and overhead costs require work center rate data which
+     * is not available at the operation level. For complete routing costing,
+     * use WorkCenterManager::calculateCost() for each operation's work center.
+     *
      * {@inheritdoc}
      */
     public function calculateCost(string $routingId, float $quantity): array
@@ -231,14 +238,14 @@ final readonly class RoutingManager implements RoutingManagerInterface
 
         foreach ($routing->getOperations() as $operation) {
             // Only subcontract operations have cost data on the operation itself
-            // Labor, machine, and overhead costs should be calculated from work center rates
+            // Labor, machine, and overhead costs require WorkCenterManager for rate lookup
             $subcontractCost += ($operation->subcontractCost ?? 0.0) * $quantity;
         }
 
         return [
-            'labor' => 0.0, // Requires work center rate data
-            'machine' => 0.0, // Requires work center rate data
-            'overhead' => 0.0, // Requires work center rate data
+            'labor' => 0.0, // Use WorkCenterManager::calculateCost() for work center rates
+            'machine' => 0.0, // Use WorkCenterManager::calculateCost() for work center rates
+            'overhead' => 0.0, // Use WorkCenterManager::calculateCost() for work center rates
             'subcontract' => $subcontractCost,
             'total' => $subcontractCost,
         ];
