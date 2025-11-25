@@ -7,7 +7,7 @@ namespace Nexus\Tenant\Services;
 use Nexus\Tenant\Contracts\CacheRepositoryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\Tenant\Contracts\TenantInterface;
-use Nexus\Tenant\Contracts\TenantRepositoryInterface;
+use Nexus\Tenant\Contracts\TenantQueryInterface;
 use Nexus\Tenant\Exceptions\TenantContextNotSetException;
 use Nexus\Tenant\Exceptions\TenantNotFoundException;
 use Nexus\Tenant\Exceptions\TenantSuspendedException;
@@ -20,9 +20,14 @@ use Psr\Log\NullLogger;
  * Core service for managing the current tenant context within a request or process.
  * This is the primary service that other packages will use to access tenant information.
  *
+ * Uses TenantQueryInterface (ISP-compliant) instead of fat repository.
+ *
+ * Note: This service maintains request-scoped state (currentTenantId), which is acceptable.
+ * Unlike TenantImpersonationService, this state is ephemeral per-request and not persistent.
+ *
  * @package Nexus\Tenant\Services
  */
-class TenantContextManager implements TenantContextInterface
+final class TenantContextManager implements TenantContextInterface
 {
     private const CACHE_TTL = 3600; // 1 hour
     private const CACHE_PREFIX = 'tenant:';
@@ -31,7 +36,7 @@ class TenantContextManager implements TenantContextInterface
     private ?TenantInterface $currentTenant = null;
 
     public function __construct(
-        private readonly TenantRepositoryInterface $repository,
+        private readonly TenantQueryInterface $query,
         private readonly CacheRepositoryInterface $cache,
         private readonly LoggerInterface $logger = new NullLogger()
     ) {
@@ -146,8 +151,8 @@ class TenantContextManager implements TenantContextInterface
             return $tenant;
         }
 
-        // Load from database
-        $tenant = $this->repository->findById($tenantId);
+        // Load from database using query interface
+        $tenant = $this->query->findById($tenantId);
 
         if ($tenant) {
             // Cache the tenant
@@ -169,7 +174,7 @@ class TenantContextManager implements TenantContextInterface
         $cacheKey = self::CACHE_PREFIX . $tenantId;
         $this->cache->forget($cacheKey);
 
-        $tenant = $this->repository->findById($tenantId);
+        $tenant = $this->query->findById($tenantId);
         if ($tenant) {
             $this->cache->set($cacheKey, $tenant, self::CACHE_TTL);
             $this->logger->debug("Tenant cache refreshed: {$tenantId}");

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\Tenant\Services;
 
-use Nexus\Tenant\Contracts\TenantRepositoryInterface;
-use Nexus\Tenant\Exceptions\ImpersonationNotAllowedException;
+use Nexus\Tenant\Contracts\ImpersonationStorageInterface;
+use Nexus\Tenant\Contracts\EventDispatcherInterface;
+use Nexus\Tenant\Contracts\TenantQueryInterface;
+use Nexus\Tenant\Events\ImpersonationStartedEvent;
+use Nexus\Tenant\Events\ImpersonationEndedEvent;
 use Nexus\Tenant\Exceptions\TenantNotFoundException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -15,143 +18,149 @@ use Psr\Log\NullLogger;
  *
  * Manages secure impersonation of tenants by support staff.
  *
+ * STATELESS: All impersonation state is externalized via ImpersonationStorageInterface.
+ * No in-memory properties storing session data.
+ *
  * @package Nexus\Tenant\Services
  */
-class TenantImpersonationService
+final readonly class TenantImpersonationService
 {
-    private ?string $originalUserId = null;
-    private ?string $impersonatedTenantId = null;
-    private ?string $impersonationReason = null;
-    private ?\DateTimeInterface $impersonationStartedAt = null;
-
     public function __construct(
-        private readonly TenantRepositoryInterface $repository,
-        private readonly TenantContextManager $contextManager,
-        private readonly TenantEventDispatcher $eventDispatcher,
-        private readonly LoggerInterface $logger = new NullLogger()
+        private TenantQueryInterface $tenantQuery,
+        private TenantContextManager $contextManager,
+        private ImpersonationStorageInterface $storage,
+        private EventDispatcherInterface $eventDispatcher,
+        private LoggerInterface $logger = new NullLogger()
     ) {
     }
 
     /**
      * Start impersonating a tenant.
      *
-     * @param string $tenantId
-     * @param string $originalUserId
-     * @param string|null $reason
+     * @param string $storageKey Storage key (e.g., session ID or user ID)
+     * @param string $tenantId Target tenant to impersonate
+     * @param string $impersonatorId User performing impersonation
+     * @param string|null $reason Optional reason for impersonation
      * @return void
      * @throws TenantNotFoundException
-     * @throws ImpersonationNotAllowedException
      */
-    public function impersonate(string $tenantId, string $originalUserId, ?string $reason = null): void
-    {
+    public function impersonate(
+        string $storageKey,
+        string $tenantId,
+        string $impersonatorId,
+        ?string $reason = null
+    ): void {
         // Validate tenant exists
-        $tenant = $this->repository->findById($tenantId);
-        if (!$tenant) {
+        $targetTenant = $this->tenantQuery->findById($tenantId);
+        if (!$targetTenant) {
             throw TenantNotFoundException::byId($tenantId);
         }
 
-        // Note: Permission validation should be done by the application layer
-        // before calling this method, but we track it here for audit purposes
+        // Get current tenant context (original)
+        $originalTenantId = $this->contextManager->getCurrentTenantId();
+        $originalTenant = $originalTenantId ? $this->tenantQuery->findById($originalTenantId) : null;
 
-        $this->originalUserId = $originalUserId;
-        $this->impersonatedTenantId = $tenantId;
-        $this->impersonationReason = $reason;
-        $this->impersonationStartedAt = new \DateTimeImmutable();
+        // Store impersonation state externally
+        $this->storage->store(
+            key: $storageKey,
+            originalTenantId: $originalTenantId ?? 'system',
+            targetTenantId: $tenantId,
+            impersonatorId: $impersonatorId
+        );
 
         // Set the tenant context
         $this->contextManager->setTenant($tenantId);
 
-        $this->eventDispatcher->dispatchImpersonationStarted($tenantId, $originalUserId, $reason);
-        $this->logger->warning("Impersonation started: User {$originalUserId} accessing tenant {$tenantId}" . ($reason ? " - Reason: {$reason}" : ''));
+        // Dispatch event
+        if ($originalTenant) {
+            $this->eventDispatcher->dispatch(
+                new ImpersonationStartedEvent($originalTenant, $targetTenant, $impersonatorId)
+            );
+        }
+
+        $this->logger->warning(
+            "Impersonation started: User {$impersonatorId} accessing tenant {$tenantId}" .
+            ($reason ? " - Reason: {$reason}" : '')
+        );
     }
 
     /**
      * Stop impersonation and restore original context.
      *
+     * @param string $storageKey Storage key (e.g., session ID or user ID)
      * @return void
      */
-    public function stopImpersonation(): void
+    public function stopImpersonation(string $storageKey): void
     {
-        if (!$this->isImpersonating()) {
+        if (!$this->storage->isActive($storageKey)) {
             return;
         }
 
-        $tenantId = $this->impersonatedTenantId;
-        $originalUserId = $this->originalUserId;
-        $duration = $this->getImpersonationDuration();
+        $context = $this->storage->retrieve($storageKey);
+        if (!$context) {
+            return;
+        }
 
-        $this->contextManager->clearTenant();
+        $originalTenantId = $context['original_tenant_id'];
+        $targetTenantId = $context['target_tenant_id'];
+        $impersonatorId = $context['impersonator_id'];
 
-        $this->eventDispatcher->dispatchImpersonationEnded($tenantId, $originalUserId);
-        $this->logger->info("Impersonation ended: User {$originalUserId} stopped accessing tenant {$tenantId}. Duration: {$duration} seconds");
+        // Retrieve tenant objects for event
+        $targetTenant = $this->tenantQuery->findById($targetTenantId);
+        $restoredTenant = $originalTenantId !== 'system' ? $this->tenantQuery->findById($originalTenantId) : null;
 
-        $this->originalUserId = null;
-        $this->impersonatedTenantId = null;
-        $this->impersonationReason = null;
-        $this->impersonationStartedAt = null;
+        // Restore original tenant context
+        if ($originalTenantId === 'system') {
+            $this->contextManager->clearTenant();
+        } else {
+            $this->contextManager->setTenant($originalTenantId);
+        }
+
+        // Clear storage
+        $this->storage->clear($storageKey);
+
+        // Dispatch event
+        if ($targetTenant && $restoredTenant) {
+            $this->eventDispatcher->dispatch(
+                new ImpersonationEndedEvent($targetTenant, $restoredTenant, $impersonatorId)
+            );
+        }
+
+        $this->logger->info(
+            "Impersonation ended: User {$impersonatorId} stopped accessing tenant {$targetTenantId}"
+        );
     }
 
     /**
      * Check if currently impersonating a tenant.
      *
+     * @param string $storageKey Storage key
      * @return bool
      */
-    public function isImpersonating(): bool
+    public function isImpersonating(string $storageKey): bool
     {
-        return $this->impersonatedTenantId !== null;
+        return $this->storage->isActive($storageKey);
     }
 
     /**
      * Get the impersonated tenant ID.
      *
+     * @param string $storageKey Storage key
      * @return string|null
      */
-    public function getImpersonatedTenantId(): ?string
+    public function getImpersonatedTenantId(string $storageKey): ?string
     {
-        return $this->impersonatedTenantId;
+        return $this->storage->getTargetTenantId($storageKey);
     }
 
     /**
-     * Get the original user ID who initiated impersonation.
+     * Get the original tenant ID before impersonation.
      *
+     * @param string $storageKey Storage key
      * @return string|null
      */
-    public function getOriginalUserId(): ?string
+    public function getOriginalTenantId(string $storageKey): ?string
     {
-        return $this->originalUserId;
-    }
-
-    /**
-     * Get the impersonation reason.
-     *
-     * @return string|null
-     */
-    public function getImpersonationReason(): ?string
-    {
-        return $this->impersonationReason;
-    }
-
-    /**
-     * Get when impersonation started.
-     *
-     * @return \DateTimeInterface|null
-     */
-    public function getImpersonationStartedAt(): ?\DateTimeInterface
-    {
-        return $this->impersonationStartedAt;
-    }
-
-    /**
-     * Get impersonation duration in seconds.
-     *
-     * @return int
-     */
-    public function getImpersonationDuration(): int
-    {
-        if (!$this->impersonationStartedAt) {
-            return 0;
-        }
-
-        return (new \DateTimeImmutable())->getTimestamp() - $this->impersonationStartedAt->getTimestamp();
+        return $this->storage->getOriginalTenantId($storageKey);
     }
 }
