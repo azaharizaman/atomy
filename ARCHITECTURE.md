@@ -52,7 +52,7 @@ Nexus is a **package-only monorepo** containing 52 atomic, reusable PHP packages
 21. **Nexus\Inventory** - Stock management with lot/serial tracking (depends on Uom)
 22. **Nexus\Warehouse** - Warehouse operations and bin management
 23. **Nexus\Procurement** - Purchase requisitions, POs, goods receipt
-24. **Nexus\Manufacturing** - Bill of materials, work orders, MRP
+24. **Nexus\Manufacturing** - Versioned BOMs with effectivity, MRP II, capacity planning, ML forecasting
 25. **Nexus\Product** - Product catalog, pricing, categorization
 
 ### Human Resources (3 packages)

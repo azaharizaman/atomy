@@ -1,0 +1,250 @@
+{
+  "metadata": {
+    "generatedDate": "2025-11-25",
+    "version": "1.0.0",
+    "totalPackages": 52,
+    "websitePurpose": "Nexus ERP – Atomic, framework-agnostic PHP 8.3+ Lego bricks for modern ERP & SaaS"
+  },
+  "filters": {
+    "intent": [
+      { "id": "integration", "label": "Integrate into my existing app", "description": "Add specific business capabilities without multi-tenancy overhead" },
+      { "id": "saas",      "label": "Build a full SaaS / multi-tenant product", "description": "Requires tenancy, SSO, messaging, billing, etc." }
+      { "id": "application",      "label": "Build a full Inhouse Erp/Erp-Subset / multi-tenant application", "description": "Requires SSO, messaging, etc." }
+    ],
+    "verticals": [
+      "Finance & Accounting",
+      "Sales & Operations",
+      "Inventory & Warehouse",
+      "Manufacturing",
+      "Human Resources",
+      "Customer & Partner Management",
+      "Integration & Automation",
+      "Reporting & Data",
+      "Compliance & Governance",
+      "Foundation & Infrastructure"
+    ],
+    "deploymentScale": [
+      { "id": "small",     "label": "Small business / Startup",    "description": "Lean stack, minimal overhead" },
+      { "id": "medium",    "label": "Mid-market",                   "description": "Balanced features + scalability" },
+      { "id": "enterprise","label": "Large corporation / Enterprise", "description": "Full compliance, ML, advanced audit, etc." }
+    ]
+  },
+  "packages": [
+    {
+      "id": "Tenant",
+      "name": "Nexus\\Tenant",
+      "namespace": "Nexus\\Tenant",
+      "businessDomain": "Foundation & Infrastructure",
+      "verticals": ["Foundation & Infrastructure"],
+      "nature": "architectural",
+      "intent": ["saas"],
+      "deploymentScale": ["medium","enterprise"],
+      "description": "Multi-tenancy context isolation with queue & event propagation",
+      "shortDescription": "Tenant context & isolation engine",
+      "completionPercent": 100,
+      "complexityPercent": 65,
+      "qualityScore": 98,
+      "documentationScore": 100,
+      "maturity": "production-ready",
+      "progressiveDisclosure": {
+        "basic": "Simple tenant switching",
+        "intermediate": "Tenant lifecycle + middleware",
+        "advanced": "Tenant provisioning API + queue propagation"
+      },
+      "codeSamples": {
+        "basic": "// Basic tenant context\n$tenantContext->setCurrentTenant($tenantId);",
+        "intermediate": "// Automatic middleware + repository scoping\npublic function __construct(private TenantContextInterface $tenant) {}",
+        "advanced": "// Full tenant creation with event propagation\n$tenantService->createTenant($data);"
+      }
+    },
+    {
+      "id": "Identity",
+      "name": "Nexus\\Identity",
+      "namespace": "Nexus\\Identity",
+      "businessDomain": "Security & Identity",
+      "verticals": ["Foundation & Infrastructure"],
+      "nature": "architectural",
+      "intent": ["saas","application"],
+      "deploymentScale": ["medium","enterprise"],
+      "description": "Authentication, RBAC, MFA, token & session management",
+      "shortDescription": "Full auth + authorization engine",
+      "completionPercent": 100,
+      "complexityPercent": 80,
+      "qualityScore": 99,
+      "documentationScore": 100,
+      "maturity": "production-ready",
+      "progressiveDisclosure": {
+        "basic": "Simple login/logout",
+        "intermediate": "RBAC + permissions",
+        "advanced": "MFA + API tokens + policies"
+      },
+      "codeSamples": {
+        "basic": "$auth->attempt($credentials);",
+        "intermediate": "$authz->can('delete', 'invoice');",
+        "advanced": "$mfa->generateSecret(); $mfa->verify($code);"
+      }
+    },
+    {
+      "id": "Tax",
+      "name": "Nexus\\Tax",
+      "namespace": "Nexus\\Tax",
+      "businessDomain": "Finance & Accounting",
+      "verticals": ["Finance & Accounting","Compliance & Governance"],
+      "nature": "operational",
+      "intent": ["saas", "application", "integration"],
+      "deploymentScale": ["medium","enterprise"],
+      "description": "Stateless tax calculation & compliance engine (VAT, GST, Sales Tax, withholding)",
+      "shortDescription": "Multi-jurisdiction tax engine",
+      "completionPercent": 92,
+      "complexityPercent": 88,
+      "qualityScore": 95,
+      "documentationScore": 96,
+      "maturity": "near-production",
+      "progressiveDisclosure": {
+        "basic": "Simple rate lookup",
+        "intermediate": "Fiscal positions + reverse charge",
+        "advanced": "Avalara/Vertex adapters + filing reports"
+      },
+      "codeSamples": {
+        "basic": "$taxEngine->calculate($amount, $country);",
+        "intermediate": "$taxEngine->applyFiscalPosition($line, $position);",
+        "advanced": "$taxReport->generateQuarterly($period);"
+      }
+    },
+    {
+      "id": "Manufacturing",
+      "name": "Nexus\\Manufacturing",
+      "namespace": "Nexus\\Manufacturing",
+      "businessDomain": "Sales & Operations",
+      "verticals": ["Manufacturing"],
+      "nature": "operational",
+      "intent": ["integration","saas","application"],
+      "deploymentScale": ["medium","enterprise"],
+      "description": "Versioned BOMs with effectivity dates, multi-level routing, MRP II with lot-sizing strategies, finite/infinite capacity planning with bottleneck resolution, ML-powered demand forecasting",
+      "shortDescription": "Complete MRP II manufacturing execution",
+      "completionPercent": 95,
+      "complexityPercent": 94,
+      "qualityScore": 88,
+      "documentationScore": 95,
+      "maturity": "near-production",
+      "progressiveDisclosure": {
+        "basic": "Simple BOM + work order lifecycle",
+        "intermediate": "MRP with lot sizing (L4L, FOQ, EOQ, POQ) + planning zones",
+        "advanced": "Finite capacity planning + ML demand forecasting + resolution suggestions"
+      },
+      "codeSamples": {
+        "basic": "$bomManager->create($productId, '1.0', 'manufacturing');",
+        "intermediate": "$mrpResult = $mrpEngine->runMrp($productId, $horizon);",
+        "advanced": "$suggestions = $capacityResolver->getSuggestions($workCenterId, $start, $end);"
+      }
+    },
+    {
+        "id": "EventStream",
+        "name": "Nexus\\EventStream",
+        "namespace": "Nexus\\EventStream",
+        "businessDomain": "Foundation & Infrastructure",
+        "verticals": ["Foundation & Infrastructure","Compliance & Governance"],
+        "nature": "architectural",
+        "intent": ["integration","saas","application"],
+        "deploymentScale": ["medium","enterprise"],
+        "description": "Event sourcing engine with audit trail, state replay, and CQRS support",
+        "shortDescription": "Event sourcing & CQRS framework",
+        "completionPercent": 85,
+        "complexityPercent": 90,
+        "qualityScore": 92,
+        "documentationScore": 90,
+        "maturity": "beta",
+        "progressiveDisclosure": {
+            "basic": "Append-only event store",
+            "intermediate": "State replay + projections",
+            "advanced": "CQRS + event-driven workflows"
+        },
+        "codeSamples": {
+            "basic": "$eventStore->append($event);",
+            "intermediate": "$state = $eventStore->replay($aggregateId);",
+            "advanced": "$commandBus->dispatch($command);"
+        }
+    },
+    {
+      "id": "MachineLearning",
+      "name": "Nexus\\MachineLearning",
+      "namespace": "Nexus\\MachineLearning",
+      "businessDomain": "Reporting & Data",
+      "verticals": ["Reporting & Data","Finance & Accounting","Sales & Operations"],
+      "nature": "analytical",
+      "intent": ["integration","saas","application"],
+      "deploymentScale": ["medium","enterprise"],
+      "description": "ML-powered demand forecasting, anomaly detection, and predictive analytics",
+      "shortDescription": "Machine learning toolkit for ERP",
+      "completionPercent": 70,
+      "complexityPercent": 95,
+      "qualityScore": 90,
+      "documentationScore": 88,
+      "maturity": "alpha",
+      "progressiveDisclosure": {
+        "basic": "Data preprocessing + feature engineering",
+        "intermediate": "Prebuilt models for forecasting",
+        "advanced": "Custom model training + deployment"
+      },
+      "codeSamples": {
+        "basic": "$data = $ml->preprocess($rawData);",
+        "intermediate": "$forecast = $ml->forecastDemand($productId, $horizon);",
+        "advanced": "$model = $ml->trainModel($trainingData);"
+      }
+    },
+    {
+      "id": "Routing",
+      "name": "Nexus\\Routing",
+      "namespace": "Nexus\\Routing",
+      "businessDomain": "Foundation & Infrastructure",
+      "verticals": ["Foundation & Infrastructure", "Integration & Automation"],
+      "nature": "architectural",
+      "intent": ["integration","saas","application"],
+      "deploymentScale": ["small","medium","enterprise"],
+      "description": "Flexible HTTP routing and middleware dispatching",
+      "shortDescription": "Lightweight routing engine",
+      "completionPercent": 100,
+      "complexityPercent": 40,
+      "qualityScore": 99,
+      "documentationScore": 100,
+      "maturity": "production-ready",
+      "progressiveDisclosure": {
+        "basic": "Define routes and handlers",
+        "intermediate": "Middleware support",
+        "advanced": "Route groups + parameter constraints"
+      },
+      "codeSamples": {
+        "basic": "$router->get('/invoices', 'InvoiceController@index');",
+        "intermediate": "$router->middleware('auth')->group(function($router) { ... });",
+        "advanced": "$router->get('/users/{id:\d+}', 'UserController@show');"
+      }
+    },
+    {
+      "id": "Geo",
+      "name": "Nexus\\Geo",
+      "namespace": "Nexus\\Geo",
+      "businessDomain": "Foundation & Infrastructure",
+      "verticals": ["Foundation & Infrastructure"],
+      "nature": "operational",
+      "intent": ["integration","saas","application"],
+      "deploymentScale": ["small","medium","enterprise"],
+      "description": "Geolocation, address validation, and mapping utilities",
+      "shortDescription": "Geospatial utilities for ERP",
+      "completionPercent": 95,
+      "complexityPercent": 50,
+      "qualityScore": 97,
+      "documentationScore": 98,
+      "maturity": "production-ready",
+      "progressiveDisclosure": {
+        "basic": "Geocoding and reverse geocoding",
+        "intermediate": "Address validation",
+        "advanced": "Mapping integrations"
+      },
+      "codeSamples": {
+        "basic": "$coords = $geo->geocode('1600 Amphitheatre Parkway, Mountain View, CA');",
+        "intermediate": "$isValid = $geo->validateAddress($address);",
+        "advanced": "$mapUrl = $geo->getMapUrl($coords);"
+      }
+    }
+  ]
+}

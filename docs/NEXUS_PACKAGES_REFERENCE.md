@@ -6,6 +6,7 @@
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
 
 **Recent Updates:**
+- Added `Nexus\Manufacturing` - Complete MRP II (BOM, Routing, Work Orders, Capacity Planning, ML Forecasting)
 - Added `Nexus\FeatureFlags` - Feature flag management system
 - Added `Nexus\SSO` - Single Sign-On integration (SAML, OAuth2, OIDC)
 - Added `Nexus\Tax` - Tax calculation and compliance engine
@@ -1100,6 +1101,85 @@ use Nexus\Procurement\Contracts\RequisitionManagerInterface;
 
 ---
 
+#### **Nexus\Manufacturing**
+**Capabilities:**
+- **Bill of Materials (BOM)**: Multi-level BOMs with version control and effectivity dates
+- **Routing Management**: Multi-operation routings with setup/run times and effectivity
+- **Work Order Processing**: Complete lifecycle (Created → Released → In Progress → Completed)
+- **MRP Engine**: Multi-level explosion, net requirements, lot-sizing (L4L, FOQ, EOQ, POQ)
+- **Capacity Planning**: Finite/infinite capacity, bottleneck detection, resolution suggestions
+- **Demand Forecasting**: ML-powered via MachineLearning package with historical fallback
+- **Change Order Management**: Engineering change control with approval workflows
+
+**When to Use:**
+- ✅ Bill of Materials management with version control
+- ✅ Production routing and operation sequencing
+- ✅ Work order creation and lifecycle tracking
+- ✅ Material Requirements Planning (MRP I/II)
+- ✅ Capacity planning and bottleneck resolution
+- ✅ Demand forecasting with ML integration
+
+**Key Interfaces:**
+```php
+use Nexus\Manufacturing\Contracts\BomManagerInterface;
+use Nexus\Manufacturing\Contracts\RoutingManagerInterface;
+use Nexus\Manufacturing\Contracts\WorkOrderManagerInterface;
+use Nexus\Manufacturing\Contracts\MrpEngineInterface;
+use Nexus\Manufacturing\Contracts\CapacityPlannerInterface;
+use Nexus\Manufacturing\Contracts\DemandForecasterInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Run MRP and get planned orders
+public function __construct(
+    private readonly MrpEngineInterface $mrpEngine,
+    private readonly BomManagerInterface $bomManager
+) {}
+
+public function planProduction(string $productId): array
+{
+    $horizon = new PlanningHorizon(
+        startDate: new \DateTimeImmutable('today'),
+        endDate: new \DateTimeImmutable('+90 days'),
+        bucketSizeDays: 7,
+        frozenZoneDays: 14,
+        slushyZoneDays: 28
+    );
+    
+    // Run MRP calculation
+    $result = $this->mrpEngine->runMrp($productId, $horizon);
+    
+    return $result->getPlannedOrders();
+}
+
+// Create work order from BOM
+public function createWorkOrder(string $productId, float $quantity): WorkOrderInterface
+{
+    $bom = $this->bomManager->findEffectiveBom($productId, new \DateTimeImmutable());
+    
+    return $this->workOrderManager->create(
+        productId: $productId,
+        quantity: $quantity,
+        plannedStartDate: new \DateTimeImmutable('+3 days'),
+        plannedEndDate: new \DateTimeImmutable('+10 days'),
+        bomId: $bom->getId()
+    );
+}
+```
+
+**❌ WRONG:**
+```php
+// Creating custom BOM explosion logic violates DRY principle
+final class CustomBomExploder {
+    public function explode(array $bom, float $qty): array {
+        // ... duplicates Nexus\Manufacturing functionality
+    }
+}
+```
+
+---
+
 ### 📦 **9. Inventory & Warehouse**
 
 #### **Nexus\Inventory**
@@ -2189,6 +2269,12 @@ public function getInvoices(): array {
 | Create customer invoices | `Nexus\Receivable` | `ReceivableManagerInterface` |
 | Process vendor bills | `Nexus\Payable` | `PayableManagerInterface` |
 | Track inventory | `Nexus\Inventory` | `InventoryManagerInterface` |
+| **Create/manage BOMs** | **`Nexus\Manufacturing`** | **`BomManagerInterface`** |
+| **Manage production routings** | **`Nexus\Manufacturing`** | **`RoutingManagerInterface`** |
+| **Create work orders** | **`Nexus\Manufacturing`** | **`WorkOrderManagerInterface`** |
+| **Run MRP planning** | **`Nexus\Manufacturing`** | **`MrpEngineInterface`** |
+| **Plan production capacity** | **`Nexus\Manufacturing`** | **`CapacityPlannerInterface`** |
+| **Forecast demand with ML** | **`Nexus\Manufacturing`** | **`DemandForecasterInterface`** |
 | Manage employees | `Nexus\Hrm` | `EmployeeManagerInterface` |
 | Process payroll | `Nexus\Payroll` | `PayrollManagerInterface` |
 | Call external APIs | `Nexus\Connector` | `ConnectorManagerInterface` |

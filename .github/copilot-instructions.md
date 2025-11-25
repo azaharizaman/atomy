@@ -82,7 +82,7 @@ nexus/
 │   ├── Import/             # Data import
 │   ├── Intelligence/       # AI-assisted automation
 │   ├── Inventory/          # Inventory management
-│   ├── Manufacturing/      # Production management
+│   ├── Manufacturing/      # MRP II: BOM, Routing, Work Orders, Capacity Planning
 │   ├── Marketing/          # Marketing campaigns
 │   ├── Monitoring/         # Observability & telemetry
 │   ├── Notifier/           # Multi-channel notifications
@@ -534,6 +534,7 @@ See [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md) fo
 - `Nexus\Receivable` - Customer invoicing and collections
 - `Nexus\Payable` - Vendor bills and payments
 - `Nexus\Inventory` - Stock management with lot/serial tracking
+- `Nexus\Manufacturing` - MRP II with BOM, routing, capacity planning, ML forecasting
 - `Nexus\Notifier` - Multi-channel notifications
 - `Nexus\Connector` - Integration hub with circuit breaker
 - `Nexus\Workflow` - Process automation
@@ -557,6 +558,6 @@ See [`docs/NEXUS_PACKAGES_REFERENCE.md`](../docs/NEXUS_PACKAGES_REFERENCE.md) fo
 
 ---
 
-**Last Updated:** November 24, 2025  
+**Last Updated:** November 25, 2025  
 **Maintained By:** Nexus Architecture Team  
 **Enforcement:** Mandatory for all coding agents and developers
