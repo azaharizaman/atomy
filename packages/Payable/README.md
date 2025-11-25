@@ -263,6 +263,27 @@ vendor/bin/phpunit packages/Payable/tests
 php artisan test --filter=Payable
 ```
 
+---
+
+## 📖 Documentation
+
+### Package Documentation
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites, core concepts (3-way matching, payment terms), and first integration
+- **[API Reference](docs/api-reference.md)** - Complete documentation of all 21 interfaces, 5 enums, 2 value objects, and 8 exceptions
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples with complete code
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple vendor bill creation and payment processing
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - 3-way matching, payment scheduling, variance handling
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress, architecture, and metrics
+- `REQUIREMENTS.md` - Detailed requirements (128 requirements documented)
+- `TEST_SUITE_SUMMARY.md` - Test coverage strategy and planned tests (83 tests)
+- `VALUATION_MATRIX.md` - Package valuation metrics ($190,710 estimated value)
+- See root `ARCHITECTURE.md` for overall system architecture
+- See `docs/NEXUS_PACKAGES_REFERENCE.md` for integration with other Nexus packages
+
+---
+
 ## License
 
 MIT License - see LICENSE file for details.
@@ -271,6 +292,6 @@ MIT License - see LICENSE file for details.
 
 Part of the Nexus ERP Monorepo.
 
-- Documentation: `/docs/PAYABLE_IMPLEMENTATION.md`
-- Architecture: `/ARCHITECTURE.md`
-- Requirements: `/REQUIREMENTS.csv`
+- Main Documentation: See package `docs/` folder
+- Architecture: See root `/ARCHITECTURE.md`
+- Package Reference: See `docs/NEXUS_PACKAGES_REFERENCE.md`

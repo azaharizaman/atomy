@@ -242,6 +242,27 @@ $employee->getParty()->getPrimaryEmail();
 - PHP 8.3 or higher
 - No framework dependencies (pure PHP)
 
+---
+
+## 📖 Documentation
+
+### Package Documentation
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites, concepts, and first integration
+- **[API Reference](docs/api-reference.md)** - Complete documentation of all interfaces, value objects, enums, and exceptions
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple usage patterns
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Advanced scenarios including relationships and duplicate detection
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress, metrics, and key design decisions
+- `REQUIREMENTS.md` - Detailed requirements with traceability (52 requirements, 100% complete)
+- `TEST_SUITE_SUMMARY.md` - Test coverage and results (tests planned, not yet implemented)
+- `VALUATION_MATRIX.md` - Package valuation metrics ($30,000 estimated value)
+- See root `ARCHITECTURE.md` for overall system architecture
+- See root `docs/NEXUS_PACKAGES_REFERENCE.md` for package integration patterns
+
+---
+
 ## License
 
 MIT License - See LICENSE file for details
