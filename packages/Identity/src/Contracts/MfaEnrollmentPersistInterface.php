@@ -37,14 +37,6 @@ interface MfaEnrollmentPersistInterface
     public function setPrimary(string $enrollmentId): bool;
 
     /**
-     * Create a new enrollment.
-     *
-     * @param array $data Enrollment data
-     * @return array Created enrollment data
-     */
-    public function create(array $data): array;
-
-    /**
      * Activate a pending enrollment.
      *
      * @param string $enrollmentId Enrollment identifier
