@@ -2,9 +2,11 @@
 
 **Purpose:** Retroactively apply comprehensive documentation standards to an existing Nexus package to ensure compliance with `.github/prompts/create-package-instruction.prompt.md`.
 
-**When to Use:** When bringing an existing package into compliance with the new documentation standards established in November 2024.
+**When to Use:** When bringing an existing package into compliance with the new documentation standards established in November 2025. When new package is created, the documentation standard must be applied.
 
 **Reference Implementation:** See `packages/EventStream/DOCUMENTATION_COMPLIANCE_SUMMARY.md` for a complete example of this process.
+
+**Gold Standard:** For excellent examples of well-documented packages, refer to: Nexus\Identity or Nexus\EventStream.
 
 ---
 
