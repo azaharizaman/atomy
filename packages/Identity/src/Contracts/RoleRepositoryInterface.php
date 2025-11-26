@@ -5,100 +5,16 @@ declare(strict_types=1);
 namespace Nexus\Identity\Contracts;
 
 /**
- * Role repository interface
- * 
- * Handles persistence operations for roles
+ * Role repository interface (Combined Query + Persist for backward compatibility)
+ *
+ * Extends both RoleQueryInterface and RolePersistInterface.
+ * New code should prefer injecting the specific Query or Persist interface
+ * following CQRS principles.
+ *
+ * @deprecated Use RoleQueryInterface for reads and RolePersistInterface for writes
  */
-interface RoleRepositoryInterface
+interface RoleRepositoryInterface extends RoleQueryInterface, RolePersistInterface
 {
-    /**
-     * Find a role by its unique identifier
-     * 
-     * @throws \Nexus\Identity\Exceptions\RoleNotFoundException
-     */
-    public function findById(string $id): RoleInterface;
-
-    /**
-     * Find a role by its name
-     * 
-     * @throws \Nexus\Identity\Exceptions\RoleNotFoundException
-     */
-    public function findByName(string $name, ?string $tenantId = null): RoleInterface;
-
-    /**
-     * Find a role by name or return null
-     */
-    public function findByNameOrNull(string $name, ?string $tenantId = null): ?RoleInterface;
-
-    /**
-     * Create a new role
-     * 
-     * @param array<string, mixed> $data Role data
-     */
-    public function create(array $data): RoleInterface;
-
-    /**
-     * Update an existing role
-     * 
-     * @param string $id Role identifier
-     * @param array<string, mixed> $data Updated role data
-     */
-    public function update(string $id, array $data): RoleInterface;
-
-    /**
-     * Delete a role
-     * 
-     * @throws \Nexus\Identity\Exceptions\RoleInUseException If role is assigned to users
-     */
-    public function delete(string $id): bool;
-
-    /**
-     * Check if a role name is already in use
-     * 
-     * @param string $name Role name to check
-     * @param string|null $tenantId Tenant ID for scoping
-     * @param string|null $excludeRoleId Role ID to exclude from check (for updates)
-     */
-    public function nameExists(string $name, ?string $tenantId = null, ?string $excludeRoleId = null): bool;
-
-    /**
-     * Get all permissions assigned to a role
-     * 
-     * @return PermissionInterface[]
-     */
-    public function getRolePermissions(string $roleId): array;
-
-    /**
-     * Assign a permission to a role
-     */
-    public function assignPermission(string $roleId, string $permissionId): void;
-
-    /**
-     * Revoke a permission from a role
-     */
-    public function revokePermission(string $roleId, string $permissionId): void;
-
-    /**
-     * Get all roles
-     * 
-     * @return RoleInterface[]
-     */
-    public function getAll(?string $tenantId = null): array;
-
-    /**
-     * Get role hierarchy (parent-child relationships)
-     * 
-     * @return array<string, string> Map of role ID to parent role ID
-     */
-    public function getRoleHierarchy(?string $tenantId = null): array;
-
-    /**
-     * Check if a role has any users assigned
-     */
-    public function hasUsers(string $roleId): bool;
-
-    /**
-     * Count users assigned to a role
-     */
-    public function countUsers(string $roleId): int;
+    // All methods inherited from RoleQueryInterface and RolePersistInterface
 }
+
