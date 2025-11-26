@@ -2,8 +2,8 @@
 
 **Package:** `Nexus\Identity`  
 **Status:** Production Ready (100% complete)  
-**Last Updated:** 2024-11-24  
-**Version:** 1.0.0
+**Last Updated:** 2025-11-26  
+**Version:** 1.1.0
 
 ## Executive Summary
 
@@ -15,10 +15,28 @@ This package successfully replaces Laravel Sanctum with a more robust, multi-ten
 - **Multi-Factor Authentication** including TOTP, WebAuthn/Passkeys, and backup codes
 - **Session and API token management** with comprehensive lifecycle control
 - **Account protection** with rate limiting, lockout mechanisms, and audit logging
+- **CQRS-compliant architecture** with separated Query and Persist interfaces
 
-**Total Development Investment**: ~$45,000  
+**Total Development Investment**: ~$48,000  
 **Package Value**: $150,000+ (estimated)  
 **Strategic Importance**: Critical - Core security infrastructure
+
+---
+
+## Recent Changes (v1.1.0)
+
+### CQRS Architecture Refactoring (November 2025)
+Applied CQRS (Command Query Responsibility Segregation) pattern to all 7 repository interfaces:
+
+- **UserRepositoryInterface** → `UserQueryInterface` + `UserPersistInterface`
+- **RoleRepositoryInterface** → `RoleQueryInterface` + `RolePersistInterface`
+- **PermissionRepositoryInterface** → `PermissionQueryInterface` + `PermissionPersistInterface`
+- **MfaEnrollmentRepositoryInterface** → `MfaEnrollmentQueryInterface` + `MfaEnrollmentPersistInterface`
+- **TrustedDeviceRepositoryInterface** → `TrustedDeviceQueryInterface` + `TrustedDevicePersistInterface`
+- **WebAuthnCredentialRepositoryInterface** → `WebAuthnCredentialQueryInterface` + `WebAuthnCredentialPersistInterface`
+- **BackupCodeRepositoryInterface** → `BackupCodeQueryInterface` + `BackupCodePersistInterface`
+
+Original repository interfaces now extend both Query and Persist for backward compatibility, marked with `@deprecated` annotation.
 
 ---
 

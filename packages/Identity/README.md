@@ -7,15 +7,16 @@ The Identity package provides a comprehensive, pure PHP solution for authenticat
 ## Features
 
 - ✅ **Pure PHP 8.3+** - No framework dependencies in core logic
+- ✅ **CQRS Architecture** - Separate Query and Persist interfaces for clean separation
 - ✅ **Contract-Driven** - All data structures and operations defined via interfaces
 - ✅ **Role-Based Access Control (RBAC)** - Flexible permission management with role hierarchy
 - ✅ **Direct Permission Assignment** - Bypass roles for fine-grained control
 - ✅ **Wildcard Permissions** - `users.*` grants all user permissions
 - ✅ **Session Management** - Secure token-based authentication
 - ✅ **API Token Authentication** - Scoped tokens for programmatic access
-- ✅ **Multi-Factor Authentication (MFA)** - TOTP, SMS, Email, Backup Codes (pluggable)
+- ✅ **Multi-Factor Authentication (MFA)** - TOTP, WebAuthn/Passkeys, Backup Codes
 - ✅ **Single Sign-On (SSO)** - SAML, OAuth2, OIDC support (pluggable)
-- ✅ **Password Security** - Argon2id/bcrypt hashing, breach detection, history tracking
+- ✅ **Password Security** - Argon2id hashing, breach detection, history tracking
 - ✅ **Account Lifecycle** - Registration, activation, suspension, locking
 - ✅ **Security Events** - Integration with AuditLogger
 - ✅ **Multi-Tenant** - Tenant-scoped users and roles
@@ -28,48 +29,70 @@ composer require nexus/identity:"*@dev"
 
 ## Architecture
 
+### CQRS Pattern (v1.1.0+)
+
+The package follows CQRS (Command Query Responsibility Segregation) pattern. Each repository domain has separate interfaces:
+
+| Domain | Query Interface (Read) | Persist Interface (Write) |
+|--------|------------------------|---------------------------|
+| User | `UserQueryInterface` | `UserPersistInterface` |
+| Role | `RoleQueryInterface` | `RolePersistInterface` |
+| Permission | `PermissionQueryInterface` | `PermissionPersistInterface` |
+| MFA Enrollment | `MfaEnrollmentQueryInterface` | `MfaEnrollmentPersistInterface` |
+| Trusted Device | `TrustedDeviceQueryInterface` | `TrustedDevicePersistInterface` |
+| WebAuthn Credential | `WebAuthnCredentialQueryInterface` | `WebAuthnCredentialPersistInterface` |
+| Backup Code | `BackupCodeQueryInterface` | `BackupCodePersistInterface` |
+
+**Best Practice:** Inject the specific Query or Persist interface based on your needs:
+
+```php
+// For read-only operations
+public function __construct(
+    private readonly UserQueryInterface $userQuery
+) {}
+
+// For write operations
+public function __construct(
+    private readonly UserPersistInterface $userPersist
+) {}
+```
+
 ### Package Structure
 
 ```
 packages/Identity/
 ├── src/
-│   ├── Contracts/              # Interfaces
+│   ├── Contracts/              # Interfaces (CQRS Split)
 │   │   ├── UserInterface.php
-│   │   ├── RoleInterface.php
-│   │   ├── PermissionInterface.php
-│   │   ├── UserRepositoryInterface.php
-│   │   ├── RoleRepositoryInterface.php
-│   │   ├── PermissionRepositoryInterface.php
-│   │   ├── PasswordHasherInterface.php
-│   │   ├── PasswordValidatorInterface.php
-│   │   ├── UserAuthenticatorInterface.php
-│   │   ├── PermissionCheckerInterface.php
-│   │   ├── SessionManagerInterface.php
-│   │   ├── TokenManagerInterface.php
-│   │   ├── MfaEnrollmentInterface.php (optional)
-│   │   ├── MfaVerifierInterface.php (optional)
-│   │   ├── SsoProviderInterface.php (optional)
-│   │   └── PolicyEvaluatorInterface.php (optional)
+│   │   ├── UserQueryInterface.php      # Read operations
+│   │   ├── UserPersistInterface.php    # Write operations
+│   │   ├── UserRepositoryInterface.php # Combined (deprecated)
+│   │   ├── RoleQueryInterface.php
+│   │   ├── RolePersistInterface.php
+│   │   ├── PermissionQueryInterface.php
+│   │   ├── PermissionPersistInterface.php
+│   │   └── ... (40+ interfaces)
 │   ├── Services/               # Business Logic
 │   │   ├── UserManager.php
 │   │   ├── AuthenticationService.php
-│   │   ├── RoleManager.php
-│   │   ├── PermissionManager.php
-│   │   └── PermissionChecker.php
+│   │   ├── MfaEnrollmentService.php
+│   │   ├── MfaVerificationService.php
+│   │   └── ... (10 services)
 │   ├── ValueObjects/           # Immutable Data Structures
 │   │   ├── UserStatus.php
 │   │   ├── Credentials.php
-│   │   ├── Permission.php
-│   │   ├── SessionToken.php
-│   │   ├── ApiToken.php
-│   │   └── MfaMethod.php
+│   │   ├── WebAuthnCredential.php
+│   │   └── ... (20 value objects)
 │   └── Exceptions/             # Domain Exceptions
 │       ├── UserNotFoundException.php
-│       ├── InvalidCredentialsException.php
-│       ├── InsufficientPermissionsException.php
-│       ├── AccountLockedException.php
-│       ├── PasswordValidationException.php
-│       └── ...
+│       ├── MfaRequiredException.php
+│       └── ... (19 exceptions)
+├── docs/
+│   ├── getting-started.md
+│   ├── api-reference.md
+│   ├── integration-guide.md
+│   └── examples/
+├── tests/
 ├── composer.json
 ├── LICENSE
 └── README.md
@@ -90,6 +113,11 @@ packages/Identity/
 3. **Dependency Injection**
    - Constructor injection for all dependencies
    - Interface-based dependencies only
+
+4. **CQRS Separation**
+   - Query interfaces for read operations
+   - Persist interfaces for write operations
+   - Clear command/query responsibility
 
 ## Usage Examples
 
