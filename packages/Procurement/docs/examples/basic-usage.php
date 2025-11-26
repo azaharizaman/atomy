@@ -103,6 +103,7 @@ try {
             'payment_terms' => 'Net 30',
             'lines' => [
                 [
+                    // Note: In production, validate that lines exist before accessing
                     'requisition_line_id' => $requisition->getLines()[0]->getId(),
                     'item_code' => 'PAPER-A4',
                     'description' => 'A4 Paper 500 sheets',

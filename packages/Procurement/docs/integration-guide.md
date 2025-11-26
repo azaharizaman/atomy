@@ -612,7 +612,7 @@ final readonly class EloquentRequisitionRepository implements RequisitionReposit
             'status' => 'converted',
             'is_converted' => true,
             'converted_po_id' => $poId,
-            'converted_at' => now(),
+            'converted_at' => new \DateTimeImmutable(), // Framework-agnostic
         ]);
         return $requisition->fresh();
     }

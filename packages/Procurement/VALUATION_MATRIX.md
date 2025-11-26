@@ -343,7 +343,7 @@ ESTIMATED PACKAGE VALUE: $674,905
 | 5 | 80 | $4,000,000 | $10,000,000 |
 
 **5-Year Cumulative Value:** $10,000,000  
-**NPV at 10% Discount:** $7,580,000
+**NPV at 10% Discount:** $7,581,574 (calculated as PV of annual values)
 
 ---
 
