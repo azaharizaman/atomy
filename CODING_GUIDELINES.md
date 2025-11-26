@@ -210,6 +210,79 @@ interface InvoicePersistInterface
 }
 ```
 
+### CQRS Best Practices
+
+**Consistent Method Signatures in CQRS Interfaces:**
+
+1. **Query Interfaces - Type Consistency**
+   - All query methods must return **typed objects** or **typed arrays**
+   - Never return raw `array` without type annotation
+   - Never mix return types (e.g., `?array` alongside `?EntityInterface`)
+
+   ```php
+   // ❌ WRONG: Inconsistent return types
+   interface MfaEnrollmentQueryInterface
+   {
+       public function findById(string $id): ?MfaEnrollmentInterface;  // Typed ✅
+       public function findPendingByUserAndMethod(string $userId, string $method): ?array;  // Raw array ❌
+       public function findActiveBackupCodes(string $userId): array;  // Missing type annotation ❌
+   }
+   
+   // ✅ CORRECT: Consistent typed returns
+   interface MfaEnrollmentQueryInterface
+   {
+       public function findById(string $id): ?MfaEnrollmentInterface;
+       public function findPendingByUserAndMethod(string $userId, string $method): ?MfaEnrollmentInterface;
+       
+       /**
+        * @return array<MfaEnrollmentInterface>
+        */
+       public function findActiveBackupCodes(string $userId): array;
+   }
+   ```
+
+2. **Persist Interfaces - Avoid Method Overlap**
+   - Use **one method** for create/update operations (typically `save()`)
+   - Avoid having both `save()` and `create()` methods (overlapping responsibilities)
+   - Use domain-specific methods for state transitions (`activate()`, `revoke()`, etc.)
+
+   ```php
+   // ❌ WRONG: Overlapping create responsibilities
+   interface MfaEnrollmentPersistInterface
+   {
+       public function save(MfaEnrollmentInterface $enrollment): MfaEnrollmentInterface;  // Handles create/update
+       public function create(array $data): array;  // Overlaps with save() ❌
+   }
+   
+   // ✅ CORRECT: Single save method + domain-specific actions
+   interface MfaEnrollmentPersistInterface
+   {
+       public function save(MfaEnrollmentInterface $enrollment): MfaEnrollmentInterface;  // Handles both create and update
+       public function delete(string $enrollmentId): bool;
+       public function activate(string $enrollmentId): bool;  // Domain-specific state change
+       public function revoke(string $enrollmentId): bool;  // Domain-specific state change
+   }
+   ```
+
+3. **PHPDoc Type Annotations**
+   - Always use `@return array<Type>` for array return types
+   - Never use generic `@return array` without specifying element type
+   - Use `@return Type[]` as an alternative to `@return array<Type>`
+
+   ```php
+   // ❌ WRONG: Missing array element type
+   /**
+    * @return array Array of backup code enrollments
+    */
+   public function findActiveBackupCodes(string $userId): array;
+   
+   // ✅ CORRECT: Explicit array element type
+   /**
+    * @return array<MfaEnrollmentInterface> Array of backup code enrollments
+    */
+   public function findActiveBackupCodes(string $userId): array;
+   ```
+
 ### When to Create Additional Repository Interfaces
 
 Beyond Query and Persist, create additional interfaces **only when justified** by one of these factors:
