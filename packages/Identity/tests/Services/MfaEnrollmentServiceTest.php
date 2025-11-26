@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Nexus\Identity\Tests\Services;
 
 use DateTimeImmutable;
+use Nexus\Identity\Contracts\MfaEnrollmentDataInterface;
 use Nexus\Identity\Contracts\MfaEnrollmentRepositoryInterface;
 use Nexus\Identity\Contracts\TotpManagerInterface;
 use Nexus\Identity\Contracts\WebAuthnCredentialRepositoryInterface;
 use Nexus\Identity\Contracts\WebAuthnManagerInterface;
-use Nexus\Identity\Enums\MfaMethod;
+use Nexus\Identity\ValueObjects\MfaMethod;
 use Nexus\Identity\Exceptions\MfaEnrollmentException;
 use Nexus\Identity\Services\MfaEnrollmentService;
 use Nexus\Identity\ValueObjects\BackupCode;
@@ -121,13 +122,15 @@ final class MfaEnrollmentServiceTest extends TestCase
         $enrollmentId = 'enrollment123';
         $secret = TotpSecret::generate();
 
+        // Create mock enrollment
+        $enrollment = $this->createMock(MfaEnrollmentDataInterface::class);
+        $enrollment->method('getId')->willReturn($enrollmentId);
+        $enrollment->method('getSecret')->willReturn($secret->toArray());
+
         $this->enrollmentRepository
             ->method('findPendingByUserAndMethod')
-            ->with($userId, MfaMethod::TOTP->value)
-            ->willReturn([
-                'id' => $enrollmentId,
-                'secret' => $secret->toArray(),
-            ]);
+            ->with($userId, MfaMethod::TOTP)
+            ->willReturn($enrollment);
 
         $this->totpManager
             ->method('verifyCode')
@@ -286,14 +289,16 @@ final class MfaEnrollmentServiceTest extends TestCase
         $userId = 'user123';
         $enrollmentId = 'enrollment123';
 
+        // Create mock enrollment
+        $enrollment = $this->createMock(MfaEnrollmentDataInterface::class);
+        $enrollment->method('getId')->willReturn($enrollmentId);
+        $enrollment->method('getUserId')->willReturn($userId);
+        $enrollment->method('getMethod')->willReturn(MfaMethod::TOTP);
+
         $this->enrollmentRepository
             ->method('findById')
             ->with($enrollmentId)
-            ->willReturn([
-                'id' => $enrollmentId,
-                'user_id' => $userId,
-                'method' => MfaMethod::TOTP->value,
-            ]);
+            ->willReturn($enrollment);
 
         $this->enrollmentRepository
             ->method('findByUserId')
@@ -319,14 +324,15 @@ final class MfaEnrollmentServiceTest extends TestCase
         $userId = 'user123';
         $enrollmentId = 'enrollment123';
 
+        // Create mock enrollment
+        $enrollment = $this->createMock(MfaEnrollmentDataInterface::class);
+        $enrollment->method('getId')->willReturn($enrollmentId);
+        $enrollment->method('getUserId')->willReturn($userId);
+
         $this->enrollmentRepository
             ->method('findById')
             ->with($enrollmentId)
-            ->willReturn([
-                'id' => $enrollmentId,
-                'user_id' => $userId,
-                'method' => MfaMethod::TOTP->value,
-            ]);
+            ->willReturn($enrollment);
 
         $this->enrollmentRepository
             ->method('findByUserId')

@@ -34,7 +34,33 @@ Do NOT use this package for:
 
 ## Core Concepts
 
-### Concept 1: Framework Agnosticism
+### Concept 1: CQRS Architecture (v1.1.0+)
+
+The package follows **CQRS (Command Query Responsibility Segregation)** pattern:
+
+- **Query Interfaces** (Read): `UserQueryInterface`, `RoleQueryInterface`, etc.
+- **Persist Interfaces** (Write): `UserPersistInterface`, `RolePersistInterface`, etc.
+
+**Best Practice:** Inject only what you need:
+
+```php
+// For read-only services
+public function __construct(
+    private readonly UserQueryInterface $userQuery
+) {}
+
+// For services that write data
+public function __construct(
+    private readonly UserPersistInterface $userPersist
+) {}
+
+// Backward compatible (deprecated)
+public function __construct(
+    private readonly UserRepositoryInterface $userRepository // Extends both Query + Persist
+) {}
+```
+
+### Concept 2: Framework Agnosticism
 
 **Nexus Identity** contains ZERO framework dependencies in its core. All business logic is pure PHP 8.3+.
 
@@ -44,19 +70,19 @@ Do NOT use this package for:
 **Example:**
 ```php
 // Package defines the contract
-interface UserRepositoryInterface {
+interface UserQueryInterface {
     public function findById(string $id): UserInterface;
 }
 
 // Laravel app provides the implementation
-class EloquentUserRepository implements UserRepositoryInterface {
+class EloquentUserRepository implements UserQueryInterface {
     public function findById(string $id): UserInterface {
         return User::findOrFail($id); // Eloquent model
     }
 }
 ```
 
-### Concept 2: Multi-Tenancy is Mandatory
+### Concept 3: Multi-Tenancy is Mandatory
 
 EVERY entity in Identity is **tenant-scoped** by design:
 - Users belong to a tenant
@@ -67,13 +93,13 @@ EVERY entity in Identity is **tenant-scoped** by design:
 
 ```php
 // Correct: Repository auto-scopes by tenant
-$users = $userRepository->findAll(); // Only returns current tenant's users
+$users = $userQuery->findAll(); // Only returns current tenant's users
 
 // Wrong: Trying to access cross-tenant data will fail
-$otherTenantUser = $userRepository->findById('user-from-other-tenant'); // Throws exception
+$otherTenantUser = $userQuery->findById('user-from-other-tenant'); // Throws exception
 ```
 
-### Concept 3: Interfaces Define Dependencies
+### Concept 4: Interfaces Define Dependencies
 
 Every external dependency is an **interface**:
 - Password hashing? → `PasswordHasherInterface`
@@ -82,7 +108,7 @@ Every external dependency is an **interface**:
 
 Your application binds concrete implementations to these interfaces via dependency injection.
 
-### Concept 4: RBAC with Wildcards
+### Concept 5: RBAC with Wildcards
 
 Permissions use a **wildcard system**:
 - `users.*` grants ALL user permissions (`users.create`, `users.edit`, `users.delete`, etc.)
@@ -91,7 +117,7 @@ Permissions use a **wildcard system**:
 
 Wildcard resolution is **automatic** - no manual pattern matching needed.
 
-### Concept 5: MFA is Pluggable
+### Concept 6: MFA is Pluggable
 
 MFA methods are **optional and modular**:
 - TOTP (RFC 6238) - Built-in ✅

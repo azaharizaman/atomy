@@ -6,11 +6,12 @@ namespace Nexus\Identity\Tests\Services;
 
 use DateTimeImmutable;
 use Nexus\Identity\Contracts\CacheRepositoryInterface;
+use Nexus\Identity\Contracts\MfaEnrollmentDataInterface;
 use Nexus\Identity\Contracts\MfaEnrollmentRepositoryInterface;
 use Nexus\Identity\Contracts\TotpManagerInterface;
 use Nexus\Identity\Contracts\WebAuthnCredentialRepositoryInterface;
 use Nexus\Identity\Contracts\WebAuthnManagerInterface;
-use Nexus\Identity\Enums\MfaMethod;
+use Nexus\Identity\ValueObjects\MfaMethod;
 use Nexus\Identity\Exceptions\MfaVerificationException;
 use Nexus\Identity\Services\MfaVerificationService;
 use Nexus\Identity\ValueObjects\BackupCode;
@@ -65,13 +66,15 @@ final class MfaVerificationServiceTest extends TestCase
             ->method('get')
             ->willReturn(0); // Not rate limited
 
+        // Create mock enrollment
+        $enrollment = $this->createMock(MfaEnrollmentDataInterface::class);
+        $enrollment->method('getId')->willReturn($enrollmentId);
+        $enrollment->method('getSecret')->willReturn($secret->toArray());
+
         $this->enrollmentRepository
             ->method('findActiveByUserAndMethod')
-            ->with($userId, MfaMethod::TOTP->value)
-            ->willReturn([
-                'id' => $enrollmentId,
-                'secret' => $secret->toArray(),
-            ]);
+            ->with($userId, MfaMethod::TOTP)
+            ->willReturn($enrollment);
 
         $this->totpManager
             ->method('verifyCode')
@@ -103,12 +106,14 @@ final class MfaVerificationServiceTest extends TestCase
             ->method('get')
             ->willReturn(0);
 
+        // Create mock enrollment
+        $enrollment = $this->createMock(MfaEnrollmentDataInterface::class);
+        $enrollment->method('getId')->willReturn('enrollment123');
+        $enrollment->method('getSecret')->willReturn($secret->toArray());
+
         $this->enrollmentRepository
             ->method('findActiveByUserAndMethod')
-            ->willReturn([
-                'id' => 'enrollment123',
-                'secret' => $secret->toArray(),
-            ]);
+            ->willReturn($enrollment);
 
         $this->totpManager
             ->method('verifyCode')
@@ -288,18 +293,18 @@ final class MfaVerificationServiceTest extends TestCase
             ->method('get')
             ->willReturn(0);
 
+        // Create mock enrollment
+        $enrollment = $this->createMock(MfaEnrollmentDataInterface::class);
+        $enrollment->method('getId')->willReturn($enrollmentId);
+        $enrollment->method('getSecret')->willReturn([
+            'hash' => BackupCode::hash($code),
+            'consumed_at' => null,
+        ]);
+
         $this->enrollmentRepository
             ->method('findActiveBackupCodes')
             ->with($userId)
-            ->willReturn([
-                [
-                    'id' => $enrollmentId,
-                    'secret' => [
-                        'hash' => BackupCode::hash($code),
-                        'consumed_at' => null,
-                    ],
-                ],
-            ]);
+            ->willReturn([$enrollment]);
 
         $this->enrollmentRepository
             ->expects($this->once())
@@ -321,17 +326,17 @@ final class MfaVerificationServiceTest extends TestCase
             ->method('get')
             ->willReturn(0);
 
+        // Create mock enrollment
+        $enrollment = $this->createMock(MfaEnrollmentDataInterface::class);
+        $enrollment->method('getId')->willReturn('enrollment123');
+        $enrollment->method('getSecret')->willReturn([
+            'hash' => BackupCode::hash('DIFFERENT-CODE'),
+            'consumed_at' => null,
+        ]);
+
         $this->enrollmentRepository
             ->method('findActiveBackupCodes')
-            ->willReturn([
-                [
-                    'id' => 'enrollment123',
-                    'secret' => [
-                        'hash' => BackupCode::hash('DIFFERENT-CODE'),
-                        'consumed_at' => null,
-                    ],
-                ],
-            ]);
+            ->willReturn([$enrollment]);
 
         $this->expectException(MfaVerificationException::class);
         $this->expectExceptionMessage('Invalid backup code');
@@ -349,17 +354,17 @@ final class MfaVerificationServiceTest extends TestCase
             ->method('get')
             ->willReturn(0);
 
+        // Create mock enrollment with consumed code
+        $enrollment = $this->createMock(MfaEnrollmentDataInterface::class);
+        $enrollment->method('getId')->willReturn('enrollment123');
+        $enrollment->method('getSecret')->willReturn([
+            'hash' => BackupCode::hash($code),
+            'consumed_at' => new DateTimeImmutable(), // Already consumed
+        ]);
+
         $this->enrollmentRepository
             ->method('findActiveBackupCodes')
-            ->willReturn([
-                [
-                    'id' => 'enrollment123',
-                    'secret' => [
-                        'hash' => BackupCode::hash($code),
-                        'consumed_at' => new DateTimeImmutable(), // Already consumed
-                    ],
-                ],
-            ]);
+            ->willReturn([$enrollment]);
 
         $this->expectException(MfaVerificationException::class);
         $this->expectExceptionMessage('Invalid backup code');

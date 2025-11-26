@@ -199,17 +199,106 @@ namespace Nexus\Invoice\Contracts;
 
 interface InvoiceQueryInterface
 {
-    public function findById(string $id): InvoiceInterface;
+    public function findById(string $id): ?InvoiceInterface;
+    
+    /**
+     * @return array<InvoiceInterface>
+     */
     public function findAll(): array;
 }
 
 interface InvoicePersistInterface
 {
-    public function create(InvoiceInterface $invoice): string;
-    public function update(InvoiceInterface $invoice): void;
+    public function save(InvoiceInterface $invoice): InvoiceInterface;
     public function delete(string $id): void;
 }
 ```
+
+**Alternative Pattern (Separate Create/Update):**
+
+When you need different return types or validation logic for create vs update:
+
+```php
+interface InvoicePersistInterface
+{
+    public function create(InvoiceInterface $invoice): string;  // Returns ID
+    public function update(InvoiceInterface $invoice): void;    // Returns nothing
+    public function delete(string $id): void;
+}
+```
+
+### CQRS Best Practices
+
+**Consistent Method Signatures in CQRS Interfaces:**
+
+1. **Query Interfaces - Type Consistency**
+   - All query methods must return **typed objects** or **typed arrays** with PHPDoc
+   - Use `?array` ONLY when returning raw data structures (not entities)
+   - Always add `@return array<Type>` PHPDoc for array returns
+   - Never mix return types inconsistently (e.g., some methods return entities, others return `?array` for the same data)
+
+   ```php
+   // ✅ CORRECT: Consistent - all methods return arrays (raw data)
+   interface MfaEnrollmentQueryInterface
+   {
+       /** @return array|null Enrollment data */
+       public function findById(string $id): ?array;
+       
+       /** @return array|null Enrollment data */
+       public function findPendingByUserAndMethod(string $userId, string $method): ?array;
+       
+       /** @return array<array> Array of enrollment data */
+       public function findActiveBackupCodes(string $userId): array;
+   }
+   
+   // ✅ CORRECT: Consistent - all methods return typed entities
+   interface InvoiceQueryInterface
+   {
+       public function findById(string $id): ?InvoiceInterface;
+       public function findByNumber(string $number): ?InvoiceInterface;
+       
+       /**
+        * @return array<InvoiceInterface>
+        */
+       public function findAll(): array;
+   }
+   
+   // ❌ WRONG: Inconsistent - mixing entity returns with raw arrays
+   interface MfaEnrollmentQueryInterface
+   {
+       public function findById(string $id): ?MfaEnrollmentInterface;  // Entity ✅
+       public function findPendingByUserAndMethod(string $userId, string $method): ?array;  // Raw array ❌
+   }
+   ```
+
+2. **Persist Interfaces - Choose One Pattern Consistently**
+   - **Pattern A (Recommended)**: Single `save()` method for both create and update
+   - **Pattern B**: Separate `create()` and `update()` methods when they have different signatures/logic
+   - **Never** mix both patterns (having `save()`, `create()`, AND `update()` in the same interface)
+
+   ```php
+   // ✅ PATTERN A (Recommended): Single save method
+   interface InvoicePersistInterface
+   {
+       public function save(InvoiceInterface $invoice): InvoiceInterface;  // Handles both create and update
+       public function delete(string $id): void;
+   }
+   
+   // ✅ PATTERN B: Separate methods (when create and update have different signatures)
+   interface InvoicePersistInterface
+   {
+       public function create(InvoiceInterface $invoice): string;  // Returns new ID
+       public function update(InvoiceInterface $invoice): void;    // No return
+       public function delete(string $id): void;
+   }
+   
+   // ❌ WRONG: Method overlap - having both save() and create()
+   interface MfaEnrollmentPersistInterface
+   {
+       public function save(MfaEnrollmentInterface $enrollment): MfaEnrollmentInterface;
+       public function create(array $data): array;  // Overlaps with save() ❌
+   }
+   ```
 
 ### When to Create Additional Repository Interfaces
 

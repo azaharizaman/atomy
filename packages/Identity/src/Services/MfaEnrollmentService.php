@@ -10,7 +10,7 @@ use Nexus\Identity\Contracts\MfaEnrollmentServiceInterface;
 use Nexus\Identity\Contracts\TotpManagerInterface;
 use Nexus\Identity\Contracts\WebAuthnCredentialRepositoryInterface;
 use Nexus\Identity\Contracts\WebAuthnManagerInterface;
-use Nexus\Identity\Enums\MfaMethod;
+use Nexus\Identity\ValueObjects\MfaMethod;
 use Nexus\Identity\Exceptions\MfaEnrollmentException;
 use Nexus\Identity\ValueObjects\BackupCode;
 use Nexus\Identity\ValueObjects\BackupCodeSet;
@@ -85,7 +85,7 @@ final readonly class MfaEnrollmentService implements MfaEnrollmentServiceInterfa
         // Find pending TOTP enrollment
         $enrollment = $this->enrollmentRepository->findPendingByUserAndMethod(
             $userId,
-            MfaMethod::TOTP->value
+            MfaMethod::TOTP
         );
 
         if ($enrollment === null) {
@@ -93,7 +93,7 @@ final readonly class MfaEnrollmentService implements MfaEnrollmentServiceInterfa
         }
 
         // Reconstruct TotpSecret from stored data
-        $secret = TotpSecret::fromArray($enrollment['secret']);
+        $secret = TotpSecret::fromArray($enrollment->getSecret());
 
         // Verify code
         $isValid = $this->totpManager->verifyCode($secret, $code);
@@ -107,11 +107,11 @@ final readonly class MfaEnrollmentService implements MfaEnrollmentServiceInterfa
         }
 
         // Activate enrollment
-        $this->enrollmentRepository->activate($enrollment['id']);
+        $this->enrollmentRepository->activate($enrollment->getId());
 
         $this->logger->info('TOTP enrollment activated', [
             'user_id' => $userId,
-            'enrollment_id' => $enrollment['id'],
+            'enrollment_id' => $enrollment->getId(),
         ]);
 
         return true;
@@ -244,7 +244,7 @@ final readonly class MfaEnrollmentService implements MfaEnrollmentServiceInterfa
         // Find enrollment
         $enrollment = $this->enrollmentRepository->findById($enrollmentId);
 
-        if ($enrollment === null || $enrollment['user_id'] !== $userId) {
+        if ($enrollment === null || $enrollment->getUserId() !== $userId) {
             throw MfaEnrollmentException::enrollmentNotFound($enrollmentId);
         }
 
@@ -260,14 +260,14 @@ final readonly class MfaEnrollmentService implements MfaEnrollmentServiceInterfa
         $this->enrollmentRepository->revoke($enrollmentId);
 
         // If passkey enrollment, revoke all credentials
-        if ($enrollment['method'] === MfaMethod::PASSKEY->value) {
+        if ($enrollment->getMethod() === MfaMethod::PASSKEY) {
             $this->credentialRepository->revokeAllByUserId($userId);
         }
 
         $this->logger->info('MFA enrollment revoked', [
             'user_id' => $userId,
             'enrollment_id' => $enrollmentId,
-            'method' => $enrollment['method'],
+            'method' => $enrollment->getMethod()->value,
         ]);
 
         return true;
@@ -351,7 +351,7 @@ final readonly class MfaEnrollmentService implements MfaEnrollmentServiceInterfa
     public function hasEnrolledMfa(string $userId): bool
     {
         $enrollments = $this->getUserEnrollments($userId);
-        $activeEnrollments = array_filter($enrollments, fn($e) => $e['is_active']);
+        $activeEnrollments = array_filter($enrollments, fn($e) => $e->isActive());
 
         return count($activeEnrollments) > 0;
     }
@@ -361,7 +361,7 @@ final readonly class MfaEnrollmentService implements MfaEnrollmentServiceInterfa
         $enrollments = $this->getUserEnrollments($userId);
 
         foreach ($enrollments as $enrollment) {
-            if ($enrollment['method'] === $method && $enrollment['is_active']) {
+            if ($enrollment->getMethod()->value === $method && $enrollment->isActive()) {
                 return true;
             }
         }

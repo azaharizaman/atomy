@@ -11,7 +11,7 @@ use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
 use Nexus\Identity\Contracts\TotpManagerInterface;
 use Nexus\Identity\Contracts\WebAuthnCredentialRepositoryInterface;
 use Nexus\Identity\Contracts\WebAuthnManagerInterface;
-use Nexus\Identity\Enums\MfaMethod;
+use Nexus\Identity\ValueObjects\MfaMethod;
 use Nexus\Identity\Exceptions\MfaVerificationException;
 use Nexus\Identity\ValueObjects\BackupCode;
 use Nexus\Identity\ValueObjects\TotpSecret;
@@ -53,7 +53,7 @@ final readonly class MfaVerificationService implements MfaVerificationServiceInt
         // Find TOTP enrollment
         $enrollment = $this->enrollmentRepository->findActiveByUserAndMethod(
             $userId,
-            MfaMethod::TOTP->value
+            MfaMethod::TOTP
         );
 
         if ($enrollment === null) {
@@ -61,7 +61,7 @@ final readonly class MfaVerificationService implements MfaVerificationServiceInt
         }
 
         // Reconstruct TotpSecret from stored data
-        $secret = TotpSecret::fromArray($enrollment['secret']);
+        $secret = TotpSecret::fromArray($enrollment->getSecret());
 
         // Verify code
         $isValid = $this->totpManager->verifyCode($secret, $code);
@@ -82,7 +82,7 @@ final readonly class MfaVerificationService implements MfaVerificationServiceInt
         }
 
         // Update last used timestamp
-        $this->enrollmentRepository->updateLastUsed($enrollment['id'], new DateTimeImmutable());
+        $this->enrollmentRepository->updateLastUsed($enrollment->getId(), new DateTimeImmutable());
 
         $this->logger->info('TOTP verified successfully', [
             'user_id' => $userId,
@@ -218,7 +218,7 @@ final readonly class MfaVerificationService implements MfaVerificationServiceInt
 
         // Try to verify against each unconsumed code
         foreach ($enrollments as $enrollment) {
-            $secret = $enrollment['secret'];
+            $secret = $enrollment->getSecret();
 
             // Skip consumed codes
             if ($secret['consumed_at'] !== null) {
@@ -229,7 +229,7 @@ final readonly class MfaVerificationService implements MfaVerificationServiceInt
             if (hash_equals($secret['hash'], BackupCode::hash($code))) {
                 // Mark code as consumed
                 $this->enrollmentRepository->consumeBackupCode(
-                    $enrollment['id'],
+                    $enrollment->getId(),
                     new DateTimeImmutable()
                 );
 
@@ -242,7 +242,7 @@ final readonly class MfaVerificationService implements MfaVerificationServiceInt
 
                 $this->logger->info('Backup code verified successfully', [
                     'user_id' => $userId,
-                    'enrollment_id' => $enrollment['id'],
+                    'enrollment_id' => $enrollment->getId(),
                 ]);
 
                 return true;

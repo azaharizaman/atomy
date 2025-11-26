@@ -49,6 +49,18 @@ grep -r "now()\|config()\|app()\|dd()\|env()\|Cache::\|DB::\|Log::\|Event::" src
 echo "=== CQRS Violations ==="
 grep -r "paginate\|PaginatedResult\|LengthAwarePaginator" src/Contracts/
 
+# CQRS Type Consistency (QueryInterface returning raw arrays)
+echo "=== CQRS Type Consistency ==="
+grep -E "public function find.*\): \?array" src/Contracts/*QueryInterface.php
+
+# CQRS Method Overlap (PersistInterface with both save and create)
+echo "=== CQRS Method Overlap ==="
+grep -l "public function save" src/Contracts/*PersistInterface.php | xargs grep -l "public function create"
+
+# Missing PHPDoc Array Types
+echo "=== Missing PHPDoc Array Types ==="
+grep -B2 "public function.*\): array" src/Contracts/ | grep -v "@return array<" | grep "public function"
+
 # Stateless Violations (Mutable State in Services)
 echo "=== Stateless Violations ==="
 grep -r "private array\|private int\|private string\|private Collection" src/Services/ | grep -v "readonly"
@@ -67,6 +79,9 @@ grep '"php":' composer.json
 - Framework References: **0 matches** in `src/` directory
 - Global Helpers: **0 matches** in `src/` directory
 - CQRS Violations: **0 matches** in `src/Contracts/`
+- CQRS Type Consistency: **0 matches** (QueryInterface methods should return typed entities, not raw arrays)
+- CQRS Method Overlap: **0 matches** (PersistInterface should not have both `save()` and `create()`)
+- Missing PHPDoc Array Types: **0 matches** (all array returns need `@return array<Type>`)
 - Stateless Violations: **0 non-readonly properties** in `src/Services/`
 - Framework Dependencies: **0 framework packages** in composer.json (PSR packages OK)
 - PHP Version: **"php": "^8.3"**
@@ -107,6 +122,9 @@ Example:
 - [ ] Query methods return raw arrays (`array<EntityInterface>`), NOT paginated objects
 - [ ] Reporting methods (aging reports, statistics) NOT in repository interfaces
 - [ ] Read models separated from write models
+- [ ] **Query interfaces have consistent return types** (no mixing `?array` with `?EntityInterface`)
+- [ ] **All array return types have PHPDoc annotations** (`@return array<Type>`)
+- [ ] **Persist interfaces avoid method overlap** (use `save()` for create/update, not both `save()` and `create()`)
 
 **Violations Found:**
 ```
@@ -117,6 +135,24 @@ Example:
 - Issue: Method signature: all(array $filters, int $page, int $perPage): LengthAwarePaginator
 - Severity: High
 - Fix: Remove pagination from domain interface, return array<TenantInterface>, apply pagination in application layer
+
+Example (Type Consistency):
+- File: src/Contracts/MfaEnrollmentQueryInterface.php
+- Issue: findById() returns ?MfaEnrollmentInterface but findPendingByUserAndMethod() returns ?array
+- Severity: High
+- Fix: Change return type to ?MfaEnrollmentInterface for consistent typing
+
+Example (Missing PHPDoc):
+- File: src/Contracts/MfaEnrollmentQueryInterface.php
+- Issue: findActiveBackupCodes() returns array without PHPDoc type annotation
+- Severity: Medium
+- Fix: Add @return array<MfaEnrollmentInterface> annotation
+
+Example (Method Overlap):
+- File: src/Contracts/MfaEnrollmentPersistInterface.php
+- Issue: Has both save(MfaEnrollmentInterface) and create(array) methods with overlapping responsibilities
+- Severity: High
+- Fix: Remove create() method, use save() for both create and update operations
 ```
 
 ### Category 3: Stateless Architecture Violations
