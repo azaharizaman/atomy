@@ -713,6 +713,21 @@ $glJournalId = $receivableManager->writeOffInvoice(
 // GL Entry: Debit Bad Debt Expense / Credit AR Control
 ```
 
+## 📖 Documentation
+
+### Package Documentation
+- [Getting Started Guide](docs/getting-started.md)
+- [API Reference](docs/api-reference.md)
+- [Integration Guide](docs/integration-guide.md)
+- [Examples](docs/examples/)
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress
+- `REQUIREMENTS.md` - Requirements
+- `TEST_SUITE_SUMMARY.md` - Tests
+- `VALUATION_MATRIX.md` - Valuation
+
+
 ## License
 
 MIT License - see LICENSE file for details.
