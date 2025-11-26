@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Nexus\Identity\Services;
 
 use Nexus\Identity\Contracts\PermissionInterface;
-use Nexus\Identity\Contracts\PermissionRepositoryInterface;
 use Nexus\Identity\Exceptions\PermissionNotFoundException;
+use Nexus\Identity\Contracts\PermissionRepositoryInterface;
 use Nexus\Identity\ValueObjects\Permission as PermissionValue;
 
 /**

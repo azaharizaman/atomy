@@ -4,6 +4,11 @@
 
 **When to Use:** Creating a new package from scratch in `packages/` directory.
 
+**Critical References:**
+- **[`CODING_GUIDELINES.md`](../../CODING_GUIDELINES.md)** - All code standards, patterns, and anti-patterns
+- **[`ARCHITECTURE.md`](../../ARCHITECTURE.md)** - Package structure and design principles
+- **[`docs/NEXUS_PACKAGES_REFERENCE.md`](../../docs/NEXUS_PACKAGES_REFERENCE.md)** - Existing package capabilities
+
 ---
 
 ## 📁 Mandatory Package Structure
@@ -49,6 +54,8 @@ packages/NewPackage/
     ├── Unit/
     └── Feature/
 ```
+
+**For code structure, standards, and patterns, see [`CODING_GUIDELINES.md`](../../CODING_GUIDELINES.md).**
 
 ---
 

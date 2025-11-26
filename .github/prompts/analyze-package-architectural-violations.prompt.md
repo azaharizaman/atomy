@@ -4,6 +4,11 @@
 
 **When to Use:** Before merging package code, during package review, or when refactoring existing packages.
 
+**Critical References:**
+- **[`CODING_GUIDELINES.md`](../../CODING_GUIDELINES.md)** - Section 11: Architectural Violation Detection
+- **[`ARCHITECTURE.md`](../../ARCHITECTURE.md)** - Repository interface design principles
+- **[`docs/NEXUS_PACKAGES_REFERENCE.md`](../../docs/NEXUS_PACKAGES_REFERENCE.md)** - Existing package capabilities
+
 ---
 
 ## 🎯 Analysis Scope
@@ -18,6 +23,8 @@
 ## 📋 Automated Violation Detection
 
 ### Step 1: Run Quick Scan Scripts
+
+**For complete violation scan commands and criteria, see [`CODING_GUIDELINES.md` - Section 11: Architectural Violation Detection](../../CODING_GUIDELINES.md#11-architectural-violation-detection).**
 
 Execute these commands from the package root directory:
 
@@ -68,6 +75,8 @@ grep '"php":' composer.json
 
 ## 🔍 Manual Violation Review
 
+**For detailed violation criteria, examples, and rejection rules, see [`CODING_GUIDELINES.md` - Section 11](../../CODING_GUIDELINES.md#11-architectural-violation-detection).**
+
 ### Category 1: ISP (Interface Segregation Principle) Violations
 
 **Checklist:**
@@ -87,7 +96,7 @@ Example:
 - File: src/Contracts/TenantRepositoryInterface.php
 - Issue: Interface contains create(), update(), delete(), findById(), all(), getExpiredTrials()
 - Severity: High
-- Fix: Split into TenantPersistenceInterface, TenantQueryInterface, TenantStatusService
+- Fix: Split into TenantPersistInterface, TenantQueryInterface, TenantStatusService
 ```
 
 ### Category 2: CQRS (Command Query Responsibility Segregation) Violations

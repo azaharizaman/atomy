@@ -296,7 +296,70 @@ Nexus uses two event patterns for different needs:
 
 **Decision Rule:** Use EventStream only when you need temporal queries for legal compliance.
 
-### 3.4 Compliance & Statutory Separation
+### 3.4 Repository Interface Design Principles
+
+#### The Baseline: Query and Persist
+
+All packages start with two foundational repository interfaces:
+
+1. **`EntityQueryInterface`** - Read operations (findById, findAll, etc.)
+2. **`EntityPersistInterface`** - Write operations (create, update, delete)
+
+This separation enforces **CQRS (Command Query Responsibility Segregation)** at the interface level.
+
+#### When to Create Additional Repository Interfaces
+
+Beyond Query and Persist, create additional repository interfaces based on these four factors:
+
+##### 1. Behavioral Intent (What are we doing?)
+
+Separates analytical/reporting actions from transactional data access.
+
+| Factor | Description | Example Repository | Justification |
+|--------|-------------|-------------------|---------------|
+| **Search/Indexing** | Full-text search, fuzzy matching, relevance ranking (ElasticSearch, Algolia) | `ContentSearchInterface` | Decouples search engine implementation from domain queries. Prevents `ContentQueryInterface` from search-specific methods (relevance boosting, fuzzy matching). |
+| **Bulk Processing** | Large-scale data retrieval for background jobs, exports, ETL | `PayslipStreamInterface` | Optimizes I/O with generators/lazy collections. Different concern than synchronous `PayslipQueryInterface`. |
+
+##### 2. Aggregate Boundary (Ensuring Consistency)
+
+Ensures repository manages a specific unit of consistency (Aggregate Root) per DDD principles.
+
+| Factor | Description | Example Repository | Justification |
+|--------|-------------|-------------------|---------------|
+| **Relationship Management** | Fetching related data managed by different package (cross-aggregate queries) | `CaseMessagingInterface` | Enforces boundaries. Core `CaseRepository` manages `Ticket` VO. Separate interface manages associated `MessageRecords` from `Nexus\Messaging`. Prevents package bloat. |
+| **Data Context** | Same data with different context/representation (Draft vs Published) | `DraftRepositoryInterface` | Enforces consistency. Services requiring *only* draft content cannot accidentally access published data. |
+
+##### 3. External System Dependency (Connector Pattern)
+
+Used when "persistence" interacts with third-party APIs with transient/external storage.
+
+| Factor | Description | Example Repository | Justification |
+|--------|-------------|-------------------|---------------|
+| **Connector/Gateway** | Abstract third-party API (payment gateways, communication providers) | `MessagingConnectorInterface` | Decouples vendor. Abstracts Twilio/Meta/SendGrid complexity. Core `Nexus\Messaging` only deals with standardized VOs, not vendor-specific API structures. |
+
+##### 4. Write Intent (Specialized Modifications)
+
+Isolates specific, non-standard modification patterns outside simple CRUD.
+
+| Factor | Description | Example Repository | Justification |
+|--------|-------------|-------------------|---------------|
+| **Transaction/State Change** | Atomic state changes not bundled with general `update()` | `CaseTransitionInterface` | Granular control. `CaseStatusService` depends *only* on state transition capability, not full entity modification. Improves security and auditability. |
+
+#### Decision Matrix: Should I Create a New Repository Interface?
+
+Ask these questions:
+
+1. **Is this a read operation?** → Use `EntityQueryInterface`
+2. **Is this a write operation?** → Use `EntityPersistInterface`
+3. **Does this require specialized search/indexing?** → Create `EntitySearchInterface`
+4. **Is this for bulk/streaming data?** → Create `EntityStreamInterface`
+5. **Does this cross aggregate boundaries?** → Create relationship-specific interface
+6. **Is this interfacing with external system?** → Create connector interface
+7. **Is this a specific state transition?** → Create transition interface
+
+**Golden Rule:** Every repository interface must serve a distinct, justifiable purpose following SRP and ISP.
+
+### 3.5 Compliance & Statutory Separation
 
 **`Nexus\Compliance`** - Process Enforcement
 - Controls system behavior (e.g., mandatory approvals)
