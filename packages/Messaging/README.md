@@ -528,3 +528,19 @@ Developed by the **Nexus Development Team** as part of the Nexus ERP ecosystem.
 **Package Status:** ✅ Production Ready  
 **Version:** 1.0.0  
 **Last Updated:** November 24, 2025
+
+## 📖 Documentation
+
+### Package Documentation
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites and basic configuration
+- **[API Reference](docs/api-reference.md)** - Complete documentation of all interfaces and components
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple usage patterns
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Advanced scenarios
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress and metrics
+- `REQUIREMENTS.md` - Detailed requirements
+- `TEST_SUITE_SUMMARY.md` - Test coverage and results
+- `VALUATION_MATRIX.md` - Package valuation metrics
+- See root `ARCHITECTURE.md` for overall system architecture
