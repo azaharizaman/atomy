@@ -386,7 +386,8 @@ $grn2 = $procurement->recordGoodsReceipt(
 );
 
 echo "Second delivery: 40 units\n";
-echo "PO Status: {$po->fresh()->getStatus()}\n"; // "fully_received"
+$po = $procurement->getPurchaseOrder($po->getId());
+echo "PO Status: {$po->getStatus()}\n"; // "fully_received"
 
 // Attempting to receive more than ordered fails
 try {
