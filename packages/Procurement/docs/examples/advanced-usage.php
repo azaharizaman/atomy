@@ -288,6 +288,7 @@ use Nexus\Procurement\Exceptions\{
 
 function processProcurementWorkflow(
     ProcurementManagerInterface $procurement,
+    string $tenantId,
     string $requisitionId,
     string $userId
 ): array {
@@ -305,7 +306,7 @@ function processProcurementWorkflow(
         
         // Step 3: Convert to PO
         $po = $procurement->convertRequisitionToPO(
-            tenantId: $requisition->getTenantId(),
+            tenantId: $tenantId,
             requisitionId: $requisitionId,
             creatorId: $userId,
             poData: [/* ... */]

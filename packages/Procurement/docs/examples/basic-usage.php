@@ -91,6 +91,32 @@ try {
 // Step 4: Convert to Purchase Order
 // ============================================
 
+// Build PO lines with safe array access
+$requisitionLines = $requisition->getLines();
+$poLines = [];
+
+if (isset($requisitionLines[0])) {
+    $poLines[] = [
+        'requisition_line_id' => $requisitionLines[0]->getId(),
+        'item_code' => 'PAPER-A4',
+        'description' => 'A4 Paper 500 sheets',
+        'quantity' => 10,
+        'unit' => 'box',
+        'unit_price' => 24.50, // Negotiated price (within 10% of estimate)
+    ];
+}
+
+if (isset($requisitionLines[1])) {
+    $poLines[] = [
+        'requisition_line_id' => $requisitionLines[1]->getId(),
+        'item_code' => 'PEN-BLK',
+        'description' => 'Black ballpoint pens (dozen)',
+        'quantity' => 5,
+        'unit' => 'dozen',
+        'unit_price' => 11.00, // Negotiated price
+    ];
+}
+
 try {
     $purchaseOrder = $procurement->convertRequisitionToPO(
         tenantId: 'tenant-001',
@@ -101,25 +127,7 @@ try {
             'vendor_id' => 'vendor-office-supplies',
             'currency' => 'MYR',
             'payment_terms' => 'Net 30',
-            'lines' => [
-                [
-                    // Note: In production, validate that lines exist before accessing
-                    'requisition_line_id' => $requisition->getLines()[0]->getId(),
-                    'item_code' => 'PAPER-A4',
-                    'description' => 'A4 Paper 500 sheets',
-                    'quantity' => 10,
-                    'unit' => 'box',
-                    'unit_price' => 24.50, // Negotiated price (within 10% of estimate)
-                ],
-                [
-                    'requisition_line_id' => $requisition->getLines()[1]->getId(),
-                    'item_code' => 'PEN-BLK',
-                    'description' => 'Black ballpoint pens (dozen)',
-                    'quantity' => 5,
-                    'unit' => 'dozen',
-                    'unit_price' => 11.00, // Negotiated price
-                ],
-            ],
+            'lines' => $poLines,
         ]
     );
     
