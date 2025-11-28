@@ -99,4 +99,42 @@ interface FeatureFlagManagerInterface
         array $flagNames,
         array|EvaluationContext $context = []
     ): array;
+
+    /**
+     * Check if audit change tracking is available.
+     *
+     * When true, all flag modifications are recorded via FlagAuditChangeInterface.
+     * Application layer implements this using Nexus\AuditLogger for compliance.
+     *
+     * @return bool True if audit change interface is configured
+     */
+    public function hasAuditChange(): bool;
+
+    /**
+     * Check if audit query capability is available.
+     *
+     * When true, historical flag states can be queried via FlagAuditQueryInterface.
+     * Application layer implements this using Nexus\EventStream for compliance.
+     *
+     * @return bool True if audit query interface is configured
+     */
+    public function hasAuditQuery(): bool;
+
+    /**
+     * Get the audit query interface for historical queries.
+     *
+     * Use this to query flag change history, state at point in time, etc.
+     *
+     * @return FlagAuditQueryInterface|null The audit query interface, or null if not configured
+     *
+     * @example
+     * if ($manager->hasAuditQuery()) {
+     *     $history = $manager->getAuditQuery()->getHistory('payment_v2');
+     *     $stateAt = $manager->getAuditQuery()->getStateAt(
+     *         'payment_v2',
+     *         new DateTimeImmutable('2024-11-15')
+     *     );
+     * }
+     */
+    public function getAuditQuery(): ?FlagAuditQueryInterface;
 }
