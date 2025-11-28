@@ -70,7 +70,22 @@ yarn-error.log
 *.log
 
 # ========================================
+# Build & Assets
+# ========================================
+/public/css
+/public/js
+/public/mix-manifest.json
+/public/hot
+
+# ========================================
+# Docker & DevOps
+# ========================================
+docker-compose.override.yml
+.docker/
+
+# ========================================
 # Miscellaneous
 # ========================================
 Homestead.json
 Homestead.yaml
+*.phar
