@@ -230,6 +230,21 @@ This package fulfills all requirements defined in `REQUIREMENTS.csv`:
 - ✅ **FUN-SEQ-0210 to FUN-SEQ-0245**: Functional requirements (generation, preview, bulk, gaps, versioning)
 - ✅ **PER-SEQ-0329, PER-SEQ-0336**: Performance requirements (< 50ms generation, concurrent requests)
 
+## 📖 Documentation
+
+### Package Documentation
+- [Getting Started Guide](docs/getting-started.md)
+- [API Reference](docs/api-reference.md)
+- [Integration Guide](docs/integration-guide.md)
+- [Examples](docs/examples/)
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress
+- `REQUIREMENTS.md` - Requirements
+- `TEST_SUITE_SUMMARY.md` - Tests
+- `VALUATION_MATRIX.md` - Valuation
+
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.

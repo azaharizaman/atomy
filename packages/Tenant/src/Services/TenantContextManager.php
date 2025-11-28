@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Nexus\Tenant\Services;
 
-use Nexus\Tenant\Contracts\CacheRepositoryInterface;
-use Nexus\Tenant\Contracts\TenantContextInterface;
+use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
 use Nexus\Tenant\Contracts\TenantInterface;
 use Nexus\Tenant\Contracts\TenantQueryInterface;
-use Nexus\Tenant\Exceptions\TenantContextNotSetException;
+use Nexus\Tenant\Contracts\TenantContextInterface;
+use Nexus\Tenant\Contracts\CacheRepositoryInterface;
 use Nexus\Tenant\Exceptions\TenantNotFoundException;
 use Nexus\Tenant\Exceptions\TenantSuspendedException;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Nexus\Tenant\Exceptions\TenantContextNotSetException;
 
 /**
  * Tenant Context Manager

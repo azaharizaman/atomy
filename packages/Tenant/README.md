@@ -627,6 +627,23 @@ The tenant context operations are highly optimized:
 
 This package follows the Nexus monorepo architecture guidelines. All business logic must remain framework-agnostic.
 
+## 📖 Documentation
+
+### Package Documentation
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites and basic configuration
+- **[API Reference](docs/api-reference.md)** - Complete documentation of all interfaces and components
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple usage patterns
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Advanced scenarios
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress and metrics
+- `REQUIREMENTS.md` - Detailed requirements
+- `TEST_SUITE_SUMMARY.md` - Test coverage and results
+- `VALUATION_MATRIX.md` - Package valuation metrics
+- See root `ARCHITECTURE.md` for overall system architecture
+
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.

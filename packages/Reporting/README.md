@@ -232,6 +232,21 @@ Template assets stored in `Nexus\Storage` with version audit trail.
 | REL-REP-0305 | Report Generation Resilience | PDF storage on distribution failure |
 | PER-REP-0301 | Scheduled Report Offloading | Scheduler queue for >5s jobs |
 
+## 📖 Documentation
+
+### Package Documentation
+- [Getting Started Guide](docs/getting-started.md)
+- [API Reference](docs/api-reference.md)
+- [Integration Guide](docs/integration-guide.md)
+- [Examples](docs/examples/)
+
+### Additional Resources
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress
+- `REQUIREMENTS.md` - Requirements
+- `TEST_SUITE_SUMMARY.md` - Tests
+- `VALUATION_MATRIX.md` - Valuation
+
+
 ## License
 
 MIT License - See LICENSE file for details.
