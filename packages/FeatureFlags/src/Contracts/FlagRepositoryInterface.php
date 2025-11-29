@@ -49,6 +49,19 @@ interface FlagRepositoryInterface
     public function save(FlagDefinitionInterface $flag): void;
 
     /**
+     * Save a flag definition for a specific tenant.
+     *
+     * This method ensures proper tenant isolation by explicitly passing
+     * the tenant context. Use this instead of save() when working with
+     * tenant-scoped flags.
+     *
+     * @param FlagDefinitionInterface $flag The flag to save
+     * @param string|null $tenantId The tenant ID for scoping (null for global)
+     * @return void
+     */
+    public function saveForTenant(FlagDefinitionInterface $flag, ?string $tenantId = null): void;
+
+    /**
      * Delete a flag definition.
      *
      * @param string $name The flag name to delete

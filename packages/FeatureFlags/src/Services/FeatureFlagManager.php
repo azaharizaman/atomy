@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FeatureFlags\Services;
 
+use Nexus\FeatureFlags\Contracts\FlagAuditChangeInterface;
+use Nexus\FeatureFlags\Contracts\FlagAuditQueryInterface;
 use Nexus\FeatureFlags\Contracts\FlagEvaluatorInterface;
 use Nexus\FeatureFlags\Contracts\FlagRepositoryInterface;
 use Nexus\FeatureFlags\Contracts\FeatureFlagManagerInterface;
@@ -19,13 +21,17 @@ use Psr\Log\LoggerInterface;
  * - Delegate evaluation to evaluator
  * - Log evaluation results
  * - Provide fail-closed security (defaultIfNotFound)
+ * - Optionally record changes via FlagAuditChangeInterface (Nexus\AuditLogger)
+ * - Optionally provide query history via FlagAuditQueryInterface (Nexus\EventStream)
  */
 final readonly class FeatureFlagManager implements FeatureFlagManagerInterface
 {
     public function __construct(
         private FlagRepositoryInterface $repository,
         private FlagEvaluatorInterface $evaluator,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private ?FlagAuditChangeInterface $auditChange = null,
+        private ?FlagAuditQueryInterface $auditQuery = null
     ) {
     }
 
@@ -145,5 +151,47 @@ final readonly class FeatureFlagManager implements FeatureFlagManagerInterface
         }
 
         return EvaluationContext::fromArray($context);
+    }
+
+    /**
+     * Check if audit change tracking is available.
+     *
+     * @return bool True if FlagAuditChangeInterface is configured
+     */
+    public function hasAuditChange(): bool
+    {
+        return $this->auditChange !== null;
+    }
+
+    /**
+     * Check if audit query capability is available.
+     *
+     * @return bool True if FlagAuditQueryInterface is configured
+     */
+    public function hasAuditQuery(): bool
+    {
+        return $this->auditQuery !== null;
+    }
+
+    /**
+     * Get the audit query interface for historical queries.
+     *
+     * @return FlagAuditQueryInterface|null The audit query interface
+     */
+    public function getAuditQuery(): ?FlagAuditQueryInterface
+    {
+        return $this->auditQuery;
+    }
+
+    /**
+     * Get the audit change interface for recording changes.
+     *
+     * Internal use only.
+     *
+     * @return FlagAuditChangeInterface|null The audit change interface
+     */
+    private function getAuditChange(): ?FlagAuditChangeInterface
+    {
+        return $this->auditChange;
     }
 }

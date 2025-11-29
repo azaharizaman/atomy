@@ -556,12 +556,304 @@ if ($manager->isEnabled('new.feature', $context)) {
 }
 ```
 
+## Compliance & Audit Trail
+
+For regulatory compliance (SOX, GDPR, etc.), the package provides optional audit interfaces that enable complete change tracking and historical state queries.
+
+### Audit Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    FeatureFlagManager                           │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │ FlagRepository  │  │ FlagAuditChange │  │ FlagAuditQuery  │ │
+│  │   Interface     │  │   Interface     │  │   Interface     │ │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘ │
+└───────────│───────────────────│───────────────────│────────────┘
+            │                   │                   │
+  ┌─────────▼────────┐ ┌───────▼────────┐ ┌───────▼────────┐
+  │ Database/Redis   │ │ Nexus\Audit    │ │ Nexus\Event    │
+  │ Implementation   │ │ Logger         │ │ Stream         │
+  └──────────────────┘ └────────────────┘ └────────────────┘
+```
+
+### FlagAuditChangeInterface (Write Audit)
+
+Records all feature flag modifications using `Nexus\AuditLogger`:
+
+```php
+use Nexus\FeatureFlags\Contracts\FlagAuditChangeInterface;
+use Nexus\FeatureFlags\Enums\AuditAction;
+use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
+
+// Application layer implementation
+final readonly class FeatureFlagAuditLogger implements FlagAuditChangeInterface
+{
+    public function __construct(
+        private AuditLogRepositoryInterface $auditLogger,
+        private TenantContextInterface $tenantContext
+    ) {}
+
+    public function recordChange(
+        string $flagName,
+        AuditAction $action,
+        ?string $userId,
+        ?array $before,
+        ?array $after,
+        array $metadata = []
+    ): void {
+        $this->auditLogger->create([
+            'log_name' => 'feature_flags',
+            'subject_type' => 'feature_flag',
+            'subject_id' => $flagName,
+            'causer_type' => 'user',
+            'causer_id' => $userId,
+            'event' => $action->value,
+            'description' => $action->getDescription(),
+            'properties' => [
+                'before' => $before,
+                'after' => $after,
+                ...$metadata,
+            ],
+            'level' => $action->isCritical() ? 4 : 2, // Critical = 4, Medium = 2
+            'tenant_id' => $this->tenantContext->getCurrentTenantId(),
+        ]);
+    }
+
+    public function recordBatchChange(
+        AuditAction $action,
+        ?string $userId,
+        array $changes,
+        array $metadata = []
+    ): void {
+        // Generate batch ID using your preferred method:
+        // - Symfony: (new \Symfony\Component\Uid\Ulid())->__toString()
+        // - ramsey/uuid: (string) \Ramsey\Uuid\Uuid::uuid7()
+        // - Laravel: (string) Str::ulid()
+        $batchId = $this->generateBatchId();
+        
+        foreach ($changes as $flagName => $change) {
+            $this->recordChange(
+                $flagName,
+                $action,
+                $userId,
+                $change['before'],
+                $change['after'],
+                [...$metadata, 'batch_id' => $batchId]
+            );
+        }
+    }
+
+    private function generateBatchId(): string
+    {
+        // Implement using your preferred ULID/UUID library
+        return (new \Symfony\Component\Uid\Ulid())->__toString();
+    }
+}
+```
+
+### FlagAuditQueryInterface (Read Audit)
+
+Query historical flag states using `Nexus\EventStream` for compliance audits:
+
+```php
+use Nexus\FeatureFlags\Contracts\FlagAuditQueryInterface;
+use Nexus\FeatureFlags\Contracts\FlagAuditRecordInterface;
+use Nexus\FeatureFlags\Enums\AuditAction;
+use Nexus\EventStream\Contracts\EventStoreInterface;
+
+// Application layer implementation
+final readonly class FeatureFlagAuditQuery implements FlagAuditQueryInterface
+{
+    public function __construct(
+        private EventStoreInterface $eventStore
+    ) {}
+
+    public function getHistory(
+        string $flagName,
+        ?string $tenantId = null,
+        int $limit = 100,
+        int $offset = 0
+    ): array {
+        return $this->eventStore->query(
+            filters: [
+                'aggregate_id' => ['operator' => '=', 'value' => "flag:{$flagName}"],
+            ],
+            inFilters: [],
+            orderByField: 'occurred_at',
+            orderDirection: 'desc',
+            limit: $limit,
+            cursorData: null
+        );
+    }
+
+    public function getStateAt(
+        string $flagName,
+        DateTimeImmutable $timestamp,
+        ?string $tenantId = null
+    ): ?array {
+        // Replay events up to timestamp to reconstruct state
+        $events = $this->eventStore->query(
+            filters: [
+                'aggregate_id' => ['operator' => '=', 'value' => "flag:{$flagName}"],
+                'occurred_at' => ['operator' => '<=', 'value' => $timestamp->format('Y-m-d H:i:s')],
+            ],
+            inFilters: [],
+            orderByField: 'occurred_at',
+            orderDirection: 'asc',
+            limit: 10000
+        );
+        
+        if (empty($events)) {
+            return null;
+        }
+        
+        // Reconstruct state by replaying events
+        return $this->reconstructState($events);
+    }
+
+    public function getCriticalChanges(
+        ?string $tenantId = null,
+        ?DateTimeImmutable $since = null,
+        int $limit = 500
+    ): array {
+        $filters = [];
+        
+        if ($since !== null) {
+            $filters['occurred_at'] = ['operator' => '>=', 'value' => $since->format('Y-m-d H:i:s')];
+        }
+        
+        $criticalActions = [
+            AuditAction::FORCE_DISABLED->value,
+            AuditAction::FORCE_ENABLED->value,
+            AuditAction::DELETED->value,
+            AuditAction::OVERRIDE_CHANGED->value,
+        ];
+        
+        return $this->eventStore->query(
+            filters: $filters,
+            inFilters: ['event_type' => $criticalActions],
+            orderByField: 'occurred_at',
+            orderDirection: 'desc',
+            limit: $limit
+        );
+    }
+    
+    // ... other methods
+}
+```
+
+### Using AuditableFlagRepository
+
+The `AuditableFlagRepository` decorator automatically records all changes:
+
+```php
+use Nexus\FeatureFlags\Services\AuditableFlagRepository;
+
+// Wrap your repository for automatic audit logging
+$auditableRepo = new AuditableFlagRepository(
+    repository: $baseRepository,
+    auditChange: $auditChangeLogger,
+    userId: $currentUser->getId()
+);
+
+// Set tenant context
+$auditableRepo = $auditableRepo->withTenantId($tenantId);
+
+// Now all save/delete operations are automatically audited
+$auditableRepo->save($flag); // Records CREATED or appropriate action
+$auditableRepo->delete('old_flag', $tenantId); // Records DELETED
+```
+
+### Audit Actions
+
+The `AuditAction` enum tracks all possible flag modifications:
+
+| Action | Description | Critical |
+|--------|-------------|----------|
+| `CREATED` | Flag was created | No |
+| `UPDATED` | Flag was updated (generic) | No |
+| `DELETED` | Flag was deleted | **Yes** |
+| `ENABLED_CHANGED` | Flag enabled state toggled | No |
+| `STRATEGY_CHANGED` | Evaluation strategy changed | No |
+| `OVERRIDE_CHANGED` | Override state changed | **Yes** |
+| `FORCE_ENABLED` | FORCE_ON override applied | **Yes** |
+| `FORCE_DISABLED` | FORCE_OFF override (kill switch) | **Yes** |
+| `OVERRIDE_CLEARED` | Override removed | No |
+| `ROLLOUT_CHANGED` | Percentage rollout changed | No |
+| `TARGET_LIST_CHANGED` | Tenant/user list changed | No |
+
+### Checking Audit Availability
+
+```php
+// Check if audit capabilities are configured
+if ($manager->hasAuditChange()) {
+    // Audit change logging is available
+}
+
+if ($manager->hasAuditQuery()) {
+    // Historical queries are available
+    $query = $manager->getAuditQuery();
+    
+    // Get flag history
+    $history = $query->getHistory('payment_v2', 'tenant-123');
+    
+    // Compliance audit: What was the state during an incident?
+    $stateAtIncident = $query->getStateAt(
+        'payment_v2',
+        new DateTimeImmutable('2024-11-15 14:30:00'),
+        'tenant-123'
+    );
+    
+    // Get all critical changes this month
+    $criticalChanges = $query->getCriticalChanges(
+        tenantId: 'tenant-123',
+        since: new DateTimeImmutable('first day of this month')
+    );
+}
+```
+
+### Laravel Service Provider Setup
+
+```php
+// AppServiceProvider.php
+public function register(): void
+{
+    // Register audit change logger (uses Nexus\AuditLogger)
+    $this->app->singleton(FlagAuditChangeInterface::class, function ($app) {
+        return new FeatureFlagAuditLogger(
+            $app->make(AuditLogRepositoryInterface::class),
+            $app->make(TenantContextInterface::class)
+        );
+    });
+
+    // Register audit query (uses Nexus\EventStream)
+    $this->app->singleton(FlagAuditQueryInterface::class, function ($app) {
+        return new FeatureFlagAuditQuery(
+            $app->make(EventStoreInterface::class)
+        );
+    });
+
+    // Register manager with audit support
+    $this->app->singleton(FeatureFlagManagerInterface::class, function ($app) {
+        return new FeatureFlagManager(
+            $app->make(FlagRepositoryInterface::class),
+            $app->make(FlagEvaluatorInterface::class),
+            $app->make(LoggerInterface::class),
+            $app->make(FlagAuditChangeInterface::class), // Optional
+            $app->make(FlagAuditQueryInterface::class)   // Optional
+        );
+    });
+}
+```
+
 ## Requirements
 
 - PHP 8.3+
 - PSR-3 Logger implementation
 - (Optional) Nexus\Monitoring for metrics
-- (Optional) Nexus\AuditLogger for audit trail
+- (Optional) Nexus\AuditLogger for change audit trail
+- (Optional) Nexus\EventStream for historical state queries
 
 ## 📖 Documentation
 
