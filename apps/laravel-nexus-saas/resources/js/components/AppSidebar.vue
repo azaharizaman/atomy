@@ -14,14 +14,33 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
-import AppLogo from './AppLogo.vue';
+import { BookOpen, Building2, Folder, LayoutGrid, MapPin, Users, User } from 'lucide-vue-next';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Companies',
+        href: '/backoffice/companies',
+        icon: Building2,
+    },
+    {
+        title: 'Offices',
+        href: '/backoffice/offices',
+        icon: MapPin,
+    },
+    {
+        title: 'Departments',
+        href: '/backoffice/departments',
+        icon: Users,
+    },
+    {
+        title: 'Staff',
+        href: '/backoffice/staff',
+        icon: User,
     },
 ];
 

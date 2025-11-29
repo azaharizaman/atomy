@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Backoffice\ValueObjects;
+namespace Nexus\Backoffice\Enums;
 
 enum UnitType: string
 {

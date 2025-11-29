@@ -35,4 +35,11 @@ interface OfficeQueryInterface
      * @return array<OfficeInterface>
      */
     public function getByLocation(string $country, ?string $city = null): array;
+
+    /**
+     * Get all offices.
+     *
+     * @return array<OfficeInterface>
+     */
+    public function getAll(): array;
 }
