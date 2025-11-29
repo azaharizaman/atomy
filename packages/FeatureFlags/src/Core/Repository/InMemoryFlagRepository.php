@@ -59,6 +59,12 @@ final class InMemoryFlagRepository implements FlagRepositoryInterface
         $this->storage[$key] = $flag;
     }
 
+    public function saveForTenant(FlagDefinitionInterface $flag, ?string $tenantId = null): void
+    {
+        $key = $this->buildKey($flag->getName(), $tenantId);
+        $this->storage[$key] = $flag;
+    }
+
     public function delete(string $name, ?string $tenantId = null): void
     {
         $key = $this->buildKey($name, $tenantId);

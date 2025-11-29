@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\FeatureFlags\Core\Decorators;
 
 use Nexus\FeatureFlags\Contracts\FeatureFlagManagerInterface;
+use Nexus\FeatureFlags\Contracts\FlagAuditQueryInterface;
 use Nexus\FeatureFlags\ValueObjects\EvaluationContext;
 
 /**
@@ -116,6 +117,21 @@ final readonly class MonitoredFlagManager implements FeatureFlagManagerInterface
 
             throw $e;
         }
+    }
+
+    public function hasAuditChange(): bool
+    {
+        return $this->inner->hasAuditChange();
+    }
+
+    public function hasAuditQuery(): bool
+    {
+        return $this->inner->hasAuditQuery();
+    }
+
+    public function getAuditQuery(): ?FlagAuditQueryInterface
+    {
+        return $this->inner->getAuditQuery();
     }
 
     /**

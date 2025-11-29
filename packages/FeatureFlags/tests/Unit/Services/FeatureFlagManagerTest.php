@@ -522,4 +522,92 @@ final class FeatureFlagManagerTest extends TestCase
 
         $this->assertFalse($result);
     }
+
+    // ========================================
+    // Audit Capability Tests
+    // ========================================
+
+    public function test_hasAuditChange_returns_false_when_not_configured(): void
+    {
+        $repository = $this->createStub(FlagRepositoryInterface::class);
+        $evaluator = $this->createStub(FlagEvaluatorInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
+
+        $manager = new FeatureFlagManager($repository, $evaluator, $logger);
+
+        $this->assertFalse($manager->hasAuditChange());
+    }
+
+    public function test_hasAuditChange_returns_true_when_configured(): void
+    {
+        $repository = $this->createStub(FlagRepositoryInterface::class);
+        $evaluator = $this->createStub(FlagEvaluatorInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
+        $auditChange = $this->createStub(\Nexus\FeatureFlags\Contracts\FlagAuditChangeInterface::class);
+
+        $manager = new FeatureFlagManager($repository, $evaluator, $logger, $auditChange);
+
+        $this->assertTrue($manager->hasAuditChange());
+    }
+
+    public function test_hasAuditQuery_returns_false_when_not_configured(): void
+    {
+        $repository = $this->createStub(FlagRepositoryInterface::class);
+        $evaluator = $this->createStub(FlagEvaluatorInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
+
+        $manager = new FeatureFlagManager($repository, $evaluator, $logger);
+
+        $this->assertFalse($manager->hasAuditQuery());
+    }
+
+    public function test_hasAuditQuery_returns_true_when_configured(): void
+    {
+        $repository = $this->createStub(FlagRepositoryInterface::class);
+        $evaluator = $this->createStub(FlagEvaluatorInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
+        $auditQuery = $this->createStub(\Nexus\FeatureFlags\Contracts\FlagAuditQueryInterface::class);
+
+        $manager = new FeatureFlagManager($repository, $evaluator, $logger, null, $auditQuery);
+
+        $this->assertTrue($manager->hasAuditQuery());
+    }
+
+    public function test_getAuditQuery_returns_null_when_not_configured(): void
+    {
+        $repository = $this->createStub(FlagRepositoryInterface::class);
+        $evaluator = $this->createStub(FlagEvaluatorInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
+
+        $manager = new FeatureFlagManager($repository, $evaluator, $logger);
+
+        $this->assertNull($manager->getAuditQuery());
+    }
+
+    public function test_getAuditQuery_returns_interface_when_configured(): void
+    {
+        $repository = $this->createStub(FlagRepositoryInterface::class);
+        $evaluator = $this->createStub(FlagEvaluatorInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
+        $auditQuery = $this->createStub(\Nexus\FeatureFlags\Contracts\FlagAuditQueryInterface::class);
+
+        $manager = new FeatureFlagManager($repository, $evaluator, $logger, null, $auditQuery);
+
+        $this->assertSame($auditQuery, $manager->getAuditQuery());
+    }
+
+    public function test_manager_with_both_audit_interfaces(): void
+    {
+        $repository = $this->createStub(FlagRepositoryInterface::class);
+        $evaluator = $this->createStub(FlagEvaluatorInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
+        $auditChange = $this->createStub(\Nexus\FeatureFlags\Contracts\FlagAuditChangeInterface::class);
+        $auditQuery = $this->createStub(\Nexus\FeatureFlags\Contracts\FlagAuditQueryInterface::class);
+
+        $manager = new FeatureFlagManager($repository, $evaluator, $logger, $auditChange, $auditQuery);
+
+        $this->assertTrue($manager->hasAuditChange());
+        $this->assertTrue($manager->hasAuditQuery());
+        $this->assertSame($auditQuery, $manager->getAuditQuery());
+    }
 }

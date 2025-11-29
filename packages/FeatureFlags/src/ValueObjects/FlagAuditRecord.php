@@ -70,12 +70,14 @@ final readonly class FlagAuditRecord implements FlagAuditRecordInterface
 
     public function getBefore(): ?array
     {
-        return $this->before;
+        // Defensive copy to preserve immutability
+        return $this->before !== null ? [...$this->before] : null;
     }
 
     public function getAfter(): ?array
     {
-        return $this->after;
+        // Defensive copy to preserve immutability
+        return $this->after !== null ? [...$this->after] : null;
     }
 
     public function getReason(): ?string
@@ -85,7 +87,8 @@ final readonly class FlagAuditRecord implements FlagAuditRecordInterface
 
     public function getMetadata(): array
     {
-        return $this->metadata;
+        // Defensive copy to preserve immutability
+        return [...$this->metadata];
     }
 
     public function getOccurredAt(): DateTimeImmutable
@@ -141,10 +144,10 @@ final readonly class FlagAuditRecord implements FlagAuditRecordInterface
             'action' => $this->action->value,
             'user_id' => $this->userId,
             'tenant_id' => $this->tenantId,
-            'before' => $this->before,
-            'after' => $this->after,
+            'before' => $this->before !== null ? [...$this->before] : null,
+            'after' => $this->after !== null ? [...$this->after] : null,
             'reason' => $this->reason,
-            'metadata' => $this->metadata,
+            'metadata' => [...$this->metadata],
             'occurred_at' => $this->occurredAt->format('Y-m-d H:i:s'),
             'sequence' => $this->sequence,
             'is_critical' => $this->isCritical(),

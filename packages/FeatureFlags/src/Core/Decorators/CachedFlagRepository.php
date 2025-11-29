@@ -168,16 +168,31 @@ final readonly class CachedFlagRepository implements FlagRepositoryInterface
         ]);
     }
 
-    public function delete(string $name): void
+    public function saveForTenant(FlagDefinitionInterface $flag, ?string $tenantId = null): void
+    {
+        // Update repository first
+        $this->inner->saveForTenant($flag, $tenantId);
+
+        // Invalidate cache for this specific tenant and global
+        $this->invalidateFlagForTenant($flag->getName(), $tenantId);
+
+        $this->logger->info('Feature flag saved for tenant and cache invalidated', [
+            'flag' => $flag->getName(),
+            'tenant_id' => $tenantId,
+        ]);
+    }
+
+    public function delete(string $name, ?string $tenantId = null): void
     {
         // Delete from repository
-        $this->inner->delete($name);
+        $this->inner->delete($name, $tenantId);
 
         // Invalidate cache
-        $this->invalidateFlag($name);
+        $this->invalidateFlagForTenant($name, $tenantId);
 
         $this->logger->info('Feature flag deleted and cache invalidated', [
             'flag' => $name,
+            'tenant_id' => $tenantId,
         ]);
     }
 
@@ -256,6 +271,35 @@ final readonly class CachedFlagRepository implements FlagRepositoryInterface
         $this->logger->debug('Cache invalidated for flag', [
             'flag' => $name,
             'keys_deleted' => ['global'],
+        ]);
+    }
+
+    /**
+     * Invalidate cache for a flag for a specific tenant.
+     *
+     * Deletes:
+     * - Tenant-specific flag (tenant_id = $tenantId)
+     * - Also invalidates global flag for consistency
+     *
+     * @param string $name Flag name
+     * @param string|null $tenantId Tenant ID or null for global
+     */
+    private function invalidateFlagForTenant(string $name, ?string $tenantId): void
+    {
+        // Invalidate global flag
+        $globalKey = $this->cache->buildKey($name, null);
+        $this->cache->delete($globalKey);
+
+        // Invalidate tenant-specific flag if applicable
+        if ($tenantId !== null) {
+            $tenantKey = $this->cache->buildKey($name, $tenantId);
+            $this->cache->delete($tenantKey);
+        }
+
+        $this->logger->debug('Cache invalidated for flag', [
+            'flag' => $name,
+            'tenant_id' => $tenantId,
+            'keys_deleted' => $tenantId !== null ? ['global', 'tenant'] : ['global'],
         ]);
     }
 }

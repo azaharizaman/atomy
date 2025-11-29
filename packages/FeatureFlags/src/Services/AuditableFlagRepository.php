@@ -136,8 +136,8 @@ final class AuditableFlagRepository implements FlagRepositoryInterface
         $before = $existing ? $this->flagToArray($existing) : null;
         $after = $this->flagToArray($flag);
 
-        // Save the flag
-        $this->repository->save($flag);
+        // Save the flag with proper tenant context
+        $this->repository->saveForTenant($flag, $tenantId);
 
         // Record the change
         $this->auditChange->recordChange(

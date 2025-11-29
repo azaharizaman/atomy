@@ -626,7 +626,11 @@ final readonly class FeatureFlagAuditLogger implements FlagAuditChangeInterface
         array $changes,
         array $metadata = []
     ): void {
-        $batchId = (string) Str::ulid();
+        // Generate batch ID using your preferred method:
+        // - Symfony: (new \Symfony\Component\Uid\Ulid())->__toString()
+        // - ramsey/uuid: (string) \Ramsey\Uuid\Uuid::uuid7()
+        // - Laravel: (string) Str::ulid()
+        $batchId = $this->generateBatchId();
         
         foreach ($changes as $flagName => $change) {
             $this->recordChange(
@@ -638,6 +642,12 @@ final readonly class FeatureFlagAuditLogger implements FlagAuditChangeInterface
                 [...$metadata, 'batch_id' => $batchId]
             );
         }
+    }
+
+    private function generateBatchId(): string
+    {
+        // Implement using your preferred ULID/UUID library
+        return (new \Symfony\Component\Uid\Ulid())->__toString();
     }
 }
 ```

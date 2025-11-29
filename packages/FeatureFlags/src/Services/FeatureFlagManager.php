@@ -186,11 +186,11 @@ final readonly class FeatureFlagManager implements FeatureFlagManagerInterface
     /**
      * Get the audit change interface for recording changes.
      *
-     * Internal use - exposed for services that need to record changes.
+     * Internal use only.
      *
      * @return FlagAuditChangeInterface|null The audit change interface
      */
-    public function getAuditChange(): ?FlagAuditChangeInterface
+    private function getAuditChange(): ?FlagAuditChangeInterface
     {
         return $this->auditChange;
     }
