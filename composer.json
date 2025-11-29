@@ -15,7 +15,10 @@
         "nyholm/psr7": "^1.8",
         "psr/http-client": "^1.0",
         "nexus/event-stream": "*@dev",
-        "nexus/tax": "*@dev"
+        "nexus/tax": "*@dev",
+        "nexus/identity": "dev-main",
+        "nexus/tenant": "dev-main",
+        "nexus/backoffice": "dev-main"
     },
     "repositories": [
         {

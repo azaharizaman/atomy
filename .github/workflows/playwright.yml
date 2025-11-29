@@ -1,0 +1,221 @@
+name: Playwright E2E Tests
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'apps/**'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - '.github/workflows/playwright.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'apps/**'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - '.github/workflows/playwright.yml'
+
+jobs:
+  test-laravel-nexus-saas:
+    name: Laravel Nexus SaaS E2E Tests
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: laravel_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, dom, filter, gd, json, pcre, pdo
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies (root)
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Install Composer dependencies (Laravel app)
+        working-directory: apps/laravel-nexus-saas
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Setup Laravel environment
+        working-directory: apps/laravel-nexus-saas
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan config:cache
+
+      - name: Run Laravel migrations
+        working-directory: apps/laravel-nexus-saas
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel_test
+          DB_USERNAME: root
+          DB_PASSWORD: password
+        run: php artisan migrate --force
+
+      - name: Install NPM dependencies (Laravel app)
+        working-directory: apps/laravel-nexus-saas
+        run: npm ci
+
+      - name: Build Laravel assets
+        working-directory: apps/laravel-nexus-saas
+        run: npm run build
+
+      - name: Install Playwright dependencies (root)
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start Laravel server
+        working-directory: apps/laravel-nexus-saas
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel_test
+          DB_USERNAME: root
+          DB_PASSWORD: password
+        run: php artisan serve --port=8000 &
+
+      - name: Wait for Laravel server
+        run: npx wait-on http://localhost:8000 --timeout 30000
+
+      - name: Run Playwright tests (Laravel)
+        env:
+          LARAVEL_BASE_URL: http://localhost:8000
+        run: npx playwright test --project=laravel-nexus-saas
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-laravel
+          path: playwright-report/
+          retention-days: 30
+
+  test-atomy-api:
+    name: Atomy API E2E Tests
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: symfony
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: symfony_test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, dom, filter, gd, json, pcre, pdo
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies (root)
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Install Composer dependencies (Symfony app)
+        working-directory: apps/atomy-api
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Setup Symfony environment
+        working-directory: apps/atomy-api
+        env:
+          DATABASE_URL: postgresql://symfony:password@127.0.0.1:5432/symfony_test?serverVersion=16&charset=utf8
+        run: |
+          cp .env.test .env.local
+          echo "DATABASE_URL=postgresql://symfony:password@127.0.0.1:5432/symfony_test?serverVersion=16&charset=utf8" >> .env.local
+
+      - name: Run Symfony migrations
+        working-directory: apps/atomy-api
+        env:
+          DATABASE_URL: postgresql://symfony:password@127.0.0.1:5432/symfony_test?serverVersion=16&charset=utf8
+        run: |
+          php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || true
+
+      - name: Install Playwright dependencies (root)
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start Symfony server
+        working-directory: apps/atomy-api
+        env:
+          DATABASE_URL: postgresql://symfony:password@127.0.0.1:5432/symfony_test?serverVersion=16&charset=utf8
+        run: php -S localhost:8001 -t public &
+
+      - name: Wait for Symfony server
+        run: npx wait-on http://localhost:8001 --timeout 30000
+
+      - name: Run Playwright tests (API)
+        env:
+          API_BASE_URL: http://localhost:8001
+        run: npx playwright test --project=atomy-api
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-api
+          path: playwright-report/
+          retention-days: 30
