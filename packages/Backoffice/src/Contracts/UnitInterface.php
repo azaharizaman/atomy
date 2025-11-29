@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\Backoffice\Contracts;
 
+use Nexus\Backoffice\Enums\UnitStatus;
+use Nexus\Backoffice\Enums\UnitType;
+
 /**
  * Defines the structure and operations for a Unit entity.
  *
@@ -20,9 +23,9 @@ interface UnitInterface
 
     public function getName(): string;
 
-    public function getType(): string;
+    public function getType(): UnitType;
 
-    public function getStatus(): string;
+    public function getStatus(): UnitStatus;
 
     public function getLeaderStaffId(): ?string;
 

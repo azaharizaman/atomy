@@ -457,6 +457,24 @@ $mockClock->setTime(new DateTimeImmutable('2025-01-15 09:00:00'));
 $this->assertTrue($job->isDue($mockClock));
 ```
 
+### Running the Package Test Suite
+
+The Scheduler package now ships with a dedicated PHPUnit 11 smoke suite plus deterministic in-memory adapters under `tests/Support/`. Run it locally before contributing new functionality:
+
+```bash
+cd packages/Scheduler
+composer install        # once, to pull phpunit/phpunit via require-dev
+composer test           # executes phpunit -c phpunit.xml.dist
+# composer test:coverage  # optional: generates code coverage when Xdebug/PCOV is enabled
+```
+
+What the suite covers today:
+
+- `ScheduleManagerTest` validates successful dispatch, permanent-failure handling, and recurring job rollover.
+- Support doubles (`MutableClock`, `InMemoryScheduleRepository`, `TrackingJobQueue`, `CallbackJobHandler`) keep tests framework-agnostic.
+
+Future work will extend coverage across value objects, the recurrence engine, and execution engine edge cases. Contributions should include corresponding tests that reuse the provided adapters or add new deterministic doubles inside `tests/Support/`.
+
 ## Future Features (v2)
 
 ### Calendar Export
@@ -474,7 +492,8 @@ Planned v2 features:
 - [Getting Started Guide](docs/getting-started.md)
 - [API Reference](docs/api-reference.md)
 - [Integration Guide](docs/integration-guide.md)
-- [Examples](docs/examples/)
+- [Basic Usage Example](docs/examples/basic-usage.php)
+- [Advanced Usage Example](docs/examples/advanced-usage.php)
 
 ### Additional Resources
 - `IMPLEMENTATION_SUMMARY.md` - Implementation progress

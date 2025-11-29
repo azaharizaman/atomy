@@ -17,6 +17,9 @@
         "nexus/event-stream": "*@dev",
         "nexus/tax": "*@dev",
         "nexus/procurement-ml": "*@dev"
+        "nexus/identity": "dev-main",
+        "nexus/tenant": "dev-main",
+        "nexus/backoffice": "dev-main"
     },
     "repositories": [
         {

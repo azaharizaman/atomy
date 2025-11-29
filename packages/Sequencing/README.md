@@ -236,7 +236,8 @@ This package fulfills all requirements defined in `REQUIREMENTS.csv`:
 - [Getting Started Guide](docs/getting-started.md)
 - [API Reference](docs/api-reference.md)
 - [Integration Guide](docs/integration-guide.md)
-- [Examples](docs/examples/)
+- [Basic Usage Example](docs/examples/basic-usage.php)
+- [Advanced Usage Example](docs/examples/advanced-usage.php)
 
 ### Additional Resources
 - `IMPLEMENTATION_SUMMARY.md` - Implementation progress

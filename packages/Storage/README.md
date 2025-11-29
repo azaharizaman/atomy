@@ -137,17 +137,18 @@ See `REQUIREMENTS.csv` for complete specification.
 ## 📖 Documentation
 
 ### Package Documentation
-- [Getting Started Guide](docs/getting-started.md)
-- [API Reference](docs/api-reference.md)
-- [Integration Guide](docs/integration-guide.md)
-- [Examples](docs/examples/)
+- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites, concepts, and first integration
+- **[API Reference](docs/api-reference.md)** - Complete documentation of all interfaces, value objects, and exceptions
+- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
+- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple usage patterns
+- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Advanced scenarios and patterns
 
 ### Additional Resources
-- `IMPLEMENTATION_SUMMARY.md` - Implementation progress
-- `REQUIREMENTS.md` - Requirements
-- `TEST_SUITE_SUMMARY.md` - Tests
-- `VALUATION_MATRIX.md` - Valuation
-
+- `IMPLEMENTATION_SUMMARY.md` - Implementation progress and metrics
+- `REQUIREMENTS.md` - Detailed requirements
+- `TEST_SUITE_SUMMARY.md` - Test coverage and results
+- `VALUATION_MATRIX.md` - Package valuation metrics
+- See root `ARCHITECTURE.md` for overall system architecture
 
 ## License
 
