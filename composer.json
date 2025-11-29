@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "nexus/backoffice": "*@dev",
         "nexus/machine-learning": "*@dev",
         "nexus/geo": "*@dev",
         "nexus/routing": "*@dev",
