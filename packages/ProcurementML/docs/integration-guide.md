@@ -18,7 +18,6 @@ For each interface in `Nexus\ProcurementML\Contracts`, you need to create a conc
 namespace App\Repositories\Procurement;
 
 use Nexus\ProcurementML\Contracts\VendorAnalyticsRepositoryInterface;
-use Illuminate\Support\Facades\DB;
 
 final readonly class VendorAnalyticsRepository implements VendorAnalyticsRepositoryInterface
 {
