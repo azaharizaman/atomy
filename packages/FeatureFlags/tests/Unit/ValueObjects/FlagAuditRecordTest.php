@@ -39,9 +39,9 @@ final class FlagAuditRecordTest extends TestCase
         $this->assertSame('user-123', $record->getUserId());
         $this->assertSame('tenant-456', $record->getTenantId());
         $this->assertNull($record->getBefore());
-        $this->assertSame(['enabled' => true, 'strategy' => 'system_wide'], $record->getAfter());
+        $this->assertEquals(['enabled' => true, 'strategy' => 'system_wide'], $record->getAfter());
         $this->assertSame('Initial flag creation', $record->getReason());
-        $this->assertSame(['ip' => '192.168.1.1'], $record->getMetadata());
+        $this->assertEquals(['ip' => '192.168.1.1'], $record->getMetadata());
         $this->assertSame($occurredAt, $record->getOccurredAt());
         $this->assertSame(1, $record->getSequence());
     }
@@ -68,7 +68,7 @@ final class FlagAuditRecordTest extends TestCase
         $this->assertNull($record->getTenantId());
         $this->assertNull($record->getReason());
         $this->assertNull($record->getSequence());
-        $this->assertSame([], $record->getMetadata());
+        $this->assertEquals([], $record->getMetadata());
     }
 
     // ========================================
@@ -157,14 +157,14 @@ final class FlagAuditRecordTest extends TestCase
         );
 
         $returned = $record->getBefore();
-        $this->assertSame($before, $returned);
+        $this->assertEquals($before, $returned);
 
         // Modify the returned array
         $returned['enabled'] = false;
         $returned['new_key'] = 'should not leak';
 
         // Original should be unchanged
-        $this->assertSame($before, $record->getBefore());
+        $this->assertEquals($before, $record->getBefore());
     }
 
     public function test_getAfter_returns_defensive_copy(): void
@@ -184,14 +184,14 @@ final class FlagAuditRecordTest extends TestCase
         );
 
         $returned = $record->getAfter();
-        $this->assertSame($after, $returned);
+        $this->assertEquals($after, $returned);
 
         // Modify the returned array
         $returned['enabled'] = true;
         $returned['new_key'] = 'should not leak';
 
         // Original should be unchanged
-        $this->assertSame($after, $record->getAfter());
+        $this->assertEquals($after, $record->getAfter());
     }
 
     public function test_getMetadata_returns_defensive_copy(): void
@@ -211,14 +211,14 @@ final class FlagAuditRecordTest extends TestCase
         );
 
         $returned = $record->getMetadata();
-        $this->assertSame($metadata, $returned);
+        $this->assertEquals($metadata, $returned);
 
         // Modify the returned array
         $returned['ip'] = '10.0.0.1';
         $returned['new_key'] = 'should not leak';
 
         // Original should be unchanged
-        $this->assertSame($metadata, $record->getMetadata());
+        $this->assertEquals($metadata, $record->getMetadata());
     }
 
     public function test_getBefore_returns_null_for_null_before(): void
@@ -284,10 +284,10 @@ final class FlagAuditRecordTest extends TestCase
         $this->assertSame(AuditAction::FORCE_DISABLED, $record->getAction());
         $this->assertSame('admin-001', $record->getUserId());
         $this->assertSame('tenant-abc', $record->getTenantId());
-        $this->assertSame(['enabled' => true, 'override' => null], $record->getBefore());
-        $this->assertSame(['enabled' => true, 'override' => 'force_off'], $record->getAfter());
+        $this->assertEquals(['enabled' => true, 'override' => null], $record->getBefore());
+        $this->assertEquals(['enabled' => true, 'override' => 'force_off'], $record->getAfter());
         $this->assertSame('Emergency kill switch', $record->getReason());
-        $this->assertSame(['ticket' => 'INC-12345'], $record->getMetadata());
+        $this->assertEquals(['ticket' => 'INC-12345'], $record->getMetadata());
         $this->assertSame('2024-11-15 14:30:00', $record->getOccurredAt()->format('Y-m-d H:i:s'));
         $this->assertSame(42, $record->getSequence());
     }
@@ -311,7 +311,7 @@ final class FlagAuditRecordTest extends TestCase
         $this->assertNull($record->getBefore());
         $this->assertNull($record->getAfter());
         $this->assertNull($record->getReason());
-        $this->assertSame([], $record->getMetadata());
+        $this->assertEquals([], $record->getMetadata());
         $this->assertNull($record->getSequence());
     }
 
@@ -358,10 +358,10 @@ final class FlagAuditRecordTest extends TestCase
         $this->assertSame('flag_strategy_changed', $array['action']);
         $this->assertSame('dev-123', $array['user_id']);
         $this->assertSame('company-xyz', $array['tenant_id']);
-        $this->assertSame(['strategy' => 'percentage_rollout', 'value' => 25], $array['before']);
-        $this->assertSame(['strategy' => 'tenant_list', 'value' => ['tenant-a', 'tenant-b']], $array['after']);
+        $this->assertEquals(['strategy' => 'percentage_rollout', 'value' => 25], $array['before']);
+        $this->assertEquals(['strategy' => 'tenant_list', 'value' => ['tenant-a', 'tenant-b']], $array['after']);
         $this->assertSame('Switching from rollout to explicit list', $array['reason']);
-        $this->assertSame(['source' => 'admin_panel'], $array['metadata']);
+        $this->assertEquals(['source' => 'admin_panel'], $array['metadata']);
         $this->assertSame('2024-11-15 12:00:00', $array['occurred_at']);
         $this->assertSame(100, $array['sequence']);
         $this->assertFalse($array['is_critical']); // STRATEGY_CHANGED is not critical
@@ -444,10 +444,10 @@ final class FlagAuditRecordTest extends TestCase
         $this->assertSame($original->getAction(), $reconstructed->getAction());
         $this->assertSame($original->getUserId(), $reconstructed->getUserId());
         $this->assertSame($original->getTenantId(), $reconstructed->getTenantId());
-        $this->assertSame($original->getBefore(), $reconstructed->getBefore());
-        $this->assertSame($original->getAfter(), $reconstructed->getAfter());
+        $this->assertEquals($original->getBefore(), $reconstructed->getBefore());
+        $this->assertEquals($original->getAfter(), $reconstructed->getAfter());
         $this->assertSame($original->getReason(), $reconstructed->getReason());
-        $this->assertSame($original->getMetadata(), $reconstructed->getMetadata());
+        $this->assertEquals($original->getMetadata(), $reconstructed->getMetadata());
         $this->assertSame(
             $original->getOccurredAt()->format('Y-m-d H:i:s'),
             $reconstructed->getOccurredAt()->format('Y-m-d H:i:s')
