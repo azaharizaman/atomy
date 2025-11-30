@@ -1,6 +1,6 @@
 # Nexus Atomic Packages
 
-This directory contains **54 atomic, framework-agnostic PHP packages** that form the core business logic of the Nexus ERP system. Each package is:
+This directory contains **54 atomic, framework-agnostic PHP packages** (53 atomic + SharedKernel) that form the core business logic of the Nexus ERP system. Each package is:
 
 - **Pure PHP 8.3+** - No framework dependencies
 - **Stateless** - No long-term state stored in memory
@@ -10,7 +10,7 @@ This directory contains **54 atomic, framework-agnostic PHP packages** that form
 
 ---
 
-## 📋 Package Inventory (54 Packages)
+## 📋 Package Inventory (54 Packages: 53 Atomic + SharedKernel)
 
 ### Foundation Layer (9 packages)
 Core infrastructure and multi-tenancy support:
@@ -24,12 +24,13 @@ Core infrastructure and multi-tenancy support:
 - **Monitoring** - Observability and telemetry
 - **FeatureFlags** - Feature flag management
 
-### Identity & Security (3 packages)
+### Identity & Security (4 packages)
 - **Identity** - Authentication, RBAC, MFA
+- **SSO** - Single Sign-On federation
 - **Crypto** - Cryptographic operations
 - **Audit** - Advanced audit capabilities
 
-### Financial Management (7 packages)
+### Financial Management (8 packages)
 - **Finance** - General ledger
 - **Accounting** - Financial statements
 - **Receivable** - Customer invoicing
@@ -37,6 +38,7 @@ Core infrastructure and multi-tenancy support:
 - **CashManagement** - Bank reconciliation
 - **Budget** - Budget planning
 - **Assets** - Fixed asset management
+- **Tax** - Tax calculations and compliance
 
 ### Sales & Operations (6 packages)
 - **Sales** - Quotation-to-order lifecycle
@@ -51,19 +53,18 @@ Core infrastructure and multi-tenancy support:
 - **Payroll** - Payroll processing
 - **PayrollMysStatutory** - Malaysian statutory
 
-### Customer & Partner (4 packages)
+### Customer & Partner (2 packages)
 - **Party** - Customers, vendors, employees
-- **Crm** - Leads and opportunities
-- **Marketing** - Campaigns and A/B testing
 - **FieldService** - Work orders and service
 
-### Integration & Automation (8 packages)
+### Integration & Automation (9 packages)
 - **Connector** - Integration hub
 - **Workflow** - Process automation
 - **Notifier** - Multi-channel notifications
 - **Scheduler** - Task scheduling
 - **DataProcessor** - OCR and ETL
 - **MachineLearning** - ML orchestration
+- **ProcurementML** - Procurement ML features
 - **Geo** - Geocoding and geofencing
 - **Routing** - Route optimization
 
@@ -75,15 +76,14 @@ Core infrastructure and multi-tenancy support:
 - **Currency** - Multi-currency management
 - **Document** - Document management
 
-### Compliance & Governance (4 packages)
+### Compliance & Governance (3 packages)
 - **Compliance** - Process enforcement
 - **Statutory** - Reporting compliance
 - **Backoffice** - Company structure
-- **OrgStructure** - Organizational hierarchy
 
-### Support & Utilities (3 packages)
+### Content & Storage (3 packages)
+- **Content** - Content management
 - **Storage** - File storage abstraction
-- **ProjectManagement** - Projects and tasks
 - **Messaging** - Message queue abstraction
 
 ### Shared (1 package)
@@ -440,6 +440,6 @@ Every package **MUST** include:
 
 ---
 
-**Last Updated:** 2025-11-24  
+**Last Updated:** 2025-11-30  
 **Maintained By:** Nexus Architecture Team  
 **Total Packages:** 54 (53 atomic + SharedKernel)
