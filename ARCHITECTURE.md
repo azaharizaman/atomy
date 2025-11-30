@@ -293,10 +293,16 @@ packages/PackageName/
 ├── composer.json
 ├── README.md
 ├── LICENSE
+├── CHANGELOG.md
+├── UPGRADE.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── CODE_OF_CONDUCT.md
 ├── IMPLEMENTATION_SUMMARY.md
 ├── REQUIREMENTS.md
 ├── TEST_SUITE_SUMMARY.md
 ├── VALUATION_MATRIX.md
+├── .gitignore
 ├── src/
 │   ├── Domain/              # THE TRUTH (Pure Logic)
 │   │   ├── Entities/        # Pure PHP Entities (Not Eloquent)
