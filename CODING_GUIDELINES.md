@@ -1873,7 +1873,152 @@ Manages **Reporting Compliance** and the specific formats mandated by a legal au
 
 ---
 
-## 19. Development Workflow
+## 19. Three-Layer Architecture
+
+### Layer 1: Atomic Packages (`packages/`) - Pure Business Logic
+
+**Purpose:** Framework-agnostic, reusable business logic components.
+
+**Characteristics:**
+- ✅ Pure PHP 8.3+ (no framework dependencies)
+- ✅ Stateless architecture (externalize state via interfaces)
+- ✅ Contract-driven (define interfaces, consumers implement)
+- ✅ Publishable to Packagist independently
+- ❌ NO framework code (no Eloquent, Symfony, Laravel)
+- ❌ NO database migrations or seeds
+- ❌ NO HTTP controllers or routes
+
+**Example:**
+```php
+// packages/Finance/src/Services/GeneralLedgerManager.php
+namespace Nexus\Finance\Services;
+
+final readonly class GeneralLedgerManager implements GeneralLedgerManagerInterface
+{
+    public function __construct(
+        private AccountRepositoryInterface $repository,
+        private LoggerInterface $logger
+    ) {}
+    
+    public function postJournalEntry(JournalEntry $entry): void
+    {
+        // Pure business logic
+    }
+}
+```
+
+### Layer 2: Orchestrators (`orchestrators/`) - Workflow Coordination
+
+**Purpose:** Orchestrate workflows that cross multiple atomic packages.
+
+**Characteristics:**
+- ✅ Pure PHP (still framework-agnostic)
+- ✅ Depends on multiple atomic packages
+- ✅ Owns "Flow" (processes), not "Truth" (entities)
+- ✅ Implements Saga patterns for distributed transactions
+- ✅ Event-driven coordination
+- ❌ Does NOT define core entities (those belong in atomic packages)
+- ❌ Does NOT access databases directly (uses repository interfaces)
+- ❌ NO framework code (controllers, jobs, routes)
+
+**Components:**
+- `Workflows/` - Stateful processes (Sagas, state machines)
+- `Coordinators/` - Stateless orchestration (synchronous)
+- `Listeners/` - Reactive logic (event subscribers)
+
+**Example:**
+```php
+// orchestrators/OrderManagement/src/Coordinators/FulfillmentCoordinator.php
+namespace Nexus\OrderManagement\Coordinators;
+
+final readonly class FulfillmentCoordinator
+{
+    public function __construct(
+        private SalesOrderManagerInterface $salesManager,
+        private InventoryManagerInterface $inventoryManager,
+        private NotificationManagerInterface $notifier
+    ) {}
+    
+    public function fulfill(string $orderId): void
+    {
+        // Coordinate across Sales, Inventory, Notifier packages
+        $order = $this->salesManager->findById($orderId);
+        $this->inventoryManager->reserveStock($order);
+        $this->notifier->send($order->getCustomerId(), 'order_confirmed');
+    }
+}
+```
+
+### Layer 3: Adapters (`adapters/`) - Framework-Specific Implementations
+
+**Purpose:** Concrete implementations of interfaces defined in atomic packages. The **ONLY** place where framework code is allowed.
+
+**Characteristics:**
+- ✅ Implements repository interfaces using Eloquent/Doctrine
+- ✅ Contains database migrations and seeders
+- ✅ Provides HTTP controllers and API resources
+- ✅ Handles framework-specific jobs/queues
+- ✅ THIS IS THE ONLY PLACE FOR `use Illuminate\...` or `use Symfony\...`
+- ❌ Does NOT contain business logic (that's in atomic packages)
+- ❌ Does NOT define domain entities (those are in atomic packages)
+
+**Example:**
+```php
+// adapters/Laravel/Finance/src/Repositories/EloquentAccountRepository.php
+namespace Nexus\Laravel\Finance\Repositories;
+
+use Nexus\Finance\Contracts\AccountRepositoryInterface;
+use Illuminate\Database\Eloquent\Model;
+
+final readonly class EloquentAccountRepository implements AccountRepositoryInterface
+{
+    public function findById(string $id): AccountInterface
+    {
+        return Account::findOrFail($id); // Eloquent OK in adapter
+    }
+}
+```
+
+### Dependency Direction Rules
+
+**CRITICAL: Strict dependency flow must be enforced.**
+
+```
+┌─────────────────┐
+│  adapters/      │ ← Application Layer (Framework-Specific)
+└────────┬────────┘
+         │ depends on (✅)
+         ▼
+┌─────────────────┐
+│ orchestrators/  │ ← Workflow Coordination Layer (Pure PHP)
+└────────┬────────┘
+         │ depends on (✅)
+         ▼
+┌─────────────────┐
+│  packages/      │ ← Business Logic Layer (Pure PHP)
+└─────────────────┘
+```
+
+**Allowed Dependencies:**
+- ✅ `adapters/` → `orchestrators/` (adapters can call orchestrators)
+- ✅ `adapters/` → `packages/` (adapters MUST implement package interfaces)
+- ✅ `orchestrators/` → `packages/` (orchestrators coordinate multiple packages)
+- ✅ `packages/` → `packages/` (packages can depend on other packages)
+
+**FORBIDDEN Dependencies:**
+- ❌ `packages/` → `orchestrators/` (packages NEVER know about orchestrators)
+- ❌ `packages/` → `adapters/` (packages NEVER know about framework)
+- ❌ `orchestrators/` → `adapters/` (orchestrators remain framework-agnostic)
+
+### The "Use" Test
+
+If you can use the code in a generic PHP script without `composer require laravel/framework`, it belongs in `packages/` or `orchestrators/`.
+
+If it requires `artisan`, `Eloquent`, `Blade`, or framework-specific features, it belongs in `adapters/`.
+
+---
+
+## 20. Development Workflow
 
 ### Creating a New Package
 
@@ -1920,11 +2065,13 @@ Manages **Reporting Compliance** and the specific formats mandated by a legal au
 
 ---
 
-## 20. Facade & Global Helper Prohibition
+## 21. Facade & Global Helper Prohibition
 
-The use of framework Facades and global helpers is **strictly forbidden** in all code within the `packages/` directory.
+The use of framework Facades and global helpers is **strictly forbidden** in the `packages/` and `orchestrators/` directories.
 
-### Absolute Prohibitions (Zero Tolerance)
+**Framework code is ONLY allowed in `adapters/` directory.**
+
+### Absolute Prohibitions in `packages/` and `orchestrators/` (Zero Tolerance)
 
 | Forbidden Artifact | Atomic Replacement |
 | :--- | :--- |
@@ -1978,18 +2125,23 @@ public function isExpired(\DateTimeImmutable $expiresAt): bool
 
 ---
 
-## 21. Key Reminders
+## 22. Key Reminders
 
-1. **Packages are pure engines**: Pure logic, no persistence, no framework coupling
-2. **Interfaces define needs**: Every external dependency is an interface
-3. **Consumers provide implementations**: Applications bind concrete classes to interfaces
-4. **Always check NEXUS_PACKAGES_REFERENCE.md** before creating new functionality
-5. **When in doubt, inject an interface**
-6. **All primary keys are ULIDs** (string-based UUID v4)
-7. **Follow PSR-12** coding standards
-8. **Use meaningful variable and method names**
-9. **Validate inputs in services** before processing
-10. **Throw descriptive exceptions** for error cases
+1. **Three-layer architecture**: packages/ (logic) → orchestrators/ (workflows) → adapters/ (framework)
+2. **Packages are pure engines**: Pure logic, no persistence, no framework coupling
+3. **Orchestrators coordinate**: Multi-package workflows, still pure PHP, no framework code
+4. **Adapters implement**: Framework-specific code ONLY in adapters/ (Eloquent, migrations, controllers)
+5. **Interfaces define needs**: Every external dependency is an interface
+6. **Consumers provide implementations**: Applications bind concrete classes to interfaces
+7. **Always check NEXUS_PACKAGES_REFERENCE.md** before creating new functionality
+8. **When in doubt, inject an interface**
+9. **All primary keys are ULIDs** (string-based UUID v4)
+10. **Follow PSR-12** coding standards
+11. **All dependencies must be interfaces**, never concrete classes
+12. **All properties must be `readonly`**
+13. **Use `declare(strict_types=1);`** at top of every file
+14. **No framework facades or global helpers** in `packages/` or `orchestrators/`
+15. **Dependency direction**: adapters/ → orchestrators/ → packages/ (never reverse)
 
 ---
 

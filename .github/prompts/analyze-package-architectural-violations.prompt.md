@@ -72,6 +72,20 @@ grep -E "laravel/framework|symfony/symfony|illuminate/" composer.json
 # Target PHP Version Check
 echo "=== PHP Version Requirement ==="
 grep '"php":' composer.json
+
+# Layer Dependency Violations (Three-Layer Architecture)
+echo "=== Layer Dependency Violations ==="
+# Check if package depends on orchestrator
+grep -r "use Nexus.*Orchestrator\|use Nexus.*Management\|use Nexus.*Operations" packages/*/src/ 2>/dev/null | grep -v "// Example" || echo "No package→orchestrator violations found"
+
+# Check if package depends on adapter
+grep -r "use Nexus\\\\Laravel\|use Nexus\\\\Symfony" packages/*/src/ 2>/dev/null || echo "No package→adapter violations found"
+
+# Check if orchestrator depends on adapter
+grep -r "use Nexus\\\\Laravel\|use Nexus\\\\Symfony" orchestrators/*/src/ 2>/dev/null || echo "No orchestrator→adapter violations found"
+
+# Check if orchestrator uses framework code
+grep -r "use Illuminate\|use Symfony" orchestrators/*/src/ 2>/dev/null | grep -v "// Example" || echo "No framework usage in orchestrators found"
 ```
 
 **Expected Output:**
@@ -85,6 +99,7 @@ grep '"php":' composer.json
 - Stateless Violations: **0 non-readonly properties** in `src/Services/`
 - Framework Dependencies: **0 framework packages** in composer.json (PSR packages OK)
 - PHP Version: **"php": "^8.3"**
+- Layer Dependency Violations: **0 violations** (no upward dependencies, no framework in orchestrators)
 
 ---
 
@@ -197,6 +212,40 @@ Example:
 - Fix: Remove framework reference, change to "Consuming application provides implementation"
 ```
 
+### Category 5: Three-Layer Architecture Violations
+
+**Checklist:**
+- [ ] Package code does NOT depend on orchestrator code
+- [ ] Package code does NOT depend on adapter code
+- [ ] Orchestrator code does NOT depend on adapter code
+- [ ] Orchestrator code does NOT use framework code (facades, helpers, Eloquent)
+- [ ] Adapter code does NOT contain business logic (logic belongs in packages)
+- [ ] Adapter code does NOT define domain entities (entities belong in packages)
+- [ ] Dependencies flow downward only: adapters → orchestrators → packages
+
+**Violations Found:**
+```
+[List violations here]
+
+Example:
+- File: packages/Finance/src/Services/GeneralLedgerManager.php
+- Issue: use Nexus\OrderManagement\Coordinators\OrderCoordinator;
+- Severity: Critical
+- Fix: Package should NOT depend on orchestrator. Orchestrator should depend on package instead.
+
+Example:
+- File: orchestrators/OrderManagement/src/Coordinators/FulfillmentCoordinator.php
+- Issue: use Illuminate\Support\Facades\DB;
+- Severity: Critical
+- Fix: Orchestrator must be framework-agnostic. Use repository interfaces instead of DB facade.
+
+Example:
+- File: adapters/Laravel/Finance/src/Services/AccountingLogic.php
+- Issue: Contains complex business logic for account calculations
+- Severity: High
+- Fix: Move business logic to packages/Finance/src/Services/AccountManager.php. Adapter should only call package services.
+```
+
 ---
 
 ## 📊 Violation Summary
@@ -205,7 +254,7 @@ Example:
 
 | Severity | Criteria | Action Required |
 |----------|----------|-----------------|
-| **Critical** | Framework coupling in src/, facades/helpers in domain code | REJECT - Immediate refactoring required |
+| **Critical** | Framework coupling in src/, facades/helpers in domain code, layer dependency violations | REJECT - Immediate refactoring required |
 | **High** | ISP violations (fat interfaces), CQRS violations (mixed operations), stateful services | REJECT - Refactoring required before merge |
 | **Medium** | Minor ISP issues (1-2 extra methods), incomplete readonly usage | Request refactoring, can merge with tech debt ticket |
 | **Low** | Documentation issues, missing type hints | Request improvement, OK to merge |
@@ -218,6 +267,7 @@ Example:
 | CQRS Violations | 0 | 0 | 0 | 0 | 0 | ✅ PASS |
 | Stateless Violations | 0 | 0 | 0 | 0 | 0 | ✅ PASS |
 | Framework Violations | 0 | 0 | 0 | 0 | 0 | ✅ PASS |
+| Layer Violations | 0 | 0 | 0 | 0 | 0 | ✅ PASS |
 | **TOTAL** | **0** | **0** | **0** | **0** | **0** | **✅ PASS** |
 
 ### Overall Assessment

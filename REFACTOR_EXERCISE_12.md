@@ -49,8 +49,7 @@ packages/Uom/
 │   ├── Contracts/           # Interfaces
 │   ├── Services/            # Stateless Services
 │   ├── ValueObjects/        # Immutable Data
-│   ├── Exceptions/
-│   └── README.md        # Summary of Contracts, Services, VOs, Exceptions in this package, their responsibilities, relationships, etc. table format preferred
+│   └── Exceptions/
 ├── tests/
 ├── IMPLEMENTATION_SUMMARY.md   # progressive documentation about what was implemented in this package. What features has been implemented and what is not and any decisions related to this package
 ├── TODO.md   # list of pending tasks for this package. Bugs, improvements, future planning etc. What has been done must be removed from this list
@@ -58,7 +57,7 @@ packages/Uom/
 ├── TEST_SUIT_SUMMARY.md   
 ├── VALUATION_MATRIX.md   
 ├── LICENSE.md   
-└── README.md
+└── README.md       # Include Summary of Contracts, Services, VOs, Exceptions in this package, their responsibilities, relationships, etc. table format preferred
 ```
 
   * **Rule:** Do not over-engineer these. The flat structure works perfectly here.
@@ -82,19 +81,19 @@ packages/Inventory/
 │   │   ├── Contracts/       # Repository Interfaces defined here
 │   │   ├── Services/        # Domain Services (e.g., StockCalculator)
 │   │   ├── Policies/        # Business Rules
-│   │   └── README.md        # Summary of Domains in this package, their responsibilities, relationships, etc. table format preferred
+│   │   └── Exceptions/        # Domain Exceptions
 │   │
 │   ├── Application/         # THE USE CASES
 │   │   ├── DTOs/            # Input/Output Data Transfer Objects
 │   │   ├── Commands/        # e.g., ReceiveStockCommand
 │   │   ├── Queries/         # e.g., GetStockLevelQuery
 │   │   ├── Handlers/        # Logic that orchestrates Domain Services
-│   │   └── README.md        # Summary of Applications in this package, their responsibilities, relationships, etc. table format preferred
+│   │   └── Exceptions/        # Application Exceptions
 │   │
 │   └── Infrastructure/      # INTERNAL ADAPTERS (Optional)
 │       ├── InMemory/        # In-memory repositories for unit testing
 │       ├── Mappers/         # To map Domain Objects to Arrays/DTOs
-│       └── README.md         # Summary of Infrastructures in this package, their responsibilities, relationships, etc. table format preferred
+│       └── Exceptions/         # Infrastructure Exceptions
 │
 ├── tests/
 ├── IMPLEMENTATION_SUMMARY.md   # progressive documentation about what was implemented in this package. What features has been implemented and what is not and any decisions related to this package
@@ -103,7 +102,7 @@ packages/Inventory/
 ├── TEST_SUIT_SUMMARY.md   
 ├── VALUATION_MATRIX.md   
 ├── LICENSE.md   
-└── README.md
+└── README.md       # Documentation about this package and package's Entities, VOs, Events, Contracts, Services, Policies, Commands, Queries, Handlers, their responsibilities, relationships, etc. table format preferred. Group some of them under headings like "Domain Entities", "Domain Events", "Repository Interfaces", "Domain Services", "Policies", "Application Commands", "Application Queries", "Command Handlers", "Query Handlers" etc. Use minimal code snippets only if absolutely necessary to explain something complex, else use psuedo code or plain text descriptions.
 ```
 
   * **Rule:** **NEVER** put Laravel code (Eloquent/Jobs) here.

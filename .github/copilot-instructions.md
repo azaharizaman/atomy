@@ -49,25 +49,33 @@ Before implementing ANY feature or writing ANY code, you MUST fully read and und
 
 ## Project Overview
 
-You are working on **Nexus**, a **package-only monorepo** containing 50+ framework-agnostic PHP packages for ERP systems. This project is strictly focused on **atomic, reusable packages** that can be integrated into any PHP framework (Laravel, Symfony, Slim, etc.).
+You are working on **Nexus**, a **three-layer monorepo** containing framework-agnostic PHP packages for ERP systems. The architecture consists of:
+
+1. **📦 Atomic Packages** (`packages/`) - Pure business logic, framework-agnostic
+2. **🔗 Orchestrators** (`orchestrators/`) - Cross-package workflow coordination, pure PHP
+3. **🔌 Adapters** (`adapters/`) - Framework-specific implementations (Laravel, Symfony)
+4. **🚀 Apps** (`apps/`) - Sample applications demonstrating integration
 
 ## Core Philosophy
 
-**Framework Agnosticism is Mandatory.** The monorepo contains:
+**Framework Agnosticism is Mandatory.** The three-layer architecture ensures:
 
-- **📦 `packages/`**: Pure, framework-agnostic business logic packages (the core focus)
+- **📦 `packages/`**: Pure, framework-agnostic business logic (atomic, publishable)
+- **🔗 `orchestrators/`**: Pure PHP workflow coordination (stateful processes, coordinators, listeners)
+- **🔌 `adapters/`**: Framework-specific implementations (Eloquent models, migrations, controllers)
+- **🚀 `apps/`**: Sample applications (laravel-nexus-saas, atomy-api)
 - **📄 `docs/`**: Comprehensive implementation guides and API documentation
 - **🧪 `tests/`**: Package-level unit and integration tests
 
-**NO application layer. NO Laravel-specific code. Pure PHP packages only.**
+**Strict Separation:** Framework code ONLY in `adapters/` and `apps/`. Pure PHP in `packages/` and `orchestrators/`.
 
 ## Directory Structure
 
 ```
 nexus/
-├── packages/               # 50+ Atomic, publishable PHP packages
+├── packages/               # 50+ Atomic, publishable PHP packages (PURE PHP)
+│   ├── SharedKernel/       # Common VOs, Contracts, Traits (no business logic)
 │   ├── Accounting/         # Financial accounting
-│   ├── Analytics/          # Business intelligence
 │   ├── Assets/             # Fixed asset management
 │   ├── AuditLogger/        # Audit logging (timeline/feed views)
 │   ├── Backoffice/         # Company structure
@@ -117,9 +125,95 @@ nexus/
 │   ├── Uom/                # Unit of measurement
 │   ├── Warehouse/          # Warehouse management
 │   └── Workflow/           # Workflow engine
+│
+├── orchestrators/          # Cross-package workflow coordination (PURE PHP)
+│   ├── IdentityOperations/ # User registration, authentication workflows
+│   ├── OrderManagement/    # Order-to-cash workflows (Sales + Inventory + Finance)
+│   ├── ProcurementManagement/ # Procure-to-pay workflows
+│   └── TalentManagement/   # HR workflows (Hiring, onboarding, performance)
+│
+├── adapters/               # Framework-specific implementations (ONLY place for framework code)
+│   ├── README.md           # Adapter layer guidelines
+│   └── Laravel/            # Laravel-specific implementations
+│       ├── Finance/        # Eloquent models, migrations, jobs for Finance
+│       ├── Inventory/      # Eloquent models, migrations for Inventory
+│       └── [Domain]/       # Other domain adapters
+│
+├── apps/                   # Sample applications
+│   ├── laravel-nexus-saas/ # Laravel SaaS application
+│   └── atomy-api/          # Symfony API application
+│
 ├── docs/                   # Implementation guides & references
 └── composer.json           # Monorepo package registry
 ```
+
+---
+
+## 🏗️ Three-Layer Architecture
+
+### Layer 1: Atomic Packages (`packages/`)
+**Pure Business Logic - Framework Agnostic**
+
+- ✅ Pure PHP 8.3+ (no framework dependencies)
+- ✅ Stateless architecture (externalize state via interfaces)
+- ✅ Contract-driven (define interfaces, consumers implement)
+- ✅ Publishable to Packagist independently
+- ❌ NO framework code (no Eloquent, Symfony, Laravel)
+- ❌ NO database migrations or seeds
+- ❌ NO HTTP controllers or routes
+
+**Two Package Patterns:**
+- **Simple Packages** (Uom, Sequencing, Tenant): Flat structure
+- **Complex Packages** (Inventory, Finance, Manufacturing): DDD layers (Domain, Application, Infrastructure)
+
+### Layer 2: Orchestrators (`orchestrators/`)
+**Workflow Coordination - Pure PHP**
+
+- ✅ Pure PHP (still framework-agnostic)
+- ✅ Depends on multiple atomic packages
+- ✅ Owns "Flow" (processes), not "Truth" (entities)
+- ✅ Implements Saga patterns for distributed transactions
+- ✅ Event-driven coordination
+- ❌ Does NOT define core entities (those belong in atomic packages)
+- ❌ Does NOT access databases directly (uses repository interfaces)
+- ❌ NO framework code (controllers, jobs, routes)
+
+**Components:**
+- `Workflows/` - Stateful processes (Sagas, state machines)
+- `Coordinators/` - Stateless orchestration (synchronous)
+- `Listeners/` - Reactive logic (event subscribers)
+
+### Layer 3: Adapters (`adapters/`)
+**Framework-Specific Implementations**
+
+- ✅ Implements repository interfaces using Eloquent/Doctrine
+- ✅ Contains database migrations and seeders
+- ✅ Provides HTTP controllers and API resources
+- ✅ Handles framework-specific jobs/queues
+- ✅ THIS IS THE ONLY PLACE FOR `use Illuminate\...` or `use Symfony\...`
+- ❌ Does NOT contain business logic (that's in atomic packages)
+- ❌ Does NOT define domain entities (those are in atomic packages)
+
+**Dependency Direction:**
+```
+┌─────────────────┐
+│  adapters/      │ ← Application Layer (Framework-Specific)
+└────────┬────────┘
+         │ depends on (✅)
+         ▼
+┌─────────────────┐
+│ orchestrators/  │ ← Workflow Coordination Layer (Pure PHP)
+└────────┬────────┘
+         │ depends on (✅)
+         ▼
+┌─────────────────┐
+│  packages/      │ ← Business Logic Layer (Pure PHP)
+└─────────────────┘
+```
+
+**The "Use" Test:**
+- If you can use the code in a generic PHP script without `composer require laravel/framework`, it belongs in `packages/` or `orchestrators/`.
+- If it requires `artisan`, `Eloquent`, `Blade`, or framework-specific features, it belongs in `adapters/`.
 
 ---
 
@@ -143,16 +237,20 @@ nexus/
 
 All detailed guidelines are in `CODING_GUIDELINES.md`. Here's a quick summary:
 
-1. **Packages are pure engines**: Pure logic, no persistence, no framework coupling
-2. **Interfaces define needs**: Every external dependency is an interface
-3. **Consumers provide implementations**: Applications bind concrete classes to interfaces
-4. **Always check NEXUS_PACKAGES_REFERENCE.md** before creating new functionality
-5. **When in doubt, inject an interface**
-6. **PHP 8.3+ required**: All packages must require `"php": "^8.3"`
-7. **All dependencies must be interfaces**, never concrete classes
-8. **All properties must be `readonly`**
-9. **Use `declare(strict_types=1);`** at top of every file
-10. **No framework facades or global helpers** in `packages/`
+1. **Three-layer architecture**: packages/ (logic) → orchestrators/ (workflows) → adapters/ (framework)
+2. **Packages are pure engines**: Pure logic, no persistence, no framework coupling
+3. **Orchestrators coordinate**: Multi-package workflows, still pure PHP, no framework code
+4. **Adapters implement**: Framework-specific code ONLY in adapters/ (Eloquent, migrations, controllers)
+5. **Interfaces define needs**: Every external dependency is an interface
+6. **Consumers provide implementations**: Applications bind concrete classes to interfaces
+7. **Always check NEXUS_PACKAGES_REFERENCE.md** before creating new functionality
+8. **When in doubt, inject an interface**
+9. **PHP 8.3+ required**: All packages and orchestrators must require `"php": "^8.3"`
+10. **All dependencies must be interfaces**, never concrete classes
+11. **All properties must be `readonly`**
+12. **Use `declare(strict_types=1);`** at top of every file
+13. **No framework facades or global helpers** in `packages/` or `orchestrators/`
+14. **Dependency direction**: adapters/ → orchestrators/ → packages/ (never reverse)
 
 ---
 
