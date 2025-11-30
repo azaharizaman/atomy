@@ -16,32 +16,67 @@ The Finance package provides the core double-entry bookkeeping engine for the ER
 - **Audit Trail**: Comprehensive logging via Nexus\AuditLogger
 - **Event Sourcing**: Critical GL events published to Nexus\EventStream for replay capability
 
-## Architecture
+## Architecture (DDD Layering)
 
-### Contracts (Interfaces)
-- `FinanceManagerInterface` - Main service for journal entry operations
-- `JournalEntryInterface` - Journal entry entity contract
-- `AccountInterface` - COA account entity contract
-- `LedgerRepositoryInterface` - Read-only ledger query operations
-- `JournalEntryRepositoryInterface` - Journal entry persistence
-- `AccountRepositoryInterface` - COA management
+This package follows Domain-Driven Design (DDD) architecture with three distinct layers:
+
+```
+packages/Finance/
+├── src/
+│   ├── Domain/              # THE TRUTH (Pure Logic)
+│   │   ├── Contracts/       # Entity and Repository interfaces
+│   │   ├── Entities/        # Domain entities (future)
+│   │   ├── ValueObjects/    # Money, AccountCode, ExchangeRate, etc.
+│   │   ├── Enums/           # AccountType, JournalEntryStatus
+│   │   ├── Events/          # Domain events (future)
+│   │   ├── Exceptions/      # Domain-specific exceptions
+│   │   └── Services/        # Domain services (PostingEngine, BalanceCalculator)
+│   │
+│   ├── Application/         # THE USE CASES
+│   │   ├── Handlers/        # Application services (FinanceManager)
+│   │   ├── Commands/        # Command DTOs (future)
+│   │   ├── Queries/         # Query DTOs (future)
+│   │   └── DTOs/            # Data transfer objects (future)
+│   │
+│   └── Infrastructure/      # INTERNAL ADAPTERS
+│       ├── Persistence/     # InMemory repositories for testing
+│       └── Mappers/         # Data mappers (future)
+```
+
+### Domain Layer (Core)
+- `Domain\Contracts\FinanceManagerInterface` - Main service contract
+- `Domain\Contracts\JournalEntryInterface` - Journal entry entity contract
+- `Domain\Contracts\AccountInterface` - COA account entity contract
+- `Domain\Contracts\LedgerRepositoryInterface` - Read-only ledger query operations
+- `Domain\Contracts\JournalEntryRepositoryInterface` - Journal entry persistence
+- `Domain\Contracts\AccountRepositoryInterface` - COA management
 
 ### Value Objects
-- `Money` - Immutable amount with currency (4 decimal precision)
-- `ExchangeRate` - Currency conversion rate with effective date
-- `JournalEntryNumber` - Sequential number with pattern support
-- `AccountCode` - Validated account code
+- `Domain\ValueObjects\Money` - Immutable amount with currency (4 decimal precision)
+- `Domain\ValueObjects\ExchangeRate` - Currency conversion rate with effective date
+- `Domain\ValueObjects\JournalEntryNumber` - Sequential number with pattern support
+- `Domain\ValueObjects\AccountCode` - Validated account code
 
-### Core Engine (Internal)
-- `PostingEngine` - Transaction posting logic with validation
-- `BalanceCalculator` - Account balance calculation
-- `AccountHierarchyManager` - COA tree operations
+### Domain Services
+- `Domain\Services\PostingEngine` - Transaction posting logic with validation
+- `Domain\Services\BalanceCalculator` - Account balance calculation
+
+### Application Layer
+- `Application\Handlers\FinanceManager` - Application service implementing FinanceManagerInterface
+
+### Infrastructure Layer
+- `Infrastructure\Persistence\InMemoryAccountRepository` - In-memory account storage for testing
+- `Infrastructure\Persistence\InMemoryJournalEntryRepository` - In-memory journal entry storage for testing
+- `Infrastructure\Persistence\InMemoryLedgerRepository` - In-memory ledger queries for testing
 
 ## Usage Example
 
 ```php
-use Nexus\Finance\Services\FinanceManager;
-use Nexus\Finance\ValueObjects\Money;
+use Nexus\Finance\Application\Handlers\FinanceManager;
+use Nexus\Finance\Domain\ValueObjects\Money;
+
+// Obtain FinanceManager from your service container (framework-agnostic)
+// The consumer application binds concrete implementations
 
 // Create and post a journal entry
 $journalEntry = $financeManager->createJournalEntry([
@@ -49,14 +84,14 @@ $journalEntry = $financeManager->createJournalEntry([
     'description' => 'Customer payment received',
     'lines' => [
         [
-            'account_code' => '1000', // Cash
-            'debit' => Money::of(1000, 'MYR'),
-            'credit' => Money::zero('MYR'),
+            'account_id' => '1000', // Cash
+            'debit' => '1000.0000',
+            'credit' => '0.0000',
         ],
         [
-            'account_code' => '1200', // Accounts Receivable
-            'debit' => Money::zero('MYR'),
-            'credit' => Money::of(1000, 'MYR'),
+            'account_id' => '1200', // Accounts Receivable
+            'debit' => '0.0000',
+            'credit' => '1000.0000',
         ],
     ],
 ]);
