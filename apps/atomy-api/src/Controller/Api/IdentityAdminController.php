@@ -7,14 +7,14 @@ namespace App\Controller\Api;
 use App\Service\IdentityAuditService;
 use App\Security\Attribute\RequiresPermission;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
-use Nexus\Identity\Contracts\PasswordValidatorInterface;
-use Nexus\Identity\Contracts\TokenManagerInterface;
-use Nexus\Identity\Contracts\SessionManagerInterface;
-use Nexus\Identity\Contracts\MfaVerifierInterface;
-use Nexus\Identity\Contracts\RoleRepositoryInterface;
-use Nexus\Identity\Contracts\PermissionRepositoryInterface;
-use Nexus\Identity\Contracts\UserRepositoryInterface;
-use Nexus\Identity\Contracts\PasswordHasherInterface;
+use Nexus\Domain\Identity\Contracts\PasswordValidatorInterface;
+use Nexus\Domain\Identity\Contracts\TokenManagerInterface;
+use Nexus\Domain\Identity\Contracts\SessionManagerInterface;
+use Nexus\Domain\Identity\Contracts\MfaVerifierInterface;
+use Nexus\Domain\Identity\Contracts\RoleRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\PermissionRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\PasswordHasherInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +25,7 @@ use Symfony\Component\Uid\Ulid;
 /**
  * Admin-level Identity API.
  *
- * This controller exposes endpoints that map to the full set of Nexus\Identity services.
+ * This controller exposes endpoints that map to the full set of Nexus\Domain\Identity services.
  * All endpoints produce audit events via IdentityAuditService.
  */
 #[Route('/api/identity')]

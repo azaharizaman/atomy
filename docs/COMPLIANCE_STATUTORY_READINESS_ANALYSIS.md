@@ -35,7 +35,7 @@ The monorepo is architecturally ready to implement Nexus\Compliance and Nexus\St
    - Used for: Logging compliance violations, scheme changes, SOD violations
 
 #### Optional Dependencies (SHOULD HAVE - ✅ All Available)
-3. **Nexus\Identity** - ✅ Implemented
+3. **Nexus\Domain\Identity** - ✅ Implemented
    - Purpose: User context for SOD (Segregation of Duties) checks
    - Interface: `IdentityInterface`
    - Used for: Verifying creator ≠ approver for Critical transactions
@@ -436,7 +436,7 @@ statutory_rate_tables (
 - [x] Multi-tenancy system (Nexus\Tenant) functional
 - [x] Audit logging (Nexus\AuditLogger) operational
 - [x] Settings management (Nexus\Setting) with hierarchical resolution
-- [x] Identity system (Nexus\Identity) for user context
+- [x] Identity system (Nexus\Domain\Identity) for user context
 - [x] Finance package (Nexus\Finance) with GL and journal entries
 - [x] Accounting package (Nexus\Accounting) with financial statements
 - [x] Payroll package (Nexus\Payroll) with statutory interface

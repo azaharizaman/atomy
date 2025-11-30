@@ -81,7 +81,7 @@
 | **Cost Reduction** | 8/10 | Avoids expensive recurring fees for third-party SSO services. |
 | **Compliance Value** | 7/10 | Facilitates compliance with standards like SOC 2. |
 | **Scalability Impact** | 9/10 | Allows the platform to scale to large corporate user bases. |
-| **Integration Criticality** | 10/10 | Critical dependency for `Nexus\Identity` and tenant-facing apps. |
+| **Integration Criticality** | 10/10 | Critical dependency for `Nexus\Domain\Identity` and tenant-facing apps. |
 | **AVERAGE STRATEGIC SCORE** | **8.6/10** | - |
 
 ### Revenue Impact
@@ -117,7 +117,7 @@
 
 ### Internal Package Dependencies
 - **Depends On:** `Nexus\Tenant`, `Nexus\AuditLogger`, `Nexus\Monitoring` (via interfaces)
-- **Depended By:** `Nexus\Identity` (conceptually), any application-level code.
+- **Depended By:** `Nexus\Domain\Identity` (conceptually), any application-level code.
 - **Coupling Risk:** Low, due to contract-driven design.
 
 ### Maintenance Risk

@@ -83,7 +83,7 @@
 | **Cost Reduction** | 9/10 | Avoid $15K-100K/year GRC licensing fees |
 | **Compliance Value** | 10/10 | Directly meets ISO 14001, SOX, GDPR, HIPAA, PCI DSS requirements |
 | **Scalability Impact** | 7/10 | SOD engine scales to 10,000+ rules (tested), supports multi-tenant isolation |
-| **Integration Criticality** | 8/10 | Integrates with Nexus\Setting, Nexus\AuditLogger, Nexus\Identity, Nexus\Notifier |
+| **Integration Criticality** | 8/10 | Integrates with Nexus\Setting, Nexus\AuditLogger, Nexus\Domain\Identity, Nexus\Notifier |
 | **AVERAGE STRATEGIC SCORE** | **8.4/10** | - |
 
 ### Revenue Impact
@@ -121,10 +121,10 @@
 |------------|------|------------|------------|
 | Nexus\Setting | Internal | Low | Stable package, configuration abstraction |
 | Nexus\AuditLogger | Internal | Low | Stable package, audit trail dependency |
-| Nexus\Identity | Internal | Medium | Required for role-based SOD, critical path |
+| Nexus\Domain\Identity | Internal | Medium | Required for role-based SOD, critical path |
 | Nexus\Notifier | Internal | Low | Optional dependency, violation notifications |
 
-- **Depends On:** Nexus\Setting, Nexus\AuditLogger, Nexus\Identity (optional: Nexus\Notifier)
+- **Depends On:** Nexus\Setting, Nexus\AuditLogger, Nexus\Domain\Identity (optional: Nexus\Notifier)
 - **Depended By:** None (core infrastructure, no dependents yet)
 - **Coupling Risk:** Low (interface-driven, loose coupling)
 

@@ -8,10 +8,10 @@ use App\Entity\Permission;
 use App\Entity\Role;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Nexus\Identity\Contracts\PermissionInterface;
-use Nexus\Identity\Contracts\RoleInterface;
-use Nexus\Identity\Contracts\RoleRepositoryInterface;
-use Nexus\Identity\Exceptions\RoleNotFoundException;
+use Nexus\Domain\Identity\Contracts\PermissionInterface;
+use Nexus\Domain\Identity\Contracts\RoleInterface;
+use Nexus\Domain\Identity\Contracts\RoleRepositoryInterface;
+use Nexus\Domain\Identity\Exceptions\RoleNotFoundException;
 use Symfony\Component\Uid\Ulid;
 
 /**

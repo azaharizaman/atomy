@@ -767,7 +767,7 @@ Core CRUD operations for primary entities. **Must be implemented first.**
 
 **Key Dependencies:**
 - `Nexus\Tenant` (v1.0+) - Multi-tenant context management
-- `Nexus\Identity` (v1.0+) - User authentication and RBAC
+- `Nexus\Domain\Identity` (v1.0+) - User authentication and RBAC
 - Database migrations for core entities (Company, Office, Department, Staff)
 
 ---
@@ -885,7 +885,7 @@ Nice-to-have features for enhanced functionality. **Implement last.**
 | Package | Version | Purpose | Required For |
 |---------|---------|---------|--------------|
 | **Nexus\Tenant** | ^1.0 | Multi-tenant context management, tenant isolation | All phases (Critical) |
-| **Nexus\Identity** | ^1.0 | User authentication, RBAC, permission checking | All phases (Critical) |
+| **Nexus\Domain\Identity** | ^1.0 | User authentication, RBAC, permission checking | All phases (Critical) |
 | **Nexus\AuditLogger** | ^1.0 | Activity logging, transfer approval trails, org change tracking | Phase 2+ (High) |
 | **Nexus\Monitoring** | ^1.0 | Performance tracking, telemetry, health checks | All phases (Recommended) |
 | **Nexus\Reporting** | ^1.0 | Report generation engine (company/staff/department summaries) | Phase 3+ (High) |
@@ -908,7 +908,7 @@ Nice-to-have features for enhanced functionality. **Implement last.**
 ### Implementation Sequence Recommendations
 
 **Week 1-2: Foundation Setup**
-1. Install and configure `Nexus\Tenant` and `Nexus\Identity`
+1. Install and configure `Nexus\Tenant` and `Nexus\Domain\Identity`
 2. Create database migrations for core entities (Company, Office, Department, Staff)
 3. Implement Phase 1 CRUD operations (6 stories)
 4. Write unit tests (27 tests)
@@ -963,7 +963,7 @@ Nice-to-have features for enhanced functionality. **Implement last.**
 - Consider materialized views for complex org chart queries (departments with 100+ staff)
 
 **Security:**
-- Enforce row-level permissions via `Nexus\Identity` RBAC
+- Enforce row-level permissions via `Nexus\Domain\Identity` RBAC
 - Audit all transfer approvals using `Nexus\AuditLogger`
 - Validate multi-department assignments against feature flag (`multi_department`)
 - Implement GDPR data deletion requests (Phase 4)
@@ -1064,7 +1064,7 @@ Nice-to-have features for enhanced functionality. **Implement last.**
 ### Security Considerations
 
 **Permission Enforcement:**
-- All 77 permissions enforced via `Nexus\Identity` RBAC
+- All 77 permissions enforced via `Nexus\Domain\Identity` RBAC
 - Row-level security implemented for tenant isolation
 - Multi-department assignments restricted by `backoffice.staff.multi_assign` permission
 - Transfer approvals require explicit `backoffice.transfer.approve` or `backoffice.transfer.approve.level2` permissions
@@ -1155,7 +1155,7 @@ CREATE INDEX idx_units_tenant_status ON units(tenant_id, status);
 
 **Package Integration Order:**
 
-1. **First:** `Nexus\Tenant` + `Nexus\Identity` (required before any implementation)
+1. **First:** `Nexus\Tenant` + `Nexus\Domain\Identity` (required before any implementation)
 2. **Second:** `Nexus\AuditLogger` + `Nexus\Monitoring` (needed for Phase 2+)
 3. **Third:** `Nexus\Reporting` + `Nexus\Export` (needed for Phase 3+)
 4. **Last:** `Nexus\Import`, `Nexus\Connector`, `Nexus\Compliance` (Phase 4 advanced features)
@@ -1166,7 +1166,7 @@ CREATE INDEX idx_units_tenant_status ON units(tenant_id, status);
 'providers' => [
     // Core dependencies (required)
     Nexus\Tenant\TenantServiceProvider::class,
-    Nexus\Identity\IdentityServiceProvider::class,
+    Nexus\Domain\Identity\IdentityServiceProvider::class,
     
     // Phase 2+ dependencies
     Nexus\AuditLogger\AuditLoggerServiceProvider::class,
@@ -1258,7 +1258,7 @@ CREATE INDEX idx_units_tenant_status ON units(tenant_id, status);
 - 16 feature flags implemented
 - CQRS architecture with 15 segregated repository interfaces
 - 6 legacy composite interfaces for backward compatibility
-- Full integration with Nexus\Tenant and Nexus\Identity
+- Full integration with Nexus\Tenant and Nexus\Domain\Identity
 - Comprehensive documentation and implementation guide
 
 **Planned Releases:**
@@ -1287,7 +1287,7 @@ CREATE INDEX idx_units_tenant_status ON units(tenant_id, status);
 
 **Related Packages:**
 - `Nexus\Tenant` - Multi-tenancy framework
-- `Nexus\Identity` - Authentication and authorization
+- `Nexus\Domain\Identity` - Authentication and authorization
 - `Nexus\AuditLogger` - Audit trail management
 - `Nexus\Monitoring` - Performance monitoring
 - `Nexus\Reporting` - Report generation

@@ -10,7 +10,7 @@
 
 ## 📋 Overview
 
-The `Nexus\SSO` package provides a comprehensive, enterprise-ready Single Sign-On solution for the Nexus ERP monorepo. It enables seamless authentication via industry-standard protocols (SAML 2.0, OAuth2, OIDC) while maintaining strict architectural separation from the `Nexus\Identity` package.
+The `Nexus\SSO` package provides a comprehensive, enterprise-ready Single Sign-On solution for the Nexus ERP monorepo. It enables seamless authentication via industry-standard protocols (SAML 2.0, OAuth2, OIDC) while maintaining strict architectural separation from the `Nexus\Domain\Identity` package.
 
 ---
 
@@ -43,7 +43,7 @@ The `Nexus\SSO` package provides a comprehensive, enterprise-ready Single Sign-O
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  Nexus\Identity                             │
+│                  Nexus\Domain\Identity                             │
 │  "User Management"                                          │
 │  - Creates/updates users                                   │
 │  - Assigns roles                                           │
@@ -226,7 +226,7 @@ interface UserProvisioningInterface
 ```
 
 ### Internal Package Integration
-- **`Nexus\Identity`**: User provisioning via `UserProvisioningInterface`
+- **`Nexus\Domain\Identity`**: User provisioning via `UserProvisioningInterface`
 - **`Nexus\Tenant`**: Multi-tenant context
 - **`Nexus\AuditLogger`**: SSO event logging
 - **`Nexus\Monitoring`**: SSO metrics (optional)

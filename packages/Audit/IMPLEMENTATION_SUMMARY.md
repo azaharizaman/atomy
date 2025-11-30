@@ -144,7 +144,7 @@ $sequence->isConsecutiveTo($other);
 
 ### Consumed By
 
-- **Nexus\Identity** - Critical identity events (role changes, password resets)
+- **Nexus\Domain\Identity** - Critical identity events (role changes, password resets)
 - **Nexus\Finance** - Financial transaction audit trail
 - **Nexus\Inventory** - Stock movement verification
 - **consuming application** - Application-layer storage implementation

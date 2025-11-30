@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Unit;
 
 use App\Command\CreateAdminUserCommand;
-use Nexus\Identity\Contracts\UserRepositoryInterface;
-use Nexus\Identity\Contracts\PasswordHasherInterface;
+use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\PasswordHasherInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Console\Application;
@@ -22,7 +22,7 @@ final class CreateAdminUserCommandTest extends TestCase
 
         $repo->expects(self::once())->method('create')->with(self::callback(function ($data) {
             return isset($data['email']) && isset($data['password_hash']) && $data['password_hash'] === 'hashedpw' && in_array('ROLE_ADMIN', $data['roles'], true);
-        }))->willReturn(new class implements \Nexus\Identity\Contracts\UserInterface {
+        }))->willReturn(new class implements \Nexus\Domain\Identity\Contracts\UserInterface {
             public function getId(): string { return 'id-123'; }
             public function getEmail(): string { return 'admin@example.com'; }
             public function getPasswordHash(): string { return 'hashedpw'; }

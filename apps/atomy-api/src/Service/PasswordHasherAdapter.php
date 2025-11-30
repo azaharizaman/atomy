@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use Nexus\Identity\Contracts\PasswordHasherInterface;
+use Nexus\Domain\Identity\Contracts\PasswordHasherInterface;
 
 /**
- * Application adapter for Nexus\Identity PasswordHasherInterface.
+ * Application adapter for Nexus\Domain\Identity PasswordHasherInterface.
  *
  * This implementation uses PHP's password_* functions. It prefers Argon2id
  * when available and falls back to bcrypt. It supports an optional application

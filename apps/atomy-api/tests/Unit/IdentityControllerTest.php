@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Unit;
 
 use App\Controller\Api\IdentityController;
-use Nexus\Identity\Contracts\UserRepositoryInterface;
-use Nexus\Identity\Contracts\PasswordHasherInterface;
+use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\PasswordHasherInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -21,7 +21,7 @@ final class IdentityControllerTest extends TestCase
         $repo->expects(self::once())->method('emailExists')->with('a@b.com')->willReturn(false);
         $repo->expects(self::once())->method('create')->with(self::callback(function ($data) {
             return $data['email'] === 'a@b.com' && $data['password_hash'] === 'h';
-        }))->willReturn(new class implements \Nexus\Identity\Contracts\UserInterface {
+        }))->willReturn(new class implements \Nexus\Domain\Identity\Contracts\UserInterface {
             public function getId(): string { return '01FZQ9X4C4G7V8GQXXXXXXX'; }
             public function getEmail(): string { return 'a@b.com'; }
             public function getPasswordHash(): string { return 'h'; }
@@ -54,7 +54,7 @@ final class IdentityControllerTest extends TestCase
         $repo = $this->createMock(UserRepositoryInterface::class);
         $hasher = $this->createMock(PasswordHasherInterface::class);
 
-        $repo->expects(self::once())->method('findById')->with('missing')->will($this->throwException(new \Nexus\Identity\Exceptions\UserNotFoundException('no')));
+        $repo->expects(self::once())->method('findById')->with('missing')->will($this->throwException(new \Nexus\Domain\Identity\Exceptions\UserNotFoundException('no')));
 
         $controller = new IdentityController($repo, $hasher);
         $resp = $controller->get('missing');

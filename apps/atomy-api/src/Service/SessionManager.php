@@ -7,10 +7,10 @@ namespace App\Service;
 use App\Entity\Session;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
-use Nexus\Identity\Contracts\SessionManagerInterface;
-use Nexus\Identity\Contracts\UserInterface;
-use Nexus\Identity\Exceptions\InvalidSessionException;
-use Nexus\Identity\ValueObjects\SessionToken;
+use Nexus\Domain\Identity\Contracts\SessionManagerInterface;
+use Nexus\Domain\Identity\Contracts\UserInterface;
+use Nexus\Domain\Identity\Exceptions\InvalidSessionException;
+use Nexus\Domain\Identity\ValueObjects\SessionToken;
 use Symfony\Component\Uid\Ulid;
 
 final readonly class SessionManager implements SessionManagerInterface

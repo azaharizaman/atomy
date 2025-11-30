@@ -212,7 +212,7 @@ The Backoffice package documentation has been successfully standardized accordin
 ### Package Dependencies
 ✅ **All dependencies are first-party Nexus packages or PSR interfaces:**
 - `Nexus\Tenant\Contracts\TenantContextInterface` - Multi-tenancy
-- `Nexus\Identity\Contracts\AuthorizationManagerInterface` - Authorization
+- `Nexus\Domain\Identity\Contracts\AuthorizationManagerInterface` - Authorization
 - `Nexus\AuditLogger\Contracts\AuditLogManagerInterface` - Change tracking
 - `Nexus\Monitoring\Contracts\TelemetryTrackerInterface` - Metrics
 - `Psr\Log\LoggerInterface` - Logging

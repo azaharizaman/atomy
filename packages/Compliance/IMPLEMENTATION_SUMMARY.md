@@ -219,7 +219,7 @@ The Nexus\Compliance package provides a comprehensive operational compliance fra
 
 ### Dependencies
 - **External Dependencies:** 1 (psr/log)
-- **Internal Package Dependencies:** 3 (Nexus\Setting, Nexus\AuditLogger, Nexus\Identity)
+- **Internal Package Dependencies:** 3 (Nexus\Setting, Nexus\AuditLogger, Nexus\Domain\Identity)
 
 ---
 

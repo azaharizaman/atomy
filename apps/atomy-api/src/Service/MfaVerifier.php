@@ -6,7 +6,7 @@ namespace App\Service;
 
 use App\Entity\MfaEnrollment;
 use App\Repository\MfaEnrollmentRepository;
-use Nexus\Identity\Contracts\MfaVerifierInterface;
+use Nexus\Domain\Identity\Contracts\MfaVerifierInterface;
 use Symfony\Component\Uid\Ulid;
 
 final readonly class MfaVerifier implements MfaVerifierInterface

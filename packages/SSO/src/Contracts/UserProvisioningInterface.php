@@ -9,7 +9,7 @@ use Nexus\SSO\ValueObjects\UserProfile;
 /**
  * User provisioning interface
  * 
- * This contract is defined in Nexus\SSO but IMPLEMENTED by Nexus\Identity in consuming application.
+ * This contract is defined in Nexus\SSO but IMPLEMENTED by Nexus\Domain\Identity in consuming application.
  * It decouples SSO from Identity package.
  */
 interface UserProvisioningInterface

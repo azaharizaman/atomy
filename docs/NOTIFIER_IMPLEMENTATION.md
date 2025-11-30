@@ -1680,7 +1680,7 @@ All 24 functional requirements are implemented across package and application la
 | ID | Package Integration | Status |
 |----|---------------------|--------|
 | INT-NOT-0006 | `Nexus\Connector` | ✅ All channels use Connector abstraction |
-| INT-NOT-0007 | `Nexus\Identity` | ⏳ Recipient lookup (future) |
+| INT-NOT-0007 | `Nexus\Domain\Identity` | ⏳ Recipient lookup (future) |
 | INT-NOT-0008 | `Nexus\AuditLogger` | ⏳ Optional integration |
 | INT-NOT-0009 | `Nexus\Setting` | ⏳ Global notification settings |
 | INT-NOT-0010 | `Nexus\Tenant` | ⏳ Tenant-specific settings |

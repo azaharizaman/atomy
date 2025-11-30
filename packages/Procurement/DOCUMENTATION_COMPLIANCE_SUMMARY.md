@@ -2,7 +2,7 @@
 
 **Date:** 2025-11-26  
 **Package:** `Nexus\Procurement`  
-**Standard:** Gold Standard (matching `Nexus\Identity` and `Nexus\EventStream`)
+**Standard:** Gold Standard (matching `Nexus\Domain\Identity` and `Nexus\EventStream`)
 
 ---
 
@@ -94,7 +94,7 @@ packages/Procurement/
 
 ## ✨ Gold Standard Comparison
 
-### Compared Against: `Nexus\Identity` and `Nexus\EventStream`
+### Compared Against: `Nexus\Domain\Identity` and `Nexus\EventStream`
 
 | Aspect | Identity | EventStream | Procurement | Match |
 |--------|----------|-------------|-------------|-------|

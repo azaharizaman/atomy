@@ -124,7 +124,7 @@
 
 ### Internal Package Dependencies
 - **Depends On:** Nexus\Crypto (for digital signatures)
-- **Depended By:** Nexus\Finance, Nexus\Receivable, Nexus\Payable, Nexus\Identity, Nexus\Hrm, Nexus\Inventory (all packages requiring audit trails)
+- **Depended By:** Nexus\Finance, Nexus\Receivable, Nexus\Payable, Nexus\Domain\Identity, Nexus\Hrm, Nexus\Inventory (all packages requiring audit trails)
 - **Coupling Risk:** Low (well-defined interfaces, minimal coupling)
 
 ### Maintenance Risk

@@ -331,7 +331,7 @@ final readonly class LaravelCacheRepository implements CacheRepositoryInterface
 namespace App\Services\Period;
 
 use Nexus\Period\Contracts\AuthorizationInterface;
-use Nexus\Identity\Contracts\AuthorizationManagerInterface;
+use Nexus\Domain\Identity\Contracts\AuthorizationManagerInterface;
 
 final readonly class PeriodAuthorization implements AuthorizationInterface
 {

@@ -260,7 +260,7 @@
 
 **Overall:** On par with EventStream, exceeds in some areas
 
-### vs. Nexus\Identity
+### vs. Nexus\Domain\Identity
 
 | Aspect | Nexus\Uom | Identity | Status |
 |--------|-----------|----------|--------|

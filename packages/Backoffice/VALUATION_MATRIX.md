@@ -115,7 +115,7 @@
 | PSR-3 Logger | Interface | Low | Standard PSR interface |
 
 ### Internal Package Dependencies
-- **Depends On:** Nexus\Tenant (multi-tenancy), Nexus\Identity (user management)
+- **Depends On:** Nexus\Tenant (multi-tenancy), Nexus\Domain\Identity (user management)
 - **Depended By:** Nexus\Hrm, Nexus\Payroll, Nexus\Finance, Nexus\Receivable, Nexus\Payable, Nexus\Procurement (organizational context)
 - **Coupling Risk:** Medium (critical foundation for many packages)
 
@@ -285,7 +285,7 @@ ESTIMATED PACKAGE VALUE: $112,560
 |---------|-----|------------|-------|-----|-----------------|
 | **Nexus\Backoffice** | 2,442 | $47,700 | $120,000 | 152% | 8.7/10 |
 | Nexus\AuditLogger | 1,363 | $25,200 | $65,000 | 158% | 7.9/10 |
-| Nexus\Identity | 2,100 | $42,000 | $95,000 | 126% | 9.2/10 |
+| Nexus\Domain\Identity | 2,100 | $42,000 | $95,000 | 126% | 9.2/10 |
 | Nexus\Finance | 3,200 | $65,000 | $180,000 | 177% | 9.5/10 |
 
 **Analysis:** Nexus\Backoffice has the highest strategic score among infrastructure packages due to its foundational criticality. While ROI is lower than AuditLogger (due to higher complexity), the strategic value is significantly higher because it's the organizational backbone for the entire ERP.

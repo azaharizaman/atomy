@@ -117,7 +117,7 @@
 
 ### Internal Package Dependencies
 - **Depends On:** None (standalone package)
-- **Depended By:** Nexus\Identity, Nexus\Finance, Nexus\Receivable, Nexus\Payable, Nexus\Hrm (activity tracking)
+- **Depended By:** Nexus\Domain\Identity, Nexus\Finance, Nexus\Receivable, Nexus\Payable, Nexus\Hrm (activity tracking)
 - **Coupling Risk:** Low (interface-based, loosely coupled)
 
 ### Maintenance Risk

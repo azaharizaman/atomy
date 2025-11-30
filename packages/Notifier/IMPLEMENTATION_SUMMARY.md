@@ -429,7 +429,7 @@ The Nexus\Notifier package is now **production-ready** with:
 
 ### Dependencies
 - External Dependencies: 1 (PSR-3 for logging)
-- Internal Package Dependencies: 3 (Nexus\Connector, Nexus\Identity, Nexus\AuditLogger)
+- Internal Package Dependencies: 3 (Nexus\Connector, Nexus\Domain\Identity, Nexus\AuditLogger)
 
 ### Development Effort
 - Total Development Hours: ~60 hours

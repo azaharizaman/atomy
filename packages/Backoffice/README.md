@@ -296,7 +296,7 @@ MIT License. See LICENSE file for details.
 
 This package integrates with:
 - **Nexus\Tenant** - Multi-tenancy context
-- **Nexus\Identity** - Authorization and role management
+- **Nexus\Domain\Identity** - Authorization and role management
 - **Nexus\AuditLogger** - Organizational change tracking
 - **Nexus\Monitoring** - Performance metrics and health checks
 - **Nexus\Hrm** - Human resources management

@@ -37,7 +37,7 @@ All packages in `packages/` are self-contained units of functionality designed t
 - **`Nexus\Monitoring`** - Observability with telemetry, health checks, alerting, SLO tracking
 
 ### Identity & Security (3 packages)
-- **`Nexus\Identity`** - Authentication, RBAC, MFA, session/token management
+- **`Nexus\Domain\Identity`** - Authentication, RBAC, MFA, session/token management
 - **`Nexus\Crypto`** - Cryptographic operations and key management
 - **`Nexus\Audit`** - Advanced audit capabilities (extends AuditLogger)
 

@@ -6,6 +6,27 @@
     "repositories": [
         {
             "type": "path",
+            "url": "../../packages/domain/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/support/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/operations/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "../../packages/*",
             "options": {
                 "symlink": true
@@ -23,7 +44,7 @@
         "nexus/audit-logger": "*@dev",
         "nexus/backoffice": "*@dev",
         "nexus/feature-flags": "*@dev",
-        "nexus/identity": "*@dev",
+        "nexus/domain-identity": "*@dev",
         "nexus/tenant": "*@dev",
         "symfony/console": "7.3.*",
         "symfony/dotenv": "7.3.*",

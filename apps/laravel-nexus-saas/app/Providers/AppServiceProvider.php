@@ -14,7 +14,7 @@ use Nexus\FeatureFlags\Contracts\PercentageHasherInterface;
 use Nexus\FeatureFlags\Services\DefaultFlagEvaluator;
 use Nexus\FeatureFlags\Services\FeatureFlagManager;
 use Nexus\FeatureFlags\Services\PercentageHasher;
-use Nexus\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 
 class AppServiceProvider extends ServiceProvider

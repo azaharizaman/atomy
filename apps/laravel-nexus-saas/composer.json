@@ -25,7 +25,7 @@
         "laravel/tinker": "^2.10.1",
         "nexus/backoffice": "*@dev",
         "nexus/feature-flags": "*@dev",
-        "nexus/identity": "*@dev",
+        "nexus/domain-identity": "*@dev",
         "laravel/wayfinder": "^0.1.9"
     },
     "require-dev": {

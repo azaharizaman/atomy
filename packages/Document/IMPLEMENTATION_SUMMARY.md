@@ -339,7 +339,7 @@ $redactedPath = $contentProcessor->redact($documentPath, ['/\b\d{3}-\d{2}-\d{4}\
 | **Nexus\Crypto** | MANDATORY | SHA-256 checksum calculation and verification |
 | **Nexus\AuditLogger** | RECOMMENDED | Audit logging for compliance (upload, download, delete, state changes) |
 | **Nexus\Tenant** | RECOMMENDED | Multi-tenant context and isolation |
-| **Nexus\Identity** | RECOMMENDED | User context and role-based permissions |
+| **Nexus\Domain\Identity** | RECOMMENDED | User context and role-based permissions |
 | **Nexus\Intelligence** | OPTIONAL | ML-based content processing (OCR, auto-tagging, PDF rendering) |
 | **Nexus\Compliance** | OPTIONAL | Advanced retention policies and legal hold management |
 
@@ -822,7 +822,7 @@ Good: /01HQXYZ9ABCDEFGHIJKLMNOPQR/2025/01/01HQXYZ9XYZ1234567890ABCD/v1.pdf
 
 - [ ] Integrate with `Nexus\AuditLogger` for audit logging
 - [ ] Integrate with `Nexus\Tenant` for multi-tenancy
-- [ ] Integrate with `Nexus\Identity` for user context
+- [ ] Integrate with `Nexus\Domain\Identity` for user context
 - [ ] Add API endpoints (REST/GraphQL)
 - [ ] Add ULID generation service (centralized)
 - [ ] Add factory pattern for document creation

@@ -7,9 +7,9 @@ namespace App\Repository;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Nexus\Identity\Contracts\UserInterface as NexusUserInterface;
-use Nexus\Identity\Contracts\UserRepositoryInterface;
-use Nexus\Identity\Exceptions\UserNotFoundException;
+use Nexus\Domain\Identity\Contracts\UserInterface as NexusUserInterface;
+use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Domain\Identity\Exceptions\UserNotFoundException;
 
 final class UserRepository extends ServiceEntityRepository implements UserRepositoryInterface
 {

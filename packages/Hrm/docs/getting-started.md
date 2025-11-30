@@ -683,7 +683,7 @@ $employee = Cache::remember(
 ## Security Best Practices
 
 1. **Always validate input** before passing to managers
-2. **Check authorization** before allowing operations (use `Nexus\Identity`)
+2. **Check authorization** before allowing operations (use `Nexus\Domain\Identity`)
 3. **Audit sensitive operations** (termination, salary changes)
 4. **Encrypt sensitive fields** (identification numbers, personal data)
 5. **Implement RBAC** for HR operations (only HR admins can terminate employees)

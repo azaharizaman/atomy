@@ -8,7 +8,7 @@
 
 ## ✅ Compliance Status: COMPLETE
 
-The Workflow package has been successfully updated to comply with all mandatory package documentation standards following the gold standard quality of `Nexus\Identity` and `Nexus\EventStream` packages.
+The Workflow package has been successfully updated to comply with all mandatory package documentation standards following the gold standard quality of `Nexus\Domain\Identity` and `Nexus\EventStream` packages.
 
 ---
 

@@ -203,7 +203,7 @@ $result = $exportManager->exportFromTemplate(
 - **Nexus\Tenant** - Multi-tenancy context
 - **Nexus\Connector** - Rate limiting for webhooks, circuit breakers for external services
 - **Nexus\Notifier** - Email delivery of exports
-- **Nexus\Identity** - User context and RBAC
+- **Nexus\Domain\Identity** - User context and RBAC
 
 ### With Domain Packages
 - **Nexus\Accounting** - Financial statement exports

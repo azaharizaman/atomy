@@ -130,7 +130,7 @@
 ### Integration Points
 - ✅ Nexus\Setting - Configuration management
 - ✅ Nexus\AuditLogger - Audit trail
-- ✅ Nexus\Identity - User and role management
+- ✅ Nexus\Domain\Identity - User and role management
 - ✅ Nexus\Notifier - Violation notifications
 
 ---

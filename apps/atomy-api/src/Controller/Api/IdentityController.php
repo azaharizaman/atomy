@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller\Api;
 
-use Nexus\Identity\Contracts\UserRepositoryInterface;
-use Nexus\Identity\Contracts\PasswordHasherInterface;
+use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\PasswordHasherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -21,7 +21,7 @@ final class IdentityController
 
     private function serializeUser(object $user): array
     {
-        // Minimal serializer for Nexus\Identity\Contracts\UserInterface
+        // Minimal serializer for Nexus\Domain\Identity\Contracts\UserInterface
         return [
             'id' => $user->getId(),
             'email' => $user->getEmail(),

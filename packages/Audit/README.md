@@ -127,7 +127,7 @@ $verifier->verifyRecord($record); // Throws AuditTamperedException if invalid
 
 - **Nexus\Crypto** - SHA-256 hashing and Ed25519 signatures
 - **Nexus\AuditLogger** - Presentation layer built on Audit engine
-- **Nexus\Identity** - Critical identity events logged via Audit
+- **Nexus\Domain\Identity** - Critical identity events logged via Audit
 - **Nexus\Finance** - Financial transactions logged synchronously
 
 ## Documentation

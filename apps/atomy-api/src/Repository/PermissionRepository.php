@@ -7,9 +7,9 @@ namespace App\Repository;
 use App\Entity\Permission;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Nexus\Identity\Contracts\PermissionInterface;
-use Nexus\Identity\Contracts\PermissionRepositoryInterface;
-use Nexus\Identity\Exceptions\PermissionNotFoundException;
+use Nexus\Domain\Identity\Contracts\PermissionInterface;
+use Nexus\Domain\Identity\Contracts\PermissionRepositoryInterface;
+use Nexus\Domain\Identity\Exceptions\PermissionNotFoundException;
 use Symfony\Component\Uid\Ulid;
 
 /**

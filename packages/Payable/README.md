@@ -229,7 +229,7 @@ src/
 - **Tenant Isolation**: All data scoped to tenant ID
 - **Audit Trail**: All state changes logged to `Nexus\AuditLogger`
 - **Field-Level Encryption**: Bank details encrypted at rest
-- **RBAC Integration**: Authorization via `Nexus\Identity` (application layer)
+- **RBAC Integration**: Authorization via `Nexus\Domain\Identity` (application layer)
 
 ## Roadmap
 

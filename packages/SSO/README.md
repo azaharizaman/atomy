@@ -33,14 +33,14 @@ composer require nexus/sso
 
 ## 🏗️ Architecture
 
-The `Nexus\SSO` package is designed to be **completely decoupled** from `Nexus\Identity`. It defines **contracts** (interfaces) that your application implements using the Identity package.
+The `Nexus\SSO` package is designed to be **completely decoupled** from `Nexus\Domain\Identity`. It defines **contracts** (interfaces) that your application implements using the Identity package.
 
 ### The Separation Principle
 
 | Package | Responsibility | Analogy |
 |---------|---------------|----------|
 | **`Nexus\SSO`** | **Authentication Orchestration** | "The bouncer" - verifies credentials with external IdP |
-| **`Nexus\Identity`** | **User Management** | "The membership database" - stores users, roles, permissions |
+| **`Nexus\Domain\Identity`** | **User Management** | "The membership database" - stores users, roles, permissions |
 
 ## 🚀 Quick Start
 
@@ -91,7 +91,7 @@ namespace App\Services\SSO;
 
 use Nexus\SSO\Contracts\UserProvisioningInterface;
 use Nexus\SSO\ValueObjects\UserProfile;
-use Nexus\Identity\Contracts\UserManagerInterface;
+use Nexus\Domain\Identity\Contracts\UserManagerInterface;
 
 final readonly class IdentityUserProvisioner implements UserProvisioningInterface
 {
@@ -291,7 +291,7 @@ packages/SSO/
 
 ## 🔗 Integration with Other Packages
 
-- **Nexus\Identity**: User management, roles, permissions (via `UserProvisioningInterface`)
+- **Nexus\Domain\Identity**: User management, roles, permissions (via `UserProvisioningInterface`)
 - **Nexus\Tenant**: Multi-tenancy support (SSO configs scoped by tenant)
 - **Nexus\AuditLogger**: Audit trail for SSO events
 - **Nexus\Monitoring**: Telemetry for SSO metrics

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\ValueObjects;
 
-use Nexus\Identity\Contracts\RoleInterface;
+use Nexus\Domain\Identity\Contracts\RoleInterface;
 
 /**
  * Role Value Object implementing Nexus RoleInterface

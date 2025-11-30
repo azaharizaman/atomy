@@ -310,7 +310,7 @@ The following capabilities may be added in future versions but are not required 
 | `Nexus\Finance` | Integration Requirement | INT-FIN-2601 | MUST integrate with Nexus\Period for fiscal period validation before posting |  |  |  |  |
 | `Nexus\Finance` | Integration Requirement | INT-FIN-2602 | MUST integrate with Nexus\Sequencing for journal entry number generation |  |  |  |  |
 | `Nexus\Finance` | Integration Requirement | INT-FIN-2603 | MUST integrate with Nexus\Uom for currency and exchange rate management |  |  |  |  |
-| `Nexus\Finance` | Integration Requirement | INT-FIN-2604 | MUST integrate with Nexus\Identity for user context and authentication |  |  |  |  |
+| `Nexus\Finance` | Integration Requirement | INT-FIN-2604 | MUST integrate with Nexus\Domain\Identity for user context and authentication |  |  |  |  |
 | `Nexus\Finance` | Integration Requirement | INT-FIN-2605 | MUST integrate with Nexus\AuditLogger for comprehensive audit trails |  |  |  |  |
 | `Nexus\Finance` | Integration Requirement | INT-FIN-2606 | MUST integrate with Nexus\Workflow for approval routing of manual journal entries |  |  |  |  |
 | `Nexus\Finance` | Integration Requirement | INT-FIN-2607 | Provide FinanceInterface for consumption by AP, AR, Payroll packages |  |  |  |  |

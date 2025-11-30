@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Security;
 
-use Nexus\Identity\Contracts\PasswordHasherInterface as IdentityPasswordHasherInterface;
-use Nexus\Identity\Contracts\UserRepositoryInterface as NexusUserRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\PasswordHasherInterface as IdentityPasswordHasherInterface;
+use Nexus\Domain\Identity\Contracts\UserRepositoryInterface as NexusUserRepositoryInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;

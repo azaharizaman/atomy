@@ -64,7 +64,7 @@
 | **Observability & Monitoring** |
 | `Nexus\Monitoring` | Production-grade observability with telemetry, health checks, alerting, SLO tracking | 100% | 4,000 | ~3,500 | 0.88:1 | ~112 | 188 | ~$285,000 | ~$32,000 | ~891% | Production monitoring replacing $50k/year DataDog/NewRelic | Foundation & Infrastructure | SaaS, Inhouse | Tier 2 | High | Medium - Deterrent |
 | **Identity & Security** |
-| `Nexus\Identity` | User authentication with MFA, session management, RBAC | 95% | 3,685 | ~3,200 | 0.87:1 | ~125 | ~95 | ~$320,000 | ~$35,000 | ~914% | Security foundation replacing Auth0 ($25k/year) | Foundation & Infrastructure | SaaS, Inhouse | Tier 1 Core | High | High - Blocking |
+| `Nexus\Domain\Identity` | User authentication with MFA, session management, RBAC | 95% | 3,685 | ~3,200 | 0.87:1 | ~125 | ~95 | ~$320,000 | ~$35,000 | ~914% | Security foundation replacing Auth0 ($25k/year) | Foundation & Infrastructure | SaaS, Inhouse | Tier 1 Core | High | High - Blocking |
 | `Nexus\SSO` | Single Sign-On with SAML 2.0, OAuth2/OIDC, Azure AD, Google Workspace | 80% | 2,205 | ~1,800 | 0.82:1 | ~65 | 89 | ~$195,000 | ~$22,000 | ~886% | Enterprise SSO replacing Okta/OneLogin ($15k/year) | Foundation & Infrastructure | SaaS, Inhouse | Tier 3 | High | Medium - Deterrent |
 | `Nexus\Crypto` | Field-level encryption with key rotation and HSM integration | 85% | 3,750 | ~2,800 | 0.75:1 | ~78 | ~62 | ~$215,000 | ~$28,500 | ~754% | PCI-DSS/HIPAA encryption requirements | Foundation & Infrastructure, Compliance & Governance | SaaS, Inhouse, Statutory | Tier 3 | Medium | Medium - Deterrent |
 | `Nexus\Audit` | Cryptographic audit chains with tamper detection | 30% | 1,770 | ~800 | 0.45:1 | ~45 | ~25 | ~$165,000 | ~$18,000 | ~917% | Blockchain-grade audit for regulated industries | Compliance & Governance | Statutory, Inhouse | Tier 3 | High | Low - Debt |
@@ -145,7 +145,7 @@
 - DataDog/NewRelic: $50k/year → **Nexus\Monitoring** ($285k value)
 - SAP Manufacturing: $150k/year → **Nexus\Manufacturing** ($485k value)
 - Salesforce CPQ: $36k/year → **Nexus\Sales** ($235k value)
-- Auth0: $25k/year → **Nexus\Identity** ($320k value)
+- Auth0: $25k/year → **Nexus\Domain\Identity** ($320k value)
 - Nintex Workflow: $25k/year → **Nexus\Workflow** ($245k value)
 - ServiceTitan: $300/user/month → **Nexus\FieldService** ($285k value)
 - Avalara Tax: $30k/year → **Nexus\Tax** ($475k value)
@@ -218,7 +218,7 @@
 
 **Most Valuable Packages (Top 5):**
 1. **Nexus\Accounting** - $340,000 (85% complete, 0.75:1 doc ratio)
-2. **Nexus\Identity** - $320,000 (95% complete, 0.87:1 doc ratio)
+2. **Nexus\Domain\Identity** - $320,000 (95% complete, 0.87:1 doc ratio)
 3. **Nexus\Budget** - $295,000 (75% complete, 0.71:1 doc ratio)
 4. **Nexus\Monitoring** - $285,000 (100% complete, 0.88:1 doc ratio) ⭐
 5. **Nexus\FieldService** - $285,000 (35% complete, 0.46:1 doc ratio)
@@ -233,7 +233,7 @@
 **Highest ROI (Top 5):**
 1. **Nexus\Intelligence** - 930% ROI ($265k value, 85% complete)
 2. **Nexus\Inventory** - 923% ROI ($240k value, 50% complete)
-3. **Nexus\Identity** - 914% ROI ($320k value, 95% complete) ⭐
+3. **Nexus\Domain\Identity** - 914% ROI ($320k value, 95% complete) ⭐
 4. **Nexus\Audit** - 917% ROI ($165k value, 30% complete)
 5. **Nexus\Compliance** - 896% ROI ($215k value, 80% complete)
 

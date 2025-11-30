@@ -114,11 +114,11 @@
 | PHP 8.3+ | Language | Low | Standard requirement |
 | PSR-3 | Logging | Low | Industry standard |
 | Nexus\Connector | Internal | Medium | Circuit breaker, fallback channels |
-| Nexus\Identity | Internal | Medium | Graceful degradation if unavailable |
+| Nexus\Domain\Identity | Internal | Medium | Graceful degradation if unavailable |
 | Nexus\AuditLogger | Internal | Low | Optional, logging continues |
 
 ### Internal Package Dependencies
-- **Depends On:** Nexus\Connector, Nexus\Identity, Nexus\AuditLogger
+- **Depends On:** Nexus\Connector, Nexus\Domain\Identity, Nexus\AuditLogger
 - **Depended By:** Nexus\Receivable, Nexus\Payable, Nexus\Sales, Nexus\Hrm, Nexus\FieldService
 - **Coupling Risk:** Medium (widely used, changes affect many packages)
 

@@ -46,7 +46,7 @@
 
 ### 🔐 **1. Security & Identity**
 
-#### **Nexus\Identity**
+#### **Nexus\Domain\Identity**
 **Capabilities:**
 - User authentication (session, token, MFA)
 - Authorization (RBAC, permissions, policies)
@@ -64,11 +64,11 @@
 
 **Key Interfaces:**
 ```php
-use Nexus\Identity\Contracts\AuthenticationManagerInterface;
-use Nexus\Identity\Contracts\AuthorizationManagerInterface;
-use Nexus\Identity\Contracts\UserRepositoryInterface;
-use Nexus\Identity\Contracts\RoleRepositoryInterface;
-use Nexus\Identity\Contracts\PermissionRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\AuthenticationManagerInterface;
+use Nexus\Domain\Identity\Contracts\AuthorizationManagerInterface;
+use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\RoleRepositoryInterface;
+use Nexus\Domain\Identity\Contracts\PermissionRepositoryInterface;
 ```
 
 **Example:**
@@ -164,11 +164,11 @@ final class CustomSamlHandler {
 **Integration with Identity:**
 ```php
 // Nexus\SSO defines UserProvisioningInterface
-// Consuming application implements it using Nexus\Identity
+// Consuming application implements it using Nexus\Domain\Identity
 namespace App\Services\SSO;
 
 use Nexus\SSO\Contracts\UserProvisioningInterface;
-use Nexus\Identity\Contracts\UserManagerInterface;
+use Nexus\Domain\Identity\Contracts\UserManagerInterface;
 
 final readonly class IdentityUserProvisioner implements UserProvisioningInterface
 {
@@ -2279,7 +2279,7 @@ public function getInvoices(): array {
 | Process payroll | `Nexus\Payroll` | `PayrollManagerInterface` |
 | Call external APIs | `Nexus\Connector` | `ConnectorManagerInterface` |
 | Validate periods | `Nexus\Period` | `PeriodValidatorInterface` |
-| Check permissions | `Nexus\Identity` | `AuthorizationManagerInterface` |
+| Check permissions | `Nexus\Domain\Identity` | `AuthorizationManagerInterface` |
 | **Implement SSO authentication** | **`Nexus\SSO`** | **`SsoManagerInterface`** |
 | **SAML 2.0 login** | **`Nexus\SSO`** | **`SamlProviderInterface`** |
 | **OAuth2/OIDC login** | **`Nexus\SSO`** | **`OAuthProviderInterface`** |

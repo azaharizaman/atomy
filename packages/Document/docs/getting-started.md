@@ -143,7 +143,7 @@ Documents enforce permissions:
 - **Share:** Can generate temporary URLs
 
 **Integration:**
-Permissions are checked via `PermissionCheckerInterface` (implemented by consuming application using Nexus\Identity or custom RBAC).
+Permissions are checked via `PermissionCheckerInterface` (implemented by consuming application using Nexus\Domain\Identity or custom RBAC).
 
 ## Configuration Steps
 
@@ -611,7 +611,7 @@ Nexus\Document\Exceptions\PermissionDeniedException: User cannot perform action 
 **Cause:** User lacks required permission.
 
 **Solution:**
-1. Verify user has correct role/permissions in Nexus\Identity
+1. Verify user has correct role/permissions in Nexus\Domain\Identity
 2. Check `PermissionCheckerInterface` implementation
 3. For testing, temporarily bypass permissions:
 ```php

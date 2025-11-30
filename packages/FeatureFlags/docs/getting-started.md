@@ -36,7 +36,7 @@ This package is designed for:
 
 Do NOT use this package for:
 - ❌ **Application Configuration** - Use `Nexus\Setting` instead
-- ❌ **User Permissions** - Use `Nexus\Identity` authorization instead
+- ❌ **User Permissions** - Use `Nexus\Domain\Identity` authorization instead
 - ❌ **Business Rules** - Feature flags should be temporary, not permanent business logic
 
 ---

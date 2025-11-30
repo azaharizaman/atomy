@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Nexus\Identity\Contracts\PermissionInterface;
+use Nexus\Domain\Identity\Contracts\PermissionInterface;
 
 #[ORM\Entity(repositoryClass: 'App\\Repository\\PermissionRepository')]
 #[ORM\Table(name: 'permissions')]

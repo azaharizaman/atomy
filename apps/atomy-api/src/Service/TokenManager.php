@@ -7,10 +7,10 @@ namespace App\Service;
 use App\Entity\ApiToken as ApiTokenEntity;
 use App\Repository\ApiTokenRepository;
 use App\Repository\UserRepository;
-use Nexus\Identity\Contracts\TokenManagerInterface;
-use Nexus\Identity\Contracts\UserInterface;
-use Nexus\Identity\Exceptions\InvalidTokenException;
-use Nexus\Identity\ValueObjects\ApiToken;
+use Nexus\Domain\Identity\Contracts\TokenManagerInterface;
+use Nexus\Domain\Identity\Contracts\UserInterface;
+use Nexus\Domain\Identity\Exceptions\InvalidTokenException;
+use Nexus\Domain\Identity\ValueObjects\ApiToken;
 use Symfony\Component\Uid\Ulid;
 
 final readonly class TokenManager implements TokenManagerInterface

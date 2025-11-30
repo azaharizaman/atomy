@@ -446,7 +446,7 @@ The Analytics package is designed to be configuration-free at the package level.
 ### With Other Packages
 - **Nexus\Tenant**: Analytics instances can be tenant-scoped
 - **Nexus\AuditLogger**: Query executions can be logged for compliance
-- **Nexus\Identity**: User and role information for authorization
+- **Nexus\Domain\Identity**: User and role information for authorization
 - **Nexus\Connector**: Analytics data sources can integrate with external APIs
 - **Nexus\Reporting**: ✅ **INTEGRATED** - Analytics queries are consumed by Reporting package for multi-format output
 

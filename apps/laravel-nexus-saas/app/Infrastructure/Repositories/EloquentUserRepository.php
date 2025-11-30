@@ -8,11 +8,11 @@ use App\Models\User as UserModel;
 use App\ValueObjects\PermissionVO;
 use App\ValueObjects\RoleVO;
 use App\ValueObjects\UserVO;
-use Nexus\Identity\Contracts\PermissionInterface;
-use Nexus\Identity\Contracts\RoleInterface;
-use Nexus\Identity\Contracts\UserInterface;
-use Nexus\Identity\Contracts\UserRepositoryInterface;
-use Nexus\Identity\Exceptions\UserNotFoundException;
+use Nexus\Domain\Identity\Contracts\PermissionInterface;
+use Nexus\Domain\Identity\Contracts\RoleInterface;
+use Nexus\Domain\Identity\Contracts\UserInterface;
+use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Domain\Identity\Exceptions\UserNotFoundException;
 
 /**
  * Concrete implementation of UserRepositoryInterface using Laravel Eloquent ORM.

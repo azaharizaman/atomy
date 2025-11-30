@@ -299,7 +299,7 @@ consuming application (e.g., Laravel app)app/Services/Sales/ReceivableInvoiceAda
 
 | Package | Status | Purpose |
 |---------|--------|---------|
-| **Nexus\Identity** | ✅ 95% | Authentication, RBAC, MFA |
+| **Nexus\Domain\Identity** | ✅ 95% | Authentication, RBAC, MFA |
 | **Nexus\Crypto** | ✅ 85% | Encryption, key management |
 | **Nexus\Audit** | 🚧 30% | Advanced audit capabilities |
 

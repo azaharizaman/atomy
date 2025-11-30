@@ -36,7 +36,7 @@ The package is **100% complete** with all planned features implemented, tested, 
 
 ### Phase 3: Integration & Optimization ✅ **COMPLETE**
 - [x] Integration with Nexus\Tenant for multi-tenancy
-- [x] Integration with Nexus\Identity for user management
+- [x] Integration with Nexus\Domain\Identity for user management
 - [x] Event-driven architecture for organizational changes
 - [x] Performance optimization for hierarchical queries
 - [x] Comprehensive validation rules
@@ -266,7 +266,7 @@ Potential enhancements (low priority):
 
 ### Dependencies
 - **External Dependencies:** 0 (pure PHP 8.3+)
-- **Internal Package Dependencies:** 2 (Nexus\Tenant, Nexus\Identity - optional)
+- **Internal Package Dependencies:** 2 (Nexus\Tenant, Nexus\Domain\Identity - optional)
 - **Framework Dependencies:** 0 (framework-agnostic)
 
 ## Known Limitations
@@ -300,7 +300,7 @@ Bindings:
 
 ### Nexus Package Integration
 - **Nexus\Tenant** - Multi-tenancy support via TenantContextInterface
-- **Nexus\Identity** - User management for staff-user relationships
+- **Nexus\Domain\Identity** - User management for staff-user relationships
 - **Nexus\AuditLogger** - Audit trail for organizational changes
 - **Nexus\Monitoring** - Telemetry tracking for performance metrics
 - **Nexus\Workflow** - Approval workflows for transfers (optional)
