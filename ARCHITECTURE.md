@@ -353,6 +353,14 @@ orchestrators/OrchestratorName/
 ├── LICENSE
 ├── IMPLEMENTATION_SUMMARY.md
 ├── REQUIREMENTS.md
+├── TEST_SUITE_SUMMARY.md
+├── VALUATION_MATRIX.md
+├── CHANGELOG.md
+├── UPGRADE.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── CODE_OF_CONDUCT.md
+├── .gitignore
 ├── src/
 │   ├── Workflows/           # Stateful processes (Sagas, state machines)
 │   │   └── ProcessName/
