@@ -109,51 +109,409 @@ nexus/
 ├── ARCHITECTURE.md             # (This document)
 ├── README.md
 │
-└── 📦 packages/                  # 50+ Atomic, publishable PHP packages
-    ├── Tenant/                   # Nexus\Tenant (Example Package Structure)
-    │   ├── composer.json         # Package metadata, dependencies, autoloading
-    │   ├── README.md             # Package documentation with usage examples
-    │   ├── LICENSE               # MIT License
-    │   └── src/                  # Source code root
-    │       ├── Contracts/        # REQUIRED: Interfaces
-    │       │   ├── TenantInterface.php         # Entity contract
-    │       │   ├── TenantRepositoryInterface.php # Persistence contract
-    │       │   └── TenantContextInterface.php  # Service contract
-    │       ├── Exceptions/       # REQUIRED: Domain exceptions
-    │       │   ├── TenantNotFoundException.php
-    │       │   └── InvalidTenantException.php
-    │       ├── Services/         # REQUIRED: Business logic
-    │       │   ├── TenantContextManager.php
-    │       │   └── TenantLifecycleService.php
-    │       ├── Enums/            # RECOMMENDED: Native PHP enums
-    │       │   └── TenantStatus.php
-    │       └── ValueObjects/     # RECOMMENDED: Immutable domain objects
-    │           └── TenantConfiguration.php
+├── 📦 packages/                 # 54 Atomic, publishable PHP packages (FLAT STRUCTURE)
+│   ├── README.md                # Package layer guidelines and inventory
+│   │
+│   ├── SharedKernel/            # Nexus\SharedKernel (Common building blocks)
+│   │   ├── composer.json        # NO business logic, NO dependencies on other packages
+│   │   ├── README.md
+│   │   ├── LICENSE
+│   │   └── src/
+│   │       ├── Contracts/       # Common interfaces (LoggerInterface, etc.)
+│   │       ├── ValueObjects/    # Shared VOs (TenantId, Money, Period, etc.)
+│   │       └── Traits/          # Reusable traits
+│   │
+│   ├── Tenant/                  # Example: Simple Atomic Package (Flat Structure)
+│   │   ├── composer.json        # Package metadata, dependencies, autoloading
+│   │   ├── README.md            # Package documentation with usage examples
+│   │   ├── LICENSE              # MIT License
+│   │   ├── IMPLEMENTATION_SUMMARY.md  # Implementation progress tracking
+│   │   ├── REQUIREMENTS.md      # Detailed requirements table
+│   │   ├── TEST_SUITE_SUMMARY.md      # Test coverage and results
+│   │   ├── VALUATION_MATRIX.md  # Package valuation metrics
+│   │   ├── CHANGELOG.md         # Version history
+│   │   ├── UPGRADE.md           # Upgrade instructions
+│   │   ├── CONTRIBUTING.md      # Contribution guidelines
+│   │   ├── SECURITY.md          # Security policy
+│   │   ├── CODE_OF_CONDUCT.md   # Code of conduct
+│   │   ├── .gitignore           # Git ignore file
+│   │   └── src/                 # Source code root
+│   │       ├── Contracts/       # REQUIRED: Interfaces
+│   │       │   ├── TenantInterface.php         # Entity contract
+│   │       │   ├── TenantQueryInterface.php    # Read operations (CQRS)
+│   │       │   ├── TenantPersistInterface.php  # Write operations (CQRS)
+│   │       │   └── TenantContextInterface.php  # Service contract
+│   │       ├── Exceptions/      # REQUIRED: Domain exceptions
+│   │       │   ├── TenantNotFoundException.php
+│   │       │   └── InvalidTenantException.php
+│   │       ├── Services/        # REQUIRED: Business logic
+│   │       │   ├── TenantContextManager.php
+│   │       │   └── TenantLifecycleService.php
+│   │       ├── Enums/           # RECOMMENDED: Native PHP enums
+│   │       │   └── TenantStatus.php
+│   │       └── ValueObjects/    # RECOMMENDED: Immutable domain objects
+│   │           └── TenantConfiguration.php
+│   │
+│   ├── Inventory/               # Example: Complex Atomic Package (DDD-Layered)
+│   │   ├── composer.json
+│   │   ├── README.md
+│   │   ├── LICENSE
+│   │   ├── CHANGELOG.md
+│   │   ├── UPGRADE.md
+│   │   ├── CONTRIBUTING.md
+│   │   ├── SECURITY.md
+│   │   ├── CODE_OF_CONDUCT.md
+│   │   ├── IMPLEMENTATION_SUMMARY.md
+│   │   ├── REQUIREMENTS.md
+│   │   ├── TEST_SUITE_SUMMARY.md
+│   │   ├── VALUATION_MATRIX.md
+│   │   ├── .gitignore
+│   │   └── src/
+│   │       ├── Domain/          # THE TRUTH (Pure Logic)
+│   │       │   ├── Entities/    # Pure PHP Entities (Not Eloquent)
+│   │       │   ├── ValueObjects/
+│   │       │   ├── Events/
+│   │       │   ├── Contracts/   # Repository Interfaces
+│   │       │   ├── Services/    # Domain Services
+│   │       │   └── Policies/    # Business Rules
+│   │       ├── Application/     # THE USE CASES
+│   │       │   ├── DTOs/        # Data Transfer Objects
+│   │       │   ├── Commands/    # e.g., ReceiveStockCommand
+│   │       │   ├── Queries/     # e.g., GetStockLevelQuery
+│   │       │   └── Handlers/    # Orchestrates Domain Services
+│   │       └── Infrastructure/  # INTERNAL ADAPTERS (Optional)
+│   │           ├── InMemory/    # In-memory repos for testing
+│   │           └── Mappers/     # Domain to DTO mapping
+│   │
+│   ├── Finance/
+│   ├── Receivable/
+│   ├── Payable/
+│   └── [... 51 more packages - ALL FLAT, NO NESTING]
+│
+├── 🔗 orchestrators/            # Cross-package workflow coordination (PURE PHP)
+│   ├── README.md                # Orchestrator layer guidelines
+│   │
+│   ├── IdentityOperations/      # Example: Multi-package workflow orchestrator
+│   │   ├── composer.json        # Depends on: Nexus/Identity, Nexus/Party, etc.
+│   │   ├── README.md
+│   │   ├── LICENSE
+│   │   ├── IMPLEMENTATION_SUMMARY.md
+│   │   ├── REQUIREMENTS.md
+│   │   ├── TEST_SUITE_SUMMARY.md
+│   │   ├── VALUATION_MATRIX.md
+│   │   ├── CHANGELOG.md
+│   │   ├── UPGRADE.md
+│   │   ├── CONTRIBUTING.md
+│   │   ├── SECURITY.md
+│   │   ├── CODE_OF_CONDUCT.md
+│   │   ├── .gitignore
+│   │   └── src/
+│   │       ├── Workflows/       # Stateful processes (Sagas)
+│   │       │   └── UserRegistration/
+│   │       ├── Coordinators/    # Stateless orchestration
+│   │       │   └── RegistrationCoordinator.php
+│   │       ├── Listeners/       # Event handlers
+│   │       │   └── SendWelcomeEmailOnRegistered.php
+│   │       ├── Contracts/       # Workflow interfaces
+│   │       ├── DTOs/            # Process-specific data transfer
+│   │       └── Exceptions/      # Workflow-specific errors
+│   │
+│   └── [... more orchestrators as needed]
+│
+└── 🔌 adapters/                 # Framework-specific implementations (ONLY place for framework code)
+    ├── README.md                # Adapter layer guidelines
     │
-    ├── Inventory/                # More complex package with Core/
-    │   ├── composer.json
-    │   ├── README.md
-    │   ├── LICENSE
-    │   └── src/
-    │       ├── Contracts/        # Public API contracts
-    │       ├── Services/         # Public API services (orchestrators)
-    │       ├── Core/             # Internal engine (hidden from consumers)
-    │       │   ├── Engine/       # Complex business logic
-    │       │   ├── ValueObjects/ # Internal immutable objects
-    │       │   └── Contracts/    # Internal interfaces
-    │       ├── Exceptions/
-    │       ├── Enums/
-    │       └── ValueObjects/
-    │
-    ├── Finance/
-    ├── Receivable/
-    ├── Payable/
-    └── [... 48 more packages]
+    └── Laravel/                 # Laravel-specific adapters
+        ├── Finance/             # Finance package Laravel adapter
+        │   ├── composer.json    # Requires: Nexus/Finance, illuminate/database
+        │   ├── README.md
+        │   └── src/
+        │       ├── Providers/   # ServiceProviders (bind interfaces)
+        │       ├── Models/      # Eloquent Models
+        │       ├── Repositories/ # Concrete repository implementations
+        │       ├── Database/
+        │       │   ├── Migrations/
+        │       │   └── Seeders/
+        │       ├── Http/
+        │       │   ├── Controllers/
+        │       │   └── Resources/
+        │       └── Jobs/        # Laravel queued jobs
+        │
+        └── [... more domain adapters]
 ```
 
 ---
 
-## 2. 📦 Package Development Rules
+## 2. 📦 Three-Layer Architecture
+
+Nexus follows a strict three-layer architecture to separate concerns:
+
+### Layer 1: Atomic Packages (`packages/`) - Pure Business Logic
+
+**Purpose:** Framework-agnostic, reusable business logic components.
+
+**Characteristics:**
+- ✅ Pure PHP 8.3+ (no framework dependencies)
+- ✅ Stateless architecture (externalize state via interfaces)
+- ✅ Contract-driven (define interfaces, consumers implement)
+- ✅ Publishable to Packagist independently
+- ✅ Testable with mocks (no database required)
+- ❌ NO framework code (no Eloquent, Symfony, Laravel)
+- ❌ NO database migrations or seeds
+- ❌ NO HTTP controllers or routes
+
+**Two Package Patterns:**
+
+#### Pattern A: Simple Atomic Packages (Flat Structure)
+
+For packages with low cyclomatic complexity or pure utility functions.
+
+**Examples:** `Nexus\Uom`, `Nexus\Sequencing`, `Nexus\Notifier`, `Nexus\Storage`
+
+**Structure:**
+```
+packages/PackageName/
+├── composer.json            # Require: "php": "^8.3"
+├── README.md                # Usage examples, API reference
+├── LICENSE                  # MIT License
+├── IMPLEMENTATION_SUMMARY.md
+├── REQUIREMENTS.md
+├── TEST_SUITE_SUMMARY.md
+├── VALUATION_MATRIX.md
+├── CHANGELOG.md
+├── UPGRADE.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── CODE_OF_CONDUCT.md
+├── .gitignore
+├── src/
+│   ├── Contracts/          # Interfaces only
+│   ├── Services/           # Stateless business logic
+│   ├── ValueObjects/       # Immutable data objects
+│   ├── Enums/              # Native PHP enums
+│   └── Exceptions/         # Domain-specific errors
+└── tests/
+```
+
+**Rule:** Do not over-engineer these. The flat structure works perfectly here.
+
+#### Pattern B: Complex Atomic Packages (DDD-Layered)
+
+For heavy business domains requiring strict boundaries.
+
+**Examples:** `Nexus\Inventory`, `Nexus\Finance`, `Nexus\Manufacturing`, `Nexus\Receivable`
+
+**Structure:**
+```
+packages/PackageName/
+├── composer.json
+├── README.md
+├── LICENSE
+├── CHANGELOG.md
+├── UPGRADE.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── CODE_OF_CONDUCT.md
+├── IMPLEMENTATION_SUMMARY.md
+├── REQUIREMENTS.md
+├── TEST_SUITE_SUMMARY.md
+├── VALUATION_MATRIX.md
+├── .gitignore
+├── src/
+│   ├── Domain/              # THE TRUTH (Pure Logic)
+│   │   ├── Entities/        # Pure PHP Entities (Not Eloquent)
+│   │   ├── ValueObjects/    # Domain-specific immutable objects
+│   │   ├── Events/          # Domain events
+│   │   ├── Contracts/       # Repository interfaces
+│   │   ├── Services/        # Domain services (e.g., StockCalculator)
+│   │   └── Policies/        # Business rules
+│   │
+│   ├── Application/         # THE USE CASES
+│   │   ├── DTOs/            # Input/Output data transfer
+│   │   ├── Commands/        # Write operations (e.g., ReceiveStockCommand)
+│   │   ├── Queries/         # Read operations (e.g., GetStockLevelQuery)
+│   │   └── Handlers/        # Orchestrates domain services
+│   │
+│   └── Infrastructure/      # INTERNAL ADAPTERS (Optional)
+│       ├── InMemory/        # In-memory repos for unit testing
+│       └── Mappers/         # Domain objects to DTOs/arrays
+└── tests/
+```
+
+**Rules:**
+- **NEVER** put Laravel/Symfony code here
+- The `Infrastructure` folder is for *internal* package infrastructure only (like in-memory stores)
+- Database implementations belong in `adapters/Laravel/PackageName/`
+
+### Layer 2: Orchestrators (`orchestrators/`) - Workflow Coordination
+
+**Purpose:** Orchestrate workflows that cross multiple atomic packages.
+
+**Characteristics:**
+- ✅ Pure PHP (still framework-agnostic)
+- ✅ Depends on multiple atomic packages
+- ✅ Owns "Flow" (processes), not "Truth" (entities)
+- ✅ Implements Saga patterns for distributed transactions
+- ✅ Event-driven coordination
+- ❌ Does NOT define core entities (those belong in atomic packages)
+- ❌ Does NOT access databases directly (uses repository interfaces)
+- ❌ NO framework code (controllers, jobs, routes)
+
+**Examples:** `Nexus\IdentityOperations`, `Nexus\OrderManagement`, `Nexus\ProcurementManagement`
+
+**Structure:**
+```
+orchestrators/OrchestratorName/
+├── composer.json            # Depends on: Nexus/Sales, Nexus/Inventory, etc.
+├── README.md                # Workflow diagrams and documentation
+├── LICENSE
+├── IMPLEMENTATION_SUMMARY.md
+├── REQUIREMENTS.md
+├── TEST_SUITE_SUMMARY.md
+├── VALUATION_MATRIX.md
+├── CHANGELOG.md
+├── UPGRADE.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── CODE_OF_CONDUCT.md
+├── .gitignore
+├── src/
+│   ├── Workflows/           # Stateful processes (Sagas, state machines)
+│   │   └── ProcessName/
+│   │       ├── Steps/       # Individual workflow steps
+│   │       └── States/      # Process states
+│   │
+│   ├── Coordinators/        # Stateless orchestration (synchronous)
+│   │   └── FulfillmentCoordinator.php
+│   │
+│   ├── Listeners/           # Reactive logic (event subscribers)
+│   │   └── TriggerShippingOnPaymentCaptured.php
+│   │
+│   ├── Contracts/           # Workflow-specific interfaces
+│   ├── DTOs/                # Process-specific data transfer
+│   └── Exceptions/          # Workflow-specific errors
+└── tests/
+```
+
+**Component Definitions:**
+
+| Component | Purpose | Example |
+|-----------|---------|---------|
+| **Workflows/** | Long-running processes that track state | `OrderToCashWorkflow` - knows that after Payment, then Shipping |
+| **Coordinators/** | Synchronous glue that calls multiple packages in order | `FulfillmentCoordinator::fulfill()` calls Inventory + Sales + Notifier |
+| **Listeners/** | Reactive handlers for events from atomic packages | `TriggerShippingOnPaymentCaptured` listens to `PaymentCaptured` event |
+
+**Decision Rule:** If code defines "what a thing is" → Atomic Package. If code defines "how it moves through the system" → Orchestrator.
+
+### Layer 3: Adapters (`adapters/`) - Framework-Specific Implementations
+
+**Purpose:** Concrete implementations of interfaces defined in atomic packages. The **ONLY** place where framework code is allowed.
+
+**Characteristics:**
+- ✅ Implements repository interfaces using Eloquent/Doctrine
+- ✅ Contains database migrations and seeders
+- ✅ Provides HTTP controllers and API resources
+- ✅ Handles framework-specific jobs/queues
+- ✅ THIS IS THE ONLY PLACE FOR `use Illuminate\...` or `use Symfony\...`
+- ❌ Does NOT contain business logic (that's in atomic packages)
+- ❌ Does NOT define domain entities (those are in atomic packages)
+
+**Examples:** `Laravel/Finance`, `Laravel/Inventory`, `Laravel/Identity`
+
+**Structure:**
+```
+adapters/Laravel/PackageName/
+├── composer.json            # Requires: Nexus/PackageName, illuminate/database
+├── README.md
+├── LICENSE
+├── src/
+│   ├── Providers/           # ServiceProviders (bind interfaces)
+│   │   └── PackageNameServiceProvider.php
+│   │
+│   ├── Models/              # Eloquent models (persistence only)
+│   │   └── Account.php      # extends Illuminate\Database\Eloquent\Model
+│   │
+│   ├── Repositories/        # Concrete repository implementations
+│   │   └── EloquentAccountRepository.php  # implements AccountRepositoryInterface
+│   │
+│   ├── Database/
+│   │   ├── Migrations/      # Schema definitions
+│   │   └── Seeders/         # Test data
+│   │
+│   ├── Http/
+│   │   ├── Controllers/     # API/Web controllers
+│   │   └── Resources/       # API response transformers
+│   │
+│   ├── Jobs/                # Laravel queued jobs
+│   └── Exceptions/          # Laravel-specific exceptions
+└── tests/                   # Integration tests (require database)
+```
+
+**Dependency Direction:**
+- `adapters/` → depends on → `packages/` ✅
+- `packages/` → **NEVER** depends on → `adapters/` ❌
+- `apps/` → depends on → `adapters/` AND `packages/` ✅
+
+### The "Use" Test
+
+If you can use the code in a generic PHP script without `composer require laravel/framework`, it belongs in `packages/` or `orchestrators/`.
+
+If it requires `artisan`, `Eloquent`, `Blade`, or framework-specific features, it belongs in `adapters/Laravel/`.
+
+---
+
+## 3. 📋 Documentation Standards
+
+Every package (atomic or orchestrator) **MUST** include these 13 files:
+
+### Required Files (13 total)
+
+1. **`composer.json`** - Package metadata (require `"php": "^8.3"`)
+2. **`README.md`** - Comprehensive usage guide with examples
+3. **`LICENSE`** - MIT License
+4. **`IMPLEMENTATION_SUMMARY.md`** - Implementation progress tracking
+5. **`REQUIREMENTS.md`** - Detailed requirements table
+6. **`TEST_SUITE_SUMMARY.md`** - Test coverage and results
+7. **`VALUATION_MATRIX.md`** - Package valuation metrics
+8. **`CHANGELOG.md`** - Version history
+9. **`UPGRADE.md`** - Upgrade instructions between versions
+10. **`CONTRIBUTING.md`** - Contribution guidelines
+11. **`SECURITY.md`** - Security policy and vulnerability reporting
+12. **`CODE_OF_CONDUCT.md`** - Code of conduct for contributors
+13. **`.gitignore`** - Package-specific ignores
+
+**Reference:** See `packages/README.md`, `orchestrators/README.md`, and `adapters/README.md` for detailed guidelines on each layer.
+
+---
+
+## 4. 📦 Package Development Rules
+
+### The Golden Rule: Framework Agnosticism
+
+> A package must be a **pure PHP engine** that works with any framework.
+
+**NEVER:**
+- Use Laravel-specific classes (`Illuminate\Database\Eloquent\Model`, `Illuminate\Http\Request`, facades)
+- Include database migrations or schema definitions
+- Use global helpers (`config()`, `app()`, `now()`, `dd()`, `env()`)
+- Reference framework components (`Route::`, `DB::`, `Cache::`, `Log::`)
+- Depend on application-specific code
+
+**ALWAYS:**
+- Write pure PHP 8.3+ code
+- Define persistence needs via **Contracts (Interfaces)**
+- Use dependency injection via constructor
+- Use `readonly` properties for injected dependencies
+- Use constructor property promotion
+- Use `declare(strict_types=1);` at top of every file
+- Make packages publishable (include composer.json, LICENSE, README.md)
+
+**ACCEPTABLE:**
+- PSR interfaces (`psr/log`, `psr/http-client`, `psr/cache`)
+- Light dependency on `illuminate/support` for Collections (avoid if possible)
+- Requiring other Nexus packages (explicit in composer.json)
+
+## 4. 📦 Package Development Rules
 
 ### The Golden Rule: Framework Agnosticism
 
@@ -186,36 +544,90 @@ nexus/
 1. **`src/Contracts/`** - All interfaces (Repository, Manager, Entity)
 2. **`src/Services/`** - Business logic (Managers, Coordinators)
 3. **`src/Exceptions/`** - Domain-specific exceptions
-4. **`composer.json`** - Package metadata, require `"php": "^8.3"`
-5. **`README.md`** - Usage examples and documentation
-6. **`LICENSE`** - MIT License
+4. **13 Mandatory Files** - composer.json, README.md, LICENSE, IMPLEMENTATION_SUMMARY.md, REQUIREMENTS.md, TEST_SUITE_SUMMARY.md, VALUATION_MATRIX.md, CHANGELOG.md, UPGRADE.md, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, .gitignore
 
 **RECOMMENDED Components:**
 1. **`src/Enums/`** - Native PHP enums for statuses, types, levels
 2. **`src/ValueObjects/`** - Immutable domain objects (Money, Period, etc.)
 
-**OPTIONAL Components:**
-1. **`src/Core/`** - Internal engine for complex packages (see below)
+**OPTIONAL Components (Complex Packages Only):**
+1. **`src/Domain/`** - Domain layer (Entities, ValueObjects, Events, Contracts, Services, Policies)
+2. **`src/Application/`** - Use case layer (DTOs, Commands, Queries, Handlers)
+3. **`src/Infrastructure/`** - Internal adapters (InMemory repositories, Mappers)
 
-### When to Use `Core/` Folder
+### When to Use Domain/Application/Infrastructure Layers (DDD)
 
-Create `src/Core/` when your package is complex and has internal components consumers shouldn't access:
+Create `src/Domain/`, `src/Application/`, `src/Infrastructure/` when your package:
 
-**Use `Core/` when:**
-- Package has > 10 files
+**Use DDD Layers when:**
+- High complexity (Analytics, Workflow, Manufacturing, Finance, Receivable)
+- Package has > 15 files
 - Main service class > 300 lines
-- Internal contracts for engine components needed
-- Value Objects only used internally
-- Main Manager is merely an orchestrator
+- Multiple bounded contexts within the package
+- Complex business rules requiring separation
+- Event sourcing or CQRS patterns needed
 
-**Skip `Core/` when:**
-- Package has < 10 files
-- Simple business logic
+**Skip DDD Layers when:**
+- Package has < 15 files
+- Simple business logic (Uom, Sequencing, Tenant)
+- Utility package with no complex domain
 - All components are public API
+
+### Orchestrator Development Rules
+
+Orchestrators are **still framework-agnostic** like packages:
+
+**REQUIRED for Orchestrators:**
+- Pure PHP 8.3+ (NO framework code)
+- Depend on multiple atomic packages via interfaces
+- Define workflow contracts (WorkflowInterface, SagaInterface)
+- Use event-driven coordination
+- Include 13 mandatory documentation files
+
+**FORBIDDEN in Orchestrators:**
+- Framework facades or global helpers
+- Direct database access (use package repositories)
+- Defining core entities (those belong in atomic packages)
+- Application-layer code (HTTP controllers, jobs)
+
+**Components:**
+- `Workflows/` - Long-running stateful processes (Saga pattern)
+- `Coordinators/` - Synchronous stateless orchestration
+- `Listeners/` - Event handlers that trigger cross-package actions
+- `Contracts/` - Workflow-specific interfaces
+- `DTOs/` - Process-level data transfer objects
+- `Exceptions/` - Workflow-specific errors
+
+### Adapter Development Rules
+
+Adapters are **the ONLY place** where framework code is allowed:
+
+**REQUIRED for Adapters:**
+- Implement package interfaces using framework features
+- Include database migrations and seeders
+- Provide HTTP controllers and API resources
+- Handle framework-specific jobs/queues
+- Include 13 mandatory documentation files
+
+**ALLOWED in Adapters:**
+- `use Illuminate\...` (Laravel)
+- `use Symfony\...` (Symfony)
+- Eloquent models extending `Model`
+- Framework facades (only in adapters!)
+- Global helpers (only in adapters!)
+- Application-specific code
+
+**Components:**
+- `Providers/` - ServiceProviders (bind package interfaces to concrete implementations)
+- `Models/` - Eloquent models (persistence only, no business logic)
+- `Repositories/` - Concrete repository implementations
+- `Database/` - Migrations, seeders
+- `Http/` - Controllers, resources, requests
+- `Jobs/` - Laravel queued jobs
 
 ---
 
-## 3. 🏛️ Architectural Patterns
+## 5. 🏛️ Architectural Patterns
 
 ### 3.1 Contract-Driven Design
 
@@ -456,7 +868,83 @@ final readonly class StockManager
 - Connector → Crypto, Storage, AuditLogger
 - Notifier → Connector, Identity
 
-### 5.2 Circular Dependency Prevention
+**Orchestrator Layer:**
+- IdentityOperations → Identity, Party, Notifier, AuditLogger
+- OrderManagement → Sales, Inventory, Finance, Notifier
+- ProcurementManagement → Procurement, Inventory, Payable, Notifier
+
+**Adapter Layer:**
+- Laravel/Finance → Finance (package), illuminate/database, illuminate/support
+- Laravel/Inventory → Inventory (package), illuminate/database
+- Laravel/Identity → Identity (package), illuminate/database, illuminate/auth
+
+### 5.2 Dependency Direction Rules
+
+**CRITICAL: Strict dependency flow must be enforced.**
+
+```
+┌─────────────────┐
+│  adapters/      │ ← Application Layer (Framework-Specific)
+└────────┬────────┘
+         │ depends on (✅)
+         ▼
+┌─────────────────┐
+│ orchestrators/  │ ← Workflow Coordination Layer (Pure PHP)
+└────────┬────────┘
+         │ depends on (✅)
+         ▼
+┌─────────────────┐
+│  packages/      │ ← Business Logic Layer (Pure PHP)
+└─────────────────┘
+```
+
+**Allowed Dependencies:**
+- ✅ `adapters/` → `orchestrators/` (adapters can call orchestrators)
+- ✅ `adapters/` → `packages/` (adapters MUST implement package interfaces)
+- ✅ `orchestrators/` → `packages/` (orchestrators coordinate multiple packages)
+- ✅ `packages/` → `packages/` (packages can depend on other packages)
+
+**FORBIDDEN Dependencies:**
+- ❌ `packages/` → `orchestrators/` (packages NEVER know about orchestrators)
+- ❌ `packages/` → `adapters/` (packages NEVER know about framework)
+- ❌ `orchestrators/` → `adapters/` (orchestrators remain framework-agnostic)
+
+**Example Violations:**
+```php
+// ❌ WRONG: Package depending on orchestrator
+namespace Nexus\Finance\Services;
+
+use Nexus\OrderManagement\Coordinators\OrderCoordinator; // VIOLATION!
+
+final readonly class GeneralLedgerManager
+{
+    public function __construct(
+        private OrderCoordinator $orderCoordinator // ❌ Package depends on orchestrator
+    ) {}
+}
+
+// ✅ CORRECT: Package defines interface, orchestrator calls package
+namespace Nexus\Finance\Contracts;
+
+interface GeneralLedgerManagerInterface
+{
+    public function postJournalEntry(JournalEntry $entry): void;
+}
+
+// Orchestrator injects package interface
+namespace Nexus\OrderManagement\Coordinators;
+
+use Nexus\Finance\Contracts\GeneralLedgerManagerInterface;
+
+final readonly class OrderCoordinator
+{
+    public function __construct(
+        private GeneralLedgerManagerInterface $glManager // ✅ Orchestrator depends on package
+    ) {}
+}
+```
+
+### 5.3 Circular Dependency Prevention
 
 **Rule:** Package A cannot depend on Package B if B already depends on A.
 
@@ -473,6 +961,31 @@ interface GLIntegrationInterface extends GLManagerInterface { }
 // Consumer application binds them together
 // App\Providers\AppServiceProvider
 $this->app->bind(GLIntegrationInterface::class, FinanceGLManager::class);
+```
+
+### 5.4 SharedKernel Special Rules
+
+**SharedKernel is the only exception to dependency rules:**
+
+- ✅ ALL packages can depend on SharedKernel
+- ✅ ALL orchestrators can depend on SharedKernel
+- ❌ SharedKernel MUST NOT depend on ANY package
+- ❌ SharedKernel MUST NOT depend on ANY orchestrator
+
+**Why:** SharedKernel contains common building blocks (TenantId, Money, Period VOs, common interfaces). If SharedKernel depends on other packages, it creates circular dependencies.
+
+**Example:**
+```php
+// ✅ CORRECT: Package depends on SharedKernel
+namespace Nexus\Finance;
+
+use Nexus\SharedKernel\ValueObjects\Money;
+use Nexus\SharedKernel\ValueObjects\Period;
+
+// ❌ WRONG: SharedKernel depends on package
+namespace Nexus\SharedKernel\ValueObjects;
+
+use Nexus\Finance\Contracts\CurrencyManagerInterface; // VIOLATION!
 ```
 
 ---
@@ -931,8 +1444,20 @@ Before committing to any package:
 - [ ] Custom exceptions for domain errors
 - [ ] No direct database access
 - [ ] Package has valid composer.json
-- [ ] Package has comprehensive README.md
-- [ ] Package has LICENSE file
+- [ ] Package has all 13 mandatory files:
+  - [ ] `composer.json`
+  - [ ] `README.md`
+  - [ ] `LICENSE`
+  - [ ] `IMPLEMENTATION_SUMMARY.md`
+  - [ ] `REQUIREMENTS.md`
+  - [ ] `TEST_SUITE_SUMMARY.md`
+  - [ ] `VALUATION_MATRIX.md`
+  - [ ] `CHANGELOG.md`
+  - [ ] `UPGRADE.md`
+  - [ ] `CONTRIBUTING.md`
+  - [ ] `SECURITY.md`
+  - [ ] `CODE_OF_CONDUCT.md`
+  - [ ] `.gitignore`
 - [ ] Unit tests written and passing
 
 ---
@@ -977,12 +1502,15 @@ Before publishing a package to Packagist:
 2. **Interfaces define needs** - Every dependency is an interface
 3. **Consumers provide implementations** - Applications bind contracts to concrete classes
 4. **Framework agnostic** - Works with Laravel, Symfony, or any PHP framework
-5. **Stateless design** - Long-term state externalized via interfaces
-6. **PHP 8.3+ modern** - Use latest language features
-7. **Always check NEXUS_PACKAGES_REFERENCE.md** - Avoid reinventing functionality
+5. **Three-layer architecture** - Packages (logic), Orchestrators (workflows), Adapters (framework)
+6. **Dependency direction** - Adapters → Orchestrators → Packages (never reverse)
+7. **Stateless design** - Long-term state externalized via interfaces
+8. **PHP 8.3+ modern** - Use latest language features
+9. **Always check NEXUS_PACKAGES_REFERENCE.md** - Avoid reinventing functionality
+10. **13 mandatory documentation files** - Every package must be comprehensively documented
 
 ---
 
-**Last Updated:** November 24, 2025  
+**Last Updated:** November 26, 2025  
 **Maintained By:** Nexus Architecture Team  
 **Enforcement:** Mandatory for all developers
