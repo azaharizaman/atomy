@@ -32,7 +32,7 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
 
         // Return absolute value to ensure positive demand even if data has inconsistencies
         $result = bcdiv((string) $totalDemand, (string) $days, 4);
-        return (float) ($result[0] === '-' ? ltrim($result, '-') : $result);
+        return abs((float) $result);
     }
 
     public function getDemandVolatilityCoefficient(string $productId, int $days): float
@@ -47,24 +47,31 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
             ->map(fn ($q) => abs((float) $q))
             ->all();
 
-        if (count($dailyDemands) < 2) {
+        if (count($dailyDemands) === 0) {
             return 0.0;
         }
 
-        $mean = array_sum($dailyDemands) / count($dailyDemands);
+        $sum = array_reduce($dailyDemands, fn($carry, $item) => bcadd((string) $carry, (string) $item, 10), '0');
+        $mean = (float) bcdiv($sum, (string) count($dailyDemands), 10);
         
         if ($mean === 0.0) {
             return 0.0;
         }
 
-        $variance = array_sum(array_map(
-            fn ($x) => pow($x - $mean, 2),
+        $squaredDiffs = array_map(
+            fn($demand) => bcpow(bcsub((string) $demand, (string) $mean, 10), '2', 10),
             $dailyDemands
-        )) / count($dailyDemands);
+        );
+        $squaredSum = array_reduce($squaredDiffs, fn($carry, $item) => bcadd((string) $carry, (string) $item, 10), '0');
+        $variance = (float) bcdiv(
+            $squaredSum,
+            (string) count($dailyDemands),
+            10
+        );
 
-        $stdDev = sqrt($variance);
+        $stdDev = (float) bcsqrt((string) $variance, 10);
 
-        return $stdDev / $mean;
+        return (float) bcdiv((string) $stdDev, (string) $mean, 10);
     }
 
     public function getSeasonalityIndex(string $productId): float
@@ -81,7 +88,8 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
             return 1.0;
         }
 
-        return $currentMonthDemand / $yearlyAverage;
+        // Seasonality index: current month demand / yearly average
+        return (float) bcdiv((string) $currentMonthDemand, (string) $yearlyAverage, 6);
     }
 
     public function getTrendSlope(string $productId, int $days): float
@@ -123,7 +131,17 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
             return 0.0;
         }
 
-        return (($n * $sumXY) - ($sumX * $sumY)) / $denominator;
+        // Calculate slope using least squares method with BC Math for precision
+        $nStr = (string) $n;
+        $numeratorPart1 = bcmul($nStr, (string) $sumXY, 10);
+        $numeratorPart2 = bcmul((string) $sumX, (string) $sumY, 10);
+        $numerator = bcsub($numeratorPart1, $numeratorPart2, 10);
+        
+        $denominatorPart1 = bcmul($nStr, (string) $sumX2, 10);
+        $denominatorPart2 = bcmul((string) $sumX, (string) $sumX, 10);
+        $denominatorBC = bcsub($denominatorPart1, $denominatorPart2, 10);
+        
+        return (float) bcdiv($numerator, $denominatorBC, 10);
     }
 
     public function getRecentSales(string $productId, int $days): float
@@ -182,7 +200,9 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
         $recentAvgCost = (float) ($recentAvgCost ?? $previousAvgCost);
         $previousAvgCost = (float) $previousAvgCost;
 
-        return (($recentAvgCost - $previousAvgCost) / $previousAvgCost) * 100;
+        $difference = bcsub((string) $recentAvgCost, (string) $previousAvgCost, 10);
+        $ratio = bcdiv($difference, (string) $previousAvgCost, 10);
+        return (float) bcmul($ratio, '100', 6);
     }
 
     public function getProductLifecycleStage(string $productId): string

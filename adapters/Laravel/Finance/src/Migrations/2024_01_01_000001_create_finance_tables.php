@@ -71,6 +71,7 @@ return new class extends Migration
                 ->onDelete('restrict');
 
             $table->index('account_id');
+            $table->index('journal_entry_id');
         });
     }
 
