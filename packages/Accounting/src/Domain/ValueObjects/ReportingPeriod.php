@@ -45,6 +45,10 @@ final readonly class ReportingPeriod
      */
     public static function forMonth(int $year, int $month): self
     {
+        if ($month < 1 || $month > 12) {
+            throw new \InvalidArgumentException('Month must be between 1 and 12');
+        }
+
         $start = new \DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month));
         $end = $start->modify('last day of this month');
         $label = $start->format('F Y');
