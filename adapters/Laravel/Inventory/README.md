@@ -194,8 +194,12 @@ The package supports these movement types:
 - `ADJUSTMENT` - Stock count adjustment
 - `TRANSFER_OUT` - Transfer to another warehouse
 - `TRANSFER_IN` - Transfer from another warehouse
-- `RESERVATION` - Stock reserved for order
-- `RESERVATION_RELEASE` - Reservation released
+- `RESERVATION` - Stock reserved for order (reservation state change)
+- `RESERVATION_RELEASE` - Reservation released (reservation state change)
+
+> **Note:**  
+> `RESERVATION` and `RESERVATION_RELEASE` record reservation state changes for audit and traceability.  
+> These do **not** represent physical stock movements; actual stock quantity changes occur via `RECEIPT`, `ISSUE`, or other movement types.
 
 ## License
 

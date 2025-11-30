@@ -15,8 +15,8 @@ use Nexus\Laravel\Inventory\Repositories\EloquentStockMovementRepository;
 /**
  * Laravel Service Provider for Nexus Inventory Package
  * 
- * Registers Eloquent implementations of Inventory repository interfaces.
- * This provider bridges the framework-agnostic Inventory package with Laravel.
+ * Binds Eloquent repository implementations to their domain interfaces,
+ * bridging the framework-agnostic Inventory package with Laravel.
  */
 class InventoryServiceProvider extends ServiceProvider
 {

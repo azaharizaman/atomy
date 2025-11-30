@@ -79,26 +79,22 @@ class StockMovement extends Model
 
     /**
      * Check if this is an inbound movement
+     * 
+     * Delegates to domain enum for business logic.
      */
     public function isInbound(): bool
     {
-        return in_array($this->movement_type, [
-            MovementType::RECEIPT->value,
-            MovementType::TRANSFER_IN->value,
-            MovementType::RESERVATION_RELEASE->value,
-        ], true);
+        return $this->getMovementTypeEnum()->isInbound();
     }
 
     /**
      * Check if this is an outbound movement
+     * 
+     * Delegates to domain enum for business logic.
      */
     public function isOutbound(): bool
     {
-        return in_array($this->movement_type, [
-            MovementType::ISSUE->value,
-            MovementType::TRANSFER_OUT->value,
-            MovementType::RESERVATION->value,
-        ], true);
+        return $this->getMovementTypeEnum()->isOutbound();
     }
 
     public function getCreatedAt(): DateTimeImmutable

@@ -7,6 +7,7 @@ namespace Nexus\Laravel\Inventory\Models;
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Nexus\Inventory\Enums\ReservationStatus;
 
 /**
  * Eloquent model for Stock Reservations
@@ -43,17 +44,20 @@ class Reservation extends Model
         'expires_at' => 'datetime',
     ];
 
-    public const STATUS_ACTIVE = 'active';
-    public const STATUS_FULFILLED = 'fulfilled';
-    public const STATUS_CANCELLED = 'cancelled';
-    public const STATUS_EXPIRED = 'expired';
+    /**
+     * Get status as enum
+     */
+    public function getStatusEnum(): ReservationStatus
+    {
+        return ReservationStatus::from($this->status);
+    }
 
     /**
      * Check if reservation is active
      */
     public function isActive(): bool
     {
-        if ($this->status !== self::STATUS_ACTIVE) {
+        if (!$this->getStatusEnum()->isActive()) {
             return false;
         }
 

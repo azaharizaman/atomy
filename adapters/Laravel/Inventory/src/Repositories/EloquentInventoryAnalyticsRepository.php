@@ -14,6 +14,11 @@ use Nexus\Laravel\Inventory\Models\StockMovement;
  * Eloquent implementation of Inventory Analytics Repository
  * 
  * Provides time-series and aggregated data for demand forecasting and inventory optimization.
+ * 
+ * NOTE: This repository implements analytics methods as defined by the domain interface.
+ * Some methods contain statistical calculations (volatility, trend, lifecycle stage, safety stock)
+ * that may be better suited for a dedicated domain service in future refactoring.
+ * The current implementation provides a working baseline that follows the interface contract.
  */
 final readonly class EloquentInventoryAnalyticsRepository implements InventoryAnalyticsRepositoryInterface
 {
@@ -51,33 +56,31 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
             return 0.0;
         }
 
+        // Calculate mean using BC Math for precision
         $sum = array_reduce($dailyDemands, fn($carry, $item) => bcadd((string) $carry, (string) $item, 10), '0');
-        $mean = (float) bcdiv($sum, (string) count($dailyDemands), 10);
+        $count = count($dailyDemands);
+        $mean = (float) bcdiv($sum, (string) $count, 10);
         
         if ($mean === 0.0) {
             return 0.0;
         }
 
+        // Calculate variance using BC Math
         $squaredDiffs = array_map(
             fn($demand) => bcpow(bcsub((string) $demand, (string) $mean, 10), '2', 10),
             $dailyDemands
         );
         $squaredSum = array_reduce($squaredDiffs, fn($carry, $item) => bcadd((string) $carry, (string) $item, 10), '0');
-        $variance = (float) bcdiv(
-            $squaredSum,
-            (string) count($dailyDemands),
-            10
-        );
+        $variance = (float) bcdiv($squaredSum, (string) $count, 10);
 
         $stdDev = (float) bcsqrt((string) $variance, 10);
 
+        // Return coefficient of variation using BC Math
         return (float) bcdiv((string) $stdDev, (string) $mean, 10);
     }
 
     public function getSeasonalityIndex(string $productId): float
     {
-        $currentMonth = (int) now()->format('m');
-        
         // Get current month's average daily demand
         $currentMonthDemand = $this->getAverageDailyDemand($productId, 30);
         
@@ -88,7 +91,7 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
             return 1.0;
         }
 
-        // Seasonality index: current month demand / yearly average
+        // Seasonality index: current month demand / yearly average using BC Math
         return (float) bcdiv((string) $currentMonthDemand, (string) $yearlyAverage, 6);
     }
 
@@ -110,7 +113,7 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
             return 0.0;
         }
 
-        // Simple linear regression
+        // Simple linear regression using least squares method
         $n = count($dailyDemands);
         $x = range(1, $n);
         $y = array_values($dailyDemands);
@@ -125,13 +128,7 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
             $sumX2 += $x[$i] * $x[$i];
         }
 
-        $denominator = ($n * $sumX2) - ($sumX * $sumX);
-        
-        if ($denominator === 0.0) {
-            return 0.0;
-        }
-
-        // Calculate slope using least squares method with BC Math for precision
+        // Calculate slope using BC Math for precision
         $nStr = (string) $n;
         $numeratorPart1 = bcmul($nStr, (string) $sumXY, 10);
         $numeratorPart2 = bcmul((string) $sumX, (string) $sumY, 10);
@@ -139,9 +136,13 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
         
         $denominatorPart1 = bcmul($nStr, (string) $sumX2, 10);
         $denominatorPart2 = bcmul((string) $sumX, (string) $sumX, 10);
-        $denominatorBC = bcsub($denominatorPart1, $denominatorPart2, 10);
+        $denominator = bcsub($denominatorPart1, $denominatorPart2, 10);
         
-        return (float) bcdiv($numerator, $denominatorBC, 10);
+        if (bccomp($denominator, '0', 10) === 0) {
+            return 0.0;
+        }
+
+        return (float) bcdiv($numerator, $denominator, 10);
     }
 
     public function getRecentSales(string $productId, int $days): float
@@ -200,6 +201,7 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
         $recentAvgCost = (float) ($recentAvgCost ?? $previousAvgCost);
         $previousAvgCost = (float) $previousAvgCost;
 
+        // Calculate percentage change using BC Math for precision
         $difference = bcsub((string) $recentAvgCost, (string) $previousAvgCost, 10);
         $ratio = bcdiv($difference, (string) $previousAvgCost, 10);
         return (float) bcmul($ratio, '100', 6);
@@ -207,10 +209,12 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
 
     public function getProductLifecycleStage(string $productId): string
     {
+        // NOTE: This heuristic-based logic should ideally be in a domain service.
+        // The implementation here follows the interface contract and provides a baseline.
         $trend = $this->getTrendSlope($productId, 90);
         $volatility = $this->getDemandVolatilityCoefficient($productId, 90);
         
-        // Simple heuristic for lifecycle stage
+        // Simple heuristic for lifecycle stage based on trend and volatility
         if ($volatility > 0.5) {
             return 'introduction';
         }
@@ -240,16 +244,30 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
         return 2.0;
     }
 
+    /**
+     * Calculate safety stock based on demand volatility and lead time.
+     * 
+     * NOTE: Despite the method name "getCurrentSafetyStock", this actually computes
+     * a recommended safety stock level using the formula:
+     * Safety Stock = Z-score × Volatility × Average Daily Demand × √Lead Time
+     * 
+     * This calculation logic should ideally reside in a domain service.
+     */
     public function getCurrentSafetyStock(string $productId): float
     {
-        // Calculate based on demand volatility and lead time
         $avgDailyDemand = $this->getAverageDailyDemand($productId, 30);
         $volatility = $this->getDemandVolatilityCoefficient($productId, 30);
         $leadTime = $this->getSupplierLeadTimeDays($productId);
         
         // Z-score for 95% service level = 1.65
-        $zScore = 1.65;
+        $zScore = '1.65';
         
-        return $zScore * $volatility * $avgDailyDemand * sqrt($leadTime);
+        // Calculate using BC Math for precision
+        $sqrtLeadTime = bcsqrt((string) $leadTime, 10);
+        $result = bcmul($zScore, (string) $volatility, 10);
+        $result = bcmul($result, (string) $avgDailyDemand, 10);
+        $result = bcmul($result, $sqrtLeadTime, 10);
+        
+        return (float) $result;
     }
 }

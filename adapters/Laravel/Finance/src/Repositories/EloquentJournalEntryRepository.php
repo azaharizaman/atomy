@@ -157,6 +157,13 @@ final readonly class EloquentJournalEntryRepository implements JournalEntryRepos
         $entry->delete();
     }
 
+    /**
+     * Generate the next entry number for a given date.
+     * 
+     * NOTE: This entry number generation logic (year-based prefix with sequential numbering)
+     * should ideally reside in a domain service like `JournalEntryNumberGenerator` in `nexus/finance`.
+     * The current implementation provides a working baseline following the repository interface contract.
+     */
     public function getNextEntryNumber(DateTimeImmutable $date): string
     {
         $year = $date->format('Y');

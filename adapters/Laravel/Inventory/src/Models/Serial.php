@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Nexus\Inventory\Enums\SerialStatus;
 
 /**
  * Eloquent model for Serial Numbers
@@ -48,13 +49,6 @@ class Serial extends Model
         'attributes' => 'array',
     ];
 
-    public const STATUS_AVAILABLE = 'available';
-    public const STATUS_RESERVED = 'reserved';
-    public const STATUS_SOLD = 'sold';
-    public const STATUS_RETURNED = 'returned';
-    public const STATUS_DAMAGED = 'damaged';
-    public const STATUS_SCRAPPED = 'scrapped';
-
     /**
      * Get the lot this serial belongs to
      */
@@ -64,11 +58,19 @@ class Serial extends Model
     }
 
     /**
+     * Get status as enum
+     */
+    public function getStatusEnum(): SerialStatus
+    {
+        return SerialStatus::from($this->status);
+    }
+
+    /**
      * Check if serial is available for sale
      */
     public function isAvailable(): bool
     {
-        return $this->status === self::STATUS_AVAILABLE;
+        return $this->getStatusEnum()->isAvailable();
     }
 
     /**
@@ -76,7 +78,7 @@ class Serial extends Model
      */
     public function isReserved(): bool
     {
-        return $this->status === self::STATUS_RESERVED;
+        return $this->getStatusEnum()->isReserved();
     }
 
     /**
@@ -84,7 +86,7 @@ class Serial extends Model
      */
     public function isSold(): bool
     {
-        return $this->status === self::STATUS_SOLD;
+        return $this->getStatusEnum()->isSold();
     }
 
     public function getCreatedAt(): DateTimeImmutable

@@ -7,6 +7,7 @@ namespace Nexus\Laravel\Finance\Repositories;
 use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
 use Nexus\Finance\Domain\Contracts\LedgerRepositoryInterface;
+use Nexus\Finance\Domain\Enums\AccountType;
 use Nexus\Laravel\Finance\Models\Account;
 use Nexus\Laravel\Finance\Models\JournalEntry;
 use Nexus\Laravel\Finance\Models\JournalEntryLine;
@@ -38,11 +39,11 @@ final readonly class EloquentLedgerRepository implements LedgerRepositoryInterfa
             })
             ->sum('credit_amount');
         
-        // For Asset and Expense accounts, debit increases the balance
-        // For Liability, Equity, and Revenue accounts, credit increases the balance
-        $accountType = strtoupper($account->type);
+        // Use domain enum to determine normal balance direction
+        $accountType = AccountType::tryFrom(strtolower($account->type));
+        $isDebitNormal = $accountType?->isDebitNormal() ?? true;
         
-        if (in_array($accountType, ['ASSET', 'EXPENSE'], true)) {
+        if ($isDebitNormal) {
             return bcsub((string) $debits, (string) $credits, 4);
         }
         
@@ -122,13 +123,16 @@ final readonly class EloquentLedgerRepository implements LedgerRepositoryInterfa
         
         $activity = [];
         $runningBalance = $openingBalance;
-        $isDebitNormal = in_array(strtoupper($account->type), ['ASSET', 'EXPENSE'], true);
+        
+        // Use domain enum to determine normal balance direction
+        $accountType = AccountType::tryFrom(strtolower($account->type));
+        $isDebitNormal = $accountType?->isDebitNormal() ?? true;
         
         foreach ($lines as $line) {
             $debit = bcadd((string) $line->debit_amount, '0', 4);
             $credit = bcadd((string) $line->credit_amount, '0', 4);
             
-            // Calculate running balance
+            // Calculate running balance using domain-defined normal balance rules
             if ($isDebitNormal) {
                 $runningBalance = bcadd(
                     bcsub($runningBalance, $credit, 4),
