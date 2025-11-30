@@ -134,6 +134,7 @@ nexus/
 │   │   ├── CONTRIBUTING.md      # Contribution guidelines
 │   │   ├── SECURITY.md          # Security policy
 │   │   ├── CODE_OF_CONDUCT.md   # Code of conduct
+│   │   ├── .gitignore           # Git ignore file
 │   │   └── src/                 # Source code root
 │   │       ├── Contracts/       # REQUIRED: Interfaces
 │   │       │   ├── TenantInterface.php         # Entity contract
