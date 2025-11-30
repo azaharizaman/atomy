@@ -1,5 +1,4 @@
-This structure finds the balance between the simplicity of your current setup and the scalability of the 5-layer proposal. It distinguishes between "Simple Atoms" (Utilities) and "Complex Atoms" (Domains) while isolating Framework Adapters outside of the pure business logic.
-
+# Refactoring Exercise 12: Monorepo Structure with Integration Packages
 ### 📂 Top-Level Directory Map
 
 ```text
@@ -8,30 +7,32 @@ nexus/
 │   ├── laravel-nexus-saas/               # The sample laravel app
 │   └── atomy-api/              # The sample Symfony API app
 |
-├── packages/                # PURE PHP BUSINESS LOGIC (Framework Agnostic)
-│   ├── [Simple Domain]/     # e.g., Uom, Sequencing (Keep Flat Structure)
-│   ├── [Complex Domain]/    # e.g., Inventory, Finance (Adopt DDD Internal Layers)
-│   ├── [Integration]/       # e.g., OrderManagement (The Workflow/Orchestrator Layer)
-│   └── SharedKernel/        # (Formerly "Core") Common VOs, Contracts, Traits
+├── packages/                # PURE PHP BUSINESS LOGIC (Framework Agnostic), atomic packages publishable to packagist.org as isolated packages of business logic
+│   ├── [Simple Domain Packages]/     # e.g., Uom, Sequencing, Currency, etc (Keep Flat Structure)
+│   ├── [Complex Domain Packages]/    # e.g., Inventory, Finance, etc (Adopt DDD Internal Layers)
+│   ├── SharedKernel/        # (New Package) Common VOs, Contracts, Traits (extracted out from other packages). No business logic here and this package MUST NOT depend on any other package, but it provides common building blocks for other atomic packages.
+│   └── README.md/        # Documentation about package structure guidelines (what simple domain and complex domain packages criterias are and their standard folder structure), architechtural decisions and Do's and Don'ts, summary of packages, etc. (No examples of code snippets here, just guidelines)
 |
 ├── orchestrators/                # PURE PHP BUSINESS LOGIC (Framework Agnostic) that ochestrate 2 or more packages
-│   ├── OrderManagement/     # e.g., Uom, Sequencing (Keep Flat Structure)
+│   ├── OrderManagement/     
 │   ├── TalentManagement/    
-│   ├── Procurement/    # procure -to - pay
+│   ├── ProcurementManagement/    # procure -to - pay    
+│   └── README.md/        # Documentation about orchestrators package structure guidelines (what are the criterias of an orchestrator are and their standard folder structure), architechtural decisions and Do's and Don'ts, summary of orchestrator packages, etc. (No examples of code snippets here, just guidelines)
 │
 ├── adapters/                # INFRASTRUCTURE BRIDGE (Framework Specific) (as guideline only, will not be implemented at this time)
-│   └── Laravel/             # Implementation details for Laravel
-│       ├── Finance/         # Eloquent Models, Migrations, Jobs for Finance
-│       └── Inventory/       # Eloquent Models, Migrations for Inventory
+│   │── Laravel/             # Implementation details for Laravel
+│   │   ├── Finance/         # Eloquent Models, Migrations, Jobs for Finance
+│   │   └── Inventory/       # Eloquent Models, Migrations for Inventory
+│   └── README.md/        # Documentation about adapters package structure guidelines (what are the criterias of an adapters are and their standard folder structure), architechtural decisions and Do's and Don'ts, summary of adapters packages, etc. (No examples of code snippets here, just guidelines)
 │
 └── ...
 ```
 
 ### Namespace Convention
 
-packages folder -> Nexus\Tenant, Nexus\Tax, Nexus\Identity, etc
-orchestrators folder -> Nexus\Orchestrators\TalentManagement, Nexus\Orchestrators\Procurement, etc
-adapters -> Nexus\Adapters\Laravel\Finance, etc
+atomic domain packages -> Nexus\Tenant, Nexus\Tax, Nexus\Identity, etc
+orchestrator packages -> Nexus\TalentManagement, Nexus\ProcurementManagement, etc
+adapter packages -> Nexus\Laravel\Finance, etc
 apps -> based on each application framework namespaces. Out of the scope of this monorepo
 -----
 
@@ -43,12 +44,21 @@ apps -> based on each application framework namespaces. Out of the scope of this
 ```text
 packages/Uom/
 ├── composer.json
+├── docs/                     # Package-level, User Facing, documentation
 ├── src/
 │   ├── Contracts/           # Interfaces
 │   ├── Services/            # Stateless Services
 │   ├── ValueObjects/        # Immutable Data
-│   └── Exceptions/
-└── tests/
+│   ├── Exceptions/
+│   └── README.md        # Summary of Contracts, Services, VOs, Exceptions in this package, their responsibilities, relationships, etc. table format preferred
+├── tests/
+├── IMPLEMENTATION_SUMMARY.md   # progressive documentation about what was implemented in this package. What features has been implemented and what is not and any decisions related to this package
+├── TODO.md   # list of pending tasks for this package. Bugs, improvements, future planning etc. What has been done must be removed from this list
+├── REQUIREMENTS.md   
+├── TEST_SUIT_SUMMARY.md   
+├── VALUATION_MATRIX.md   
+├── LICENSE.md   
+└── README.md
 ```
 
   * **Rule:** Do not over-engineer these. The flat structure works perfectly here.
@@ -71,19 +81,29 @@ packages/Inventory/
 │   │   ├── Events/
 │   │   ├── Contracts/       # Repository Interfaces defined here
 │   │   ├── Services/        # Domain Services (e.g., StockCalculator)
-│   │   └── Policies/        # Business Rules
+│   │   ├── Policies/        # Business Rules
+│   │   └── README.md        # Summary of Domains in this package, their responsibilities, relationships, etc. table format preferred
 │   │
 │   ├── Application/         # THE USE CASES
 │   │   ├── DTOs/            # Input/Output Data Transfer Objects
 │   │   ├── Commands/        # e.g., ReceiveStockCommand
 │   │   ├── Queries/         # e.g., GetStockLevelQuery
-│   │   └── Handlers/        # Logic that orchestrates Domain Services
+│   │   ├── Handlers/        # Logic that orchestrates Domain Services
+│   │   └── README.md        # Summary of Applications in this package, their responsibilities, relationships, etc. table format preferred
 │   │
 │   └── Infrastructure/      # INTERNAL ADAPTERS (Optional)
 │       ├── InMemory/        # In-memory repositories for unit testing
-│       └── Mappers/         # To map Domain Objects to Arrays/DTOs
+│       ├── Mappers/         # To map Domain Objects to Arrays/DTOs
+│       └── README.md         # Summary of Infrastructures in this package, their responsibilities, relationships, etc. table format preferred
 │
-└── tests/
+├── tests/
+├── IMPLEMENTATION_SUMMARY.md   # progressive documentation about what was implemented in this package. What features has been implemented and what is not and any decisions related to this package
+├── TODO.md   # list of pending tasks for this package. Bugs, improvements, future planning etc. What has been done must be removed from this list
+├── REQUIREMENTS.md   
+├── TEST_SUIT_SUMMARY.md   
+├── VALUATION_MATRIX.md   
+├── LICENSE.md   
+└── README.md
 ```
 
   * **Rule:** **NEVER** put Laravel code (Eloquent/Jobs) here.
@@ -91,9 +111,9 @@ packages/Inventory/
 
 -----
 
-### 3\. 🔗 Integration Packages (The "Wiring" Layer)
+### 3\. 🔗 Orchestrator Packages (The "Wiring" Layer)
 
-**Usage:** Replaces "SalesOperations". Orchestrates workflows that cross multiple domains.
+**Usage:** Orchestrates workflows that cross multiple domains.
 **Examples:** `Nexus\OrderManagement` (Wires Sales + Inventory + Finance).
 
 ```text
@@ -103,7 +123,14 @@ orchestrators/OrderManagement/
 │   ├── Workflows/           # Stateful processes (e.g., OrderToCash)
 │   ├── Coordinators/        # Stateless glue code
 │   └── Listeners/           # Reacts to events from Atomic packages
-└── tests/
+├── tests/
+├── IMPLEMENTATION_SUMMARY.md   # progressive documentation about what was implemented in this package. What features has been implemented and what is not and any decisions related to this package
+├── TODO.md   # list of pending tasks for this package. Bugs, improvements, future planning etc. What has been done must be removed from this list
+├── REQUIREMENTS.md   
+├── TEST_SUIT_SUMMARY.md   
+├── VALUATION_MATRIX.md   
+├── LICENSE.md  
+└── README.md        # Documentation about this package and package's workflows, coordinators, listeners, their responsibilities, relationships, etc. table format preferred
 ```
 
   * **Rule:** These packages can depend on multiple Atomic packages. Atomic packages cannot depend on these.
@@ -129,7 +156,15 @@ adapters/Laravel/Finance/
 │   │   ├── Controllers/
 │   │   └── Resources/       # API Resources
 │   └── Jobs/                # Laravel Queued Jobs
-└── tests/                   # Integration tests requiring DB connection
+├── tests/                   # Integration tests requiring DB connection
+├── IMPLEMENTATION_SUMMARY.md   # progressive documentation about what was implemented in this package. What features has been implemented and what is not and any decisions related to this package
+├── TODO.md   # list of pending tasks for this package. Bugs, improvements, future planning etc. What has been done must be removed from this list
+├── REQUIREMENTS.md   
+├── TEST_SUIT_SUMMARY.md   
+├── VALUATION_MATRIX.md   
+├── LICENSE.md  
+└── README.md        # Documentation about this package and package's Providers, Models, Repositories, etc. table format preferred
+
 ```
 
   * **Rule:** This is the **ONLY** place where `use Illuminate\...` is allowed.
@@ -149,7 +184,7 @@ adapters/Laravel/Finance/
       * `packages/` -\> **NEVER** depends on -\> `adapters/`
       * `apps/atomy-api` -\> depends on -\> `adapters/` AND `packages/`
 
-3.  **Shared Kernel (`Nexus\Core`):**
+3.  **Shared Kernel (`Nexus\SharedKernel`):**
 
       * Move all shared VOs (like `TenantId`, `Money`) and shared Contracts (`LoggerInterface`) to `packages/SharedKernel`.
       * All other packages depend on `SharedKernel`.
@@ -157,9 +192,9 @@ adapters/Laravel/Finance/
 ----
 ## Attention to Orchestrators/Integration layer of packages
 
-This is the definitive guide for structuring **Layer 3: Integration Packages**.
+This is the definitive guide for structuring **Layer 3: Orchestration/Integration Packages**.
 
-An Integration Package (e.g., `Nexus\OrderManagement`, `Nexus\Procurement`) is fundamentally different from an Atomic Package because its primary job is **behavior**, not data definition. It does not own the "Truth" (Entities); it owns the "Flow" (Processes).
+An Orchestration Package (e.g., `Nexus\OrderManagement`, `Nexus\ProcurementManagement`) is fundamentally different from an Atomic Package because its primary job is **behavior**, not data definition. It does not own the "Truth" (Entities); it owns the "Flow" (Processes).
 
 Here is the standard folder structure and coding guidelines for your team.
 
@@ -170,7 +205,7 @@ Here is the standard folder structure and coding guidelines for your team.
 ```text
 orchestrators/OrderManagement/
 ├── composer.json             # Depends on: Nexus/Sales, Nexus/Inventory, Nexus/Finance
-├── README.md                 # Diagrams of the workflows handled here
+├── README.md                 # As explained above plus Diagrams of the workflows handled here
 ├── src/
 │   ├── Workflows/            # Stateful Processes (Sagas / State Machines)
 │   │   ├── OrderToCash/
@@ -238,7 +273,7 @@ Integration packages often need to reshape data to pass it from one domain to an
 
 -----
 
-### 📜 Coding Guidelines for Integration Packages
+### 📜 Coding Guidelines for Orchestrator Packages
 
 #### ✅ DO:
 
