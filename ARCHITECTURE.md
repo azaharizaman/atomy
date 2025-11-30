@@ -192,7 +192,7 @@ nexus/
 │   ├── README.md                # Orchestrator layer guidelines
 │   │
 │   ├── IdentityOperations/      # Example: Multi-package workflow orchestrator
-│   │   ├── composer.json        # Depends on: Nexus/Identity, Nexus/User, etc.
+│   │   ├── composer.json        # Depends on: Nexus/Identity, Nexus/Party, etc.
 │   │   ├── README.md
 │   │   ├── LICENSE
 │   │   ├── IMPLEMENTATION_SUMMARY.md
