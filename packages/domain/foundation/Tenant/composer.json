@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": "^8.3",
+        "nexus/shared-kernel": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {
