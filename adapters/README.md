@@ -18,7 +18,7 @@ An adapter is a **framework-specific package** that:
 - ❌ Does NOT define domain entities (those belong in atomic packages)
 - ❌ Does NOT implement workflows (those belong in orchestrators)
 
-**This is the ONLY place where \`use Illuminate\\...\` or \`use Symfony\\...\` is allowed.**
+**This is the ONLY place where `use Illuminate\...` or `use Symfony\...` is allowed.**
 
 ---
 
@@ -32,10 +32,10 @@ Framework adapters for Laravel applications.
 - Individual domain adapters to be created as needed
 
 **Planned Adapters:**
-- \`Laravel/Finance/\` - Eloquent models and migrations for Finance package
-- \`Laravel/Inventory/\` - Eloquent models and migrations for Inventory package
-- \`Laravel/Identity/\` - Eloquent models and migrations for Identity package
-- \`Laravel/Sales/\` - Eloquent models and migrations for Sales package
+- `Laravel/Finance/` - Eloquent models and migrations for Finance package
+- `Laravel/Inventory/` - Eloquent models and migrations for Inventory package
+- `Laravel/Identity/` - Eloquent models and migrations for Identity package
+- `Laravel/Sales/` - Eloquent models and migrations for Sales package
 
 ---
 
@@ -43,9 +43,9 @@ Framework adapters for Laravel applications.
 
 ### Standard Folder Structure
 
-\`\`\`
+```
 adapters/Laravel/DomainName/
-├── composer.json              # Requires: Nexus\\DomainName, illuminate/database
+├── composer.json              # Requires: Nexus\DomainName, illuminate/database
 ├── LICENSE
 ├── README.md
 ├── IMPLEMENTATION_SUMMARY.md
@@ -88,7 +88,7 @@ adapters/Laravel/DomainName/
 └── tests/                     # Integration tests requiring DB
     ├── Feature/
     └── Unit/
-\`\`\`
+```
 
 ---
 
@@ -97,11 +97,11 @@ adapters/Laravel/DomainName/
 ### ✅ DO
 
 1. **Implement Package Interfaces**
-   \`\`\`php
-   namespace App\\Adapters\\Laravel\\Finance\\Repositories;
+   ```php
+   namespace App\Adapters\Laravel\Finance\Repositories;
    
-   use Nexus\\Finance\\Contracts\\AccountRepositoryInterface;
-   use App\\Adapters\\Laravel\\Finance\\Models\\Account;
+   use Nexus\Finance\Contracts\AccountRepositoryInterface;
+   use App\Adapters\Laravel\Finance\Models\Account;
    
    final class EloquentAccountRepository implements AccountRepositoryInterface
    {
@@ -116,15 +116,15 @@ adapters/Laravel/DomainName/
            // Map Eloquent model to domain entity/VO
        }
    }
-   \`\`\`
+   ```
 
 2. **Bind Interfaces in Service Provider**
-   \`\`\`php
-   namespace App\\Adapters\\Laravel\\Finance\\Providers;
+   ```php
+   namespace App\Adapters\Laravel\Finance\Providers;
    
-   use Illuminate\\Support\\ServiceProvider;
-   use Nexus\\Finance\\Contracts\\AccountRepositoryInterface;
-   use App\\Adapters\\Laravel\\Finance\\Repositories\\EloquentAccountRepository;
+   use Illuminate\Support\ServiceProvider;
+   use Nexus\Finance\Contracts\AccountRepositoryInterface;
+   use App\Adapters\Laravel\Finance\Repositories\EloquentAccountRepository;
    
    final class FinanceServiceProvider extends ServiceProvider
    {
@@ -136,13 +136,13 @@ adapters/Laravel/DomainName/
            );
        }
    }
-   \`\`\`
+   ```
 
 3. **Create Migrations for Package Entities**
-   \`\`\`php
-   use Illuminate\\Database\\Migrations\\Migration;
-   use Illuminate\\Database\\Schema\\Blueprint;
-   use Illuminate\\Support\\Facades\\Schema;
+   ```php
+   use Illuminate\Database\Migrations\Migration;
+   use Illuminate\Database\Schema\Blueprint;
+   use Illuminate\Support\Facades\Schema;
    
    return new class extends Migration
    {
@@ -161,10 +161,10 @@ adapters/Laravel/DomainName/
            });
        }
    };
-   \`\`\`
+   ```
 
 4. **Map Between Domain and Eloquent**
-   \`\`\`php
+   ```php
    final class EloquentAccountRepository implements AccountRepositoryInterface
    {
        private function toDomainEntity(Account $model): AccountInterface
@@ -189,13 +189,13 @@ adapters/Laravel/DomainName/
            return $model;
        }
    }
-   \`\`\`
+   ```
 
 5. **Create API Resources for External Consumption**
-   \`\`\`php
-   namespace App\\Adapters\\Laravel\\Finance\\Http\\Resources;
+   ```php
+   namespace App\Adapters\Laravel\Finance\Http\Resources;
    
-   use Illuminate\\Http\\Resources\\Json\\JsonResource;
+   use Illuminate\Http\Resources\Json\JsonResource;
    
    final class AccountResource extends JsonResource
    {
@@ -214,12 +214,12 @@ adapters/Laravel/DomainName/
            ];
        }
    }
-   \`\`\`
+   ```
 
 ### ❌ DON'T
 
 1. **Put Business Logic in Adapters**
-   \`\`\`php
+   ```php
    // ❌ WRONG: Business logic in controller
    final class InvoiceController extends Controller
    {
@@ -244,12 +244,12 @@ adapters/Laravel/DomainName/
            return new InvoiceResource($invoice);
        }
    }
-   \`\`\`
+   ```
 
 2. **Define Domain Entities in Adapters**
-   \`\`\`php
+   ```php
    // ❌ WRONG: Domain entity in adapter
-   namespace App\\Adapters\\Laravel\\Finance\\Models;
+   namespace App\Adapters\Laravel\Finance\Models;
    
    class Invoice extends Model // This is a persistence model, NOT a domain entity
    {
@@ -260,7 +260,7 @@ adapters/Laravel/DomainName/
    }
    
    // ✅ CORRECT: Eloquent model is just persistence
-   namespace App\\Adapters\\Laravel\\Finance\\Models;
+   namespace App\Adapters\Laravel\Finance\Models;
    
    class Invoice extends Model
    {
@@ -273,7 +273,7 @@ adapters/Laravel/DomainName/
    }
    
    // Domain entity lives in package
-   namespace Nexus\\Receivable\\Domain\\Entities;
+   namespace Nexus\Receivable\Domain\Entities;
    
    final class Invoice implements InvoiceInterface
    {
@@ -282,12 +282,12 @@ adapters/Laravel/DomainName/
            // Business logic here
        }
    }
-   \`\`\`
+   ```
 
 3. **Access Other Adapters Directly**
-   \`\`\`php
+   ```php
    // ❌ WRONG: Adapter coupling
-   use App\\Adapters\\Laravel\\Finance\\Repositories\\EloquentAccountRepository;
+   use App\Adapters\Laravel\Finance\Repositories\EloquentAccountRepository;
    
    final class InvoiceController extends Controller
    {
@@ -297,7 +297,7 @@ adapters/Laravel/DomainName/
    }
    
    // ✅ CORRECT: Depend on package interface
-   use Nexus\\Finance\\Contracts\\AccountRepositoryInterface;
+   use Nexus\Finance\Contracts\AccountRepositoryInterface;
    
    final class InvoiceController extends Controller
    {
@@ -305,7 +305,7 @@ adapters/Laravel/DomainName/
            private AccountRepositoryInterface $accountRepo // Package interface!
        ) {}
    }
-   \`\`\`
+   ```
 
 ---
 
@@ -329,11 +329,11 @@ adapters/Laravel/DomainName/
 
 Determine which atomic package needs Laravel infrastructure.
 
-**Example:** \`Nexus\\Finance\` package needs Eloquent models and migrations.
+**Example:** `Nexus\Finance` package needs Eloquent models and migrations.
 
 ### Step 2: Create Adapter Structure
 
-\`\`\`bash
+```bash
 mkdir -p adapters/Laravel/Finance
 cd adapters/Laravel/Finance
 
@@ -354,15 +354,15 @@ touch TEST_SUITE_SUMMARY.md
 touch VALUATION_MATRIX.md
 touch LICENSE
 touch .gitignore
-\`\`\`
+```
 
 ### Step 3: Create Eloquent Models
 
 Map package entities to database tables:
-\`\`\`php
-namespace App\\Adapters\\Laravel\\Finance\\Models;
+```php
+namespace App\Adapters\Laravel\Finance\Models;
 
-use Illuminate\\Database\\Eloquent\\Model;
+use Illuminate\Database\Eloquent\Model;
 
 final class Account extends Model
 {
@@ -373,15 +373,15 @@ final class Account extends Model
         return $this->belongsTo(Tenant::class);
     }
 }
-\`\`\`
+```
 
 ### Step 4: Create Repository Implementation
 
-\`\`\`php
-namespace App\\Adapters\\Laravel\\Finance\\Repositories;
+```php
+namespace App\Adapters\Laravel\Finance\Repositories;
 
-use Nexus\\Finance\\Contracts\\AccountRepositoryInterface;
-use App\\Adapters\\Laravel\\Finance\\Models\\Account;
+use Nexus\Finance\Contracts\AccountRepositoryInterface;
+use App\Adapters\Laravel\Finance\Models\Account;
 
 final class EloquentAccountRepository implements AccountRepositoryInterface
 {
@@ -399,16 +399,16 @@ final class EloquentAccountRepository implements AccountRepositoryInterface
     
     // Mapping methods...
 }
-\`\`\`
+```
 
 ### Step 5: Create Service Provider
 
-\`\`\`php
-namespace App\\Adapters\\Laravel\\Finance\\Providers;
+```php
+namespace App\Adapters\Laravel\Finance\Providers;
 
-use Illuminate\\Support\\ServiceProvider;
-use Nexus\\Finance\\Contracts\\AccountRepositoryInterface;
-use App\\Adapters\\Laravel\\Finance\\Repositories\\EloquentAccountRepository;
+use Illuminate\Support\ServiceProvider;
+use Nexus\Finance\Contracts\AccountRepositoryInterface;
+use App\Adapters\Laravel\Finance\Repositories\EloquentAccountRepository;
 
 final class FinanceServiceProvider extends ServiceProvider
 {
@@ -425,23 +425,23 @@ final class FinanceServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
     }
 }
-\`\`\`
+```
 
 ### Step 6: Create Migrations
 
-\`\`\`bash
+```bash
 php artisan make:migration create_accounts_table
-\`\`\`
+```
 
 ### Step 7: Register in Application
 
-Add to \`config/app.php\`:
-\`\`\`php
+Add to `config/app.php`:
+```php
 'providers' => [
     // ...
-    App\\Adapters\\Laravel\\Finance\\Providers\\FinanceServiceProvider::class,
+    App\Adapters\Laravel\Finance\Providers\FinanceServiceProvider::class,
 ],
-\`\`\`
+```
 
 ---
 
@@ -449,9 +449,9 @@ Add to \`config/app.php\`:
 
 ### Feature Tests (Database Required)
 
-\`\`\`php
-use Illuminate\\Foundation\\Testing\\RefreshDatabase;
-use Tests\\TestCase;
+```php
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 final class EloquentAccountRepositoryTest extends TestCase
 {
@@ -479,12 +479,12 @@ final class EloquentAccountRepositoryTest extends TestCase
         $this->assertEquals('ACC001', $account->getCode());
     }
 }
-\`\`\`
+```
 
 ### Unit Tests (Mocking Eloquent)
 
-\`\`\`php
-use PHPUnit\\Framework\\TestCase;
+```php
+use PHPUnit\Framework\TestCase;
 
 final class AccountControllerTest extends TestCase
 {
@@ -500,7 +500,7 @@ final class AccountControllerTest extends TestCase
         // Test controller logic...
     }
 }
-\`\`\`
+```
 
 ---
 
@@ -508,30 +508,30 @@ final class AccountControllerTest extends TestCase
 
 **CRITICAL RULE:** Dependencies flow in ONE direction only:
 
-\`\`\`
+```
 Adapters → depends on → Packages/Orchestrators
 Packages/Orchestrators → NEVER depend on → Adapters
 Applications → depend on → Adapters AND Packages/Orchestrators
-\`\`\`
+```
 
 **Example:**
-- ✅ \`adapters/Laravel/Finance\` requires \`nexus/finance\` ✅
-- ❌ \`nexus/finance\` CANNOT require \`nexus/laravel-finance-adapter\` ❌
+- ✅ `adapters/Laravel/Finance` requires `nexus/finance` ✅
+- ❌ `nexus/finance` CANNOT require `nexus/laravel-finance-adapter` ❌
 
 ---
 
 ## 📖 Key References
 
-- **Architecture Guidelines:** \`../ARCHITECTURE.md\`
-- **Coding Standards:** \`../CODING_GUIDELINES.md\`
-- **Package Reference:** \`../docs/NEXUS_PACKAGES_REFERENCE.md\`
-- **Refactoring Exercise:** \`../REFACTOR_EXERCISE_12.md\`
-- **Atomic Packages:** \`../packages/README.md\`
-- **Orchestrators:** \`../orchestrators/README.md\`
+- **Architecture Guidelines:** `../ARCHITECTURE.md`
+- **Coding Standards:** `../CODING_GUIDELINES.md`
+- **Package Reference:** `../docs/NEXUS_PACKAGES_REFERENCE.md`
+- **Refactoring Exercise:** `../REFACTOR_EXERCISE_12.md`
+- **Atomic Packages:** `../packages/README.md`
+- **Orchestrators:** `../orchestrators/README.md`
 
 ---
 
-**Last Updated:** 2025-11-24  
+**Last Updated:** 2025-11-30  
 **Maintained By:** Nexus Architecture Team  
 **Current Adapters:** Laravel structure established  
 **Planned Adapters:** Finance, Inventory, Identity, Sales, and more as needed
