@@ -121,7 +121,10 @@ final readonly class EloquentJournalEntryRepository implements JournalEntryRepos
             ]
         );
 
-        // Sync lines
+        // Sync lines by replacing all lines.
+        // This approach is simpler and ensures consistency when receiving
+        // a non-Eloquent JournalEntryInterface. For Eloquent models,
+        // we use the direct save() path above which is more efficient.
         $journalEntry->lines()->delete();
         foreach ($entry->getLines() as $line) {
             $journalEntry->lines()->create([

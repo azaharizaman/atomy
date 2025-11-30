@@ -82,8 +82,8 @@ final readonly class EloquentLedgerRepository implements LedgerRepositoryInterfa
                     'account_id' => $account->id,
                     'account_code' => $account->code,
                     'account_name' => $account->name,
-                    'debit' => number_format((float) $debits, 4, '.', ''),
-                    'credit' => number_format((float) $credits, 4, '.', ''),
+                    'debit' => bcadd((string) $debits, '0', 4),
+                    'credit' => bcadd((string) $credits, '0', 4),
                 ];
             }
         }
@@ -125,8 +125,8 @@ final readonly class EloquentLedgerRepository implements LedgerRepositoryInterfa
         $isDebitNormal = in_array(strtoupper($account->type), ['ASSET', 'EXPENSE'], true);
         
         foreach ($lines as $line) {
-            $debit = number_format((float) $line->debit_amount, 4, '.', '');
-            $credit = number_format((float) $line->credit_amount, 4, '.', '');
+            $debit = bcadd((string) $line->debit_amount, '0', 4);
+            $credit = bcadd((string) $line->credit_amount, '0', 4);
             
             // Calculate running balance
             if ($isDebitNormal) {

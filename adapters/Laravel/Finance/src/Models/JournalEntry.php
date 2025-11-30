@@ -94,12 +94,18 @@ class JournalEntry extends Model implements JournalEntryInterface
 
     public function getTotalDebit(): string
     {
-        return (string) $this->lines->sum(fn (JournalEntryLine $line) => (float) $line->debit_amount);
+        return $this->lines->reduce(
+            fn (string $carry, JournalEntryLine $line) => bcadd($carry, (string) $line->debit_amount, 4),
+            '0.0000'
+        );
     }
 
     public function getTotalCredit(): string
     {
-        return (string) $this->lines->sum(fn (JournalEntryLine $line) => (float) $line->credit_amount);
+        return $this->lines->reduce(
+            fn (string $carry, JournalEntryLine $line) => bcadd($carry, (string) $line->credit_amount, 4),
+            '0.0000'
+        );
     }
 
     public function isBalanced(): bool

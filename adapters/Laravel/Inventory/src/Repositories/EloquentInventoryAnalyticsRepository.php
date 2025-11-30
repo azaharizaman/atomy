@@ -19,6 +19,8 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
 {
     public function getAverageDailyDemand(string $productId, int $days): float
     {
+        // For demand calculations, we sum ISSUE movements.
+        // Quantities should be positive in our data model (direction is determined by movement type).
         $totalDemand = StockMovement::where('product_id', $productId)
             ->where('movement_type', MovementType::ISSUE->value)
             ->where('created_at', '>=', now()->subDays($days))
@@ -28,18 +30,21 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
             return 0.0;
         }
 
-        return (float) bcdiv((string) abs($totalDemand), (string) $days, 4);
+        // Return absolute value to ensure positive demand even if data has inconsistencies
+        $result = bcdiv((string) $totalDemand, (string) $days, 4);
+        return (float) ($result[0] === '-' ? ltrim($result, '-') : $result);
     }
 
     public function getDemandVolatilityCoefficient(string $productId, int $days): float
     {
+        // Sum daily demand - quantities should be positive in our data model
         $dailyDemands = StockMovement::where('product_id', $productId)
             ->where('movement_type', MovementType::ISSUE->value)
             ->where('created_at', '>=', now()->subDays($days))
-            ->selectRaw('DATE(created_at) as date, SUM(ABS(quantity)) as daily_quantity')
+            ->selectRaw('DATE(created_at) as date, SUM(quantity) as daily_quantity')
             ->groupBy('date')
             ->pluck('daily_quantity')
-            ->map(fn ($q) => (float) $q)
+            ->map(fn ($q) => abs((float) $q))
             ->all();
 
         if (count($dailyDemands) < 2) {
@@ -81,14 +86,16 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
 
     public function getTrendSlope(string $productId, int $days): float
     {
+        // For trend calculation, we track daily demand over time
+        // Quantities should be positive in our data model
         $dailyDemands = StockMovement::where('product_id', $productId)
             ->where('movement_type', MovementType::ISSUE->value)
             ->where('created_at', '>=', now()->subDays($days))
-            ->selectRaw('DATE(created_at) as date, SUM(ABS(quantity)) as daily_quantity')
+            ->selectRaw('DATE(created_at) as date, SUM(quantity) as daily_quantity')
             ->groupBy('date')
             ->orderBy('date')
             ->pluck('daily_quantity', 'date')
-            ->map(fn ($q) => (float) $q)
+            ->map(fn ($q) => abs((float) $q))
             ->all();
 
         if (count($dailyDemands) < 2) {
