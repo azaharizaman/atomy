@@ -64,7 +64,7 @@ All interfaces are framework-agnostic and define the package's public API:
 
 **Key Design Decisions:**
 - ✅ All dependencies are **interfaces**, never concrete classes
-- ✅ No direct coupling to `Nexus\Domain\Identity` - bridged via `UserProvisioningInterface`
+- ✅ No direct coupling to `Nexus\Identity` - bridged via `UserProvisioningInterface`
 - ✅ Consuming application implements repositories and provisioning logic
 - ✅ Protocol-specific interfaces extend base `SsoProviderInterface`
 
@@ -338,7 +338,7 @@ tests/Unit/
 - Database migrations
 - `DbSsoConfigRepository` - Eloquent repository
 - `DbSsoSessionRepository` - Session repository
-- `IdentityUserProvisioner` - Bridge to `Nexus\Domain\Identity`
+- `IdentityUserProvisioner` - Bridge to `Nexus\Identity`
 - `RedisSsoStateStore` - Redis-based state storage
 - Service provider bindings
 
@@ -387,7 +387,7 @@ The `Nexus\SSO` package **strictly adheres** to Nexus architecture guidelines:
 
 - All external dependencies are **interfaces**
 - Package defines contracts, consuming application implements
-- No direct coupling to `Nexus\Domain\Identity`
+- No direct coupling to `Nexus\Identity`
 - Bridge pattern used for user provisioning
 
 ### ✅ Modern PHP 8.3+ Standards
@@ -415,16 +415,16 @@ The `Nexus\SSO` package **strictly adheres** to Nexus architecture guidelines:
 
 ## 🔗 Integration Points
 
-### With Nexus\Domain\Identity
+### With Nexus\Identity
 
 **Integration Type:** Loose Coupling via Interface
 
-The SSO package defines `UserProvisioningInterface`, which the consuming application implements using `Nexus\Domain\Identity`:
+The SSO package defines `UserProvisioningInterface`, which the consuming application implements using `Nexus\Identity`:
 
 ```php
 // In consuming application
 use Nexus\SSO\Contracts\UserProvisioningInterface;
-use Nexus\Domain\Identity\Contracts\UserManagerInterface;
+use Nexus\Identity\Contracts\UserManagerInterface;
 
 class IdentityUserProvisioner implements UserProvisioningInterface
 {

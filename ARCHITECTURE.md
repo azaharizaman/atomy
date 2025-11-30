@@ -34,7 +34,7 @@ Nexus is a **package-only monorepo** containing 52 atomic, reusable PHP packages
 9. **Nexus\FeatureFlags** - Feature flag management and A/B testing
 
 ### Identity & Security (3 packages)
-10. **Nexus\Domain\Identity** - Authentication, RBAC, MFA, session/token management
+10. **Nexus\Identity** - Authentication, RBAC, MFA, session/token management
 11. **Nexus\Crypto** - Cryptographic operations and key management
 12. **Nexus\Audit** - Advanced audit capabilities (extends AuditLogger)
 

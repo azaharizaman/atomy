@@ -2,13 +2,13 @@
 
 **Operations layer: Multi-step Identity workflows and orchestrations for Nexus ERP**
 
-This package provides high-level, multi-step workflows that orchestrate the atomic `Nexus\Domain\Identity` package services to implement complete business processes.
+This package provides high-level, multi-step workflows that orchestrate the atomic `Nexus\Identity` package services to implement complete business processes.
 
 ## Layer Architecture
 
 ```
 packages/
-  domain/Identity/          ← Layer 1: Pure atomic operations
+  domain/identity-security/          ← Layer 1: Pure atomic operations
   support/                  ← Layer 2: Helpers and adapters
   operations/IdentityOperations/ ← Layer 3: Multi-step workflows (THIS PACKAGE)
 ```
@@ -44,7 +44,7 @@ composer require nexus/operations-identity:"*@dev"
 
 ## Dependencies
 
-- `nexus/domain-identity` - Core Identity services (Layer 1)
+- `nexus/identity` - Core Identity services (Layer 1)
 
 ## License
 

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use Nexus\Domain\Identity\Contracts\PasswordValidatorInterface;
-use Nexus\Domain\Identity\Contracts\UserInterface;
+use Nexus\Identity\Contracts\PasswordValidatorInterface;
+use Nexus\Identity\Contracts\UserInterface;
 
 final readonly class PasswordValidator implements PasswordValidatorInterface
 {

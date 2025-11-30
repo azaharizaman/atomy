@@ -455,7 +455,7 @@ Billing
 ### First-Party Nexus Packages
 | Package | Purpose | Stories Affected |
 |---------|---------|------------------|
-| `Nexus\Domain\Identity` | User authentication and RBAC | All authenticated stories |
+| `Nexus\Identity` | User authentication and RBAC | All authenticated stories |
 | `Nexus\AuditLogger` | Audit trail logging | USE-TNT-0013, USE-TNT-0031 |
 | `Nexus\Notifier` | Notification delivery | USE-TNT-0041 |
 | `Nexus\FeatureFlags` | Feature flag management | All stories with feature flags |

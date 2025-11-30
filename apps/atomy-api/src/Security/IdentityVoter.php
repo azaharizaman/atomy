@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Security;
 
 use App\Entity\User;
-use Nexus\Domain\Identity\Contracts\PermissionRepositoryInterface;
-use Nexus\Domain\Identity\Contracts\RoleRepositoryInterface;
+use Nexus\Identity\Contracts\PermissionRepositoryInterface;
+use Nexus\Identity\Contracts\RoleRepositoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 

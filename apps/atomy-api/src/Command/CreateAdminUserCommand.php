@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use Nexus\Domain\Identity\Contracts\PasswordHasherInterface;
-use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Identity\Contracts\PasswordHasherInterface;
+use Nexus\Identity\Contracts\UserRepositoryInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,7 +18,7 @@ use Symfony\Component\Console\Question\Question;
  * Create a backend admin user for managing tenants.
  *
  * This command expects an application-level implementation of
- * Nexus\Domain\Identity\Contracts\UserRepositoryInterface to be registered.
+ * Nexus\Identity\Contracts\UserRepositoryInterface to be registered.
  */
 #[AsCommand(name: 'app:create-admin', description: 'Create a backend admin user')]
 final class CreateAdminUserCommand extends Command

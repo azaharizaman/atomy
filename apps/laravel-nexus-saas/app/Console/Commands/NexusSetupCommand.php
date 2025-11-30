@@ -7,9 +7,9 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Nexus\Domain\Identity\ValueObjects\UserStatus;
+use Nexus\Identity\ValueObjects\UserStatus;
 use App\Models\User;
-use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Identity\Contracts\UserRepositoryInterface;
 
 /**
  * Custom Artisan command to perform initial boilerplate setup for Nexus SaaS.
@@ -87,7 +87,7 @@ class NexusSetupCommand extends Command
     }
 
     /**
-     * Creates the Superadmin user using the Nexus\Domain\Identity contract.
+     * Creates the Superadmin user using the Nexus\Identity contract.
      * * @param string $name
      * @param string $email
      * @param string $password

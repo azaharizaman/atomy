@@ -18,7 +18,7 @@ The `Nexus\SSO` package provides enterprise Single Sign-On capabilities for the 
 | Package | Requirement Type | Requirement ID | Description | Priority | Status | Notes | Dependencies |
 |---------|-----------------|----------------|-------------|----------|--------|-------|--------------|
 | `Nexus\SSO` | Architectural Requirement | ARC-SSO-2001 | SSO package MUST be framework-agnostic (pure PHP 8.3+) | P0 | ⏳ Planning | Zero Laravel dependencies in package layer | - |
-| `Nexus\SSO` | Architectural Requirement | ARC-SSO-2002 | SSO package MUST NOT depend on Nexus\Domain\Identity | P0 | ⏳ Planning | Use UserProvisioningInterface contract | - |
+| `Nexus\SSO` | Architectural Requirement | ARC-SSO-2002 | SSO package MUST NOT depend on Nexus\Identity | P0 | ⏳ Planning | Use UserProvisioningInterface contract | - |
 | `Nexus\SSO` | Architectural Requirement | ARC-SSO-2003 | All dependencies injected via constructor as interfaces | P0 | ⏳ Planning | Follow DI principles | - |
 | `Nexus\SSO` | Architectural Requirement | ARC-SSO-2004 | SSO providers MUST be pluggable (provider pattern) | P0 | ⏳ Planning | SsoProviderInterface | - |
 | `Nexus\SSO` | Architectural Requirement | ARC-SSO-2005 | Support multi-tenant SSO configuration | P0 | ⏳ Planning | Per-tenant provider configs | Nexus\Tenant |
@@ -32,10 +32,10 @@ The `Nexus\SSO` package provides enterprise Single Sign-On capabilities for the 
 | `Nexus\SSO` | Business Requirement | BUS-SSO-2013 | Support Okta integration | P1 | ⏳ Planning | Third-party IdP | - |
 | `Nexus\SSO` | Business Requirement | BUS-SSO-2014 | Just-In-Time (JIT) user provisioning | P0 | ⏳ Planning | Auto-create users on first login | - |
 | `Nexus\SSO` | Business Requirement | BUS-SSO-2015 | Configurable attribute mapping (IdP → local) | P0 | ⏳ Planning | Map email, name, roles, etc. | - |
-| `Nexus\SSO` | Business Requirement | BUS-SSO-2016 | Optional local password authentication | P0 | ⏳ Planning | Can disable local auth when SSO enforced | Nexus\Domain\Identity |
+| `Nexus\SSO` | Business Requirement | BUS-SSO-2016 | Optional local password authentication | P0 | ⏳ Planning | Can disable local auth when SSO enforced | Nexus\Identity |
 | `Nexus\SSO` | Business Requirement | BUS-SSO-2017 | Per-tenant SSO provider configuration | P0 | ⏳ Planning | Tenant A uses Azure, Tenant B uses Google | Nexus\Tenant |
 | `Nexus\SSO` | Business Requirement | BUS-SSO-2018 | Single Logout (SLO) support | P1 | ⏳ Planning | SAML/OIDC logout | - |
-| `Nexus\SSO` | Business Requirement | BUS-SSO-2019 | Default role assignment on JIT provisioning | P0 | ⏳ Planning | Assign default roles to new users | Nexus\Domain\Identity |
+| `Nexus\SSO` | Business Requirement | BUS-SSO-2019 | Default role assignment on JIT provisioning | P0 | ⏳ Planning | Assign default roles to new users | Nexus\Identity |
 | `Nexus\SSO` | Business Requirement | BUS-SSO-2020 | Link existing users to SSO identities | P0 | ⏳ Planning | Match by email before creating new user | - |
 | `Nexus\SSO` | Functional Requirement | FUN-SSO-2021 | Provide SsoManagerInterface contract | P0 | ⏳ Planning | Main SSO orchestration | - |
 | `Nexus\SSO` | Functional Requirement | FUN-SSO-2022 | Provide SsoProviderInterface contract | P0 | ⏳ Planning | Base provider interface | - |
@@ -161,7 +161,7 @@ The `Nexus\SSO` package provides enterprise Single Sign-On capabilities for the 
 
 ### Internal Package Dependencies
 
-- **`Nexus\Domain\Identity`**: User provisioning bridge (via `UserProvisioningInterface`)
+- **`Nexus\Identity`**: User provisioning bridge (via `UserProvisioningInterface`)
 - **`Nexus\Tenant`**: Multi-tenant context
 - **`Nexus\AuditLogger`**: SSO event logging
 - **`Nexus\Monitoring`**: SSO metrics tracking (optional)

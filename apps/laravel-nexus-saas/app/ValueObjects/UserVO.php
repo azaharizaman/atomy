@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\ValueObjects;
 
-use Nexus\Domain\Identity\Contracts\UserInterface;
+use Nexus\Identity\Contracts\UserInterface;
 
 /**
  * User Value Object implementing Nexus UserInterface

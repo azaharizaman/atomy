@@ -11,7 +11,21 @@
     "repositories": [
         {
             "type": "path",
-            "url": "../../packages/*",
+            "url": "../../packages/domain/*/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/support/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/operations/*",
             "options": {
                 "symlink": true
             }
@@ -25,7 +39,7 @@
         "laravel/tinker": "^2.10.1",
         "nexus/backoffice": "*@dev",
         "nexus/feature-flags": "*@dev",
-        "nexus/domain-identity": "*@dev",
+        "nexus/identity": "*@dev",
         "laravel/wayfinder": "^0.1.9"
     },
     "require-dev": {

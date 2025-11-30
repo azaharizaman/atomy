@@ -1117,7 +1117,7 @@ public function test_find_due_for_generation_returns_daily_reports(): void
 **Integration Points:**
 - Call `ReportManager` service from controllers
 - Use `AnalyticsManager::getAvailableQueries()` to populate query selector
-- Use `Nexus\Domain\Identity` for recipient lookup and role filtering
+- Use `Nexus\Identity` for recipient lookup and role filtering
 
 ### Phase 3: Template Management (Priority 2)
 
@@ -1281,7 +1281,7 @@ case ScheduleType::CRON:
 ```
 
 **Recommendation:**
-- Integrate with `Nexus\Domain\Identity` for role membership queries
+- Integrate with `Nexus\Identity` for role membership queries
 - Support recipient types: `user:<id>`, `role:<name>`, `group:<id>`, `email:<address>`
 
 ### 3. Large Dataset Streaming (Partial Implementation)
@@ -1299,7 +1299,7 @@ case ScheduleType::CRON:
 
 **Recommendation:**
 - Integrate with Laravel translation system
-- Store user locale in `Nexus\Domain\Identity`
+- Store user locale in `Nexus\Identity`
 - Pass locale to `NotificationManager::send()`
 
 ### 5. Report Bursting (Advanced Distribution)

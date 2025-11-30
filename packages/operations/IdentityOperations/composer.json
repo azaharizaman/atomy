@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/domain-identity": "*@dev"
+        "nexus/identity": "*@dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"

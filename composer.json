@@ -5,7 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/domain-identity": "*@dev",
+        "nexus/identity": "*@dev",
         "nexus/backoffice": "*@dev",
         "nexus/machine-learning": "*@dev",
         "nexus/geo": "*@dev",
@@ -24,7 +24,7 @@
     "repositories": [
         {
             "type": "path",
-            "url": "./packages/domain/*",
+            "url": "./packages/domain/*/*",
             "options": {
                 "symlink": true
             }
@@ -42,206 +42,6 @@
             "options": {
                 "symlink": true
             }
-        },
-        {
-            "type": "path",
-            "url": "./packages/MachineLearning"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Manufacturing"
-        },
-        {
-            "type": "path",
-            "url": "./packages/AuditLogger"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Tenant"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Uom"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Sequencing"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Workflow"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Hrm"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Payroll"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Backoffice"
-        },
-        {
-            "type": "path",
-            "url": "./packages/PayrollMysStatutory"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Setting"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Storage"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Connector"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Content"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Crypto"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Notifier"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Period"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Finance"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Accounting"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Payable"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Receivable"
-        },
-        {
-            "type": "path",
-            "url": "./packages/DataProcessor"
-        },
-        {
-            "type": "path",
-            "url": "./packages/EventStream"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Compliance"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Statutory"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Analytics"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Monitoring"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Assets"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Export"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Import"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Scheduler"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Currency"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Procurement"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Party"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Product"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Budget"
-        },
-        {
-            "type": "path",
-            "url": "./packages/CashManagement"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Reporting"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Geo"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Routing"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Inventory"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Warehouse"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Document"
-        },
-        {
-            "type": "path",
-            "url": "./packages/FieldService"
-        },
-        {
-            "type": "path",
-            "url": "./packages/FeatureFlags"
-        },
-        {
-            "type": "path",
-            "url": "./packages/SSO"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Tax"
-        },
-        {
-            "type": "path",
-            "url": "./packages/Messaging"
-        },
-        {
-            "type": "path",
-            "url": "./packages/ProcurementML"
         }
     ],
     "minimum-stability": "dev",

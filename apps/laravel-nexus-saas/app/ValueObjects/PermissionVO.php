@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\ValueObjects;
 
-use Nexus\Domain\Identity\Contracts\PermissionInterface;
+use Nexus\Identity\Contracts\PermissionInterface;
 
 /**
  * Permission Value Object implementing Nexus PermissionInterface

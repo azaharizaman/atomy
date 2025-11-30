@@ -10,7 +10,7 @@
 
 ## 🎯 Executive Summary
 
-The `Nexus\SSO` package provides a comprehensive Single Sign-On (SSO) solution for the Nexus ERP monorepo. It enables enterprise authentication via SAML 2.0, OAuth2/OIDC, and custom identity providers while maintaining strict separation from the `Nexus\Domain\Identity` package.
+The `Nexus\SSO` package provides a comprehensive Single Sign-On (SSO) solution for the Nexus ERP monorepo. It enables enterprise authentication via SAML 2.0, OAuth2/OIDC, and custom identity providers while maintaining strict separation from the `Nexus\Identity` package.
 
 ### Key Architectural Principles
 
@@ -47,9 +47,9 @@ The `Nexus\SSO` package provides a comprehensive Single Sign-On (SSO) solution f
 | Package | Responsibility | Analogy |
 |---------|---------------|----------|
 | **`Nexus\SSO`** | **Authentication Orchestration** | "The bouncer at the club entrance" - verifies credentials with external IdP |
-| **`Nexus\Domain\Identity`** | **User Management** | "The membership database" - stores user records, roles, permissions |
+| **`Nexus\Identity`** | **User Management** | "The membership database" - stores user records, roles, permissions |
 
-**Critical Rule:** `Nexus\SSO` **MUST NOT** directly depend on `Nexus\Domain\Identity`. Instead:
+**Critical Rule:** `Nexus\SSO` **MUST NOT** directly depend on `Nexus\Identity`. Instead:
 - SSO defines `UserProvisioningInterface` (contract)
 - Identity implements the contract in consuming application (via `UserManager`)
 - consuming application wires them together via dependency injection
@@ -97,7 +97,7 @@ The `Nexus\SSO` package provides a comprehensive Single Sign-On (SSO) solution f
                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  8. SsoManager calls UserProvisioningInterface::findOrCreate()  │
-│     (Implemented by Nexus\Domain\Identity in consuming application)                    │
+│     (Implemented by Nexus\Identity in consuming application)                    │
 └────────────────────────────────┬────────────────────────────────┘
                                  │
                                  ▼
@@ -122,7 +122,7 @@ The `Nexus\SSO` package provides a comprehensive Single Sign-On (SSO) solution f
 5. **Testing Isolation**: SSO integration tests don't require Identity database
 
 **Alternative Considered (Rejected):**
-- ❌ **Embed SSO in `Nexus\Domain\Identity`**: Violates SRP, makes Identity too heavyweight
+- ❌ **Embed SSO in `Nexus\Identity`**: Violates SRP, makes Identity too heavyweight
 - ❌ **Embed SSO in `Nexus\Connector`**: Connector is for API integration, not user auth
 
 ---
@@ -193,7 +193,7 @@ Nexus\SSO
 └── lcobucci/jwt (JWT validation)
 
 NO dependencies on:
-❌ Nexus\Domain\Identity
+❌ Nexus\Identity
 ❌ Illuminate\* (Laravel)
 ❌ Any Eloquent models
 ```
@@ -481,7 +481,7 @@ interface OAuthProviderInterface extends SsoProviderInterface
 
 ### 5. `UserProvisioningInterface` (Bridge to Identity)
 
-**Responsibility:** Find or create user from SSO profile (implemented by `Nexus\Domain\Identity` in consuming application)
+**Responsibility:** Find or create user from SSO profile (implemented by `Nexus\Identity` in consuming application)
 
 ```php
 <?php
@@ -495,7 +495,7 @@ use Nexus\SSO\ValueObjects\UserProfile;
 /**
  * User provisioning interface
  * 
- * This contract is defined in Nexus\SSO but IMPLEMENTED by Nexus\Domain\Identity in consuming application.
+ * This contract is defined in Nexus\SSO but IMPLEMENTED by Nexus\Identity in consuming application.
  * It decouples SSO from Identity package.
  */
 interface UserProvisioningInterface
@@ -1377,7 +1377,7 @@ class SsoServiceProvider extends ServiceProvider
         $this->app->singleton(AttributeMapperInterface::class, AttributeMapper::class);
         $this->app->singleton(CallbackStateValidatorInterface::class, RedisSsoStateStore::class);
         
-        // User provisioning (bridge to Nexus\Domain\Identity)
+        // User provisioning (bridge to Nexus\Identity)
         $this->app->singleton(UserProvisioningInterface::class, IdentityUserProvisioner::class);
 
         // Register SSO providers
@@ -1404,7 +1404,7 @@ class SsoServiceProvider extends ServiceProvider
 
 ## 🔗 Integration Points
 
-### Integration with `Nexus\Domain\Identity`
+### Integration with `Nexus\Identity`
 
 **File:** `consuming application (e.g., Laravel app)app/Services/SSO/IdentityUserProvisioner.php`
 
@@ -1418,15 +1418,15 @@ namespace App\Services\SSO;
 use Nexus\SSO\Contracts\UserProvisioningInterface;
 use Nexus\SSO\ValueObjects\UserProfile;
 use Nexus\SSO\Exceptions\ProvisioningException;
-use Nexus\Domain\Identity\Contracts\UserManagerInterface;
-use Nexus\Domain\Identity\Contracts\UserRepositoryInterface;
-use Nexus\Domain\Identity\Contracts\RoleManagerInterface;
+use Nexus\Identity\Contracts\UserManagerInterface;
+use Nexus\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Identity\Contracts\RoleManagerInterface;
 use App\Models\SsoUserMapping;
 
 /**
  * Identity-based user provisioner
  * 
- * Bridges Nexus\SSO to Nexus\Domain\Identity
+ * Bridges Nexus\SSO to Nexus\Identity
  */
 final readonly class IdentityUserProvisioner implements UserProvisioningInterface
 {
@@ -1710,13 +1710,13 @@ return [
 | BUS-IDE-1341 | SSO providers (SAML, OAuth2, OIDC) are configured per tenant | `SsoConfigRepositoryInterface`, multi-tenant config |
 | BUS-IDE-1342 | SSO user provisioning can be automatic (JIT) or manual approval | `UserProvisioningInterface::isJitProvisioningEnabled()` |
 | BUS-IDE-1343 | SSO attribute mapping is configurable | `AttributeMapperInterface`, `AttributeMap` VO |
-| BUS-IDE-1344 | Local password authentication can be disabled when SSO is enforced | Config flag, enforced in `Nexus\Domain\Identity` |
+| BUS-IDE-1344 | Local password authentication can be disabled when SSO is enforced | Config flag, enforced in `Nexus\Identity` |
 | FUN-IDE-1375 | Provide SsoProviderInterface for single sign-on integration | `SsoProviderInterface` (contract) |
 | FUN-IDE-1399 | Support SSO authentication with SAML 2.0 | `Saml2Provider`, `SamlProviderInterface` |
 | FUN-IDE-1400 | Support SSO authentication with OAuth2/OIDC | `OAuth2Provider`, `OidcProvider` |
 | FUN-IDE-1401 | Support JIT (Just-In-Time) user provisioning from SSO | `UserProvisioningInterface::findOrCreateUser()` |
 | FUN-IDE-1402 | Support SSO attribute mapping configuration | `AttributeMapper`, `AttributeMap` |
-| FUN-IDE-1403 | Support user impersonation with audit trail | (Handled by `Nexus\Domain\Identity` + `AuditLogger`) |
+| FUN-IDE-1403 | Support user impersonation with audit trail | (Handled by `Nexus\Identity` + `AuditLogger`) |
 
 ---
 

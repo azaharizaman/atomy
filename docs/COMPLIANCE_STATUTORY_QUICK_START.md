@@ -54,7 +54,7 @@
 ✅ **ALL READY** - All 11 required dependencies are implemented:
 - Nexus\Setting ✓
 - Nexus\AuditLogger ✓
-- Nexus\Domain\Identity ✓
+- Nexus\Identity ✓
 - Nexus\Notifier ✓
 - Nexus\Workflow ✓
 - Nexus\Finance ✓
