@@ -8,8 +8,8 @@ The SharedKernel package contains foundational elements that are shared across m
 
 This package provides:
 
-- **Value Objects**: Immutable domain primitives (TenantId, Money, DateRange, etc.)
-- **Contracts**: Common interfaces used across packages (ClockInterface, LoggerInterface, EventDispatcherInterface)
+- **Value Objects**: Immutable domain primitives (TenantId, etc.)
+- **Contracts**: Common interfaces used across packages (ClockInterface, EventDispatcherInterface)
 - **Exceptions**: Shared domain exceptions
 
 ## Installation
@@ -25,15 +25,17 @@ composer require nexus/shared-kernel
 | Value Object | Description |
 |--------------|-------------|
 | `TenantId` | Strongly-typed tenant identifier (ULID) |
-| `Money` | Monetary value with currency and precision |
 
 ### Contracts (`src/Contracts/`)
 
 | Interface | Description |
 |-----------|-------------|
 | `ClockInterface` | Provides current time for testability |
-| `LoggerInterface` | PSR-3 compatible logging contract |
 | `EventDispatcherInterface` | Event dispatching contract |
+
+> **Note:** For logging, use PSR-3's `Psr\Log\LoggerInterface` directly. This package depends on `psr/log` for convenience.
+
+> **Note:** For monetary values, use `Nexus\Finance\ValueObjects\Money` from the Finance package.
 
 ### Exceptions (`src/Exceptions/`)
 
@@ -61,29 +63,6 @@ $tenantId->equals($otherTenantId);
 $tenantIdString = $tenantId->toString();
 ```
 
-### Money
-
-```php
-use Nexus\SharedKernel\ValueObjects\Money;
-
-// Create money
-$money = Money::of(100.50, 'MYR');
-
-// Operations
-$total = $money->add(Money::of(50, 'MYR'));
-$difference = $money->subtract(Money::of(25, 'MYR'));
-$doubled = $money->multiply(2);
-
-// Comparisons
-$money->greaterThan($otherMoney);
-$money->equals($otherMoney);
-$money->isPositive();
-$money->isZero();
-
-// Format for display
-echo $money->format(); // "100.50 MYR"
-```
-
 ### ClockInterface
 
 ```php
@@ -102,6 +81,24 @@ final readonly class MyService
 }
 ```
 
+### Logging (PSR-3)
+
+```php
+use Psr\Log\LoggerInterface;
+
+final readonly class MyService
+{
+    public function __construct(
+        private LoggerInterface $logger
+    ) {}
+    
+    public function doSomething(): void
+    {
+        $this->logger->info('Operation completed');
+    }
+}
+```
+
 ## Design Principles
 
 1. **Immutability**: All value objects are immutable (`readonly`)
@@ -112,6 +109,7 @@ final readonly class MyService
 ## Dependencies
 
 - PHP ^8.3
+- psr/log ^3.0
 
 ## License
 
