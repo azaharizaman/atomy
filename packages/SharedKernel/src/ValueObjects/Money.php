@@ -32,10 +32,17 @@ final readonly class Money
 
     /**
      * Create Money from numeric value
+     *
+     * Uses BCMath for precision-safe string formatting.
      */
     public static function of(float|int|string $amount, string $currency): self
     {
-        $formatted = number_format((float)$amount, self::PRECISION, '.', '');
+        // Convert to string first to avoid float precision issues
+        $stringAmount = is_string($amount) ? $amount : (string)$amount;
+
+        // Use bcadd with zero to normalize and format with proper precision
+        $formatted = bcadd($stringAmount, '0', self::PRECISION);
+
         return new self($formatted, strtoupper($currency));
     }
 

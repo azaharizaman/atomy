@@ -101,7 +101,7 @@ final readonly class TenantId
         // 48-bit timestamp in milliseconds
         $timestamp = (int)(microtime(true) * 1000);
 
-        // Encode timestamp (10 characters)
+        // Encode timestamp (10 characters - 50 bits, but we only use 48)
         $timeEncoded = '';
         for ($i = 9; $i >= 0; $i--) {
             $timeEncoded = $encodingChars[$timestamp & 0x1F] . $timeEncoded;
@@ -109,18 +109,28 @@ final readonly class TenantId
         }
 
         // 80-bit randomness (16 characters)
-        $randomBytes = random_bytes(10);
+        // We need exactly 80 bits = 16 base32 characters
+        // Each base32 char encodes 5 bits, so 16 * 5 = 80 bits
+        $randomBytes = random_bytes(10); // 80 bits
         $randomEncoded = '';
-        for ($i = 0; $i < 10; $i++) {
-            $byte = ord($randomBytes[$i]);
-            $randomEncoded .= $encodingChars[($byte >> 3) & 0x1F];
-            if ($i < 9) {
-                $nextByte = ord($randomBytes[$i + 1]);
-                $randomEncoded .= $encodingChars[(($byte & 0x07) << 2) | (($nextByte >> 6) & 0x03)];
-            }
-        }
-        $randomEncoded .= $encodingChars[ord($randomBytes[9]) & 0x1F];
 
-        return $timeEncoded . substr($randomEncoded, 0, 16);
+        // Convert 10 bytes (80 bits) to 16 base32 characters
+        // Process as a bit stream
+        $bitBuffer = 0;
+        $bitCount = 0;
+        $byteIndex = 0;
+
+        for ($i = 0; $i < 16; $i++) {
+            // Need 5 bits for each character
+            while ($bitCount < 5 && $byteIndex < 10) {
+                $bitBuffer = ($bitBuffer << 8) | ord($randomBytes[$byteIndex]);
+                $bitCount += 8;
+                $byteIndex++;
+            }
+            $bitCount -= 5;
+            $randomEncoded .= $encodingChars[($bitBuffer >> $bitCount) & 0x1F];
+        }
+
+        return $timeEncoded . $randomEncoded;
     }
 }
