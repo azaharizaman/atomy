@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "nexus/shared-kernel": "*@dev",
         "nexus/identity": "*@dev",
         "nexus/backoffice": "*@dev",
         "nexus/machine-learning": "*@dev",
@@ -24,6 +25,13 @@
     "repositories": [
         {
             "type": "path",
+            "url": "./packages/SharedKernel",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "./packages/domain/*/*",
             "options": {
                 "symlink": true
@@ -39,6 +47,20 @@
         {
             "type": "path",
             "url": "./packages/operations/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "./orchestrators/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "./adapters/*",
             "options": {
                 "symlink": true
             }
