@@ -1,13 +1,18 @@
 # TODO: Accounting Package - Remaining Work
 
-**Last Updated:** November 18, 2025  
-**Status:** Phase 1-5 Complete | Dependencies & Testing Pending
+**Last Updated:** December 1, 2025  
+**Status:** Phase 1-5 Complete | Dependencies & Testing Pending  
+**Architecture:** Three-Layer Monorepo (packages/ → orchestrators/ → adapters/)
 
 ---
 
 ## Overview
 
 The Accounting package implementation (Phases 1-5) is structurally complete and production-ready. However, several dependencies from other packages need to be implemented, and comprehensive testing is required before full deployment.
+
+**Package Location:** `packages/Accounting/` (Pure PHP business logic)  
+**Integration Layer:** `adapters/Laravel/Accounting/` (Framework-specific implementation)  
+**Related Orchestrators:** None (Accounting is an atomic package)
 
 ---
 
@@ -135,8 +140,9 @@ public function getNetIncome(
 
 ### Implementation Location
 
-- **Interface:** `packages/Finance/src/Contracts/LedgerRepositoryInterface.php`
-- **Implementation:** Consuming application implements `LedgerRepositoryInterface`
+- **Interface:** `packages/Finance/src/Contracts/LedgerRepositoryInterface.php` (Pure PHP)
+- **Implementation:** `adapters/Laravel/Finance/src/Repositories/EloquentLedgerRepository.php` (Framework-specific)
+- **Binding:** `adapters/Laravel/Finance/src/Providers/FinanceServiceProvider.php`
 
 ### Estimated Effort
 
@@ -193,9 +199,10 @@ interface JournalEntryServiceInterface
 
 ### Implementation Location
 
-- **Interface:** `packages/Finance/src/Contracts/JournalEntryServiceInterface.php`
-- **Service:** `packages/Finance/src/Services/JournalEntryService.php`
-- **Implementation Binding:** Consuming application's service provider
+- **Interface:** `packages/Finance/src/Contracts/JournalEntryServiceInterface.php` (Pure PHP)
+- **Service:** `packages/Finance/src/Services/JournalEntryService.php` (Pure PHP business logic)
+- **Repository:** `adapters/Laravel/Finance/src/Repositories/EloquentJournalEntryRepository.php` (Framework-specific)
+- **Binding:** `adapters/Laravel/Finance/src/Providers/FinanceServiceProvider.php`
 
 ### Estimated Effort
 
@@ -257,9 +264,10 @@ public function findFiscalYearById(string $fiscalYearId): ?array;
 
 ### Implementation Location
 
-- **Interface:** `packages/Period/src/Contracts/PeriodManagerInterface.php`
-- **Service:** `packages/Period/src/Services/PeriodManager.php`
-- **Repository:** Implement in existing `EloquentPeriodRepository.php`
+- **Interface:** `packages/Period/src/Contracts/PeriodManagerInterface.php` (Pure PHP)
+- **Service:** `packages/Period/src/Services/PeriodManager.php` (Pure PHP business logic)
+- **Repository:** `adapters/Laravel/Period/src/Repositories/EloquentPeriodRepository.php` (Framework-specific)
+- **Binding:** `adapters/Laravel/Period/src/Providers/PeriodServiceProvider.php`
 
 ### Estimated Effort
 
@@ -279,9 +287,10 @@ The Accounting package references `AuditLoggerInterface` but the integration is 
 
 ### Required Work
 
-1. Ensure `AuditLoggerInterface` exists in `packages/AuditLogger/src/Contracts/`
-2. Bind the interface in `AppServiceProvider.php`
-3. Add audit log entries for:
+1. Ensure `AuditLoggerInterface` exists in `packages/AuditLogger/src/Contracts/` (Pure PHP)
+2. Implement `EloquentAuditLogRepository` in `adapters/Laravel/AuditLogger/src/Repositories/` (Framework-specific)
+3. Bind the interface in `adapters/Laravel/AuditLogger/src/Providers/AuditLoggerServiceProvider.php`
+4. Add audit log entries for:
    - Period close operations
    - Period reopen operations
    - Statement generation events
@@ -358,10 +367,11 @@ interface BudgetRepositoryInterface
 
 ### Implementation Location
 
-- **Interface:** `packages/Analytics/src/Contracts/BudgetRepositoryInterface.php`
-- **Repository:** Consuming application implements `BudgetRepositoryInterface`
-- **Model:** Consuming application's persistence layer (e.g., Eloquent models)
-- **Migration:** Create `budgets` table
+- **Interface:** `packages/Analytics/src/Contracts/BudgetRepositoryInterface.php` (Pure PHP)
+- **Repository:** `adapters/Laravel/Analytics/src/Repositories/EloquentBudgetRepository.php` (Framework-specific)
+- **Model:** `adapters/Laravel/Analytics/src/Models/Budget.php` (Eloquent model)
+- **Migration:** `adapters/Laravel/Analytics/database/migrations/create_budgets_table.php`
+- **Binding:** `adapters/Laravel/Analytics/src/Providers/AnalyticsServiceProvider.php`
 
 ### Estimated Effort
 
@@ -414,9 +424,11 @@ public function getBool(string $key, bool $default = false): bool;
 
 ### Implementation Location
 
-- **Interface:** Already exists (verify)
-- **Service:** `packages/Setting/src/Services/SettingsManager.php`
-- **Repository:** Consuming application implements `SettingRepositoryInterface`
+- **Interface:** `packages/Setting/src/Contracts/SettingsManagerInterface.php` (Already exists - verify)
+- **Service:** `packages/Setting/src/Services/SettingsManager.php` (Pure PHP business logic)
+- **Repository:** `adapters/Laravel/Setting/src/Repositories/EloquentSettingRepository.php` (Framework-specific)
+- **Model:** `adapters/Laravel/Setting/src/Models/Setting.php` (Eloquent model)
+- **Binding:** `adapters/Laravel/Setting/src/Providers/SettingServiceProvider.php`
 
 ### Estimated Effort
 
@@ -429,9 +441,9 @@ public function getBool(string $key, bool $default = false): bool;
 
 **Priority:** 🔴 HIGH (Required before production)
 
-### Unit Tests (Package Level)
+### Unit Tests (Package Level - Pure PHP)
 
-**Location:** `packages/Accounting/tests/Unit/`
+**Location:** `packages/Accounting/tests/Unit/` (No database, no framework)
 
 **Test Coverage Needed:**
 
@@ -454,9 +466,9 @@ public function getBool(string $key, bool $default = false): bool;
 
 **Estimated Effort:** 12-16 hours
 
-### Feature Tests (Application Level)
+### Feature Tests (Adapter Layer - Framework Integration)
 
-**Location:** Consuming application's test suite (e.g., `tests/Feature/`)
+**Location:** `adapters/Laravel/Accounting/tests/Feature/` (Requires database, uses Eloquent)
 
 **Test Coverage Needed:**
 

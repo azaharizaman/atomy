@@ -109,7 +109,7 @@ nexus/
 ├── ARCHITECTURE.md             # (This document)
 ├── README.md
 │
-├── 📦 packages/                 # 54 Atomic, publishable PHP packages (FLAT STRUCTURE)
+├── packages/                 # 54 Atomic, publishable PHP packages (FLAT STRUCTURE)
 │   ├── README.md                # Package layer guidelines and inventory
 │   │
 │   ├── SharedKernel/            # Nexus\SharedKernel (Common building blocks)
@@ -173,22 +173,25 @@ nexus/
 │   │       │   ├── Events/
 │   │       │   ├── Contracts/   # Repository Interfaces
 │   │       │   ├── Services/    # Domain Services
-│   │       │   └── Policies/    # Business Rules
+│   │       │   ├── Policies/    # Business Rules
+│   │       │   └── Exceptions/    # Exceptions specific to Domain layer
 │   │       ├── Application/     # THE USE CASES
 │   │       │   ├── DTOs/        # Data Transfer Objects
 │   │       │   ├── Commands/    # e.g., ReceiveStockCommand
 │   │       │   ├── Queries/     # e.g., GetStockLevelQuery
-│   │       │   └── Handlers/    # Orchestrates Domain Services
+│   │       │   ├── Handlers/    # Orchestrates Domain Services
+│   │       │   └── Exceptions/    # Exceptions specific to Application layer
 │   │       └── Infrastructure/  # INTERNAL ADAPTERS (Optional)
 │   │           ├── InMemory/    # In-memory repos for testing
-│   │           └── Mappers/     # Domain to DTO mapping
+│   │           ├── Mappers/     # Domain to DTO mapping
+│   │           └── Exceptions/         # Infrastructure Exceptions
 │   │
 │   ├── Finance/
 │   ├── Receivable/
 │   ├── Payable/
 │   └── [... 51 more packages - ALL FLAT, NO NESTING]
 │
-├── 🔗 orchestrators/            # Cross-package workflow coordination (PURE PHP)
+├── orchestrators/            # Cross-package workflow coordination (PURE PHP)
 │   ├── README.md                # Orchestrator layer guidelines
 │   │
 │   ├── IdentityOperations/      # Example: Multi-package workflow orchestrator
@@ -218,7 +221,7 @@ nexus/
 │   │
 │   └── [... more orchestrators as needed]
 │
-└── 🔌 adapters/                 # Framework-specific implementations (ONLY place for framework code)
+└── adapters/                 # Framework-specific implementations (ONLY place for framework code)
     ├── README.md                # Adapter layer guidelines
     │
     └── Laravel/                 # Laravel-specific adapters

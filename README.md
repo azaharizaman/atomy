@@ -1,20 +1,22 @@
-# Nexus - Framework-Agnostic PHP Packages for ERP Systems
+# Nexus - Framework-Agnostic PHP Monorepo for ERP Systems
 
-Nexus is a **package-only monorepo** containing 50+ atomic, reusable PHP packages for building Enterprise Resource Planning (ERP) systems. Each package is framework-agnostic, making them usable with Laravel, Symfony, Slim, or any other PHP framework.
+Nexus is a **three-layer monorepo** containing 50+ atomic, reusable PHP packages for building Enterprise Resource Planning (ERP) systems. The architecture separates business logic (packages), workflow coordination (orchestrators), and framework-specific implementations (adapters).
 
 ## 📖 The Philosophy: "Pure Business Logic, Framework Independent"
 
-The core philosophy of Nexus is **Framework Agnosticism**. Business logic should be portable and reusable across different frameworks and applications.
+The core philosophy of Nexus is **Framework Agnosticism** with **Clear Layer Separation**. Business logic should be portable and reusable across different frameworks and applications.
 
 - **🎯 Pure Business Logic**: Packages contain only business rules and domain logic
-- **🔌 Interface-Driven**: All external dependencies defined as contracts
+- **🔗 Workflow Orchestration**: Orchestrators coordinate multi-package workflows (pure PHP)
+- **🔌 Framework Adapters**: Adapters provide framework-specific implementations (Eloquent, migrations)
 - **📦 Atomic & Publishable**: Each package can be published independently to Packagist
 - **🧪 Testable**: Pure PHP logic with mockable dependencies
-- **🌍 Framework-Agnostic**: Works with Laravel, Symfony, or any PHP framework
+- **🌍 Framework-Agnostic**: Packages and orchestrators work with Laravel, Symfony, or any PHP framework
 
-## 🏗️ Architecture
+## 🏗️ Three-Layer Architecture
 
-### 📦 Atomic Packages
+### Layer 1: Atomic Packages (`packages/`)
+**Pure Business Logic - Framework Agnostic**
 
 All packages in `packages/` are self-contained units of functionality designed to be:
 
@@ -23,6 +25,47 @@ All packages in `packages/` are self-contained units of functionality designed t
 - **Publishable:** Each package can be published independently to Packagist
 - **Contract-Driven:** All external dependencies injected as interfaces
 - **Stateless:** Long-term state externalized via storage interfaces
+
+**Two Package Patterns:**
+- **Simple Packages** (Uom, Sequencing, Tenant): Flat structure with Contracts, Services, Exceptions
+- **Complex Packages** (Inventory, Finance, Manufacturing): DDD-layered with Domain, Application, Infrastructure
+
+### Layer 2: Orchestrators (`orchestrators/`)
+**Cross-Package Workflow Coordination - Pure PHP**
+
+Orchestrators in `orchestrators/` coordinate workflows that span multiple packages:
+
+- **Pure PHP:** Still framework-agnostic, no framework dependencies
+- **Multi-Package:** Depends on 2+ atomic packages to orchestrate business processes
+- **Workflow-Focused:** Owns "Flow" (processes), not "Truth" (entities)
+- **Event-Driven:** Implements Saga patterns and event-driven coordination
+- **Stateful Processes:** Long-running workflows with state machines
+
+**Examples:** OrderManagement (Sales + Inventory + Finance), ProcurementManagement, TalentManagement
+
+### Layer 3: Adapters (`adapters/`)
+**Framework-Specific Implementations**
+
+Adapters in `adapters/` provide concrete implementations for specific frameworks:
+
+- **Framework-Specific:** Contains Eloquent models, migrations, controllers, jobs
+- **Interface Implementation:** Binds package interfaces to concrete framework classes
+- **Database Layer:** Migrations, seeders, and ORM models
+- **HTTP Layer:** Controllers, resources, middleware
+- **Job Layer:** Queued jobs and event listeners
+
+**Examples:** `adapters/Laravel/Finance/`, `adapters/Laravel/Inventory/`
+
+### Dependency Direction
+
+```
+apps/ → depends on → adapters/ AND packages/ AND orchestrators/
+adapters/ → depends on → orchestrators/ AND packages/
+orchestrators/ → depends on → packages/
+packages/ → independent (or depend on other packages)
+```
+
+**Rule:** Dependencies flow downward only. Packages never depend on orchestrators or adapters.
 
 ## 📦 Available Packages (51 packages)
 
