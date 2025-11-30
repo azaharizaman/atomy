@@ -6,7 +6,21 @@
     "repositories": [
         {
             "type": "path",
-            "url": "../../packages/*",
+            "url": "../../packages/domain/*/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/support/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/operations/*",
             "options": {
                 "symlink": true
             }
