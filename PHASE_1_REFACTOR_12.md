@@ -87,10 +87,10 @@ packages/
 ## Success Criteria
 
 - [x] All packages moved from nested structure to flat packages/ directory
-- [ ] No packages remain in packages/domain/* subdirectories
-- [ ] All package namespaces remain Nexus\PackageName
-- [ ] Git history preserved for all moved files
-- [ ] Phase 1 committed and PR created
+- [x] No packages remain in packages/domain/* subdirectories
+- [x] All package namespaces remain Nexus\PackageName
+- [x] Git history preserved for all moved files
+- [x] Phase 1 committed and PR created
 
 ## Risk Mitigation
 
