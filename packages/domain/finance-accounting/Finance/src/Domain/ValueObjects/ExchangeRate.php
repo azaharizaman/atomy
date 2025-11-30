@@ -38,11 +38,18 @@ final readonly class ExchangeRate
     }
 
     /**
-     * Create a 1:1 rate for same currency
+     * Create a 1:1 rate for same currency (identity conversion)
+     * 
+     * Note: This creates a conceptual identity rate by appending '_BASE' suffix
+     * to the target currency. This is a workaround since the constructor
+     * enforces different currencies. For actual conversions, use the regular
+     * constructor with different currency codes.
+     * 
+     * @deprecated Consider using Money operations directly when no conversion is needed
      */
     public static function identity(string $currency, DateTimeImmutable $effectiveDate): self
     {
-        // For same currency, we create two different instances conceptually
+        // For same currency, we create a conceptual identity by using a special suffix
         return new self($currency, $currency . '_BASE', '1.000000', $effectiveDate);
     }
 
@@ -114,13 +121,30 @@ final readonly class ExchangeRate
         );
     }
 
+    private const ISO_CURRENCY_LENGTH = 3;
+    private const BASE_SUFFIX_LENGTH = 5; // '_BASE'
+    private const IDENTITY_CURRENCY_LENGTH = 8; // 3 + 5 = 'XXX_BASE'
+
     private function validateCurrency(string $currency): void
     {
-        if (strlen($currency) !== 3 && strlen($currency) !== 8) { // Allow BASE suffix
+        $length = strlen($currency);
+        
+        // Allow standard 3-letter ISO currency codes
+        // Or 8-character identity codes (e.g., 'USD_BASE' for identity conversion)
+        if ($length !== self::ISO_CURRENCY_LENGTH && $length !== self::IDENTITY_CURRENCY_LENGTH) {
             throw new InvalidArgumentException("Currency must be 3-letter ISO code, got: {$currency}");
         }
 
-        if (!ctype_upper(substr($currency, 0, 3))) {
+        // Validate identity currency format
+        if ($length === self::IDENTITY_CURRENCY_LENGTH) {
+            if (!str_ends_with($currency, '_BASE')) {
+                throw new InvalidArgumentException(
+                    "Extended currency code must end with '_BASE' suffix: {$currency}"
+                );
+            }
+        }
+
+        if (!ctype_upper(substr($currency, 0, self::ISO_CURRENCY_LENGTH))) {
             throw new InvalidArgumentException("Currency code must be uppercase: {$currency}");
         }
     }

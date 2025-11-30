@@ -51,11 +51,14 @@ final readonly class FinanceManager implements FinanceManagerInterface
         // Set default status to Draft
         $data['status'] = $data['status'] ?? JournalEntryStatus::Draft->value;
 
-        // This would create a new journal entry entity
-        // Implementation depends on how we construct journal entries
-        // For now, this is a placeholder that assumes the repository handles creation
-
-        throw new \RuntimeException('createJournalEntry implementation depends on entity factory');
+        // TODO: Implementation requires concrete JournalEntry entity
+        // The consumer application must provide a JournalEntryFactoryInterface implementation
+        // that creates JournalEntryInterface instances from the data array.
+        // For now, this throws to indicate the implementation is incomplete.
+        throw new \RuntimeException(
+            'createJournalEntry requires JournalEntryFactoryInterface. ' .
+            'Consumer application must provide entity factory implementation.'
+        );
     }
 
     /**
@@ -175,9 +178,14 @@ final readonly class FinanceManager implements FinanceManagerInterface
             throw DuplicateAccountCodeException::forCode($code->getValue());
         }
 
-        // This would create a new account entity
-        // Implementation depends on how we construct accounts
-        throw new \RuntimeException('createAccount implementation depends on entity factory');
+        // TODO: Implementation requires concrete Account entity
+        // The consumer application must provide an AccountFactoryInterface implementation
+        // that creates AccountInterface instances from the data array.
+        // For now, this throws to indicate the implementation is incomplete.
+        throw new \RuntimeException(
+            'createAccount requires AccountFactoryInterface. ' .
+            'Consumer application must provide entity factory implementation.'
+        );
     }
 
     /**

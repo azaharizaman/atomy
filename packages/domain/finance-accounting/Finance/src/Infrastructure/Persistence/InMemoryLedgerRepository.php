@@ -55,10 +55,12 @@ final class InMemoryLedgerRepository implements LedgerRepositoryInterface
             // Determine if balance is debit or credit
             $isDebit = bccomp($balance, '0', 4) >= 0;
 
+            // Note: In production, account_code and account_name should be looked up
+            // from the AccountRepository. These placeholders are for testing only.
             $result[] = [
                 'account_id' => $accountId,
-                'account_code' => $accountId, // Simplified - in real implementation would lookup account
-                'account_name' => "Account {$accountId}", // Simplified
+                'account_code' => $accountId, // Testing placeholder - lookup in production
+                'account_name' => "Account {$accountId}", // Testing placeholder
                 'debit' => $isDebit ? $balance : '0.0000',
                 'credit' => $isDebit ? '0.0000' : bcmul($balance, '-1', 4),
             ];
