@@ -1,0 +1,26 @@
+{
+    "name": "nexus/laravel-finance",
+    "description": "Laravel adapter for Nexus Finance package - Eloquent implementations and service providers",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Laravel\\Finance\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.3",
+        "nexus/finance": "*@dev",
+        "illuminate/database": "^11.0",
+        "illuminate/support": "^11.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nexus\\Laravel\\Finance\\ServiceProviders\\FinanceServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

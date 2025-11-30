@@ -64,6 +64,13 @@
             "options": {
                 "symlink": true
             }
+        },
+        {
+            "type": "path",
+            "url": "./adapters/Laravel/*",
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "minimum-stability": "dev",

@@ -1,0 +1,26 @@
+{
+    "name": "nexus/laravel-inventory",
+    "description": "Laravel adapter for Nexus Inventory package - Eloquent implementations and service providers",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Laravel\\Inventory\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.3",
+        "nexus/inventory": "*@dev",
+        "illuminate/database": "^11.0",
+        "illuminate/support": "^11.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nexus\\Laravel\\Inventory\\ServiceProviders\\InventoryServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
