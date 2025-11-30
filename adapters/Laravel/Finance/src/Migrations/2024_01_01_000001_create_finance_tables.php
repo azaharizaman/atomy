@@ -54,8 +54,9 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->ulid('journal_entry_id');
             $table->ulid('account_id');
-            // Use DECIMAL(20, 4) for monetary amounts to provide sufficient precision for most currencies.
-            // 4 decimal places is standard for amounts; higher precision (6-8 decimals) would be used for rates/exchange if needed.
+            // DECIMAL(20, 4) provides sufficient precision for monetary amounts in journal entries.
+            // 4 decimal places is standard for transaction amounts in most currencies.
+            // For exchange rates or unit prices, separate tables may use higher precision (6-8 decimals).
             $table->decimal('debit_amount', 20, 4)->default(0);
             $table->decimal('credit_amount', 20, 4)->default(0);
             $table->char('currency', 3)->default('MYR');

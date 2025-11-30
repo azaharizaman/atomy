@@ -22,6 +22,12 @@ use Nexus\Laravel\Inventory\Models\StockMovement;
  */
 final readonly class EloquentInventoryAnalyticsRepository implements InventoryAnalyticsRepositoryInterface
 {
+    /**
+     * Z-score for 95% service level confidence interval.
+     * Used in safety stock calculations.
+     */
+    private const SERVICE_LEVEL_95_Z_SCORE = '1.65';
+
     public function getAverageDailyDemand(string $productId, int $days): float
     {
         // For demand calculations, we sum ISSUE movements.
@@ -81,8 +87,11 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
 
     public function getSeasonalityIndex(string $productId): float
     {
+        // Use actual days in current month for more accurate seasonality calculation
+        $daysInCurrentMonth = (int) now()->format('t');
+        
         // Get current month's average daily demand
-        $currentMonthDemand = $this->getAverageDailyDemand($productId, 30);
+        $currentMonthDemand = $this->getAverageDailyDemand($productId, $daysInCurrentMonth);
         
         // Get yearly average (last 365 days)
         $yearlyAverage = $this->getAverageDailyDemand($productId, 365);
@@ -259,12 +268,9 @@ final readonly class EloquentInventoryAnalyticsRepository implements InventoryAn
         $volatility = $this->getDemandVolatilityCoefficient($productId, 30);
         $leadTime = $this->getSupplierLeadTimeDays($productId);
         
-        // Z-score for 95% service level = 1.65
-        $zScore = '1.65';
-        
         // Calculate using BC Math for precision
         $sqrtLeadTime = bcsqrt((string) $leadTime, 10);
-        $result = bcmul($zScore, (string) $volatility, 10);
+        $result = bcmul(self::SERVICE_LEVEL_95_Z_SCORE, (string) $volatility, 10);
         $result = bcmul($result, (string) $avgDailyDemand, 10);
         $result = bcmul($result, $sqrtLeadTime, 10);
         
