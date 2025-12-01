@@ -12,7 +12,7 @@
 - **Class Coverage:** 0%
 - **Complexity Coverage:** 0%
 
-**Note:** The Accounting package follows DDD architecture. This test suite covers only the Domain layer (pure business logic). Application and Infrastructure layer tests will be added separately.
+**Note:** The Accounting package follows DDD architecture. This test suite covers only the Domain layer (pure business logic). Application layer tests will be added separately.
 
 ### Detailed Coverage by Component (Domain Layer Only)
 | Component | Lines Covered | Functions Covered | Coverage % | Status |
