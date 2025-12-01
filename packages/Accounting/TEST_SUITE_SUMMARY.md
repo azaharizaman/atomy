@@ -75,7 +75,7 @@
   - `test_line_item_equality()`
   
 - `StatementSectionTest.php` - Test section value object
-  - `test_create_section()`
+  - `test_create_section_value_object()`
   - `test_add_line_items_to_section()`
   - `test_calculate_section_total()`
   - `test_section_immutability()`
