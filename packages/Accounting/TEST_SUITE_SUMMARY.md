@@ -343,14 +343,14 @@ composer test -- --testsuite=Integration
 
 ### Run Specific Test Category
 ```bash
-# Run only entity tests
-composer test -- --filter=Entity
+# Run only BalanceSheet tests (Domain Entity)
+composer test -- --filter=BalanceSheet
 
-# Run only value object tests
-composer test -- --filter=ValueObject
+# Run only LineItem tests (Value Object)
+composer test -- --filter=LineItem
 
-# Run only service tests
-composer test -- --filter=Service
+# Run only Generator service tests (e.g., BalanceSheetGenerator)
+composer test -- --filter=Generator
 ```
 
 ### Generate Coverage Report
