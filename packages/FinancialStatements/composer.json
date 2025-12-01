@@ -1,0 +1,31 @@
+{
+    "name": "nexus/financial-statements",
+    "description": "Financial statement structures, templates, and validation for GAAP/IFRS compliance",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nexus Architecture Team",
+            "email": "architecture@nexus.dev"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "nexus/shared-kernel": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\FinancialStatements\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\FinancialStatements\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

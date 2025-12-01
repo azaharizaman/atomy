@@ -1,0 +1,27 @@
+{
+    "name": "nexus/accounting-operations",
+    "description": "Nexus AccountingOperations Orchestrator - Cross-package workflow coordination for accounting processes",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/financial-statements": "*@dev",
+        "nexus/account-consolidation": "*@dev",
+        "nexus/account-variance-analysis": "*@dev",
+        "nexus/account-period-close": "*@dev",
+        "nexus/financial-ratios": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\AccountingOperations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\AccountingOperations\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
