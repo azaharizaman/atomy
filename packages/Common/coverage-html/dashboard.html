@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for /home/azaharizaman/dev/atomy/packages/Common/src</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="_css/bootstrap.min.css?v=11.0.11" rel="stylesheet" type="text/css">
+  <link href="_css/nv.d3.min.css?v=11.0.11" rel="stylesheet" type="text/css">
+  <link href="_css/style.css?v=11.0.11" rel="stylesheet" type="text/css">
+  <link href="_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="index.html">/home/azaharizaman/dev/atomy/packages/Common/src</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="ValueObjects/Measurement.php.html#22">Nexus\Common\ValueObjects\Measurement</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#21">Nexus\Common\ValueObjects\Quantity</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#17">Nexus\Common\ValueObjects\Status</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#17">Nexus\Common\ValueObjects\TaxCode</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#17">Nexus\Common\ValueObjects\TaxRate</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#23">Nexus\Common\ValueObjects\VarianceResult</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#18">Nexus\Common\ValueObjects\EntityId</a></td><td class="text-right">50%</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#18">Nexus\Common\ValueObjects\DateRange</a></td><td class="text-right">57%</td></tr>
+       <tr><td><a href="ValueObjects/Address.php.html#16">Nexus\Common\ValueObjects\Address</a></td><td class="text-right">68%</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#14">Nexus\Common\ValueObjects\PhoneNumber</a></td><td class="text-right">87%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#23">Nexus\Common\ValueObjects\VarianceResult</a></td><td class="text-right">2162</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#22">Nexus\Common\ValueObjects\Measurement</a></td><td class="text-right">756</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#17">Nexus\Common\ValueObjects\TaxRate</a></td><td class="text-right">756</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#21">Nexus\Common\ValueObjects\Quantity</a></td><td class="text-right">650</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#17">Nexus\Common\ValueObjects\Status</a></td><td class="text-right">420</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#17">Nexus\Common\ValueObjects\TaxCode</a></td><td class="text-right">342</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#18">Nexus\Common\ValueObjects\DateRange</a></td><td class="text-right">63</td></tr>
+       <tr><td><a href="ValueObjects/Address.php.html#16">Nexus\Common\ValueObjects\Address</a></td><td class="text-right">45</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#18">Nexus\Common\ValueObjects\EntityId</a></td><td class="text-right">43</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#14">Nexus\Common\ValueObjects\PhoneNumber</a></td><td class="text-right">18</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="ValueObjects/Address.php.html#92"><abbr title="Nexus\Common\ValueObjects\Address::compareTo">compareTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Address.php.html#102"><abbr title="Nexus\Common\ValueObjects\Address::equals">equals</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Address.php.html#116"><abbr title="Nexus\Common\ValueObjects\Address::greaterThan">greaterThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Address.php.html#121"><abbr title="Nexus\Common\ValueObjects\Address::lessThan">lessThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Address.php.html#139"><abbr title="Nexus\Common\ValueObjects\Address::toString">toString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#55"><abbr title="Nexus\Common\ValueObjects\DateRange::shift">shift</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#63"><abbr title="Nexus\Common\ValueObjects\DateRange::extend">extend</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#99"><abbr title="Nexus\Common\ValueObjects\DateRange::equals">equals</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#109"><abbr title="Nexus\Common\ValueObjects\DateRange::greaterThan">greaterThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#114"><abbr title="Nexus\Common\ValueObjects\DateRange::lessThan">lessThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#129"><abbr title="Nexus\Common\ValueObjects\DateRange::toString">toString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#50"><abbr title="Nexus\Common\ValueObjects\EntityId::getValue">getValue</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#55"><abbr title="Nexus\Common\ValueObjects\EntityId::toUlid">toUlid</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#61"><abbr title="Nexus\Common\ValueObjects\EntityId::compareTo">compareTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#75"><abbr title="Nexus\Common\ValueObjects\EntityId::greaterThan">greaterThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#80"><abbr title="Nexus\Common\ValueObjects\EntityId::lessThan">lessThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#54"><abbr title="Nexus\Common\ValueObjects\Measurement::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#63"><abbr title="Nexus\Common\ValueObjects\Measurement::getAmount">getAmount</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#68"><abbr title="Nexus\Common\ValueObjects\Measurement::getUnit">getUnit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#74"><abbr title="Nexus\Common\ValueObjects\Measurement::convertTo">convertTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#93"><abbr title="Nexus\Common\ValueObjects\Measurement::canConvertTo">canConvertTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#106"><abbr title="Nexus\Common\ValueObjects\Measurement::compareTo">compareTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#120"><abbr title="Nexus\Common\ValueObjects\Measurement::equals">equals</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#125"><abbr title="Nexus\Common\ValueObjects\Measurement::greaterThan">greaterThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#130"><abbr title="Nexus\Common\ValueObjects\Measurement::lessThan">lessThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#136"><abbr title="Nexus\Common\ValueObjects\Measurement::add">add</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#147"><abbr title="Nexus\Common\ValueObjects\Measurement::subtract">subtract</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#158"><abbr title="Nexus\Common\ValueObjects\Measurement::multiply">multiply</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#164"><abbr title="Nexus\Common\ValueObjects\Measurement::divide">divide</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#174"><abbr title="Nexus\Common\ValueObjects\Measurement::toArray">toArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#182"><abbr title="Nexus\Common\ValueObjects\Measurement::toString">toString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#187"><abbr title="Nexus\Common\ValueObjects\Measurement::fromArray">fromArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#196"><abbr title="Nexus\Common\ValueObjects\Measurement::format">format</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#354"><abbr title="Nexus\Common\ValueObjects\Money::convertToCurrency">convertToCurrency</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#399"><abbr title="Nexus\Common\ValueObjects\Money::fromArray">fromArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#33"><abbr title="Nexus\Common\ValueObjects\Quantity::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#42"><abbr title="Nexus\Common\ValueObjects\Quantity::getAmount">getAmount</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#47"><abbr title="Nexus\Common\ValueObjects\Quantity::getUnit">getUnit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#52"><abbr title="Nexus\Common\ValueObjects\Quantity::isZero">isZero</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#58"><abbr title="Nexus\Common\ValueObjects\Quantity::convertTo">convertTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#67"><abbr title="Nexus\Common\ValueObjects\Quantity::canConvertTo">canConvertTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#74"><abbr title="Nexus\Common\ValueObjects\Quantity::compareTo">compareTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#90"><abbr title="Nexus\Common\ValueObjects\Quantity::equals">equals</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#95"><abbr title="Nexus\Common\ValueObjects\Quantity::greaterThan">greaterThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#100"><abbr title="Nexus\Common\ValueObjects\Quantity::lessThan">lessThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#106"><abbr title="Nexus\Common\ValueObjects\Quantity::add">add</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#120"><abbr title="Nexus\Common\ValueObjects\Quantity::subtract">subtract</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#134"><abbr title="Nexus\Common\ValueObjects\Quantity::multiply">multiply</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#140"><abbr title="Nexus\Common\ValueObjects\Quantity::divide">divide</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#150"><abbr title="Nexus\Common\ValueObjects\Quantity::toArray">toArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#158"><abbr title="Nexus\Common\ValueObjects\Quantity::toString">toString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#163"><abbr title="Nexus\Common\ValueObjects\Quantity::fromArray">fromArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#25"><abbr title="Nexus\Common\ValueObjects\Status::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#36"><abbr title="Nexus\Common\ValueObjects\Status::getState">getState</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#41"><abbr title="Nexus\Common\ValueObjects\Status::canTransitionTo">canTransitionTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#54"><abbr title="Nexus\Common\ValueObjects\Status::isFinal">isFinal</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#64"><abbr title="Nexus\Common\ValueObjects\Status::transitionTo">transitionTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#78"><abbr title="Nexus\Common\ValueObjects\Status::values">values</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#85"><abbr title="Nexus\Common\ValueObjects\Status::getValue">getValue</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#90"><abbr title="Nexus\Common\ValueObjects\Status::isValid">isValid</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#96"><abbr title="Nexus\Common\ValueObjects\Status::toArray">toArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#105"><abbr title="Nexus\Common\ValueObjects\Status::toString">toString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#110"><abbr title="Nexus\Common\ValueObjects\Status::fromArray">fromArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#120"><abbr title="Nexus\Common\ValueObjects\Status::draft">draft</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#125"><abbr title="Nexus\Common\ValueObjects\Status::pending">pending</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#130"><abbr title="Nexus\Common\ValueObjects\Status::approved">approved</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#135"><abbr title="Nexus\Common\ValueObjects\Status::rejected">rejected</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#140"><abbr title="Nexus\Common\ValueObjects\Status::closed">closed</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#26"><abbr title="Nexus\Common\ValueObjects\TaxCode::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#41"><abbr title="Nexus\Common\ValueObjects\TaxCode::getCode">getCode</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#46"><abbr title="Nexus\Common\ValueObjects\TaxCode::getDescription">getDescription</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#51"><abbr title="Nexus\Common\ValueObjects\TaxCode::getRate">getRate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#56"><abbr title="Nexus\Common\ValueObjects\TaxCode::isActive">isActive</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#61"><abbr title="Nexus\Common\ValueObjects\TaxCode::calculateTax">calculateTax</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#67"><abbr title="Nexus\Common\ValueObjects\TaxCode::compareTo">compareTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#77"><abbr title="Nexus\Common\ValueObjects\TaxCode::equals">equals</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#86"><abbr title="Nexus\Common\ValueObjects\TaxCode::greaterThan">greaterThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#91"><abbr title="Nexus\Common\ValueObjects\TaxCode::lessThan">lessThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#97"><abbr title="Nexus\Common\ValueObjects\TaxCode::multiply">multiply</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#108"><abbr title="Nexus\Common\ValueObjects\TaxCode::toArray">toArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#118"><abbr title="Nexus\Common\ValueObjects\TaxCode::toString">toString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#123"><abbr title="Nexus\Common\ValueObjects\TaxCode::fromArray">fromArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#27"><abbr title="Nexus\Common\ValueObjects\TaxRate::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#47"><abbr title="Nexus\Common\ValueObjects\TaxRate::getRate">getRate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#52"><abbr title="Nexus\Common\ValueObjects\TaxRate::getTaxType">getTaxType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#57"><abbr title="Nexus\Common\ValueObjects\TaxRate::getJurisdiction">getJurisdiction</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#62"><abbr title="Nexus\Common\ValueObjects\TaxRate::getEffectiveFrom">getEffectiveFrom</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#67"><abbr title="Nexus\Common\ValueObjects\TaxRate::getEffectiveTo">getEffectiveTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#72"><abbr title="Nexus\Common\ValueObjects\TaxRate::isEffectiveOn">isEffectiveOn</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#78"><abbr title="Nexus\Common\ValueObjects\TaxRate::calculateTax">calculateTax</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#84"><abbr title="Nexus\Common\ValueObjects\TaxRate::compareTo">compareTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#94"><abbr title="Nexus\Common\ValueObjects\TaxRate::equals">equals</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#105"><abbr title="Nexus\Common\ValueObjects\TaxRate::greaterThan">greaterThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#110"><abbr title="Nexus\Common\ValueObjects\TaxRate::lessThan">lessThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#116"><abbr title="Nexus\Common\ValueObjects\TaxRate::multiply">multiply</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#128"><abbr title="Nexus\Common\ValueObjects\TaxRate::toArray">toArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#139"><abbr title="Nexus\Common\ValueObjects\TaxRate::toString">toString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#144"><abbr title="Nexus\Common\ValueObjects\TaxRate::fromArray">fromArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/TenantId.php.html#99"><abbr title="Nexus\Common\ValueObjects\TenantId::__toString">__toString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#41"><abbr title="Nexus\Common\ValueObjects\VarianceResult::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#55"><abbr title="Nexus\Common\ValueObjects\VarianceResult::getActual">getActual</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#60"><abbr title="Nexus\Common\ValueObjects\VarianceResult::getBudget">getBudget</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#65"><abbr title="Nexus\Common\ValueObjects\VarianceResult::getVariance">getVariance</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#70"><abbr title="Nexus\Common\ValueObjects\VarianceResult::getPercentageVariance">getPercentageVariance</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#75"><abbr title="Nexus\Common\ValueObjects\VarianceResult::isFavorable">isFavorable</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#83"><abbr title="Nexus\Common\ValueObjects\VarianceResult::isUnfavorable">isUnfavorable</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#89"><abbr title="Nexus\Common\ValueObjects\VarianceResult::average">average</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#110"><abbr title="Nexus\Common\ValueObjects\VarianceResult::abs">abs</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#115"><abbr title="Nexus\Common\ValueObjects\VarianceResult::isWithinRange">isWithinRange</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#125"><abbr title="Nexus\Common\ValueObjects\VarianceResult::getTrendDirection">getTrendDirection</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#140"><abbr title="Nexus\Common\ValueObjects\VarianceResult::percentageChange">percentageChange</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#153"><abbr title="Nexus\Common\ValueObjects\VarianceResult::isSignificantChange">isSignificantChange</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#159"><abbr title="Nexus\Common\ValueObjects\VarianceResult::compareTo">compareTo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#169"><abbr title="Nexus\Common\ValueObjects\VarianceResult::equals">equals</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#178"><abbr title="Nexus\Common\ValueObjects\VarianceResult::greaterThan">greaterThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#183"><abbr title="Nexus\Common\ValueObjects\VarianceResult::lessThan">lessThan</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#189"><abbr title="Nexus\Common\ValueObjects\VarianceResult::add">add</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#202"><abbr title="Nexus\Common\ValueObjects\VarianceResult::subtract">subtract</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#215"><abbr title="Nexus\Common\ValueObjects\VarianceResult::multiply">multiply</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#224"><abbr title="Nexus\Common\ValueObjects\VarianceResult::divide">divide</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#237"><abbr title="Nexus\Common\ValueObjects\VarianceResult::toArray">toArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#248"><abbr title="Nexus\Common\ValueObjects\VarianceResult::toString">toString</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#261"><abbr title="Nexus\Common\ValueObjects\VarianceResult::fromArray">fromArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ValueObjects/Address.php.html#27"><abbr title="Nexus\Common\ValueObjects\Address::__construct">__construct</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#84"><abbr title="Nexus\Common\ValueObjects\DateRange::compareTo">compareTo</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ValueObjects/Email.php.html#48"><abbr title="Nexus\Common\ValueObjects\Email::compareTo">compareTo</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#25"><abbr title="Nexus\Common\ValueObjects\EntityId::__construct">__construct</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ValueObjects/Percentage.php.html#78"><abbr title="Nexus\Common\ValueObjects\Percentage::compareTo">compareTo</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ValueObjects/Percentage.php.html#103"><abbr title="Nexus\Common\ValueObjects\Percentage::add">add</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ValueObjects/Percentage.php.html#113"><abbr title="Nexus\Common\ValueObjects\Percentage::subtract">subtract</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#72"><abbr title="Nexus\Common\ValueObjects\PhoneNumber::compareTo">compareTo</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ValueObjects/TenantId.php.html#69"><abbr title="Nexus\Common\ValueObjects\TenantId::compareTo">compareTo</abbr></a></td><td class="text-right">66%</td></tr>
+       <tr><td><a href="ValueObjects/AuditMetadata.php.html#87"><abbr title="Nexus\Common\ValueObjects\AuditMetadata::toString">toString</abbr></a></td><td class="text-right">75%</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#260"><abbr title="Nexus\Common\ValueObjects\Money::equals">equals</abbr></a></td><td class="text-right">75%</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#43"><abbr title="Nexus\Common\ValueObjects\PhoneNumber::getCountryCode">getCountryCode</abbr></a></td><td class="text-right">75%</td></tr>
+       <tr><td><a href="ValueObjects/UnitOfMeasurement.php.html#89"><abbr title="Nexus\Common\ValueObjects\UnitOfMeasurement::getCategory">getCategory</abbr></a></td><td class="text-right">75%</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#22"><abbr title="Nexus\Common\ValueObjects\PhoneNumber::__construct">__construct</abbr></a></td><td class="text-right">83%</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#128"><abbr title="Nexus\Common\ValueObjects\Money::add">add</abbr></a></td><td class="text-right">85%</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#147"><abbr title="Nexus\Common\ValueObjects\Money::subtract">subtract</abbr></a></td><td class="text-right">85%</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#236"><abbr title="Nexus\Common\ValueObjects\Money::compareTo">compareTo</abbr></a></td><td class="text-right">87%</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#54"><abbr title="Nexus\Common\ValueObjects\PhoneNumber::format">format</abbr></a></td><td class="text-right">87%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="ValueObjects/Address.php.html#102"><abbr title="Nexus\Common\ValueObjects\Address::equals">equals</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#27"><abbr title="Nexus\Common\ValueObjects\TaxRate::__construct">__construct</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#93"><abbr title="Nexus\Common\ValueObjects\Measurement::canConvertTo">canConvertTo</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#94"><abbr title="Nexus\Common\ValueObjects\TaxRate::equals">equals</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#41"><abbr title="Nexus\Common\ValueObjects\VarianceResult::__construct">__construct</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#89"><abbr title="Nexus\Common\ValueObjects\VarianceResult::average">average</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#115"><abbr title="Nexus\Common\ValueObjects\VarianceResult::isWithinRange">isWithinRange</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#125"><abbr title="Nexus\Common\ValueObjects\VarianceResult::getTrendDirection">getTrendDirection</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#99"><abbr title="Nexus\Common\ValueObjects\DateRange::equals">equals</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#106"><abbr title="Nexus\Common\ValueObjects\Measurement::compareTo">compareTo</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#74"><abbr title="Nexus\Common\ValueObjects\Quantity::compareTo">compareTo</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#106"><abbr title="Nexus\Common\ValueObjects\Quantity::add">add</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#120"><abbr title="Nexus\Common\ValueObjects\Quantity::subtract">subtract</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#41"><abbr title="Nexus\Common\ValueObjects\Status::canTransitionTo">canTransitionTo</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#26"><abbr title="Nexus\Common\ValueObjects\TaxCode::__construct">__construct</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#72"><abbr title="Nexus\Common\ValueObjects\TaxRate::isEffectiveOn">isEffectiveOn</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#140"><abbr title="Nexus\Common\ValueObjects\VarianceResult::percentageChange">percentageChange</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#169"><abbr title="Nexus\Common\ValueObjects\VarianceResult::equals">equals</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ValueObjects/Address.php.html#92"><abbr title="Nexus\Common\ValueObjects\Address::compareTo">compareTo</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#61"><abbr title="Nexus\Common\ValueObjects\EntityId::compareTo">compareTo</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#54"><abbr title="Nexus\Common\ValueObjects\Measurement::__construct">__construct</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#74"><abbr title="Nexus\Common\ValueObjects\Measurement::convertTo">convertTo</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#136"><abbr title="Nexus\Common\ValueObjects\Measurement::add">add</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#147"><abbr title="Nexus\Common\ValueObjects\Measurement::subtract">subtract</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Measurement.php.html#164"><abbr title="Nexus\Common\ValueObjects\Measurement::divide">divide</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#399"><abbr title="Nexus\Common\ValueObjects\Money::fromArray">fromArray</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#33"><abbr title="Nexus\Common\ValueObjects\Quantity::__construct">__construct</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Quantity.php.html#140"><abbr title="Nexus\Common\ValueObjects\Quantity::divide">divide</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#25"><abbr title="Nexus\Common\ValueObjects\Status::__construct">__construct</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Status.php.html#64"><abbr title="Nexus\Common\ValueObjects\Status::transitionTo">transitionTo</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#67"><abbr title="Nexus\Common\ValueObjects\TaxCode::compareTo">compareTo</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/TaxCode.php.html#77"><abbr title="Nexus\Common\ValueObjects\TaxCode::equals">equals</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#84"><abbr title="Nexus\Common\ValueObjects\TaxRate::compareTo">compareTo</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/TaxRate.php.html#144"><abbr title="Nexus\Common\ValueObjects\TaxRate::fromArray">fromArray</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#83"><abbr title="Nexus\Common\ValueObjects\VarianceResult::isUnfavorable">isUnfavorable</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#159"><abbr title="Nexus\Common\ValueObjects\VarianceResult::compareTo">compareTo</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#189"><abbr title="Nexus\Common\ValueObjects\VarianceResult::add">add</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#202"><abbr title="Nexus\Common\ValueObjects\VarianceResult::subtract">subtract</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#224"><abbr title="Nexus\Common\ValueObjects\VarianceResult::divide">divide</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/VarianceResult.php.html#248"><abbr title="Nexus\Common\ValueObjects\VarianceResult::toString">toString</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ValueObjects/Address.php.html#27"><abbr title="Nexus\Common\ValueObjects\Address::__construct">__construct</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#22"><abbr title="Nexus\Common\ValueObjects\PhoneNumber::__construct">__construct</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#236"><abbr title="Nexus\Common\ValueObjects\Money::compareTo">compareTo</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="ValueObjects/DateRange.php.html#84"><abbr title="Nexus\Common\ValueObjects\DateRange::compareTo">compareTo</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="ValueObjects/AuditMetadata.php.html#87"><abbr title="Nexus\Common\ValueObjects\AuditMetadata::toString">toString</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="ValueObjects/UnitOfMeasurement.php.html#89"><abbr title="Nexus\Common\ValueObjects\UnitOfMeasurement::getCategory">getCategory</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#54"><abbr title="Nexus\Common\ValueObjects\PhoneNumber::format">format</abbr></a></td><td class="text-right">3</td></tr>
+       <tr><td><a href="ValueObjects/Email.php.html#48"><abbr title="Nexus\Common\ValueObjects\Email::compareTo">compareTo</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/EntityId.php.html#25"><abbr title="Nexus\Common\ValueObjects\EntityId::__construct">__construct</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/Percentage.php.html#78"><abbr title="Nexus\Common\ValueObjects\Percentage::compareTo">compareTo</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/Percentage.php.html#103"><abbr title="Nexus\Common\ValueObjects\Percentage::add">add</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/Percentage.php.html#113"><abbr title="Nexus\Common\ValueObjects\Percentage::subtract">subtract</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#72"><abbr title="Nexus\Common\ValueObjects\PhoneNumber::compareTo">compareTo</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/TenantId.php.html#69"><abbr title="Nexus\Common\ValueObjects\TenantId::compareTo">compareTo</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#260"><abbr title="Nexus\Common\ValueObjects\Money::equals">equals</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/PhoneNumber.php.html#43"><abbr title="Nexus\Common\ValueObjects\PhoneNumber::getCountryCode">getCountryCode</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#128"><abbr title="Nexus\Common\ValueObjects\Money::add">add</abbr></a></td><td class="text-right">2</td></tr>
+       <tr><td><a href="ValueObjects/Money.php.html#147"><abbr title="Nexus\Common\ValueObjects\Money::subtract">subtract</abbr></a></td><td class="text-right">2</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 11.0.11</a> using <a href="https://www.php.net/" target="_top">PHP 8.3.6</a> and <a href="https://phpunit.de/">PHPUnit 11.5.45</a> at Mon Dec 1 20:24:43 UTC 2025.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="_js/jquery.min.js?v=11.0.11" type="text/javascript"></script>
+  <script src="_js/d3.min.js?v=11.0.11" type="text/javascript"></script>
+  <script src="_js/nv.d3.min.js?v=11.0.11" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([6,0,0,0,0,0,2,1,0,1,6,6], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([123,0,0,0,0,0,0,9,4,5,0,118], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[68,25,"<a href=\"ValueObjects\/Address.php.html#16\">Nexus\\Common\\ValueObjects\\Address<\/a>"],[100,17,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#15\">Nexus\\Common\\ValueObjects\\AttachmentMetadata<\/a>"],[96.7741935483871,13,"<a href=\"ValueObjects\/AuditMetadata.php.html#15\">Nexus\\Common\\ValueObjects\\AuditMetadata<\/a>"],[100,0,"<a href=\"ValueObjects\/CustomerId.php.html#10\">Nexus\\Common\\ValueObjects\\CustomerId<\/a>"],[57.49999999999999,23,"<a href=\"ValueObjects\/DateRange.php.html#18\">Nexus\\Common\\ValueObjects\\DateRange<\/a>"],[95,13,"<a href=\"ValueObjects\/Email.php.html#14\">Nexus\\Common\\ValueObjects\\Email<\/a>"],[100,0,"<a href=\"ValueObjects\/EmployeeId.php.html#10\">Nexus\\Common\\ValueObjects\\EmployeeId<\/a>"],[50,15,"<a href=\"ValueObjects\/EntityId.php.html#18\">Nexus\\Common\\ValueObjects\\EntityId<\/a>"],[0,27,"<a href=\"ValueObjects\/Measurement.php.html#22\">Nexus\\Common\\ValueObjects\\Measurement<\/a>"],[90,44,"<a href=\"ValueObjects\/Money.php.html#23\">Nexus\\Common\\ValueObjects\\Money<\/a>"],[90.32258064516128,23,"<a href=\"ValueObjects\/Percentage.php.html#21\">Nexus\\Common\\ValueObjects\\Percentage<\/a>"],[87.5,18,"<a href=\"ValueObjects\/PhoneNumber.php.html#14\">Nexus\\Common\\ValueObjects\\PhoneNumber<\/a>"],[100,0,"<a href=\"ValueObjects\/ProductId.php.html#10\">Nexus\\Common\\ValueObjects\\ProductId<\/a>"],[0,25,"<a href=\"ValueObjects\/Quantity.php.html#21\">Nexus\\Common\\ValueObjects\\Quantity<\/a>"],[0,20,"<a href=\"ValueObjects\/Status.php.html#17\">Nexus\\Common\\ValueObjects\\Status<\/a>"],[0,18,"<a href=\"ValueObjects\/TaxCode.php.html#17\">Nexus\\Common\\ValueObjects\\TaxCode<\/a>"],[0,27,"<a href=\"ValueObjects\/TaxRate.php.html#17\">Nexus\\Common\\ValueObjects\\TaxRate<\/a>"],[95,21,"<a href=\"ValueObjects\/TenantId.php.html#22\">Nexus\\Common\\ValueObjects\\TenantId<\/a>"],[94.44444444444444,13,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#16\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement<\/a>"],[0,46,"<a href=\"ValueObjects\/VarianceResult.php.html#23\">Nexus\\Common\\ValueObjects\\VarianceResult<\/a>"],[100,0,"<a href=\"ValueObjects\/VendorId.php.html#10\">Nexus\\Common\\ValueObjects\\VendorId<\/a>"],[100,0,"<a href=\"ValueObjects\/WarehouseId.php.html#10\">Nexus\\Common\\ValueObjects\\WarehouseId<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[66.66666666666666,4,"<a href=\"ValueObjects\/Address.php.html#27\">Nexus\\Common\\ValueObjects\\Address::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/Address.php.html#48\">Nexus\\Common\\ValueObjects\\Address::getStreet<\/a>"],[100,1,"<a href=\"ValueObjects\/Address.php.html#53\">Nexus\\Common\\ValueObjects\\Address::getStreet2<\/a>"],[100,1,"<a href=\"ValueObjects\/Address.php.html#58\">Nexus\\Common\\ValueObjects\\Address::getCity<\/a>"],[100,1,"<a href=\"ValueObjects\/Address.php.html#63\">Nexus\\Common\\ValueObjects\\Address::getState<\/a>"],[100,1,"<a href=\"ValueObjects\/Address.php.html#68\">Nexus\\Common\\ValueObjects\\Address::getPostalCode<\/a>"],[100,1,"<a href=\"ValueObjects\/Address.php.html#73\">Nexus\\Common\\ValueObjects\\Address::getCountry<\/a>"],[100,1,"<a href=\"ValueObjects\/Address.php.html#78\">Nexus\\Common\\ValueObjects\\Address::getFullAddress<\/a>"],[0,2,"<a href=\"ValueObjects\/Address.php.html#92\">Nexus\\Common\\ValueObjects\\Address::compareTo<\/a>"],[0,7,"<a href=\"ValueObjects\/Address.php.html#102\">Nexus\\Common\\ValueObjects\\Address::equals<\/a>"],[0,1,"<a href=\"ValueObjects\/Address.php.html#116\">Nexus\\Common\\ValueObjects\\Address::greaterThan<\/a>"],[0,1,"<a href=\"ValueObjects\/Address.php.html#121\">Nexus\\Common\\ValueObjects\\Address::lessThan<\/a>"],[100,1,"<a href=\"ValueObjects\/Address.php.html#127\">Nexus\\Common\\ValueObjects\\Address::toArray<\/a>"],[0,1,"<a href=\"ValueObjects\/Address.php.html#139\">Nexus\\Common\\ValueObjects\\Address::toString<\/a>"],[100,1,"<a href=\"ValueObjects\/Address.php.html#144\">Nexus\\Common\\ValueObjects\\Address::fromArray<\/a>"],[100,4,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#26\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#47\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::getFileName<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#52\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::getMimeType<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#57\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::getSizeInBytes<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#62\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::getUploadedAt<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#67\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::getUploadedBy<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#72\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::getStoragePath<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#77\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::getFileExtension<\/a>"],[100,3,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#83\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::getHumanReadableSize<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#98\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::toArray<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#112\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::toString<\/a>"],[100,1,"<a href=\"ValueObjects\/AttachmentMetadata.php.html#117\">Nexus\\Common\\ValueObjects\\AttachmentMetadata::fromArray<\/a>"],[100,1,"<a href=\"ValueObjects\/AuditMetadata.php.html#23\">Nexus\\Common\\ValueObjects\\AuditMetadata::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/AuditMetadata.php.html#34\">Nexus\\Common\\ValueObjects\\AuditMetadata::forCreate<\/a>"],[100,1,"<a href=\"ValueObjects\/AuditMetadata.php.html#45\">Nexus\\Common\\ValueObjects\\AuditMetadata::withUpdate<\/a>"],[100,1,"<a href=\"ValueObjects\/AuditMetadata.php.html#56\">Nexus\\Common\\ValueObjects\\AuditMetadata::getCreatedBy<\/a>"],[100,1,"<a href=\"ValueObjects\/AuditMetadata.php.html#61\">Nexus\\Common\\ValueObjects\\AuditMetadata::getCreatedAt<\/a>"],[100,1,"<a href=\"ValueObjects\/AuditMetadata.php.html#66\">Nexus\\Common\\ValueObjects\\AuditMetadata::getUpdatedBy<\/a>"],[100,1,"<a href=\"ValueObjects\/AuditMetadata.php.html#71\">Nexus\\Common\\ValueObjects\\AuditMetadata::getUpdatedAt<\/a>"],[100,1,"<a href=\"ValueObjects\/AuditMetadata.php.html#77\">Nexus\\Common\\ValueObjects\\AuditMetadata::toArray<\/a>"],[75,3,"<a href=\"ValueObjects\/AuditMetadata.php.html#87\">Nexus\\Common\\ValueObjects\\AuditMetadata::toString<\/a>"],[100,2,"<a href=\"ValueObjects\/AuditMetadata.php.html#98\">Nexus\\Common\\ValueObjects\\AuditMetadata::fromArray<\/a>"],[100,2,"<a href=\"ValueObjects\/DateRange.php.html#23\">Nexus\\Common\\ValueObjects\\DateRange::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/DateRange.php.html#33\">Nexus\\Common\\ValueObjects\\DateRange::getStartDate<\/a>"],[100,1,"<a href=\"ValueObjects\/DateRange.php.html#38\">Nexus\\Common\\ValueObjects\\DateRange::getEndDate<\/a>"],[100,2,"<a href=\"ValueObjects\/DateRange.php.html#43\">Nexus\\Common\\ValueObjects\\DateRange::contains<\/a>"],[100,2,"<a href=\"ValueObjects\/DateRange.php.html#48\">Nexus\\Common\\ValueObjects\\DateRange::overlaps<\/a>"],[0,1,"<a href=\"ValueObjects\/DateRange.php.html#55\">Nexus\\Common\\ValueObjects\\DateRange::shift<\/a>"],[0,1,"<a href=\"ValueObjects\/DateRange.php.html#63\">Nexus\\Common\\ValueObjects\\DateRange::extend<\/a>"],[100,1,"<a href=\"ValueObjects\/DateRange.php.html#72\">Nexus\\Common\\ValueObjects\\DateRange::getDays<\/a>"],[100,1,"<a href=\"ValueObjects\/DateRange.php.html#77\">Nexus\\Common\\ValueObjects\\DateRange::isActive<\/a>"],[66.66666666666666,3,"<a href=\"ValueObjects\/DateRange.php.html#84\">Nexus\\Common\\ValueObjects\\DateRange::compareTo<\/a>"],[0,3,"<a href=\"ValueObjects\/DateRange.php.html#99\">Nexus\\Common\\ValueObjects\\DateRange::equals<\/a>"],[0,1,"<a href=\"ValueObjects\/DateRange.php.html#109\">Nexus\\Common\\ValueObjects\\DateRange::greaterThan<\/a>"],[0,1,"<a href=\"ValueObjects\/DateRange.php.html#114\">Nexus\\Common\\ValueObjects\\DateRange::lessThan<\/a>"],[100,1,"<a href=\"ValueObjects\/DateRange.php.html#120\">Nexus\\Common\\ValueObjects\\DateRange::toArray<\/a>"],[0,1,"<a href=\"ValueObjects\/DateRange.php.html#129\">Nexus\\Common\\ValueObjects\\DateRange::toString<\/a>"],[100,1,"<a href=\"ValueObjects\/DateRange.php.html#134\">Nexus\\Common\\ValueObjects\\DateRange::fromArray<\/a>"],[100,2,"<a href=\"ValueObjects\/Email.php.html#21\">Nexus\\Common\\ValueObjects\\Email::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/Email.php.html#32\">Nexus\\Common\\ValueObjects\\Email::getValue<\/a>"],[100,1,"<a href=\"ValueObjects\/Email.php.html#37\">Nexus\\Common\\ValueObjects\\Email::getDomain<\/a>"],[100,1,"<a href=\"ValueObjects\/Email.php.html#42\">Nexus\\Common\\ValueObjects\\Email::getLocalPart<\/a>"],[66.66666666666666,2,"<a href=\"ValueObjects\/Email.php.html#48\">Nexus\\Common\\ValueObjects\\Email::compareTo<\/a>"],[100,1,"<a href=\"ValueObjects\/Email.php.html#57\">Nexus\\Common\\ValueObjects\\Email::equals<\/a>"],[100,1,"<a href=\"ValueObjects\/Email.php.html#62\">Nexus\\Common\\ValueObjects\\Email::greaterThan<\/a>"],[100,1,"<a href=\"ValueObjects\/Email.php.html#67\">Nexus\\Common\\ValueObjects\\Email::lessThan<\/a>"],[100,1,"<a href=\"ValueObjects\/Email.php.html#73\">Nexus\\Common\\ValueObjects\\Email::toArray<\/a>"],[100,1,"<a href=\"ValueObjects\/Email.php.html#82\">Nexus\\Common\\ValueObjects\\Email::toString<\/a>"],[100,1,"<a href=\"ValueObjects\/Email.php.html#87\">Nexus\\Common\\ValueObjects\\Email::fromArray<\/a>"],[66.66666666666666,2,"<a href=\"ValueObjects\/EntityId.php.html#25\">Nexus\\Common\\ValueObjects\\EntityId::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/EntityId.php.html#37\">Nexus\\Common\\ValueObjects\\EntityId::generate<\/a>"],[100,1,"<a href=\"ValueObjects\/EntityId.php.html#45\">Nexus\\Common\\ValueObjects\\EntityId::fromString<\/a>"],[0,1,"<a href=\"ValueObjects\/EntityId.php.html#50\">Nexus\\Common\\ValueObjects\\EntityId::getValue<\/a>"],[0,1,"<a href=\"ValueObjects\/EntityId.php.html#55\">Nexus\\Common\\ValueObjects\\EntityId::toUlid<\/a>"],[0,2,"<a href=\"ValueObjects\/EntityId.php.html#61\">Nexus\\Common\\ValueObjects\\EntityId::compareTo<\/a>"],[100,2,"<a href=\"ValueObjects\/EntityId.php.html#70\">Nexus\\Common\\ValueObjects\\EntityId::equals<\/a>"],[0,1,"<a href=\"ValueObjects\/EntityId.php.html#75\">Nexus\\Common\\ValueObjects\\EntityId::greaterThan<\/a>"],[0,1,"<a href=\"ValueObjects\/EntityId.php.html#80\">Nexus\\Common\\ValueObjects\\EntityId::lessThan<\/a>"],[100,1,"<a href=\"ValueObjects\/EntityId.php.html#86\">Nexus\\Common\\ValueObjects\\EntityId::toArray<\/a>"],[100,1,"<a href=\"ValueObjects\/EntityId.php.html#91\">Nexus\\Common\\ValueObjects\\EntityId::toString<\/a>"],[100,1,"<a href=\"ValueObjects\/EntityId.php.html#96\">Nexus\\Common\\ValueObjects\\EntityId::fromArray<\/a>"],[0,2,"<a href=\"ValueObjects\/Measurement.php.html#54\">Nexus\\Common\\ValueObjects\\Measurement::__construct<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#63\">Nexus\\Common\\ValueObjects\\Measurement::getAmount<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#68\">Nexus\\Common\\ValueObjects\\Measurement::getUnit<\/a>"],[0,2,"<a href=\"ValueObjects\/Measurement.php.html#74\">Nexus\\Common\\ValueObjects\\Measurement::convertTo<\/a>"],[0,4,"<a href=\"ValueObjects\/Measurement.php.html#93\">Nexus\\Common\\ValueObjects\\Measurement::canConvertTo<\/a>"],[0,3,"<a href=\"ValueObjects\/Measurement.php.html#106\">Nexus\\Common\\ValueObjects\\Measurement::compareTo<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#120\">Nexus\\Common\\ValueObjects\\Measurement::equals<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#125\">Nexus\\Common\\ValueObjects\\Measurement::greaterThan<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#130\">Nexus\\Common\\ValueObjects\\Measurement::lessThan<\/a>"],[0,2,"<a href=\"ValueObjects\/Measurement.php.html#136\">Nexus\\Common\\ValueObjects\\Measurement::add<\/a>"],[0,2,"<a href=\"ValueObjects\/Measurement.php.html#147\">Nexus\\Common\\ValueObjects\\Measurement::subtract<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#158\">Nexus\\Common\\ValueObjects\\Measurement::multiply<\/a>"],[0,2,"<a href=\"ValueObjects\/Measurement.php.html#164\">Nexus\\Common\\ValueObjects\\Measurement::divide<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#174\">Nexus\\Common\\ValueObjects\\Measurement::toArray<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#182\">Nexus\\Common\\ValueObjects\\Measurement::toString<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#187\">Nexus\\Common\\ValueObjects\\Measurement::fromArray<\/a>"],[0,1,"<a href=\"ValueObjects\/Measurement.php.html#196\">Nexus\\Common\\ValueObjects\\Measurement::format<\/a>"],[100,2,"<a href=\"ValueObjects\/Money.php.html#41\">Nexus\\Common\\ValueObjects\\Money::__construct<\/a>"],[100,2,"<a href=\"ValueObjects\/Money.php.html#59\">Nexus\\Common\\ValueObjects\\Money::of<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#75\">Nexus\\Common\\ValueObjects\\Money::zero<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#83\">Nexus\\Common\\ValueObjects\\Money::getAmountInMinorUnits<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#91\">Nexus\\Common\\ValueObjects\\Money::getCurrency<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#101\">Nexus\\Common\\ValueObjects\\Money::getAmount<\/a>"],[100,2,"<a href=\"ValueObjects\/Money.php.html#112\">Nexus\\Common\\ValueObjects\\Money::format<\/a>"],[85.71428571428571,2,"<a href=\"ValueObjects\/Money.php.html#128\">Nexus\\Common\\ValueObjects\\Money::add<\/a>"],[85.71428571428571,2,"<a href=\"ValueObjects\/Money.php.html#147\">Nexus\\Common\\ValueObjects\\Money::subtract<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#166\">Nexus\\Common\\ValueObjects\\Money::multiply<\/a>"],[100,2,"<a href=\"ValueObjects\/Money.php.html#179\">Nexus\\Common\\ValueObjects\\Money::divide<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#193\">Nexus\\Common\\ValueObjects\\Money::abs<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#201\">Nexus\\Common\\ValueObjects\\Money::negate<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#209\">Nexus\\Common\\ValueObjects\\Money::isPositive<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#217\">Nexus\\Common\\ValueObjects\\Money::isNegative<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#225\">Nexus\\Common\\ValueObjects\\Money::isZero<\/a>"],[87.5,4,"<a href=\"ValueObjects\/Money.php.html#236\">Nexus\\Common\\ValueObjects\\Money::compareTo<\/a>"],[75,2,"<a href=\"ValueObjects\/Money.php.html#260\">Nexus\\Common\\ValueObjects\\Money::equals<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#276\">Nexus\\Common\\ValueObjects\\Money::greaterThan<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#286\">Nexus\\Common\\ValueObjects\\Money::greaterThanOrEqual<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#296\">Nexus\\Common\\ValueObjects\\Money::lessThan<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#306\">Nexus\\Common\\ValueObjects\\Money::lessThanOrEqual<\/a>"],[100,5,"<a href=\"ValueObjects\/Money.php.html#318\">Nexus\\Common\\ValueObjects\\Money::allocate<\/a>"],[0,1,"<a href=\"ValueObjects\/Money.php.html#354\">Nexus\\Common\\ValueObjects\\Money::convertToCurrency<\/a>"],[100,2,"<a href=\"ValueObjects\/Money.php.html#365\">Nexus\\Common\\ValueObjects\\Money::assertSameCurrency<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#377\">Nexus\\Common\\ValueObjects\\Money::toString<\/a>"],[100,1,"<a href=\"ValueObjects\/Money.php.html#387\">Nexus\\Common\\ValueObjects\\Money::toArray<\/a>"],[0,2,"<a href=\"ValueObjects\/Money.php.html#399\">Nexus\\Common\\ValueObjects\\Money::fromArray<\/a>"],[100,3,"<a href=\"ValueObjects\/Percentage.php.html#36\">Nexus\\Common\\ValueObjects\\Percentage::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#48\">Nexus\\Common\\ValueObjects\\Percentage::fromDecimal<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#56\">Nexus\\Common\\ValueObjects\\Percentage::getValue<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#64\">Nexus\\Common\\ValueObjects\\Percentage::asDecimal<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#72\">Nexus\\Common\\ValueObjects\\Percentage::of<\/a>"],[66.66666666666666,2,"<a href=\"ValueObjects\/Percentage.php.html#78\">Nexus\\Common\\ValueObjects\\Percentage::compareTo<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#87\">Nexus\\Common\\ValueObjects\\Percentage::equals<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#92\">Nexus\\Common\\ValueObjects\\Percentage::greaterThan<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#97\">Nexus\\Common\\ValueObjects\\Percentage::lessThan<\/a>"],[66.66666666666666,2,"<a href=\"ValueObjects\/Percentage.php.html#103\">Nexus\\Common\\ValueObjects\\Percentage::add<\/a>"],[66.66666666666666,2,"<a href=\"ValueObjects\/Percentage.php.html#113\">Nexus\\Common\\ValueObjects\\Percentage::subtract<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#123\">Nexus\\Common\\ValueObjects\\Percentage::multiply<\/a>"],[100,2,"<a href=\"ValueObjects\/Percentage.php.html#129\">Nexus\\Common\\ValueObjects\\Percentage::divide<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#139\">Nexus\\Common\\ValueObjects\\Percentage::toArray<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#147\">Nexus\\Common\\ValueObjects\\Percentage::toString<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#152\">Nexus\\Common\\ValueObjects\\Percentage::fromArray<\/a>"],[100,1,"<a href=\"ValueObjects\/Percentage.php.html#158\">Nexus\\Common\\ValueObjects\\Percentage::format<\/a>"],[83.33333333333334,4,"<a href=\"ValueObjects\/PhoneNumber.php.html#22\">Nexus\\Common\\ValueObjects\\PhoneNumber::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/PhoneNumber.php.html#38\">Nexus\\Common\\ValueObjects\\PhoneNumber::getValue<\/a>"],[75,2,"<a href=\"ValueObjects\/PhoneNumber.php.html#43\">Nexus\\Common\\ValueObjects\\PhoneNumber::getCountryCode<\/a>"],[87.5,3,"<a href=\"ValueObjects\/PhoneNumber.php.html#54\">Nexus\\Common\\ValueObjects\\PhoneNumber::format<\/a>"],[66.66666666666666,2,"<a href=\"ValueObjects\/PhoneNumber.php.html#72\">Nexus\\Common\\ValueObjects\\PhoneNumber::compareTo<\/a>"],[100,1,"<a href=\"ValueObjects\/PhoneNumber.php.html#81\">Nexus\\Common\\ValueObjects\\PhoneNumber::equals<\/a>"],[100,1,"<a href=\"ValueObjects\/PhoneNumber.php.html#86\">Nexus\\Common\\ValueObjects\\PhoneNumber::greaterThan<\/a>"],[100,1,"<a href=\"ValueObjects\/PhoneNumber.php.html#91\">Nexus\\Common\\ValueObjects\\PhoneNumber::lessThan<\/a>"],[100,1,"<a href=\"ValueObjects\/PhoneNumber.php.html#97\">Nexus\\Common\\ValueObjects\\PhoneNumber::toArray<\/a>"],[100,1,"<a href=\"ValueObjects\/PhoneNumber.php.html#106\">Nexus\\Common\\ValueObjects\\PhoneNumber::toString<\/a>"],[100,1,"<a href=\"ValueObjects\/PhoneNumber.php.html#111\">Nexus\\Common\\ValueObjects\\PhoneNumber::fromArray<\/a>"],[0,2,"<a href=\"ValueObjects\/Quantity.php.html#33\">Nexus\\Common\\ValueObjects\\Quantity::__construct<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#42\">Nexus\\Common\\ValueObjects\\Quantity::getAmount<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#47\">Nexus\\Common\\ValueObjects\\Quantity::getUnit<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#52\">Nexus\\Common\\ValueObjects\\Quantity::isZero<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#58\">Nexus\\Common\\ValueObjects\\Quantity::convertTo<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#67\">Nexus\\Common\\ValueObjects\\Quantity::canConvertTo<\/a>"],[0,3,"<a href=\"ValueObjects\/Quantity.php.html#74\">Nexus\\Common\\ValueObjects\\Quantity::compareTo<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#90\">Nexus\\Common\\ValueObjects\\Quantity::equals<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#95\">Nexus\\Common\\ValueObjects\\Quantity::greaterThan<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#100\">Nexus\\Common\\ValueObjects\\Quantity::lessThan<\/a>"],[0,3,"<a href=\"ValueObjects\/Quantity.php.html#106\">Nexus\\Common\\ValueObjects\\Quantity::add<\/a>"],[0,3,"<a href=\"ValueObjects\/Quantity.php.html#120\">Nexus\\Common\\ValueObjects\\Quantity::subtract<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#134\">Nexus\\Common\\ValueObjects\\Quantity::multiply<\/a>"],[0,2,"<a href=\"ValueObjects\/Quantity.php.html#140\">Nexus\\Common\\ValueObjects\\Quantity::divide<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#150\">Nexus\\Common\\ValueObjects\\Quantity::toArray<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#158\">Nexus\\Common\\ValueObjects\\Quantity::toString<\/a>"],[0,1,"<a href=\"ValueObjects\/Quantity.php.html#163\">Nexus\\Common\\ValueObjects\\Quantity::fromArray<\/a>"],[0,2,"<a href=\"ValueObjects\/Status.php.html#25\">Nexus\\Common\\ValueObjects\\Status::__construct<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#36\">Nexus\\Common\\ValueObjects\\Status::getState<\/a>"],[0,3,"<a href=\"ValueObjects\/Status.php.html#41\">Nexus\\Common\\ValueObjects\\Status::canTransitionTo<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#54\">Nexus\\Common\\ValueObjects\\Status::isFinal<\/a>"],[0,2,"<a href=\"ValueObjects\/Status.php.html#64\">Nexus\\Common\\ValueObjects\\Status::transitionTo<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#78\">Nexus\\Common\\ValueObjects\\Status::values<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#85\">Nexus\\Common\\ValueObjects\\Status::getValue<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#90\">Nexus\\Common\\ValueObjects\\Status::isValid<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#96\">Nexus\\Common\\ValueObjects\\Status::toArray<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#105\">Nexus\\Common\\ValueObjects\\Status::toString<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#110\">Nexus\\Common\\ValueObjects\\Status::fromArray<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#120\">Nexus\\Common\\ValueObjects\\Status::draft<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#125\">Nexus\\Common\\ValueObjects\\Status::pending<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#130\">Nexus\\Common\\ValueObjects\\Status::approved<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#135\">Nexus\\Common\\ValueObjects\\Status::rejected<\/a>"],[0,1,"<a href=\"ValueObjects\/Status.php.html#140\">Nexus\\Common\\ValueObjects\\Status::closed<\/a>"],[0,3,"<a href=\"ValueObjects\/TaxCode.php.html#26\">Nexus\\Common\\ValueObjects\\TaxCode::__construct<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#41\">Nexus\\Common\\ValueObjects\\TaxCode::getCode<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#46\">Nexus\\Common\\ValueObjects\\TaxCode::getDescription<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#51\">Nexus\\Common\\ValueObjects\\TaxCode::getRate<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#56\">Nexus\\Common\\ValueObjects\\TaxCode::isActive<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#61\">Nexus\\Common\\ValueObjects\\TaxCode::calculateTax<\/a>"],[0,2,"<a href=\"ValueObjects\/TaxCode.php.html#67\">Nexus\\Common\\ValueObjects\\TaxCode::compareTo<\/a>"],[0,2,"<a href=\"ValueObjects\/TaxCode.php.html#77\">Nexus\\Common\\ValueObjects\\TaxCode::equals<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#86\">Nexus\\Common\\ValueObjects\\TaxCode::greaterThan<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#91\">Nexus\\Common\\ValueObjects\\TaxCode::lessThan<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#97\">Nexus\\Common\\ValueObjects\\TaxCode::multiply<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#108\">Nexus\\Common\\ValueObjects\\TaxCode::toArray<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#118\">Nexus\\Common\\ValueObjects\\TaxCode::toString<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxCode.php.html#123\">Nexus\\Common\\ValueObjects\\TaxCode::fromArray<\/a>"],[0,5,"<a href=\"ValueObjects\/TaxRate.php.html#27\">Nexus\\Common\\ValueObjects\\TaxRate::__construct<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#47\">Nexus\\Common\\ValueObjects\\TaxRate::getRate<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#52\">Nexus\\Common\\ValueObjects\\TaxRate::getTaxType<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#57\">Nexus\\Common\\ValueObjects\\TaxRate::getJurisdiction<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#62\">Nexus\\Common\\ValueObjects\\TaxRate::getEffectiveFrom<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#67\">Nexus\\Common\\ValueObjects\\TaxRate::getEffectiveTo<\/a>"],[0,3,"<a href=\"ValueObjects\/TaxRate.php.html#72\">Nexus\\Common\\ValueObjects\\TaxRate::isEffectiveOn<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#78\">Nexus\\Common\\ValueObjects\\TaxRate::calculateTax<\/a>"],[0,2,"<a href=\"ValueObjects\/TaxRate.php.html#84\">Nexus\\Common\\ValueObjects\\TaxRate::compareTo<\/a>"],[0,4,"<a href=\"ValueObjects\/TaxRate.php.html#94\">Nexus\\Common\\ValueObjects\\TaxRate::equals<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#105\">Nexus\\Common\\ValueObjects\\TaxRate::greaterThan<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#110\">Nexus\\Common\\ValueObjects\\TaxRate::lessThan<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#116\">Nexus\\Common\\ValueObjects\\TaxRate::multiply<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#128\">Nexus\\Common\\ValueObjects\\TaxRate::toArray<\/a>"],[0,1,"<a href=\"ValueObjects\/TaxRate.php.html#139\">Nexus\\Common\\ValueObjects\\TaxRate::toString<\/a>"],[0,2,"<a href=\"ValueObjects\/TaxRate.php.html#144\">Nexus\\Common\\ValueObjects\\TaxRate::fromArray<\/a>"],[100,1,"<a href=\"ValueObjects\/TenantId.php.html#27\">Nexus\\Common\\ValueObjects\\TenantId::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/TenantId.php.html#36\">Nexus\\Common\\ValueObjects\\TenantId::generate<\/a>"],[100,1,"<a href=\"ValueObjects\/TenantId.php.html#47\">Nexus\\Common\\ValueObjects\\TenantId::fromString<\/a>"],[100,1,"<a href=\"ValueObjects\/TenantId.php.html#55\">Nexus\\Common\\ValueObjects\\TenantId::toString<\/a>"],[100,2,"<a href=\"ValueObjects\/TenantId.php.html#63\">Nexus\\Common\\ValueObjects\\TenantId::equals<\/a>"],[66.66666666666666,2,"<a href=\"ValueObjects\/TenantId.php.html#69\">Nexus\\Common\\ValueObjects\\TenantId::compareTo<\/a>"],[100,1,"<a href=\"ValueObjects\/TenantId.php.html#78\">Nexus\\Common\\ValueObjects\\TenantId::greaterThan<\/a>"],[100,1,"<a href=\"ValueObjects\/TenantId.php.html#83\">Nexus\\Common\\ValueObjects\\TenantId::lessThan<\/a>"],[100,1,"<a href=\"ValueObjects\/TenantId.php.html#89\">Nexus\\Common\\ValueObjects\\TenantId::toArray<\/a>"],[100,1,"<a href=\"ValueObjects\/TenantId.php.html#94\">Nexus\\Common\\ValueObjects\\TenantId::fromArray<\/a>"],[0,1,"<a href=\"ValueObjects\/TenantId.php.html#99\">Nexus\\Common\\ValueObjects\\TenantId::__toString<\/a>"],[100,3,"<a href=\"ValueObjects\/TenantId.php.html#109\">Nexus\\Common\\ValueObjects\\TenantId::validate<\/a>"],[100,5,"<a href=\"ValueObjects\/TenantId.php.html#130\">Nexus\\Common\\ValueObjects\\TenantId::generateUlid<\/a>"],[100,2,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#71\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::__construct<\/a>"],[100,1,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#79\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::getValue<\/a>"],[100,1,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#84\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::getLabel<\/a>"],[75,3,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#89\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::getCategory<\/a>"],[100,1,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#100\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::canConvertTo<\/a>"],[100,1,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#106\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::values<\/a>"],[100,1,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#111\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::isValid<\/a>"],[100,1,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#117\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::toArray<\/a>"],[100,1,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#126\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::toString<\/a>"],[100,1,"<a href=\"ValueObjects\/UnitOfMeasurement.php.html#131\">Nexus\\Common\\ValueObjects\\UnitOfMeasurement::fromArray<\/a>"],[0,4,"<a href=\"ValueObjects\/VarianceResult.php.html#41\">Nexus\\Common\\ValueObjects\\VarianceResult::__construct<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#55\">Nexus\\Common\\ValueObjects\\VarianceResult::getActual<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#60\">Nexus\\Common\\ValueObjects\\VarianceResult::getBudget<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#65\">Nexus\\Common\\ValueObjects\\VarianceResult::getVariance<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#70\">Nexus\\Common\\ValueObjects\\VarianceResult::getPercentageVariance<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#75\">Nexus\\Common\\ValueObjects\\VarianceResult::isFavorable<\/a>"],[0,2,"<a href=\"ValueObjects\/VarianceResult.php.html#83\">Nexus\\Common\\ValueObjects\\VarianceResult::isUnfavorable<\/a>"],[0,4,"<a href=\"ValueObjects\/VarianceResult.php.html#89\">Nexus\\Common\\ValueObjects\\VarianceResult::average<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#110\">Nexus\\Common\\ValueObjects\\VarianceResult::abs<\/a>"],[0,4,"<a href=\"ValueObjects\/VarianceResult.php.html#115\">Nexus\\Common\\ValueObjects\\VarianceResult::isWithinRange<\/a>"],[0,4,"<a href=\"ValueObjects\/VarianceResult.php.html#125\">Nexus\\Common\\ValueObjects\\VarianceResult::getTrendDirection<\/a>"],[0,3,"<a href=\"ValueObjects\/VarianceResult.php.html#140\">Nexus\\Common\\ValueObjects\\VarianceResult::percentageChange<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#153\">Nexus\\Common\\ValueObjects\\VarianceResult::isSignificantChange<\/a>"],[0,2,"<a href=\"ValueObjects\/VarianceResult.php.html#159\">Nexus\\Common\\ValueObjects\\VarianceResult::compareTo<\/a>"],[0,3,"<a href=\"ValueObjects\/VarianceResult.php.html#169\">Nexus\\Common\\ValueObjects\\VarianceResult::equals<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#178\">Nexus\\Common\\ValueObjects\\VarianceResult::greaterThan<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#183\">Nexus\\Common\\ValueObjects\\VarianceResult::lessThan<\/a>"],[0,2,"<a href=\"ValueObjects\/VarianceResult.php.html#189\">Nexus\\Common\\ValueObjects\\VarianceResult::add<\/a>"],[0,2,"<a href=\"ValueObjects\/VarianceResult.php.html#202\">Nexus\\Common\\ValueObjects\\VarianceResult::subtract<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#215\">Nexus\\Common\\ValueObjects\\VarianceResult::multiply<\/a>"],[0,2,"<a href=\"ValueObjects\/VarianceResult.php.html#224\">Nexus\\Common\\ValueObjects\\VarianceResult::divide<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#237\">Nexus\\Common\\ValueObjects\\VarianceResult::toArray<\/a>"],[0,2,"<a href=\"ValueObjects\/VarianceResult.php.html#248\">Nexus\\Common\\ValueObjects\\VarianceResult::toString<\/a>"],[0,1,"<a href=\"ValueObjects\/VarianceResult.php.html#261\">Nexus\\Common\\ValueObjects\\VarianceResult::fromArray<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>

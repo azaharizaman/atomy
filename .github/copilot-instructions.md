@@ -79,7 +79,7 @@ You are working on **Nexus**, a **three-layer monorepo** containing framework-ag
 ```
 nexus/
 ├── packages/               # 50+ Atomic, publishable PHP packages (PURE PHP)
-│   ├── SharedKernel/       # Common VOs, Contracts, Traits (no business logic)
+│   ├── Common/       # Common VOs, Contracts, Traits (no business logic)
 │   ├── Accounting/         # Financial accounting
 │   ├── Assets/             # Fixed asset management
 │   ├── AuditLogger/        # Audit logging (timeline/feed views)

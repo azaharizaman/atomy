@@ -112,7 +112,7 @@ nexus/
 ├── packages/                 # 54 Atomic, publishable PHP packages (FLAT STRUCTURE)
 │   ├── README.md                # Package layer guidelines and inventory
 │   │
-│   ├── SharedKernel/            # Nexus\SharedKernel (Common building blocks)
+│   ├── Common/            # Nexus\Common (Common building blocks)
 │   │   ├── composer.json        # NO business logic, NO dependencies on other packages
 │   │   ├── README.md
 │   │   ├── LICENSE
@@ -966,27 +966,27 @@ interface GLIntegrationInterface extends GLManagerInterface { }
 $this->app->bind(GLIntegrationInterface::class, FinanceGLManager::class);
 ```
 
-### 5.4 SharedKernel Special Rules
+### 5.4 Common Special Rules
 
-**SharedKernel is the only exception to dependency rules:**
+**Common is the only exception to dependency rules:**
 
-- ✅ ALL packages can depend on SharedKernel
-- ✅ ALL orchestrators can depend on SharedKernel
-- ❌ SharedKernel MUST NOT depend on ANY package
-- ❌ SharedKernel MUST NOT depend on ANY orchestrator
+- ✅ ALL packages can depend on Common
+- ✅ ALL orchestrators can depend on Common
+- ❌ Common MUST NOT depend on ANY package
+- ❌ Common MUST NOT depend on ANY orchestrator
 
-**Why:** SharedKernel contains common building blocks (TenantId, Money, Period VOs, common interfaces). If SharedKernel depends on other packages, it creates circular dependencies.
+**Why:** Common contains common building blocks (TenantId, Money, Period VOs, common interfaces). If Common depends on other packages, it creates circular dependencies.
 
 **Example:**
 ```php
-// ✅ CORRECT: Package depends on SharedKernel
+// ✅ CORRECT: Package depends on Common
 namespace Nexus\Finance;
 
-use Nexus\SharedKernel\ValueObjects\Money;
-use Nexus\SharedKernel\ValueObjects\Period;
+use Nexus\Common\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Period;
 
-// ❌ WRONG: SharedKernel depends on package
-namespace Nexus\SharedKernel\ValueObjects;
+// ❌ WRONG: Common depends on package
+namespace Nexus\Common\ValueObjects;
 
 use Nexus\Finance\Contracts\CurrencyManagerInterface; // VIOLATION!
 ```

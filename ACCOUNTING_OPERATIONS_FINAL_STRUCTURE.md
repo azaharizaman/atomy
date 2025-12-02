@@ -399,7 +399,7 @@ orchestrators/AccountingOperations/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           SharedKernel                                   │
+│                           Common                                   │
 │  Money, Currency, PercentageVO, BusinessRuleInterface                    │
 └───────────────────────────────────┬─────────────────────────────────────┘
                                     │

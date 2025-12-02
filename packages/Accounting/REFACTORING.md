@@ -2,9 +2,9 @@
 
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              SharedKernel                                    │
+│                              Common                                    │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │ Nexus\Money, Nexus\Currency, SharedKernel(PercentageVO), ReportingPeriod, PeriodType         │   │
+│  │ Nexus\Common\ValueObjects\Money, Nexus\Currency, Common(PercentageVO), ReportingPeriod, PeriodType         │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       ▲

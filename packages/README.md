@@ -1,6 +1,6 @@
 # Nexus Atomic Packages
 
-This directory contains **54 atomic, framework-agnostic PHP packages** (53 atomic + SharedKernel) that form the core business logic of the Nexus ERP system. Each package is:
+This directory contains **54 atomic, framework-agnostic PHP packages** (53 atomic + Common) that form the core business logic of the Nexus ERP system. Each package is:
 
 - **Pure PHP 8.3+** - No framework dependencies
 - **Stateless** - No long-term state stored in memory
@@ -10,7 +10,7 @@ This directory contains **54 atomic, framework-agnostic PHP packages** (53 atomi
 
 ---
 
-## 📋 Package Inventory (54 Packages: 53 Atomic + SharedKernel)
+## 📋 Package Inventory (54 Packages: 53 Atomic + Common)
 
 ### Foundation Layer (9 packages)
 Core infrastructure and multi-tenancy support:
@@ -87,7 +87,7 @@ Core infrastructure and multi-tenancy support:
 - **Messaging** - Message queue abstraction
 
 ### Shared (1 package)
-- **SharedKernel** - Common VOs, Contracts, Traits
+- **Common** - Common VOs, Contracts, Traits
 
 ---
 
@@ -402,7 +402,7 @@ Every package **MUST** include:
 ### ❌ Anti-Pattern 3: Circular Dependencies
 **Problem:** Package A depends on Package B, Package B depends on Package A
 
-**Solution:** Extract shared logic to `SharedKernel` or use event-driven communication
+**Solution:** Extract shared logic to `Common` or use event-driven communication
 
 ### ❌ Anti-Pattern 4: Stateful Services
 **Problem:** Storing state in class properties (e.g., `private array $cache = []`)
@@ -442,4 +442,4 @@ Every package **MUST** include:
 
 **Last Updated:** 2025-11-30  
 **Maintained By:** Nexus Architecture Team  
-**Total Packages:** 54 (53 atomic + SharedKernel)
+**Total Packages:** 54 (53 atomic + Common)

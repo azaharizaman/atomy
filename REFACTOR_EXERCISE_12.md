@@ -10,7 +10,7 @@ nexus/
 ├── packages/                # PURE PHP BUSINESS LOGIC (Framework Agnostic), atomic packages publishable to packagist.org as isolated packages of business logic
 │   ├── [Simple Domain Packages]/     # e.g., Uom, Sequencing, Currency, etc (Keep Flat Structure)
 │   ├── [Complex Domain Packages]/    # e.g., Inventory, Finance, etc (Adopt DDD Internal Layers)
-│   ├── SharedKernel/        # (New Package) Common VOs, Contracts, Traits (extracted out from other packages). No business logic here and this package MUST NOT depend on any other package, but it provides common building blocks for other atomic packages.
+│   ├── Common/        # (New Package) Common VOs, Contracts, Traits (extracted out from other packages). No business logic here and this package MUST NOT depend on any other package, but it provides common building blocks for other atomic packages.
 │   └── README.md/        # Documentation about package structure guidelines (what simple domain and complex domain packages criterias are and their standard folder structure), architechtural decisions and Do's and Don'ts, summary of packages, etc. (No examples of code snippets here, just guidelines)
 |
 ├── orchestrators/                # PURE PHP BUSINESS LOGIC (Framework Agnostic) that ochestrate 2 or more packages
@@ -183,10 +183,10 @@ adapters/Laravel/Finance/
       * `packages/` -\> **NEVER** depends on -\> `adapters/`
       * `apps/atomy-api` -\> depends on -\> `adapters/` AND `packages/`
 
-3.  **Shared Kernel (`Nexus\SharedKernel`):**
+3.  **Shared Kernel (`Nexus\Common`):**
 
-      * Move all shared VOs (like `TenantId`, `Money`) and shared Contracts (`LoggerInterface`) to `packages/SharedKernel`.
-      * All other packages depend on `SharedKernel`.
+      * Move all shared VOs (like `TenantId`, `Money`) and shared Contracts (`LoggerInterface`) to `packages/Common`.
+      * All other packages depend on `Common`.
 
 ----
 ## Attention to Orchestrators/Integration layer of packages

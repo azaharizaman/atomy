@@ -5,7 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/shared-kernel": "*@dev",
+        "nexus/common": "*@dev",
         "nexus/identity": "*@dev",
         "nexus/backoffice": "*@dev",
         "nexus/machine-learning": "*@dev",
@@ -20,7 +20,8 @@
         "nexus/event-stream": "*@dev",
         "nexus/tax": "*@dev",
         "nexus/procurement-ml": "*@dev",
-        "nexus/tenant": "*@dev"
+        "nexus/tenant": "*@dev",
+        "nexus/common": "*@dev"
     },
     "repositories": [
         {
