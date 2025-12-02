@@ -84,6 +84,6 @@ This layer represents "THE TRUTH" - pure business logic with no framework depend
 
 ## Dependencies
 
-- `Nexus\SharedKernel` - Common value objects and contracts
+- `Nexus\Common` - Common value objects and contracts
 - `Nexus\Finance` - General ledger integration (via interfaces)
 - `Nexus\Period` - Fiscal period management (via interfaces)

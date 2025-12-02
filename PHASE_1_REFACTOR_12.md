@@ -12,7 +12,7 @@ Restructure the packages directory from nested category-based structure to a fla
 
 ```
 packages/
-├── SharedKernel/
+├── Common/
 ├── domain/
 │   ├── business-operations/
 │   ├── data-intelligence/
@@ -38,7 +38,7 @@ packages/
 
 ```
 packages/
-├── SharedKernel/           # Common VOs, Contracts, Traits (MUST NOT depend on other packages)
+├── Common/           # Common VOs, Contracts, Traits (MUST NOT depend on other packages)
 ├── Tenant/                 # Simple atomic package (flat structure)
 ├── Sequencing/
 ├── Period/
@@ -102,6 +102,6 @@ packages/
 
 ## Notes
 
-- SharedKernel stays at packages/SharedKernel (already correct)
+- Common stays at packages/Common (already correct)
 - Packages maintain their current internal structure (will be addressed in Phase 2 if needed)
 - Focus on physical file movement only in this phase

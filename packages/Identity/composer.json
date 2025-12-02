@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/shared-kernel": "*@dev",
+        "nexus/common": "*@dev",
         "psr/log": "^3.0",
         "spomky-labs/otphp": "^11.3",
         "endroid/qr-code": "^5.0",

@@ -1,0 +1,31 @@
+{
+    "name": "nexus/account-period-close",
+    "description": "Period close validation, closing entry generation, and reopen management",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nexus Architecture Team",
+            "email": "architecture@nexus.dev"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\AccountPeriodClose\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\AccountPeriodClose\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
