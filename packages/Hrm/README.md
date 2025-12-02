@@ -7,7 +7,7 @@ Atomic Human Resource Management domain for Nexus ERP.
 - Employee master data management
 - Employment contracts and lifecycle tracking
 - Leave entitlements and requests with approval workflows
-- Attendance tracking (clock-in/out, break tracking, overtime calculation)
+- Attendance tracking (clock-in/out, break tracking, overtime calculation, time-offs bucket)
 - Performance management (review cycles, templates, 360-degree feedback, analytics)
 - Disciplinary case management (investigation, resolution, follow-up tracking)
 - Training program management (enrollment, completion, certification tracking)
