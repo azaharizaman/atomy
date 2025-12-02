@@ -650,59 +650,84 @@ orchestrators/HumanResourceOperations/
 
 ## Dependency Graph
 
+```mermaid
+graph TD
+    %% Foundation Layer
+    Common[Nexus\Common<br/>Money, Currency, PercentageVO<br/>BusinessRuleInterface, DateRange]
+    
+    %% Atomic HR Packages
+    Employee[EmployeeManagement<br/>Pure Domain Logic]
+    Contract[ContractManagement<br/>Pure Domain Logic]
+    Leave[LeaveManagement<br/>Pure Domain Logic]
+    Attendance[AttendanceManagement<br/>Pure Domain Logic]
+    Performance[PerformanceReview<br/>Pure Domain Logic]
+    Training[TrainingDevelopment<br/>Pure Domain Logic]
+    Disciplinary[DisciplinaryManagement<br/>Pure Domain Logic]
+    
+    %% Orchestrator
+    HRO[HumanResourceOperations<br/>Orchestrator<br/><br/>• Implements DataProvider interfaces<br/>• Coordinates workflows<br/>• Cross-package rules<br/>• External integrations]
+    
+    %% External Nexus Packages
+    Identity[Nexus\Identity]
+    Backoffice[Nexus\Backoffice]
+    Payroll[Nexus\Payroll]
+    PayrollMys[Nexus\PayrollMysStatutory]
+    Workflow[Nexus\Workflow]
+    Notifier[Nexus\Notifier]
+    AuditLogger[Nexus\AuditLogger]
+    Document[Nexus\Document]
+    Budget[Nexus\Budget]
+    Party[Nexus\Party]
+    Statutory[Nexus\Statutory]
+    
+    %% Dependencies from Common to Atomic Packages
+    Common --> Employee
+    Common --> Contract
+    Common --> Leave
+    Common --> Attendance
+    Common --> Performance
+    Common --> Training
+    Common --> Disciplinary
+    
+    %% Dependencies from Atomic Packages to Orchestrator
+    Employee --> HRO
+    Contract --> HRO
+    Leave --> HRO
+    Attendance --> HRO
+    Performance --> HRO
+    Training --> HRO
+    Disciplinary --> HRO
+    
+    %% External Package Integrations (Orchestrator Only)
+    Identity -.-> HRO
+    Backoffice -.-> HRO
+    Payroll -.-> HRO
+    PayrollMys -.-> HRO
+    Workflow -.-> HRO
+    Notifier -.-> HRO
+    AuditLogger -.-> HRO
+    Document -.-> HRO
+    Budget -.-> HRO
+    Party -.-> HRO
+    Statutory -.-> HRO
+    
+    %% Styling
+    classDef foundation fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef atomic fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef orchestrator fill:#fff3e0,stroke:#e65100,stroke-width:3px
+    classDef external fill:#f3e5f5,stroke:#4a148c,stroke-width:1px,stroke-dasharray: 5 5
+    
+    class Common foundation
+    class Employee,Contract,Leave,Attendance,Performance,Training,Disciplinary atomic
+    class HRO orchestrator
+    class Identity,Backoffice,Payroll,PayrollMys,Workflow,Notifier,AuditLogger,Document,Budget,Party,Statutory external
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           Common                                         │
-│  Money, Currency, PercentageVO, BusinessRuleInterface, DateRange, etc.  │
-└───────────────────────────┬─────────────────────────────────────────────┘
-                            │
-    ┌───────────────────────┼───────────────────────────────┐
-    │                       │                               │
-    ▼                       ▼                               ▼
-┌──────────────┐   ┌────────────────┐        ┌──────────────────────┐
-│ Employee     │   │ Contract       │        │ Leave                │
-│ Management   │   │ Management     │        │ Management           │
-│ (Pure)       │   │ (Pure)         │        │ (Pure)               │
-└──────┬───────┘   └────────┬───────┘        └──────────┬───────────┘
-       │                    │                           │
-       │        ┌───────────┼───────────────────────────┼───────────┐
-       │        │           │                           │           │
-       │        ▼           ▼                           ▼           ▼
-       │  ┌──────────────────────┐        ┌──────────────────────────┐
-       │  │ Attendance           │        │ Performance              │
-       │  │ Management           │        │ Review                   │
-       │  │ (Pure)               │        │ (Pure)                   │
-       │  └──────────┬───────────┘        └──────────┬───────────────┘
-       │             │                               │
-       │             │        ┌──────────────────────┼───────────────┐
-       │             │        │                      │               │
-       │             ▼        ▼                      ▼               ▼
-       │     ┌──────────────────────┐    ┌──────────────────────────┐
-       │     │ Training             │    │ Disciplinary             │
-       │     │ Development          │    │ Management               │
-       │     │ (Pure)               │    │ (Pure)                   │
-       │     └──────────┬───────────┘    └──────────┬───────────────┘
-       │                │                           │
-       └────────────────┼───────────────────────────┘
-                        │
-                        ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      HumanResourceOperations                             │
-│                         (Orchestrator)                                   │
-│                                                                          │
-│  + Implements all DataProvider interfaces for atomic packages           │
-│  + Coordinates with: Nexus\Identity, Nexus\Backoffice, Nexus\Payroll,   │
-│                      Nexus\PayrollMysStatutory, Nexus\Workflow,         │
-│                      Nexus\Notifier, Nexus\AuditLogger, Nexus\Document, │
-│                      Nexus\Budget, Nexus\Party, Nexus\Statutory         │
-│  + Owns cross-package rules (ActiveContractBeforeLeaveAccrual, etc.)    │
-│  + Owns employee lifecycle workflows (Onboarding, Offboarding)          │
-│  + Owns leave approval workflows                                        │
-│  + Owns performance review workflows                                    │
-│  + Owns training enrollment workflows                                   │
-│  + Owns disciplinary process workflows                                  │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+
+**Legend:**
+- 🔵 **Foundation** (Blue) - Common building blocks
+- 🟢 **Atomic Packages** (Green) - Pure domain logic, zero cross-package dependencies
+- 🟠 **Orchestrator** (Orange) - Workflow coordination, implements DataProvider interfaces
+- 🟣 **External Packages** (Purple, Dashed) - Nexus package integrations (via orchestrator only)
 
 ---
 
