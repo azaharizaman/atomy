@@ -1,249 +1,175 @@
-Below is a **professional, polished, publication-ready README.md** for the **Nexus ERP – Human Resource (HR) Module**.
-It is written in a clear enterprise tone and formatted the way a mature ERP vendor would present internal architecture and developer documentation.
+# Nexus\HumanResourceOperations
 
-You can drop this directly into:
-
-```
-packages/HumanResourceOperations/README.md
-```
-
-—or use it as the central README for the HR suite inside your ERP.
+> **⚠️ REFACTORED (Dec 2025):** This orchestrator has been completely refactored to follow the **Advanced Orchestrator Pattern**.
+>
+> **📖 New Architecture:** See [NEW_ARCHITECTURE.md](./NEW_ARCHITECTURE.md) for complete documentation.
+> 
+> **📜 Previous Design:** See [README.OLD.md](./README.OLD.md) for historical reference.
 
 ---
 
-# 📘 **Nexus ERP – Human Resource (HR) Module**
+## Quick Start
 
-The **Nexus ERP Human Resource Module** provides a fully modular, domain-driven, and extensible platform for managing the complete employee lifecycle, including leave, attendance, payroll, shift scheduling, and employee profile management.
+The HumanResourceOperations orchestrator coordinates HR workflows across multiple atomic packages using a clean, maintainable architecture.
 
-This module is designed using **Clean Architecture**, **DDD (Domain-Driven Design)**, and **Atomic Package Principles**, allowing every HR domain (e.g. Leave, Attendance, Payroll) to operate independently while being orchestrated through a cohesive application layer.
+### Core Components
 
----
+- **Coordinators** - Traffic cops that orchestrate workflows
+- **DataProviders** - Aggregate data from multiple packages
+- **Rules** - Composable validation logic
+- **Services** - Complex business operations
+- **Workflows** - Long-running stateful processes
+- **Listeners** - Reactive event handlers
+- **DTOs** - Strict type contracts
 
-# 🧱 **Architecture Overview**
+### Example: Hiring Workflow
 
-The HR module is structured into **two layers**:
+```php
+use Nexus\HumanResourceOperations\Coordinators\HiringCoordinator;
+use Nexus\HumanResourceOperations\DTOs\HiringRequest;
 
-## **1. Atomic HR Domain Packages (Pure DDD Domain)**
+$coordinator = $container->get(HiringCoordinator::class);
 
-These packages contain all domain entities, value objects, policies, and calculation engines.
-They are **framework-free**, **stateless**, and **individually publishable** as standalone components.
+$request = new HiringRequest(
+    applicationId: 'app-123',
+    jobPostingId: 'job-456',
+    hired: true,
+    decidedBy: 'manager-789',
+    startDate: '2025-01-01',
+    positionId: 'senior-dev',
+    departmentId: 'engineering',
+);
 
-Atomic domain packages include:
+$result = $coordinator->processHiringDecision($request);
 
-| Package              | Namespace                    | Purpose                                              |
-| -------------------- | ---------------------------- | ---------------------------------------------------- |
-| LeaveManagement      | `Nexus\LeaveManagement`      | Leave rules, entitlements, balances, accrual engines |
-| AttendanceManagement | `Nexus\AttendanceManagement` | Time tracking, anomalies, work schedules             |
-| PayrollCore          | `Nexus\PayrollCore`          | Payroll rules, formulas, adjustments, payslips       |
-| EmployeeProfile      | `Nexus\EmployeeProfile`      | Employee master data, contracts, eligibility         |
-| ShiftManagement      | `Nexus\ShiftManagement`      | Shift templates, assignments, compliance             |
-
-These domain packages do **not** contain use cases, pipelines, or infrastructure implementations.
-
----
-
-## **2. HumanResourceOperations (Orchestration Layer)**
-
-Namespace: **`Nexus\HumanResourceOperations`**
-
-This layer acts as the **application service layer** for all HR features.
-It coordinates logic across domain packages through:
-
-* **UseCases** (entrypoints for business processes)
-* **Pipelines** (multi-step workflows)
-* **Orchestrators** (cross-domain logic consolidators)
-* **Adapters** (integration with external systems)
-* **Gateways** (interfaces for devices/APIs)
-
-This ensures the domain packages remain pure, reusable, and loosely coupled.
-
----
-
-# 🏗️ **Package Structure**
-
-```
-Nexus\HumanResourceOperations
-├── UseCases/
-│   ├── Leave/
-│   ├── Attendance/
-│   ├── Payroll/
-│   └── Employee/
-│
-├── Pipelines/
-│   ├── Leave/
-│   ├── Payroll/
-│   └── Attendance/
-│
-├── Services/
-│   ├── Leave/
-│   ├── Payroll/
-│   ├── Attendance/
-│   └── Employee/
-│
-├── Adapters/
-│   ├── Leave/
-│   ├── Payroll/
-│   ├── Attendance/
-│   └── Employee/
-│
-├── Contracts/         # Gateways & external interfaces
-└── Exceptions/
+if ($result->success) {
+    echo "Employee hired: {$result->employeeId}";
+    echo "User created: {$result->userId}";
+} else {
+    echo "Hiring failed: {$result->message}";
+    print_r($result->issues);
+}
 ```
 
-This structure strictly separates orchestration concerns from domain logic.
+### Example: Leave Application
 
----
+```php
+use Nexus\HumanResourceOperations\Coordinators\LeaveCoordinator;
+use Nexus\HumanResourceOperations\DTOs\LeaveApplicationRequest;
 
-# 🔄 **Core Workflow Examples**
+$coordinator = $container->get(LeaveCoordinator::class);
 
-### **Apply Leave Workflow**
+$request = new LeaveApplicationRequest(
+    employeeId: 'emp-123',
+    leaveTypeId: 'annual-leave',
+    startDate: '2025-01-10',
+    endDate: '2025-01-15',
+    reason: 'Family vacation',
+    requestedBy: 'emp-123',
+);
 
-1. User submits leave request → UseCase (`ApplyLeaveHandler`)
-2. Pipeline executes:
+$result = $coordinator->applyLeave($request);
 
-   * Validate request
-   * Run domain policy rules
-   * Resolve accrual strategy (country, employee type, company rules)
-   * Deduct leave balance
-3. Save via domain repository
-4. Return standardized result DTO
-
-### **Process Payroll**
-
-1. Triggered manually or scheduled
-2. Pipeline:
-
-   * Load payroll period
-   * Fetch components and adjustments
-   * Calculate: basic pay → OT → allowances → deductions → contributions → net pay
-3. Persist payslip via PayrollCore domain repository
-4. Publish event or export
-
-### **Attendance Sync**
-
-1. Sync punch logs through adapter (device → DTO)
-2. Validate & resolve schedule
-3. Apply policies (late, early out, overtime)
-4. Persist validated attendance entries
-
----
-
-# ⚙️ **How the Layers Interact**
-
-```
-Application (HumanResourceOperations)
-    ↓ Calls
-Domain (Atomic Packages: Leave, Payroll, Attendance)
-    ↓ Implemented By
-Infrastructure (Adapters, Gateways, ERP storage, device connectors)
+if ($result->success) {
+    echo "Leave approved: {$result->leaveRequestId}";
+    echo "New balance: {$result->newBalance} days";
+}
 ```
 
-* The application layer **never contains business rules**.
-* The domain layer **never knows about persistence, APIs, frameworks, or devices**.
-* The infrastructure layer **never contains domain logic**.
+---
 
-This ensures the HR module is maintainable and test-friendly.
+## Architecture Principles
+
+This orchestrator follows the **Advanced Orchestrator Pattern** with these golden rules:
+
+1. **Coordinators are Traffic Cops, not Workers** - They direct flow, don't do work
+2. **Data Fetching is Abstracted** - DataProviders aggregate cross-package data
+3. **Validation is Composable** - Rules are individual, testable classes
+4. **Strict Contracts** - Always use DTOs, never raw arrays
+5. **System First** - Always use Nexus packages (Identity, Notifier, AuditLogger, etc.)
+
+See [NEW_ARCHITECTURE.md](./NEW_ARCHITECTURE.md) for complete details.
 
 ---
 
-# 🌍 **Country-Law-Aware Accrual System**
-
-The HR module includes a sophisticated **Accrual Strategy Resolver**, enabling:
-
-* Country-specific leave laws
-* Company-level overrides
-* Employee contract–based variations
-* Dynamic accrual strategies using:
-
-  * Monthly accrual
-  * Fixed annual allocation
-  * No-deduction leave
-  * Hybrid/custom strategies
-
-Integrators may register custom strategies for countries or industries.
-
----
-
-# 🧩 **Extensibility**
-
-### You can extend the module by adding:
-
-* New domain packages (e.g., Claims, Training, Onboarding)
-* New UseCases for workflows
-* New adapters for:
-
-  * Time attendance devices
-  * Government data sources
-  * Payroll bank file exporters
-* New policies or accrual strategies
-
-### Atomic packages guarantee:
-
-* Reusability
-* Versionability
-* Independent releases
-* Clean dependency boundaries
-
----
-
-# 🧪 **Testing Strategy**
-
-Each layer is independently testable:
-
-| Layer      | Testing Approach                             |
-| ---------- | -------------------------------------------- |
-| Domain     | Pure unit tests (no database needed)         |
-| Operations | Integration tests (mock domain repositories) |
-| Pipelines  | Behavioural tests (multi-step validation)    |
-| Adapters   | Infrastructure-mocked tests                  |
-| End-to-End | ERP-wide scenario testing                    |
-
----
-
-# 🚀 **Why This Architecture Works**
-
-* Reduces coupling between features
-* Enables micro-module deployment
-* Supports multi-country HR rules
-* Cleaner code ownership (domain vs operations vs infrastructure)
-* Very high testability
-* Safe for future scaling (multi-company, multi-tenant ERP)
-
----
-
-# 📦 **Installation & Usage (Developer Notes)**
-
-Each domain package is a standalone composer package:
+## Directory Structure
 
 ```
-composer require nexus/leave-management
-composer require nexus/attendance-management
-composer require nexus/payroll-core
-composer require nexus/employee-profile
-composer require nexus/shift-management
+src/
+├── Coordinators/       # Entry points for operations
+├── DataProviders/      # Cross-package data aggregation
+├── Rules/              # Validation constraints
+├── Services/           # Complex business logic
+├── Workflows/          # Stateful processes
+├── Listeners/          # Event reactors
+├── DTOs/               # Request/Response objects
+├── Contracts/          # Interfaces
+└── Exceptions/         # Domain errors
+```
+
+---
+
+## Available Coordinators
+
+| Coordinator | Purpose | Key Operations |
+|-------------|---------|----------------|
+| `HiringCoordinator` | Process hiring decisions | `processHiringDecision()` |
+| `LeaveCoordinator` | Manage leave applications | `applyLeave()`, `approveLeave()`, `cancelLeave()` |
+| `AttendanceCoordinator` | (Planned) Attendance tracking | `recordCheckIn()`, `detectAnomalies()` |
+| `PayrollCoordinator` | (Planned) Payroll processing | `calculatePayroll()`, `generatePayslip()` |
+
+---
+
+## Installation
+
+```bash
 composer require nexus/human-resource-operations
 ```
 
-Then bind repositories & adapters inside your ERP’s DI container.
+Dependencies:
+- `nexus/hrm` - Employee management
+- `nexus/identity` - User accounts
+- `nexus/party` - Party records
+- `nexus/org-structure` - Organizational hierarchy
+- `nexus/leave` - Leave management
+- `nexus/notifier` - Notifications
+- `nexus/audit-logger` - Audit trails
 
 ---
 
-# 📚 **Documentation Links**
+## Testing
 
-* **Leave Management Domain Docs**
-* **Attendance Domain Docs**
-* **Payroll Core Domain Docs**
-* **Employee Profile Domain Docs**
-* **Shift Management Docs**
-* **Orchestration & UseCase Reference**
-* **Accrual Strategy Customization Guide**
-* **Country Law Resolver Implementation Guide**
+```bash
+# Unit tests (Rules, Services)
+vendor/bin/phpunit tests/Unit
 
-(Each atomic package includes its own `/docs` directory.)
+# Integration tests (Coordinators)
+vendor/bin/phpunit tests/Integration
+```
 
 ---
 
-# 📞 Support & Contribution
+## Migration Guide
 
-This module is part of the **Nexus ERP Core Framework**.
-For issues, feature requests, or contributions, please follow our organizational guidelines and submit requests through the internal engineering channels.
+If migrating from the old architecture:
+
+1. **UseCases → Coordinators** - Entry points
+2. **Pipelines → Workflows** - Long-running processes
+3. **Inline validation → Rules** - Composable validation
+4. **Array params → DTOs** - Typed contracts
+5. **Direct repo calls → DataProviders** - Data aggregation
+
+See [NEW_ARCHITECTURE.md](./NEW_ARCHITECTURE.md) for complete migration guide.
+
+---
+
+## License
+
+MIT License
+
+---
+
+**Documentation:**
+- [New Architecture](./NEW_ARCHITECTURE.md) - Complete refactored design
+- [Old Architecture](./README.OLD.md) - Historical reference
+- [System Design Philosophy](/SYSTEM_DESIGN_AND_PHILOSOPHY.md) - Pattern rationale
