@@ -1,0 +1,35 @@
+{
+    "name": "nexus/human-resource-operations",
+    "description": "HR Operations Orchestrator - Coordinates all HR domain packages including Leave, Attendance, Payroll, Employee, Shift, Disciplinary, Performance Review, Training, Recruitment, and Onboarding",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/leave-management": "*@dev",
+        "nexus/attendance-management": "*@dev",
+        "nexus/payroll-core": "*@dev",
+        "nexus/employee-profile": "*@dev",
+        "nexus/shift-management": "*@dev",
+        "nexus/disciplinary": "*@dev",
+        "nexus/performance-review": "*@dev",
+        "nexus/training-management": "*@dev",
+        "nexus/recruitment": "*@dev",
+        "nexus/onboarding": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\HumanResourceOperations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\HumanResourceOperations\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

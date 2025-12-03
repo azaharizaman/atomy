@@ -1,0 +1,25 @@
+{
+    "name": "nexus/onboarding",
+    "description": "Pre-hire to onboarding to probation milestone tracking for new employee integration",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["hrm", "onboarding", "probation", "new-hire", "checklist"],
+    "require": {
+        "php": "^8.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Onboarding\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Onboarding\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

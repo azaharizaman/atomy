@@ -1,0 +1,25 @@
+{
+    "name": "nexus/recruitment",
+    "description": "Job posting, applicant tracking, interviews, and hiring decision engine for talent acquisition",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["hrm", "recruitment", "hiring", "applicant-tracking", "interviews"],
+    "require": {
+        "php": "^8.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Recruitment\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Recruitment\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
