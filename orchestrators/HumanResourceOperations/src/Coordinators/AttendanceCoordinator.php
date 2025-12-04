@@ -8,7 +8,7 @@ use Nexus\HumanResourceOperations\DataProviders\AttendanceDataProvider;
 use Nexus\HumanResourceOperations\DTOs\AttendanceCheckRequest;
 use Nexus\HumanResourceOperations\DTOs\AttendanceCheckResult;
 use Nexus\HumanResourceOperations\Services\AttendanceRuleRegistry;
-use Nexus\AttendanceManagement\Contracts\AttendanceManagerInterface;
+use Nexus\Attendance\Contracts\AttendanceManagerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 

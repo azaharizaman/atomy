@@ -36,7 +36,7 @@
     "repositories": [
         {
             "type": "path",
-            "url": "../../packages/*",
+            "url": "../../packages/HRM/*",
             "options": {
                 "symlink": true
             }
