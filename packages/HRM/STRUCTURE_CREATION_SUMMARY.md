@@ -41,8 +41,8 @@
 
 ---
 
-### 2. LeaveManagement (Atomic Package)
-**Location:** `packages/HRM/LeaveManagement/`  
+### 2. Leave (Atomic Package)
+**Location:** `packages/HRM/Leave/`  
 **Type:** Pure Domain Logic  
 **Dependencies:** None (framework-agnostic)
 
@@ -138,8 +138,8 @@
 
 ---
 
-### 6. ShiftManagement (Atomic Package)
-**Location:** `packages/HRM/ShiftManagement/`  
+### 6. Shift (Atomic Package)
+**Location:** `packages/HRM/Shift/`  
 **Type:** Pure Domain Logic  
 **Dependencies:** None
 
@@ -175,7 +175,7 @@ packages/HRM/
 │   │   └── Exceptions/ (2 exceptions)
 │   └── tests/ (empty, ready for tests)
 │
-├── LeaveManagement/ (atomic)
+├── Leave/ (atomic)
 │   ├── composer.json
 │   ├── README.md
 │   ├── src/
@@ -209,7 +209,7 @@ packages/HRM/
 │   │   └── Enums/ (2 enums)
 │   └── tests/
 │
-└── ShiftManagement/ (atomic)
+└── Shift/ (atomic)
     ├── composer.json
     ├── README.md
     ├── src/

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\UseCases\Training;
 
-use Nexus\TrainingManagement\Contracts\CertificationRepositoryInterface;
+use Nexus\Training\Contracts\CertificationRepositoryInterface;
 
 final readonly class GrantCertificationHandler
 {

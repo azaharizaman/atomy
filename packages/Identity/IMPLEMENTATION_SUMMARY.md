@@ -145,7 +145,7 @@ All repository and service interfaces defining the package contracts:
    - `CacheRepositoryInterface` - Caching abstraction
    - `SessionActivityInterface` - Session activity tracking
 
-#### Services (10 files)
+#### Services (11 files)
 Business logic implementations:
 
 1. `UserManager` - User lifecycle management (create, update, delete, status changes)
@@ -153,40 +153,42 @@ Business logic implementations:
 3. `RoleManager` - Role CRUD and hierarchy management
 4. `PermissionManager` - Permission CRUD and assignment
 5. `PermissionChecker` - Fast permission validation with wildcard support
-6. `MfaEnrollmentService` - 17 methods for MFA enrollment/management
-7. `MfaVerificationService` - 11 methods for MFA verification
-8. `WebAuthnManager` - WebAuthn registration and authentication (6 methods)
-9. `TotpManager` - TOTP secret generation and QR code creation (4 methods)
-10. `TrustedDeviceManager` - Device trust management
+6. `PolicyEvaluator` - Context-aware authorization with custom policy registration (ABAC)
+7. `MfaEnrollmentService` - 17 methods for MFA enrollment/management
+8. `MfaVerificationService` - 11 methods for MFA verification
+9. `WebAuthnManager` - WebAuthn registration and authentication (6 methods)
+10. `TotpManager` - TOTP secret generation and QR code creation (4 methods)
+11. `TrustedDeviceManager` - Device trust management
 
-#### Value Objects (20 files)
+#### Value Objects (21 files)
 Immutable domain objects with validation:
 
 **Core Value Objects**:
 1. `UserStatus` (enum) - active, inactive, suspended, locked, pending_activation
 2. `Credentials` - Email and password pair
 3. `Permission` - Permission representation with wildcard support
-4. `SessionToken` - Session token with metadata
-5. `ApiToken` - API token with scopes and expiration
-6. `SessionActivity` - Session activity metadata
+4. `Policy` - Policy builder helper for ABAC authorization
+5. `SessionToken` - Session token with metadata
+6. `ApiToken` - API token with scopes and expiration
+7. `SessionActivity` - Session activity metadata
 
 **MFA Value Objects**:
-7. `MfaMethod` (enum) - PASSKEY, TOTP, SMS, EMAIL, BACKUP_CODES
-8. `TotpSecret` - TOTP secret with Base32 validation
-9. `BackupCode` - Single backup code with hash
-10. `BackupCodeSet` - Collection of backup codes
-11. `DeviceFingerprint` - HMAC-SHA256 device fingerprinting
+8. `MfaMethod` (enum) - PASSKEY, TOTP, SMS, EMAIL, BACKUP_CODES
+9. `TotpSecret` - TOTP secret with Base32 validation
+10. `BackupCode` - Single backup code with hash
+11. `BackupCodeSet` - Collection of backup codes
+12. `DeviceFingerprint` - HMAC-SHA256 device fingerprinting
 
 **WebAuthn Value Objects**:
-12. `WebAuthnCredential` - Credential data with sign count tracking
-13. `WebAuthnRegistrationOptions` - Registration challenge data
-14. `WebAuthnAuthenticationOptions` - Authentication challenge data
-15. `PublicKeyCredentialDescriptor` - Credential reference
-16. `AuthenticatorSelection` - Authenticator requirements
-17. `AuthenticatorAttachment` (enum) - PLATFORM, CROSS_PLATFORM
-18. `UserVerificationRequirement` (enum) - REQUIRED, PREFERRED, DISCOURAGED
-19. `AttestationConveyancePreference` (enum) - NONE, INDIRECT, DIRECT, ENTERPRISE
-20. `PublicKeyCredentialType` (enum) - PUBLIC_KEY
+13. `WebAuthnCredential` - Credential data with sign count tracking
+14. `WebAuthnRegistrationOptions` - Registration challenge data
+15. `WebAuthnAuthenticationOptions` - Authentication challenge data
+16. `PublicKeyCredentialDescriptor` - Credential reference
+17. `AuthenticatorSelection` - Authenticator requirements
+18. `AuthenticatorAttachment` (enum) - PLATFORM, CROSS_PLATFORM
+19. `UserVerificationRequirement` (enum) - REQUIRED, PREFERRED, DISCOURAGED
+20. `AttestationConveyancePreference` (enum) - NONE, INDIRECT, DIRECT, ENTERPRISE
+21. `PublicKeyCredentialType` (enum) - PUBLIC_KEY
 
 #### Exceptions (19 files)
 Domain-specific exceptions with static factory methods:

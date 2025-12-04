@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\Services\Training;
 
-use Nexus\TrainingManagement\Contracts\TrainerRepositoryInterface;
+use Nexus\Training\Contracts\TrainerRepositoryInterface;
 
 final readonly class TrainerMatchingService
 {

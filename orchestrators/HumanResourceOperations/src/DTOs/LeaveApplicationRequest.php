@@ -16,6 +16,8 @@ final readonly class LeaveApplicationRequest
         public string $endDate,
         public string $reason,
         public string $requestedBy,
+        public string $applicantUserId,
+        public string $applicantName,
         public ?float $daysRequested = null,
         public ?array $metadata = null,
     ) {}

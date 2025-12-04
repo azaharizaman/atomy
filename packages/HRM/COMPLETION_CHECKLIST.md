@@ -20,7 +20,7 @@
   - [x] 2 Gateway interfaces created
   - [x] 2 Exception classes created
 
-- [x] **LeaveManagement** (Atomic Package)
+- [x] **Leave** (Atomic Package)
   - [x] Directory structure created
   - [x] composer.json configured (PHP 8.3+, no dependencies)
   - [x] README.md written
@@ -51,7 +51,7 @@
   - [x] 1 Contract interface created
   - [x] 2 Enum classes created
 
-- [x] **ShiftManagement** (Atomic Package)
+- [x] **Shift** (Atomic Package)
   - [x] Directory structure created
   - [x] composer.json configured
   - [x] README.md written
@@ -128,7 +128,7 @@
       ✅ src/Contracts/ (2 gateway interfaces)
       ✅ src/Exceptions/ (2 exception classes)
       ✅ tests/
-   ✅ LeaveManagement/
+   ✅ Leave/
       ✅ composer.json
       ✅ README.md
       ✅ docs/examples/
@@ -155,7 +155,7 @@
       ✅ src/Contracts/ (1 interface)
       ✅ src/Enums/ (2 enums)
       ✅ tests/
-   ✅ ShiftManagement/
+   ✅ Shift/
       ✅ composer.json
       ✅ README.md
       ✅ src/Contracts/ (1 interface)

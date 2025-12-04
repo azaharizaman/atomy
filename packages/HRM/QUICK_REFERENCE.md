@@ -6,7 +6,7 @@
 **Use when:** You need to coordinate workflows across multiple HR domains  
 **Examples:** Employee onboarding (uses Employee + Leave + Payroll), Payroll processing (uses Attendance + Leave + Payroll)
 
-### LeaveManagement
+### Leave
 **Use when:** Managing leave balances, applications, approvals, accrual  
 **Examples:** Calculate annual leave balance, apply for sick leave, process year-end carry-forward
 
@@ -22,7 +22,7 @@
 **Use when:** Managing employee master data  
 **Examples:** Create employee record, update contract, track employment history
 
-### ShiftManagement
+### Shift
 **Use when:** Scheduling shifts, managing shift patterns  
 **Examples:** Create rotating shifts, assign shift to employee, detect shift overlaps
 
@@ -46,7 +46,7 @@ $leaveId = $handler->handle('employee-123', [
 
 **Option 2: Direct Domain Usage**
 ```php
-use Nexus\LeaveManagement\Services\LeaveBalanceCalculator;
+use Nexus\Leave\Services\LeaveBalanceCalculator;
 
 $calculator = new LeaveBalanceCalculator($balanceRepo);
 $balance = $calculator->calculateBalance('employee-123', 'annual');
@@ -80,14 +80,14 @@ Each atomic package will have a Laravel adapter:
 
 ```
 adapters/Laravel/
-├── LeaveManagement/
+├── Leave/
 │   ├── Models/Leave.php (Eloquent)
 │   ├── Repositories/EloquentLeaveRepository.php
 │   └── Migrations/
 ├── AttendanceManagement/
 ├── PayrollCore/
 ├── EmployeeProfile/
-└── ShiftManagement/
+└── Shift/
 ```
 
 Service Provider binding:
@@ -105,7 +105,7 @@ $this->app->bind(
 
 ### Unit Test (Atomic Package)
 ```php
-use Nexus\LeaveManagement\Services\LeaveBalanceCalculator;
+use Nexus\Leave\Services\LeaveBalanceCalculator;
 use PHPUnit\Framework\TestCase;
 
 class LeaveBalanceCalculatorTest extends TestCase
@@ -156,11 +156,11 @@ composer require nexus/shift-management
 ```json
 {
     "repositories": [
-        {"type": "path", "url": "./packages/HRM/LeaveManagement"},
+        {"type": "path", "url": "./packages/HRM/Leave"},
         {"type": "path", "url": "./packages/HRM/AttendanceManagement"},
         {"type": "path", "url": "./packages/HRM/PayrollCore"},
         {"type": "path", "url": "./packages/HRM/EmployeeProfile"},
-        {"type": "path", "url": "./packages/HRM/ShiftManagement"},
+        {"type": "path", "url": "./packages/HRM/Shift"},
         {"type": "path", "url": "./packages/HRM/HumanResourceOperations"}
     ]
 }
@@ -173,12 +173,12 @@ composer require nexus/shift-management
 | I need to... | Use Package | Layer |
 |-------------|-------------|-------|
 | Coordinate multi-domain workflows | HumanResourceOperations | Orchestrator |
-| Calculate leave balance | LeaveManagement | Atomic |
+| Calculate leave balance | Leave | Atomic |
 | Apply for leave (full workflow) | HumanResourceOperations | Orchestrator |
 | Record check-in/out | AttendanceManagement | Atomic |
 | Generate payslip | PayrollCore or HumanResourceOperations | Atomic or Orchestrator |
 | Create employee | EmployeeProfile | Atomic |
-| Schedule shifts | ShiftManagement | Atomic |
+| Schedule shifts | Shift | Atomic |
 
 **Rule of Thumb:**
 - **Atomic Package:** Single-domain operations, pure business logic

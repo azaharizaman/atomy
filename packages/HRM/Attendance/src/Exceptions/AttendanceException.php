@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\Attendance\Exceptions;
+
+/**
+ * Base exception for all attendance management errors
+ */
+class AttendanceException extends \Exception
+{
+}

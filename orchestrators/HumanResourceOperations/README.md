@@ -120,6 +120,73 @@ src/
 
 ---
 
+## Authorization Policies
+
+This orchestrator uses **`Nexus\Identity`** for context-aware authorization via `PolicyEvaluatorInterface`.
+
+### Policy-Based Authorization (ABAC)
+
+Complex authorization scenarios (e.g., "Can user apply leave on behalf of employee?") are handled by policies that check relationships and context:
+
+```php
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;
+
+// In ProxyApplicationAuthorizedRule
+$canApply = $this->policyEvaluator->evaluate(
+    user: $applicant,
+    action: 'hrm.leave.apply_on_behalf',
+    resource: null,
+    context: [
+        'target_employee_id' => $context->employeeId,
+    ]
+);
+```
+
+### Registering Policies
+
+Policies must be registered in your application's service provider:
+
+```php
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;
+use Nexus\Identity\ValueObjects\Policy;
+use Nexus\Hrm\Contracts\EmployeeQueryInterface;
+
+public function boot(): void
+{
+    $policyEvaluator = $this->app->make(PolicyEvaluatorInterface::class);
+    $employeeQuery = $this->app->make(EmployeeQueryInterface::class);
+    
+    // Register leave proxy policy
+    $policy = Policy::define('hrm.leave.apply_on_behalf')
+        ->description('User can apply leave on behalf of employees in same department or as manager')
+        ->check(function($user, $action, $resource, $context) use ($employeeQuery) {
+            $targetEmployeeId = $context['target_employee_id'] ?? null;
+            if (!$targetEmployeeId) {
+                return false;
+            }
+            
+            $userEmployee = $employeeQuery->findByUserId($user->getId());
+            $targetEmployee = $employeeQuery->findById($targetEmployeeId);
+            
+            if (!$userEmployee || !$targetEmployee) {
+                return false;
+            }
+            
+            // Same department OR user is manager
+            return $userEmployee->getDepartmentId() === $targetEmployee->getDepartmentId()
+                || $userEmployee->getId() === $targetEmployee->getManagerId();
+        });
+    
+    $policyEvaluator->registerPolicy($policy->getName(), $policy->getEvaluator());
+}
+```
+
+**📖 See:** [adapters/Laravel/HRM/docs/POLICY_REGISTRATION_EXAMPLE.md](../../../adapters/Laravel/HRM/docs/POLICY_REGISTRATION_EXAMPLE.md) for complete examples.
+
+**📖 See:** [CODING_GUIDELINES.md - Section 5.1](/CODING_GUIDELINES.md#51-authorization--policy-based-access-control) for authorization patterns.
+
+---
+
 ## Installation
 
 ```bash
@@ -128,7 +195,7 @@ composer require nexus/human-resource-operations
 
 Dependencies:
 - `nexus/hrm` - Employee management
-- `nexus/identity` - User accounts
+- `nexus/identity` - User accounts and authorization
 - `nexus/party` - Party records
 - `nexus/org-structure` - Organizational hierarchy
 - `nexus/leave` - Leave management

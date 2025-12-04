@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\UseCases\Training;
 
-use Nexus\TrainingManagement\Contracts\EnrollmentRepositoryInterface;
+use Nexus\Training\Contracts\EnrollmentRepositoryInterface;
 
 final readonly class ApproveTrainingRequestHandler
 {

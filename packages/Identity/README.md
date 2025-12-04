@@ -171,6 +171,8 @@ $authService->logout($session->token);
 
 ### Authorization
 
+#### Basic Permission Checking (RBAC)
+
 ```php
 use Nexus\Identity\Services\PermissionChecker;
 
@@ -191,6 +193,62 @@ if ($permissionChecker->hasRole($user, 'admin')) {
 
 // Wildcard permission matching
 // If user has "users.*", they have "users.create", "users.update", etc.
+```
+
+#### Policy-Based Authorization (ABAC)
+
+For complex authorization that requires context, relationships, or business rules:
+
+```php
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;
+use Nexus\Identity\ValueObjects\Policy;
+
+// Register a custom policy
+$leavePolicy = Policy::define('hrm.leave.apply_on_behalf')
+    ->description('User can apply leave on behalf of employees in same department or as their manager')
+    ->check(function(UserInterface $user, string $action, mixed $resource, array $context) use ($employeeQuery) {
+        // Extract target employee from context
+        $targetEmployeeId = $context['target_employee_id'] ?? null;
+        if (!$targetEmployeeId) {
+            return false;
+        }
+
+        $userEmployee = $employeeQuery->findByUserId($user->getId());
+        $targetEmployee = $employeeQuery->findById($targetEmployeeId);
+
+        // Check if same department OR user is manager
+        return $userEmployee?->getDepartmentId() === $targetEmployee?->getDepartmentId()
+            || $userEmployee?->getId() === $targetEmployee?->getManagerId();
+    });
+
+$policyEvaluator->registerPolicy(
+    $leavePolicy->getName(),
+    $leavePolicy->getEvaluator()
+);
+
+// Evaluate policy with context
+$canApply = $policyEvaluator->evaluate(
+    user: $user,
+    action: 'hrm.leave.apply_on_behalf',
+    resource: null,
+    context: ['target_employee_id' => $employeeId]
+);
+
+if ($canApply) {
+    // User can apply leave on behalf of this employee
+}
+```
+
+**When to use Policy-Based Authorization:**
+- ✅ Authorization depends on relationships (e.g., manager, same department)
+- ✅ Authorization requires resource state (e.g., invoice status, case ownership)
+- ✅ Complex multi-condition rules
+- ✅ Context-dependent decisions
+
+**When to use Basic Permission Checking:**
+- ✅ Simple "can user perform action" checks
+- ✅ Role-based access (admin, manager, user)
+- ✅ Static permissions that don't change based on context
 ```
 
 ### Role Management

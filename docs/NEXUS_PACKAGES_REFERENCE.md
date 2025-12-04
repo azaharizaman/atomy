@@ -49,7 +49,9 @@
 #### **Nexus\Identity**
 **Capabilities:**
 - User authentication (session, token, MFA)
-- Authorization (RBAC, permissions, policies)
+- **Authorization (RBAC + ABAC)**
+  - **Basic Permission Checking** via `PermissionCheckerInterface` (RBAC)
+  - **Context-Aware Authorization** via `PolicyEvaluatorInterface` (ABAC)
 - Role and permission management
 - Password hashing and verification
 - Token generation and validation
@@ -57,7 +59,8 @@
 
 **When to Use:**
 - ✅ User login/logout
-- ✅ Permission checking
+- ✅ **Basic permission checking** (RBAC)
+- ✅ **Context-aware authorization** with custom policies (ABAC)
 - ✅ Role assignment
 - ✅ Multi-factor authentication
 - ✅ API token generation
@@ -65,26 +68,81 @@
 **Key Interfaces:**
 ```php
 use Nexus\Identity\Contracts\AuthenticationManagerInterface;
-use Nexus\Identity\Contracts\AuthorizationManagerInterface;
+use Nexus\Identity\Contracts\PermissionCheckerInterface;  // For RBAC
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;    // For ABAC
 use Nexus\Identity\Contracts\UserRepositoryInterface;
 use Nexus\Identity\Contracts\RoleRepositoryInterface;
 use Nexus\Identity\Contracts\PermissionRepositoryInterface;
+use Nexus\Identity\ValueObjects\Policy;                   // Policy builder helper
 ```
 
-**Example:**
+**Example - Basic Permission Check (RBAC):**
 ```php
-// ✅ CORRECT: Check if user can perform action
+// ✅ CORRECT: Simple permission check
 public function __construct(
-    private readonly AuthorizationManagerInterface $authorization
+    private readonly PermissionCheckerInterface $permissionChecker
 ) {}
 
-public function deleteInvoice(string $invoiceId): void
+public function deleteInvoice(UserInterface $user, string $invoiceId): void
 {
-    if (!$this->authorization->can('delete', 'invoice')) {
+    if (!$this->permissionChecker->hasPermission($user, 'finance.invoice.delete')) {
         throw new UnauthorizedException();
     }
     // ... delete logic
 }
+```
+
+**Example - Context-Aware Authorization (ABAC):**
+```php
+// ✅ CORRECT: Context-aware authorization with policy
+public function __construct(
+    private readonly PolicyEvaluatorInterface $policyEvaluator
+) {}
+
+public function applyLeaveOnBehalf(
+    UserInterface $user,
+    string $employeeId
+): void {
+    // Evaluate policy with context
+    $canApply = $this->policyEvaluator->evaluate(
+        user: $user,
+        action: 'hrm.leave.apply_on_behalf',
+        resource: null,
+        context: ['target_employee_id' => $employeeId]
+    );
+    
+    if (!$canApply) {
+        throw new UnauthorizedException(
+            'Not authorized to apply leave on behalf of this employee'
+        );
+    }
+    
+    // ... proceed with leave application
+}
+```
+
+**Policy Registration (in Application Layer):**
+```php
+// Register custom policies in service provider
+use Nexus\Identity\ValueObjects\Policy;
+
+$policy = Policy::define('hrm.leave.apply_on_behalf')
+    ->description('User can apply leave on behalf of employees in same department')
+    ->check(function(UserInterface $user, string $action, mixed $resource, array $context) use ($employeeQuery) {
+        $targetEmployeeId = $context['target_employee_id'] ?? null;
+        if (!$targetEmployeeId) {
+            return false;
+        }
+        
+        $userEmployee = $employeeQuery->findByUserId($user->getId());
+        $targetEmployee = $employeeQuery->findById($targetEmployeeId);
+        
+        // Authorization logic based on relationship
+        return $userEmployee?->getDepartmentId() === $targetEmployee?->getDepartmentId()
+            || $userEmployee?->getId() === $targetEmployee?->getManagerId();
+    });
+
+$policyEvaluator->registerPolicy($policy->getName(), $policy->getEvaluator());
 ```
 
 ---

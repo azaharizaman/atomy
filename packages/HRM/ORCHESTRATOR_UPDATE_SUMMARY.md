@@ -12,7 +12,7 @@
 The HumanResourceOperations orchestrator has been significantly expanded to integrate 5 new HR domain packages:
 - Disciplinary
 - PerformanceReview
-- TrainingManagement
+- Training
 - Recruitment
 - Onboarding
 
