@@ -70,13 +70,21 @@ final readonly class EmployeeRegistrationService
     private function createPartyRecord(string $name, string $email): string
     {
         // Implementation: Call Nexus\Party package
-        return 'party-' . uniqid();
+        // Using cryptographically secure UUID instead of predictable uniqid()
+        $bytes = random_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+        return 'party-' . vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
     }
 
     private function createUserAccount(string $email, string $name, string $partyId): string
     {
         // Implementation: Call Nexus\Identity package
-        return 'user-' . uniqid();
+        // Using cryptographically secure UUID instead of predictable uniqid()
+        $bytes = random_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+        return 'user-' . vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
     }
 
     private function createEmployeeRecord(
@@ -89,7 +97,11 @@ final readonly class EmployeeRegistrationService
         array $metadata,
     ): string {
         // Implementation: Call Nexus\Hrm package
-        return 'emp-' . uniqid();
+        // Using cryptographically secure UUID instead of predictable uniqid()
+        $bytes = random_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+        return 'emp-' . vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
     }
 
     private function assignToOrganization(string $employeeId, string $departmentId): void

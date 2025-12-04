@@ -12,29 +12,32 @@ use Nexus\HumanResourceOperations\Contracts\HiringRuleInterface;
  * Following Advanced Orchestrator Pattern:
  * - Centralized rule management
  * - Composable validation logic
+ * - Readonly with constructor injection
  */
-final class HiringRuleRegistry
+final readonly class HiringRuleRegistry
 {
     /**
-     * @var array<HiringRuleInterface>
+     * @param array<HiringRuleInterface> $rules
      */
-    private array $rules = [];
-
-    public function register(HiringRuleInterface $rule): void
-    {
-        $this->rules[$rule->getName()] = $rule;
-    }
+    public function __construct(
+        private array $rules
+    ) {}
 
     /**
      * @return array<HiringRuleInterface>
      */
     public function all(): array
     {
-        return array_values($this->rules);
+        return $this->rules;
     }
 
     public function get(string $name): ?HiringRuleInterface
     {
-        return $this->rules[$name] ?? null;
+        foreach ($this->rules as $rule) {
+            if ($rule->getName() === $name) {
+                return $rule;
+            }
+        }
+        return null;
     }
 }

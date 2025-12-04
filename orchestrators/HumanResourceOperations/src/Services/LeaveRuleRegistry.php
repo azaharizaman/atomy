@@ -8,29 +8,35 @@ use Nexus\HumanResourceOperations\Contracts\LeaveRuleInterface;
 
 /**
  * Registry for leave validation rules.
+ * 
+ * Following Advanced Orchestrator Pattern:
+ * - Readonly with constructor injection
+ * - Composable validation logic
  */
-final class LeaveRuleRegistry
+final readonly class LeaveRuleRegistry
 {
     /**
-     * @var array<LeaveRuleInterface>
+     * @param array<LeaveRuleInterface> $rules
      */
-    private array $rules = [];
-
-    public function register(LeaveRuleInterface $rule): void
-    {
-        $this->rules[$rule->getName()] = $rule;
-    }
+    public function __construct(
+        private array $rules
+    ) {}
 
     /**
      * @return array<LeaveRuleInterface>
      */
     public function all(): array
     {
-        return array_values($this->rules);
+        return $this->rules;
     }
 
     public function get(string $name): ?LeaveRuleInterface
     {
-        return $this->rules[$name] ?? null;
+        foreach ($this->rules as $rule) {
+            if ($rule->getName() === $name) {
+                return $rule;
+            }
+        }
+        return null;
     }
 }

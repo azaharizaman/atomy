@@ -16,6 +16,7 @@ This orchestrator follows the **Advanced Orchestrator Pattern** which strictly s
 4. **Business Logic** (Services)
 5. **Stateful Processes** (Workflows)
 6. **Reactive Logic** (Listeners)
+7. **Error Handling** (Exceptions)
 
 ### The Golden Rules
 

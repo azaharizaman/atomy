@@ -38,8 +38,11 @@ final readonly class OnboardingWorkflow
             'employee_id' => $employeeId,
         ]);
 
-        // Create workflow instance
-        $workflowId = 'onboarding-' . uniqid();
+        // Create workflow instance with cryptographically secure UUID
+        $bytes = random_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+        $workflowId = 'onboarding-' . vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
 
         // Implementation: Persist workflow state
         // Step through each onboarding phase

@@ -1,16 +1,3 @@
-Below is a **professional, polished, publication-ready README.md** for the **Nexus ERP – Human Resource (HR) Module**.
-It is written in a clear enterprise tone and formatted the way a mature ERP vendor would present internal architecture and developer documentation.
-
-You can drop this directly into:
-
-```
-packages/HumanResourceOperations/README.md
-```
-
-—or use it as the central README for the HR suite inside your ERP.
-
----
-
 # 📘 **Nexus ERP – Human Resource (HR) Module**
 
 The **Nexus ERP Human Resource Module** provides a fully modular, domain-driven, and extensible platform for managing the complete employee lifecycle, including leave, attendance, payroll, shift scheduling, and employee profile management.

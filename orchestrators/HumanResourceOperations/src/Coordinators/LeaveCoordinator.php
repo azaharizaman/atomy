@@ -6,8 +6,11 @@ namespace Nexus\HumanResourceOperations\Coordinators;
 
 use Nexus\HumanResourceOperations\DTOs\LeaveApplicationRequest;
 use Nexus\HumanResourceOperations\DTOs\LeaveApplicationResult;
+use Nexus\HumanResourceOperations\DTOs\LeaveContext;
 use Nexus\HumanResourceOperations\DataProviders\LeaveDataProvider;
 use Nexus\HumanResourceOperations\Services\LeaveRuleRegistry;
+use Nexus\HumanResourceOperations\Services\WorkingDaysCalculationService;
+use Nexus\HumanResourceOperations\Services\LeaveBalanceService;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -18,6 +21,7 @@ use Psr\Log\NullLogger;
  * - Traffic cop: directs flow, doesn't do work
  * - Calls DataProvider for context
  * - Calls RuleRegistry for validation
+ * - Delegates calculations to Services
  * - Delegates to atomic packages for execution
  */
 final readonly class LeaveCoordinator
@@ -25,6 +29,8 @@ final readonly class LeaveCoordinator
     public function __construct(
         private LeaveDataProvider $dataProvider,
         private LeaveRuleRegistry $ruleRegistry,
+        private WorkingDaysCalculationService $workingDaysCalc,
+        private LeaveBalanceService $leaveBalanceService,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -32,10 +38,10 @@ final readonly class LeaveCoordinator
      * Process leave application.
      * 
      * Flow:
-     * 1. Get leave context from DataProvider
-     * 2. Validate using Rules
-     * 3. If valid, create leave request
-     * 4. Update balance
+     * 1. Calculate days if not provided (via Service)
+     * 2. Get leave context from DataProvider
+     * 3. Validate using Rules
+     * 4. If valid, create leave request (via Service)
      * 5. Return result
      */
     public function applyLeave(LeaveApplicationRequest $request): LeaveApplicationResult
@@ -47,8 +53,8 @@ final readonly class LeaveCoordinator
             'end_date' => $request->endDate,
         ]);
 
-        // Step 1: Calculate days if not provided
-        $daysRequested = $request->daysRequested ?? $this->calculateWorkingDays(
+        // Step 1: Calculate days if not provided (delegated to Service)
+        $daysRequested = $request->daysRequested ?? $this->workingDaysCalc->calculate(
             $request->startDate,
             $request->endDate
         );
@@ -88,20 +94,23 @@ final readonly class LeaveCoordinator
             );
         }
 
-        // Step 4: Create leave request (delegated to atomic package)
+        // Step 4: Create leave request (delegated to Service)
         try {
-            $leaveRequestId = $this->createLeaveRequest($request, $context);
-            $newBalance = $context->currentBalance - $daysRequested;
+            $result = $this->leaveBalanceService->createLeaveRequest(
+                $request,
+                $context,
+                $daysRequested
+            );
 
             $this->logger->info('Leave application approved', [
-                'leave_request_id' => $leaveRequestId,
+                'leave_request_id' => $result['leaveRequestId'],
                 'employee_id' => $request->employeeId,
             ]);
 
             return new LeaveApplicationResult(
                 success: true,
-                leaveRequestId: $leaveRequestId,
-                newBalance: $newBalance,
+                leaveRequestId: $result['leaveRequestId'],
+                newBalance: $result['newBalance'],
                 message: 'Leave application approved',
             );
 
@@ -116,24 +125,6 @@ final readonly class LeaveCoordinator
                 message: 'Failed to create leave request: ' . $e->getMessage(),
             );
         }
-    }
-
-    private function calculateWorkingDays(string $startDate, string $endDate): float
-    {
-        // Simplified calculation - should use business calendar
-        $start = new \DateTimeImmutable($startDate);
-        $end = new \DateTimeImmutable($endDate);
-        $diff = $start->diff($end);
-        
-        return $diff->days + 1;
-    }
-
-    private function createLeaveRequest(
-        LeaveApplicationRequest $request,
-        $context
-    ): string {
-        // Implementation: Call Nexus\Leave package
-        return 'leave-' . uniqid();
     }
 
     /**
