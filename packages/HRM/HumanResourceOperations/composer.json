@@ -5,19 +5,16 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
-        "nexus/hrm": "*@dev",
-        "nexus/attendance": "*@dev",
-        "nexus/leave": "*@dev",
-        "nexus/shift": "*@dev",
+        "nexus/leave-management": "*@dev",
+        "nexus/attendance-management": "*@dev",
+        "nexus/payroll-core": "*@dev",
+        "nexus/employee-profile": "*@dev",
+        "nexus/shift-management": "*@dev",
         "nexus/disciplinary": "*@dev",
         "nexus/performance-review": "*@dev",
-        "nexus/training": "*@dev",
+        "nexus/training-management": "*@dev",
         "nexus/recruitment": "*@dev",
         "nexus/onboarding": "*@dev",
-        "nexus/payroll": "*@dev",
-        "nexus/payroll-mys-statutory": "*@dev",
-        "nexus/identity": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -33,15 +30,6 @@
             "Nexus\\HumanResourceOperations\\Tests\\": "tests/"
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../../packages/*",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "minimum-stability": "dev",
     "prefer-stable": true
 }
