@@ -86,6 +86,52 @@ grep -r "use Nexus\\\\Laravel\|use Nexus\\\\Symfony" orchestrators/*/src/ 2>/dev
 
 # Check if orchestrator uses framework code
 grep -r "use Illuminate\|use Symfony" orchestrators/*/src/ 2>/dev/null | grep -v "// Example" || echo "No framework usage in orchestrators found"
+
+# Orchestrator Advanced Pattern Violations (v1.1)
+echo "=== Orchestrator Advanced Pattern Violations ==="
+
+# God Coordinator (doing too much work - fetching, validating, calculating)
+echo "--- God Coordinator Detection ---"
+grep -A 30 "final readonly class.*Coordinator" orchestrators/*/src/Coordinators/*.php | grep -c "->find\|new \|if (" || echo "0"
+
+# Constructor Bloat (>5 dependencies in Coordinator)
+echo "--- Constructor Bloat (>5 dependencies) ---"
+for file in orchestrators/*/src/Coordinators/*.php; do
+  if [ -f "$file" ]; then
+    count=$(grep -A 20 "__construct" "$file" | grep -c "private")
+    if [ "$count" -gt 5 ]; then
+      echo "$file: $count dependencies (MAX: 5)"
+    fi
+  fi
+done
+
+# Data Leakage (array manipulation in Coordinators)
+echo "--- Data Leakage (Array Access) ---"
+grep -r "\$data\['\|\\$request\['\|\\$context\['" orchestrators/*/src/Coordinators/ || echo "No data leakage found"
+
+# Missing DataProviders (Coordinators fetching data manually)
+echo "--- Missing DataProviders ---"
+grep -r "->findById\|->findByCode\|->findBy" orchestrators/*/src/Coordinators/ || echo "No manual data fetching found"
+
+# Inline Validation ("if" wall - first 20 lines are validation)
+echo "--- Inline Validation Wall ---"
+grep -A 25 "public function" orchestrators/*/src/Coordinators/*.php | grep -E "^\s+if \(" | head -20
+
+# Missing Rules (validation in Coordinator instead of Rules)
+echo "--- Missing Rules (Validation in Coordinator) ---"
+grep -r "if (!.*->is\|if (.*->has\|if (empty\|if (!.*->can" orchestrators/*/src/Coordinators/ || echo "No inline validation found"
+
+# Method Description "And" Rule (too much responsibility)
+echo "--- Method Docblock 'And' Rule ---"
+grep -B5 "public function" orchestrators/*/src/Coordinators/*.php | grep "and.*and" || echo "No 'and' violations in docblocks"
+
+# Missing DTOs (using arrays instead of typed objects)
+echo "--- Missing DTOs (Array Parameters) ---"
+grep -E "public function.*\(array \\\$" orchestrators/*/src/Coordinators/*.php || echo "No array parameters found"
+
+# Missing Context DTOs (DataProviders returning arrays)
+echo "--- Missing Context DTOs ---"
+grep -E "public function.*\): array" orchestrators/*/src/DataProviders/*.php || echo "All DataProviders return typed DTOs"
 ```
 
 **Expected Output:**
@@ -100,6 +146,16 @@ grep -r "use Illuminate\|use Symfony" orchestrators/*/src/ 2>/dev/null | grep -v
 - Framework Dependencies: **0 framework packages** in composer.json (PSR packages OK)
 - PHP Version: **"php": "^8.3"**
 - Layer Dependency Violations: **0 violations** (no upward dependencies, no framework in orchestrators)
+- **Orchestrator Advanced Pattern Violations:**
+  - God Coordinator: **0 coordinators doing too much work**
+  - Constructor Bloat: **0 coordinators with >5 dependencies**
+  - Data Leakage: **0 array access patterns**
+  - Missing DataProviders: **0 manual data fetching**
+  - Inline Validation: **0 "if" walls**
+  - Missing Rules: **0 validation in Coordinators**
+  - Method "And" Rule: **0 docblocks with multiple "and"**
+  - Missing DTOs: **0 array parameters**
+  - Missing Context DTOs: **0 DataProviders returning arrays**
 
 ---
 
@@ -244,6 +300,76 @@ Example:
 - Issue: Contains complex business logic for account calculations
 - Severity: High
 - Fix: Move business logic to packages/Finance/src/Services/AccountManager.php. Adapter should only call package services.
+```
+
+### Category 6: Orchestrator Advanced Pattern Violations (v1.1)
+
+**For Orchestrators Only** (`orchestrators/*`)
+
+**Coordinator Checklist:**
+- [ ] Coordinator accepts Request DTO (not `array $data`)
+- [ ] Coordinator calls DataProvider to get context (no manual `findById()` calls)
+- [ ] Coordinator calls RuleRegistry for validation (no inline `if` statements)
+- [ ] Coordinator calls Service for execution (no complex calculations)
+- [ ] Coordinator returns Result DTO (not `array`)
+- [ ] Coordinator has ≤5 dependencies (no constructor bloat)
+- [ ] Method docblock does NOT contain >1 "and" (single responsibility)
+- [ ] No "if" wall (first 20 lines are NOT validation checks)
+- [ ] No data leakage (`$data['user']['id']` array access)
+
+**DataProvider Checklist:**
+- [ ] DataProvider aggregates data from multiple packages
+- [ ] Returns typed Context DTO (not `array`)
+- [ ] Hides package implementation details from Coordinator
+- [ ] Single responsibility (one context type per provider)
+
+**Rules Checklist:**
+- [ ] Each Rule implements `RuleInterface`
+- [ ] Each Rule checks ONE constraint only
+- [ ] Rules return `RuleResult` (pass/fail with message)
+- [ ] Rules are testable in isolation
+- [ ] RuleRegistry composes multiple rules
+
+**Services Checklist:**
+- [ ] Services handle cross-boundary calculations only
+- [ ] Services are stateless (`readonly` class)
+- [ ] Services have clear single purpose
+- [ ] No data fetching (use DataProviders)
+
+**DTO Checklist:**
+- [ ] Request DTOs for Coordinator input
+- [ ] Result DTOs for Coordinator output
+- [ ] Context DTOs for DataProvider output
+- [ ] All DTOs are `readonly` value objects
+- [ ] No business logic in DTOs
+
+**Violations Found:**
+```
+[List violations here]
+
+Example - God Coordinator:
+- File: orchestrators/HumanResourceOperations/src/Coordinators/HiringCoordinator.php
+- Issue: Coordinator fetches data manually: $user = $this->userRepo->findById($data['user_id']);
+- Severity: High
+- Fix: Extract to EmployeeProfileProvider::getContext(HiringRequest): EmployeeContext
+
+Example - Constructor Bloat:
+- File: orchestrators/OrderManagement/src/Coordinators/OrderCoordinator.php
+- Issue: 8 dependencies in constructor (MAX: 5)
+- Severity: Medium
+- Fix: Group repositories into OrderDataProvider, validators into OrderRuleRegistry
+
+Example - Data Leakage:
+- File: orchestrators/AccountingOperations/src/Coordinators/PeriodCloseCoordinator.php
+- Issue: Array access: $userName = $data['user']['profile']['name'];
+- Severity: High
+- Fix: Create CloseContext DTO with typed $context->user->getName()
+
+Example - Inline Validation:
+- File: orchestrators/ProcurementManagement/src/Coordinators/PurchaseCoordinator.php
+- Issue: First 30 lines are if ($this->check...) { throw ... }
+- Severity: High
+- Fix: Extract to src/Rules/ (VendorActiveRule, BudgetAvailableRule) + RuleRegistry
 ```
 
 ---

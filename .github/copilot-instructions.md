@@ -174,6 +174,11 @@ nexus/
 ### Layer 2: Orchestrators (`orchestrators/`)
 **Workflow Coordination - Pure PHP**
 
+**Reference Implementations:**
+- **`Nexus\AccountingOperations`** - Benchmark orchestrator (Advanced Pattern v1.1)
+- **`Nexus\HumanResourceOperations`** - HR workflow orchestration
+
+**Characteristics:**
 - ✅ Pure PHP (still framework-agnostic)
 - ✅ Depends on multiple atomic packages
 - ✅ Owns "Flow" (processes), not "Truth" (entities)
@@ -183,10 +188,27 @@ nexus/
 - ❌ Does NOT access databases directly (uses repository interfaces)
 - ❌ NO framework code (controllers, jobs, routes)
 
-**Components:**
-- `Workflows/` - Stateful processes (Sagas, state machines)
-- `Coordinators/` - Stateless orchestration (synchronous)
-- `Listeners/` - Reactive logic (event subscribers)
+**7 Component Types (Advanced Pattern v1.1):**
+- `Coordinators/` - Traffic cops (stateless flow control, NOT workers)
+- `DataProviders/` - Cross-package data aggregation into Context DTOs
+- `Rules/` - Individual business constraint validators (composable)
+- `Services/` - Pure calculation/formatting logic crossing boundaries
+- `Workflows/` - Stateful long-running processes (Sagas)
+- `Listeners/` - Event reactors for async side-effects
+- `Exceptions/` - Domain-specific error scenarios
+
+**The Golden Rules:**
+1. **Coordinators are Traffic Cops, not Workers** - Direct traffic, don't pave roads
+2. **Data Fetching is Abstracted** - Coordinators never manually aggregate; DataProviders do
+3. **Validation is Composable** - Business rules are individual classes, not inline `if`
+4. **Strict Contracts** - Input/Output are typed DTOs, never associative arrays
+5. **System First** - Leverage Nexus packages before custom implementation
+
+**Refactoring Triggers:**
+- **"And" Rule**: Method with >1 "and" in description = too much responsibility
+- **Constructor Bloat**: >5 dependencies = SRP violation → group into DataProvider/Service
+- **"If" Wall**: 20+ lines of validation = needs Rule Engine
+- **Data Leakage**: `$data['user']['id']` manipulation = needs DTO + DataProvider
 
 ### Layer 3: Adapters (`adapters/`)
 **Framework-Specific Implementations**

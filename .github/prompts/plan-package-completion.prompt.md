@@ -549,6 +549,85 @@ After implementation, ensure ALL documentation is updated:
 
 ---
 
+## 🔗 Orchestrator-Specific Completion Criteria
+
+**Use this section when planning completion for orchestrators (e.g., `orchestrators/AccountingOperations`, `orchestrators/HumanResourceOperations`)**
+
+### Advanced Pattern v1.1 Component Checklist
+
+**Coordinators (`src/Coordinators/`):**
+- [ ] Coordinator accepts Request DTO (not arrays)
+- [ ] Coordinator calls DataProvider to get context
+- [ ] Coordinator calls RuleRegistry for validation
+- [ ] Coordinator calls Service for execution
+- [ ] Coordinator returns Result DTO
+- [ ] Coordinator has ≤5 dependencies (avoid constructor bloat)
+- [ ] No inline validation (no "if" wall)
+- [ ] No manual data fetching (no `$repo->findById()` calls)
+- [ ] No complex calculations (delegate to Services)
+
+**DataProviders (`src/DataProviders/`):**
+- [ ] DataProvider aggregates data from multiple packages
+- [ ] Returns typed Context DTO (not arrays)
+- [ ] Hides package implementation details
+- [ ] Single responsibility (one context type per provider)
+
+**Rules (`src/Rules/`):**
+- [ ] Each Rule implements `RuleInterface`
+- [ ] Each Rule checks ONE constraint only
+- [ ] Rules return `RuleResult` (pass/fail with message)
+- [ ] Rules are testable in isolation
+- [ ] RuleRegistry composes multiple rules
+
+**Services (`src/Services/`):**
+- [ ] Services handle cross-boundary calculations
+- [ ] Services are stateless (readonly class)
+- [ ] Services have clear single purpose
+- [ ] No data fetching (use DataProviders)
+
+**Workflows (`src/Workflows/`):**
+- [ ] Long-running processes only (hours/days)
+- [ ] State persistence implemented
+- [ ] Compensation logic defined
+- [ ] Saga pattern followed
+
+**Listeners (`src/Listeners/`):**
+- [ ] Subscribe to package/orchestrator events
+- [ ] Async side-effects only
+- [ ] No direct workflow logic
+
+**DTOs (`src/DTOs/`):**
+- [ ] Request DTOs for Coordinator input
+- [ ] Result DTOs for Coordinator output
+- [ ] Context DTOs for DataProvider output
+- [ ] All DTOs are readonly value objects
+- [ ] No business logic in DTOs
+
+### Orchestrator Anti-Pattern Detection
+
+**Scan for these violations:**
+```bash
+# God Coordinator (doing too much)
+grep -A 20 "public function" orchestrators/*/src/Coordinators/*.php | grep -c "new \|->find\|if ("
+
+# Constructor Bloat (>5 dependencies)
+grep -A 10 "__construct" orchestrators/*/src/Coordinators/*.php | grep -c "private"
+
+# Data Leakage (array manipulation)
+grep -r "\$data\[" orchestrators/*/src/Coordinators/
+
+# Inline Validation ("if" wall)
+grep -A 30 "public function" orchestrators/*/src/Coordinators/*.php | grep -c "if ("
+```
+
+**Refactoring Triggers:**
+- Method description has >1 "and" → Extract to components
+- Constructor has >5 dependencies → Group into DataProvider/Service
+- First 20 lines are validation → Extract to Rules
+- Array access `$data['user']['id']` → Create DTO and DataProvider
+
+---
+
 ## ⚠️ Critical Constraints
 
 ### Framework Agnosticism (MANDATORY)

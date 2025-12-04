@@ -350,6 +350,10 @@ packages/PackageName/
 
 **Purpose:** Orchestrate workflows that cross multiple atomic packages.
 
+**Reference Implementations:**
+- **`Nexus\AccountingOperations`** - Benchmark orchestrator demonstrating Advanced Orchestrator Pattern v1.1
+- **`Nexus\HumanResourceOperations`** - Comprehensive HR workflow orchestration (hiring, onboarding, performance, payroll)
+
 **Characteristics:**
 - ✅ Pure PHP (still framework-agnostic)
 - ✅ Depends on multiple atomic packages
@@ -379,13 +383,23 @@ orchestrators/OrchestratorName/
 ├── CODE_OF_CONDUCT.md
 ├── .gitignore
 ├── src/
+│   ├── Coordinators/        # Stateless orchestration (synchronous)
+│   │   └── FulfillmentCoordinator.php
+│   │
+│   ├── DataProviders/       # Cross-package data aggregation
+│   │   └── OrderContextProvider.php
+│   │
+│   ├── Rules/               # Individual business constraint validators
+│   │   ├── StockAvailableRule.php
+│   │   └── PaymentVerifiedRule.php
+│   │
+│   ├── Services/            # Cross-boundary calculations and builders
+│   │   └── ShippingCostCalculator.php
+│   │
 │   ├── Workflows/           # Stateful processes (Sagas, state machines)
 │   │   └── ProcessName/
 │   │       ├── Steps/       # Individual workflow steps
 │   │       └── States/      # Process states
-│   │
-│   ├── Coordinators/        # Stateless orchestration (synchronous)
-│   │   └── FulfillmentCoordinator.php
 │   │
 │   ├── Listeners/           # Reactive logic (event subscribers)
 │   │   └── TriggerShippingOnPaymentCaptured.php
@@ -405,6 +419,114 @@ orchestrators/OrchestratorName/
 | **Listeners/** | Reactive handlers for events from atomic packages | `TriggerShippingOnPaymentCaptured` listens to `PaymentCaptured` event |
 
 **Decision Rule:** If code defines "what a thing is" → Atomic Package. If code defines "how it moves through the system" → Orchestrator.
+
+---
+
+### Advanced Orchestrator Pattern v1.1
+
+Based on `Nexus\AccountingOperations` and `Nexus\HumanResourceOperations`, the **Advanced Orchestrator Pattern** prevents "God Class" anti-patterns by strictly separating architectural concerns.
+
+#### The Golden Rules
+
+1. **Coordinators are Traffic Cops, not Workers** - They direct traffic but do not pave the road
+2. **Data Fetching is Abstracted** - Coordinators never manually aggregate data; DataProviders do
+3. **Validation is Composable** - Business rules are individual classes, not inline `if` statements
+4. **Strict Contracts** - Input and Output are always typed DTOs, never associative arrays
+5. **System First** - Always leverage existing Nexus packages before building custom solutions
+
+#### Component Responsibilities
+
+**🚦 Coordinators (`src/Coordinators/`)**
+- **DO:** Accept a Request DTO
+- **DO:** Call a DataProvider to get context
+- **DO:** Call a RuleRegistry to validate context
+- **DO:** Call a Service to perform the action
+- **DON'T:** Write complex `if/else` logic
+- **DON'T:** Calculate values (e.g., tax, totals)
+- **DON'T:** Directly query repositories from multiple packages
+
+**📦 DataProviders (`src/DataProviders/`)**
+- **Responsibility:** Aggregate data from multiple atomic packages into a single Context DTO
+- **Why:** Prevents Coordinators from knowing package intricacies
+- **Output:** Returns a "Context" or "Aggregate" DTO
+- **Example:** `ConsolidationDataProvider` fetches Trial Balance + Exchange Rates + Budget Data
+
+**🛡️ Rules (`src/Rules/`)**
+- **Responsibility:** Enforce a single business constraint
+- **Pattern:** Strategy Pattern / Specification Pattern
+- **Interface:** `check(Context $ctx): RuleResult`
+- **Why:** Rules can be unit tested in isolation and reused
+- **Example:** `AllSubledgersClosedRule`, `NoUnpostedJournalsRule`
+
+**⚙️ Services (`src/Services/`)**
+- **Responsibility:** Perform domain logic that crosses boundaries
+- **Tasks:** Complex calculations, generating reports, building complex objects
+- **Example:** `FinancialStatementBuilder`, `CloseEntryGenerator`, `PayrollCalculationService`
+
+**🔄 Workflows (`src/Workflows/`)**
+- **Responsibility:** Manage long-running, stateful processes (Sagas)
+- **Use Case:** Multi-step processes requiring compensation logic (rollback)
+- **State:** Persists state to database to resume later
+- **Example:** `YearEndCloseWorkflow` with multiple steps
+
+**👂 Listeners (`src/Listeners/`)**
+- **Responsibility:** React to events emitted by packages/orchestrators
+- **Nature:** Asynchronous side-effects
+- **Example:** `TriggerConsolidationOnPeriodClose`
+
+**⚠️ Exceptions (`src/Exceptions/`)**
+- **Responsibility:** Domain-specific error scenarios
+- **Why:** Provide meaningful error messages specific to orchestrator workflows
+- **Example:** `WorkflowStateException`, `ValidationFailedException`, `CoordinationException`
+
+#### Decision Matrix: "Where does this code go?"
+
+| Scenario | Component | Why? |
+|----------|-----------|------|
+| Check if user is active AND period is open | **Rules** | Validation logic - Create `UserActiveRule` and `PeriodOpenRule` |
+| Fetch User, Profile, and Department | **DataProviders** | Data aggregation - Create `EmployeeProfileProvider` |
+| Calculate weighted average cost | **Services** | Complex calculation - Create `CostCalculationService` |
+| Execute 'Hiring' process (Validate → Create → Notify) | **Coordinators** | Flow control - Create `HiringCoordinator` |
+| Pass 10 parameters to Coordinator | **DTOs** | Prevent "argument soup" - Create `HiringRequest` DTO |
+| Process takes 3 days and requires approval | **Workflows** | Stateful process - Create `EmployeeOnboardingWorkflow` |
+| Send email when user is created | **Listeners** | Reactive side-effect - Create `SendWelcomeEmailListener` |
+
+#### Refactoring Triggers
+
+**🚩 Trigger 1: The "And" Rule (Coordinators)**
+If your Coordinator method description uses "and" more than once, it's doing too much.
+- **Bad:** "Validates request **and** fetches user **and** calculates tax **and** saves invoice"
+- **Refactor:** Extract validation to Rules, fetching to DataProviders, calculation to Services
+
+**🚩 Trigger 2: Constructor Bloat**
+If `__construct` has more than **5 dependencies**, you violate Single Responsibility Principle.
+- **Refactor:** Group related repositories into DataProvider or logic into Service
+
+**🚩 Trigger 3: The "If" Wall (Validation)**
+If first 20 lines are `if ($this->check...) { throw ... }`, you need a Rule Engine.
+- **Refactor:** Move checks to `src/Rules/` and inject RuleRegistry
+
+**🚩 Trigger 4: Data Leakage**
+If you see array manipulation like `$data['user']['id']` inside Coordinator, you leak implementation details.
+- **Refactor:** Create DTO (`UserContext`) and DataProvider that returns this object
+
+#### Naming Conventions
+
+| Component | Suffix/Pattern | Example |
+|-----------|----------------|---------|
+| **Coordinator** | `*Coordinator` | `PeriodCloseCoordinator` |
+| **DataProvider** | `*DataProvider` | `ConsolidationDataProvider` |
+| **Rule** | `*Rule` | `AllSubledgersClosedRule` |
+| **Service** | `*Service` or `*Builder` | `FinancialStatementBuilder` |
+| **Workflow** | `*Workflow` | `YearEndCloseWorkflow` |
+| **Listener** | `*Listener` | `TriggerConsolidationListener` |
+| **DTO (Request)** | `*Request` | `PeriodCloseRequest` |
+| **DTO (Result)** | `*Result` | `CloseReadinessResult` |
+| **DTO (Context)** | `*Context` | `ConsolidationContext` |
+
+**For complete details, see [`SYSTEM_DESIGN_AND_PHILOSOPHY.md`](SYSTEM_DESIGN_AND_PHILOSOPHY.md)**
+
+---
 
 ### Layer 3: Adapters (`adapters/`) - Framework-Specific Implementations
 
