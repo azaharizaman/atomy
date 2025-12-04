@@ -5,11 +5,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/financial-statements": "*@dev",
-        "nexus/account-consolidation": "*@dev",
-        "nexus/account-variance-analysis": "*@dev",
-        "nexus/account-period-close": "*@dev",
-        "nexus/financial-ratios": "*@dev",
+        "nexus/chart-of-account": "*@dev",
+        "nexus/journal-entry": "*@dev",
+        "nexus/period": "*@dev",
+        "nexus/budget": "*@dev",
+        "nexus/currency": "*@dev",
         "psr/log": "^3.0"
     },
     "autoload": {

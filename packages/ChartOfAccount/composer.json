@@ -1,0 +1,22 @@
+{
+    "name": "nexus/chart-of-account",
+    "description": "Nexus Chart of Account Package - Framework-agnostic chart of accounts management for general ledger",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nexus\\ChartOfAccount\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\ChartOfAccount\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

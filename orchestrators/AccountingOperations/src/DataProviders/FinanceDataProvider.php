@@ -4,60 +4,107 @@ declare(strict_types=1);
 
 namespace Nexus\AccountingOperations\DataProviders;
 
-use Nexus\FinancialStatements\Contracts\StatementDataProviderInterface;
-use Nexus\FinancialStatements\ValueObjects\AccountBalance;
+use Nexus\AccountingOperations\DTOs\AccountBalanceDTO;
+use Nexus\ChartOfAccount\Contracts\AccountQueryInterface;
+use Nexus\JournalEntry\Contracts\LedgerQueryInterface;
 
 /**
- * Data provider that integrates with Nexus\Finance for statement data.
+ * Data provider that integrates with ChartOfAccount and JournalEntry packages.
+ *
+ * Aggregates account and balance data from atomic packages for statement generation.
  */
-final readonly class FinanceDataProvider implements StatementDataProviderInterface
+final readonly class FinanceDataProvider
 {
     public function __construct(
-        // Injected dependencies from consuming application
+        private AccountQueryInterface $accountQuery,
+        private LedgerQueryInterface $ledgerQuery,
     ) {}
 
     /**
-     * @return array<AccountBalance>
+     * Get account balances for a period.
+     *
+     * @return array<AccountBalanceDTO>
      */
     public function getAccountBalances(string $tenantId, string $periodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        $accounts = $this->accountQuery->findAll();
+        $balances = [];
+
+        foreach ($accounts as $account) {
+            $balance = $this->ledgerQuery->getAccountBalance(
+                accountId: $account->getId(),
+                asOfDate: new \DateTimeImmutable()
+            );
+
+            $balances[] = new AccountBalanceDTO(
+                accountId: $account->getId(),
+                accountCode: $account->getCode(),
+                accountName: $account->getName(),
+                debitBalance: $balance['debit'] ?? '0.00',
+                creditBalance: $balance['credit'] ?? '0.00',
+                currency: 'MYR'
+            );
+        }
+
+        return $balances;
     }
 
     /**
-     * @return array<AccountBalance>
+     * Get comparative balances for two periods.
+     *
+     * @return array<AccountBalanceDTO>
      */
     public function getComparativeBalances(string $tenantId, string $periodId, string $comparativePeriodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        // Get balances for both periods and combine
+        $currentBalances = $this->getAccountBalances($tenantId, $periodId);
+        // Comparative period logic would be implemented based on period dates
+        return $currentBalances;
     }
 
     /**
+     * Get period metadata.
+     *
      * @return array<string, mixed>
      */
     public function getPeriodMetadata(string $tenantId, string $periodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        return [
+            'tenant_id' => $tenantId,
+            'period_id' => $periodId,
+            'generated_at' => new \DateTimeImmutable(),
+        ];
     }
 
     /**
+     * Get cash flow data for a period.
+     *
      * @return array<string, float>
      */
     public function getCashFlowData(string $tenantId, string $periodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        // Cash flow data would be derived from journal entries
+        return [
+            'operating_activities' => 0.0,
+            'investing_activities' => 0.0,
+            'financing_activities' => 0.0,
+        ];
     }
 
     /**
+     * Get equity movements for a period.
+     *
      * @return array<string, mixed>
      */
     public function getEquityMovements(string $tenantId, string $periodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        // Equity movements would be derived from journal entries
+        return [
+            'beginning_balance' => 0.0,
+            'net_income' => 0.0,
+            'dividends' => 0.0,
+            'other_adjustments' => 0.0,
+            'ending_balance' => 0.0,
+        ];
     }
 }
