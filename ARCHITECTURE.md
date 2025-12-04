@@ -474,6 +474,11 @@ Based on `Nexus\AccountingOperations` and `Nexus\HumanResourceOperations`, the *
 - **Nature:** Asynchronous side-effects
 - **Example:** `TriggerConsolidationOnPeriodClose`
 
+**⚠️ Exceptions (`src/Exceptions/`)**
+- **Responsibility:** Domain-specific error scenarios
+- **Why:** Provide meaningful error messages specific to orchestrator workflows
+- **Example:** `WorkflowStateException`, `ValidationFailedException`, `CoordinationException`
+
 #### Decision Matrix: "Where does this code go?"
 
 | Scenario | Component | Why? |
