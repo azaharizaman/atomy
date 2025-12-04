@@ -85,6 +85,11 @@ final readonly class AttendanceCoordinator
         // TODO: Implement via Nexus\Hrm AttendanceManager
         // This should create attendance record in database
         
-        return 'ATT-' . uniqid();
+        // Generate a cryptographically secure UUIDv4 for attendanceId
+        $bytes = random_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40); // set version to 4
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80); // set variant to RFC 4122
+        $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+        return 'ATT-' . $uuid;
     }
 }
