@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace Nexus\JournalEntry\Services;
 
+use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
+use Nexus\Common\Contracts\ClockInterface;
+use Nexus\Common\ValueObjects\Money;
+use Nexus\JournalEntry\Enums\JournalEntryStatus;
+use Nexus\JournalEntry\Contracts\LedgerQueryInterface;
 use Nexus\JournalEntry\Contracts\JournalEntryInterface;
+use Nexus\JournalEntry\Contracts\JournalEntryQueryInterface;
 use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
 use Nexus\JournalEntry\Contracts\JournalEntryPersistInterface;
-use Nexus\JournalEntry\Contracts\JournalEntryQueryInterface;
-use Nexus\JournalEntry\Contracts\LedgerQueryInterface;
-use Nexus\JournalEntry\Enums\JournalEntryStatus;
 use Nexus\JournalEntry\Exceptions\InvalidJournalEntryException;
-use Nexus\JournalEntry\Exceptions\JournalEntryAlreadyPostedException;
-use Nexus\JournalEntry\Exceptions\JournalEntryAlreadyReversedException;
 use Nexus\JournalEntry\Exceptions\JournalEntryNotFoundException;
 use Nexus\JournalEntry\Exceptions\JournalEntryNotPostedException;
 use Nexus\JournalEntry\Exceptions\UnbalancedJournalEntryException;
-use Nexus\Common\ValueObjects\Money;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Nexus\JournalEntry\Exceptions\JournalEntryAlreadyPostedException;
+use Nexus\JournalEntry\Exceptions\JournalEntryAlreadyReversedException;
 
 /**
  * Journal Entry Manager.
@@ -37,6 +38,8 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
         private JournalEntryQueryInterface $query,
         private JournalEntryPersistInterface $persist,
         private LedgerQueryInterface $ledgerQuery,
+        private ClockInterface $clock,
+        private string $defaultCurrency = 'MYR',
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -105,15 +108,15 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
             throw JournalEntryNotFoundException::withId($entryId);
         }
 
-        if ($original->getStatus() !== JournalEntryStatus::POSTED) {
-            throw JournalEntryNotPostedException::cannotReverse($entryId);
-        }
-
         if ($original->getStatus() === JournalEntryStatus::REVERSED) {
             throw JournalEntryAlreadyReversedException::cannotReverse($entryId);
         }
 
-        $reversalDate = $reversalDate ?? new \DateTimeImmutable();
+        if ($original->getStatus() !== JournalEntryStatus::POSTED) {
+            throw JournalEntryNotPostedException::cannotReverse($entryId);
+        }
+
+        $reversalDate = $reversalDate ?? $this->clock->now();
 
         // Create reversal entry by swapping debits and credits
         $reversalData = $this->buildReversalData($original, $reason, $reversalDate);
@@ -186,8 +189,8 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
     {
         $balances = $this->ledgerQuery->getAllAccountBalances($asOfDate);
 
-        $totalDebit = Money::zero('MYR');
-        $totalCredit = Money::zero('MYR');
+        $totalDebit = Money::zero($this->defaultCurrency);
+        $totalCredit = Money::zero($this->defaultCurrency);
         $result = [];
 
         foreach ($balances as $accountId => $balance) {
@@ -230,7 +233,7 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
      */
     private function validateBalance(array $lines): void
     {
-        $currency = 'MYR'; // Default, should come from config
+        $currency = $this->defaultCurrency;
         $totalDebit = Money::zero($currency);
         $totalCredit = Money::zero($currency);
 

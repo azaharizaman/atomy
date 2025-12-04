@@ -57,31 +57,39 @@ final readonly class ExchangeRate
 
     /**
      * Create exchange rate from components.
+     *
+     * @param string $fromCurrency Source currency code (ISO 4217)
+     * @param string $toCurrency Target currency code (ISO 4217)
+     * @param string $rate Exchange rate value
+     * @param \DateTimeImmutable $effectiveDate Date this rate is effective
      */
     public static function of(
         string $fromCurrency,
         string $toCurrency,
         string $rate,
-        ?\DateTimeImmutable $effectiveDate = null
+        \DateTimeImmutable $effectiveDate
     ): self {
         return new self(
             $fromCurrency,
             $toCurrency,
             $rate,
-            $effectiveDate ?? new \DateTimeImmutable()
+            $effectiveDate
         );
     }
 
     /**
      * Create identity rate (1:1 for same currency).
+     *
+     * @param string $currency Currency code (ISO 4217)
+     * @param \DateTimeImmutable $effectiveDate Date this rate is effective
      */
-    public static function identity(string $currency): self
+    public static function identity(string $currency, \DateTimeImmutable $effectiveDate): self
     {
         return new self(
             $currency,
             $currency,
             '1',
-            new \DateTimeImmutable()
+            $effectiveDate
         );
     }
 
@@ -101,7 +109,10 @@ final readonly class ExchangeRate
             );
         }
 
-        // Use the Money's built-in currency conversion
+        // Note: Money::convertToCurrency() accepts float, so we cast from bcmath string.
+        // For typical exchange rates (4-6 decimal places), float precision is sufficient.
+        // High-precision scenarios requiring more than ~15 significant digits should
+        // use bcmath operations directly on the minor units.
         return $amount->convertToCurrency($this->toCurrency, (float) $this->rate);
     }
 

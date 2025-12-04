@@ -17,11 +17,6 @@ use Nexus\JournalEntry\Exceptions\InvalidJournalEntryNumberException;
 final readonly class JournalEntryNumber
 {
     /**
-     * Default pattern: prefix-year-sequence or prefix + sequence
-     */
-    private const string DEFAULT_PATTERN = '/^([A-Z]{1,5})?[-]?(\d{4})?[-]?(\d{4,10})$/';
-
-    /**
      * Create a new JournalEntryNumber instance.
      *
      * @param string $value The full journal entry number
@@ -92,18 +87,24 @@ final readonly class JournalEntryNumber
     }
 
     /**
-     * Create a new journal entry number with pattern.
+     * Create a journal entry number from components.
+     *
+     * This method assembles a journal entry number from pre-generated components.
+     * The sequence number should be obtained externally (e.g., from Nexus\Sequencing
+     * via an orchestrator) before calling this method.
      *
      * @param string $prefix Entry prefix (e.g., "JE", "GJ")
-     * @param int $sequence Sequence number
-     * @param int|null $year Optional year
-     * @param string $separator Separator character
+     * @param int $sequence Pre-generated sequence number (from external source)
+     * @param int|null $year Optional year component
+     * @param string $separator Separator character (default: "-")
+     * @param int $sequencePadding Zero-padding length for sequence (default: 6)
      */
-    public static function generate(
+    public static function fromComponents(
         string $prefix,
         int $sequence,
         ?int $year = null,
-        string $separator = '-'
+        string $separator = '-',
+        int $sequencePadding = 6
     ): self {
         $parts = [$prefix];
 
@@ -111,7 +112,7 @@ final readonly class JournalEntryNumber
             $parts[] = (string) $year;
         }
 
-        $parts[] = str_pad((string) $sequence, 6, '0', STR_PAD_LEFT);
+        $parts[] = str_pad((string) $sequence, $sequencePadding, '0', STR_PAD_LEFT);
 
         $value = implode($separator, $parts);
 
@@ -123,29 +124,6 @@ final readonly class JournalEntryNumber
         );
     }
 
-    /**
-     * Get the prefix portion.
-     */
-    public function getPrefix(): ?string
-    {
-        return $this->prefix;
-    }
-
-    /**
-     * Get the year portion.
-     */
-    public function getYear(): ?int
-    {
-        return $this->year;
-    }
-
-    /**
-     * Get the sequence number.
-     */
-    public function getSequence(): int
-    {
-        return $this->sequence;
-    }
 
     /**
      * Check if this number equals another.

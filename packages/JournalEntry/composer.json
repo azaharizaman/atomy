@@ -21,8 +21,6 @@
     "require": {
         "php": "^8.3",
         "nexus/common": "^1.0",
-        "nexus/chart-of-account": "^1.0",
-        "nexus/period": "^1.0",
         "psr/log": "^3.0"
     },
     "require-dev": {

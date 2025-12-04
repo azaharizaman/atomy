@@ -59,9 +59,7 @@ final readonly class AccountManager implements AccountManagerInterface
         }
 
         // Create the account via persistence layer
-        // Note: Actual entity creation is delegated to the persist implementation
-        // which will handle creating the concrete entity
-        $account = $this->persist->save($this->buildAccountFromData($data));
+        $account = $this->persist->create($data);
 
         $this->logger->info('Account created', [
             'id' => $account->getId(),
@@ -118,7 +116,7 @@ final readonly class AccountManager implements AccountManagerInterface
             }
         }
 
-        $updatedAccount = $this->persist->save($this->mergeAccountData($account, $data));
+        $updatedAccount = $this->persist->update($id, $data);
 
         $this->logger->info('Account updated', [
             'id' => $id,
@@ -196,9 +194,7 @@ final readonly class AccountManager implements AccountManagerInterface
             return $account;
         }
 
-        $updatedAccount = $this->persist->save(
-            $this->mergeAccountData($account, ['is_active' => true])
-        );
+        $updatedAccount = $this->persist->update($id, ['is_active' => true]);
 
         $this->logger->info('Account activated', ['id' => $id]);
 
@@ -216,9 +212,7 @@ final readonly class AccountManager implements AccountManagerInterface
             return $account;
         }
 
-        $updatedAccount = $this->persist->save(
-            $this->mergeAccountData($account, ['is_active' => false])
-        );
+        $updatedAccount = $this->persist->update($id, ['is_active' => false]);
 
         $this->logger->info('Account deactivated', ['id' => $id]);
 
@@ -356,46 +350,5 @@ final readonly class AccountManager implements AccountManagerInterface
     {
         // Strict matching - child must have same type as parent
         return $parentType === $childType;
-    }
-
-    /**
-     * Build account data structure for creation.
-     *
-     * Note: This returns a structure that the persist interface will use.
-     * The actual AccountInterface implementation is provided by the consumer.
-     *
-     * @param array<string, mixed> $data
-     * @return AccountInterface
-     */
-    private function buildAccountFromData(array $data): AccountInterface
-    {
-        // This is a placeholder - in practice, the persist interface
-        // receives data and creates the concrete entity
-        // For now, we pass through the data as-is
-        // The persist implementation will handle entity creation
-        throw new \LogicException(
-            'AccountManager::buildAccountFromData should not be called directly. ' .
-            'The persist interface implementation should create entities from data arrays.'
-        );
-    }
-
-    /**
-     * Merge account with updated data.
-     *
-     * Note: This is a conceptual merge - actual implementation depends on
-     * the concrete entity implementation provided by the consumer.
-     *
-     * @param AccountInterface $account
-     * @param array<string, mixed> $data
-     * @return AccountInterface
-     */
-    private function mergeAccountData(AccountInterface $account, array $data): AccountInterface
-    {
-        // This is a placeholder - in practice, the persist interface
-        // handles merging existing entities with updated data
-        throw new \LogicException(
-            'AccountManager::mergeAccountData should not be called directly. ' .
-            'The persist interface implementation should handle entity updates.'
-        );
     }
 }

@@ -15,7 +15,8 @@
     },
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev"
+        "nexus/common": "*@dev",
+        "psr/log": "^3.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

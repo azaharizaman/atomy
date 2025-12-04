@@ -36,13 +36,18 @@ final readonly class FinanceDataProvider
                 asOfDate: new \DateTimeImmutable()
             );
 
+            // Balance is a Money object - positive = debit, negative = credit
+            $amount = $balance->getAmount();
+            $debitBalance = $amount >= 0 ? number_format($amount, 2, '.', '') : '0.00';
+            $creditBalance = $amount < 0 ? number_format(abs($amount), 2, '.', '') : '0.00';
+
             $balances[] = new AccountBalanceDTO(
                 accountId: $account->getId(),
                 accountCode: $account->getCode(),
                 accountName: $account->getName(),
-                debitBalance: $balance['debit'] ?? '0.00',
-                creditBalance: $balance['credit'] ?? '0.00',
-                currency: 'MYR'
+                debitBalance: $debitBalance,
+                creditBalance: $creditBalance,
+                currency: $balance->getCurrency()
             );
         }
 
