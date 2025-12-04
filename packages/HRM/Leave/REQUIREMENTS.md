@@ -1,7 +1,7 @@
 # Requirements: Leave
 
 **Package:** `Nexus\Leave`  
-**Total Requirements:** 35  
+**Total Requirements:** 38  
 **Last Updated:** 2025-12-04
 
 ## Requirements Summary
@@ -9,12 +9,12 @@
 | Category | Count | Complete | Pending |
 |----------|-------|----------|---------|
 | Architectural (ARC) | 5 | 5 | 0 |
-| Business (BUS) | 10 | 3 | 7 |
-| Functional (FUN) | 12 | 5 | 7 |
+| Business (BUS) | 11 | 4 | 7 |
+| Functional (FUN) | 14 | 6 | 8 |
 | Integration (INT) | 4 | 4 | 0 |
 | Security (SEC) | 2 | 1 | 1 |
 | Performance (PER) | 2 | 0 | 2 |
-| **TOTAL** | **35** | **18** | **17** |
+| **TOTAL** | **38** | **20** | **18** |
 
 ---
 
@@ -44,6 +44,7 @@
 | BUS-LVE-0008 | System MUST support leave carry-forward at year end | - | ⏳ Pending | CarryForwardProcessor planned | 2025-12-04 |
 | BUS-LVE-0009 | System MUST support leave encashment calculations | - | ⏳ Pending | LeaveEncashmentCalculator planned | 2025-12-04 |
 | BUS-LVE-0010 | System MUST support proration for mid-year joins/exits | - | ⏳ Pending | Proration logic planned | 2025-12-04 |
+| BUS-LVE-0011 | System MUST allow authorized users to apply leave on behalf of other employees | src/Exceptions/UnauthorizedProxyApplicationException.php | ✅ Complete | Exception defined, orchestrator rule implemented | 2025-12-04 |
 
 ---
 
@@ -63,6 +64,8 @@
 | FUN-LVE-0010 | System MUST validate leave requests against policies | - | ⏳ Pending | LeavePolicyValidator planned | 2025-12-04 |
 | FUN-LVE-0011 | System MUST process accruals for configured periods | src/Contracts/LeaveAccrualEngineInterface.php | ⏳ Pending | Interface defined, impl pending | 2025-12-04 |
 | FUN-LVE-0012 | System MUST support country-specific leave rules | src/Contracts/CountryLawRepositoryInterface.php | ⏳ Pending | Interface defined, data pending | 2025-12-04 |
+| FUN-LVE-0013 | System MUST validate proxy leave application authorization | src/Exceptions/UnauthorizedProxyApplicationException.php | ✅ Complete | Exception defined | 2025-12-04 |
+| FUN-LVE-0014 | System MUST track applicant information for proxy leave applications | - | ⏳ Pending | Orchestrator DTOs updated, audit integration pending | 2025-12-04 |
 
 ---
 
@@ -117,6 +120,15 @@ BUS-LVE-0010 → Proration logic (planned)
 FUN-LVE-0005 → LeavePolicyInterface
 FUN-LVE-0009 → LeaveOverlapDetector (planned)
 FUN-LVE-0010 → LeavePolicyValidator (planned)
+```
+
+### Proxy Leave Application Flow
+```
+BUS-LVE-0011 → FUN-LVE-0013 → UnauthorizedProxyApplicationException
+BUS-LVE-0011 → FUN-LVE-0014 → Orchestrator DTOs (LeaveContext, LeaveApplicationRequest)
+BUS-LVE-0011 → SEC-LVE-0001 → Audit trail via Nexus\AuditLogger
+Orchestrator Rule: ProxyApplicationAuthorizedRule (HumanResourceOperations)
+Integration: Nexus\Identity (PermissionCheckerInterface)
 ```
 
 ---

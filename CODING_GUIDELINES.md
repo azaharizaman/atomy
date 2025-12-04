@@ -14,6 +14,7 @@
 3. [Repository Interface Design](#3-repository-interface-design)
 4. [Service Class Design](#4-service-class-design)
 5. [Contract-Driven Development](#5-contract-driven-development)
+   - [5.1. Authorization & Policy-Based Access Control](#51-authorization--policy-based-access-control)
 6. [Value Objects & Data Protection](#6-value-objects--data-protection)
 7. [Error Handling](#7-error-handling)
 8. [Testing Standards](#8-testing-standards)
@@ -617,6 +618,176 @@ $this->app->singleton(
     FinanceGLAdapter::class
 );
 ```
+
+---
+
+## 5.1. Authorization & Policy-Based Access Control
+
+### Use Nexus\Identity for ALL Authorization
+
+**CRITICAL:** All packages and orchestrators MUST use `Nexus\Identity` for authorization. Do NOT create custom authorization implementations.
+
+### Two Authorization Patterns
+
+#### Pattern 1: Basic Permission Checking (RBAC)
+
+Use `PermissionCheckerInterface` for simple permission checks:
+
+```php
+use Nexus\Identity\Contracts\PermissionCheckerInterface;
+use Nexus\Identity\Contracts\UserInterface;
+
+final readonly class InvoiceManager
+{
+    public function __construct(
+        private PermissionCheckerInterface $permissionChecker
+    ) {}
+    
+    public function deleteInvoice(UserInterface $user, string $invoiceId): void
+    {
+        // Simple permission check
+        if (!$this->permissionChecker->hasPermission($user, 'finance.invoice.delete')) {
+            throw new UnauthorizedException('You do not have permission to delete invoices');
+        }
+        
+        // Proceed with deletion
+    }
+}
+```
+
+**When to use:**
+- ✅ Simple "can user perform action" checks
+- ✅ Role-based access (admin, manager, user)
+- ✅ Static permissions that don't change based on context
+
+#### Pattern 2: Policy-Based Authorization (ABAC)
+
+Use `PolicyEvaluatorInterface` for context-aware authorization:
+
+```php
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;
+use Nexus\Identity\Contracts\UserInterface;
+use Nexus\Identity\ValueObjects\Policy;
+
+final readonly class LeaveCoordinator
+{
+    public function __construct(
+        private PolicyEvaluatorInterface $policyEvaluator,
+        private EmployeeQueryInterface $employeeQuery
+    ) {}
+    
+    public function applyLeaveOnBehalf(
+        UserInterface $user,
+        string $employeeId,
+        // ... other params
+    ): void {
+        // Context-aware authorization check
+        $canApply = $this->policyEvaluator->evaluate(
+            user: $user,
+            action: 'hrm.leave.apply_on_behalf',
+            resource: null,
+            context: ['target_employee_id' => $employeeId]
+        );
+        
+        if (!$canApply) {
+            throw new UnauthorizedException(
+                'You are not authorized to apply leave on behalf of this employee'
+            );
+        }
+        
+        // Proceed with leave application
+    }
+}
+```
+
+**When to use:**
+- ✅ Authorization depends on relationships (e.g., manager, same department)
+- ✅ Authorization requires resource state (e.g., invoice status, case ownership)
+- ✅ Complex multi-condition rules
+- ✅ Context-dependent decisions
+
+### Registering Custom Policies
+
+Policies should be registered in the **application layer** (adapters), not in packages or orchestrators:
+
+```php
+// adapters/Laravel/HRM/src/Providers/HrmServiceProvider.php
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;
+use Nexus\Identity\ValueObjects\Policy;
+use Nexus\Hrm\Contracts\EmployeeQueryInterface;
+
+public function boot(): void
+{
+    $policyEvaluator = $this->app->make(PolicyEvaluatorInterface::class);
+    $employeeQuery = $this->app->make(EmployeeQueryInterface::class);
+    
+    // Register leave application policy
+    $leavePolicy = Policy::define('hrm.leave.apply_on_behalf')
+        ->description('User can apply leave on behalf of employees in same department or as their manager')
+        ->check(function(UserInterface $user, string $action, mixed $resource, array $context) use ($employeeQuery) {
+            // Extract target employee from context
+            $targetEmployeeId = $context['target_employee_id'] ?? null;
+            if (!$targetEmployeeId) {
+                return false;
+            }
+            
+            $userEmployee = $employeeQuery->findByUserId($user->getId());
+            $targetEmployee = $employeeQuery->findById($targetEmployeeId);
+            
+            if (!$userEmployee || !$targetEmployee) {
+                return false;
+            }
+            
+            // Check if same department OR user is manager
+            return $userEmployee->getDepartmentId() === $targetEmployee->getDepartmentId()
+                || $userEmployee->getId() === $targetEmployee->getManagerId();
+        });
+    
+    $policyEvaluator->registerPolicy(
+        $leavePolicy->getName(),
+        $leavePolicy->getEvaluator()
+    );
+}
+```
+
+### Authorization Anti-Patterns
+
+**❌ FORBIDDEN: Creating Custom Authorization Logic**
+
+```php
+// ❌ WRONG: Custom authorization service
+final readonly class LeaveAuthorizationService
+{
+    public function canApplyOnBehalf(string $userId, string $employeeId): bool
+    {
+        // Custom authorization logic - VIOLATES DRY!
+    }
+}
+
+// ❌ WRONG: Inline authorization checks
+if ($user->getDepartment() === $employee->getDepartment() || $user->isManagerOf($employee)) {
+    // Authorization logic scattered across codebase!
+}
+```
+
+**✅ CORRECT: Use PolicyEvaluator**
+
+```php
+// ✅ All authorization centralized in Nexus\Identity
+$this->policyEvaluator->evaluate($user, 'hrm.leave.apply_on_behalf', null, [
+    'target_employee_id' => $employeeId
+]);
+```
+
+### Authorization Checklist
+
+Before implementing authorization:
+
+- [ ] **Check if basic RBAC is sufficient** - Use `PermissionCheckerInterface`
+- [ ] **If context is required** - Use `PolicyEvaluatorInterface`
+- [ ] **Register policies in application layer** - Never in packages/orchestrators
+- [ ] **Do NOT create custom authorization services** - Use `Nexus\Identity`
+- [ ] **Log authorization failures** - For security auditing
 
 ---
 
