@@ -1925,6 +1925,239 @@ final readonly class GeneralLedgerManager implements GeneralLedgerManagerInterfa
 - `Workflows/` - Stateful processes (Sagas, state machines)
 - `Coordinators/` - Stateless orchestration (synchronous)
 - `Listeners/` - Reactive logic (event subscribers)
+- `DataProviders/` - Cross-package data aggregation
+- `Rules/` - Individual business constraint validators
+- `Services/` - Cross-boundary calculations and builders
+
+### Advanced Orchestrator Pattern v1.1
+
+Based on `Nexus\AccountingOperations` and `Nexus\HumanResourceOperations`, orchestrators must follow strict component separation to prevent "God Class" anti-patterns.
+
+#### The Golden Rules
+
+1. **Coordinators are Traffic Cops, not Workers** - Direct traffic, don't pave roads
+2. **Data Fetching is Abstracted** - Coordinators never manually aggregate data; DataProviders do
+3. **Validation is Composable** - Business rules are individual classes, not inline `if` statements
+4. **Strict Contracts** - Input/Output are typed DTOs, never associative arrays
+5. **System First** - Leverage Nexus packages before custom implementation
+
+#### Component Coding Standards
+
+**Coordinators (`src/Coordinators/`):**
+```php
+// ✅ CORRECT: Traffic cop pattern
+final readonly class HiringCoordinator
+{
+    public function __construct(
+        private EmployeeProfileProvider $profileProvider,  // DataProvider
+        private HiringRuleRegistry $rules,                 // Rule engine
+        private EmployeeCreationService $creationService,  // Service
+        private NotificationManagerInterface $notifier    // Package interface
+    ) {}
+    
+    public function hire(HiringRequest $request): HiringResult
+    {
+        // 1. Get context (DataProvider does the work)
+        $context = $this->profileProvider->getContext($request);
+        
+        // 2. Validate (Rules do the work)
+        $this->rules->validate($context);
+        
+        // 3. Execute (Service does the work)
+        $employee = $this->creationService->create($context);
+        
+        // 4. Side-effect (Package does the work)
+        $this->notifier->send($employee->getId(), 'welcome_email');
+        
+        return HiringResult::success($employee->getId());
+    }
+}
+
+// ❌ WRONG: Coordinator doing too much work
+final readonly class HiringCoordinator
+{
+    public function hire(array $data): array  // ❌ Array instead of DTO
+    {
+        // ❌ Manual data fetching (should be DataProvider)
+        $user = $this->userRepo->findById($data['user_id']);
+        $department = $this->deptRepo->findById($data['dept_id']);
+        
+        // ❌ Inline validation (should be Rules)
+        if (!$user->isActive()) { throw new Exception(); }
+        if ($department->isFull()) { throw new Exception(); }
+        
+        // ❌ Complex calculation (should be Service)
+        $salary = $data['base'] * (1 + $department->getRatio());
+        
+        // ... more work
+    }
+}
+```
+
+**DataProviders (`src/DataProviders/`):**
+```php
+// ✅ CORRECT: Aggregate cross-package data into DTO
+final readonly class EmployeeProfileProvider
+{
+    public function __construct(
+        private UserQueryInterface $userQuery,
+        private DepartmentQueryInterface $deptQuery,
+        private BranchQueryInterface $branchQuery
+    ) {}
+    
+    public function getContext(HiringRequest $request): EmployeeContext
+    {
+        return new EmployeeContext(
+            user: $this->userQuery->findById($request->userId),
+            department: $this->deptQuery->findById($request->departmentId),
+            branch: $this->branchQuery->findById($request->branchId)
+        );
+    }
+}
+```
+
+**Rules (`src/Rules/`):**
+```php
+// ✅ CORRECT: Single responsibility, testable in isolation
+final readonly class UserActiveRule implements RuleInterface
+{
+    public function check(EmployeeContext $context): RuleResult
+    {
+        if (!$context->user->isActive()) {
+            return RuleResult::fail('User must be active');
+        }
+        
+        return RuleResult::pass();
+    }
+}
+
+final readonly class DepartmentCapacityRule implements RuleInterface
+{
+    public function check(EmployeeContext $context): RuleResult
+    {
+        if ($context->department->isFull()) {
+            return RuleResult::fail('Department is at capacity');
+        }
+        
+        return RuleResult::pass();
+    }
+}
+
+// Rule Registry for composition
+final readonly class HiringRuleRegistry
+{
+    public function __construct(
+        private UserActiveRule $userActive,
+        private DepartmentCapacityRule $deptCapacity
+    ) {}
+    
+    public function validate(EmployeeContext $context): void
+    {
+        foreach ($this->getRules() as $rule) {
+            $result = $rule->check($context);
+            if ($result->failed()) {
+                throw new ValidationException($result->getMessage());
+            }
+        }
+    }
+    
+    private function getRules(): array
+    {
+        return [$this->userActive, $this->deptCapacity];
+    }
+}
+```
+
+**Services (`src/Services/`):**
+```php
+// ✅ CORRECT: Complex cross-boundary logic
+final readonly class SalaryCalculationService
+{
+    public function calculate(
+        Money $baseSalary,
+        Department $department,
+        array $allowances
+    ): Money {
+        $total = $baseSalary;
+        
+        // Apply department coefficient
+        $coefficient = $department->getSalaryCoefficient();
+        $total = $total->multiply($coefficient);
+        
+        // Add allowances
+        foreach ($allowances as $allowance) {
+            $total = $total->add($allowance);
+        }
+        
+        return $total;
+    }
+}
+```
+
+#### Refactoring Triggers
+
+**🚩 Trigger 1: The "And" Rule**
+If method description uses "and" more than once:
+```php
+// ❌ BAD: "Validates request AND fetches user AND calculates salary AND creates employee"
+public function hire(array $data) { ... }
+
+// ✅ GOOD: Split into components
+$context = $this->dataProvider->getContext($request);  // Fetch
+$this->rules->validate($context);                      // Validate
+$employee = $this->service->create($context);          // Create
+```
+
+**🚩 Trigger 2: Constructor Bloat**
+More than 5 dependencies = SRP violation:
+```php
+// ❌ BAD: 8 dependencies
+public function __construct(
+    private UserRepo $userRepo,
+    private DeptRepo $deptRepo,
+    private BranchRepo $branchRepo,
+    private SalaryCalc $salaryCalc,
+    private EmailSender $emailSender,
+    private AuditLogger $auditLogger,
+    private EventDispatcher $eventDispatcher,
+    private ConfigManager $configManager
+) {}
+
+// ✅ GOOD: Group into DataProvider, Service, or RuleRegistry
+public function __construct(
+    private EmployeeProfileProvider $profileProvider,  // Grouped repos
+    private HiringRuleRegistry $rules,                 // Grouped validators
+    private EmployeeCreationService $creationService,  // Grouped logic
+    private NotificationManagerInterface $notifier    // Single interface
+) {}
+```
+
+**🚩 Trigger 3: The "If" Wall**
+First 20 lines are validation checks:
+```php
+// ❌ BAD: Inline validation wall
+public function hire(array $data) {
+    if (empty($data['user_id'])) { throw new Exception(); }
+    if (empty($data['dept_id'])) { throw new Exception(); }
+    if (!$this->userRepo->exists($data['user_id'])) { throw new Exception(); }
+    if (!$this->deptRepo->exists($data['dept_id'])) { throw new Exception(); }
+    // ... 16 more lines
+}
+
+// ✅ GOOD: Move to Rules
+$this->rules->validate($context);  // One line, delegates to Rules
+```
+
+**🚩 Trigger 4: Data Leakage**
+Array manipulation in Coordinator:
+```php
+// ❌ BAD: Leaking implementation details
+$userName = $data['user']['profile']['name'];  // Knows internal structure
+
+// ✅ GOOD: Use DTO and DataProvider
+$context = $this->profileProvider->getContext($request);
+$userName = $context->user->getName();  // Typed access
+```
 
 **Example:**
 ```php

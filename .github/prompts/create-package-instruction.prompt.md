@@ -832,6 +832,122 @@ Create a `Core/` folder when your package is **complex** and contains internal c
 
 ---
 
+## 🔗 Creating Orchestrators (Advanced Pattern v1.1)
+
+**Purpose:** Orchestrators coordinate workflows across multiple atomic packages. Use when your workflow needs logic from 2+ packages.
+
+**Reference Implementations:**
+- **`Nexus\AccountingOperations`** - Benchmark orchestrator
+- **`Nexus\HumanResourceOperations`** - HR workflow orchestration
+
+### Mandatory Orchestrator Structure
+
+```
+orchestrators/OrchestratorName/
+├── composer.json              # Dependencies on multiple packages
+├── LICENSE                    # MIT License
+├── .gitignore
+├── README.md
+├── IMPLEMENTATION_SUMMARY.md
+├── REQUIREMENTS.md
+├── TEST_SUITE_SUMMARY.md
+├── VALUATION_MATRIX.md
+├── CHANGELOG.md
+├── UPGRADE.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── CODE_OF_CONDUCT.md
+├── src/
+│   ├── Coordinators/          # REQUIRED: Traffic cops (flow control)
+│   │   └── ProcessCoordinator.php
+│   ├── DataProviders/         # REQUIRED: Cross-package data aggregation
+│   │   └── ContextProvider.php
+│   ├── Rules/                 # RECOMMENDED: Business constraint validators
+│   │   ├── EntityActiveRule.php
+│   │   └── PeriodOpenRule.php
+│   ├── Services/              # RECOMMENDED: Cross-boundary calculations
+│   │   └── CalculationService.php
+│   ├── Workflows/             # OPTIONAL: Stateful processes (Sagas)
+│   │   └── LongRunningProcess/
+│   ├── Listeners/             # OPTIONAL: Event reactors
+│   │   └── TriggerOnEventListener.php
+│   ├── Contracts/             # REQUIRED: Orchestrator interfaces
+│   ├── DTOs/                  # REQUIRED: Typed data transfer objects
+│   │   ├── ProcessRequest.php
+│   │   ├── ProcessResult.php
+│   │   └── ProcessContext.php
+│   └── Exceptions/            # REQUIRED: Domain-specific errors
+└── tests/
+```
+
+### The 7 Component Types
+
+**🚦 Coordinators** - Traffic cops, NOT workers
+- Accept Request DTO
+- Call DataProvider to get context
+- Call RuleRegistry to validate
+- Call Service to execute
+- Return Result DTO
+- **DON'T**: Fetch data manually, inline validation, complex calculations
+
+**📦 DataProviders** - Aggregate data into Context DTOs
+- Inject multiple package repositories
+- Return typed Context objects
+- Hide package implementation details
+
+**🛡️ Rules** - Individual validation constraints
+- Implement `RuleInterface`
+- `check(Context): RuleResult`
+- Testable in isolation
+- Composable via RuleRegistry
+
+**⚙️ Services** - Cross-boundary logic
+- Complex calculations
+- Report generation
+- Object builders
+
+**🔄 Workflows** - Stateful processes
+- Long-running (hours/days)
+- Compensation logic
+- State persistence
+
+**👂 Listeners** - Event reactors
+- Async side-effects
+- Subscribe to package/orchestrator events
+
+**⚠️ Exceptions** - Domain errors
+- Workflow-specific exceptions
+
+### Orchestrator Creation Steps
+
+1. **Create directory structure** with all 7 component folders
+2. **Create composer.json** requiring multiple atomic packages
+3. **Define DTOs** (Request, Result, Context) in `src/DTOs/`
+4. **Create DataProviders** to aggregate cross-package data
+5. **Create Rules** for individual validations
+6. **Create Services** for complex calculations
+7. **Create Coordinators** to orchestrate flow
+8. **Create Workflows** if process is stateful/long-running
+9. **Create Listeners** for event reactions
+10. **Write tests** for each component
+11. **Update documentation** following package standards
+
+### Orchestrator Anti-Patterns to Avoid
+
+❌ **God Coordinator** - Coordinator doing too much work (fetch, validate, calculate)
+✅ **Solution** - Extract to DataProviders, Rules, Services
+
+❌ **Constructor Bloat** - >5 dependencies in Coordinator
+✅ **Solution** - Group repos into DataProvider, validators into RuleRegistry
+
+❌ **Inline Validation** - 20+ lines of `if` statements
+✅ **Solution** - Extract to `src/Rules/` classes
+
+❌ **Data Leakage** - Array manipulation `$data['user']['id']`
+✅ **Solution** - Create DTO and DataProvider with typed access
+
+---
+
 ## 🎓 Feature Implementation Workflow
 
 When adding a new feature to an existing package:

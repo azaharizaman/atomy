@@ -1424,6 +1424,144 @@ declare(strict_types=1);
 
 ---
 
+## 🔗 Orchestrator Documentation Standards (Advanced Pattern v1.1)
+
+**For Orchestrators Only** (`orchestrators/*`)
+
+Orchestrators have the same 15 mandatory items as packages, plus additional component-specific documentation.
+
+### Component Documentation Requirements
+
+Each orchestrator component type requires specific documentation in `docs/api-reference.md`:
+
+**Coordinators:**
+```markdown
+### Coordinators
+
+#### HiringCoordinator
+
+**Purpose:** Orchestrate employee hiring workflow across Identity, Hrm, and Payroll packages.
+
+**Method:** `hire(HiringRequest $request): HiringResult`
+
+**Flow:**
+1. Get context via EmployeeProfileProvider
+2. Validate via HiringRuleRegistry
+3. Execute via EmployeeCreationService
+4. Notify via NotificationManagerInterface
+
+**Dependencies (≤5):**
+- EmployeeProfileProvider (DataProvider)
+- HiringRuleRegistry (Rules)
+- EmployeeCreationService (Service)
+- NotificationManagerInterface (Package)
+- AuditLogManagerInterface (Package)
+
+**Request DTO:** `HiringRequest(userId, departmentId, branchId, salary)`
+**Result DTO:** `HiringResult(success, employeeId, errors)`
+```
+
+**DataProviders:**
+```markdown
+### DataProviders
+
+#### EmployeeProfileProvider
+
+**Purpose:** Aggregate employee context from multiple packages.
+
+**Method:** `getContext(HiringRequest $request): EmployeeContext`
+
+**Aggregates:**
+- User from Identity package
+- Department from Backoffice package
+- Branch from Backoffice package
+
+**Returns:** `EmployeeContext` DTO with typed properties
+```
+
+**Rules:**
+```markdown
+### Rules
+
+#### UserActiveRule
+
+**Purpose:** Validate that user is active before hiring.
+
+**Method:** `check(EmployeeContext $context): RuleResult`
+
+**Validation:** User status must be "active"
+
+**Returns:** RuleResult (pass/fail with message)
+```
+
+**Services:**
+```markdown
+### Services
+
+#### SalaryCalculationService
+
+**Purpose:** Calculate final salary with department coefficient and allowances.
+
+**Method:** `calculate(Money $base, Department $dept, array $allowances): Money`
+
+**Business Logic:**
+1. Apply department salary coefficient
+2. Add allowances
+3. Return total salary
+
+**Does NOT:** Fetch data, validate, persist
+```
+
+### Orchestrator README.md Required Sections
+
+In addition to standard sections, orchestrators must include:
+
+```markdown
+## Workflow Diagrams
+
+[Mermaid sequence diagrams showing cross-package flows]
+
+## Component Architecture
+
+### Advanced Pattern v1.1
+
+This orchestrator follows the Advanced Orchestrator Pattern v1.1:
+
+- **7 Component Types:** Coordinators, DataProviders, Rules, Services, Workflows, Listeners, Exceptions
+- **Reference:** AccountingOperations (benchmark), HumanResourceOperations
+
+### Component Breakdown
+
+- **Coordinators (3):** HiringCoordinator, TerminationCoordinator, TransferCoordinator
+- **DataProviders (2):** EmployeeProfileProvider, CompensationDataProvider
+- **Rules (5):** UserActiveRule, DepartmentCapacityRule, etc.
+- **Services (2):** SalaryCalculationService, BenefitsCalculationService
+- **Workflows (1):** EmployeeOnboardingWorkflow (stateful, 7-day process)
+- **Listeners (2):** TriggerPayrollSetupListener, SendWelcomeEmailListener
+
+## Integration Examples
+
+### Example 1: Hire New Employee
+
+[Complete working code example showing Request DTO → Coordinator → Result DTO]
+
+### Example 2: Employee Transfer
+
+[Complete working code example showing cross-department transfer workflow]
+```
+
+### Orchestrator Compliance Checklist
+
+- [ ] All 15 mandatory package items complete
+- [ ] **Component documentation** in `docs/api-reference.md` for each component
+- [ ] **Workflow diagrams** in README.md (Mermaid sequence diagrams)
+- [ ] **Component breakdown** section showing 7 component types
+- [ ] **Integration examples** showing complete Request→Coordinator→Result flows
+- [ ] **Reference implementations** cited (AccountingOperations, HumanResourceOperations)
+- [ ] **Advanced Pattern v1.1** compliance statement
+
+---
+
 ## 🎯 Execution Checklist
 
 Use this checklist when applying standards to a package:
