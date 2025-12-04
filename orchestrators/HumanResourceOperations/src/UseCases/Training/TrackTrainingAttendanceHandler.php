@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\UseCases\Training;
 
-use Nexus\TrainingManagement\Contracts\SessionRepositoryInterface;
+use Nexus\Training\Contracts\SessionRepositoryInterface;
 
 final readonly class TrackTrainingAttendanceHandler
 {

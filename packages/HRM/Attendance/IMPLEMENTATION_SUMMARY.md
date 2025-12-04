@@ -976,7 +976,7 @@ The AttendanceManagement package has been successfully implemented following:
 
 **Next Steps:**
 1. Update `AttendanceCoordinator` in `orchestrators/HumanResourceOperations`
-2. Integrate with other HRM packages (LeaveManagement, ShiftManagement)
+2. Integrate with other HRM packages (Leave, Shift)
 3. Create Laravel adapter with Eloquent models and migrations
 4. Deploy to production environment
 

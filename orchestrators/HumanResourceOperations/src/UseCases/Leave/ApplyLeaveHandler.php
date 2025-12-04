@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\UseCases\Leave;
 
-use Nexus\LeaveManagement\Contracts\LeaveRepositoryInterface;
-use Nexus\LeaveManagement\Contracts\LeaveBalanceRepositoryInterface;
-use Nexus\LeaveManagement\Contracts\LeavePolicyInterface;
+use Nexus\Leave\Contracts\LeaveRepositoryInterface;
+use Nexus\Leave\Contracts\LeaveBalanceRepositoryInterface;
+use Nexus\Leave\Contracts\LeavePolicyInterface;
 use Psr\Log\LoggerInterface;
 
 /**

@@ -19,11 +19,11 @@ Atomic domain packages include:
 
 | Package              | Namespace                    | Purpose                                              |
 | -------------------- | ---------------------------- | ---------------------------------------------------- |
-| LeaveManagement      | `Nexus\LeaveManagement`      | Leave rules, entitlements, balances, accrual engines |
+| Leave      | `Nexus\Leave`      | Leave rules, entitlements, balances, accrual engines |
 | AttendanceManagement | `Nexus\AttendanceManagement` | Time tracking, anomalies, work schedules             |
 | PayrollCore          | `Nexus\PayrollCore`          | Payroll rules, formulas, adjustments, payslips       |
 | EmployeeProfile      | `Nexus\EmployeeProfile`      | Employee master data, contracts, eligibility         |
-| ShiftManagement      | `Nexus\ShiftManagement`      | Shift templates, assignments, compliance             |
+| Shift      | `Nexus\Shift`      | Shift templates, assignments, compliance             |
 
 These domain packages do **not** contain use cases, pipelines, or infrastructure implementations.
 

@@ -1362,6 +1362,44 @@ SOFTWARE.
 
 ---
 
+## 📖 Documentation
+
+### Package Documentation
+
+Comprehensive documentation is available to help you get started and integrate the Attendance package into your application:
+
+- **[Getting Started Guide](docs/getting-started.md)** - Prerequisites, installation, core concepts, and your first integration
+- **[API Reference](docs/api-reference.md)** - Complete documentation for all interfaces, entities, value objects, and services
+- **[Integration Guide](docs/integration-guide.md)** - Framework-specific integration for Laravel and Symfony with database migrations, ORM models, and API examples
+- **[Basic Usage Examples](docs/examples/basic-usage.php)** - Runnable examples demonstrating simple check-in/check-out workflows
+- **[Advanced Usage Examples](docs/examples/advanced-usage.php)** - Complex scenarios including overtime calculation, late arrival detection, and compliance reporting
+
+### Additional Resources
+
+For developers contributing to or evaluating this package:
+
+- **[Package Requirements](REQUIREMENTS.md)** - Detailed requirements tracking with 45 documented requirements (ARC, BUS, FUN, PER, SEC, INT)
+- **[Test Suite Summary](TEST_SUITE_SUMMARY.md)** - Comprehensive test documentation with 100% coverage (46 tests, 95 assertions)
+- **[Valuation Matrix](VALUATION_MATRIX.md)** - Package valuation analysis and business value assessment ($22,000 valuation)
+- **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - Implementation progress, architectural decisions, and TDD methodology
+
+### Quick Reference
+
+| Documentation | Description |
+|--------------|-------------|
+| Getting Started | Quickest path to integration (15 min read) |
+| API Reference | All public interfaces and methods |
+| Integration Guide | Laravel/Symfony step-by-step setup |
+| Basic Examples | Copy-paste ready code samples |
+| Advanced Examples | Complex use cases and patterns |
+| Requirements | Full requirement traceability |
+| Test Suite | Quality metrics and test catalog |
+| Valuation | ROI and business value analysis |
+
+**Tip:** Start with the [Getting Started Guide](docs/getting-started.md) for a quick 15-minute introduction, then refer to the [API Reference](docs/api-reference.md) and [Integration Guide](docs/integration-guide.md) for deeper implementation details.
+
+---
+
 ## 📞 Support
 
 - **Documentation**: [https://nexus-docs.example.com/attendance](https://nexus-docs.example.com/attendance)

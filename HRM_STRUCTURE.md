@@ -18,11 +18,11 @@ Below is the complete hierarchy:
 ```
 packages/HRM/
 ├── HumanResourceOperations/
-├── LeaveManagement/
+├── Leave/
 ├── AttendanceManagement/
 ├── PayrollCore/
 ├── EmployeeProfile/
-├── ShiftManagement/
+├── Shift/
 └── (…future HR atomic domain packages)
 ```
 
@@ -193,12 +193,12 @@ packages/HumanResourceOperations/
 
 # 🧱 **2. LEAVE MANAGEMENT (Atomic Domain Package)**
 
-Namespace: `Nexus\LeaveManagement`
+Namespace: `Nexus\Leave`
 
 This is your fully domain-pure package.
 
 ```
-packages/HRM/LeaveManagement/
+packages/HRM/Leave/
 ├── composer.json
 ├── README.md
 ├── docs/
@@ -377,10 +377,10 @@ packages/HRM/EmployeeProfile/
 
 # 🧱 **6. SHIFT MANAGEMENT (Atomic Domain Package)**
 
-Namespace: `Nexus\ShiftManagement`
+Namespace: `Nexus\Shift`
 
 ```
-packages/HRM/ShiftManagement/
+packages/HRM/Shift/
 ├── composer.json
 ├── README.md
 ├── src/
@@ -417,7 +417,7 @@ Below is a **clean, standardized, Nexus-style directory structure** for the new 
 * **Recruitment**
 * **Onboarding**
 
-All structures follow the same *Atomic Package* format used across the Nexus ERP HR domain, consistent with your LeaveManagement, Attendance, Payroll, etc.
+All structures follow the same *Atomic Package* format used across the Nexus ERP HR domain, consistent with your Leave, Attendance, Payroll, etc.
 
 Each package is:
 
@@ -522,12 +522,12 @@ packages/HRM/PerformanceReview/
 
 ---
 
-# ✅ **3. Nexus\TrainingManagement**
+# ✅ **3. Nexus\Training**
 
 Manages courses, enrollments, trainers, certification tracking.
 
 ```
-packages/HRM/TrainingManagement/
+packages/HRM/Training/
 ├── composer.json
 ├── README.md
 ├── docs/

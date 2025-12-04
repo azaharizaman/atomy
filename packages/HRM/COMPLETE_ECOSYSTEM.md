@@ -24,11 +24,11 @@
 
 | # | Package | Namespace | Purpose | Files |
 |---|---------|-----------|---------|-------|
-| 1 | **LeaveManagement** | `Nexus\LeaveManagement` | Leave applications, approvals, balances, carry-forward | 22 |
+| 1 | **Leave** | `Nexus\Leave` | Leave applications, approvals, balances, carry-forward | 22 |
 | 2 | **AttendanceManagement** | `Nexus\AttendanceManagement` | Clock-in/out, overtime, shift tracking | 8 |
 | 3 | **PayrollCore** | `Nexus\PayrollCore` | Payslip generation, statutory calculations | 6 |
 | 4 | **EmployeeProfile** | `Nexus\EmployeeProfile` | Employee master data, employment status | 7 |
-| 5 | **ShiftManagement** | `Nexus\ShiftManagement` | Shift scheduling, rotations | 7 |
+| 5 | **Shift** | `Nexus\Shift` | Shift scheduling, rotations | 7 |
 
 **Subtotal:** 50 files
 
@@ -38,7 +38,7 @@
 |---|---------|-----------|---------|-------|
 | 6 | **Disciplinary** | `Nexus\Disciplinary` | Misconduct, sanctions, policy enforcement | 22 |
 | 7 | **PerformanceReview** | `Nexus\PerformanceReview` | Appraisals, KPIs, ratings | 21 |
-| 8 | **TrainingManagement** | `Nexus\TrainingManagement` | Courses, enrollments, certifications | 20 |
+| 8 | **Training** | `Nexus\Training` | Courses, enrollments, certifications | 20 |
 | 9 | **Recruitment** | `Nexus\Recruitment` | Job posting, ATS, hiring | 20 |
 | 10 | **Onboarding** | `Nexus\Onboarding` | New hire integration, probation | 19 |
 
@@ -87,14 +87,14 @@
 | Package | Contracts | Entities | VOs | Policies | Services | Exceptions |
 |---------|-----------|----------|-----|----------|----------|------------|
 | HumanResourceOperations | 2 | 0 | 0 | 0 | 2 | 2 |
-| LeaveManagement | 9 | 0 | 5 | 0 | 5 | 3 |
+| Leave | 9 | 0 | 5 | 0 | 5 | 3 |
 | AttendanceManagement | 2 | 0 | 2 | 0 | 0 | 0 |
 | PayrollCore | 1 | 0 | 1 | 0 | 0 | 0 |
 | EmployeeProfile | 1 | 0 | 2 | 0 | 0 | 0 |
-| ShiftManagement | 1 | 0 | 2 | 0 | 0 | 0 |
+| Shift | 1 | 0 | 2 | 0 | 0 | 0 |
 | **Disciplinary** ✨ | 4 | 3 | 4 | 4 | 4 | 4 |
 | **PerformanceReview** ✨ | 4 | 3 | 3 | 3 | 4 | 3 |
-| **TrainingManagement** ✨ | 4 | 3 | 3 | 3 | 3 | 3 |
+| **Training** ✨ | 4 | 3 | 3 | 3 | 3 | 3 |
 | **Recruitment** ✨ | 4 | 3 | 3 | 3 | 3 | 3 |
 | **Onboarding** ✨ | 3 | 3 | 3 | 3 | 3 | 3 |
 | **TOTALS** | **35** | **15** | **28** | **16** | **24** | **21** |
@@ -114,16 +114,16 @@
 3. **Employee Master** → `Nexus\EmployeeProfile`
    - Maintain employee records, employment status
 
-4. **Time & Attendance** → `Nexus\AttendanceManagement`, `Nexus\ShiftManagement`
+4. **Time & Attendance** → `Nexus\AttendanceManagement`, `Nexus\Shift`
    - Track work hours, shifts, overtime
 
-5. **Leave Management** → `Nexus\LeaveManagement`
+5. **Leave Management** → `Nexus\Leave`
    - Apply for leave, approvals, balance tracking
 
 6. **Performance** → `Nexus\PerformanceReview`
    - Appraisals, KPIs, ratings, promotions
 
-7. **Learning & Development** → `Nexus\TrainingManagement`
+7. **Learning & Development** → `Nexus\Training`
    - Courses, enrollments, certifications
 
 8. **Discipline** → `Nexus\Disciplinary`
@@ -183,14 +183,14 @@ packages/HRM/
 │       ├── Services/
 │       └── UseCases/
 │
-├── LeaveManagement/                # Atomic Package 1
+├── Leave/                # Atomic Package 1
 ├── AttendanceManagement/           # Atomic Package 2
 ├── PayrollCore/                    # Atomic Package 3
 ├── EmployeeProfile/                # Atomic Package 4
-├── ShiftManagement/                # Atomic Package 5
+├── Shift/                # Atomic Package 5
 ├── Disciplinary/                   # Atomic Package 6 ✨
 ├── PerformanceReview/              # Atomic Package 7 ✨
-├── TrainingManagement/             # Atomic Package 8 ✨
+├── Training/             # Atomic Package 8 ✨
 ├── Recruitment/                    # Atomic Package 9 ✨
 └── Onboarding/                     # Atomic Package 10 ✨
 ```

@@ -10,22 +10,22 @@ This directory contains the complete HRM domain implementation for the Nexus ERP
 - **[HumanResourceOperations](HumanResourceOperations/)** - Coordinates all HR workflows and use cases
 
 ### **Atomic Domain Packages**
-1. **[LeaveManagement](LeaveManagement/)** - Leave application, balances, accrual strategies
+1. **[Leave](Leave/)** - Leave application, balances, accrual strategies
 2. **[AttendanceManagement](AttendanceManagement/)** - Check-in/out, schedules, anomaly detection
 3. **[PayrollCore](PayrollCore/)** - Payslip generation, calculations, adjustments
 4. **[EmployeeProfile](EmployeeProfile/)** - Employee lifecycle, contracts, positions
-5. **[ShiftManagement](ShiftManagement/)** - Shift scheduling, templates, assignments
+5. **[Shift](Shift/)** - Shift scheduling, templates, assignments
 
 ## 🏗️ Architecture
 
 ```
 packages/HRM/
 ├── HumanResourceOperations/    # Orchestrator (depends on all atomic packages)
-├── LeaveManagement/            # Pure domain logic
+├── Leave/            # Pure domain logic
 ├── AttendanceManagement/       # Pure domain logic
 ├── PayrollCore/                # Pure domain logic
 ├── EmployeeProfile/            # Pure domain logic
-└── ShiftManagement/            # Pure domain logic
+└── Shift/            # Pure domain logic
 ```
 
 ### Key Principles
@@ -87,7 +87,7 @@ $leaveId = $handler->handle('employee-123', [
 
 ### Direct Domain Usage (Leave Management)
 ```php
-use Nexus\LeaveManagement\Services\LeaveBalanceCalculator;
+use Nexus\Leave\Services\LeaveBalanceCalculator;
 
 $calculator = new LeaveBalanceCalculator($balanceRepo);
 $balance = $calculator->calculateBalance('employee-123', 'annual');
@@ -107,7 +107,7 @@ Each package includes its own test suite:
 cd HumanResourceOperations && vendor/bin/phpunit
 
 # Test atomic packages
-cd LeaveManagement && vendor/bin/phpunit
+cd Leave && vendor/bin/phpunit
 cd AttendanceManagement && vendor/bin/phpunit
 ```
 

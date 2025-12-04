@@ -10,21 +10,21 @@ The HRM domain is organized into:
 - No domain logic - pure application layer
 
 ### 2. **Atomic Domain Packages**
-- **LeaveManagement** - Leave operations and balance tracking
+- **Leave** - Leave operations and balance tracking
 - **AttendanceManagement** - Check-in/out and schedule management
 - **PayrollCore** - Payroll calculation and payslip generation
 - **EmployeeProfile** - Employee lifecycle and contracts
-- **ShiftManagement** - Shift scheduling and assignment
+- **Shift** - Shift scheduling and assignment
 
 ## Dependency Flow
 
 ```
 HumanResourceOperations (Orchestrator)
-    ├── depends on → LeaveManagement
+    ├── depends on → Leave
     ├── depends on → AttendanceManagement
     ├── depends on → PayrollCore
     ├── depends on → EmployeeProfile
-    └── depends on → ShiftManagement
+    └── depends on → Shift
 ```
 
 ## Key Principles
