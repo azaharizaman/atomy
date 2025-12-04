@@ -8,6 +8,7 @@ use Nexus\HumanResourceOperations\DataProviders\AttendanceDataProvider;
 use Nexus\HumanResourceOperations\DTOs\AttendanceCheckRequest;
 use Nexus\HumanResourceOperations\DTOs\AttendanceCheckResult;
 use Nexus\HumanResourceOperations\Services\AttendanceRuleRegistry;
+use Nexus\AttendanceManagement\Contracts\AttendanceManagerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -18,14 +19,14 @@ use Psr\Log\NullLogger;
  * - Coordinators are Traffic Cops (orchestrate flow)
  * - DataProviders aggregate data
  * - Rules validate in isolation
+ * - AttendanceManager (domain service) handles persistence
  */
 final readonly class AttendanceCoordinator
 {
     public function __construct(
         private AttendanceDataProvider $dataProvider,
         private AttendanceRuleRegistry $ruleRegistry,
-        // TODO: Inject AttendanceManager from Nexus\Hrm package
-        // private AttendanceManagerInterface $attendanceManager,
+        private AttendanceManagerInterface $attendanceManager,
         private LoggerInterface $logger = new NullLogger()
     ) {}
 
@@ -56,8 +57,7 @@ final readonly class AttendanceCoordinator
         // Step 3: Extract anomalies
         $anomalies = $this->ruleRegistry->getAnomalies($validationResults);
 
-        // Step 4: Record attendance (Traffic Cop delegates to Service)
-        // TODO: Call Nexus\Hrm AttendanceManager to persist record
+        // Step 4: Record attendance (Traffic Cop delegates to Domain Service)
         $attendanceId = $this->recordAttendance($request);
 
         $this->logger->info('Attendance check processed', [
@@ -78,18 +78,37 @@ final readonly class AttendanceCoordinator
     }
 
     /**
-     * @skeleton
+     * Record attendance using domain service
+     * 
+     * Maps orchestrator DTOs to domain layer calls.
+     * The domain layer (AttendanceManager) handles all business rules,
+     * validation, and persistence.
      */
     private function recordAttendance(AttendanceCheckRequest $request): string
     {
-        // TODO: Implement via Nexus\Hrm AttendanceManager
-        // This should create attendance record in database
+        // Delegate to AttendanceManager (domain service)
+        // The manager will:
+        // 1. Validate check-in/out rules
+        // 2. Calculate work hours
+        // 3. Apply schedule rules
+        // 4. Persist the record
         
-        // Generate a cryptographically secure UUIDv4 for attendanceId
-        $bytes = random_bytes(16);
-        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40); // set version to 4
-        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80); // set variant to RFC 4122
-        $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
-        return 'ATT-' . $uuid;
+        if ($request->type === 'check_in') {
+            $attendanceId = $this->attendanceManager->checkIn(
+                employeeId: $request->employeeId,
+                timestamp: $request->timestamp,
+                locationId: $request->locationId,
+                latitude: $request->latitude,
+                longitude: $request->longitude
+            );
+        } else {
+            // check_out
+            $attendanceId = $this->attendanceManager->checkOut(
+                employeeId: $request->employeeId,
+                timestamp: $request->timestamp
+            );
+        }
+        
+        return $attendanceId->toString();
     }
 }
