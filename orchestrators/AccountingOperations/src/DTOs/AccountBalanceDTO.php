@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\AccountingOperations\DTOs;
 
+use Nexus\ChartOfAccount\Enums\AccountType;
+
 /**
  * Data Transfer Object for account balance information.
  *
@@ -16,6 +18,7 @@ final readonly class AccountBalanceDTO
         public string $accountId,
         public string $accountCode,
         public string $accountName,
+        public AccountType $accountType,
         public string $debitBalance,
         public string $creditBalance,
         public string $currency,

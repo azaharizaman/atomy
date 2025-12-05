@@ -13,6 +13,7 @@ use Nexus\AccountingOperations\DTOs\IncomeStatementDTO;
 use Nexus\AccountingOperations\DTOs\StatementOfChangesInEquityDTO;
 use Nexus\AccountingOperations\Enums\ComplianceFramework;
 use Nexus\AccountingOperations\Enums\StatementType;
+use Nexus\ChartOfAccount\Enums\AccountType;
 
 /**
  * Builds financial statements using data from ChartOfAccount and JournalEntry packages.
@@ -51,14 +52,25 @@ final readonly class FinanceStatementBuilder implements StatementBuilderInterfac
         $balances = $this->dataProvider->getAccountBalances($tenantId, $periodId);
         $metadata = $this->dataProvider->getPeriodMetadata($tenantId, $periodId);
 
-        // Calculate totals from account balances
+        // Calculate totals from account balances using bcmath for precision
         $totalAssets = '0.00';
         $totalLiabilities = '0.00';
         $totalEquity = '0.00';
 
         foreach ($balances as $balance) {
-            // This is simplified - real implementation would check account type
-            // by fetching account details from ChartOfAccount package
+            // Get the net balance for this account (debit - credit)
+            $netBalance = $balance->getNetBalance();
+
+            // Categorize by account type and accumulate using bcmath
+            match ($balance->accountType) {
+                AccountType::Asset => 
+                    $totalAssets = bcadd($totalAssets, $netBalance, 2),
+                AccountType::Liability => 
+                    $totalLiabilities = bcadd($totalLiabilities, bcmul($netBalance, '-1', 2), 2),
+                AccountType::Equity => 
+                    $totalEquity = bcadd($totalEquity, bcmul($netBalance, '-1', 2), 2),
+                default => null, // Revenue and Expense accounts don't appear on balance sheet
+            };
         }
 
         return new BalanceSheetDTO(
@@ -82,15 +94,38 @@ final readonly class FinanceStatementBuilder implements StatementBuilderInterfac
     ): IncomeStatementDTO {
         $balances = $this->dataProvider->getAccountBalances($tenantId, $periodId);
 
+        // Calculate totals from account balances using bcmath for precision
+        $totalRevenue = '0.00';
+        $totalExpenses = '0.00';
+
+        foreach ($balances as $balance) {
+            // Get the net balance for this account (debit - credit)
+            $netBalance = $balance->getNetBalance();
+
+            // Categorize by account type and accumulate using bcmath
+            match ($balance->accountType) {
+                AccountType::Revenue => 
+                    // Revenue has credit normal balance, so we invert the net balance
+                    $totalRevenue = bcadd($totalRevenue, bcmul($netBalance, '-1', 2), 2),
+                AccountType::Expense => 
+                    // Expense has debit normal balance
+                    $totalExpenses = bcadd($totalExpenses, $netBalance, 2),
+                default => null, // Balance sheet accounts don't appear on income statement
+            };
+        }
+
+        // Calculate net income: Revenue - Expenses
+        $netIncome = bcsub($totalRevenue, $totalExpenses, 2);
+
         return new IncomeStatementDTO(
             id: uniqid('is_'),
             tenantId: $tenantId,
             periodId: $periodId,
             framework: $framework,
             sections: [],
-            totalRevenue: '0.00',
-            totalExpenses: '0.00',
-            netIncome: '0.00',
+            totalRevenue: $totalRevenue,
+            totalExpenses: $totalExpenses,
+            netIncome: $netIncome,
             generatedAt: new \DateTimeImmutable(),
         );
     }
@@ -103,16 +138,29 @@ final readonly class FinanceStatementBuilder implements StatementBuilderInterfac
     ): CashFlowStatementDTO {
         $cashFlowData = $this->dataProvider->getCashFlowData($tenantId, $periodId);
 
+        // TODO: Update getCashFlowData to return string values directly
+        // For now, convert to string using number_format for precision up to 2 decimal places
+        $operatingCashFlow = number_format($cashFlowData['operating_activities'], 2, '.', '');
+        $investingCashFlow = number_format($cashFlowData['investing_activities'], 2, '.', '');
+        $financingCashFlow = number_format($cashFlowData['financing_activities'], 2, '.', '');
+
+        // Calculate net cash change using bcmath for precision
+        $netCashChange = bcadd(
+            bcadd($operatingCashFlow, $investingCashFlow, 2),
+            $financingCashFlow,
+            2
+        );
+
         return new CashFlowStatementDTO(
             id: uniqid('cf_'),
             tenantId: $tenantId,
             periodId: $periodId,
             framework: $framework,
             sections: [],
-            operatingCashFlow: '0.00',
-            investingCashFlow: '0.00',
-            financingCashFlow: '0.00',
-            netCashChange: '0.00',
+            operatingCashFlow: $operatingCashFlow,
+            investingCashFlow: $investingCashFlow,
+            financingCashFlow: $financingCashFlow,
+            netCashChange: $netCashChange,
             generatedAt: new \DateTimeImmutable(),
         );
     }
@@ -125,14 +173,33 @@ final readonly class FinanceStatementBuilder implements StatementBuilderInterfac
     ): StatementOfChangesInEquityDTO {
         $movements = $this->dataProvider->getEquityMovements($tenantId, $periodId);
 
+        // TODO: Update getEquityMovements to return string values directly
+        // For now, convert to string using number_format for precision up to 2 decimal places
+        $beginningBalance = number_format($movements['beginning_balance'], 2, '.', '');
+        $netIncome = number_format($movements['net_income'], 2, '.', '');
+        $dividends = number_format($movements['dividends'], 2, '.', '');
+        $otherAdjustments = number_format($movements['other_adjustments'], 2, '.', '');
+
+        // Calculate ending balance using bcmath for precision
+        // Ending = Beginning + Net Income - Dividends + Other Adjustments
+        $endingBalance = bcadd(
+            bcsub(
+                bcadd($beginningBalance, $netIncome, 2),
+                $dividends,
+                2
+            ),
+            $otherAdjustments,
+            2
+        );
+
         return new StatementOfChangesInEquityDTO(
             id: uniqid('sce_'),
             tenantId: $tenantId,
             periodId: $periodId,
             framework: $framework,
             sections: [],
-            openingEquity: '0.00',
-            closingEquity: '0.00',
+            openingEquity: $beginningBalance,
+            closingEquity: $endingBalance,
             generatedAt: new \DateTimeImmutable(),
         );
     }
