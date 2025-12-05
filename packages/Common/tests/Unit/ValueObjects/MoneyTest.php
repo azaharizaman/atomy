@@ -747,7 +747,8 @@ final class MoneyTest extends TestCase
         $money = Money::of(100.00, 'USD'); // 10000 minor units
 
         // Rate that produces exactly .5: 10000 * 0.85005 = 8500.5
-        $result = $money->convertToCurrencyWithStringRate('EUR', '0.85005', 8);
+        $rateProducingHalfway = '0.85005';
+        $result = $money->convertToCurrencyWithStringRate('EUR', $rateProducingHalfway, 8);
 
         // 8500.5 should round to 8501 (away from zero)
         $this->assertSame(8501, $result->getAmountInMinorUnits());
@@ -759,7 +760,8 @@ final class MoneyTest extends TestCase
         $money = Money::of(-100.00, 'USD'); // -10000 minor units
 
         // Rate that produces exactly .5: -10000 * 0.85005 = -8500.5
-        $result = $money->convertToCurrencyWithStringRate('EUR', '0.85005', 8);
+        $rateProducingHalfway = '0.85005';
+        $result = $money->convertToCurrencyWithStringRate('EUR', $rateProducingHalfway, 8);
 
         // -8500.5 should round to -8501 (away from zero)
         $this->assertSame(-8501, $result->getAmountInMinorUnits());

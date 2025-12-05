@@ -387,7 +387,7 @@ final readonly class Money implements
 
         // Validate exchange rate
         if (!is_numeric($exchangeRate)) {
-            throw new InvalidMoneyException("Exchange rate must be numeric, got: {$exchangeRate}");
+            throw new InvalidMoneyException("Exchange rate must be numeric");
         }
 
         if (bccomp($exchangeRate, '0', $scale) <= 0) {
