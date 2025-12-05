@@ -728,6 +728,19 @@ final class MoneyTest extends TestCase
         $this->assertSame(8500, $result->getAmountInMinorUnits());
     }
 
+    public function test_convert_to_currency_with_string_rate_handles_negative_amounts(): void
+    {
+        $money = Money::of(-100.00, 'USD'); // -10000 minor units
+
+        // Negative amount with rate
+        $result = $money->convertToCurrencyWithStringRate('EUR', '0.856789', 8);
+
+        // -10000 * 0.856789 = -8567.89, rounds to -8568
+        $this->assertSame('EUR', $result->getCurrency());
+        $this->assertSame(-8568, $result->getAmountInMinorUnits());
+        $this->assertSame(-85.68, $result->getAmount());
+    }
+
     // ========== Immutability Tests ==========
 
     public function test_money_is_immutable(): void

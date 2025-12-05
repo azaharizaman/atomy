@@ -366,6 +366,7 @@ final readonly class Money implements
      * @param string $toCurrency Target currency code
      * @param string $exchangeRate Exchange rate as string (multiply factor)
      * @param int $scale Scale for bcmath operations (default: 8 decimal places)
+     * @return static
      */
     public function convertToCurrencyWithStringRate(string $toCurrency, string $exchangeRate, int $scale = 8): static
     {
@@ -376,15 +377,18 @@ final readonly class Money implements
         $convertedStr = bcmul($minorUnitsStr, $exchangeRate, $scale);
         
         // Round using bcmath to maintain precision
-        // Add 0.5 for positive numbers, subtract 0.5 for negative, then truncate
+        // For positive: add 0.5 and truncate (standard rounding)
+        // For negative: subtract 0.5 and truncate (rounds away from zero)
         $isNegative = bccomp($convertedStr, '0', $scale) < 0;
         if ($isNegative) {
-            $roundedStr = bcsub($convertedStr, '0.5', $scale);
+            // For negative, we want -1.6 to become -2, so subtract 0.5 then truncate
+            $roundedStr = bcsub($convertedStr, '0.5', 0);
         } else {
-            $roundedStr = bcadd($convertedStr, '0.5', $scale);
+            // For positive, add 0.5 then truncate
+            $roundedStr = bcadd($convertedStr, '0.5', 0);
         }
         
-        // Truncate to integer (bcmath doesn't have floor/ceil, so we parse as int)
+        // Parse as integer
         $convertedAmount = (int) $roundedStr;
         
         return new self($convertedAmount, $toCurrency);
