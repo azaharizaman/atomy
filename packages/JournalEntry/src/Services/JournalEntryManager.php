@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\JournalEntry\Services;
 
-use Psr\Log\NullLogger;
 use Psr\Log\LoggerInterface;
 use Nexus\Common\Contracts\ClockInterface;
 use Nexus\Common\ValueObjects\Money;
@@ -41,9 +40,9 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
         private JournalEntryPersistInterface $persist,
         private LedgerQueryInterface $ledgerQuery,
         private ClockInterface $clock,
+        private LoggerInterface $logger,
         private string $defaultCurrency = 'MYR',
         private ?CurrencyConverterInterface $currencyConverter = null,
-        private LoggerInterface $logger = new NullLogger(),
     ) {}
 
     public function createEntry(array $data, ?string $createdBy = null): JournalEntryInterface
