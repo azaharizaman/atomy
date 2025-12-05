@@ -14,10 +14,12 @@ use Nexus\JournalEntry\Contracts\JournalEntryInterface;
 use Nexus\JournalEntry\Contracts\JournalEntryQueryInterface;
 use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
 use Nexus\JournalEntry\Contracts\JournalEntryPersistInterface;
+use Nexus\JournalEntry\Contracts\CurrencyConverterInterface;
 use Nexus\JournalEntry\Exceptions\InvalidJournalEntryException;
 use Nexus\JournalEntry\Exceptions\JournalEntryNotFoundException;
 use Nexus\JournalEntry\Exceptions\JournalEntryNotPostedException;
 use Nexus\JournalEntry\Exceptions\UnbalancedJournalEntryException;
+use Nexus\JournalEntry\Exceptions\InvalidExchangeRateException;
 use Nexus\JournalEntry\Exceptions\JournalEntryAlreadyPostedException;
 use Nexus\JournalEntry\Exceptions\JournalEntryAlreadyReversedException;
 
@@ -40,6 +42,7 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
         private LedgerQueryInterface $ledgerQuery,
         private ClockInterface $clock,
         private string $defaultCurrency = 'MYR',
+        private ?CurrencyConverterInterface $currencyConverter = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -228,24 +231,54 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
     /**
      * Validate that entry lines balance (debits = credits).
      *
+     * For multi-currency entries:
+     * - If a CurrencyConverter is available, converts all amounts to the default currency before validation
+     * - If no CurrencyConverter is available, validates that all lines use the same currency
+     *
      * @param array<array{debit: string, credit: string, currency?: string}> $lines
      * @throws UnbalancedJournalEntryException
+     * @throws InvalidExchangeRateException
      */
     private function validateBalance(array $lines): void
     {
         $currency = $this->defaultCurrency;
         $totalDebit = Money::zero($currency);
         $totalCredit = Money::zero($currency);
+        
+        // Check if all lines use the same currency
+        $currencies = array_unique(array_map(
+            fn($line) => $line['currency'] ?? $currency,
+            $lines
+        ));
+        
+        $hasMultipleCurrencies = count($currencies) > 1;
+
+        // If multiple currencies and no converter, require single currency
+        if ($hasMultipleCurrencies && $this->currencyConverter === null) {
+            throw InvalidExchangeRateException::currencyMismatch(
+                $currency,
+                'Mixed currencies (' . implode(', ', $currencies) . ') require a CurrencyConverter'
+            );
+        }
 
         foreach ($lines as $line) {
             $lineCurrency = $line['currency'] ?? $currency;
-
+            
+            // Convert to default currency if needed
             if (!empty($line['debit'])) {
-                $totalDebit = $totalDebit->add(Money::of($line['debit'], $lineCurrency));
+                $debitMoney = Money::of($line['debit'], $lineCurrency);
+                if ($lineCurrency !== $currency && $this->currencyConverter !== null) {
+                    $debitMoney = $this->currencyConverter->convert($debitMoney, $currency);
+                }
+                $totalDebit = $totalDebit->add($debitMoney);
             }
 
             if (!empty($line['credit'])) {
-                $totalCredit = $totalCredit->add(Money::of($line['credit'], $lineCurrency));
+                $creditMoney = Money::of($line['credit'], $lineCurrency);
+                if ($lineCurrency !== $currency && $this->currencyConverter !== null) {
+                    $creditMoney = $this->currencyConverter->convert($creditMoney, $currency);
+                }
+                $totalCredit = $totalCredit->add($creditMoney);
             }
         }
 
