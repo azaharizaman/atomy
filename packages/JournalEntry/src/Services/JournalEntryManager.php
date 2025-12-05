@@ -292,7 +292,7 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
                 'account_id' => $line->getAccountId(),
                 'debit' => $line->getCreditAmount()->getAmount(),
                 'credit' => $line->getDebitAmount()->getAmount(),
-                'currency' => $line->getDebitAmount()->getCurrency(),
+                'currency' => $line->getCurrency(),
                 'description' => 'Reversal: ' . ($line->getDescription() ?? ''),
             ];
         }
