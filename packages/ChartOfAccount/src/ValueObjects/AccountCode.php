@@ -60,7 +60,7 @@ final readonly class AccountCode
         }
 
         // Validate format: alphanumeric with optional separators
-        if (!preg_match('/^[a-zA-Z0-9]+([.\-][a-zA-Z0-9]+)*$/', $trimmed)) {
+        if (!preg_match('/^[a-zA-Z0-9]+([.-][a-zA-Z0-9]+)*$/', $trimmed)) {
             throw new InvalidAccountException(
                 'Account code must be alphanumeric, optionally separated by dots or dashes'
             );
@@ -103,7 +103,7 @@ final readonly class AccountCode
     public function getSegments(): array
     {
         // Split by either dash or dot
-        return preg_split('/[.\-]/', $this->value) ?: [$this->value];
+        return preg_split('/[.-]/', $this->value) ?: [$this->value];
     }
 
     /**
