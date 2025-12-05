@@ -658,6 +658,165 @@ final class MoneyTest extends TestCase
         $money->allocate([-1, 1, 1]);
     }
 
+    // ========== Currency Conversion Tests ==========
+
+    public function test_convert_to_currency_with_float_rate_converts_correctly(): void
+    {
+        $money = Money::of(100.00, 'USD');
+
+        $result = $money->convertToCurrency('EUR', 0.85);
+
+        $this->assertSame('EUR', $result->getCurrency());
+        $this->assertSame(8500, $result->getAmountInMinorUnits());
+        $this->assertSame(85.00, $result->getAmount());
+    }
+
+    public function test_convert_to_currency_with_string_rate_maintains_precision(): void
+    {
+        $money = Money::of(100.00, 'USD');
+
+        // High-precision rate that would lose precision as float
+        $result = $money->convertToCurrencyWithStringRate('EUR', '0.85123456', 8);
+
+        $this->assertSame('EUR', $result->getCurrency());
+        $this->assertSame(8512, $result->getAmountInMinorUnits());
+        $this->assertSame(85.12, $result->getAmount());
+    }
+
+    public function test_convert_to_currency_with_string_rate_handles_very_small_rates(): void
+    {
+        $money = Money::of(1000000.00, 'USD'); // 1 million USD
+
+        // Very small rate with high precision
+        $result = $money->convertToCurrencyWithStringRate('BTC', '0.00001234', 8);
+
+        $this->assertSame('BTC', $result->getCurrency());
+        $this->assertSame(1234, $result->getAmountInMinorUnits());
+    }
+
+    public function test_convert_to_currency_with_string_rate_handles_large_rates(): void
+    {
+        $money = Money::of(1.00, 'USD'); // 100 minor units
+
+        // Large rate: 100 * 150.123456 = 15012.3456 minor units, rounds to 15012
+        $result = $money->convertToCurrencyWithStringRate('JPY', '150.123456', 8);
+
+        $this->assertSame('JPY', $result->getCurrency());
+        $this->assertSame(15012, $result->getAmountInMinorUnits());
+    }
+
+    public function test_convert_to_currency_with_string_rate_rounds_correctly(): void
+    {
+        $money = Money::of(100.00, 'USD');
+
+        // Rate that requires rounding
+        $result = $money->convertToCurrencyWithStringRate('EUR', '0.856789', 8);
+
+        $this->assertSame('EUR', $result->getCurrency());
+        $this->assertSame(8568, $result->getAmountInMinorUnits());
+        $this->assertSame(85.68, $result->getAmount());
+    }
+
+    public function test_convert_to_currency_with_string_rate_default_scale(): void
+    {
+        $money = Money::of(100.00, 'USD');
+
+        // Test default scale parameter
+        $result = $money->convertToCurrencyWithStringRate('EUR', '0.85');
+
+        $this->assertSame('EUR', $result->getCurrency());
+        $this->assertSame(8500, $result->getAmountInMinorUnits());
+    }
+
+    public function test_convert_to_currency_with_string_rate_handles_negative_amounts(): void
+    {
+        $money = Money::of(-100.00, 'USD'); // -10000 minor units
+
+        // Negative amount with rate
+        $result = $money->convertToCurrencyWithStringRate('EUR', '0.856789', 8);
+
+        // -10000 * 0.856789 = -8567.89, rounds to -8568
+        $this->assertSame('EUR', $result->getCurrency());
+        $this->assertSame(-8568, $result->getAmountInMinorUnits());
+        $this->assertSame(-85.68, $result->getAmount());
+    }
+
+    public function test_convert_to_currency_with_string_rate_rounds_halfway_positive(): void
+    {
+        // Test "round half away from zero" for positive halfway value
+        $money = Money::of(100.00, 'USD'); // 10000 minor units
+
+        // Rate that produces exactly .5: 10000 * 0.85005 = 8500.5
+        $rateProducingHalfway = '0.85005';
+        $result = $money->convertToCurrencyWithStringRate('EUR', $rateProducingHalfway, 8);
+
+        // 8500.5 should round to 8501 (away from zero)
+        $this->assertSame(8501, $result->getAmountInMinorUnits());
+    }
+
+    public function test_convert_to_currency_with_string_rate_rounds_halfway_negative(): void
+    {
+        // Test "round half away from zero" for negative halfway value
+        $money = Money::of(-100.00, 'USD'); // -10000 minor units
+
+        // Rate that produces exactly .5: -10000 * 0.85005 = -8500.5
+        $rateProducingHalfway = '0.85005';
+        $result = $money->convertToCurrencyWithStringRate('EUR', $rateProducingHalfway, 8);
+
+        // -8500.5 should round to -8501 (away from zero)
+        $this->assertSame(-8501, $result->getAmountInMinorUnits());
+    }
+
+    public function test_convert_to_currency_with_string_rate_throws_on_invalid_exchange_rate(): void
+    {
+        $money = Money::of(100.00, 'USD');
+
+        $this->expectException(InvalidMoneyException::class);
+        $this->expectExceptionMessage('Exchange rate must be numeric');
+
+        $money->convertToCurrencyWithStringRate('EUR', 'invalid');
+    }
+
+    public function test_convert_to_currency_with_string_rate_throws_on_empty_exchange_rate(): void
+    {
+        $money = Money::of(100.00, 'USD');
+
+        $this->expectException(InvalidMoneyException::class);
+        $this->expectExceptionMessage('Exchange rate must be numeric');
+
+        $money->convertToCurrencyWithStringRate('EUR', '');
+    }
+
+    public function test_convert_to_currency_with_string_rate_throws_on_negative_exchange_rate(): void
+    {
+        $money = Money::of(100.00, 'USD');
+
+        $this->expectException(InvalidMoneyException::class);
+        $this->expectExceptionMessage('Exchange rate must be positive');
+
+        $money->convertToCurrencyWithStringRate('EUR', '-0.5');
+    }
+
+    public function test_convert_to_currency_with_string_rate_throws_on_zero_exchange_rate(): void
+    {
+        $money = Money::of(100.00, 'USD');
+
+        $this->expectException(InvalidMoneyException::class);
+        $this->expectExceptionMessage('Exchange rate must be positive');
+
+        $money->convertToCurrencyWithStringRate('EUR', '0');
+    }
+
+    public function test_convert_to_currency_with_string_rate_throws_on_negative_scale(): void
+    {
+        $money = Money::of(100.00, 'USD');
+
+        $this->expectException(InvalidMoneyException::class);
+        $this->expectExceptionMessage('Scale must be non-negative');
+
+        $money->convertToCurrencyWithStringRate('EUR', '0.85', -1);
+    }
+
     // ========== Immutability Tests ==========
 
     public function test_money_is_immutable(): void

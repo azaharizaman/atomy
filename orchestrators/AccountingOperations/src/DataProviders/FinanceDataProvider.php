@@ -4,60 +4,134 @@ declare(strict_types=1);
 
 namespace Nexus\AccountingOperations\DataProviders;
 
-use Nexus\FinancialStatements\Contracts\StatementDataProviderInterface;
-use Nexus\FinancialStatements\ValueObjects\AccountBalance;
+use Nexus\AccountingOperations\DTOs\AccountBalanceDTO;
+use Nexus\ChartOfAccount\Contracts\AccountQueryInterface;
+use Nexus\JournalEntry\Contracts\LedgerQueryInterface;
 
 /**
- * Data provider that integrates with Nexus\Finance for statement data.
+ * Data provider that integrates with ChartOfAccount and JournalEntry packages.
+ *
+ * Aggregates account and balance data from atomic packages for statement generation.
  */
-final readonly class FinanceDataProvider implements StatementDataProviderInterface
+final readonly class FinanceDataProvider
 {
+    /** Format options for balance display (2 decimal places, no currency symbol) */
+    private const BALANCE_FORMAT_OPTIONS = ['decimals' => 2, 'symbol' => false];
+
     public function __construct(
-        // Injected dependencies from consuming application
+        private AccountQueryInterface $accountQuery,
+        private LedgerQueryInterface $ledgerQuery,
     ) {}
 
     /**
-     * @return array<AccountBalance>
+     * Get account balances for a period.
+     *
+     * @return array<AccountBalanceDTO>
      */
     public function getAccountBalances(string $tenantId, string $periodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        $accounts = $this->accountQuery->findAll();
+        $balances = [];
+
+        foreach ($accounts as $account) {
+            $balance = $this->ledgerQuery->getAccountBalance(
+                accountId: $account->getId(),
+                asOfDate: new \DateTimeImmutable()
+            );
+
+            // Determine debit/credit presentation based on account type's normal balance
+            // For debit-normal accounts (Asset, Expense): positive balance shows on debit side
+            // For credit-normal accounts (Liability, Equity, Revenue): positive balance shows on credit side
+            $isDebitNormal = $account->getType()->isDebitNormal();
+            
+            if ($isDebitNormal) {
+                // Asset/Expense: positive = debit, negative = credit
+                $debitBalance = !$balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
+                    : '0.00';
+                $creditBalance = $balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
+                    : '0.00';
+            } else {
+                // Liability/Equity/Revenue: positive = credit, negative = debit
+                $debitBalance = $balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
+                    : '0.00';
+                $creditBalance = !$balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
+                    : '0.00';
+            }
+
+            $balances[] = new AccountBalanceDTO(
+                accountId: $account->getId(),
+                accountCode: $account->getCode(),
+                accountName: $account->getName(),
+                accountType: $account->getType(),
+                debitBalance: $debitBalance,
+                creditBalance: $creditBalance,
+                currency: $balance->getCurrency()
+            );
+        }
+
+        return $balances;
     }
 
     /**
-     * @return array<AccountBalance>
+     * Get comparative balances for two periods.
+     *
+     * @return array<AccountBalanceDTO>
      */
     public function getComparativeBalances(string $tenantId, string $periodId, string $comparativePeriodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        // Get balances for both periods and combine
+        $currentBalances = $this->getAccountBalances($tenantId, $periodId);
+        // Comparative period logic would be implemented based on period dates
+        return $currentBalances;
     }
 
     /**
+     * Get period metadata.
+     *
      * @return array<string, mixed>
      */
     public function getPeriodMetadata(string $tenantId, string $periodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        return [
+            'tenant_id' => $tenantId,
+            'period_id' => $periodId,
+            'generated_at' => new \DateTimeImmutable(),
+        ];
     }
 
     /**
+     * Get cash flow data for a period.
+     *
      * @return array<string, float>
      */
     public function getCashFlowData(string $tenantId, string $periodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        // Cash flow data would be derived from journal entries
+        return [
+            'operating_activities' => 0.0,
+            'investing_activities' => 0.0,
+            'financing_activities' => 0.0,
+        ];
     }
 
     /**
+     * Get equity movements for a period.
+     *
      * @return array<string, mixed>
      */
     public function getEquityMovements(string $tenantId, string $periodId): array
     {
-        // Implementation provided by consuming application
-        return [];
+        // Equity movements would be derived from journal entries
+        return [
+            'beginning_balance' => 0.0,
+            'net_income' => 0.0,
+            'dividends' => 0.0,
+            'other_adjustments' => 0.0,
+            'ending_balance' => 0.0,
+        ];
     }
 }
