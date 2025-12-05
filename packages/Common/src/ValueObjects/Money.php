@@ -375,8 +375,17 @@ final readonly class Money implements
         // Perform multiplication with arbitrary precision
         $convertedStr = bcmul($minorUnitsStr, $exchangeRate, $scale);
         
-        // Round to nearest integer for minor units
-        $convertedAmount = (int) round((float) $convertedStr);
+        // Round using bcmath to maintain precision
+        // Add 0.5 for positive numbers, subtract 0.5 for negative, then truncate
+        $isNegative = bccomp($convertedStr, '0', $scale) < 0;
+        if ($isNegative) {
+            $roundedStr = bcsub($convertedStr, '0.5', $scale);
+        } else {
+            $roundedStr = bcadd($convertedStr, '0.5', $scale);
+        }
+        
+        // Truncate to integer (bcmath doesn't have floor/ceil, so we parse as int)
+        $convertedAmount = (int) $roundedStr;
         
         return new self($convertedAmount, $toCurrency);
     }
