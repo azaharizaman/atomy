@@ -13,6 +13,7 @@ use Nexus\AccountingOperations\DTOs\IncomeStatementDTO;
 use Nexus\AccountingOperations\DTOs\StatementOfChangesInEquityDTO;
 use Nexus\AccountingOperations\Enums\ComplianceFramework;
 use Nexus\AccountingOperations\Enums\StatementType;
+use Nexus\ChartOfAccount\Enums\AccountType;
 
 /**
  * Builds financial statements using data from ChartOfAccount and JournalEntry packages.
@@ -62,11 +63,11 @@ final readonly class FinanceStatementBuilder implements StatementBuilderInterfac
 
             // Categorize by account type and accumulate using bcmath
             match ($balance->accountType) {
-                \Nexus\ChartOfAccount\Enums\AccountType::Asset => 
+                AccountType::Asset => 
                     $totalAssets = bcadd($totalAssets, $netBalance, 2),
-                \Nexus\ChartOfAccount\Enums\AccountType::Liability => 
+                AccountType::Liability => 
                     $totalLiabilities = bcadd($totalLiabilities, bcmul($netBalance, '-1', 2), 2),
-                \Nexus\ChartOfAccount\Enums\AccountType::Equity => 
+                AccountType::Equity => 
                     $totalEquity = bcadd($totalEquity, bcmul($netBalance, '-1', 2), 2),
                 default => null, // Revenue and Expense accounts don't appear on balance sheet
             };
@@ -103,10 +104,10 @@ final readonly class FinanceStatementBuilder implements StatementBuilderInterfac
 
             // Categorize by account type and accumulate using bcmath
             match ($balance->accountType) {
-                \Nexus\ChartOfAccount\Enums\AccountType::Revenue => 
+                AccountType::Revenue => 
                     // Revenue has credit normal balance, so we invert the net balance
                     $totalRevenue = bcadd($totalRevenue, bcmul($netBalance, '-1', 2), 2),
-                \Nexus\ChartOfAccount\Enums\AccountType::Expense => 
+                AccountType::Expense => 
                     // Expense has debit normal balance
                     $totalExpenses = bcadd($totalExpenses, $netBalance, 2),
                 default => null, // Balance sheet accounts don't appear on income statement
