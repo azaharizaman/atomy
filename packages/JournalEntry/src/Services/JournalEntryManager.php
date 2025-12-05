@@ -305,8 +305,8 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
             return $this->currencyConverter->convert($money, $toCurrency);
         }
 
-        // Unreachable: earlier validation guarantees converter is present if needed.
-        // Defensive code removed for clarity.
+        // Currency conversion required but no converter available
+        throw InvalidExchangeRateException::converterRequired([$fromCurrency, $toCurrency]);
     }
 
     /**

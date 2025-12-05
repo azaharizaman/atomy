@@ -29,9 +29,9 @@ final readonly class AccountBalanceDTO
      */
     public function getNetBalance(): string
     {
-        return bcadd(
+        return bcsub(
             $this->debitBalance,
-            bcmul($this->creditBalance, '-1', 2),
+            $this->creditBalance,
             2
         );
     }
