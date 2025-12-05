@@ -54,6 +54,36 @@ Line items can be in different currencies:
 - Base amount converted using effective exchange rate
 - Exchange rate captured at posting time
 
+**Important**: Multi-currency journal entries require a `CurrencyConverterInterface` implementation to be injected into `JournalEntryManager`. Without it, all lines must use the same currency.
+
+```php
+// Single currency - works without CurrencyConverter
+$entry = $manager->createEntry([
+    'lines' => [
+        ['account_id' => 'acc-1', 'debit' => '100.00', 'currency' => 'MYR'],
+        ['account_id' => 'acc-2', 'credit' => '100.00', 'currency' => 'MYR'],
+    ],
+]);
+
+// Multi-currency - requires CurrencyConverter
+$manager = new JournalEntryManager(
+    $query,
+    $persist,
+    $ledgerQuery,
+    $clock,
+    'MYR', // default currency
+    $currencyConverter, // inject converter
+    $logger
+);
+
+$entry = $manager->createEntry([
+    'lines' => [
+        ['account_id' => 'acc-1', 'debit' => '100.00', 'currency' => 'USD'],
+        ['account_id' => 'acc-2', 'credit' => '475.00', 'currency' => 'MYR'], // ~100 USD at 4.75 rate
+    ],
+]);
+```
+
 ## Quick Start
 
 ```php
@@ -110,7 +140,7 @@ public function recordSale(): void
 | Interface | Description |
 |-----------|-------------|
 | `LedgerQueryInterface` | Balance and ledger queries |
-| `ExchangeRateProviderInterface` | Exchange rate retrieval |
+| `CurrencyConverterInterface` | Currency conversion for multi-currency entries |
 | `SequencingIntegrationInterface` | Journal entry number generation |
 | `PeriodValidationInterface` | Fiscal period validation |
 
@@ -240,7 +270,7 @@ $number = $sequencing->getNext('journal_entry');
 Consuming applications must provide implementations for:
 
 1. **Repository Interfaces** - Database persistence using Eloquent/Doctrine
-2. **Exchange Rate Provider** - Currency conversion source
+2. **Currency Converter** - Convert money between currencies (required for multi-currency entries)
 3. **Period Validator** - Integration with Period package
 
 ### Example: Laravel Implementation
@@ -258,8 +288,8 @@ $this->app->bind(
 );
 
 $this->app->bind(
-    ExchangeRateProviderInterface::class,
-    CurrencyExchangeRateAdapter::class
+    CurrencyConverterInterface::class,
+    CurrencyExchangeRateAdapter::class // Wraps Nexus\Currency\ExchangeRateService
 );
 ```
 
