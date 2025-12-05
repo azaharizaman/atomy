@@ -102,7 +102,7 @@ final class UlidInterfaceTest extends TestCase
     {
         // Generate ULIDs with slight delay to ensure different timestamps
         $ulid1 = $this->ulidGenerator->generate();
-        usleep(1000); // 1ms delay
+        usleep(1000); // 1000 microseconds = 1ms delay
         $ulid2 = $this->ulidGenerator->generate();
         usleep(1000);
         $ulid3 = $this->ulidGenerator->generate();

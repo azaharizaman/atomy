@@ -54,7 +54,7 @@ final class PeriodTest extends TestCase
     public function test_for_month_validates_month_range(): void
     {
         $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('Month must be between 1 and 12');
+        $this->expectExceptionMessage('Month must be between 1 and 12, got: 13');
         
         Period::forMonth(2024, 13);
     }
@@ -62,7 +62,7 @@ final class PeriodTest extends TestCase
     public function test_for_month_validates_minimum_month(): void
     {
         $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('Month must be between 1 and 12');
+        $this->expectExceptionMessage('Month must be between 1 and 12, got: 0');
         
         Period::forMonth(2024, 0);
     }
@@ -90,7 +90,7 @@ final class PeriodTest extends TestCase
     public function test_for_quarter_validates_quarter_range(): void
     {
         $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('Quarter must be between 1 and 4');
+        $this->expectExceptionMessage('Quarter must be between 1 and 4, got: 5');
         
         Period::forQuarter(2024, 5);
     }
@@ -98,7 +98,7 @@ final class PeriodTest extends TestCase
     public function test_for_quarter_validates_minimum_quarter(): void
     {
         $this->expectException(InvalidValueException::class);
-        $this->expectExceptionMessage('Quarter must be between 1 and 4');
+        $this->expectExceptionMessage('Quarter must be between 1 and 4, got: 0');
         
         Period::forQuarter(2024, 0);
     }

@@ -16,13 +16,14 @@ use Nexus\Common\Exceptions\InvalidValueException;
  */
 final readonly class Period implements Comparable, SerializableVO
 {
+    private string $name;
+
     /**
      * @param string $name Period name/identifier (e.g., "2024-Q1", "JAN-2024", "FY2024")
      * @throws InvalidValueException
      */
-    public function __construct(
-        private string $name
-    ) {
+    public function __construct(string $name)
+    {
         $trimmed = trim($name);
         
         if (empty($trimmed)) {
@@ -32,6 +33,8 @@ final readonly class Period implements Comparable, SerializableVO
         if (strlen($trimmed) > 50) {
             throw new InvalidValueException('Period name cannot exceed 50 characters');
         }
+
+        $this->name = $trimmed;
     }
 
     /**
@@ -94,7 +97,7 @@ final readonly class Period implements Comparable, SerializableVO
     }
 
     /**
-     * Check if this appears to be a yearly period (format: FYYYYYYY)
+     * Check if this appears to be a yearly period (format: FYYYYY)
      */
     public function isYearly(): bool
     {
