@@ -37,15 +37,29 @@ Provides current time for testability.
 |--------|-------------|---------|
 | `now()` | Get the current time | `DateTimeImmutable` |
 
-### EventDispatcherInterface
+### UlidInterface
 
-**Namespace:** `Nexus\Common\Contracts\EventDispatcherInterface`
+**Namespace:** `Nexus\Common\Contracts\UlidInterface`
 
-Dispatches domain events to the application layer.
+Standardized ULID generation for entity identifiers.
 
 | Method | Description | Returns |
 |--------|-------------|---------|
-| `dispatch(object $event)` | Dispatch an event to all listeners | `void` |
+| `generate()` | Generate a new ULID string | `string` |
+| `isValid(string $ulid)` | Validate ULID format | `bool` |
+| `getTimestamp(string $ulid)` | Extract timestamp from ULID | `DateTimeImmutable` |
+
+## Event Dispatching
+
+For event dispatching, use PSR-14's `Psr\EventDispatcher\EventDispatcherInterface` directly. 
+This package depends on `psr/event-dispatcher` for PSR compliance.
+
+```php
+// Inject PSR-14 interface
+public function __construct(
+    private \Psr\EventDispatcher\EventDispatcherInterface $eventDispatcher
+) {}
+```
 
 ## Logging
 
@@ -53,7 +67,11 @@ For logging, use PSR-3's `Psr\Log\LoggerInterface` directly. This package depend
 
 ## Monetary Values
 
-For monetary values, use `Nexus\Finance\ValueObjects\Money` from the Finance package.
+The `Money` value object is located in this package (`Nexus\Common\ValueObjects\Money`).
+
+**Money vs Currency Package Boundary:**
+- **`Money` (this package)**: Immutable monetary value with arithmetic, comparison, formatting
+- **`Nexus\Currency` package**: Exchange rate management, cross-currency conversions
 
 ## Exceptions
 

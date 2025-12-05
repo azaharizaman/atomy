@@ -9,7 +9,8 @@ The Common package contains foundational elements that are shared across multipl
 This package provides:
 
 - **Value Objects**: Immutable domain primitives (TenantId, etc.)
-- **Contracts**: Common interfaces used across packages (ClockInterface, EventDispatcherInterface)
+- **Contracts**: Common interfaces used across packages (ClockInterface, behavioral contracts)
+- **PSR Compliance**: Uses PSR-14 `Psr\EventDispatcher\EventDispatcherInterface` for event dispatching
 - **Exceptions**: Shared domain exceptions
 
 ## Installation
@@ -147,9 +148,9 @@ composer require nexus/common
 | Interface | Methods | Description |
 |-----------|---------|-------------|
 | `ClockInterface` | `now()` | Provides current time for testability |
-| `EventDispatcherInterface` | `dispatch()` | Event dispatching contract |
+| `UlidInterface` | `generate()`, `isValid()`, `getTimestamp()` | ULID generation for entity identifiers |
 
-> **Note:** For logging, use PSR-3's `Psr\Log\LoggerInterface` directly. This package depends on `psr/log` for convenience.
+> **Note:** For event dispatching, use PSR-14's `Psr\EventDispatcher\EventDispatcherInterface` directly. This package depends on `psr/event-dispatcher`.
 
 ### Exceptions (`src/Exceptions/`)
 
@@ -162,6 +163,14 @@ composer require nexus/common
 ## Usage Examples
 
 ### Money Value Object
+
+The `Money` value object provides immutable monetary value representation with precision arithmetic.
+
+**Important - Money vs Currency Package Boundary:**
+- **`Money` (this package)**: Arithmetic operations, comparison, formatting, allocation
+- **`Nexus\Currency` package**: Exchange rate management, cross-currency conversions with rates
+
+Use `Money` for calculations within a single currency. Use `Nexus\Currency` when you need exchange rates and cross-currency operations.
 
 ```php
 use Nexus\Common\ValueObjects\Money;
@@ -180,7 +189,8 @@ if ($total->greaterThan($price)) {
     echo "Total exceeds price";
 }
 
-// Currency conversion
+// Low-level currency conversion (with known exchange rate)
+// For exchange rate management, use Nexus\Currency package
 $usd = $price->convertToCurrency('USD', exchangeRate: 4.5);
 
 // Formatting
