@@ -75,7 +75,7 @@ final class AccountManagerTest extends TestCase
         $accountData = [
             'code' => '1000',
             'name' => 'Cash',
-            'type' => 'asset',  // lowercase to match enum value
+            'type' => 'asset',  // enum value AccountType::Asset->value
         ];
 
         $mockAccount = $this->createMock(AccountInterface::class);
