@@ -15,6 +15,9 @@ use Nexus\JournalEntry\Contracts\LedgerQueryInterface;
  */
 final readonly class FinanceDataProvider
 {
+    /** Format options for balance display (2 decimal places, no currency symbol) */
+    private const BALANCE_FORMAT_OPTIONS = ['decimals' => 2, 'symbol' => false];
+
     public function __construct(
         private AccountQueryInterface $accountQuery,
         private LedgerQueryInterface $ledgerQuery,
@@ -43,19 +46,19 @@ final readonly class FinanceDataProvider
             
             if ($isDebitNormal) {
                 // Asset/Expense: positive = debit, negative = credit
-                $debitBalance = $balance->isPositive() || $balance->isZero() 
-                    ? $balance->abs()->format(['decimals' => 2, 'symbol' => false])
+                $debitBalance = !$balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
                     : '0.00';
                 $creditBalance = $balance->isNegative() 
-                    ? $balance->abs()->format(['decimals' => 2, 'symbol' => false])
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
                     : '0.00';
             } else {
                 // Liability/Equity/Revenue: positive = credit, negative = debit
                 $debitBalance = $balance->isNegative() 
-                    ? $balance->abs()->format(['decimals' => 2, 'symbol' => false])
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
                     : '0.00';
-                $creditBalance = $balance->isPositive() || $balance->isZero() 
-                    ? $balance->abs()->format(['decimals' => 2, 'symbol' => false])
+                $creditBalance = !$balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
                     : '0.00';
             }
 
