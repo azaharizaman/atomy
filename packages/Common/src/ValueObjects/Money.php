@@ -382,7 +382,7 @@ final readonly class Money implements
     {
         // Validate scale
         if ($scale < 0) {
-            throw new InvalidMoneyException("Scale must be non-negative, got: {$scale}");
+            throw new InvalidMoneyException("Scale must be non-negative");
         }
 
         // Validate exchange rate
