@@ -30,6 +30,17 @@ final readonly class Money implements
     SerializableVO,
     Formattable
 {
+    /**
+     * Scale used for validating exchange rates against zero.
+     * High precision ensures accurate comparison for very small rates.
+     */
+    private const int EXCHANGE_RATE_VALIDATION_SCALE = 20;
+
+    /**
+     * Rounding adjustment for "round half away from zero" behavior.
+     */
+    private const string ROUNDING_ADJUSTMENT = '0.5';
+
     private int $amountInMinorUnits;
     private string $currency;
 
@@ -391,7 +402,7 @@ final readonly class Money implements
         }
 
         // Use a high fixed scale for zero comparison to handle all valid exchange rates
-        if (bccomp($exchangeRate, '0', 20) <= 0) {
+        if (bccomp($exchangeRate, '0', self::EXCHANGE_RATE_VALIDATION_SCALE) <= 0) {
             throw new InvalidMoneyException("Exchange rate must be positive");
         }
 
@@ -403,7 +414,9 @@ final readonly class Money implements
         
         // Round using bcmath: add ±0.5 based on sign, then truncate
         // For "round half away from zero": positive add 0.5, negative add -0.5
-        $adjustment = bccomp($convertedStr, '0', $scale) < 0 ? '-0.5' : '0.5';
+        $adjustment = bccomp($convertedStr, '0', $scale) < 0 
+            ? '-' . self::ROUNDING_ADJUSTMENT 
+            : self::ROUNDING_ADJUSTMENT;
         $roundedStr = bcadd($convertedStr, $adjustment, 0);
         
         // Parse as integer
