@@ -38,21 +38,22 @@ Nexus is a **package-only monorepo** containing 52 atomic, reusable PHP packages
 11. **Nexus\Crypto** - Cryptographic operations and key management
 12. **Nexus\Audit** - Advanced audit capabilities (extends AuditLogger)
 
-### Finance & Accounting (7 packages)
-13. **Nexus\Finance** - General ledger, journal entries, double-entry bookkeeping
-14. **Nexus\Accounting** - Financial statements, period close, consolidation
-15. **Nexus\Receivable** - Customer invoicing, collections, credit control
-16. **Nexus\Payable** - Vendor bills, payment processing, 3-way matching
-17. **Nexus\CashManagement** - Bank reconciliation, cash flow forecasting
-18. **Nexus\Budget** - Budget planning and variance tracking
-19. **Nexus\Assets** - Fixed asset management, depreciation
+### Finance & Accounting (8 packages)
+13. **Nexus\ChartOfAccount** - Chart of accounts management, account hierarchy
+14. **Nexus\JournalEntry** - Journal entries, double-entry bookkeeping, GL transactions
+15. **Nexus\Accounting** - Financial statements, period close, consolidation
+16. **Nexus\Receivable** - Customer invoicing, collections, credit control
+17. **Nexus\Payable** - Vendor bills, payment processing, 3-way matching
+18. **Nexus\CashManagement** - Bank reconciliation, cash flow forecasting
+19. **Nexus\Budget** - Budget planning and variance tracking
+20. **Nexus\Assets** - Fixed asset management, depreciation
 
 ### Sales & Operations (6 packages)
-20. **Nexus\Sales** - Quotation-to-order lifecycle, pricing engine
-21. **Nexus\Inventory** - Stock management with lot/serial tracking (depends on Uom)
-22. **Nexus\Warehouse** - Warehouse operations and bin management
-23. **Nexus\Procurement** - Purchase requisitions, POs, goods receipt
-24. **Nexus\Manufacturing** - Versioned BOMs with effectivity, MRP II, capacity planning, ML forecasting
+21. **Nexus\Sales** - Quotation-to-order lifecycle, pricing engine
+22. **Nexus\Inventory** - Stock management with lot/serial tracking (depends on Uom)
+23. **Nexus\Warehouse** - Warehouse operations and bin management
+24. **Nexus\Procurement** - Purchase requisitions, POs, goods receipt
+25. **Nexus\Manufacturing** - Versioned BOMs with effectivity, MRP II, capacity planning, ML forecasting
 25. **Nexus\Product** - Product catalog, pricing, categorization
 
 ### Human Resources (3 packages)
@@ -302,7 +303,7 @@ packages/PackageName/
 
 For heavy business domains requiring strict boundaries.
 
-**Examples:** `Nexus\Inventory`, `Nexus\Finance`, `Nexus\Manufacturing`, `Nexus\Receivable`
+**Examples:** `Nexus\Inventory`, `Nexus\JournalEntry`, `Nexus\Manufacturing`, `Nexus\Receivable`
 
 **Structure:**
 ```
@@ -770,17 +771,17 @@ interface GeneralLedgerIntegrationInterface
 // Consumer application implements using another package
 namespace App\Services\Receivable;
 
-use Nexus\Finance\Contracts\GeneralLedgerManagerInterface;
+use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
 
-final readonly class FinanceGLAdapter implements GeneralLedgerIntegrationInterface
+final readonly class JournalEntryAdapter implements GeneralLedgerIntegrationInterface
 {
     public function __construct(
-        private GeneralLedgerManagerInterface $glManager
+        private JournalEntryManagerInterface $jeManager
     ) {}
     
     public function postJournalEntry(JournalEntry $entry): void
     {
-        $this->glManager->post($entry);
+        $this->jeManager->post($entry);
     }
 }
 ```
@@ -1037,11 +1038,11 @@ final readonly class StockManager
 **Example Violations:**
 ```php
 // ❌ WRONG: Package depending on orchestrator
-namespace Nexus\Finance\Services;
+namespace Nexus\JournalEntry\Services;
 
 use Nexus\OrderManagement\Coordinators\OrderCoordinator; // VIOLATION!
 
-final readonly class GeneralLedgerManager
+final readonly class JournalEntryManager
 {
     public function __construct(
         private OrderCoordinator $orderCoordinator // ❌ Package depends on orchestrator
@@ -1049,9 +1050,9 @@ final readonly class GeneralLedgerManager
 }
 
 // ✅ CORRECT: Package defines interface, orchestrator calls package
-namespace Nexus\Finance\Contracts;
+namespace Nexus\JournalEntry\Contracts;
 
-interface GeneralLedgerManagerInterface
+interface JournalEntryManagerInterface
 {
     public function postJournalEntry(JournalEntry $entry): void;
 }
@@ -1059,12 +1060,12 @@ interface GeneralLedgerManagerInterface
 // Orchestrator injects package interface
 namespace Nexus\OrderManagement\Coordinators;
 
-use Nexus\Finance\Contracts\GeneralLedgerManagerInterface;
+use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
 
 final readonly class OrderCoordinator
 {
     public function __construct(
-        private GeneralLedgerManagerInterface $glManager // ✅ Orchestrator depends on package
+        private JournalEntryManagerInterface $jeManager // ✅ Orchestrator depends on package
     ) {}
 }
 ```
@@ -1075,17 +1076,17 @@ final readonly class OrderCoordinator
 
 **Solution:** Use interfaces and adapter pattern in consuming application:
 ```php
-// Finance defines interface
-namespace Nexus\Finance\Contracts;
-interface GLManagerInterface { }
+// JournalEntry defines interface
+namespace Nexus\JournalEntry\Contracts;
+interface JournalEntryManagerInterface { }
 
-// Receivable depends on interface (not concrete Finance package)
+// Receivable depends on interface (not concrete JournalEntry package)
 namespace Nexus\Receivable\Contracts;
-interface GLIntegrationInterface extends GLManagerInterface { }
+interface GLIntegrationInterface { }
 
 // Consumer application binds them together
 // App\Providers\AppServiceProvider
-$this->app->bind(GLIntegrationInterface::class, FinanceGLManager::class);
+$this->app->bind(GLIntegrationInterface::class, JournalEntryAdapter::class);
 ```
 
 ### 5.4 Common Special Rules
@@ -1102,7 +1103,7 @@ $this->app->bind(GLIntegrationInterface::class, FinanceGLManager::class);
 **Example:**
 ```php
 // ✅ CORRECT: Package depends on Common
-namespace Nexus\Finance;
+namespace Nexus\JournalEntry;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\Common\ValueObjects\Period;
@@ -1110,7 +1111,7 @@ use Nexus\Common\ValueObjects\Period;
 // ❌ WRONG: Common depends on package
 namespace Nexus\Common\ValueObjects;
 
-use Nexus\Finance\Contracts\CurrencyManagerInterface; // VIOLATION!
+use Nexus\Currency\Contracts\CurrencyManagerInterface; // VIOLATION!
 ```
 
 ---

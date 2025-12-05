@@ -6,6 +6,7 @@
     "require": {
         "php": "^8.3",
         "ext-bcmath": "*",
+        "psr/event-dispatcher": "^1.0",
         "psr/log": "^3.0",
         "symfony/uid": "^7.0"
     },

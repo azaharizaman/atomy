@@ -9,10 +9,48 @@ use Nexus\Common\Contracts\SerializableVO;
 use Nexus\Common\Exceptions\InvalidValueException;
 
 /**
- * Immutable fiscal period identifier value object.
- * 
- * Represents a named fiscal period (e.g., "2024-Q1", "JAN-2024", "FY2024").
- * This is a lightweight identifier for referencing periods, not the full period entity.
+ * Immutable period identifier value object for cross-domain period referencing.
+ *
+ * This is a lightweight, domain-agnostic period identifier that can be used across
+ * multiple domains including but not limited to:
+ *
+ * - **Accounting/Finance**: Fiscal periods for financial reporting (e.g., "2024-Q1", "FY2024")
+ * - **Inventory Management**: Inventory valuation periods, cycle count periods
+ * - **Human Resources**: Payroll periods, performance review cycles, leave accrual periods
+ * - **Budgeting**: Budget planning periods, forecast horizons
+ * - **Manufacturing**: Production planning periods, MRP buckets
+ * - **Sales**: Commission periods, sales target periods
+ *
+ * **Important Distinction:**
+ * This Period VO is a lightweight *identifier* for referencing periods. For full period
+ * management with dates, status, and lifecycle operations, use `Nexus\Period` package
+ * which provides complete period entities and management services.
+ *
+ * **When to Use This VO:**
+ * - As a foreign key/reference to link records to a specific period
+ * - When you need to pass period context between services
+ * - For period-based filtering and grouping in queries
+ * - When creating period-aware DTOs and value objects
+ *
+ * **When to Use Nexus\Period Package:**
+ * - When you need period start/end dates
+ * - When you need period status (open/closed/locked)
+ * - When you need period lifecycle management
+ *
+ * @example Creating Period identifiers for different domains:
+ * ```php
+ * // Accounting period
+ * $fiscalQ1 = Period::forQuarter(2024, 1);
+ *
+ * // Payroll period
+ * $payrollPeriod = Period::forMonth(2024, 3);
+ *
+ * // Custom inventory valuation period
+ * $inventoryPeriod = new Period('INV-2024-W12');
+ *
+ * // Manufacturing planning bucket
+ * $mrpBucket = new Period('MRP-2024-W15');
+ * ```
  */
 final readonly class Period implements Comparable, SerializableVO
 {

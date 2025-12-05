@@ -2485,7 +2485,7 @@ The use of framework Facades and global helpers is **strictly forbidden** in the
 | **`Config::...`** | Inject `SettingsManagerInterface` |
 | **`Mail::...`** | Inject `NotificationManagerInterface` |
 | **`Storage::...`** | Inject `StorageInterface` |
-| **`Event::...`** | Inject `EventDispatcherInterface` |
+| **`Event::...`** | Inject `Psr\EventDispatcher\EventDispatcherInterface` (PSR-14) |
 | **`Queue::...`** | Inject `QueueInterface` |
 | **Global Helpers** (`now()`, `config()`, `app()`, `dd()`, `env()`, etc.) | Inject interfaces or use native PHP |
 
@@ -2503,6 +2503,25 @@ public function __construct(
 public function processData(array $data): void
 {
     $this->logger->info('Processing data', ['count' => count($data)]);
+}
+```
+
+**Event Dispatching Example:**
+```php
+// ✅ CORRECT: Use PSR-14 EventDispatcherInterface
+use Psr\EventDispatcher\EventDispatcherInterface;
+
+public function __construct(
+    private readonly EventDispatcherInterface $eventDispatcher
+) {}
+
+public function createInvoice(array $data): Invoice
+{
+    $invoice = $this->repository->create($data);
+    
+    $this->eventDispatcher->dispatch(new InvoiceCreatedEvent($invoice));
+    
+    return $invoice;
 }
 ```
 

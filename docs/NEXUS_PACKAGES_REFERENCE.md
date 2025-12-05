@@ -866,26 +866,29 @@ public function convertQuantity(float $quantity, string $fromUom, string $toUom)
 **Capabilities:**
 - Multi-currency support
 - Exchange rate management
-- Money calculations with precision
-- Currency conversion
+- Currency conversion with exchange rates
 - Historical exchange rates
 
+**Money vs Currency Package Boundary:**
+- **`Nexus\Common\ValueObjects\Money`**: Immutable monetary value with arithmetic (add, subtract, multiply, divide), comparison, and formatting within a single currency
+- **`Nexus\Currency` (this package)**: Exchange rate management, cross-currency conversions using rates, historical rate lookups
+
 **When to Use:**
-- ✅ Financial transactions in multiple currencies
-- ✅ Currency conversion
-- ✅ Exchange rate tracking
-- ✅ Multi-currency reporting
+- ✅ Exchange rate management
+- ✅ Cross-currency conversions requiring exchange rates
+- ✅ Historical exchange rate lookups
+- ✅ Multi-currency reporting with rate-based conversions
 
 **Key Interfaces:**
 ```php
 use Nexus\Currency\Contracts\CurrencyManagerInterface;
 use Nexus\Currency\Contracts\ExchangeRateRepositoryInterface;
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;  // Money VO is in Common
 ```
 
 **Example:**
 ```php
-// ✅ CORRECT: Convert invoice amount to base currency
+// ✅ CORRECT: Convert invoice amount to base currency using exchange rates
 public function __construct(
     private readonly CurrencyManagerInterface $currencyManager
 ) {}
@@ -903,26 +906,48 @@ public function convertToBaseCurrency(Money $amount): Money
 
 ### 💼 **7. Financial Management**
 
-#### **Nexus\Finance**
+#### **Nexus\ChartOfAccount**
 **Capabilities:**
-- General ledger management
-- Chart of accounts
-- Journal entries
-- Double-entry bookkeeping
-- Trial balance
-- Financial statement generation
+- Chart of accounts management
+- Account hierarchy and groupings
+- Account types (Asset, Liability, Equity, Revenue, Expense)
+- Account validation and numbering
+- Account activation/deactivation
 
 **When to Use:**
 - ✅ GL account management
-- ✅ Journal entry posting
-- ✅ Financial reporting
-- ✅ Account reconciliation
+- ✅ Account hierarchy setup
+- ✅ Account type classification
+- ✅ Account validation
 
 **Key Interfaces:**
 ```php
-use Nexus\Finance\Contracts\GeneralLedgerManagerInterface;
-use Nexus\Finance\Contracts\ChartOfAccountsInterface;
-use Nexus\Finance\Contracts\JournalEntryRepositoryInterface;
+use Nexus\ChartOfAccount\Contracts\ChartOfAccountManagerInterface;
+use Nexus\ChartOfAccount\Contracts\AccountQueryInterface;
+use Nexus\ChartOfAccount\Contracts\AccountPersistInterface;
+```
+
+---
+
+#### **Nexus\JournalEntry**
+**Capabilities:**
+- Journal entry creation and posting
+- Double-entry bookkeeping validation
+- Journal entry reversal
+- Batch journal processing
+- GL transaction recording
+
+**When to Use:**
+- ✅ Journal entry posting
+- ✅ Double-entry validation
+- ✅ GL transaction recording
+- ✅ Journal reversals
+
+**Key Interfaces:**
+```php
+use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
+use Nexus\JournalEntry\Contracts\JournalEntryQueryInterface;
+use Nexus\JournalEntry\Contracts\JournalEntryPersistInterface;
 ```
 
 ---
@@ -2100,10 +2125,10 @@ When Package A needs functionality from Package B:
 **❌ WRONG:**
 ```php
 // Direct coupling between packages
-use Nexus\Finance\Services\GeneralLedgerManager;
+use Nexus\JournalEntry\Services\JournalEntryManager;
 
 public function __construct(
-    private readonly GeneralLedgerManager $glManager // Concrete class!
+    private readonly JournalEntryManager $jeManager // Concrete class!
 ) {}
 ```
 
@@ -2121,17 +2146,17 @@ interface GeneralLedgerIntegrationInterface
 namespace App\Services\Receivable;
 
 use Nexus\Receivable\Contracts\GeneralLedgerIntegrationInterface;
-use Nexus\Finance\Contracts\GeneralLedgerManagerInterface;
+use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
 
-final readonly class FinanceGLAdapter implements GeneralLedgerIntegrationInterface
+final readonly class JournalEntryAdapter implements GeneralLedgerIntegrationInterface
 {
     public function __construct(
-        private GeneralLedgerManagerInterface $glManager
+        private JournalEntryManagerInterface $jeManager
     ) {}
     
     public function postJournalEntry(JournalEntry $entry): void
     {
-        $this->glManager->post($entry);
+        $this->jeManager->post($entry);
     }
 }
 ```
@@ -2251,10 +2276,10 @@ public function trackEvent(): void {
 
 ```php
 // ❌ WRONG: Package requires another package's concrete class
-use Nexus\Finance\Services\GeneralLedgerManager;
+use Nexus\JournalEntry\Services\JournalEntryManager;
 
 public function __construct(
-    private readonly GeneralLedgerManager $glManager
+    private readonly JournalEntryManager $jeManager
 ) {}
 
 // ✅ CORRECT: Package defines interface, consuming app wires implementation
@@ -2323,7 +2348,8 @@ public function getInvoices(): array {
 | Get current tenant | `Nexus\Tenant` | `TenantContextInterface` |
 | Convert units | `Nexus\Uom` | `UomManagerInterface` |
 | Handle currencies | `Nexus\Currency` | `CurrencyManagerInterface` |
-| Post GL transactions | `Nexus\Finance` | `GeneralLedgerManagerInterface` |
+| Manage GL accounts | `Nexus\ChartOfAccount` | `ChartOfAccountManagerInterface` |
+| Post journal entries | `Nexus\JournalEntry` | `JournalEntryManagerInterface` |
 | Create customer invoices | `Nexus\Receivable` | `ReceivableManagerInterface` |
 | Process vendor bills | `Nexus\Payable` | `PayableManagerInterface` |
 | Track inventory | `Nexus\Inventory` | `InventoryManagerInterface` |
