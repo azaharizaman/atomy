@@ -15,7 +15,6 @@ use Nexus\ChartOfAccount\Exceptions\DuplicateAccountCodeException;
 use Nexus\ChartOfAccount\Exceptions\InvalidAccountException;
 use Nexus\ChartOfAccount\ValueObjects\AccountCode;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Chart of Accounts Manager.
@@ -28,7 +27,7 @@ final readonly class AccountManager implements AccountManagerInterface
     public function __construct(
         private AccountQueryInterface $query,
         private AccountPersistInterface $persist,
-        private LoggerInterface $logger = new NullLogger()
+        private LoggerInterface $logger
     ) {}
 
     /**
