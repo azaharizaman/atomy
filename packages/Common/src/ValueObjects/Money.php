@@ -358,6 +358,30 @@ final readonly class Money implements
     }
 
     /**
+     * Convert to another currency using high-precision string exchange rate.
+     * 
+     * Uses bcmath for arbitrary precision arithmetic to prevent precision loss
+     * in exchange rate conversions.
+     * 
+     * @param string $toCurrency Target currency code
+     * @param string $exchangeRate Exchange rate as string (multiply factor)
+     * @param int $scale Scale for bcmath operations (default: 8 decimal places)
+     */
+    public function convertToCurrencyWithStringRate(string $toCurrency, string $exchangeRate, int $scale = 8): static
+    {
+        // Convert minor units to string for bcmath
+        $minorUnitsStr = (string) $this->amountInMinorUnits;
+        
+        // Perform multiplication with arbitrary precision
+        $convertedStr = bcmul($minorUnitsStr, $exchangeRate, $scale);
+        
+        // Round to nearest integer for minor units
+        $convertedAmount = (int) round((float) $convertedStr);
+        
+        return new self($convertedAmount, $toCurrency);
+    }
+
+    /**
      * Assert that both money objects have the same currency.
      * 
      * @throws CurrencyMismatchException
