@@ -376,17 +376,10 @@ final readonly class Money implements
         // Perform multiplication with arbitrary precision
         $convertedStr = bcmul($minorUnitsStr, $exchangeRate, $scale);
         
-        // Round using bcmath to maintain precision
-        // For positive: add 0.5 and truncate (standard rounding)
-        // For negative: subtract 0.5 and truncate (rounds away from zero)
-        $isNegative = bccomp($convertedStr, '0', $scale) < 0;
-        if ($isNegative) {
-            // For negative, we want -1.6 to become -2, so subtract 0.5 then truncate
-            $roundedStr = bcsub($convertedStr, '0.5', 0);
-        } else {
-            // For positive, add 0.5 then truncate
-            $roundedStr = bcadd($convertedStr, '0.5', 0);
-        }
+        // Round using bcmath: add ±0.5 based on sign, then truncate
+        // For "round half away from zero": positive add 0.5, negative add -0.5
+        $adjustment = bccomp($convertedStr, '0', $scale) < 0 ? '-0.5' : '0.5';
+        $roundedStr = bcadd($convertedStr, $adjustment, 0);
         
         // Parse as integer
         $convertedAmount = (int) $roundedStr;
