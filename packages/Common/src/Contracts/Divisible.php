@@ -28,7 +28,7 @@ namespace Nexus\Common\Contracts;
  * {
  *     public function divide(float|int $divisor): static
  *     {
- *         if ($divisor == 0) {
+ *         if ($divisor === 0.0) {
  *             throw new InvalidMoneyException('Cannot divide by zero');
  *         }
  *         $result = (int) round($this->amountInMinorUnits / $divisor);
