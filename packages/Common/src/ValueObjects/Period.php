@@ -97,7 +97,7 @@ final readonly class Period implements Comparable, SerializableVO
     }
 
     /**
-     * Check if this appears to be a yearly period (format: FYYYYY)
+     * Check if this appears to be a yearly period (format: FY + 4-digit year, e.g., FY2024)
      */
     public function isYearly(): bool
     {
