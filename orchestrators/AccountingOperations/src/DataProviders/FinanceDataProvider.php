@@ -45,6 +45,7 @@ final readonly class FinanceDataProvider
                 accountId: $account->getId(),
                 accountCode: $account->getCode(),
                 accountName: $account->getName(),
+                accountType: $account->getType(),
                 debitBalance: $debitBalance,
                 creditBalance: $creditBalance,
                 currency: $balance->getCurrency()
