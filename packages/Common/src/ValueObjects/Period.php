@@ -147,6 +147,9 @@ final readonly class Period implements Comparable, SerializableVO
 
     public static function fromArray(array $data): static
     {
+        if (!isset($data['name'])) {
+            throw new InvalidValueException('Period name is required in array data');
+        }
         return new self($data['name']);
     }
 }
