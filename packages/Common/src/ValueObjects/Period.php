@@ -111,7 +111,7 @@ final readonly class Period implements Comparable, SerializableVO
             throw new \InvalidArgumentException('Can only compare with another Period');
         }
 
-        return strcmp($this->name, $other->name);
+        return $this->name <=> $other->name;
     }
 
     public function equals(Comparable $other): bool
