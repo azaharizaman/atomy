@@ -213,6 +213,14 @@ final class PeriodTest extends TestCase
         $this->assertSame('FY2024', $period->getName());
     }
 
+    public function test_from_array_throws_exception_when_name_missing(): void
+    {
+        $this->expectException(InvalidValueException::class);
+        $this->expectExceptionMessage('Period name is required in array data');
+        
+        Period::fromArray([]);
+    }
+
     public function test_custom_period_names_are_allowed(): void
     {
         $period = new Period('H1-2024'); // Half-year
