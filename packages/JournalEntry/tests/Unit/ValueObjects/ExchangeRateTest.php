@@ -70,9 +70,9 @@ final class ExchangeRateTest extends TestCase
         $this->assertSame(1501235, $jpy->getAmountInMinorUnits());
     }
 
-    public function test_convert_maintains_precision_better_than_float_cast(): void
+    public function test_convert_with_high_precision_multi_decimal_rate(): void
     {
-        // Use a rate where float precision would cause issues
+        // Use a rate with many decimal places to test high-precision handling
         $rate = ExchangeRate::of(
             'USD',
             'EUR',
