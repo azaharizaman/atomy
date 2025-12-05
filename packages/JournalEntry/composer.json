@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "^1.0",
+        "nexus/common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -36,7 +36,7 @@
             "Nexus\\JournalEntry\\Tests\\": "tests/"
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
         "sort-packages": true

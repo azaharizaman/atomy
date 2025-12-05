@@ -96,6 +96,8 @@ final readonly class ExchangeRate
     /**
      * Convert an amount using this exchange rate.
      *
+     * Uses high-precision string-based conversion to prevent precision loss.
+     *
      * @param Money $amount Source amount (must match fromCurrency)
      * @return Money Converted amount in toCurrency
      * @throws InvalidExchangeRateException If currencies don't match
@@ -109,11 +111,8 @@ final readonly class ExchangeRate
             );
         }
 
-        // Note: Money::convertToCurrency() accepts float, so we cast from bcmath string.
-        // For typical exchange rates (4-6 decimal places), float precision is sufficient.
-        // High-precision scenarios requiring more than ~15 significant digits should
-        // use bcmath operations directly on the minor units.
-        return $amount->convertToCurrency($this->toCurrency, (float) $this->rate);
+        // Use string-based conversion to maintain precision
+        return $amount->convertToCurrencyWithStringRate($this->toCurrency, $this->rate, self::SCALE);
     }
 
     /**

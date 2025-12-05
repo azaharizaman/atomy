@@ -30,6 +30,17 @@ final readonly class Money implements
     SerializableVO,
     Formattable
 {
+    /**
+     * Scale used for validating exchange rates against zero.
+     * High precision ensures accurate comparison for very small rates.
+     */
+    private const int EXCHANGE_RATE_VALIDATION_SCALE = 20;
+
+    /**
+     * Rounding adjustment for "round half away from zero" behavior.
+     */
+    private const string ROUNDING_ADJUSTMENT = '0.5';
+
     private int $amountInMinorUnits;
     private string $currency;
 
@@ -354,6 +365,63 @@ final readonly class Money implements
     public function convertToCurrency(string $toCurrency, float $exchangeRate): static
     {
         $convertedAmount = (int) round($this->amountInMinorUnits * $exchangeRate);
+        return new self($convertedAmount, $toCurrency);
+    }
+
+    /**
+     * Convert to another currency using high-precision string exchange rate.
+     * 
+     * Uses bcmath for arbitrary precision arithmetic to prevent precision loss
+     * in exchange rate conversions.
+     * 
+     * The default scale of 8 decimal places is sufficient for most currency exchange
+     * rates. Override the scale parameter only when dealing with:
+     * - Cryptocurrencies with more than 8 decimal places
+     * - Scientific calculations requiring higher precision
+     * - Specialized financial instruments with unusual precision requirements
+     * 
+     * Note: ExchangeRate::convert() uses a fixed scale of 8 for consistency.
+     * Direct callers of this method can choose a different scale if needed.
+     * 
+     * @param string $toCurrency Target currency code
+     * @param string $exchangeRate Exchange rate as string (multiply factor)
+     * @param int $scale Scale for bcmath operations (default: 8 decimal places)
+     * @return static
+     * @throws InvalidMoneyException If exchange rate is invalid or scale is negative
+     */
+    public function convertToCurrencyWithStringRate(string $toCurrency, string $exchangeRate, int $scale = 8): static
+    {
+        // Validate scale
+        if ($scale < 0) {
+            throw new InvalidMoneyException("Scale must be non-negative");
+        }
+
+        // Validate exchange rate
+        if (!is_numeric($exchangeRate)) {
+            throw new InvalidMoneyException("Exchange rate must be numeric");
+        }
+
+        // Use a high fixed scale for zero comparison to handle all valid exchange rates
+        if (bccomp($exchangeRate, '0', self::EXCHANGE_RATE_VALIDATION_SCALE) <= 0) {
+            throw new InvalidMoneyException("Exchange rate must be positive");
+        }
+
+        // Convert minor units to string for bcmath
+        $minorUnitsStr = (string) $this->amountInMinorUnits;
+        
+        // Perform multiplication with arbitrary precision
+        $convertedStr = bcmul($minorUnitsStr, $exchangeRate, $scale);
+        
+        // Round using bcmath: add ±0.5 based on sign, then truncate
+        // For "round half away from zero": positive add 0.5, negative add -0.5
+        $adjustment = bccomp($convertedStr, '0', $scale) < 0 
+            ? '-' . self::ROUNDING_ADJUSTMENT 
+            : self::ROUNDING_ADJUSTMENT;
+        $roundedStr = bcadd($convertedStr, $adjustment, 0);
+        
+        // Parse as integer
+        $convertedAmount = (int) $roundedStr;
+        
         return new self($convertedAmount, $toCurrency);
     }
 

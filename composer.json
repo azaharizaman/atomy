@@ -14,6 +14,7 @@
         "nexus/inventory": "*@dev",
         "nexus/warehouse": "*@dev",
         "nexus/manufacturing": "*@dev",
+        "nexus/journal-entry": "*@dev",
         "symfony/http-client": "^7.3",
         "nyholm/psr7": "^1.8",
         "psr/http-client": "^1.0",
