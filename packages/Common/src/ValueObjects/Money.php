@@ -390,7 +390,8 @@ final readonly class Money implements
             throw new InvalidMoneyException("Exchange rate must be numeric");
         }
 
-        if (bccomp($exchangeRate, '0', $scale) <= 0) {
+        // Use a high fixed scale for zero comparison to handle all valid exchange rates
+        if (bccomp($exchangeRate, '0', 20) <= 0) {
             throw new InvalidMoneyException("Exchange rate must be positive");
         }
 
