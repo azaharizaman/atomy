@@ -36,6 +36,8 @@ use DateTimeImmutable;
  *
  * Testing (FrozenClock):
  * ```php
+ * // Note: Intentionally NOT readonly to allow setTime() for testing.
+ * // This deviates from the immutable-by-default pattern for test flexibility.
  * final class FrozenClock implements ClockInterface
  * {
  *     public function __construct(
