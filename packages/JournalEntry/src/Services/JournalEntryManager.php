@@ -263,22 +263,14 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
             
             // Process debit
             if (!empty($line['debit'])) {
-                $debitMoney = $this->convertToCurrency(
-                    Money::of($line['debit'], $lineCurrency),
-                    $lineCurrency,
-                    $currency
-                );
-                $totalDebit = $totalDebit->add($debitMoney);
+                $debitMoney = Money::of($line['debit'], $lineCurrency);
+                $totalDebit = $totalDebit->add($this->convertToCurrency($debitMoney, $currency));
             }
 
             // Process credit
             if (!empty($line['credit'])) {
-                $creditMoney = $this->convertToCurrency(
-                    Money::of($line['credit'], $lineCurrency),
-                    $lineCurrency,
-                    $currency
-                );
-                $totalCredit = $totalCredit->add($creditMoney);
+                $creditMoney = Money::of($line['credit'], $lineCurrency);
+                $totalCredit = $totalCredit->add($this->convertToCurrency($creditMoney, $currency));
             }
         }
 
@@ -295,12 +287,14 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
      * Convert money to target currency if needed.
      *
      * @param Money $money The amount to convert
-     * @param string $fromCurrency Source currency
      * @param string $toCurrency Target currency
      * @return Money Converted money or original if same currency
+     * @throws InvalidExchangeRateException If conversion needed but no converter available
      */
-    private function convertToCurrency(Money $money, string $fromCurrency, string $toCurrency): Money
+    private function convertToCurrency(Money $money, string $toCurrency): Money
     {
+        $fromCurrency = $money->getCurrency();
+        
         // No conversion needed if same currency
         if ($fromCurrency === $toCurrency) {
             return $money;
@@ -311,8 +305,9 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
             return $this->currencyConverter->convert($money, $toCurrency);
         }
 
-        // This should never happen due to earlier validation, but included for safety
-        return $money;
+        // This should never happen due to earlier validation
+        // but throw an exception for safety
+        throw InvalidExchangeRateException::converterRequired([$fromCurrency, $toCurrency]);
     }
 
     /**
