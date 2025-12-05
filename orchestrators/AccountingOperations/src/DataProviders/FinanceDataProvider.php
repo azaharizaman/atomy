@@ -15,6 +15,9 @@ use Nexus\JournalEntry\Contracts\LedgerQueryInterface;
  */
 final readonly class FinanceDataProvider
 {
+    /** Format options for balance display (2 decimal places, no currency symbol) */
+    private const BALANCE_FORMAT_OPTIONS = ['decimals' => 2, 'symbol' => false];
+
     public function __construct(
         private AccountQueryInterface $accountQuery,
         private LedgerQueryInterface $ledgerQuery,
@@ -36,10 +39,28 @@ final readonly class FinanceDataProvider
                 asOfDate: new \DateTimeImmutable()
             );
 
-            // Balance is a Money object - positive = debit, negative = credit
-            $amount = $balance->getAmount();
-            $debitBalance = $amount >= 0 ? number_format($amount, 2, '.', '') : '0.00';
-            $creditBalance = $amount < 0 ? number_format(abs($amount), 2, '.', '') : '0.00';
+            // Determine debit/credit presentation based on account type's normal balance
+            // For debit-normal accounts (Asset, Expense): positive balance shows on debit side
+            // For credit-normal accounts (Liability, Equity, Revenue): positive balance shows on credit side
+            $isDebitNormal = $account->getType()->isDebitNormal();
+            
+            if ($isDebitNormal) {
+                // Asset/Expense: positive = debit, negative = credit
+                $debitBalance = !$balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
+                    : '0.00';
+                $creditBalance = $balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
+                    : '0.00';
+            } else {
+                // Liability/Equity/Revenue: positive = credit, negative = debit
+                $debitBalance = $balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
+                    : '0.00';
+                $creditBalance = !$balance->isNegative() 
+                    ? $balance->abs()->format(self::BALANCE_FORMAT_OPTIONS)
+                    : '0.00';
+            }
 
             $balances[] = new AccountBalanceDTO(
                 accountId: $account->getId(),
