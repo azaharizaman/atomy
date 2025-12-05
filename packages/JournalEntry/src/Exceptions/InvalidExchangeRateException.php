@@ -33,4 +33,13 @@ class InvalidExchangeRateException extends JournalEntryException
     {
         return new self("Exchange rate not found: {$fromCurrency}/{$toCurrency} on {$date}");
     }
+
+    public static function converterRequired(array $currencies): self
+    {
+        return new self(
+            'Multi-currency journal entries require a CurrencyConverter. ' .
+            'Found currencies: ' . implode(', ', $currencies) . '. ' .
+            'Please inject a CurrencyConverterInterface implementation into JournalEntryManager.'
+        );
+    }
 }

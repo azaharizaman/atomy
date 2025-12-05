@@ -255,29 +255,29 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
 
         // If multiple currencies and no converter, require single currency
         if ($hasMultipleCurrencies && $this->currencyConverter === null) {
-            throw InvalidExchangeRateException::currencyMismatch(
-                $currency,
-                'Mixed currencies (' . implode(', ', $currencies) . ') require a CurrencyConverter'
-            );
+            throw InvalidExchangeRateException::converterRequired($currencies);
         }
 
         foreach ($lines as $line) {
             $lineCurrency = $line['currency'] ?? $currency;
             
-            // Convert to default currency if needed
+            // Process debit
             if (!empty($line['debit'])) {
-                $debitMoney = Money::of($line['debit'], $lineCurrency);
-                if ($lineCurrency !== $currency && $this->currencyConverter !== null) {
-                    $debitMoney = $this->currencyConverter->convert($debitMoney, $currency);
-                }
+                $debitMoney = $this->convertToCurrency(
+                    Money::of($line['debit'], $lineCurrency),
+                    $lineCurrency,
+                    $currency
+                );
                 $totalDebit = $totalDebit->add($debitMoney);
             }
 
+            // Process credit
             if (!empty($line['credit'])) {
-                $creditMoney = Money::of($line['credit'], $lineCurrency);
-                if ($lineCurrency !== $currency && $this->currencyConverter !== null) {
-                    $creditMoney = $this->currencyConverter->convert($creditMoney, $currency);
-                }
+                $creditMoney = $this->convertToCurrency(
+                    Money::of($line['credit'], $lineCurrency),
+                    $lineCurrency,
+                    $currency
+                );
                 $totalCredit = $totalCredit->add($creditMoney);
             }
         }
@@ -289,6 +289,30 @@ final readonly class JournalEntryManager implements JournalEntryManagerInterface
                 $currency
             );
         }
+    }
+
+    /**
+     * Convert money to target currency if needed.
+     *
+     * @param Money $money The amount to convert
+     * @param string $fromCurrency Source currency
+     * @param string $toCurrency Target currency
+     * @return Money Converted money or original if same currency
+     */
+    private function convertToCurrency(Money $money, string $fromCurrency, string $toCurrency): Money
+    {
+        // No conversion needed if same currency
+        if ($fromCurrency === $toCurrency) {
+            return $money;
+        }
+
+        // Convert using the injected converter
+        if ($this->currencyConverter !== null) {
+            return $this->currencyConverter->convert($money, $toCurrency);
+        }
+
+        // This should never happen due to earlier validation, but included for safety
+        return $money;
     }
 
     /**
