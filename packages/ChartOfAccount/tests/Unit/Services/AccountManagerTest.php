@@ -42,7 +42,7 @@ final class AccountManagerTest extends TestCase
 
         $this->manager->createAccount([
             'name' => 'Cash',
-            'type' => 'ASSET',
+            'type' => 'asset',
         ]);
     }
 
@@ -75,7 +75,7 @@ final class AccountManagerTest extends TestCase
         $accountData = [
             'code' => '1000',
             'name' => 'Cash',
-            'type' => 'ASSET',
+            'type' => 'asset',  // lowercase to match enum value
         ];
 
         $mockAccount = $this->createMock(AccountInterface::class);
@@ -85,7 +85,8 @@ final class AccountManagerTest extends TestCase
         $this->query->method('codeExists')->willReturn(false);
         
         $this->persist->expects($this->once())
-            ->method('save')
+            ->method('create')
+            ->with($accountData)
             ->willReturn($mockAccount);
 
         $result = $this->manager->createAccount($accountData);
@@ -118,13 +119,13 @@ final class AccountManagerTest extends TestCase
     public function test_updateAccount_prevents_type_change(): void
     {
         $mockAccount = $this->createMock(AccountInterface::class);
-        $mockAccount->method('getType')->willReturn(AccountType::ASSET);
+        $mockAccount->method('getType')->willReturn(AccountType::Asset);
 
         $this->query->method('find')->willReturn($mockAccount);
 
         $this->expectException(InvalidAccountException::class);
 
-        $this->manager->updateAccount('acc-1', ['type' => 'LIABILITY']);
+        $this->manager->updateAccount('acc-1', ['type' => AccountType::Liability]);
     }
 
     public function test_findById_throws_exception_for_nonexistent_account(): void
@@ -225,10 +226,10 @@ final class AccountManagerTest extends TestCase
 
         $this->query->expects($this->once())
             ->method('findByType')
-            ->with(AccountType::ASSET)
+            ->with(AccountType::Asset)
             ->willReturn($mockAccounts);
 
-        $result = $this->manager->getAccountsByType(AccountType::ASSET);
+        $result = $this->manager->getAccountsByType(AccountType::Asset);
 
         $this->assertSame($mockAccounts, $result);
     }

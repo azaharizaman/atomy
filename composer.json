@@ -15,14 +15,14 @@
         "nexus/warehouse": "*@dev",
         "nexus/manufacturing": "*@dev",
         "nexus/journal-entry": "*@dev",
+        "nexus/chart-of-account": "*@dev",
         "symfony/http-client": "^7.3",
         "nyholm/psr7": "^1.8",
         "psr/http-client": "^1.0",
         "nexus/event-stream": "*@dev",
         "nexus/tax": "*@dev",
         "nexus/procurement-ml": "*@dev",
-        "nexus/tenant": "*@dev",
-        "nexus/common": "*@dev"
+        "nexus/tenant": "*@dev"
     },
     "repositories": [
         {

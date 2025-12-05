@@ -149,35 +149,35 @@ final class AccountCodeTest extends TestCase
         $this->assertSame('1000', $dotParent->getValue());
     }
 
-    public function test_isDescendantOf_returns_true_for_direct_child(): void
+    public function test_isChildOf_returns_true_for_direct_child(): void
     {
         $parent = AccountCode::fromString('1000');
         $child = AccountCode::fromString('1000-001');
 
-        $this->assertTrue($child->isDescendantOf($parent));
+        $this->assertTrue($child->isChildOf($parent));
     }
 
-    public function test_isDescendantOf_returns_true_for_deep_descendant(): void
+    public function test_isChildOf_returns_true_for_deep_descendant(): void
     {
         $parent = AccountCode::fromString('1000');
         $descendant = AccountCode::fromString('1000-001-01');
 
-        $this->assertTrue($descendant->isDescendantOf($parent));
+        $this->assertTrue($descendant->isChildOf($parent));
     }
 
-    public function test_isDescendantOf_returns_false_for_non_descendant(): void
+    public function test_isChildOf_returns_false_for_non_descendant(): void
     {
         $code1 = AccountCode::fromString('1000');
         $code2 = AccountCode::fromString('2000-001');
 
-        $this->assertFalse($code2->isDescendantOf($code1));
+        $this->assertFalse($code2->isChildOf($code1));
     }
 
-    public function test_isDescendantOf_returns_false_for_same_code(): void
+    public function test_isChildOf_returns_false_for_same_code(): void
     {
         $code = AccountCode::fromString('1000');
 
-        $this->assertFalse($code->isDescendantOf($code));
+        $this->assertFalse($code->isChildOf($code));
     }
 
     public function test_toString_returns_value(): void

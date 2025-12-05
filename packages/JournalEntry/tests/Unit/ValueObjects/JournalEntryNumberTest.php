@@ -59,9 +59,9 @@ final class JournalEntryNumberTest extends TestCase
         JournalEntryNumber::fromString('   ');
     }
 
-    public function test_generate_with_prefix_year_and_sequence(): void
+    public function test_fromComponents_with_prefix_year_and_sequence(): void
     {
-        $number = JournalEntryNumber::generate('JE', 123, 2024);
+        $number = JournalEntryNumber::fromComponents('JE', 123, 2024);
 
         $this->assertSame('JE-2024-000123', $number->value);
         $this->assertSame('JE', $number->prefix);
@@ -69,9 +69,9 @@ final class JournalEntryNumberTest extends TestCase
         $this->assertSame(123, $number->sequence);
     }
 
-    public function test_generate_with_prefix_and_sequence_only(): void
+    public function test_fromComponents_with_prefix_and_sequence_only(): void
     {
-        $number = JournalEntryNumber::generate('GJ', 456);
+        $number = JournalEntryNumber::fromComponents('GJ', 456);
 
         $this->assertSame('GJ-000456', $number->value);
         $this->assertSame('GJ', $number->prefix);
@@ -79,9 +79,9 @@ final class JournalEntryNumberTest extends TestCase
         $this->assertSame(456, $number->sequence);
     }
 
-    public function test_generate_with_custom_separator(): void
+    public function test_fromComponents_with_custom_separator(): void
     {
-        $number = JournalEntryNumber::generate('JE', 789, 2024, '/');
+        $number = JournalEntryNumber::fromComponents('JE', 789, 2024, '/');
 
         $this->assertSame('JE/2024/000789', $number->value);
         $this->assertSame('JE', $number->prefix);
@@ -89,9 +89,9 @@ final class JournalEntryNumberTest extends TestCase
         $this->assertSame(789, $number->sequence);
     }
 
-    public function test_generate_pads_sequence_to_six_digits(): void
+    public function test_fromComponents_pads_sequence_to_six_digits(): void
     {
-        $number = JournalEntryNumber::generate('JE', 1, 2024);
+        $number = JournalEntryNumber::fromComponents('JE', 1, 2024);
 
         $this->assertSame('JE-2024-000001', $number->value);
     }
