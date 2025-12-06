@@ -43,125 +43,23 @@ final readonly class InvoiceMatchFailedEvent
      * @param \DateTimeImmutable $failedAt Timestamp of match failure
      */
     public function __construct(
-        private string $vendorBillId,
-        private string $tenantId,
-        private string $vendorBillNumber,
-        private string $purchaseOrderId,
-        private string $purchaseOrderNumber,
-        private array $goodsReceiptIds,
-        private string $vendorId,
-        private int $invoiceAmountCents,
-        private int $poAmountCents,
-        private int $receivedAmountCents,
-        private string $currency,
-        private float $priceVariancePercent,
-        private float $quantityVariancePercent,
-        private float $priceTolerancePercent,
-        private float $quantityTolerancePercent,
-        private array $varianceDetails,
-        private string $failureReason,
-        private \DateTimeImmutable $failedAt,
+        public readonly string $vendorBillId,
+        public readonly string $tenantId,
+        public readonly string $vendorBillNumber,
+        public readonly string $purchaseOrderId,
+        public readonly string $purchaseOrderNumber,
+        public readonly array $goodsReceiptIds,
+        public readonly string $vendorId,
+        public readonly int $invoiceAmountCents,
+        public readonly int $poAmountCents,
+        public readonly int $receivedAmountCents,
+        public readonly string $currency,
+        public readonly float $priceVariancePercent,
+        public readonly float $quantityVariancePercent,
+        public readonly float $priceTolerancePercent,
+        public readonly float $quantityTolerancePercent,
+        public readonly array $varianceDetails,
+        public readonly string $failureReason,
+        public readonly \DateTimeImmutable $failedAt,
     ) {}
-
-    public function getVendorBillId(): string
-    {
-        return $this->vendorBillId;
-    }
-
-    public function getTenantId(): string
-    {
-        return $this->tenantId;
-    }
-
-    public function getVendorBillNumber(): string
-    {
-        return $this->vendorBillNumber;
-    }
-
-    public function getPurchaseOrderId(): string
-    {
-        return $this->purchaseOrderId;
-    }
-
-    public function getPurchaseOrderNumber(): string
-    {
-        return $this->purchaseOrderNumber;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getGoodsReceiptIds(): array
-    {
-        return $this->goodsReceiptIds;
-    }
-
-    public function getVendorId(): string
-    {
-        return $this->vendorId;
-    }
-
-    public function getInvoiceAmountCents(): int
-    {
-        return $this->invoiceAmountCents;
-    }
-
-    public function getPoAmountCents(): int
-    {
-        return $this->poAmountCents;
-    }
-
-    public function getReceivedAmountCents(): int
-    {
-        return $this->receivedAmountCents;
-    }
-
-    public function getCurrency(): string
-    {
-        return $this->currency;
-    }
-
-    public function getPriceVariancePercent(): float
-    {
-        return $this->priceVariancePercent;
-    }
-
-    public function getQuantityVariancePercent(): float
-    {
-        return $this->quantityVariancePercent;
-    }
-
-    public function getPriceTolerancePercent(): float
-    {
-        return $this->priceTolerancePercent;
-    }
-
-    public function getQuantityTolerancePercent(): float
-    {
-        return $this->quantityTolerancePercent;
-    }
-
-    /**
-     * @return array<string, array{
-     *     type: string,
-     *     field: string,
-     *     expected: mixed,
-     *     actual: mixed,
-     *     variancePercent: float
-     * }>
-     */
-    public function getVarianceDetails(): array
-    {
-        return $this->varianceDetails;
-    }
-
-    public function getFailureReason(): string
-    {
-        return $this->failureReason;
-    }
-
-    public function getFailedAt(): \DateTimeImmutable
-    {
-        return $this->failedAt;
-    }
 }

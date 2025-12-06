@@ -31,80 +31,17 @@ final readonly class PurchaseOrderAmendedEvent
      * @param \DateTimeImmutable $amendedAt Timestamp of amendment
      */
     public function __construct(
-        private string $purchaseOrderId,
-        private string $tenantId,
-        private string $purchaseOrderNumber,
-        private string $amendedBy,
-        private int $previousAmountCents,
-        private int $newAmountCents,
-        private int $amountChangeCents,
-        private string $currency,
-        private string $amendmentReason,
-        private int $revisionNumber,
-        private array $changedFields,
-        private \DateTimeImmutable $amendedAt,
+        public readonly string $purchaseOrderId,
+        public readonly string $tenantId,
+        public readonly string $purchaseOrderNumber,
+        public readonly string $amendedBy,
+        public readonly int $previousAmountCents,
+        public readonly int $newAmountCents,
+        public readonly int $amountChangeCents,
+        public readonly string $currency,
+        public readonly string $amendmentReason,
+        public readonly int $revisionNumber,
+        public readonly array $changedFields,
+        public readonly \DateTimeImmutable $amendedAt,
     ) {}
-
-    public function getPurchaseOrderId(): string
-    {
-        return $this->purchaseOrderId;
-    }
-
-    public function getTenantId(): string
-    {
-        return $this->tenantId;
-    }
-
-    public function getPurchaseOrderNumber(): string
-    {
-        return $this->purchaseOrderNumber;
-    }
-
-    public function getAmendedBy(): string
-    {
-        return $this->amendedBy;
-    }
-
-    public function getPreviousAmountCents(): int
-    {
-        return $this->previousAmountCents;
-    }
-
-    public function getNewAmountCents(): int
-    {
-        return $this->newAmountCents;
-    }
-
-    public function getAmountChangeCents(): int
-    {
-        return $this->amountChangeCents;
-    }
-
-    public function getCurrency(): string
-    {
-        return $this->currency;
-    }
-
-    public function getAmendmentReason(): string
-    {
-        return $this->amendmentReason;
-    }
-
-    public function getRevisionNumber(): int
-    {
-        return $this->revisionNumber;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function getChangedFields(): array
-    {
-        return $this->changedFields;
-    }
-
-    public function getAmendedAt(): \DateTimeImmutable
-    {
-        return $this->amendedAt;
-    }
 }

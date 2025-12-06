@@ -45,120 +45,22 @@ final readonly class VendorBillReceivedEvent
      * @param \DateTimeImmutable $receivedAt Timestamp when recorded
      */
     public function __construct(
-        private string $vendorBillId,
-        private string $tenantId,
-        private string $vendorBillNumber,
-        private string $vendorInvoiceNumber,
-        private string $vendorId,
-        private ?string $purchaseOrderId,
-        private ?string $purchaseOrderNumber,
-        private array $lineItems,
-        private int $subtotalCents,
-        private int $taxAmountCents,
-        private int $totalAmountCents,
-        private string $currency,
-        private \DateTimeImmutable $invoiceDate,
-        private \DateTimeImmutable $dueDate,
-        private string $paymentTerms,
-        private string $receivedBy,
-        private \DateTimeImmutable $receivedAt,
+        public readonly string $vendorBillId,
+        public readonly string $tenantId,
+        public readonly string $vendorBillNumber,
+        public readonly string $vendorInvoiceNumber,
+        public readonly string $vendorId,
+        public readonly ?string $purchaseOrderId,
+        public readonly ?string $purchaseOrderNumber,
+        public readonly array $lineItems,
+        public readonly int $subtotalCents,
+        public readonly int $taxAmountCents,
+        public readonly int $totalAmountCents,
+        public readonly string $currency,
+        public readonly \DateTimeImmutable $invoiceDate,
+        public readonly \DateTimeImmutable $dueDate,
+        public readonly string $paymentTerms,
+        public readonly string $receivedBy,
+        public readonly \DateTimeImmutable $receivedAt,
     ) {}
-
-    public function getVendorBillId(): string
-    {
-        return $this->vendorBillId;
-    }
-
-    public function getTenantId(): string
-    {
-        return $this->tenantId;
-    }
-
-    public function getVendorBillNumber(): string
-    {
-        return $this->vendorBillNumber;
-    }
-
-    public function getVendorInvoiceNumber(): string
-    {
-        return $this->vendorInvoiceNumber;
-    }
-
-    public function getVendorId(): string
-    {
-        return $this->vendorId;
-    }
-
-    public function getPurchaseOrderId(): ?string
-    {
-        return $this->purchaseOrderId;
-    }
-
-    public function getPurchaseOrderNumber(): ?string
-    {
-        return $this->purchaseOrderNumber;
-    }
-
-    /**
-     * @return array<int, array{
-     *     lineId: string,
-     *     poLineId: string|null,
-     *     productId: string|null,
-     *     description: string,
-     *     quantity: float,
-     *     unitPriceCents: int,
-     *     lineTotalCents: int,
-     *     taxCode: string|null,
-     *     taxAmountCents: int
-     * }>
-     */
-    public function getLineItems(): array
-    {
-        return $this->lineItems;
-    }
-
-    public function getSubtotalCents(): int
-    {
-        return $this->subtotalCents;
-    }
-
-    public function getTaxAmountCents(): int
-    {
-        return $this->taxAmountCents;
-    }
-
-    public function getTotalAmountCents(): int
-    {
-        return $this->totalAmountCents;
-    }
-
-    public function getCurrency(): string
-    {
-        return $this->currency;
-    }
-
-    public function getInvoiceDate(): \DateTimeImmutable
-    {
-        return $this->invoiceDate;
-    }
-
-    public function getDueDate(): \DateTimeImmutable
-    {
-        return $this->dueDate;
-    }
-
-    public function getPaymentTerms(): string
-    {
-        return $this->paymentTerms;
-    }
-
-    public function getReceivedBy(): string
-    {
-        return $this->receivedBy;
-    }
-
-    public function getReceivedAt(): \DateTimeImmutable
-    {
-        return $this->receivedAt;
-    }
 }

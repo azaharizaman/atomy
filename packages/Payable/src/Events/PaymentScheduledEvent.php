@@ -33,89 +33,19 @@ final readonly class PaymentScheduledEvent
      * @param \DateTimeImmutable $scheduledAt Timestamp when scheduled
      */
     public function __construct(
-        private string $paymentScheduleId,
-        private string $tenantId,
-        private string $paymentBatchId,
-        private string $vendorBillId,
-        private string $vendorBillNumber,
-        private string $vendorId,
-        private string $vendorName,
-        private int $scheduledAmountCents,
-        private string $currency,
-        private \DateTimeImmutable $scheduledPaymentDate,
-        private string $paymentMethod,
-        private ?string $bankAccountId,
-        private string $scheduledBy,
-        private \DateTimeImmutable $scheduledAt,
+        public readonly string $paymentScheduleId,
+        public readonly string $tenantId,
+        public readonly string $paymentBatchId,
+        public readonly string $vendorBillId,
+        public readonly string $vendorBillNumber,
+        public readonly string $vendorId,
+        public readonly string $vendorName,
+        public readonly int $scheduledAmountCents,
+        public readonly string $currency,
+        public readonly \DateTimeImmutable $scheduledPaymentDate,
+        public readonly string $paymentMethod,
+        public readonly ?string $bankAccountId,
+        public readonly string $scheduledBy,
+        public readonly \DateTimeImmutable $scheduledAt,
     ) {}
-
-    public function getPaymentScheduleId(): string
-    {
-        return $this->paymentScheduleId;
-    }
-
-    public function getTenantId(): string
-    {
-        return $this->tenantId;
-    }
-
-    public function getPaymentBatchId(): string
-    {
-        return $this->paymentBatchId;
-    }
-
-    public function getVendorBillId(): string
-    {
-        return $this->vendorBillId;
-    }
-
-    public function getVendorBillNumber(): string
-    {
-        return $this->vendorBillNumber;
-    }
-
-    public function getVendorId(): string
-    {
-        return $this->vendorId;
-    }
-
-    public function getVendorName(): string
-    {
-        return $this->vendorName;
-    }
-
-    public function getScheduledAmountCents(): int
-    {
-        return $this->scheduledAmountCents;
-    }
-
-    public function getCurrency(): string
-    {
-        return $this->currency;
-    }
-
-    public function getScheduledPaymentDate(): \DateTimeImmutable
-    {
-        return $this->scheduledPaymentDate;
-    }
-
-    public function getPaymentMethod(): string
-    {
-        return $this->paymentMethod;
-    }
-
-    public function getBankAccountId(): ?string
-    {
-        return $this->bankAccountId;
-    }
-
-    public function getScheduledBy(): string
-    {
-        return $this->scheduledBy;
-    }
-
-    public function getScheduledAt(): \DateTimeImmutable
-    {
-        return $this->scheduledAt;
-    }
 }

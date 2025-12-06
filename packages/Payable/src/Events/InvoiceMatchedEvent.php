@@ -35,104 +35,21 @@ final readonly class InvoiceMatchedEvent
      * @param \DateTimeImmutable $matchedAt Timestamp of match
      */
     public function __construct(
-        private string $vendorBillId,
-        private string $tenantId,
-        private string $vendorBillNumber,
-        private string $purchaseOrderId,
-        private string $purchaseOrderNumber,
-        private array $matchedGoodsReceiptIds,
-        private string $vendorId,
-        private int $invoiceAmountCents,
-        private int $poAmountCents,
-        private int $receivedAmountCents,
-        private string $currency,
-        private float $priceVariancePercent,
-        private float $quantityVariancePercent,
-        private bool $withinTolerance,
-        private string $matchedBy,
-        private \DateTimeImmutable $matchedAt,
+        public readonly string $vendorBillId,
+        public readonly string $tenantId,
+        public readonly string $vendorBillNumber,
+        public readonly string $purchaseOrderId,
+        public readonly string $purchaseOrderNumber,
+        public readonly array $matchedGoodsReceiptIds,
+        public readonly string $vendorId,
+        public readonly int $invoiceAmountCents,
+        public readonly int $poAmountCents,
+        public readonly int $receivedAmountCents,
+        public readonly string $currency,
+        public readonly float $priceVariancePercent,
+        public readonly float $quantityVariancePercent,
+        public readonly bool $withinTolerance,
+        public readonly string $matchedBy,
+        public readonly \DateTimeImmutable $matchedAt,
     ) {}
-
-    public function getVendorBillId(): string
-    {
-        return $this->vendorBillId;
-    }
-
-    public function getTenantId(): string
-    {
-        return $this->tenantId;
-    }
-
-    public function getVendorBillNumber(): string
-    {
-        return $this->vendorBillNumber;
-    }
-
-    public function getPurchaseOrderId(): string
-    {
-        return $this->purchaseOrderId;
-    }
-
-    public function getPurchaseOrderNumber(): string
-    {
-        return $this->purchaseOrderNumber;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getMatchedGoodsReceiptIds(): array
-    {
-        return $this->matchedGoodsReceiptIds;
-    }
-
-    public function getVendorId(): string
-    {
-        return $this->vendorId;
-    }
-
-    public function getInvoiceAmountCents(): int
-    {
-        return $this->invoiceAmountCents;
-    }
-
-    public function getPoAmountCents(): int
-    {
-        return $this->poAmountCents;
-    }
-
-    public function getReceivedAmountCents(): int
-    {
-        return $this->receivedAmountCents;
-    }
-
-    public function getCurrency(): string
-    {
-        return $this->currency;
-    }
-
-    public function getPriceVariancePercent(): float
-    {
-        return $this->priceVariancePercent;
-    }
-
-    public function getQuantityVariancePercent(): float
-    {
-        return $this->quantityVariancePercent;
-    }
-
-    public function isWithinTolerance(): bool
-    {
-        return $this->withinTolerance;
-    }
-
-    public function getMatchedBy(): string
-    {
-        return $this->matchedBy;
-    }
-
-    public function getMatchedAt(): \DateTimeImmutable
-    {
-        return $this->matchedAt;
-    }
 }
