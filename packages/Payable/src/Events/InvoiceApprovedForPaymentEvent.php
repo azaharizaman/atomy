@@ -33,89 +33,19 @@ final readonly class InvoiceApprovedForPaymentEvent
      * @param \DateTimeImmutable $approvedAt Timestamp of approval
      */
     public function __construct(
-        private string $vendorBillId,
-        private string $tenantId,
-        private string $vendorBillNumber,
-        private string $vendorId,
-        private string $vendorName,
-        private int $approvedAmountCents,
-        private string $currency,
-        private \DateTimeImmutable $dueDate,
-        private string $paymentTerms,
-        private ?int $earlyPaymentDiscountCents,
-        private ?\DateTimeImmutable $discountDeadline,
-        private string $approvedBy,
-        private ?string $approvalComments,
-        private \DateTimeImmutable $approvedAt,
+        public readonly string $vendorBillId,
+        public readonly string $tenantId,
+        public readonly string $vendorBillNumber,
+        public readonly string $vendorId,
+        public readonly string $vendorName,
+        public readonly int $approvedAmountCents,
+        public readonly string $currency,
+        public readonly \DateTimeImmutable $dueDate,
+        public readonly string $paymentTerms,
+        public readonly ?int $earlyPaymentDiscountCents,
+        public readonly ?\DateTimeImmutable $discountDeadline,
+        public readonly string $approvedBy,
+        public readonly ?string $approvalComments,
+        public readonly \DateTimeImmutable $approvedAt,
     ) {}
-
-    public function getVendorBillId(): string
-    {
-        return $this->vendorBillId;
-    }
-
-    public function getTenantId(): string
-    {
-        return $this->tenantId;
-    }
-
-    public function getVendorBillNumber(): string
-    {
-        return $this->vendorBillNumber;
-    }
-
-    public function getVendorId(): string
-    {
-        return $this->vendorId;
-    }
-
-    public function getVendorName(): string
-    {
-        return $this->vendorName;
-    }
-
-    public function getApprovedAmountCents(): int
-    {
-        return $this->approvedAmountCents;
-    }
-
-    public function getCurrency(): string
-    {
-        return $this->currency;
-    }
-
-    public function getDueDate(): \DateTimeImmutable
-    {
-        return $this->dueDate;
-    }
-
-    public function getPaymentTerms(): string
-    {
-        return $this->paymentTerms;
-    }
-
-    public function getEarlyPaymentDiscountCents(): ?int
-    {
-        return $this->earlyPaymentDiscountCents;
-    }
-
-    public function getDiscountDeadline(): ?\DateTimeImmutable
-    {
-        return $this->discountDeadline;
-    }
-
-    public function getApprovedBy(): string
-    {
-        return $this->approvedBy;
-    }
-
-    public function getApprovalComments(): ?string
-    {
-        return $this->approvalComments;
-    }
-
-    public function getApprovedAt(): \DateTimeImmutable
-    {
-        return $this->approvedAt;
-    }
 }
