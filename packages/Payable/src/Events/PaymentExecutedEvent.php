@@ -39,23 +39,119 @@ final readonly class PaymentExecutedEvent
      * @param \DateTimeImmutable $executedAt Timestamp of payment execution
      */
     public function __construct(
-        public string $paymentId,
-        public string $tenantId,
-        public string $paymentReference,
-        public string $vendorId,
-        public string $vendorName,
-        public array $paidInvoiceIds,
-        public array $paidInvoiceNumbers,
-        public int $totalAmountCents,
-        public int $discountTakenCents,
-        public int $netAmountCents,
-        public string $currency,
-        public string $paymentMethod,
-        public string $bankAccountId,
-        public ?string $chequeNumber,
-        public ?string $bankReferenceNumber,
-        public ?string $vendorBankAccountId,
-        public string $executedBy,
-        public \DateTimeImmutable $executedAt,
+        private string $paymentId,
+        private string $tenantId,
+        private string $paymentReference,
+        private string $vendorId,
+        private string $vendorName,
+        private array $paidInvoiceIds,
+        private array $paidInvoiceNumbers,
+        private int $totalAmountCents,
+        private int $discountTakenCents,
+        private int $netAmountCents,
+        private string $currency,
+        private string $paymentMethod,
+        private string $bankAccountId,
+        private ?string $chequeNumber,
+        private ?string $bankReferenceNumber,
+        private ?string $vendorBankAccountId,
+        private string $executedBy,
+        private \DateTimeImmutable $executedAt,
     ) {}
+
+    public function getPaymentId(): string
+    {
+        return $this->paymentId;
+    }
+
+    public function getTenantId(): string
+    {
+        return $this->tenantId;
+    }
+
+    public function getPaymentReference(): string
+    {
+        return $this->paymentReference;
+    }
+
+    public function getVendorId(): string
+    {
+        return $this->vendorId;
+    }
+
+    public function getVendorName(): string
+    {
+        return $this->vendorName;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getPaidInvoiceIds(): array
+    {
+        return $this->paidInvoiceIds;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getPaidInvoiceNumbers(): array
+    {
+        return $this->paidInvoiceNumbers;
+    }
+
+    public function getTotalAmountCents(): int
+    {
+        return $this->totalAmountCents;
+    }
+
+    public function getDiscountTakenCents(): int
+    {
+        return $this->discountTakenCents;
+    }
+
+    public function getNetAmountCents(): int
+    {
+        return $this->netAmountCents;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+
+    public function getPaymentMethod(): string
+    {
+        return $this->paymentMethod;
+    }
+
+    public function getBankAccountId(): string
+    {
+        return $this->bankAccountId;
+    }
+
+    public function getChequeNumber(): ?string
+    {
+        return $this->chequeNumber;
+    }
+
+    public function getBankReferenceNumber(): ?string
+    {
+        return $this->bankReferenceNumber;
+    }
+
+    public function getVendorBankAccountId(): ?string
+    {
+        return $this->vendorBankAccountId;
+    }
+
+    public function getExecutedBy(): string
+    {
+        return $this->executedBy;
+    }
+
+    public function getExecutedAt(): \DateTimeImmutable
+    {
+        return $this->executedAt;
+    }
 }

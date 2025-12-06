@@ -47,18 +47,100 @@ final readonly class GoodsReceiptCreatedEvent
      * @param \DateTimeImmutable $receivedAt Timestamp of receipt
      */
     public function __construct(
-        public string $goodsReceiptId,
-        public string $tenantId,
-        public string $goodsReceiptNumber,
-        public string $purchaseOrderId,
-        public string $purchaseOrderNumber,
-        public string $vendorId,
-        public string $warehouseId,
-        public string $receivedBy,
-        public array $lineItems,
-        public int $totalValueCents,
-        public string $currency,
-        public bool $isPartialReceipt,
-        public \DateTimeImmutable $receivedAt,
+        private string $goodsReceiptId,
+        private string $tenantId,
+        private string $goodsReceiptNumber,
+        private string $purchaseOrderId,
+        private string $purchaseOrderNumber,
+        private string $vendorId,
+        private string $warehouseId,
+        private string $receivedBy,
+        private array $lineItems,
+        private int $totalValueCents,
+        private string $currency,
+        private bool $isPartialReceipt,
+        private \DateTimeImmutable $receivedAt,
     ) {}
+
+    public function getGoodsReceiptId(): string
+    {
+        return $this->goodsReceiptId;
+    }
+
+    public function getTenantId(): string
+    {
+        return $this->tenantId;
+    }
+
+    public function getGoodsReceiptNumber(): string
+    {
+        return $this->goodsReceiptNumber;
+    }
+
+    public function getPurchaseOrderId(): string
+    {
+        return $this->purchaseOrderId;
+    }
+
+    public function getPurchaseOrderNumber(): string
+    {
+        return $this->purchaseOrderNumber;
+    }
+
+    public function getVendorId(): string
+    {
+        return $this->vendorId;
+    }
+
+    public function getWarehouseId(): string
+    {
+        return $this->warehouseId;
+    }
+
+    public function getReceivedBy(): string
+    {
+        return $this->receivedBy;
+    }
+
+    /**
+     * @return array<int, array{
+     *     lineId: string,
+     *     poLineId: string,
+     *     productId: string,
+     *     description: string,
+     *     quantityReceived: float,
+     *     quantityOrdered: float,
+     *     unitOfMeasure: string,
+     *     unitCostCents: int,
+     *     currency: string,
+     *     lotNumber: string|null,
+     *     serialNumbers: array<string>,
+     *     expiryDate: string|null,
+     *     binLocation: string|null
+     * }>
+     */
+    public function getLineItems(): array
+    {
+        return $this->lineItems;
+    }
+
+    public function getTotalValueCents(): int
+    {
+        return $this->totalValueCents;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+
+    public function isPartialReceipt(): bool
+    {
+        return $this->isPartialReceipt;
+    }
+
+    public function getReceivedAt(): \DateTimeImmutable
+    {
+        return $this->receivedAt;
+    }
 }

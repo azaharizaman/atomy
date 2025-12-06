@@ -36,21 +36,104 @@ final readonly class PaymentFailedEvent
      * @param \DateTimeImmutable $failedAt Timestamp of failure
      */
     public function __construct(
-        public string $paymentId,
-        public string $tenantId,
-        public string $paymentReference,
-        public string $vendorId,
-        public string $vendorName,
-        public array $affectedInvoiceIds,
-        public int $attemptedAmountCents,
-        public string $currency,
-        public string $paymentMethod,
-        public string $failureReason,
-        public ?string $failureCode,
-        public ?string $bankResponse,
-        public int $attemptNumber,
-        public bool $willRetry,
-        public ?\DateTimeImmutable $nextRetryAt,
-        public \DateTimeImmutable $failedAt,
+        private string $paymentId,
+        private string $tenantId,
+        private string $paymentReference,
+        private string $vendorId,
+        private string $vendorName,
+        private array $affectedInvoiceIds,
+        private int $attemptedAmountCents,
+        private string $currency,
+        private string $paymentMethod,
+        private string $failureReason,
+        private ?string $failureCode,
+        private ?string $bankResponse,
+        private int $attemptNumber,
+        private bool $willRetry,
+        private ?\DateTimeImmutable $nextRetryAt,
+        private \DateTimeImmutable $failedAt,
     ) {}
+
+    public function getPaymentId(): string
+    {
+        return $this->paymentId;
+    }
+
+    public function getTenantId(): string
+    {
+        return $this->tenantId;
+    }
+
+    public function getPaymentReference(): string
+    {
+        return $this->paymentReference;
+    }
+
+    public function getVendorId(): string
+    {
+        return $this->vendorId;
+    }
+
+    public function getVendorName(): string
+    {
+        return $this->vendorName;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getAffectedInvoiceIds(): array
+    {
+        return $this->affectedInvoiceIds;
+    }
+
+    public function getAttemptedAmountCents(): int
+    {
+        return $this->attemptedAmountCents;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+
+    public function getPaymentMethod(): string
+    {
+        return $this->paymentMethod;
+    }
+
+    public function getFailureReason(): string
+    {
+        return $this->failureReason;
+    }
+
+    public function getFailureCode(): ?string
+    {
+        return $this->failureCode;
+    }
+
+    public function getBankResponse(): ?string
+    {
+        return $this->bankResponse;
+    }
+
+    public function getAttemptNumber(): int
+    {
+        return $this->attemptNumber;
+    }
+
+    public function willRetry(): bool
+    {
+        return $this->willRetry;
+    }
+
+    public function getNextRetryAt(): ?\DateTimeImmutable
+    {
+        return $this->nextRetryAt;
+    }
+
+    public function getFailedAt(): \DateTimeImmutable
+    {
+        return $this->failedAt;
+    }
 }
