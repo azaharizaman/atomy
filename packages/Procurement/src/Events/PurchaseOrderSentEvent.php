@@ -26,13 +26,53 @@ final readonly class PurchaseOrderSentEvent
      * @param \DateTimeImmutable $sentAt Timestamp when sent
      */
     public function __construct(
-        public string $purchaseOrderId,
-        public string $tenantId,
-        public string $purchaseOrderNumber,
-        public string $vendorId,
-        public string $sentBy,
-        public string $deliveryMethod,
-        public ?string $deliveryAddress,
-        public \DateTimeImmutable $sentAt,
+        private string $purchaseOrderId,
+        private string $tenantId,
+        private string $purchaseOrderNumber,
+        private string $vendorId,
+        private string $sentBy,
+        private string $deliveryMethod,
+        private ?string $deliveryAddress,
+        private \DateTimeImmutable $sentAt,
     ) {}
+
+    public function getPurchaseOrderId(): string
+    {
+        return $this->purchaseOrderId;
+    }
+
+    public function getTenantId(): string
+    {
+        return $this->tenantId;
+    }
+
+    public function getPurchaseOrderNumber(): string
+    {
+        return $this->purchaseOrderNumber;
+    }
+
+    public function getVendorId(): string
+    {
+        return $this->vendorId;
+    }
+
+    public function getSentBy(): string
+    {
+        return $this->sentBy;
+    }
+
+    public function getDeliveryMethod(): string
+    {
+        return $this->deliveryMethod;
+    }
+
+    public function getDeliveryAddress(): ?string
+    {
+        return $this->deliveryAddress;
+    }
+
+    public function getSentAt(): \DateTimeImmutable
+    {
+        return $this->sentAt;
+    }
 }

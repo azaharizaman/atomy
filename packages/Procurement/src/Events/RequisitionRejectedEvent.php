@@ -26,13 +26,53 @@ final readonly class RequisitionRejectedEvent
      * @param \DateTimeImmutable $rejectedAt Timestamp of rejection
      */
     public function __construct(
-        public string $requisitionId,
-        public string $tenantId,
-        public string $requisitionNumber,
-        public string $rejectedBy,
-        public string $rejectionReason,
-        public int $releasedAmountCents,
-        public string $currency,
-        public \DateTimeImmutable $rejectedAt,
+        private string $requisitionId,
+        private string $tenantId,
+        private string $requisitionNumber,
+        private string $rejectedBy,
+        private string $rejectionReason,
+        private int $releasedAmountCents,
+        private string $currency,
+        private \DateTimeImmutable $rejectedAt,
     ) {}
+
+    public function getRequisitionId(): string
+    {
+        return $this->requisitionId;
+    }
+
+    public function getTenantId(): string
+    {
+        return $this->tenantId;
+    }
+
+    public function getRequisitionNumber(): string
+    {
+        return $this->requisitionNumber;
+    }
+
+    public function getRejectedBy(): string
+    {
+        return $this->rejectedBy;
+    }
+
+    public function getRejectionReason(): string
+    {
+        return $this->rejectionReason;
+    }
+
+    public function getReleasedAmountCents(): int
+    {
+        return $this->releasedAmountCents;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+
+    public function getRejectedAt(): \DateTimeImmutable
+    {
+        return $this->rejectedAt;
+    }
 }

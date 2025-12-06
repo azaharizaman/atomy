@@ -39,16 +39,84 @@ final readonly class PurchaseOrderCreatedEvent
      * @param \DateTimeImmutable $createdAt Timestamp of creation
      */
     public function __construct(
-        public string $purchaseOrderId,
-        public string $tenantId,
-        public string $purchaseOrderNumber,
-        public string $vendorId,
-        public ?string $requisitionId,
-        public array $lineItems,
-        public int $totalAmountCents,
-        public string $currency,
-        public string $paymentTerms,
-        public ?string $contractId,
-        public \DateTimeImmutable $createdAt,
+        private string $purchaseOrderId,
+        private string $tenantId,
+        private string $purchaseOrderNumber,
+        private string $vendorId,
+        private ?string $requisitionId,
+        private array $lineItems,
+        private int $totalAmountCents,
+        private string $currency,
+        private string $paymentTerms,
+        private ?string $contractId,
+        private \DateTimeImmutable $createdAt,
     ) {}
+
+    public function getPurchaseOrderId(): string
+    {
+        return $this->purchaseOrderId;
+    }
+
+    public function getTenantId(): string
+    {
+        return $this->tenantId;
+    }
+
+    public function getPurchaseOrderNumber(): string
+    {
+        return $this->purchaseOrderNumber;
+    }
+
+    public function getVendorId(): string
+    {
+        return $this->vendorId;
+    }
+
+    public function getRequisitionId(): ?string
+    {
+        return $this->requisitionId;
+    }
+
+    /**
+     * @return array<int, array{
+     *     lineId: string,
+     *     productId: string,
+     *     description: string,
+     *     quantity: float,
+     *     unitOfMeasure: string,
+     *     unitPriceCents: int,
+     *     currency: string,
+     *     taxCode: string|null,
+     *     expectedDeliveryDate: string|null
+     * }>
+     */
+    public function getLineItems(): array
+    {
+        return $this->lineItems;
+    }
+
+    public function getTotalAmountCents(): int
+    {
+        return $this->totalAmountCents;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+
+    public function getPaymentTerms(): string
+    {
+        return $this->paymentTerms;
+    }
+
+    public function getContractId(): ?string
+    {
+        return $this->contractId;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
 }
