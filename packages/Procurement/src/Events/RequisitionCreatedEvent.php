@@ -38,16 +38,83 @@ final readonly class RequisitionCreatedEvent
      * @param \DateTimeImmutable $createdAt Timestamp of creation
      */
     public function __construct(
-        public string $requisitionId,
-        public string $tenantId,
-        public string $requisitionNumber,
-        public string $requestedBy,
-        public string $departmentId,
-        public array $lineItems,
-        public int $totalEstimatedAmountCents,
-        public string $currency,
-        public ?string $costCenterId,
-        public ?string $projectId,
-        public \DateTimeImmutable $createdAt,
+        private string $requisitionId,
+        private string $tenantId,
+        private string $requisitionNumber,
+        private string $requestedBy,
+        private string $departmentId,
+        private array $lineItems,
+        private int $totalEstimatedAmountCents,
+        private string $currency,
+        private ?string $costCenterId,
+        private ?string $projectId,
+        private \DateTimeImmutable $createdAt,
     ) {}
+
+    public function getRequisitionId(): string
+    {
+        return $this->requisitionId;
+    }
+
+    public function getTenantId(): string
+    {
+        return $this->tenantId;
+    }
+
+    public function getRequisitionNumber(): string
+    {
+        return $this->requisitionNumber;
+    }
+
+    public function getRequestedBy(): string
+    {
+        return $this->requestedBy;
+    }
+
+    public function getDepartmentId(): string
+    {
+        return $this->departmentId;
+    }
+
+    /**
+     * @return array<int, array{
+     *     lineId: string,
+     *     productId: string,
+     *     description: string,
+     *     quantity: float,
+     *     unitOfMeasure: string,
+     *     estimatedUnitPrice: int,
+     *     currency: string,
+     *     requestedDeliveryDate: string|null
+     * }>
+     */
+    public function getLineItems(): array
+    {
+        return $this->lineItems;
+    }
+
+    public function getTotalEstimatedAmountCents(): int
+    {
+        return $this->totalEstimatedAmountCents;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+
+    public function getCostCenterId(): ?string
+    {
+        return $this->costCenterId;
+    }
+
+    public function getProjectId(): ?string
+    {
+        return $this->projectId;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
 }
