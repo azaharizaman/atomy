@@ -76,7 +76,7 @@ final readonly class RequisitionToPoListener
             $this->getLogger()->error('Exception during PO creation from requisition', [
                 'requisition_id' => $event->requisitionId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'exception_class' => get_class($e),
             ]);
         }
     }

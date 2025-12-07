@@ -294,6 +294,14 @@ final readonly class NotifyApproversOnVarianceDetected
      */
     private function addBusinessDays(\DateTimeImmutable $date, int $days): \DateTimeImmutable
     {
+        if ($days === 0) {
+            return $date;
+        }
+        
+        if ($days < 0) {
+            throw new \InvalidArgumentException('Days must be non-negative');
+        }
+        
         $result = $date;
         $added = 0;
         while ($added < $days) {

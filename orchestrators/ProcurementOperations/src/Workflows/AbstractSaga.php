@@ -30,7 +30,7 @@ abstract readonly class AbstractSaga implements SagaInterface
     public function __construct(
         protected WorkflowStorageInterface $storage,
         protected EventDispatcherInterface $eventDispatcher,
-        protected LoggerInterface $logger = new NullLogger(),
+        protected ?LoggerInterface $logger = null,
     ) {}
 
     /**
