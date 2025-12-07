@@ -172,7 +172,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
             $this->logger->error('Unexpected error during goods receipt', [
                 'purchase_order_id' => $request->purchaseOrderId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'error_code' => $e->getCode(),
             ]);
 
             return GoodsReceiptResult::failure('Unexpected error: ' . $e->getMessage());

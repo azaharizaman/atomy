@@ -78,10 +78,10 @@ final readonly class InvoiceMatchingRuleRegistry
         $failures = [];
 
         foreach ($results as $ruleName => $result) {
-            if (!$result->isPassed()) {
+            if ($result->failed()) {
                 $failures[$ruleName] = [
                     'message' => $result->message,
-                    'data' => $result->data,
+                    'context' => $result->context,
                 ];
             }
         }
@@ -102,7 +102,7 @@ final readonly class InvoiceMatchingRuleRegistry
         $results = $this->validate($context);
 
         foreach ($results as $result) {
-            if (!$result->isPassed()) {
+            if ($result->failed()) {
                 return false;
             }
         }
@@ -130,16 +130,16 @@ final readonly class InvoiceMatchingRuleRegistry
         $formattedResults = [];
 
         foreach ($results as $ruleName => $result) {
-            if ($result->isPassed()) {
+            if ($result->passed) {
                 $passedCount++;
             } else {
                 $failedCount++;
             }
 
             $formattedResults[$ruleName] = [
-                'passed' => $result->isPassed(),
+                'passed' => $result->passed,
                 'message' => $result->message,
-                'data' => $result->data,
+                'context' => $result->context,
             ];
         }
 
@@ -203,7 +203,7 @@ final readonly class InvoiceMatchingRuleRegistry
         $failed = [];
 
         foreach ($results as $ruleName => $result) {
-            if (!$result->isPassed()) {
+            if ($result->failed()) {
                 $failed[] = $ruleName;
             }
         }
@@ -234,9 +234,9 @@ final readonly class InvoiceMatchingRuleRegistry
             'priceVariancePercent' => $context->calculatePriceVariancePercent(),
             'quantityVariancePercent' => $context->calculateQuantityVariancePercent(),
             'amountVariancePercent' => $this->calculateAmountVariance($context),
-            'withinPriceTolerance' => $priceResult->isPassed(),
-            'withinQuantityTolerance' => $quantityResult->isPassed(),
-            'withinAmountTolerance' => $toleranceResult->isPassed(),
+            'withinPriceTolerance' => $priceResult->passed,
+            'withinQuantityTolerance' => $quantityResult->passed,
+            'withinAmountTolerance' => $toleranceResult->passed,
             'overallMatch' => $this->allPass($context),
         ];
     }

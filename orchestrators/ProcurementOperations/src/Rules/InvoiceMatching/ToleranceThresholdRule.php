@@ -147,7 +147,7 @@ final readonly class ToleranceThresholdRule implements RuleInterface
      */
     public function canAutoApprove(ThreeWayMatchContext $context): bool
     {
-        return $this->check($context)->isPassed();
+        return $this->check($context)->passed;
     }
 
     /**
@@ -163,7 +163,7 @@ final readonly class ToleranceThresholdRule implements RuleInterface
     {
         $result = $this->check($context);
 
-        if ($result->isPassed()) {
+        if ($result->passed) {
             return [
                 'classification' => 'within_tolerance',
                 'requiresApproval' => false,
@@ -172,8 +172,8 @@ final readonly class ToleranceThresholdRule implements RuleInterface
         }
 
         // Determine approval level based on variance severity
-        $data = $result->data;
-        $violations = $data['violations'] ?? [];
+        $contextData = $result->context;
+        $violations = $contextData['violations'] ?? [];
         $maxExceeded = 0.0;
 
         foreach ($violations as $violation) {

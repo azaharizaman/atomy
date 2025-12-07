@@ -112,7 +112,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
             $this->logger->error('Unexpected error during invoice matching', [
                 'vendor_bill_id' => $request->vendorBillId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'error_code' => $e->getCode(),
             ]);
 
             return MatchingResult::error(
@@ -384,13 +384,11 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
             return null;
         }
 
-        $accrualAmount = Money::fromCents($accrualAmountCents, $context->purchaseOrderInfo['currency']);
-
         return $this->accrualService->reverseAccrualOnMatch(
-            purchaseOrderId: $purchaseOrderId,
+            tenantId: $context->tenantId,
             vendorBillId: $vendorBillId,
-            amount: $accrualAmount,
-            matchedAt: new \DateTimeImmutable(),
+            goodsReceiptIds: $context->goodsReceiptIds,
+            postedBy: 'system',
         );
     }
 
@@ -408,13 +406,13 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
             return null;
         }
 
-        $invoiceAmount = Money::fromCents($invoiceAmountCents, $context->invoiceInfo['currency']);
-
         return $this->accrualService->postPayableLiability(
+            tenantId: $context->tenantId,
             vendorBillId: $vendorBillId,
             vendorId: $context->invoiceInfo['vendorId'],
-            amount: $invoiceAmount,
-            invoiceDate: $context->invoiceInfo['invoiceDate'],
+            amountCents: $invoiceAmountCents,
+            currency: $context->invoiceInfo['currency'],
+            postedBy: 'system',
         );
     }
 
