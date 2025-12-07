@@ -21,19 +21,16 @@ use Psr\Log\NullLogger;
  * - Service handles complex calculation logic
  * - Coordinator delegates batch building to this service
  */
-final readonly class PaymentBatchBuilder
+final class PaymentBatchBuilder
 {
-    public function __construct(
-        private PaymentDataProvider $dataProvider,
-        private ?LoggerInterface $logger = null,
-    ) {}
+    private LoggerInterface $logger;
 
-    /**
-     * Get the logger instance, or a NullLogger if none was injected.
-     */
-    private function getLogger(): LoggerInterface
-    {
-        return $this->logger ?? new NullLogger();
+    public function __construct(
+        private readonly PaymentDataProvider $dataProvider,
+        private readonly PaymentIdGenerator $idGenerator,
+        ?LoggerInterface $logger = null,
+    ) {
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -43,14 +40,14 @@ final readonly class PaymentBatchBuilder
      */
     public function buildBatch(ProcessPaymentRequest $request): PaymentBatchContext
     {
-        $this->getLogger()->info('Building payment batch', [
+        $this->logger->info('Building payment batch', [
             'tenantId' => $request->tenantId,
             'invoiceCount' => count($request->vendorBillIds),
             'paymentMethod' => $request->paymentMethod,
         ]);
 
         // Generate a unique batch ID
-        $paymentBatchId = $this->generateBatchId();
+        $paymentBatchId = $this->idGenerator->generateBatchId();
 
         // Use data provider to build the context
         $context = $this->dataProvider->buildBatchContext(
@@ -62,7 +59,7 @@ final readonly class PaymentBatchBuilder
             calculateDiscounts: $request->takeEarlyPaymentDiscount,
         );
 
-        $this->getLogger()->info('Payment batch built successfully', [
+        $this->logger->info('Payment batch built successfully', [
             'batchId' => $context->paymentBatchId,
             'totalAmountCents' => $context->totalAmountCents,
             'netAmountCents' => $context->netAmountCents,
@@ -222,14 +219,6 @@ final readonly class PaymentBatchBuilder
     }
 
     /**
-     * Generate a unique batch ID.
-     */
-    private function generateBatchId(): string
-    {
-        return 'PAY-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
-    }
-
-    /**
      * Group vendor bills by optimal payment method.
      *
      * @param string $tenantId
@@ -238,11 +227,25 @@ final readonly class PaymentBatchBuilder
      */
     private function groupByOptimalPaymentMethod(string $tenantId, array $vendorBillIds): array
     {
-        // This would typically use data from vendors to determine optimal method
-        // For now, return all as 'wire' - in production, query vendor preferences
-        return [
-            'wire' => $vendorBillIds,
-        ];
+        // Query vendor bills and determine optimal payment method for each vendor
+        $bills = $this->dataProvider->getBillsByIds($tenantId, $vendorBillIds);
+        $grouped = [];
+        
+        foreach ($bills as $bill) {
+            $billId = $bill['id'] ?? null;
+            if (!$billId) {
+                continue;
+            }
+            
+            // Determine optimal payment method based on vendor preferences and location
+            // For international vendors, use 'wire'; for domestic, use 'ach' or 'check'
+            $isInternational = $bill['vendorCountry'] !== $bill['tenantCountry'];
+            $paymentMethod = $isInternational ? 'wire' : ($bill['vendorPreferredMethod'] ?? 'ach');
+            
+            $grouped[$paymentMethod][] = $billId;
+        }
+        
+        return $grouped;
     }
 
     /**
@@ -254,10 +257,18 @@ final readonly class PaymentBatchBuilder
      */
     private function groupByVendor(string $tenantId, array $vendorBillIds): array
     {
-        // This would typically query vendor bills and group by vendor ID
-        // For now, return all in one group - in production, query bills and group
-        return [
-            'default' => $vendorBillIds,
-        ];
+        // Query vendor bills and group by vendor ID
+        $bills = $this->dataProvider->getBillsByIds($tenantId, $vendorBillIds);
+        $grouped = [];
+        
+        foreach ($bills as $bill) {
+            $vendorId = $bill['vendorId'] ?? null;
+            $billId = $bill['id'] ?? null;
+            if ($vendorId && $billId) {
+                $grouped[$vendorId][] = $billId;
+            }
+        }
+        
+        return $grouped;
     }
 }

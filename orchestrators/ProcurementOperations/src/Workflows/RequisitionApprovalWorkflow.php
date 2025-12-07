@@ -155,7 +155,7 @@ final class RequisitionApprovalWorkflow extends AbstractSaga implements SagaInte
                 'requisitionId' => $requisitionId,
                 'action' => 'submit',
             ]),
-            metadata: ['submittedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['submittedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->execute($context);
@@ -180,7 +180,7 @@ final class RequisitionApprovalWorkflow extends AbstractSaga implements SagaInte
                 'decision' => $decision,
                 'comments' => $comments,
             ],
-            metadata: ['decidedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['decidedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         // Resume from pending approval step
@@ -206,7 +206,7 @@ final class RequisitionApprovalWorkflow extends AbstractSaga implements SagaInte
                 'delegateeId' => $delegateeId,
                 'reason' => $reason,
             ],
-            metadata: ['delegatedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['delegatedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->resume($requisitionId, $context->data);
@@ -229,7 +229,7 @@ final class RequisitionApprovalWorkflow extends AbstractSaga implements SagaInte
                 'action' => 'escalate',
                 'reason' => $reason,
             ],
-            metadata: ['escalatedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['escalatedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->resume($requisitionId, $context->data);
@@ -252,7 +252,7 @@ final class RequisitionApprovalWorkflow extends AbstractSaga implements SagaInte
                 'action' => 'cancel',
                 'reason' => $reason,
             ],
-            metadata: ['cancelledAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['cancelledAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->cancel($requisitionId, $context->data);

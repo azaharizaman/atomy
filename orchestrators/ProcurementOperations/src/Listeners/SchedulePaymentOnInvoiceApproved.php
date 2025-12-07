@@ -21,13 +21,17 @@ use Psr\Log\NullLogger;
  * 3. Calculates optimal payment date based on payment terms
  * 4. Schedules payment via PaymentProcessingCoordinator
  */
-final readonly class SchedulePaymentOnInvoiceApproved
+final class SchedulePaymentOnInvoiceApproved
 {
+    private LoggerInterface $logger;
+
     public function __construct(
-        private PaymentProcessingCoordinatorInterface $paymentCoordinator,
-        private PaymentDataProvider $dataProvider,
-        private ?LoggerInterface $logger = null,
-    ) {}
+        private readonly PaymentProcessingCoordinatorInterface $paymentCoordinator,
+        private readonly PaymentDataProvider $dataProvider,
+        ?LoggerInterface $logger = null,
+    ) {
+        $this->logger = $logger ?? new NullLogger();
+    }
 
     /**
      * Get the logger instance, or a NullLogger if none was injected.
@@ -58,7 +62,7 @@ final readonly class SchedulePaymentOnInvoiceApproved
 
         // Check if auto-scheduling is enabled
         if (!$this->isAutoSchedulingEnabled($event->tenantId, $event->vendorId)) {
-            $this->getLogger()->debug('Auto-scheduling disabled for vendor', [
+            $this->logger->debug('Auto-scheduling disabled for vendor', [
                 'tenantId' => $event->tenantId,
                 'vendorId' => $event->vendorId,
             ]);
@@ -71,7 +75,7 @@ final readonly class SchedulePaymentOnInvoiceApproved
         // Get default bank account for tenant
         $bankAccountId = $this->getDefaultBankAccount($event->tenantId);
         if ($bankAccountId === null) {
-            $this->getLogger()->warning('No default bank account configured, skipping auto-schedule', [
+            $this->logger->warning('No default bank account configured, skipping auto-schedule', [
                 'tenantId' => $event->tenantId,
             ]);
             return;
@@ -88,14 +92,14 @@ final readonly class SchedulePaymentOnInvoiceApproved
                 scheduledBy: 'system',
             );
 
-            $this->getLogger()->info('Payment scheduled for approved invoice', [
+            $this->logger->info('Payment scheduled for approved invoice', [
                 'tenantId' => $event->tenantId,
                 'invoiceId' => $event->invoiceId,
                 'scheduledDate' => $paymentDate->format('Y-m-d'),
                 'paymentResult' => $result->status->value,
             ]);
         } catch (\Throwable $e) {
-            $this->getLogger()->error('Failed to schedule payment for approved invoice', [
+            $this->logger->error('Failed to schedule payment for approved invoice', [
                 'tenantId' => $event->tenantId,
                 'invoiceId' => $event->invoiceId,
                 'error' => $e->getMessage(),
@@ -108,9 +112,8 @@ final readonly class SchedulePaymentOnInvoiceApproved
      */
     private function isAutoSchedulingEnabled(string $tenantId, string $vendorId): bool
     {
-        // In a real implementation, this would check tenant settings
-        // and vendor-specific configuration
-        return true;
+        // Query tenant settings and vendor-specific configuration
+        return $this->dataProvider->isAutoPaymentSchedulingEnabled($tenantId, $vendorId);
     }
 
     /**
@@ -132,7 +135,7 @@ final readonly class SchedulePaymentOnInvoiceApproved
 
             // If discount is still available, schedule for discount date
             if ($discountDate > $today) {
-                $this->getLogger()->debug('Scheduling for early payment discount', [
+                $this->logger->debug('Scheduling for early payment discount', [
                     'discountPercent' => $event->earlyPaymentDiscountPercent,
                     'discountDate' => $discountDate->format('Y-m-d'),
                 ]);
@@ -157,8 +160,8 @@ final readonly class SchedulePaymentOnInvoiceApproved
      */
     private function getDefaultBankAccount(string $tenantId): ?string
     {
-        // In a real implementation, query tenant settings
-        return 'default-bank-account';
+        // Query tenant settings for default bank account via data provider
+        return $this->dataProvider->getDefaultBankAccount($tenantId);
     }
 
     /**
@@ -166,7 +169,7 @@ final readonly class SchedulePaymentOnInvoiceApproved
      */
     private function getDefaultPaymentMethod(string $tenantId): string
     {
-        // In a real implementation, query tenant settings
-        return 'bank_transfer';
+        // Query tenant settings for default payment method via data provider
+        return $this->dataProvider->getDefaultPaymentMethod($tenantId);
     }
 }
