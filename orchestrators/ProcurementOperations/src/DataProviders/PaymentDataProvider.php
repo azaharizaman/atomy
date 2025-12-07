@@ -201,4 +201,109 @@ final readonly class PaymentDataProvider
 
         return $duplicates;
     }
+
+    /**
+     * Get vendor bills by IDs with minimal data for grouping operations.
+     *
+     * @param string $tenantId Tenant ID (reserved for future multi-tenant filtering)
+     * @param array<string> $vendorBillIds
+     * @return array<array{
+     *     id: string,
+     *     vendorId: string,
+     *     vendorCountry: ?string,
+     *     tenantCountry: ?string,
+     *     vendorPreferredMethod: ?string
+     * }>
+     */
+    public function getBillsByIds(string $tenantId, array $vendorBillIds): array
+    {
+        $bills = [];
+
+        foreach ($vendorBillIds as $billId) {
+            $bill = $this->vendorBillQuery->findById($billId);
+
+            if ($bill === null) {
+                continue;
+            }
+
+            // Get vendor information for payment method determination
+            $vendorCountry = null;
+            $vendorPreferredMethod = null;
+            if ($this->vendorQuery !== null) {
+                $vendor = $this->vendorQuery->findById($bill->getVendorId());
+                if ($vendor !== null) {
+                    $vendorCountry = $vendor->getCountry();
+                    $vendorPreferredMethod = $vendor->getPreferredPaymentMethod();
+                }
+            }
+
+            $bills[] = [
+                'id' => $bill->getId(),
+                'vendorId' => $bill->getVendorId(),
+                'vendorCountry' => $vendorCountry,
+                'tenantCountry' => 'MY', // TODO: Get from tenant configuration by $tenantId
+                'vendorPreferredMethod' => $vendorPreferredMethod,
+            ];
+        }
+
+        return $bills;
+    }
+
+    /**
+     * Check if auto payment scheduling is enabled for tenant/vendor.
+     *
+     * @param string $tenantId Tenant ID (will be used for tenant-specific settings query)
+     * @param string $vendorId Vendor ID (will be used for vendor-specific configuration)
+     */
+    public function isAutoPaymentSchedulingEnabled(string $tenantId, string $vendorId): bool
+    {
+        // TODO: Query tenant settings and vendor-specific configuration
+        // For now, return false to prevent unintended auto-scheduling
+        return false;
+    }
+
+    /**
+     * Get default bank account for tenant.
+     *
+     * @param string $tenantId Tenant ID (will be used to query tenant settings)
+     */
+    public function getDefaultBankAccount(string $tenantId): ?string
+    {
+        // TODO: Query tenant settings for default bank account
+        // Return null if not configured
+        return null;
+    }
+
+    /**
+     * Get default payment method for tenant.
+     *
+     * @param string $tenantId Tenant ID (will be used to query tenant settings)
+     */
+    public function getDefaultPaymentMethod(string $tenantId): string
+    {
+        // TODO: Query tenant settings by $tenantId for default payment method
+        // Return a configurable default per tenant
+        return 'bank_transfer';
+    }
+
+    /**
+     * Get batch data by batch ID.
+     *
+     * @param string $tenantId Tenant ID (will be used for tenant-scoped batch retrieval)
+     * @param string $paymentBatchId Batch ID to retrieve
+     * @return array{
+     *     vendorBillIds: array<string>,
+     *     totalAmountCents: int,
+     *     currency: string,
+     *     netAmountCents: int,
+     *     discountCents: int
+     * }|null
+     */
+    public function getBatchById(string $tenantId, string $paymentBatchId): ?array
+    {
+        // TODO: Implement batch storage/retrieval
+        // This would typically query a payment batch repository
+        // For now, return null to indicate batch not found
+        return null;
+    }
 }
