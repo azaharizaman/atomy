@@ -26,10 +26,14 @@ final readonly class PaymentBatchBuilder
     public function __construct(
         private PaymentDataProvider $dataProvider,
         private ?LoggerInterface $logger = null,
-    ) {
-        if ($this->logger === null) {
-            $this->logger = new NullLogger();
-        }
+    ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
     }
 
     /**
@@ -39,7 +43,7 @@ final readonly class PaymentBatchBuilder
      */
     public function buildBatch(ProcessPaymentRequest $request): PaymentBatchContext
     {
-        $this->logger->info('Building payment batch', [
+        $this->getLogger()->info('Building payment batch', [
             'tenantId' => $request->tenantId,
             'invoiceCount' => count($request->vendorBillIds),
             'paymentMethod' => $request->paymentMethod,
@@ -58,7 +62,7 @@ final readonly class PaymentBatchBuilder
             calculateDiscounts: $request->takeEarlyPaymentDiscount,
         );
 
-        $this->logger->info('Payment batch built successfully', [
+        $this->getLogger()->info('Payment batch built successfully', [
             'batchId' => $context->paymentBatchId,
             'totalAmountCents' => $context->totalAmountCents,
             'netAmountCents' => $context->netAmountCents,

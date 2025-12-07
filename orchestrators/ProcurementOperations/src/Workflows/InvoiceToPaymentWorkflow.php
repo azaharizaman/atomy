@@ -108,6 +108,7 @@ final class InvoiceToPaymentWorkflow extends AbstractSaga implements SagaInterfa
             vendorId: $vendorId,
             amountCents: $amountCents,
             initiatedBy: $context->userId,
+            startedAt: new \DateTimeImmutable(),
         ));
 
         // Execute base saga logic
@@ -128,6 +129,7 @@ final class InvoiceToPaymentWorkflow extends AbstractSaga implements SagaInterfa
                 invoiceId: $invoiceId,
                 failureReason: $result->errorMessage,
                 failedStep: $result->data['failedStep'] ?? null,
+                failedAt: new \DateTimeImmutable(),
             ));
         }
 

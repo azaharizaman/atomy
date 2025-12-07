@@ -38,10 +38,14 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         private PaymentIdGenerator $idGenerator,
         private ?EventDispatcherInterface $eventDispatcher = null,
         private ?LoggerInterface $logger = null,
-    ) {
-        if ($this->logger === null) {
-            $this->logger = new NullLogger();
-        }
+    ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
     }
 
     /**
@@ -51,7 +55,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     public function process(ProcessPaymentRequest $request): PaymentResult
     {
-        $this->logger->info('Processing payment request', [
+        $this->getLogger()->info('Processing payment request', [
             'tenantId' => $request->tenantId,
             'invoiceCount' => count($request->vendorBillIds),
             'paymentMethod' => $request->paymentMethod,
@@ -92,7 +96,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         string $bankAccountId,
         string $scheduledBy,
     ): PaymentResult {
-        $this->logger->info('Scheduling payment', [
+        $this->getLogger()->info('Scheduling payment', [
             'tenantId' => $tenantId,
             'scheduledDate' => $scheduledDate->format('Y-m-d'),
             'vendorBillCount' => count($vendorBillIds),
@@ -127,7 +131,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
             scheduledBy: $scheduledBy,
         ));
 
-        $this->logger->info('Payment scheduled successfully', [
+        $this->getLogger()->info('Payment scheduled successfully', [
             'paymentId' => $paymentId,
             'batchId' => $batchId,
             'scheduledDate' => $scheduledDate->format('Y-m-d'),
@@ -156,7 +160,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     public function executeBatch(string $tenantId, string $paymentBatchId, string $executedBy): PaymentResult
     {
-        $this->logger->info('Executing payment batch', [
+        $this->getLogger()->info('Executing payment batch', [
             'tenantId' => $tenantId,
             'batchId' => $paymentBatchId,
         ]);
@@ -179,7 +183,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
             journalEntryId: $journalEntryId,
         ));
 
-        $this->logger->info('Payment batch executed', [
+        $this->getLogger()->info('Payment batch executed', [
             'paymentId' => $paymentId,
             'batchId' => $paymentBatchId,
             'journalEntryId' => $journalEntryId,
@@ -205,7 +209,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     public function cancel(string $tenantId, string $paymentId, string $cancelledBy, string $reason): PaymentResult
     {
-        $this->logger->info('Cancelling payment', [
+        $this->getLogger()->info('Cancelling payment', [
             'tenantId' => $tenantId,
             'paymentId' => $paymentId,
             'reason' => $reason,
@@ -224,7 +228,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     public function void(string $tenantId, string $paymentId, string $voidedBy, string $reason): PaymentResult
     {
-        $this->logger->info('Voiding payment', [
+        $this->getLogger()->info('Voiding payment', [
             'tenantId' => $tenantId,
             'paymentId' => $paymentId,
             'reason' => $reason,
@@ -272,7 +276,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     private function executePayment(ProcessPaymentRequest $request, PaymentBatchContext $context): PaymentResult
     {
-        $this->logger->info('Executing immediate payment', [
+        $this->getLogger()->info('Executing immediate payment', [
             'batchId' => $context->paymentBatchId,
             'netAmountCents' => $context->netAmountCents,
         ]);
@@ -295,7 +299,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
             journalEntryId: $journalEntryId,
         ));
 
-        $this->logger->info('Payment executed successfully', [
+        $this->getLogger()->info('Payment executed successfully', [
             'paymentId' => $paymentId,
             'batchId' => $context->paymentBatchId,
             'journalEntryId' => $journalEntryId,

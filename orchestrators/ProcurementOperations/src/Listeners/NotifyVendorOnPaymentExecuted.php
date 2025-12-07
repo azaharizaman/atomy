@@ -26,10 +26,14 @@ final readonly class NotifyVendorOnPaymentExecuted
         private ?NotificationManagerInterface $notifier = null,
         private ?PartyQueryInterface $partyQuery = null,
         private ?LoggerInterface $logger = null,
-    ) {
-        if ($this->logger === null) {
-            $this->logger = new NullLogger();
-        }
+    ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
     }
 
     /**
@@ -46,11 +50,11 @@ final readonly class NotifyVendorOnPaymentExecuted
     public function handle(PaymentExecutedEvent $event): void
     {
         if ($this->notifier === null) {
-            $this->logger->debug('Notification manager not configured, skipping vendor notification');
+            $this->getLogger()->debug('Notification manager not configured, skipping vendor notification');
             return;
         }
 
-        $this->logger->info('Sending payment notification to vendors', [
+        $this->getLogger()->info('Sending payment notification to vendors', [
             'tenantId' => $event->tenantId,
             'paymentId' => $event->paymentId,
             'invoiceCount' => count($event->vendorBillIds),
@@ -87,7 +91,7 @@ final readonly class NotifyVendorOnPaymentExecuted
             $vendorContact = $this->getVendorContact($vendorId, $event->tenantId);
 
             if ($vendorContact === null) {
-                $this->logger->warning('No contact information found for vendor', [
+                $this->getLogger()->warning('No contact information found for vendor', [
                     'vendorId' => $vendorId,
                 ]);
                 return;
@@ -114,13 +118,13 @@ final readonly class NotifyVendorOnPaymentExecuted
                 ],
             );
 
-            $this->logger->info('Payment notification sent to vendor', [
+            $this->getLogger()->info('Payment notification sent to vendor', [
                 'vendorId' => $vendorId,
                 'paymentId' => $event->paymentId,
                 'channel' => 'email',
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to send payment notification to vendor', [
+            $this->getLogger()->error('Failed to send payment notification to vendor', [
                 'vendorId' => $vendorId,
                 'paymentId' => $event->paymentId,
                 'error' => $e->getMessage(),
@@ -137,7 +141,7 @@ final readonly class NotifyVendorOnPaymentExecuted
     private function getVendorContact(string $vendorId, string $tenantId): ?array
     {
         if ($this->partyQuery === null) {
-            $this->logger->warning('Party query not configured, cannot send vendor notification', [
+            $this->getLogger()->warning('Party query not configured, cannot send vendor notification', [
                 'vendorId' => $vendorId,
             ]);
             return null;
@@ -155,7 +159,7 @@ final readonly class NotifyVendorOnPaymentExecuted
                 'email' => $party->getEmail(),
             ];
         } catch (\Throwable $e) {
-            $this->logger->warning('Failed to fetch vendor contact', [
+            $this->getLogger()->warning('Failed to fetch vendor contact', [
                 'vendorId' => $vendorId,
                 'error' => $e->getMessage(),
             ]);
