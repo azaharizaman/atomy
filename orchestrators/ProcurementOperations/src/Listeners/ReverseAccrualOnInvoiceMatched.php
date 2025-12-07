@@ -62,24 +62,25 @@ final readonly class ReverseAccrualOnInvoiceMatched
             $receivedAmount = Money::fromCents($event->receivedAmountCents, $event->currency);
 
             // 1. Reverse the GR-IR accrual entries for all matched GRs
-            foreach ($event->matchedGoodsReceiptIds as $goodsReceiptId) {
-                $this->reverseGoodsReceiptAccrual($event, $goodsReceiptId);
-            }
+            $this->accrualService->reverseAccrualOnMatch(
+                tenantId: $event->tenantId,
+                vendorBillId: $event->vendorBillId,
+                goodsReceiptIds: $event->matchedGoodsReceiptIds,
+                postedBy: $event->matchedBy,
+            );
 
             // 2. Post the final AP liability
             $this->accrualService->postPayableLiability(
+                tenantId: $event->tenantId,
                 vendorBillId: $event->vendorBillId,
-                purchaseOrderId: $event->purchaseOrderId,
                 vendorId: $event->vendorId,
-                amount: $invoiceAmount,
-                matchedAt: $event->matchedAt,
+                amountCents: $event->invoiceAmountCents,
+                currency: $event->currency,
+                postedBy: $event->matchedBy,
             );
 
             // 3. Handle price variance if exists
             $varianceAmount = $invoiceAmount->subtract($receivedAmount);
-            if (!$varianceAmount->isZero()) {
-                $this->postPriceVariance($event, $varianceAmount);
-            }
 
             $this->logger->info('Successfully processed accrual reversal and AP recognition', [
                 'vendor_bill_id' => $event->vendorBillId,
@@ -110,52 +111,5 @@ final readonly class ReverseAccrualOnInvoiceMatched
                 message: 'Unexpected error: ' . $e->getMessage(),
             );
         }
-    }
-
-    /**
-     * Reverse the GR-IR accrual for a specific goods receipt.
-     */
-    private function reverseGoodsReceiptAccrual(
-        InvoiceMatchedEvent $event,
-        string $goodsReceiptId,
-    ): void {
-        $this->logger->debug('Reversing accrual for goods receipt', [
-            'vendor_bill_id' => $event->vendorBillId,
-            'goods_receipt_id' => $goodsReceiptId,
-        ]);
-
-        $this->accrualService->reverseAccrualOnMatch(
-            goodsReceiptId: $goodsReceiptId,
-            vendorBillId: $event->vendorBillId,
-            matchedAt: $event->matchedAt,
-        );
-    }
-
-    /**
-     * Post price variance entry.
-     *
-     * Variance = Invoice Amount - Received Amount (GR value)
-     *
-     * If positive (invoice > GR): Unfavorable variance
-     *   DR: Purchase Price Variance
-     *   CR: Accounts Payable (additional)
-     *
-     * If negative (invoice < GR): Favorable variance
-     *   DR: Accounts Payable (reduction)
-     *   CR: Purchase Price Variance
-     */
-    private function postPriceVariance(
-        InvoiceMatchedEvent $event,
-        Money $varianceAmount,
-    ): void {
-        $this->logger->info('Posting price variance entry', [
-            'vendor_bill_id' => $event->vendorBillId,
-            'variance_amount' => $varianceAmount->formatSimple(),
-            'variance_type' => $varianceAmount->isPositive() ? 'unfavorable' : 'favorable',
-        ]);
-
-        // The accrual service handles the variance posting
-        // as part of the AP liability posting (net effect)
-        // This is logged for auditing purposes
     }
 }

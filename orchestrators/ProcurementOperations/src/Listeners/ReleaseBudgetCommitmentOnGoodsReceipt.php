@@ -106,7 +106,7 @@ final readonly class ReleaseBudgetCommitmentOnGoodsReceipt
             $this->logger->error('Failed to release budget commitment', [
                 'purchase_order_id' => $event->purchaseOrderId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'error_code' => $e->getCode(),
             ]);
 
             // Don't re-throw - budget release failure shouldn't block goods receipt

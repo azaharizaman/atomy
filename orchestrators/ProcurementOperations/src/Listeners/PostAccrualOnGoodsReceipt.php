@@ -60,11 +60,11 @@ final readonly class PostAccrualOnGoodsReceipt
 
             // Post the GR-IR accrual entry
             $this->accrualService->postGoodsReceiptAccrual(
+                tenantId: $event->tenantId,
                 goodsReceiptId: $event->goodsReceiptId,
                 purchaseOrderId: $event->purchaseOrderId,
-                vendorId: $event->vendorId,
-                amount: $receivedValue,
-                receivedAt: $event->receivedAt,
+                lineItems: $event->lineItems,
+                postedBy: $event->receivedBy,
             );
 
             $this->logger->info('Successfully posted GR-IR accrual entry', [
@@ -86,7 +86,7 @@ final readonly class PostAccrualOnGoodsReceipt
             $this->logger->error('Unexpected error during accrual posting', [
                 'goods_receipt_id' => $event->goodsReceiptId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'error_code' => $e->getCode(),
             ]);
 
             throw AccrualException::postingFailed(
