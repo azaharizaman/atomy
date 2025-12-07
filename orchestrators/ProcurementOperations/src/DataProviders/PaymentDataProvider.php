@@ -205,6 +205,7 @@ final readonly class PaymentDataProvider
     /**
      * Get vendor bills by IDs with minimal data for grouping operations.
      *
+     * @param string $tenantId Tenant ID (reserved for future multi-tenant filtering)
      * @param array<string> $vendorBillIds
      * @return array<array{
      *     id: string,
@@ -240,7 +241,7 @@ final readonly class PaymentDataProvider
                 'id' => $bill->getId(),
                 'vendorId' => $bill->getVendorId(),
                 'vendorCountry' => $vendorCountry,
-                'tenantCountry' => 'MY', // TODO: Get from tenant settings
+                'tenantCountry' => 'MY', // TODO: Get from tenant configuration by $tenantId
                 'vendorPreferredMethod' => $vendorPreferredMethod,
             ];
         }
@@ -250,6 +251,9 @@ final readonly class PaymentDataProvider
 
     /**
      * Check if auto payment scheduling is enabled for tenant/vendor.
+     *
+     * @param string $tenantId Tenant ID (will be used for tenant-specific settings query)
+     * @param string $vendorId Vendor ID (will be used for vendor-specific configuration)
      */
     public function isAutoPaymentSchedulingEnabled(string $tenantId, string $vendorId): bool
     {
@@ -260,6 +264,8 @@ final readonly class PaymentDataProvider
 
     /**
      * Get default bank account for tenant.
+     *
+     * @param string $tenantId Tenant ID (will be used to query tenant settings)
      */
     public function getDefaultBankAccount(string $tenantId): ?string
     {
@@ -270,17 +276,21 @@ final readonly class PaymentDataProvider
 
     /**
      * Get default payment method for tenant.
+     *
+     * @param string $tenantId Tenant ID (will be used to query tenant settings)
      */
     public function getDefaultPaymentMethod(string $tenantId): string
     {
-        // TODO: Query tenant settings for default payment method
-        // Return a safe default
+        // TODO: Query tenant settings by $tenantId for default payment method
+        // Return a configurable default per tenant
         return 'bank_transfer';
     }
 
     /**
      * Get batch data by batch ID.
      *
+     * @param string $tenantId Tenant ID (will be used for tenant-scoped batch retrieval)
+     * @param string $paymentBatchId Batch ID to retrieve
      * @return array{
      *     vendorBillIds: array<string>,
      *     totalAmountCents: int,
