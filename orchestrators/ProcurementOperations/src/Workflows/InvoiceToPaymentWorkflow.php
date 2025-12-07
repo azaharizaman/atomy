@@ -155,7 +155,7 @@ final class InvoiceToPaymentWorkflow extends AbstractSaga implements SagaInterfa
                 'invoiceId' => $invoiceId,
                 'vendorId' => $vendorId,
             ]),
-            metadata: ['receivedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['receivedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->execute($context);
@@ -183,7 +183,7 @@ final class InvoiceToPaymentWorkflow extends AbstractSaga implements SagaInterfa
                 'purchaseOrderId' => $purchaseOrderId,
                 'autoMatch' => true,
             ]),
-            metadata: ['receivedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['receivedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->execute($context);
@@ -208,7 +208,7 @@ final class InvoiceToPaymentWorkflow extends AbstractSaga implements SagaInterfa
                 'decision' => $decision,
                 'comments' => $comments,
             ],
-            metadata: ['decidedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['decidedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->resume($invoiceId, $context->data);
@@ -237,7 +237,7 @@ final class InvoiceToPaymentWorkflow extends AbstractSaga implements SagaInterfa
                 'adjustedAmountCents' => $adjustedAmountCents,
                 'reason' => $reason,
             ],
-            metadata: ['resolvedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['resolvedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->resume($invoiceId, $context->data);
@@ -260,11 +260,11 @@ final class InvoiceToPaymentWorkflow extends AbstractSaga implements SagaInterfa
             data: [
                 'invoiceId' => $invoiceId,
                 'action' => 'schedule_payment',
-                'paymentDate' => $paymentDate->format(\DateTimeInterface::ISO8601),
+                'paymentDate' => $paymentDate->format(\DateTimeInterface::ATOM),
                 'paymentMethod' => $paymentMethod,
                 'bankAccountId' => $bankAccountId,
             ],
-            metadata: ['scheduledAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['scheduledAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->resume($invoiceId, $context->data);
@@ -290,7 +290,7 @@ final class InvoiceToPaymentWorkflow extends AbstractSaga implements SagaInterfa
                 'bankAccountId' => $bankAccountId,
                 'immediate' => true,
             ],
-            metadata: ['executedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['executedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->resume($invoiceId, $context->data);
@@ -313,7 +313,7 @@ final class InvoiceToPaymentWorkflow extends AbstractSaga implements SagaInterfa
                 'action' => 'cancel',
                 'reason' => $reason,
             ],
-            metadata: ['cancelledAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601)],
+            metadata: ['cancelledAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
         );
 
         return $this->cancel($invoiceId, $context->data);

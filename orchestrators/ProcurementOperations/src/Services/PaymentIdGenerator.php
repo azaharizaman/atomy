@@ -16,13 +16,16 @@ final readonly class PaymentIdGenerator
     /**
      * Generate a unique payment batch ID.
      */
-    public function generateBatchId(): string
+    public function generateBatchId(?\DateTimeImmutable $now = null): string
     {
-        return 'PAY-BATCH-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+        $now = $now ?? new \DateTimeImmutable();
+        return 'PAY-BATCH-' . $now->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
     }
 
     /**
      * Generate a unique payment ID.
+     *
+     * Note: Payment ID does not include timestamp for brevity.
      */
     public function generatePaymentId(): string
     {
@@ -32,16 +35,18 @@ final readonly class PaymentIdGenerator
     /**
      * Generate a payment reference number.
      */
-    public function generatePaymentReference(): string
+    public function generatePaymentReference(?\DateTimeImmutable $now = null): string
     {
-        return 'REF-' . date('YmdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+        $now = $now ?? new \DateTimeImmutable();
+        return 'REF-' . $now->format('YmdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
     }
 
     /**
      * Generate a journal entry ID.
      */
-    public function generateJournalEntryId(): string
+    public function generateJournalEntryId(?\DateTimeImmutable $now = null): string
     {
-        return 'JE-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+        $now = $now ?? new \DateTimeImmutable();
+        return 'JE-' . $now->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
     }
 }
