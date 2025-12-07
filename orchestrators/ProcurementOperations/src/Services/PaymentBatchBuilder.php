@@ -239,7 +239,9 @@ final class PaymentBatchBuilder
             
             // Determine optimal payment method based on vendor preferences and location
             // For international vendors, use 'wire'; for domestic, use 'ach' or 'check'
-            $isInternational = $bill['vendorCountry'] !== $bill['tenantCountry'];
+            $vendorCountry = $bill['vendorCountry'] ?? null;
+            $tenantCountry = $bill['tenantCountry'] ?? null;
+            $isInternational = ($vendorCountry !== null && $tenantCountry !== null && $vendorCountry !== $tenantCountry);
             $paymentMethod = $isInternational ? 'wire' : ($bill['vendorPreferredMethod'] ?? 'ach');
             
             $grouped[$paymentMethod][] = $billId;

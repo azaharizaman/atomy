@@ -210,7 +210,9 @@ final class UpdateVendorLedgerOnPayment
         $remainder = $event->totalAmountCents % $invoiceCount;
 
         // Distribute the remainder to the first invoice in the list
-        if ($vendorBillId === $event->vendorBillIds[0]) {
+        // Check if vendorBillId matches the first element
+        $firstBillId = reset($event->vendorBillIds);
+        if ($firstBillId !== false && $vendorBillId === $firstBillId) {
             return $baseAmount + $remainder;
         }
         return $baseAmount;
