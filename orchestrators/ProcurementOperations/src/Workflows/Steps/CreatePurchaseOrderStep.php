@@ -21,8 +21,16 @@ final readonly class CreatePurchaseOrderStep implements SagaStepInterface
 {
     public function __construct(
         private PurchaseOrderManagerInterface $poManager,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     public function getId(): string
     {
@@ -41,7 +49,7 @@ final readonly class CreatePurchaseOrderStep implements SagaStepInterface
 
     public function execute(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->info('Creating purchase order', [
+        $this->getLogger()->info('Creating purchase order', [
             'saga_instance_id' => $context->sagaInstanceId,
             'tenant_id' => $context->tenantId,
         ]);
@@ -72,7 +80,7 @@ final readonly class CreatePurchaseOrderStep implements SagaStepInterface
                 'total_amount' => $purchaseOrder->getTotalAmount(),
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to create purchase order', [
+            $this->getLogger()->error('Failed to create purchase order', [
                 'error' => $e->getMessage(),
             ]);
 
@@ -85,7 +93,7 @@ final readonly class CreatePurchaseOrderStep implements SagaStepInterface
 
     public function compensate(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->info('Compensating: Cancelling purchase order', [
+        $this->getLogger()->info('Compensating: Cancelling purchase order', [
             'saga_instance_id' => $context->sagaInstanceId,
         ]);
 
@@ -107,7 +115,7 @@ final readonly class CreatePurchaseOrderStep implements SagaStepInterface
                 'cancelled_po_id' => $poId,
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to cancel PO during compensation', [
+            $this->getLogger()->error('Failed to cancel PO during compensation', [
                 'error' => $e->getMessage(),
             ]);
 

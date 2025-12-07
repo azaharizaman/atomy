@@ -21,8 +21,16 @@ final readonly class CreateAccrualStep implements SagaStepInterface
 {
     public function __construct(
         private AccrualServiceInterface $accrualService,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     public function getId(): string
     {
@@ -41,7 +49,7 @@ final readonly class CreateAccrualStep implements SagaStepInterface
 
     public function execute(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->info('Creating accrual entry', [
+        $this->getLogger()->info('Creating accrual entry', [
             'saga_instance_id' => $context->sagaInstanceId,
             'tenant_id' => $context->tenantId,
         ]);
@@ -79,7 +87,7 @@ final readonly class CreateAccrualStep implements SagaStepInterface
                 'accrual_date' => $accrualResult->accrualDate,
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to create accrual entry', [
+            $this->getLogger()->error('Failed to create accrual entry', [
                 'error' => $e->getMessage(),
             ]);
 
@@ -92,7 +100,7 @@ final readonly class CreateAccrualStep implements SagaStepInterface
 
     public function compensate(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->info('Compensating: Reversing accrual entry', [
+        $this->getLogger()->info('Compensating: Reversing accrual entry', [
             'saga_instance_id' => $context->sagaInstanceId,
         ]);
 
@@ -123,7 +131,7 @@ final readonly class CreateAccrualStep implements SagaStepInterface
                 'reversed_journal_entry_id' => $journalEntryId,
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to reverse accrual during compensation', [
+            $this->getLogger()->error('Failed to reverse accrual during compensation', [
                 'error' => $e->getMessage(),
             ]);
 

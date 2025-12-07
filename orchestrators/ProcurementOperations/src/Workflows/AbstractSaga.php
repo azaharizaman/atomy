@@ -30,8 +30,16 @@ abstract readonly class AbstractSaga implements SagaInterface
     public function __construct(
         protected WorkflowStorageInterface $storage,
         protected EventDispatcherInterface $eventDispatcher,
-        protected LoggerInterface $logger = new NullLogger(),
+        protected ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Execute the saga with given context.
@@ -43,7 +51,7 @@ abstract readonly class AbstractSaga implements SagaInterface
         $completedSteps = [];
         $stepOutputs = [];
 
-        $this->logger->info('Starting saga execution', [
+        $this->getLogger()->info('Starting saga execution', [
             'saga_id' => $this->getId(),
             'instance_id' => $instanceId,
             'tenant_id' => $context->tenantId,
@@ -65,7 +73,7 @@ abstract readonly class AbstractSaga implements SagaInterface
                     isCompensation: false,
                 );
 
-                $this->logger->debug('Executing saga step', [
+                $this->getLogger()->debug('Executing saga step', [
                     'step_id' => $step->getId(),
                     'step_name' => $step->getName(),
                 ]);
@@ -73,7 +81,7 @@ abstract readonly class AbstractSaga implements SagaInterface
                 $result = $this->executeStepWithRetry($step, $stepContext);
 
                 if (!$result->success) {
-                    $this->logger->warning('Saga step failed, initiating compensation', [
+                    $this->getLogger()->warning('Saga step failed, initiating compensation', [
                         'step_id' => $step->getId(),
                         'error' => $result->errorMessage,
                     ]);
@@ -114,7 +122,7 @@ abstract readonly class AbstractSaga implements SagaInterface
             // All steps completed successfully
             $this->saveState($instanceId, SagaStatus::COMPLETED, $context, $completedSteps, []);
 
-            $this->logger->info('Saga completed successfully', [
+            $this->getLogger()->info('Saga completed successfully', [
                 'saga_id' => $this->getId(),
                 'instance_id' => $instanceId,
             ]);
@@ -126,7 +134,7 @@ abstract readonly class AbstractSaga implements SagaInterface
                 data: $stepOutputs,
             );
         } catch (\Throwable $e) {
-            $this->logger->error('Saga execution failed with exception', [
+            $this->getLogger()->error('Saga execution failed with exception', [
                 'saga_id' => $this->getId(),
                 'instance_id' => $instanceId,
                 'error' => $e->getMessage(),
@@ -176,7 +184,7 @@ abstract readonly class AbstractSaga implements SagaInterface
             );
         }
 
-        $this->logger->info('Manual compensation triggered', [
+        $this->getLogger()->info('Manual compensation triggered', [
             'saga_id' => $this->getId(),
             'instance_id' => $sagaInstanceId,
             'reason' => $reason,
@@ -241,7 +249,7 @@ abstract readonly class AbstractSaga implements SagaInterface
             }
 
             $attempts++;
-            $this->logger->debug('Retrying saga step', [
+            $this->getLogger()->debug('Retrying saga step', [
                 'step_id' => $step->getId(),
                 'attempt' => $attempts,
                 'max_attempts' => $maxAttempts,
@@ -300,7 +308,7 @@ abstract readonly class AbstractSaga implements SagaInterface
                 isCompensation: true,
             );
 
-            $this->logger->debug('Compensating saga step', [
+            $this->getLogger()->debug('Compensating saga step', [
                 'step_id' => $stepId,
                 'step_name' => $step->getName(),
             ]);
@@ -310,7 +318,7 @@ abstract readonly class AbstractSaga implements SagaInterface
             if ($result->success) {
                 $compensatedSteps[] = $stepId;
             } else {
-                $this->logger->error('Step compensation failed', [
+                $this->getLogger()->error('Step compensation failed', [
                     'step_id' => $stepId,
                     'error' => $result->errorMessage,
                 ]);

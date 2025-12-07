@@ -22,8 +22,16 @@ final readonly class ThreeWayMatchStep implements SagaStepInterface
 {
     public function __construct(
         private ThreeWayMatchingServiceInterface $matchingService,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     public function getId(): string
     {
@@ -42,7 +50,7 @@ final readonly class ThreeWayMatchStep implements SagaStepInterface
 
     public function execute(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->info('Performing 3-way matching', [
+        $this->getLogger()->info('Performing 3-way matching', [
             'saga_instance_id' => $context->sagaInstanceId,
             'tenant_id' => $context->tenantId,
         ]);
@@ -77,7 +85,7 @@ final readonly class ThreeWayMatchStep implements SagaStepInterface
 
             // If requires intervention, we might pause the saga
             if ($matchResult->status->requiresIntervention()) {
-                $this->logger->warning('3-way match requires intervention', [
+                $this->getLogger()->warning('3-way match requires intervention', [
                     'match_status' => $matchResult->status->value,
                     'variances' => $matchResult->variances,
                 ]);
@@ -91,7 +99,7 @@ final readonly class ThreeWayMatchStep implements SagaStepInterface
                 'requires_approval' => $matchResult->status->requiresIntervention(),
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to perform 3-way matching', [
+            $this->getLogger()->error('Failed to perform 3-way matching', [
                 'error' => $e->getMessage(),
             ]);
 
@@ -104,7 +112,7 @@ final readonly class ThreeWayMatchStep implements SagaStepInterface
 
     public function compensate(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->info('Compensating: Unmatching documents', [
+        $this->getLogger()->info('Compensating: Unmatching documents', [
             'saga_instance_id' => $context->sagaInstanceId,
         ]);
 
@@ -126,7 +134,7 @@ final readonly class ThreeWayMatchStep implements SagaStepInterface
                 'unmatched_id' => $matchId,
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to unmatch documents during compensation', [
+            $this->getLogger()->error('Failed to unmatch documents during compensation', [
                 'error' => $e->getMessage(),
             ]);
 

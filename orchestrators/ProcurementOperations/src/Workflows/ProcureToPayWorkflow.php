@@ -55,9 +55,9 @@ final class ProcureToPayWorkflow extends AbstractSaga implements SagaInterface
         private readonly array $steps,
         WorkflowStorageInterface $storage,
         EventDispatcherInterface $eventDispatcher,
-        LoggerInterface $logger = new NullLogger(),
+        ?LoggerInterface $logger = null,
     ) {
-        parent::__construct($storage, $eventDispatcher, $logger);
+        parent::__construct($storage, $eventDispatcher, $logger ?? new NullLogger());
         $this->id = 'procure_to_pay_workflow';
     }
 
@@ -73,7 +73,7 @@ final class ProcureToPayWorkflow extends AbstractSaga implements SagaInterface
         ProcessPaymentStep $processPayment,
         WorkflowStorageInterface $storage,
         EventDispatcherInterface $eventDispatcher,
-        LoggerInterface $logger = new NullLogger(),
+        ?LoggerInterface $logger = null,
     ): self {
         return new self(
             steps: [
