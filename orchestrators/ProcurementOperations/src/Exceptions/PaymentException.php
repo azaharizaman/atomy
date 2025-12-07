@@ -131,4 +131,14 @@ class PaymentException extends ProcurementOperationsException
             sprintf('Invalid payment method: %s', $method)
         );
     }
+
+    /**
+     * Create exception for validation failure.
+     */
+    public static function validationFailed(string $ruleName, string $message): self
+    {
+        return new self(
+            sprintf('Payment validation failed [%s]: %s', $ruleName, $message)
+        );
+    }
 }
