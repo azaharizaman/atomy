@@ -1,0 +1,46 @@
+{
+    "name": "nexus/procurement-operations",
+    "description": "Nexus ProcurementOperations Orchestrator - Cross-package workflow coordination for Procure-to-Pay (P2P) processes",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "nexus",
+        "orchestrator",
+        "procurement",
+        "procure-to-pay",
+        "p2p",
+        "purchase-order",
+        "goods-receipt",
+        "invoice-matching",
+        "3-way-match"
+    ],
+    "require": {
+        "php": "^8.3",
+        "nexus/procurement": "*@dev",
+        "nexus/payable": "*@dev",
+        "nexus/inventory": "*@dev",
+        "nexus/journal-entry": "*@dev",
+        "nexus/budget": "*@dev",
+        "nexus/workflow": "*@dev",
+        "nexus/party": "*@dev",
+        "nexus/period": "*@dev",
+        "nexus/currency": "*@dev",
+        "nexus/notifier": "*@dev",
+        "nexus/audit-logger": "*@dev",
+        "nexus/setting": "*@dev",
+        "psr/log": "^3.0",
+        "psr/event-dispatcher": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\ProcurementOperations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\ProcurementOperations\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
