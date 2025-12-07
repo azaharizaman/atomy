@@ -33,8 +33,8 @@ The orchestrator coordinates:
 | **Phase 1** | Foundation (Contracts, DTOs, Exceptions) | ⏳ Not Started | - | - |
 | **Phase 2** | Requisition Workflow | ⏳ Not Started | - | - |
 | **Phase 3** | Purchase Order Workflow | ⏳ Not Started | - | - |
-| **Phase 4** | Goods Receipt & GL Integration | ⏳ Not Started | - | - |
-| **Phase 5** | Three-Way Matching | ⏳ Not Started | - | - |
+| **Phase 4** | Goods Receipt & GL Integration | ✅ Complete | `feature/procurement-operations-phase-1` | - |
+| **Phase 5** | Three-Way Matching | ✅ Complete | `feature/procurement-operations-phase-1` | - |
 | **Phase 6** | Payment Processing | ⏳ Not Started | - | - |
 | **Phase 7** | Stateful Workflows (Sagas) | ⏳ Not Started | - | - |
 
@@ -263,36 +263,36 @@ Implement goods receipt recording, inventory updates, and GL accrual posting.
 
 | Component | Purpose | Status |
 |-----------|---------|--------|
-| `GoodsReceiptContextProvider` | Aggregate GR data | ⏳ |
+| `GoodsReceiptContextProvider` | Aggregate GR data | ✅ |
 
 #### 4.2 Rules
 
 | Rule | Purpose | Status |
 |------|---------|--------|
-| `QuantityToleranceRule` | Validate quantity tolerance | ⏳ |
-| `QualityCheckPassedRule` | Validate quality check | ⏳ |
-| `ExpiryDateValidRule` | Validate lot expiry | ⏳ |
-| `GoodsReceiptRuleRegistry` | Rule composition | ⏳ |
+| `QuantityToleranceRule` | Validate quantity tolerance | ✅ |
+| `QualityCheckPassedRule` | Validate quality check | ✅ |
+| `ExpiryDateValidRule` | Validate lot expiry | ✅ |
+| `GoodsReceiptRuleRegistry` | Rule composition | ✅ |
 
 #### 4.3 Services
 
 | Service | Purpose | Status |
 |---------|---------|--------|
-| `AccrualCalculationService` | Calculate GR-IR accrual | ⏳ |
+| `AccrualCalculationService` | Calculate GR-IR accrual | ✅ |
 
 #### 4.4 Coordinator
 
 | Component | Purpose | Status |
 |-----------|---------|--------|
-| `GoodsReceiptCoordinator` | Orchestrate GR workflow | ⏳ |
+| `GoodsReceiptCoordinator` | Orchestrate GR workflow | ✅ |
 
 #### 4.5 Listeners
 
 | Listener | Reacts To | Status |
 |----------|-----------|--------|
-| `UpdateInventoryOnGoodsReceipt` | `GoodsReceiptCreatedEvent` | ⏳ |
-| `PostAccrualOnGoodsReceipt` | `GoodsReceiptCreatedEvent` | ⏳ |
-| `ReleaseBudgetCommitmentOnGoodsReceipt` | `GoodsReceiptCreatedEvent` | ⏳ |
+| `UpdateInventoryOnGoodsReceipt` | `GoodsReceiptCreatedEvent` | ✅ |
+| `PostAccrualOnGoodsReceipt` | `GoodsReceiptCreatedEvent` | ✅ |
+| `ReleaseBudgetCommitmentOnGoodsReceipt` | `GoodsReceiptCreatedEvent` | ✅ |
 
 ### Estimated Effort
 
@@ -312,36 +312,36 @@ Implement PO-GR-Invoice matching with tolerance handling and variance workflows.
 
 | Component | Purpose | Status |
 |-----------|---------|--------|
-| `ThreeWayMatchContextProvider` | Aggregate PO, GR, Invoice data | ⏳ |
+| `ThreeWayMatchContextProvider` | Aggregate PO, GR, Invoice data | ✅ (Already existed as ThreeWayMatchDataProvider) |
 
 #### 5.2 Rules
 
 | Rule | Purpose | Status |
 |------|---------|--------|
-| `PriceMatchRule` | Validate price match | ⏳ |
-| `QuantityMatchRule` | Validate quantity match | ⏳ |
-| `ToleranceThresholdRule` | Check tolerance threshold | ⏳ |
-| `InvoiceMatchingRuleRegistry` | Rule composition | ⏳ |
+| `PriceMatchRule` | Validate price match | ✅ |
+| `QuantityMatchRule` | Validate quantity match | ✅ |
+| `ToleranceThresholdRule` | Check tolerance threshold | ✅ |
+| `InvoiceMatchingRuleRegistry` | Rule composition | ✅ |
 
 #### 5.3 Services
 
 | Service | Purpose | Status |
 |---------|---------|--------|
-| `ThreeWayMatchingService` | Execute 3-way matching logic | ⏳ |
+| `ThreeWayMatchingService` | Execute 3-way matching logic | ✅ |
 
 #### 5.4 Coordinator
 
 | Component | Purpose | Status |
 |-----------|---------|--------|
-| `InvoiceMatchingCoordinator` | Orchestrate matching workflow | ⏳ |
+| `InvoiceMatchingCoordinator` | Orchestrate matching workflow | ✅ |
 
 #### 5.5 Listeners
 
 | Listener | Reacts To | Status |
 |----------|-----------|--------|
-| `TriggerMatchingOnInvoiceReceived` | `VendorBillReceivedEvent` | ⏳ |
-| `ReverseAccrualOnInvoiceMatched` | `InvoiceMatchedEvent` | ⏳ |
-| `NotifyApproversOnVarianceDetected` | `InvoiceMatchFailedEvent` | ⏳ |
+| `TriggerMatchingOnInvoiceReceived` | `VendorBillReceivedEvent` | ✅ |
+| `ReverseAccrualOnInvoiceMatched` | `InvoiceMatchedEvent` | ✅ |
+| `NotifyApproversOnVarianceDetected` | `InvoiceMatchFailedEvent` | ✅ |
 
 ### Estimated Effort
 

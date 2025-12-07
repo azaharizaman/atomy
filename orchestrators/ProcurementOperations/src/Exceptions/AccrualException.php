@@ -10,17 +10,22 @@ namespace Nexus\ProcurementOperations\Exceptions;
 class AccrualException extends ProcurementOperationsException
 {
     /**
-     * Create exception for accrual posting failure.
+     * Create exception for zero amount accrual.
      */
-    public static function postingFailed(string $entityId, string $entityType, string $reason): self
+    public static function zeroAmount(string $entityId): self
     {
         return new self(
-            sprintf(
-                'Failed to post accrual for %s %s: %s',
-                $entityType,
-                $entityId,
-                $reason
-            )
+            sprintf('Cannot post accrual for zero amount: %s', $entityId)
+        );
+    }
+
+    /**
+     * Create exception for accrual posting failure.
+     */
+    public static function postingFailed(string $entityId, string $reason): self
+    {
+        return new self(
+            sprintf('Failed to post accrual for %s: %s', $entityId, $reason)
         );
     }
 

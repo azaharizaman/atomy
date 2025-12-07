@@ -82,4 +82,57 @@ class MatchingException extends ProcurementOperationsException
             sprintf('Vendor bill not found: %s', $vendorBillId)
         );
     }
+
+    /**
+     * Create exception for validation failures.
+     *
+     * @param array<string, array{message: string, data: array<string, mixed>}> $failures
+     */
+    public static function validationFailed(string $vendorBillId, array $failures): self
+    {
+        $ruleNames = array_keys($failures);
+        return new self(
+            sprintf(
+                'Invoice matching validation failed for %s. Failed rules: %s',
+                $vendorBillId,
+                implode(', ', $ruleNames)
+            )
+        );
+    }
+
+    /**
+     * Create exception for variance exceeding tolerance.
+     */
+    public static function varianceExceedsTolerance(
+        string $vendorBillId,
+        float $priceVariance,
+        float $quantityVariance,
+        float $priceTolerance,
+        float $quantityTolerance
+    ): self {
+        return new self(
+            sprintf(
+                'Variance exceeds tolerance for invoice %s. Price: %.2f%% (max %.2f%%), Qty: %.2f%% (max %.2f%%)',
+                $vendorBillId,
+                $priceVariance,
+                $priceTolerance,
+                $quantityVariance,
+                $quantityTolerance
+            )
+        );
+    }
+
+    /**
+     * Create exception for unauthorized variance approval.
+     */
+    public static function unauthorizedApproval(string $userId, string $vendorBillId): self
+    {
+        return new self(
+            sprintf(
+                'User %s is not authorized to approve variance for invoice %s',
+                $userId,
+                $vendorBillId
+            )
+        );
+    }
 }
