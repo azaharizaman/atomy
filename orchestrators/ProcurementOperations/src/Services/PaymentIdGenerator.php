@@ -24,7 +24,7 @@ final readonly class PaymentIdGenerator
 
     /**
      * Generate a unique payment ID.
-     * 
+     *
      * Note: Payment ID does not include timestamp for brevity.
      */
     public function generatePaymentId(): string
