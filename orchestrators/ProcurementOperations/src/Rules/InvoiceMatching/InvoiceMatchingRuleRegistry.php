@@ -78,7 +78,7 @@ final readonly class InvoiceMatchingRuleRegistry
         $failures = [];
 
         foreach ($results as $ruleName => $result) {
-            if ($result->failed()) {
+            if (!$result->passed) {
                 $failures[$ruleName] = [
                     'message' => $result->message,
                     'context' => $result->context,
@@ -102,7 +102,7 @@ final readonly class InvoiceMatchingRuleRegistry
         $results = $this->validate($context);
 
         foreach ($results as $result) {
-            if ($result->failed()) {
+            if (!$result->passed) {
                 return false;
             }
         }
@@ -203,7 +203,7 @@ final readonly class InvoiceMatchingRuleRegistry
         $failed = [];
 
         foreach ($results as $ruleName => $result) {
-            if ($result->failed()) {
+            if (!$result->passed) {
                 $failed[] = $ruleName;
             }
         }
