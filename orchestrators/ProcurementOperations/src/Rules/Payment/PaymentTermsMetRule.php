@@ -72,7 +72,8 @@ final readonly class PaymentTermsMetRule implements RuleInterface
 
             // Check if due date is too far in the future
             if ($dueDate > $paymentWindow) {
-                $daysUntilDue = $today->diff($dueDate)->days;
+                $diff = $today->diff($dueDate);
+                $daysUntilDue = $diff->days !== false ? $diff->days : 0;
                 $violations[] = sprintf(
                     'Invoice %s is not yet due (due in %d days on %s). Payment buffer is %d days.',
                     $invoice['id'] ?? 'unknown',

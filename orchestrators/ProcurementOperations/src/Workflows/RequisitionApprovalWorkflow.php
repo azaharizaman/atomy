@@ -110,6 +110,7 @@ final class RequisitionApprovalWorkflow extends AbstractSaga implements SagaInte
             requisitionId: $requisitionId,
             amountCents: $amountCents,
             requestorId: $requestorId,
+            startedAt: new \DateTimeImmutable(),
         ));
 
         // Execute base saga logic
@@ -129,6 +130,7 @@ final class RequisitionApprovalWorkflow extends AbstractSaga implements SagaInte
                 requisitionId: $requisitionId,
                 rejectedBy: $result->data['rejectedBy'] ?? null,
                 reason: $result->errorMessage,
+                rejectedAt: new \DateTimeImmutable(),
             ));
         }
 

@@ -14,6 +14,7 @@ use Nexus\ProcurementOperations\Events\PaymentScheduledEvent;
 use Nexus\ProcurementOperations\Exceptions\PaymentException;
 use Nexus\ProcurementOperations\Rules\Payment\PaymentRuleRegistry;
 use Nexus\ProcurementOperations\Services\PaymentBatchBuilder;
+use Nexus\ProcurementOperations\Services\PaymentIdGenerator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -34,9 +35,18 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         private PaymentDataProvider $dataProvider,
         private PaymentRuleRegistry $rules,
         private PaymentBatchBuilder $batchBuilder,
+        private PaymentIdGenerator $idGenerator,
         private ?EventDispatcherInterface $eventDispatcher = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Process a payment request.
@@ -45,7 +55,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     public function process(ProcessPaymentRequest $request): PaymentResult
     {
-        $this->logger->info('Processing payment request', [
+        $this->getLogger()->info('Processing payment request', [
             'tenantId' => $request->tenantId,
             'invoiceCount' => count($request->vendorBillIds),
             'paymentMethod' => $request->paymentMethod,
@@ -86,14 +96,14 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         string $bankAccountId,
         string $scheduledBy,
     ): PaymentResult {
-        $this->logger->info('Scheduling payment', [
+        $this->getLogger()->info('Scheduling payment', [
             'tenantId' => $tenantId,
             'scheduledDate' => $scheduledDate->format('Y-m-d'),
             'vendorBillCount' => count($vendorBillIds),
         ]);
 
         // Build batch context
-        $batchId = $this->generateBatchId();
+        $batchId = $this->idGenerator->generateBatchId();
         $context = $this->dataProvider->buildBatchContext(
             tenantId: $tenantId,
             paymentBatchId: $batchId,
@@ -106,8 +116,8 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         $this->rules->validate($context);
 
         // Generate payment reference
-        $paymentReference = $this->generatePaymentReference();
-        $paymentId = $this->generatePaymentId();
+        $paymentReference = $this->idGenerator->generatePaymentReference();
+        $paymentId = $this->idGenerator->generatePaymentId();
 
         // Dispatch event
         $this->eventDispatcher?->dispatch(new PaymentScheduledEvent(
@@ -121,7 +131,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
             scheduledBy: $scheduledBy,
         ));
 
-        $this->logger->info('Payment scheduled successfully', [
+        $this->getLogger()->info('Payment scheduled successfully', [
             'paymentId' => $paymentId,
             'batchId' => $batchId,
             'scheduledDate' => $scheduledDate->format('Y-m-d'),
@@ -150,15 +160,15 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     public function executeBatch(string $tenantId, string $paymentBatchId, string $executedBy): PaymentResult
     {
-        $this->logger->info('Executing payment batch', [
+        $this->getLogger()->info('Executing payment batch', [
             'tenantId' => $tenantId,
             'batchId' => $paymentBatchId,
         ]);
 
         $executedAt = new \DateTimeImmutable();
-        $paymentReference = $this->generatePaymentReference();
-        $paymentId = $this->generatePaymentId();
-        $journalEntryId = $this->generateJournalEntryId();
+        $paymentReference = $this->idGenerator->generatePaymentReference();
+        $paymentId = $this->idGenerator->generatePaymentId();
+        $journalEntryId = $this->idGenerator->generateJournalEntryId();
 
         // Dispatch event
         $this->eventDispatcher?->dispatch(new PaymentExecutedEvent(
@@ -173,7 +183,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
             journalEntryId: $journalEntryId,
         ));
 
-        $this->logger->info('Payment batch executed', [
+        $this->getLogger()->info('Payment batch executed', [
             'paymentId' => $paymentId,
             'batchId' => $paymentBatchId,
             'journalEntryId' => $journalEntryId,
@@ -199,7 +209,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     public function cancel(string $tenantId, string $paymentId, string $cancelledBy, string $reason): PaymentResult
     {
-        $this->logger->info('Cancelling payment', [
+        $this->getLogger()->info('Cancelling payment', [
             'tenantId' => $tenantId,
             'paymentId' => $paymentId,
             'reason' => $reason,
@@ -218,7 +228,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     public function void(string $tenantId, string $paymentId, string $voidedBy, string $reason): PaymentResult
     {
-        $this->logger->info('Voiding payment', [
+        $this->getLogger()->info('Voiding payment', [
             'tenantId' => $tenantId,
             'paymentId' => $paymentId,
             'reason' => $reason,
@@ -266,15 +276,15 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
      */
     private function executePayment(ProcessPaymentRequest $request, PaymentBatchContext $context): PaymentResult
     {
-        $this->logger->info('Executing immediate payment', [
+        $this->getLogger()->info('Executing immediate payment', [
             'batchId' => $context->paymentBatchId,
             'netAmountCents' => $context->netAmountCents,
         ]);
 
         $executedAt = new \DateTimeImmutable();
-        $paymentReference = $this->generatePaymentReference();
-        $paymentId = $this->generatePaymentId();
-        $journalEntryId = $this->generateJournalEntryId();
+        $paymentReference = $this->idGenerator->generatePaymentReference();
+        $paymentId = $this->idGenerator->generatePaymentId();
+        $journalEntryId = $this->idGenerator->generateJournalEntryId();
 
         // Dispatch event
         $this->eventDispatcher?->dispatch(new PaymentExecutedEvent(
@@ -289,7 +299,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
             journalEntryId: $journalEntryId,
         ));
 
-        $this->logger->info('Payment executed successfully', [
+        $this->getLogger()->info('Payment executed successfully', [
             'paymentId' => $paymentId,
             'batchId' => $context->paymentBatchId,
             'journalEntryId' => $journalEntryId,
@@ -310,37 +320,5 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
                 number_format($context->netAmountCents / 100, 2)
             ),
         );
-    }
-
-    /**
-     * Generate a unique batch ID.
-     */
-    private function generateBatchId(): string
-    {
-        return 'PAY-BATCH-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
-    }
-
-    /**
-     * Generate a unique payment ID.
-     */
-    private function generatePaymentId(): string
-    {
-        return 'PAY-' . strtoupper(substr(bin2hex(random_bytes(8)), 0, 16));
-    }
-
-    /**
-     * Generate a payment reference number.
-     */
-    private function generatePaymentReference(): string
-    {
-        return 'REF-' . date('YmdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
-    }
-
-    /**
-     * Generate a journal entry ID.
-     */
-    private function generateJournalEntryId(): string
-    {
-        return 'JE-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
     }
 }

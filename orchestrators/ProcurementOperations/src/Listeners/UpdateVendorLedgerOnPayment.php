@@ -26,8 +26,16 @@ final readonly class UpdateVendorLedgerOnPayment
     public function __construct(
         private ?VendorLedgerManagerInterface $vendorLedger = null,
         private ?JournalEntryManagerInterface $journalEntryManager = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Handle the payment executed event.
@@ -42,7 +50,7 @@ final readonly class UpdateVendorLedgerOnPayment
      */
     public function handle(PaymentExecutedEvent $event): void
     {
-        $this->logger->info('Processing payment execution for ledger update', [
+        $this->getLogger()->info('Processing payment execution for ledger update', [
             'tenantId' => $event->tenantId,
             'paymentId' => $event->paymentId,
             'batchId' => $event->paymentBatchId,
@@ -58,7 +66,7 @@ final readonly class UpdateVendorLedgerOnPayment
         // Mark invoices as paid
         $this->markInvoicesAsPaid($event);
 
-        $this->logger->info('Vendor ledger updated successfully', [
+        $this->getLogger()->info('Vendor ledger updated successfully', [
             'tenantId' => $event->tenantId,
             'paymentId' => $event->paymentId,
             'invoiceCount' => count($event->vendorBillIds),
@@ -71,7 +79,7 @@ final readonly class UpdateVendorLedgerOnPayment
     private function updateVendorLedger(PaymentExecutedEvent $event): void
     {
         if ($this->vendorLedger === null) {
-            $this->logger->debug('Vendor ledger manager not configured, skipping ledger update');
+            $this->getLogger()->debug('Vendor ledger manager not configured, skipping ledger update');
             return;
         }
 
@@ -86,12 +94,12 @@ final readonly class UpdateVendorLedgerOnPayment
                     bankReference: $event->bankReference,
                 );
 
-                $this->logger->debug('Vendor ledger entry recorded', [
+                $this->getLogger()->debug('Vendor ledger entry recorded', [
                     'vendorBillId' => $vendorBillId,
                     'paymentId' => $event->paymentId,
                 ]);
             } catch (\Throwable $e) {
-                $this->logger->error('Failed to update vendor ledger', [
+                $this->getLogger()->error('Failed to update vendor ledger', [
                     'vendorBillId' => $vendorBillId,
                     'error' => $e->getMessage(),
                 ]);
@@ -111,13 +119,13 @@ final readonly class UpdateVendorLedgerOnPayment
     private function postJournalEntries(PaymentExecutedEvent $event): void
     {
         if ($this->journalEntryManager === null) {
-            $this->logger->debug('Journal entry manager not configured, skipping GL posting');
+            $this->getLogger()->debug('Journal entry manager not configured, skipping GL posting');
             return;
         }
 
         // Skip if journal entry already created (from event)
         if ($event->journalEntryId !== null) {
-            $this->logger->debug('Journal entry already created during payment execution', [
+            $this->getLogger()->debug('Journal entry already created during payment execution', [
                 'journalEntryId' => $event->journalEntryId,
             ]);
             return;
@@ -136,12 +144,12 @@ final readonly class UpdateVendorLedgerOnPayment
                 'sourceDocumentId' => $event->paymentId,
             ]);
 
-            $this->logger->info('Journal entry posted for payment', [
+            $this->getLogger()->info('Journal entry posted for payment', [
                 'journalEntryId' => $journalEntryId,
                 'paymentId' => $event->paymentId,
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to post journal entry', [
+            $this->getLogger()->error('Failed to post journal entry', [
                 'paymentId' => $event->paymentId,
                 'error' => $e->getMessage(),
             ]);
@@ -155,7 +163,7 @@ final readonly class UpdateVendorLedgerOnPayment
     private function markInvoicesAsPaid(PaymentExecutedEvent $event): void
     {
         if ($this->vendorLedger === null) {
-            $this->logger->debug('Vendor ledger manager not configured, skipping invoice status update');
+            $this->getLogger()->debug('Vendor ledger manager not configured, skipping invoice status update');
             return;
         }
 
@@ -168,12 +176,12 @@ final readonly class UpdateVendorLedgerOnPayment
                     paidAt: $event->executedAt,
                 );
 
-                $this->logger->debug('Invoice marked as paid', [
+                $this->getLogger()->debug('Invoice marked as paid', [
                     'vendorBillId' => $vendorBillId,
                     'paymentId' => $event->paymentId,
                 ]);
             } catch (\Throwable $e) {
-                $this->logger->error('Failed to mark invoice as paid', [
+                $this->getLogger()->error('Failed to mark invoice as paid', [
                     'vendorBillId' => $vendorBillId,
                     'error' => $e->getMessage(),
                 ]);

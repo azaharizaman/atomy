@@ -14,6 +14,6 @@ final readonly class RequisitionApprovalRejectedEvent
         public ?string $requisitionId,
         public ?string $rejectedBy,
         public ?string $reason,
-        public \DateTimeImmutable $rejectedAt = new \DateTimeImmutable(),
+        public \DateTimeImmutable $rejectedAt,
     ) {}
 }
