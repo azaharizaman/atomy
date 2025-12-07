@@ -26,8 +26,12 @@ final readonly class UpdateVendorLedgerOnPayment
     public function __construct(
         private ?VendorLedgerManagerInterface $vendorLedger = null,
         private ?JournalEntryManagerInterface $journalEntryManager = null,
-        private LoggerInterface $logger = new NullLogger(),
-    ) {}
+        private ?LoggerInterface $logger = null,
+    ) {
+        if ($this->logger === null) {
+            $this->logger = new NullLogger();
+        }
+    }
 
     /**
      * Handle the payment executed event.

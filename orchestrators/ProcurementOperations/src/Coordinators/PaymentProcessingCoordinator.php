@@ -14,6 +14,7 @@ use Nexus\ProcurementOperations\Events\PaymentScheduledEvent;
 use Nexus\ProcurementOperations\Exceptions\PaymentException;
 use Nexus\ProcurementOperations\Rules\Payment\PaymentRuleRegistry;
 use Nexus\ProcurementOperations\Services\PaymentBatchBuilder;
+use Nexus\ProcurementOperations\Services\PaymentIdGenerator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -34,9 +35,14 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         private PaymentDataProvider $dataProvider,
         private PaymentRuleRegistry $rules,
         private PaymentBatchBuilder $batchBuilder,
+        private PaymentIdGenerator $idGenerator,
         private ?EventDispatcherInterface $eventDispatcher = null,
-        private LoggerInterface $logger = new NullLogger(),
-    ) {}
+        private ?LoggerInterface $logger = null,
+    ) {
+        if ($this->logger === null) {
+            $this->logger = new NullLogger();
+        }
+    }
 
     /**
      * Process a payment request.
@@ -93,7 +99,7 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         ]);
 
         // Build batch context
-        $batchId = $this->generateBatchId();
+        $batchId = $this->idGenerator->generateBatchId();
         $context = $this->dataProvider->buildBatchContext(
             tenantId: $tenantId,
             paymentBatchId: $batchId,
@@ -106,8 +112,8 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         $this->rules->validate($context);
 
         // Generate payment reference
-        $paymentReference = $this->generatePaymentReference();
-        $paymentId = $this->generatePaymentId();
+        $paymentReference = $this->idGenerator->generatePaymentReference();
+        $paymentId = $this->idGenerator->generatePaymentId();
 
         // Dispatch event
         $this->eventDispatcher?->dispatch(new PaymentScheduledEvent(
@@ -156,9 +162,9 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         ]);
 
         $executedAt = new \DateTimeImmutable();
-        $paymentReference = $this->generatePaymentReference();
-        $paymentId = $this->generatePaymentId();
-        $journalEntryId = $this->generateJournalEntryId();
+        $paymentReference = $this->idGenerator->generatePaymentReference();
+        $paymentId = $this->idGenerator->generatePaymentId();
+        $journalEntryId = $this->idGenerator->generateJournalEntryId();
 
         // Dispatch event
         $this->eventDispatcher?->dispatch(new PaymentExecutedEvent(
@@ -272,9 +278,9 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
         ]);
 
         $executedAt = new \DateTimeImmutable();
-        $paymentReference = $this->generatePaymentReference();
-        $paymentId = $this->generatePaymentId();
-        $journalEntryId = $this->generateJournalEntryId();
+        $paymentReference = $this->idGenerator->generatePaymentReference();
+        $paymentId = $this->idGenerator->generatePaymentId();
+        $journalEntryId = $this->idGenerator->generateJournalEntryId();
 
         // Dispatch event
         $this->eventDispatcher?->dispatch(new PaymentExecutedEvent(
@@ -310,37 +316,5 @@ final readonly class PaymentProcessingCoordinator implements PaymentProcessingCo
                 number_format($context->netAmountCents / 100, 2)
             ),
         );
-    }
-
-    /**
-     * Generate a unique batch ID.
-     */
-    private function generateBatchId(): string
-    {
-        return 'PAY-BATCH-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
-    }
-
-    /**
-     * Generate a unique payment ID.
-     */
-    private function generatePaymentId(): string
-    {
-        return 'PAY-' . strtoupper(substr(bin2hex(random_bytes(8)), 0, 16));
-    }
-
-    /**
-     * Generate a payment reference number.
-     */
-    private function generatePaymentReference(): string
-    {
-        return 'REF-' . date('YmdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
-    }
-
-    /**
-     * Generate a journal entry ID.
-     */
-    private function generateJournalEntryId(): string
-    {
-        return 'JE-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
     }
 }

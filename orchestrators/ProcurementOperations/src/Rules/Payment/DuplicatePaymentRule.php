@@ -34,6 +34,7 @@ final readonly class DuplicatePaymentRule implements RuleInterface
 
         $violations = [];
         $seenInvoiceIds = [];
+        $duplicateIds = [];
 
         foreach ($context->invoices as $invoice) {
             $invoiceId = $invoice['id'] ?? null;
@@ -45,6 +46,7 @@ final readonly class DuplicatePaymentRule implements RuleInterface
 
             // Check for duplicates within the batch
             if (isset($seenInvoiceIds[$invoiceId])) {
+                $duplicateIds[] = $invoiceId;
                 $violations[] = sprintf(
                     'Invoice %s appears multiple times in the payment batch',
                     $invoiceId
@@ -77,10 +79,7 @@ final readonly class DuplicatePaymentRule implements RuleInterface
             return RuleResult::fail(
                 $this->getName(),
                 'Duplicate payment detected: ' . implode('; ', $violations),
-                ['duplicates' => array_keys(array_filter(
-                    array_count_values(array_keys($seenInvoiceIds)),
-                    fn($count) => $count > 1
-                ))]
+                ['duplicates' => array_unique($duplicateIds)]
             );
         }
 

@@ -25,8 +25,12 @@ final readonly class PaymentBatchBuilder
 {
     public function __construct(
         private PaymentDataProvider $dataProvider,
-        private LoggerInterface $logger = new NullLogger(),
-    ) {}
+        private ?LoggerInterface $logger = null,
+    ) {
+        if ($this->logger === null) {
+            $this->logger = new NullLogger();
+        }
+    }
 
     /**
      * Build a payment batch context from a payment request.

@@ -14,6 +14,6 @@ final readonly class InvoiceToPaymentFailedEvent
         public ?string $invoiceId,
         public ?string $failureReason,
         public ?string $failedStep,
-        public \DateTimeImmutable $failedAt = new \DateTimeImmutable(),
+        public \DateTimeImmutable $failedAt,
     ) {}
 }

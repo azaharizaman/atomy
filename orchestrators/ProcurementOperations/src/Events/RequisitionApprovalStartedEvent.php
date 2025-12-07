@@ -14,6 +14,6 @@ final readonly class RequisitionApprovalStartedEvent
         public ?string $requisitionId,
         public int $amountCents,
         public string $requestorId,
-        public \DateTimeImmutable $startedAt = new \DateTimeImmutable(),
+        public \DateTimeImmutable $startedAt,
     ) {}
 }

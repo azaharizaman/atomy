@@ -25,8 +25,12 @@ final readonly class NotifyVendorOnPaymentExecuted
     public function __construct(
         private ?NotificationManagerInterface $notifier = null,
         private ?PartyQueryInterface $partyQuery = null,
-        private LoggerInterface $logger = new NullLogger(),
-    ) {}
+        private ?LoggerInterface $logger = null,
+    ) {
+        if ($this->logger === null) {
+            $this->logger = new NullLogger();
+        }
+    }
 
     /**
      * Handle the payment executed event.
@@ -133,11 +137,10 @@ final readonly class NotifyVendorOnPaymentExecuted
     private function getVendorContact(string $vendorId, string $tenantId): ?array
     {
         if ($this->partyQuery === null) {
-            $this->logger->debug('Party query not configured, using placeholder contact');
-            return [
-                'name' => 'Vendor',
-                'email' => 'vendor@example.com',
-            ];
+            $this->logger->warning('Party query not configured, cannot send vendor notification', [
+                'vendorId' => $vendorId,
+            ]);
+            return null;
         }
 
         try {

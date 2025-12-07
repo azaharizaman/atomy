@@ -15,6 +15,6 @@ final readonly class InvoiceToPaymentStartedEvent
         public ?string $vendorId,
         public int $amountCents,
         public string $initiatedBy,
-        public \DateTimeImmutable $startedAt = new \DateTimeImmutable(),
+        public \DateTimeImmutable $startedAt,
     ) {}
 }

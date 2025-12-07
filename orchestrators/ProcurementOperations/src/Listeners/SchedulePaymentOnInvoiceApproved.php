@@ -26,8 +26,12 @@ final readonly class SchedulePaymentOnInvoiceApproved
     public function __construct(
         private PaymentProcessingCoordinatorInterface $paymentCoordinator,
         private PaymentDataProvider $dataProvider,
-        private LoggerInterface $logger = new NullLogger(),
-    ) {}
+        private ?LoggerInterface $logger = null,
+    ) {
+        if ($this->logger === null) {
+            $this->logger = new NullLogger();
+        }
+    }
 
     /**
      * Handle the invoice approved event.

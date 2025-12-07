@@ -90,9 +90,11 @@ final readonly class VendorSpendContextProvider
                 // Calculate payment days
                 $paymentDate = $bill->getPaymentDate();
                 if ($paymentDate !== null) {
-                    $paymentDays = $invoiceDate->diff($paymentDate)->days;
-                    $summary[$vendorId]['paymentDaysSum'] += $paymentDays;
-                    $summary[$vendorId]['paidCountForAvg']++;
+                    $diff = $invoiceDate->diff($paymentDate);
+                    if ($diff->days !== false) {
+                        $summary[$vendorId]['paymentDaysSum'] += $diff->days;
+                        $summary[$vendorId]['paidCountForAvg']++;
+                    }
                 }
             } else {
                 $summary[$vendorId]['outstandingCount']++;
@@ -238,9 +240,11 @@ final readonly class VendorSpendContextProvider
                     $metrics['paidOnTime']++;
                 } else {
                     $metrics['paidLate']++;
-                    $daysLate = $dueDate->diff($paymentDate)->days;
-                    $totalDaysLate += $daysLate;
-                    $lateCount++;
+                    $diff = $dueDate->diff($paymentDate);
+                    if ($diff->days !== false) {
+                        $totalDaysLate += $diff->days;
+                        $lateCount++;
+                    }
                 }
             }
 
