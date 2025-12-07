@@ -46,15 +46,23 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
         private EventDispatcherInterface $eventDispatcher,
         private float $priceTolerancePercent = self::DEFAULT_PRICE_TOLERANCE,
         private float $quantityTolerancePercent = self::DEFAULT_QUANTITY_TOLERANCE,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Perform three-way match: PO ↔ GR ↔ Invoice.
      */
     public function match(MatchInvoiceRequest $request): MatchingResult
     {
-        $this->logger->info('Starting three-way invoice matching', [
+        $this->getLogger()->info('Starting three-way invoice matching', [
             'vendor_bill_id' => $request->vendorBillId,
             'purchase_order_id' => $request->purchaseOrderId,
             'goods_receipt_ids' => $request->goodsReceiptIds,
@@ -103,13 +111,13 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
             return $result;
 
         } catch (MatchingException $e) {
-            $this->logger->error('Matching exception occurred', [
+            $this->getLogger()->error('Matching exception occurred', [
                 'vendor_bill_id' => $request->vendorBillId,
                 'error' => $e->getMessage(),
             ]);
             throw $e;
         } catch (\Throwable $e) {
-            $this->logger->error('Unexpected error during invoice matching', [
+            $this->getLogger()->error('Unexpected error during invoice matching', [
                 'vendor_bill_id' => $request->vendorBillId,
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
@@ -131,7 +139,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
         string $purchaseOrderId,
         string $performedBy
     ): MatchingResult {
-        $this->logger->info('Starting two-way invoice matching', [
+        $this->getLogger()->info('Starting two-way invoice matching', [
             'vendor_bill_id' => $vendorBillId,
             'purchase_order_id' => $purchaseOrderId,
             'performed_by' => $performedBy,
@@ -165,7 +173,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
             return $result;
 
         } catch (\Throwable $e) {
-            $this->logger->error('Error during two-way matching', [
+            $this->getLogger()->error('Error during two-way matching', [
                 'vendor_bill_id' => $vendorBillId,
                 'error' => $e->getMessage(),
             ]);
@@ -185,7 +193,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
         string $approvedBy,
         string $approvalReason
     ): MatchingResult {
-        $this->logger->info('Force matching invoice with variance approval', [
+        $this->getLogger()->info('Force matching invoice with variance approval', [
             'vendor_bill_id' => $vendorBillId,
             'purchase_order_id' => $purchaseOrderId,
             'approved_by' => $approvedBy,
@@ -241,7 +249,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
         MatchingResult $result,
         object $context
     ): MatchingResult {
-        $this->logger->info('Match successful, posting GL entries', [
+        $this->getLogger()->info('Match successful, posting GL entries', [
             'vendor_bill_id' => $request->vendorBillId,
         ]);
 
@@ -282,7 +290,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
             );
 
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to post GL entries after successful match', [
+            $this->getLogger()->error('Failed to post GL entries after successful match', [
                 'vendor_bill_id' => $request->vendorBillId,
                 'error' => $e->getMessage(),
             ]);
@@ -301,7 +309,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
         MatchingResult $failedResult,
         object $context
     ): MatchingResult {
-        $this->logger->info('Processing approved variance match', [
+        $this->getLogger()->info('Processing approved variance match', [
             'vendor_bill_id' => $request->vendorBillId,
             'approval_reason' => $request->varianceApprovalReason,
             'price_variance' => $failedResult->priceVariancePercent,
@@ -341,7 +349,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
             );
 
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to process approved variance match', [
+            $this->getLogger()->error('Failed to process approved variance match', [
                 'vendor_bill_id' => $request->vendorBillId,
                 'error' => $e->getMessage(),
             ]);
@@ -439,7 +447,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
     ): void {
         // Event dispatching would use domain events
         // For now, log the event
-        $this->logger->info('InvoiceMatchedEvent dispatched', [
+        $this->getLogger()->info('InvoiceMatchedEvent dispatched', [
             'vendor_bill_id' => $vendorBillId,
             'purchase_order_id' => $purchaseOrderId,
             'price_variance' => $result->priceVariancePercent,
@@ -454,7 +462,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
         MatchInvoiceRequest $request,
         MatchingResult $result
     ): void {
-        $this->logger->info('InvoiceMatchFailedEvent dispatched', [
+        $this->getLogger()->info('InvoiceMatchFailedEvent dispatched', [
             'vendor_bill_id' => $request->vendorBillId,
             'purchase_order_id' => $request->purchaseOrderId,
             'failure_reason' => $result->failureReason,

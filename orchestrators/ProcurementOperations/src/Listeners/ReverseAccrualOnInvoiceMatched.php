@@ -38,15 +38,23 @@ final readonly class ReverseAccrualOnInvoiceMatched
 {
     public function __construct(
         private AccrualServiceInterface $accrualService,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Handle the invoice matched event.
      */
     public function handle(InvoiceMatchedEvent $event): void
     {
-        $this->logger->info('Processing accrual reversal for matched invoice', [
+        $this->getLogger()->info('Processing accrual reversal for matched invoice', [
             'vendor_bill_id' => $event->vendorBillId,
             'vendor_bill_number' => $event->vendorBillNumber,
             'purchase_order_id' => $event->purchaseOrderId,
@@ -82,7 +90,7 @@ final readonly class ReverseAccrualOnInvoiceMatched
             // 3. Handle price variance if exists
             $varianceAmount = $invoiceAmount->subtract($receivedAmount);
 
-            $this->logger->info('Successfully processed accrual reversal and AP recognition', [
+            $this->getLogger()->info('Successfully processed accrual reversal and AP recognition', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'invoice_amount' => $invoiceAmount->formatSimple(),
                 'received_amount' => $receivedAmount->formatSimple(),
@@ -91,7 +99,7 @@ final readonly class ReverseAccrualOnInvoiceMatched
             ]);
 
         } catch (AccrualException $e) {
-            $this->logger->error('Failed to process accrual reversal', [
+            $this->getLogger()->error('Failed to process accrual reversal', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
@@ -100,7 +108,7 @@ final readonly class ReverseAccrualOnInvoiceMatched
             // Re-throw to allow retry or manual intervention
             throw $e;
         } catch (\Throwable $e) {
-            $this->logger->error('Unexpected error during accrual reversal', [
+            $this->getLogger()->error('Unexpected error during accrual reversal', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'error' => $e->getMessage(),
                 'exception_class' => get_class($e),

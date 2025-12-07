@@ -32,15 +32,23 @@ final readonly class UpdateInventoryOnGoodsReceipt
         private StockManagerInterface $stockManager,
         private ?LotManagerInterface $lotManager = null,
         private ?SerialNumberManagerInterface $serialNumberManager = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Handle the goods receipt created event.
      */
     public function handle(GoodsReceiptCreatedEvent $event): void
     {
-        $this->logger->info('Processing goods receipt for inventory update', [
+        $this->getLogger()->info('Processing goods receipt for inventory update', [
             'goods_receipt_id' => $event->goodsReceiptId,
             'goods_receipt_number' => $event->goodsReceiptNumber,
             'purchase_order_id' => $event->purchaseOrderId,
@@ -57,7 +65,7 @@ final readonly class UpdateInventoryOnGoodsReceipt
                 $processedCount++;
             } catch (\Throwable $e) {
                 $errorCount++;
-                $this->logger->error('Failed to process inventory update for line item', [
+                $this->getLogger()->error('Failed to process inventory update for line item', [
                     'goods_receipt_id' => $event->goodsReceiptId,
                     'line_id' => $lineItem['lineId'],
                     'product_id' => $lineItem['productId'],
@@ -66,7 +74,7 @@ final readonly class UpdateInventoryOnGoodsReceipt
             }
         }
 
-        $this->logger->info('Completed inventory update for goods receipt', [
+        $this->getLogger()->info('Completed inventory update for goods receipt', [
             'goods_receipt_id' => $event->goodsReceiptId,
             'processed_count' => $processedCount,
             'error_count' => $errorCount,
@@ -139,7 +147,7 @@ final readonly class UpdateInventoryOnGoodsReceipt
             expiryDate: $expiryDate,
         );
 
-        $this->logger->debug('Created lot for received goods', [
+        $this->getLogger()->debug('Created lot for received goods', [
             'goods_receipt_id' => $event->goodsReceiptId,
             'product_id' => $lineItem['productId'],
             'lot_number' => $lineItem['lotNumber'],
@@ -173,7 +181,7 @@ final readonly class UpdateInventoryOnGoodsReceipt
             );
         }
 
-        $this->logger->debug('Registered serial numbers for received goods', [
+        $this->getLogger()->debug('Registered serial numbers for received goods', [
             'goods_receipt_id' => $event->goodsReceiptId,
             'product_id' => $lineItem['productId'],
             'serial_count' => count($lineItem['serialNumbers']),
@@ -213,7 +221,7 @@ final readonly class UpdateInventoryOnGoodsReceipt
             expiryDate: $expiryDate,
         );
 
-        $this->logger->debug('Posted stock receipt to inventory', [
+        $this->getLogger()->debug('Posted stock receipt to inventory', [
             'goods_receipt_id' => $event->goodsReceiptId,
             'line_id' => $lineItem['lineId'],
             'product_id' => $lineItem['productId'],

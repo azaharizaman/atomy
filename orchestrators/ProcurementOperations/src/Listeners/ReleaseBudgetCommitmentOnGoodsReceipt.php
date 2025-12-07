@@ -30,8 +30,16 @@ final readonly class ReleaseBudgetCommitmentOnGoodsReceipt
 {
     public function __construct(
         private ?BudgetCommitmentManagerInterface $budgetManager = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Handle the goods receipt completed event.
@@ -43,13 +51,13 @@ final readonly class ReleaseBudgetCommitmentOnGoodsReceipt
     {
         // Budget management is optional - skip if not configured
         if ($this->budgetManager === null) {
-            $this->logger->debug('Budget management not configured, skipping commitment release', [
+            $this->getLogger()->debug('Budget management not configured, skipping commitment release', [
                 'purchase_order_id' => $event->purchaseOrderId,
             ]);
             return;
         }
 
-        $this->logger->info('Processing budget commitment release for completed goods receipt', [
+        $this->getLogger()->info('Processing budget commitment release for completed goods receipt', [
             'purchase_order_id' => $event->purchaseOrderId,
             'purchase_order_number' => $event->purchaseOrderNumber,
             'total_ordered_cents' => $event->totalOrderedAmountCents,
@@ -69,7 +77,7 @@ final readonly class ReleaseBudgetCommitmentOnGoodsReceipt
                 encumberedAmount: $encumberedAmount,
             );
 
-            $this->logger->debug('Released budget encumbrance', [
+            $this->getLogger()->debug('Released budget encumbrance', [
                 'purchase_order_id' => $event->purchaseOrderId,
                 'encumbered_cents' => $event->totalOrderedAmountCents,
             ]);
@@ -85,7 +93,7 @@ final readonly class ReleaseBudgetCommitmentOnGoodsReceipt
                 ),
             );
 
-            $this->logger->debug('Recorded actual expenditure', [
+            $this->getLogger()->debug('Recorded actual expenditure', [
                 'purchase_order_id' => $event->purchaseOrderId,
                 'actual_cents' => $event->totalReceivedAmountCents,
             ]);
@@ -96,14 +104,14 @@ final readonly class ReleaseBudgetCommitmentOnGoodsReceipt
                 $this->trackBudgetVariance($event, $varianceCents);
             }
 
-            $this->logger->info('Successfully processed budget commitment release', [
+            $this->getLogger()->info('Successfully processed budget commitment release', [
                 'purchase_order_id' => $event->purchaseOrderId,
                 'encumbered_cents' => $event->totalOrderedAmountCents,
                 'actual_cents' => $event->totalReceivedAmountCents,
                 'variance_cents' => $varianceCents,
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to release budget commitment', [
+            $this->getLogger()->error('Failed to release budget commitment', [
                 'purchase_order_id' => $event->purchaseOrderId,
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
@@ -144,7 +152,7 @@ final readonly class ReleaseBudgetCommitmentOnGoodsReceipt
             ),
         );
 
-        $this->logger->info('Recorded budget variance', [
+        $this->getLogger()->info('Recorded budget variance', [
             'purchase_order_id' => $event->purchaseOrderId,
             'variance_type' => $varianceType,
             'variance_cents' => $varianceCents,

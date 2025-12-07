@@ -30,15 +30,23 @@ final readonly class PostAccrualOnGoodsReceipt
 {
     public function __construct(
         private AccrualServiceInterface $accrualService,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Handle the goods receipt created event.
      */
     public function handle(GoodsReceiptCreatedEvent $event): void
     {
-        $this->logger->info('Processing goods receipt for accrual posting', [
+        $this->getLogger()->info('Processing goods receipt for accrual posting', [
             'goods_receipt_id' => $event->goodsReceiptId,
             'goods_receipt_number' => $event->goodsReceiptNumber,
             'purchase_order_id' => $event->purchaseOrderId,
@@ -49,7 +57,7 @@ final readonly class PostAccrualOnGoodsReceipt
         try {
             // Validate total value is positive
             if ($event->totalValueCents <= 0) {
-                $this->logger->warning('Skipping accrual posting for zero-value goods receipt', [
+                $this->getLogger()->warning('Skipping accrual posting for zero-value goods receipt', [
                     'goods_receipt_id' => $event->goodsReceiptId,
                     'total_value_cents' => $event->totalValueCents,
                 ]);
@@ -67,14 +75,14 @@ final readonly class PostAccrualOnGoodsReceipt
                 postedBy: $event->receivedBy,
             );
 
-            $this->logger->info('Successfully posted GR-IR accrual entry', [
+            $this->getLogger()->info('Successfully posted GR-IR accrual entry', [
                 'goods_receipt_id' => $event->goodsReceiptId,
                 'purchase_order_id' => $event->purchaseOrderId,
                 'amount_cents' => $event->totalValueCents,
                 'currency' => $event->currency,
             ]);
         } catch (AccrualException $e) {
-            $this->logger->error('Failed to post accrual entry', [
+            $this->getLogger()->error('Failed to post accrual entry', [
                 'goods_receipt_id' => $event->goodsReceiptId,
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
@@ -83,7 +91,7 @@ final readonly class PostAccrualOnGoodsReceipt
             // Re-throw to allow the message queue to handle retry logic
             throw $e;
         } catch (\Throwable $e) {
-            $this->logger->error('Unexpected error during accrual posting', [
+            $this->getLogger()->error('Unexpected error during accrual posting', [
                 'goods_receipt_id' => $event->goodsReceiptId,
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),

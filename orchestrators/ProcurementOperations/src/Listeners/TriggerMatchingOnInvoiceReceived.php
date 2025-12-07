@@ -34,15 +34,23 @@ final readonly class TriggerMatchingOnInvoiceReceived
         private InvoiceMatchingCoordinatorInterface $matchingCoordinator,
         private GoodsReceiptQueryInterface $goodsReceiptQuery,
         private bool $autoMatchEnabled = true,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Handle the vendor bill received event.
      */
     public function handle(VendorBillReceivedEvent $event): void
     {
-        $this->logger->info('Vendor bill received, evaluating auto-match eligibility', [
+        $this->getLogger()->info('Vendor bill received, evaluating auto-match eligibility', [
             'vendor_bill_id' => $event->vendorBillId,
             'vendor_bill_number' => $event->vendorBillNumber,
             'purchase_order_id' => $event->purchaseOrderId,
@@ -53,7 +61,7 @@ final readonly class TriggerMatchingOnInvoiceReceived
 
         // Skip if auto-matching is disabled
         if (!$this->autoMatchEnabled) {
-            $this->logger->info('Auto-matching is disabled, skipping', [
+            $this->getLogger()->info('Auto-matching is disabled, skipping', [
                 'vendor_bill_id' => $event->vendorBillId,
             ]);
             return;
@@ -61,7 +69,7 @@ final readonly class TriggerMatchingOnInvoiceReceived
 
         // Skip if invoice doesn't reference a PO (non-PO invoice)
         if ($event->purchaseOrderId === null) {
-            $this->logger->info('No PO reference on invoice, skipping auto-match', [
+            $this->getLogger()->info('No PO reference on invoice, skipping auto-match', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'vendor_bill_number' => $event->vendorBillNumber,
             ]);
@@ -76,14 +84,14 @@ final readonly class TriggerMatchingOnInvoiceReceived
             );
 
             if (empty($goodsReceiptIds)) {
-                $this->logger->info('No goods receipts found for PO, cannot auto-match', [
+                $this->getLogger()->info('No goods receipts found for PO, cannot auto-match', [
                     'vendor_bill_id' => $event->vendorBillId,
                     'purchase_order_id' => $event->purchaseOrderId,
                 ]);
                 return;
             }
 
-            $this->logger->info('Found goods receipts for auto-matching', [
+            $this->getLogger()->info('Found goods receipts for auto-matching', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'purchase_order_id' => $event->purchaseOrderId,
                 'goods_receipt_ids' => $goodsReceiptIds,
@@ -105,7 +113,7 @@ final readonly class TriggerMatchingOnInvoiceReceived
             $result = $this->matchingCoordinator->match($request);
 
             if ($result->matched) {
-                $this->logger->info('Auto-match successful', [
+                $this->getLogger()->info('Auto-match successful', [
                     'vendor_bill_id' => $event->vendorBillId,
                     'purchase_order_id' => $event->purchaseOrderId,
                     'price_variance_percent' => $result->priceVariancePercent,
@@ -113,7 +121,7 @@ final readonly class TriggerMatchingOnInvoiceReceived
                     'journal_entry_id' => $result->journalEntryId,
                 ]);
             } else {
-                $this->logger->warning('Auto-match failed due to variance', [
+                $this->getLogger()->warning('Auto-match failed due to variance', [
                     'vendor_bill_id' => $event->vendorBillId,
                     'purchase_order_id' => $event->purchaseOrderId,
                     'price_variance_percent' => $result->priceVariancePercent,
@@ -124,7 +132,7 @@ final readonly class TriggerMatchingOnInvoiceReceived
             }
 
         } catch (MatchingException $e) {
-            $this->logger->error('Auto-match failed with exception', [
+            $this->getLogger()->error('Auto-match failed with exception', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'purchase_order_id' => $event->purchaseOrderId,
                 'error' => $e->getMessage(),
@@ -132,7 +140,7 @@ final readonly class TriggerMatchingOnInvoiceReceived
             ]);
             // Invoice remains unmatched for manual intervention
         } catch (\Throwable $e) {
-            $this->logger->error('Unexpected error during auto-match', [
+            $this->getLogger()->error('Unexpected error during auto-match', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'error' => $e->getMessage(),
                 'exception_class' => get_class($e),

@@ -21,8 +21,16 @@ final readonly class ProcessPaymentStep implements SagaStepInterface
 {
     public function __construct(
         private PaymentManagerInterface $paymentManager,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     public function getId(): string
     {
@@ -41,7 +49,7 @@ final readonly class ProcessPaymentStep implements SagaStepInterface
 
     public function execute(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->info('Processing vendor payment', [
+        $this->getLogger()->info('Processing vendor payment', [
             'saga_instance_id' => $context->sagaInstanceId,
             'tenant_id' => $context->tenantId,
         ]);
@@ -91,7 +99,7 @@ final readonly class ProcessPaymentStep implements SagaStepInterface
                 'payment_status' => $processResult->getStatus(),
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to process payment', [
+            $this->getLogger()->error('Failed to process payment', [
                 'error' => $e->getMessage(),
             ]);
 
@@ -104,7 +112,7 @@ final readonly class ProcessPaymentStep implements SagaStepInterface
 
     public function compensate(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->warning('Payment compensation requested - requires manual intervention', [
+        $this->getLogger()->warning('Payment compensation requested - requires manual intervention', [
             'saga_instance_id' => $context->sagaInstanceId,
         ]);
 
@@ -121,7 +129,7 @@ final readonly class ProcessPaymentStep implements SagaStepInterface
                     flaggedBy: 'system',
                 );
             } catch (\Throwable $e) {
-                $this->logger->error('Failed to flag payment for review', [
+                $this->getLogger()->error('Failed to flag payment for review', [
                     'payment_id' => $paymentId,
                     'error' => $e->getMessage(),
                 ]);
