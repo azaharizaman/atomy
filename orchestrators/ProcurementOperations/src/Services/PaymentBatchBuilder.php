@@ -230,23 +230,23 @@ final class PaymentBatchBuilder
         // Query vendor bills and determine optimal payment method for each vendor
         $bills = $this->dataProvider->getBillsByIds($tenantId, $vendorBillIds);
         $grouped = [];
-        
+
         foreach ($bills as $bill) {
             $billId = $bill['id'] ?? null;
             if (!$billId) {
                 continue;
             }
-            
+
             // Determine optimal payment method based on vendor preferences and location
             // For international vendors, use 'wire'; for domestic, use 'ach' or 'check'
             $vendorCountry = $bill['vendorCountry'] ?? null;
             $tenantCountry = $bill['tenantCountry'] ?? null;
             $isInternational = ($vendorCountry !== null && $tenantCountry !== null && $vendorCountry !== $tenantCountry);
             $paymentMethod = $isInternational ? 'wire' : ($bill['vendorPreferredMethod'] ?? 'ach');
-            
+
             $grouped[$paymentMethod][] = $billId;
         }
-        
+
         return $grouped;
     }
 
@@ -262,7 +262,7 @@ final class PaymentBatchBuilder
         // Query vendor bills and group by vendor ID
         $bills = $this->dataProvider->getBillsByIds($tenantId, $vendorBillIds);
         $grouped = [];
-        
+
         foreach ($bills as $bill) {
             $vendorId = $bill['vendorId'] ?? null;
             $billId = $bill['id'] ?? null;
@@ -270,7 +270,7 @@ final class PaymentBatchBuilder
                 $grouped[$vendorId][] = $billId;
             }
         }
-        
+
         return $grouped;
     }
 }

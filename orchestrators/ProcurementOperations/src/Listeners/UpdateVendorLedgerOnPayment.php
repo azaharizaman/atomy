@@ -231,7 +231,7 @@ final class UpdateVendorLedgerOnPayment
         // TODO: Use Chart of Accounts service to resolve account codes by purpose
         // e.g., $chartOfAccounts->getAccountCode('accounts_payable')
         // These hardcoded values are placeholders only
-        
+
         // Standard AP Payment Entry
         return [
             // Debit Accounts Payable
