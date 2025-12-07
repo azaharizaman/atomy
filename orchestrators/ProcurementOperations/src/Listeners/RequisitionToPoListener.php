@@ -21,8 +21,16 @@ final readonly class RequisitionToPoListener
 {
     public function __construct(
         private RequisitionCoordinator $requisitionCoordinator,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Handle the requisition approved event.
@@ -31,7 +39,7 @@ final readonly class RequisitionToPoListener
      */
     public function handle(RequisitionApprovedEvent $event): void
     {
-        $this->logger->info('Processing approved requisition for PO creation', [
+        $this->getLogger()->info('Processing approved requisition for PO creation', [
             'requisition_id' => $event->requisitionId,
             'approved_by' => $event->approvedBy,
             'approved_at' => $event->occurredAt->format('c'),
@@ -40,7 +48,7 @@ final readonly class RequisitionToPoListener
         try {
             // Check if auto-conversion is enabled for this requisition
             if (!$this->shouldAutoConvert($event)) {
-                $this->logger->info('Auto-conversion disabled, skipping PO creation', [
+                $this->getLogger()->info('Auto-conversion disabled, skipping PO creation', [
                     'requisition_id' => $event->requisitionId,
                 ]);
                 return;
@@ -53,22 +61,22 @@ final readonly class RequisitionToPoListener
             $result = $this->requisitionCoordinator->createPurchaseOrder($request);
 
             if ($result->success) {
-                $this->logger->info('Successfully created PO from requisition', [
+                $this->getLogger()->info('Successfully created PO from requisition', [
                     'requisition_id' => $event->requisitionId,
                     'purchase_order_id' => $result->purchaseOrderId,
                     'po_number' => $result->poNumber,
                 ]);
             } else {
-                $this->logger->warning('Failed to create PO from requisition', [
+                $this->getLogger()->warning('Failed to create PO from requisition', [
                     'requisition_id' => $event->requisitionId,
                     'errors' => $result->errors,
                 ]);
             }
         } catch (\Throwable $e) {
-            $this->logger->error('Exception during PO creation from requisition', [
+            $this->getLogger()->error('Exception during PO creation from requisition', [
                 'requisition_id' => $event->requisitionId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'exception_class' => get_class($e),
             ]);
         }
     }

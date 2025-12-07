@@ -49,8 +49,16 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
         private ?PurchaseOrderPersistInterface $purchaseOrderPersist = null,
         private ?SequencingManagerInterface $sequencing = null,
         private ?EventDispatcherInterface $eventDispatcher = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Record goods receipt against a purchase order.
@@ -59,7 +67,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
      */
     public function record(RecordGoodsReceiptRequest $request): GoodsReceiptResult
     {
-        $this->logger->info('Recording goods receipt', [
+        $this->getLogger()->info('Recording goods receipt', [
             'tenant_id' => $request->tenantId,
             'purchase_order_id' => $request->purchaseOrderId,
             'warehouse_id' => $request->warehouseId,
@@ -119,7 +127,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
                     $request->receivedBy
                 );
             } catch (\Throwable $e) {
-                $this->logger->warning('Failed to post GR-IR accrual, continuing', [
+                $this->getLogger()->warning('Failed to post GR-IR accrual, continuing', [
                     'goods_receipt_id' => $goodsReceiptId,
                     'error' => $e->getMessage(),
                 ]);
@@ -141,7 +149,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
             // 10. Dispatch events for side effects
             $this->dispatchEvents($goodsReceiptId, $grNumber, $request, $poFullyReceived);
 
-            $this->logger->info('Goods receipt recorded successfully', [
+            $this->getLogger()->info('Goods receipt recorded successfully', [
                 'goods_receipt_id' => $goodsReceiptId,
                 'goods_receipt_number' => $grNumber,
                 'po_fully_received' => $poFullyReceived,
@@ -162,14 +170,14 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
                     : 'Goods receipt recorded. PO has outstanding quantities.',
             );
         } catch (GoodsReceiptException|PurchaseOrderException $e) {
-            $this->logger->warning('Goods receipt failed', [
+            $this->getLogger()->warning('Goods receipt failed', [
                 'purchase_order_id' => $request->purchaseOrderId,
                 'error' => $e->getMessage(),
             ]);
 
             return GoodsReceiptResult::failure($e->getMessage());
         } catch (\Throwable $e) {
-            $this->logger->error('Unexpected error during goods receipt', [
+            $this->getLogger()->error('Unexpected error during goods receipt', [
                 'purchase_order_id' => $request->purchaseOrderId,
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
@@ -190,7 +198,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
         string $reversedBy,
         string $reason
     ): GoodsReceiptResult {
-        $this->logger->info('Reversing goods receipt', [
+        $this->getLogger()->info('Reversing goods receipt', [
             'tenant_id' => $tenantId,
             'goods_receipt_id' => $goodsReceiptId,
             'reversed_by' => $reversedBy,
@@ -216,7 +224,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
                         $reversedBy
                     );
                 } catch (\Throwable $e) {
-                    $this->logger->warning('Failed to reverse accrual, continuing', [
+                    $this->getLogger()->warning('Failed to reverse accrual, continuing', [
                         'goods_receipt_id' => $goodsReceiptId,
                         'error' => $e->getMessage(),
                     ]);
@@ -226,7 +234,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
             // 5. Dispatch reversal events
             $this->dispatchReversalEvents($goodsReceiptId, $context, $reversedBy, $reason);
 
-            $this->logger->info('Goods receipt reversed successfully', [
+            $this->getLogger()->info('Goods receipt reversed successfully', [
                 'goods_receipt_id' => $goodsReceiptId,
             ]);
 
@@ -240,7 +248,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
                 message: 'Goods receipt reversed successfully.',
             );
         } catch (GoodsReceiptException $e) {
-            $this->logger->warning('Goods receipt reversal failed', [
+            $this->getLogger()->warning('Goods receipt reversal failed', [
                 'goods_receipt_id' => $goodsReceiptId,
                 'error' => $e->getMessage(),
             ]);

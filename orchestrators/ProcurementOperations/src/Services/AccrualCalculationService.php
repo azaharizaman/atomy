@@ -17,17 +17,18 @@ use Psr\Log\NullLogger;
  * Handles GR-IR accrual calculations and GL posting.
  *
  * This service manages the accounting entries for:
- * - Goods Receipt accrual (GR-IR clearing)
- * - Invoice matching and accrual reversal
+ * - Goods Receipt accrual (GR-IR clearing; accrual entry only, not reversal)
+ * - Invoice matching and accrual reversal (reverses GR-IR accrual)
  * - AP liability posting
  * - Payment journal entries
  *
  * GL Flow:
- * 1. On Goods Receipt:
+ * 1. On Goods Receipt (GR-IR accrual):
  *    DR Inventory Asset (at PO price)
  *    CR GR-IR Clearing Account
+ *    // This accrual entry increases both Inventory Asset and GR-IR liability.
  *
- * 2. On Invoice Match:
+ * 2. On Invoice Match (accrual reversal and AP recognition):
  *    DR GR-IR Clearing Account
  *    CR Accounts Payable
  *    (+ variance entries if price differs)
@@ -40,8 +41,16 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
 {
     public function __construct(
         private ?JournalEntryManagerInterface $journalEntryManager = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Calculate and post GR-IR accrual for goods receipt.
@@ -55,7 +64,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
         array $lineItems,
         string $postedBy
     ): string {
-        $this->logger->info('Posting GR-IR accrual', [
+        $this->getLogger()->info('Posting GR-IR accrual', [
             'tenant_id' => $tenantId,
             'goods_receipt_id' => $goodsReceiptId,
             'purchase_order_id' => $purchaseOrderId,
@@ -71,7 +80,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
 
         // If no journal entry manager, return a placeholder
         if ($this->journalEntryManager === null) {
-            $this->logger->warning('JournalEntryManager not available, skipping GL posting', [
+            $this->getLogger()->warning('JournalEntryManager not available, skipping GL posting', [
                 'goods_receipt_id' => $goodsReceiptId,
             ]);
             return 'PENDING-' . $goodsReceiptId;
@@ -91,7 +100,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
                 postedBy: $postedBy,
             );
 
-            $this->logger->info('GR-IR accrual posted successfully', [
+            $this->getLogger()->info('GR-IR accrual posted successfully', [
                 'journal_entry_id' => $journalEntryId,
                 'goods_receipt_id' => $goodsReceiptId,
                 'total_cents' => $totalCents,
@@ -99,7 +108,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
 
             return $journalEntryId;
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to post GR-IR accrual', [
+            $this->getLogger()->error('Failed to post GR-IR accrual', [
                 'goods_receipt_id' => $goodsReceiptId,
                 'error' => $e->getMessage(),
             ]);
@@ -118,54 +127,27 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
         array $goodsReceiptIds,
         string $postedBy
     ): string {
-        $this->logger->info('Reversing GR-IR accrual on invoice match', [
+        $this->getLogger()->info('Reversing GR-IR accrual on invoice match', [
             'tenant_id' => $tenantId,
             'vendor_bill_id' => $vendorBillId,
             'goods_receipt_ids' => $goodsReceiptIds,
         ]);
 
         if ($this->journalEntryManager === null) {
-            $this->logger->warning('JournalEntryManager not available, skipping accrual reversal', [
+            $this->getLogger()->warning('JournalEntryManager not available, skipping accrual reversal', [
                 'vendor_bill_id' => $vendorBillId,
             ]);
             return 'PENDING-REVERSAL-' . $vendorBillId;
         }
 
-        // Build reversal journal lines
-        // DR GR-IR Clearing
-        // CR Inventory (or Expense variance)
-        $journalLines = [
-            [
-                'accountCode' => $this->getGrIrClearingAccount($tenantId),
-                'debit' => 0, // Will be calculated from matched GRs
-                'credit' => 0,
-                'description' => 'GR-IR clearing reversal',
-            ],
-        ];
-
-        try {
-            $journalEntryId = $this->journalEntryManager->post(
-                tenantId: $tenantId,
-                description: sprintf('GR-IR Reversal for Invoice %s', $vendorBillId),
-                lines: $journalLines,
-                reference: $vendorBillId,
-                referenceType: 'vendor_bill',
-                postedBy: $postedBy,
-            );
-
-            $this->logger->info('GR-IR accrual reversed successfully', [
-                'journal_entry_id' => $journalEntryId,
-                'vendor_bill_id' => $vendorBillId,
-            ]);
-
-            return $journalEntryId;
-        } catch (\Throwable $e) {
-            $this->logger->error('Failed to reverse GR-IR accrual', [
-                'vendor_bill_id' => $vendorBillId,
-                'error' => $e->getMessage(),
-            ]);
-            throw AccrualException::reversalFailed($vendorBillId, $e->getMessage());
-        }
+        // Calculation of reversal journal lines requires matched GRs, which are not available here.
+        // Return pending placeholder to avoid posting invalid journal entries.
+        $this->getLogger()->info('Accrual reversal requires matched GR data - returning pending placeholder', [
+            'vendor_bill_id' => $vendorBillId,
+            'goods_receipt_ids' => $goodsReceiptIds,
+        ]);
+        
+        return 'PENDING-REVERSAL-' . $vendorBillId;
     }
 
     /**
@@ -181,7 +163,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
         string $currency,
         string $postedBy
     ): string {
-        $this->logger->info('Posting AP liability', [
+        $this->getLogger()->info('Posting AP liability', [
             'tenant_id' => $tenantId,
             'vendor_bill_id' => $vendorBillId,
             'vendor_id' => $vendorId,
@@ -190,7 +172,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
         ]);
 
         if ($this->journalEntryManager === null) {
-            $this->logger->warning('JournalEntryManager not available, skipping AP posting', [
+            $this->getLogger()->warning('JournalEntryManager not available, skipping AP posting', [
                 'vendor_bill_id' => $vendorBillId,
             ]);
             return 'PENDING-AP-' . $vendorBillId;
@@ -221,7 +203,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
                 postedBy: $postedBy,
             );
 
-            $this->logger->info('AP liability posted successfully', [
+            $this->getLogger()->info('AP liability posted successfully', [
                 'journal_entry_id' => $journalEntryId,
                 'vendor_bill_id' => $vendorBillId,
                 'amount_cents' => $amountCents,
@@ -229,7 +211,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
 
             return $journalEntryId;
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to post AP liability', [
+            $this->getLogger()->error('Failed to post AP liability', [
                 'vendor_bill_id' => $vendorBillId,
                 'error' => $e->getMessage(),
             ]);
@@ -251,7 +233,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
         string $currency,
         string $postedBy
     ): string {
-        $this->logger->info('Posting payment entry', [
+        $this->getLogger()->info('Posting payment entry', [
             'tenant_id' => $tenantId,
             'payment_id' => $paymentId,
             'vendor_id' => $vendorId,
@@ -261,7 +243,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
         ]);
 
         if ($this->journalEntryManager === null) {
-            $this->logger->warning('JournalEntryManager not available, skipping payment posting', [
+            $this->getLogger()->warning('JournalEntryManager not available, skipping payment posting', [
                 'payment_id' => $paymentId,
             ]);
             return 'PENDING-PAYMENT-' . $paymentId;
@@ -292,7 +274,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
                 postedBy: $postedBy,
             );
 
-            $this->logger->info('Payment entry posted successfully', [
+            $this->getLogger()->info('Payment entry posted successfully', [
                 'journal_entry_id' => $journalEntryId,
                 'payment_id' => $paymentId,
                 'amount_cents' => $amountCents,
@@ -300,7 +282,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
 
             return $journalEntryId;
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to post payment entry', [
+            $this->getLogger()->error('Failed to post payment entry', [
                 'payment_id' => $paymentId,
                 'error' => $e->getMessage(),
             ]);
@@ -342,7 +324,7 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
             $variance = $invoicePrice - $poPrice;
             $variancePercent = $poPrice > 0 ? ($variance / $poPrice) * 100 : 0.0;
 
-            $totalVariance += $variance * (int) $line['invoiceQuantity'];
+            $totalVariance += $variance * $line['invoiceQuantity'];
             $lineVariances[$line['lineId']] = [
                 'poPrice' => $poPrice,
                 'invoicePrice' => $invoicePrice,

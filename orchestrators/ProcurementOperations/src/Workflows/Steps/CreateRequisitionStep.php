@@ -21,8 +21,16 @@ final readonly class CreateRequisitionStep implements SagaStepInterface
 {
     public function __construct(
         private RequisitionManagerInterface $requisitionManager,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     public function getId(): string
     {
@@ -41,7 +49,7 @@ final readonly class CreateRequisitionStep implements SagaStepInterface
 
     public function execute(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->info('Creating requisition', [
+        $this->getLogger()->info('Creating requisition', [
             'saga_instance_id' => $context->sagaInstanceId,
             'tenant_id' => $context->tenantId,
         ]);
@@ -66,7 +74,7 @@ final readonly class CreateRequisitionStep implements SagaStepInterface
                 'requisition_number' => $requisition->getNumber(),
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to create requisition', [
+            $this->getLogger()->error('Failed to create requisition', [
                 'error' => $e->getMessage(),
             ]);
 
@@ -79,7 +87,7 @@ final readonly class CreateRequisitionStep implements SagaStepInterface
 
     public function compensate(SagaStepContext $context): SagaStepResult
     {
-        $this->logger->info('Compensating: Cancelling requisition', [
+        $this->getLogger()->info('Compensating: Cancelling requisition', [
             'saga_instance_id' => $context->sagaInstanceId,
         ]);
 
@@ -101,7 +109,7 @@ final readonly class CreateRequisitionStep implements SagaStepInterface
                 'cancelled_requisition_id' => $requisitionId,
             ]);
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to cancel requisition during compensation', [
+            $this->getLogger()->error('Failed to cancel requisition during compensation', [
                 'error' => $e->getMessage(),
             ]);
 

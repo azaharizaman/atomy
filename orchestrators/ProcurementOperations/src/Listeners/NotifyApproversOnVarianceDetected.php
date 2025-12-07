@@ -40,15 +40,23 @@ final readonly class NotifyApproversOnVarianceDetected
     public function __construct(
         private NotificationManagerInterface $notifier,
         private ?TaskManagerInterface $taskManager = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger = null,
     ) {}
+
+    /**
+     * Get the logger instance, or a NullLogger if none was injected.
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->logger ?? new NullLogger();
+    }
 
     /**
      * Handle the invoice match failed event.
      */
     public function handle(InvoiceMatchFailedEvent $event): void
     {
-        $this->logger->info('Processing variance notification for failed match', [
+        $this->getLogger()->info('Processing variance notification for failed match', [
             'vendor_bill_id' => $event->vendorBillId,
             'vendor_bill_number' => $event->vendorBillNumber,
             'purchase_order_id' => $event->purchaseOrderId,
@@ -65,7 +73,7 @@ final readonly class NotifyApproversOnVarianceDetected
             );
             $approvalLevel = $this->determineApprovalLevel($maxVariance);
 
-            $this->logger->info('Determined approval level for variance', [
+            $this->getLogger()->info('Determined approval level for variance', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'max_variance_percent' => $maxVariance,
                 'approval_level' => $approvalLevel,
@@ -79,13 +87,13 @@ final readonly class NotifyApproversOnVarianceDetected
             // Send notifications to appropriate approvers
             $this->sendNotifications($event, $approvalLevel, $maxVariance);
 
-            $this->logger->info('Successfully processed variance notifications', [
+            $this->getLogger()->info('Successfully processed variance notifications', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'approval_level' => $approvalLevel,
             ]);
 
         } catch (\Throwable $e) {
-            $this->logger->error('Failed to process variance notification', [
+            $this->getLogger()->error('Failed to process variance notification', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'error' => $e->getMessage(),
                 'exception_class' => get_class($e),
@@ -116,7 +124,7 @@ final readonly class NotifyApproversOnVarianceDetected
         string $approvalLevel,
         float $maxVariance,
     ): void {
-        $this->logger->debug('Creating variance approval task', [
+        $this->getLogger()->debug('Creating variance approval task', [
             'vendor_bill_id' => $event->vendorBillId,
             'approval_level' => $approvalLevel,
         ]);
@@ -159,7 +167,7 @@ final readonly class NotifyApproversOnVarianceDetected
             ],
         );
 
-        $this->logger->info('Created variance approval task', [
+        $this->getLogger()->info('Created variance approval task', [
             'vendor_bill_id' => $event->vendorBillId,
             'task_type' => 'invoice_variance_approval',
             'assigned_to_role' => $approvalLevel,
@@ -224,7 +232,7 @@ final readonly class NotifyApproversOnVarianceDetected
         string $approvalLevel,
         array $data,
     ): void {
-        $this->logger->debug('Sending variance notification', [
+        $this->getLogger()->debug('Sending variance notification', [
             'vendor_bill_id' => $event->vendorBillId,
             'channel' => $channel,
             'approval_level' => $approvalLevel,
@@ -244,7 +252,7 @@ final readonly class NotifyApproversOnVarianceDetected
                 ],
             );
         } catch (\Throwable $e) {
-            $this->logger->warning('Failed to send notification via channel', [
+            $this->getLogger()->warning('Failed to send notification via channel', [
                 'vendor_bill_id' => $event->vendorBillId,
                 'channel' => $channel,
                 'error' => $e->getMessage(),
@@ -272,12 +280,38 @@ final readonly class NotifyApproversOnVarianceDetected
     {
         $now = new \DateTimeImmutable();
 
-        return match ($approvalLevel) {
-            'ap_clerk' => $now->modify('+3 business days'),
-            'ap_supervisor' => $now->modify('+2 business days'),
-            'finance_manager' => $now->modify('+1 business day'),
-            default => $now->modify('+3 business days'),
+        $days = match ($approvalLevel) {
+            'ap_clerk' => 3,
+            'ap_supervisor' => 2,
+            'finance_manager' => 1,
+            default => 3,
         };
+        return $this->addBusinessDays($now, $days);
+    }
+
+    /**
+     * Add business days (Mon-Fri) to a date.
+     */
+    private function addBusinessDays(\DateTimeImmutable $date, int $days): \DateTimeImmutable
+    {
+        if ($days === 0) {
+            return $date;
+        }
+        
+        if ($days < 0) {
+            throw new \InvalidArgumentException('Days must be non-negative');
+        }
+        
+        $result = $date;
+        $added = 0;
+        while ($added < $days) {
+            $result = $result->modify('+1 day');
+            $dayOfWeek = (int) $result->format('N'); // 1 (Mon) to 7 (Sun)
+            if ($dayOfWeek < 6) {
+                $added++;
+            }
+        }
+        return $result;
     }
 
     /**
