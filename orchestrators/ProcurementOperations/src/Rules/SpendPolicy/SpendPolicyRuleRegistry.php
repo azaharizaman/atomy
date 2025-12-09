@@ -16,46 +16,60 @@ use Nexus\ProcurementOperations\Rules\RuleResult;
  * Registry of spend policy rules.
  *
  * Manages the collection of policy rules and orchestrates their execution.
+ * Implements the Rule Engine pattern from Advanced Orchestrator Pattern v1.1.
  */
-final class SpendPolicyRuleRegistry
+final readonly class SpendPolicyRuleRegistry
 {
     /**
-     * @var array<SpendPolicyRuleInterface>
+     * @var array<string, SpendPolicyRuleInterface>
      */
-    private array $rules = [];
+    private array $rules;
+
+    /**
+     * @param CategorySpendLimitRule $categoryLimit
+     * @param VendorSpendLimitRule $vendorLimit
+     * @param PreferredVendorRule $preferredVendor
+     * @param MaverickSpendRule $maverickSpend
+     * @param BudgetAvailabilityRule $budgetAvailability
+     * @param ContractComplianceRule $contractCompliance
+     * @param array<SpendPolicyRuleInterface> $additionalRules Optional custom rules
+     */
+    public function __construct(
+        private CategorySpendLimitRule $categoryLimit,
+        private VendorSpendLimitRule $vendorLimit,
+        private PreferredVendorRule $preferredVendor,
+        private MaverickSpendRule $maverickSpend,
+        private BudgetAvailabilityRule $budgetAvailability,
+        private ContractComplianceRule $contractCompliance,
+        private array $additionalRules = [],
+    ) {
+        $this->rules = [
+            $categoryLimit->getName() => $categoryLimit,
+            $vendorLimit->getName() => $vendorLimit,
+            $preferredVendor->getName() => $preferredVendor,
+            $maverickSpend->getName() => $maverickSpend,
+            $budgetAvailability->getName() => $budgetAvailability,
+            $contractCompliance->getName() => $contractCompliance,
+        ];
+
+        foreach ($additionalRules as $rule) {
+            $this->rules[$rule->getName()] = $rule;
+        }
+    }
 
     /**
      * Create a registry with default rules.
      */
     public static function withDefaultRules(): self
     {
-        $registry = new self();
-
-        // Register all default spend policy rules
-        $registry->register(new CategorySpendLimitRule());
-        $registry->register(new VendorSpendLimitRule());
-        $registry->register(new PreferredVendorRule());
-        $registry->register(new MaverickSpendRule());
-        $registry->register(new BudgetAvailabilityRule());
-        $registry->register(new ContractComplianceRule());
-
-        return $registry;
-    }
-
-    /**
-     * Register a policy rule.
-     */
-    public function register(SpendPolicyRuleInterface $rule): void
-    {
-        $this->rules[$rule->getName()] = $rule;
-    }
-
-    /**
-     * Unregister a policy rule.
-     */
-    public function unregister(string $ruleName): void
-    {
-        unset($this->rules[$ruleName]);
+        return new self(
+            categoryLimit: new CategorySpendLimitRule(),
+            vendorLimit: new VendorSpendLimitRule(),
+            preferredVendor: new PreferredVendorRule(),
+            maverickSpend: new MaverickSpendRule(),
+            budgetAvailability: new BudgetAvailabilityRule(),
+            contractCompliance: new ContractComplianceRule(),
+        );
     }
 
     /**

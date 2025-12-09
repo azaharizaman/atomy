@@ -81,7 +81,7 @@ final readonly class WithholdingTaxResult
         return new self(
             grossAmount: $grossAmount,
             netAmount: $grossAmount,
-            withholdingAmount: Money::zero($grossAmount->currency),
+            withholdingAmount: Money::zero($grossAmount->getCurrency()),
             effectiveRate: 0.0,
             jurisdictionCode: $jurisdictionCode,
         );

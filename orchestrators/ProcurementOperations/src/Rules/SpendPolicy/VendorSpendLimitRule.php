@@ -47,8 +47,8 @@ final readonly class VendorSpendLimitRule implements SpendPolicyRuleInterface
 
         // Determine severity based on how much over limit
         $projectedSpend = $context->getProjectedVendorSpend();
-        $overagePercent = ($projectedSpend->getAmountInCents() - $context->vendorLimit->getAmountInCents())
-            / $context->vendorLimit->getAmountInCents() * 100;
+        $overagePercent = ($projectedSpend->getAmountInMinorUnits() - $context->vendorLimit->getAmountInMinorUnits())
+            / $context->vendorLimit->getAmountInMinorUnits() * 100;
 
         $severity = match (true) {
             $overagePercent >= 50 => PolicyViolationSeverity::CRITICAL,
