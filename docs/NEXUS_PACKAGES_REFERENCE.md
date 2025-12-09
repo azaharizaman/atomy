@@ -1,11 +1,25 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.1  
-**Last Updated:** November 25, 2025  
+**Version:** 1.2  
+**Last Updated:** December 9, 2025  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
 
-**Recent Updates:**
+**Recent Updates (December 2025):**
+- **NEW:** Added `Nexus\ProcurementOperations` orchestrator - Complete P2P workflow coordination (~30% coverage, see improvement areas)
+- **NEW:** Added `Nexus\AccountingOperations` orchestrator - Financial workflow coordination (period close, consolidation, ratios)
+- **NEW:** Added `Nexus\HumanResourceOperations` orchestrator - HR workflow coordination (hiring, attendance, payroll)
+- **NEW:** Added `Nexus\FinancialStatements` - Statement generation engine (Balance Sheet, P&L, Cash Flow)
+- **NEW:** Added `Nexus\FinancialRatios` - Financial ratio analysis (DuPont, liquidity, profitability)
+- **NEW:** Added `Nexus\AccountConsolidation` - Multi-entity consolidation
+- **NEW:** Added `Nexus\AccountPeriodClose` - Period close management
+- **NEW:** Added `Nexus\AccountVarianceAnalysis` - Budget vs actual variance analysis
+- **NEW:** Added `Nexus\ProcurementML` - Procurement-specific ML feature extractors
+- **NEW:** Added `Nexus\PerformanceReview` - Employee performance review management
+- **IMPROVED:** Total package count increased from 52 to 61 atomic packages
+- **IMPROVED:** Total orchestrator count: 3 production-ready orchestrators
+
+**Previous Updates (November 2025):**
 - Added `Nexus\Manufacturing` - Complete MRP II (BOM, Routing, Work Orders, Capacity Planning, ML Forecasting)
 - Added `Nexus\FeatureFlags` - Feature flag management system
 - Added `Nexus\SSO` - Single Sign-On integration (SAML, OAuth2, OIDC)
@@ -2116,6 +2130,353 @@ use Nexus\Crypto\Contracts\KeyManagerInterface;
 
 ---
 
+### 📈 **18. Financial Analysis Packages**
+
+#### **Nexus\FinancialStatements**
+**Capabilities:**
+- Generate complete financial statements from account balances
+- Support for multiple compliance frameworks (GAAP, IFRS, custom)
+- Statement types: Balance Sheet, Income Statement, Cash Flow, Changes in Equity
+- Section organization and grouping
+- Statement validation (balancing, compliance requirements)
+- Export adapter contracts for PDF, Excel, HTML
+
+**When to Use:**
+- ✅ Generate Balance Sheets and P&L statements
+- ✅ Cash Flow Statement (direct & indirect methods)
+- ✅ Multi-framework compliance reporting
+- ✅ Period-end financial reporting
+
+**Key Interfaces:**
+```php
+use Nexus\FinancialStatements\Contracts\FinancialStatementInterface;
+use Nexus\FinancialStatements\Contracts\StatementGeneratorInterface;
+use Nexus\FinancialStatements\Contracts\StatementValidatorInterface;
+use Nexus\FinancialStatements\Contracts\LayoutManagerInterface;
+```
+
+---
+
+#### **Nexus\FinancialRatios**
+**Capabilities:**
+- Calculate standard financial ratios (liquidity, profitability, leverage, efficiency)
+- DuPont analysis decomposition (ROE breakdown)
+- Benchmarking against industry standards
+- Health assessment indicators
+- Trend analysis over time
+- Multi-period comparison
+
+**Ratio Categories:**
+| Category | Key Ratios |
+|----------|------------|
+| **Liquidity** | Current, Quick, Cash |
+| **Profitability** | Gross Margin, Net Margin, ROA, ROE |
+| **Leverage** | Debt-to-Equity, Interest Coverage |
+| **Efficiency** | Inventory Turnover, AR Turnover |
+| **Cash Flow** | Operating Cash Flow, Free Cash Flow |
+| **Market** | EPS, P/E, Dividend Yield |
+
+**When to Use:**
+- ✅ Financial health assessment
+- ✅ DuPont analysis for ROE decomposition
+- ✅ Industry benchmarking
+- ✅ Trend analysis and forecasting
+
+**Key Interfaces:**
+```php
+use Nexus\FinancialRatios\Contracts\RatioCalculatorInterface;
+use Nexus\FinancialRatios\Contracts\DuPontAnalyzerInterface;
+use Nexus\FinancialRatios\Contracts\BenchmarkProviderInterface;
+```
+
+---
+
+#### **Nexus\AccountConsolidation**
+**Capabilities:**
+- Multi-entity financial consolidation
+- Elimination entries for intercompany transactions
+- Currency translation for foreign subsidiaries
+- Minority interest calculations
+- Consolidation hierarchy management
+
+**When to Use:**
+- ✅ Consolidated financial statements
+- ✅ Multi-entity group reporting
+- ✅ Intercompany eliminations
+- ✅ Foreign currency consolidation
+
+**Key Interfaces:**
+```php
+use Nexus\AccountConsolidation\Contracts\ConsolidationManagerInterface;
+use Nexus\AccountConsolidation\Contracts\EliminationEngineInterface;
+```
+
+---
+
+#### **Nexus\AccountPeriodClose**
+**Capabilities:**
+- Period close workflow management
+- Pre-close validation checks
+- Close checklist tracking
+- Period lock/unlock controls
+- Close journal generation
+
+**When to Use:**
+- ✅ Month-end close process
+- ✅ Year-end close workflows
+- ✅ Period validation before close
+- ✅ Close checklist enforcement
+
+**Key Interfaces:**
+```php
+use Nexus\AccountPeriodClose\Contracts\PeriodCloseManagerInterface;
+use Nexus\AccountPeriodClose\Contracts\CloseValidatorInterface;
+```
+
+---
+
+#### **Nexus\AccountVarianceAnalysis**
+**Capabilities:**
+- Budget vs actual variance analysis
+- Favorable/unfavorable variance classification
+- Variance explanation tracking
+- Multi-dimensional analysis (by cost center, project, department)
+
+**When to Use:**
+- ✅ Budget variance reporting
+- ✅ Cost control analysis
+- ✅ Management reporting
+- ✅ Performance evaluation
+
+**Key Interfaces:**
+```php
+use Nexus\AccountVarianceAnalysis\Contracts\VarianceAnalyzerInterface;
+use Nexus\AccountVarianceAnalysis\Contracts\VarianceReportGeneratorInterface;
+```
+
+---
+
+### 👥 **19. HR Extensions**
+
+#### **Nexus\PerformanceReview**
+**Capabilities:**
+- Performance review cycle management
+- Goal setting and tracking
+- Competency assessments
+- 360-degree feedback collection
+- Review templates and workflows
+
+**When to Use:**
+- ✅ Annual performance reviews
+- ✅ Goal setting and OKRs
+- ✅ 360-degree feedback processes
+- ✅ Competency evaluations
+
+**Key Interfaces:**
+```php
+use Nexus\PerformanceReview\Contracts\ReviewManagerInterface;
+use Nexus\PerformanceReview\Contracts\GoalTrackerInterface;
+use Nexus\PerformanceReview\Contracts\FeedbackCollectorInterface;
+```
+
+---
+
+#### **Nexus\ProcurementML**
+**Capabilities:**
+- Procurement-specific ML feature extractors
+- Vendor performance analytics interfaces
+- Spend pattern analysis
+- Invoice anomaly detection features
+- Price variance prediction features
+
+**When to Use:**
+- ✅ ML-powered procurement analytics
+- ✅ Vendor performance scoring with ML
+- ✅ Anomaly detection in procurement
+- ✅ Spend pattern analysis
+
+**Key Interfaces:**
+```php
+use Nexus\ProcurementML\Contracts\VendorPerformanceAnalyticsRepositoryInterface;
+use Nexus\ProcurementML\Contracts\SpendAnalyticsRepositoryInterface;
+use Nexus\ProcurementML\Extractors\InvoiceAnomalyExtractor;
+use Nexus\ProcurementML\Extractors\VendorPerformanceExtractor;
+```
+
+---
+
+## 🔗 **20. Orchestrators (Workflow Coordination)**
+
+Orchestrators coordinate workflows across multiple atomic packages. They own the **flow**, not the **truth** (entities remain in atomic packages).
+
+### **Nexus\AccountingOperations** ✅ **PRODUCTION-READY**
+
+**Capabilities:**
+- Period close workflow coordination
+- Financial statement generation workflows
+- Consolidation process orchestration
+- Variance analysis workflows
+- Ratio analysis coordination
+
+**Packages Orchestrated:**
+| Package | Purpose |
+|---------|---------|
+| `Nexus\FinancialStatements` | Generate statements |
+| `Nexus\AccountConsolidation` | Multi-entity consolidation |
+| `Nexus\AccountVarianceAnalysis` | Variance analysis |
+| `Nexus\AccountPeriodClose` | Period close management |
+| `Nexus\FinancialRatios` | Ratio calculations |
+
+**When to Use:**
+- ✅ End-to-end period close process
+- ✅ Consolidated statement generation
+- ✅ Management reporting workflows
+
+**Key Interfaces:**
+```php
+use Nexus\AccountingOperations\Contracts\AccountingWorkflowInterface;
+use Nexus\AccountingOperations\Coordinators\PeriodCloseCoordinator;
+use Nexus\AccountingOperations\Coordinators\StatementGenerationCoordinator;
+```
+
+---
+
+### **Nexus\HumanResourceOperations** ✅ **PRODUCTION-READY**
+
+**Capabilities:**
+- Hiring workflow coordination with interview tracking
+- Attendance workflow with anomaly detection (unusual hours, location, consecutive absences)
+- Payroll calculation workflow with Malaysian statutory compliance
+- Leave management coordination
+- Onboarding workflows
+
+**Key Features:**
+- ✅ Real-time attendance anomaly detection (geolocation, unusual hours)
+- ✅ Malaysian Employment Act overtime validation (104 hrs/month, 4 hrs/day)
+- ✅ Multi-level approval workflows with delegation
+- ✅ Integration with `Nexus\PayrollMysStatutory` for statutory calculations
+
+**Packages Orchestrated:**
+| Package | Purpose |
+|---------|---------|
+| `Nexus\Hrm` | Employee management, leave |
+| `Nexus\Payroll` | Payroll processing |
+| `Nexus\PayrollMysStatutory` | Malaysian statutory (EPF, SOCSO, PCB) |
+| `Nexus\Identity` | User provisioning |
+| `Nexus\Party` | Contact management |
+
+**Key Interfaces:**
+```php
+use Nexus\HumanResourceOperations\Coordinators\HiringCoordinator;
+use Nexus\HumanResourceOperations\Coordinators\AttendanceCoordinator;
+use Nexus\HumanResourceOperations\Coordinators\PayrollCoordinator;
+use Nexus\HumanResourceOperations\Coordinators\LeaveCoordinator;
+```
+
+---
+
+### **Nexus\ProcurementOperations** ⚠️ **~30% COVERAGE - NEEDS IMPROVEMENT**
+
+**Capabilities:**
+- Procure-to-Pay (P2P) workflow coordination
+- Three-way matching (PO-GR-Invoice)
+- Payment batch processing
+- GR-IR accrual posting
+
+**Current Implementation Status:**
+
+| Area | Coverage | Status |
+|------|----------|--------|
+| Basic Requisition → PO flow | 40% | ⚠️ Basic |
+| Three-Way Matching | 60% | ✅ Good |
+| Payment Processing | 30% | ⚠️ Basic |
+| Vendor Management | 10% | 🔴 Critical Gap |
+| Contract Management | 0% | 🔴 Not Implemented |
+| Compliance Controls | 20% | 🔴 Critical Gap |
+| Analytics/Reporting | 0% | 🔴 Not Implemented |
+
+**⚠️ Critical Gaps (See Gap Analysis):**
+- Multi-level approval routing with delegation
+- Blanket/Framework POs and Contract POs
+- Vendor onboarding and compliance tracking
+- Duplicate invoice detection
+- Payment method strategies (ACH, Wire, Check)
+- Segregation of duties validation
+- Spend analytics and AP aging reports
+
+**Key Interfaces:**
+```php
+use Nexus\ProcurementOperations\Coordinators\ProcurementCoordinator;
+use Nexus\ProcurementOperations\Coordinators\ThreeWayMatchCoordinator;
+use Nexus\ProcurementOperations\Coordinators\PaymentProcessingCoordinator;
+use Nexus\ProcurementOperations\Workflows\ProcureToPayWorkflow;
+```
+
+---
+
+## 🚧 **21. Areas Needing Improvement**
+
+This section highlights packages and orchestrators that require additional development.
+
+### **ProcurementOperations - Critical Gaps**
+
+Based on the comprehensive gap analysis comparing against SAP Ariba, Oracle Procurement Cloud, and Microsoft Dynamics 365:
+
+#### 🔴 **Critical Priority (Must Have)**
+
+| Gap | Description | Business Impact |
+|-----|-------------|-----------------|
+| **Multi-level Approval** | Approval routing by amount, category, cost center | Cannot enforce corporate policies |
+| **Delegation & Substitution** | Manager absence → delegate approves | Blocks approvals |
+| **Blanket/Contract POs** | Long-term agreements with release orders | Cannot manage volume commitments |
+| **Vendor Hold Management** | Block POs/payments for non-compliant vendors | Payments to risky vendors |
+| **Credit/Debit Memo** | Handle vendor credits | Cannot process vendor credits |
+| **Duplicate Invoice Detection** | Prevent duplicate payments | Financial loss risk |
+| **Segregation of Duties** | Requestor ≠ Approver ≠ Receiver | Fraud risk |
+| **Payment Method Support** | ACH, Wire, Check, Virtual Card | Limited payment options |
+
+#### 🟡 **High Priority (Should Have)**
+
+| Gap | Description |
+|-----|-------------|
+| **Budget Pre-check** | Block requisition if budget unavailable |
+| **Quality Inspection Integration** | QC hold before stock receipt |
+| **Return to Vendor (RTV)** | Process for rejected goods |
+| **Invoice Hold Management** | Hold invoice with reason codes |
+| **Early Payment Discount** | Auto-capture 2/10 Net 30 discounts |
+| **Tax Validation** | Validate tax amounts/codes |
+
+#### 🟢 **Medium Priority (Nice to Have)**
+
+| Gap | Description |
+|-----|-------------|
+| **Spend Analytics** | Spend by category, vendor, department |
+| **Vendor Performance Scorecards** | Quality, delivery, price KPIs |
+| **Cash Flow Forecasting** | Predict future cash requirements |
+| **EDI Support** | Electronic PO/Invoice exchange |
+
+**Estimated Effort to Enterprise-Ready:** 16-23 weeks
+
+**Recommended Phases:**
+1. **Phase A (4-6 weeks):** Critical Foundation - approvals, blanket POs, vendor hold, duplicate detection
+2. **Phase B (3-4 weeks):** Compliance Controls - SOX readiness, spend policies, tax validation
+3. **Phase C (4-6 weeks):** Advanced Features - RFQ, vendor onboarding, quality inspection
+4. **Phase D (2-3 weeks):** Analytics - spend analytics, AP aging, vendor scorecards
+5. **Phase E (3-4 weeks):** Integrations - bank files, EDI, vendor portal
+
+---
+
+### **Other Packages Needing Enhancement**
+
+| Package | Gap | Priority |
+|---------|-----|----------|
+| `Nexus\SSO` | Currently PLANNED status | 🟡 High |
+| `Nexus\ProcurementML` | No unit tests | 🟢 Medium |
+| `Nexus\PerformanceReview` | Minimal documentation | 🟢 Medium |
+| `Nexus\FinancialRatios` | Missing market ratio integrations | 🟢 Low |
+
+---
+
 ## 🔄 Package Integration Patterns
 
 ### Pattern 1: Cross-Package Communication via Interfaces
@@ -2389,6 +2750,16 @@ public function getInvoices(): array {
 | **Publish/consume messages** | **`Nexus\Messaging`** | **`MessagePublisherInterface`, `MessageConsumerInterface`** |
 | **Manage content/CMS** | **`Nexus\Content`** | **`ContentManagerInterface`** |
 | **Track detailed changes** | **`Nexus\Audit`** | **`ChangeTrackerInterface`** |
+| **Generate financial statements** | **`Nexus\FinancialStatements`** | **`StatementGeneratorInterface`** |
+| **Calculate financial ratios** | **`Nexus\FinancialRatios`** | **`RatioCalculatorInterface`** |
+| **DuPont ROE analysis** | **`Nexus\FinancialRatios`** | **`DuPontAnalyzerInterface`** |
+| **Consolidate multi-entity financials** | **`Nexus\AccountConsolidation`** | **`ConsolidationManagerInterface`** |
+| **Close accounting periods** | **`Nexus\AccountPeriodClose`** | **`PeriodCloseManagerInterface`** |
+| **Analyze budget variances** | **`Nexus\AccountVarianceAnalysis`** | **`VarianceAnalyzerInterface`** |
+| **Manage performance reviews** | **`Nexus\PerformanceReview`** | **`ReviewManagerInterface`** |
+| **Coordinate P2P workflows** | **`Nexus\ProcurementOperations`** | **`ProcurementCoordinator`** |
+| **Coordinate HR workflows** | **`Nexus\HumanResourceOperations`** | **`HiringCoordinator`, `PayrollCoordinator`** |
+| **Coordinate accounting workflows** | **`Nexus\AccountingOperations`** | **`PeriodCloseCoordinator`** |
 
 ---
 
@@ -2426,9 +2797,10 @@ Before implementing ANY feature, run this mental checklist:
 - **Coding Standards**: [`.github/copilot-instructions.md`](.github/copilot-instructions.md)
 - **Package-Specific Docs**: [`docs/REQUIREMENTS_*.md`](docs/)
 - **Implementation Summaries**: [`docs/*_IMPLEMENTATION_SUMMARY.md`](docs/)
+- **ProcurementOperations Gap Analysis**: [`orchestrators/ProcurementOperations/GAP_ANALYSIS_PROCUREMENT_OPERATIONS.md`](../orchestrators/ProcurementOperations/GAP_ANALYSIS_PROCUREMENT_OPERATIONS.md)
 
 ---
 
-**Last Updated:** November 25, 2025  
+**Last Updated:** December 9, 2025  
 **Maintained By:** Nexus Architecture Team  
 **Enforcement:** Mandatory for all coding agents and developers
