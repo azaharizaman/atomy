@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Nexus\ProcurementOperations\DataProviders;
 
 use Nexus\Common\ValueObjects\Money;
+use Nexus\ProcurementOperations\Contracts\BudgetQueryInterface;
+use Nexus\ProcurementOperations\Contracts\ContractQueryInterface;
 use Nexus\ProcurementOperations\Contracts\SpendPolicyDataProviderInterface;
+use Nexus\ProcurementOperations\Contracts\SpendQueryInterface;
+use Nexus\ProcurementOperations\Contracts\VendorQueryInterface;
 use Nexus\ProcurementOperations\DTOs\SpendPolicy\SpendPolicyContext;
 use Nexus\ProcurementOperations\DTOs\SpendPolicy\SpendPolicyRequest;
 use Nexus\Setting\Contracts\SettingsManagerInterface;
@@ -184,45 +188,4 @@ final readonly class SpendPolicyDataProvider implements SpendPolicyDataProviderI
             'auto_override_for_executives' => false,
         ]);
     }
-}
-
-/**
- * Contract for spend query operations.
- * Consumer application must implement this interface.
- */
-interface SpendQueryInterface
-{
-    public function getCategorySpendYtd(string $tenantId, string $categoryId, int $year): Money;
-    public function getVendorSpendYtd(string $tenantId, string $vendorId, int $year): Money;
-    public function getDepartmentSpendYtd(string $tenantId, string $departmentId, int $year): Money;
-}
-
-/**
- * Contract for vendor query operations.
- * Consumer application must implement this interface.
- */
-interface VendorQueryInterface
-{
-    public function isPreferredForCategory(string $tenantId, string $vendorId, string $categoryId): bool;
-}
-
-/**
- * Contract for contract query operations.
- * Consumer application must implement this interface.
- */
-interface ContractQueryInterface
-{
-    /**
-     * @return array{id: string, remaining: Money}|null
-     */
-    public function getActiveContract(string $tenantId, string $categoryId, ?string $vendorId): ?array;
-}
-
-/**
- * Contract for budget query operations.
- * Consumer application must implement this interface.
- */
-interface BudgetQueryInterface
-{
-    public function getDepartmentBudget(string $tenantId, string $departmentId): ?Money;
 }

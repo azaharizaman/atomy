@@ -17,45 +17,60 @@ use Nexus\ProcurementOperations\Rules\RuleResult;
  *
  * Manages the collection of policy rules and orchestrates their execution.
  */
-final class SpendPolicyRuleRegistry
+final readonly class SpendPolicyRuleRegistry
 {
     /**
-     * @var array<SpendPolicyRuleInterface>
+     * @var array<string, SpendPolicyRuleInterface>
      */
-    private array $rules = [];
+    private array $rules;
+
+    /**
+     * @param array<SpendPolicyRuleInterface> $rules
+     */
+    public function __construct(array $rules = [])
+    {
+        $indexed = [];
+        foreach ($rules as $rule) {
+            $indexed[$rule->getName()] = $rule;
+        }
+        $this->rules = $indexed;
+    }
 
     /**
      * Create a registry with default rules.
      */
     public static function withDefaultRules(): self
     {
-        $registry = new self();
-
-        // Register all default spend policy rules
-        $registry->register(new CategorySpendLimitRule());
-        $registry->register(new VendorSpendLimitRule());
-        $registry->register(new PreferredVendorRule());
-        $registry->register(new MaverickSpendRule());
-        $registry->register(new BudgetAvailabilityRule());
-        $registry->register(new ContractComplianceRule());
-
-        return $registry;
+        return new self([
+            new CategorySpendLimitRule(),
+            new VendorSpendLimitRule(),
+            new PreferredVendorRule(),
+            new MaverickSpendRule(),
+            new BudgetAvailabilityRule(),
+            new ContractComplianceRule(),
+        ]);
     }
 
     /**
      * Register a policy rule.
+     * Returns a new instance with the added rule.
      */
-    public function register(SpendPolicyRuleInterface $rule): void
+    public function register(SpendPolicyRuleInterface $rule): self
     {
-        $this->rules[$rule->getName()] = $rule;
+        $rules = $this->rules;
+        $rules[$rule->getName()] = $rule;
+        return new self(array_values($rules));
     }
 
     /**
      * Unregister a policy rule.
+     * Returns a new instance with the rule removed.
      */
-    public function unregister(string $ruleName): void
+    public function unregister(string $ruleName): self
     {
-        unset($this->rules[$ruleName]);
+        $rules = $this->rules;
+        unset($rules[$ruleName]);
+        return new self(array_values($rules));
     }
 
     /**

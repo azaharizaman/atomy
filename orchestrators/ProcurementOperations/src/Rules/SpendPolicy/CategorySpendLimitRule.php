@@ -42,8 +42,8 @@ final readonly class CategorySpendLimitRule implements SpendPolicyRuleInterface
 
         // Determine severity based on how much over limit
         $projectedSpend = $context->getProjectedCategorySpend();
-        $overagePercent = ($projectedSpend->getAmountInCents() - $context->categoryLimit->getAmountInCents())
-            / $context->categoryLimit->getAmountInCents() * 100;
+        $overagePercent = ($projectedSpend->getAmountInMinorUnits() - $context->categoryLimit->getAmountInMinorUnits())
+            / $context->categoryLimit->getAmountInMinorUnits() * 100;
 
         $severity = match (true) {
             $overagePercent >= 50 => PolicyViolationSeverity::CRITICAL,

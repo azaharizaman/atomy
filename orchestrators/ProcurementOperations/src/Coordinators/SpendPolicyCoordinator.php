@@ -138,7 +138,7 @@ final readonly class SpendPolicyCoordinator
             description: $description,
             metadata: [
                 'tenant_id' => $request->tenantId,
-                'amount' => $request->amount->getAmountInCents(),
+                'amount' => $request->amount->getAmountInMinorUnits(),
                 'currency' => $request->amount->getCurrency(),
                 'category_id' => $request->categoryId,
                 'vendor_id' => $request->vendorId,
