@@ -57,7 +57,7 @@ final class USWithholdingRates
         PaymentType::PROFESSIONAL_SERVICES->value => 0.30,
         PaymentType::TECHNICAL_SERVICES->value => 0.30,
         PaymentType::MANAGEMENT_FEES->value => 0.30,
-        PaymentType::RENTS->value => 0.30,
+        PaymentType::RENT->value => 0.30,
         PaymentType::CONTRACT_PAYMENTS->value => 0.30,
     ];
 
