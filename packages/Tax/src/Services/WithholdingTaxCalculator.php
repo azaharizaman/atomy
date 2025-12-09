@@ -21,10 +21,10 @@ use Psr\Log\NullLogger;
  * 
  * Framework-agnostic - strategies are injected at construction.
  */
-final class WithholdingTaxCalculator implements WithholdingTaxCalculatorInterface
+final readonly class WithholdingTaxCalculator implements WithholdingTaxCalculatorInterface
 {
     /** @var array<string, WithholdingTaxStrategyInterface> */
-    private readonly array $strategies;
+    private array $strategies;
 
     /**
      * @param array<WithholdingTaxStrategyInterface> $strategies Jurisdiction strategies
@@ -32,7 +32,7 @@ final class WithholdingTaxCalculator implements WithholdingTaxCalculatorInterfac
      */
     public function __construct(
         array $strategies,
-        private readonly LoggerInterface $logger = new NullLogger(),
+        private LoggerInterface $logger = new NullLogger(),
     ) {
         $this->strategies = $this->indexStrategies($strategies);
     }

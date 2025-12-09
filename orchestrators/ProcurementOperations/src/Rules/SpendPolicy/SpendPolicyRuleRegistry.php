@@ -18,12 +18,12 @@ use Nexus\ProcurementOperations\Rules\RuleResult;
  * Manages the collection of policy rules and orchestrates their execution.
  * Implements the Rule Engine pattern from Advanced Orchestrator Pattern v1.1.
  */
-final class SpendPolicyRuleRegistry
+final readonly class SpendPolicyRuleRegistry
 {
     /**
      * @var array<string, SpendPolicyRuleInterface>
      */
-    private readonly array $rules;
+    private array $rules;
 
     /**
      * @param CategorySpendLimitRule $categoryLimit
@@ -35,13 +35,13 @@ final class SpendPolicyRuleRegistry
      * @param array<SpendPolicyRuleInterface> $additionalRules Optional custom rules
      */
     public function __construct(
-        private readonly CategorySpendLimitRule $categoryLimit,
-        private readonly VendorSpendLimitRule $vendorLimit,
-        private readonly PreferredVendorRule $preferredVendor,
-        private readonly MaverickSpendRule $maverickSpend,
-        private readonly BudgetAvailabilityRule $budgetAvailability,
-        private readonly ContractComplianceRule $contractCompliance,
-        private readonly array $additionalRules = [],
+        private CategorySpendLimitRule $categoryLimit,
+        private VendorSpendLimitRule $vendorLimit,
+        private PreferredVendorRule $preferredVendor,
+        private MaverickSpendRule $maverickSpend,
+        private BudgetAvailabilityRule $budgetAvailability,
+        private ContractComplianceRule $contractCompliance,
+        private array $additionalRules = [],
     ) {
         $this->rules = [
             $categoryLimit->getName() => $categoryLimit,
