@@ -23,7 +23,7 @@ final class SpendPolicyRuleRegistry
     /**
      * @var array<string, SpendPolicyRuleInterface>
      */
-    private array $rules;
+    private readonly array $rules;
 
     /**
      * @param CategorySpendLimitRule $categoryLimit

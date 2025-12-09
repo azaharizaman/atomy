@@ -24,7 +24,7 @@ use Psr\Log\NullLogger;
 final class WithholdingTaxCalculator implements WithholdingTaxCalculatorInterface
 {
     /** @var array<string, WithholdingTaxStrategyInterface> */
-    private array $strategies;
+    private readonly array $strategies;
 
     /**
      * @param array<WithholdingTaxStrategyInterface> $strategies Jurisdiction strategies
