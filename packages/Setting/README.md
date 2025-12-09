@@ -306,6 +306,7 @@ $this->assertEquals('Asia/Kuala_Lumpur', $result);
 
 ### Package Documentation
 - [Getting Started Guide](docs/getting-started.md)
+- [Runtime Settings Management](docs/runtime-settings-management.md) - Multi-tenancy aware key resolution and usage patterns
 - [API Reference](docs/api-reference.md)
 - [Integration Guide](docs/integration-guide.md)
 - [Examples](docs/examples/)
