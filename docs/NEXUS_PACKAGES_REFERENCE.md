@@ -81,13 +81,13 @@
 
 **Key Interfaces:**
 ```php
-use Nexus\Identity\Contracts\AuthenticationManagerInterface;
-use Nexus\Identity\Contracts\PermissionCheckerInterface;  // For RBAC
-use Nexus\Identity\Contracts\PolicyEvaluatorInterface;    // For ABAC
-use Nexus\Identity\Contracts\UserRepositoryInterface;
-use Nexus\Identity\Contracts\RoleRepositoryInterface;
-use Nexus\Identity\Contracts\PermissionRepositoryInterface;
-use Nexus\Identity\ValueObjects\Policy;                   // Policy builder helper
+use Illuminate\Support\Facades\Cache;
+use Nexus\Identity\ValueObjects\Policy;
+use Nexus\Geo\Contracts\GeocoderInterface;
+use Nexus\SSO\Contracts\SsoManagerInterface;
+use Nexus\Uom\Contracts\UomManagerInterface;
+use Nexus\Export\Contracts\ExporterInterface;
+use Nexus\SSO\Contracts\SsoProviderInterface;
 ```
 
 **Example - Basic Permission Check (RBAC):**
@@ -138,7 +138,7 @@ public function applyLeaveOnBehalf(
 **Policy Registration (in Application Layer):**
 ```php
 // Register custom policies in service provider
-use Nexus\Identity\ValueObjects\Policy;
+use Nexus\Storage\Contracts\StorageInterface;
 
 $policy = Policy::define('hrm.leave.apply_on_behalf')
     ->description('User can apply leave on behalf of employees in same department')
@@ -185,12 +185,12 @@ $policyEvaluator->registerPolicy($policy->getName(), $policy->getEvaluator());
 
 **Key Interfaces:**
 ```php
-use Nexus\SSO\Contracts\SsoManagerInterface;
-use Nexus\SSO\Contracts\SsoProviderInterface;
+use Nexus\Hrm\Contracts\LeaveManagerInterface;
 use Nexus\SSO\Contracts\SamlProviderInterface;
+use Nexus\Crypto\Contracts\KeyManagerInterface;
 use Nexus\SSO\Contracts\OAuthProviderInterface;
-use Nexus\SSO\Contracts\UserProvisioningInterface;
-use Nexus\SSO\Contracts\AttributeMapperInterface;
+use Nexus\Tax\Contracts\TaxCalculatorInterface;
+use Nexus\Uom\Contracts\UomRepositoryInterface;
 ```
 
 **Example:**
@@ -239,8 +239,8 @@ final class CustomSamlHandler {
 // Consuming application implements it using Nexus\Identity
 namespace App\Services\SSO;
 
-use Nexus\SSO\Contracts\UserProvisioningInterface;
-use Nexus\Identity\Contracts\UserManagerInterface;
+use Nexus\Import\Contracts\FieldMapperInterface;
+use Nexus\Import\Contracts\TransformerInterface;
 
 final readonly class IdentityUserProvisioner implements UserProvisioningInterface
 {
@@ -279,9 +279,9 @@ final readonly class IdentityUserProvisioner implements UserProvisioningInterfac
 
 **Key Interfaces:**
 ```php
-use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
-use Nexus\Monitoring\Contracts\HealthCheckerInterface;
-use Nexus\Monitoring\Contracts\MetricExporterInterface;
+use Nexus\Party\Contracts\PartyManagerInterface;
+use Nexus\Routing\Contracts\RouteCacheInterface;
+use Nexus\Tax\Contracts\TaxRateManagerInterface;
 ```
 
 **Example:**
@@ -346,8 +346,8 @@ final class CustomMetricsCollector {
 
 **Key Interfaces:**
 ```php
-use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
-use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
+use Nexus\Assets\Contracts\AssetManagerInterface;
+use Nexus\Audit\Contracts\ChangeTrackerInterface;
 ```
 
 **Example:**
@@ -399,9 +399,9 @@ public function updateInvoiceStatus(string $invoiceId, string $newStatus): void
 
 **Key Interfaces:**
 ```php
-use Nexus\Audit\Contracts\AuditTrailManagerInterface;
-use Nexus\Audit\Contracts\ChangeTrackerInterface;
-use Nexus\Audit\Contracts\AuditReportGeneratorInterface;
+use Nexus\Hrm\Contracts\EmployeeManagerInterface;
+use Nexus\Import\Contracts\ImportParserInterface;
+use Nexus\SSO\Contracts\AttributeMapperInterface;
 ```
 
 **Example:**
@@ -454,9 +454,9 @@ public function updateCustomer(string $customerId, array $updates): void
 
 **Key Interfaces:**
 ```php
-use Nexus\Notifier\Contracts\NotificationManagerInterface;
-use Nexus\Notifier\Contracts\NotificationChannelInterface;
-use Nexus\Notifier\Contracts\NotificationRepositoryInterface;
+use Nexus\Budget\Contracts\BudgetManagerInterface;
+use Nexus\Connector\Contracts\ConnectionInterface;
+use Nexus\Content\Contracts\MediaManagerInterface;
 ```
 
 **Example:**
@@ -503,8 +503,8 @@ public function sendPaymentReminder(string $invoiceId): void
 
 **Key Interfaces:**
 ```php
-use Nexus\Storage\Contracts\StorageInterface;
-use Nexus\Storage\Contracts\FileRepositoryInterface;
+use Nexus\Export\Contracts\ExportManagerInterface;
+use Nexus\Identity\Contracts\UserManagerInterface;
 ```
 
 **Example:**
@@ -547,8 +547,8 @@ public function attachFile(string $invoiceId, string $filePath, string $fileName
 
 **Key Interfaces:**
 ```php
-use Nexus\Document\Contracts\DocumentManagerInterface;
-use Nexus\Document\Contracts\DocumentRepositoryInterface;
+use Nexus\Import\Contracts\ImportHandlerInterface;
+use Nexus\Inventory\Contracts\LotManagerInterface;
 ```
 
 ---
@@ -570,10 +570,10 @@ use Nexus\Document\Contracts\DocumentRepositoryInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\EventStream\Contracts\EventStoreInterface;
-use Nexus\EventStream\Contracts\StreamReaderInterface;
-use Nexus\EventStream\Contracts\SnapshotRepositoryInterface;
-use Nexus\EventStream\Contracts\ProjectorInterface;
+use Nexus\Period\Contracts\PeriodManagerInterface;
+use Nexus\SSO\Contracts\UserProvisioningInterface;
+use Nexus\SSO\Contracts\UserProvisioningInterface;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 ```
 
 **Example:**
@@ -633,10 +633,10 @@ public function getBalanceAt(string $accountId, \DateTimeImmutable $timestamp): 
 
 **Key Interfaces:**
 ```php
-use Nexus\DataProcessor\Contracts\OcrProcessorInterface;
-use Nexus\DataProcessor\Contracts\DocumentExtractorInterface;
-use Nexus\DataProcessor\Contracts\EtlPipelineInterface;
-use Nexus\DataProcessor\Contracts\DataTransformerInterface;
+use Nexus\EventStream\Contracts\ProjectorInterface;
+use Nexus\Geo\Contracts\GeofencingManagerInterface;
+use Nexus\Hrm\Contracts\AttendanceManagerInterface;
+use Nexus\Party\Contracts\PartyRepositoryInterface;
 ```
 
 **Example:**
@@ -688,10 +688,10 @@ public function processInvoiceImage(string $imagePath): array
 
 **Key Interfaces:**
 ```php
-use Nexus\Backoffice\Contracts\CompanyManagerInterface;
-use Nexus\Backoffice\Contracts\BranchManagerInterface;
-use Nexus\Backoffice\Contracts\DepartmentManagerInterface;
-use Nexus\Backoffice\Contracts\CostCenterManagerInterface;
+use Nexus\Workflow\Contracts\StateMachineInterface;
+use Nexus\Content\Contracts\ContentManagerInterface;
+use Nexus\EventStream\Contracts\EventStoreInterface;
+use Nexus\Import\Contracts\ImportProcessorInterface;
 ```
 
 **Example:**
@@ -732,9 +732,9 @@ public function getCompanyStructure(string $companyId): array
 
 **Key Interfaces:**
 ```php
-use Nexus\Tenant\Contracts\TenantContextInterface;
-use Nexus\Tenant\Contracts\TenantRepositoryInterface;
-use Nexus\Tenant\Contracts\TenantLifecycleInterface;
+use Nexus\Import\Contracts\ImportValidatorInterface;
+use Nexus\Inventory\Contracts\StockManagerInterface;
+use Nexus\JournalEntry\Services\JournalEntryManager;
 ```
 
 **Example:**
@@ -772,9 +772,9 @@ public function listInvoices(): array
 
 **Key Interfaces:**
 ```php
-use Nexus\Period\Contracts\PeriodManagerInterface;
-use Nexus\Period\Contracts\PeriodRepositoryInterface;
-use Nexus\Period\Contracts\PeriodValidatorInterface;
+use Nexus\JournalEntry\Services\JournalEntryManager;
+use Nexus\Messaging\Contracts\QueueManagerInterface;
+use Nexus\Payable\Contracts\PayableManagerInterface;
 ```
 
 **Example:**
@@ -816,8 +816,8 @@ public function postTransaction(\DateTimeImmutable $transactionDate): void
 
 **Key Interfaces:**
 ```php
-use Nexus\Sequencing\Contracts\SequencingManagerInterface;
-use Nexus\Sequencing\Contracts\SequenceRepositoryInterface;
+use Nexus\Payroll\Contracts\PayrollManagerInterface;
+use Nexus\Period\Contracts\PeriodValidatorInterface;
 ```
 
 **Example:**
@@ -857,8 +857,8 @@ public function createInvoice(array $data): Invoice
 
 **Key Interfaces:**
 ```php
-use Nexus\Uom\Contracts\UomManagerInterface;
-use Nexus\Uom\Contracts\UomRepositoryInterface;
+use Nexus\Product\Contracts\ProductManagerInterface;
+use Nexus\Routing\Contracts\RouteOptimizerInterface;
 ```
 
 **Example:**
@@ -895,9 +895,9 @@ public function convertQuantity(float $quantity, string $fromUom, string $toUom)
 
 **Key Interfaces:**
 ```php
-use Nexus\Currency\Contracts\CurrencyManagerInterface;
-use Nexus\Currency\Contracts\ExchangeRateRepositoryInterface;
-use Nexus\Common\ValueObjects\Money;  // Money VO is in Common
+use Nexus\Sales\Contracts\QuotationManagerInterface;
+use Nexus\Storage\Contracts\FileRepositoryInterface;
+use Nexus\Tax\Contracts\TaxReportGeneratorInterface;
 ```
 
 **Example:**
@@ -936,9 +936,9 @@ public function convertToBaseCurrency(Money $amount): Money
 
 **Key Interfaces:**
 ```php
-use Nexus\ChartOfAccount\Contracts\ChartOfAccountManagerInterface;
-use Nexus\ChartOfAccount\Contracts\AccountQueryInterface;
-use Nexus\ChartOfAccount\Contracts\AccountPersistInterface;
+use Nexus\Tenant\Contracts\TenantLifecycleInterface;
+use Nexus\Audit\Contracts\AuditTrailManagerInterface;
+use Nexus\Budget\Contracts\BudgetRepositoryInterface;
 ```
 
 ---
@@ -959,9 +959,9 @@ use Nexus\ChartOfAccount\Contracts\AccountPersistInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
-use Nexus\JournalEntry\Contracts\JournalEntryQueryInterface;
-use Nexus\JournalEntry\Contracts\JournalEntryPersistInterface;
+use Nexus\Identity\Contracts\RoleRepositoryInterface;
+use Nexus\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Manufacturing\Contracts\MrpEngineInterface;
 ```
 
 ---
@@ -982,8 +982,8 @@ use Nexus\JournalEntry\Contracts\JournalEntryPersistInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Accounting\Contracts\FinancialStatementGeneratorInterface;
-use Nexus\Accounting\Contracts\PeriodCloseManagerInterface;
+use Nexus\Messaging\Contracts\MessageRouterInterface;
+use Nexus\Period\Contracts\PeriodRepositoryInterface;
 ```
 
 ---
@@ -1006,9 +1006,9 @@ use Nexus\Accounting\Contracts\PeriodCloseManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Receivable\Contracts\ReceivableManagerInterface;
-use Nexus\Receivable\Contracts\CustomerInvoiceRepositoryInterface;
-use Nexus\Receivable\Contracts\PaymentReceiptRepositoryInterface;
+use Nexus\Reporting\Contracts\ReportManagerInterface;
+use Nexus\Sales\Contracts\SalesOrderManagerInterface;
+use Nexus\Scheduler\Contracts\JobRepositoryInterface;
 ```
 
 ---
@@ -1023,8 +1023,8 @@ use Nexus\Receivable\Contracts\PaymentReceiptRepositoryInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Payable\Contracts\PayableManagerInterface;
-use Nexus\Payable\Contracts\VendorBillRepositoryInterface;
+use Nexus\Setting\Contracts\SettingsManagerInterface;
+use Nexus\Tax\Contracts\TaxExemptionManagerInterface;
 ```
 
 ---
@@ -1038,8 +1038,8 @@ use Nexus\Payable\Contracts\VendorBillRepositoryInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\CashManagement\Contracts\BankAccountManagerInterface;
-use Nexus\CashManagement\Contracts\ReconciliationManagerInterface;
+use Nexus\Tenant\Contracts\TenantRepositoryInterface;
+use Nexus\Backoffice\Contracts\BranchManagerInterface;
 ```
 
 ---
@@ -1053,8 +1053,8 @@ use Nexus\CashManagement\Contracts\ReconciliationManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Budget\Contracts\BudgetManagerInterface;
-use Nexus\Budget\Contracts\BudgetRepositoryInterface;
+use Nexus\Content\Contracts\ContentPublisherInterface;
+use Nexus\Crypto\Contracts\EncryptionManagerInterface;
 ```
 
 ---
@@ -1068,8 +1068,8 @@ use Nexus\Budget\Contracts\BudgetRepositoryInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Assets\Contracts\AssetManagerInterface;
-use Nexus\Assets\Contracts\DepreciationCalculatorInterface;
+use Nexus\Currency\Contracts\CurrencyManagerInterface;
+use Nexus\Document\Contracts\DocumentManagerInterface;
 ```
 
 ---
@@ -1094,10 +1094,10 @@ use Nexus\Assets\Contracts\DepreciationCalculatorInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Tax\Contracts\TaxCalculatorInterface;
-use Nexus\Tax\Contracts\TaxRateManagerInterface;
-use Nexus\Tax\Contracts\TaxReportGeneratorInterface;
-use Nexus\Tax\Contracts\TaxExemptionManagerInterface;
+use Nexus\EventStream\Contracts\StreamReaderInterface;
+use Nexus\Import\Contracts\DuplicateDetectorInterface;
+use Nexus\Manufacturing\Contracts\BomManagerInterface;
+use Nexus\Monitoring\Contracts\HealthCheckerInterface;
 ```
 
 **Example:**
@@ -1145,8 +1145,8 @@ public function calculateInvoiceTax(Invoice $invoice): Money
 
 **Key Interfaces:**
 ```php
-use Nexus\Party\Contracts\PartyManagerInterface;
-use Nexus\Party\Contracts\PartyRepositoryInterface;
+use Nexus\Payroll\Contracts\PayrollStatutoryInterface;
+use Nexus\Payroll\Contracts\PayslipGeneratorInterface;
 ```
 
 ---
@@ -1161,8 +1161,8 @@ use Nexus\Party\Contracts\PartyRepositoryInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Product\Contracts\ProductManagerInterface;
-use Nexus\Product\Contracts\ProductRepositoryInterface;
+use Nexus\Workflow\Contracts\WorkflowManagerInterface;
+use Nexus\Backoffice\Contracts\CompanyManagerInterface;
 ```
 
 ---
@@ -1177,8 +1177,8 @@ use Nexus\Product\Contracts\ProductRepositoryInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Sales\Contracts\SalesOrderManagerInterface;
-use Nexus\Sales\Contracts\QuotationManagerInterface;
+use Nexus\Content\Contracts\ContentRepositoryInterface;
+use Nexus\DataProcessor\Contracts\EtlPipelineInterface;
 ```
 
 ---
@@ -1192,8 +1192,8 @@ use Nexus\Sales\Contracts\QuotationManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Procurement\Contracts\PurchaseOrderManagerInterface;
-use Nexus\Procurement\Contracts\RequisitionManagerInterface;
+use Nexus\Import\Contracts\TransactionManagerInterface;
+use Nexus\Inventory\Contracts\TransferManagerInterface;
 ```
 
 ---
@@ -1218,12 +1218,12 @@ use Nexus\Procurement\Contracts\RequisitionManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Manufacturing\Contracts\BomManagerInterface;
-use Nexus\Manufacturing\Contracts\RoutingManagerInterface;
-use Nexus\Manufacturing\Contracts\WorkOrderManagerInterface;
-use Nexus\Manufacturing\Contracts\MrpEngineInterface;
-use Nexus\Manufacturing\Contracts\CapacityPlannerInterface;
-use Nexus\Manufacturing\Contracts\DemandForecasterInterface;
+use Nexus\Messaging\Contracts\MessageConsumerInterface;
+use Nexus\Monitoring\Contracts\MetricExporterInterface;
+use Nexus\Product\Contracts\ProductRepositoryInterface;
+use Nexus\Setting\Contracts\SettingRepositoryInterface;
+use Nexus\Statutory\Contracts\TaxonomyAdapterInterface;
+use Nexus\Warehouse\Contracts\LocationManagerInterface;
 ```
 
 **Example:**
@@ -1299,11 +1299,11 @@ final class CustomBomExploder {
 
 **Key Interfaces:**
 ```php
-use Nexus\Inventory\Contracts\StockManagerInterface;
-use Nexus\Inventory\Contracts\LotManagerInterface;
-use Nexus\Inventory\Contracts\SerialNumberManagerInterface;
-use Nexus\Inventory\Contracts\ReservationManagerInterface;
-use Nexus\Inventory\Contracts\TransferManagerInterface;
+use Nexus\Analytics\Contracts\AnalyticsManagerInterface;
+use Nexus\Analytics\Contracts\PredictionEngineInterface;
+use Nexus\Audit\Contracts\AuditReportGeneratorInterface;
+use Nexus\Connector\Contracts\ConnectorManagerInterface;
+use Nexus\DataProcessor\Contracts\OcrProcessorInterface;
 ```
 
 **Valuation Methods:**
@@ -1449,8 +1449,8 @@ public function transferStock(): void
 
 **Key Interfaces:**
 ```php
-use Nexus\Warehouse\Contracts\WarehouseManagerInterface;
-use Nexus\Warehouse\Contracts\LocationManagerInterface;
+use Nexus\Messaging\Contracts\MessagePublisherInterface;
+use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 ```
 
 ---
@@ -1467,9 +1467,9 @@ use Nexus\Warehouse\Contracts\LocationManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Hrm\Contracts\EmployeeManagerInterface;
-use Nexus\Hrm\Contracts\LeaveManagerInterface;
-use Nexus\Hrm\Contracts\AttendanceManagerInterface;
+use Nexus\Scheduler\Contracts\SchedulerManagerInterface;
+use Nexus\Warehouse\Contracts\WarehouseManagerInterface;
+use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
 ```
 
 ---
@@ -1483,9 +1483,9 @@ use Nexus\Hrm\Contracts\AttendanceManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Payroll\Contracts\PayrollManagerInterface;
-use Nexus\Payroll\Contracts\PayslipGeneratorInterface;
-use Nexus\Payroll\Contracts\PayrollStatutoryInterface;
+use Nexus\ChartOfAccount\Contracts\AccountQueryInterface;
+use Nexus\Compliance\Contracts\ComplianceSchemeInterface;
+use Nexus\Document\Contracts\DocumentRepositoryInterface;
 ```
 
 ---
@@ -1502,7 +1502,7 @@ use Nexus\Payroll\Contracts\PayrollStatutoryInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\PayrollMysStatutory\Contracts\MalaysianStatutoryCalculatorInterface;
+use Nexus\MachineLearning\Contracts\ModelLoaderInterface;
 ```
 
 ---
@@ -1519,8 +1519,8 @@ use Nexus\PayrollMysStatutory\Contracts\MalaysianStatutoryCalculatorInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\FieldService\Contracts\WorkOrderManagerInterface;
-use Nexus\FieldService\Contracts\ServiceContractManagerInterface;
+use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
+use Nexus\YourPackage\Contracts\CacheRepositoryInterface;
 ```
 
 ---
@@ -1535,8 +1535,8 @@ use Nexus\FieldService\Contracts\ServiceContractManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\ProjectManagement\Contracts\ProjectManagerInterface;
-use Nexus\ProjectManagement\Contracts\TaskManagerInterface;
+use Nexus\Backoffice\Contracts\CostCenterManagerInterface;
+use Nexus\Backoffice\Contracts\DepartmentManagerInterface;
 ```
 
 ---
@@ -1560,9 +1560,9 @@ use Nexus\ProjectManagement\Contracts\TaskManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Connector\Contracts\ConnectorManagerInterface;
-use Nexus\Connector\Contracts\ConnectionInterface;
-use Nexus\Connector\Contracts\CircuitBreakerStorageInterface;
+use Nexus\Compliance\Contracts\ComplianceManagerInterface;
+use Nexus\Inventory\Contracts\ReservationManagerInterface;
+use Nexus\MachineLearning\Contracts\MLflowClientInterface;
 ```
 
 **Example:**
@@ -1608,10 +1608,10 @@ public function syncCustomer(string $customerId): void
 
 **Key Interfaces:**
 ```php
-use Nexus\Messaging\Contracts\MessagePublisherInterface;
-use Nexus\Messaging\Contracts\MessageConsumerInterface;
-use Nexus\Messaging\Contracts\QueueManagerInterface;
-use Nexus\Messaging\Contracts\MessageRouterInterface;
+use Nexus\Manufacturing\Contracts\RoutingManagerInterface;
+use Nexus\Notifier\Contracts\NotificationChannelInterface;
+use Nexus\Notifier\Contracts\NotificationManagerInterface;
+use Nexus\Payable\Contracts\VendorBillRepositoryInterface;
 ```
 
 **Example:**
@@ -1649,8 +1649,8 @@ public function createInvoice(Invoice $invoice): void
 
 **Key Interfaces:**
 ```php
-use Nexus\Workflow\Contracts\WorkflowManagerInterface;
-use Nexus\Workflow\Contracts\StateMachineInterface;
+use Nexus\Receivable\Contracts\ReceivableManagerInterface;
+use Nexus\Sequencing\Contracts\SequencingManagerInterface;
 ```
 
 ---
@@ -1667,8 +1667,8 @@ use Nexus\Workflow\Contracts\StateMachineInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Reporting\Contracts\ReportManagerInterface;
-use Nexus\Reporting\Contracts\ReportRepositoryInterface;
+use Nexus\Accounting\Contracts\PeriodCloseManagerInterface;
+use Nexus\Assets\Contracts\DepreciationCalculatorInterface;
 ```
 
 ---
@@ -1688,8 +1688,8 @@ use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Export\Contracts\ExportManagerInterface;
-use Nexus\Export\Contracts\ExporterInterface;
+use Nexus\ChartOfAccount\Contracts\AccountPersistInterface;
+use Nexus\DataProcessor\Contracts\DataTransformerInterface;
 ```
 
 ---
@@ -1715,14 +1715,14 @@ use Nexus\Export\Contracts\ExporterInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Import\Contracts\ImportParserInterface;
-use Nexus\Import\Contracts\TransactionManagerInterface;
-use Nexus\Import\Contracts\ImportHandlerInterface;
-use Nexus\Import\Contracts\ImportProcessorInterface;
-use Nexus\Import\Contracts\TransformerInterface;
-use Nexus\Import\Contracts\FieldMapperInterface;
-use Nexus\Import\Contracts\ImportValidatorInterface;
-use Nexus\Import\Contracts\DuplicateDetectorInterface;
+use Nexus\FeatureFlags\Contracts\FeatureEvaluatorInterface;
+use Nexus\FieldService\Contracts\WorkOrderManagerInterface;
+use Nexus\Identity\Contracts\PermissionRepositoryInterface;
+use Nexus\Inventory\Contracts\SerialNumberManagerInterface;
+use Nexus\Manufacturing\Contracts\CapacityPlannerInterface;
+use Nexus\PerformanceReview\Contracts\GoalTrackerInterface;
+use Nexus\ProcurementML\Extractors\InvoiceAnomalyExtractor;
+use Nexus\ProjectManagement\Contracts\TaskManagerInterface;
 ```
 
 **Example:**
@@ -1810,8 +1810,8 @@ final class CustomFieldTransformer {
 
 **Key Interfaces:**
 ```php
-use Nexus\Analytics\Contracts\AnalyticsManagerInterface;
-use Nexus\Analytics\Contracts\PredictionEngineInterface;
+use Nexus\Sequencing\Contracts\SequenceRepositoryInterface;
+use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 ```
 
 ---
@@ -1836,13 +1836,13 @@ use Nexus\Analytics\Contracts\PredictionEngineInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\MachineLearning\Contracts\AnomalyDetectionServiceInterface;
-use Nexus\MachineLearning\Contracts\FeatureExtractorInterface;
-use Nexus\MachineLearning\Contracts\FeatureVersionManagerInterface;
-use Nexus\MachineLearning\Contracts\ProviderStrategyInterface;
-use Nexus\MachineLearning\Contracts\ModelLoaderInterface;
-use Nexus\MachineLearning\Contracts\InferenceEngineInterface;
-use Nexus\MachineLearning\Contracts\MLflowClientInterface;
+use Nexus\EventStream\Contracts\SnapshotRepositoryInterface;
+use Nexus\FinancialRatios\Contracts\DuPontAnalyzerInterface;
+use Nexus\Identity\Contracts\AuthenticationManagerInterface;
+use Nexus\JournalEntry\Contracts\JournalEntryQueryInterface;
+use Nexus\Manufacturing\Contracts\DemandForecasterInterface;
+use Nexus\Manufacturing\Contracts\WorkOrderManagerInterface;
+use Nexus\Procurement\Contracts\RequisitionManagerInterface;
 ```
 
 **Example:**
@@ -1899,8 +1899,8 @@ See `docs/MIGRATION_INTELLIGENCE_TO_MACHINELEARNING.md` for complete guide.
 
 **Key Interfaces:**
 ```php
-use Nexus\Geo\Contracts\GeocoderInterface;
-use Nexus\Geo\Contracts\GeofencingManagerInterface;
+use Nexus\Connector\Contracts\CircuitBreakerStorageInterface;
+use Nexus\Currency\Contracts\ExchangeRateRepositoryInterface;
 ```
 
 ---
@@ -1914,8 +1914,8 @@ use Nexus\Geo\Contracts\GeofencingManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Routing\Contracts\RouteOptimizerInterface;
-use Nexus\Routing\Contracts\RouteCacheInterface;
+use Nexus\DataProcessor\Contracts\DocumentExtractorInterface;
+use Nexus\FeatureFlags\Contracts\FeatureFlagManagerInterface;
 ```
 
 ---
@@ -1942,10 +1942,10 @@ use Nexus\Routing\Contracts\RouteCacheInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Content\Contracts\ContentManagerInterface;
-use Nexus\Content\Contracts\ContentRepositoryInterface;
-use Nexus\Content\Contracts\MediaManagerInterface;
-use Nexus\Content\Contracts\ContentPublisherInterface;
+use Nexus\FinancialRatios\Contracts\RatioCalculatorInterface;
+use Nexus\MachineLearning\Contracts\InferenceEngineInterface;
+use Nexus\Notifier\Contracts\NotificationRepositoryInterface;
+use Nexus\PerformanceReview\Contracts\ReviewManagerInterface;
 ```
 
 **Example:**
@@ -1992,8 +1992,8 @@ public function publishProductContent(string $productId, array $translations): v
 
 **Key Interfaces:**
 ```php
-use Nexus\Compliance\Contracts\ComplianceManagerInterface;
-use Nexus\Compliance\Contracts\ComplianceSchemeInterface;
+use Nexus\Common\ValueObjects\Money;  // Money VO is in Common
+use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
 ```
 
 ---
@@ -2014,8 +2014,8 @@ use Nexus\Compliance\Contracts\ComplianceSchemeInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Statutory\Contracts\StatutoryReportGeneratorInterface;
-use Nexus\Statutory\Contracts\TaxonomyAdapterInterface;
+use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
+use Nexus\JournalEntry\Contracts\JournalEntryPersistInterface;
 ```
 
 ---
@@ -2038,8 +2038,8 @@ use Nexus\Statutory\Contracts\TaxonomyAdapterInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Setting\Contracts\SettingsManagerInterface;
-use Nexus\Setting\Contracts\SettingRepositoryInterface;
+use Nexus\MachineLearning\Contracts\FeatureExtractorInterface;
+use Nexus\MachineLearning\Contracts\ProviderStrategyInterface;
 ```
 
 **Example:**
@@ -2075,9 +2075,9 @@ public function getMaxRetries(): int
 
 **Key Interfaces:**
 ```php
-use Nexus\FeatureFlags\Contracts\FeatureFlagManagerInterface;
-use Nexus\FeatureFlags\Contracts\FeatureFlagRepositoryInterface;
-use Nexus\FeatureFlags\Contracts\FeatureEvaluatorInterface;
+use Nexus\Procurement\Contracts\PurchaseOrderManagerInterface;
+use Nexus\ProcurementML\Extractors\VendorPerformanceExtractor;
+use Nexus\ProjectManagement\Contracts\ProjectManagerInterface;
 ```
 
 **Example:**
@@ -2108,8 +2108,8 @@ public function processOrder(Order $order): void
 
 **Key Interfaces:**
 ```php
-use Nexus\Scheduler\Contracts\SchedulerManagerInterface;
-use Nexus\Scheduler\Contracts\JobRepositoryInterface;
+use Nexus\AccountPeriodClose\Contracts\CloseValidatorInterface;
+use Nexus\CashManagement\Contracts\BankAccountManagerInterface;
 ```
 
 ---
@@ -2124,8 +2124,8 @@ use Nexus\Scheduler\Contracts\JobRepositoryInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Crypto\Contracts\EncryptionManagerInterface;
-use Nexus\Crypto\Contracts\KeyManagerInterface;
+use Nexus\FinancialRatios\Contracts\BenchmarkProviderInterface;
+use Nexus\FinancialStatements\Contracts\LayoutManagerInterface;
 ```
 
 ---
@@ -2149,10 +2149,10 @@ use Nexus\Crypto\Contracts\KeyManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\FinancialStatements\Contracts\FinancialStatementInterface;
-use Nexus\FinancialStatements\Contracts\StatementGeneratorInterface;
-use Nexus\FinancialStatements\Contracts\StatementValidatorInterface;
-use Nexus\FinancialStatements\Contracts\LayoutManagerInterface;
+use Nexus\ProcurementOperations\Workflows\ProcureToPayWorkflow;
+use Nexus\FeatureFlags\Contracts\FeatureFlagRepositoryInterface;
+use Nexus\HumanResourceOperations\Coordinators\LeaveCoordinator;
+use Nexus\Statutory\Contracts\StatutoryReportGeneratorInterface;
 ```
 
 ---
@@ -2184,9 +2184,9 @@ use Nexus\FinancialStatements\Contracts\LayoutManagerInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\FinancialRatios\Contracts\RatioCalculatorInterface;
-use Nexus\FinancialRatios\Contracts\DuPontAnalyzerInterface;
-use Nexus\FinancialRatios\Contracts\BenchmarkProviderInterface;
+use Nexus\FieldService\Contracts\ServiceContractManagerInterface;
+use Nexus\HumanResourceOperations\Coordinators\HiringCoordinator;
+use Nexus\PerformanceReview\Contracts\FeedbackCollectorInterface;
 ```
 
 ---
@@ -2207,8 +2207,8 @@ use Nexus\FinancialRatios\Contracts\BenchmarkProviderInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\AccountConsolidation\Contracts\ConsolidationManagerInterface;
-use Nexus\AccountConsolidation\Contracts\EliminationEngineInterface;
+use Nexus\Receivable\Contracts\GeneralLedgerIntegrationInterface;
+use Nexus\Receivable\Contracts\GeneralLedgerIntegrationInterface;
 ```
 
 ---
@@ -2229,8 +2229,8 @@ use Nexus\AccountConsolidation\Contracts\EliminationEngineInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\AccountPeriodClose\Contracts\PeriodCloseManagerInterface;
-use Nexus\AccountPeriodClose\Contracts\CloseValidatorInterface;
+use Nexus\Receivable\Contracts\PaymentReceiptRepositoryInterface;
+use Nexus\CashManagement\Contracts\ReconciliationManagerInterface;
 ```
 
 ---
@@ -2250,8 +2250,8 @@ use Nexus\AccountPeriodClose\Contracts\CloseValidatorInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\AccountVarianceAnalysis\Contracts\VarianceAnalyzerInterface;
-use Nexus\AccountVarianceAnalysis\Contracts\VarianceReportGeneratorInterface;
+use Nexus\ChartOfAccount\Contracts\ChartOfAccountManagerInterface;
+use Nexus\HumanResourceOperations\Coordinators\PayrollCoordinator;
 ```
 
 ---
@@ -2274,9 +2274,9 @@ use Nexus\AccountVarianceAnalysis\Contracts\VarianceReportGeneratorInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\PerformanceReview\Contracts\ReviewManagerInterface;
-use Nexus\PerformanceReview\Contracts\GoalTrackerInterface;
-use Nexus\PerformanceReview\Contracts\FeedbackCollectorInterface;
+use Nexus\Receivable\Contracts\CustomerInvoiceRepositoryInterface;
+use Nexus\AccountingOperations\Coordinators\PeriodCloseCoordinator;
+use Nexus\AccountPeriodClose\Contracts\PeriodCloseManagerInterface;
 ```
 
 ---
@@ -2297,10 +2297,10 @@ use Nexus\PerformanceReview\Contracts\FeedbackCollectorInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\ProcurementML\Contracts\VendorPerformanceAnalyticsRepositoryInterface;
-use Nexus\ProcurementML\Contracts\SpendAnalyticsRepositoryInterface;
-use Nexus\ProcurementML\Extractors\InvoiceAnomalyExtractor;
-use Nexus\ProcurementML\Extractors\VendorPerformanceExtractor;
+use Nexus\MachineLearning\Contracts\FeatureVersionManagerInterface;
+use Nexus\AccountConsolidation\Contracts\EliminationEngineInterface;
+use Nexus\Accounting\Contracts\FinancialStatementGeneratorInterface;
+use Nexus\FinancialStatements\Contracts\FinancialStatementInterface;
 ```
 
 ---
@@ -2334,9 +2334,9 @@ Orchestrators coordinate workflows across multiple atomic packages. They own the
 
 **Key Interfaces:**
 ```php
-use Nexus\AccountingOperations\Contracts\AccountingWorkflowInterface;
-use Nexus\AccountingOperations\Coordinators\PeriodCloseCoordinator;
-use Nexus\AccountingOperations\Coordinators\StatementGenerationCoordinator;
+use Nexus\FinancialStatements\Contracts\StatementGeneratorInterface;
+use Nexus\FinancialStatements\Contracts\StatementValidatorInterface;
+use Nexus\ProcurementML\Contracts\SpendAnalyticsRepositoryInterface;
 ```
 
 ---
@@ -2367,10 +2367,10 @@ use Nexus\AccountingOperations\Coordinators\StatementGenerationCoordinator;
 
 **Key Interfaces:**
 ```php
-use Nexus\HumanResourceOperations\Coordinators\HiringCoordinator;
+use Nexus\ProcurementOperations\Coordinators\ProcurementCoordinator;
+use Nexus\AccountingOperations\Contracts\AccountingWorkflowInterface;
 use Nexus\HumanResourceOperations\Coordinators\AttendanceCoordinator;
-use Nexus\HumanResourceOperations\Coordinators\PayrollCoordinator;
-use Nexus\HumanResourceOperations\Coordinators\LeaveCoordinator;
+use Nexus\Identity\Contracts\PermissionCheckerInterface;  // For RBAC
 ```
 
 ---
@@ -2406,10 +2406,10 @@ use Nexus\HumanResourceOperations\Coordinators\LeaveCoordinator;
 
 **Key Interfaces:**
 ```php
-use Nexus\ProcurementOperations\Coordinators\ProcurementCoordinator;
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;    // For ABAC
+use Nexus\MachineLearning\Contracts\AnomalyDetectionServiceInterface;
+use Nexus\AccountVarianceAnalysis\Contracts\VarianceAnalyzerInterface;
 use Nexus\ProcurementOperations\Coordinators\ThreeWayMatchCoordinator;
-use Nexus\ProcurementOperations\Coordinators\PaymentProcessingCoordinator;
-use Nexus\ProcurementOperations\Workflows\ProcureToPayWorkflow;
 ```
 
 ---
@@ -2486,7 +2486,7 @@ When Package A needs functionality from Package B:
 **❌ WRONG:**
 ```php
 // Direct coupling between packages
-use Nexus\JournalEntry\Services\JournalEntryManager;
+use Nexus\AccountConsolidation\Contracts\ConsolidationManagerInterface;
 
 public function __construct(
     private readonly JournalEntryManager $jeManager // Concrete class!
@@ -2506,8 +2506,8 @@ interface GeneralLedgerIntegrationInterface
 // Consuming application implements using Package B
 namespace App\Services\Receivable;
 
-use Nexus\Receivable\Contracts\GeneralLedgerIntegrationInterface;
-use Nexus\JournalEntry\Contracts\JournalEntryManagerInterface;
+use Nexus\ProcurementOperations\Coordinators\PaymentProcessingCoordinator;
+use Nexus\AccountingOperations\Coordinators\StatementGenerationCoordinator;
 
 final readonly class JournalEntryAdapter implements GeneralLedgerIntegrationInterface
 {
@@ -2637,14 +2637,14 @@ public function trackEvent(): void {
 
 ```php
 // ❌ WRONG: Package requires another package's concrete class
-use Nexus\JournalEntry\Services\JournalEntryManager;
+use Nexus\AccountVarianceAnalysis\Contracts\VarianceReportGeneratorInterface;
 
 public function __construct(
     private readonly JournalEntryManager $jeManager
 ) {}
 
 // ✅ CORRECT: Package defines interface, consuming app wires implementation
-use Nexus\Receivable\Contracts\GeneralLedgerIntegrationInterface;
+use Nexus\PayrollMysStatutory\Contracts\MalaysianStatutoryCalculatorInterface;
 
 public function __construct(
     private readonly GeneralLedgerIntegrationInterface $glIntegration
@@ -2655,14 +2655,14 @@ public function __construct(
 
 ```php
 // ❌ WRONG: Using Laravel facades in package
-use Illuminate\Support\Facades\Cache;
+use Nexus\ProcurementML\Contracts\VendorPerformanceAnalyticsRepositoryInterface;
 
 public function getTenant(string $id): Tenant {
     return Cache::remember("tenant.{$id}", 3600, fn() => $this->fetch($id));
 }
 
 // ✅ CORRECT: Inject cache interface
-use Nexus\YourPackage\Contracts\CacheRepositoryInterface;
+use Nexus\Identity\ValueObjects\Policy;                   // Policy builder helper
 
 public function __construct(
     private readonly CacheRepositoryInterface $cache
