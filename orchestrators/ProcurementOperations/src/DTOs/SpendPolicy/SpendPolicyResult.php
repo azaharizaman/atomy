@@ -108,7 +108,16 @@ final readonly class SpendPolicyResult
      */
     public function canProceedWithOverride(): bool
     {
-        return count($this->getBlockingViolations()) === 0
-            || count($this->getOverridableViolations()) > 0;
+        $blockingViolations = $this->getBlockingViolations();
+        if (count($blockingViolations) === 0) {
+            return true;
+        }
+        // Only allow override if ALL blocking violations are overridable
+        foreach ($blockingViolations as $violation) {
+            if (!$violation->isOverridable) {
+                return false;
+            }
+        }
+        return true;
     }
 }
