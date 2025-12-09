@@ -130,7 +130,7 @@ final readonly class SpendPolicyDataProvider implements SpendPolicyDataProviderI
             return null;
         }
 
-        return new Money($limit['amount_cents'], $limit['currency'] ?? 'USD');
+        return new Money((int) $limit['amount_cents'], $limit['currency'] ?? 'USD');
     }
 
     /**
@@ -145,7 +145,7 @@ final readonly class SpendPolicyDataProvider implements SpendPolicyDataProviderI
             return null;
         }
 
-        return new Money($limit['amount_cents'], $limit['currency'] ?? 'USD');
+        return new Money((int) $limit['amount_cents'], $limit['currency'] ?? 'USD');
     }
 
     /**
