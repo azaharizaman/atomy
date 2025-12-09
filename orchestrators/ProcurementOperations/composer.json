@@ -28,6 +28,9 @@
         "nexus/notifier": "*@dev",
         "nexus/audit-logger": "*@dev",
         "nexus/setting": "*@dev",
+        "nexus/tax": "*@dev",
+        "nexus/compliance": "*@dev",
+        "nexus/document": "*@dev",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^1.0"
     },
