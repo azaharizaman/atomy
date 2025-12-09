@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\ProcurementOperations\DataProviders;
+namespace Nexus\ProcurementOperations\Contracts;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\DTOs\SpendPolicy\SpendPolicyContext;

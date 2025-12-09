@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Strategies\Withholding;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Contracts\WithholdingTaxStrategyInterface;
 use Nexus\Tax\Data\WithholdingRates\MYWithholdingRates;
 use Nexus\Tax\Enums\PaymentType;
@@ -49,7 +49,7 @@ final readonly class MYWithholdingStrategy implements WithholdingTaxStrategyInte
         $withholdingAmount = $grossAmount->multiply($rate);
         $netAmount = $grossAmount->subtract($withholdingAmount);
 
-        $itaSection = MYWithholdingRates::getITASection($context->paymentType);
+        $itaSection = MYWithholdingRates::getSectionReference($context->paymentType);
 
         $lines = [
             new WithholdingTaxLine(
@@ -91,7 +91,7 @@ final readonly class MYWithholdingStrategy implements WithholdingTaxStrategyInte
         }
 
         // Check if payment type is subject to WHT
-        return MYWithholdingRates::isPaymentTypeSubject($context->paymentType);
+        return isset(MYWithholdingRates::RATES_BY_PAYMENT_TYPE[$context->paymentType->value]);
     }
 
     /**
@@ -111,7 +111,7 @@ final readonly class MYWithholdingStrategy implements WithholdingTaxStrategyInte
         }
 
         // Standard rate based on payment type
-        return MYWithholdingRates::getRate($context->paymentType);
+        return MYWithholdingRates::getDomesticRate($context->paymentType);
     }
 
     /**

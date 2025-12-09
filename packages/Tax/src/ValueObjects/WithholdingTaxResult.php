@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\ValueObjects;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 /**
  * Withholding Tax Result: Complete result of WHT calculation

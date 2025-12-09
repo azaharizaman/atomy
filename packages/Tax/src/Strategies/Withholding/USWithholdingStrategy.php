@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Strategies\Withholding;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Contracts\WithholdingTaxStrategyInterface;
 use Nexus\Tax\Data\WithholdingRates\USWithholdingRates;
 use Nexus\Tax\Enums\PaymentType;
@@ -120,7 +120,7 @@ final readonly class USWithholdingStrategy implements WithholdingTaxStrategyInte
             }
 
             // Standard NRA rate based on payment type
-            return USWithholdingRates::getNonResidentRate($context->paymentType);
+            return USWithholdingRates::getNraRate($context->paymentType);
         }
 
         return 0.0;
