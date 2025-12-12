@@ -28,7 +28,7 @@ final readonly class SOXComplianceDataProvider
         private SOXControlServiceInterface $soxControlService,
         private SOXPerformanceMonitorInterface $performanceMonitor,
         private SOXComplianceStorageInterface $storage,
-        private LoggerInterface $logger = new NullLogger(),
+        private LoggerInterface $logger,
     ) {}
 
     /**

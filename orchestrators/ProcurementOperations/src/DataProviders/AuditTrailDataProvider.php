@@ -26,7 +26,7 @@ final readonly class AuditTrailDataProvider
 {
     public function __construct(
         private AuditLogManagerInterface $auditLogger,
-        private LoggerInterface $logger = new NullLogger(),
+        private LoggerInterface $logger,
     ) {}
 
     /**
