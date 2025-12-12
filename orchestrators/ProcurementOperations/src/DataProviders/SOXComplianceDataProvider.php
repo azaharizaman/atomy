@@ -352,8 +352,8 @@ final readonly class SOXComplianceDataProvider
         // Check for high failure rates on critical controls
         $criticalControls = [
             SOXControlPoint::INV_THREE_WAY_MATCH,
-            SOXControlPoint::PAY_DUAL_APPROVAL,
-            SOXControlPoint::REQ_SOD_CHECK,
+            SOXControlPoint::PAY_APPROVAL_THRESHOLD,
+            SOXControlPoint::SOD_REQUESTOR_APPROVER,
         ];
 
         foreach ($criticalControls as $control) {
