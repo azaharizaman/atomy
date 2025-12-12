@@ -14,7 +14,6 @@ use Nexus\ProcurementOperations\DTOs\Audit\Sox404EvidenceData;
 use Nexus\ProcurementOperations\Enums\ControlArea;
 use Nexus\ProcurementOperations\Enums\RetentionCategory;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * DataProvider for audit trail and compliance data aggregation.

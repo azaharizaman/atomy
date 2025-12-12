@@ -176,7 +176,7 @@ final readonly class ControlTestingRule
 
         // Test after period end requires rollback procedures
         if ($lastTestDate > $periodEndDate) {
-            $daysAfter = $periodEndDate->diff($lastTestDate)->days;
+            $daysAfter = (int) $periodEndDate->diff($lastTestDate)->days;
 
             if ($daysAfter > 60) {
                 return ControlTestingRuleResult::fail(

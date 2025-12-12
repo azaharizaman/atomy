@@ -70,7 +70,8 @@ final readonly class EarlyPaymentDiscountMissedEvent
         \DateTimeImmutable $discountDeadline,
     ): self {
         $now = new \DateTimeImmutable();
-        $daysOverdue = (int) $discountDeadline->diff($now)->days;
+        $interval = $discountDeadline->diff($now);
+        $daysOverdue = is_int($interval->days) ? $interval->days : 0;
 
         return new self(
             invoiceId: $invoiceId,
@@ -99,7 +100,8 @@ final readonly class EarlyPaymentDiscountMissedEvent
         \DateTimeImmutable $discountDeadline,
     ): self {
         $now = new \DateTimeImmutable();
-        $daysOverdue = (int) $discountDeadline->diff($now)->days;
+        $interval = $discountDeadline->diff($now);
+        $daysOverdue = is_int($interval->days) ? $interval->days : 0;
 
         return new self(
             invoiceId: $invoiceId,
