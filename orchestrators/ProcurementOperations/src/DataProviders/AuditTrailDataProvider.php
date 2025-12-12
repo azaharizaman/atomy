@@ -410,11 +410,11 @@ final readonly class AuditTrailDataProvider
     {
         return match (strtoupper($documentType)) {
             'PURCHASE_ORDER' => RetentionCategory::PURCHASE_ORDERS,
-            'INVOICE', 'VENDOR_INVOICE' => RetentionCategory::INVOICES_AND_PAYMENTS,
+            'INVOICE', 'VENDOR_INVOICE' => RetentionCategory::INVOICES_PAYABLE,
             'CONTRACT', 'VENDOR_CONTRACT' => RetentionCategory::VENDOR_CONTRACTS,
             'RFQ', 'RFP' => RetentionCategory::RFQ_DATA,
             'GOODS_RECEIPT' => RetentionCategory::GOODS_RECEIPTS,
-            'PAYMENT' => RetentionCategory::INVOICES_AND_PAYMENTS,
+            'PAYMENT' => RetentionCategory::INVOICES_PAYABLE,
             'AUDIT_REPORT' => RetentionCategory::AUDIT_WORKPAPERS,
             'TAX_DOCUMENT' => RetentionCategory::TAX_DOCUMENTATION,
             default => RetentionCategory::GENERAL_PROCUREMENT,
