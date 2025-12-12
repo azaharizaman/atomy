@@ -411,7 +411,6 @@ final readonly class AuditTrailDataProvider
         return match (strtoupper($documentType)) {
             'PURCHASE_ORDER' => RetentionCategory::PURCHASE_ORDERS,
             'INVOICE', 'VENDOR_INVOICE' => RetentionCategory::INVOICES_PAYABLE,
-            'INVOICE', 'VENDOR_INVOICE' => RetentionCategory::INVOICES_PAYABLE,
             'CONTRACT', 'VENDOR_CONTRACT' => RetentionCategory::VENDOR_CONTRACTS,
             'RFQ', 'RFP' => RetentionCategory::RFQ_DATA,
             'GOODS_RECEIPT' => RetentionCategory::PURCHASE_ORDERS, // GRs follow same retention as POs
