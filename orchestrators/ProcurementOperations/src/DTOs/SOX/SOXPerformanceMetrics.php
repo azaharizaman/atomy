@@ -89,7 +89,7 @@ final readonly class SOXPerformanceMetrics
     /**
      * Get overall error rate (timeouts + errors).
      */
-    public function getErrorRate(): float
+    public function getErrorRatePercentage(): float
     {
         if ($this->totalValidations === 0) {
             return 0.0;
