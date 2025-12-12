@@ -33,6 +33,8 @@ final readonly class SOXPerformanceMetrics
         public array $controlFailures,
         public int $timeoutCount,
         public int $errorCount,
+        public float $failureRate,
+        public float $timeoutRate,
         public array $metadata = [],
     ) {}
 
@@ -143,9 +145,11 @@ final readonly class SOXPerformanceMetrics
             'control_failures' => $this->controlFailures,
             'timeout_count' => $this->timeoutCount,
             'error_count' => $this->errorCount,
+            'failure_rate' => $this->failureRate,
+            'timeout_rate' => $this->timeoutRate,
             'is_within_sla' => $this->isWithinSla(),
             'success_rate' => $this->getSuccessRate(),
-            'error_rate' => $this->getErrorRate(),
+            'error_rate' => $this->getErrorRatePercentage(),
             'slowest_controls' => $this->getSlowestControls(),
             'most_failing_controls' => $this->getMostFailingControls(),
             'metadata' => $this->metadata,

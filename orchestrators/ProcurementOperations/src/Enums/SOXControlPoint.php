@@ -296,7 +296,7 @@ enum SOXControlPoint: string
      *
      * @return array<self>
      */
-    public static function forStep(P2PStep $step): array
+    public static function getControlsForStep(P2PStep $step): array
     {
         return array_filter(
             self::cases(),
