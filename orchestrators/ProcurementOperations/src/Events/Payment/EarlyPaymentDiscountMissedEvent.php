@@ -28,6 +28,15 @@ final readonly class EarlyPaymentDiscountMissedEvent
     ) {}
 
     /**
+     * Calculate days between two dates, handling DateInterval->days returning false
+     */
+    private static function calculateDaysOverdue(\DateTimeImmutable $deadline, \DateTimeImmutable $now): int
+    {
+        $interval = $deadline->diff($now);
+        return is_int($interval->days) ? $interval->days : 0;
+    }
+
+    /**
      * Create discount missed event due to late payment
      */
     public static function latePayment(
@@ -40,8 +49,7 @@ final readonly class EarlyPaymentDiscountMissedEvent
         \DateTimeImmutable $discountDeadline,
     ): self {
         $now = new \DateTimeImmutable();
-        $interval = $discountDeadline->diff($now);
-        $daysOverdue = is_int($interval->days) ? $interval->days : 0;
+        $daysOverdue = self::calculateDaysOverdue($discountDeadline, $now);
 
         return new self(
             invoiceId: $invoiceId,
@@ -70,8 +78,7 @@ final readonly class EarlyPaymentDiscountMissedEvent
         \DateTimeImmutable $discountDeadline,
     ): self {
         $now = new \DateTimeImmutable();
-        $interval = $discountDeadline->diff($now);
-        $daysOverdue = is_int($interval->days) ? $interval->days : 0;
+        $daysOverdue = self::calculateDaysOverdue($discountDeadline, $now);
 
         return new self(
             invoiceId: $invoiceId,
@@ -100,8 +107,7 @@ final readonly class EarlyPaymentDiscountMissedEvent
         \DateTimeImmutable $discountDeadline,
     ): self {
         $now = new \DateTimeImmutable();
-        $interval = $discountDeadline->diff($now);
-        $daysOverdue = is_int($interval->days) ? $interval->days : 0;
+        $daysOverdue = self::calculateDaysOverdue($discountDeadline, $now);
 
         return new self(
             invoiceId: $invoiceId,

@@ -211,7 +211,7 @@ final readonly class VendorSuspendedEvent
         }
 
         $interval = $now->diff($this->suspendedUntil);
-        return is_int($interval->days) ? (int) $interval->days : 0;
+        return is_int($interval->days) ? $interval->days : 0;
     }
 
     /**
