@@ -145,6 +145,8 @@ final readonly class SOXPerformanceMetrics
             'control_failures' => $this->controlFailures,
             'timeout_count' => $this->timeoutCount,
             'error_count' => $this->errorCount,
+            'failure_rate' => $this->failureRate,
+            'timeout_rate' => $this->timeoutRate,
             'is_within_sla' => $this->isWithinSla(),
             'success_rate' => $this->getSuccessRate(),
             'error_rate' => $this->getErrorRatePercentage(),
