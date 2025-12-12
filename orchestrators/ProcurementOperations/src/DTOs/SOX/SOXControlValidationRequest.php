@@ -42,7 +42,7 @@ final readonly class SOXControlValidationRequest
             return $this->controlsToValidate;
         }
 
-        return SOXControlPoint::forStep($this->p2pStep);
+        return SOXControlPoint::getControlsForStep($this->p2pStep);
     }
 
     /**
