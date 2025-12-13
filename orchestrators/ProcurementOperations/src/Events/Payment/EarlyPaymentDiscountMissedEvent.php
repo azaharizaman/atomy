@@ -33,7 +33,12 @@ final readonly class EarlyPaymentDiscountMissedEvent
     private static function calculateDaysOverdue(\DateTimeImmutable $deadline, \DateTimeImmutable $now): int
     {
         $interval = $deadline->diff($now);
-        return is_int($interval->days) ? $interval->days : 0;
+        
+        if (!is_int($interval->days)) {
+            throw new \RuntimeException('Failed to calculate days overdue: DateInterval->days is not an integer.');
+        }
+        
+        return $interval->days;
     }
 
     /**

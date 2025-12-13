@@ -81,10 +81,7 @@ final readonly class TaxValidationResult
     ): self {
         $variance = null;
         if ($calculatedTax !== null && $statedTax !== null) {
-            $variance = Money::of(
-                $statedTax->getAmount() - $calculatedTax->getAmount(),
-                $calculatedTax->getCurrency(),
-            );
+            $variance = $statedTax->subtract($calculatedTax);
         }
 
         return new self(
