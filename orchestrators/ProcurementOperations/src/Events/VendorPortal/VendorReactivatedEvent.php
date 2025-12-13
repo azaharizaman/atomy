@@ -173,7 +173,11 @@ final readonly class VendorReactivatedEvent
 
     public function getSuspensionDurationDays(): int
     {
-        return (int) $this->suspendedAt->diff($this->occurredAt)->days;
+        $interval = $this->suspendedAt->diff($this->occurredAt);
+        if (!is_int($interval->days)) {
+            throw new \RuntimeException('Failed to calculate suspension duration: DateInterval->days is not an integer.');
+        }
+        return $interval->days;
     }
 
     public function requiresEnhancedMonitoring(): bool

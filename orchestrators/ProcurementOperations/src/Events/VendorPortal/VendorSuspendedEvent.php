@@ -211,7 +211,12 @@ final readonly class VendorSuspendedEvent
         }
 
         $interval = $now->diff($this->suspendedUntil);
-        return is_int($interval->days) ? $interval->days : 0;
+        
+        if (!is_int($interval->days)) {
+            throw new \RuntimeException('Failed to calculate remaining suspension days: DateInterval->days is not an integer.');
+        }
+        
+        return $interval->days;
     }
 
     /**
