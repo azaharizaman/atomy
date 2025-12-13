@@ -67,10 +67,7 @@ final readonly class WithholdingTaxCalculation
         bool $certificateOnFile = false,
         ?string $treatyApplied = null,
     ): self {
-        $netPayable = Money::of(
-            $grossAmount->getAmount() - $withholdingAmount->getAmount(),
-            $grossAmount->getCurrency(),
-        );
+        $netPayable = $grossAmount->subtract($withholdingAmount);
 
         $effectiveRate = $grossAmount->isZero()
             ? 0.0

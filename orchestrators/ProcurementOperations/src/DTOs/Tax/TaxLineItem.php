@@ -128,9 +128,6 @@ final readonly class TaxLineItem
     public function getTaxVariance(): Money
     {
         $expected = $this->calculateExpectedTax();
-        return Money::of(
-            $this->taxAmount->getAmount() - $expected->getAmount(),
-            $this->taxAmount->getCurrency(),
-        );
+        return $this->taxAmount->subtract($expected);
     }
 }

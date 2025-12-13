@@ -159,7 +159,16 @@ final readonly class ControlTestingRule
     ): ControlTestingRuleResult {
         // Calculate days between test and period end
         $interval = $lastTestDate->diff($periodEndDate);
-        $daysBetween = is_int($interval->days) ? $interval->days : 0;
+        
+        if (!is_int($interval->days)) {
+            return ControlTestingRuleResult::fail(
+                message: 'Unable to determine days between test and period end: invalid interval calculation',
+                reason: 'INVALID_INTERVAL',
+                controlArea: $controlArea->value,
+            );
+        }
+        
+        $daysBetween = $interval->days;
 
         // Key controls must be tested within 90 days of period end
         $maxDaysBefore = $controlArea->isKeyControl() ? 90 : 120;
@@ -178,7 +187,16 @@ final readonly class ControlTestingRule
         // Test after period end requires rollback procedures
         if ($lastTestDate > $periodEndDate) {
             $interval = $periodEndDate->diff($lastTestDate);
-            $daysAfter = is_int($interval->days) ? $interval->days : 0;
+            
+            if (!is_int($interval->days)) {
+                return ControlTestingRuleResult::fail(
+                    message: 'Unable to determine days after period end: invalid interval calculation',
+                    reason: 'INVALID_INTERVAL',
+                    controlArea: $controlArea->value,
+                );
+            }
+            
+            $daysAfter = $interval->days;
 
             if ($daysAfter > 60) {
                 return ControlTestingRuleResult::fail(
