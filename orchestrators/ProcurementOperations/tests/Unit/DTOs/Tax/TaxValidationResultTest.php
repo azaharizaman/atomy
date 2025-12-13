@@ -207,4 +207,81 @@ final class TaxValidationResultTest extends TestCase
         $this->assertArrayHasKey('errors', $array);
         $this->assertArrayHasKey('warnings', $array);
     }
+
+    #[Test]
+    public function invalid_throws_exception_when_only_calculatedTax_provided(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Both $calculatedTax and $statedTax must be provided together to compute variance, or both must be null.');
+
+        TaxValidationResult::invalid(
+            invoiceId: 'INV-001',
+            errors: [
+                TaxValidationError::invalidTaxCode(1, 'INVALID', 'Invalid tax code'),
+            ],
+            calculatedTax: Money::of(60, 'MYR'),
+            statedTax: null,
+        );
+    }
+
+    #[Test]
+    public function invalid_throws_exception_when_only_statedTax_provided(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Both $calculatedTax and $statedTax must be provided together to compute variance, or both must be null.');
+
+        TaxValidationResult::invalid(
+            invoiceId: 'INV-001',
+            errors: [
+                TaxValidationError::invalidTaxCode(1, 'INVALID', 'Invalid tax code'),
+            ],
+            calculatedTax: null,
+            statedTax: Money::of(60, 'MYR'),
+        );
+    }
+
+    #[Test]
+    public function invalid_accepts_both_tax_amounts_as_null(): void
+    {
+        $result = TaxValidationResult::invalid(
+            invoiceId: 'INV-001',
+            errors: [
+                TaxValidationError::invalidTaxCode(1, 'INVALID', 'Invalid tax code'),
+            ],
+            calculatedTax: null,
+            statedTax: null,
+        );
+
+        $this->assertFalse($result->isValid);
+        $this->assertNull($result->calculatedTax);
+        $this->assertNull($result->statedTax);
+        $this->assertNull($result->variance);
+    }
+
+    #[Test]
+    public function invalid_accepts_both_tax_amounts_provided(): void
+    {
+        $calculatedTax = Money::of(60, 'MYR');
+        $statedTax = Money::of(65, 'MYR');
+
+        $result = TaxValidationResult::invalid(
+            invoiceId: 'INV-001',
+            errors: [
+                TaxValidationError::calculationMismatch(
+                    lineNumber: 1,
+                    expectedTax: $calculatedTax,
+                    actualTax: $statedTax,
+                    variance: 8.33,
+                ),
+            ],
+            calculatedTax: $calculatedTax,
+            statedTax: $statedTax,
+        );
+
+        $this->assertFalse($result->isValid);
+        $this->assertSame($calculatedTax, $result->calculatedTax);
+        $this->assertSame($statedTax, $result->statedTax);
+        $this->assertNotNull($result->variance);
+        $this->assertEquals(5_00, $result->variance->getAmountInCents());
+    }
 }
