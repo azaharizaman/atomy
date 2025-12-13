@@ -51,10 +51,7 @@ final readonly class TaxValidationResult
             warnings: [],
             calculatedTax: $calculatedTax,
             statedTax: $statedTax,
-            variance: Money::of(
-                $statedTax->getAmount() - $calculatedTax->getAmount(),
-                $calculatedTax->getCurrency(),
-            ),
+            variance: $statedTax->subtract($calculatedTax),
             reverseChargeApplicable: $reverseChargeApplicable,
             reverseChargeApplied: $reverseChargeApplied,
             vendorTaxRegistrationValid: $vendorTaxRegistrationValid,
@@ -126,10 +123,7 @@ final readonly class TaxValidationResult
             warnings: $warnings,
             calculatedTax: $calculatedTax,
             statedTax: $statedTax,
-            variance: Money::of(
-                $statedTax->getAmount() - $calculatedTax->getAmount(),
-                $calculatedTax->getCurrency(),
-            ),
+            variance: $statedTax->subtract($calculatedTax),
             reverseChargeApplicable: false,
             reverseChargeApplied: false,
             vendorTaxRegistrationValid: $vendorTaxRegistrationValid,
