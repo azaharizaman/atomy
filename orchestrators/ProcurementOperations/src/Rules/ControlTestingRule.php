@@ -320,14 +320,6 @@ final readonly class ControlTestingRule
     }
 
     /**
-     * Validate that DateInterval->days is a valid integer.
-     *
-     * @param \DateInterval $interval The interval to validate
-     * @param ControlArea $controlArea The control area being validated
-     * @param string $context Description of what's being calculated (e.g., "days between test and period end")
-     * @return ControlTestingRuleResult|null Returns failure result if invalid, null if valid
-     */
-    /**
      * Validate DateInterval and extract days value.
      * 
      * Returns a tuple of [?ControlTestingRuleResult, int]:
@@ -358,6 +350,14 @@ final readonly class ControlTestingRule
         return [null, $interval->days];
     }
 
+    /**
+     * Validate that DateInterval->days is a valid integer.
+     *
+     * @param \DateInterval $interval The interval to validate
+     * @param ControlArea $controlArea The control area being validated
+     * @param string $context Description of what's being calculated (e.g., "days between test and period end")
+     * @return ControlTestingRuleResult|null Returns failure result if invalid, null if valid
+     */
     private function validateIntervalDays(
         \DateInterval $interval,
         ControlArea $controlArea,
