@@ -217,7 +217,7 @@ final class TaxValidationResultTest extends TestCase
         TaxValidationResult::invalid(
             invoiceId: 'INV-001',
             errors: [
-                TaxValidationError::invalidTaxCode(1, 'INVALID', 'Invalid tax code'),
+                TaxValidationError::invalidTaxCode('INVALID'),
             ],
             calculatedTax: Money::of(60, 'MYR'),
             statedTax: null,
@@ -233,7 +233,7 @@ final class TaxValidationResultTest extends TestCase
         TaxValidationResult::invalid(
             invoiceId: 'INV-001',
             errors: [
-                TaxValidationError::invalidTaxCode(1, 'INVALID', 'Invalid tax code'),
+                TaxValidationError::invalidTaxCode('INVALID'),
             ],
             calculatedTax: null,
             statedTax: Money::of(60, 'MYR'),
@@ -246,7 +246,7 @@ final class TaxValidationResultTest extends TestCase
         $result = TaxValidationResult::invalid(
             invoiceId: 'INV-001',
             errors: [
-                TaxValidationError::invalidTaxCode(1, 'INVALID', 'Invalid tax code'),
+                TaxValidationError::invalidTaxCode('INVALID'),
             ],
             calculatedTax: null,
             statedTax: null,
@@ -268,10 +268,9 @@ final class TaxValidationResultTest extends TestCase
             invoiceId: 'INV-001',
             errors: [
                 TaxValidationError::calculationMismatch(
-                    lineNumber: 1,
-                    expectedTax: $calculatedTax,
-                    actualTax: $statedTax,
-                    variance: 8.33,
+                    stated: 65.0,
+                    calculated: 60.0,
+                    variance: 5.0,
                 ),
             ],
             calculatedTax: $calculatedTax,
@@ -282,6 +281,7 @@ final class TaxValidationResultTest extends TestCase
         $this->assertSame($calculatedTax, $result->calculatedTax);
         $this->assertSame($statedTax, $result->statedTax);
         $this->assertNotNull($result->variance);
+        // Variance = statedTax - calculatedTax = 65 - 60 = 5 MYR = 500 cents
         $this->assertEquals(5_00, $result->variance->getAmountInCents());
     }
 }
