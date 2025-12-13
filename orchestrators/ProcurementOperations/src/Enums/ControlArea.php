@@ -22,7 +22,7 @@ enum ControlArea: string
     case APPROVAL_LIMITS = 'approval_limits';
     case PERIOD_END_CUTOFF = 'period_end_cutoff';
     case ACCRUAL_RECOGNITION = 'accrual_recognition';
-    case INTERCOMPANY_TRANSACTIONS = 'intercompany_transactions';
+    case INTERCOMPANY_TRANSACTION = 'intercompany_transactions';
 
     /**
      * Get control objective description.
@@ -41,7 +41,7 @@ enum ControlArea: string
             self::APPROVAL_LIMITS => 'Ensure approval thresholds are appropriate and enforced.',
             self::PERIOD_END_CUTOFF => 'Ensure transactions are recorded in the correct accounting period.',
             self::ACCRUAL_RECOGNITION => 'Ensure liabilities are properly accrued for goods/services received but not invoiced.',
-            self::INTERCOMPANY_TRANSACTIONS => 'Ensure intercompany transactions are properly recorded and eliminated.',
+            self::INTERCOMPANY_TRANSACTION => 'Ensure intercompany transactions are properly recorded and eliminated.',
         };
     }
 
@@ -61,7 +61,7 @@ enum ControlArea: string
             self::SEGREGATION_OF_DUTIES,
             self::APPROVAL_LIMITS => 15,
             self::ACCRUAL_RECOGNITION,
-            self::INTERCOMPANY_TRANSACTIONS => 10,
+            self::INTERCOMPANY_TRANSACTION => 10,
             self::PURCHASE_REQUISITION => 25,
         };
     }
@@ -83,7 +83,7 @@ enum ControlArea: string
             self::APPROVAL_LIMITS => 'Control Environment',
             self::PERIOD_END_CUTOFF,
             self::ACCRUAL_RECOGNITION => 'Information & Communication',
-            self::INTERCOMPANY_TRANSACTIONS => 'Monitoring Activities',
+            self::INTERCOMPANY_TRANSACTION => 'Monitoring Activities',
         };
     }
 
@@ -106,7 +106,7 @@ enum ControlArea: string
             self::APPROVAL_LIMITS => ['Authorization', 'Segregation'],
             self::PERIOD_END_CUTOFF => ['Cutoff', 'Completeness'],
             self::ACCRUAL_RECOGNITION => ['Completeness', 'Valuation'],
-            self::INTERCOMPANY_TRANSACTIONS => ['Completeness', 'Accuracy', 'Validity'],
+            self::INTERCOMPANY_TRANSACTION => ['Completeness', 'Accuracy', 'Validity'],
         };
     }
 
@@ -127,7 +127,7 @@ enum ControlArea: string
             self::VENDOR_MASTER => 'ANNUALLY',
             self::PURCHASE_REQUISITION,
             self::ACCRUAL_RECOGNITION,
-            self::INTERCOMPANY_TRANSACTIONS => 'ANNUALLY',
+            self::INTERCOMPANY_TRANSACTION => 'ANNUALLY',
         };
     }
 

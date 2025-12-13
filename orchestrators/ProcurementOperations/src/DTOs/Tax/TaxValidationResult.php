@@ -79,6 +79,13 @@ final readonly class TaxValidationResult
         array $correctedValues = [],
         bool $vendorTaxRegistrationValid = true,
     ): self {
+        // Validate that both tax amounts are provided together or both are null
+        if (($calculatedTax === null && $statedTax !== null) || ($calculatedTax !== null && $statedTax === null)) {
+            throw new \InvalidArgumentException(
+                'Both $calculatedTax and $statedTax must be provided together to compute variance, or both must be null.'
+            );
+        }
+
         $variance = null;
         if ($calculatedTax !== null && $statedTax !== null) {
             $variance = $statedTax->subtract($calculatedTax);
