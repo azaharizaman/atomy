@@ -160,7 +160,7 @@ final readonly class ControlTestingRule
         // Calculate days between test and period end
         $interval = $lastTestDate->diff($periodEndDate);
         
-        $validationResult = $this->validateIntervalDays(
+        [$validationResult, $daysBetween] = $this->validateAndExtractDays(
             $interval,
             $controlArea,
             'days between test and period end'
@@ -168,8 +168,6 @@ final readonly class ControlTestingRule
         if ($validationResult !== null) {
             return $validationResult;
         }
-        
-        $daysBetween = $interval->days;
 
         // Key controls must be tested within 90 days of period end
         $maxDaysBefore = $controlArea->isKeyControl() ? 90 : 120;
@@ -189,7 +187,7 @@ final readonly class ControlTestingRule
         if ($lastTestDate > $periodEndDate) {
             $interval = $periodEndDate->diff($lastTestDate);
             
-            $validationResult = $this->validateIntervalDays(
+            [$validationResult, $daysAfter] = $this->validateAndExtractDays(
                 $interval,
                 $controlArea,
                 'days after period end'
@@ -197,8 +195,6 @@ final readonly class ControlTestingRule
             if ($validationResult !== null) {
                 return $validationResult;
             }
-            
-            $daysAfter = $interval->days;
 
             if ($daysAfter > 60) {
                 return ControlTestingRuleResult::fail(
@@ -331,6 +327,37 @@ final readonly class ControlTestingRule
      * @param string $context Description of what's being calculated (e.g., "days between test and period end")
      * @return ControlTestingRuleResult|null Returns failure result if invalid, null if valid
      */
+    /**
+     * Validate DateInterval and extract days value.
+     * 
+     * Returns a tuple of [?ControlTestingRuleResult, int]:
+     * - If validation fails, returns [FailResult, 0]
+     * - If validation passes, returns [null, daysValue]
+     *
+     * @param \DateInterval $interval The date interval to validate
+     * @param ControlArea $controlArea Control area for error reporting
+     * @param string $context Context description for error messages
+     * @return array{0: ?ControlTestingRuleResult, 1: int}
+     */
+    private function validateAndExtractDays(
+        \DateInterval $interval,
+        ControlArea $controlArea,
+        string $context,
+    ): array {
+        if (!is_int($interval->days)) {
+            return [
+                ControlTestingRuleResult::fail(
+                    message: "Unable to determine {$context}: invalid interval calculation",
+                    reason: 'INVALID_INTERVAL',
+                    controlArea: $controlArea->value,
+                ),
+                0,
+            ];
+        }
+
+        return [null, $interval->days];
+    }
+
     private function validateIntervalDays(
         \DateInterval $interval,
         ControlArea $controlArea,
