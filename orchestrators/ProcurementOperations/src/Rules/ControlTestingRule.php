@@ -160,12 +160,13 @@ final readonly class ControlTestingRule
         // Calculate days between test and period end
         $interval = $lastTestDate->diff($periodEndDate);
         
-        if (!is_int($interval->days)) {
-            return ControlTestingRuleResult::fail(
-                message: 'Unable to determine days between test and period end: invalid interval calculation',
-                reason: 'INVALID_INTERVAL',
-                controlArea: $controlArea->value,
-            );
+        $validationResult = $this->validateIntervalDays(
+            $interval,
+            $controlArea,
+            'days between test and period end'
+        );
+        if ($validationResult !== null) {
+            return $validationResult;
         }
         
         $daysBetween = $interval->days;
@@ -188,12 +189,13 @@ final readonly class ControlTestingRule
         if ($lastTestDate > $periodEndDate) {
             $interval = $periodEndDate->diff($lastTestDate);
             
-            if (!is_int($interval->days)) {
-                return ControlTestingRuleResult::fail(
-                    message: 'Unable to determine days after period end: invalid interval calculation',
-                    reason: 'INVALID_INTERVAL',
-                    controlArea: $controlArea->value,
-                );
+            $validationResult = $this->validateIntervalDays(
+                $interval,
+                $controlArea,
+                'days after period end'
+            );
+            if ($validationResult !== null) {
+                return $validationResult;
             }
             
             $daysAfter = $interval->days;
@@ -319,6 +321,30 @@ final readonly class ControlTestingRule
             testedControlCount: count($testedControls),
             requiredControlCount: count($requiredControls),
         );
+    }
+
+    /**
+     * Validate that DateInterval->days is a valid integer.
+     *
+     * @param \DateInterval $interval The interval to validate
+     * @param ControlArea $controlArea The control area being validated
+     * @param string $context Description of what's being calculated (e.g., "days between test and period end")
+     * @return ControlTestingRuleResult|null Returns failure result if invalid, null if valid
+     */
+    private function validateIntervalDays(
+        \DateInterval $interval,
+        ControlArea $controlArea,
+        string $context,
+    ): ?ControlTestingRuleResult {
+        if (!is_int($interval->days)) {
+            return ControlTestingRuleResult::fail(
+                message: "Unable to determine {$context}: invalid interval calculation",
+                reason: 'INVALID_INTERVAL',
+                controlArea: $controlArea->value,
+            );
+        }
+
+        return null;
     }
 }
 

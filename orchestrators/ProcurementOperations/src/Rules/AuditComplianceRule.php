@@ -193,7 +193,7 @@ final readonly class AuditComplianceRule
         $sodResult = $this->checkSegregationOfDutiesCompliance($sodReport);
 
         $allPassed = $controlResult->passed && $findingsResult->passed && $sodResult->passed;
-        $hasWarnings = !$controlResult->passed || !$findingsResult->passed || !$sodResult->passed;
+        $hasFailures = !$controlResult->passed || !$findingsResult->passed || !$sodResult->passed;
 
         if (!$allPassed) {
             $failureReasons = [];
@@ -220,7 +220,7 @@ final readonly class AuditComplianceRule
             }
         }
 
-        if ($hasWarnings) {
+        if ($hasFailures) {
             return AuditComplianceRuleResult::warn(
                 message: 'Audit readiness check passed with warnings',
                 subResults: [
