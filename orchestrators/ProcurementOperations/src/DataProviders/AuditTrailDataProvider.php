@@ -14,7 +14,6 @@ use Nexus\ProcurementOperations\DTOs\Audit\Sox404EvidenceData;
 use Nexus\ProcurementOperations\Enums\ControlArea;
 use Nexus\ProcurementOperations\Enums\RetentionCategory;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * DataProvider for audit trail and compliance data aggregation.
@@ -26,7 +25,7 @@ final readonly class AuditTrailDataProvider
 {
     public function __construct(
         private AuditLogManagerInterface $auditLogger,
-        private LoggerInterface $logger = new NullLogger(),
+        private LoggerInterface $logger,
     ) {}
 
     /**

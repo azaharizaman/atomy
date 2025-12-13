@@ -158,7 +158,8 @@ final readonly class ControlTestingRule
         \DateTimeImmutable $periodEndDate,
     ): ControlTestingRuleResult {
         // Calculate days between test and period end
-        $daysBetween = $lastTestDate->diff($periodEndDate)->days;
+        $interval = $lastTestDate->diff($periodEndDate);
+        $daysBetween = is_int($interval->days) ? $interval->days : 0;
 
         // Key controls must be tested within 90 days of period end
         $maxDaysBefore = $controlArea->isKeyControl() ? 90 : 120;
@@ -176,7 +177,8 @@ final readonly class ControlTestingRule
 
         // Test after period end requires rollback procedures
         if ($lastTestDate > $periodEndDate) {
-            $daysAfter = $periodEndDate->diff($lastTestDate)->days;
+            $interval = $periodEndDate->diff($lastTestDate);
+            $daysAfter = is_int($interval->days) ? $interval->days : 0;
 
             if ($daysAfter > 60) {
                 return ControlTestingRuleResult::fail(
