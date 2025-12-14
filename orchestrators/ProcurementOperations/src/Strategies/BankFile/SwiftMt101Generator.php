@@ -68,7 +68,7 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
     public function supports(PaymentBatchData $batch): bool
     {
         // SWIFT MT101 requires BIC codes and IBAN for international transfers
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             // Must have beneficiary bank BIC or other routing info
             if (empty($item->beneficiaryBic) && empty($item->vendorBankRoutingNumber)) {
                 return false;
@@ -93,7 +93,7 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
         }
 
         // Validate each payment item
-        foreach ($batch->items as $index => $item) {
+        foreach ($batch->paymentItems as $index => $item) {
             $itemErrors = $this->validatePaymentItem($item, $index);
             $errors = array_merge($errors, $itemErrors);
         }
@@ -233,7 +233,7 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
 
         // Transaction details for each payment
         $transactionIndex = 0;
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $transactionIndex++;
             $transactionLines = $this->buildTransactionDetails($item, $transactionIndex);
             $lines = array_merge($lines, $transactionLines);
@@ -431,7 +431,7 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
 
         // Collect transaction references
         $transactionRefs = [];
-        foreach ($batch->items as $index => $item) {
+        foreach ($batch->paymentItems as $index => $item) {
             $transactionRefs[] = $this->generateTransactionReference($item, $index + 1);
         }
 
@@ -439,7 +439,7 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
             batchId: $batch->batchId,
             fileName: $this->generateFileName('SWIFT_MT101', $batch->batchId),
             fileContent: $fileContent,
-            totalRecords: count($batch->items),
+            totalRecords: count($batch->paymentItems),
             totalAmount: $totalAmount,
             messageReferenceNumber: $mrn,
             senderBic: $this->configuration->senderBic,

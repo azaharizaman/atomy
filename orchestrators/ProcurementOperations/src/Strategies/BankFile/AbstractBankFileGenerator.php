@@ -187,7 +187,7 @@ abstract readonly class AbstractBankFileGenerator implements BankFileGeneratorIn
     {
         $total = Money::zero($batch->currency);
 
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $total = $total->add($item->amount);
         }
 
@@ -200,7 +200,7 @@ abstract readonly class AbstractBankFileGenerator implements BankFileGeneratorIn
     protected function countValidItems(PaymentBatchData $batch): int
     {
         return count(array_filter(
-            $batch->items,
+            $batch->paymentItems,
             fn(PaymentItemData $item) => $item->amount->getAmount() > 0,
         ));
     }
@@ -218,11 +218,11 @@ abstract readonly class AbstractBankFileGenerator implements BankFileGeneratorIn
             $errors[] = 'Batch ID is required';
         }
 
-        if (empty($batch->items)) {
+        if (empty($batch->paymentItems)) {
             $errors[] = 'At least one payment item is required';
         }
 
-        foreach ($batch->items as $index => $item) {
+        foreach ($batch->paymentItems as $index => $item) {
             if ($item->amount->getAmount() <= 0) {
                 $errors[] = "Item {$index}: Amount must be positive";
             }
@@ -240,7 +240,7 @@ abstract readonly class AbstractBankFileGenerator implements BankFileGeneratorIn
             'format' => $this->getFormat()->value,
             'version' => $this->getVersion(),
             'batch_id' => $batch->batchId,
-            'item_count' => count($batch->items),
+            'item_count' => count($batch->paymentItems),
         ]);
     }
 

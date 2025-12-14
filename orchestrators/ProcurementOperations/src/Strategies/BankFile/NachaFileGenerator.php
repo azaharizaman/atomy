@@ -74,7 +74,7 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
         }
 
         // All items must have valid routing/account numbers
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             if (empty($item->bankRoutingNumber) || empty($item->bankAccountNumber)) {
                 return false;
             }
@@ -98,7 +98,7 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
         }
 
         // Validate each payment item
-        foreach ($batch->items as $index => $item) {
+        foreach ($batch->paymentItems as $index => $item) {
             $itemErrors = $this->validatePaymentItem($item, $index);
             $errors = array_merge($errors, $itemErrors);
         }
@@ -251,7 +251,7 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
 
         // Record Type 6: Entry Detail Records
         $traceNumber = 0;
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $traceNumber++;
             $entryRecord = $this->buildEntryDetailRecord($item, $traceNumber);
             $records[] = $entryRecord;
@@ -470,7 +470,7 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
         $totalCreditCents = $this->formatAmountAsCents($totalAmount);
 
         // Count records (file header + batch header + entries + batch control + file control)
-        $totalRecords = 2 + count($batch->items) + 2;
+        $totalRecords = 2 + count($batch->paymentItems) + 2;
 
         return NachaFileResult::success(
             batchId: $batch->batchId,
@@ -483,7 +483,7 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
             secCode: $this->configuration->secCode,
             batchCount: 1,
             blockCount: $this->calculateBlockCount($totalRecords),
-            entryAddendaCount: count($batch->items),
+            entryAddendaCount: count($batch->paymentItems),
             entryHash: $this->calculateEntryHash($batch),
             totalDebitAmount: 0,
             totalCreditAmount: $totalCreditCents,
@@ -499,7 +499,7 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
     {
         $hash = 0;
 
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $hash += $this->extractRoutingHash($item->bankRoutingNumber);
         }
 

@@ -62,7 +62,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
     public function supports(PaymentBatchData $batch): bool
     {
         // Positive Pay requires check numbers
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             if (empty($item->checkNumber)) {
                 return false;
             }
@@ -81,13 +81,13 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         }
 
         // Validate each payment item
-        foreach ($batch->items as $index => $item) {
+        foreach ($batch->paymentItems as $index => $item) {
             $itemErrors = $this->validatePaymentItem($item, $index);
             $errors = array_merge($errors, $itemErrors);
         }
 
         // Check for duplicate check numbers
-        $checkNumbers = array_map(fn($item) => $item->checkNumber, $batch->items);
+        $checkNumbers = array_map(fn($item) => $item->checkNumber, $batch->paymentItems);
         $duplicates = array_diff_assoc($checkNumbers, array_unique($checkNumbers));
 
         if (!empty($duplicates)) {
@@ -190,7 +190,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         // Data rows
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
 
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $lines[] = sprintf(
                 '%s,%s,%s,%.2f,"%s",%s',
                 $this->configuration->bankAccountNumber,
@@ -237,12 +237,12 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $lines[] = sprintf(
             '03,%s,USD,010,%d,%d,/',
             $this->configuration->bankAccountNumber,
-            count($batch->items),
+            count($batch->paymentItems),
             $this->formatAmountAsCents($totalAmount),
         );
 
         // 16 - Transaction Detail (for each check)
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $lines[] = sprintf(
                 '16,475,%d,0,%s,%s,/',
                 $this->formatAmountAsCents($item->amount),
@@ -255,7 +255,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $lines[] = sprintf(
             '49,%d,%d/',
             $this->formatAmountAsCents($totalAmount),
-            count($batch->items) + 2, // records in this group
+            count($batch->paymentItems) + 2, // records in this group
         );
 
         // 98 - Group Trailer
@@ -284,7 +284,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
 
         // Bank of America uses fixed-width format
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $lines[] = sprintf(
                 '%s%s%s%s%s',
                 $this->padString($this->configuration->bankAccountNumber, 16),      // Account Number
@@ -311,11 +311,11 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
             'H%s%s%06d',
             $this->padString($this->configuration->bankAccountNumber, 15),
             $issueDate->format('Ymd'),
-            count($batch->items),
+            count($batch->paymentItems),
         );
 
         // Detail records
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $lines[] = sprintf(
                 'D%s%s%s%s%s',
                 $this->padString($this->configuration->bankAccountNumber, 15),      // Account Number
@@ -330,7 +330,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $totalAmount = $this->calculateTotalAmount($batch);
         $lines[] = sprintf(
             'T%06d%012d',
-            count($batch->items),
+            count($batch->paymentItems),
             $this->formatAmountAsCents($totalAmount),
         );
 
@@ -346,7 +346,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
 
         // Chase uses pipe-delimited format
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $lines[] = implode('|', [
                 $this->configuration->bankAccountNumber,
                 $item->checkNumber ?? '',
@@ -373,11 +373,11 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
             '01%s%s%s',
             $this->padString($this->configuration->bankAccountNumber, 20),
             (new \DateTimeImmutable())->format('Ymd'),
-            $this->padNumber(count($batch->items), 6),
+            $this->padNumber(count($batch->paymentItems), 6),
         );
 
         // Detail records
-        foreach ($batch->items as $item) {
+        foreach ($batch->paymentItems as $item) {
             $lines[] = sprintf(
                 '02%s%s%s%s%s%s',
                 $this->padString($this->configuration->bankAccountNumber, 20),      // Account
@@ -393,7 +393,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $totalAmount = $this->calculateTotalAmount($batch);
         $lines[] = sprintf(
             '99%06d%015d',
-            count($batch->items),
+            count($batch->paymentItems),
             $this->formatAmountAsCents($totalAmount),
         );
 
@@ -468,7 +468,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
     {
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
         $totalAmount = $this->calculateTotalAmount($batch);
-        $categories = $this->categorizeItems($batch->items);
+        $categories = $this->categorizeItems($batch->paymentItems);
 
         return PositivePayResult::success(
             batchId: $batch->batchId,
