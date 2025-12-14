@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementOperations\Strategies\BankFile;
 
+use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
 use Nexus\Common\ValueObjects\Money;
-use Nexus\ProcurementOperations\DTOs\BankFile\BankFileResultInterface;
-use Nexus\ProcurementOperations\DTOs\BankFile\PositivePayResult;
-use Nexus\ProcurementOperations\DTOs\Financial\PaymentBatchData;
-use Nexus\ProcurementOperations\DTOs\Financial\PaymentItemData;
 use Nexus\ProcurementOperations\Enums\BankFileFormat;
 use Nexus\ProcurementOperations\Enums\PositivePayFormat;
+use Nexus\ProcurementOperations\DTOs\Financial\PaymentItemData;
+use Nexus\ProcurementOperations\DTOs\BankFile\PositivePayResult;
+use Nexus\ProcurementOperations\DTOs\Financial\PaymentBatchData;
+use Nexus\ProcurementOperations\DTOs\BankFile\BankFileResultInterface;
 use Nexus\ProcurementOperations\ValueObjects\PositivePayConfiguration;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Positive Pay File Generator.
