@@ -36,6 +36,17 @@ final readonly class PaymentItemData
         public ?string $achTraceNumber = null,
         public ?string $failureReason = null,
         public ?\DateTimeImmutable $processedAt = null,
+        // Check-specific fields for Positive Pay
+        public ?\DateTimeImmutable $checkDate = null,
+        public ?string $checkType = null, // 'ISSUED', 'VOID', 'STOP', 'STALE'
+        // International payment fields (SWIFT/Wire)
+        public ?string $beneficiaryBic = null, // SWIFT BIC code (8 or 11 chars)
+        public ?string $beneficiaryIban = null, // IBAN for international transfers
+        public ?string $beneficiaryName = null, // Beneficiary name (for international)
+        public ?string $beneficiaryAddress = null, // Beneficiary address
+        public ?string $beneficiaryCountry = null, // Beneficiary country code (ISO 3166)
+        public ?string $intermediaryBic = null, // Intermediary bank BIC
+        public ?string $chargeCode = null, // 'SHA', 'OUR', 'BEN' for SWIFT
         public array $metadata = [],
     ) {}
 
@@ -342,10 +353,68 @@ final readonly class PaymentItemData
             'withholding_tax' => $this->withholdingTax?->toArray(),
             'net_amount' => $this->netAmount?->toArray(),
             'check_number' => $this->checkNumber,
+            'check_date' => $this->checkDate?->format('Y-m-d'),
+            'check_type' => $this->checkType,
             'wire_reference' => $this->wireReference,
             'ach_trace_number' => $this->achTraceNumber,
+            'beneficiary_bic' => $this->beneficiaryBic,
+            'beneficiary_iban' => $this->beneficiaryIban,
+            'beneficiary_name' => $this->beneficiaryName,
+            'beneficiary_address' => $this->beneficiaryAddress,
+            'beneficiary_country' => $this->beneficiaryCountry,
+            'intermediary_bic' => $this->intermediaryBic,
+            'charge_code' => $this->chargeCode,
             'failure_reason' => $this->failureReason,
             'processed_at' => $this->processedAt?->format('c'),
         ];
+    }
+
+    /**
+     * Create payment item for international wire transfer (SWIFT)
+     */
+    public static function forInternationalWire(
+        string $paymentItemId,
+        string $vendorId,
+        string $vendorName,
+        Money $amount,
+        array $invoiceIds,
+        string $paymentReference,
+        string $beneficiaryBic,
+        string $beneficiaryIban,
+        string $beneficiaryName,
+        ?string $beneficiaryAddress = null,
+        ?string $beneficiaryCountry = null,
+        ?string $intermediaryBic = null,
+        string $chargeCode = 'SHA',
+        ?Money $discountTaken = null,
+        ?Money $withholdingTax = null,
+    ): self {
+        $netAmount = $amount;
+        if ($discountTaken !== null) {
+            $netAmount = $netAmount->subtract($discountTaken);
+        }
+        if ($withholdingTax !== null) {
+            $netAmount = $netAmount->subtract($withholdingTax);
+        }
+
+        return new self(
+            paymentItemId: $paymentItemId,
+            vendorId: $vendorId,
+            vendorName: $vendorName,
+            amount: $amount,
+            invoiceIds: $invoiceIds,
+            paymentReference: $paymentReference,
+            status: 'pending',
+            discountTaken: $discountTaken,
+            withholdingTax: $withholdingTax,
+            netAmount: $netAmount,
+            beneficiaryBic: $beneficiaryBic,
+            beneficiaryIban: $beneficiaryIban,
+            beneficiaryName: $beneficiaryName,
+            beneficiaryAddress: $beneficiaryAddress,
+            beneficiaryCountry: $beneficiaryCountry,
+            intermediaryBic: $intermediaryBic,
+            chargeCode: $chargeCode,
+        );
     }
 }
