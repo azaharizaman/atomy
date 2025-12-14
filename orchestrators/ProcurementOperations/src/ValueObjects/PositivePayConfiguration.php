@@ -261,9 +261,9 @@ final readonly class PositivePayConfiguration
     public function formatCheckNumber(string $checkNumber): string
     {
         // Remove any non-numeric characters
-        $numeric = preg_replace('/[^0-9]/', '', $checkNumber);
+        $numeric = preg_replace('/[^0-9]/', '', $checkNumber) ?? '';
 
-        return str_pad($numeric ?? '', $this->checkNumberPadding, '0', STR_PAD_LEFT);
+        return str_pad($numeric, $this->checkNumberPadding, '0', STR_PAD_LEFT);
     }
 
     /**
