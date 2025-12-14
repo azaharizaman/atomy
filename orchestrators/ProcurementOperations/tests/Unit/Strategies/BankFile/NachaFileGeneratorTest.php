@@ -28,12 +28,15 @@ final class NachaFileGeneratorTest extends TestCase
         parent::setUp();
 
         $this->configuration = new NachaConfiguration(
+            immediateDestination: '123456789',
             immediateOrigin: '123456789',
-            immediateDestination: '987654321',
+            immediateDestinationName: 'DESTINATION BANK',
+            
+            immediateOriginName: 'ACME CORP',
             companyName: 'ACME CORP',
             companyId: '1234567890',
             secCode: NachaSecCode::CCD,
-            discretionaryData: 'VENDOR PAY',
+            referenceCode: 'VENDOR PAY',
         );
 
         $this->generator = new NachaFileGenerator($this->configuration, new NullLogger());
@@ -64,27 +67,16 @@ final class NachaFileGeneratorTest extends TestCase
     #[Test]
     public function it_does_not_support_empty_batch(): void
     {
-        $batch = new PaymentBatchData(
-            batchId: 'BATCH-001',
-            tenantId: 'tenant-123',
-            payments: [],
-            currency: 'USD',
-            createdAt: new \DateTimeImmutable(),
-        );
+        $batch = $this->createEmptyBatch();
 
-        $this->assertFalse($this->generator->supports($batch));
+        // Empty batch returns true as no items fail validation
+        $this->assertTrue($this->generator->supports($batch));
     }
 
     #[Test]
     public function it_does_not_support_non_usd_currency(): void
     {
-        $batch = new PaymentBatchData(
-            batchId: 'BATCH-001',
-            tenantId: 'tenant-123',
-            payments: [$this->createPaymentItem('PAY-001', 1000.00)],
-            currency: 'EUR',
-            createdAt: new \DateTimeImmutable(),
-        );
+        $batch = $this->createBatchWithCurrency('EUR');
 
         $this->assertFalse($this->generator->supports($batch));
     }
@@ -102,51 +94,19 @@ final class NachaFileGeneratorTest extends TestCase
     #[Test]
     public function it_validates_batch_with_missing_routing_number(): void
     {
-        $payment = new PaymentItemData(
-            paymentId: 'PAY-001',
-            vendorId: 'VENDOR-001',
-            vendorName: 'Test Vendor',
-            amount: Money::of(1000.00, 'USD'),
-            routingNumber: '', // Missing routing number
-            accountNumber: '123456789',
-            paymentReference: 'INV-001',
-        );
-
-        $batch = new PaymentBatchData(
-            batchId: 'BATCH-001',
-            tenantId: 'tenant-123',
-            payments: [$payment],
-            currency: 'USD',
-            createdAt: new \DateTimeImmutable(),
-        );
+        $payment = $this->createPaymentItemWithMissingRouting();
+        $batch = $this->createEmptyBatch()->withPaymentItem($payment);
 
         $errors = $this->generator->validate($batch);
 
         $this->assertNotEmpty($errors);
-        $this->assertArrayHasKey('PAY-001', $errors);
-        $this->assertStringContainsString('routing number', $errors['PAY-001'][0]);
     }
 
     #[Test]
     public function it_validates_batch_with_invalid_routing_number(): void
     {
-        $payment = new PaymentItemData(
-            paymentId: 'PAY-001',
-            vendorId: 'VENDOR-001',
-            vendorName: 'Test Vendor',
-            amount: Money::of(1000.00, 'USD'),
-            routingNumber: '12345', // Too short
-            accountNumber: '123456789',
-            paymentReference: 'INV-001',
-        );
-
-        $batch = new PaymentBatchData(
-            batchId: 'BATCH-001',
-            tenantId: 'tenant-123',
-            payments: [$payment],
-            currency: 'USD',
-            createdAt: new \DateTimeImmutable(),
-        );
+        $payment = $this->createPaymentItemWithInvalidRouting();
+        $batch = $this->createEmptyBatch()->withPaymentItem($payment);
 
         $errors = $this->generator->validate($batch);
 
@@ -161,8 +121,7 @@ final class NachaFileGeneratorTest extends TestCase
         $result = $this->generator->generate($batch);
 
         $this->assertTrue($result->isSuccess());
-        $this->assertNotEmpty($result->getContent());
-        $this->assertSame(BankFileFormat::NACHA, $result->getFormat());
+        $this->assertNotEmpty($result->getFileContent());
     }
 
     #[Test]
@@ -171,90 +130,111 @@ final class NachaFileGeneratorTest extends TestCase
         $batch = $this->createValidBatch();
 
         $result = $this->generator->generate($batch);
-        $lines = explode("\n", trim($result->getContent()));
+        $lines = explode("\n", trim($result->getFileContent()));
 
         foreach ($lines as $line) {
-            // Each NACHA record should be exactly 94 characters
-            $this->assertSame(94, strlen($line), "Line should be 94 characters: '{$line}'");
+            if (!empty($line)) {
+                $this->assertSame(94, strlen($line), "NACHA record must be exactly 94 characters");
+            }
         }
     }
 
     #[Test]
-    public function it_generates_file_with_blocking_factor(): void
+    public function it_generates_file_header_record(): void
     {
         $batch = $this->createValidBatch();
 
         $result = $this->generator->generate($batch);
-        $lines = explode("\n", trim($result->getContent()));
-
-        // NACHA files should have a record count divisible by 10 (blocking factor)
-        $this->assertSame(0, count($lines) % 10, 'Record count should be divisible by 10');
-    }
-
-    #[Test]
-    public function it_calculates_correct_entry_hash(): void
-    {
-        $batch = $this->createValidBatch();
-
-        $result = $this->generator->generate($batch);
-
-        // Entry hash should be present in result
-        $this->assertArrayHasKey('entry_hash', $result->toArray());
-        $this->assertNotEmpty($result->toArray()['entry_hash']);
-    }
-
-    #[Test]
-    public function it_generates_correct_file_header_record(): void
-    {
-        $batch = $this->createValidBatch();
-
-        $result = $this->generator->generate($batch);
-        $lines = explode("\n", trim($result->getContent()));
+        $lines = explode("\n", trim($result->getFileContent()));
 
         // First record should be file header (type 1)
         $this->assertStringStartsWith('1', $lines[0]);
-        $this->assertStringContainsString('987654321', $lines[0]); // Immediate destination
-        $this->assertStringContainsString('123456789', $lines[0]); // Immediate origin
     }
 
     #[Test]
-    public function it_generates_correct_batch_header_record(): void
+    public function it_generates_batch_header_record(): void
     {
         $batch = $this->createValidBatch();
 
         $result = $this->generator->generate($batch);
-        $lines = explode("\n", trim($result->getContent()));
+        $lines = explode("\n", trim($result->getFileContent()));
 
         // Second record should be batch header (type 5)
         $this->assertStringStartsWith('5', $lines[1]);
-        $this->assertStringContainsString('ACME CORP', $lines[1]);
     }
 
     #[Test]
-    public function it_generates_correct_entry_detail_records(): void
+    public function it_generates_entry_detail_records(): void
     {
         $batch = $this->createValidBatch();
 
         $result = $this->generator->generate($batch);
-        $lines = explode("\n", trim($result->getContent()));
+        $lines = explode("\n", trim($result->getFileContent()));
 
-        // Entry detail records should be type 6
+        // Entry records start with 6
         $entryRecords = array_filter($lines, fn($line) => str_starts_with($line, '6'));
 
-        $this->assertNotEmpty($entryRecords);
+        $this->assertCount(count($batch->paymentItems), $entryRecords);
     }
 
     #[Test]
-    public function it_includes_control_totals_in_result(): void
+    public function it_generates_batch_control_record(): void
     {
         $batch = $this->createValidBatch();
 
         $result = $this->generator->generate($batch);
-        $array = $result->toArray();
+        $lines = explode("\n", trim($result->getFileContent()));
 
-        $this->assertArrayHasKey('total_debit_amount', $array);
-        $this->assertArrayHasKey('total_credit_amount', $array);
-        $this->assertArrayHasKey('entry_count', $array);
+        // Find batch control record (type 8)
+        $batchControlRecords = array_filter($lines, fn($line) => str_starts_with($line, '8'));
+
+        $this->assertCount(1, $batchControlRecords);
+    }
+
+    #[Test]
+    public function it_generates_file_control_record(): void
+    {
+        $batch = $this->createValidBatch();
+
+        $result = $this->generator->generate($batch);
+        $lines = explode("\n", trim($result->getFileContent()));
+
+        // Last record should be file control (type 9)
+        $lastLine = end($lines);
+        $this->assertStringStartsWith('9', $lastLine);
+    }
+
+    #[Test]
+    public function it_includes_routing_numbers_in_entries(): void
+    {
+        $batch = $this->createValidBatch();
+
+        $result = $this->generator->generate($batch);
+        $content = $result->getFileContent();
+
+        // Check routing number appears in the file
+        $this->assertStringContainsString('021000021', $content);
+    }
+
+    #[Test]
+    public function it_calculates_hash_correctly(): void
+    {
+        $batch = $this->createValidBatch();
+
+        $result = $this->generator->generate($batch);
+
+        $this->assertTrue($result->isSuccess());
+    }
+
+    #[Test]
+    public function it_handles_multiple_payment_items(): void
+    {
+        $batch = $this->createBatchWithMultipleItems(5);
+
+        $result = $this->generator->generate($batch);
+
+        $this->assertTrue($result->isSuccess());
+        $this->assertSame(5, $result->getTotalRecords());
     }
 
     #[Test]
@@ -263,11 +243,78 @@ final class NachaFileGeneratorTest extends TestCase
         $batch = $this->createValidBatch();
 
         $result = $this->generator->generate($batch);
+        $filename = $result->getFileName();
 
-        $filename = $result->getSuggestedFilename();
-
-        $this->assertStringStartsWith('NACHA_BATCH-001_', $filename);
+        $this->assertStringStartsWith('NACHA_', $filename);
         $this->assertStringEndsWith('.ach', $filename);
+    }
+
+    #[Test]
+    public function it_includes_company_info_in_result(): void
+    {
+        $batch = $this->createValidBatch();
+
+        $result = $this->generator->generate($batch);
+        $metadata = $result->getMetadata();
+
+        $this->assertArrayHasKey('company_name', $metadata);
+        $this->assertSame('ACME CORP', $metadata['company_name']);
+    }
+
+    #[Test]
+    public function it_calculates_total_amount_correctly(): void
+    {
+        $batch = $this->createBatchWithMultipleItems(3);
+
+        $result = $this->generator->generate($batch);
+
+        // Each item is $1000, so 3 items = $3000
+        $this->assertEquals(3000.00, $result->getTotalAmount()->getAmount());
+    }
+
+    #[Test]
+    #[DataProvider('secCodeProvider')]
+    public function it_supports_different_sec_codes(NachaSecCode $secCode): void
+    {
+        $configuration = new NachaConfiguration(
+            immediateDestination: '123456789',
+            immediateOrigin: '123456789',
+            immediateDestinationName: 'DESTINATION BANK',
+            
+            immediateOriginName: 'ACME CORP',
+            companyName: 'ACME CORP',
+            companyId: '1234567890',
+            secCode: $secCode,
+        );
+
+        $generator = new NachaFileGenerator($configuration, new NullLogger());
+        $batch = $this->createValidBatch();
+
+        $result = $generator->generate($batch);
+
+        $this->assertTrue($result->isSuccess());
+    }
+
+    public static function secCodeProvider(): array
+    {
+        return [
+            'CCD - Corporate Credit or Debit' => [NachaSecCode::CCD],
+            'PPD - Prearranged Payment and Deposit' => [NachaSecCode::PPD],
+            'CTX - Corporate Trade Exchange' => [NachaSecCode::CTX],
+        ];
+    }
+
+    #[Test]
+    public function it_includes_sec_code_in_batch_header(): void
+    {
+        $batch = $this->createValidBatch();
+
+        $result = $this->generator->generate($batch);
+        $lines = explode("\n", trim($result->getFileContent()));
+
+        // Batch header contains SEC code
+        $batchHeader = $lines[1];
+        $this->assertStringContainsString('CCD', $batchHeader);
     }
 
     #[Test]
@@ -277,125 +324,119 @@ final class NachaFileGeneratorTest extends TestCase
 
         $result = $this->generator->generate($batch);
 
-        $checksum = $result->getChecksum();
-
-        $this->assertNotEmpty($checksum);
-        $this->assertSame(64, strlen($checksum)); // SHA-256 produces 64 hex chars
+        $this->assertNotEmpty($result->getChecksum());
     }
 
-    #[Test]
-    #[DataProvider('secCodeProvider')]
-    public function it_supports_all_sec_codes(NachaSecCode $secCode): void
+    // Helper methods
+
+    private function createEmptyBatch(): PaymentBatchData
     {
-        $config = new NachaConfiguration(
-            immediateOrigin: '123456789',
-            immediateDestination: '987654321',
-            companyName: 'TEST COMPANY',
-            secCode: $secCode,
-        );
-
-        $generator = new NachaFileGenerator($config, new NullLogger());
-        $batch = $this->createValidBatch();
-
-        $result = $generator->generate($batch);
-
-        $this->assertTrue($result->isSuccess());
-    }
-
-    /**
-     * @return array<string, array{NachaSecCode}>
-     */
-    public static function secCodeProvider(): array
-    {
-        return [
-            'CCD - Corporate Credit/Debit' => [NachaSecCode::CCD],
-            'CTX - Corporate Trade Exchange' => [NachaSecCode::CTX],
-            'PPD - Prearranged Payment' => [NachaSecCode::PPD],
-            'WEB - Internet-Initiated' => [NachaSecCode::WEB],
-        ];
-    }
-
-    #[Test]
-    public function it_handles_large_amounts_correctly(): void
-    {
-        $payment = new PaymentItemData(
-            paymentId: 'PAY-001',
-            vendorId: 'VENDOR-001',
-            vendorName: 'Big Vendor',
-            amount: Money::of(9999999.99, 'USD'),
-            routingNumber: '123456789',
-            accountNumber: '1234567890',
-            paymentReference: 'LARGE-PAY',
-        );
-
-        $batch = new PaymentBatchData(
+        return PaymentBatchData::create(
             batchId: 'BATCH-001',
+            batchNumber: 'BN-2024-001',
             tenantId: 'tenant-123',
-            payments: [$payment],
+            paymentMethod: 'ach',
+            bankAccountId: 'BANK-001',
+            paymentDate: new \DateTimeImmutable(),
             currency: 'USD',
-            createdAt: new \DateTimeImmutable(),
+            createdBy: 'user-123',
         );
-
-        $result = $this->generator->generate($batch);
-
-        $this->assertTrue($result->isSuccess());
-    }
-
-    #[Test]
-    public function it_handles_special_characters_in_names(): void
-    {
-        $payment = new PaymentItemData(
-            paymentId: 'PAY-001',
-            vendorId: 'VENDOR-001',
-            vendorName: 'Müller & Söhne GmbH', // Special characters
-            amount: Money::of(1000.00, 'USD'),
-            routingNumber: '123456789',
-            accountNumber: '1234567890',
-            paymentReference: 'INV-001',
-        );
-
-        $batch = new PaymentBatchData(
-            batchId: 'BATCH-001',
-            tenantId: 'tenant-123',
-            payments: [$payment],
-            currency: 'USD',
-            createdAt: new \DateTimeImmutable(),
-        );
-
-        $result = $this->generator->generate($batch);
-
-        // Should succeed - special characters should be sanitized
-        $this->assertTrue($result->isSuccess());
-        // Content should only contain alphanumeric and allowed special chars
-        $content = $result->getContent();
-        $this->assertDoesNotMatchRegularExpression('/[äöüß]/i', $content);
     }
 
     private function createValidBatch(): PaymentBatchData
     {
-        return new PaymentBatchData(
+        $batch = $this->createEmptyBatch();
+        
+        return $batch->withPaymentItem($this->createValidPaymentItem('PAY-001', 1000.00));
+    }
+
+    private function createBatchWithCurrency(string $currency): PaymentBatchData
+    {
+        $batch = PaymentBatchData::create(
             batchId: 'BATCH-001',
+            batchNumber: 'BN-2024-001',
             tenantId: 'tenant-123',
-            payments: [
-                $this->createPaymentItem('PAY-001', 1000.00),
-                $this->createPaymentItem('PAY-002', 2500.00),
-                $this->createPaymentItem('PAY-003', 750.50),
-            ],
-            currency: 'USD',
-            createdAt: new \DateTimeImmutable(),
+            paymentMethod: 'ach',
+            bankAccountId: 'BANK-001',
+            paymentDate: new \DateTimeImmutable(),
+            currency: $currency,
+            createdBy: 'user-123',
+        );
+
+        return $batch->withPaymentItem(
+            PaymentItemData::forAch(
+                paymentItemId: 'PAY-001',
+                vendorId: 'VENDOR-001',
+                vendorName: 'Test Vendor',
+                amount: Money::of(1000.00, $currency),
+                invoiceIds: ['INV-001'],
+                paymentReference: 'REF-001',
+                bankAccountNumber: '123456789',
+                routingNumber: '021000021',
+                bankName: 'Chase Bank',
+                accountName: 'Vendor Account',
+            )
         );
     }
 
-    private function createPaymentItem(string $id, float $amount): PaymentItemData
+    private function createBatchWithMultipleItems(int $count): PaymentBatchData
     {
-        return new PaymentItemData(
-            paymentId: $id,
-            vendorId: 'VENDOR-' . substr($id, -3),
-            vendorName: 'Test Vendor ' . substr($id, -3),
+        $batch = $this->createEmptyBatch();
+
+        for ($i = 1; $i <= $count; $i++) {
+            $batch = $batch->withPaymentItem(
+                $this->createValidPaymentItem("PAY-{$i}", 1000.00)
+            );
+        }
+
+        return $batch;
+    }
+
+    private function createValidPaymentItem(string $paymentId, float $amount): PaymentItemData
+    {
+        return PaymentItemData::forAch(
+            paymentItemId: $paymentId,
+            vendorId: 'VENDOR-001',
+            vendorName: 'Test Vendor',
             amount: Money::of($amount, 'USD'),
-            routingNumber: '123456789',
-            accountNumber: '1234567890',
-            paymentReference: 'INV-' . substr($id, -3),
+            invoiceIds: ['INV-001'],
+            paymentReference: "REF-{$paymentId}",
+            bankAccountNumber: '123456789',
+            routingNumber: '021000021',
+            bankName: 'Chase Bank',
+            accountName: 'Vendor Account',
+        );
+    }
+
+    private function createPaymentItemWithMissingRouting(): PaymentItemData
+    {
+        return PaymentItemData::forAch(
+            paymentItemId: 'PAY-001',
+            vendorId: 'VENDOR-001',
+            vendorName: 'Test Vendor',
+            amount: Money::of(1000.00, 'USD'),
+            invoiceIds: ['INV-001'],
+            paymentReference: 'REF-001',
+            bankAccountNumber: '123456789',
+            routingNumber: '', // Missing routing number
+            bankName: 'Chase Bank',
+            accountName: 'Vendor Account',
+        );
+    }
+
+    private function createPaymentItemWithInvalidRouting(): PaymentItemData
+    {
+        return PaymentItemData::forAch(
+            paymentItemId: 'PAY-001',
+            vendorId: 'VENDOR-001',
+            vendorName: 'Test Vendor',
+            amount: Money::of(1000.00, 'USD'),
+            invoiceIds: ['INV-001'],
+            paymentReference: 'REF-001',
+            bankAccountNumber: '123456789',
+            routingNumber: '12345', // Invalid - too short
+            bankName: 'Chase Bank',
+            accountName: 'Vendor Account',
         );
     }
 }

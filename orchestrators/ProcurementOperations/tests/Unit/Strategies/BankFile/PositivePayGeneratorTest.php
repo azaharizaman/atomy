@@ -29,8 +29,8 @@ final class PositivePayGeneratorTest extends TestCase
 
         $this->configuration = new PositivePayConfiguration(
             format: PositivePayFormat::STANDARD_CSV,
-            accountNumber: '123456789012',
-            bankId: 'BANK001',
+            bankAccountNumber: '123456789012',
+            bankRoutingNumber: 'BANK001',
             companyName: 'ACME CORPORATION',
         );
 
@@ -65,7 +65,7 @@ final class PositivePayGeneratorTest extends TestCase
         $batch = new PaymentBatchData(
             batchId: 'BATCH-001',
             tenantId: 'tenant-123',
-            payments: [],
+            paymentItems: [],
             currency: 'USD',
             createdAt: new \DateTimeImmutable(),
         );
@@ -87,7 +87,7 @@ final class PositivePayGeneratorTest extends TestCase
     public function it_validates_batch_with_missing_check_number(): void
     {
         $payment = new PaymentItemData(
-            paymentId: 'PAY-001',
+            paymentItemId: 'PAY-001',
             vendorId: 'VENDOR-001',
             vendorName: 'Test Vendor',
             amount: Money::of(1000.00, 'USD'),
@@ -98,7 +98,7 @@ final class PositivePayGeneratorTest extends TestCase
         $batch = new PaymentBatchData(
             batchId: 'BATCH-001',
             tenantId: 'tenant-123',
-            payments: [$payment],
+            paymentItems: [$payment],
             currency: 'USD',
             createdAt: new \DateTimeImmutable(),
         );
@@ -146,8 +146,8 @@ final class PositivePayGeneratorTest extends TestCase
     {
         $config = new PositivePayConfiguration(
             format: $format,
-            accountNumber: '123456789012',
-            bankId: 'BANK001',
+            bankAccountNumber: '123456789012',
+            bankRoutingNumber: 'BANK001',
         );
 
         $generator = new PositivePayGenerator($config, new NullLogger());
@@ -177,7 +177,7 @@ final class PositivePayGeneratorTest extends TestCase
     #[Test]
     public function it_generates_bank_of_america_fixed_width_format(): void
     {
-        $config = PositivePayConfiguration::forBankOfAmerica('123456789012', 'BANK001');
+        $config = PositivePayConfiguration::bankOfAmerica('123456789012', '021000021', 'ACME Corp', 'ACME001');
         $generator = new PositivePayGenerator($config, new NullLogger());
         $batch = $this->createValidBatch();
 
@@ -194,7 +194,7 @@ final class PositivePayGeneratorTest extends TestCase
     #[Test]
     public function it_generates_wells_fargo_format_with_header_trailer(): void
     {
-        $config = PositivePayConfiguration::forWellsFargo('123456789012', 'BANK001');
+        $config = PositivePayConfiguration::wellsFargo('123456789012', '121000248', 'ACME Corp', 'ACME001');
         $generator = new PositivePayGenerator($config, new NullLogger());
         $batch = $this->createValidBatch();
 
@@ -209,7 +209,7 @@ final class PositivePayGeneratorTest extends TestCase
     #[Test]
     public function it_generates_chase_pipe_delimited_format(): void
     {
-        $config = PositivePayConfiguration::forChase('123456789012', 'BANK001');
+        $config = PositivePayConfiguration::chase('123456789012', '021000021', 'ACME Corp', 'ACME001');
         $generator = new PositivePayGenerator($config, new NullLogger());
         $batch = $this->createValidBatch();
 
@@ -223,7 +223,7 @@ final class PositivePayGeneratorTest extends TestCase
     #[Test]
     public function it_generates_citi_format_with_record_type(): void
     {
-        $config = PositivePayConfiguration::forCiti('123456789012', 'BANK001');
+        $config = PositivePayConfiguration::citi('123456789012', '021000089', 'ACME Corp', 'ACME001');
         $generator = new PositivePayGenerator($config, new NullLogger());
         $batch = $this->createValidBatch();
 
@@ -250,7 +250,7 @@ final class PositivePayGeneratorTest extends TestCase
     public function it_categorizes_voided_checks(): void
     {
         $voidedPayment = new PaymentItemData(
-            paymentId: 'PAY-001',
+            paymentItemId: 'PAY-001',
             vendorId: 'VENDOR-001',
             vendorName: 'Test Vendor',
             amount: Money::of(0.00, 'USD'), // Voided check has zero amount
@@ -262,7 +262,7 @@ final class PositivePayGeneratorTest extends TestCase
         $batch = new PaymentBatchData(
             batchId: 'BATCH-001',
             tenantId: 'tenant-123',
-            payments: [$voidedPayment],
+            paymentItems: [$voidedPayment],
             currency: 'USD',
             createdAt: new \DateTimeImmutable(),
         );
@@ -301,7 +301,7 @@ final class PositivePayGeneratorTest extends TestCase
     public function it_handles_special_characters_in_payee_names(): void
     {
         $payment = new PaymentItemData(
-            paymentId: 'PAY-001',
+            paymentItemId: 'PAY-001',
             vendorId: 'VENDOR-001',
             vendorName: "O'Brien & Associates, Inc.",
             amount: Money::of(1000.00, 'USD'),
@@ -312,7 +312,7 @@ final class PositivePayGeneratorTest extends TestCase
         $batch = new PaymentBatchData(
             batchId: 'BATCH-001',
             tenantId: 'tenant-123',
-            payments: [$payment],
+            paymentItems: [$payment],
             currency: 'USD',
             createdAt: new \DateTimeImmutable(),
         );
@@ -353,7 +353,7 @@ final class PositivePayGeneratorTest extends TestCase
         return new PaymentBatchData(
             batchId: 'BATCH-001',
             tenantId: 'tenant-123',
-            payments: [
+            paymentItems: [
                 $this->createCheckPayment('PAY-001', '1001', 1000.00),
                 $this->createCheckPayment('PAY-002', '1002', 2500.00),
                 $this->createCheckPayment('PAY-003', '1003', 750.50),
@@ -366,7 +366,7 @@ final class PositivePayGeneratorTest extends TestCase
     private function createCheckPayment(string $id, string $checkNumber, float $amount): PaymentItemData
     {
         return new PaymentItemData(
-            paymentId: $id,
+            paymentItemId: $id,
             vendorId: 'VENDOR-' . substr($id, -3),
             vendorName: 'Test Vendor ' . substr($id, -3),
             amount: Money::of($amount, 'USD'),
