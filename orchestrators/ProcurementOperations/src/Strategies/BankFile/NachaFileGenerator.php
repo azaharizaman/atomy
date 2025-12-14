@@ -51,7 +51,7 @@ final class NachaFileGenerator extends AbstractBankFileGenerator
     private const int TRANSACTION_CODE_PRENOTE_CREDIT_CHECKING = 23;
     private const int TRANSACTION_CODE_PRENOTE_CREDIT_SAVINGS = 33;
 
-    private NachaConfiguration $configuration;
+    private readonly NachaConfiguration $configuration;
 
     public function __construct(
         NachaConfiguration $configuration,
@@ -258,7 +258,7 @@ final class NachaFileGenerator extends AbstractBankFileGenerator
 
             // Update counters
             $entryAddendaCount++;
-            $entryHash += $this->extractRoutingHash($item->bankRoutingNumber);
+            $entryHash += $this->extractRoutingHash($item->vendorBankRoutingNumber);
 
             $amountCents = $this->formatAmountAsCents($item->amount);
             // For vendor payments, typically credits
@@ -328,11 +328,11 @@ final class NachaFileGenerator extends AbstractBankFileGenerator
             '%s%s%s%s%s%s%s%s%s',
             '6',                                                          // Record Type Code
             $this->padNumber($transactionCode, 2),                        // Transaction Code
-            $this->padNumber($item->bankRoutingNumber, 8),                // Receiving DFI Identification (first 8 digits)
-            $this->calculateCheckDigit($item->bankRoutingNumber),         // Check Digit (9th digit)
-            $this->padString($item->bankAccountNumber, 17),               // DFI Account Number
+            $this->padNumber($item->vendorBankRoutingNumber, 8),                // Receiving DFI Identification (first 8 digits)
+            $this->calculateCheckDigit($item->vendorBankRoutingNumber),         // Check Digit (9th digit)
+            $this->padString($item->vendorBankAccountNumber, 17),               // DFI Account Number
             $this->padNumber($amountCents, 10),                           // Amount
-            $this->padString($item->vendorId ?? $item->referenceNumber ?? '', 15), // Individual Identification Number
+            $this->padString($item->vendorId ?? $item->paymentReference ?? '', 15), // Individual Identification Number
             $this->padString($this->sanitizeForBankFile($item->vendorName ?? ''), 22), // Individual Name
             $this->padString('', 2),                                      // Discretionary Data
             '0',                                                          // Addenda Record Indicator (0 = no addenda)
@@ -500,7 +500,7 @@ final class NachaFileGenerator extends AbstractBankFileGenerator
         $hash = 0;
 
         foreach ($batch->paymentItems as $item) {
-            $hash += $this->extractRoutingHash($item->bankRoutingNumber);
+            $hash += $this->extractRoutingHash($item->vendorBankRoutingNumber);
         }
 
         // Return only last 10 digits

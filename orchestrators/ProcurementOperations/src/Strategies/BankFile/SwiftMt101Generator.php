@@ -40,7 +40,7 @@ final class SwiftMt101Generator extends AbstractBankFileGenerator
     /** Maximum payee name length */
     private const int MAX_NAME_LENGTH = 35;
 
-    private SwiftMt101Configuration $configuration;
+    private readonly SwiftMt101Configuration $configuration;
 
     public function __construct(
         SwiftMt101Configuration $configuration,

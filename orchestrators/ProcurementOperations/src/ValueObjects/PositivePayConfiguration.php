@@ -106,110 +106,139 @@ final readonly class PositivePayConfiguration
 
     /**
      * Create configuration for standard CSV format.
+     *
+     * @param string $accountNumber Bank account number
+     * @param string $routingNumber Bank routing number (9 digits)
+     * @param string $name Company name for file header
      */
     public static function standardCsv(
-        string $bankAccountNumber,
-        string $bankRoutingNumber,
-        string $companyName = '',
+        string $accountNumber,
+        string $routingNumber,
+        string $name = '',
     ): self {
         return new self(
-            bankAccountNumber: $bankAccountNumber,
-            bankRoutingNumber: $bankRoutingNumber,
+            bankAccountNumber: $accountNumber,
+            bankRoutingNumber: $routingNumber,
             format: PositivePayFormat::STANDARD_CSV,
-            companyName: $companyName,
+            companyName: $name,
         );
     }
 
     /**
      * Create configuration for BAI2 format.
+     *
+     * @param string $accountNumber Bank account number
+     * @param string $routingNumber Bank routing number (9 digits)
+     * @param string $name Company name for file header
+     * @param string $id Company identification
      */
     public static function bai2(
-        string $bankAccountNumber,
-        string $bankRoutingNumber,
-        string $companyName,
-        string $companyId,
+        string $accountNumber,
+        string $routingNumber,
+        string $name,
+        string $id,
     ): self {
         return new self(
-            bankAccountNumber: $bankAccountNumber,
-            bankRoutingNumber: $bankRoutingNumber,
+            bankAccountNumber: $accountNumber,
+            bankRoutingNumber: $routingNumber,
             format: PositivePayFormat::BAI2,
-            companyName: $companyName,
-            companyId: $companyId,
+            companyName: $name,
+            companyId: $id,
         );
     }
 
     /**
      * Create configuration for Bank of America format.
+     *
+     * @param string $accountNumber Bank account number
+     * @param string $routingNumber Bank routing number (9 digits)
+     * @param string $name Company name for file header
+     * @param string $id Company identification
      */
     public static function bankOfAmerica(
-        string $bankAccountNumber,
-        string $bankRoutingNumber,
-        string $companyName,
-        string $companyId,
+        string $accountNumber,
+        string $routingNumber,
+        string $name,
+        string $id,
     ): self {
         return new self(
-            bankAccountNumber: $bankAccountNumber,
-            bankRoutingNumber: $bankRoutingNumber,
+            bankAccountNumber: $accountNumber,
+            bankRoutingNumber: $routingNumber,
             format: PositivePayFormat::BANK_OF_AMERICA,
-            companyName: $companyName,
-            companyId: $companyId,
+            companyName: $name,
+            companyId: $id,
             checkNumberPadding: 10,
         );
     }
 
     /**
      * Create configuration for Wells Fargo format.
+     *
+     * @param string $accountNumber Bank account number
+     * @param string $routingNumber Bank routing number (9 digits)
+     * @param string $name Company name for file header
+     * @param string $id Company identification
      */
     public static function wellsFargo(
-        string $bankAccountNumber,
-        string $bankRoutingNumber,
-        string $companyName,
-        string $companyId,
+        string $accountNumber,
+        string $routingNumber,
+        string $name,
+        string $id,
     ): self {
         return new self(
-            bankAccountNumber: $bankAccountNumber,
-            bankRoutingNumber: $bankRoutingNumber,
+            bankAccountNumber: $accountNumber,
+            bankRoutingNumber: $routingNumber,
             format: PositivePayFormat::WELLS_FARGO,
-            companyName: $companyName,
-            companyId: $companyId,
+            companyName: $name,
+            companyId: $id,
             checkNumberPadding: 10,
         );
     }
 
     /**
      * Create configuration for Chase format.
+     *
+     * @param string $accountNumber Bank account number
+     * @param string $routingNumber Bank routing number (9 digits)
+     * @param string $name Company name for file header
+     * @param string $id Company identification
      */
     public static function chase(
-        string $bankAccountNumber,
-        string $bankRoutingNumber,
-        string $companyName,
-        string $companyId,
+        string $accountNumber,
+        string $routingNumber,
+        string $name,
+        string $id,
     ): self {
         return new self(
-            bankAccountNumber: $bankAccountNumber,
-            bankRoutingNumber: $bankRoutingNumber,
+            bankAccountNumber: $accountNumber,
+            bankRoutingNumber: $routingNumber,
             format: PositivePayFormat::CHASE,
-            companyName: $companyName,
-            companyId: $companyId,
+            companyName: $name,
+            companyId: $id,
             checkNumberPadding: 8,
         );
     }
 
     /**
      * Create configuration for Citi format.
+     *
+     * @param string $accountNumber Bank account number
+     * @param string $routingNumber Bank routing number (9 digits)
+     * @param string $name Company name for file header
+     * @param string $id Company identification
      */
     public static function citi(
-        string $bankAccountNumber,
-        string $bankRoutingNumber,
-        string $companyName,
-        string $companyId,
+        string $accountNumber,
+        string $routingNumber,
+        string $name,
+        string $id,
     ): self {
         return new self(
-            bankAccountNumber: $bankAccountNumber,
-            bankRoutingNumber: $bankRoutingNumber,
+            bankAccountNumber: $accountNumber,
+            bankRoutingNumber: $routingNumber,
             format: PositivePayFormat::CITI,
-            companyName: $companyName,
-            companyId: $companyId,
+            companyName: $name,
+            companyId: $id,
             checkNumberPadding: 10,
         );
     }

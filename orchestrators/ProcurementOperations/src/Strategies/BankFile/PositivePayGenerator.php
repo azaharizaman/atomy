@@ -36,7 +36,7 @@ final class PositivePayGenerator extends AbstractBankFileGenerator
 {
     protected const string VERSION = '1.0.0';
 
-    private PositivePayConfiguration $configuration;
+    private readonly PositivePayConfiguration $configuration;
 
     public function __construct(
         PositivePayConfiguration $configuration,
@@ -422,11 +422,21 @@ final class PositivePayGenerator extends AbstractBankFileGenerator
 
     /**
      * Escape CSV value.
+     *
+     * Neutralizes formula prefixes to prevent CSV injection attacks.
+     * Prefixes like =, +, -, @ can trigger formula execution in spreadsheet apps.
      */
     private function escapeCsvValue(string $value): string
     {
         // Remove any existing quotes and add proper escaping
         $value = str_replace('"', '""', $value);
+
+        // Neutralize formula injection prefixes by prepending with single quote
+        // This prevents spreadsheet applications from interpreting the value as a formula
+        $formulaPrefixes = ['=', '+', '-', '@'];
+        if ($value !== '' && in_array($value[0], $formulaPrefixes, true)) {
+            $value = "'" . $value;
+        }
 
         return $value;
     }
