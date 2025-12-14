@@ -64,8 +64,8 @@ final class SwiftMt101GeneratorTest extends TestCase
     {
         $batch = $this->createEmptyBatch();
 
-        // Empty batch returns true (no items fail validation)
-        $this->assertTrue($this->generator->supports($batch));
+        // Empty batch is not supported - no payment items to process
+        $this->assertFalse($this->generator->supports($batch));
     }
 
     #[Test]

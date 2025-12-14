@@ -146,6 +146,9 @@ final readonly class PaymentItemData
         Money $amount,
         array $invoiceIds,
         string $paymentReference,
+        string $checkNumber,
+        ?\DateTimeImmutable $checkDate = null,
+        ?string $checkType = null,
         ?Money $discountTaken = null,
         ?Money $withholdingTax = null,
     ): self {
@@ -168,6 +171,9 @@ final readonly class PaymentItemData
             discountTaken: $discountTaken,
             withholdingTax: $withholdingTax,
             netAmount: $netAmount,
+            checkNumber: $checkNumber,
+            checkDate: $checkDate ?? new \DateTimeImmutable(),
+            checkType: $checkType ?? 'ISSUED',
         );
     }
 

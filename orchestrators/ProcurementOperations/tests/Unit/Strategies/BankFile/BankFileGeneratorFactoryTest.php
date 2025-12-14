@@ -36,9 +36,12 @@ final class BankFileGeneratorFactoryTest extends TestCase
     public function it_creates_nacha_generator(): void
     {
         $config = new NachaConfiguration(
+            immediateDestination: '021000021', // Valid routing number
             immediateOrigin: '123456789',
-            immediateDestination: '987654321',
+            immediateDestinationName: 'DEST BANK',
+            immediateOriginName: 'TEST COMPANY',
             companyName: 'TEST COMPANY',
+            companyId: '1234567890',
         );
 
         $generator = $this->factory->create(BankFileFormat::NACHA, $config);
@@ -51,8 +54,9 @@ final class BankFileGeneratorFactoryTest extends TestCase
     public function it_creates_positive_pay_generator(): void
     {
         $config = new PositivePayConfiguration(
+            bankAccountNumber: '123456789012',
+            bankRoutingNumber: '021000021', // Valid routing number
             format: PositivePayFormat::STANDARD_CSV,
-            accountNumber: '123456789012',
         );
 
         $generator = $this->factory->create(BankFileFormat::POSITIVE_PAY, $config);
@@ -80,9 +84,12 @@ final class BankFileGeneratorFactoryTest extends TestCase
     public function it_throws_exception_for_iso20022_format(): void
     {
         $config = new NachaConfiguration(
+            immediateDestination: '021000021',
             immediateOrigin: '123456789',
-            immediateDestination: '987654321',
+            immediateDestinationName: 'DEST BANK',
+            immediateOriginName: 'TEST COMPANY',
             companyName: 'TEST COMPANY',
+            companyId: '1234567890',
         );
 
         $this->expectException(UnsupportedBankFileFormatException::class);
@@ -95,9 +102,12 @@ final class BankFileGeneratorFactoryTest extends TestCase
     public function it_throws_exception_for_bai2_format(): void
     {
         $config = new NachaConfiguration(
+            immediateDestination: '021000021',
             immediateOrigin: '123456789',
-            immediateDestination: '987654321',
+            immediateDestinationName: 'DEST BANK',
+            immediateOriginName: 'TEST COMPANY',
             companyName: 'TEST COMPANY',
+            companyId: '1234567890',
         );
 
         $this->expectException(UnsupportedBankFileFormatException::class);
@@ -110,8 +120,9 @@ final class BankFileGeneratorFactoryTest extends TestCase
     public function it_throws_exception_for_wrong_configuration_type(): void
     {
         $config = new PositivePayConfiguration(
+            bankAccountNumber: '123456789012',
+            bankRoutingNumber: '021000021',
             format: PositivePayFormat::STANDARD_CSV,
-            accountNumber: '123456789012',
         );
 
         $this->expectException(\InvalidArgumentException::class);
@@ -124,9 +135,12 @@ final class BankFileGeneratorFactoryTest extends TestCase
     public function it_creates_nacha_generator_directly(): void
     {
         $config = new NachaConfiguration(
+            immediateDestination: '021000021',
             immediateOrigin: '123456789',
-            immediateDestination: '987654321',
+            immediateDestinationName: 'DEST BANK',
+            immediateOriginName: 'TEST COMPANY',
             companyName: 'TEST COMPANY',
+            companyId: '1234567890',
         );
 
         $generator = $this->factory->createNachaGenerator($config);
@@ -138,8 +152,9 @@ final class BankFileGeneratorFactoryTest extends TestCase
     public function it_creates_positive_pay_generator_directly(): void
     {
         $config = new PositivePayConfiguration(
+            bankAccountNumber: '123456789012',
+            bankRoutingNumber: '021000021',
             format: PositivePayFormat::STANDARD_CSV,
-            accountNumber: '123456789012',
         );
 
         $generator = $this->factory->createPositivePayGenerator($config);
@@ -166,8 +181,9 @@ final class BankFileGeneratorFactoryTest extends TestCase
     {
         $generator = $this->factory->createNachaForVendorPayments(
             immediateOrigin: '123456789',
-            immediateDestination: '987654321',
+            immediateDestination: '021000021',
             companyName: 'TEST COMPANY',
+            companyId: '1234567890',
         );
 
         $this->assertInstanceOf(NachaFileGenerator::class, $generator);

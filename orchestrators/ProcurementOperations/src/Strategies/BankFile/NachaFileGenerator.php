@@ -330,10 +330,10 @@ final class NachaFileGenerator extends AbstractBankFileGenerator
         $amountCents = $this->formatAmountAsCents($item->amount);
 
         return sprintf(
-            '%s%s%s%s%s%s%s%s%s',
+            '%s%s%s%s%s%s%s%s%s%s%s%s',
             '6',                                                          // Record Type Code
             $this->padNumber($transactionCode, 2),                        // Transaction Code
-            $this->padNumber($item->vendorBankRoutingNumber, 8),                // Receiving DFI Identification (first 8 digits)
+            substr($item->vendorBankRoutingNumber, 0, 8),                 // Receiving DFI Identification (first 8 digits)
             $this->calculateCheckDigit($item->vendorBankRoutingNumber),         // Check Digit (9th digit)
             $this->padString($item->vendorBankAccountNumber, 17),               // DFI Account Number
             $this->padNumber($amountCents, 10),                           // Amount
@@ -341,7 +341,7 @@ final class NachaFileGenerator extends AbstractBankFileGenerator
             $this->padString($this->sanitizeForBankFile($item->vendorName ?? ''), 22), // Individual Name
             $this->padString('', 2),                                      // Discretionary Data
             '0',                                                          // Addenda Record Indicator (0 = no addenda)
-            $this->padNumber($this->configuration->immediateOrigin, 8),   // Trace Number (first 8 - ODFI routing)
+            substr($this->configuration->immediateOrigin, 0, 8),          // Trace Number (first 8 - ODFI routing)
             $this->padNumber($traceNumber, 7),                            // Trace Number (sequence)
         );
     }
@@ -358,7 +358,7 @@ final class NachaFileGenerator extends AbstractBankFileGenerator
         int $totalCredit,
     ): string {
         return sprintf(
-            '%s%s%s%s%s%s%s%s%s%s',
+            '%s%s%s%s%s%s%s%s%s%s%s',
             '8',                                                              // Record Type Code
             '220',                                                            // Service Class Code
             $this->padNumber($entryAddendaCount, 6),                          // Entry/Addenda Count
