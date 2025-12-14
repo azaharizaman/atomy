@@ -33,7 +33,7 @@ use Psr\Log\NullLogger;
  *
  * @see https://www.nacha.org/rules
  */
-final readonly class NachaFileGenerator extends AbstractBankFileGenerator
+final class NachaFileGenerator extends AbstractBankFileGenerator
 {
     protected const string VERSION = '2025.1';
 
@@ -75,7 +75,7 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
 
         // All items must have valid routing/account numbers
         foreach ($batch->paymentItems as $item) {
-            if (empty($item->bankRoutingNumber) || empty($item->bankAccountNumber)) {
+            if (empty($item->vendorBankRoutingNumber) || empty($item->vendorBankAccountNumber)) {
                 return false;
             }
         }
@@ -152,15 +152,15 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
         $errors = [];
         $prefix = "Item {$index}";
 
-        if (empty($item->bankRoutingNumber)) {
+        if (empty($item->vendorBankRoutingNumber)) {
             $errors[] = "{$prefix}: Routing number is required";
-        } elseif (!$this->isValidRoutingNumber($item->bankRoutingNumber)) {
+        } elseif (!$this->isValidRoutingNumber($item->vendorBankRoutingNumber)) {
             $errors[] = "{$prefix}: Invalid routing number format";
         }
 
-        if (empty($item->bankAccountNumber)) {
+        if (empty($item->vendorBankAccountNumber)) {
             $errors[] = "{$prefix}: Account number is required";
-        } elseif (!$this->isValidAccountNumber($item->bankAccountNumber)) {
+        } elseif (!$this->isValidAccountNumber($item->vendorBankAccountNumber)) {
             $errors[] = "{$prefix}: Invalid account number format";
         }
 

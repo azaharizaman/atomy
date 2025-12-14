@@ -30,7 +30,7 @@ use Psr\Log\NullLogger;
  *
  * @see https://www.swift.com/standards/mt-messages
  */
-final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
+final class SwiftMt101Generator extends AbstractBankFileGenerator
 {
     protected const string VERSION = '1.0.0';
 
@@ -67,6 +67,11 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
 
     public function supports(PaymentBatchData $batch): bool
     {
+        // Early return for empty payment items
+        if (empty($batch->paymentItems)) {
+            return false;
+        }
+
         // SWIFT MT101 requires BIC codes and IBAN for international transfers
         foreach ($batch->paymentItems as $item) {
             // Must have beneficiary bank BIC or other routing info

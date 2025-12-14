@@ -21,7 +21,7 @@ use Psr\Log\NullLogger;
  * - Validation helpers
  * - Amount formatting
  */
-abstract readonly class AbstractBankFileGenerator implements BankFileGeneratorInterface
+abstract class AbstractBankFileGenerator implements BankFileGeneratorInterface
 {
     protected const string VERSION = '1.0.0';
 
@@ -169,15 +169,23 @@ abstract readonly class AbstractBankFileGenerator implements BankFileGeneratorIn
 
     /**
      * Validate account number format.
+     * 
+     * Uses strict digits-only validation to prevent control character injection.
      */
     protected function isValidAccountNumber(string $accountNumber): bool
     {
-        // Account numbers are typically 4-17 digits
-        $cleaned = preg_replace('/[^0-9]/', '', $accountNumber);
+        // Strict validation: must be 4-17 digits only, no other characters
+        return preg_match('/^\d{4,17}$/', $accountNumber) === 1;
+    }
 
-        return $cleaned !== null
-            && strlen($cleaned) >= 4
-            && strlen($cleaned) <= 17;
+    /**
+     * Sanitize account number by removing non-digit characters.
+     * 
+     * Use this when you need to clean up user input before validation.
+     */
+    protected function sanitizeAccountNumber(string $accountNumber): string
+    {
+        return preg_replace('/[^0-9]/', '', $accountNumber) ?? '';
     }
 
     /**

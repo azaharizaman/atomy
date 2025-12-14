@@ -32,7 +32,7 @@ use Psr\Log\NullLogger;
  * - CHASE: Chase specific format
  * - CITI: Citibank specific format
  */
-final readonly class PositivePayGenerator extends AbstractBankFileGenerator
+final class PositivePayGenerator extends AbstractBankFileGenerator
 {
     protected const string VERSION = '1.0.0';
 
