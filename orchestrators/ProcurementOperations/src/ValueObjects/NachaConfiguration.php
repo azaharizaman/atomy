@@ -99,6 +99,14 @@ final readonly class NachaConfiguration
     }
 
     /**
+     * Check if configuration is valid.
+     */
+    public function isValid(): bool
+    {
+        return empty($this->validate());
+    }
+
+    /**
      * Validate a routing number using the checksum algorithm.
      *
      * ABA routing numbers use a weighted checksum where:

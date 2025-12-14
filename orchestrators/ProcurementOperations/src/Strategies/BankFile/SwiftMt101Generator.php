@@ -70,7 +70,7 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
         // SWIFT MT101 requires BIC codes and IBAN for international transfers
         foreach ($batch->items as $item) {
             // Must have beneficiary bank BIC or other routing info
-            if (empty($item->swiftBic) && empty($item->bankRoutingNumber)) {
+            if (empty($item->beneficiaryBic) && empty($item->vendorBankRoutingNumber)) {
                 return false;
             }
         }
@@ -172,17 +172,17 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
         }
 
         // Beneficiary account
-        if (empty($item->bankAccountNumber) && empty($item->iban)) {
+        if (empty($item->vendorBankAccountNumber) && empty($item->beneficiaryIban)) {
             $errors[] = "{$prefix}: Beneficiary account number or IBAN is required";
         }
 
         // Validate IBAN if provided
-        if (!empty($item->iban) && !$this->isValidIban($item->iban)) {
+        if (!empty($item->beneficiaryIban) && !$this->isValidIban($item->beneficiaryIban)) {
             $errors[] = "{$prefix}: Invalid IBAN format";
         }
 
         // Beneficiary bank BIC
-        if (!empty($item->swiftBic) && !$this->isValidBic($item->swiftBic)) {
+        if (!empty($item->beneficiaryBic) && !$this->isValidBic($item->beneficiaryBic)) {
             $errors[] = "{$prefix}: Invalid beneficiary bank BIC format";
         }
 
@@ -321,17 +321,17 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
         $lines[] = ':32B:' . $item->amount->getCurrency() . $amount;
 
         // Beneficiary Bank (Tag 57A or 57D)
-        if (!empty($item->swiftBic)) {
-            $lines[] = ':57A:' . strtoupper($item->swiftBic);
-        } elseif (!empty($item->bankRoutingNumber)) {
-            $lines[] = ':57D:' . $item->bankRoutingNumber;
-            if (!empty($item->bankName)) {
-                $lines[] = $this->truncate($item->bankName, self::MAX_NAME_LENGTH);
+        if (!empty($item->beneficiaryBic)) {
+            $lines[] = ':57A:' . strtoupper($item->beneficiaryBic);
+        } elseif (!empty($item->vendorBankRoutingNumber)) {
+            $lines[] = ':57D:' . $item->vendorBankRoutingNumber;
+            if (!empty($item->vendorBankName)) {
+                $lines[] = $this->truncate($item->vendorBankName, self::MAX_NAME_LENGTH);
             }
         }
 
         // Beneficiary (Tag 59 or 59A)
-        $accountNumber = $item->iban ?? $item->bankAccountNumber ?? '';
+        $accountNumber = $item->beneficiaryIban ?? $item->vendorBankAccountNumber ?? '';
         $lines[] = ':59:/' . $accountNumber;
 
         // Beneficiary name and address
@@ -341,17 +341,16 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
         }
 
         // Add beneficiary address if available
-        if (!empty($item->vendorAddress)) {
-            $addressLines = $this->splitIntoLines($item->vendorAddress, self::MAX_NAME_LENGTH);
+        if (!empty($item->beneficiaryAddress)) {
+            $addressLines = $this->splitIntoLines($item->beneficiaryAddress, self::MAX_NAME_LENGTH);
             foreach (array_slice($addressLines, 0, 2) as $line) {
                 $lines[] = $line;
             }
         }
 
         // Remittance Information (Tag 70) - payment reference/description
-        if (!empty($item->referenceNumber) || !empty($item->description)) {
-            $remittance = $item->referenceNumber ?? $item->description ?? '';
-            $lines[] = ':70:' . $this->truncate($remittance, 35);
+        if (!empty($item->paymentReference)) {
+            $lines[] = ':70:' . $this->truncate($item->paymentReference, 35);
         }
 
         // Details of Charges (Tag 71A) - SHA (shared), OUR, BEN
@@ -377,7 +376,7 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
      */
     private function generateTransactionReference(PaymentItemData $item, int $index): string
     {
-        $ref = $item->referenceNumber ?? sprintf('TXN%05d', $index);
+        $ref = $item->paymentReference ?? sprintf('TXN%05d', $index);
 
         return $this->truncate(strtoupper($ref), self::MAX_REFERENCE_LENGTH);
     }

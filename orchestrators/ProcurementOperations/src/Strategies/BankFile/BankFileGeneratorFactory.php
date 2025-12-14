@@ -124,11 +124,15 @@ final readonly class BankFileGeneratorFactory
         string $immediateOrigin,
         string $immediateDestination,
         string $companyName,
-        ?string $companyId = null,
+        string $companyId,
+        string $originName = '',
+        string $destinationName = '',
     ): NachaFileGenerator {
         $configuration = NachaConfiguration::forVendorPayments(
-            immediateOrigin: $immediateOrigin,
             immediateDestination: $immediateDestination,
+            immediateOrigin: $immediateOrigin,
+            destinationName: $destinationName ?: 'DEST BANK',
+            originName: $originName ?: $companyName,
             companyName: $companyName,
             companyId: $companyId,
         );
@@ -147,14 +151,34 @@ final readonly class BankFileGeneratorFactory
         ?string $bankId = null,
     ): PositivePayGenerator {
         $configuration = match ($bankFormat) {
-            PositivePayFormat::BANK_OF_AMERICA => PositivePayConfiguration::forBankOfAmerica($accountNumber, $bankId),
-            PositivePayFormat::WELLS_FARGO => PositivePayConfiguration::forWellsFargo($accountNumber, $bankId),
-            PositivePayFormat::CHASE => PositivePayConfiguration::forChase($accountNumber, $bankId),
-            PositivePayFormat::CITI => PositivePayConfiguration::forCiti($accountNumber, $bankId),
+            PositivePayFormat::BANK_OF_AMERICA => PositivePayConfiguration::bankOfAmerica(
+                bankAccountNumber: $accountNumber,
+                bankRoutingNumber: $bankId ?? '000000000',
+                companyName: '',
+                companyId: '',
+            ),
+            PositivePayFormat::WELLS_FARGO => PositivePayConfiguration::wellsFargo(
+                bankAccountNumber: $accountNumber,
+                bankRoutingNumber: $bankId ?? '000000000',
+                companyName: '',
+                companyId: '',
+            ),
+            PositivePayFormat::CHASE => PositivePayConfiguration::chase(
+                bankAccountNumber: $accountNumber,
+                bankRoutingNumber: $bankId ?? '000000000',
+                companyName: '',
+                companyId: '',
+            ),
+            PositivePayFormat::CITI => PositivePayConfiguration::citi(
+                bankAccountNumber: $accountNumber,
+                bankRoutingNumber: $bankId ?? '000000000',
+                companyName: '',
+                companyId: '',
+            ),
             default => new PositivePayConfiguration(
+                bankAccountNumber: $accountNumber,
+                bankRoutingNumber: $bankId ?? '000000000',
                 format: $bankFormat,
-                accountNumber: $accountNumber,
-                bankId: $bankId,
             ),
         };
 

@@ -225,9 +225,9 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
             '094',                                                  // Record Size
             '10',                                                   // Blocking Factor
             '1',                                                    // Format Code
-            $this->padString($this->configuration->destinationName ?? 'DEST BANK', 23), // Immediate Destination Name
-            $this->padString($this->configuration->originName ?? 'ORIGIN CO', 23),      // Immediate Origin Name
-            $this->padString($this->configuration->fileReference ?? '', 8),             // Reference Code
+            $this->padString($this->configuration->immediateDestinationName ?? 'DEST BANK', 23), // Immediate Destination Name
+            $this->padString($this->configuration->immediateOriginName ?? 'ORIGIN CO', 23),      // Immediate Origin Name
+            $this->padString($this->configuration->referenceCode ?? '', 8),             // Reference Code
         );
     }
 

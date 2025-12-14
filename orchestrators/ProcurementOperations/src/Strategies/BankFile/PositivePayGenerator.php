@@ -184,10 +184,8 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
     {
         $lines = [];
 
-        // Header row
-        if ($this->configuration->includeHeader) {
-            $lines[] = 'Account Number,Check Number,Issue Date,Amount,Payee Name,Status';
-        }
+        // Header row (always include for standard CSV)
+        $lines[] = 'Account Number,Check Number,Issue Date,Amount,Payee Name,Status';
 
         // Data rows
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
@@ -195,9 +193,9 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         foreach ($batch->items as $item) {
             $lines[] = sprintf(
                 '%s,%s,%s,%.2f,"%s",%s',
-                $this->configuration->accountNumber,
+                $this->configuration->bankAccountNumber,
                 $item->checkNumber,
-                $issueDate->format($this->configuration->dateFormat),
+                $issueDate->format($this->configuration->format->dateFormat()),
                 $item->amount->getAmount(),
                 $this->escapeCsvValue($item->vendorName ?? ''),
                 $this->determineStatus($item),
@@ -219,8 +217,8 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         // 01 - File Header
         $lines[] = sprintf(
             '01,%s,%s,%s,%s,1,//',
-            $this->configuration->accountNumber,
-            $this->configuration->bankId ?? '000000000',
+            $this->configuration->bankAccountNumber,
+            $this->configuration->bankRoutingNumber ?? '000000000',
             $now->format('ymd'),
             $now->format('Hi'),
         );
@@ -228,8 +226,8 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         // 02 - Group Header
         $lines[] = sprintf(
             '02,%s,%s,1,%s,%s,,2/',
-            $this->configuration->accountNumber,
-            $this->configuration->bankId ?? '000000000',
+            $this->configuration->bankAccountNumber,
+            $this->configuration->bankRoutingNumber ?? '000000000',
             $issueDate->format('ymd'),
             $issueDate->format('Hi'),
         );
@@ -238,7 +236,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $totalAmount = $this->calculateTotalAmount($batch);
         $lines[] = sprintf(
             '03,%s,USD,010,%d,%d,/',
-            $this->configuration->accountNumber,
+            $this->configuration->bankAccountNumber,
             count($batch->items),
             $this->formatAmountAsCents($totalAmount),
         );
@@ -289,7 +287,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         foreach ($batch->items as $item) {
             $lines[] = sprintf(
                 '%s%s%s%s%s',
-                $this->padString($this->configuration->accountNumber, 16),      // Account Number
+                $this->padString($this->configuration->bankAccountNumber, 16),      // Account Number
                 $this->padNumber($item->checkNumber ?? '', 10),                 // Check Number
                 $issueDate->format('mdY'),                                       // Issue Date (MMDDYYYY)
                 $this->padNumber($this->formatAmountAsCents($item->amount), 10), // Amount in cents
@@ -311,7 +309,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         // Wells Fargo header
         $lines[] = sprintf(
             'H%s%s%06d',
-            $this->padString($this->configuration->accountNumber, 15),
+            $this->padString($this->configuration->bankAccountNumber, 15),
             $issueDate->format('Ymd'),
             count($batch->items),
         );
@@ -320,7 +318,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         foreach ($batch->items as $item) {
             $lines[] = sprintf(
                 'D%s%s%s%s%s',
-                $this->padString($this->configuration->accountNumber, 15),      // Account Number
+                $this->padString($this->configuration->bankAccountNumber, 15),      // Account Number
                 $this->padNumber($item->checkNumber ?? '', 10),                 // Check Number
                 $this->padNumber($this->formatAmountAsCents($item->amount), 12), // Amount
                 $issueDate->format('Ymd'),                                       // Issue Date
@@ -350,7 +348,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         // Chase uses pipe-delimited format
         foreach ($batch->items as $item) {
             $lines[] = implode('|', [
-                $this->configuration->accountNumber,
+                $this->configuration->bankAccountNumber,
                 $item->checkNumber ?? '',
                 number_format($item->amount->getAmount(), 2, '.', ''),
                 $issueDate->format('m/d/Y'),
@@ -373,7 +371,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         // Citi file header
         $lines[] = sprintf(
             '01%s%s%s',
-            $this->padString($this->configuration->accountNumber, 20),
+            $this->padString($this->configuration->bankAccountNumber, 20),
             (new \DateTimeImmutable())->format('Ymd'),
             $this->padNumber(count($batch->items), 6),
         );
@@ -382,7 +380,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         foreach ($batch->items as $item) {
             $lines[] = sprintf(
                 '02%s%s%s%s%s%s',
-                $this->padString($this->configuration->accountNumber, 20),      // Account
+                $this->padString($this->configuration->bankAccountNumber, 20),      // Account
                 $this->padNumber($item->checkNumber ?? '', 10),                 // Check Number
                 $this->padNumber($this->formatAmountAsCents($item->amount), 12), // Amount
                 $issueDate->format('Ymd'),                                       // Issue Date
@@ -478,7 +476,7 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
             fileContent: $fileContent,
             totalAmount: $totalAmount,
             positivePayFormat: $this->configuration->format,
-            bankAccountNumber: $this->configuration->accountNumber,
+            bankAccountNumber: $this->configuration->bankAccountNumber,
             includedCheckNumbers: $categories['issued'],
             voidedCheckNumbers: $categories['voided'],
             stopPaymentCheckNumbers: $categories['stop_payment'],

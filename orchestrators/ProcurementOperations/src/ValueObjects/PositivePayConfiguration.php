@@ -78,6 +78,14 @@ final readonly class PositivePayConfiguration
     }
 
     /**
+     * Check if configuration is valid.
+     */
+    public function isValid(): bool
+    {
+        return empty($this->validate());
+    }
+
+    /**
      * Validate a routing number using the checksum algorithm.
      */
     private function validateRoutingNumber(string $routingNumber): bool
@@ -143,6 +151,63 @@ final readonly class PositivePayConfiguration
             bankAccountNumber: $bankAccountNumber,
             bankRoutingNumber: $bankRoutingNumber,
             format: PositivePayFormat::BANK_OF_AMERICA,
+            companyName: $companyName,
+            companyId: $companyId,
+            checkNumberPadding: 10,
+        );
+    }
+
+    /**
+     * Create configuration for Wells Fargo format.
+     */
+    public static function wellsFargo(
+        string $bankAccountNumber,
+        string $bankRoutingNumber,
+        string $companyName,
+        string $companyId,
+    ): self {
+        return new self(
+            bankAccountNumber: $bankAccountNumber,
+            bankRoutingNumber: $bankRoutingNumber,
+            format: PositivePayFormat::WELLS_FARGO,
+            companyName: $companyName,
+            companyId: $companyId,
+            checkNumberPadding: 10,
+        );
+    }
+
+    /**
+     * Create configuration for Chase format.
+     */
+    public static function chase(
+        string $bankAccountNumber,
+        string $bankRoutingNumber,
+        string $companyName,
+        string $companyId,
+    ): self {
+        return new self(
+            bankAccountNumber: $bankAccountNumber,
+            bankRoutingNumber: $bankRoutingNumber,
+            format: PositivePayFormat::CHASE,
+            companyName: $companyName,
+            companyId: $companyId,
+            checkNumberPadding: 8,
+        );
+    }
+
+    /**
+     * Create configuration for Citi format.
+     */
+    public static function citi(
+        string $bankAccountNumber,
+        string $bankRoutingNumber,
+        string $companyName,
+        string $companyId,
+    ): self {
+        return new self(
+            bankAccountNumber: $bankAccountNumber,
+            bankRoutingNumber: $bankRoutingNumber,
+            format: PositivePayFormat::CITI,
             companyName: $companyName,
             companyId: $companyId,
             checkNumberPadding: 10,
