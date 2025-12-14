@@ -61,6 +61,11 @@ final class PositivePayGenerator extends AbstractBankFileGenerator
 
     public function supports(PaymentBatchData $batch): bool
     {
+        // Early return for empty payment items
+        if (empty($batch->paymentItems)) {
+            return false;
+        }
+
         // Positive Pay requires check numbers
         foreach ($batch->paymentItems as $item) {
             if (empty($item->checkNumber)) {

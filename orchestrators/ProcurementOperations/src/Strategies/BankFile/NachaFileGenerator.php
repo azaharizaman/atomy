@@ -68,6 +68,11 @@ final class NachaFileGenerator extends AbstractBankFileGenerator
 
     public function supports(PaymentBatchData $batch): bool
     {
+        // Early return for empty payment items
+        if (empty($batch->paymentItems)) {
+            return false;
+        }
+
         // NACHA only supports USD
         if ($batch->currency !== 'USD') {
             return false;
