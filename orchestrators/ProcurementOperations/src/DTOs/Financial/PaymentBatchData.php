@@ -167,6 +167,20 @@ final readonly class PaymentBatchData
     }
 
     /**
+     * Add multiple payment items to batch
+     *
+     * @param array<PaymentItemData> $items
+     */
+    public function withPaymentItems(array $items): self
+    {
+        $batch = $this;
+        foreach ($items as $item) {
+            $batch = $batch->withPaymentItem($item);
+        }
+        return $batch;
+    }
+
+    /**
      * Submit for approval
      */
     public function withSubmitForApproval(): self

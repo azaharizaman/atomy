@@ -22,7 +22,8 @@
         "nexus/event-stream": "*@dev",
         "nexus/tax": "*@dev",
         "nexus/procurement-ml": "*@dev",
-        "nexus/tenant": "*@dev"
+        "nexus/tenant": "*@dev",
+        "nexus/procurement-operations": "*@dev"
     },
     "repositories": [
         {
@@ -56,5 +57,15 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\ProcurementOperations\\": "orchestrators/ProcurementOperations/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\ProcurementOperations\\Tests\\": "orchestrators/ProcurementOperations/tests/"
+        }
     }
 }
