@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementOperations\Strategies\BankFile;
 
-use Nexus\Common\ValueObjects\Money;
-use Nexus\ProcurementOperations\DTOs\BankFile\BankFileResultInterface;
-use Nexus\ProcurementOperations\DTOs\BankFile\SwiftMt101Result;
-use Nexus\ProcurementOperations\DTOs\Financial\PaymentBatchData;
-use Nexus\ProcurementOperations\DTOs\Financial\PaymentItemData;
-use Nexus\ProcurementOperations\Enums\BankFileFormat;
-use Nexus\ProcurementOperations\ValueObjects\SwiftMt101Configuration;
-use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
+use Nexus\Common\ValueObjects\Money;
+use Nexus\ProcurementOperations\Enums\BankFileFormat;
+use Nexus\ProcurementOperations\DTOs\BankFile\SwiftMt101Result;
+use Nexus\ProcurementOperations\DTOs\Financial\PaymentItemData;
+use Nexus\ProcurementOperations\DTOs\Financial\PaymentBatchData;
+use Nexus\ProcurementOperations\ValueObjects\SwiftMt101Configuration;
+use Nexus\ProcurementOperations\DTOs\BankFile\BankFileResultInterface;
 
 /**
  * SWIFT MT101 File Generator.
@@ -162,6 +162,31 @@ final class SwiftMt101Generator extends AbstractBankFileGenerator
     }
 
     /**
+     * Check if string contains control characters.
+     *
+     * Detects ASCII control characters (0x00-0x1F, 0x7F) that could be used
+     * for injection attacks in SWIFT message structures.
+     */
+    private function containsControlCharacters(string $value): bool
+    {
+        return (bool) preg_match('/[\x00-\x1F\x7F]/', $value);
+    }
+
+    /**
+     * Sanitize account number/IBAN for SWIFT message.
+     *
+     * Strips all non-alphanumeric characters and converts to uppercase
+     * to prevent injection of SWIFT tags or message structure manipulation.
+     */
+    private function sanitizeAccountForSwift(string $account): string
+    {
+        // Strip all non-alphanumeric characters (including control chars, colons, newlines)
+        $sanitized = preg_replace('/[^A-Z0-9]/', '', strtoupper($account)) ?? '';
+
+        return $sanitized;
+    }
+
+    /**
      * Validate individual payment item.
      *
      * @return array<string>
@@ -182,8 +207,18 @@ final class SwiftMt101Generator extends AbstractBankFileGenerator
         }
 
         // Validate IBAN if provided
-        if (!empty($item->beneficiaryIban) && !$this->isValidIban($item->beneficiaryIban)) {
-            $errors[] = "{$prefix}: Invalid IBAN format";
+        if (!empty($item->beneficiaryIban)) {
+            // Reject IBANs containing control characters (injection prevention)
+            if ($this->containsControlCharacters($item->beneficiaryIban)) {
+                $errors[] = "{$prefix}: IBAN contains invalid control characters";
+            } elseif (!$this->isValidIban($item->beneficiaryIban)) {
+                $errors[] = "{$prefix}: Invalid IBAN format";
+            }
+        }
+
+        // Validate account number for control characters
+        if (!empty($item->vendorBankAccountNumber) && $this->containsControlCharacters($item->vendorBankAccountNumber)) {
+            $errors[] = "{$prefix}: Account number contains invalid control characters";
         }
 
         // Beneficiary bank BIC
@@ -336,7 +371,9 @@ final class SwiftMt101Generator extends AbstractBankFileGenerator
         }
 
         // Beneficiary (Tag 59 or 59A)
-        $accountNumber = $item->beneficiaryIban ?? $item->vendorBankAccountNumber ?? '';
+        // Sanitize account to prevent SWIFT tag injection
+        $rawAccount = $item->beneficiaryIban ?? $item->vendorBankAccountNumber ?? '';
+        $accountNumber = $this->sanitizeAccountForSwift($rawAccount);
         $lines[] = ':59:/' . $accountNumber;
 
         // Beneficiary name and address

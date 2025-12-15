@@ -130,11 +130,20 @@ abstract class AbstractBankFileGenerator implements BankFileGeneratorInterface
 
     /**
      * Sanitize string for bank file (uppercase, alphanumeric only).
+     *
+     * Security: Explicitly strips control characters (0x00-0x1F, 0x7F) to prevent
+     * manipulation of fixed-width and delimited file formats before applying
+     * alphanumeric filtering.
      */
     protected function sanitizeForBankFile(string $value, bool $allowSpaces = true): string
     {
+        // First, strip all control characters (0x00-0x1F and 0x7F) to prevent injection attacks
+        $value = preg_replace('/[\x00-\x1F\x7F]/', '', $value) ?? '';
+
+        // Convert to uppercase for bank file compatibility
         $value = strtoupper($value);
 
+        // Apply alphanumeric filter based on space allowance
         if ($allowSpaces) {
             return preg_replace('/[^A-Z0-9 ]/', '', $value) ?? '';
         }

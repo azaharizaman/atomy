@@ -411,8 +411,10 @@ final class PositivePayGenerator extends AbstractBankFileGenerator
     private function determineStatus(PaymentItemData $item): string
     {
         // Check metadata for void/stop payment flags
-        $isVoid = $item->metadata['void'] ?? false;
-        $isStopPayment = $item->metadata['stop_payment'] ?? false;
+        // Use null coalescing on metadata first to handle null metadata array
+        $metadata = $item->metadata ?? [];
+        $isVoid = $metadata['void'] ?? false;
+        $isStopPayment = $metadata['stop_payment'] ?? false;
 
         if ($isVoid) {
             return 'VOID';
