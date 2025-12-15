@@ -329,15 +329,20 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
         $transactionCode = $this->determineTransactionCode($item);
         $amountCents = $this->formatAmountAsCents($item->amount);
 
+        // Sanitize routing and account numbers to prevent NACHA record injection
+        $sanitizedRouting = $this->sanitizeForNacha($item->vendorBankRoutingNumber);
+        $sanitizedAccount = $this->sanitizeForNacha($item->vendorBankAccountNumber);
+        $sanitizedId = $this->sanitizeForNacha($item->vendorId ?? $item->paymentReference ?? '');
+
         return sprintf(
             '%s%s%s%s%s%s%s%s%s%s%s%s',
             '6',                                                          // Record Type Code
             $this->padNumber($transactionCode, 2),                        // Transaction Code
-            substr($item->vendorBankRoutingNumber, 0, 8),                 // Receiving DFI Identification (first 8 digits)
-            $this->calculateCheckDigit($item->vendorBankRoutingNumber),         // Check Digit (9th digit)
-            $this->padString($item->vendorBankAccountNumber, 17),               // DFI Account Number
+            substr($sanitizedRouting, 0, 8),                              // Receiving DFI Identification (first 8 digits)
+            $this->calculateCheckDigit($sanitizedRouting),                // Check Digit (9th digit)
+            $this->padString($sanitizedAccount, 17),                      // DFI Account Number
             $this->padNumber($amountCents, 10),                           // Amount
-            $this->padString($item->vendorId ?? $item->paymentReference ?? '', 15), // Individual Identification Number
+            $this->padString($sanitizedId, 15),                           // Individual Identification Number
             $this->padString($this->sanitizeForBankFile($item->vendorName ?? ''), 22), // Individual Name
             $this->padString('', 2),                                      // Discretionary Data
             '0',                                                          // Addenda Record Indicator (0 = no addenda)
@@ -460,6 +465,24 @@ final readonly class NachaFileGenerator extends AbstractBankFileGenerator
     private function calculateCheckDigit(string $routingNumber): string
     {
         return substr($routingNumber, 8, 1);
+    }
+
+    /**
+     * Sanitize value for NACHA record fields.
+     *
+     * Strips control characters and non-alphanumeric characters to prevent
+     * injection attacks that could manipulate fixed-width NACHA records.
+     * NACHA records are 94-character fixed-width, so injected characters
+     * could shift field positions and corrupt the file structure.
+     */
+    private function sanitizeForNacha(string $value): string
+    {
+        // Strip control characters (0x00-0x1F and 0x7F)
+        $value = preg_replace('/[\x00-\x1F\x7F]/', '', $value) ?? '';
+
+        // For NACHA fields, allow only alphanumeric characters
+        // (routing/account numbers should be numeric, but we allow alpha for edge cases)
+        return preg_replace('/[^A-Za-z0-9]/', '', $value) ?? '';
     }
 
     /**

@@ -395,7 +395,9 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
         if (!empty($item->beneficiaryBic)) {
             $lines[] = ':57A:' . strtoupper($item->beneficiaryBic);
         } elseif (!empty($item->vendorBankRoutingNumber)) {
-            $lines[] = ':57D:' . $item->vendorBankRoutingNumber;
+            // Sanitize routing number to prevent SWIFT tag injection
+            $sanitizedRouting = $this->sanitizeForSwift($item->vendorBankRoutingNumber);
+            $lines[] = ':57D:' . $sanitizedRouting;
             if (!empty($item->vendorBankName)) {
                 $lines[] = $this->truncate($item->vendorBankName, self::MAX_NAME_LENGTH);
             }

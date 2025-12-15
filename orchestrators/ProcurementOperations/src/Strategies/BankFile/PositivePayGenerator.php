@@ -195,11 +195,17 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         // Data rows
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
 
+        // Sanitize account number from configuration
+        $sanitizedAccountNumber = $this->sanitizeForPositivePay($this->configuration->bankAccountNumber);
+
         foreach ($batch->paymentItems as $item) {
+            // Sanitize check number to prevent CSV injection and format manipulation
+            $sanitizedCheckNumber = $this->sanitizeForPositivePay($item->checkNumber ?? '');
+
             $lines[] = sprintf(
                 '%s,%s,%s,%.2f,"%s",%s',
-                $this->configuration->bankAccountNumber,
-                $item->checkNumber,
+                $sanitizedAccountNumber,
+                $sanitizedCheckNumber,
                 $issueDate->format($this->configuration->format->dateFormat()),
                 $item->amount->getAmount(),
                 $this->escapeCsvValue($item->vendorName ?? ''),
@@ -219,11 +225,15 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $now = new \DateTimeImmutable();
         $issueDate = $batch->paymentDate ?? $now;
 
+        // Sanitize account and routing numbers from configuration
+        $sanitizedAccountNumber = $this->sanitizeForPositivePay($this->configuration->bankAccountNumber);
+        $sanitizedRoutingNumber = $this->sanitizeForPositivePay($this->configuration->bankRoutingNumber ?? '000000000');
+
         // 01 - File Header
         $lines[] = sprintf(
             '01,%s,%s,%s,%s,1,//',
-            $this->configuration->bankAccountNumber,
-            $this->configuration->bankRoutingNumber ?? '000000000',
+            $sanitizedAccountNumber,
+            $sanitizedRoutingNumber,
             $now->format('ymd'),
             $now->format('Hi'),
         );
@@ -231,8 +241,8 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         // 02 - Group Header
         $lines[] = sprintf(
             '02,%s,%s,1,%s,%s,,2/',
-            $this->configuration->bankAccountNumber,
-            $this->configuration->bankRoutingNumber ?? '000000000',
+            $sanitizedAccountNumber,
+            $sanitizedRoutingNumber,
             $issueDate->format('ymd'),
             $issueDate->format('Hi'),
         );
@@ -241,17 +251,20 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $totalAmount = $this->calculateTotalAmount($batch);
         $lines[] = sprintf(
             '03,%s,USD,010,%d,%d,/',
-            $this->configuration->bankAccountNumber,
+            $sanitizedAccountNumber,
             count($batch->paymentItems),
             $this->formatAmountAsCents($totalAmount),
         );
 
         // 16 - Transaction Detail (for each check)
         foreach ($batch->paymentItems as $item) {
+            // Sanitize check number to prevent BAI2 format manipulation
+            $sanitizedCheckNumber = $this->sanitizeForPositivePay($item->checkNumber ?? '');
+
             $lines[] = sprintf(
                 '16,475,%d,0,%s,%s,/',
                 $this->formatAmountAsCents($item->amount),
-                $item->checkNumber,
+                $sanitizedCheckNumber,
                 $this->sanitizeForBankFile($item->vendorName ?? '', false),
             );
         }
@@ -288,12 +301,18 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $lines = [];
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
 
+        // Sanitize account number from configuration
+        $sanitizedAccountNumber = $this->sanitizeForPositivePay($this->configuration->bankAccountNumber);
+
         // Bank of America uses fixed-width format
         foreach ($batch->paymentItems as $item) {
+            // Sanitize check number to prevent fixed-width format manipulation
+            $sanitizedCheckNumber = $this->sanitizeForPositivePay($item->checkNumber ?? '');
+
             $lines[] = sprintf(
                 '%s%s%s%s%s',
-                $this->padString($this->configuration->bankAccountNumber, 16),      // Account Number
-                $this->padNumber($item->checkNumber ?? '', 10),                 // Check Number
+                $this->padString($sanitizedAccountNumber, 16),                   // Account Number
+                $this->padNumber($sanitizedCheckNumber, 10),                     // Check Number
                 $issueDate->format('mdY'),                                       // Issue Date (MMDDYYYY)
                 $this->padNumber($this->formatAmountAsCents($item->amount), 10), // Amount in cents
                 $this->padString($this->sanitizeForBankFile($item->vendorName ?? ''), 40), // Payee Name
@@ -311,20 +330,26 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $lines = [];
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
 
+        // Sanitize account number from configuration
+        $sanitizedAccountNumber = $this->sanitizeForPositivePay($this->configuration->bankAccountNumber);
+
         // Wells Fargo header
         $lines[] = sprintf(
             'H%s%s%06d',
-            $this->padString($this->configuration->bankAccountNumber, 15),
+            $this->padString($sanitizedAccountNumber, 15),
             $issueDate->format('Ymd'),
             count($batch->paymentItems),
         );
 
         // Detail records
         foreach ($batch->paymentItems as $item) {
+            // Sanitize check number to prevent fixed-width format manipulation
+            $sanitizedCheckNumber = $this->sanitizeForPositivePay($item->checkNumber ?? '');
+
             $lines[] = sprintf(
                 'D%s%s%s%s%s',
-                $this->padString($this->configuration->bankAccountNumber, 15),      // Account Number
-                $this->padNumber($item->checkNumber ?? '', 10),                 // Check Number
+                $this->padString($sanitizedAccountNumber, 15),                   // Account Number
+                $this->padNumber($sanitizedCheckNumber, 10),                     // Check Number
                 $this->padNumber($this->formatAmountAsCents($item->amount), 12), // Amount
                 $issueDate->format('Ymd'),                                       // Issue Date
                 $this->padString($this->sanitizeForBankFile($item->vendorName ?? ''), 35), // Payee
@@ -350,11 +375,17 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $lines = [];
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
 
+        // Sanitize account number from configuration
+        $sanitizedAccountNumber = $this->sanitizeForPositivePay($this->configuration->bankAccountNumber);
+
         // Chase uses pipe-delimited format
         foreach ($batch->paymentItems as $item) {
+            // Sanitize check number to prevent delimiter injection
+            $sanitizedCheckNumber = $this->sanitizeForPositivePay($item->checkNumber ?? '');
+
             $lines[] = implode('|', [
-                $this->configuration->bankAccountNumber,
-                $item->checkNumber ?? '',
+                $sanitizedAccountNumber,
+                $sanitizedCheckNumber,
                 number_format($item->amount->getAmount(), 2, '.', ''),
                 $issueDate->format('m/d/Y'),
                 $this->sanitizeForBankFile($item->vendorName ?? ''),
@@ -373,20 +404,26 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         $lines = [];
         $issueDate = $batch->paymentDate ?? new \DateTimeImmutable();
 
+        // Sanitize account number from configuration
+        $sanitizedAccountNumber = $this->sanitizeForPositivePay($this->configuration->bankAccountNumber);
+
         // Citi file header
         $lines[] = sprintf(
             '01%s%s%s',
-            $this->padString($this->configuration->bankAccountNumber, 20),
+            $this->padString($sanitizedAccountNumber, 20),
             (new \DateTimeImmutable())->format('Ymd'),
             $this->padNumber(count($batch->paymentItems), 6),
         );
 
         // Detail records
         foreach ($batch->paymentItems as $item) {
+            // Sanitize check number to prevent fixed-width format manipulation
+            $sanitizedCheckNumber = $this->sanitizeForPositivePay($item->checkNumber ?? '');
+
             $lines[] = sprintf(
                 '02%s%s%s%s%s%s',
-                $this->padString($this->configuration->bankAccountNumber, 20),      // Account
-                $this->padNumber($item->checkNumber ?? '', 10),                 // Check Number
+                $this->padString($sanitizedAccountNumber, 20),                   // Account
+                $this->padNumber($sanitizedCheckNumber, 10),                     // Check Number
                 $this->padNumber($this->formatAmountAsCents($item->amount), 12), // Amount
                 $issueDate->format('Ymd'),                                       // Issue Date
                 $this->padString($this->sanitizeForBankFile($item->vendorName ?? ''), 40), // Payee
@@ -446,6 +483,25 @@ final readonly class PositivePayGenerator extends AbstractBankFileGenerator
         }
 
         return $value;
+    }
+
+    /**
+     * Sanitize value for Positive Pay file fields.
+     *
+     * Strips control characters and non-alphanumeric characters to prevent
+     * injection attacks that could manipulate fixed-width records, CSV fields,
+     * or delimited formats (BAI2, pipe-delimited).
+     *
+     * For check numbers and account numbers, this ensures only safe numeric
+     * characters are included in the output.
+     */
+    private function sanitizeForPositivePay(string $value): string
+    {
+        // Strip control characters (0x00-0x1F and 0x7F)
+        $value = preg_replace('/[\x00-\x1F\x7F]/', '', $value) ?? '';
+
+        // For Positive Pay fields (account/check numbers), allow only alphanumeric
+        return preg_replace('/[^A-Za-z0-9]/', '', $value) ?? '';
     }
 
     /**
