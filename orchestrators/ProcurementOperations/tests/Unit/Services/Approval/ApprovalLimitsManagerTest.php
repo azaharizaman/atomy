@@ -150,7 +150,7 @@ final class ApprovalLimitsManagerTest extends TestCase
             ->with($userId)
             ->willReturn(['manager', 'viewer']);
 
-        $authority = $this->manager->getUserAuthority($userId);
+        $authority = $this->manager->getUserAuthority(self::TENANT_ID, $userId);
 
         $this->assertInstanceOf(ApprovalAuthority::class, $authority);
         $this->assertSame($userId, $authority->userId);
@@ -189,7 +189,7 @@ final class ApprovalLimitsManagerTest extends TestCase
             ->method('getUserRoles')
             ->willReturn(['manager']);
 
-        $authority = $this->manager->getUserAuthority($userId);
+        $authority = $this->manager->getUserAuthority(self::TENANT_ID, $userId);
 
         $this->assertTrue($authority->hasOverrides);
         $this->assertSame(100000_00, $authority->limits['purchase_order']);

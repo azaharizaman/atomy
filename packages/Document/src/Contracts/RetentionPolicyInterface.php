@@ -122,6 +122,3 @@ interface RetentionPolicyInterface
      */
     public function getDisposalMethod(string $documentType): string;
 }
-     */
-    public function releaseLegalHold(string $documentId, string $releasedBy): void;
-}

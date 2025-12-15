@@ -33,7 +33,7 @@ use Nexus\ProcurementOperations\Contracts\ProcurementAuditServiceInterface;
  *
  * All evidence is generated with full audit trail for regulatory compliance.
  */
-final readonly class ProcurementAuditService implements ProcurementAuditServiceInterface
+final class ProcurementAuditService implements ProcurementAuditServiceInterface
 {
     /**
      * Incompatible duty pairs for SoD validation.
@@ -84,18 +84,17 @@ final readonly class ProcurementAuditService implements ProcurementAuditServiceI
      *
      * @var array<string, AuditFindingData>
      */
-    private array $findings;
+    private array $findings = [];
 
     public function __construct(
-        private AuditLoggerAdapterInterface $auditLogger,
-        private UserQueryInterface $userQuery,
-        private RoleQueryInterface $roleQuery,
-        private SODValidationService $sodValidationService,
-        private SettingsAdapterInterface $settings,
-        private TenantContextInterface $tenantContext,
-        private LoggerInterface $logger = new NullLogger(),
+        private readonly AuditLoggerAdapterInterface $auditLogger,
+        private readonly UserQueryInterface $userQuery,
+        private readonly RoleQueryInterface $roleQuery,
+        private readonly SODValidationService $sodValidationService,
+        private readonly SettingsAdapterInterface $settings,
+        private readonly TenantContextInterface $tenantContext,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {
-        $this->findings = [];
     }
 
     /**
