@@ -21,7 +21,7 @@ use Psr\Log\NullLogger;
  * - Validation helpers
  * - Amount formatting
  */
-abstract class AbstractBankFileGenerator implements BankFileGeneratorInterface
+abstract readonly class AbstractBankFileGenerator implements BankFileGeneratorInterface
 {
     protected const string VERSION = '1.0.0';
 

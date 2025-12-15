@@ -32,7 +32,7 @@ use Nexus\ProcurementOperations\ValueObjects\PositivePayConfiguration;
  * - CHASE: Chase specific format
  * - CITI: Citibank specific format
  */
-final class PositivePayGenerator extends AbstractBankFileGenerator
+final readonly class PositivePayGenerator extends AbstractBankFileGenerator
 {
     protected const string VERSION = '1.0.0';
 

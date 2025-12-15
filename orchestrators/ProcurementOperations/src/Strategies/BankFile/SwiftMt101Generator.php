@@ -30,7 +30,7 @@ use Nexus\ProcurementOperations\DTOs\BankFile\BankFileResultInterface;
  *
  * @see https://www.swift.com/standards/mt-messages
  */
-final class SwiftMt101Generator extends AbstractBankFileGenerator
+final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
 {
     protected const string VERSION = '1.0.0';
 
@@ -184,6 +184,37 @@ final class SwiftMt101Generator extends AbstractBankFileGenerator
         $sanitized = preg_replace('/[^A-Z0-9]/', '', strtoupper($account)) ?? '';
 
         return $sanitized;
+    }
+
+    /**
+     * Validate and whitelist SWIFT charge code.
+     *
+     * Only allows valid SWIFT MT101 charge codes (SHA, OUR, BEN) to prevent
+     * injection attacks via metadata manipulation.
+     *
+     * @param string|null $chargeCode The charge code to validate
+     * @param string $default Default charge code if invalid or null
+     * @return string Valid charge code (SHA, OUR, or BEN)
+     */
+    private function validateChargeCode(?string $chargeCode, string $default = 'SHA'): string
+    {
+        // Allowed SWIFT charge codes per MT101 specification
+        $allowedCodes = ['SHA', 'OUR', 'BEN'];
+
+        if ($chargeCode === null) {
+            return in_array($default, $allowedCodes, true) ? $default : 'SHA';
+        }
+
+        // Normalize: uppercase and strip any non-alpha characters
+        $normalized = strtoupper(preg_replace('/[^A-Z]/', '', $chargeCode) ?? '');
+
+        // Strict whitelist check
+        if (in_array($normalized, $allowedCodes, true)) {
+            return $normalized;
+        }
+
+        // Fall back to default if invalid
+        return in_array($default, $allowedCodes, true) ? $default : 'SHA';
     }
 
     /**
@@ -396,7 +427,11 @@ final class SwiftMt101Generator extends AbstractBankFileGenerator
         }
 
         // Details of Charges (Tag 71A) - SHA (shared), OUR, BEN
-        $chargeCode = $item->metadata['charge_code'] ?? $this->configuration->defaultChargeCode ?? 'SHA';
+        // Strictly whitelist charge codes to prevent injection attacks
+        $chargeCode = $this->validateChargeCode(
+            $item->metadata['charge_code'] ?? null,
+            $this->configuration->defaultChargeCode ?? 'SHA'
+        );
         $lines[] = ':71A:' . $chargeCode;
 
         return $lines;

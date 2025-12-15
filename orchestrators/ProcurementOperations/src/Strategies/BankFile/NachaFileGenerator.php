@@ -33,7 +33,7 @@ use Psr\Log\NullLogger;
  *
  * @see https://www.nacha.org/rules
  */
-final class NachaFileGenerator extends AbstractBankFileGenerator
+final readonly class NachaFileGenerator extends AbstractBankFileGenerator
 {
     protected const string VERSION = '2025.1';
 
