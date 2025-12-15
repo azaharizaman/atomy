@@ -394,4 +394,191 @@ final class SwiftMt101GeneratorTest extends TestCase
             beneficiaryCountry: 'DE',
         );
     }
+
+    // ========================================
+    // Security Tests - SWIFT Tag Injection Prevention
+    // ========================================
+
+    #[Test]
+    public function it_sanitizes_vendor_name_to_prevent_swift_tag_injection(): void
+    {
+        // Attempt tag injection via vendor name
+        $maliciousVendorName = ':71A:OUR MALICIOUS VENDOR';
+
+        $batch = PaymentBatchData::create(
+            batchId: 'BATCH-SEC-001',
+            batchNumber: 'PB-2024-SEC-001',
+            tenantId: 'tenant-123',
+            paymentMethod: 'wire',
+            bankAccountId: 'bank-account-001',
+            paymentDate: new \DateTimeImmutable(),
+            currency: 'EUR',
+            createdBy: 'test-user',
+        );
+
+        $payment = PaymentItemData::forInternationalWire(
+            paymentItemId: 'PAY-SEC-001',
+            vendorId: 'VENDOR-SEC-001',
+            vendorName: $maliciousVendorName,
+            amount: Money::of(1000.00, 'EUR'),
+            invoiceIds: ['INV-SEC-001'],
+            paymentReference: 'REF-SEC-001',
+            beneficiaryBic: 'DEUTDEFFXXX',
+            beneficiaryIban: 'DE89370400440532013000',
+            beneficiaryName: 'Legit Name',
+            beneficiaryAddress: 'Berlin, Germany',
+            beneficiaryCountry: 'DE',
+        );
+
+        $batch = $batch->withPaymentItem($payment);
+        $result = $this->generator->generate($batch);
+
+        $this->assertTrue($result->isSuccess());
+
+        // The malicious tag should be stripped - no :71A: in vendor name line
+        $content = $result->getFileContent();
+
+        // The content should have exactly one :71A: tag (the legitimate one)
+        $tagCount = substr_count($content, ':71A:');
+        $this->assertSame(1, $tagCount, 'Should have exactly one :71A: tag (the legitimate charge code)');
+
+        // The malicious vendor name should be sanitized to not start with a tag
+        $this->assertStringNotContainsString(':71A:OUR MALICIOUS', $content);
+    }
+
+    #[Test]
+    public function it_sanitizes_beneficiary_address_to_prevent_swift_tag_injection(): void
+    {
+        // Attempt tag injection via beneficiary address
+        $maliciousAddress = ':59:/ATTACKER_IBAN_DE12345678901234567890';
+
+        $batch = PaymentBatchData::create(
+            batchId: 'BATCH-SEC-002',
+            batchNumber: 'PB-2024-SEC-002',
+            tenantId: 'tenant-123',
+            paymentMethod: 'wire',
+            bankAccountId: 'bank-account-001',
+            paymentDate: new \DateTimeImmutable(),
+            currency: 'EUR',
+            createdBy: 'test-user',
+        );
+
+        $payment = PaymentItemData::forInternationalWire(
+            paymentItemId: 'PAY-SEC-002',
+            vendorId: 'VENDOR-SEC-002',
+            vendorName: 'Legitimate Vendor',
+            amount: Money::of(2000.00, 'EUR'),
+            invoiceIds: ['INV-SEC-002'],
+            paymentReference: 'REF-SEC-002',
+            beneficiaryBic: 'DEUTDEFFXXX',
+            beneficiaryIban: 'DE89370400440532013000',
+            beneficiaryName: 'Legit Name',
+            beneficiaryAddress: $maliciousAddress,
+            beneficiaryCountry: 'DE',
+        );
+
+        $batch = $batch->withPaymentItem($payment);
+        $result = $this->generator->generate($batch);
+
+        $this->assertTrue($result->isSuccess());
+
+        $content = $result->getFileContent();
+
+        // Should have exactly one :59: tag (the legitimate beneficiary)
+        $tagCount = substr_count($content, ':59:');
+        $this->assertSame(1, $tagCount, 'Should have exactly one :59: tag (the legitimate beneficiary)');
+
+        // The malicious address should not appear as a SWIFT tag
+        $this->assertStringNotContainsString(':59:/ATTACKER', $content);
+    }
+
+    #[Test]
+    public function it_sanitizes_bank_name_to_prevent_swift_tag_injection(): void
+    {
+        // Attempt tag injection via bank name (when using routing number path)
+        $maliciousBankName = ':57A:ATTACKERBIC';
+
+        $batch = PaymentBatchData::create(
+            batchId: 'BATCH-SEC-003',
+            batchNumber: 'PB-2024-SEC-003',
+            tenantId: 'tenant-123',
+            paymentMethod: 'wire',
+            bankAccountId: 'bank-account-001',
+            paymentDate: new \DateTimeImmutable(),
+            currency: 'USD',
+            createdBy: 'test-user',
+        );
+
+        // Create payment using routing number (no BIC) to exercise :57D: path
+        $payment = new PaymentItemData(
+            paymentItemId: 'PAY-SEC-003',
+            vendorId: 'VENDOR-SEC-003',
+            vendorName: 'Domestic Vendor',
+            amount: Money::of(3000.00, 'USD'),
+            invoiceIds: ['INV-SEC-003'],
+            paymentReference: 'REF-SEC-003',
+            status: 'pending',
+            vendorBankAccountNumber: '123456789012',
+            vendorBankRoutingNumber: '021000021',
+            vendorBankName: $maliciousBankName,
+        );
+
+        $batch = $batch->withPaymentItem($payment);
+        $result = $this->generator->generate($batch);
+
+        $this->assertTrue($result->isSuccess());
+
+        $content = $result->getFileContent();
+
+        // The malicious bank name should not create a :57A: tag
+        $this->assertStringNotContainsString(':57A:ATTACKERBIC', $content);
+
+        // Should have exactly one :57D: tag (the legitimate one via routing number)
+        $tagCount = substr_count($content, ':57D:');
+        $this->assertSame(1, $tagCount, 'Should have exactly one :57D: tag');
+    }
+
+    #[Test]
+    public function it_strips_leading_colons_from_untrusted_text(): void
+    {
+        // Various injection attempts with leading colons
+        $maliciousName = ':::SUSPICIOUS VENDOR';
+
+        $batch = PaymentBatchData::create(
+            batchId: 'BATCH-SEC-004',
+            batchNumber: 'PB-2024-SEC-004',
+            tenantId: 'tenant-123',
+            paymentMethod: 'wire',
+            bankAccountId: 'bank-account-001',
+            paymentDate: new \DateTimeImmutable(),
+            currency: 'EUR',
+            createdBy: 'test-user',
+        );
+
+        $payment = PaymentItemData::forInternationalWire(
+            paymentItemId: 'PAY-SEC-004',
+            vendorId: 'VENDOR-SEC-004',
+            vendorName: $maliciousName,
+            amount: Money::of(500.00, 'EUR'),
+            invoiceIds: ['INV-SEC-004'],
+            paymentReference: 'REF-SEC-004',
+            beneficiaryBic: 'DEUTDEFFXXX',
+            beneficiaryIban: 'DE89370400440532013000',
+            beneficiaryName: 'Legit Name',
+            beneficiaryAddress: '123 Main Street',
+            beneficiaryCountry: 'DE',
+        );
+
+        $batch = $batch->withPaymentItem($payment);
+        $result = $this->generator->generate($batch);
+
+        $this->assertTrue($result->isSuccess());
+
+        $content = $result->getFileContent();
+
+        // Leading colons should be stripped - vendor name should not start with colons
+        // The sanitized name should appear without leading colons
+        $this->assertStringContainsString('SUSPICIOUS VENDOR', $content);
+        $this->assertStringNotContainsString(':::SUSPICIOUS', $content);
+    }
 }

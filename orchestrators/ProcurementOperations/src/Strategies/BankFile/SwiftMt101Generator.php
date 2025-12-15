@@ -399,7 +399,11 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
             $sanitizedRouting = $this->sanitizeForSwift($item->vendorBankRoutingNumber);
             $lines[] = ':57D:' . $sanitizedRouting;
             if (!empty($item->vendorBankName)) {
-                $lines[] = $this->truncate($item->vendorBankName, self::MAX_NAME_LENGTH);
+                // Sanitize bank name to prevent SWIFT tag injection (e.g., ":71A:OUR")
+                $sanitizedBankName = $this->sanitizeLineForSwift($item->vendorBankName);
+                if ($sanitizedBankName !== '') {
+                    $lines[] = substr($sanitizedBankName, 0, self::MAX_NAME_LENGTH);
+                }
             }
         }
 
@@ -410,16 +414,24 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
         $lines[] = ':59:/' . $accountNumber;
 
         // Beneficiary name and address
+        // Sanitize to prevent SWIFT tag injection (e.g., vendor name like ":59:/ATTACKER_IBAN")
         $beneficiaryLines = $this->splitIntoLines($item->vendorName ?? '', self::MAX_NAME_LENGTH);
         foreach (array_slice($beneficiaryLines, 0, 4) as $line) {
-            $lines[] = $line;
+            $sanitizedLine = $this->sanitizeLineForSwift($line);
+            if ($sanitizedLine !== '') {
+                $lines[] = $sanitizedLine;
+            }
         }
 
         // Add beneficiary address if available
+        // Sanitize to prevent SWIFT tag injection (e.g., address like ":71A:BEN")
         if (!empty($item->beneficiaryAddress)) {
             $addressLines = $this->splitIntoLines($item->beneficiaryAddress, self::MAX_NAME_LENGTH);
             foreach (array_slice($addressLines, 0, 2) as $line) {
-                $lines[] = $line;
+                $sanitizedLine = $this->sanitizeLineForSwift($line);
+                if ($sanitizedLine !== '') {
+                    $lines[] = $sanitizedLine;
+                }
             }
         }
 
@@ -496,6 +508,34 @@ final readonly class SwiftMt101Generator extends AbstractBankFileGenerator
         // SWIFT allows: A-Z, 0-9, space, and certain special characters
         $text = preg_replace('/[^A-Z0-9 \/\-\?\:\(\)\.\,\'\+]/', '', $text) ?? '';
 
+        return trim($text);
+    }
+
+    /**
+     * Sanitize untrusted text that will be added as a separate SWIFT line.
+     *
+     * This method prevents SWIFT tag injection by stripping leading patterns
+     * that could be interpreted as SWIFT tags (e.g., :71A:, :59:, :20:).
+     * Attackers could craft vendor/bank names like ":71A:OUR" to inject or
+     * override critical payment instruction fields.
+     *
+     * @param string $text The untrusted text to sanitize
+     * @return string Safe text that cannot be mistaken for a SWIFT tag
+     */
+    private function sanitizeLineForSwift(string $text): string
+    {
+        // First apply standard SWIFT sanitization
+        $text = $this->sanitizeForSwift($text);
+
+        // Strip any leading pattern that looks like a SWIFT tag
+        // SWIFT tags are in format :XXX: where X is alphanumeric (2-3 chars typically)
+        // Also handle :XX: format and bare leading colons
+        $text = preg_replace('/^:[A-Z0-9]{1,3}[A-Z]?:/', '', $text) ?? $text;
+
+        // Strip any remaining leading colons that could start a tag
+        $text = ltrim($text, ':');
+
+        // If the line is now empty or only whitespace, return empty
         return trim($text);
     }
 
