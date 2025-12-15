@@ -1,7 +1,7 @@
 # Nexus Coding Guidelines
 
-**Version:** 1.0  
-**Last Updated:** November 26, 2025  
+**Version:** 1.1  
+**Last Updated:** December 15, 2025  
 **Target Audience:** Developers & Coding Agents  
 **Purpose:** Enforce consistent, high-quality code across all Nexus packages
 
@@ -111,8 +111,10 @@ All packages must require `"php": "^8.3"` in composer.json.
    ```
 
 3. **Readonly Properties**
+   
+   **For Service Classes:** Use class-level `readonly` for immutable services with injected dependencies:
    ```php
-   // ✅ All injected dependencies must be readonly
+   // ✅ Service classes use class-level readonly
    final readonly class InvoiceManager
    {
        public function __construct(
@@ -121,6 +123,20 @@ All packages must require `"php": "^8.3"` in composer.json.
        ) {}
    }
    ```
+   
+   **For Value Objects:** Use per-property `readonly` on constructor-promoted properties:
+   ```php
+   // ✅ Value Objects use per-property readonly
+   final class Money
+   {
+       public function __construct(
+           public readonly int $amountInCents,
+           public readonly string $currency
+       ) {}
+   }
+   ```
+   
+   > **Why the difference?** Value Objects expose public properties for direct access, and PHP 8.3+ best practice is to declare `readonly` at the property level for explicit immutability contracts. Service classes have only private dependencies, making class-level `readonly` more appropriate.
 
 4. **Native PHP Enums**
    ```php
@@ -795,6 +811,42 @@ Before implementing authorization:
 
 Value Objects (VOs) are immutable objects that represent domain concepts without identity. They are compared by their values, not by reference. This section provides comprehensive guidance on when to create VOs, when to avoid them, and how to use them to protect sensitive data.
 
+### 6.0 Value Object Class Declaration (PHP 8.3+)
+
+**CRITICAL:** Value Objects MUST use per-property `readonly` declarations, NOT class-level `readonly`.
+
+**✅ CORRECT Pattern:**
+```php
+final class Money
+{
+    public function __construct(
+        public readonly int $amountInCents,
+        public readonly string $currency
+    ) {
+        // Validation logic
+    }
+}
+```
+
+**❌ WRONG Pattern:**
+```php
+final readonly class Money  // ❌ Don't use class-level readonly for VOs
+{
+    public function __construct(
+        public int $amountInCents,  // ❌ Missing per-property readonly
+        public string $currency
+    ) {}
+}
+```
+
+**Rationale:**
+1. **Explicit Immutability Contract:** Per-property `readonly` makes the immutability of each property explicit
+2. **PHP 8.3+ Best Practice:** Modern PHP convention for Value Objects with public properties
+3. **Consistency:** All public constructor-promoted properties should declare their own `readonly` modifier
+4. **Future Flexibility:** Allows mixing readonly and non-readonly properties if needed (though rare for VOs)
+
+**Note:** Service classes with only private dependencies should continue to use `final readonly class` pattern.
+
 ### 6.1 When to Create a Value Object
 
 **CREATE a VO when:**
@@ -811,11 +863,11 @@ Value Objects (VOs) are immutable objects that represent domain concepts without
 **Example - Domain Concept VO:**
 ```php
 // ✅ CORRECT: Money VO with validation and precision
-final readonly class Money
+final class Money
 {
     public function __construct(
-        public int $amountInCents,
-        public string $currency
+        public readonly int $amountInCents,
+        public readonly string $currency
     ) {
         if ($amountInCents < 0) {
             throw new InvalidMoneyException('Amount cannot be negative');
@@ -851,10 +903,10 @@ final readonly class Money
 **❌ WRONG: Unnecessary VO for simple string**
 ```php
 // ❌ Over-engineering: No validation, no behavior
-final readonly class CustomerName
+final class CustomerName
 {
     public function __construct(
-        public string $value
+        public readonly string $value
     ) {}
 }
 
@@ -868,14 +920,14 @@ interface CustomerInterface
 **❌ WRONG: VO instead of Enum**
 ```php
 // ❌ Should be an Enum, not a VO
-final readonly class InvoiceStatus
+final class InvoiceStatus
 {
     public const DRAFT = 'draft';
     public const PENDING = 'pending';
     public const PAID = 'paid';
     
     public function __construct(
-        public string $value
+        public readonly string $value
     ) {
         if (!in_array($value, [self::DRAFT, self::PENDING, self::PAID])) {
             throw new InvalidArgumentException();
@@ -907,10 +959,10 @@ Wrap single values with domain-specific validation and behavior.
 
 **Example:**
 ```php
-final readonly class EmailAddress
+final class EmailAddress
 {
     public function __construct(
-        public string $value
+        public readonly string $value
     ) {
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidEmailException("Invalid email: {$value}");
@@ -942,11 +994,11 @@ Group related fields that always travel together.
 
 **Example:**
 ```php
-final readonly class DateRange
+final class DateRange
 {
     public function __construct(
-        public \DateTimeImmutable $startDate,
-        public \DateTimeImmutable $endDate
+        public readonly \DateTimeImmutable $startDate,
+        public readonly \DateTimeImmutable $endDate
     ) {
         if ($endDate < $startDate) {
             throw new InvalidDateRangeException('End date must be after start date');
@@ -993,14 +1045,14 @@ interface UserInterface
 }
 
 // ✅ SAFE: Projection VO for external use
-final readonly class UserProfile
+final class UserProfile
 {
     public function __construct(
-        public string $id,
-        public string $email,
-        public string $name,
-        public ?string $avatarUrl,
-        public \DateTimeImmutable $createdAt
+        public readonly string $id,
+        public readonly string $email,
+        public readonly string $name,
+        public readonly ?string $avatarUrl,
+        public readonly \DateTimeImmutable $createdAt
         // NO password, NO tokens, NO MFA secrets
     ) {}
     
@@ -1072,14 +1124,14 @@ enum AccessLevel: int
 **Use Value Object for:**
 ```php
 // Dynamic tax rate with validation - VO
-final readonly class TaxRate
+final class TaxRate
 {
     public function __construct(
-        public string $code,
-        public float $rate,
-        public string $jurisdiction,
-        public \DateTimeImmutable $effectiveFrom,
-        public ?\DateTimeImmutable $effectiveTo = null
+        public readonly string $code,
+        public readonly float $rate,
+        public readonly string $jurisdiction,
+        public readonly \DateTimeImmutable $effectiveFrom,
+        public readonly ?\DateTimeImmutable $effectiveTo = null
     ) {
         if ($rate < 0 || $rate > 100) {
             throw new InvalidTaxRateException();
@@ -1094,12 +1146,12 @@ final readonly class TaxRate
 }
 
 // Currency with conversion behavior - VO (not enum, too many currencies)
-final readonly class Currency
+final class Currency
 {
     public function __construct(
-        public string $code,
-        public string $symbol,
-        public int $decimalPlaces
+        public readonly string $code,
+        public readonly string $symbol,
+        public readonly int $decimalPlaces
     ) {
         if (strlen($code) !== 3) {
             throw new InvalidCurrencyException();
@@ -1201,9 +1253,9 @@ Before creating a VO, answer these questions:
 **❌ Anti-Pattern 1: Wrapper with no value**
 ```php
 // ❌ WRONG: Just a wrapper, no validation, no behavior
-final readonly class CustomerId
+final class CustomerId
 {
-    public function __construct(public string $value) {}
+    public function __construct(public readonly string $value) {}
 }
 
 // ✅ Just use string - less code, same effect
@@ -1213,7 +1265,7 @@ public function findCustomer(string $customerId): CustomerInterface;
 **❌ Anti-Pattern 2: Mutable "Value Object"**
 ```php
 // ❌ WRONG: VOs must be immutable
-final class Money  // Missing readonly!
+final class Money  // Missing readonly on properties!
 {
     public int $amount;  // Mutable!
     
@@ -1223,12 +1275,12 @@ final class Money  // Missing readonly!
     }
 }
 
-// ✅ CORRECT: Immutable VO
-final readonly class Money
+// ✅ CORRECT: Immutable VO with per-property readonly
+final class Money
 {
     public function __construct(
-        public int $amountInCents,
-        public string $currency
+        public readonly int $amountInCents,
+        public readonly string $currency
     ) {}
     
     public function add(Money $other): self  // Returns new instance
@@ -1241,23 +1293,23 @@ final readonly class Money
 **❌ Anti-Pattern 3: VO with identity**
 ```php
 // ❌ WRONG: If it has an ID, it's an Entity, not a VO
-final readonly class Address
+final class Address
 {
     public function __construct(
-        public string $id,  // VOs don't have IDs!
-        public string $street,
-        public string $city
+        public readonly string $id,  // VOs don't have IDs!
+        public readonly string $street,
+        public readonly string $city
     ) {}
 }
 
 // ✅ CORRECT: VO without identity
-final readonly class Address
+final class Address
 {
     public function __construct(
-        public string $street,
-        public string $city,
-        public string $postalCode,
-        public string $country
+        public readonly string $street,
+        public readonly string $city,
+        public readonly string $postalCode,
+        public readonly string $country
     ) {}
     
     public function equals(self $other): bool

@@ -12,7 +12,7 @@ use Nexus\ProcurementOperations\Enums\PositivePayFormat;
  * Encapsulates all settings required to generate Positive Pay files
  * for check fraud prevention.
  */
-final readonly class PositivePayConfiguration
+final class PositivePayConfiguration
 {
     /**
      * @param string $bankAccountNumber Bank account number
@@ -28,17 +28,17 @@ final readonly class PositivePayConfiguration
      * @param string $recordTerminator Line ending character(s)
      */
     public function __construct(
-        public string $bankAccountNumber,
-        public string $bankRoutingNumber,
-        public PositivePayFormat $format = PositivePayFormat::STANDARD_CSV,
-        public string $companyName = '',
-        public ?string $companyId = null,
-        public bool $includeVoidedChecks = true,
-        public bool $includeStopPayments = true,
-        public int $checkNumberPadding = 10,
-        public int $amountDecimalPlaces = 2,
-        public string $fieldDelimiter = ',',
-        public string $recordTerminator = "\n",
+        public readonly string $bankAccountNumber,
+        public readonly string $bankRoutingNumber,
+        public readonly PositivePayFormat $format = PositivePayFormat::STANDARD_CSV,
+        public readonly string $companyName = '',
+        public readonly ?string $companyId = null,
+        public readonly bool $includeVoidedChecks = true,
+        public readonly bool $includeStopPayments = true,
+        public readonly int $checkNumberPadding = 10,
+        public readonly int $amountDecimalPlaces = 2,
+        public readonly string $fieldDelimiter = ',',
+        public readonly string $recordTerminator = "\n",
     ) {}
 
     /**

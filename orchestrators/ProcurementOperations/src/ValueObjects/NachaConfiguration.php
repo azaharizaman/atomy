@@ -12,7 +12,7 @@ use Nexus\ProcurementOperations\Enums\NachaSecCode;
  * Encapsulates all the originator and file-level settings required
  * to generate a NACHA-compliant ACH file.
  */
-final readonly class NachaConfiguration
+final class NachaConfiguration
 {
     /**
      * @param string $immediateDestination Receiving bank routing number (9 digits)
@@ -30,19 +30,19 @@ final readonly class NachaConfiguration
      * @param string|null $offsetRoutingNumber Routing for offsetting entry if balanced
      */
     public function __construct(
-        public string $immediateDestination,
-        public string $immediateOrigin,
-        public string $immediateDestinationName,
-        public string $immediateOriginName,
-        public string $companyName,
-        public string $companyId,
-        public NachaSecCode $secCode = NachaSecCode::CCD,
-        public string $entryDescription = 'PAYMENT',
-        public string $discretionaryData = '',
-        public string $referenceCode = '',
-        public bool $balancedFile = false,
-        public ?string $offsetAccountNumber = null,
-        public ?string $offsetRoutingNumber = null,
+        public readonly string $immediateDestination,
+        public readonly string $immediateOrigin,
+        public readonly string $immediateDestinationName,
+        public readonly string $immediateOriginName,
+        public readonly string $companyName,
+        public readonly string $companyId,
+        public readonly NachaSecCode $secCode = NachaSecCode::CCD,
+        public readonly string $entryDescription = 'PAYMENT',
+        public readonly string $discretionaryData = '',
+        public readonly string $referenceCode = '',
+        public readonly bool $balancedFile = false,
+        public readonly ?string $offsetAccountNumber = null,
+        public readonly ?string $offsetRoutingNumber = null,
     ) {}
 
     /**

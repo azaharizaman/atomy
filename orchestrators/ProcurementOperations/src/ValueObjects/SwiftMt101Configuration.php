@@ -10,7 +10,7 @@ namespace Nexus\ProcurementOperations\ValueObjects;
  * Contains all necessary parameters for generating SWIFT MT101 messages
  * including sender information, ordering customer details, and defaults.
  */
-final readonly class SwiftMt101Configuration
+final class SwiftMt101Configuration
 {
     /**
      * @param string $senderBic Bank Identifier Code of the sending institution (8 or 11 chars)
@@ -22,13 +22,13 @@ final readonly class SwiftMt101Configuration
      * @param string|null $orderingCustomerCountry Ordering customer country code (optional)
      */
     public function __construct(
-        public string $senderBic,
-        public string $orderingCustomerAccount,
-        public string $orderingCustomerName,
-        public ?string $accountServicingInstitution = null,
-        public string $defaultChargeCode = 'SHA',
-        public ?string $orderingCustomerAddress = null,
-        public ?string $orderingCustomerCountry = null,
+        public readonly string $senderBic,
+        public readonly string $orderingCustomerAccount,
+        public readonly string $orderingCustomerName,
+        public readonly ?string $accountServicingInstitution = null,
+        public readonly string $defaultChargeCode = 'SHA',
+        public readonly ?string $orderingCustomerAddress = null,
+        public readonly ?string $orderingCustomerCountry = null,
     ) {}
 
     /**
