@@ -13,6 +13,15 @@
         "AML",
         "financial-crime"
     ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./../../packages/*",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "authors": [
         {
             "name": "Nexus Team",
@@ -21,8 +30,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/party": "^1.0",
-        "nexus/audit-logger": "^1.0",
+        "nexus/common": "^1.0",
         "psr/log": "^3.0"
     },
     "require-dev": {
