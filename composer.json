@@ -23,7 +23,9 @@
         "nexus/tax": "*@dev",
         "nexus/procurement-ml": "*@dev",
         "nexus/tenant": "*@dev",
-        "nexus/procurement-operations": "*@dev"
+        "nexus/procurement-operations": "*@dev",
+        "nexus/sanctions": "*@dev",
+        "nexus/aml-compliance": "*@dev"
     },
     "repositories": [
         {
@@ -60,12 +62,16 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\\ProcurementOperations\\": "orchestrators/ProcurementOperations/src/"
+            "Nexus\\ProcurementOperations\\": "orchestrators/ProcurementOperations/src/",
+            "Nexus\\Sanctions\\": "packages/Sanctions/src/",
+            "Nexus\\AmlCompliance\\": "packages/AmlCompliance/src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\\ProcurementOperations\\Tests\\": "orchestrators/ProcurementOperations/tests/"
+            "Nexus\\ProcurementOperations\\Tests\\": "orchestrators/ProcurementOperations/tests/",
+            "Nexus\\Sanctions\\Tests\\": "packages/Sanctions/tests/",
+            "Nexus\\AmlCompliance\\Tests\\": "packages/AmlCompliance/tests/"
         }
     }
 }
