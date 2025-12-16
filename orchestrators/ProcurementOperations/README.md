@@ -402,6 +402,122 @@ echo "Documents affected: {$holdResult->documentCount}";
 
 ---
 
+## Compliance Services (Phase B)
+
+### ApprovalLimitsManager
+
+Manages configurable approval thresholds by role, department, and user.
+
+```php
+use Nexus\ProcurementOperations\Services\Approval\ApprovalLimitsManager;
+use Nexus\ProcurementOperations\DTOs\ApprovalLimitCheckRequest;
+
+$manager = $container->get(ApprovalLimitsManager::class);
+
+// Check if user can approve a requisition
+$result = $manager->checkApprovalLimit(new ApprovalLimitCheckRequest(
+    tenantId: 'tenant-123',
+    approverId: 'user-456',
+    documentType: 'requisition',
+    amountCents: 500000, // $5,000
+    currency: 'USD',
+));
+
+if ($result->canApprove) {
+    echo "User authorized to approve";
+    echo "Authority level: {$result->authorityLevel}";
+} else {
+    echo "Approval limit exceeded: {$result->reason}";
+}
+
+// Get user's approval authority
+$authority = $manager->getApprovalAuthority('tenant-123', 'user-456');
+echo "Max requisition: {$authority->getMaxAmountForType('requisition')} cents";
+```
+
+### DocumentRetentionService
+
+Manages document lifecycle with regulatory compliance.
+
+```php
+use Nexus\ProcurementOperations\Services\Compliance\DocumentRetentionService;
+
+$service = $container->get(DocumentRetentionService::class);
+
+// Apply retention policy to a document
+$result = $service->applyRetentionPolicy(
+    tenantId: 'tenant-123',
+    documentId: 'doc-001',
+    documentType: 'purchase_order',
+    createdDate: new \DateTimeImmutable('2024-01-15'),
+);
+
+echo "Retention expires: {$result['expiresAt']->format('Y-m-d')}";
+
+// Check disposal eligibility (respects legal holds)
+$eligibility = $service->checkDisposalEligibility(
+    tenantId: 'tenant-123',
+    documentId: 'doc-001',
+);
+
+if ($eligibility['eligible']) {
+    echo "Document can be disposed";
+} else {
+    echo "Blocked: {$eligibility['reason']}";
+    // e.g., "Document is under legal hold: LH-2024-001"
+}
+
+// Apply legal hold
+$service->applyLegalHold(
+    tenantId: 'tenant-123',
+    legalHoldId: 'LH-2024-002',
+    documentIds: ['doc-001', 'doc-002', 'doc-003'],
+    reason: 'Pending litigation - Jones v. Acme Corp',
+);
+```
+
+### ProcurementAuditService
+
+SOX 404 compliance audit and evidence generation.
+
+```php
+use Nexus\ProcurementOperations\Services\Compliance\ProcurementAuditService;
+
+$service = $container->get(ProcurementAuditService::class);
+
+// Generate SOX 404 evidence package
+$evidence = $service->generateSox404EvidencePackage(
+    tenantId: 'tenant-123',
+    periodStart: new \DateTimeImmutable('2024-01-01'),
+    periodEnd: new \DateTimeImmutable('2024-12-31'),
+);
+
+echo "Control areas covered: " . implode(', ', $evidence['controlAreas']);
+echo "Evidence items: {$evidence['evidenceCount']}";
+echo "Compliant: " . ($evidence['overallCompliant'] ? 'Yes' : 'No');
+
+// Get Segregation of Duties report
+$sodReport = $service->getSegregationOfDutiesReport('tenant-123');
+
+foreach ($sodReport['conflictGroups'] as $group) {
+    echo "Users with conflicts in {$group['conflictType']}: ";
+    echo implode(', ', $group['users']);
+}
+
+// Perform control test
+$testResult = $service->performControlTest(
+    tenantId: 'tenant-123',
+    controlId: 'CTRL-PR-001',
+    sampleSize: 25,
+    testProcedures: ['vouching', 'recalculation'],
+);
+
+echo "Control effective: " . ($testResult['isEffective'] ? 'Yes' : 'No');
+echo "Exceptions found: {$testResult['exceptionsFound']}";
+```
+
+---
+
 ## Event-Driven Integration
 
 ### Published Events

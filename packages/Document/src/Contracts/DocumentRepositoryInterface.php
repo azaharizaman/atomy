@@ -103,4 +103,49 @@ interface DocumentRepositoryInterface
      * @return DocumentInterface
      */
     public function create(array $attributes): DocumentInterface;
+
+    /**
+     * Permanently delete a document (hard delete).
+     *
+     * WARNING: This operation cannot be undone. Use only after
+     * retention period has expired and legal hold is verified cleared.
+     *
+     * @param string $id Document ULID
+     * @throws \Nexus\Document\Exceptions\DocumentNotFoundException If document not found
+     */
+    public function forceDelete(string $id): void;
+
+    /**
+     * Find documents by their current state.
+     *
+     * @param \Nexus\Document\ValueObjects\DocumentState $state Document state
+     * @return array<DocumentInterface>
+     */
+    public function findByState(\Nexus\Document\ValueObjects\DocumentState $state): array;
+
+    /**
+     * Find documents eligible for disposal.
+     *
+     * Returns documents that:
+     * - Are past their retention period (based on creation date and retention days)
+     * - Have no active legal hold
+     * - Are in DELETED or ARCHIVED state
+     *
+     * @param \DateTimeInterface $retentionCutoff Documents created before this date are eligible
+     * @param DocumentType|null $type Optional filter by document type
+     * @return array<DocumentInterface>
+     */
+    public function findEligibleForDisposal(
+        \DateTimeInterface $retentionCutoff,
+        ?DocumentType $type = null
+    ): array;
+
+    /**
+     * Find documents by custom metadata field.
+     *
+     * @param string $key Metadata key
+     * @param mixed $value Metadata value
+     * @return array<DocumentInterface>
+     */
+    public function findByMetadata(string $key, mixed $value): array;
 }

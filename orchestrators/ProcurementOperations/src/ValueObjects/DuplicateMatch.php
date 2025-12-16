@@ -12,7 +12,7 @@ use Nexus\ProcurementOperations\Enums\DuplicateMatchType;
  *
  * Contains details about the matching invoice and the type of match detected.
  */
-final class DuplicateMatch
+final readonly class DuplicateMatch
 {
     /**
      * @param string $matchedInvoiceId ID of the potentially duplicate invoice
@@ -25,14 +25,14 @@ final class DuplicateMatch
      * @param array<string, mixed> $matchDetails Additional match details
      */
     public function __construct(
-        public readonly string $matchedInvoiceId,
-        public readonly string $matchedInvoiceNumber,
-        public readonly DuplicateMatchType $matchType,
-        public readonly float $confidenceScore,
-        public readonly Money $matchedAmount,
-        public readonly \DateTimeImmutable $matchedDate,
-        public readonly string $matchedStatus,
-        public readonly array $matchDetails = [],
+        public string $matchedInvoiceId,
+        public string $matchedInvoiceNumber,
+        public DuplicateMatchType $matchType,
+        public float $confidenceScore,
+        public Money $matchedAmount,
+        public \DateTimeImmutable $matchedDate,
+        public string $matchedStatus,
+        public array $matchDetails = [],
     ) {}
 
     /**

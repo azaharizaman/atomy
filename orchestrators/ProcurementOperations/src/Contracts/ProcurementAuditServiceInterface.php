@@ -45,8 +45,8 @@ interface ProcurementAuditServiceInterface
      * Validate approval authority compliance.
      *
      * @param string $tenantId Tenant context
-     * @param string $periodStart Period start date
-     * @param string $periodEnd Period end date
+     * @param \DateTimeImmutable $periodStart Period start date
+     * @param \DateTimeImmutable $periodEnd Period end date
      * @return array Approval authority validation results
      */
     public function validateApprovalAuthority(
