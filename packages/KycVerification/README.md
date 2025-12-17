@@ -1,31 +1,19 @@
 # Nexus\KycVerification
 
-**Version:** 1.0.0  
-**Status:** 🔵 In Development  
-**Category:** Compliance & Governance
+**Know Your Customer (KYC) Verification Package for Nexus ERP**
+
+A comprehensive, framework-agnostic PHP package for managing KYC verification processes, risk assessment, beneficial ownership tracking, and review scheduling.
 
 ## Overview
 
-`Nexus\KycVerification` is a framework-agnostic, atomic PHP package for Know Your Customer (KYC) identity verification and customer due diligence (CDD). It provides document verification workflows, beneficial ownership (UBO) tracking, and Enhanced Due Diligence (EDD) capabilities.
+`Nexus\KycVerification` provides a complete solution for:
 
-## Purpose
-
-Verify customer identity and track beneficial ownership:
-- **Identity Verification** - Passport, national ID, driver's license verification
-- **Address Verification** - Utility bills, bank statements
-- **UBO Tracking** - Ultimate Beneficial Owner identification (25%+ ownership)
-- **CDD/EDD** - Customer/Enhanced Due Diligence workflows
-- **Periodic KYC Review** - Ongoing verification requirements
-
-## Key Features
-
-- ✅ **Document Verification** - Verify identity documents (passport, ID, license)
-- ✅ **Address Verification** - Verify proof of address documents
-- ✅ **UBO Tracking** - Identify beneficial owners with 25%+ ownership
-- ✅ **CDD Workflows** - Standard customer due diligence
-- ✅ **EDD Workflows** - Enhanced due diligence for high-risk customers
-- ✅ **Periodic Review** - Automated KYC refresh requirements
-- ✅ **Framework-Agnostic** - Pure PHP 8.3+, works with any framework
+- **Party Verification**: Full lifecycle management from initiation to approval/rejection
+- **Risk Assessment**: Multi-factor risk scoring with configurable thresholds
+- **Beneficial Ownership**: UBO identification, circular ownership detection, PEP tracking
+- **Review Scheduling**: Risk-based review frequency with SLA tracking
+- **Document Verification**: Multi-document type support with expiry tracking
+- **Sanctions & PEP Screening**: Integration points for screening providers
 
 ## Installation
 
@@ -33,105 +21,363 @@ Verify customer identity and track beneficial ownership:
 composer require nexus/kyc-verification
 ```
 
-## Quick Start
+## Requirements
 
-### Identity Verification
-
-```php
-use Nexus\KycVerification\Services\IdentityVerifier;
-use Nexus\KycVerification\Contracts\IdentityVerifierInterface;
-
-public function __construct(
-    private readonly IdentityVerifierInterface $identityVerifier
-) {}
-
-// Verify passport document
-$result = $this->identityVerifier->verifyDocument(
-    partyId: 'party-12345',
-    documentType: DocumentType::PASSPORT,
-    documentNumber: 'P123456789',
-    issueDate: new \DateTimeImmutable('2020-01-01'),
-    expiryDate: new \DateTimeImmutable('2030-01-01'),
-    documentFileId: 'file-abc123'
-);
-
-if ($result->isVerified()) {
-    // Identity verified successfully
-} else {
-    $rejectionReasons = $result->getRejectionReasons();
-    // ['document_expired', 'quality_insufficient']
-}
-```
-
-### UBO Tracking
-
-```php
-use Nexus\KycVerification\Services\UboTracker;
-use Nexus\KycVerification\Contracts\UboTrackerInterface;
-
-public function __construct(
-    private readonly UboTrackerInterface $uboTracker
-) {}
-
-// Register beneficial owner
-$this->uboTracker->registerUbo(
-    entityPartyId: 'party-company-123',
-    uboPartyId: 'party-person-456',
-    ownershipPercentage: 35.5,
-    controlType: ControlType::DIRECT_OWNERSHIP
-);
-
-// Get all UBOs for entity
-$ubos = $this->uboTracker->getUbos('party-company-123');
-// Returns array of UBO records with ownership % and control types
-```
-
-### Enhanced Due Diligence (EDD)
-
-```php
-use Nexus\KycVerification\Services\DueDiligenceManager;
-
-public function __construct(
-    private readonly DueDiligenceManagerInterface $ddManager
-) {}
-
-// Perform EDD for high-risk customer
-$eddResult = $this->ddManager->performEdd(
-    partyId: 'party-12345',
-    riskFactors: ['high_risk_jurisdiction', 'pep_match', 'high_value_transactions'],
-    additionalDocuments: ['source_of_wealth_declaration', 'tax_residency_cert']
-);
-```
+- PHP 8.3+
+- `nexus/common` package (for shared value objects)
+- `psr/log` (for logging interface)
 
 ## Architecture
 
-### Atomic Package Compliance
+This package follows the **Atomic Package Pattern**:
 
-- **Domain-Specific**: ONE domain - KYC identity verification
-- **Stateless**: No in-memory state, all data externalized
-- **Framework-Agnostic**: Pure PHP 8.3+, zero framework coupling
-- **Logic-Focused**: Business rules only, no migrations
-- **Contract-Driven**: All dependencies injected as interfaces
-- **Independently Deployable**: Published to Packagist
+- **No external package dependencies** beyond `nexus/common`
+- **Provider interfaces** for external integrations (Party, Document, Screening)
+- **Framework-agnostic** - works with Laravel, Symfony, or any PHP framework
+- **Orchestrator layer implements** the provider interfaces
 
-## Dependencies
+### Package Structure
 
-- **nexus/party** - Party identity management
-- **nexus/document** - Document storage and retrieval
-- **nexus/identity** - User context for verification operators
-- **psr/log** - PSR-3 logging
+```
+src/
+├── Contracts/
+│   ├── Providers/              # External integration interfaces
+│   │   ├── PartyProviderInterface.php
+│   │   ├── DocumentVerificationProviderInterface.php
+│   │   ├── ScreeningProviderInterface.php
+│   │   ├── AddressVerificationProviderInterface.php
+│   │   └── AuditLoggerProviderInterface.php
+│   ├── KycVerificationManagerInterface.php
+│   ├── RiskAssessorInterface.php
+│   ├── BeneficialOwnershipTrackerInterface.php
+│   ├── ReviewSchedulerInterface.php
+│   ├── KycProfileQueryInterface.php
+│   └── KycProfilePersistInterface.php
+├── Enums/
+│   ├── VerificationStatus.php
+│   ├── DocumentType.php
+│   ├── RiskLevel.php
+│   ├── DueDiligenceLevel.php
+│   ├── ReviewTrigger.php
+│   └── PartyType.php
+├── Exceptions/
+│   ├── KycVerificationException.php
+│   ├── VerificationFailedException.php
+│   ├── DocumentExpiredException.php
+│   ├── HighRiskPartyException.php
+│   ├── InvalidStatusTransitionException.php
+│   ├── BeneficialOwnershipException.php
+│   └── ReviewOverdueException.php
+├── ValueObjects/
+│   ├── DocumentVerification.php
+│   ├── AddressVerification.php
+│   ├── BeneficialOwner.php
+│   ├── RiskAssessment.php
+│   ├── RiskFactor.php
+│   ├── ReviewSchedule.php
+│   ├── KycProfile.php
+│   └── VerificationResult.php
+└── Services/
+    ├── KycVerificationManager.php
+    ├── RiskAssessor.php
+    ├── BeneficialOwnershipTracker.php
+    └── ReviewScheduler.php
+```
 
-## Related Packages
+## Quick Start
 
-- **nexus/sanctions** - Sanctions/PEP screening
-- **nexus/aml-compliance** - AML risk assessment
-- **nexus/party-compliance** - Comprehensive party compliance orchestration
+### 1. Implement Provider Interfaces
+
+The orchestrator layer must implement the provider interfaces:
+
+```php
+use Nexus\KycVerification\Contracts\Providers\PartyProviderInterface;
+
+class PartyProviderAdapter implements PartyProviderInterface
+{
+    public function __construct(
+        private PartyManagerInterface $partyManager
+    ) {}
+
+    public function findById(string $partyId): ?array
+    {
+        $party = $this->partyManager->findById($partyId);
+        return $party ? $party->toArray() : null;
+    }
+
+    public function getPartyType(string $partyId): ?string
+    {
+        $party = $this->partyManager->findById($partyId);
+        return $party?->getType()->value;
+    }
+
+    // ... implement other methods
+}
+```
+
+### 2. Initialize Services
+
+```php
+use Nexus\KycVerification\Services\KycVerificationManager;
+use Nexus\KycVerification\Services\RiskAssessor;
+use Nexus\KycVerification\Services\BeneficialOwnershipTracker;
+use Nexus\KycVerification\Services\ReviewScheduler;
+
+// Create service instances with dependencies
+$kycManager = new KycVerificationManager(
+    profileQuery: $profileQueryRepository,
+    profilePersist: $profilePersistRepository,
+    riskAssessor: $riskAssessor,
+    ownershipTracker: $ownershipTracker,
+    reviewScheduler: $reviewScheduler,
+    partyProvider: $partyProviderAdapter,
+    auditLogger: $auditLoggerAdapter,
+    logger: $psrLogger
+);
+```
+
+### 3. Initiate Verification
+
+```php
+use Nexus\KycVerification\Enums\DueDiligenceLevel;
+
+// Initiate KYC verification for a customer
+$result = $kycManager->initiateVerification(
+    partyId: 'CUST-001',
+    dueDiligenceLevel: DueDiligenceLevel::STANDARD
+);
+
+if ($result->isPending()) {
+    // Verification initiated, collect documents
+    echo "Required documents: " . count($result->details['required_documents']);
+}
+```
+
+### 4. Add Document Verification
+
+```php
+use Nexus\KycVerification\ValueObjects\DocumentVerification;
+use Nexus\KycVerification\Enums\DocumentType;
+
+$document = DocumentVerification::verified(
+    documentId: 'DOC-001',
+    documentType: DocumentType::PASSPORT,
+    confidence: 0.95,
+    expiryDate: new DateTimeImmutable('+5 years')
+);
+
+$result = $kycManager->addDocumentVerification('CUST-001', $document);
+```
+
+### 5. Complete Verification
+
+```php
+$result = $kycManager->completeVerification(
+    partyId: 'CUST-001',
+    verifiedBy: 'OFFICER-001'
+);
+
+if ($result->isSuccess()) {
+    echo "Customer verified successfully!";
+} elseif ($result->isConditional()) {
+    echo "Missing requirements: " . implode(', ', $result->conditions);
+}
+```
+
+## Risk Assessment
+
+### Automatic Risk Scoring
+
+```php
+use Nexus\KycVerification\Services\RiskAssessor;
+
+$assessment = $riskAssessor->assess('CUST-001', [
+    'industry' => 'gambling',
+    'transaction_volume' => 1_500_000
+]);
+
+echo "Risk Level: " . $assessment->riskLevel->value;
+echo "Risk Score: " . $assessment->riskScore;
+
+foreach ($assessment->factors as $factor) {
+    echo "- {$factor->name}: {$factor->score} points";
+}
+```
+
+### Risk Levels
+
+| Level | Score Range | Review Frequency | Due Diligence |
+|-------|-------------|------------------|---------------|
+| LOW | 0-20 | 24 months | Simplified (SDD) |
+| MEDIUM | 21-40 | 12 months | Standard (CDD) |
+| HIGH | 41-60 | 6 months | Enhanced (EDD) |
+| VERY_HIGH | 61-80 | 3 months | Enhanced (EDD) |
+| PROHIBITED | 81-100 | N/A | Blocked |
+
+### Override Risk Level
+
+```php
+$assessment = $riskAssessor->overrideRiskLevel(
+    partyId: 'CUST-001',
+    newRiskLevel: RiskLevel::MEDIUM,
+    reason: 'Mitigating controls in place',
+    approvedBy: 'SENIOR-OFFICER-001'
+);
+```
+
+## Beneficial Ownership
+
+### Register UBOs
+
+```php
+use Nexus\KycVerification\ValueObjects\BeneficialOwner;
+
+$owner = new BeneficialOwner(
+    ownerId: 'PERSON-001',
+    name: 'John Smith',
+    ownershipPercentage: 40.0,
+    controlRights: ['voting', 'management'],
+    isPep: false,
+    nationality: 'MY',
+    dateOfBirth: new DateTimeImmutable('1980-05-15'),
+    isVerified: true,
+    verificationDate: new DateTimeImmutable()
+);
+
+$ownershipTracker->registerBeneficialOwner('CORP-001', $owner);
+```
+
+### Validate Ownership Structure
+
+```php
+$validation = $ownershipTracker->validateOwnershipStructure('CORP-001');
+
+if (!$validation['valid']) {
+    foreach ($validation['errors'] as $error) {
+        echo "Error: {$error}";
+    }
+}
+
+// Check circular ownership
+if ($ownershipTracker->detectCircularOwnership('CORP-001')) {
+    throw new Exception('Circular ownership detected!');
+}
+```
+
+### Get Ownership Hierarchy
+
+```php
+$hierarchy = $ownershipTracker->getOwnershipHierarchy('CORP-001');
+// Returns nested tree of ownership structure
+```
+
+## Review Scheduling
+
+### Schedule Reviews
+
+```php
+use Nexus\KycVerification\Enums\ReviewTrigger;
+
+// Auto-schedule based on risk level
+$schedule = $reviewScheduler->autoSchedulePeriodicReview('CUST-001');
+
+// Manual schedule with specific trigger
+$schedule = $reviewScheduler->scheduleReview(
+    partyId: 'CUST-001',
+    trigger: ReviewTrigger::ADVERSE_MEDIA_ALERT
+);
+```
+
+### Process Reviews
+
+```php
+// Start review
+$schedule = $reviewScheduler->startReview(
+    partyId: 'CUST-001',
+    reviewId: 'REV-20240115-ABC123',
+    reviewerId: 'OFFICER-001'
+);
+
+// Complete review
+$schedule = $reviewScheduler->completeReview(
+    partyId: 'CUST-001',
+    reviewId: 'REV-20240115-ABC123',
+    outcome: 'approved',
+    completedBy: 'OFFICER-001'
+);
+```
+
+### Monitor Reviews
+
+```php
+// Get overdue reviews
+$overdueReviews = $reviewScheduler->getOverdueReviews();
+
+// Get reviews due within 7 days
+$upcomingReviews = $reviewScheduler->getReviewsDueSoon(7);
+
+// Get statistics
+$stats = $reviewScheduler->getReviewStatistics();
+echo "Overdue: {$stats['overdue']}";
+echo "In Progress: {$stats['in_progress']}";
+```
+
+## Verification Status Workflow
+
+```
+                    ┌─────────────────────────────────────────────────────┐
+                    │                                                     │
+                    ▼                                                     │
+┌─────────┐    ┌─────────┐    ┌──────────────┐    ┌────────────┐        │
+│ PENDING │───▶│IN_REVIEW│───▶│PENDING_DOCS  │───▶│  VERIFIED  │────────┤
+└─────────┘    └─────────┘    └──────────────┘    └────────────┘        │
+     │              │               │                   │                │
+     │              │               │                   ▼                │
+     │              ▼               ▼          ┌───────────────────┐    │
+     │         ┌─────────┐    ┌──────────┐    │PENDING_REVERIFICATION│   │
+     │         │REJECTED │    │ EXPIRED  │    └───────────────────┘    │
+     │         └─────────┘    └──────────┘              │                │
+     │                                                  │                │
+     ▼                                                  ▼                │
+┌─────────────┐                                  ┌───────────┐          │
+│  SUSPENDED  │◀─────────────────────────────────│ CANCELLED │          │
+└─────────────┘                                  └───────────┘          │
+```
+
+## Document Types
+
+The package supports 29 document types across categories:
+
+### Primary Identity Documents
+- Passport, National ID, Driving License
+
+### Secondary Documents
+- Utility Bill, Bank Statement, Tax Return
+
+### Corporate Documents
+- Certificate of Incorporation, Memorandum of Association
+- Board Resolution, Shareholder Register
+
+### Financial Documents
+- Audited Financial Statements, Bank Reference Letter
+
+## Testing
+
+```bash
+./vendor/bin/phpunit packages/KycVerification/tests
+```
 
 ## License
 
-MIT License. See LICENSE file for details.
+MIT License. See [LICENSE](LICENSE) for details.
+
+## Related Packages
+
+- **nexus/aml-compliance** - AML risk assessment and compliance
+- **nexus/sanctions** - Sanctions and PEP screening
+- **nexus/compliance** - General compliance management
 
 ---
 
-**Last Updated**: December 16, 2025  
+**Last Updated**: January 2025  
 **Maintained By**: Nexus Compliance Team
