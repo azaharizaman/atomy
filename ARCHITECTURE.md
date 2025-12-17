@@ -20,6 +20,340 @@ Nexus is a **package-only monorepo** containing 52 atomic, reusable PHP packages
 - **Stateless** - No session state, all long-term state externalized
 - **Testable** - Pure business logic with mockable dependencies
 
+---
+
+## Package Atomicity Principles
+
+### What is an Atomic Package?
+
+An **atomic package** in Nexus is a focused, self-contained unit of business logic that follows strict architectural principles. The term "atomic" means it cannot be meaningfully decomposed further without losing its core purpose.
+
+**Definition: An atomic package MUST be:**
+
+1. **Domain-Specific** - Addresses ONE business domain/capability
+   - ✅ Good: `Nexus\Inventory` (stock management)
+   - ❌ Bad: `Nexus\InventoryAndSalesAndPricing` (multiple domains)
+
+2. **Stateless** - No in-memory long-term state
+   - Externalizes persistent state via storage interfaces
+   - Request-scoped context (e.g., current tenant) is acceptable
+   - Long-term state (cache, counters, flags) → injected `*StorageInterface`
+
+3. **Framework-Agnostic** - Pure PHP 8.3+, zero framework coupling
+   - No `use Illuminate\*` or `use Symfony\*` in package code
+   - No facades (`Log::`, `Cache::`, `DB::`)
+   - No global helpers (`config()`, `app()`, `now()`, `dd()`)
+
+4. **Logic-Focused** - Business rules, calculations, validations
+   - ✅ Contains: Domain services, entities, value objects, policies
+   - ❌ Does NOT contain: Database migrations, Eloquent models, HTTP controllers
+   - ❌ Does NOT contain: Framework-specific jobs, routes, views
+
+5. **Contract-Driven** - Defines needs via interfaces
+   - All external dependencies are injected interfaces
+   - Package defines `*Interface`, consumer provides implementation
+   - Enables integration with other packages and orchestrators
+
+6. **Independently Deployable** - Can be published to Packagist alone
+   - Has valid `composer.json` with proper dependencies
+   - Has comprehensive `README.md` and documentation
+   - Includes unit tests (no database/framework required)
+
+### The Atomicity Spectrum
+
+Packages exist on a spectrum from **Simple** to **Complex**:
+
+| Complexity | Package Type | Structure | Examples |
+|------------|--------------|-----------|----------|
+| **Simple** | Flat structure | `src/Contracts/`, `src/Services/`, `src/Exceptions/` | `Nexus\Uom`, `Nexus\Sequencing`, `Nexus\Tenant` |
+| **Complex** | DDD Layers | `src/Domain/`, `src/Application/`, `src/Infrastructure/` | `Nexus\Inventory`, `Nexus\JournalEntry`, `Nexus\Manufacturing` |
+
+**Rule:** Use the simplest structure that supports your domain. Don't over-engineer simple packages with DDD layers.
+
+### Anti-Pattern: God Packages
+
+❌ **FORBIDDEN:** Creating monolithic packages that violate atomicity principles.
+
+**Warning Signs of a God Package:**
+
+| Metric | Threshold | Action |
+|--------|-----------|--------|
+| **Public Service Classes** | >15 classes | Split into multiple packages |
+| **Total Interface Methods** | >40 methods across all interfaces | Violates ISP, refactor |
+| **Lines of Code** | >5,000 LOC (excluding tests) | Consider domain decomposition |
+| **Constructor Dependencies** | >7 dependencies in any service | Violates SRP, extract services |
+| **Domain Responsibilities** | >3 unrelated domains | Split into focused packages |
+
+**Examples of God Package Anti-Patterns:**
+
+```php
+// ❌ WRONG: God package handling multiple unrelated domains
+namespace Nexus\FinanceEverything;
+
+final readonly class FinanceManager
+{
+    public function __construct(
+        private InvoiceRepository $invoices,
+        private PaymentRepository $payments,
+        private BudgetRepository $budgets,
+        private TaxRepository $taxes,
+        private AssetRepository $assets,
+        private PayrollRepository $payroll,  // ← Too many unrelated domains!
+        private ComplianceRepository $compliance,
+        private ReportingEngine $reports
+    ) {}
+    
+    // 50+ methods handling everything finance-related
+}
+```
+
+**✅ CORRECT: Split into focused atomic packages:**
+
+- `Nexus\Receivable` - Customer invoicing only
+- `Nexus\Payable` - Vendor bills only
+- `Nexus\Budget` - Budget planning only
+- `Nexus\Assets` - Fixed assets only
+- `Nexus\Payroll` - Payroll processing only
+
+### Progressive Disclosure Pattern
+
+For complex domains, use **Progressive Disclosure** - start with a simple core package, add complexity via extension packages as users need advanced features.
+
+**Strategy:** 80% of users need 20% of features. Provide the 20% in the core package, advanced features in extensions.
+
+#### Pattern Structure
+
+**Core Package** (Mandatory, covers common use cases):
+```
+Nexus\[Domain]
+├── Basic CRUD operations
+├── Essential business rules
+├── Common workflows
+└── Standard interfaces
+```
+
+**Extension Packages** (Optional, advanced features):
+```
+Nexus\[Domain][FeatureName]
+├── Specialized capabilities
+├── Advanced algorithms
+├── Regulatory/compliance features
+└── Industry-specific logic
+```
+
+#### Real-World Example: Inventory Management
+
+**Core: `Nexus\Inventory`** (Simple stock tracking - 80% use case)
+```php
+// Core capabilities (always needed):
+- receiveStock()      // Basic stock receipt
+- issueStock()        // Basic stock issue
+- adjustStock()       // Stock adjustments
+- getStockLevel()     // Current balance query
+- Valuation: FIFO, Weighted Average, Standard Cost
+```
+
+**Extension: `Nexus\InventoryLot`** (Lot/batch tracking with FEFO)
+```php
+// Advanced lot tracking (pharmaceutical, food & beverage):
+- createLot()         // Lot creation with expiry
+- allocateFromLots()  // FEFO (First-Expiry-First-Out)
+- trackLotMovements() // Lot traceability
+- Compliance: FDA, HACCP, regulatory tracking
+```
+
+**Extension: `Nexus\InventorySerial`** (Serial number tracking)
+```php
+// High-value item tracking (electronics, machinery):
+- registerSerial()    // Serial number registration
+- trackSerialHistory()// Warranty, ownership chain
+- Compliance: Warranty management, theft prevention
+```
+
+**Extension: `Nexus\InventoryConsignment`** (Consignment stock)
+```php
+// Consignment business model:
+- receiveConsignment()
+- sellConsignment()
+- returnConsignment()
+- settlementCalculation()
+```
+
+**Benefits:**
+- ✅ New users adopt `Nexus\Inventory` without cognitive overload
+- ✅ Advanced users add `Nexus\InventoryLot` only when needed
+- ✅ Each extension remains atomic, testable, independently deployable
+- ✅ Core package stays focused, maintainable, easy to understand
+
+#### When to Create Extension Package
+
+Create an extension package when:
+
+| Criteria | Threshold | Example |
+|----------|-----------|---------|
+| **Feature Adds Interfaces** | >8 new interface methods | Serial tracking adds 10+ methods |
+| **Specialized Domain Knowledge** | Requires expertise beyond core | FEFO requires regulatory knowledge |
+| **Optional for Majority** | <30% of users need it | Only pharma/food need lot tracking |
+| **Regulatory Context** | Distinct compliance requirements | FDA serialization rules |
+| **Alternative Implementations** | Multiple valid approaches | Consignment models vary by industry |
+
+#### Extension Package Naming
+
+| Core Package | Extension | Purpose |
+|--------------|-----------|---------|
+| `Nexus\Inventory` | `Nexus\InventoryLot` | Lot/batch tracking with FEFO |
+| `Nexus\Inventory` | `Nexus\InventorySerial` | Serial number tracking |
+| `Nexus\Inventory` | `Nexus\InventoryConsignment` | Consignment stock management |
+| `Nexus\Payroll` | `Nexus\PayrollMysStatutory` | Malaysian statutory (EPF, SOCSO, PCB) |
+| `Nexus\Compliance` | `Nexus\ComplianceISO9001` | ISO 9001 quality management |
+| `Nexus\Manufacturing` | `Nexus\ManufacturingJIT` | Just-In-Time production |
+
+**Naming Convention:** `Nexus\[Core][Feature/Region/Standard]`
+
+### Decision Matrix: When to Split vs Extend
+
+Use this decision tree when evaluating package design:
+
+```
+Is the feature core to the domain?
+├─ YES → Add to existing atomic package
+│  └─ Does it add >8 interface methods?
+│     ├─ YES → Consider refactoring existing package (may violate ISP)
+│     └─ NO → Safe to add
+│
+└─ NO → Is it optional for >70% of users?
+   ├─ YES → Create extension package
+   │  └─ Progressive Disclosure Pattern
+   │
+   └─ NO → Is it a different domain?
+      ├─ YES → Create new atomic package
+      └─ NO → Add to existing package (but watch complexity metrics)
+```
+
+### Package Decomposition Triggers
+
+**Refactor/Split when you observe:**
+
+1. **"And" Rule Violation**
+   - Package description has >2 "and" conjunctions
+   - Example: "Handles invoicing **and** payments **and** collections **and** credit control"
+   - Action: Split into `Receivable`, `Payment`, `Collections`, `Credit`
+
+2. **ISP Violation**
+   - Any repository interface has >10 methods
+   - Services forced to implement methods they don't use
+   - Action: Split into focused interfaces (Query, Persist, Validation)
+
+3. **Multiple Team Ownership**
+   - Different teams need to modify same package
+   - Merge conflicts indicate domain overlap
+   - Action: Split along team boundaries
+
+4. **Deployment Coupling**
+   - Changes to Feature A require redeploying Feature B
+   - Features have different release cycles
+   - Action: Extract into separate packages
+
+### Examples: Well-Decomposed Atomic Packages
+
+**✅ GOOD: Clear, focused atomic packages**
+
+```
+Nexus\Sequencing
+├── Purpose: Auto-numbering ONLY
+├── Interfaces: 2 (SequencingManagerInterface, SequenceRepositoryInterface)
+├── Services: 1 (SequencingManager)
+├── LOC: ~500 lines
+└── Domain: Sequence generation
+
+Nexus\Uom
+├── Purpose: Unit conversion ONLY
+├── Interfaces: 2 (UomManagerInterface, UomRepositoryInterface)
+├── Services: 1 (UomManager)
+├── LOC: ~800 lines
+└── Domain: Unit of measurement
+
+Nexus\Tenant
+├── Purpose: Multi-tenancy context ONLY
+├── Interfaces: 3 (TenantContextInterface, TenantQueryInterface, TenantPersistInterface)
+├── Services: 2 (TenantContextManager, TenantLifecycleService)
+├── LOC: ~1,200 lines
+└── Domain: Tenant isolation
+```
+
+**❌ BAD: God package that needs decomposition**
+
+```
+Nexus\Sales (hypothetical bad example)
+├── Purpose: EVERYTHING sales-related ← TOO BROAD
+├── Interfaces: 25+ ← ISP violation
+├── Services: 18+ ← SRP violation
+├── LOC: ~12,000 lines ← Too large
+└── Domains: Quotations, Orders, Pricing, Discounts, 
+             Commissions, Returns, Warranties, 
+             Shipping, Invoicing ← Should be 6+ packages
+```
+
+**✅ GOOD: Decomposed into focused packages**
+
+```
+Nexus\Sales → Quotation + Order lifecycle
+Nexus\Pricing → Pricing engine
+Nexus\Commission → Sales commission calculation
+Nexus\Receivable → Customer invoicing
+Nexus\Returns → Return merchandise authorization
+Nexus\Warranty → Warranty management
+```
+
+### Atomic Package Checklist
+
+Before committing a package, verify:
+
+**Atomicity Compliance:**
+- [ ] Addresses ONE domain/capability (not multiple)
+- [ ] Package name clearly reflects single purpose
+- [ ] Can explain package purpose in <10 words
+- [ ] No unrelated business logic mixed in
+
+**Framework Agnosticism:**
+- [ ] Zero framework dependencies in `composer.json`
+- [ ] No framework namespaces in code (`Illuminate\*`, `Symfony\*`)
+- [ ] No facades or global helpers
+- [ ] Works with vanilla PHP script
+
+**Stateless Architecture:**
+- [ ] No private properties storing long-term state
+- [ ] All services are `final readonly class`
+- [ ] State externalized via `*StorageInterface`
+- [ ] Request-scoped state clearly documented
+
+**Contract-Driven:**
+- [ ] All dependencies are interfaces
+- [ ] Package defines `*Interface` for external needs
+- [ ] No concrete class dependencies from other packages
+- [ ] Interfaces follow ISP (focused, not fat)
+
+**Independently Deployable:**
+- [ ] Valid `composer.json` with `"php": "^8.3"`
+- [ ] Comprehensive `README.md` with examples
+- [ ] All 13 mandatory documentation files present
+- [ ] Unit tests pass without database/framework
+
+**Complexity Check:**
+- [ ] <15 public service classes
+- [ ] <40 total interface methods
+- [ ] <5,000 LOC (excluding tests)
+- [ ] <7 constructor dependencies in any service
+- [ ] Single domain responsibility
+
+**Progressive Disclosure (if complex domain):**
+- [ ] Core package covers 80% use cases
+- [ ] Advanced features in extension packages
+- [ ] Extensions are optional, not mandatory
+- [ ] Clear documentation on when to add extensions
+
+---
+
 ## Package Inventory (52 Atomic Packages)
 
 ### Foundation & Infrastructure (9 packages)

@@ -22,7 +22,12 @@
         "nexus/event-stream": "*@dev",
         "nexus/tax": "*@dev",
         "nexus/procurement-ml": "*@dev",
-        "nexus/tenant": "*@dev"
+        "nexus/tenant": "*@dev",
+        "nexus/procurement-operations": "*@dev",
+        "nexus/sanctions": "*@dev",
+        "nexus/aml-compliance": "*@dev",
+        "nexus/data-privacy": "*@dev",
+        "nexus/pdpa": "*@dev"
     },
     "repositories": [
         {
@@ -56,5 +61,27 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\ProcurementOperations\\": "orchestrators/ProcurementOperations/src/",
+            "Nexus\\Sanctions\\": "packages/Sanctions/src/",
+            "Nexus\\AmlCompliance\\": "packages/AmlCompliance/src/",
+            "Nexus\\KycVerification\\": "packages/KycVerification/src/",
+            "Nexus\\DataPrivacy\\": "packages/DataPrivacy/src/",
+            "Nexus\\GDPR\\": "packages/GDPR/src/",
+            "Nexus\\PDPA\\": "packages/PDPA/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\ProcurementOperations\\Tests\\": "orchestrators/ProcurementOperations/tests/",
+            "Nexus\\Sanctions\\Tests\\": "packages/Sanctions/tests/",
+            "Nexus\\AmlCompliance\\Tests\\": "packages/AmlCompliance/tests/",
+            "Nexus\\KycVerification\\Tests\\": "packages/KycVerification/tests/",
+            "Nexus\\DataPrivacy\\Tests\\": "packages/DataPrivacy/tests/",
+            "Nexus\\GDPR\\Tests\\": "packages/GDPR/tests/",
+            "Nexus\\PDPA\\Tests\\": "packages/PDPA/tests/"
+        }
     }
 }

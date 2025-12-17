@@ -1,0 +1,46 @@
+{
+    "name": "nexus/aml-compliance",
+    "description": "Anti-Money Laundering (AML) risk assessment and transaction monitoring with SAR generation - atomic, framework-agnostic package",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "AML",
+        "anti-money-laundering",
+        "risk-assessment",
+        "transaction-monitoring",
+        "SAR",
+        "compliance",
+        "financial-crime",
+        "FATF",
+        "KYC"
+    ],
+    "authors": [
+        {
+            "name": "Nexus Architecture Team",
+            "email": "team@nexus-erp.com"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\AmlCompliance\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\AmlCompliance\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}
