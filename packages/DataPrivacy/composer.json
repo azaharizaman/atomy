@@ -1,18 +1,17 @@
 {
     "name": "nexus/data-privacy",
-    "description": "GDPR data subject rights management, consent tracking, and data retention policies",
+    "description": "Framework-agnostic data privacy core: data subject rights, consent management, retention policies, breach notification",
     "type": "library",
     "license": "MIT",
     "keywords": [
-        "GDPR",
         "data-privacy",
         "consent-management",
         "data-subject-rights",
         "right-to-erasure",
         "data-portability",
-        "CCPA",
-        "LGPD",
-        "PIPEDA"
+        "retention-policy",
+        "breach-notification",
+        "privacy"
     ],
     "authors": [
         {
@@ -22,13 +21,11 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/party": "^1.0",
-        "nexus/audit-logger": "^1.0",
+        "nexus/common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^10.0",
-        "mockery/mockery": "^1.6"
+        "phpunit/phpunit": "^10.0"
     },
     "autoload": {
         "psr-4": {
