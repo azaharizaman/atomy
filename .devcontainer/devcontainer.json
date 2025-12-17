@@ -3,7 +3,7 @@
 {
 	"name": "PHP",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "byjg/php:8.3-cli",
+	"image": "mcr.microsoft.com/devcontainers/php:1-8.3-bullseye",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -16,6 +16,8 @@
 		8080
 	],
 	"features": {
+		"ghcr.io/devcontainers/features/github-cli:1": {},
+		"ghcr.io/devcontainers-extra/features/composer:1": {}
 	}
 
 	// Use 'postCreateCommand' to run commands after the container is created.
