@@ -8,15 +8,30 @@
             "Nexus\\Crypto\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Crypto\\Tests\\": "tests/"
+        }
+    },
     "require": {
         "php": "^8.3",
         "ext-sodium": "*",
         "ext-openssl": "*",
         "psr/log": "^3.0"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "nexus/scheduler": "*@dev"
+    },
     "suggest": {
         "nexus/scheduler": "Required for automated key rotation via scheduled jobs"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Scheduler"
+        }
+    ],
     "minimum-stability": "dev",
     "prefer-stable": true
 }

@@ -79,7 +79,9 @@ final readonly class SodiumEncryptor implements SymmetricEncryptorInterface
         $nonce = $encrypted->getIVBinary();
         $tag = $encrypted->getTagBinary();
         
-        if (empty($ciphertext)) {
+        // For GCM/Poly1305, empty ciphertext is valid (empty plaintext)
+        // But we still need a valid nonce
+        if ($nonce === false || strlen($nonce) === 0) {
             throw DecryptionException::invalidCiphertext();
         }
         
@@ -145,7 +147,12 @@ final readonly class SodiumEncryptor implements SymmetricEncryptorInterface
             $key
         );
         
-        return $plaintext ?: throw DecryptionException::authenticationFailed();
+        // Use strict comparison - empty string is valid plaintext
+        if ($plaintext === false) {
+            throw DecryptionException::authenticationFailed();
+        }
+        
+        return $plaintext;
     }
     
     /**
@@ -183,7 +190,12 @@ final readonly class SodiumEncryptor implements SymmetricEncryptorInterface
             $key
         );
         
-        return $plaintext ?: throw DecryptionException::authenticationFailed();
+        // Use strict comparison - empty string is valid plaintext
+        if ($plaintext === false) {
+            throw DecryptionException::authenticationFailed();
+        }
+        
+        return $plaintext;
     }
     
     /**

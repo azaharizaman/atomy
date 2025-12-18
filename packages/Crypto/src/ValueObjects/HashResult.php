@@ -59,6 +59,11 @@ final readonly class HashResult
      */
     public function getBinary(): string
     {
+        // Validate hex format before attempting conversion
+        if (!ctype_xdigit($this->hash) || strlen($this->hash) % 2 !== 0) {
+            throw new \InvalidArgumentException('Invalid hex-encoded hash');
+        }
+        
         $binary = hex2bin($this->hash);
         if ($binary === false) {
             throw new \InvalidArgumentException('Invalid hex-encoded hash');

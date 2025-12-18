@@ -6,7 +6,7 @@ namespace Nexus\Crypto\Handlers;
 
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
-use Nexus\Crypto\Services\CryptoManager;
+use Nexus\Crypto\Contracts\KeyRotationServiceInterface;
 use Nexus\Scheduler\Contracts\JobHandlerInterface;
 use Nexus\Scheduler\Enums\JobType;
 use Nexus\Scheduler\ValueObjects\JobResult;
@@ -28,7 +28,7 @@ final readonly class KeyRotationHandler implements JobHandlerInterface
     private const JOB_TYPE = 'crypto_key_rotation';
     
     public function __construct(
-        private CryptoManager $cryptoManager,
+        private KeyRotationServiceInterface $keyRotationService,
         private LoggerInterface $logger,
     ) {}
     
@@ -54,7 +54,7 @@ final readonly class KeyRotationHandler implements JobHandlerInterface
             $warningDays = $job->payload['warningDays'] ?? 7;
             
             // Find keys expiring soon
-            $expiringKeyIds = $this->cryptoManager->findExpiringKeys($warningDays);
+            $expiringKeyIds = $this->keyRotationService->findExpiringKeys($warningDays);
             
             $this->logger->info('Key rotation check started', [
                 'jobId' => $job->id,
@@ -65,7 +65,7 @@ final readonly class KeyRotationHandler implements JobHandlerInterface
             // Rotate each expiring key
             foreach ($expiringKeyIds as $keyId) {
                 try {
-                    $newKey = $this->cryptoManager->rotateKey($keyId);
+                    $newKey = $this->keyRotationService->rotateKey($keyId);
                     
                     $rotatedKeys[] = [
                         'keyId' => $keyId,

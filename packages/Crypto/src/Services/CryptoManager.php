@@ -6,28 +6,44 @@ namespace Nexus\Crypto\Services;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Nexus\Crypto\Contracts\AnonymizerInterface;
 use Nexus\Crypto\Contracts\AsymmetricSignerInterface;
+use Nexus\Crypto\Contracts\DataMaskerInterface;
 use Nexus\Crypto\Contracts\HasherInterface;
 use Nexus\Crypto\Contracts\KeyGeneratorInterface;
+use Nexus\Crypto\Contracts\KeyRotationServiceInterface;
 use Nexus\Crypto\Contracts\KeyStorageInterface;
 use Nexus\Crypto\Contracts\SymmetricEncryptorInterface;
+use Nexus\Crypto\Enums\AnonymizationMethod;
 use Nexus\Crypto\Enums\AsymmetricAlgorithm;
 use Nexus\Crypto\Enums\HashAlgorithm;
+use Nexus\Crypto\Enums\MaskingPattern;
 use Nexus\Crypto\Enums\SymmetricAlgorithm;
+use Nexus\Crypto\ValueObjects\AnonymizedData;
 use Nexus\Crypto\ValueObjects\EncryptedData;
 use Nexus\Crypto\ValueObjects\EncryptionKey;
 use Nexus\Crypto\ValueObjects\HashResult;
 use Nexus\Crypto\ValueObjects\KeyPair;
+use Nexus\Crypto\ValueObjects\PseudonymizedData;
 use Nexus\Crypto\ValueObjects\SignedData;
 
 /**
  * Crypto Manager
  *
  * Facade providing unified interface to all cryptographic operations.
- * Orchestrates hashing, encryption, signing, and key management services.
+ * Orchestrates hashing, encryption, signing, key management,
+ * anonymization, pseudonymization, and data masking services.
+ *
+ * Data Protection Capabilities (v1.1):
+ * - Irreversible anonymization (hash-based, k-anonymity, suppression)
+ * - Reversible pseudonymization (encryption-based with key management)
+ * - Data masking (format-preserving, compliance-aware patterns)
  */
-final readonly class CryptoManager
+final readonly class CryptoManager implements KeyRotationServiceInterface
 {
+    private ?AnonymizerInterface $anonymizer;
+    private ?DataMaskerInterface $dataMasker;
+
     public function __construct(
         private HasherInterface $hasher,
         private SymmetricEncryptorInterface $encryptor,
@@ -35,7 +51,18 @@ final readonly class CryptoManager
         private KeyGeneratorInterface $keyGenerator,
         private KeyStorageInterface $keyStorage,
         private LoggerInterface $logger = new NullLogger(),
-    ) {}
+        ?AnonymizerInterface $anonymizer = null,
+        ?DataMaskerInterface $dataMasker = null,
+    ) {
+        // Create default implementations if not provided
+        $this->anonymizer = $anonymizer ?? new Anonymizer(
+            $this->hasher,
+            $this->encryptor,
+            $this->keyStorage,
+            $this->logger,
+        );
+        $this->dataMasker = $dataMasker ?? new DataMasker($this->logger);
+    }
     
     // =====================================================
     // HASHING OPERATIONS
@@ -241,5 +268,220 @@ final readonly class CryptoManager
     public function randomBytes(int $length): string
     {
         return $this->keyGenerator->generateRandomBytes($length);
+    }
+    
+    // =====================================================
+    // ANONYMIZATION OPERATIONS
+    // =====================================================
+    
+    /**
+     * Anonymize data (irreversible)
+     *
+     * @param string $data The data to anonymize
+     * @param AnonymizationMethod $method The anonymization method to use
+     * @param array<string, mixed> $options Method-specific options
+     * @return AnonymizedData The anonymized result
+     */
+    public function anonymize(
+        string $data,
+        AnonymizationMethod $method = AnonymizationMethod::SALTED_HASH,
+        array $options = []
+    ): AnonymizedData {
+        $this->logger->debug('Anonymizing data via CryptoManager', [
+            'method' => $method->value,
+        ]);
+        
+        return $this->anonymizer->anonymize($data, $method, $options);
+    }
+    
+    /**
+     * Pseudonymize data (reversible with key)
+     *
+     * @param string $data The data to pseudonymize
+     * @param string $keyId The key ID to use for encryption
+     * @return PseudonymizedData The pseudonymized result
+     */
+    public function pseudonymize(string $data, string $keyId): PseudonymizedData
+    {
+        $this->logger->debug('Pseudonymizing data via CryptoManager', [
+            'keyId' => $keyId,
+        ]);
+        
+        return $this->anonymizer->pseudonymize($data, $keyId);
+    }
+    
+    /**
+     * Reverse pseudonymization to recover original data
+     *
+     * @param PseudonymizedData $pseudonymized The pseudonymized data
+     * @return string The original data
+     */
+    public function dePseudonymize(PseudonymizedData $pseudonymized): string
+    {
+        $this->logger->debug('De-pseudonymizing data via CryptoManager', [
+            'keyId' => $pseudonymized->keyId,
+        ]);
+        
+        return $this->anonymizer->dePseudonymize($pseudonymized);
+    }
+    
+    /**
+     * Generate a consistent pseudonym for data within a context
+     *
+     * Same data + same context + same key = same pseudonym
+     *
+     * @param string $data The data to pseudonymize
+     * @param string $context The context (e.g., 'customer_id', 'email')
+     * @param string $keyId The key ID to use for HMAC
+     * @return string The deterministic pseudonym
+     */
+    public function generatePseudonym(string $data, string $context, string $keyId): string
+    {
+        return $this->anonymizer->generatePseudonym($data, $context, $keyId);
+    }
+    
+    /**
+     * Verify if data matches an anonymized value
+     *
+     * Only works for deterministic anonymization methods.
+     *
+     * @param string $data The data to verify
+     * @param AnonymizedData $anonymized The anonymized value to check against
+     * @param array<string, mixed> $options Method-specific options (for HMAC, must include keyId)
+     * @return bool True if data matches the anonymized value
+     */
+    public function verifyAnonymized(
+        string $data,
+        AnonymizedData $anonymized,
+        array $options = []
+    ): bool {
+        return $this->anonymizer->verifyAnonymized($data, $anonymized, $options);
+    }
+    
+    // =====================================================
+    // DATA MASKING OPERATIONS
+    // =====================================================
+    
+    /**
+     * Mask data using a predefined pattern
+     *
+     * Applies a standard masking pattern appropriate for the data type.
+     * Patterns are designed to comply with industry standards (PCI-DSS, HIPAA, GDPR).
+     *
+     * @param string $data The sensitive data to mask
+     * @param MaskingPattern $pattern Pattern to apply
+     * @return string Masked data preserving format structure
+     */
+    public function mask(string $data, MaskingPattern $pattern): string
+    {
+        $this->logger->debug('Masking with pattern via CryptoManager', [
+            'pattern' => $pattern->value,
+        ]);
+        
+        return $this->dataMasker->mask($data, $pattern);
+    }
+    
+    /**
+     * Mask data using custom pattern
+     *
+     * Pattern characters:
+     * - '#' = preserve character
+     * - '*' = mask character
+     * - Any other = literal character
+     *
+     * @param string $data The sensitive data to mask
+     * @param string $pattern Custom masking pattern using # (keep) and * (mask)
+     * @param string $maskChar Character to use for masking (default: '*')
+     * @return string Masked data
+     */
+    public function maskWithPattern(string $data, string $pattern, string $maskChar = '*'): string
+    {
+        $this->logger->debug('Masking with custom pattern via CryptoManager', [
+            'pattern' => $pattern,
+        ]);
+        
+        return $this->dataMasker->maskWithPattern($data, $pattern, $maskChar);
+    }
+    
+    /**
+     * Mask email address (shows first few chars + full domain)
+     */
+    public function maskEmail(string $email): string
+    {
+        return $this->dataMasker->maskEmail($email);
+    }
+    
+    /**
+     * Mask phone number (shows last 4 digits, preserves format)
+     */
+    public function maskPhone(string $phone): string
+    {
+        return $this->dataMasker->maskPhone($phone);
+    }
+    
+    /**
+     * Mask credit card number (PCI-DSS compliant: shows first 6 and last 4)
+     */
+    public function maskCreditCard(string $cardNumber): string
+    {
+        return $this->dataMasker->maskCreditCard($cardNumber);
+    }
+    
+    /**
+     * Mask national ID with country-specific formatting
+     *
+     * Supported countries: MY, US, GB, SG
+     */
+    public function maskNationalId(string $nationalId, string $country = 'MY'): string
+    {
+        return $this->dataMasker->maskNationalId($nationalId, $country);
+    }
+    
+    /**
+     * Mask IBAN (shows country code + check digits and last 4)
+     */
+    public function maskIban(string $iban): string
+    {
+        return $this->dataMasker->maskIban($iban);
+    }
+    
+    /**
+     * Mask name (shows first letter of each part)
+     */
+    public function maskName(string $name): string
+    {
+        return $this->dataMasker->maskName($name);
+    }
+    
+    /**
+     * Mask address (partial masking preserving structure)
+     */
+    public function maskAddress(string $address): string
+    {
+        return $this->dataMasker->maskAddress($address);
+    }
+    
+    /**
+     * Mask date of birth (shows year only)
+     */
+    public function maskDateOfBirth(string $dob): string
+    {
+        return $this->dataMasker->maskDateOfBirth($dob);
+    }
+    
+    /**
+     * Fully redact data (replace with marker)
+     */
+    public function redact(string $data, string $replacement = '[REDACTED]'): string
+    {
+        return $this->dataMasker->redact($data, $replacement);
+    }
+    
+    /**
+     * Check if data appears to already be masked
+     */
+    public function isAlreadyMasked(string $data, string $maskChar = '*'): bool
+    {
+        return $this->dataMasker->isAlreadyMasked($data, $maskChar);
     }
 }
