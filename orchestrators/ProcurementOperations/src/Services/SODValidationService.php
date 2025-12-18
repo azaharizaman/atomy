@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementOperations\Services;
 
-use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
-use Nexus\ProcurementOperations\DataProviders\SODComplianceDataProvider;
-use Nexus\ProcurementOperations\DTOs\SODValidationRequest;
-use Nexus\ProcurementOperations\DTOs\SODValidationResult;
+use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Nexus\ProcurementOperations\DTOs\SODViolation;
 use Nexus\ProcurementOperations\Enums\SODConflictType;
-use Nexus\ProcurementOperations\Events\SODValidationPassedEvent;
-use Nexus\ProcurementOperations\Events\SODViolationDetectedEvent;
-use Nexus\ProcurementOperations\Rules\POCreatorInvoiceMatcherSODRule;
+use Nexus\ProcurementOperations\DTOs\SODValidationResult;
+use Nexus\ProcurementOperations\DTOs\SODValidationRequest;
 use Nexus\ProcurementOperations\Rules\ReceiverPayerSODRule;
 use Nexus\ProcurementOperations\Rules\RequestorApproverSODRule;
+use Nexus\ProcurementOperations\Events\SODValidationPassedEvent;
 use Nexus\ProcurementOperations\Rules\VendorCreatorPayerSODRule;
-use Psr\EventDispatcher\EventDispatcherInterface;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Nexus\ProcurementOperations\Events\SODViolationDetectedEvent;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
+use Nexus\ProcurementOperations\Rules\POCreatorInvoiceMatcherSODRule;
+use Nexus\ProcurementOperations\DataProviders\SODComplianceDataProvider;
 
 /**
  * Service for validating Segregation of Duties compliance.

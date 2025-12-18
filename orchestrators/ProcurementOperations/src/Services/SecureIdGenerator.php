@@ -94,6 +94,17 @@ final readonly class SecureIdGenerator implements SecureIdGeneratorInterface
         return sprintf(
             'vnd_%s_%s',
             substr($hash, 0, 8),
+            /**
+             * Generates a secure, unique ID using HMAC-based derivation with a random component.
+             * 
+             * This method creates an ID that is partially deterministic based on the entity ID
+             * and includes a random suffix for enhanced uniqueness and security. The HMAC
+             * ensures the entity-based portion is cryptographically secure, while the random
+             * component prevents ID collision and adds unpredictability.
+             * 
+             * @param string $entityId The entity identifier used as input for HMAC derivation
+             * @return string A 24-character hexadecimal ID (16 chars from HMAC + 8 random chars)
+             */
             $this->randomHex(8),
         );
     }
