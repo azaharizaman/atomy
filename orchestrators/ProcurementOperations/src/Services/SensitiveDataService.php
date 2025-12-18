@@ -40,13 +40,7 @@ final readonly class SensitiveDataService implements SensitiveDataServiceInterfa
      */
     public function maskBankAccount(string $accountNumber): string
     {
-        $length = strlen($accountNumber);
-
-        if ($length <= 4) {
-            return str_repeat('*', $length);
-        }
-
-        return str_repeat('*', $length - 4) . substr($accountNumber, -4);
+        return $this->maskNumericIdentifier($accountNumber);
     }
 
     /**
@@ -76,7 +70,7 @@ final readonly class SensitiveDataService implements SensitiveDataServiceInterfa
     /**
      * @inheritDoc
      */
-    public function encrypt(string $data, ?string $context = null): string
+    public function encrypt(string $data): string
     {
         $encrypted = $this->crypto->encrypt($data);
 
@@ -87,7 +81,7 @@ final readonly class SensitiveDataService implements SensitiveDataServiceInterfa
     /**
      * @inheritDoc
      */
-    public function decrypt(string $encryptedData, ?string $context = null): string
+    public function decrypt(string $encryptedData): string
     {
         // Deserialize from string back to EncryptedData
         $data = json_decode($encryptedData, true, 512, JSON_THROW_ON_ERROR);
@@ -147,18 +141,30 @@ final readonly class SensitiveDataService implements SensitiveDataServiceInterfa
         }
 
         if (isset($masked['routing_number']) && is_string($masked['routing_number'])) {
-            $routing = $masked['routing_number'];
-            $length = strlen($routing);
-            
-            if ($length <= 4) {
-                // Fully mask short routing numbers
-                $masked['routing_number'] = str_repeat('*', $length);
-            } else {
-                $masked['routing_number'] = str_repeat('*', $length - 4) . substr($routing, -4);
-            }
+            $masked['routing_number'] = $this->maskNumericIdentifier($masked['routing_number']);
         }
 
         return $masked;
+    }
+
+    /**
+     * Mask a numeric identifier, showing only the last 4 digits.
+     *
+     * For identifiers with 4 or fewer characters, fully masks them.
+     * For longer identifiers, masks all but the last 4 characters.
+     *
+     * @param string $identifier The numeric identifier to mask
+     * @return string Masked identifier (e.g., "****5678")
+     */
+    private function maskNumericIdentifier(string $identifier): string
+    {
+        $length = strlen($identifier);
+
+        if ($length <= 4) {
+            return str_repeat('*', $length);
+        }
+
+        return str_repeat('*', $length - 4) . substr($identifier, -4);
     }
 
     /**

@@ -56,20 +56,20 @@ interface SensitiveDataServiceInterface
     /**
      * Encrypt sensitive data for storage.
      *
+     * Uses AES-256-GCM authenticated encryption.
+     *
      * @param string $data The data to encrypt
-     * @param string|null $context Optional context for key derivation
-     * @return string Encrypted data
+     * @return string Encrypted data (JSON-encoded EncryptedData)
      */
-    public function encrypt(string $data, ?string $context = null): string;
+    public function encrypt(string $data): string;
 
     /**
      * Decrypt sensitive data from storage.
      *
-     * @param string $encryptedData The data to decrypt
-     * @param string|null $context Optional context for key derivation
+     * @param string $encryptedData The data to decrypt (JSON-encoded EncryptedData)
      * @return string Decrypted data
      */
-    public function decrypt(string $encryptedData, ?string $context = null): string;
+    public function decrypt(string $encryptedData): string;
 
     /**
      * Hash sensitive data for comparison without revealing original.
