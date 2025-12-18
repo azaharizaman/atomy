@@ -30,9 +30,9 @@ final readonly class SensitiveDataService implements SensitiveDataServiceInterfa
     /**
      * @inheritDoc
      */
-    public function maskTaxId(string $taxId): string
+    public function maskTaxId(string $taxId, string $country): string
     {
-        return $this->crypto->maskNationalId($taxId);
+        return $this->crypto->maskNationalId($taxId, $country);
     }
 
     /**

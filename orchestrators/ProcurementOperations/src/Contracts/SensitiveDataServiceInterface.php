@@ -16,9 +16,10 @@ interface SensitiveDataServiceInterface
      * Mask a tax identification number for display.
      *
      * @param string $taxId The tax ID to mask
+     * @param string $country ISO 3166-1 alpha-2 country code (e.g., 'MY', 'US', 'GB')
      * @return string Masked tax ID (e.g., "****1234")
      */
-    public function maskTaxId(string $taxId): string;
+    public function maskTaxId(string $taxId, string $country): string;
 
     /**
      * Mask bank account number for display.

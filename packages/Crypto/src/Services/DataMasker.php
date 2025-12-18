@@ -53,7 +53,9 @@ final readonly class DataMasker implements DataMaskerInterface
             MaskingPattern::EMAIL => $this->maskEmail($data),
             MaskingPattern::PHONE => $this->maskPhone($data),
             MaskingPattern::CREDIT_CARD => $this->maskCreditCard($data),
-            MaskingPattern::NATIONAL_ID => $this->maskNationalId($data),
+            MaskingPattern::NATIONAL_ID => throw new \InvalidArgumentException(
+                'NATIONAL_ID pattern requires country context. Use maskNationalId($data, $country) directly.'
+            ),
             MaskingPattern::IBAN => $this->maskIban($data),
             MaskingPattern::NAME => $this->maskName($data),
             MaskingPattern::ADDRESS => $this->maskAddress($data),
