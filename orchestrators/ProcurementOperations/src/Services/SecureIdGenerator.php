@@ -78,9 +78,10 @@ final readonly class SecureIdGenerator implements SecureIdGeneratorInterface
         // The derivation key should be injected from secure configuration
         if ($this->clientIdDerivationKey === '') {
             // Fallback to random-only generation if no key provided
+            // bin2hex() on 4 bytes produces exactly 8 hex characters
             return sprintf(
                 'vnd_%s_%s',
-                substr(bin2hex($this->crypto->randomBytes(4)), 0, 8),
+                bin2hex($this->crypto->randomBytes(4)),
                 $this->randomHex(8),
             );
         }
