@@ -228,7 +228,7 @@ final readonly class DataMasker implements DataMaskerInterface
     /**
      * @inheritDoc
      */
-    public function maskNationalId(string $nationalId, string $country = 'MY'): string
+    public function maskNationalId(string $nationalId, string $country): string
     {
         return match (strtoupper($country)) {
             'MY' => $this->maskMalaysianIC($nationalId),

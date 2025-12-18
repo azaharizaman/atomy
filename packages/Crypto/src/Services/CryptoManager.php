@@ -438,7 +438,7 @@ final readonly class CryptoManager implements CryptoManagerInterface, KeyRotatio
      * - SG (Singapore): ****567D (shows last 4 of NRIC)
      * - Other: Shows first 2 and last 2 characters
      */
-    public function maskNationalId(string $nationalId, string $country = 'MY'): string
+    public function maskNationalId(string $nationalId, string $country): string
     {
         return $this->dataMasker->maskNationalId($nationalId, $country);
     }

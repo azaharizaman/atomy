@@ -115,10 +115,10 @@ interface DataMaskerInterface
      * - Other: Shows first 2 and last 2 characters
      *
      * @param string $nationalId National ID or SSN
-     * @param string $country ISO 3166-1 alpha-2 country code (default: 'MY')
+     * @param string $country ISO 3166-1 alpha-2 country code (required)
      * @return string Masked national ID
      */
-    public function maskNationalId(string $nationalId, string $country = 'MY'): string;
+    public function maskNationalId(string $nationalId, string $country): string;
 
     /**
      * Mask IBAN
