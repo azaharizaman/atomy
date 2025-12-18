@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\Services;
 
+use Nexus\HumanResourceOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\HumanResourceOperations\DTOs\LeaveApplicationRequest;
 use Nexus\HumanResourceOperations\DTOs\LeaveContext;
 
@@ -16,6 +17,10 @@ use Nexus\HumanResourceOperations\DTOs\LeaveContext;
  */
 final readonly class LeaveBalanceService
 {
+    public function __construct(
+        private ?SecureIdGeneratorInterface $idGenerator = null,
+    ) {}
+
     /**
      * Create leave request and calculate new balance.
      * 
@@ -26,11 +31,16 @@ final readonly class LeaveBalanceService
         LeaveContext $context,
         float $daysRequested
     ): array {
-        // Generate secure UUID for leave request
-        $bytes = random_bytes(16);
-        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
-        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
-        $leaveRequestId = 'leave-' . vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+        // Generate secure UUID for leave request via SecureIdGenerator
+        if ($this->idGenerator !== null) {
+            $leaveRequestId = 'leave-' . $this->idGenerator->generateUuid();
+        } else {
+            // Fallback for backward compatibility
+            $bytes = random_bytes(16);
+            $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+            $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+            $leaveRequestId = 'leave-' . vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+        }
         
         // Calculate new balance
         $newBalance = $context->currentBalance - $daysRequested;

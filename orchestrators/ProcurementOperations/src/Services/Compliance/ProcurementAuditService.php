@@ -8,6 +8,7 @@ use Psr\Log\NullLogger;
 use Psr\Log\LoggerInterface;
 use Nexus\Identity\Contracts\RoleQueryInterface;
 use Nexus\Identity\Contracts\UserQueryInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\Enums\ControlArea;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\ProcurementOperations\Contracts\AuditLoggerAdapterInterface;
@@ -94,6 +95,7 @@ final class ProcurementAuditService implements ProcurementAuditServiceInterface
         private readonly SettingsAdapterInterface $settings,
         private readonly TenantContextInterface $tenantContext,
         private readonly LoggerInterface $logger = new NullLogger(),
+        private readonly ?SecureIdGeneratorInterface $idGenerator = null,
     ) {
     }
 
@@ -1134,22 +1136,38 @@ final class ProcurementAuditService implements ProcurementAuditServiceInterface
 
     private function generateEvidenceId(): string
     {
-        return 'EVD-' . date('Y') . '-' . strtoupper(bin2hex(random_bytes(6)));
+        $hex = $this->idGenerator !== null
+            ? $this->idGenerator->randomHex(6)
+            : bin2hex(random_bytes(6));
+
+        return 'EVD-' . date('Y') . '-' . strtoupper($hex);
     }
 
     private function generateReportId(string $prefix): string
     {
-        return strtoupper($prefix) . '-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
+        $hex = $this->idGenerator !== null
+            ? $this->idGenerator->randomHex(4)
+            : bin2hex(random_bytes(4));
+
+        return strtoupper($prefix) . '-' . date('Ymd') . '-' . strtoupper($hex);
     }
 
     private function generateFindingId(): string
     {
-        return 'FND-' . date('Y') . '-' . strtoupper(bin2hex(random_bytes(6)));
+        $hex = $this->idGenerator !== null
+            ? $this->idGenerator->randomHex(6)
+            : bin2hex(random_bytes(6));
+
+        return 'FND-' . date('Y') . '-' . strtoupper($hex);
     }
 
     private function generateTestId(): string
     {
-        return 'TST-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
+        $hex = $this->idGenerator !== null
+            ? $this->idGenerator->randomHex(4)
+            : bin2hex(random_bytes(4));
+
+        return 'TST-' . date('Ymd') . '-' . strtoupper($hex);
     }
 
     private function getCurrentUserId(): string

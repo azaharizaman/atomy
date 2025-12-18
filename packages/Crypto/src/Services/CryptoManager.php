@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Nexus\Crypto\Contracts\AnonymizerInterface;
 use Nexus\Crypto\Contracts\AsymmetricSignerInterface;
+use Nexus\Crypto\Contracts\CryptoManagerInterface;
 use Nexus\Crypto\Contracts\DataMaskerInterface;
 use Nexus\Crypto\Contracts\HasherInterface;
 use Nexus\Crypto\Contracts\KeyGeneratorInterface;
@@ -39,7 +40,7 @@ use Nexus\Crypto\ValueObjects\SignedData;
  * - Reversible pseudonymization (encryption-based with key management)
  * - Data masking (format-preserving, compliance-aware patterns)
  */
-final readonly class CryptoManager implements KeyRotationServiceInterface
+final readonly class CryptoManager implements CryptoManagerInterface, KeyRotationServiceInterface
 {
     private ?AnonymizerInterface $anonymizer;
     private ?DataMaskerInterface $dataMasker;
@@ -430,9 +431,14 @@ final readonly class CryptoManager implements KeyRotationServiceInterface
     /**
      * Mask national ID with country-specific formatting
      *
-     * Supported countries: MY, US, GB, SG
+     * Format varies by country:
+     * - MY (Malaysia): ******-**-5678 (shows last 4 of 12-digit IC)
+     * - US (USA): ***-**-6789 (shows last 4 of SSN)
+     * - GB/UK (Britain): AB******* (shows first 2 of NIN)
+     * - SG (Singapore): ****567D (shows last 4 of NRIC)
+     * - Other: Shows first 2 and last 2 characters
      */
-    public function maskNationalId(string $nationalId, string $country = 'MY'): string
+    public function maskNationalId(string $nationalId, string $country): string
     {
         return $this->dataMasker->maskNationalId($nationalId, $country);
     }

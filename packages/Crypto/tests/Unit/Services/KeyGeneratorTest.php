@@ -180,18 +180,16 @@ final class KeyGeneratorTest extends TestCase
         $randomBytes = $this->generator->generateRandomBytes(32);
         
         $this->assertNotEmpty($randomBytes);
-        // Result is base64 encoded, so decoded should be 32 bytes
-        $decoded = base64_decode($randomBytes, true);
-        $this->assertSame(32, strlen($decoded));
+        // Result is raw bytes, so should be exactly 32 bytes
+        $this->assertSame(32, strlen($randomBytes));
     }
 
     public function test_generate_random_bytes_various_lengths(): void
     {
         foreach ([16, 32, 64, 128, 256] as $length) {
             $randomBytes = $this->generator->generateRandomBytes($length);
-            $decoded = base64_decode($randomBytes, true);
             
-            $this->assertSame($length, strlen($decoded), "Failed for length: $length");
+            $this->assertSame($length, strlen($randomBytes), "Failed for length: $length");
         }
     }
 
@@ -232,8 +230,7 @@ final class KeyGeneratorTest extends TestCase
         // This should not throw - it's exactly 1MB
         $randomBytes = $this->generator->generateRandomBytes(1048576);
         
-        $decoded = base64_decode($randomBytes, true);
-        $this->assertSame(1048576, strlen($decoded));
+        $this->assertSame(1048576, strlen($randomBytes));
     }
 
     // =====================================================

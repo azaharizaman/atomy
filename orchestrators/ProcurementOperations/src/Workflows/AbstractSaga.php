@@ -7,6 +7,7 @@ namespace Nexus\ProcurementOperations\Workflows;
 use Nexus\ProcurementOperations\Contracts\SagaInterface;
 use Nexus\ProcurementOperations\Contracts\SagaStateInterface;
 use Nexus\ProcurementOperations\Contracts\SagaStepInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\Contracts\WorkflowStorageInterface;
 use Nexus\ProcurementOperations\DTOs\SagaContext;
 use Nexus\ProcurementOperations\DTOs\SagaResult;
@@ -31,6 +32,7 @@ abstract readonly class AbstractSaga implements SagaInterface
         protected WorkflowStorageInterface $storage,
         protected EventDispatcherInterface $eventDispatcher,
         protected ?LoggerInterface $logger = null,
+        protected ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     /**
@@ -354,10 +356,14 @@ abstract readonly class AbstractSaga implements SagaInterface
      */
     protected function generateInstanceId(): string
     {
+        $uniquePart = $this->idGenerator !== null
+            ? $this->idGenerator->randomHex(16)
+            : bin2hex(random_bytes(16));
+
         return sprintf(
             '%s-%s',
             $this->getId(),
-            bin2hex(random_bytes(16))
+            $uniquePart
         );
     }
 }

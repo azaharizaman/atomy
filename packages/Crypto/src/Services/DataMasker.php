@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\Crypto\Services;
 
-use Nexus\Crypto\Contracts\DataMaskerInterface;
-use Nexus\Crypto\Enums\MaskingPattern;
-use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
+use Nexus\Crypto\Enums\MaskingPattern;
+use Nexus\Crypto\Contracts\DataMaskerInterface;
 
 /**
  * DataMasker Service
@@ -53,7 +53,6 @@ final readonly class DataMasker implements DataMaskerInterface
             MaskingPattern::EMAIL => $this->maskEmail($data),
             MaskingPattern::PHONE => $this->maskPhone($data),
             MaskingPattern::CREDIT_CARD => $this->maskCreditCard($data),
-            MaskingPattern::NATIONAL_ID => $this->maskNationalId($data),
             MaskingPattern::IBAN => $this->maskIban($data),
             MaskingPattern::NAME => $this->maskName($data),
             MaskingPattern::ADDRESS => $this->maskAddress($data),
@@ -228,7 +227,7 @@ final readonly class DataMasker implements DataMaskerInterface
     /**
      * @inheritDoc
      */
-    public function maskNationalId(string $nationalId, string $country = 'MY'): string
+    public function maskNationalId(string $nationalId, string $country): string
     {
         return match (strtoupper($country)) {
             'MY' => $this->maskMalaysianIC($nationalId),

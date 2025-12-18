@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\ProcurementOperations\Strategies\BankFile;
 
 use Nexus\Common\ValueObjects\Money;
+use Nexus\ProcurementOperations\Contracts\HashingServiceInterface;
 use Nexus\ProcurementOperations\DTOs\BankFile\BankFileResultInterface;
 use Nexus\ProcurementOperations\DTOs\Financial\PaymentBatchData;
 use Nexus\ProcurementOperations\DTOs\Financial\PaymentItemData;
@@ -17,7 +18,7 @@ use Psr\Log\NullLogger;
  *
  * Provides common functionality for:
  * - File naming conventions
- * - Checksum generation
+ * - Checksum generation (via HashingServiceInterface for algorithm agility)
  * - Validation helpers
  * - Amount formatting
  */
@@ -27,6 +28,7 @@ abstract readonly class AbstractBankFileGenerator implements BankFileGeneratorIn
 
     public function __construct(
         protected LoggerInterface $logger = new NullLogger(),
+        protected ?HashingServiceInterface $hashingService = null,
     ) {}
 
     abstract public function getFormat(): BankFileFormat;
@@ -81,9 +83,18 @@ abstract readonly class AbstractBankFileGenerator implements BankFileGeneratorIn
 
     /**
      * Calculate SHA-256 checksum of file content.
+     *
+     * Uses HashingServiceInterface when available for algorithm agility
+     * and post-quantum cryptography (PQC) readiness. Falls back to
+     * native hash() function for backward compatibility.
      */
     protected function calculateChecksum(string $content): string
     {
+        if ($this->hashingService !== null) {
+            return $this->hashingService->calculateChecksum($content);
+        }
+
+        // Fallback for backward compatibility
         return hash('sha256', $content);
     }
 

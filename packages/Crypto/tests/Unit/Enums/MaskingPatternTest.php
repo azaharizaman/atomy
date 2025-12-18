@@ -17,11 +17,10 @@ final class MaskingPatternTest extends TestCase
     {
         $cases = MaskingPattern::cases();
         
-        $this->assertCount(9, $cases);
+        $this->assertCount(8, $cases);
         $this->assertContains(MaskingPattern::EMAIL, $cases);
         $this->assertContains(MaskingPattern::PHONE, $cases);
         $this->assertContains(MaskingPattern::CREDIT_CARD, $cases);
-        $this->assertContains(MaskingPattern::NATIONAL_ID, $cases);
         $this->assertContains(MaskingPattern::IBAN, $cases);
         $this->assertContains(MaskingPattern::NAME, $cases);
         $this->assertContains(MaskingPattern::ADDRESS, $cases);
@@ -34,7 +33,6 @@ final class MaskingPatternTest extends TestCase
         $this->assertSame('email', MaskingPattern::EMAIL->value);
         $this->assertSame('phone', MaskingPattern::PHONE->value);
         $this->assertSame('credit_card', MaskingPattern::CREDIT_CARD->value);
-        $this->assertSame('national_id', MaskingPattern::NATIONAL_ID->value);
         $this->assertSame('iban', MaskingPattern::IBAN->value);
         $this->assertSame('name', MaskingPattern::NAME->value);
         $this->assertSame('address', MaskingPattern::ADDRESS->value);
@@ -51,7 +49,6 @@ final class MaskingPatternTest extends TestCase
         $this->assertSame('Email Address', MaskingPattern::EMAIL->getLabel());
         $this->assertSame('Phone Number', MaskingPattern::PHONE->getLabel());
         $this->assertSame('Credit Card', MaskingPattern::CREDIT_CARD->getLabel());
-        $this->assertSame('National ID / SSN', MaskingPattern::NATIONAL_ID->getLabel());
         $this->assertSame('IBAN / Bank Account', MaskingPattern::IBAN->getLabel());
         $this->assertSame('Personal Name', MaskingPattern::NAME->getLabel());
         $this->assertSame('Mailing Address', MaskingPattern::ADDRESS->getLabel());
@@ -68,7 +65,6 @@ final class MaskingPatternTest extends TestCase
         $this->assertSame('j*******@example.com', MaskingPattern::EMAIL->getExample());
         $this->assertSame('+1 (***) ***-4567', MaskingPattern::PHONE->getExample());
         $this->assertSame('****-****-****-1234', MaskingPattern::CREDIT_CARD->getExample());
-        $this->assertSame('***-**-6789', MaskingPattern::NATIONAL_ID->getExample());
         $this->assertSame('DE**************3000', MaskingPattern::IBAN->getExample());
         $this->assertSame('J*** D**', MaskingPattern::NAME->getExample());
         $this->assertSame('123 **** Street, ****', MaskingPattern::ADDRESS->getExample());
@@ -139,12 +135,6 @@ final class MaskingPatternTest extends TestCase
         $this->assertContains('GDPR', $standards);
         $this->assertContains('HIPAA', $standards);
         $this->assertContains('PCI-DSS', $standards);
-    }
-
-    public function test_national_id_complies_with_pdpa(): void
-    {
-        $standards = MaskingPattern::NATIONAL_ID->getComplianceStandards();
-        $this->assertContains('PDPA', $standards);
     }
 
     public function test_full_redaction_complies_with_all_major_standards(): void

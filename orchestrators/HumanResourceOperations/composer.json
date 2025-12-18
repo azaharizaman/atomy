@@ -18,6 +18,7 @@
         "nexus/payroll": "*@dev",
         "nexus/payroll-mys-statutory": "*@dev",
         "nexus/identity": "*@dev",
+        "nexus/crypto": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -37,6 +38,13 @@
         {
             "type": "path",
             "url": "../../packages/HRM/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path", 
+            "url": "../../packages/*",
             "options": {
                 "symlink": true
             }

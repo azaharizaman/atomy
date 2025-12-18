@@ -6,6 +6,7 @@ namespace Nexus\ProcurementOperations\Strategies\Payment;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\PaymentMethodStrategyInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\PaymentExecutionResult;
 use Nexus\ProcurementOperations\DTOs\PaymentRequest;
 use Nexus\ProcurementOperations\Enums\PaymentMethod;
@@ -24,6 +25,7 @@ final readonly class AchPaymentStrategy implements PaymentMethodStrategyInterfac
 
     public function __construct(
         private string $currency = 'MYR',
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     public function getMethod(): string
@@ -76,7 +78,9 @@ final readonly class AchPaymentStrategy implements PaymentMethodStrategyInterfac
         }
 
         // In real implementation, this would integrate with ACH processor
-        $paymentId = 'ACH-' . bin2hex(random_bytes(8));
+        $paymentId = $this->idGenerator !== null
+            ? $this->idGenerator->generateId('ACH-', 8)
+            : 'ACH-' . bin2hex(random_bytes(8));
         $transactionRef = 'ACH' . date('Ymd') . random_int(100000, 999999);
 
         return PaymentExecutionResult::success(

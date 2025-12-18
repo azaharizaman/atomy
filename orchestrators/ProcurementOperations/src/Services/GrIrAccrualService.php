@@ -6,6 +6,7 @@ namespace Nexus\ProcurementOperations\Services;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\AccrualManagementServiceInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\Financial\GrIrAccrualData;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
@@ -38,6 +39,7 @@ final readonly class GrIrAccrualService implements AccrualManagementServiceInter
     public function __construct(
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger = new NullLogger(),
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     /**
@@ -499,6 +501,10 @@ final readonly class GrIrAccrualService implements AccrualManagementServiceInter
      */
     private function generateAccrualId(): string
     {
+        if ($this->idGenerator !== null) {
+            return $this->idGenerator->generateId('accr-', 12);
+        }
+
         return 'accr-' . bin2hex(random_bytes(12));
     }
 }

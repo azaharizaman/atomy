@@ -107,14 +107,18 @@ interface DataMaskerInterface
     /**
      * Mask national ID / SSN
      *
-     * Format: ***-**-6789
-     * - Shows only last 4 digits
-     * - Preserves separator structure for recognition
+     * Format varies by country:
+     * - MY (Malaysia): ******-**-5678 (shows last 4 of 12-digit IC)
+     * - US (USA): ***-**-6789 (shows last 4 of SSN)
+     * - GB/UK (Britain): AB******* (shows first 2 of NIN)
+     * - SG (Singapore): ****567D (shows last 4 of NRIC)
+     * - Other: Shows first 2 and last 2 characters
      *
      * @param string $nationalId National ID or SSN
+     * @param string $country ISO 3166-1 alpha-2 country code (required)
      * @return string Masked national ID
      */
-    public function maskNationalId(string $nationalId): string;
+    public function maskNationalId(string $nationalId, string $country): string;
 
     /**
      * Mask IBAN

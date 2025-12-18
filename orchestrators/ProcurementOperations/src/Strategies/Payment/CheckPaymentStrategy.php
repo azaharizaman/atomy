@@ -6,6 +6,7 @@ namespace Nexus\ProcurementOperations\Strategies\Payment;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\PaymentMethodStrategyInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\PaymentExecutionResult;
 use Nexus\ProcurementOperations\DTOs\PaymentRequest;
 use Nexus\ProcurementOperations\Enums\PaymentMethod;
@@ -24,6 +25,7 @@ final readonly class CheckPaymentStrategy implements PaymentMethodStrategyInterf
 
     public function __construct(
         private string $currency = 'MYR',
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     public function getMethod(): string
@@ -72,7 +74,9 @@ final readonly class CheckPaymentStrategy implements PaymentMethodStrategyInterf
         }
 
         // In real implementation, this would integrate with check printing/mailing service
-        $paymentId = 'CHK-' . bin2hex(random_bytes(8));
+        $paymentId = $this->idGenerator !== null
+            ? $this->idGenerator->generateId('CHK-', 8)
+            : 'CHK-' . bin2hex(random_bytes(8));
         $checkNumber = 'CHK' . date('Ymd') . random_int(100000, 999999);
 
         return PaymentExecutionResult::success(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\Workflows\Onboarding;
 
+use Nexus\HumanResourceOperations\Contracts\SecureIdGeneratorInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -27,6 +28,7 @@ final readonly class OnboardingWorkflow
 {
     public function __construct(
         private LoggerInterface $logger = new NullLogger(),
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     /**
@@ -39,10 +41,15 @@ final readonly class OnboardingWorkflow
         ]);
 
         // Create workflow instance with cryptographically secure UUID
-        $bytes = random_bytes(16);
-        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
-        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
-        $workflowId = 'onboarding-' . vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+        if ($this->idGenerator !== null) {
+            $workflowId = 'onboarding-' . $this->idGenerator->generateUuid();
+        } else {
+            // Fallback for backward compatibility
+            $bytes = random_bytes(16);
+            $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+            $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+            $workflowId = 'onboarding-' . vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+        }
 
         // Implementation: Persist workflow state
         // Step through each onboarding phase
