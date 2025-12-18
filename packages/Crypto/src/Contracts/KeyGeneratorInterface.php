@@ -44,8 +44,13 @@ interface KeyGeneratorInterface
     /**
      * Generate cryptographically secure random bytes
      *
-     * @param int $length Number of bytes to generate
-     * @return string Base64-encoded random bytes
+     * Returns raw binary bytes suitable for cryptographic operations.
+     * Use bin2hex() to convert to hex string, or base64_encode() for
+     * text-safe representation.
+     *
+     * @param int $length Number of bytes to generate (1 to 1048576)
+     * @return string Raw binary bytes (NOT base64-encoded)
+     * @throws \InvalidArgumentException If length is invalid
      */
     public function generateRandomBytes(int $length): string;
 }
