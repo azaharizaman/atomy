@@ -40,8 +40,14 @@ interface SecureIdGeneratorInterface
     /**
      * Generate hex-encoded random bytes.
      *
-     * @param int $length Number of bytes before hex encoding
-     * @return string Hex-encoded random bytes
+     * The output string length is 2 * $length since each byte
+     * produces 2 hex characters. Examples:
+     * - randomHex(4) returns 8 hex characters
+     * - randomHex(8) returns 16 hex characters
+     * - randomHex(16) returns 32 hex characters
+     *
+     * @param int $length Number of random bytes to generate
+     * @return string Hex-encoded random bytes (length = 2 * $length)
      */
     public function randomHex(int $length): string;
 }

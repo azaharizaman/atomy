@@ -65,6 +65,14 @@ final readonly class SecureIdGenerator implements SecureIdGeneratorInterface
     }
 
     /**
+     * Generate hex-encoded random bytes.
+     *
+     * Note: Each byte produces 2 hex characters, so the output
+     * string length is 2 * $length. For example:
+     * - randomHex(4) returns 8 hex characters
+     * - randomHex(8) returns 16 hex characters
+     * - randomHex(16) returns 32 hex characters
+     *
      * @inheritDoc
      */
     public function randomHex(int $length): string

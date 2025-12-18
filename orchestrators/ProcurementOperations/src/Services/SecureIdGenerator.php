@@ -19,11 +19,23 @@ use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
  *
  * This implementation leverages Nexus\Crypto for post-quantum
  * cryptography (PQC) readiness and algorithm agility.
+ *
+ * Note on randomHex(): The length parameter specifies the number of
+ * random bytes to generate. Since each byte becomes 2 hex characters,
+ * the output string length is 2 * $length. For example, randomHex(8)
+ * returns 16 hex characters.
  */
 final readonly class SecureIdGenerator implements SecureIdGeneratorInterface
 {
+    /**
+     * @param CryptoManagerInterface $crypto Crypto operations provider
+     * @param string $clientIdDerivationKey Secret key for deterministic client ID derivation.
+     *                                       Should be stored in secure configuration, not hardcoded.
+     *                                       Minimum 32 bytes recommended for HMAC-SHA256.
+     */
     public function __construct(
         private CryptoManagerInterface $crypto,
+        private string $clientIdDerivationKey = '',
     ) {}
 
     /**
@@ -63,9 +75,19 @@ final readonly class SecureIdGenerator implements SecureIdGeneratorInterface
     public function generateClientId(string $entityId): string
     {
         // Use HMAC-based derivation for deterministic but secure client IDs
+        // The derivation key should be injected from secure configuration
+        if ($this->clientIdDerivationKey === '') {
+            // Fallback to random-only generation if no key provided
+            return sprintf(
+                'vnd_%s_%s',
+                substr(bin2hex($this->crypto->randomBytes(4)), 0, 8),
+                $this->randomHex(8),
+            );
+        }
+
         $hash = $this->crypto->hmac(
             data: $entityId,
-            secret: 'client_id_derivation_key',
+            secret: $this->clientIdDerivationKey,
         );
 
         return sprintf(
@@ -100,6 +122,14 @@ final readonly class SecureIdGenerator implements SecureIdGeneratorInterface
     }
 
     /**
+     * Generate hex-encoded random bytes.
+     *
+     * Note: Each byte produces 2 hex characters, so the output
+     * string length is 2 * $length. For example:
+     * - randomHex(4) returns 8 hex characters
+     * - randomHex(8) returns 16 hex characters
+     * - randomHex(16) returns 32 hex characters
+     *
      * @inheritDoc
      */
     public function randomHex(int $length): string
