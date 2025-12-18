@@ -148,7 +148,14 @@ final readonly class SensitiveDataService implements SensitiveDataServiceInterfa
 
         if (isset($masked['routing_number']) && is_string($masked['routing_number'])) {
             $routing = $masked['routing_number'];
-            $masked['routing_number'] = str_repeat('*', strlen($routing) - 4) . substr($routing, -4);
+            $length = strlen($routing);
+            
+            if ($length <= 4) {
+                // Fully mask short routing numbers
+                $masked['routing_number'] = str_repeat('*', $length);
+            } else {
+                $masked['routing_number'] = str_repeat('*', $length - 4) . substr($routing, -4);
+            }
         }
 
         return $masked;
