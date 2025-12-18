@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\ProcurementOperations\Services;
 
 use Nexus\Crypto\Contracts\CryptoManagerInterface;
+use Nexus\Crypto\Enums\HashAlgorithm;
 use Nexus\ProcurementOperations\Contracts\HashingServiceInterface;
 
 /**
@@ -25,7 +26,7 @@ final readonly class HashingService implements HashingServiceInterface
      */
     public function sha256(string $content): string
     {
-        $result = $this->crypto->hash($content, 'sha256');
+        $result = $this->crypto->hash($content, HashAlgorithm::SHA256);
 
         return $result->hash;
     }
@@ -35,7 +36,7 @@ final readonly class HashingService implements HashingServiceInterface
      */
     public function sha512(string $content): string
     {
-        $result = $this->crypto->hash($content, 'sha512');
+        $result = $this->crypto->hash($content, HashAlgorithm::SHA512);
 
         return $result->hash;
     }
@@ -45,7 +46,7 @@ final readonly class HashingService implements HashingServiceInterface
      */
     public function blake2b(string $content): string
     {
-        $result = $this->crypto->hash($content, 'blake2b');
+        $result = $this->crypto->hash($content, HashAlgorithm::BLAKE2B);
 
         return $result->hash;
     }

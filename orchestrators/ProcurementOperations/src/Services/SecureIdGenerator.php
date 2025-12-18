@@ -65,7 +65,7 @@ final readonly class SecureIdGenerator implements SecureIdGeneratorInterface
         // Use HMAC-based derivation for deterministic but secure client IDs
         $hash = $this->crypto->hmac(
             data: $entityId,
-            key: 'client_id_derivation_key',
+            secret: 'client_id_derivation_key',
         );
 
         return sprintf(
