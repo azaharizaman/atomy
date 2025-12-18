@@ -1,23 +1,42 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.2  
-**Last Updated:** December 9, 2025  
+**Version:** 1.3  
+**Last Updated:** December 18, 2025  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
 
-**Recent Updates (December 2025):**
-- **NEW:** Added `Nexus\ProcurementOperations` orchestrator - Complete P2P workflow coordination (~30% coverage, see improvement areas)
-- **NEW:** Added `Nexus\AccountingOperations` orchestrator - Financial workflow coordination (period close, consolidation, ratios)
-- **NEW:** Added `Nexus\HumanResourceOperations` orchestrator - HR workflow coordination (hiring, attendance, payroll)
-- **NEW:** Added `Nexus\FinancialStatements` - Statement generation engine (Balance Sheet, P&L, Cash Flow)
-- **NEW:** Added `Nexus\FinancialRatios` - Financial ratio analysis (DuPont, liquidity, profitability)
-- **NEW:** Added `Nexus\AccountConsolidation` - Multi-entity consolidation
-- **NEW:** Added `Nexus\AccountPeriodClose` - Period close management
-- **NEW:** Added `Nexus\AccountVarianceAnalysis` - Budget vs actual variance analysis
-- **NEW:** Added `Nexus\ProcurementML` - Procurement-specific ML feature extractors
-- **NEW:** Added `Nexus\PerformanceReview` - Employee performance review management
-- **IMPROVED:** Total package count increased from 52 to 61 atomic packages
+**Recent Updates (December 18, 2025):**
+- **NEW:** Added `Nexus\KycVerification` - KYC verification, risk assessment, beneficial ownership tracking
+- **NEW:** Added `Nexus\AmlCompliance` - Anti-Money Laundering risk scoring and transaction monitoring
+- **NEW:** Added `Nexus\DataPrivacy` - Regulation-agnostic data privacy foundation (DSAR, consent, retention)
+- **NEW:** Added `Nexus\GDPR` - EU GDPR compliance extension (30-day DSAR, 72-hour breach notification)
+- **NEW:** Added `Nexus\PDPA` - Malaysian PDPA compliance extension
+- **NEW:** Added `Nexus\Sanctions` - International sanctions screening and PEP detection (FATF-compliant)
+- **NEW:** Added `Nexus\Crypto` - Cryptographic primitives with post-quantum readiness
+- **NEW:** Added HRM Sub-Package Suite under `packages/HRM/`:
+  - `Nexus\HRM\Leave` - Leave management, accrual strategies, carry-forward
+  - `Nexus\HRM\Attendance` - Check-in/out, schedules, overtime calculation
+  - `Nexus\HRM\Shift` - Shift scheduling and templates
+  - `Nexus\HRM\EmployeeProfile` - Employee lifecycle and contracts
+  - `Nexus\HRM\PayrollCore` - Payslip generation and calculations
+  - `Nexus\HRM\Recruitment` - Job posting, ATS, hiring decision engine
+  - `Nexus\HRM\Training` - Course management and certifications
+  - `Nexus\HRM\Onboarding` - Onboarding checklists and probation tracking
+  - `Nexus\HRM\Disciplinary` - Misconduct cases, sanctions, policy enforcement
+- **IMPROVED:** Total package count increased from 61 to 78 atomic packages
 - **IMPROVED:** Total orchestrator count: 3 production-ready orchestrators
+
+**Previous Updates (December 2025):**
+- Added `Nexus\ProcurementOperations` orchestrator - Complete P2P workflow coordination (~30% coverage)
+- Added `Nexus\AccountingOperations` orchestrator - Financial workflow coordination (period close, consolidation, ratios)
+- Added `Nexus\HumanResourceOperations` orchestrator - HR workflow coordination (hiring, attendance, payroll)
+- Added `Nexus\FinancialStatements` - Statement generation engine (Balance Sheet, P&L, Cash Flow)
+- Added `Nexus\FinancialRatios` - Financial ratio analysis (DuPont, liquidity, profitability)
+- Added `Nexus\AccountConsolidation` - Multi-entity consolidation
+- Added `Nexus\AccountPeriodClose` - Period close management
+- Added `Nexus\AccountVarianceAnalysis` - Budget vs actual variance analysis
+- Added `Nexus\ProcurementML` - Procurement-specific ML feature extractors
+- Added `Nexus\PerformanceReview` - Employee performance review management
 
 **Previous Updates (November 2025):**
 - Added `Nexus\Manufacturing` - Complete MRP II (BOM, Routing, Work Orders, Capacity Planning, ML Forecasting)
@@ -53,6 +72,12 @@
 | Managing multi-tenancy context | Use `Nexus\Tenant\Contracts\TenantContextInterface` |
 | Handling currency conversions | Use `Nexus\Currency\Contracts\CurrencyManagerInterface` |
 | Processing events | Use `Nexus\EventStream` or publish to event dispatcher |
+| **Building KYC verification** | **Use `Nexus\KycVerification\Contracts\KycVerificationManagerInterface`** |
+| **Creating AML risk scoring** | **Use `Nexus\AmlCompliance\Contracts\AmlRiskAssessorInterface`** |
+| **Managing data privacy/consent** | **Use `Nexus\DataPrivacy\Contracts\ConsentManagerInterface`** |
+| **Screening against sanctions lists** | **Use `Nexus\Sanctions\Contracts\SanctionsScreenerInterface`** |
+| **Custom encryption/hashing** | **Use `Nexus\Crypto\Contracts\CryptoManagerInterface`** |
+| **Managing leave/attendance** | **Use `Nexus\HRM\Leave` or `Nexus\HRM\Attendance` packages** |
 
 ---
 
@@ -1474,6 +1499,170 @@ use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
 
 ---
 
+#### **HRM Sub-Package Suite (`packages/HRM/`)**
+
+The HRM package suite provides granular, domain-specific HR functionality as independent atomic packages:
+
+##### **Nexus\HRM\Leave**
+**Capabilities:**
+- Leave application and approval workflows
+- Leave balance tracking and calculations
+- Accrual strategies (monthly, annual, pro-rated)
+- Carry-forward rules and expiry
+- Leave types configuration (annual, sick, unpaid, etc.)
+- Public holiday integration
+
+**Key Interfaces:**
+```php
+use Nexus\HRM\Leave\Contracts\LeaveManagerInterface;
+use Nexus\HRM\Leave\Contracts\LeaveBalanceCalculatorInterface;
+use Nexus\HRM\Leave\Contracts\AccrualStrategyInterface;
+```
+
+---
+
+##### **Nexus\HRM\Attendance**
+**Capabilities:**
+- Check-in/check-out tracking
+- Work schedule management
+- Overtime calculation and approval
+- Late/early departure tracking
+- Attendance anomaly detection
+- Geolocation-based attendance
+
+**Key Interfaces:**
+```php
+use Nexus\HRM\Attendance\Contracts\AttendanceManagerInterface;
+use Nexus\HRM\Attendance\Contracts\OvertimeCalculatorInterface;
+use Nexus\HRM\Attendance\Contracts\ScheduleManagerInterface;
+```
+
+---
+
+##### **Nexus\HRM\Shift**
+**Capabilities:**
+- Shift template creation and management
+- Shift scheduling and assignment
+- Rotating shift patterns
+- Shift swap requests
+- Coverage tracking
+
+**Key Interfaces:**
+```php
+use Nexus\HRM\Shift\Contracts\ShiftManagerInterface;
+use Nexus\HRM\Shift\Contracts\ShiftSchedulerInterface;
+```
+
+---
+
+##### **Nexus\HRM\EmployeeProfile**
+**Capabilities:**
+- Employee lifecycle management (hire, transfer, terminate)
+- Employment contracts and amendments
+- Position and department assignments
+- Personal information management
+- Emergency contacts
+- Employment history tracking
+
+**Key Interfaces:**
+```php
+use Nexus\HRM\EmployeeProfile\Contracts\EmployeeManagerInterface;
+use Nexus\HRM\EmployeeProfile\Contracts\ContractManagerInterface;
+use Nexus\HRM\EmployeeProfile\Contracts\PositionManagerInterface;
+```
+
+---
+
+##### **Nexus\HRM\PayrollCore**
+**Capabilities:**
+- Payslip generation engine
+- Earnings and deductions processing
+- Payroll period management
+- Tax and statutory integration hooks
+- Payroll approval workflows
+- Payment file generation
+
+**Key Interfaces:**
+```php
+use Nexus\HRM\PayrollCore\Contracts\PayslipGeneratorInterface;
+use Nexus\HRM\PayrollCore\Contracts\EarningsCalculatorInterface;
+use Nexus\HRM\PayrollCore\Contracts\DeductionsCalculatorInterface;
+```
+
+---
+
+##### **Nexus\HRM\Recruitment**
+**Capabilities:**
+- Job posting and requisition management
+- Applicant Tracking System (ATS)
+- Interview scheduling and feedback
+- Hiring decision engine
+- Offer letter generation
+- Candidate pipeline management
+
+**Key Interfaces:**
+```php
+use Nexus\HRM\Recruitment\Contracts\RecruitmentManagerInterface;
+use Nexus\HRM\Recruitment\Contracts\ApplicantTrackerInterface;
+use Nexus\HRM\Recruitment\Contracts\HiringDecisionEngineInterface;
+```
+
+---
+
+##### **Nexus\HRM\Training**
+**Capabilities:**
+- Course and curriculum management
+- Training enrollment and scheduling
+- Certification tracking and expiry
+- Skill gap analysis
+- Training completion tracking
+- E-learning integration hooks
+
+**Key Interfaces:**
+```php
+use Nexus\HRM\Training\Contracts\TrainingManagerInterface;
+use Nexus\HRM\Training\Contracts\CertificationTrackerInterface;
+use Nexus\HRM\Training\Contracts\CourseManagerInterface;
+```
+
+---
+
+##### **Nexus\HRM\Onboarding**
+**Capabilities:**
+- Onboarding checklist management
+- Task assignment and tracking
+- Probation period management
+- Welcome package configuration
+- New hire documentation collection
+- Integration with IT/Admin provisioning
+
+**Key Interfaces:**
+```php
+use Nexus\HRM\Onboarding\Contracts\OnboardingManagerInterface;
+use Nexus\HRM\Onboarding\Contracts\ChecklistManagerInterface;
+use Nexus\HRM\Onboarding\Contracts\ProbationTrackerInterface;
+```
+
+---
+
+##### **Nexus\HRM\Disciplinary**
+**Capabilities:**
+- Misconduct case management
+- Disciplinary action tracking
+- Sanction application (warning, suspension, termination)
+- Policy violation documentation
+- Appeal process management
+- Case investigation workflows
+
+**Key Interfaces:**
+```php
+use Nexus\HRM\Disciplinary\Contracts\DisciplinaryManagerInterface;
+use Nexus\HRM\Disciplinary\Contracts\CaseInvestigatorInterface;
+use Nexus\HRM\Disciplinary\Contracts\SanctionManagerInterface;
+```
+
+---
+
 #### **Nexus\Payroll**
 **Capabilities:**
 - Payroll processing framework
@@ -2116,21 +2305,344 @@ use Nexus\CashManagement\Contracts\BankAccountManagerInterface;
 
 #### **Nexus\Crypto**
 **Capabilities:**
-- Encryption/decryption
-- Key management
-- Hashing
-- Digital signatures
-- Secure token generation
+- **Symmetric Encryption**: AES-256-GCM with authenticated encryption
+- **Asymmetric Encryption**: RSA-OAEP, ECDSA key pairs
+- **Hashing**: SHA-256/384/512, BLAKE3 with algorithm agility
+- **Key Management**: Key generation, rotation, derivation (HKDF, PBKDF2)
+- **Digital Signatures**: Ed25519, ECDSA with verification
+- **Secure Token Generation**: CSPRNG-based tokens and UUIDs
+- **Post-Quantum Readiness**: Phase 1 (awareness), Phase 2 (hybrid), Phase 3 (full PQC)
+- **Algorithm Agility**: Runtime algorithm switching without code changes
+
+**When to Use:**
+- ✅ Encrypt sensitive data at rest (PII, financial data)
+- ✅ Generate secure API tokens and session identifiers
+- ✅ Digital signature verification for document integrity
+- ✅ Key derivation for password-based encryption
+- ✅ Prepare for post-quantum cryptography migration
 
 **Key Interfaces:**
 ```php
-use Nexus\FinancialRatios\Contracts\BenchmarkProviderInterface;
-use Nexus\FinancialStatements\Contracts\LayoutManagerInterface;
+use Nexus\Crypto\Contracts\CryptoManagerInterface;
+use Nexus\Crypto\Contracts\KeyManagerInterface;
+use Nexus\Crypto\Contracts\HashManagerInterface;
+use Nexus\Crypto\Contracts\SignatureManagerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Encrypt sensitive data with algorithm agility
+public function __construct(
+    private readonly CryptoManagerInterface $crypto
+) {}
+
+public function encryptDocument(string $content): EncryptedPayload
+{
+    return $this->crypto->encrypt(
+        plaintext: $content,
+        algorithm: 'aes-256-gcm', // Can be changed via config
+        context: ['document_type' => 'contract']
+    );
+}
+
+// Generate secure tokens
+public function generateApiToken(): string
+{
+    return $this->crypto->generateSecureToken(length: 32);
+}
 ```
 
 ---
 
-### 📈 **18. Financial Analysis Packages**
+### 🛡️ **18. Compliance & Regulatory**
+
+#### **Nexus\KycVerification**
+**Capabilities:**
+- **Customer Verification**: Identity verification lifecycle management
+- **Risk Assessment**: Risk scoring (LOW/MEDIUM/HIGH/CRITICAL) with configurable rules
+- **Beneficial Ownership**: UBO tracking with ownership percentage validation
+- **Document Verification**: ID document validation with expiry tracking
+- **Review Scheduling**: Automated periodic review scheduling (annual, bi-annual, etc.)
+- **Verification Workflow**: Status tracking (PENDING → IN_REVIEW → APPROVED/REJECTED)
+
+**When to Use:**
+- ✅ Customer onboarding identity verification
+- ✅ Beneficial ownership tracking for corporate customers
+- ✅ Risk-based customer categorization
+- ✅ Periodic KYC review automation
+- ✅ Compliance with AML/CFT regulations
+
+**Key Interfaces:**
+```php
+use Nexus\KycVerification\Contracts\KycVerificationManagerInterface;
+use Nexus\KycVerification\Contracts\RiskAssessmentInterface;
+use Nexus\KycVerification\Contracts\BeneficialOwnershipInterface;
+use Nexus\KycVerification\Contracts\DocumentVerificationInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Initiate KYC verification for customer
+public function __construct(
+    private readonly KycVerificationManagerInterface $kycManager
+) {}
+
+public function verifyCustomer(string $customerId): KycVerificationResult
+{
+    return $this->kycManager->initiateVerification(
+        entityType: 'customer',
+        entityId: $customerId,
+        verificationType: 'ENHANCED_DUE_DILIGENCE',
+        requiredDocuments: ['passport', 'proof_of_address']
+    );
+}
+
+public function assessRisk(string $verificationId): RiskAssessment
+{
+    return $this->kycManager->assessRisk($verificationId, [
+        'country_risk' => 'HIGH',
+        'transaction_volume' => 'MEDIUM',
+        'pep_status' => false,
+    ]);
+}
+```
+
+---
+
+#### **Nexus\AmlCompliance**
+**Capabilities:**
+- **Risk Scoring**: 0-100 AML risk score calculation with weighted factors
+- **Transaction Monitoring**: Pattern detection for suspicious activity
+- **SAR Generation**: Suspicious Activity Report generation and filing
+- **Threshold Monitoring**: Large transaction detection and reporting
+- **Case Management**: Investigation workflow for flagged transactions
+- **Regulatory Reporting**: Automated compliance report generation
+
+**When to Use:**
+- ✅ AML risk scoring for customers and transactions
+- ✅ Suspicious transaction detection and alerting
+- ✅ SAR filing workflow
+- ✅ Cash threshold monitoring
+- ✅ Compliance with BSA/AML regulations
+
+**Key Interfaces:**
+```php
+use Nexus\AmlCompliance\Contracts\AmlRiskAssessorInterface;
+use Nexus\AmlCompliance\Contracts\TransactionMonitorInterface;
+use Nexus\AmlCompliance\Contracts\SarGeneratorInterface;
+use Nexus\AmlCompliance\Contracts\CaseManagerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Assess AML risk for transaction
+public function __construct(
+    private readonly AmlRiskAssessorInterface $amlAssessor,
+    private readonly TransactionMonitorInterface $monitor
+) {}
+
+public function assessTransaction(Transaction $transaction): AmlRiskResult
+{
+    $riskScore = $this->amlAssessor->calculateRisk(
+        transaction: $transaction,
+        factors: [
+            'amount' => $transaction->getAmount(),
+            'country' => $transaction->getDestinationCountry(),
+            'customer_risk' => $this->getCustomerRiskLevel($transaction->getCustomerId()),
+        ]
+    );
+    
+    // Auto-flag if score exceeds threshold
+    if ($riskScore->getScore() >= 75) {
+        $this->monitor->flagForReview($transaction->getId(), $riskScore);
+    }
+    
+    return $riskScore;
+}
+```
+
+---
+
+#### **Nexus\DataPrivacy**
+**Capabilities:**
+- **Consent Management**: Opt-in/opt-out tracking with purpose-based consent
+- **DSAR Handling**: Data Subject Access Request workflow (30/45 day configurable)
+- **Data Retention**: Configurable retention policies by data category
+- **Breach Management**: Breach detection, assessment, and notification workflow
+- **Data Inventory**: Personal data mapping and classification
+- **Right to Erasure**: Automated data deletion with audit trail
+
+**When to Use:**
+- ✅ Manage user consent for data processing
+- ✅ Handle data subject access requests
+- ✅ Implement data retention policies
+- ✅ Data breach incident management
+- ✅ Foundation for GDPR/PDPA/CCPA compliance
+
+**Key Interfaces:**
+```php
+use Nexus\DataPrivacy\Contracts\ConsentManagerInterface;
+use Nexus\DataPrivacy\Contracts\DsarHandlerInterface;
+use Nexus\DataPrivacy\Contracts\RetentionPolicyInterface;
+use Nexus\DataPrivacy\Contracts\BreachManagerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Record user consent
+public function __construct(
+    private readonly ConsentManagerInterface $consentManager
+) {}
+
+public function recordMarketingConsent(string $userId, bool $consented): void
+{
+    $this->consentManager->recordConsent(
+        subjectId: $userId,
+        purpose: 'marketing_emails',
+        consented: $consented,
+        source: 'website_form',
+        expiresAt: new \DateTimeImmutable('+2 years')
+    );
+}
+
+public function handleDsar(string $userId): DsarResponse
+{
+    return $this->dsarHandler->processRequest(
+        subjectId: $userId,
+        requestType: 'ACCESS',
+        deadline: new \DateTimeImmutable('+30 days')
+    );
+}
+```
+
+---
+
+#### **Nexus\GDPR**
+**Capabilities:**
+- **GDPR-Specific DSAR**: 30-day deadline enforcement with extension handling
+- **72-Hour Breach Notification**: Supervisory authority notification workflow
+- **Lawful Basis Tracking**: 6 lawful bases for processing (consent, contract, legal, vital, public, legitimate)
+- **DPO Integration**: Data Protection Officer notification and approval workflows
+- **Cross-Border Transfer**: Standard Contractual Clauses (SCC) tracking
+- **DPIA Management**: Data Protection Impact Assessment workflow
+
+**When to Use:**
+- ✅ EU GDPR compliance requirements
+- ✅ 30-day DSAR deadline enforcement
+- ✅ 72-hour breach notification to authorities
+- ✅ Lawful basis documentation
+- ✅ Cross-border data transfer compliance
+
+**Key Interfaces:**
+```php
+use Nexus\GDPR\Contracts\GdprDsarHandlerInterface;
+use Nexus\GDPR\Contracts\BreachNotificationInterface;
+use Nexus\GDPR\Contracts\LawfulBasisManagerInterface;
+use Nexus\GDPR\Contracts\DpiaManagerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Report data breach to supervisory authority
+public function __construct(
+    private readonly BreachNotificationInterface $breachNotifier
+) {}
+
+public function reportBreach(DataBreach $breach): BreachNotificationResult
+{
+    // Must notify within 72 hours of awareness
+    return $this->breachNotifier->notifySupervisoryAuthority(
+        breach: $breach,
+        affectedSubjects: $breach->getAffectedCount(),
+        dataCategories: $breach->getAffectedDataCategories(),
+        mitigationMeasures: $breach->getMitigationActions()
+    );
+}
+```
+
+---
+
+#### **Nexus\PDPA**
+**Capabilities:**
+- **Malaysian PDPA Compliance**: Personal Data Protection Act 2010 requirements
+- **Data User Registration**: Registration with Commissioner tracking
+- **Consent Requirements**: Bilingual consent (Bahasa Malaysia + English)
+- **Cross-Border Restrictions**: White-listed country validation
+- **Retention Limits**: Malaysian-specific retention period enforcement
+- **Breach Notification**: Commissioner notification workflow
+
+**When to Use:**
+- ✅ Malaysian PDPA compliance
+- ✅ Data user registration with Commissioner
+- ✅ Bilingual consent management
+- ✅ Cross-border transfer to approved countries only
+
+**Key Interfaces:**
+```php
+use Nexus\PDPA\Contracts\PdpaComplianceManagerInterface;
+use Nexus\PDPA\Contracts\CommissionerNotificationInterface;
+use Nexus\PDPA\Contracts\BilingualConsentInterface;
+```
+
+---
+
+#### **Nexus\Sanctions**
+**Capabilities:**
+- **Multi-List Screening**: OFAC, UN, EU, UK HMT, FATF sanctions lists
+- **PEP Detection**: Politically Exposed Person identification
+- **Real-Time Screening**: Transaction and customer screening
+- **Fuzzy Matching**: Name matching with configurable threshold (70-100%)
+- **Watchlist Management**: Custom internal watchlist support
+- **FATF Compliance**: Grey/black list country detection
+
+**When to Use:**
+- ✅ Customer and vendor sanctions screening
+- ✅ Transaction screening against watchlists
+- ✅ PEP identification for enhanced due diligence
+- ✅ FATF grey/black list country blocking
+- ✅ Compliance with international sanctions regimes
+
+**Key Interfaces:**
+```php
+use Nexus\Sanctions\Contracts\SanctionsScreenerInterface;
+use Nexus\Sanctions\Contracts\PepDetectorInterface;
+use Nexus\Sanctions\Contracts\WatchlistManagerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Screen customer against sanctions lists
+public function __construct(
+    private readonly SanctionsScreenerInterface $screener,
+    private readonly PepDetectorInterface $pepDetector
+) {}
+
+public function screenCustomer(Customer $customer): ScreeningResult
+{
+    $sanctionsResult = $this->screener->screen(
+        name: $customer->getName(),
+        dateOfBirth: $customer->getDateOfBirth(),
+        nationality: $customer->getNationality(),
+        lists: ['OFAC', 'UN', 'EU'],
+        matchThreshold: 85 // Fuzzy match percentage
+    );
+    
+    $pepResult = $this->pepDetector->check(
+        name: $customer->getName(),
+        country: $customer->getNationality()
+    );
+    
+    return new ScreeningResult(
+        sanctionsHit: $sanctionsResult->hasMatch(),
+        pepHit: $pepResult->isPep(),
+        riskLevel: $this->calculateOverallRisk($sanctionsResult, $pepResult)
+    );
+}
+```
+
+---
+
+### 📈 **19. Financial Analysis Packages**
 
 #### **Nexus\FinancialStatements**
 **Capabilities:**
@@ -2256,7 +2768,7 @@ use Nexus\HumanResourceOperations\Coordinators\PayrollCoordinator;
 
 ---
 
-### 👥 **19. HR Extensions**
+### 👥 **20. HR Extensions**
 
 #### **Nexus\PerformanceReview**
 **Capabilities:**
@@ -2305,7 +2817,7 @@ use Nexus\FinancialStatements\Contracts\FinancialStatementInterface;
 
 ---
 
-## 🔗 **20. Orchestrators (Workflow Coordination)**
+## 🔗 **21. Orchestrators (Workflow Coordination)**
 
 Orchestrators coordinate workflows across multiple atomic packages. They own the **flow**, not the **truth** (entities remain in atomic packages).
 
@@ -2414,7 +2926,7 @@ use Nexus\ProcurementOperations\Coordinators\ThreeWayMatchCoordinator;
 
 ---
 
-## 🚧 **21. Areas Needing Improvement**
+## 🚧 **22. Areas Needing Improvement**
 
 This section highlights packages and orchestrators that require additional development.
 
@@ -2721,6 +3233,15 @@ public function getInvoices(): array {
 | **Plan production capacity** | **`Nexus\Manufacturing`** | **`CapacityPlannerInterface`** |
 | **Forecast demand with ML** | **`Nexus\Manufacturing`** | **`DemandForecasterInterface`** |
 | Manage employees | `Nexus\Hrm` | `EmployeeManagerInterface` |
+| **Manage employee leave** | **`Nexus\HRM\Leave`** | **`LeaveManagerInterface`** |
+| **Track attendance** | **`Nexus\HRM\Attendance`** | **`AttendanceManagerInterface`** |
+| **Manage shift schedules** | **`Nexus\HRM\Shift`** | **`ShiftManagerInterface`** |
+| **Manage employee profiles** | **`Nexus\HRM\EmployeeProfile`** | **`EmployeeManagerInterface`** |
+| **Generate payslips** | **`Nexus\HRM\PayrollCore`** | **`PayslipGeneratorInterface`** |
+| **Manage recruitment/ATS** | **`Nexus\HRM\Recruitment`** | **`RecruitmentManagerInterface`** |
+| **Track training/certifications** | **`Nexus\HRM\Training`** | **`TrainingManagerInterface`** |
+| **Manage onboarding** | **`Nexus\HRM\Onboarding`** | **`OnboardingManagerInterface`** |
+| **Handle disciplinary cases** | **`Nexus\HRM\Disciplinary`** | **`DisciplinaryManagerInterface`** |
 | Process payroll | `Nexus\Payroll` | `PayrollManagerInterface` |
 | Call external APIs | `Nexus\Connector` | `ConnectorManagerInterface` |
 | Validate periods | `Nexus\Period` | `PeriodValidatorInterface` |
@@ -2743,7 +3264,10 @@ public function getInvoices(): array {
 | Export to Excel | `Nexus\Export` | `ExportManagerInterface` |
 | Generate reports | `Nexus\Reporting` | `ReportManagerInterface` |
 | Event sourcing (GL/Inventory) | `Nexus\EventStream` | `EventStoreInterface` |
-| Encrypt data | `Nexus\Crypto` | `EncryptionManagerInterface` |
+| **Encrypt/decrypt data** | **`Nexus\Crypto`** | **`CryptoManagerInterface`** |
+| **Manage encryption keys** | **`Nexus\Crypto`** | **`KeyManagerInterface`** |
+| **Hash data securely** | **`Nexus\Crypto`** | **`HashManagerInterface`** |
+| **Sign/verify documents** | **`Nexus\Crypto`** | **`SignatureManagerInterface`** |
 | Get/set app config | `Nexus\Setting` | `SettingsManagerInterface` |
 | **Manage feature flags** | **`Nexus\FeatureFlags`** | **`FeatureFlagManagerInterface`** |
 | **Calculate taxes** | **`Nexus\Tax`** | **`TaxCalculatorInterface`** |
@@ -2757,6 +3281,22 @@ public function getInvoices(): array {
 | **Close accounting periods** | **`Nexus\AccountPeriodClose`** | **`PeriodCloseManagerInterface`** |
 | **Analyze budget variances** | **`Nexus\AccountVarianceAnalysis`** | **`VarianceAnalyzerInterface`** |
 | **Manage performance reviews** | **`Nexus\PerformanceReview`** | **`ReviewManagerInterface`** |
+| **Verify customer identity (KYC)** | **`Nexus\KycVerification`** | **`KycVerificationManagerInterface`** |
+| **Assess KYC risk** | **`Nexus\KycVerification`** | **`RiskAssessmentInterface`** |
+| **Track beneficial ownership** | **`Nexus\KycVerification`** | **`BeneficialOwnershipInterface`** |
+| **Calculate AML risk scores** | **`Nexus\AmlCompliance`** | **`AmlRiskAssessorInterface`** |
+| **Monitor suspicious transactions** | **`Nexus\AmlCompliance`** | **`TransactionMonitorInterface`** |
+| **Generate SAR reports** | **`Nexus\AmlCompliance`** | **`SarGeneratorInterface`** |
+| **Manage user consent** | **`Nexus\DataPrivacy`** | **`ConsentManagerInterface`** |
+| **Handle DSAR requests** | **`Nexus\DataPrivacy`** | **`DsarHandlerInterface`** |
+| **Manage data retention** | **`Nexus\DataPrivacy`** | **`RetentionPolicyInterface`** |
+| **Handle data breaches** | **`Nexus\DataPrivacy`** | **`BreachManagerInterface`** |
+| **GDPR breach notification** | **`Nexus\GDPR`** | **`BreachNotificationInterface`** |
+| **GDPR lawful basis tracking** | **`Nexus\GDPR`** | **`LawfulBasisManagerInterface`** |
+| **Malaysian PDPA compliance** | **`Nexus\PDPA`** | **`PdpaComplianceManagerInterface`** |
+| **Screen sanctions lists** | **`Nexus\Sanctions`** | **`SanctionsScreenerInterface`** |
+| **Detect PEPs** | **`Nexus\Sanctions`** | **`PepDetectorInterface`** |
+| **Manage watchlists** | **`Nexus\Sanctions`** | **`WatchlistManagerInterface`** |
 | **Coordinate P2P workflows** | **`Nexus\ProcurementOperations`** | **`ProcurementCoordinator`** |
 | **Coordinate HR workflows** | **`Nexus\HumanResourceOperations`** | **`HiringCoordinator`, `PayrollCoordinator`** |
 | **Coordinate accounting workflows** | **`Nexus\AccountingOperations`** | **`PeriodCloseCoordinator`** |
@@ -2801,6 +3341,6 @@ Before implementing ANY feature, run this mental checklist:
 
 ---
 
-**Last Updated:** December 9, 2025  
+**Last Updated:** December 18, 2025  
 **Maintained By:** Nexus Architecture Team  
 **Enforcement:** Mandatory for all coding agents and developers
