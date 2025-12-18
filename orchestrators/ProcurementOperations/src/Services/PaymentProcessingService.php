@@ -6,6 +6,7 @@ namespace Nexus\ProcurementOperations\Services;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\PaymentProcessingServiceInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\Financial\BankFileGenerationResult;
 use Nexus\ProcurementOperations\DTOs\Financial\PaymentBatchData;
 use Nexus\ProcurementOperations\DTOs\Financial\PaymentItemData;
@@ -58,6 +59,7 @@ final readonly class PaymentProcessingService implements PaymentProcessingServic
     public function __construct(
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger = new NullLogger(),
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     /**
@@ -733,6 +735,10 @@ final readonly class PaymentProcessingService implements PaymentProcessingServic
      * Generate unique batch ID.
      */
     private function generateBatchId(): string {
+        if ($this->idGenerator !== null) {
+            return $this->idGenerator->generateId('batch-', 12);
+        }
+
         return 'batch-' . bin2hex(random_bytes(12));
     }
 
@@ -740,6 +746,10 @@ final readonly class PaymentProcessingService implements PaymentProcessingServic
      * Generate unique item ID.
      */
     private function generateItemId(): string {
+        if ($this->idGenerator !== null) {
+            return $this->idGenerator->generateId('item-', 8);
+        }
+
         return 'item-' . bin2hex(random_bytes(8));
     }
 }

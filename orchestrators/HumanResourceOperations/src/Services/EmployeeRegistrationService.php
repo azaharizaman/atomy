@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\Services;
 
+use Nexus\HumanResourceOperations\Contracts\SecureIdGeneratorInterface;
+
 /**
  * Service for employee registration operations.
  * 
@@ -17,6 +19,7 @@ final readonly class EmployeeRegistrationService
     public function __construct(
         // Dependencies from atomic packages will be injected by consuming application
         // e.g., EmployeeManagerInterface, UserManagerInterface, PartyManagerInterface
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     /**
@@ -70,7 +73,12 @@ final readonly class EmployeeRegistrationService
     private function createPartyRecord(string $name, string $email): string
     {
         // Implementation: Call Nexus\Party package
-        // Using cryptographically secure UUID instead of predictable uniqid()
+        // Using cryptographically secure UUID via SecureIdGenerator
+        if ($this->idGenerator !== null) {
+            return 'party-' . $this->idGenerator->generateUuid();
+        }
+
+        // Fallback for backward compatibility
         $bytes = random_bytes(16);
         $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
         $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
@@ -80,7 +88,12 @@ final readonly class EmployeeRegistrationService
     private function createUserAccount(string $email, string $name, string $partyId): string
     {
         // Implementation: Call Nexus\Identity package
-        // Using cryptographically secure UUID instead of predictable uniqid()
+        // Using cryptographically secure UUID via SecureIdGenerator
+        if ($this->idGenerator !== null) {
+            return 'user-' . $this->idGenerator->generateUuid();
+        }
+
+        // Fallback for backward compatibility
         $bytes = random_bytes(16);
         $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
         $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
@@ -97,7 +110,12 @@ final readonly class EmployeeRegistrationService
         array $metadata,
     ): string {
         // Implementation: Call Nexus\Hrm package
-        // Using cryptographically secure UUID instead of predictable uniqid()
+        // Using cryptographically secure UUID via SecureIdGenerator
+        if ($this->idGenerator !== null) {
+            return 'emp-' . $this->idGenerator->generateUuid();
+        }
+
+        // Fallback for backward compatibility
         $bytes = random_bytes(16);
         $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
         $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);

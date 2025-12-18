@@ -6,6 +6,7 @@ namespace Nexus\ProcurementOperations\Workflows;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\IntercompanySettlementServiceInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\Financial\IntercompanySettlementData;
 use Nexus\ProcurementOperations\DTOs\Financial\NetSettlementResult;
 use Nexus\ProcurementOperations\Enums\SettlementStatus;
@@ -37,6 +38,7 @@ final class IntercompanySettlementWorkflow
         private readonly IntercompanySettlementServiceInterface $settlementService,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly LoggerInterface $logger = new NullLogger(),
+        private readonly ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     /**
@@ -449,7 +451,11 @@ final class IntercompanySettlementWorkflow
      */
     private function generateSettlementId(): string
     {
-        return 'ICSET-' . strtoupper(bin2hex(random_bytes(8)));
+        $uniquePart = $this->idGenerator !== null
+            ? strtoupper($this->idGenerator->generateHex(8))
+            : strtoupper(bin2hex(random_bytes(8)));
+
+        return 'ICSET-' . $uniquePart;
     }
 
     /**

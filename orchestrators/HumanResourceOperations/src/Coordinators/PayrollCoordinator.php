@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\Coordinators;
 
+use Nexus\HumanResourceOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\HumanResourceOperations\DataProviders\PayrollDataProvider;
 use Nexus\HumanResourceOperations\DTOs\PayrollCalculationRequest;
 use Nexus\HumanResourceOperations\DTOs\PayrollCalculationResult;
@@ -29,7 +30,8 @@ final readonly class PayrollCoordinator
         private PayrollRuleRegistry $ruleRegistry,
         // TODO: Inject PayrollManager from Nexus\Payroll package
         // private PayrollManagerInterface $payrollManager,
-        private LoggerInterface $logger = new NullLogger()
+        private LoggerInterface $logger = new NullLogger(),
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     /**
@@ -99,6 +101,11 @@ final readonly class PayrollCoordinator
         // This should generate and persist payslip record
         
         // Generate a cryptographically secure UUIDv4 for payslipId
+        if ($this->idGenerator !== null) {
+            return 'PAYSLIP-' . $this->idGenerator->generateUuid();
+        }
+
+        // Fallback for backward compatibility
         $bytes = random_bytes(16);
         $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40); // set version to 0100
         $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80); // set bits 6-7 to 10

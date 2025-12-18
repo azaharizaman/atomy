@@ -6,6 +6,7 @@ namespace Nexus\ProcurementOperations\Coordinators;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\MultiEntityPaymentServiceInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\Financial\MultiEntityPaymentBatch;
 use Nexus\ProcurementOperations\DTOs\Financial\PaymentItemData;
 use Nexus\ProcurementOperations\Events\Financial\MultiEntityPaymentBatchCreatedEvent;
@@ -31,6 +32,7 @@ final readonly class MultiEntityPaymentCoordinator
         private MultiEntityPaymentServiceInterface $paymentService,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger = new NullLogger(),
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     /**
@@ -421,6 +423,10 @@ final readonly class MultiEntityPaymentCoordinator
      */
     private function generateBatchId(): string
     {
+        if ($this->idGenerator !== null) {
+            return 'MEPB-' . strtoupper($this->idGenerator->generateHex(8));
+        }
+
         return 'MEPB-' . strtoupper(bin2hex(random_bytes(8)));
     }
 }

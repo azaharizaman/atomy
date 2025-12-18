@@ -6,6 +6,7 @@ namespace Nexus\ProcurementOperations\Strategies\Payment;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\PaymentMethodStrategyInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\PaymentExecutionResult;
 use Nexus\ProcurementOperations\DTOs\PaymentRequest;
 use Nexus\ProcurementOperations\Enums\PaymentMethod;
@@ -25,6 +26,7 @@ final readonly class WirePaymentStrategy implements PaymentMethodStrategyInterfa
 
     public function __construct(
         private string $currency = 'MYR',
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     public function getMethod(): string
@@ -74,7 +76,9 @@ final readonly class WirePaymentStrategy implements PaymentMethodStrategyInterfa
         }
 
         // In real implementation, this would integrate with wire transfer processor
-        $paymentId = 'WIRE-' . bin2hex(random_bytes(8));
+        $paymentId = $this->idGenerator !== null
+            ? $this->idGenerator->generateId('WIRE-', 8)
+            : 'WIRE-' . bin2hex(random_bytes(8));
         $transactionRef = 'WIRE' . date('Ymd') . random_int(100000, 999999);
 
         return PaymentExecutionResult::success(

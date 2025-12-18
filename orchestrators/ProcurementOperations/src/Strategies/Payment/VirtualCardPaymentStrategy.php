@@ -6,6 +6,7 @@ namespace Nexus\ProcurementOperations\Strategies\Payment;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\PaymentMethodStrategyInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\PaymentExecutionResult;
 use Nexus\ProcurementOperations\DTOs\PaymentRequest;
 use Nexus\ProcurementOperations\Enums\PaymentMethod;
@@ -24,6 +25,7 @@ final readonly class VirtualCardPaymentStrategy implements PaymentMethodStrategy
 
     public function __construct(
         private string $currency = 'MYR',
+        private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
 
     public function getMethod(): string
@@ -70,7 +72,9 @@ final readonly class VirtualCardPaymentStrategy implements PaymentMethodStrategy
         }
 
         // In real implementation, this would generate virtual card number
-        $paymentId = 'VCARD-' . bin2hex(random_bytes(8));
+        $paymentId = $this->idGenerator !== null
+            ? $this->idGenerator->generateId('VCARD-', 8)
+            : 'VCARD-' . bin2hex(random_bytes(8));
         $cardRef = 'VC' . date('Ymd') . random_int(100000, 999999);
         $virtualCardNumber = $this->generateVirtualCardNumber();
 

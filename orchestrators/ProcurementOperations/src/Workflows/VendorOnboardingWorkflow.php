@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementOperations\Workflows;
 
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\Vendor\VendorOnboardingRequest;
 use Nexus\ProcurementOperations\DTOs\Vendor\VendorOnboardingResult;
 use Nexus\ProcurementOperations\DTOs\Vendor\VendorProfileData;
@@ -122,11 +123,15 @@ final class VendorOnboardingWorkflow
 
     private LoggerInterface $logger;
 
+    private ?SecureIdGeneratorInterface $idGenerator = null;
+
     public function __construct(
         private readonly VendorOnboardingRequest $request,
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
         ?LoggerInterface $logger = null,
+        ?SecureIdGeneratorInterface $idGenerator = null,
     ) {
+        $this->idGenerator = $idGenerator;
         $this->workflowId = $this->generateWorkflowId();
         $this->logger = $logger ?? new NullLogger();
         $this->initializeDocumentRequirements();
@@ -761,12 +766,20 @@ final class VendorOnboardingWorkflow
 
     private function generateWorkflowId(): string
     {
-        return sprintf('vndr_wf_%s_%s', date('YmdHis'), bin2hex(random_bytes(6)));
+        $uniquePart = $this->idGenerator !== null
+            ? $this->idGenerator->generateHex(6)
+            : bin2hex(random_bytes(6));
+
+        return sprintf('vndr_wf_%s_%s', date('YmdHis'), $uniquePart);
     }
 
     private function generateVendorId(): string
     {
-        return sprintf('VND-%s-%s', strtoupper(substr($this->request->countryCode, 0, 2)), strtoupper(bin2hex(random_bytes(6))));
+        $uniquePart = $this->idGenerator !== null
+            ? $this->idGenerator->generateHex(6)
+            : bin2hex(random_bytes(6));
+
+        return sprintf('VND-%s-%s', strtoupper(substr($this->request->countryCode, 0, 2)), strtoupper($uniquePart));
     }
 
     private function dispatchEvent(object $event): void

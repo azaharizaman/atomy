@@ -31,9 +31,19 @@
         "nexus/tax": "*@dev",
         "nexus/compliance": "*@dev",
         "nexus/document": "*@dev",
+        "nexus/crypto": "*@dev",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^1.0"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../packages/Crypto",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Nexus\\ProcurementOperations\\": "src/"
