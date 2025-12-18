@@ -26,6 +26,19 @@ The `ProcurementOperations` orchestrator coordinates the complete **Procure-to-P
 
 ---
 
+## ⚠️ Stability & Compatibility Notice
+
+**Pre-Production Status:** This orchestrator is under active development and has **not yet reached production state**. As such:
+
+- **Breaking changes may occur** between minor versions without deprecation notices
+- **API signatures may change** as the design evolves based on real-world usage
+- **Backward compatibility is not guaranteed** until v1.0.0 stable release
+- Some dependencies (e.g., `CryptoManagerInterface` in `HashingService`) are **mandatory** rather than optional, as they are core to the service's functionality
+
+Please pin to specific versions in non-production environments and review the [CHANGELOG](CHANGELOG.md) before upgrading.
+
+---
+
 ## Architecture
 
 This orchestrator follows the **Advanced Orchestrator Pattern v1.1** with strict component separation:

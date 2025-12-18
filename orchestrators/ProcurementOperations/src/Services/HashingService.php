@@ -14,9 +14,20 @@ use Nexus\ProcurementOperations\Contracts\HashingServiceInterface;
  * Provides algorithm-agile hashing with support for SHA-256, SHA-512,
  * and BLAKE2b. Designed to be easily extensible for post-quantum
  * cryptography (PQC) when available.
+ *
+ * @note This service requires CryptoManagerInterface as a MANDATORY dependency.
+ *       Unlike optional integrations (e.g., TelemetryTrackerInterface), this service's
+ *       core functionality is cryptographic hashing which cannot operate without
+ *       a crypto provider. There is no meaningful fallback behavior.
  */
 final readonly class HashingService implements HashingServiceInterface
 {
+    /**
+     * @param CryptoManagerInterface $crypto MANDATORY - Provides cryptographic hashing.
+     *                                        This is not nullable because the entire
+     *                                        purpose of this service is to delegate
+     *                                        to the crypto provider.
+     */
     public function __construct(
         private CryptoManagerInterface $crypto
     ) {}
