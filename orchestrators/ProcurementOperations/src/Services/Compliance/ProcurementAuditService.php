@@ -1137,7 +1137,7 @@ final class ProcurementAuditService implements ProcurementAuditServiceInterface
     private function generateEvidenceId(): string
     {
         $hex = $this->idGenerator !== null
-            ? $this->idGenerator->generateHex(6)
+            ? $this->idGenerator->randomHex(6)
             : bin2hex(random_bytes(6));
 
         return 'EVD-' . date('Y') . '-' . strtoupper($hex);
@@ -1146,7 +1146,7 @@ final class ProcurementAuditService implements ProcurementAuditServiceInterface
     private function generateReportId(string $prefix): string
     {
         $hex = $this->idGenerator !== null
-            ? $this->idGenerator->generateHex(4)
+            ? $this->idGenerator->randomHex(4)
             : bin2hex(random_bytes(4));
 
         return strtoupper($prefix) . '-' . date('Ymd') . '-' . strtoupper($hex);
@@ -1155,7 +1155,7 @@ final class ProcurementAuditService implements ProcurementAuditServiceInterface
     private function generateFindingId(): string
     {
         $hex = $this->idGenerator !== null
-            ? $this->idGenerator->generateHex(6)
+            ? $this->idGenerator->randomHex(6)
             : bin2hex(random_bytes(6));
 
         return 'FND-' . date('Y') . '-' . strtoupper($hex);
@@ -1164,7 +1164,7 @@ final class ProcurementAuditService implements ProcurementAuditServiceInterface
     private function generateTestId(): string
     {
         $hex = $this->idGenerator !== null
-            ? $this->idGenerator->generateHex(4)
+            ? $this->idGenerator->randomHex(4)
             : bin2hex(random_bytes(4));
 
         return 'TST-' . date('Ymd') . '-' . strtoupper($hex);

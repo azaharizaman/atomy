@@ -767,7 +767,7 @@ final class VendorOnboardingWorkflow
     private function generateWorkflowId(): string
     {
         $uniquePart = $this->idGenerator !== null
-            ? $this->idGenerator->generateHex(6)
+            ? $this->idGenerator->randomHex(6)
             : bin2hex(random_bytes(6));
 
         return sprintf('vndr_wf_%s_%s', date('YmdHis'), $uniquePart);
@@ -776,7 +776,7 @@ final class VendorOnboardingWorkflow
     private function generateVendorId(): string
     {
         $uniquePart = $this->idGenerator !== null
-            ? $this->idGenerator->generateHex(6)
+            ? $this->idGenerator->randomHex(6)
             : bin2hex(random_bytes(6));
 
         return sprintf('VND-%s-%s', strtoupper(substr($this->request->countryCode, 0, 2)), strtoupper($uniquePart));

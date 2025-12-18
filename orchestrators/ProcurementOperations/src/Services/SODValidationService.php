@@ -216,7 +216,7 @@ final readonly class SODValidationService
     private function dispatchViolationEvent(SODViolation $violation, SODValidationRequest $request): void
     {
         $violationId = $this->idGenerator !== null
-            ? $this->idGenerator->generateHex(16)
+            ? $this->idGenerator->randomHex(16)
             : bin2hex(random_bytes(16));
 
         $this->eventDispatcher->dispatch(new SODViolationDetectedEvent(

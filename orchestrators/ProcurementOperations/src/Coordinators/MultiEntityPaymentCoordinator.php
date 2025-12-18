@@ -424,7 +424,7 @@ final readonly class MultiEntityPaymentCoordinator
     private function generateBatchId(): string
     {
         if ($this->idGenerator !== null) {
-            return 'MEPB-' . strtoupper($this->idGenerator->generateHex(8));
+            return 'MEPB-' . strtoupper($this->idGenerator->randomHex(8));
         }
 
         return 'MEPB-' . strtoupper(bin2hex(random_bytes(8)));

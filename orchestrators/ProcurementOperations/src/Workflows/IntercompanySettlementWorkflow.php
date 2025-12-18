@@ -452,7 +452,7 @@ final class IntercompanySettlementWorkflow
     private function generateSettlementId(): string
     {
         $uniquePart = $this->idGenerator !== null
-            ? strtoupper($this->idGenerator->generateHex(8))
+            ? strtoupper($this->idGenerator->randomHex(8))
             : strtoupper(bin2hex(random_bytes(8)));
 
         return 'ICSET-' . $uniquePart;

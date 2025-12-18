@@ -357,7 +357,7 @@ abstract readonly class AbstractSaga implements SagaInterface
     protected function generateInstanceId(): string
     {
         $uniquePart = $this->idGenerator !== null
-            ? $this->idGenerator->generateHex(16)
+            ? $this->idGenerator->randomHex(16)
             : bin2hex(random_bytes(16));
 
         return sprintf(
