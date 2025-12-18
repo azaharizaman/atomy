@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Nexus\Sanctions\Tests\Unit\Services;
 
 use DateTimeImmutable;
-use Nexus\Sanctions\Contracts\PartyInterface;
-use Nexus\Sanctions\Contracts\SanctionsRepositoryInterface;
+use Psr\Log\NullLogger;
+use PHPUnit\Framework\TestCase;
 use Nexus\Sanctions\Enums\MatchStrength;
 use Nexus\Sanctions\Enums\SanctionsList;
-use Nexus\Sanctions\Exceptions\InvalidPartyException;
-use Nexus\Sanctions\Exceptions\ScreeningFailedException;
+use PHPUnit\Framework\MockObject\MockObject;
+use Nexus\Sanctions\Contracts\PartyInterface;
 use Nexus\Sanctions\Services\SanctionsScreener;
 use Nexus\Sanctions\ValueObjects\ScreeningResult;
-use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
+use Nexus\Sanctions\Exceptions\InvalidPartyException;
+use Nexus\Sanctions\Exceptions\ScreeningFailedException;
+use Nexus\Sanctions\Contracts\SanctionsRepositoryInterface;
 
 /**
  * Unit tests for SanctionsScreener service

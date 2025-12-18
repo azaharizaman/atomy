@@ -1,0 +1,48 @@
+{
+    "name": "nexus/payment-wallet",
+    "description": "Payment wallet extension providing integrations with digital wallets, mobile payments, and BNPL services",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "payment",
+        "wallet",
+        "apple-pay",
+        "google-pay",
+        "bnpl",
+        "buy-now-pay-later",
+        "digital-wallet",
+        "erp"
+    ],
+    "authors": [
+        {
+            "name": "Nexus Team",
+            "email": "team@nexus.dev"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "nexus/payment": "^0.1",
+        "nexus/common": "^1.0",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "phpstan/phpstan": "^1.10",
+        "friendsofphp/php-cs-fixer": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\PaymentWallet\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\PaymentWallet\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}

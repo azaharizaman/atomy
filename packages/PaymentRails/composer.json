@@ -1,0 +1,47 @@
+{
+    "name": "nexus/payment-rails",
+    "description": "Payment rails extension providing ACH, Wire, Check, RTGS, and other payment network implementations",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "payment",
+        "ach",
+        "wire",
+        "check",
+        "rtgs",
+        "payment-rails",
+        "erp"
+    ],
+    "authors": [
+        {
+            "name": "Nexus Team",
+            "email": "team@nexus.dev"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "nexus/payment": "^0.1",
+        "nexus/common": "^1.0",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "phpstan/phpstan": "^1.10",
+        "friendsofphp/php-cs-fixer": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\PaymentRails\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\PaymentRails\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}
