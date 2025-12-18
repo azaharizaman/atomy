@@ -431,12 +431,16 @@ final readonly class CryptoManager implements CryptoManagerInterface, KeyRotatio
     /**
      * Mask national ID with country-specific formatting
      *
-     * Uses Malaysian (MY) format by default.
-     * For other countries, use DataMaskerInterface directly.
+     * Format varies by country:
+     * - MY (Malaysia): ******-**-5678 (shows last 4 of 12-digit IC)
+     * - US (USA): ***-**-6789 (shows last 4 of SSN)
+     * - GB/UK (Britain): AB******* (shows first 2 of NIN)
+     * - SG (Singapore): ****567D (shows last 4 of NRIC)
+     * - Other: Shows first 2 and last 2 characters
      */
-    public function maskNationalId(string $nationalId): string
+    public function maskNationalId(string $nationalId, string $country = 'MY'): string
     {
-        return $this->dataMasker->maskNationalId($nationalId);
+        return $this->dataMasker->maskNationalId($nationalId, $country);
     }
     
     /**
