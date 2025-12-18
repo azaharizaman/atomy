@@ -39,14 +39,6 @@ enum MaskingPattern: string
     case CREDIT_CARD = 'credit_card';
 
     /**
-     * SSN/National ID masking: ***-**-6789
-     *
-     * Shows only last 4 digits.
-     * Compliant with US SSN display requirements.
-     */
-    case NATIONAL_ID = 'national_id';
-
-    /**
      * IBAN masking: DE**************3000
      *
      * Shows country code and last 4 characters.
@@ -95,7 +87,6 @@ enum MaskingPattern: string
             self::EMAIL => 'Email Address',
             self::PHONE => 'Phone Number',
             self::CREDIT_CARD => 'Credit Card',
-            self::NATIONAL_ID => 'National ID / SSN',
             self::IBAN => 'IBAN / Bank Account',
             self::NAME => 'Personal Name',
             self::ADDRESS => 'Mailing Address',
@@ -113,7 +104,6 @@ enum MaskingPattern: string
             self::EMAIL => 'j*******@example.com',
             self::PHONE => '+1 (***) ***-4567',
             self::CREDIT_CARD => '****-****-****-1234',
-            self::NATIONAL_ID => '***-**-6789',
             self::IBAN => 'DE**************3000',
             self::NAME => 'J*** D**',
             self::ADDRESS => '123 **** Street, ****',
@@ -142,7 +132,6 @@ enum MaskingPattern: string
             self::EMAIL => true,
             self::PHONE => true,
             self::CREDIT_CARD => true,
-            self::NATIONAL_ID => true,
             self::IBAN => true,
             self::NAME => true,
             self::ADDRESS => true,
@@ -160,7 +149,6 @@ enum MaskingPattern: string
     {
         return match ($this) {
             self::CREDIT_CARD => ['PCI-DSS'],
-            self::NATIONAL_ID => ['PDPA', 'HIPAA'],
             self::EMAIL, self::PHONE, self::NAME, self::ADDRESS => ['GDPR', 'HIPAA'],
             self::DATE_OF_BIRTH => ['GDPR', 'HIPAA', 'PCI-DSS'],
             self::IBAN => ['PSD2', 'GDPR'],
