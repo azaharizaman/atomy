@@ -110,7 +110,15 @@ final class PaymentManager implements PaymentManagerInterface
                 );
 
                 throw new PaymentExecutionException(
-                    'Idempotency key collision across tenants detected.'
+                    'Idempotency key collision across tenants detected.',
+                    null,
+                    'SECURITY_IDEMPOTENCY_TENANT_COLLISION',
+                    sprintf(
+                        'idempotencyKey=%s; currentTenantId=%s; existingTenantId=%s',
+                        $idempotencyKey->getValue(),
+                        $tenantId,
+                        $existing->getTenantId()
+                    )
                 );
             }
         }

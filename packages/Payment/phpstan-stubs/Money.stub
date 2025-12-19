@@ -15,11 +15,11 @@ final class Money
 
     private function __construct(int $amountInMinorUnits, string $currency) {}
 
-    public static function of(float|string $amount, string $currency): self {}
+    public static function of(float|string $amount, string $currency, int $scale = 2): self {}
     
     public static function zero(string $currency): self {}
 
-    public function getAmount(): float {}
+    public function getAmount(int $scale = 2): float {}
     
     public function getAmountInMinorUnits(): int {}
     
