@@ -36,7 +36,7 @@ use Nexus\Payment\ValueObjects\ExchangeRateSnapshot;
  *         $rate = $this->rateProvider->getRate($amount->getCurrency(), $targetCurrency, $asOf);
  *         // Use precision 6 for currency conversion to preserve accuracy
  *         return Money::of(
- *             bcmul($amount->getAmountAsString(), $rate, 6),
+ *             bcmul((string) $amount->getAmount(), $rate, 6),
  *             $targetCurrency
  *         );
  *     }
