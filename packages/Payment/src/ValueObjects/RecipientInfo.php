@@ -96,6 +96,8 @@ final readonly class RecipientInfo
 
     /**
      * Create a copy with additional metadata.
+     *
+     * @param array<string, mixed> $metadata
      */
     public function withMetadata(array $metadata): self
     {

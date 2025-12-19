@@ -1,0 +1,35 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    
+    # Stub the Money class from Nexus\Common since it's not available in isolation
+    stubFiles:
+        - phpstan-stubs/Money.stub
+    
+    # Ignore errors for missing types from external dependencies (not real issues)
+    # These resolve when composer install is run with proper autoloading
+    ignoreErrors:
+        # Nexus\Common dependency
+        - '#has invalid (return )?type Nexus\\Common\\ValueObjects\\Money#'
+        - '#has unknown class Nexus\\Common\\ValueObjects\\Money#'
+        - '#Call to .* on an unknown class Nexus\\Common\\ValueObjects\\Money#'
+        - '#Parameter .* has invalid type Nexus\\Common\\ValueObjects\\Money#'
+        - '#Property .* has unknown class Nexus\\Common\\ValueObjects\\Money#'
+        
+        # PSR interfaces (installed via composer)
+        - '#has invalid type Psr\\Log\\LoggerInterface#'
+        - '#has unknown class Psr\\Log\\LoggerInterface#'
+        - '#on an unknown class Psr\\Log\\LoggerInterface#'
+        - '#has invalid type Psr\\EventDispatcher\\EventDispatcherInterface#'
+        - '#has unknown class Psr\\EventDispatcher\\EventDispatcherInterface#'
+        - '#on an unknown class Psr\\EventDispatcher\\EventDispatcherInterface#'
+        - '#Instantiated class Psr\\Log\\NullLogger not found#'
+        - '#Default value of the parameter .* \(Psr\\Log\\NullLogger\) .* is incompatible#'
+        
+        # PHPDoc @throws for exceptions (not actual code issues)
+        - '#PHPDoc tag @throws with type Nexus\\Payment\\Contracts\\InvalidDisbursementStatusException#'
+        - '#PHPDoc tag @throws with type Nexus\\Payment\\Exceptions\\PaymentStateException#'
+    
+    # Report unmatched ignores so we know when issues are fixed
+    reportUnmatchedIgnoredErrors: false

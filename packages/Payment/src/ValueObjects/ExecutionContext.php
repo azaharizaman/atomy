@@ -127,6 +127,8 @@ final readonly class ExecutionContext
 
     /**
      * Create a copy with additional metadata.
+     *
+     * @param array<string, mixed> $metadata
      */
     public function withMetadata(array $metadata): self
     {
@@ -145,6 +147,8 @@ final readonly class ExecutionContext
     /**
      * Create a copy with additional metadata merged.
      * Alias for withMetadata for clearer intent.
+     *
+     * @param array<string, mixed> $metadata
      */
     public function withAdditionalMetadata(array $metadata): self
     {

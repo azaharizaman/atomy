@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\Common\ValueObjects;
+
+/**
+ * Money Value Object stub for PHPStan analysis.
+ * This is a stub file - the actual implementation is in nexus/common package.
+ */
+final class Money
+{
+    private function __construct(
+        public readonly int $amountInCents,
+        public readonly string $currency
+    ) {}
+
+    public static function of(int|float $amount, string $currency): self {}
+    
+    public static function zero(string $currency): self {}
+    
+    public static function fromCents(int $cents, string $currency): self {}
+
+    public function getAmount(): int|float {}
+    
+    public function getAmountInCents(): int {}
+    
+    public function getCurrency(): string {}
+
+    public function add(self $other): self {}
+    
+    public function subtract(self $other): self {}
+    
+    public function multiply(float $multiplier): self {}
+    
+    public function divide(float $divisor): self {}
+
+    public function isZero(): bool {}
+    
+    public function isPositive(): bool {}
+    
+    public function isNegative(): bool {}
+
+    public function equals(self $other): bool {}
+    
+    public function greaterThan(self $other): bool {}
+    
+    public function lessThan(self $other): bool {}
+    
+    public function greaterThanOrEqual(self $other): bool {}
+    
+    public function lessThanOrEqual(self $other): bool {}
+
+    public function format(?string $locale = null): string {}
+    
+    public function __toString(): string {}
+}

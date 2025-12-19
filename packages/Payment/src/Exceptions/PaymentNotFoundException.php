@@ -26,12 +26,6 @@ final class PaymentNotFoundException extends PaymentException
      */
     public static function forReference(string $reference): self
     {
-        $exception = new self($reference);
-
-        return new self(
-            sprintf('Payment transaction with reference "%s" not found', $reference),
-            404,
-            null,
-        );
+        return new self($reference);
     }
 }

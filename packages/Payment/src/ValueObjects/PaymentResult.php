@@ -37,6 +37,8 @@ final readonly class PaymentResult
 
     /**
      * Create a successful payment result.
+     *
+     * @param array<string, mixed> $metadata
      */
     public static function success(
         string $paymentId,
@@ -55,6 +57,8 @@ final readonly class PaymentResult
 
     /**
      * Create a failed payment result.
+     *
+     * @param array<string, mixed> $metadata
      */
     public static function failure(
         string $paymentId,
@@ -73,6 +77,8 @@ final readonly class PaymentResult
 
     /**
      * Create a pending payment result (async processing).
+     *
+     * @param array<string, mixed> $metadata
      */
     public static function pending(
         string $paymentId,

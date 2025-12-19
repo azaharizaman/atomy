@@ -32,6 +32,10 @@ final class PaymentMethod implements PaymentMethodInterface
 
     private ?float $minimumAmount;
 
+    /**
+     * @param array<string, mixed> $metadata
+     * @param array<string, mixed>|null $billingAddress
+     */
     public function __construct(
         private readonly string $id,
         private readonly string $tenantId,
