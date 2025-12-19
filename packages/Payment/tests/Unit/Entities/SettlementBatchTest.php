@@ -449,4 +449,74 @@ final class SettlementBatchTest extends TestCase
         $this->assertTrue($discrepancy->isZero());
         $this->assertFalse($batch->hasDiscrepancy());
     }
+
+    #[Test]
+    public function it_throws_exception_for_lowercase_currency_code(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: usd');
+
+        SettlementBatch::create(
+            id: 'batch-001',
+            tenantId: 'tenant-001',
+            processorId: 'stripe',
+            currency: 'usd'
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_non_three_letter_currency_code(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: US');
+
+        SettlementBatch::create(
+            id: 'batch-001',
+            tenantId: 'tenant-001',
+            processorId: 'stripe',
+            currency: 'US'
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_numeric_currency_code(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: 123');
+
+        SettlementBatch::create(
+            id: 'batch-001',
+            tenantId: 'tenant-001',
+            processorId: 'stripe',
+            currency: '123'
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_empty_currency_code(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: ');
+
+        SettlementBatch::create(
+            id: 'batch-001',
+            tenantId: 'tenant-001',
+            processorId: 'stripe',
+            currency: ''
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_too_long_currency_code(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: USDT');
+
+        SettlementBatch::create(
+            id: 'batch-001',
+            tenantId: 'tenant-001',
+            processorId: 'stripe',
+            currency: 'USDT'
+        );
+    }
 }

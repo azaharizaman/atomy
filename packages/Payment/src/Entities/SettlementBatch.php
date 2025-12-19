@@ -242,6 +242,8 @@ final class SettlementBatch implements SettlementBatchInterface
     public function removePayment(string $paymentId, Money $amount, Money $fee): void
     {
         $this->assertOpen();
+        $this->assertSameCurrency($amount);
+        $this->assertSameCurrency($fee);
 
         $index = array_search($paymentId, $this->paymentIds, true);
         if ($index !== false) {
