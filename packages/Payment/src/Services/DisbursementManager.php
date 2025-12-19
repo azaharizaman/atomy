@@ -397,7 +397,12 @@ final class DisbursementManager implements DisbursementManagerInterface
      */
     public function getPendingApprovals(string $tenantId): array
     {
-        return $this->disbursementQuery->findPendingApproval($tenantId);
+        // Repository is responsible for tenant scoping via TenantContextInterface.
+        // The $tenantId parameter is kept for interface symmetry with other methods
+        // and for potential future use, but is not used for additional filtering here.
+        $pending = $this->disbursementQuery->findPendingApproval();
+
+        return $pending;
     }
 
     /**
@@ -437,7 +442,7 @@ final class DisbursementManager implements DisbursementManagerInterface
      */
     public function findOrFail(string $disbursementId): DisbursementInterface
     {
-        $disbursement = $this->disbursementQuery->findById('*', $disbursementId);
+        $disbursement = $this->disbursementQuery->findById($disbursementId);
 
         if ($disbursement === null) {
             throw new DisbursementNotFoundException($disbursementId);
@@ -477,7 +482,7 @@ final class DisbursementManager implements DisbursementManagerInterface
      */
     public function findByStatus(DisbursementStatus $status): array
     {
-        return $this->disbursementQuery->findByStatus('*', $status);
+        return $this->disbursementQuery->findByStatus($status);
     }
 
     /**

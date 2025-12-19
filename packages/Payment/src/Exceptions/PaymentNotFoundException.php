@@ -9,15 +9,27 @@ namespace Nexus\Payment\Exceptions;
  */
 final class PaymentNotFoundException extends PaymentException
 {
-    public function __construct(
-        string $paymentId,
+    private function __construct(
+        string $message,
+        array $context = [],
         ?\Throwable $previous = null,
     ) {
         parent::__construct(
-            sprintf('Payment transaction with ID "%s" not found', $paymentId),
+            $message,
             404,
             $previous,
-            ['payment_id' => $paymentId],
+            $context,
+        );
+    }
+
+    /**
+     * Create for a payment ID lookup.
+     */
+    public static function forId(string $paymentId): self
+    {
+        return new self(
+            sprintf('Payment transaction with ID "%s" not found', $paymentId),
+            ['payment_id' => $paymentId]
         );
     }
 
@@ -26,12 +38,9 @@ final class PaymentNotFoundException extends PaymentException
      */
     public static function forReference(string $reference): self
     {
-        $exception = new self($reference);
-
         return new self(
             sprintf('Payment transaction with reference "%s" not found', $reference),
-            404,
-            null,
+            ['payment_reference' => $reference]
         );
     }
 }

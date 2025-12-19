@@ -76,6 +76,8 @@ final class SettlementBatch implements SettlementBatchInterface
 
     /**
      * Create a new settlement batch.
+     *
+     * @param array<string, mixed> $metadata
      */
     public static function create(
         string $id,

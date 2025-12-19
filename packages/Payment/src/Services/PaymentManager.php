@@ -87,14 +87,38 @@ final class PaymentManager implements PaymentManagerInterface
             $this->validator->validateIdempotencyKey($idempotencyKey);
 
             $existing = $this->paymentQuery->findByIdempotencyKey(
-                $tenantId,
                 $idempotencyKey->getValue()
             );
 
             if ($existing !== null) {
-                throw new DuplicatePaymentException(
-                    $idempotencyKey->getValue(),
-                    $existing->getId()
+                // Verify tenant matches for extra safety; cross-tenant collisions are treated as security issues
+                if ($existing->getTenantId() === $tenantId) {
+                    throw new DuplicatePaymentException(
+                        $idempotencyKey->getValue(),
+                        $existing->getId()
+                    );
+                }
+
+                $this->logger->warning(
+                    'Idempotency key collision across tenants detected in PaymentManager::create',
+                    [
+                        'idempotencyKey'   => $idempotencyKey->getValue(),
+                        'currentTenantId'  => $tenantId,
+                        'existingTenantId' => $existing->getTenantId(),
+                        'existingPaymentId'=> $existing->getId(),
+                    ]
+                );
+
+                throw new PaymentExecutionException(
+                    message: 'Idempotency key collision across tenants detected.',
+                    paymentId: null,
+                    providerCode: 'SECURITY_IDEMPOTENCY_TENANT_COLLISION',
+                    providerMessage: sprintf(
+                        'idempotencyKey=%s; currentTenantId=%s; existingTenantId=%s',
+                        $idempotencyKey->getValue(),
+                        $tenantId,
+                        $existing->getTenantId()
+                    )
                 );
             }
         }
@@ -178,7 +202,7 @@ final class PaymentManager implements PaymentManagerInterface
         if ($payment->getMethodType()->requiresTokenization()) {
             $methodId = $payment->getMetadata()['payment_method_id'] ?? null;
             if ($methodId !== null) {
-                $method = $this->methodQuery->findById($payment->getTenantId(), $methodId);
+                $method = $this->methodQuery->findById($methodId);
                 if ($method !== null) {
                     $this->validator->validatePaymentMethod($method, $payment->getAmount());
                 }
@@ -379,11 +403,11 @@ final class PaymentManager implements PaymentManagerInterface
      */
     public function findOrFail(string $paymentId): PaymentTransactionInterface
     {
-        // Get tenant context - in real implementation, this would come from TenantContextInterface
-        $payment = $this->paymentQuery->findById('*', $paymentId);
+        // Repository auto-scopes by tenant via TenantContextInterface
+        $payment = $this->paymentQuery->findById($paymentId);
 
         if ($payment === null) {
-            throw new PaymentNotFoundException($paymentId);
+            throw PaymentNotFoundException::forId($paymentId);
         }
 
         return $payment;
