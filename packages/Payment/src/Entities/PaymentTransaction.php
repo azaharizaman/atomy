@@ -9,6 +9,7 @@ use Nexus\Payment\Contracts\PaymentTransactionInterface;
 use Nexus\Payment\Enums\PaymentDirection;
 use Nexus\Payment\Enums\PaymentMethodType;
 use Nexus\Payment\Enums\PaymentStatus;
+use Nexus\Payment\ValueObjects\ExchangeRateSnapshot;
 use Nexus\Payment\ValueObjects\ExecutionContext;
 use Nexus\Payment\ValueObjects\IdempotencyKey;
 use Nexus\Payment\ValueObjects\PaymentReference;
@@ -17,6 +18,7 @@ use Nexus\Payment\ValueObjects\PaymentReference;
  * Payment transaction entity.
  *
  * Represents a single payment transaction with full state tracking.
+ * Supports multi-currency payments with exchange rate snapshots.
  */
 final class PaymentTransaction implements PaymentTransactionInterface
 {
@@ -43,6 +45,13 @@ final class PaymentTransaction implements PaymentTransactionInterface
     /** @var array<string, mixed> */
     private array $metadata = [];
 
+    // Multi-currency support
+    private ?string $settlementCurrency = null;
+
+    private ?Money $settlementAmount = null;
+
+    private ?ExchangeRateSnapshot $exchangeRateSnapshot = null;
+
     public function __construct(
         private readonly string $id,
         private readonly string $tenantId,
@@ -58,6 +67,8 @@ final class PaymentTransaction implements PaymentTransactionInterface
         private readonly \DateTimeImmutable $createdAt,
     ) {
         $this->status = PaymentStatus::PENDING;
+        // Default settlement currency is the original currency
+        $this->settlementCurrency = $amount->getCurrency();
     }
 
     /**
@@ -333,6 +344,62 @@ final class PaymentTransaction implements PaymentTransactionInterface
     public function addMetadata(array $metadata): void
     {
         $this->metadata = array_merge($this->metadata, $metadata);
+    }
+
+    // ========================================================================
+    // Multi-Currency Support
+    // ========================================================================
+
+    public function getOriginalAmount(): Money
+    {
+        return $this->amount;
+    }
+
+    public function getSettlementCurrency(): string
+    {
+        return $this->settlementCurrency ?? $this->amount->getCurrency();
+    }
+
+    public function getSettlementAmount(): ?Money
+    {
+        return $this->settlementAmount;
+    }
+
+    public function getExchangeRateSnapshot(): ?ExchangeRateSnapshot
+    {
+        return $this->exchangeRateSnapshot;
+    }
+
+    public function isCrossCurrency(): bool
+    {
+        return $this->settlementCurrency !== null
+            && $this->settlementCurrency !== $this->amount->getCurrency();
+    }
+
+    public function setExchangeRateSnapshot(ExchangeRateSnapshot $snapshot): void
+    {
+        $this->exchangeRateSnapshot = $snapshot;
+        $this->settlementCurrency = $snapshot->targetCurrency;
+    }
+
+    public function setSettlementAmount(Money $amount): void
+    {
+        if ($this->settlementCurrency !== null && $amount->getCurrency() !== $this->settlementCurrency) {
+            throw new \InvalidArgumentException(sprintf(
+                'Settlement amount currency (%s) does not match settlement currency (%s)',
+                $amount->getCurrency(),
+                $this->settlementCurrency
+            ));
+        }
+        $this->settlementAmount = $amount;
+    }
+
+    /**
+     * Set the settlement currency.
+     */
+    public function setSettlementCurrency(string $currency): void
+    {
+        $this->settlementCurrency = $currency;
     }
 
     /**
