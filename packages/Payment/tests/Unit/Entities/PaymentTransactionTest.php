@@ -243,6 +243,37 @@ final class PaymentTransactionTest extends TestCase
         $this->assertSame('value2', $metadata['key2']);
     }
 
+    #[Test]
+    public function it_returns_original_currency_as_settlement_currency_by_default(): void
+    {
+        $transaction = $this->createTransaction();
+
+        $this->assertSame('USD', $transaction->getSettlementCurrency());
+        $this->assertFalse($transaction->isCrossCurrency());
+    }
+
+    #[Test]
+    public function it_can_set_settlement_currency_for_cross_currency_transaction(): void
+    {
+        $transaction = $this->createTransaction();
+
+        $transaction->setSettlementCurrency('EUR');
+
+        $this->assertSame('EUR', $transaction->getSettlementCurrency());
+        $this->assertTrue($transaction->isCrossCurrency());
+    }
+
+    #[Test]
+    public function it_is_not_cross_currency_when_settlement_currency_matches_original(): void
+    {
+        $transaction = $this->createTransaction();
+
+        $transaction->setSettlementCurrency('USD');
+
+        $this->assertSame('USD', $transaction->getSettlementCurrency());
+        $this->assertFalse($transaction->isCrossCurrency());
+    }
+
     private function createTransaction(): PaymentTransaction
     {
         return PaymentTransaction::create(

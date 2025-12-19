@@ -67,8 +67,6 @@ final class PaymentTransaction implements PaymentTransactionInterface
         private readonly \DateTimeImmutable $createdAt,
     ) {
         $this->status = PaymentStatus::PENDING;
-        // Default settlement currency is the original currency
-        $this->settlementCurrency = $amount->getCurrency();
     }
 
     /**
