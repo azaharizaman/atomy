@@ -27,7 +27,8 @@
         "nexus/sanctions": "*@dev",
         "nexus/aml-compliance": "*@dev",
         "nexus/data-privacy": "*@dev",
-        "nexus/pdpa": "*@dev"
+        "nexus/pdpa": "*@dev",
+        "nexus/payment": "*@dev"
     },
     "repositories": [
         {
@@ -70,7 +71,8 @@
             "Nexus\\KycVerification\\": "packages/KycVerification/src/",
             "Nexus\\DataPrivacy\\": "packages/DataPrivacy/src/",
             "Nexus\\GDPR\\": "packages/GDPR/src/",
-            "Nexus\\PDPA\\": "packages/PDPA/src/"
+            "Nexus\\PDPA\\": "packages/PDPA/src/",
+            "Nexus\\Payment\\": "packages/Payment/src/"
         }
     },
     "autoload-dev": {
@@ -81,7 +83,8 @@
             "Nexus\\KycVerification\\Tests\\": "packages/KycVerification/tests/",
             "Nexus\\DataPrivacy\\Tests\\": "packages/DataPrivacy/tests/",
             "Nexus\\GDPR\\Tests\\": "packages/GDPR/tests/",
-            "Nexus\\PDPA\\Tests\\": "packages/PDPA/tests/"
+            "Nexus\\PDPA\\Tests\\": "packages/PDPA/tests/",
+            "Nexus\\Payment\\Tests\\": "packages/Payment/tests/"
         }
     }
 }
