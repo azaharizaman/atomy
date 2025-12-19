@@ -26,6 +26,11 @@ final class PaymentTransaction implements PaymentTransactionInterface
 
     private ?string $providerTransactionId = null;
 
+    /**
+     * The actual amount settled by the payment processor when the payment completes.
+     * This may differ from the requested amount due to fees, rounding, or provider adjustments.
+     * Set via markAsCompleted().
+     */
     private ?Money $settledAmount = null;
 
     private ?\DateTimeImmutable $processedAt = null;
@@ -45,11 +50,27 @@ final class PaymentTransaction implements PaymentTransactionInterface
     /** @var array<string, mixed> */
     private array $metadata = [];
 
-    // Multi-currency support
+    // ========================================================================
+    // Multi-Currency Support Properties
+    // ========================================================================
+
+    /**
+     * The target currency for settlement (for cross-currency transactions).
+     * Null for same-currency transactions.
+     */
     private ?string $settlementCurrency = null;
 
-    private ?Money $settlementAmount = null;
+    /**
+     * The amount after currency conversion for cross-currency transactions.
+     * This is calculated using the exchange rate snapshot.
+     * Different from $settledAmount which represents the final processed amount.
+     * Set via setSettlementAmount().
+     */
+    private ?Money $convertedSettlementAmount = null;
 
+    /**
+     * Snapshot of the exchange rate used for cross-currency conversion.
+     */
     private ?ExchangeRateSnapshot $exchangeRateSnapshot = null;
 
     public function __construct(
@@ -364,7 +385,7 @@ final class PaymentTransaction implements PaymentTransactionInterface
 
     public function getSettlementAmount(): ?Money
     {
-        return $this->settlementAmount;
+        return $this->convertedSettlementAmount;
     }
 
     public function getExchangeRateSnapshot(): ?ExchangeRateSnapshot
@@ -419,7 +440,7 @@ final class PaymentTransaction implements PaymentTransactionInterface
                 $this->settlementCurrency
             ));
         }
-        $this->settlementAmount = $amount;
+        $this->convertedSettlementAmount = $amount;
     }
 
     /**
