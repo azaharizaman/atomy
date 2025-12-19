@@ -10,20 +10,18 @@ namespace Nexus\Common\ValueObjects;
  */
 final class Money
 {
-    private function __construct(
-        public readonly int $amountInCents,
-        public readonly string $currency
-    ) {}
+    private int $amountInMinorUnits;
+    private string $currency;
 
-    public static function of(int|float $amount, string $currency): self {}
+    private function __construct(int $amountInMinorUnits, string $currency) {}
+
+    public static function of(float|string $amount, string $currency): self {}
     
     public static function zero(string $currency): self {}
-    
-    public static function fromCents(int $cents, string $currency): self {}
 
-    public function getAmount(): int|float {}
+    public function getAmount(): float {}
     
-    public function getAmountInCents(): int {}
+    public function getAmountInMinorUnits(): int {}
     
     public function getCurrency(): string {}
 

@@ -18,7 +18,7 @@ final class PaymentReversedEvent extends PaymentEvent
         public readonly Money $reversedAmount,
         public readonly ?string $reason,
         public readonly ?string $reversalTransactionId,
-        public readonly string $reversedBy,
+        public readonly ?string $reversedBy,
         \DateTimeImmutable $occurredAt,
     ) {
         parent::__construct($paymentId, $tenantId, $occurredAt);
