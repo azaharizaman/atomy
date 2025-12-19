@@ -274,6 +274,56 @@ final class PaymentTransactionTest extends TestCase
         $this->assertFalse($transaction->isCrossCurrency());
     }
 
+    #[Test]
+    public function it_throws_exception_for_lowercase_settlement_currency_code(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: usd');
+
+        $transaction = $this->createTransaction();
+        $transaction->setSettlementCurrency('usd');
+    }
+
+    #[Test]
+    public function it_throws_exception_for_non_three_letter_settlement_currency_code(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: US');
+
+        $transaction = $this->createTransaction();
+        $transaction->setSettlementCurrency('US');
+    }
+
+    #[Test]
+    public function it_throws_exception_for_numeric_settlement_currency_code(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: 123');
+
+        $transaction = $this->createTransaction();
+        $transaction->setSettlementCurrency('123');
+    }
+
+    #[Test]
+    public function it_throws_exception_for_empty_settlement_currency_code(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: ');
+
+        $transaction = $this->createTransaction();
+        $transaction->setSettlementCurrency('');
+    }
+
+    #[Test]
+    public function it_throws_exception_for_too_long_settlement_currency_code(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency code must be a valid ISO 4217 3-letter code, got: USDT');
+
+        $transaction = $this->createTransaction();
+        $transaction->setSettlementCurrency('USDT');
+    }
+
     private function createTransaction(): PaymentTransaction
     {
         return PaymentTransaction::create(
