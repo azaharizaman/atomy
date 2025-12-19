@@ -9,6 +9,7 @@ use Nexus\Payment\Contracts\PaymentTransactionInterface;
 use Nexus\Payment\Enums\PaymentDirection;
 use Nexus\Payment\Enums\PaymentMethodType;
 use Nexus\Payment\Enums\PaymentStatus;
+use Nexus\Payment\ValueObjects\ExchangeRateSnapshot;
 use Nexus\Payment\ValueObjects\ExecutionContext;
 use Nexus\Payment\ValueObjects\IdempotencyKey;
 use Nexus\Payment\ValueObjects\PaymentReference;
@@ -17,6 +18,7 @@ use Nexus\Payment\ValueObjects\PaymentReference;
  * Payment transaction entity.
  *
  * Represents a single payment transaction with full state tracking.
+ * Supports multi-currency payments with exchange rate snapshots.
  */
 final class PaymentTransaction implements PaymentTransactionInterface
 {
@@ -24,6 +26,11 @@ final class PaymentTransaction implements PaymentTransactionInterface
 
     private ?string $providerTransactionId = null;
 
+    /**
+     * The actual amount settled by the payment processor when the payment completes.
+     * This may differ from the requested amount due to fees, rounding, or provider adjustments.
+     * Set via markAsCompleted().
+     */
     private ?Money $settledAmount = null;
 
     private ?\DateTimeImmutable $processedAt = null;
@@ -42,6 +49,29 @@ final class PaymentTransaction implements PaymentTransactionInterface
 
     /** @var array<string, mixed> */
     private array $metadata = [];
+
+    // ========================================================================
+    // Multi-Currency Support Properties
+    // ========================================================================
+
+    /**
+     * The target currency for settlement (for cross-currency transactions).
+     * Null for same-currency transactions.
+     */
+    private ?string $settlementCurrency = null;
+
+    /**
+     * The amount after currency conversion for cross-currency transactions.
+     * This is calculated using the exchange rate snapshot.
+     * Different from $settledAmount which represents the final processed amount.
+     * Set via setSettlementAmount().
+     */
+    private ?Money $convertedSettlementAmount = null;
+
+    /**
+     * Snapshot of the exchange rate used for cross-currency conversion.
+     */
+    private ?ExchangeRateSnapshot $exchangeRateSnapshot = null;
 
     public function __construct(
         private readonly string $id,
@@ -333,6 +363,110 @@ final class PaymentTransaction implements PaymentTransactionInterface
     public function addMetadata(array $metadata): void
     {
         $this->metadata = array_merge($this->metadata, $metadata);
+    }
+
+    // ========================================================================
+    // Multi-Currency Support
+    // ========================================================================
+
+    public function getOriginalAmount(): Money
+    {
+        return $this->amount;
+    }
+
+    /**
+     * Get the settlement currency.
+     * Returns the original transaction currency if no settlement currency is set.
+     */
+    public function getSettlementCurrency(): string
+    {
+        return $this->settlementCurrency ?? $this->amount->getCurrency();
+    }
+
+    public function getSettlementAmount(): ?Money
+    {
+        return $this->convertedSettlementAmount;
+    }
+
+    public function getExchangeRateSnapshot(): ?ExchangeRateSnapshot
+    {
+        return $this->exchangeRateSnapshot;
+    }
+
+    /**
+     * Check if this is a cross-currency transaction.
+     * Returns true only if a settlement currency is set AND differs from the original currency.
+     */
+    public function isCrossCurrency(): bool
+    {
+        return $this->settlementCurrency !== null
+            && $this->settlementCurrency !== $this->amount->getCurrency();
+    }
+
+    /**
+     * Set the exchange rate snapshot for cross-currency transactions.
+     * This also sets the settlement currency to the snapshot's target currency.
+     *
+     * @throws \InvalidArgumentException If settlement currency is already set and differs from snapshot target
+     */
+    public function setExchangeRateSnapshot(ExchangeRateSnapshot $snapshot): void
+    {
+        if ($this->settlementCurrency !== null && $this->settlementCurrency !== $snapshot->targetCurrency) {
+            throw new \InvalidArgumentException(sprintf(
+                'Snapshot target currency (%s) conflicts with existing settlement currency (%s)',
+                $snapshot->targetCurrency,
+                $this->settlementCurrency
+            ));
+        }
+
+        if ($snapshot->sourceCurrency !== $this->amount->getCurrency()) {
+            throw new \InvalidArgumentException(sprintf(
+                'Snapshot source currency (%s) does not match payment currency (%s)',
+                $snapshot->sourceCurrency,
+                $this->amount->getCurrency()
+            ));
+        }
+
+        $this->exchangeRateSnapshot = $snapshot;
+        $this->settlementCurrency = $snapshot->targetCurrency;
+    }
+
+    public function setSettlementAmount(Money $amount): void
+    {
+        if ($this->settlementCurrency !== null && $amount->getCurrency() !== $this->settlementCurrency) {
+            throw new \InvalidArgumentException(sprintf(
+                'Settlement amount currency (%s) does not match settlement currency (%s)',
+                $amount->getCurrency(),
+                $this->settlementCurrency
+            ));
+        }
+        $this->convertedSettlementAmount = $amount;
+    }
+
+    /**
+     * Set the settlement currency.
+     *
+     * @throws \InvalidArgumentException If currency is not a valid ISO 4217 code or conflicts with exchange rate snapshot
+     */
+    public function setSettlementCurrency(string $currency): void
+    {
+        // Validate ISO 4217 currency code (3 uppercase letters)
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Currency code must be a valid ISO 4217 3-letter code, got: %s',
+                $currency
+            ));
+        }
+
+        if ($this->exchangeRateSnapshot !== null && $this->exchangeRateSnapshot->targetCurrency !== $currency) {
+            throw new \InvalidArgumentException(sprintf(
+                'Currency (%s) conflicts with existing exchange rate snapshot target currency (%s)',
+                $currency,
+                $this->exchangeRateSnapshot->targetCurrency
+            ));
+        }
+
+        $this->settlementCurrency = $currency;
     }
 
     /**

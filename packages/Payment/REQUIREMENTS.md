@@ -105,8 +105,8 @@ The `Nexus\Payment` package provides a framework-agnostic payment processing fou
 
 | ID | Requirement | Priority | Status |
 |----|-------------|----------|--------|
-| PAY-050 | System shall define processor settlement batch abstraction (grouping payments by processor) | P1 | 🔴 |
-| PAY-051 | System shall support grouping payments into processor settlement batches | P1 | 🔴 |
+| PAY-050 | System shall define processor settlement batch abstraction (grouping payments by processor) | P1 | ✅ |
+| PAY-051 | System shall support grouping payments into processor settlement batches | P1 | ✅ |
 
 > **Note:** Bank reconciliation (matching payments with bank transactions, discrepancy tracking) is the responsibility of `Nexus\CashManagement` (see BUS-CASH-0007 to BUS-CASH-0011). This package only handles processor-level settlement batching (e.g., Stripe settlement reports, ACH batch files).
 
@@ -114,10 +114,10 @@ The `Nexus\Payment` package provides a framework-agnostic payment processing fou
 
 | ID | Requirement | Priority | Status |
 |----|-------------|----------|--------|
-| PAY-060 | System shall support payment amounts in multiple currencies | P0 | 🔴 |
-| PAY-061 | System shall track original currency and settlement currency | P1 | 🔴 |
-| PAY-062 | System shall support exchange rate capture at payment time | P1 | 🔴 |
-| PAY-063 | System shall define currency conversion interface for extensions | P2 | 🔴 |
+| PAY-060 | System shall support payment amounts in multiple currencies | P0 | ✅ |
+| PAY-061 | System shall track original currency and settlement currency | P1 | ✅ |
+| PAY-062 | System shall support exchange rate capture at payment time | P1 | ✅ |
+| PAY-063 | System shall define currency conversion interface for extensions | P2 | ✅ |
 
 ### 2.8 Events
 

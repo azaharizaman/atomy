@@ -8,6 +8,7 @@ use Nexus\Common\ValueObjects\Money;
 use Nexus\Payment\Enums\PaymentDirection;
 use Nexus\Payment\Enums\PaymentMethodType;
 use Nexus\Payment\Enums\PaymentStatus;
+use Nexus\Payment\ValueObjects\ExchangeRateSnapshot;
 use Nexus\Payment\ValueObjects\ExecutionContext;
 use Nexus\Payment\ValueObjects\IdempotencyKey;
 use Nexus\Payment\ValueObjects\PaymentReference;
@@ -17,6 +18,12 @@ use Nexus\Payment\ValueObjects\PaymentReference;
  *
  * Represents a single payment transaction in the system.
  * Payments can be inbound (receiving money) or outbound (sending money).
+ *
+ * Multi-currency payments are supported via:
+ * - getOriginalAmount(): Amount in original currency
+ * - getSettlementCurrency(): Currency for settlement
+ * - getExchangeRateSnapshot(): Exchange rate at time of payment
+ * - getSettlementAmount(): Amount converted to settlement currency
  */
 interface PaymentTransactionInterface
 {
@@ -189,4 +196,58 @@ interface PaymentTransactionInterface
      * Mark the payment as reversed.
      */
     public function markAsReversed(?string $reason = null, ?string $reversalTransactionId = null): void;
+
+    // ========================================================================
+    // Multi-Currency Support (PAY-060 to PAY-063)
+    // ========================================================================
+
+    /**
+     * Get the original amount in the source currency.
+     *
+     * This is the amount as specified by the payment initiator,
+     * before any currency conversion.
+     */
+    public function getOriginalAmount(): Money;
+
+    /**
+     * Get the settlement currency code.
+     *
+     * This is the currency that the payment will be settled in.
+     * For same-currency payments, this equals the original currency.
+     */
+    public function getSettlementCurrency(): string;
+
+    /**
+     * Get the settlement amount in the settlement currency.
+     *
+     * For same-currency payments, this equals getAmount().
+     * For cross-currency payments, this is the converted amount.
+     *
+     * Returns null if not yet calculated.
+     */
+    public function getSettlementAmount(): ?Money;
+
+    /**
+     * Get the exchange rate snapshot used for conversion.
+     *
+     * Returns null for same-currency payments or if not yet captured.
+     */
+    public function getExchangeRateSnapshot(): ?ExchangeRateSnapshot;
+
+    /**
+     * Check if this is a cross-currency payment.
+     */
+    public function isCrossCurrency(): bool;
+
+    /**
+     * Set the exchange rate snapshot for cross-currency conversion.
+     *
+     * This captures the rate at the time of payment creation.
+     */
+    public function setExchangeRateSnapshot(ExchangeRateSnapshot $snapshot): void;
+
+    /**
+     * Set the settlement amount after currency conversion.
+     */
+    public function setSettlementAmount(Money $amount): void;
 }
