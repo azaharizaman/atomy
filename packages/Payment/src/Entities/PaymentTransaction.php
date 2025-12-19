@@ -425,10 +425,18 @@ final class PaymentTransaction implements PaymentTransactionInterface
     /**
      * Set the settlement currency.
      *
-     * @throws \InvalidArgumentException If exchange rate snapshot is set with a different target currency
+     * @throws \InvalidArgumentException If currency is not a valid ISO 4217 code or conflicts with exchange rate snapshot
      */
     public function setSettlementCurrency(string $currency): void
     {
+        // Validate ISO 4217 currency code (3 uppercase letters)
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Currency code must be a valid ISO 4217 3-letter code, got: %s',
+                $currency
+            ));
+        }
+
         if ($this->exchangeRateSnapshot !== null && $this->exchangeRateSnapshot->targetCurrency !== $currency) {
             throw new \InvalidArgumentException(sprintf(
                 'Currency (%s) conflicts with existing exchange rate snapshot target currency (%s)',

@@ -355,4 +355,102 @@ final class ExchangeRateSnapshotTest extends TestCase
             $restored->capturedAt->format(DateTimeImmutable::ATOM)
         );
     }
+
+    #[Test]
+    public function it_throws_exception_for_lowercase_source_currency(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Source currency must be a valid ISO 4217 3-letter code, got: usd');
+
+        new ExchangeRateSnapshot(
+            sourceCurrency: 'usd',
+            targetCurrency: 'MYR',
+            rate: '4.50',
+            capturedAt: new DateTimeImmutable()
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_lowercase_target_currency(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Target currency must be a valid ISO 4217 3-letter code, got: myr');
+
+        new ExchangeRateSnapshot(
+            sourceCurrency: 'USD',
+            targetCurrency: 'myr',
+            rate: '4.50',
+            capturedAt: new DateTimeImmutable()
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_non_three_letter_source_currency(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Source currency must be a valid ISO 4217 3-letter code, got: US');
+
+        new ExchangeRateSnapshot(
+            sourceCurrency: 'US',
+            targetCurrency: 'MYR',
+            rate: '4.50',
+            capturedAt: new DateTimeImmutable()
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_too_long_target_currency(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Target currency must be a valid ISO 4217 3-letter code, got: USDT');
+
+        new ExchangeRateSnapshot(
+            sourceCurrency: 'USD',
+            targetCurrency: 'USDT',
+            rate: '4.50',
+            capturedAt: new DateTimeImmutable()
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_numeric_source_currency(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Source currency must be a valid ISO 4217 3-letter code, got: 123');
+
+        new ExchangeRateSnapshot(
+            sourceCurrency: '123',
+            targetCurrency: 'MYR',
+            rate: '4.50',
+            capturedAt: new DateTimeImmutable()
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_empty_source_currency(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Source currency must be a valid ISO 4217 3-letter code, got: ');
+
+        new ExchangeRateSnapshot(
+            sourceCurrency: '',
+            targetCurrency: 'MYR',
+            rate: '4.50',
+            capturedAt: new DateTimeImmutable()
+        );
+    }
+
+    #[Test]
+    public function it_throws_exception_for_empty_target_currency(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Target currency must be a valid ISO 4217 3-letter code, got: ');
+
+        new ExchangeRateSnapshot(
+            sourceCurrency: 'USD',
+            targetCurrency: '',
+            rate: '4.50',
+            capturedAt: new DateTimeImmutable()
+        );
+    }
 }

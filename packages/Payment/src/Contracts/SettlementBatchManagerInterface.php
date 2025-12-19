@@ -145,16 +145,24 @@ interface SettlementBatchManagerInterface
     /**
      * Recalculate batch totals from associated payments.
      *
-     * Fetches all payments linked to this batch and recalculates:
+     * This method requires implementations to have access to payment query interfaces
+     * to fetch all payments linked to the batch. It is primarily used for edge cases
+     * where payments may have been modified outside the normal batch workflow
+     * (e.g., administrative corrections, refund reversals, or data migration scenarios).
+     *
+     * IMPORTANT: Under normal operations, batches follow strict state transitions
+     * (OPEN → CLOSED → RECONCILED/DISPUTED). Payments should NOT be modified after
+     * being added to a batch. This method exists for exceptional administrative cases only.
+     *
+     * The method recalculates:
      * - grossAmount: Sum of all payment amounts
      * - totalFees: Sum of all processor fees
      * - netAmount: grossAmount - totalFees
      *
-     * Useful after payment modifications, reversals, or reconciliation adjustments.
-     *
      * @param string $batchId Batch ID
      * @return SettlementBatchInterface Updated batch with recalculated totals
      * @throws \Nexus\Payment\Exceptions\SettlementBatchNotFoundException If batch not found
+     * @throws \LogicException If implementation lacks payment query capabilities
      */
     public function recalculateTotals(string $batchId): SettlementBatchInterface;
 }
