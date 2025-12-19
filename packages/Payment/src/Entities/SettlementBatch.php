@@ -60,6 +60,14 @@ final class SettlementBatch implements SettlementBatchInterface
         private readonly DateTimeImmutable $openedAt,
         private readonly DateTimeImmutable $createdAt,
     ) {
+        // Validate ISO 4217 currency code (3 uppercase letters)
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Currency code must be a valid ISO 4217 3-letter code, got: %s',
+                $currency
+            ));
+        }
+
         $this->status = SettlementBatchStatus::OPEN;
         $this->grossAmount = Money::zero($currency);
         $this->totalFees = Money::zero($currency);
@@ -295,11 +303,25 @@ final class SettlementBatch implements SettlementBatchInterface
     }
 
     /**
-     * @param array<string, mixed> $metadata
+     * Merge additional metadata into existing metadata.
+     * Existing keys will be overwritten if present in the new metadata.
+     *
+     * @param array<string, mixed> $metadata Metadata to merge
+     */
+    public function mergeMetadata(array $metadata): void
+    {
+        $this->metadata = array_merge($this->metadata, $metadata);
+        $this->touch();
+    }
+
+    /**
+     * Replace all metadata with new metadata.
+     *
+     * @param array<string, mixed> $metadata New metadata
      */
     public function setMetadata(array $metadata): void
     {
-        $this->metadata = array_merge($this->metadata, $metadata);
+        $this->metadata = $metadata;
         $this->touch();
     }
 

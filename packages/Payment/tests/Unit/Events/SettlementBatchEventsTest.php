@@ -36,7 +36,7 @@ final class SettlementBatchEventsTest extends TestCase
     // ========================================================================
 
     #[Test]
-    public function itCreatesSettlementBatchCreatedEvent(): void
+    public function it_creates_settlement_batch_created_event(): void
     {
         $event = new SettlementBatchCreatedEvent(
             batchId: 'batch-001',
@@ -54,7 +54,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itExtendsSettlementBatchEvent(): void
+    public function it_extends_settlement_batch_event(): void
     {
         $event = new SettlementBatchCreatedEvent(
             batchId: 'batch-001',
@@ -72,7 +72,7 @@ final class SettlementBatchEventsTest extends TestCase
     // ========================================================================
 
     #[Test]
-    public function itCreatesSettlementBatchClosedEvent(): void
+    public function it_creates_settlement_batch_closed_event(): void
     {
         $grossAmount = Money::of(10000.00, 'MYR');
         $totalFees = Money::of(250.00, 'MYR');
@@ -100,7 +100,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itClosedEventExtendsSettlementBatchEvent(): void
+    public function it_closed_event_extends_settlement_batch_event(): void
     {
         $event = new SettlementBatchClosedEvent(
             batchId: 'batch-001',
@@ -117,7 +117,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itHandlesZeroAmountsInClosedEvent(): void
+    public function it_handles_zero_amounts_in_closed_event(): void
     {
         $event = new SettlementBatchClosedEvent(
             batchId: 'batch-001',
@@ -137,7 +137,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itClosedEventMoneyValuesAreCorrect(): void
+    public function it_closed_event_money_values_are_correct(): void
     {
         $event = new SettlementBatchClosedEvent(
             batchId: 'batch-001',
@@ -160,7 +160,7 @@ final class SettlementBatchEventsTest extends TestCase
     // ========================================================================
 
     #[Test]
-    public function itCreatesSettlementBatchReconciledEvent(): void
+    public function it_creates_settlement_batch_reconciled_event(): void
     {
         $expectedAmount = Money::of(10000.00, 'MYR');
         $actualAmount = Money::of(10000.00, 'MYR');
@@ -188,7 +188,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itCreatesReconciledEventWithDiscrepancy(): void
+    public function it_creates_reconciled_event_with_discrepancy(): void
     {
         $expectedAmount = Money::of(10000.00, 'MYR');
         $actualAmount = Money::of(9900.00, 'MYR');
@@ -210,7 +210,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itReconciledEventExtendsSettlementBatchEvent(): void
+    public function it_reconciled_event_extends_settlement_batch_event(): void
     {
         $event = new SettlementBatchReconciledEvent(
             batchId: 'batch-001',
@@ -227,7 +227,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itReconciledEventWithPositiveDiscrepancy(): void
+    public function it_reconciled_event_with_positive_discrepancy(): void
     {
         $expectedAmount = Money::of(1000.00, 'MYR');
         $actualAmount = Money::of(1050.00, 'MYR');
@@ -254,7 +254,7 @@ final class SettlementBatchEventsTest extends TestCase
     // ========================================================================
 
     #[Test]
-    public function itCreatesSettlementBatchDisputedEvent(): void
+    public function it_creates_settlement_batch_disputed_event(): void
     {
         $event = new SettlementBatchDisputedEvent(
             batchId: 'batch-001',
@@ -272,7 +272,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itDisputedEventExtendsSettlementBatchEvent(): void
+    public function it_disputed_event_extends_settlement_batch_event(): void
     {
         $event = new SettlementBatchDisputedEvent(
             batchId: 'batch-001',
@@ -286,7 +286,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itDisputedEventWithLongReason(): void
+    public function it_disputed_event_with_long_reason(): void
     {
         $longReason = str_repeat('This is a detailed dispute reason. ', 20);
 
@@ -306,7 +306,7 @@ final class SettlementBatchEventsTest extends TestCase
     // ========================================================================
 
     #[Test]
-    public function itCreatesPaymentAddedToBatchEvent(): void
+    public function it_creates_payment_added_to_batch_event(): void
     {
         $amount = Money::of(250.00, 'MYR');
         $fee = Money::of(6.25, 'MYR');
@@ -331,7 +331,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itPaymentAddedEventExtendsSettlementBatchEvent(): void
+    public function it_payment_added_event_extends_settlement_batch_event(): void
     {
         $event = new PaymentAddedToBatchEvent(
             batchId: 'batch-001',
@@ -347,7 +347,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itHandlesZeroFeePayment(): void
+    public function it_handles_zero_fee_payment(): void
     {
         $event = new PaymentAddedToBatchEvent(
             batchId: 'batch-001',
@@ -364,7 +364,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itPaymentAddedEventWithLargeAmount(): void
+    public function it_payment_added_event_with_large_amount(): void
     {
         $event = new PaymentAddedToBatchEvent(
             batchId: 'batch-001',
@@ -385,7 +385,7 @@ final class SettlementBatchEventsTest extends TestCase
     // ========================================================================
 
     #[Test]
-    public function itCreatedEventPropertiesAreReadonly(): void
+    public function it_created_event_properties_are_readonly(): void
     {
         $event = new SettlementBatchCreatedEvent(
             batchId: 'batch-001',
@@ -405,7 +405,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itClosedEventPropertiesAreReadonly(): void
+    public function it_closed_event_properties_are_readonly(): void
     {
         $event = new SettlementBatchClosedEvent(
             batchId: 'batch-001',
@@ -427,7 +427,7 @@ final class SettlementBatchEventsTest extends TestCase
     }
 
     #[Test]
-    public function itReconciledEventPropertiesAreReadonly(): void
+    public function it_reconciled_event_properties_are_readonly(): void
     {
         $event = new SettlementBatchReconciledEvent(
             batchId: 'batch-001',

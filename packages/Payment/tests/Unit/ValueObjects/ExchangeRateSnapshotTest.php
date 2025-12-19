@@ -315,10 +315,10 @@ final class ExchangeRateSnapshotTest extends TestCase
     }
 
     #[Test]
-    public function it_throws_division_by_zero_on_convert_back(): void
+    public function it_converts_back_to_source_currency_using_rate(): void
     {
-        // This should not happen in practice due to constructor validation,
-        // but the method has defensive code for it
+        // Verify that convertBack correctly divides target amount by rate
+        // to return the source currency amount (inverse of convert())
         $snapshot = new ExchangeRateSnapshot(
             sourceCurrency: 'USD',
             targetCurrency: 'MYR',
@@ -326,7 +326,7 @@ final class ExchangeRateSnapshotTest extends TestCase
             capturedAt: new DateTimeImmutable()
         );
 
-        // Normal conversion back works
+        // 450 MYR / 4.50 = 100 USD
         $result = $snapshot->convertBack('450');
         $this->assertSame('100.000000', $result);
     }

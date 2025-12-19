@@ -19,9 +19,12 @@ interface SettlementBatchManagerInterface
     /**
      * Create a new settlement batch for a processor.
      *
+     * The batch currency should be specified in metadata or configured at the processor level.
+     * If not specified, the implementation should use the processor's default settlement currency.
+     *
      * @param string $tenantId Tenant ID
      * @param string $processorId Payment processor ID
-     * @param array<string, mixed> $metadata Optional metadata
+     * @param array<string, mixed> $metadata Optional metadata (may include 'currency' key)
      * @return SettlementBatchInterface
      */
     public function createBatch(
@@ -33,6 +36,9 @@ interface SettlementBatchManagerInterface
     /**
      * Get or create the current open batch for a processor.
      * If no open batch exists, creates a new one.
+     *
+     * The batch currency is determined by the processor's configuration.
+     * For cross-currency settlements, use createBatch() with explicit currency in metadata.
      *
      * @param string $tenantId Tenant ID
      * @param string $processorId Payment processor ID
@@ -46,12 +52,16 @@ interface SettlementBatchManagerInterface
     /**
      * Add a payment to the current open batch.
      *
+     * The payment amount and fee currencies must match the batch currency.
+     * For cross-currency payments, convert amounts to the batch currency before calling.
+     *
      * @param string $tenantId Tenant ID
      * @param string $processorId Payment processor ID
      * @param string $paymentId Payment ID
-     * @param Money $amount Payment amount
-     * @param Money $fee Processor fee
+     * @param Money $amount Payment amount (must match batch currency)
+     * @param Money $fee Processor fee (must match batch currency)
      * @return SettlementBatchInterface Updated batch
+     * @throws \InvalidArgumentException If currency does not match batch currency
      */
     public function addPaymentToBatch(
         string $tenantId,
@@ -133,11 +143,18 @@ interface SettlementBatchManagerInterface
     public function getDisputedBatches(string $tenantId): array;
 
     /**
-     * Calculate batch totals from payments.
-     * Useful for recalculating after payment modifications.
+     * Recalculate batch totals from associated payments.
+     *
+     * Fetches all payments linked to this batch and recalculates:
+     * - grossAmount: Sum of all payment amounts
+     * - totalFees: Sum of all processor fees
+     * - netAmount: grossAmount - totalFees
+     *
+     * Useful after payment modifications, reversals, or reconciliation adjustments.
      *
      * @param string $batchId Batch ID
-     * @return SettlementBatchInterface Updated batch
+     * @return SettlementBatchInterface Updated batch with recalculated totals
+     * @throws \Nexus\Payment\Exceptions\SettlementBatchNotFoundException If batch not found
      */
     public function recalculateTotals(string $batchId): SettlementBatchInterface;
 }

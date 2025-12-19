@@ -206,9 +206,17 @@ interface SettlementBatchInterface
     public function setSettlementDate(DateTimeImmutable $date): void;
 
     /**
-     * Update batch metadata.
+     * Replace all batch metadata with new metadata.
+     *
+     * @param array<string, mixed> $metadata New metadata (replaces existing)
+     */
+    public function setMetadata(array $metadata): void;
+
+    /**
+     * Merge additional metadata into existing metadata.
+     * Existing keys will be overwritten if present in the new metadata.
      *
      * @param array<string, mixed> $metadata Metadata to merge
      */
-    public function setMetadata(array $metadata): void;
+    public function mergeMetadata(array $metadata): void;
 }
