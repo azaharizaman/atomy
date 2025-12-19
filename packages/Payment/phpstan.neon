@@ -32,4 +32,4 @@ parameters:
         - '#PHPDoc tag @throws with type Nexus\\Payment\\Exceptions\\PaymentStateException#'
     
     # Report unmatched ignores so we know when issues are fixed
-    reportUnmatchedIgnoredErrors: false
+    reportUnmatchedIgnoredErrors: true

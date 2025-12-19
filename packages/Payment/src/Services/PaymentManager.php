@@ -91,13 +91,35 @@ final class PaymentManager implements PaymentManagerInterface
             );
 
             if ($existing !== null) {
-                // Verify tenant matches for extra safety
+                // Verify tenant matches for extra safety; cross-tenant collisions are treated as security issues
                 if ($existing->getTenantId() === $tenantId) {
                     throw new DuplicatePaymentException(
                         $idempotencyKey->getValue(),
                         $existing->getId()
                     );
                 }
+
+                $this->logger->warning(
+                    'Idempotency key collision across tenants detected in PaymentManager::create',
+                    [
+                        'idempotencyKey'   => $idempotencyKey->getValue(),
+                        'currentTenantId'  => $tenantId,
+                        'existingTenantId' => $existing->getTenantId(),
+                        'existingPaymentId'=> $existing->getId(),
+                    ]
+                );
+
+                throw new PaymentExecutionException(
+                    message: 'Idempotency key collision across tenants detected.',
+                    paymentId: null,
+                    providerCode: 'SECURITY_IDEMPOTENCY_TENANT_COLLISION',
+                    providerMessage: sprintf(
+                        'idempotencyKey=%s; currentTenantId=%s; existingTenantId=%s',
+                        $idempotencyKey->getValue(),
+                        $tenantId,
+                        $existing->getTenantId()
+                    )
+                );
             }
         }
 
@@ -385,7 +407,7 @@ final class PaymentManager implements PaymentManagerInterface
         $payment = $this->paymentQuery->findById($paymentId);
 
         if ($payment === null) {
-            throw new PaymentNotFoundException($paymentId);
+            throw PaymentNotFoundException::forId($paymentId);
         }
 
         return $payment;

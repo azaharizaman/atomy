@@ -397,14 +397,12 @@ final class DisbursementManager implements DisbursementManagerInterface
      */
     public function getPendingApprovals(string $tenantId): array
     {
-        // Note: Repository auto-scopes by tenant via TenantContextInterface
-        // Manual tenant filtering applied for consistency
+        // Repository is responsible for tenant scoping via TenantContextInterface.
+        // The $tenantId parameter is kept for interface symmetry with other methods
+        // and for potential future use, but is not used for additional filtering here.
         $pending = $this->disbursementQuery->findPendingApproval();
 
-        return array_filter(
-            $pending,
-            fn(DisbursementInterface $d) => $d->getTenantId() === $tenantId
-        );
+        return $pending;
     }
 
     /**
