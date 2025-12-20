@@ -55,14 +55,14 @@ final class DisbursementLimitValidator implements DisbursementLimitValidatorInte
                 continue;
             }
 
-            $currentUsage = $this->getCurrentUsage($tenantId, $period, $userId);
+            $currentUsage = $this->getCurrentUsage($tenantId, $period, $userId, $amount->getCurrency());
             $limits->validatePeriodAmount($amount, $currentUsage, $period);
 
-            // Also check count limits
+            // Also check count limits - add 1 to simulate count AFTER adding this transaction
             $countLimit = $limits->getCountLimitForPeriod($period);
             if ($countLimit !== null) {
                 $currentCount = $this->getCurrentCount($tenantId, $period, $userId);
-                $limits->validatePeriodCount($currentCount, $period);
+                $limits->validatePeriodCount($currentCount + 1, $period);
             }
         }
 
@@ -120,11 +120,14 @@ final class DisbursementLimitValidator implements DisbursementLimitValidatorInte
 
     /**
      * {@inheritDoc}
+     *
+     * @param string|null $defaultCurrency Currency to use when no disbursements exist (for internal use)
      */
     public function getCurrentUsage(
         string $tenantId,
         LimitPeriod $period,
         ?string $userId = null,
+        ?string $defaultCurrency = null,
     ): Money {
         $now = new \DateTimeImmutable();
         $periodStart = $period->getPeriodStart($now);
@@ -143,9 +146,10 @@ final class DisbursementLimitValidator implements DisbursementLimitValidatorInte
             ],
         );
 
-        // If there are no disbursements in the period, usage is zero in USD by default
+        // If there are no disbursements in the period, usage is zero
+        // Use the provided currency or fall back to USD
         if (empty($disbursements)) {
-            return Money::zero('USD');
+            return Money::zero($defaultCurrency ?? 'USD');
         }
 
         // Sum up amounts, using the currency of the first disbursement

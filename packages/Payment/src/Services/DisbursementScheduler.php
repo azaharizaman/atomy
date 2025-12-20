@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Payment\Services;
 
 use Nexus\Payment\Contracts\DisbursementInterface;
+use Nexus\Payment\Contracts\DisbursementManagerInterface;
 use Nexus\Payment\Contracts\DisbursementPersistInterface;
 use Nexus\Payment\Contracts\DisbursementQueryInterface;
 use Nexus\Payment\Contracts\DisbursementSchedulerInterface;
@@ -30,6 +31,7 @@ final readonly class DisbursementScheduler implements DisbursementSchedulerInter
         private DisbursementQueryInterface $disbursementQuery,
         private DisbursementPersistInterface $disbursementPersist,
         private DisbursementScheduleStorageInterface $scheduleStorage,
+        private ?DisbursementManagerInterface $disbursementManager = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -171,25 +173,74 @@ final readonly class DisbursementScheduler implements DisbursementSchedulerInter
     /**
      * {@inheritDoc}
      *
-     * NOTE: This method is not fully implemented.
+     * Creates a new disbursement instance for the next occurrence of a recurring
+     * disbursement, copying the template data from the parent disbursement.
      *
-     * Proper implementation requires creating a new disbursement instance for each
-     * occurrence using a factory/manager (e.g. DisbursementFactoryInterface or
-     * DisbursementManagerInterface) injected into this service.
-     *
-     * Until that dependency is wired in and the implementation completed, this
-     * method will throw a LogicException to prevent incorrect behaviour in
-     * production.
-     *
-     * @throws \LogicException Always thrown - method not implemented
+     * @throws DisbursementNotFoundException If parent disbursement not found
+     * @throws InvalidScheduleException If no more occurrences are available
+     * @throws \LogicException If DisbursementManagerInterface was not injected
      */
     public function processNextOccurrence(string $disbursementId): DisbursementInterface
     {
-        throw new \LogicException(
-            'processNextOccurrence is not implemented: recurring disbursement ' .
-            'processing requires a disbursement factory/manager to create ' .
-            'new disbursement instances for each occurrence.'
+        if ($this->disbursementManager === null) {
+            throw new \LogicException(
+                'processNextOccurrence requires DisbursementManagerInterface to be injected. ' .
+                'Ensure the scheduler is constructed with a disbursement manager.'
+            );
+        }
+
+        // Get the parent disbursement (template)
+        $parentDisbursement = $this->disbursementQuery->findById($disbursementId);
+        if ($parentDisbursement === null) {
+            throw DisbursementNotFoundException::withId($disbursementId);
+        }
+
+        // Get and validate schedule
+        $schedule = $this->getSchedule($disbursementId);
+        if ($schedule === null) {
+            throw InvalidScheduleException::scheduleNotRecurring();
+        }
+
+        if (!$schedule->hasMoreOccurrences()) {
+            throw InvalidScheduleException::scheduleNoMoreOccurrences();
+        }
+
+        // Calculate the next occurrence date
+        $nextDate = $schedule->getNextOccurrence();
+        if ($nextDate === null) {
+            throw InvalidScheduleException::scheduleNoMoreOccurrences();
+        }
+
+        // Create a new disbursement from the template
+        $newDisbursement = $this->disbursementManager->create(
+            tenantId: $parentDisbursement->getTenantId(),
+            amount: $parentDisbursement->getAmount(),
+            recipient: $parentDisbursement->getRecipient(),
+            methodType: $parentDisbursement->getMethodType(),
+            createdBy: $parentDisbursement->getCreatedBy(),
+            sourceDocumentIds: $parentDisbursement->getSourceDocumentIds() ?: null,
+            scheduledDate: $nextDate,
+            metadata: array_merge(
+                $parentDisbursement->getMetadata(),
+                [
+                    'parent_disbursement_id' => $disbursementId,
+                    'occurrence_number' => $schedule->getCompletedOccurrences() + 1,
+                ]
+            ),
         );
+
+        // Update the schedule to record this occurrence
+        $updatedSchedule = $schedule->recordOccurrence();
+        $this->scheduleStorage->saveSchedule($disbursementId, $updatedSchedule);
+
+        $this->logger->info('Processed next occurrence for recurring disbursement', [
+            'parent_disbursement_id' => $disbursementId,
+            'new_disbursement_id' => $newDisbursement->getId(),
+            'scheduled_date' => $nextDate->format('c'),
+            'occurrence_number' => $updatedSchedule->getCompletedOccurrences(),
+        ]);
+
+        return $newDisbursement;
     }
 
     /**

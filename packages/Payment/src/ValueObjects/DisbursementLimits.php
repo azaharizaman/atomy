@@ -146,10 +146,10 @@ final class DisbursementLimits
     /**
      * Validate against period count limit.
      *
-     * @param int $currentCount Current period transaction count (excluding this transaction)
+     * @param int $currentCount Transaction count INCLUDING the current transaction being validated
      * @param LimitPeriod $period The period to check
      *
-     * @throws DisbursementLimitExceededException If limit would be exceeded
+     * @throws DisbursementLimitExceededException If count exceeds the limit
      */
     public function validatePeriodCount(int $currentCount, LimitPeriod $period): void
     {
