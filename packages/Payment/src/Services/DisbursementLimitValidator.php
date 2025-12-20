@@ -21,7 +21,7 @@ use Psr\Log\NullLogger;
  * Validates disbursement amounts against configured limits (PAY-035).
  * Supports per-transaction, daily, weekly, and monthly limits.
  */
-final class DisbursementLimitValidator implements DisbursementLimitValidatorInterface
+final readonly class DisbursementLimitValidator implements DisbursementLimitValidatorInterface
 {
     public function __construct(
         private readonly DisbursementQueryInterface $disbursementQuery,
@@ -55,7 +55,7 @@ final class DisbursementLimitValidator implements DisbursementLimitValidatorInte
                 continue;
             }
 
-            $currentUsage = $this->getCurrentUsage($tenantId, $period, $userId, $amount->getCurrency());
+            $currentUsage = $this->getCurrentUsage($tenantId, $period, $userId);
             $limits->validatePeriodAmount($amount, $currentUsage, $period);
 
             // Also check count limits - add 1 to simulate count AFTER adding this transaction
@@ -120,14 +120,11 @@ final class DisbursementLimitValidator implements DisbursementLimitValidatorInte
 
     /**
      * {@inheritDoc}
-     *
-     * @param string|null $defaultCurrency Currency to use when no disbursements exist (for internal use)
      */
     public function getCurrentUsage(
         string $tenantId,
         LimitPeriod $period,
         ?string $userId = null,
-        ?string $defaultCurrency = null,
     ): Money {
         $now = new \DateTimeImmutable();
         $periodStart = $period->getPeriodStart($now);
@@ -147,9 +144,9 @@ final class DisbursementLimitValidator implements DisbursementLimitValidatorInte
         );
 
         // If there are no disbursements in the period, usage is zero
-        // Use the provided currency or fall back to USD
+        // Fall back to USD as the base currency when no disbursements exist
         if (empty($disbursements)) {
-            return Money::zero($defaultCurrency ?? 'USD');
+            return Money::zero('USD');
         }
 
         // Sum up amounts, using the currency of the first disbursement

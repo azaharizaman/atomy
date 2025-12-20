@@ -206,7 +206,7 @@ final readonly class DisbursementScheduler implements DisbursementSchedulerInter
         }
 
         // Calculate the next occurrence date
-        $nextDate = $schedule->getNextOccurrence();
+        $nextDate = $schedule->calculateNextOccurrence();
         if ($nextDate === null) {
             throw InvalidScheduleException::scheduleNoMoreOccurrences();
         }
@@ -224,20 +224,20 @@ final readonly class DisbursementScheduler implements DisbursementSchedulerInter
                 $parentDisbursement->getMetadata(),
                 [
                     'parent_disbursement_id' => $disbursementId,
-                    'occurrence_number' => $schedule->getCompletedOccurrences() + 1,
+                    'occurrence_number' => $schedule->currentOccurrence + 1,
                 ]
             ),
         );
 
         // Update the schedule to record this occurrence
-        $updatedSchedule = $schedule->recordOccurrence();
+        $updatedSchedule = $schedule->incrementOccurrence();
         $this->scheduleStorage->saveSchedule($disbursementId, $updatedSchedule);
 
         $this->logger->info('Processed next occurrence for recurring disbursement', [
             'parent_disbursement_id' => $disbursementId,
             'new_disbursement_id' => $newDisbursement->getId(),
             'scheduled_date' => $nextDate->format('c'),
-            'occurrence_number' => $updatedSchedule->getCompletedOccurrences(),
+            'occurrence_number' => $updatedSchedule->currentOccurrence,
         ]);
 
         return $newDisbursement;
