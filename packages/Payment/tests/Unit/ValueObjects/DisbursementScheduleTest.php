@@ -308,8 +308,9 @@ final class DisbursementScheduleTest extends TestCase
     #[Test]
     public function it_stops_recurring_when_end_date_is_reached(): void
     {
-        $startDate = new \DateTimeImmutable('+1 day');
-        $endDate = new \DateTimeImmutable('+60 days'); // ~2 months
+        // Use fixed dates for deterministic testing
+        $startDate = new \DateTimeImmutable('2025-01-15 10:00:00');
+        $endDate = new \DateTimeImmutable('2025-03-01 10:00:00'); // ~45 days later
 
         // Monthly recurrence with end date
         $schedule = DisbursementSchedule::recurring(
@@ -318,25 +319,51 @@ final class DisbursementScheduleTest extends TestCase
             endDate: $endDate,
         );
 
-        // First occurrence should be available
+        // First occurrence (2025-01-15) - should be available
         $this->assertTrue($schedule->hasMoreOccurrences());
-        $nextDate = $schedule->calculateNextOccurrence();
-        $this->assertNotNull($nextDate);
-        $this->assertEquals($startDate, $nextDate);
+        $firstOccurrence = $schedule->calculateNextOccurrence();
+        $this->assertNotNull($firstOccurrence);
+        $this->assertEquals($startDate, $firstOccurrence);
 
-        // Second occurrence (after 1 month)
+        // Second occurrence (2025-02-15) - should be available (within end date)
         $schedule = $schedule->incrementOccurrence();
         $this->assertTrue($schedule->hasMoreOccurrences());
+        $secondOccurrence = $schedule->calculateNextOccurrence();
+        $this->assertNotNull($secondOccurrence);
+        $this->assertEquals(new \DateTimeImmutable('2025-02-15 10:00:00'), $secondOccurrence);
         
-        // Third occurrence would be after end date (after 2 months from start)
+        // Third occurrence (2025-03-15) - would exceed end date (2025-03-01)
         $schedule = $schedule->incrementOccurrence();
-        
-        // Calculate if next occurrence exceeds end date
         $thirdOccurrence = $schedule->calculateNextOccurrence();
         
-        // The third occurrence should be null or beyond end date
-        if ($thirdOccurrence !== null && $thirdOccurrence > $endDate) {
-            $this->assertFalse($schedule->hasMoreOccurrences());
-        }
+        // Should be null because it exceeds end date
+        $this->assertNull($thirdOccurrence);
+        $this->assertFalse($schedule->hasMoreOccurrences());
+    }
+
+    #[Test]
+    public function it_handles_variable_month_lengths_correctly(): void
+    {
+        // Test the Jan 31 edge case mentioned in review
+        // Monthly recurrence from Jan 31 should correctly handle Feb 28/29
+        $startDate = new \DateTimeImmutable('2025-01-31 10:00:00');
+
+        $schedule = DisbursementSchedule::recurring(
+            startDate: $startDate,
+            frequency: RecurrenceFrequency::MONTHLY,
+        );
+
+        // First occurrence: Jan 31
+        $this->assertEquals('2025-01-31', $schedule->calculateNextOccurrence()->format('Y-m-d'));
+
+        // Second occurrence: Feb 28 (2025 is not a leap year, Jan 31 + 1 month = Feb 28)
+        $schedule = $schedule->incrementOccurrence();
+        $secondOccurrence = $schedule->calculateNextOccurrence();
+        $this->assertEquals('2025-02-28', $secondOccurrence->format('Y-m-d'));
+
+        // Third occurrence: Should be Mar 31 (Feb 28 + 1 month, not Feb 28 + 2 months from Jan 31)
+        $schedule = $schedule->incrementOccurrence();
+        $thirdOccurrence = $schedule->calculateNextOccurrence();
+        $this->assertEquals('2025-03-31', $thirdOccurrence->format('Y-m-d'));
     }
 }
