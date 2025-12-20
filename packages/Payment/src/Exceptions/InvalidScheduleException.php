@@ -68,6 +68,22 @@ final class InvalidScheduleException extends PaymentException
      */
     public static function scheduleCompleted(): self
     {
-        return new self('This disbursement schedule has no more occurrences');
+        return new self('Disbursement schedule has been completed');
+    }
+
+    /**
+     * Create exception for non-recurring schedule.
+     */
+    public static function scheduleNotRecurring(): self
+    {
+        return new self('Cannot process next occurrence - schedule is not recurring');
+    }
+
+    /**
+     * Create exception for no more occurrences.
+     */
+    public static function scheduleNoMoreOccurrences(): self
+    {
+        return new self('Recurring schedule has reached maximum occurrences or end date');
     }
 }

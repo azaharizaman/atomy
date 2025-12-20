@@ -21,22 +21,19 @@ use Psr\Log\NullLogger;
  * Validates disbursement amounts against configured limits (PAY-035).
  * Supports per-transaction, daily, weekly, and monthly limits.
  */
-final readonly class DisbursementLimitValidator implements DisbursementLimitValidatorInterface
+final class DisbursementLimitValidator implements DisbursementLimitValidatorInterface
 {
     /** @var array<string, DisbursementLimits> Tenant limits cache */
-    private array $tenantLimits;
+    private array $tenantLimits = [];
 
     /** @var array<string, array<string, DisbursementLimits>> User limits cache */
-    private array $userLimits;
+    private array $userLimits = [];
 
     public function __construct(
-        private DisbursementQueryInterface $disbursementQuery,
-        private DisbursementLimitStorageInterface $limitStorage,
-        private LoggerInterface $logger = new NullLogger(),
-    ) {
-        $this->tenantLimits = [];
-        $this->userLimits = [];
-    }
+        private readonly DisbursementQueryInterface $disbursementQuery,
+        private readonly DisbursementLimitStorageInterface $limitStorage,
+        private readonly LoggerInterface $logger = new NullLogger(),
+    ) {}
 
     /**
      * {@inheritDoc}
