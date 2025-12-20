@@ -23,12 +23,6 @@ use Psr\Log\NullLogger;
  */
 final class DisbursementLimitValidator implements DisbursementLimitValidatorInterface
 {
-    /** @var array<string, DisbursementLimits> Tenant limits cache */
-    private array $tenantLimits = [];
-
-    /** @var array<string, array<string, DisbursementLimits>> User limits cache */
-    private array $userLimits = [];
-
     public function __construct(
         private readonly DisbursementQueryInterface $disbursementQuery,
         private readonly DisbursementLimitStorageInterface $limitStorage,
@@ -149,15 +143,27 @@ final class DisbursementLimitValidator implements DisbursementLimitValidatorInte
             ],
         );
 
-        // Sum up amounts
-        $total = Money::zero('USD'); // Will match first disbursement's currency
+        // If there are no disbursements in the period, usage is zero in USD by default
+        if (empty($disbursements)) {
+            return Money::zero('USD');
+        }
+
+        // Sum up amounts, using the currency of the first disbursement
+        $firstDisbursement = reset($disbursements);
+        $total = Money::zero($firstDisbursement->getAmount()->getCurrency());
 
         foreach ($disbursements as $disbursement) {
             $amount = $disbursement->getAmount();
 
             if ($total->getCurrency() !== $amount->getCurrency()) {
-                // Currency mismatch - in real implementation, would use CurrencyConversionInterface
-                continue;
+                // Currency mismatch indicates inconsistent configuration or data; fail fast
+                throw new \LogicException(sprintf(
+                    'Currency mismatch while calculating disbursement totals: expected "%s", got "%s" for tenant "%s"%s.',
+                    $total->getCurrency(),
+                    $amount->getCurrency(),
+                    $tenantId,
+                    $userId !== null ? sprintf(' and user "%s"', $userId) : ''
+                ));
             }
 
             $total = $total->add($amount);

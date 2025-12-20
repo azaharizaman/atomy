@@ -171,66 +171,25 @@ final readonly class DisbursementScheduler implements DisbursementSchedulerInter
     /**
      * {@inheritDoc}
      *
-     * NOTE: Current implementation limitation - This method should create a new
-     * disbursement instance for each occurrence, but lacks the necessary factory
-     * dependency. Proper implementation requires DisbursementFactoryInterface or
-     * DisbursementManagerInterface to be injected.
+     * NOTE: This method is not fully implemented.
      *
-     * For now, it returns the parent disbursement and updates the schedule counter.
-     * Consumers should use the returned disbursement's scheduled date and occurrence
-     * number from the updated schedule to track processing.
+     * Proper implementation requires creating a new disbursement instance for each
+     * occurrence using a factory/manager (e.g. DisbursementFactoryInterface or
+     * DisbursementManagerInterface) injected into this service.
+     *
+     * Until that dependency is wired in and the implementation completed, this
+     * method will throw a LogicException to prevent incorrect behaviour in
+     * production.
+     *
+     * @throws \LogicException Always thrown - method not implemented
      */
     public function processNextOccurrence(string $disbursementId): DisbursementInterface
     {
-        $schedule = $this->getSchedule($disbursementId);
-
-        if ($schedule === null) {
-            throw new DisbursementNotFoundException($disbursementId);
-        }
-
-        if (!$schedule->scheduleType->supportsRecurrence()) {
-            throw InvalidScheduleException::scheduleNotRecurring();
-        }
-
-        if (!$schedule->hasMoreOccurrences()) {
-            throw InvalidScheduleException::scheduleNoMoreOccurrences();
-        }
-
-        // Get parent disbursement
-        $parentDisbursement = $this->disbursementQuery->findById($disbursementId);
-
-        if ($parentDisbursement === null) {
-            throw new DisbursementNotFoundException($disbursementId);
-        }
-
-        // Calculate and schedule next occurrence
-        $nextDate = $schedule->calculateNextOccurrence();
-
-        if ($nextDate === null) {
-            throw InvalidScheduleException::scheduleNoMoreOccurrences();
-        }
-
-        // Increment occurrence counter
-        $updatedSchedule = $schedule->incrementOccurrence();
-
-        // Update stored schedule
-        $this->scheduleStorage->saveSchedule($disbursementId, $updatedSchedule);
-
-        // TODO: Create new disbursement instance for this occurrence
-        // This requires a factory/manager dependency to be added to constructor
-        // For now, update the parent's scheduled date to reflect next occurrence
-        if ($nextDate !== $parentDisbursement->getScheduledDate()) {
-            $parentDisbursement->schedule($nextDate);
-            $this->disbursementPersist->save($parentDisbursement);
-        }
-
-        $this->logger->info('Recurring disbursement next occurrence scheduled', [
-            'disbursement_id' => $disbursementId,
-            'occurrence' => $updatedSchedule->currentOccurrence,
-            'next_date' => $nextDate->format('c'),
-        ]);
-
-        return $parentDisbursement;
+        throw new \LogicException(
+            'processNextOccurrence is not implemented: recurring disbursement ' .
+            'processing requires a disbursement factory/manager to create ' .
+            'new disbursement instances for each occurrence.'
+        );
     }
 
     /**
@@ -291,9 +250,6 @@ final readonly class DisbursementScheduler implements DisbursementSchedulerInter
             throw new DisbursementNotFoundException($disbursementId);
         }
 
-        // Validate schedule (only validates recurrence frequency requirement)
-        $this->validateSchedule($schedule, $disbursement);
-
         // Store the schedule
         $this->scheduleStorage->saveSchedule($disbursementId, $schedule);
 
@@ -312,30 +268,6 @@ final readonly class DisbursementScheduler implements DisbursementSchedulerInter
         ], $logContext));
 
         return $disbursement;
-    }
-
-    /**
-     * Validate schedule configuration.
-     *
-     * Note: Date validations (past dates, end date, max occurrences) are already
-     * performed by the DisbursementSchedule value object factory methods.
-     * This method only validates business rules not covered by the value object.
-     *
-     * @throws InvalidScheduleException If schedule is invalid
-     */
-    private function validateSchedule(
-        DisbursementSchedule $schedule,
-        DisbursementInterface $disbursement,
-    ): void {
-        // Recurring schedules require frequency (redundant check, but explicit)
-        if ($schedule->scheduleType === ScheduleType::RECURRING) {
-            if ($schedule->recurrenceFrequency === null) {
-                throw InvalidScheduleException::recurrenceFrequencyRequired();
-            }
-        }
-
-        // Additional business validation could be added here
-        // e.g., checking if disbursement is in correct status for scheduling
     }
 
     /**

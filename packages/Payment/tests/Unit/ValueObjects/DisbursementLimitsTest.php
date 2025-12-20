@@ -205,9 +205,10 @@ final class DisbursementLimitsTest extends TestCase
         $limits = DisbursementLimits::none()
             ->withDailyCountLimit(10);
 
-        // Should not throw
+        // Should not throw - exactly at the limit should be allowed
         $limits->validatePeriodCount(5, LimitPeriod::DAILY);
         $limits->validatePeriodCount(9, LimitPeriod::DAILY);
+        $limits->validatePeriodCount(10, LimitPeriod::DAILY); // At limit is OK
 
         $this->assertTrue(true);
     }
@@ -218,10 +219,18 @@ final class DisbursementLimitsTest extends TestCase
         $limits = DisbursementLimits::none()
             ->withDailyCountLimit(10);
 
-        $this->expectException(DisbursementLimitExceededException::class);
-        $this->expectExceptionMessage('count limit');
-
-        $limits->validatePeriodCount(10, LimitPeriod::DAILY);
+        try {
+            // Now exceeding the limit should throw
+            $limits->validatePeriodCount(11, LimitPeriod::DAILY);
+            $this->fail('Expected DisbursementLimitExceededException to be thrown');
+        } catch (DisbursementLimitExceededException $e) {
+            $this->assertStringContainsString('count limit', $e->getMessage());
+            // Verify exception properties are correctly populated
+            $this->assertSame(11, $e->currentCount);
+            $this->assertSame(10, $e->countLimit);
+            $this->assertSame(LimitPeriod::DAILY, $e->period);
+            $this->assertTrue($e->isCountLimit());
+        }
     }
 
     #[Test]
@@ -263,5 +272,43 @@ final class DisbursementLimitsTest extends TestCase
         $this->assertSame(10, $limits->getCountLimitForPeriod(LimitPeriod::DAILY));
         $this->assertSame(50, $limits->getCountLimitForPeriod(LimitPeriod::WEEKLY));
         $this->assertSame(150, $limits->getCountLimitForPeriod(LimitPeriod::MONTHLY));
+    }
+
+    #[Test]
+    public function exception_helper_methods_identify_exception_type(): void
+    {
+        $limits = DisbursementLimits::none()
+            ->withPerTransactionLimit(Money::of(1000, 'USD'))
+            ->withDailyLimit(Money::of(5000, 'USD'))
+            ->withDailyCountLimit(10);
+
+        // Test per-transaction limit exception
+        try {
+            $limits->validateAmount(Money::of(2000, 'USD'));
+            $this->fail('Expected per-transaction limit exception');
+        } catch (DisbursementLimitExceededException $e) {
+            $this->assertTrue($e->isPerTransactionLimit());
+            $this->assertFalse($e->isCountLimit());
+        }
+
+        // Test period amount limit exception
+        try {
+            $currentUsage = Money::of(4500, 'USD');
+            $amount = Money::of(1000, 'USD');
+            $limits->validatePeriodAmount($amount, $currentUsage, LimitPeriod::DAILY);
+            $this->fail('Expected period limit exception');
+        } catch (DisbursementLimitExceededException $e) {
+            $this->assertFalse($e->isPerTransactionLimit());
+            $this->assertFalse($e->isCountLimit());
+        }
+
+        // Test count limit exception
+        try {
+            $limits->validatePeriodCount(11, LimitPeriod::DAILY);
+            $this->fail('Expected count limit exception');
+        } catch (DisbursementLimitExceededException $e) {
+            $this->assertFalse($e->isPerTransactionLimit());
+            $this->assertTrue($e->isCountLimit());
+        }
     }
 }

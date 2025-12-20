@@ -159,7 +159,7 @@ final class DisbursementLimits
             return;
         }
 
-        if ($currentCount >= $limit) {
+        if ($currentCount > $limit) {
             throw DisbursementLimitExceededException::countLimitExceeded(
                 currentCount: $currentCount,
                 limit: $limit,
@@ -267,6 +267,10 @@ final class DisbursementLimits
 
     /**
      * Create a new instance with updated per-transaction limit.
+     *
+     * Note: The withXXX methods follow an immutable pattern by creating new instances.
+     * While this creates some code repetition, it's the recommended approach for PHP 8.3.
+     * PHP 8.4+ will support the `with` keyword for more concise property cloning.
      */
     public function withPerTransactionLimit(Money $limit): self
     {
