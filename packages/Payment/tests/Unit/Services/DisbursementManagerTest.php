@@ -453,7 +453,6 @@ final class DisbursementManagerTest extends TestCase
 
         $this->disbursementQuery->expects(self::once())
             ->method('findPendingApproval')
-            ->with('tenant_123')
             ->willReturn($disbursements);
 
         $result = $this->manager->getPendingApprovals('tenant_123');

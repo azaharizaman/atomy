@@ -16,7 +16,7 @@ final class PaymentCancelledEvent extends PaymentEvent
         string $tenantId,
         public readonly Money $amount,
         public readonly ?string $reason,
-        public readonly string $cancelledBy,
+        public readonly ?string $cancelledBy,
         \DateTimeImmutable $occurredAt,
     ) {
         parent::__construct($paymentId, $tenantId, $occurredAt);

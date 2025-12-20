@@ -6,6 +6,12 @@
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
 
 **Recent Updates (December 18, 2025):**
+- **NEW:** Added `Nexus\Payment` - Complete payment suite (100% implemented):
+  - Payment transaction lifecycle with multi-gateway support
+  - Disbursement processing with scheduling (PAY-034) and limits (PAY-035)
+  - Settlement batches and reconciliation
+  - Payment allocation engine (7 strategies: FIFO, LIFO, PROPORTIONAL, etc.)
+  - Cross-currency support with exchange rate snapshots
 - **NEW:** Added `Nexus\KycVerification` - KYC verification, risk assessment, beneficial ownership tracking
 - **NEW:** Added `Nexus\AmlCompliance` - Anti-Money Laundering risk scoring and transaction monitoring
 - **NEW:** Added `Nexus\DataPrivacy` - Regulation-agnostic data privacy foundation (DSAR, consent, retention)
@@ -23,7 +29,7 @@
   - `Nexus\HRM\Training` - Course management and certifications
   - `Nexus\HRM\Onboarding` - Onboarding checklists and probation tracking
   - `Nexus\HRM\Disciplinary` - Misconduct cases, sanctions, policy enforcement
-- **IMPROVED:** Total package count increased from 61 to 78 atomic packages
+- **IMPROVED:** Total package count increased from 61 to 79 atomic packages
 - **IMPROVED:** Total orchestrator count: 3 production-ready orchestrators
 
 **Previous Updates (December 2025):**
@@ -78,6 +84,9 @@
 | **Screening against sanctions lists** | **Use `Nexus\Sanctions\Contracts\SanctionsScreenerInterface`** |
 | **Custom encryption/hashing** | **Use `Nexus\Crypto\Contracts\CryptoManagerInterface`** |
 | **Managing leave/attendance** | **Use `Nexus\HRM\Leave` or `Nexus\HRM\Attendance` packages** |
+| **Building custom payment processor** | **Use `Nexus\Payment\Contracts\PaymentManagerInterface`** |
+| **Creating custom allocation logic** | **Use `Nexus\Payment\Contracts\AllocationEngineInterface`** |
+| **Building disbursement scheduler** | **Use `Nexus\Payment\Contracts\DisbursementSchedulerInterface`** |
 
 ---
 
@@ -1148,6 +1157,138 @@ public function calculateInvoiceTax(Invoice $invoice): Money
     }
     
     return $totalTax;
+}
+```
+
+---
+
+#### **Nexus\Payment** ✅ **NEW - 100% COMPLETE**
+**Capabilities:**
+- **Payment Transaction Management**: Complete lifecycle (DRAFT → PENDING → PROCESSING → COMPLETED/FAILED)
+- **Multi-Gateway Support**: Pluggable gateway abstraction with circuit breaker pattern
+- **Disbursement Processing**: Outbound payments with approval workflows (PAY-034, PAY-035)
+- **Payment Method Management**: Bank transfer, credit/debit cards, e-wallets, virtual accounts
+- **Settlement Batches**: Batch reconciliation with status tracking (OPEN → CLOSED → RECONCILED)
+- **Payment Allocation Engine**: 7 strategies (FIFO, LIFO, PROPORTIONAL, MANUAL, OLDEST_FIRST, LARGEST_FIRST, SMALLEST_FIRST)
+- **Cross-Currency Support**: Exchange rate snapshots for multi-currency payments
+- **Idempotency**: Built-in idempotency key support for safe retries
+- **Disbursement Scheduling**: Immediate, scheduled, and recurring disbursements
+- **Disbursement Limits**: Per-transaction, daily, weekly, monthly controls
+
+**When to Use:**
+- ✅ Process inbound/outbound payments
+- ✅ Multi-gateway payment processing
+- ✅ Disbursement creation with approval workflows
+- ✅ Payment allocation to invoices
+- ✅ Settlement and reconciliation
+- ✅ Schedule recurring disbursements
+- ✅ Enforce payment limits and controls
+
+**Key Interfaces:**
+```php
+use Nexus\Payment\Contracts\PaymentTransactionInterface;
+use Nexus\Payment\Contracts\PaymentTransactionQueryInterface;
+use Nexus\Payment\Contracts\PaymentTransactionPersistInterface;
+use Nexus\Payment\Contracts\PaymentManagerInterface;
+use Nexus\Payment\Contracts\PaymentGatewayInterface;
+use Nexus\Payment\Contracts\GatewayRegistryInterface;
+use Nexus\Payment\Contracts\DisbursementInterface;
+use Nexus\Payment\Contracts\DisbursementQueryInterface;
+use Nexus\Payment\Contracts\DisbursementPersistInterface;
+use Nexus\Payment\Contracts\DisbursementManagerInterface;
+use Nexus\Payment\Contracts\DisbursementSchedulerInterface;
+use Nexus\Payment\Contracts\DisbursementLimitValidatorInterface;
+use Nexus\Payment\Contracts\SettlementBatchInterface;
+use Nexus\Payment\Contracts\AllocationEngineInterface;
+use Nexus\Payment\Contracts\AllocationStrategyInterface;
+```
+
+**Example - Process Payment:**
+```php
+// ✅ CORRECT: Process payment through gateway
+public function __construct(
+    private readonly PaymentManagerInterface $paymentManager
+) {}
+
+public function processPayment(string $paymentId): PaymentResult
+{
+    return $this->paymentManager->process(
+        paymentId: $paymentId,
+        gatewayName: 'stripe',
+        context: ExecutionContext::create([
+            'idempotency_key' => IdempotencyKey::generate()->toString(),
+            'metadata' => ['order_id' => 'ORD-2024-001'],
+        ])
+    );
+}
+```
+
+**Example - Create Scheduled Disbursement:**
+```php
+// ✅ CORRECT: Schedule a recurring disbursement
+public function __construct(
+    private readonly DisbursementSchedulerInterface $scheduler,
+    private readonly DisbursementLimitValidatorInterface $limitValidator
+) {}
+
+public function createMonthlyDisbursement(
+    string $tenantId,
+    string $recipientId,
+    Money $amount
+): string {
+    // Validate limits first
+    $this->limitValidator->validate($tenantId, $amount);
+    
+    // Create recurring schedule
+    $schedule = DisbursementSchedule::recurring(
+        startDate: new \DateTimeImmutable('first day of next month'),
+        frequency: RecurrenceFrequency::MONTHLY,
+        maxOccurrences: 12
+    );
+    
+    return $this->scheduler->scheduleRecurring(
+        tenantId: $tenantId,
+        recipientId: $recipientId,
+        amount: $amount,
+        schedule: $schedule,
+        reference: 'Monthly vendor payment'
+    );
+}
+```
+
+**Example - Allocate Payment to Invoices:**
+```php
+// ✅ CORRECT: Allocate payment using FIFO strategy
+public function __construct(
+    private readonly AllocationEngineInterface $allocationEngine
+) {}
+
+public function allocatePayment(
+    Money $paymentAmount,
+    array $invoices
+): AllocationResult {
+    return $this->allocationEngine->allocate(
+        amount: $paymentAmount,
+        documents: $invoices,
+        method: AllocationMethod::FIFO
+    );
+}
+```
+
+**❌ WRONG:**
+```php
+// Creating custom payment processor violates DRY principle
+final class CustomPaymentProcessor {
+    public function process($amount, $gateway) {
+        // ... duplicates Nexus\Payment functionality
+    }
+}
+
+// Creating custom allocation logic
+final class CustomAllocationService {
+    public function allocate($payment, $invoices) {
+        // ... should use AllocationEngineInterface
+    }
 }
 ```
 
@@ -3225,6 +3366,13 @@ public function getInvoices(): array {
 | Post journal entries | `Nexus\JournalEntry` | `JournalEntryManagerInterface` |
 | Create customer invoices | `Nexus\Receivable` | `ReceivableManagerInterface` |
 | Process vendor bills | `Nexus\Payable` | `PayableManagerInterface` |
+| **Process payments** | **`Nexus\Payment`** | **`PaymentManagerInterface`** |
+| **Create disbursements** | **`Nexus\Payment`** | **`DisbursementManagerInterface`** |
+| **Schedule disbursements** | **`Nexus\Payment`** | **`DisbursementSchedulerInterface`** |
+| **Validate disbursement limits** | **`Nexus\Payment`** | **`DisbursementLimitValidatorInterface`** |
+| **Allocate payments to invoices** | **`Nexus\Payment`** | **`AllocationEngineInterface`** |
+| **Manage settlement batches** | **`Nexus\Payment`** | **`SettlementBatchManagerInterface`** |
+| **Multi-gateway payment processing** | **`Nexus\Payment`** | **`GatewayRegistryInterface`** |
 | Track inventory | `Nexus\Inventory` | `InventoryManagerInterface` |
 | **Create/manage BOMs** | **`Nexus\Manufacturing`** | **`BomManagerInterface`** |
 | **Manage production routings** | **`Nexus\Manufacturing`** | **`RoutingManagerInterface`** |

@@ -2,7 +2,7 @@
 
 **Package:** `nexus/payment`  
 **Version:** 0.1.0  
-**Status:** 🟢 Implemented (~95% Complete)  
+**Status:** 🟢 Implemented (100% Complete)  
 **Last Updated:** December 18, 2025  
 **Author:** Nexus Architecture Team
 
@@ -85,8 +85,8 @@ The `Nexus\Payment` package provides a framework-agnostic payment processing fou
 | PAY-031 | System shall track disbursement approval status (isApproved, approvedBy, approvedAt) | P1 | ✅ |
 | PAY-032 | System shall support batch disbursement processing | P1 | ✅ |
 | PAY-033 | System shall track disbursement recipient information | P0 | ✅ |
-| PAY-034 | System shall support disbursement scheduling | P2 | 🔴 |
-| PAY-035 | System shall support disbursement limits and controls | P1 | 🔴 |
+| PAY-034 | System shall support disbursement scheduling (immediate, scheduled, recurring via DisbursementSchedule VO) | P2 | ✅ |
+| PAY-035 | System shall support disbursement limits and controls (per-transaction, daily, weekly, monthly via DisbursementLimits VO) | P1 | ✅ |
 
 > **Note:** Approval workflows (routing, multi-level approval, delegation) are handled by `PaymentOperations` orchestrator + `Nexus\Workflow`. This package only tracks the result (approved/rejected) via `markApproved()`/`markRejected()` methods.
 

@@ -155,7 +155,7 @@ final class PaymentManagerTest extends TestCase
 
         $this->paymentQuery->expects(self::once())
             ->method('findByIdempotencyKey')
-            ->with('tenant_123', $idempotencyKey->getValue())
+            ->with($idempotencyKey->getValue())
             ->willReturn(null);
 
         $this->paymentPersist->expects(self::once())->method('save');
@@ -184,10 +184,12 @@ final class PaymentManagerTest extends TestCase
         $idempotencyKey = IdempotencyKey::generate();
 
         $existingPayment = $this->createMock(PaymentTransactionInterface::class);
+        $existingPayment->method('getTenantId')->willReturn('tenant_123');
+        $existingPayment->method('getId')->willReturn('existing_pay_123');
 
         $this->paymentQuery->expects(self::once())
             ->method('findByIdempotencyKey')
-            ->with('tenant_123', $idempotencyKey->getValue())
+            ->with($idempotencyKey->getValue())
             ->willReturn($existingPayment);
 
         $this->paymentPersist->expects(self::never())->method('save');
@@ -214,7 +216,7 @@ final class PaymentManagerTest extends TestCase
 
         $this->paymentQuery->expects(self::once())
             ->method('findById')
-            ->with('*', 'pay_123')
+            ->with('pay_123')
             ->willReturn($payment);
 
         $this->executor->expects(self::once())
@@ -513,7 +515,7 @@ final class PaymentManagerTest extends TestCase
 
         $this->paymentQuery->expects(self::once())
             ->method('findById')
-            ->with('*', 'pay_123')
+            ->with('pay_123')
             ->willReturn($payment);
 
         $result = $this->manager->findOrFail('pay_123');

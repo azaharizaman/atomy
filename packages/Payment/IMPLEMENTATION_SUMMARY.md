@@ -2,7 +2,7 @@
 
 **Package:** `nexus/payment`  
 **Version:** 0.1.0  
-**Status:** � Feature Complete (Testing & Documentation Phase)  
+**Status:** 🟢 Feature Complete  
 **Last Updated:** December 18, 2025
 
 ---
@@ -16,6 +16,8 @@ The Nexus\Payment package provides comprehensive payment processing capabilities
 - Flexible payment allocation with 7 strategies
 - Cross-currency support with exchange rate snapshots
 - Idempotency for duplicate prevention
+- **Disbursement scheduling (immediate, scheduled, recurring)** ← NEW
+- **Disbursement limits and controls** ← NEW
 
 ---
 
@@ -23,18 +25,18 @@ The Nexus\Payment package provides comprehensive payment processing capabilities
 
 | Component | Status | Progress | Notes |
 |-----------|--------|----------|-------|
-| **Contracts** | 🟢 Completed | 100% | 21 interfaces |
-| **Enums** | 🟢 Completed | 100% | 6 enums |
-| **Value Objects** | 🟢 Completed | 100% | 7 VOs |
+| **Contracts** | 🟢 Completed | 100% | 25 interfaces (+4 for scheduling/limits) |
+| **Enums** | 🟢 Completed | 100% | 9 enums (+3 for scheduling/limits) |
+| **Value Objects** | 🟢 Completed | 100% | 9 VOs (+2 for scheduling/limits) |
 | **Entities** | 🟢 Completed | 100% | 4 entities |
-| **Services** | 🟢 Completed | 100% | 4 services |
+| **Services** | 🟢 Completed | 100% | 6 services (+2 for scheduling/limits) |
 | **Strategies** | 🟢 Completed | 100% | 8 strategies |
 | **Events** | 🟢 Completed | 100% | 20 events |
-| **Exceptions** | 🟢 Completed | 100% | 17 exceptions |
-| **Tests** | 🟢 Completed | 95% | 33 test files |
-| **Documentation** | 🟡 In Progress | 80% | Updating |
+| **Exceptions** | 🟢 Completed | 100% | 19 exceptions (+2 for scheduling/limits) |
+| **Tests** | 🟢 Completed | 100% | 35 test files (+2 for scheduling/limits) |
+| **Documentation** | 🟢 Completed | 100% | Complete |
 
-**Overall Progress:** ~95%
+**Overall Progress:** 100%
 
 ---
 
@@ -42,12 +44,12 @@ The Nexus\Payment package provides comprehensive payment processing capabilities
 
 | Metric | Target | Current |
 |--------|--------|---------|
-| Source Files | - | 94 |
-| Test Files | - | 33 |
-| Requirements Implemented | 100% | ~95% |
+| Source Files | - | 100+ |
+| Test Files | - | 35 |
+| Requirements Implemented | 100% | 100% |
 | Test Coverage | >80% | ~85% (estimated) |
 | PHPStan Level | 8 | Pending verification |
-| Documentation | Complete | 80% |
+| Documentation | Complete | 100% |
 
 ---
 
@@ -78,8 +80,12 @@ The Nexus\Payment package provides comprehensive payment processing capabilities
 | `AllocationStrategyInterface` | 🟢 | Allocation strategy contract |
 | `AllocatableDocumentInterface` | 🟢 | Documents that can receive allocations |
 | `CurrencyConversionInterface` | 🟢 | Cross-currency allocation support |
+| `DisbursementSchedulerInterface` | 🟢 | Disbursement scheduling service (PAY-034) |
+| `DisbursementLimitValidatorInterface` | 🟢 | Disbursement limit validation (PAY-035) |
+| `DisbursementScheduleStorageInterface` | 🟢 | Schedule persistence contract (PAY-034) |
+| `DisbursementLimitStorageInterface` | 🟢 | Limit persistence contract (PAY-035) |
 
-### Enums (6 Enums)
+### Enums (9 Enums)
 
 | Enum | Status | Values |
 |------|--------|--------|
@@ -89,8 +95,11 @@ The Nexus\Payment package provides comprehensive payment processing capabilities
 | `DisbursementStatus` | 🟢 | DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, PROCESSING, COMPLETED, FAILED, CANCELLED |
 | `SettlementBatchStatus` | 🟢 | OPEN, CLOSED, RECONCILED, DISPUTED |
 | `AllocationMethod` | 🟢 | FIFO, LIFO, PROPORTIONAL, MANUAL, OLDEST_FIRST, LARGEST_FIRST, SMALLEST_FIRST |
+| `ScheduleType` | 🟢 | IMMEDIATE, SCHEDULED, RECURRING (PAY-034) |
+| `RecurrenceFrequency` | 🟢 | DAILY, WEEKLY, BIWEEKLY, MONTHLY, QUARTERLY, ANNUALLY (PAY-034) |
+| `LimitPeriod` | 🟢 | DAILY, WEEKLY, MONTHLY, QUARTERLY, ANNUALLY, PER_TRANSACTION (PAY-035) |
 
-### Value Objects (7 VOs)
+### Value Objects (9 VOs)
 
 | Value Object | Status | Description |
 |--------------|--------|-------------|
@@ -101,6 +110,8 @@ The Nexus\Payment package provides comprehensive payment processing capabilities
 | `PaymentReference` | 🟢 | Structured payment reference number |
 | `PaymentResult` | 🟢 | Result of payment execution |
 | `RecipientInfo` | 🟢 | Recipient details for disbursements |
+| `DisbursementSchedule` | 🟢 | Schedule configuration for disbursements (PAY-034) |
+| `DisbursementLimits` | 🟢 | Limit configuration for disbursements (PAY-035) |
 
 ### Entities (4 Entities)
 
@@ -111,11 +122,13 @@ The Nexus\Payment package provides comprehensive payment processing capabilities
 | `Disbursement` | 🟢 | Outbound payment request |
 | `SettlementBatch` | 🟢 | Batch of payments for reconciliation |
 
-### Services (4 Services)
+### Services (6 Services)
 
 | Service | Status | Description |
 |---------|--------|-------------|
 | `PaymentManager` | 🟢 | Core payment lifecycle management |
+| `DisbursementScheduler` | 🟢 | Disbursement scheduling service (PAY-034) |
+| `DisbursementLimitValidator` | 🟢 | Disbursement limit validation (PAY-035) |
 | `PaymentValidator` | 🟢 | Payment validation rules engine |
 | `DisbursementManager` | 🟢 | Disbursement workflow management |
 | `AllocationEngine` | 🟢 | Payment allocation with strategy pattern |
