@@ -159,7 +159,7 @@ final class DisbursementLimits
             return;
         }
 
-        if ($currentCount >= $limit) {
+        if ($currentCount > $limit) {
             throw DisbursementLimitExceededException::countLimitExceeded(
                 currentCount: $currentCount,
                 limit: $limit,

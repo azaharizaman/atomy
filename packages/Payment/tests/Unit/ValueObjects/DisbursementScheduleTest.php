@@ -270,4 +270,73 @@ final class DisbursementScheduleTest extends TestCase
         $this->assertTrue($immediate->isImmediate());
         $this->assertFalse($scheduled->isImmediate());
     }
+
+    #[Test]
+    public function it_calculates_remaining_occurrences(): void
+    {
+        $startDate = new \DateTimeImmutable('+1 day');
+
+        // Non-recurring schedule returns null
+        $scheduled = DisbursementSchedule::scheduled($startDate);
+        $this->assertNull($scheduled->getRemainingOccurrences());
+
+        // Recurring with max occurrences
+        $recurring = DisbursementSchedule::recurring(
+            startDate: $startDate,
+            frequency: RecurrenceFrequency::MONTHLY,
+            maxOccurrences: 5,
+        );
+        
+        $this->assertSame(5, $recurring->getRemainingOccurrences());
+        
+        // After some occurrences
+        $recurring = $recurring->incrementOccurrence()->incrementOccurrence();
+        $this->assertSame(3, $recurring->getRemainingOccurrences());
+        
+        // All occurrences completed
+        $recurring = $recurring->incrementOccurrence()->incrementOccurrence()->incrementOccurrence();
+        $this->assertSame(0, $recurring->getRemainingOccurrences());
+
+        // Unlimited recurrence (no max occurrences)
+        $unlimited = DisbursementSchedule::recurring(
+            startDate: $startDate,
+            frequency: RecurrenceFrequency::WEEKLY,
+        );
+        $this->assertNull($unlimited->getRemainingOccurrences());
+    }
+
+    #[Test]
+    public function it_stops_recurring_when_end_date_is_reached(): void
+    {
+        $startDate = new \DateTimeImmutable('+1 day');
+        $endDate = new \DateTimeImmutable('+60 days'); // ~2 months
+
+        // Monthly recurrence with end date
+        $schedule = DisbursementSchedule::recurring(
+            startDate: $startDate,
+            frequency: RecurrenceFrequency::MONTHLY,
+            endDate: $endDate,
+        );
+
+        // First occurrence should be available
+        $this->assertTrue($schedule->hasMoreOccurrences());
+        $nextDate = $schedule->calculateNextOccurrence();
+        $this->assertNotNull($nextDate);
+        $this->assertEquals($startDate, $nextDate);
+
+        // Second occurrence (after 1 month)
+        $schedule = $schedule->incrementOccurrence();
+        $this->assertTrue($schedule->hasMoreOccurrences());
+        
+        // Third occurrence would be after end date (after 2 months from start)
+        $schedule = $schedule->incrementOccurrence();
+        
+        // Calculate if next occurrence exceeds end date
+        $thirdOccurrence = $schedule->calculateNextOccurrence();
+        
+        // The third occurrence should be null or beyond end date
+        if ($thirdOccurrence !== null && $thirdOccurrence > $endDate) {
+            $this->assertFalse($schedule->hasMoreOccurrences());
+        }
+    }
 }

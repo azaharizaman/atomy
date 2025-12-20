@@ -47,10 +47,7 @@ final class DisbursementSchedule
      */
     public static function scheduled(\DateTimeImmutable $scheduledDate): self
     {
-        $now = new \DateTimeImmutable();
-        if ($scheduledDate < $now) {
-            throw InvalidScheduleException::scheduledDateInPast($scheduledDate);
-        }
+        self::validateScheduledDate($scheduledDate);
 
         return new self(
             scheduleType: ScheduleType::SCHEDULED,
@@ -78,10 +75,7 @@ final class DisbursementSchedule
         ?\DateTimeImmutable $endDate = null,
         ?int $maxOccurrences = null,
     ): self {
-        $now = new \DateTimeImmutable();
-        if ($startDate < $now) {
-            throw InvalidScheduleException::scheduledDateInPast($startDate);
-        }
+        self::validateScheduledDate($startDate);
 
         if ($endDate !== null && $endDate < $startDate) {
             throw InvalidScheduleException::endDateBeforeStartDate($startDate, $endDate);
@@ -156,13 +150,23 @@ final class DisbursementSchedule
             return $this->scheduledDate;
         }
 
-        // Calculate next based on frequency
-        $interval = $this->recurrenceFrequency->toDateInterval();
-        $nextDate = $this->scheduledDate;
-
-        for ($i = 0; $i < $this->currentOccurrence; $i++) {
-            $nextDate = $nextDate->add($interval);
+        // Calculate next based on frequency in O(1) time by scaling the interval
+        $baseInterval = $this->recurrenceFrequency->toDateInterval();
+        
+        // Create a scaled interval based on current occurrence count
+        $scaledInterval = new \DateInterval('P0D');
+        $scaledInterval->y = $baseInterval->y * $this->currentOccurrence;
+        $scaledInterval->m = $baseInterval->m * $this->currentOccurrence;
+        $scaledInterval->d = $baseInterval->d * $this->currentOccurrence;
+        $scaledInterval->h = $baseInterval->h * $this->currentOccurrence;
+        $scaledInterval->i = $baseInterval->i * $this->currentOccurrence;
+        $scaledInterval->s = $baseInterval->s * $this->currentOccurrence;
+        $scaledInterval->invert = $baseInterval->invert;
+        if (property_exists($baseInterval, 'f')) {
+            $scaledInterval->f = $baseInterval->f * $this->currentOccurrence;
         }
+
+        $nextDate = $this->scheduledDate->add($scaledInterval);
 
         // Check if we've exceeded end date
         if ($this->recurrenceEndDate !== null && $nextDate > $this->recurrenceEndDate) {
@@ -280,5 +284,18 @@ final class DisbursementSchedule
         $nextDate = $this->calculateNextOccurrence();
 
         return $nextDate !== null && $nextDate <= $now;
+    }
+
+    /**
+     * Validate that a scheduled date is not in the past.
+     *
+     * @throws InvalidScheduleException If scheduled date is in the past or equal to now
+     */
+    private static function validateScheduledDate(\DateTimeImmutable $scheduledDate): void
+    {
+        $now = new \DateTimeImmutable();
+        if ($scheduledDate <= $now) {
+            throw InvalidScheduleException::scheduledDateInPast($scheduledDate);
+        }
     }
 }
