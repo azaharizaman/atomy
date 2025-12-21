@@ -28,7 +28,8 @@
         "nexus/aml-compliance": "*@dev",
         "nexus/data-privacy": "*@dev",
         "nexus/pdpa": "*@dev",
-        "nexus/payment": "*@dev"
+        "nexus/payment": "*@dev",
+        "nexus/payment-gateway": "*@dev"
     },
     "repositories": [
         {
@@ -72,7 +73,8 @@
             "Nexus\\DataPrivacy\\": "packages/DataPrivacy/src/",
             "Nexus\\GDPR\\": "packages/GDPR/src/",
             "Nexus\\PDPA\\": "packages/PDPA/src/",
-            "Nexus\\Payment\\": "packages/Payment/src/"
+            "Nexus\\Payment\\": "packages/Payment/src/",
+            "Nexus\\PaymentGateway\\": "packages/PaymentGateway/src/"
         }
     },
     "autoload-dev": {
@@ -84,7 +86,8 @@
             "Nexus\\DataPrivacy\\Tests\\": "packages/DataPrivacy/tests/",
             "Nexus\\GDPR\\Tests\\": "packages/GDPR/tests/",
             "Nexus\\PDPA\\Tests\\": "packages/PDPA/tests/",
-            "Nexus\\Payment\\Tests\\": "packages/Payment/tests/"
+            "Nexus\\Payment\\Tests\\": "packages/Payment/tests/",
+            "Nexus\\PaymentGateway\\Tests\\": "packages/PaymentGateway/tests/"
         }
     }
 }
