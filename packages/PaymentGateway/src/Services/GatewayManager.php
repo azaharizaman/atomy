@@ -38,12 +38,23 @@ use Psr\Log\NullLogger;
  *
  * Provides unified interface for all gateway operations with
  * logging, event dispatching, and error handling.
+ *
+ * Note: This class intentionally uses mutable state for runtime gateway
+ * registration. Gateways are registered at application bootstrap, not
+ * per-request. The state is application-scoped, not request-scoped.
  */
 final class GatewayManager implements GatewayManagerInterface
 {
-    /** @var array<string, GatewayInterface> */
+    /**
+     * Registered gateways by provider.
+     *
+     * @var array<string, GatewayInterface>
+     */
     private array $gateways = [];
 
+    /**
+     * Default provider for operations when not explicitly specified.
+     */
     private ?GatewayProvider $defaultProvider = null;
 
     public function __construct(

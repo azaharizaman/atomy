@@ -34,6 +34,10 @@ final readonly class PaymentCapturedEvent
         GatewayProvider $provider,
         CaptureResult $result,
     ): self {
+        if ($result->capturedAmount === null) {
+            throw new \InvalidArgumentException('CaptureResult must have a captured amount to create event');
+        }
+
         return new self(
             tenantId: $tenantId,
             captureId: $result->captureId ?? '',

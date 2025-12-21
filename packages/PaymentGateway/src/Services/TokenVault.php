@@ -21,10 +21,18 @@ use Psr\Log\NullLogger;
  *
  * Combines tokenization (via gateway) with secure storage
  * for reusable payment methods.
+ *
+ * Note: This class intentionally uses mutable state for runtime tokenizer
+ * registration. Tokenizers are registered at application bootstrap, not
+ * per-request. The state is application-scoped, not request-scoped.
  */
 final class TokenVault
 {
-    /** @var array<string, TokenizerInterface> */
+    /**
+     * Registered tokenizers by provider.
+     *
+     * @var array<string, TokenizerInterface>
+     */
     private array $tokenizers = [];
 
     public function __construct(

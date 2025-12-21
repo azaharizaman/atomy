@@ -36,6 +36,10 @@ final readonly class PaymentRefundedEvent
         GatewayProvider $provider,
         RefundResult $result,
     ): self {
+        if ($result->refundedAmount === null) {
+            throw new \InvalidArgumentException('RefundResult must have a refunded amount to create event');
+        }
+
         return new self(
             tenantId: $tenantId,
             refundId: $result->refundId ?? '',

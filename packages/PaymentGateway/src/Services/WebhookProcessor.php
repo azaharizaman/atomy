@@ -20,13 +20,26 @@ use Psr\Log\NullLogger;
  * Processes incoming webhooks from payment gateways.
  *
  * Handles verification, parsing, and routing to appropriate handlers.
+ *
+ * Note: This class intentionally uses mutable state for runtime configuration
+ * of handlers and secrets. This follows the Gateway Registry pattern where
+ * providers are registered at application bootstrap, not per-request.
+ * The state is application-scoped, not request-scoped.
  */
 final class WebhookProcessor implements WebhookProcessorInterface
 {
-    /** @var array<string, WebhookHandlerInterface> */
+    /**
+     * Registered webhook handlers by provider.
+     *
+     * @var array<string, WebhookHandlerInterface>
+     */
     private array $handlers = [];
 
-    /** @var array<string, string> */
+    /**
+     * Webhook verification secrets by provider.
+     *
+     * @var array<string, string>
+     */
     private array $secrets = [];
 
     public function __construct(
