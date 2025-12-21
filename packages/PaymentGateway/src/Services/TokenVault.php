@@ -22,18 +22,17 @@ use Psr\Log\NullLogger;
  * Combines tokenization (via gateway) with secure storage
  * for reusable payment methods.
  */
-final readonly class TokenVault
+final class TokenVault
 {
     /** @var array<string, TokenizerInterface> */
-    private array $tokenizers;
+    private array $tokenizers = [];
 
     public function __construct(
-        private TokenStorageInterface $storage,
-        private TenantContextInterface $tenantContext,
-        private ?EventDispatcherInterface $eventDispatcher = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private readonly TokenStorageInterface $storage,
+        private readonly TenantContextInterface $tenantContext,
+        private readonly ?EventDispatcherInterface $eventDispatcher = null,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {
-        $this->tokenizers = [];
     }
 
     /**

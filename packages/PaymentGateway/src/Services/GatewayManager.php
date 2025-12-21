@@ -39,21 +39,19 @@ use Psr\Log\NullLogger;
  * Provides unified interface for all gateway operations with
  * logging, event dispatching, and error handling.
  */
-final readonly class GatewayManager implements GatewayManagerInterface
+final class GatewayManager implements GatewayManagerInterface
 {
     /** @var array<string, GatewayInterface> */
-    private array $gateways;
+    private array $gateways = [];
 
-    private ?GatewayProvider $defaultProvider;
+    private ?GatewayProvider $defaultProvider = null;
 
     public function __construct(
-        private GatewayRegistryInterface $registry,
-        private TenantContextInterface $tenantContext,
-        private ?EventDispatcherInterface $eventDispatcher = null,
-        private LoggerInterface $logger = new NullLogger(),
+        private readonly GatewayRegistryInterface $registry,
+        private readonly TenantContextInterface $tenantContext,
+        private readonly ?EventDispatcherInterface $eventDispatcher = null,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {
-        $this->gateways = [];
-        $this->defaultProvider = null;
     }
 
     public function registerGateway(

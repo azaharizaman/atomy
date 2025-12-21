@@ -307,13 +307,13 @@ abstract class AbstractGateway implements GatewayInterface
      */
     protected function validateRefundRequest(RefundRequest $request): void
     {
-        if (empty($request->captureId)) {
+        if (empty($request->transactionId)) {
             throw new RefundFailedException(
-                message: 'Capture ID is required',
+                message: 'Transaction ID is required',
                 transactionId: null,
                 attemptedAmount: null,
-                gatewayErrorCode: 'INVALID_CAPTURE',
-                gatewayMessage: 'Capture ID is required',
+                gatewayErrorCode: 'INVALID_TRANSACTION',
+                gatewayMessage: 'Transaction ID is required for refund',
             );
         }
     }

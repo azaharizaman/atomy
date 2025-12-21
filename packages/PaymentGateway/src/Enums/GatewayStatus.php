@@ -13,6 +13,7 @@ enum GatewayStatus: string
     case DEGRADED = 'degraded';
     case UNHEALTHY = 'unhealthy';
     case MAINTENANCE = 'maintenance';
+    case UNAVAILABLE = 'unavailable';
     case UNKNOWN = 'unknown';
 
     /**
@@ -25,6 +26,7 @@ enum GatewayStatus: string
             self::DEGRADED => 'Degraded',
             self::UNHEALTHY => 'Unhealthy',
             self::MAINTENANCE => 'Under Maintenance',
+            self::UNAVAILABLE => 'Unavailable',
             self::UNKNOWN => 'Unknown',
         };
     }
