@@ -66,7 +66,7 @@ final readonly class AchBatchResult
             fileContents: $fileContents,
             fileName: $file->getSuggestedFilename(),
             traceNumbers: $traceNumbers,
-            effectiveDate: $file->fileCreationDate,
+            effectiveDate: $file->batches[0]->effectiveEntryDate ?? $file->fileCreationDateTime,
         );
     }
 

@@ -60,7 +60,7 @@ final class RailCapabilities
         return new self(
             railType: RailType::ACH,
             supportedCurrencies: ['USD'],
-            minimumAmount: Money::cents(1, 'USD'),
+            minimumAmount: Money::of(0.01, 'USD'),
             maximumAmount: Money::of(99999999.99, 'USD'),
             supportsCredit: true,
             supportsDebit: true,
@@ -147,7 +147,7 @@ final class RailCapabilities
         return new self(
             railType: RailType::CHECK,
             supportedCurrencies: ['USD'],
-            minimumAmount: Money::cents(1, 'USD'),
+            minimumAmount: Money::of(0.01, 'USD'),
             maximumAmount: Money::of(9999999.99, 'USD'),
             supportsCredit: true,
             supportsDebit: false,
@@ -203,7 +203,7 @@ final class RailCapabilities
         return new self(
             railType: RailType::VIRTUAL_CARD,
             supportedCurrencies: ['USD', 'EUR', 'GBP', 'CAD'],
-            minimumAmount: Money::cents(1, 'USD'),
+            minimumAmount: Money::of(0.01, 'USD'),
             maximumAmount: Money::of(250000.00, 'USD'),
             supportsCredit: true,
             supportsDebit: false,
