@@ -17,16 +17,16 @@ final readonly class RailTransactionRequest
      * @param array<string, mixed>|null $metadata
      */
     public function __construct(
-        public readonly string $beneficiaryName,
-        public readonly Money $amount,
-        public readonly ?BankAccount $beneficiaryAccount = null,
-        public readonly ?RoutingNumber $routingNumber = null,
-        public readonly ?string $beneficiaryCountry = null,
-        public readonly ?string $beneficiaryAddress = null,
-        public readonly bool $isInternational = false,
-        public readonly ?string $purposeOfPayment = null,
-        public readonly ?string $memo = null,
-        public readonly ?array $metadata = null,
+        public string $beneficiaryName,
+        public Money $amount,
+        public ?BankAccount $beneficiaryAccount = null,
+        public ?RoutingNumber $routingNumber = null,
+        public ?string $beneficiaryCountry = null,
+        public ?string $beneficiaryAddress = null,
+        public bool $isInternational = false,
+        public ?string $purposeOfPayment = null,
+        public ?string $memo = null,
+        public ?array $metadata = null,
     ) {
     }
 }
