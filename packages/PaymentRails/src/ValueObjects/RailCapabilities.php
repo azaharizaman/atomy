@@ -238,12 +238,28 @@ final class RailCapabilities
      */
     public function isAmountWithinLimits(Money $amount): bool
     {
-        if ($this->minimumAmount !== null && $amount->lessThan($this->minimumAmount)) {
+        if (!$this->supportsCurrency($amount->getCurrency())) {
             return false;
         }
 
-        if ($this->maximumAmount !== null && $amount->greaterThan($this->maximumAmount)) {
+        if ($this->minimumAmount !== null) {
+            $minimumAmount = $this->minimumAmount->getCurrency() === $amount->getCurrency()
+                ? $this->minimumAmount
+                : new Money($this->minimumAmount->getAmountInMinorUnits(), $amount->getCurrency());
+
+            if ($amount->lessThan($minimumAmount)) {
             return false;
+            }
+        }
+
+        if ($this->maximumAmount !== null) {
+            $maximumAmount = $this->maximumAmount->getCurrency() === $amount->getCurrency()
+                ? $this->maximumAmount
+                : new Money($this->maximumAmount->getAmountInMinorUnits(), $amount->getCurrency());
+
+            if ($amount->greaterThan($maximumAmount)) {
+            return false;
+            }
         }
 
         return true;

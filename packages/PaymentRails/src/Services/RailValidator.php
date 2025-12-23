@@ -318,29 +318,51 @@ final readonly class RailValidator implements RailValidatorInterface
             return $errors;
         }
 
+        // Note: some rails support multiple currencies, while capability limits may be defined in a
+        // single “base” currency. Since Money comparisons require matching currency, we project
+        // the configured limit into the transaction currency using the same minor-unit amount.
+
         // Minimum amount
-        if ($capabilities->minimumAmount !== null && $amount->lessThan($capabilities->minimumAmount)) {
+        if ($capabilities->minimumAmount !== null) {
+            $minimumAmount = $capabilities->minimumAmount->getCurrency() === $amount->getCurrency()
+                ? $capabilities->minimumAmount
+                : new Money(
+                    $capabilities->minimumAmount->getAmountInMinorUnits(),
+                    $amount->getCurrency()
+                );
+
+            if ($amount->lessThan($minimumAmount)) {
             if ($rail->getRailType() === RailType::RTGS) {
                 $errors[] = sprintf(
-                    'RTGS is for high-value transactions only (minimum $%.2f).',
-                    $capabilities->minimumAmount->getAmount()
+                    'RTGS is for high-value transactions only (minimum %s).',
+                    $minimumAmount->format(['symbol' => false])
                 );
             } else {
                 $errors[] = sprintf(
-                    'Amount is below minimum of $%.2f for %s rail.',
-                    $capabilities->minimumAmount->getAmount(),
+                    'Amount is below minimum of %s for %s rail.',
+                    $minimumAmount->format(['symbol' => false]),
                     $rail->getRailType()->value
                 );
+            }
             }
         }
 
         // Maximum amount
-        if ($capabilities->maximumAmount !== null && $amount->greaterThan($capabilities->maximumAmount)) {
-            $errors[] = sprintf(
-                'Amount exceeds maximum of $%.2f for %s rail.',
-                $capabilities->maximumAmount->getAmount(),
-                $rail->getRailType()->value
-            );
+        if ($capabilities->maximumAmount !== null) {
+            $maximumAmount = $capabilities->maximumAmount->getCurrency() === $amount->getCurrency()
+                ? $capabilities->maximumAmount
+                : new Money(
+                    $capabilities->maximumAmount->getAmountInMinorUnits(),
+                    $amount->getCurrency()
+                );
+
+            if ($amount->greaterThan($maximumAmount)) {
+                $errors[] = sprintf(
+                    'Amount exceeds maximum of %s for %s rail.',
+                    $maximumAmount->format(['symbol' => false]),
+                    $rail->getRailType()->value
+                );
+            }
         }
 
         return $errors;
@@ -404,8 +426,9 @@ final readonly class RailValidator implements RailValidatorInterface
             $errors = array_merge($errors, $accountErrors);
         }
 
-        // Routing number validation if provided
-        if ($request->getRoutingNumber() !== null) {
+        // Routing number validation if provided.
+        // If a beneficiary account is present, its routing number is the canonical source.
+        if ($request->getRoutingNumber() !== null && ($request->getBeneficiaryAccount()?->routingNumber === null)) {
             $routingErrors = $this->validateRoutingNumber($request->getRoutingNumber());
             $errors = array_merge($errors, $routingErrors);
         }
@@ -514,9 +537,9 @@ final readonly class RailValidator implements RailValidatorInterface
         // SEC code required
         $metadata = $request->getMetadata();
         if ($metadata === null || !isset($metadata['sec_code'])) {
-            $errors[] = 'SEC code is required for ACH transactions';
+            $errors[] = 'SEC code is required for ACH transactions.';
         } elseif (!is_string($metadata['sec_code']) || trim($metadata['sec_code']) === '') {
-            $errors[] = 'SEC code is required for ACH transactions';
+            $errors[] = 'SEC code is required for ACH transactions.';
         }
 
         return $errors;

@@ -20,6 +20,8 @@ final readonly class RailTransactionRequest
         private string $beneficiaryName,
         private Money $amount,
         private ?BankAccount $beneficiaryAccount = null,
+        // Optional standalone routing number.
+        // Prefer providing routing via $beneficiaryAccount->routingNumber when available.
         private ?RoutingNumber $routingNumber = null,
         private ?string $beneficiaryCountry = null,
         private ?string $beneficiaryAddress = null,

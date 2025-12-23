@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentRails\Tests\Unit;
 
+use PHPUnit\Framework\TestCase;
 use Nexus\Common\ValueObjects\Money;
-use Nexus\PaymentRails\Contracts\PaymentRailInterface;
-use Nexus\PaymentRails\DTOs\RailTransactionRequest;
-use Nexus\PaymentRails\DTOs\RailTransactionResult;
 use Nexus\PaymentRails\Enums\RailType;
 use Nexus\PaymentRails\Services\RailValidator;
 use Nexus\PaymentRails\ValueObjects\BankAccount;
-use Nexus\PaymentRails\ValueObjects\RailCapabilities;
+use Nexus\PaymentRails\DTOs\RailTransactionResult;
 use Nexus\PaymentRails\ValueObjects\RoutingNumber;
-use PHPUnit\Framework\TestCase;
+use Nexus\PaymentRails\DTOs\RailTransactionRequest;
+use Nexus\PaymentRails\ValueObjects\RailCapabilities;
+use Nexus\PaymentRails\Contracts\PaymentRailInterface;
 
 final class RailValidatorTest extends TestCase
 {
@@ -55,6 +55,7 @@ final class RailValidatorTest extends TestCase
         $errors = $this->validator->getValidationErrors($request, $rail);
 
         self::assertNotEmpty($errors);
+        self::assertCount(1, $errors);
         self::assertStringContainsString('Currency EUR is not supported by wire rail.', $errors[0]);
     }
 
@@ -75,6 +76,8 @@ final class RailValidatorTest extends TestCase
 
         $errors = $this->validator->getValidationErrors($request, $rail);
 
+        self::assertNotEmpty($errors);
+        self::assertCount(1, $errors);
         self::assertStringContainsString('Amount is below minimum', $errors[0]);
     }
 
@@ -90,7 +93,7 @@ final class RailValidatorTest extends TestCase
 
         $errors = $this->validator->getValidationErrors($request, $rail);
 
-        self::assertContains('SEC code is required for ACH transactions', $errors);
+        self::assertContains('SEC code is required for ACH transactions.', $errors);
     }
 
     public function test_international_wire_requires_purpose_and_address(): void
@@ -105,8 +108,28 @@ final class RailValidatorTest extends TestCase
 
         $errors = $this->validator->getValidationErrors($request, $rail);
 
+        self::assertCount(2, $errors);
         self::assertContains('Purpose of payment is required for international wires.', $errors);
         self::assertContains('Beneficiary address is required for international wires.', $errors);
+    }
+
+    public function test_international_wire_minimum_amount_is_currency_safe(): void
+    {
+        $rail = $this->stubRail(RailType::WIRE, RailCapabilities::forInternationalWire());
+
+        $request = new RailTransactionRequest(
+            beneficiaryName: 'Euro Vendor',
+            amount: Money::of(0.50, 'EUR'),
+            isInternational: true,
+            purposeOfPayment: 'Invoice payment',
+            beneficiaryAddress: '123 Example Street, Berlin',
+        );
+
+        $errors = $this->validator->getValidationErrors($request, $rail);
+
+        self::assertNotEmpty($errors);
+        self::assertCount(1, $errors);
+        self::assertStringContainsString('Amount is below minimum', $errors[0]);
     }
 
     public function test_rtgs_enforces_high_value_threshold(): void
@@ -185,6 +208,8 @@ final class RailValidatorTest extends TestCase
 
             public function validateTransaction(array $transactionData): array
             {
+                // This suite tests Nexus\PaymentRails\Services\RailValidator.
+                // Rail-specific validation is out of scope for these unit tests.
                 return [];
             }
 
