@@ -383,37 +383,37 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // Basic field validation
-        if (empty($request->beneficiaryName)) {
+        if (empty($request->getBeneficiaryName())) {
             $errors[] = 'Beneficiary name is required.';
         }
 
-        if (strlen($request->beneficiaryName) > 35) {
+        if (strlen($request->getBeneficiaryName()) > 35) {
             $errors[] = 'Beneficiary name exceeds maximum length (35 characters).';
         }
 
         // Amount validation
-        $amountErrors = $this->validateAmount($request->amount, $rail);
+        $amountErrors = $this->validateAmount($request->getAmount(), $rail);
         $errors = array_merge($errors, $amountErrors);
 
         // Bank account validation if provided
-        if ($request->beneficiaryAccount !== null) {
+        if ($request->getBeneficiaryAccount() !== null) {
             $accountErrors = $this->validateBankAccount(
-                $request->beneficiaryAccount,
+                $request->getBeneficiaryAccount(),
                 $rail->getRailType()
             );
             $errors = array_merge($errors, $accountErrors);
         }
 
         // Routing number validation if provided
-        if ($request->routingNumber !== null) {
-            $routingErrors = $this->validateRoutingNumber($request->routingNumber);
+        if ($request->getRoutingNumber() !== null) {
+            $routingErrors = $this->validateRoutingNumber($request->getRoutingNumber());
             $errors = array_merge($errors, $routingErrors);
         }
 
         // Sanctions screening
         $sanctionsErrors = $this->screenSanctions(
-            $request->beneficiaryName,
-            $request->beneficiaryCountry
+            $request->getBeneficiaryName(),
+            $request->getBeneficiaryCountry()
         );
         $errors = array_merge($errors, $sanctionsErrors);
 
@@ -507,14 +507,15 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // ACH USD only
-        if ($request->amount->getCurrency() !== 'USD') {
+        if ($request->getAmount()->getCurrency() !== 'USD') {
             $errors[] = 'ACH transactions must be in USD.';
         }
 
         // SEC code required
-        if ($request->metadata === null || !isset($request->metadata['sec_code'])) {
+        $metadata = $request->getMetadata();
+        if ($metadata === null || !isset($metadata['sec_code'])) {
             $errors[] = 'SEC code is required for ACH transactions';
-        } elseif (!is_string($request->metadata['sec_code']) || trim($request->metadata['sec_code']) === '') {
+        } elseif (!is_string($metadata['sec_code']) || trim($metadata['sec_code']) === '') {
             $errors[] = 'SEC code is required for ACH transactions';
         }
 
@@ -531,12 +532,12 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // Purpose of payment for international
-        if ($request->isInternational && empty($request->purposeOfPayment)) {
+        if ($request->isInternational() && empty($request->getPurposeOfPayment())) {
             $errors[] = 'Purpose of payment is required for international wires.';
         }
 
         // Beneficiary address for international
-        if ($request->isInternational && empty($request->beneficiaryAddress)) {
+        if ($request->isInternational() && empty($request->getBeneficiaryAddress())) {
             $errors[] = 'Beneficiary address is required for international wires.';
         }
 
@@ -553,12 +554,12 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // Payee address required
-        if (empty($request->beneficiaryAddress)) {
+        if (empty($request->getBeneficiaryAddress())) {
             $errors[] = 'Payee address is required for check issuance.';
         }
 
         // Check memo length
-        if ($request->memo !== null && strlen($request->memo) > 40) {
+        if ($request->getMemo() !== null && strlen($request->getMemo()) > 40) {
             $errors[] = 'Check memo exceeds maximum length (40 characters).';
         }
 
@@ -587,7 +588,8 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // Vendor ID required
-        if ($request->metadata === null || !isset($request->metadata['vendor_id'])) {
+        $metadata = $request->getMetadata();
+        if ($metadata === null || !isset($metadata['vendor_id'])) {
             $errors[] = 'Vendor ID is required for virtual card issuance.';
         }
 
