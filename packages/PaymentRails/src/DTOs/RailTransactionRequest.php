@@ -11,7 +11,7 @@ use Nexus\PaymentRails\ValueObjects\RoutingNumber;
 /**
  * Data transfer object for validating a payment rail transaction.
  */
-final class RailTransactionRequest
+final readonly class RailTransactionRequest
 {
     /**
      * @param array<string, mixed>|null $metadata

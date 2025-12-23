@@ -92,7 +92,7 @@ final class RailValidatorTest extends TestCase
 
         $errors = $this->validator->getValidationErrors($request, $rail);
 
-        self::assertContains('SEC code is required', $errors);
+        self::assertContains('SEC code is required for ACH transactions', $errors);
     }
 
     public function test_international_wire_requires_purpose_and_address(): void
@@ -192,7 +192,7 @@ final class RailValidatorTest extends TestCase
 
             public function getTransactionStatus(string $transactionId): RailTransactionResult
             {
-                return RailTransactionResult::pending($transactionId, $this->type, Money::cents(1, 'USD'));
+                return RailTransactionResult::pending($transactionId, $this->type, new Money(1, 'USD'));
             }
 
             public function cancelTransaction(string $transactionId, string $reason): bool

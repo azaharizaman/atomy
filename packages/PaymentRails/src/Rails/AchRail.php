@@ -153,7 +153,12 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
 
     public function sendPrenote(array $accountData): AchBatchResult
     {
-        $routing = RoutingNumber::fromString((string) ($accountData['routing_number'] ?? ''));
+        $routingNumber = isset($accountData['routing_number']) ? trim((string) $accountData['routing_number']) : '';
+        $routing = RoutingNumber::tryFromString($routingNumber);
+
+        if ($routing === null) {
+            throw new \InvalidArgumentException('Missing or invalid routing_number provided for ACH prenote.');
+        }
         $accountNumber = (string) ($accountData['account_number'] ?? '');
         $receiverName = (string) ($accountData['receiver_name'] ?? '');
         $isDebit = (bool) ($accountData['is_debit'] ?? false);
@@ -182,14 +187,80 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
 
     public function processReturn(AchReturn $return): bool
     {
-        $this->logOperation('Return processed', $return->returnCode->value, []);
+        $transaction = null;
+
+        if ($return->originalEntryId !== null) {
+            $transaction = $this->transactionQuery->findById($return->originalEntryId);
+        }
+
+        if ($transaction === null) {
+            $transaction = $this->transactionQuery->findByReference($return->originalTraceNumber);
+        }
+
+        if ($transaction === null) {
+            $this->logOperation('Return received for unknown transaction', $return->originalTraceNumber, [
+                'return_code' => $return->returnCode->value,
+                'return_date' => $return->returnDate->format(DATE_ATOM),
+                'retriable' => $return->isRetriable(),
+            ]);
+            return false;
+        }
+
+        $message = sprintf(
+            'ACH return %s: %s',
+            $return->returnCode->value,
+            $return->getDescription()
+        );
+
+        $errors = [$message];
+        if ($return->addendaInformation !== null && $return->addendaInformation !== '') {
+            $errors[] = sprintf('Addenda: %s', $return->addendaInformation);
+        }
+
+        $errors[] = sprintf('Suggested action: %s', $return->getSuggestedAction());
+        $errors[] = sprintf('Retriable: %s', $return->isRetriable() ? 'yes' : 'no');
+
+        $this->transactionPersist->markFailed($transaction->transactionId, $errors);
+
+        $this->logOperation('Return processed', $transaction->transactionId, [
+            'return_code' => $return->returnCode->value,
+            'return_date' => $return->returnDate->format(DATE_ATOM),
+            'retriable' => $return->isRetriable(),
+            'dishonored' => $return->dishonored,
+            'contested' => $return->contested,
+        ]);
+
         return true;
     }
 
     public function processNoc(AchNotificationOfChange $noc): bool
     {
-        $this->logOperation('NOC processed', $noc->changeCode->value, []);
-        return true;
+        $transaction = null;
+
+        if ($noc->originalEntryId !== null) {
+            $transaction = $this->transactionQuery->findById($noc->originalEntryId);
+        }
+
+        if ($transaction === null) {
+            $transaction = $this->transactionQuery->findByReference($noc->originalTraceNumber);
+        }
+
+        $corrections = $noc->parseCorrectionsData();
+
+        if ($transaction !== null) {
+            $this->transactionPersist->updateStatus($transaction->transactionId, 'noc_received');
+        }
+
+        $this->logOperation('NOC processed', $transaction?->transactionId ?? $noc->originalTraceNumber, [
+            'noc_code' => $noc->nocCode->value,
+            'noc_date' => $noc->nocDate->format(DATE_ATOM),
+            'within_update_window' => $noc->isWithinUpdateWindow(),
+            'fields_to_update' => $noc->getFieldsToUpdate(),
+            'corrections' => $corrections,
+            'corrected_data' => $noc->correctedData,
+        ]);
+
+        return $transaction !== null;
     }
 
     public function isSameDayAvailable(): bool

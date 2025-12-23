@@ -123,8 +123,8 @@ final readonly class RailValidator implements RailValidatorInterface
             $errors[] = 'Payee name is required for check issuance.';
         }
 
-        if ($request->payeeAddress === '') {
-            $errors[] = 'Payee address is required for check issuance.';
+        if ($request->shouldMail && !$request->hasMailingAddress()) {
+            $errors[] = 'Payee mailing address is required for check issuance.';
         }
 
         return $errors;
@@ -137,12 +137,12 @@ final readonly class RailValidator implements RailValidatorInterface
     {
         $errors = [];
 
-        if ($request->vendorId === '') {
+        if ($request->vendorId === null || $request->vendorId === '') {
             $errors[] = 'Vendor ID is required for virtual card issuance.';
         }
 
-        if ($request->amount->lessThan(Money::cents(1, $request->amount->getCurrency()))) {
-            $errors[] = 'Virtual card amount must be positive.';
+        if ($request->creditLimit->isZero() || $request->creditLimit->isNegative()) {
+            $errors[] = 'Virtual card credit limit must be positive.';
         }
 
         return $errors;
@@ -298,6 +298,14 @@ final readonly class RailValidator implements RailValidatorInterface
     {
         $errors = [];
         $capabilities = $rail->getCapabilities();
+
+        if ($amount->isZero()) {
+            $errors[] = 'Amount must be greater than zero.';
+        }
+
+        if ($amount->isNegative()) {
+            $errors[] = 'Amount cannot be negative.';
+        }
 
         // Currency support
         if (!in_array($amount->getCurrency(), $capabilities->supportedCurrencies, true)) {
@@ -458,14 +466,14 @@ final readonly class RailValidator implements RailValidatorInterface
 
         // SWIFT code validation
         if ($account->swiftCode !== null) {
-            if (!$this->isValidSwiftCodeFormat($account->swiftCode)) {
+            if (!$this->isValidSwiftCodeFormat($account->swiftCode->value)) {
                 $errors[] = 'Invalid SWIFT/BIC code format.';
             }
         }
 
         // IBAN validation
         if ($account->iban !== null) {
-            if (!$this->isValidIbanFormat($account->iban)) {
+            if (!$this->isValidIbanFormat($account->iban->value)) {
                 $errors[] = 'Invalid IBAN format.';
             }
         }
@@ -505,7 +513,9 @@ final readonly class RailValidator implements RailValidatorInterface
 
         // SEC code required
         if ($request->metadata === null || !isset($request->metadata['sec_code'])) {
-            $errors[] = 'SEC code is required';
+            $errors[] = 'SEC code is required for ACH transactions';
+        } elseif (!is_string($request->metadata['sec_code']) || trim($request->metadata['sec_code']) === '') {
+            $errors[] = 'SEC code is required for ACH transactions';
         }
 
         return $errors;
