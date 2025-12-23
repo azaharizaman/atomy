@@ -572,15 +572,9 @@ final readonly class RailValidator implements RailValidatorInterface
      */
     private function validateRtgsTransaction(RailTransactionRequest $request): array
     {
-        $errors = [];
-
-        // High-value only
-        $amountCents = (int) ($request->amount->getAmount() * 100);
-        if ($amountCents < 2500000) { // $25,000
-            $errors[] = 'RTGS is for high-value transactions only (minimum $25,000).';
-        }
-
-        return $errors;
+        // RTGS high-value threshold is enforced via RailCapabilities::minimumAmount
+        // and validated in validateAmount() to keep Money arithmetic in minor units.
+        return [];
     }
 
     /**

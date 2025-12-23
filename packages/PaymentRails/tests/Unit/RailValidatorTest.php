@@ -35,7 +35,6 @@ final class RailValidatorTest extends TestCase
                 accountNumber: '1234567890',
                 routingNumber: RoutingNumber::fromString('021000021'),
             ),
-            routingNumber: RoutingNumber::fromString('021000021'),
             metadata: ['sec_code' => 'PPD'],
         );
 
@@ -87,7 +86,6 @@ final class RailValidatorTest extends TestCase
             beneficiaryName: 'David Recipient',
             amount: Money::of(25.00, 'USD'),
             beneficiaryAccount: new BankAccount('987654321', RoutingNumber::fromString('021000021')),
-            routingNumber: RoutingNumber::fromString('021000021'),
         );
 
         $errors = $this->validator->getValidationErrors($request, $rail);
@@ -144,9 +142,9 @@ final class RailValidatorTest extends TestCase
     {
         return new class($type, $capabilities, $available) implements PaymentRailInterface {
             public function __construct(
-                private readonly RailType $type,
-                private readonly RailCapabilities $capabilities,
-                private readonly bool $available,
+                private RailType $type,
+                private RailCapabilities $capabilities,
+                private bool $available,
             ) {
             }
 

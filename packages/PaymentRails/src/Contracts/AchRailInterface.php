@@ -6,6 +6,7 @@ namespace Nexus\PaymentRails\Contracts;
 
 use Nexus\PaymentRails\DTOs\AchBatchRequest;
 use Nexus\PaymentRails\DTOs\AchBatchResult;
+use Nexus\PaymentRails\DTOs\AchPrenoteRequest;
 use Nexus\PaymentRails\ValueObjects\AchFile;
 use Nexus\PaymentRails\ValueObjects\AchNotificationOfChange;
 use Nexus\PaymentRails\ValueObjects\AchReturn;
@@ -40,10 +41,8 @@ interface AchRailInterface extends PaymentRailInterface
 
     /**
      * Send a prenote for account validation.
-     *
-     * @param array<string, mixed> $accountData
      */
-    public function sendPrenote(array $accountData): AchBatchResult;
+    public function sendPrenote(AchPrenoteRequest $request): AchBatchResult;
 
     /**
      * Process an ACH return notification.

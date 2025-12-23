@@ -4,29 +4,30 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentRails\Rails;
 
+use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
 use Nexus\Common\ValueObjects\Money;
-use Nexus\PaymentRails\Contracts\AchRailInterface;
-use Nexus\PaymentRails\Contracts\NachaFormatterInterface;
-use Nexus\PaymentRails\Contracts\RailConfigurationInterface;
-use Nexus\PaymentRails\Contracts\RailTransactionPersistInterface;
-use Nexus\PaymentRails\Contracts\RailTransactionQueryInterface;
-use Nexus\PaymentRails\DTOs\AchBatchRequest;
-use Nexus\PaymentRails\DTOs\AchBatchResult;
-use Nexus\PaymentRails\DTOs\AchEntryRequest;
-use Nexus\PaymentRails\DTOs\RailTransactionResult;
-use Nexus\PaymentRails\Enums\AccountType;
-use Nexus\PaymentRails\Enums\RailType;
 use Nexus\PaymentRails\Enums\SecCode;
-use Nexus\PaymentRails\Exceptions\RailUnavailableException;
+use Nexus\PaymentRails\Enums\RailType;
+use Nexus\PaymentRails\Enums\AccountType;
+use Nexus\PaymentRails\DTOs\AchBatchResult;
+use Nexus\PaymentRails\DTOs\AchBatchRequest;
+use Nexus\PaymentRails\DTOs\AchEntryRequest;
+use Nexus\PaymentRails\ValueObjects\AchFile;
 use Nexus\PaymentRails\ValueObjects\AchBatch;
 use Nexus\PaymentRails\ValueObjects\AchEntry;
-use Nexus\PaymentRails\ValueObjects\AchFile;
-use Nexus\PaymentRails\ValueObjects\AchNotificationOfChange;
+use Nexus\PaymentRails\DTOs\AchPrenoteRequest;
 use Nexus\PaymentRails\ValueObjects\AchReturn;
-use Nexus\PaymentRails\ValueObjects\RailCapabilities;
+use Nexus\PaymentRails\Contracts\AchRailInterface;
+use Nexus\PaymentRails\DTOs\RailTransactionResult;
 use Nexus\PaymentRails\ValueObjects\RoutingNumber;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Nexus\PaymentRails\ValueObjects\RailCapabilities;
+use Nexus\PaymentRails\Contracts\NachaFormatterInterface;
+use Nexus\PaymentRails\Exceptions\RailUnavailableException;
+use Nexus\PaymentRails\Contracts\RailConfigurationInterface;
+use Nexus\PaymentRails\ValueObjects\AchNotificationOfChange;
+use Nexus\PaymentRails\Contracts\RailTransactionQueryInterface;
+use Nexus\PaymentRails\Contracts\RailTransactionPersistInterface;
 
 /**
  * ACH (Automated Clearing House) payment rail implementation.
@@ -151,32 +152,31 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
         return $this->nachaFormatter->parseFile($content);
     }
 
-    public function sendPrenote(array $accountData): AchBatchResult
+    public function sendPrenote(AchPrenoteRequest $request): AchBatchResult
     {
-        $routingNumber = isset($accountData['routing_number']) ? trim((string) $accountData['routing_number']) : '';
-        $routing = RoutingNumber::tryFromString($routingNumber);
-
-        if ($routing === null) {
-            throw new \InvalidArgumentException('Missing or invalid routing_number provided for ACH prenote.');
+        $accountNumber = trim($request->accountNumber);
+        if ($accountNumber === '') {
+            throw new \InvalidArgumentException('Missing accountNumber provided for ACH prenote.');
         }
-        $accountNumber = (string) ($accountData['account_number'] ?? '');
-        $receiverName = (string) ($accountData['receiver_name'] ?? '');
-        $isDebit = (bool) ($accountData['is_debit'] ?? false);
-        $accountType = $this->normalizeAccountType($accountData['account_type'] ?? null);
+
+        $receiverName = trim($request->receiverName);
+        if ($receiverName === '') {
+            throw new \InvalidArgumentException('Missing receiverName provided for ACH prenote.');
+        }
 
         $entryRequest = AchEntryRequest::prenote(
-            receivingDfi: $routing,
+            receivingDfi: $request->routingNumber,
             accountNumber: $accountNumber,
-            accountType: $accountType,
+            accountType: $request->accountType,
             receiverName: $receiverName,
-            isDebit: $isDebit,
+            isDebit: $request->isDebit,
         );
 
         $batchRequest = new AchBatchRequest(
-            companyName: $accountData['company_name'] ?? 'Prenote',
-            companyId: $accountData['company_id'] ?? $this->configuration->getAchCompanyId(),
+            companyName: $request->companyName ?? 'Prenote',
+            companyId: $request->companyId ?? $this->configuration->getAchCompanyId(),
             companyEntryDescription: 'PRENOTE',
-            originatingDfi: $routing,
+            originatingDfi: $request->routingNumber,
             secCode: SecCode::PPD,
             entries: [$entryRequest],
             effectiveEntryDate: $this->getNextEffectiveDate(false),
