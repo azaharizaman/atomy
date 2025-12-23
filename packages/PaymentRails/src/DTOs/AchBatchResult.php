@@ -55,6 +55,8 @@ final readonly class AchBatchResult
         string $fileContents,
         array $traceNumbers = [],
     ): self {
+        $firstBatch = $file->batches[0] ?? null;
+
         return new self(
             fileId: $file->id,
             batchId: $batchId,
@@ -66,7 +68,7 @@ final readonly class AchBatchResult
             fileContents: $fileContents,
             fileName: $file->getSuggestedFilename(),
             traceNumbers: $traceNumbers,
-            effectiveDate: $file->batches[0]->effectiveEntryDate ?? $file->fileCreationDateTime,
+            effectiveDate: $firstBatch?->effectiveEntryDate ?? $file->fileCreationDateTime,
         );
     }
 

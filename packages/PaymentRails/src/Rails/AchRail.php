@@ -128,7 +128,8 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
         $this->ensureAvailable();
 
         $fileContents = $this->nachaFormatter->generateFile($file);
-        $batchId = $file->batches[0]->id ?? $this->generateReference('BATCH');
+        $firstBatch = $file->batches[0] ?? null;
+        $batchId = $firstBatch?->id ?? $this->generateReference('BATCH');
 
         $result = AchBatchResult::success($file, $batchId, $fileContents);
         $this->transactionPersist->save(RailTransactionResult::fromAchResult($result));
