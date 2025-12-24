@@ -115,8 +115,8 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
         $this->transactionPersist->save(RailTransactionResult::fromAchResult($result));
         $this->logOperation('Batch created', $batchId, [
             'entry_count' => $result->entryCount,
-            'total_debits' => $result->totalDebits->getAmountAsFloat(),
-            'total_credits' => $result->totalCredits->getAmountAsFloat(),
+            'total_debits' => $result->totalDebits->getAmount(),
+            'total_credits' => $result->totalCredits->getAmount(),
             'sec_code' => $request->secCode->value,
         ]);
 
@@ -415,20 +415,4 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
         return $odfiId . $sequenceNumber;
     }
 
-    private function normalizeAccountType(mixed $value): AccountType
-    {
-        if ($value instanceof AccountType) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            try {
-                return AccountType::from($value);
-            } catch (\ValueError) {
-                // Fall through to default
-            }
-        }
-
-        return AccountType::CHECKING;
-    }
 }
