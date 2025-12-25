@@ -4,34 +4,30 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentRails\Rails;
 
+use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
 use Nexus\Common\ValueObjects\Money;
-use Nexus\PaymentRails\Contracts\AchRailInterface;
-use Nexus\PaymentRails\Contracts\NachaFormatterInterface;
-use Nexus\PaymentRails\Contracts\RailConfigurationInterface;
-use Nexus\PaymentRails\Contracts\RailTransactionPersistInterface;
-use Nexus\PaymentRails\Contracts\RailTransactionQueryInterface;
-use Nexus\PaymentRails\DTOs\AchBatchRequest;
-use Nexus\PaymentRails\DTOs\AchBatchResult;
-use Nexus\PaymentRails\DTOs\RailTransactionResult;
-use Nexus\PaymentRails\Enums\AchReturnCode;
-use Nexus\PaymentRails\Enums\EntryStatus;
-use Nexus\PaymentRails\Enums\FileStatus;
-use Nexus\PaymentRails\Enums\NocCode;
-use Nexus\PaymentRails\Enums\RailType;
 use Nexus\PaymentRails\Enums\SecCode;
-use Nexus\PaymentRails\Enums\TransactionCode;
-use Nexus\PaymentRails\Exceptions\AchValidationException;
-use Nexus\PaymentRails\Exceptions\InvalidRoutingNumberException;
-use Nexus\PaymentRails\Exceptions\RailUnavailableException;
+use Nexus\PaymentRails\Enums\RailType;
+use Nexus\PaymentRails\Enums\AccountType;
+use Nexus\PaymentRails\DTOs\AchBatchResult;
+use Nexus\PaymentRails\DTOs\AchBatchRequest;
+use Nexus\PaymentRails\DTOs\AchEntryRequest;
+use Nexus\PaymentRails\ValueObjects\AchFile;
 use Nexus\PaymentRails\ValueObjects\AchBatch;
 use Nexus\PaymentRails\ValueObjects\AchEntry;
-use Nexus\PaymentRails\ValueObjects\AchFile;
-use Nexus\PaymentRails\ValueObjects\AchNotificationOfChange;
+use Nexus\PaymentRails\DTOs\AchPrenoteRequest;
 use Nexus\PaymentRails\ValueObjects\AchReturn;
-use Nexus\PaymentRails\ValueObjects\RailCapabilities;
+use Nexus\PaymentRails\Contracts\AchRailInterface;
+use Nexus\PaymentRails\DTOs\RailTransactionResult;
 use Nexus\PaymentRails\ValueObjects\RoutingNumber;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Nexus\PaymentRails\ValueObjects\RailCapabilities;
+use Nexus\PaymentRails\Contracts\NachaFormatterInterface;
+use Nexus\PaymentRails\Exceptions\RailUnavailableException;
+use Nexus\PaymentRails\Contracts\RailConfigurationInterface;
+use Nexus\PaymentRails\ValueObjects\AchNotificationOfChange;
+use Nexus\PaymentRails\Contracts\RailTransactionQueryInterface;
+use Nexus\PaymentRails\Contracts\RailTransactionPersistInterface;
 
 /**
  * ACH (Automated Clearing House) payment rail implementation.
@@ -45,11 +41,6 @@ use Psr\Log\NullLogger;
  */
 final class AchRail extends AbstractPaymentRail implements AchRailInterface
 {
-    /**
-     * @var array<string, AchBatch>
-     */
-    private array $pendingBatches = [];
-
     public function __construct(
         RailConfigurationInterface $configuration,
         private readonly NachaFormatterInterface $nachaFormatter,
@@ -70,353 +61,330 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
         return new RailCapabilities(
             railType: RailType::ACH,
             supportedCurrencies: ['USD'],
-            minimumAmountCents: 1,
-            maximumAmountCents: 999999999999, // $9.99 billion (practical limit)
-            settlementDays: 2, // Standard ACH T+2
-            isRealTime: false,
-            supportsRefunds: true,
-            supportsPartialRefunds: true,
+            minimumAmount: new Money(1, 'USD'),
+            maximumAmount: new Money(999999999999, 'USD'),
+            supportsScheduledPayments: true,
             supportsRecurring: true,
-            requiresBeneficiaryAddress: false,
+            supportsBatchProcessing: true,
+            requiresPrenotification: false,
+            typicalSettlementDays: 2,
+            requiredFields: ['routing_number', 'account_number', 'account_type'],
+            additionalCapabilities: [
+                'supports_refunds' => true,
+                'supports_partial_refunds' => true,
+                'requires_beneficiary_address' => false,
+                'supports_same_day' => true,
+            ],
         );
     }
 
-    /**
-     * Create an ACH batch from a request.
-     */
     public function createBatch(AchBatchRequest $request): AchBatchResult
     {
         $this->ensureAvailable();
 
-        // Validate the batch request
-        $errors = $this->validateBatchRequest($request);
+        $batchId = $request->batchId ?? $this->generateReference('BATCH');
+        $errors = $request->validate();
+
+        if ($request->isSameDay && !$this->isSameDayAvailable()) {
+            $errors[] = 'Same-day ACH cutoff has passed.';
+        }
+
         if (!empty($errors)) {
-            throw AchValidationException::multipleErrors($errors);
+            return AchBatchResult::failure($batchId, $errors);
         }
 
-        $batchId = $this->generateReference('BATCH');
-        $entries = [];
-        $totalDebitCents = 0;
-        $totalCreditCents = 0;
-
-        foreach ($request->entries as $index => $entryRequest) {
-            $traceNumber = $this->generateTraceNumber($index);
-            
-            $entry = new AchEntry(
-                traceNumber: $traceNumber,
-                transactionCode: $entryRequest->transactionCode,
-                routingNumber: $entryRequest->routingNumber,
-                accountNumber: $entryRequest->accountNumber,
-                amountCents: $entryRequest->amountCents,
-                individualId: $entryRequest->individualId,
-                individualName: $entryRequest->individualName,
-                discretionaryData: $entryRequest->discretionaryData,
-                addendaRecord: $entryRequest->addendaRecord,
-                status: EntryStatus::PENDING,
-            );
-
-            $entries[] = $entry;
-
-            if ($entryRequest->transactionCode->isDebit()) {
-                $totalDebitCents += $entryRequest->amountCents;
-            } else {
-                $totalCreditCents += $entryRequest->amountCents;
-            }
-        }
+        $effectiveDate = $request->effectiveEntryDate ?? $this->getNextEffectiveDate($request->isSameDay);
+        [$entries, $traceNumbers] = $this->buildEntries($request->entries);
 
         $batch = new AchBatch(
-            batchNumber: 1,
-            companyName: $request->companyName,
-            companyDiscretionaryData: $request->companyDiscretionaryData,
-            companyId: $request->companyId,
+            id: $batchId,
             secCode: $request->secCode,
-            companyEntryDescription: $request->entryDescription,
-            effectiveEntryDate: $request->effectiveDate,
+            companyName: $request->companyName,
+            companyId: $request->companyId,
+            companyEntryDescription: $request->companyEntryDescription,
+            originatingDfi: $request->originatingDfi,
+            effectiveEntryDate: $effectiveDate,
             entries: $entries,
-            originatorStatusCode: '1',
-            originatingDfiId: substr($this->configuration->getImmediateOrigin(), 0, 8),
+            companyDiscretionaryData: $request->companyDiscretionaryData,
         );
 
-        $this->pendingBatches[$batchId] = $batch;
+        $file = $this->buildFileFromRequest($request, $batch);
+        $fileContents = $this->nachaFormatter->generateFile($file);
 
+        $result = AchBatchResult::success(
+            file: $file,
+            batchId: $batchId,
+            fileContents: $fileContents,
+            traceNumbers: $traceNumbers,
+        );
+
+        $this->transactionPersist->save(RailTransactionResult::fromAchResult($result));
         $this->logOperation('Batch created', $batchId, [
-            'entry_count' => count($entries),
-            'total_debit_cents' => $totalDebitCents,
-            'total_credit_cents' => $totalCreditCents,
+            'entry_count' => $result->entryCount,
+            'total_debits' => $result->totalDebits->getAmount(),
+            'total_credits' => $result->totalCredits->getAmount(),
             'sec_code' => $request->secCode->value,
         ]);
 
-        return new AchBatchResult(
-            success: true,
-            batchId: $batchId,
-            entryCount: count($entries),
-            totalDebitCents: $totalDebitCents,
-            totalCreditCents: $totalCreditCents,
-            effectiveDate: $request->effectiveDate,
-            traceNumbers: array_map(fn(AchEntry $e) => $e->traceNumber, $entries),
-        );
+        return $result;
     }
 
-    /**
-     * Submit an ACH file for processing.
-     *
-     * @param array<AchBatch> $batches
-     */
-    public function submitFile(array $batches): AchFile
+    public function submitFile(AchFile $file): AchBatchResult
     {
         $this->ensureAvailable();
 
-        if (empty($batches)) {
-            throw AchValidationException::missingRequiredField('batches');
-        }
+        $fileContents = $this->nachaFormatter->generateFile($file);
+        $firstBatch = $file->batches[0] ?? null;
+        $batchId = $firstBatch?->id ?? $this->generateReference('BATCH');
 
-        $fileId = $this->generateReference('FILE');
-        $now = new \DateTimeImmutable();
+        $result = AchBatchResult::success($file, $batchId, $fileContents);
+        $this->transactionPersist->save(RailTransactionResult::fromAchResult($result));
 
-        $file = new AchFile(
-            fileId: $fileId,
-            immediateDestination: $this->configuration->getImmediateDestination(),
-            immediateOrigin: $this->configuration->getImmediateOrigin(),
-            fileCreationDate: $now,
-            fileCreationTime: $now,
-            fileIdModifier: 'A',
-            batches: $batches,
-            status: FileStatus::PENDING,
-        );
-
-        // Persist the file
-        $this->transactionPersist->save($file->fileId, [
-            'type' => 'ach_file',
-            'status' => $file->status->value,
-            'batch_count' => count($batches),
-            'created_at' => $now->format(\DateTimeInterface::RFC3339),
+        $this->logOperation('File submitted', $file->id, [
+            'batch_count' => $file->getBatchCount(),
+            'entry_count' => $file->getEntryCount(),
         ]);
 
-        $this->logOperation('File submitted', $fileId, [
-            'batch_count' => count($batches),
-            'total_entries' => $file->getTotalEntryCount(),
-        ]);
-
-        return $file;
+        return $result;
     }
 
-    /**
-     * Generate NACHA formatted file content.
-     */
-    public function generateNachaFile(AchFile $file): string
+    public function generateNachaFile(AchBatchRequest $request): string
     {
+        $file = $this->buildFileFromRequest($request, null);
         return $this->nachaFormatter->generateFile($file);
     }
 
-    /**
-     * Parse a NACHA formatted file.
-     */
     public function parseNachaFile(string $content): AchFile
     {
         return $this->nachaFormatter->parseFile($content);
     }
 
-    /**
-     * Send a prenote (zero-dollar test transaction).
-     */
-    public function sendPrenote(
-        RoutingNumber $routingNumber,
-        string $accountNumber,
-        TransactionCode $accountType,
-        string $individualName,
-        string $individualId,
-    ): string {
-        $this->ensureAvailable();
+    public function sendPrenote(AchPrenoteRequest $request): AchBatchResult
+    {
+        $accountNumber = trim($request->accountNumber);
+        if ($accountNumber === '') {
+            throw new \InvalidArgumentException('Missing accountNumber provided for ACH prenote.');
+        }
 
-        // Prenotes are always $0.00
-        $prenoteCode = $accountType->isDebit() 
-            ? TransactionCode::CHECKING_PRENOTE_DEBIT 
-            : TransactionCode::CHECKING_PRENOTE_CREDIT;
+        $receiverName = trim($request->receiverName);
+        if ($receiverName === '') {
+            throw new \InvalidArgumentException('Missing receiverName provided for ACH prenote.');
+        }
 
-        $traceNumber = $this->generateTraceNumber(0);
-
-        $entry = new AchEntry(
-            traceNumber: $traceNumber,
-            transactionCode: $prenoteCode,
-            routingNumber: $routingNumber,
+        $entryRequest = AchEntryRequest::prenote(
+            receivingDfi: $request->routingNumber,
             accountNumber: $accountNumber,
-            amountCents: 0,
-            individualId: $individualId,
-            individualName: $individualName,
-            status: EntryStatus::PENDING,
+            accountType: $request->accountType,
+            receiverName: $receiverName,
+            isDebit: $request->isDebit,
         );
 
-        $this->transactionPersist->save($traceNumber, [
-            'type' => 'prenote',
-            'routing_number' => $routingNumber->getMasked(),
-            'individual_name' => $individualName,
-            'status' => EntryStatus::PENDING->value,
-        ]);
+        $batchRequest = new AchBatchRequest(
+            companyName: $request->companyName ?? 'Prenote',
+            companyId: $request->companyId ?? $this->configuration->getAchCompanyId(),
+            companyEntryDescription: 'PRENOTE',
+            originatingDfi: $request->routingNumber,
+            secCode: SecCode::PPD,
+            entries: [$entryRequest],
+            effectiveEntryDate: $this->getNextEffectiveDate(false),
+        );
 
-        $this->logOperation('Prenote sent', $traceNumber, [
-            'routing_number' => $routingNumber->getMasked(),
-        ]);
-
-        return $traceNumber;
+        return $this->createBatch($batchRequest);
     }
 
-    /**
-     * Process an ACH return.
-     */
-    public function processReturn(AchReturn $return): void
+    public function processReturn(AchReturn $return): bool
     {
-        $existingTransaction = $this->transactionQuery->findByReference($return->originalTraceNumber);
+        $transaction = null;
 
-        if ($existingTransaction === null) {
-            $this->logger->warning('Return received for unknown transaction', [
-                'trace_number' => $return->originalTraceNumber,
+        if ($return->originalEntryId !== null) {
+            $transaction = $this->transactionQuery->findById($return->originalEntryId);
+        }
+
+        if ($transaction === null) {
+            $transaction = $this->transactionQuery->findByReference($return->originalTraceNumber);
+        }
+
+        if ($transaction === null) {
+            $this->logOperation('Return received for unknown transaction', $return->originalTraceNumber, [
                 'return_code' => $return->returnCode->value,
+                'return_date' => $return->returnDate->format(DATE_ATOM),
+                'retriable' => $return->isRetriable(),
             ]);
-            return;
+            return false;
         }
 
-        $this->transactionPersist->markFailed(
-            $return->originalTraceNumber,
-            sprintf('ACH Return: %s - %s', $return->returnCode->value, $return->returnCode->getDescription())
+        $message = sprintf(
+            'ACH return %s: %s',
+            $return->returnCode->value,
+            $return->getDescription()
         );
 
-        $this->logOperation('Return processed', $return->originalTraceNumber, [
+        $errors = [$message];
+        if ($return->addendaInformation !== null && $return->addendaInformation !== '') {
+            $errors[] = sprintf('Addenda: %s', $return->addendaInformation);
+        }
+
+        $errors[] = sprintf('Suggested action: %s', $return->getSuggestedAction());
+        $errors[] = sprintf('Retriable: %s', $return->isRetriable() ? 'yes' : 'no');
+
+        $this->transactionPersist->markFailed($transaction->transactionId, $errors);
+
+        $this->logOperation('Return processed', $transaction->transactionId, [
             'return_code' => $return->returnCode->value,
-            'is_retriable' => $return->returnCode->isRetriable(),
+            'return_date' => $return->returnDate->format(DATE_ATOM),
+            'retriable' => $return->isRetriable(),
+            'dishonored' => $return->dishonored,
+            'contested' => $return->contested,
         ]);
-    }
-
-    /**
-     * Process a Notification of Change (NOC).
-     */
-    public function processNoc(AchNotificationOfChange $noc): void
-    {
-        $this->logOperation('NOC received', $noc->originalTraceNumber, [
-            'noc_code' => $noc->nocCode->value,
-            'corrected_data' => $noc->correctedData,
-        ]);
-
-        // NOCs require merchant to update records within 6 banking days
-        // Log for follow-up but don't automatically update
-    }
-
-    /**
-     * Check if same-day ACH is available.
-     */
-    public function isSameDayAvailable(): bool
-    {
-        $now = new \DateTimeImmutable();
-        $cutoff = $this->getSameDayCutoffTime();
-
-        if ($cutoff === null) {
-            return false;
-        }
-
-        return $now <= $cutoff;
-    }
-
-    /**
-     * Get the cutoff time for today.
-     */
-    public function getCutoffTime(): \DateTimeImmutable
-    {
-        $cutoffTimes = $this->configuration->getCutoffTimes($this->getRailType());
-        $closeTime = $cutoffTimes['close'] ?? '17:00:00';
-
-        $today = new \DateTimeImmutable();
-        return \DateTimeImmutable::createFromFormat(
-            'Y-m-d H:i:s',
-            $today->format('Y-m-d') . ' ' . $closeTime
-        );
-    }
-
-    /**
-     * Get the next effective entry date.
-     */
-    public function getNextEffectiveDate(bool $sameDayRequested = false): \DateTimeImmutable
-    {
-        $now = new \DateTimeImmutable();
-
-        if ($sameDayRequested && $this->isSameDayAvailable()) {
-            return $now;
-        }
-
-        // Standard ACH: next business day
-        $nextDay = $now->modify('+1 business day');
-        
-        // Adjust for weekends
-        $dayOfWeek = (int) $nextDay->format('N');
-        if ($dayOfWeek === 6) { // Saturday
-            $nextDay = $nextDay->modify('+2 days');
-        } elseif ($dayOfWeek === 7) { // Sunday
-            $nextDay = $nextDay->modify('+1 day');
-        }
-
-        return $nextDay;
-    }
-
-    /**
-     * Validate a routing number.
-     */
-    public function validateRoutingNumber(string $routingNumber): bool
-    {
-        try {
-            RoutingNumber::fromString($routingNumber);
-            return true;
-        } catch (InvalidRoutingNumberException) {
-            return false;
-        }
-    }
-
-    /**
-     * Get transaction status.
-     */
-    public function getTransactionStatus(string $transactionId): RailTransactionResult
-    {
-        $transaction = $this->transactionQuery->findById($transactionId);
-
-        if ($transaction === null) {
-            return new RailTransactionResult(
-                success: false,
-                transactionId: $transactionId,
-                railType: $this->getRailType(),
-                status: 'NOT_FOUND',
-                errorMessage: 'Transaction not found',
-            );
-        }
-
-        return $transaction;
-    }
-
-    /**
-     * Cancel a transaction.
-     */
-    public function cancelTransaction(string $transactionId, string $reason): bool
-    {
-        $transaction = $this->transactionQuery->findById($transactionId);
-
-        if ($transaction === null) {
-            return false;
-        }
-
-        // Can only cancel pending transactions
-        if ($transaction->status !== 'PENDING') {
-            $this->logger->warning('Cannot cancel non-pending ACH transaction', [
-                'transaction_id' => $transactionId,
-                'current_status' => $transaction->status,
-            ]);
-            return false;
-        }
-
-        $this->transactionPersist->updateStatus($transactionId, 'CANCELLED');
-        $this->logOperation('Transaction cancelled', $transactionId, ['reason' => $reason]);
 
         return true;
     }
 
-    /**
-     * Ensure the rail is available for processing.
-     */
+    public function processNoc(AchNotificationOfChange $noc): bool
+    {
+        $transaction = null;
+
+        if ($noc->originalEntryId !== null) {
+            $transaction = $this->transactionQuery->findById($noc->originalEntryId);
+        }
+
+        if ($transaction === null) {
+            $transaction = $this->transactionQuery->findByReference($noc->originalTraceNumber);
+        }
+
+        $corrections = $noc->parseCorrectionsData();
+
+        if ($transaction !== null) {
+            $this->transactionPersist->updateStatus($transaction->transactionId, 'noc_received');
+        }
+
+        $this->logOperation('NOC processed', $transaction?->transactionId ?? $noc->originalTraceNumber, [
+            'noc_code' => $noc->nocCode->value,
+            'noc_date' => $noc->nocDate->format(DATE_ATOM),
+            'within_update_window' => $noc->isWithinUpdateWindow(),
+            'fields_to_update' => $noc->getFieldsToUpdate(),
+            'corrections' => $corrections,
+            'corrected_data' => $noc->correctedData,
+        ]);
+
+        return $transaction !== null;
+    }
+
+    public function isSameDayAvailable(): bool
+    {
+        $cutoff = $this->getSameDayCutoffTime();
+        return $cutoff !== null && (new \DateTimeImmutable()) <= $cutoff;
+    }
+
+    public function getCutoffTime(): \DateTimeImmutable
+    {
+        $cutoffTimes = $this->configuration->getCutoffTimes($this->getRailType());
+        $close = $cutoffTimes['close'] ?? '23:59:59';
+
+        if ($close instanceof \DateTimeImmutable) {
+            return $close;
+        }
+
+        $today = new \DateTimeImmutable();
+        return \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $today->format('Y-m-d') . ' ' . (string) $close) ?: $today;
+    }
+
+    public function getNextEffectiveDate(bool $isSameDay = false): \DateTimeImmutable
+    {
+        if ($isSameDay && $this->isSameDayAvailable()) {
+            return (new \DateTimeImmutable())->setTime(0, 0);
+        }
+
+        $date = new \DateTimeImmutable('+1 day');
+        while ((int) $date->format('N') >= 6) {
+            $date = $date->modify('+1 day');
+        }
+
+        return $date->setTime(0, 0);
+    }
+
+    public function validateRoutingNumber(string $routingNumber): bool
+    {
+        return RoutingNumber::tryFromString($routingNumber) !== null;
+    }
+
+    public function getTransactionStatus(string $transactionId): RailTransactionResult
+    {
+        return $this->transactionQuery->get($transactionId);
+    }
+
+    public function cancelTransaction(string $transactionId, string $reason): bool
+    {
+        $this->transactionPersist->markFailed($transactionId, [$reason]);
+        $this->logOperation('Transaction cancelled', $transactionId, ['reason' => $reason]);
+        return true;
+    }
+
+    private function buildEntries(array $entryRequests): array
+    {
+        $entries = [];
+        $traceNumbers = [];
+
+        foreach ($entryRequests as $index => $entryRequest) {
+            if (!$entryRequest instanceof AchEntryRequest) {
+                continue;
+            }
+
+            $entryId = $entryRequest->externalId ?? $this->generateReference('ENTRY');
+            $trace = $this->generateTraceNumber($index);
+
+            $entry = new AchEntry(
+                id: $entryId,
+                transactionCode: $entryRequest->getTransactionCode(),
+                routingNumber: $entryRequest->receivingDfi,
+                accountNumber: $entryRequest->accountNumber,
+                accountType: $entryRequest->accountType,
+                amount: $entryRequest->amount,
+                individualName: $entryRequest->receiverName,
+                individualId: $entryRequest->receiverId,
+                discretionaryData: null,
+                addenda: $entryRequest->addendaRecord,
+                traceNumber: $trace,
+            );
+
+            $entries[] = $entry;
+            $traceNumbers[$entryId] = $trace;
+        }
+
+        return [$entries, $traceNumbers];
+    }
+
+    private function buildFileFromRequest(AchBatchRequest $request, ?AchBatch $batch): AchFile
+    {
+        $effectiveDate = $request->effectiveEntryDate ?? $this->getNextEffectiveDate($request->isSameDay);
+        [$entries] = $batch === null ? $this->buildEntries($request->entries) : [$batch->entries];
+        $batchToUse = $batch ?? new AchBatch(
+            id: $request->batchId ?? $this->generateReference('BATCH'),
+            secCode: $request->secCode,
+            companyName: $request->companyName,
+            companyId: $request->companyId,
+            companyEntryDescription: $request->companyEntryDescription,
+            originatingDfi: $request->originatingDfi,
+            effectiveEntryDate: $effectiveDate,
+            entries: $entries,
+            companyDiscretionaryData: $request->companyDiscretionaryData,
+        );
+
+        $fileId = $this->generateReference('FILE');
+        $originatorInfo = $this->configuration->getOriginatorInfo();
+
+        $file = AchFile::create(
+            id: $fileId,
+            immediateDestination: RoutingNumber::fromString($this->configuration->getImmediateDestination()),
+            immediateOrigin: RoutingNumber::fromString($this->configuration->getImmediateOrigin()),
+            immediateDestinationName: $originatorInfo['immediate_destination_name'] ?? 'DESTINATION',
+            immediateOriginName: $originatorInfo['immediate_origin_name'] ?? 'ORIGIN',
+            fileCreationDateTime: new \DateTimeImmutable(),
+        );
+
+        return $file->addBatch($batchToUse);
+    }
+
     private function ensureAvailable(): void
     {
         if (!$this->isAvailable()) {
@@ -424,94 +392,27 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
         }
     }
 
-    /**
-     * Get same-day ACH cutoff time.
-     */
     private function getSameDayCutoffTime(): ?\DateTimeImmutable
     {
         $cutoffTimes = $this->configuration->getCutoffTimes($this->getRailType());
-        
+
         if (!isset($cutoffTimes['same_day'])) {
             return null;
+        }
+
+        $sameDay = $cutoffTimes['same_day'];
+
+        if ($sameDay instanceof \DateTimeImmutable) {
+            return $sameDay;
         }
 
         $today = new \DateTimeImmutable();
         return \DateTimeImmutable::createFromFormat(
             'Y-m-d H:i:s',
-            $today->format('Y-m-d') . ' ' . $cutoffTimes['same_day']
-        );
+            $today->format('Y-m-d') . ' ' . (string) $sameDay
+        ) ?: null;
     }
 
-    /**
-     * Validate a batch request.
-     *
-     * @return array<string>
-     */
-    private function validateBatchRequest(AchBatchRequest $request): array
-    {
-        $errors = [];
-
-        if (empty($request->entries)) {
-            $errors[] = 'Batch must contain at least one entry.';
-        }
-
-        if (count($request->entries) > 9999999) {
-            $errors[] = 'Batch exceeds maximum entry count (9,999,999).';
-        }
-
-        // Validate effective date
-        $now = new \DateTimeImmutable();
-        $maxFutureDate = $now->modify('+365 days');
-
-        if ($request->effectiveDate < $now->setTime(0, 0)) {
-            $errors[] = 'Effective date cannot be in the past.';
-        }
-
-        if ($request->effectiveDate > $maxFutureDate) {
-            $errors[] = 'Effective date cannot be more than 365 days in the future.';
-        }
-
-        // Validate SEC code compatibility with entries
-        foreach ($request->entries as $index => $entry) {
-            $secCodeErrors = $this->validateSecCodeForEntry($request->secCode, $entry);
-            foreach ($secCodeErrors as $error) {
-                $errors[] = sprintf('Entry %d: %s', $index + 1, $error);
-            }
-        }
-
-        return $errors;
-    }
-
-    /**
-     * Validate SEC code compatibility with entry.
-     *
-     * @return array<string>
-     */
-    private function validateSecCodeForEntry(SecCode $secCode, object $entry): array
-    {
-        $errors = [];
-
-        // Consumer vs Corporate validation
-        if ($secCode->isConsumer() && $entry->transactionCode->isCorporate()) {
-            $errors[] = 'Consumer SEC code cannot be used with corporate transaction code.';
-        }
-
-        // PPD requires individual ID
-        if ($secCode === SecCode::PPD && empty($entry->individualId)) {
-            $errors[] = 'PPD requires individual ID.';
-        }
-
-        // WEB requires authorization
-        if ($secCode === SecCode::WEB && empty($entry->discretionaryData)) {
-            $errors[] = 'WEB requires authorization reference in discretionary data.';
-        }
-
-        return $errors;
-    }
-
-    /**
-     * Generate a trace number.
-     */
     private function generateTraceNumber(int $sequence): string
     {
         $odfiId = substr($this->configuration->getImmediateOrigin(), 0, 8);
@@ -519,4 +420,5 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
 
         return $odfiId . $sequenceNumber;
     }
+
 }

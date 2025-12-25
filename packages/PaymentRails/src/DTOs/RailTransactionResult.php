@@ -180,7 +180,7 @@ final readonly class RailTransactionResult
             errors: $result->errors,
             metadata: [
                 'card_type' => $result->cardType->value,
-                'available_credit' => $result->availableCredit->getAmountAsFloat(),
+                'available_credit' => $result->availableCredit->getAmount(),
             ],
             expectedSettlementDate: $result->expiresAt,
         );

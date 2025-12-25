@@ -90,7 +90,7 @@ final readonly class VirtualCardResult
             status: VirtualCardStatus::CANCELLED,
             cardType: VirtualCardType::SINGLE_USE,
             creditLimit: $creditLimit,
-            availableCredit: Money::zero($creditLimit->currency),
+            availableCredit: Money::zero($creditLimit->getCurrency()),
             errors: $errors,
         );
     }
@@ -104,8 +104,8 @@ final readonly class VirtualCardResult
             return 0.0;
         }
 
-        $used = $this->creditLimit->subtract($this->availableCredit)->getAmountAsFloat();
-        $limit = $this->creditLimit->getAmountAsFloat();
+        $used = $this->creditLimit->subtract($this->availableCredit)->getAmount();
+        $limit = $this->creditLimit->getAmount();
 
         return round(($used / $limit) * 100, 2);
     }

@@ -4,6 +4,1354 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentRails\Services;
 
+use Nexus\Common\ValueObjects\Money;
+use Nexus\PaymentRails\Contracts\NachaFormatterInterface;
+use Nexus\PaymentRails\Enums\AccountType;
+use Nexus\PaymentRails\Enums\FileStatus;
+use Nexus\PaymentRails\Enums\SecCode;
+use Nexus\PaymentRails\Enums\TransactionCode;
+use Nexus\PaymentRails\ValueObjects\AchBatch;
+use Nexus\PaymentRails\ValueObjects\AchEntry;
+use Nexus\PaymentRails\ValueObjects\AchFile;
+use Nexus\PaymentRails\ValueObjects\RoutingNumber;
+
+/**
+ * NACHA (ACH) formatter.
+ *
+ * This file previously contained corrupted/duplicated legacy content. The
+ * authoritative implementation is the class below. Any remaining content
+ * after `__halt_compiler()` is ignored by PHP.
+ */
+final class NachaFormatter implements NachaFormatterInterface
+{
+    private const int RECORD_LENGTH = 94;
+
+    private const string RECORD_TYPE_FILE_HEADER = '1';
+    private const string RECORD_TYPE_BATCH_HEADER = '5';
+    private const string RECORD_TYPE_ENTRY_DETAIL = '6';
+    private const string RECORD_TYPE_ADDENDA = '7';
+    private const string RECORD_TYPE_BATCH_CONTROL = '8';
+    private const string RECORD_TYPE_FILE_CONTROL = '9';
+
+    private const string PRIORITY_CODE = '01';
+    private const string RECORD_SIZE = '094';
+    private const string BLOCKING_FACTOR = '10';
+    private const string FORMAT_CODE = '1';
+    private const string ORIGINATOR_STATUS_CODE = '1';
+    private const string ADDENDA_TYPE_CODE = '05';
+
+    public function generateFile(AchFile $file): string
+    {
+        $lines = [];
+
+        $lines[] = $this->generateFileHeader([
+            'immediate_destination' => $file->getFormattedImmediateDestination(),
+            'immediate_origin' => $file->getFormattedImmediateOrigin(),
+            'file_creation_date' => $file->getFileCreationDate(),
+            'file_creation_time' => $file->getFileCreationTime(),
+            'file_id_modifier' => $file->fileIdModifier,
+            'immediate_destination_name' => $file->getFormattedDestinationName(),
+            'immediate_origin_name' => $file->getFormattedOriginName(),
+            'reference_code' => $file->referenceCode,
+        ]);
+
+        foreach ($file->batches as $batchIndex => $batch) {
+            $batchNumber = $batch->batchNumber > 0 ? $batch->batchNumber : ($batchIndex + 1);
+
+            $lines[] = $this->generateBatchHeader([
+                'service_class_code' => $batch->getServiceClassCode(),
+                'company_name' => $batch->getFormattedCompanyName(),
+                'company_discretionary_data' => $batch->companyDiscretionaryData,
+                'company_id' => $batch->getFormattedCompanyId(),
+                'sec_code' => $batch->secCode->value,
+                'company_entry_description' => $batch->getFormattedEntryDescription(),
+                'company_descriptive_date' => $batch->companyDescriptiveDate?->format('ymd'),
+                'effective_entry_date' => $batch->effectiveEntryDate->format('ymd'),
+                'originating_dfi_identification' => mb_substr($batch->originatingDfi->value, 0, 8),
+                'batch_number' => $batchNumber,
+            ]);
+
+            $entrySequence = 0;
+            foreach ($batch->entries as $entry) {
+                $entrySequence++;
+
+                $traceNumber = $entry->traceNumber;
+                if ($traceNumber === null || $traceNumber === '') {
+                    $traceNumber = $this->buildTraceNumber(
+                        originatingDfiIdentification: mb_substr($batch->originatingDfi->value, 0, 8),
+                        sequence: $entrySequence
+                    );
+                }
+
+                $lines[] = $this->generateEntryDetail([
+                    'transaction_code' => $entry->transactionCode->value,
+                    'receiving_dfi_identification' => mb_substr($entry->routingNumber->value, 0, 8),
+                    'check_digit' => (string) $entry->routingNumber->getCheckDigit(),
+                    'dfi_account_number' => $entry->getFormattedAccountNumber(),
+                    'amount_cents' => $entry->getAmountInCents(),
+                    'individual_id' => $entry->getFormattedIndividualId(),
+                    'individual_name' => $entry->getFormattedIndividualName(),
+                    'discretionary_data' => $entry->discretionaryData,
+                    'addenda_indicator' => $entry->getAddendaIndicator(),
+                    'trace_number' => $traceNumber,
+                ]);
+
+                if ($entry->hasAddenda()) {
+                    $lines[] = $this->generateAddenda([
+                        'payment_related_information' => $entry->addenda,
+                        'addenda_sequence_number' => 1,
+                        'entry_detail_sequence_number' => $entrySequence,
+                    ]);
+                }
+            }
+
+            $lines[] = $this->generateBatchControl([
+                'service_class_code' => $batch->getServiceClassCode(),
+                'entry_addenda_count' => $batch->getEntryCount() + $batch->getAddendaCount(),
+                'entry_hash' => $batch->getEntryHash(),
+                'total_debit_cents' => $batch->getTotalDebits()->getAmountInMinorUnits(),
+                'total_credit_cents' => $batch->getTotalCredits()->getAmountInMinorUnits(),
+                'company_id' => $batch->getFormattedCompanyId(),
+                'originating_dfi_identification' => mb_substr($batch->originatingDfi->value, 0, 8),
+                'batch_number' => $batchNumber,
+            ]);
+        }
+
+        $lines[] = $this->generateFileControl([
+            'batch_count' => $file->getBatchCount(),
+            'block_count' => $file->getBlockCount(),
+            'entry_addenda_count' => $file->getEntryCount() + $file->getAddendaCount(),
+            'entry_hash' => $file->getEntryHash(),
+            'total_debit_cents' => $file->getTotalDebits()->getAmountInMinorUnits(),
+            'total_credit_cents' => $file->getTotalCredits()->getAmountInMinorUnits(),
+        ]);
+
+        $lines = $this->addBlockingRecords($lines);
+
+        return implode("\n", $lines);
+    }
+
+    public function generateFileHeader(array $headerData): string
+    {
+        $record = self::RECORD_TYPE_FILE_HEADER;
+        $record .= self::PRIORITY_CODE;
+        $record .= $this->formatField($headerData['immediate_destination'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['immediate_origin'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['file_creation_date'] ?? '', 6, 'numeric', 'right', '0');
+        $record .= $this->formatField($headerData['file_creation_time'] ?? '', 4, 'numeric', 'right', '0');
+        $record .= $this->formatField($headerData['file_id_modifier'] ?? 'A', 1, 'alphanumeric', 'left', ' ');
+        $record .= self::RECORD_SIZE;
+        $record .= self::BLOCKING_FACTOR;
+        $record .= self::FORMAT_CODE;
+        $record .= $this->formatField($headerData['immediate_destination_name'] ?? '', 23, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['immediate_origin_name'] ?? '', 23, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['reference_code'] ?? '', 8, 'alphanumeric', 'left', ' ');
+
+        return $this->ensureRecordLength($record);
+    }
+
+    public function generateFileControl(array $controlData): string
+    {
+        $record = self::RECORD_TYPE_FILE_CONTROL;
+        $record .= $this->formatField((string) ($controlData['batch_count'] ?? 0), 6, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($controlData['block_count'] ?? 0), 6, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($controlData['entry_addenda_count'] ?? 0), 8, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($controlData['entry_hash'] ?? 0), 10, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($controlData['total_debit_cents'] ?? 0), 12, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($controlData['total_credit_cents'] ?? 0), 12, 'numeric', 'right', '0');
+        $record .= str_repeat(' ', 39);
+
+        return $this->ensureRecordLength($record);
+    }
+
+    public function generateBatchHeader(array $batchData): string
+    {
+        $record = self::RECORD_TYPE_BATCH_HEADER;
+        $record .= $this->formatField((string) ($batchData['service_class_code'] ?? 200), 3, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['company_name'] ?? '', 16, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['company_discretionary_data'] ?? '', 20, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['company_id'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['sec_code'] ?? '', 3, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['company_entry_description'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['company_descriptive_date'] ?? '', 6, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['effective_entry_date'] ?? '', 6, 'numeric', 'right', '0');
+        $record .= '   '; // settlement date (julian) - blank
+        $record .= self::ORIGINATOR_STATUS_CODE;
+        $record .= $this->formatField($batchData['originating_dfi_identification'] ?? '', 8, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($batchData['batch_number'] ?? 1), 7, 'numeric', 'right', '0');
+
+        return $this->ensureRecordLength($record);
+    }
+
+    public function generateBatchControl(array $batchData): string
+    {
+        $record = self::RECORD_TYPE_BATCH_CONTROL;
+        $record .= $this->formatField((string) ($batchData['service_class_code'] ?? 200), 3, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($batchData['entry_addenda_count'] ?? 0), 6, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($batchData['entry_hash'] ?? 0), 10, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($batchData['total_debit_cents'] ?? 0), 12, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($batchData['total_credit_cents'] ?? 0), 12, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['company_id'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= str_repeat(' ', 19); // message authentication code
+        $record .= str_repeat(' ', 6); // reserved
+        $record .= $this->formatField($batchData['originating_dfi_identification'] ?? '', 8, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($batchData['batch_number'] ?? 1), 7, 'numeric', 'right', '0');
+
+        return $this->ensureRecordLength($record);
+    }
+
+    public function generateEntryDetail(array $entryData): string
+    {
+        $record = self::RECORD_TYPE_ENTRY_DETAIL;
+        $record .= $this->formatField($entryData['transaction_code'] ?? '', 2, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['receiving_dfi_identification'] ?? '', 8, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['check_digit'] ?? '', 1, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['dfi_account_number'] ?? '', 17, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField((string) ($entryData['amount_cents'] ?? 0), 10, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['individual_id'] ?? '', 15, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($entryData['individual_name'] ?? '', 22, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($entryData['discretionary_data'] ?? '', 2, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField((string) ($entryData['addenda_indicator'] ?? 0), 1, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['trace_number'] ?? '', 15, 'numeric', 'right', '0');
+
+        return $this->ensureRecordLength($record);
+    }
+
+    public function generateAddenda(array $addendaData): string
+    {
+        $record = self::RECORD_TYPE_ADDENDA;
+        $record .= self::ADDENDA_TYPE_CODE;
+        $record .= $this->formatField($addendaData['payment_related_information'] ?? '', 80, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField((string) ($addendaData['addenda_sequence_number'] ?? 1), 4, 'numeric', 'right', '0');
+        $record .= $this->formatField((string) ($addendaData['entry_detail_sequence_number'] ?? 1), 7, 'numeric', 'right', '0');
+
+        return $this->ensureRecordLength($record);
+    }
+
+    public function parseFile(string $content): AchFile
+    {
+        $lines = array_values(array_filter(explode("\n", $content), static fn (string $l) => $l !== ''));
+        $lines = array_values(array_filter($lines, fn (string $l) => $l !== str_repeat('9', self::RECORD_LENGTH)));
+
+        if ($lines === []) {
+            throw new \InvalidArgumentException('NACHA content is empty.');
+        }
+
+        $header = $lines[0];
+        if ($header[0] !== self::RECORD_TYPE_FILE_HEADER) {
+            throw new \InvalidArgumentException('Missing file header record.');
+        }
+
+        $immediateDestination = trim(mb_substr($header, 3, 10));
+        $immediateOrigin = trim(mb_substr($header, 13, 10));
+        $date = mb_substr($header, 23, 6);
+        $time = mb_substr($header, 29, 4);
+        $modifier = mb_substr($header, 33, 1);
+        $destName = rtrim(mb_substr($header, 40, 23));
+        $origName = rtrim(mb_substr($header, 63, 23));
+
+        $fileOriginRouting = new RoutingNumber($immediateOrigin);
+
+        $fileCreationDateTime = \DateTimeImmutable::createFromFormat('ymdHi', $date . $time)
+            ?: new \DateTimeImmutable();
+
+        $batches = [];
+        $currentBatch = null;
+        $currentEntries = [];
+        $pendingAddenda = null;
+
+        for ($i = 1; $i < count($lines); $i++) {
+            $line = $lines[$i];
+            $type = $line[0];
+
+            if ($type === self::RECORD_TYPE_BATCH_HEADER) {
+                if ($currentBatch !== null) {
+                    $batches[] = $this->finalizeParsedBatch($currentBatch, $currentEntries, $fileOriginRouting);
+                }
+
+                $currentBatch = $this->parseBatchHeader($line);
+                $currentEntries = [];
+                $pendingAddenda = null;
+                continue;
+            }
+
+            if ($type === self::RECORD_TYPE_ENTRY_DETAIL) {
+                $pendingAddenda = null;
+                $currentEntries[] = $this->parseEntryDetail($line);
+                $pendingAddenda = count($currentEntries) - 1;
+                continue;
+            }
+
+            if ($type === self::RECORD_TYPE_ADDENDA) {
+                if ($pendingAddenda !== null && isset($currentEntries[$pendingAddenda])) {
+                    $addenda = rtrim(mb_substr($line, 3, 80));
+                    $entry = $currentEntries[$pendingAddenda];
+                    $currentEntries[$pendingAddenda] = new AchEntry(
+                        id: $entry->id,
+                        transactionCode: $entry->transactionCode,
+                        routingNumber: $entry->routingNumber,
+                        accountNumber: $entry->accountNumber,
+                        accountType: $entry->accountType,
+                        amount: $entry->amount,
+                        individualName: $entry->individualName,
+                        individualId: $entry->individualId,
+                        discretionaryData: $entry->discretionaryData,
+                        addenda: $addenda,
+                        traceNumber: $entry->traceNumber,
+                    );
+                }
+                continue;
+            }
+
+            if ($type === self::RECORD_TYPE_BATCH_CONTROL) {
+                if ($currentBatch !== null) {
+                    $batches[] = $this->finalizeParsedBatch($currentBatch, $currentEntries, $fileOriginRouting);
+                    $currentBatch = null;
+                    $currentEntries = [];
+                    $pendingAddenda = null;
+                }
+                continue;
+            }
+
+            if ($type === self::RECORD_TYPE_FILE_CONTROL) {
+                break;
+            }
+        }
+
+        if ($currentBatch !== null) {
+            $batches[] = $this->finalizeParsedBatch($currentBatch, $currentEntries, $fileOriginRouting);
+        }
+
+        return new AchFile(
+            id: 'parsed-file',
+            immediateDestination: new RoutingNumber($immediateDestination),
+            immediateOrigin: $fileOriginRouting,
+            immediateDestinationName: $destName,
+            immediateOriginName: $origName,
+            fileCreationDateTime: $fileCreationDateTime,
+            batches: $batches,
+            fileIdModifier: $modifier !== '' ? $modifier : 'A',
+            status: FileStatus::GENERATED,
+            referenceCode: null,
+        );
+    }
+
+    public function validateFormat(string $content): array
+    {
+        $errors = [];
+        $lines = array_values(array_filter(explode("\n", $content), static fn (string $l) => $l !== ''));
+
+        if ($lines === []) {
+            return ['NACHA content is empty.'];
+        }
+
+        $hasFileControl = false;
+
+        foreach ($lines as $index => $line) {
+            if (strlen($line) !== self::RECORD_LENGTH) {
+                $errors[] = sprintf('Record %d is not %d characters.', $index + 1, self::RECORD_LENGTH);
+                continue;
+            }
+
+            $type = $line[0];
+            if (!in_array($type, [
+                self::RECORD_TYPE_FILE_HEADER,
+                self::RECORD_TYPE_BATCH_HEADER,
+                self::RECORD_TYPE_ENTRY_DETAIL,
+                self::RECORD_TYPE_ADDENDA,
+                self::RECORD_TYPE_BATCH_CONTROL,
+                self::RECORD_TYPE_FILE_CONTROL,
+            ], true)) {
+                $errors[] = sprintf('Record %d has invalid record type: %s', $index + 1, $type);
+            }
+
+            if ($type === self::RECORD_TYPE_FILE_CONTROL && $line !== str_repeat('9', self::RECORD_LENGTH)) {
+                $hasFileControl = true;
+            }
+        }
+
+        if (!$hasFileControl) {
+            $errors[] = 'Missing file control record.';
+        }
+
+        return $errors;
+    }
+
+    public function calculateEntryHash(array $routingNumbers): string
+    {
+        $hash = 0;
+        foreach ($routingNumbers as $routingNumber) {
+            $hash += (int) mb_substr($routingNumber, 0, 8);
+        }
+        $hash = $hash % 10000000000;
+        return str_pad((string) $hash, 10, '0', STR_PAD_LEFT);
+    }
+
+    public function formatField(
+        mixed $value,
+        int $length,
+        string $type = 'alphanumeric',
+        string $align = 'left',
+        string $padChar = ' ',
+    ): string {
+        $stringValue = (string) ($value ?? '');
+
+        if ($type === 'numeric') {
+            $stringValue = preg_replace('/\D+/', '', $stringValue) ?? '';
+        }
+
+        $stringValue = mb_substr($stringValue, 0, $length);
+
+        return $align === 'right'
+            ? str_pad($stringValue, $length, $padChar, STR_PAD_LEFT)
+            : str_pad($stringValue, $length, $padChar, STR_PAD_RIGHT);
+    }
+
+    /** @param array<string> $lines */
+    private function addBlockingRecords(array $lines): array
+    {
+        $remainder = count($lines) % 10;
+        if ($remainder === 0) {
+            return $lines;
+        }
+
+        $needed = 10 - $remainder;
+        for ($i = 0; $i < $needed; $i++) {
+            $lines[] = str_repeat('9', self::RECORD_LENGTH);
+        }
+
+        return $lines;
+    }
+
+    private function ensureRecordLength(string $record): string
+    {
+        $record = mb_substr($record, 0, self::RECORD_LENGTH);
+        return str_pad($record, self::RECORD_LENGTH, ' ', STR_PAD_RIGHT);
+    }
+
+    private function buildTraceNumber(string $originatingDfiIdentification, int $sequence): string
+    {
+        return str_pad($originatingDfiIdentification, 8, '0', STR_PAD_LEFT)
+            . str_pad((string) $sequence, 7, '0', STR_PAD_LEFT);
+    }
+
+    /** @return array<string, mixed> */
+    private function parseBatchHeader(string $line): array
+    {
+        return [
+            'service_class_code' => (int) mb_substr($line, 1, 3),
+            'company_name' => rtrim(mb_substr($line, 4, 16)),
+            'company_discretionary_data' => rtrim(mb_substr($line, 20, 20)) ?: null,
+            'company_id' => rtrim(mb_substr($line, 40, 10)),
+            'sec_code' => rtrim(mb_substr($line, 50, 3)),
+            'company_entry_description' => rtrim(mb_substr($line, 53, 10)),
+            'company_descriptive_date' => rtrim(mb_substr($line, 63, 6)) ?: null,
+            'effective_entry_date' => rtrim(mb_substr($line, 69, 6)),
+            'originating_dfi_identification' => rtrim(mb_substr($line, 79, 8)),
+            'batch_number' => (int) mb_substr($line, 87, 7),
+        ];
+    }
+
+    private function parseEntryDetail(string $line): AchEntry
+    {
+        $transactionCode = TransactionCode::from(mb_substr($line, 1, 2));
+        $receivingDfi = mb_substr($line, 3, 8);
+        $checkDigit = mb_substr($line, 11, 1);
+        $routing = new RoutingNumber($receivingDfi . $checkDigit);
+        $accountNumber = rtrim(mb_substr($line, 12, 17));
+        $amount = (int) mb_substr($line, 29, 10);
+        $individualId = rtrim(mb_substr($line, 39, 15));
+        $individualName = rtrim(mb_substr($line, 54, 22));
+        $discretionary = rtrim(mb_substr($line, 76, 2)) ?: null;
+        $traceNumber = rtrim(mb_substr($line, 79, 15));
+
+        $accountType = $transactionCode->isSavings() ? AccountType::SAVINGS : AccountType::CHECKING;
+
+        return new AchEntry(
+            id: 'parsed-entry-' . $traceNumber,
+            transactionCode: $transactionCode,
+            routingNumber: $routing,
+            accountNumber: $accountNumber,
+            accountType: $accountType,
+            amount: new Money($amount, 'USD'),
+            individualName: $individualName,
+            individualId: $individualId,
+            discretionaryData: $discretionary,
+            addenda: null,
+            traceNumber: $traceNumber,
+        );
+    }
+
+    /** @param array<string, mixed> $batch */
+    private function finalizeParsedBatch(array $batch, array $entries, RoutingNumber $fileOriginRouting): AchBatch
+    {
+        $secCode = SecCode::from($batch['sec_code']);
+        $effectiveEntryDate = \DateTimeImmutable::createFromFormat('ymd', (string) $batch['effective_entry_date'])
+            ?: new \DateTimeImmutable();
+
+        return new AchBatch(
+            id: 'parsed-batch-' . (string) $batch['batch_number'],
+            secCode: $secCode,
+            companyName: (string) ($batch['company_name'] ?? ''),
+            companyId: (string) ($batch['company_id'] ?? ''),
+            companyEntryDescription: (string) ($batch['company_entry_description'] ?? ''),
+            // Batch header only includes the first 8 digits (ODFI identification), not the check digit.
+            // Use the file's immediate origin routing number as a safe default.
+            originatingDfi: $fileOriginRouting,
+            effectiveEntryDate: $effectiveEntryDate,
+            entries: $entries,
+            companyDiscretionaryData: $batch['company_discretionary_data'] ?? null,
+            companyDescriptiveDate: null,
+            batchNumber: (int) ($batch['batch_number'] ?? 1),
+        );
+    }
+}
+
+__halt_compiler();
+
+    private const string RECORD_TYPE_FILE_HEADER = '1';
+    private const string RECORD_TYPE_BATCH_HEADER = '5';
+    private const string RECORD_TYPE_ENTRY_DETAIL = '6';
+    private const string RECORD_TYPE_ADDENDA = '7';
+    private const string RECORD_TYPE_BATCH_CONTROL = '8';
+    private const string RECORD_TYPE_FILE_CONTROL = '9';
+
+    private const string PRIORITY_CODE = '01';
+    private const string RECORD_SIZE = '094';
+    private const string BLOCKING_FACTOR = '10';
+    private const string FORMAT_CODE = '1';
+    private const string ORIGINATOR_STATUS_CODE = '1';
+    private const string ADDENDA_TYPE_CODE = '05';
+
+    public function generateFile(AchFile $file): string
+    {
+        $lines = [];
+
+        $lines[] = $this->generateFileHeader([
+            'immediate_destination' => $file->getFormattedImmediateDestination(),
+            'immediate_origin' => $file->getFormattedImmediateOrigin(),
+            'file_creation_date' => $file->getFileCreationDate(),
+            'file_creation_time' => $file->getFileCreationTime(),
+            'file_id_modifier' => $file->fileIdModifier,
+            'immediate_destination_name' => $file->getFormattedDestinationName(),
+            'immediate_origin_name' => $file->getFormattedOriginName(),
+            'reference_code' => $file->referenceCode,
+        ]);
+
+        foreach ($file->batches as $batchIndex => $batch) {
+            $batchNumber = $batch->batchNumber > 0 ? $batch->batchNumber : ($batchIndex + 1);
+
+            $lines[] = $this->generateBatchHeader([
+                'service_class_code' => $batch->getServiceClassCode(),
+                'company_name' => $batch->getFormattedCompanyName(),
+                'company_discretionary_data' => $batch->companyDiscretionaryData,
+                'company_id' => $batch->getFormattedCompanyId(),
+                'sec_code' => $batch->secCode->value,
+                'company_entry_description' => $batch->getFormattedEntryDescription(),
+                'company_descriptive_date' => $batch->companyDescriptiveDate?->format('ymd'),
+                'effective_entry_date' => $batch->effectiveEntryDate->format('ymd'),
+                'originating_dfi_identification' => mb_substr($batch->originatingDfi->value, 0, 8),
+                'batch_number' => $batchNumber,
+            ]);
+
+            $entrySequence = 0;
+            foreach ($batch->entries as $entry) {
+                $entrySequence++;
+
+                $traceNumber = $entry->traceNumber;
+                if ($traceNumber === null || $traceNumber === '') {
+                    $traceNumber = $this->buildTraceNumber(
+                        originatingDfiIdentification: mb_substr($batch->originatingDfi->value, 0, 8),
+                        sequence: $entrySequence
+                    );
+                }
+
+                $lines[] = $this->generateEntryDetail([
+                    'transaction_code' => $entry->transactionCode->value,
+                    'receiving_dfi_identification' => mb_substr($entry->routingNumber->value, 0, 8),
+                    'check_digit' => (string) $entry->routingNumber->getCheckDigit(),
+                    'dfi_account_number' => $entry->getFormattedAccountNumber(),
+                    'amount_cents' => $entry->getAmountInCents(),
+                    'individual_id' => $entry->getFormattedIndividualId(),
+                    'individual_name' => $entry->getFormattedIndividualName(),
+                    'discretionary_data' => $entry->discretionaryData,
+                    'addenda_indicator' => $entry->getAddendaIndicator(),
+                    'trace_number' => $traceNumber,
+                ]);
+
+                if ($entry->hasAddenda()) {
+                    $lines[] = $this->generateAddenda([
+                        'payment_related_information' => $entry->addenda,
+                        'addenda_sequence_number' => 1,
+                        'entry_detail_sequence_number' => $entrySequence,
+                    ]);
+                }
+            }
+
+            $lines[] = $this->generateBatchControl([
+                'service_class_code' => $batch->getServiceClassCode(),
+                'entry_addenda_count' => $batch->getEntryCount() + $batch->getAddendaCount(),
+                'entry_hash' => $batch->getEntryHash(),
+                'total_debit_cents' => $batch->getTotalDebits()->getAmountInMinorUnits(),
+                'total_credit_cents' => $batch->getTotalCredits()->getAmountInMinorUnits(),
+                'company_id' => $batch->getFormattedCompanyId(),
+                'originating_dfi_identification' => mb_substr($batch->originatingDfi->value, 0, 8),
+                'batch_number' => $batchNumber,
+            ]);
+        }
+
+        $lines[] = $this->generateFileControl([
+            'batch_count' => $file->getBatchCount(),
+            'block_count' => $file->getBlockCount(),
+            'entry_addenda_count' => $file->getEntryCount() + $file->getAddendaCount(),
+            'entry_hash' => $file->getEntryHash(),
+            'total_debit_cents' => $file->getTotalDebits()->getAmountInMinorUnits(),
+            'total_credit_cents' => $file->getTotalCredits()->getAmountInMinorUnits(),
+        ]);
+
+        $lines = $this->addBlockingRecords($lines);
+
+        return implode("\n", $lines);
+    }
+
+    public function generateFileHeader(array $headerData): string
+    {
+        $record = self::RECORD_TYPE_FILE_HEADER;
+        $record .= self::PRIORITY_CODE;
+        $record .= $this->formatField($headerData['immediate_destination'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['immediate_origin'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['file_creation_date'] ?? '', 6, 'numeric', 'right', '0');
+        $record .= $this->formatField($headerData['file_creation_time'] ?? '', 4, 'numeric', 'right', '0');
+        $record .= $this->formatField($headerData['file_id_modifier'] ?? 'A', 1, 'alphanumeric', 'left', ' ');
+        $record .= self::RECORD_SIZE;
+        $record .= self::BLOCKING_FACTOR;
+        $record .= self::FORMAT_CODE;
+        $record .= $this->formatField($headerData['immediate_destination_name'] ?? '', 23, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['immediate_origin_name'] ?? '', 23, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['reference_code'] ?? '', 8, 'alphanumeric', 'left', ' ');
+
+        return $this->assertRecordLength($record);
+    }
+
+    public function generateFileControl(array $controlData): string
+    {
+        $record = self::RECORD_TYPE_FILE_CONTROL;
+        $record .= $this->formatField($controlData['batch_count'] ?? 0, 6, 'numeric', 'right', '0');
+        $record .= $this->formatField($controlData['block_count'] ?? 0, 6, 'numeric', 'right', '0');
+        $record .= $this->formatField($controlData['entry_addenda_count'] ?? 0, 8, 'numeric', 'right', '0');
+        $record .= $this->formatField($controlData['entry_hash'] ?? 0, 10, 'numeric', 'right', '0');
+        $record .= $this->formatField($controlData['total_debit_cents'] ?? 0, 12, 'numeric', 'right', '0');
+        $record .= $this->formatField($controlData['total_credit_cents'] ?? 0, 12, 'numeric', 'right', '0');
+        $record .= str_repeat(' ', 39);
+
+        return $this->assertRecordLength($record);
+    }
+
+    public function generateBatchHeader(array $batchData): string
+    {
+        $record = self::RECORD_TYPE_BATCH_HEADER;
+        $record .= $this->formatField($batchData['service_class_code'] ?? 200, 3, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['company_name'] ?? '', 16, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['company_discretionary_data'] ?? '', 20, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['company_id'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['sec_code'] ?? '', 3, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['company_entry_description'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['company_descriptive_date'] ?? '', 6, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($batchData['effective_entry_date'] ?? '', 6, 'numeric', 'right', '0');
+        $record .= str_repeat(' ', 3);
+        $record .= self::ORIGINATOR_STATUS_CODE;
+        $record .= $this->formatField($batchData['originating_dfi_identification'] ?? '', 8, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['batch_number'] ?? 1, 7, 'numeric', 'right', '0');
+
+        return $this->assertRecordLength($record);
+    }
+
+    public function generateBatchControl(array $batchData): string
+    {
+        $record = self::RECORD_TYPE_BATCH_CONTROL;
+        $record .= $this->formatField($batchData['service_class_code'] ?? 200, 3, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['entry_addenda_count'] ?? 0, 6, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['entry_hash'] ?? 0, 10, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['total_debit_cents'] ?? 0, 12, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['total_credit_cents'] ?? 0, 12, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['company_id'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= str_repeat(' ', 19);
+        $record .= str_repeat(' ', 6);
+        $record .= $this->formatField($batchData['originating_dfi_identification'] ?? '', 8, 'numeric', 'right', '0');
+        $record .= $this->formatField($batchData['batch_number'] ?? 1, 7, 'numeric', 'right', '0');
+
+        return $this->assertRecordLength($record);
+    }
+
+    public function generateEntryDetail(array $entryData): string
+    {
+        $record = self::RECORD_TYPE_ENTRY_DETAIL;
+        $record .= $this->formatField($entryData['transaction_code'] ?? '', 2, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['receiving_dfi_identification'] ?? '', 8, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['check_digit'] ?? '', 1, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['dfi_account_number'] ?? '', 17, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($entryData['amount_cents'] ?? 0, 10, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['individual_id'] ?? '', 15, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($entryData['individual_name'] ?? '', 22, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($entryData['discretionary_data'] ?? '', 2, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($entryData['addenda_indicator'] ?? 0, 1, 'numeric', 'right', '0');
+        $record .= $this->formatField($entryData['trace_number'] ?? '', 15, 'numeric', 'right', '0');
+
+        return $this->assertRecordLength($record);
+    }
+
+    public function generateAddenda(array $addendaData): string
+    {
+        $record = self::RECORD_TYPE_ADDENDA;
+        $record .= self::ADDENDA_TYPE_CODE;
+        $record .= $this->formatField($addendaData['payment_related_information'] ?? '', 80, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($addendaData['addenda_sequence_number'] ?? 1, 4, 'numeric', 'right', '0');
+        $record .= $this->formatField($addendaData['entry_detail_sequence_number'] ?? 1, 7, 'numeric', 'right', '0');
+
+        return $this->assertRecordLength($record);
+    }
+
+    public function parseFile(string $content): AchFile
+    {
+        $errors = $this->validateFormat($content);
+        if ($errors !== []) {
+            throw new \InvalidArgumentException('Invalid NACHA file: ' . implode(' ', $errors));
+        }
+
+        $lines = $this->splitLines($content);
+        $lines = array_values(array_filter($lines, static fn (string $line): bool => $line !== ''));
+
+        $headerLine = $lines[0] ?? '';
+        $header = $this->parseFileHeader($headerLine);
+
+        $creationDate = $header['file_creation_date'];
+        $creationTime = $header['file_creation_time'];
+        $fileCreationDateTime = \DateTimeImmutable::createFromFormat('ymdHi', $creationDate . $creationTime)
+            ?: new \DateTimeImmutable();
+
+        $batches = [];
+        $currentBatchHeader = null;
+        $currentBatchEntries = [];
+        $currentBatchNumber = 1;
+
+        for ($i = 1; $i < count($lines); $i++) {
+            $line = $lines[$i];
+
+            if ($line === str_repeat('9', self::RECORD_LENGTH)) {
+                continue;
+            }
+
+            $type = $line[0] ?? '';
+
+            if ($type === self::RECORD_TYPE_BATCH_HEADER) {
+                $currentBatchHeader = $this->parseBatchHeader($line);
+                $currentBatchEntries = [];
+                $currentBatchNumber = (int) ($currentBatchHeader['batch_number'] ?? $currentBatchNumber);
+                continue;
+            }
+
+            if ($type === self::RECORD_TYPE_ENTRY_DETAIL) {
+                $entry = $this->parseEntryDetail($line);
+                $currentBatchEntries[] = $entry;
+                continue;
+            }
+
+            if ($type === self::RECORD_TYPE_ADDENDA) {
+                $addenda = $this->parseAddenda($line);
+                $lastIndex = count($currentBatchEntries) - 1;
+                if ($lastIndex >= 0) {
+                    $existing = $currentBatchEntries[$lastIndex];
+                    $currentBatchEntries[$lastIndex] = new AchEntry(
+                        id: $existing->id,
+                        transactionCode: $existing->transactionCode,
+                        routingNumber: $existing->routingNumber,
+                        accountNumber: $existing->accountNumber,
+                        accountType: $existing->accountType,
+                        amount: $existing->amount,
+                        individualName: $existing->individualName,
+                        individualId: $existing->individualId,
+                        discretionaryData: $existing->discretionaryData,
+                        addenda: $addenda['payment_related_information'],
+                        traceNumber: $existing->traceNumber,
+                    );
+                }
+                continue;
+            }
+
+            if ($type === self::RECORD_TYPE_BATCH_CONTROL) {
+                $batchHeader = $currentBatchHeader ?? $this->parseBatchHeaderFallback($currentBatchNumber);
+                $secCodeValue = trim((string) ($batchHeader['sec_code'] ?? 'PPD'));
+
+                $batches[] = new AchBatch(
+                    id: sprintf('BATCH-%d', $currentBatchNumber),
+                    secCode: SecCode::from($secCodeValue),
+                    companyName: rtrim((string) ($batchHeader['company_name'] ?? '')),
+                    companyId: rtrim((string) ($batchHeader['company_id'] ?? '')),
+                    companyEntryDescription: rtrim((string) ($batchHeader['company_entry_description'] ?? '')),
+                    originatingDfi: new RoutingNumber($this->inferFullRoutingNumberFromFirst8Digits((string) ($batchHeader['originating_dfi_identification'] ?? '00000000'))),
+                    effectiveEntryDate: \DateTimeImmutable::createFromFormat('ymd', (string) ($batchHeader['effective_entry_date'] ?? '000000'))
+                        ?: new \DateTimeImmutable('today'),
+                    entries: $currentBatchEntries,
+                    companyDiscretionaryData: rtrim((string) ($batchHeader['company_discretionary_data'] ?? '')),
+                    companyDescriptiveDate: $this->parseOptionalDate((string) ($batchHeader['company_descriptive_date'] ?? '')),
+                    batchNumber: $currentBatchNumber,
+                );
+
+                $currentBatchHeader = null;
+                $currentBatchEntries = [];
+                continue;
+            }
+
+            if ($type === self::RECORD_TYPE_FILE_CONTROL) {
+                break;
+            }
+        }
+
+        $immediateDestination = new RoutingNumber(trim($header['immediate_destination']));
+        $immediateOrigin = new RoutingNumber(trim($header['immediate_origin']));
+
+        $id = sprintf(
+            'NACHA-%s%s-%s',
+            $creationDate,
+            $creationTime,
+            $header['file_id_modifier']
+        );
+
+        return new AchFile(
+            id: $id,
+            immediateDestination: $immediateDestination,
+            immediateOrigin: $immediateOrigin,
+            immediateDestinationName: rtrim($header['immediate_destination_name']),
+            immediateOriginName: rtrim($header['immediate_origin_name']),
+            fileCreationDateTime: $fileCreationDateTime,
+            batches: $batches,
+            fileIdModifier: $header['file_id_modifier'],
+            status: FileStatus::GENERATED,
+            referenceCode: rtrim($header['reference_code']) !== '' ? rtrim($header['reference_code']) : null,
+        );
+    }
+
+    public function validateFormat(string $content): array
+    {
+        $errors = [];
+
+        $lines = $this->splitLines($content);
+        $lines = array_values(array_filter($lines, static fn (string $line): bool => $line !== ''));
+
+        if ($lines === []) {
+            return ['Empty NACHA file content.'];
+        }
+
+        $first = $lines[0];
+        if (($first[0] ?? '') !== self::RECORD_TYPE_FILE_HEADER) {
+            $errors[] = 'First record must be a File Header record (type 1).';
+        }
+
+        $hasFileControl = false;
+
+        foreach ($lines as $index => $line) {
+            if (mb_strlen($line) !== self::RECORD_LENGTH) {
+                $errors[] = sprintf('Record %d must be %d characters, got %d.', $index + 1, self::RECORD_LENGTH, mb_strlen($line));
+                continue;
+            }
+
+            if ($line === str_repeat('9', self::RECORD_LENGTH)) {
+                continue;
+            }
+
+            $type = $line[0] ?? '';
+            if (!in_array($type, [
+                self::RECORD_TYPE_FILE_HEADER,
+                self::RECORD_TYPE_BATCH_HEADER,
+                self::RECORD_TYPE_ENTRY_DETAIL,
+                self::RECORD_TYPE_ADDENDA,
+                self::RECORD_TYPE_BATCH_CONTROL,
+                self::RECORD_TYPE_FILE_CONTROL,
+            ], true)) {
+                $errors[] = sprintf('Record %d has invalid record type: %s', $index + 1, $type);
+            }
+
+            if ($type === self::RECORD_TYPE_FILE_CONTROL) {
+                $hasFileControl = true;
+            }
+        }
+
+        if (!$hasFileControl) {
+            $errors[] = 'Missing File Control record (type 9).';
+        }
+
+        return $errors;
+    }
+
+    public function calculateEntryHash(array $routingNumbers): string
+    {
+        $sum = 0;
+
+        foreach ($routingNumbers as $routingNumber) {
+            $digits = preg_replace('/[^0-9]/', '', (string) $routingNumber) ?? '';
+            if (mb_strlen($digits) >= 8) {
+                $sum += (int) mb_substr($digits, 0, 8);
+            }
+        }
+
+        $hash = $sum % 10000000000;
+
+        return str_pad((string) $hash, 10, '0', STR_PAD_LEFT);
+    }
+
+    public function formatField(
+        mixed $value,
+        int $length,
+        string $type = 'alphanumeric',
+        string $align = 'left',
+        string $padChar = ' ',
+    ): string {
+        $stringValue = (string) ($value ?? '');
+
+        $stringValue = match ($type) {
+            'numeric' => preg_replace('/[^0-9\-]/', '', $stringValue) ?? '',
+            'alpha' => preg_replace('/[^A-Za-z ]/', '', $stringValue) ?? '',
+            default => $stringValue,
+        };
+
+        $stringValue = mb_substr($stringValue, 0, $length);
+        $padType = $align === 'right' ? STR_PAD_LEFT : STR_PAD_RIGHT;
+
+        return str_pad($stringValue, $length, $padChar, $padType);
+    }
+
+    /** @param array<string> $lines */
+    private function addBlockingRecords(array $lines): array
+    {
+        $blockRecord = str_repeat('9', self::RECORD_LENGTH);
+        while (count($lines) % 10 !== 0) {
+            $lines[] = $blockRecord;
+        }
+
+        return $lines;
+    }
+
+    private function assertRecordLength(string $record): string
+    {
+        if (mb_strlen($record) !== self::RECORD_LENGTH) {
+            throw new \RuntimeException(sprintf(
+                'Generated NACHA record must be %d characters, got %d.',
+                self::RECORD_LENGTH,
+                mb_strlen($record)
+            ));
+        }
+
+        return $record;
+    }
+
+    private function buildTraceNumber(string $originatingDfiIdentification, int $sequence): string
+    {
+        $prefix = $this->formatField($originatingDfiIdentification, 8, 'numeric', 'right', '0');
+        $suffix = $this->formatField($sequence, 7, 'numeric', 'right', '0');
+
+        return $prefix . $suffix;
+    }
+
+    /** @return array<string, string> */
+    private function parseFileHeader(string $line): array
+    {
+        return [
+            'immediate_destination' => mb_substr($line, 3, 10),
+            'immediate_origin' => mb_substr($line, 13, 10),
+            'file_creation_date' => mb_substr($line, 23, 6),
+            'file_creation_time' => mb_substr($line, 29, 4),
+            'file_id_modifier' => mb_substr($line, 33, 1),
+            'immediate_destination_name' => mb_substr($line, 40, 23),
+            'immediate_origin_name' => mb_substr($line, 63, 23),
+            'reference_code' => mb_substr($line, 86, 8),
+        ];
+    }
+
+    /** @return array<string, string> */
+    private function parseBatchHeader(string $line): array
+    {
+        return [
+            'service_class_code' => mb_substr($line, 1, 3),
+            'company_name' => mb_substr($line, 4, 16),
+            'company_discretionary_data' => mb_substr($line, 20, 20),
+            'company_id' => mb_substr($line, 40, 10),
+            'sec_code' => mb_substr($line, 50, 3),
+            'company_entry_description' => mb_substr($line, 53, 10),
+            'company_descriptive_date' => mb_substr($line, 63, 6),
+            'effective_entry_date' => mb_substr($line, 69, 6),
+            'originating_dfi_identification' => mb_substr($line, 79, 8),
+            'batch_number' => mb_substr($line, 87, 7),
+        ];
+    }
+
+    private function parseBatchHeaderFallback(int $batchNumber): array
+    {
+        return [
+            'sec_code' => 'PPD',
+            'company_name' => '',
+            'company_discretionary_data' => '',
+            'company_id' => '',
+            'company_entry_description' => '',
+            'company_descriptive_date' => '',
+            'effective_entry_date' => (new \DateTimeImmutable('today'))->format('ymd'),
+            'originating_dfi_identification' => '00000000',
+            'batch_number' => (string) $batchNumber,
+        ];
+    }
+
+    private function parseEntryDetail(string $line): AchEntry
+    {
+        $transactionCode = TransactionCode::from(mb_substr($line, 1, 2));
+        $receivingDfi8 = mb_substr($line, 3, 8);
+        $checkDigit = mb_substr($line, 11, 1);
+        $routingNumber = new RoutingNumber($receivingDfi8 . $checkDigit);
+
+        $accountNumber = rtrim(mb_substr($line, 12, 17));
+        $amountCents = (int) mb_substr($line, 29, 10);
+        $individualId = rtrim(mb_substr($line, 39, 15));
+        $individualName = rtrim(mb_substr($line, 54, 22));
+        $discretionaryData = rtrim(mb_substr($line, 76, 2));
+        $addendaIndicator = (int) mb_substr($line, 78, 1);
+        $traceNumber = rtrim(mb_substr($line, 79, 15));
+
+        return new AchEntry(
+            id: $traceNumber !== '' ? $traceNumber : sprintf('ENTRY-%s', uniqid('', true)),
+            transactionCode: $transactionCode,
+            routingNumber: $routingNumber,
+            accountNumber: $accountNumber,
+            accountType: $this->inferAccountTypeFromTransactionCode($transactionCode),
+            amount: new Money($amountCents, 'USD'),
+            individualName: $individualName,
+            individualId: $individualId,
+            discretionaryData: $discretionaryData !== '' ? $discretionaryData : null,
+            addenda: $addendaIndicator === 1 ? '' : null,
+            traceNumber: $traceNumber !== '' ? $traceNumber : null,
+        );
+    }
+
+    /** @return array{payment_related_information: string} */
+    private function parseAddenda(string $line): array
+    {
+        return [
+            'payment_related_information' => rtrim(mb_substr($line, 3, 80)),
+        ];
+    }
+
+    private function inferAccountTypeFromTransactionCode(TransactionCode $transactionCode): AccountType
+    {
+        return $transactionCode->isChecking() ? AccountType::CHECKING : AccountType::SAVINGS;
+    }
+
+    private function inferFullRoutingNumberFromFirst8Digits(string $first8Digits): string
+    {
+        $digits = preg_replace('/[^0-9]/', '', $first8Digits) ?? '';
+        $digits = str_pad(mb_substr($digits, 0, 8), 8, '0', STR_PAD_LEFT);
+
+        $weights = [3, 7, 1, 3, 7, 1, 3, 7];
+        $sum = 0;
+        for ($i = 0; $i < 8; $i++) {
+            $sum += ((int) $digits[$i]) * $weights[$i];
+        }
+
+        $checkDigit = (10 - ($sum % 10)) % 10;
+
+        return $digits . (string) $checkDigit;
+    }
+
+    private function parseOptionalDate(string $value): ?\DateTimeImmutable
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        $dt = \DateTimeImmutable::createFromFormat('ymd', $value);
+        return $dt ?: null;
+    }
+
+    /** @return array<string> */
+    private function splitLines(string $content): array
+    {
+        $normalized = str_replace("\r\n", "\n", $content);
+        $normalized = str_replace("\r", "\n", $normalized);
+        $normalized = rtrim($normalized, "\n");
+
+        return explode("\n", $normalized);
+    }
+}
+
+        foreach ($file->batches as $batchIndex => $batch) {
+            $batchNumber = $batch->batchNumber > 0 ? $batch->batchNumber : ($batchIndex + 1);
+
+            $lines[] = $this->generateBatchHeader([
+                'service_class_code' => $batch->getServiceClassCode(),
+                'company_name' => $batch->getFormattedCompanyName(),
+                'company_discretionary_data' => $batch->companyDiscretionaryData,
+                'company_id' => $batch->getFormattedCompanyId(),
+                'sec_code' => $batch->secCode->value,
+                'company_entry_description' => $batch->getFormattedEntryDescription(),
+                'company_descriptive_date' => $batch->companyDescriptiveDate?->format('ymd'),
+                'effective_entry_date' => $batch->effectiveEntryDate->format('ymd'),
+                'originating_dfi_identification' => mb_substr($batch->originatingDfi->value, 0, 8),
+                'batch_number' => $batchNumber,
+            ]);
+
+            $entrySequence = 0;
+            foreach ($batch->entries as $entry) {
+                $entrySequence++;
+
+                $traceNumber = $entry->traceNumber;
+                if ($traceNumber === null || $traceNumber === '') {
+                    $traceNumber = $this->buildTraceNumber(
+                        originatingDfiIdentification: mb_substr($batch->originatingDfi->value, 0, 8),
+                        sequence: $entrySequence
+                    );
+                }
+
+                $lines[] = $this->generateEntryDetail([
+                    'transaction_code' => $entry->transactionCode->value,
+                    'receiving_dfi_identification' => mb_substr($entry->routingNumber->value, 0, 8),
+                    'check_digit' => (string) $entry->routingNumber->getCheckDigit(),
+                    'dfi_account_number' => $entry->getFormattedAccountNumber(),
+                    'amount_cents' => $entry->getAmountInCents(),
+                    'individual_id' => $entry->getFormattedIndividualId(),
+                    'individual_name' => $entry->getFormattedIndividualName(),
+                    'discretionary_data' => $entry->discretionaryData,
+                    'addenda_indicator' => $entry->getAddendaIndicator(),
+                    'trace_number' => $traceNumber,
+                ]);
+
+                if ($entry->hasAddenda()) {
+                    $lines[] = $this->generateAddenda([
+                        'payment_related_information' => $entry->addenda,
+                        'addenda_sequence_number' => 1,
+                        'entry_detail_sequence_number' => $entrySequence,
+                    ]);
+                }
+            }
+
+            $lines[] = $this->generateBatchControl([
+                'service_class_code' => $batch->getServiceClassCode(),
+                'entry_addenda_count' => $batch->getEntryCount() + $batch->getAddendaCount(),
+                'entry_hash' => $batch->getEntryHash(),
+                'total_debit_cents' => $batch->getTotalDebits()->getAmountInMinorUnits(),
+                'total_credit_cents' => $batch->getTotalCredits()->getAmountInMinorUnits(),
+                'company_id' => $batch->getFormattedCompanyId(),
+                'originating_dfi_identification' => mb_substr($batch->originatingDfi->value, 0, 8),
+                'batch_number' => $batchNumber,
+            ]);
+        }
+
+        $lines[] = $this->generateFileControl([
+            'batch_count' => $file->getBatchCount(),
+            'block_count' => $file->getBlockCount(),
+            'entry_addenda_count' => $file->getEntryCount() + $file->getAddendaCount(),
+            'entry_hash' => $file->getEntryHash(),
+            'total_debit_cents' => $file->getTotalDebits()->getAmountInMinorUnits(),
+            'total_credit_cents' => $file->getTotalCredits()->getAmountInMinorUnits(),
+        ]);
+
+        $lines = $this->addBlockingRecords($lines);
+
+        return implode("\n", $lines);
+    }
+
+    public function generateFileHeader(array $headerData): string
+    {
+        $record = self::RECORD_TYPE_FILE_HEADER;
+        $record .= self::PRIORITY_CODE;
+        $record .= $this->formatField($headerData['immediate_destination'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['immediate_origin'] ?? '', 10, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['file_creation_date'] ?? '', 6, 'numeric', 'right', '0');
+        $record .= $this->formatField($headerData['file_creation_time'] ?? '', 4, 'numeric', 'right', '0');
+        $record .= $this->formatField($headerData['file_id_modifier'] ?? 'A', 1, 'alphanumeric', 'left', ' ');
+        $record .= self::RECORD_SIZE;
+        $record .= self::BLOCKING_FACTOR;
+        $record .= self::FORMAT_CODE;
+        $record .= $this->formatField($headerData['immediate_destination_name'] ?? '', 23, 'alphanumeric', 'left', ' ');
+        $record .= $this->formatField($headerData['immediate_origin_name'] ?? '', 23, 'alphanumeric', 'left', ' ');
+                self::RECORD_TYPE_FILE_CONTROL,
+            ], true)) {
+                $errors[] = sprintf('Record %d has invalid record type: %s', $index + 1, $type);
+            }
+
+            if ($type === self::RECORD_TYPE_FILE_CONTROL && $line !== str_repeat('9', self::RECORD_LENGTH)) {
+                $hasFileControl = true;
+            }
+        }
+
+        if (!$hasFileControl) {
+            $errors[] = 'Missing File Control record (type 9).';
+        }
+
+        return $errors;
+    }
+
+    public function calculateEntryHash(array $routingNumbers): string
+    {
+        $sum = 0;
+
+        foreach ($routingNumbers as $routingNumber) {
+            $digits = preg_replace('/[^0-9]/', '', (string) $routingNumber) ?? '';
+            if (mb_strlen($digits) >= 8) {
+                $sum += (int) mb_substr($digits, 0, 8);
+            }
+        }
+
+        $hash = $sum % 10000000000;
+
+        return str_pad((string) $hash, 10, '0', STR_PAD_LEFT);
+    }
+
+    public function formatField(
+        mixed $value,
+        int $length,
+        string $type = 'alphanumeric',
+        string $align = 'left',
+        string $padChar = ' ',
+    ): string {
+        $stringValue = (string) ($value ?? '');
+
+        $stringValue = match ($type) {
+            'numeric' => preg_replace('/[^0-9\-]/', '', $stringValue) ?? '',
+            'alpha' => preg_replace('/[^A-Za-z ]/', '', $stringValue) ?? '',
+            default => $stringValue,
+        };
+
+        $stringValue = mb_substr($stringValue, 0, $length);
+        $padType = $align === 'right' ? STR_PAD_LEFT : STR_PAD_RIGHT;
+
+        return str_pad($stringValue, $length, $padChar, $padType);
+    }
+
+    /** @param array<string> $lines */
+    private function addBlockingRecords(array $lines): array
+    {
+        $blockRecord = str_repeat('9', self::RECORD_LENGTH);
+        while (count($lines) % 10 !== 0) {
+            $lines[] = $blockRecord;
+        }
+        return $lines;
+    }
+
+    private function assertRecordLength(string $record): string
+    {
+        if (mb_strlen($record) !== self::RECORD_LENGTH) {
+            throw new \RuntimeException(sprintf(
+                'Generated NACHA record must be %d characters, got %d.',
+                self::RECORD_LENGTH,
+                mb_strlen($record)
+            ));
+        }
+
+        return $record;
+    }
+
+    private function buildTraceNumber(string $originatingDfiIdentification, int $sequence): string
+    {
+        $prefix = $this->formatField($originatingDfiIdentification, 8, 'numeric', 'right', '0');
+        $suffix = $this->formatField($sequence, 7, 'numeric', 'right', '0');
+
+        return $prefix . $suffix;
+    }
+
+    private function calculateRoutingCheckDigit(string $first8Digits): int
+    {
+        $digits = preg_replace('/[^0-9]/', '', $first8Digits) ?? '';
+        $digits = str_pad(mb_substr($digits, 0, 8), 8, '0', STR_PAD_LEFT);
+
+        $weights = [3, 7, 1, 3, 7, 1, 3, 7];
+        $sum = 0;
+
+        for ($i = 0; $i < 8; $i++) {
+            $sum += ((int) $digits[$i]) * $weights[$i];
+        }
+
+        return (10 - ($sum % 10)) % 10;
+    }
+
+    private function inferAccountTypeFromTransactionCode(TransactionCode $transactionCode): AccountType
+    {
+        return str_starts_with($transactionCode->value, '2')
+            ? AccountType::CHECKING
+            : AccountType::SAVINGS;
+    }
+
+    /** @return array<string, string> */
+    private function parseFileHeader(string $line): array
+    {
+        return [
+            'immediate_destination' => mb_substr($line, 3, 10),
+            'immediate_origin' => mb_substr($line, 13, 10),
+            'file_creation_date' => mb_substr($line, 23, 6),
+            'file_creation_time' => mb_substr($line, 29, 4),
+            'file_id_modifier' => mb_substr($line, 33, 1),
+            'immediate_destination_name' => mb_substr($line, 40, 23),
+            'immediate_origin_name' => mb_substr($line, 63, 23),
+            'reference_code' => mb_substr($line, 86, 8),
+        ];
+    }
+
+    /** @return array<string, string> */
+    private function parseBatchHeader(string $line): array
+    {
+        return [
+            'service_class_code' => mb_substr($line, 1, 3),
+            'company_name' => mb_substr($line, 4, 16),
+            'company_discretionary_data' => mb_substr($line, 20, 20),
+            'company_id' => mb_substr($line, 40, 10),
+            'sec_code' => mb_substr($line, 50, 3),
+            'company_entry_description' => mb_substr($line, 53, 10),
+            'company_descriptive_date' => mb_substr($line, 63, 6),
+            'effective_entry_date' => mb_substr($line, 69, 6),
+            'originating_dfi_identification' => mb_substr($line, 79, 8),
+            'batch_number' => mb_substr($line, 87, 7),
+        ];
+    }
+
+    /** @return array<string, string|int> */
+    private function parseEntryDetail(string $line): array
+    {
+        $traceNumber = mb_substr($line, 79, 15);
+        $entrySequence = (int) mb_substr($traceNumber, 8, 7);
+
+        return [
+            'transaction_code' => mb_substr($line, 1, 2),
+            'receiving_dfi' => mb_substr($line, 3, 8),
+            'check_digit' => mb_substr($line, 11, 1),
+            'dfi_account_number' => mb_substr($line, 12, 17),
+            'amount_cents' => (int) mb_substr($line, 29, 10),
+            'individual_id' => mb_substr($line, 39, 15),
+            'individual_name' => mb_substr($line, 54, 22),
+            'discretionary_data' => mb_substr($line, 76, 2),
+            'addenda_indicator' => (int) mb_substr($line, 78, 1),
+            'trace_number' => $traceNumber,
+            'entry_sequence_number' => $entrySequence,
+        ];
+    }
+
+    /** @return array<string, string|int> */
+    private function parseAddenda(string $line): array
+    {
+        return [
+            'payment_related_information' => rtrim(mb_substr($line, 3, 80)),
+            'addenda_sequence_number' => (int) mb_substr($line, 83, 4),
+            'entry_detail_sequence_number' => (int) mb_substr($line, 87, 7),
+        ];
+    }
+}
+/*
+ * Legacy duplicated formatter implementation was appended below and caused
+ * a parse error due to a second `<?php` open tag. It is intentionally kept
+ * commented out to preserve history while ensuring the autoloader loads a
+ * single coherent implementation.
+ */
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\PaymentRails\Services;
+
 use Nexus\PaymentRails\Contracts\NachaFormatterInterface;
 use Nexus\PaymentRails\Enums\AchSecCode;
 use Nexus\PaymentRails\ValueObjects\NachaBatch;
@@ -582,3 +1930,5 @@ final readonly class NachaFormatter implements NachaFormatterInterface
         );
     }
 }
+
+*/

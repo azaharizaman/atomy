@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentRails\Contracts;
 
-use Nexus\PaymentRails\DTOs\AchBatchRequest;
 use Nexus\PaymentRails\ValueObjects\AchFile;
 
 /**
@@ -16,18 +15,13 @@ use Nexus\PaymentRails\ValueObjects\AchFile;
 interface NachaFormatterInterface
 {
     /**
-     * Generate a complete NACHA file from a batch request.
+     * Generate a complete NACHA file from an ACH file value object.
      */
-    public function generateFile(AchBatchRequest $request): string;
-
-    /**
-     * Generate a NACHA file from an ACH file value object.
-     */
-    public function formatAchFile(AchFile $file): string;
+    public function generateFile(AchFile $file): string;
 
     /**
      * Generate the file header record (1 record).
-     *
+        * @return AchFile The parsed ACH file
      * @param array<string, mixed> $headerData
      */
     public function generateFileHeader(array $headerData): string;
@@ -71,9 +65,9 @@ interface NachaFormatterInterface
      * Parse a NACHA file into its component parts.
      *
      * @param string $content Raw NACHA file content
-     * @return array<string, mixed> Parsed data
+      * @return AchFile Parsed ACH file
      */
-    public function parseFile(string $content): array;
+     public function parseFile(string $content): AchFile;
 
     /**
      * Validate a NACHA file format.

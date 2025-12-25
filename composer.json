@@ -74,7 +74,8 @@
             "Nexus\\GDPR\\": "packages/GDPR/src/",
             "Nexus\\PDPA\\": "packages/PDPA/src/",
             "Nexus\\Payment\\": "packages/Payment/src/",
-            "Nexus\\PaymentGateway\\": "packages/PaymentGateway/src/"
+            "Nexus\\PaymentGateway\\": "packages/PaymentGateway/src/",
+            "Nexus\\PaymentRails\\": "packages/PaymentRails/src/"
         }
     },
     "autoload-dev": {
@@ -87,7 +88,8 @@
             "Nexus\\GDPR\\Tests\\": "packages/GDPR/tests/",
             "Nexus\\PDPA\\Tests\\": "packages/PDPA/tests/",
             "Nexus\\Payment\\Tests\\": "packages/Payment/tests/",
-            "Nexus\\PaymentGateway\\Tests\\": "packages/PaymentGateway/tests/"
+            "Nexus\\PaymentGateway\\Tests\\": "packages/PaymentGateway/tests/",
+            "Nexus\\PaymentRails\\Tests\\": "packages/PaymentRails/tests/"
         }
     }
 }

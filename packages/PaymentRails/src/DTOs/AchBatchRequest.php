@@ -124,7 +124,7 @@ final readonly class AchBatchRequest
         $total = Money::zero('USD');
 
         foreach ($this->entries as $entry) {
-            if ($entry->isDebit()) {
+            if ($entry->isDebit) {
                 $total = $total->add($entry->amount);
             }
         }
@@ -140,7 +140,7 @@ final readonly class AchBatchRequest
         $total = Money::zero('USD');
 
         foreach ($this->entries as $entry) {
-            if (!$entry->isDebit()) {
+            if (!$entry->isDebit) {
                 $total = $total->add($entry->amount);
             }
         }

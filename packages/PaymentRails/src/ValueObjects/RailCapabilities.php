@@ -60,7 +60,7 @@ final class RailCapabilities
         return new self(
             railType: RailType::ACH,
             supportedCurrencies: ['USD'],
-            minimumAmount: Money::cents(1, 'USD'),
+            minimumAmount: Money::of(0.01, 'USD'),
             maximumAmount: Money::of(99999999.99, 'USD'),
             supportsCredit: true,
             supportsDebit: true,
@@ -147,7 +147,7 @@ final class RailCapabilities
         return new self(
             railType: RailType::CHECK,
             supportedCurrencies: ['USD'],
-            minimumAmount: Money::cents(1, 'USD'),
+            minimumAmount: Money::of(0.01, 'USD'),
             maximumAmount: Money::of(9999999.99, 'USD'),
             supportsCredit: true,
             supportsDebit: false,
@@ -203,7 +203,7 @@ final class RailCapabilities
         return new self(
             railType: RailType::VIRTUAL_CARD,
             supportedCurrencies: ['USD', 'EUR', 'GBP', 'CAD'],
-            minimumAmount: Money::cents(1, 'USD'),
+            minimumAmount: Money::of(0.01, 'USD'),
             maximumAmount: Money::of(250000.00, 'USD'),
             supportsCredit: true,
             supportsDebit: false,
@@ -238,12 +238,28 @@ final class RailCapabilities
      */
     public function isAmountWithinLimits(Money $amount): bool
     {
-        if ($this->minimumAmount !== null && $amount->lessThan($this->minimumAmount)) {
+        if (!$this->supportsCurrency($amount->getCurrency())) {
             return false;
         }
 
-        if ($this->maximumAmount !== null && $amount->greaterThan($this->maximumAmount)) {
+        if ($this->minimumAmount !== null) {
+            $minimumAmount = $this->minimumAmount->getCurrency() === $amount->getCurrency()
+                ? $this->minimumAmount
+                : new Money($this->minimumAmount->getAmountInMinorUnits(), $amount->getCurrency());
+
+            if ($amount->lessThan($minimumAmount)) {
             return false;
+            }
+        }
+
+        if ($this->maximumAmount !== null) {
+            $maximumAmount = $this->maximumAmount->getCurrency() === $amount->getCurrency()
+                ? $this->maximumAmount
+                : new Money($this->maximumAmount->getAmountInMinorUnits(), $amount->getCurrency());
+
+            if ($amount->greaterThan($maximumAmount)) {
+            return false;
+            }
         }
 
         return true;

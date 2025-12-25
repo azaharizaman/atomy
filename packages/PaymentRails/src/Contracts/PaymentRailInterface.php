@@ -69,5 +69,5 @@ interface PaymentRailInterface
     /**
      * Cancel a pending transaction if possible.
      */
-    public function cancelTransaction(string $transactionId): bool;
+    public function cancelTransaction(string $transactionId, string $reason): bool;
 }

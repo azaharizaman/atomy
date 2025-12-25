@@ -74,14 +74,23 @@ final class VirtualCardRail extends AbstractPaymentRail implements VirtualCardRa
         return new RailCapabilities(
             railType: RailType::VIRTUAL_CARD,
             supportedCurrencies: ['USD', 'EUR', 'GBP', 'CAD', 'AUD'],
-            minimumAmountCents: self::MINIMUM_CREDIT_CENTS,
-            maximumAmountCents: self::MAXIMUM_CREDIT_CENTS,
-            settlementDays: 1, // T+1 for card networks
-            isRealTime: false,
-            supportsRefunds: true,
-            supportsPartialRefunds: true,
+            minimumAmount: new Money(self::MINIMUM_CREDIT_CENTS, 'USD'),
+            maximumAmount: new Money(self::MAXIMUM_CREDIT_CENTS, 'USD'),
+            supportsCredit: true,
+            supportsDebit: false,
+            supportsScheduledPayments: true,
             supportsRecurring: true,
-            requiresBeneficiaryAddress: false,
+            supportsBatchProcessing: true,
+            requiresPrenotification: false,
+            typicalSettlementDays: 1,
+            requiredFields: ['vendor_id', 'vendor_name'],
+            additionalCapabilities: [
+                'supports_refunds' => true,
+                'supports_partial_refunds' => true,
+                'requires_beneficiary_address' => false,
+                'max_card_validity_days' => self::MAXIMUM_VALIDITY_DAYS,
+                'default_validity_days' => self::DEFAULT_VALIDITY_DAYS,
+            ],
         );
     }
 

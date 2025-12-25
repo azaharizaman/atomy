@@ -68,14 +68,21 @@ final class CheckRail extends AbstractPaymentRail implements CheckRailInterface
         return new RailCapabilities(
             railType: RailType::CHECK,
             supportedCurrencies: ['USD'],
-            minimumAmountCents: self::MINIMUM_AMOUNT_CENTS,
-            maximumAmountCents: self::MAXIMUM_AMOUNT_CENTS,
-            settlementDays: self::STANDARD_CLEARING_DAYS,
-            isRealTime: false,
-            supportsRefunds: false, // Checks require void/reissue
-            supportsPartialRefunds: false,
+            minimumAmount: new Money(self::MINIMUM_AMOUNT_CENTS, 'USD'),
+            maximumAmount: new Money(self::MAXIMUM_AMOUNT_CENTS, 'USD'),
+            supportsCredit: true,
+            supportsDebit: false,
+            supportsScheduledPayments: true,
             supportsRecurring: false,
-            requiresBeneficiaryAddress: true,
+            supportsBatchProcessing: true,
+            requiresPrenotification: false,
+            typicalSettlementDays: self::STANDARD_CLEARING_DAYS,
+            requiredFields: ['payee_name', 'payee_address'],
+            additionalCapabilities: [
+                'supports_refunds' => false,
+                'supports_partial_refunds' => false,
+                'requires_beneficiary_address' => true,
+            ],
         );
     }
 
@@ -96,33 +103,44 @@ final class CheckRail extends AbstractPaymentRail implements CheckRailInterface
         $checkNumber = $request->checkNumber ?? $this->generateCheckNumber();
         $checkId = $this->generateReference('CHK');
 
+        $issuedAt = $this->clock->now();
+
         $check = new Check(
+            id: $checkId,
             checkNumber: $checkNumber,
-            amountCents: $this->toAmountCents($request->amount),
-            currency: $request->amount->getCurrency(),
             payeeName: $request->payeeName,
-            payeeAddress: $request->payeeAddress,
-            issueDate: new \DateTimeImmutable(),
-            memo: $request->memo,
+            amount: $request->amount,
+            checkDate: $issuedAt,
             status: CheckStatus::ISSUED,
+            memo: $request->memo,
         );
 
-        // Persist the check
-        $this->transactionPersist->save($checkId, [
-            'type' => 'check',
-            'check_number' => $checkNumber->getValue(),
-            'amount_cents' => $check->amountCents,
-            'currency' => $check->currency,
-            'payee_name' => $check->payeeName,
-            'payee_address' => $check->payeeAddress,
-            'issue_date' => $check->issueDate->format(\DateTimeInterface::RFC3339),
-            'memo' => $check->memo,
-            'status' => CheckStatus::ISSUED->value,
-        ]);
+        $result = new RailTransactionResult(
+            transactionId: $checkId,
+            success: true,
+            status: CheckStatus::ISSUED->value,
+            railType: RailType::CHECK,
+            amount: $request->amount,
+            referenceNumber: $checkNumber->toString(),
+            metadata: [
+                'type' => 'check',
+                'check_number' => $checkNumber->getValue(),
+                'amount_minor_units' => $request->amount->getAmountInMinorUnits(),
+                'currency' => $request->amount->getCurrency(),
+                'payee_name' => $request->payeeName,
+                'payee_address' => $request->payeeAddress,
+                'issue_date' => $issuedAt->format(\DateTimeInterface::RFC3339),
+                'memo' => $request->memo,
+                'status' => CheckStatus::ISSUED->value,
+            ],
+            processedAt: $issuedAt,
+        );
+
+        $this->transactionPersist->save($result);
 
         $this->logOperation('Check issued', $checkId, [
             'check_number' => $checkNumber->getMasked(),
-            'amount_cents' => $check->amountCents,
+            'amount_minor_units' => $request->amount->getAmountInMinorUnits(),
             'payee' => $check->payeeName,
         ]);
 
@@ -131,10 +149,10 @@ final class CheckRail extends AbstractPaymentRail implements CheckRailInterface
             checkId: $checkId,
             checkNumber: $checkNumber,
             status: CheckStatus::ISSUED,
-            amountCents: $check->amountCents,
-            currency: $check->currency,
+            amountCents: $this->toAmountCents($request->amount),
+            currency: $request->amount->getCurrency(),
             payeeName: $check->payeeName,
-            issueDate: $check->issueDate,
+            issueDate: $issuedAt,
         );
     }
 
@@ -159,12 +177,16 @@ final class CheckRail extends AbstractPaymentRail implements CheckRailInterface
 
         $metadata = $transaction->metadata;
 
+        $amountCents = isset($metadata['amount_cents'])
+            ? (int) $metadata['amount_cents']
+            : (int) round(((int) ($metadata['amount_minor_units'] ?? 0)) / 1);
+
         return new CheckResult(
             success: true,
             checkId: $checkId,
             checkNumber: CheckNumber::fromString($metadata['check_number']),
             status: CheckStatus::from($metadata['status']),
-            amountCents: $metadata['amount_cents'],
+            amountCents: $amountCents,
             currency: $metadata['currency'],
             payeeName: $metadata['payee_name'],
             issueDate: new \DateTimeImmutable($metadata['issue_date']),
@@ -199,15 +221,45 @@ final class CheckRail extends AbstractPaymentRail implements CheckRailInterface
             return false;
         }
 
+        $now = $this->clock->now();
         $this->transactionPersist->updateStatus($checkId, CheckStatus::STOP_PAYMENT->value);
-        $this->transactionPersist->updateMetadata($checkId, [
+        $this->updateTransactionMetadata($checkId, [
+            'status' => CheckStatus::STOP_PAYMENT->value,
             'stop_payment_reason' => $reason,
-            'stop_payment_date' => (new \DateTimeImmutable())->format(\DateTimeInterface::RFC3339),
+            'stop_payment_date' => $now->format(\DateTimeInterface::RFC3339),
         ]);
 
         $this->logOperation('Stop payment issued', $checkId, ['reason' => $reason]);
 
         return true;
+    }
+
+    /**
+     * @param array<string, mixed> $newMetadata
+     */
+    private function updateTransactionMetadata(string $transactionId, array $newMetadata): void
+    {
+        $existing = $this->transactionQuery->findById($transactionId);
+        if ($existing === null) {
+            return;
+        }
+
+        $updated = new RailTransactionResult(
+            transactionId: $existing->transactionId,
+            success: $existing->success,
+            status: $existing->status,
+            railType: $existing->railType,
+            amount: $existing->amount,
+            referenceNumber: $existing->referenceNumber,
+            errors: $existing->errors,
+            metadata: array_merge($existing->metadata, $newMetadata),
+            fees: $existing->fees,
+            processedAt: $existing->processedAt,
+            settledAt: $existing->settledAt,
+            expectedSettlementDate: $existing->expectedSettlementDate,
+        );
+
+        $this->transactionPersist->save($updated);
     }
 
     /**
@@ -495,6 +547,6 @@ final class CheckRail extends AbstractPaymentRail implements CheckRailInterface
      */
     private function toAmountCents(Money $money): int
     {
-        return (int) ($money->getAmount() * 100);
+        return $money->getAmountInMinorUnits();
     }
 }

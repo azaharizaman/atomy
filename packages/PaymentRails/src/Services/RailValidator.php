@@ -7,8 +7,13 @@ namespace Nexus\PaymentRails\Services;
 use Nexus\Common\ValueObjects\Money;
 use Nexus\PaymentRails\Contracts\PaymentRailInterface;
 use Nexus\PaymentRails\Contracts\RailValidatorInterface;
+use Nexus\PaymentRails\DTOs\AchBatchRequest;
+use Nexus\PaymentRails\DTOs\AchEntryRequest;
+use Nexus\PaymentRails\DTOs\CheckRequest;
 use Nexus\PaymentRails\DTOs\RailTransactionRequest;
 use Nexus\PaymentRails\Enums\RailType;
+use Nexus\PaymentRails\DTOs\VirtualCardRequest;
+use Nexus\PaymentRails\DTOs\WireTransferRequest;
 use Nexus\PaymentRails\Exceptions\RailValidationException;
 use Nexus\PaymentRails\ValueObjects\BankAccount;
 use Nexus\PaymentRails\ValueObjects\RoutingNumber;
@@ -49,6 +54,149 @@ final readonly class RailValidator implements RailValidatorInterface
         if (!empty($errors)) {
             throw RailValidationException::withErrors($errors);
         }
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function validateAchBatch(AchBatchRequest $request): array
+    {
+        // Placeholder: lean on entry-level validation for now
+        $errors = [];
+        foreach ($request->entries as $entry) {
+            $errors = array_merge($errors, $this->validateAchEntry($entry));
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function validateAchEntry(AchEntryRequest $request): array
+    {
+        $errors = [];
+
+        $errors = array_merge($errors, $this->validateRoutingNumber($request->receivingDfi));
+
+        // Basic account checks
+        $accountLength = strlen($request->accountNumber);
+        if ($accountLength < 4 || $accountLength > 17) {
+            $errors[] = 'Account number must be between 4 and 17 characters for ACH entry.';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function validateWireTransfer(WireTransferRequest $request): array
+    {
+        $errors = [];
+
+        if ($request->beneficiaryAccount !== null) {
+            $errors = array_merge($errors, $this->validateWireBankAccount($request->beneficiaryAccount));
+        }
+
+        if ($request->isInternational) {
+            if ($request->purposeOfPayment === null) {
+                $errors[] = 'Purpose of payment is required for international wires.';
+            }
+
+            if ($request->beneficiaryAddress === null) {
+                $errors[] = 'Beneficiary address is required for international wires.';
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function validateCheck(CheckRequest $request): array
+    {
+        $errors = [];
+
+        if ($request->payeeName === '') {
+            $errors[] = 'Payee name is required for check issuance.';
+        }
+
+        if ($request->shouldMail && !$request->hasMailingAddress()) {
+            $errors[] = 'Payee mailing address is required for check issuance.';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function validateVirtualCard(VirtualCardRequest $request): array
+    {
+        $errors = [];
+
+        if ($request->vendorId === null || $request->vendorId === '') {
+            $errors[] = 'Vendor ID is required for virtual card issuance.';
+        }
+
+        if ($request->creditLimit->isZero() || $request->creditLimit->isNegative()) {
+            $errors[] = 'Virtual card credit limit must be positive.';
+        }
+
+        return $errors;
+    }
+
+    public function isValidRoutingNumber(string $routingNumber): bool
+    {
+        try {
+            return $this->validateRoutingNumber(RoutingNumber::fromString($routingNumber)) === [];
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    public function isValidSwiftCode(string $swiftCode): bool
+    {
+        return $this->isValidSwiftCodeFormat($swiftCode);
+    }
+
+    public function isValidIban(string $iban): bool
+    {
+        return $this->isValidIbanFormat($iban);
+    }
+
+    public function isValidAccountNumber(string $accountNumber, string $countryCode): bool
+    {
+        // Simple placeholder: country-specific rules can extend later
+        $length = strlen($accountNumber);
+        $isAlnum = ctype_alnum($accountNumber);
+
+        return $isAlnum && $length >= 4 && $length <= 34;
+    }
+
+    public function isValidSecCodeForTransaction(string $secCode, array $transactionContext): bool
+    {
+        $allowed = ['PPD', 'CCD', 'WEB', 'TEL', 'CIE', 'CTX'];
+        $upper = strtoupper($secCode);
+
+        if (!in_array($upper, $allowed, true)) {
+            return false;
+        }
+
+        // If consumer transaction, disallow corporate-only codes
+        $isCorporate = (bool) ($transactionContext['corporate'] ?? false);
+        if (!$isCorporate && $upper === 'CTX') {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function checkSanctions(string $name, ?string $country = null): array
+    {
+        return $this->screenSanctions($name, $country);
     }
 
     /**
@@ -113,7 +261,7 @@ final readonly class RailValidator implements RailValidatorInterface
     public function validateRoutingNumber(RoutingNumber $routingNumber): array
     {
         $errors = [];
-        $value = $routingNumber->getValue();
+        $value = $routingNumber->value;
 
         // Length check
         if (strlen($value) !== 9) {
@@ -150,7 +298,14 @@ final readonly class RailValidator implements RailValidatorInterface
     {
         $errors = [];
         $capabilities = $rail->getCapabilities();
-        $amountCents = (int) ($amount->getAmount() * 100);
+
+        if ($amount->isZero()) {
+            $errors[] = 'Amount must be greater than zero.';
+        }
+
+        if ($amount->isNegative()) {
+            $errors[] = 'Amount cannot be negative.';
+        }
 
         // Currency support
         if (!in_array($amount->getCurrency(), $capabilities->supportedCurrencies, true)) {
@@ -159,25 +314,55 @@ final readonly class RailValidator implements RailValidatorInterface
                 $amount->getCurrency(),
                 $rail->getRailType()->value
             );
+
+            return $errors;
         }
 
+        // Note: some rails support multiple currencies, while capability limits may be defined in a
+        // single “base” currency. Since Money comparisons require matching currency, we project
+        // the configured limit into the transaction currency using the same minor-unit amount.
+
         // Minimum amount
-        if ($amountCents < $capabilities->minimumAmountCents) {
-            $errors[] = sprintf(
-                'Amount is below minimum of $%.2f for %s rail.',
-                $capabilities->minimumAmountCents / 100,
-                $rail->getRailType()->value
-            );
+        if ($capabilities->minimumAmount !== null) {
+            $minimumAmount = $capabilities->minimumAmount->getCurrency() === $amount->getCurrency()
+                ? $capabilities->minimumAmount
+                : new Money(
+                    $capabilities->minimumAmount->getAmountInMinorUnits(),
+                    $amount->getCurrency()
+                );
+
+            if ($amount->lessThan($minimumAmount)) {
+            if ($rail->getRailType() === RailType::RTGS) {
+                $errors[] = sprintf(
+                    'RTGS is for high-value transactions only (minimum %s).',
+                    $minimumAmount->format(['symbol' => false])
+                );
+            } else {
+                $errors[] = sprintf(
+                    'Amount is below minimum of %s for %s rail.',
+                    $minimumAmount->format(['symbol' => false]),
+                    $rail->getRailType()->value
+                );
+            }
+            }
         }
 
         // Maximum amount
-        if ($capabilities->maximumAmountCents !== null 
-            && $amountCents > $capabilities->maximumAmountCents) {
-            $errors[] = sprintf(
-                'Amount exceeds maximum of $%.2f for %s rail.',
-                $capabilities->maximumAmountCents / 100,
-                $rail->getRailType()->value
-            );
+        if ($capabilities->maximumAmount !== null) {
+            $maximumAmount = $capabilities->maximumAmount->getCurrency() === $amount->getCurrency()
+                ? $capabilities->maximumAmount
+                : new Money(
+                    $capabilities->maximumAmount->getAmountInMinorUnits(),
+                    $amount->getCurrency()
+                );
+
+            if ($amount->greaterThan($maximumAmount)) {
+                $errors[] = sprintf(
+                    'Amount exceeds maximum of %s for %s rail.',
+                    $maximumAmount->format(['symbol' => false]),
+                    $rail->getRailType()->value
+                );
+            }
         }
 
         return $errors;
@@ -220,37 +405,38 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // Basic field validation
-        if (empty($request->beneficiaryName)) {
+        if (empty($request->getBeneficiaryName())) {
             $errors[] = 'Beneficiary name is required.';
         }
 
-        if (strlen($request->beneficiaryName) > 35) {
+        if (strlen($request->getBeneficiaryName()) > 35) {
             $errors[] = 'Beneficiary name exceeds maximum length (35 characters).';
         }
 
         // Amount validation
-        $amountErrors = $this->validateAmount($request->amount, $rail);
+        $amountErrors = $this->validateAmount($request->getAmount(), $rail);
         $errors = array_merge($errors, $amountErrors);
 
         // Bank account validation if provided
-        if ($request->beneficiaryAccount !== null) {
+        if ($request->getBeneficiaryAccount() !== null) {
             $accountErrors = $this->validateBankAccount(
-                $request->beneficiaryAccount,
+                $request->getBeneficiaryAccount(),
                 $rail->getRailType()
             );
             $errors = array_merge($errors, $accountErrors);
         }
 
-        // Routing number validation if provided
-        if ($request->routingNumber !== null) {
-            $routingErrors = $this->validateRoutingNumber($request->routingNumber);
+        // Routing number validation if provided.
+        // If a beneficiary account is present, its routing number is the canonical source.
+        if ($request->getRoutingNumber() !== null && ($request->getBeneficiaryAccount()?->routingNumber === null)) {
+            $routingErrors = $this->validateRoutingNumber($request->getRoutingNumber());
             $errors = array_merge($errors, $routingErrors);
         }
 
         // Sanctions screening
         $sanctionsErrors = $this->screenSanctions(
-            $request->beneficiaryName,
-            $request->beneficiaryCountry
+            $request->getBeneficiaryName(),
+            $request->getBeneficiaryCountry()
         );
         $errors = array_merge($errors, $sanctionsErrors);
 
@@ -303,14 +489,14 @@ final readonly class RailValidator implements RailValidatorInterface
 
         // SWIFT code validation
         if ($account->swiftCode !== null) {
-            if (!$this->isValidSwiftCode($account->swiftCode)) {
+            if (!$this->isValidSwiftCodeFormat($account->swiftCode->value)) {
                 $errors[] = 'Invalid SWIFT/BIC code format.';
             }
         }
 
         // IBAN validation
         if ($account->iban !== null) {
-            if (!$this->isValidIban($account->iban)) {
+            if (!$this->isValidIbanFormat($account->iban->value)) {
                 $errors[] = 'Invalid IBAN format.';
             }
         }
@@ -344,12 +530,15 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // ACH USD only
-        if ($request->amount->getCurrency() !== 'USD') {
+        if ($request->getAmount()->getCurrency() !== 'USD') {
             $errors[] = 'ACH transactions must be in USD.';
         }
 
         // SEC code required
-        if ($request->metadata === null || !isset($request->metadata['sec_code'])) {
+        $metadata = $request->getMetadata();
+        if ($metadata === null || !isset($metadata['sec_code'])) {
+            $errors[] = 'SEC code is required for ACH transactions.';
+        } elseif (!is_string($metadata['sec_code']) || trim($metadata['sec_code']) === '') {
             $errors[] = 'SEC code is required for ACH transactions.';
         }
 
@@ -366,12 +555,12 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // Purpose of payment for international
-        if ($request->isInternational && empty($request->purposeOfPayment)) {
+        if ($request->isInternational() && empty($request->getPurposeOfPayment())) {
             $errors[] = 'Purpose of payment is required for international wires.';
         }
 
         // Beneficiary address for international
-        if ($request->isInternational && empty($request->beneficiaryAddress)) {
+        if ($request->isInternational() && empty($request->getBeneficiaryAddress())) {
             $errors[] = 'Beneficiary address is required for international wires.';
         }
 
@@ -388,12 +577,12 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // Payee address required
-        if (empty($request->beneficiaryAddress)) {
+        if (empty($request->getBeneficiaryAddress())) {
             $errors[] = 'Payee address is required for check issuance.';
         }
 
         // Check memo length
-        if ($request->memo !== null && strlen($request->memo) > 40) {
+        if ($request->getMemo() !== null && strlen($request->getMemo()) > 40) {
             $errors[] = 'Check memo exceeds maximum length (40 characters).';
         }
 
@@ -407,15 +596,9 @@ final readonly class RailValidator implements RailValidatorInterface
      */
     private function validateRtgsTransaction(RailTransactionRequest $request): array
     {
-        $errors = [];
-
-        // High-value only
-        $amountCents = (int) ($request->amount->getAmount() * 100);
-        if ($amountCents < 100000) { // $1,000
-            $errors[] = 'RTGS is for high-value transactions only (minimum $1,000).';
-        }
-
-        return $errors;
+        // RTGS high-value threshold is enforced via RailCapabilities::minimumAmount
+        // and validated in validateAmount() to keep Money arithmetic in minor units.
+        return [];
     }
 
     /**
@@ -428,7 +611,8 @@ final readonly class RailValidator implements RailValidatorInterface
         $errors = [];
 
         // Vendor ID required
-        if ($request->metadata === null || !isset($request->metadata['vendor_id'])) {
+        $metadata = $request->getMetadata();
+        if ($metadata === null || !isset($metadata['vendor_id'])) {
             $errors[] = 'Vendor ID is required for virtual card issuance.';
         }
 
@@ -453,7 +637,7 @@ final readonly class RailValidator implements RailValidatorInterface
     /**
      * Validate SWIFT code format.
      */
-    private function isValidSwiftCode(string $swift): bool
+    private function isValidSwiftCodeFormat(string $swift): bool
     {
         // SWIFT: 8 or 11 characters
         // Format: AAAA BB CC (DDD)
@@ -467,7 +651,7 @@ final readonly class RailValidator implements RailValidatorInterface
     /**
      * Validate IBAN format.
      */
-    private function isValidIban(string $iban): bool
+    private function isValidIbanFormat(string $iban): bool
     {
         // Remove spaces
         $iban = str_replace(' ', '', strtoupper($iban));

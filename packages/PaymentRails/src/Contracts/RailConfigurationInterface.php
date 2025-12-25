@@ -67,5 +67,5 @@ interface RailConfigurationInterface
      *
      * @return array<string, \DateTimeImmutable>
      */
-    public function getCutoffTimes(): array;
+    public function getCutoffTimes(RailType $railType): array;
 }

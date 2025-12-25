@@ -338,8 +338,8 @@ final class VirtualCard
             return 0.0;
         }
 
-        $used = $this->getUsedAmount()->getAmountAsFloat();
-        $limit = $this->creditLimit->getAmountAsFloat();
+        $used = $this->getUsedAmount()->getAmount();
+        $limit = $this->creditLimit->getAmount();
 
         return round(($used / $limit) * 100, 2);
     }

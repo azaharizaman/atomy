@@ -184,4 +184,12 @@ enum CheckStatus: string
             self::REISSUED => [],
         };
     }
+
+    /**
+     * Check if a transition to the target status is allowed.
+     */
+    public function canTransitionTo(self $target): bool
+    {
+        return in_array($target, $this->validTransitions(), true);
+    }
 }

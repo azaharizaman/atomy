@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentRails\Rails;
 
+use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
 use Nexus\Common\ValueObjects\Money;
+use Nexus\PaymentRails\Enums\RailType;
+use Nexus\Common\Contracts\ClockInterface;
+use Nexus\PaymentRails\DTOs\RailTransactionResult;
+use Nexus\PaymentRails\ValueObjects\RailCapabilities;
 use Nexus\PaymentRails\Contracts\PaymentRailInterface;
 use Nexus\PaymentRails\Contracts\RailConfigurationInterface;
-use Nexus\PaymentRails\DTOs\RailTransactionResult;
-use Nexus\PaymentRails\Enums\RailType;
-use Nexus\PaymentRails\ValueObjects\RailCapabilities;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Abstract base class for all payment rails.
@@ -23,10 +24,20 @@ abstract class AbstractPaymentRail implements PaymentRailInterface
 {
     protected RailCapabilities $capabilities;
 
+    protected readonly ClockInterface $clock;
+
     public function __construct(
         protected readonly RailConfigurationInterface $configuration,
         protected readonly LoggerInterface $logger = new NullLogger(),
+        ?ClockInterface $clock = null,
     ) {
+        $this->clock = $clock ?? new class implements ClockInterface {
+            public function now(): \DateTimeImmutable
+            {
+                return new \DateTimeImmutable();
+            }
+        };
+
         $this->capabilities = $this->buildCapabilities();
     }
 
@@ -66,12 +77,12 @@ abstract class AbstractPaymentRail implements PaymentRailInterface
     protected function checkOperatingHours(): bool
     {
         $cutoffTimes = $this->configuration->getCutoffTimes($this->getRailType());
-        
-        if ($cutoffTimes === null) {
-            return true; // No cutoff defined, always available
+
+        if ($cutoffTimes === []) {
+            return true; // No cutoff defined, always available (weekday)
         }
 
-        $now = new \DateTimeImmutable();
+        $now = $this->clock->now();
         $currentTime = $now->format('H:i:s');
         $dayOfWeek = (int) $now->format('N');
 
@@ -80,10 +91,18 @@ abstract class AbstractPaymentRail implements PaymentRailInterface
             return false;
         }
 
-        $openTime = $cutoffTimes['open'] ?? '00:00:00';
-        $closeTime = $cutoffTimes['close'] ?? '23:59:59';
+        $openTime = $cutoffTimes['open'] ?? null;
+        $closeTime = $cutoffTimes['close'] ?? null;
 
-        return $currentTime >= $openTime && $currentTime <= $closeTime;
+        $openTimeString = $openTime instanceof \DateTimeImmutable
+            ? $openTime->format('H:i:s')
+            : (is_string($openTime) ? $openTime : '00:00:00');
+
+        $closeTimeString = $closeTime instanceof \DateTimeImmutable
+            ? $closeTime->format('H:i:s')
+            : (is_string($closeTime) ? $closeTime : '23:59:59');
+
+        return $currentTime >= $openTimeString && $currentTime <= $closeTimeString;
     }
 
     /**
@@ -91,20 +110,7 @@ abstract class AbstractPaymentRail implements PaymentRailInterface
      */
     public function supportsAmount(Money $amount): bool
     {
-        $minAmount = $this->capabilities->minimumAmountCents;
-        $maxAmount = $this->capabilities->maximumAmountCents;
-
-        $amountCents = (int) ($amount->getAmount() * 100);
-
-        if ($minAmount !== null && $amountCents < $minAmount) {
-            return false;
-        }
-
-        if ($maxAmount !== null && $amountCents > $maxAmount) {
-            return false;
-        }
-
-        return true;
+        return $this->capabilities->isAmountWithinLimits($amount);
     }
 
     /**
@@ -112,7 +118,7 @@ abstract class AbstractPaymentRail implements PaymentRailInterface
      */
     public function supportsCurrency(string $currency): bool
     {
-        return in_array($currency, $this->capabilities->supportedCurrencies, true);
+        return $this->capabilities->supportsCurrency($currency);
     }
 
     /**
@@ -120,7 +126,7 @@ abstract class AbstractPaymentRail implements PaymentRailInterface
      */
     public function getEstimatedSettlementDays(): int
     {
-        return $this->capabilities->settlementDays;
+        return $this->capabilities->typicalSettlementDays;
     }
 
     /**
@@ -128,7 +134,7 @@ abstract class AbstractPaymentRail implements PaymentRailInterface
      */
     public function isRealTime(): bool
     {
-        return $this->capabilities->isRealTime;
+        return $this->capabilities->isRealTime();
     }
 
     /**

@@ -261,7 +261,7 @@ final class Check
      */
     public function getAmountInWords(): string
     {
-        $amount = $this->amount->getAmountAsFloat();
+        $amount = $this->amount->getAmount();
         $dollars = (int) floor($amount);
         $cents = (int) round(($amount - $dollars) * 100);
 

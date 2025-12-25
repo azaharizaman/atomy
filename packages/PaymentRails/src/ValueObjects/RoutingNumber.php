@@ -95,19 +95,15 @@ final class RoutingNumber
      */
     public function getFederalReserveDistrict(): int
     {
-        $first = (int) mb_substr($this->value, 0, 1);
-        $second = (int) mb_substr($this->value, 1, 1);
+        $prefix = (int) mb_substr($this->value, 0, 2);
 
-        // Districts 1-12 are mapped from first digit
-        if ($first >= 0 && $first <= 9) {
-            if ($first === 0) {
-                return $second === 0 ? 0 : ($second <= 2 ? $second : 12);
-            }
-
-            return $first;
-        }
-
-        return 0;
+        return match (true) {
+            $prefix >= 1 && $prefix <= 12 => $prefix,
+            $prefix >= 21 && $prefix <= 32 => $prefix - 20,
+            $prefix >= 61 && $prefix <= 72 => $prefix - 60,
+            $prefix === 80 => 7, // 080 is 7 (Chicago)
+            default => 0,
+        };
     }
 
     /**
