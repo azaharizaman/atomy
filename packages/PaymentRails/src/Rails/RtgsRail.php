@@ -75,17 +75,29 @@ final class RtgsRail extends AbstractPaymentRail implements RtgsRailInterface
 
     protected function buildCapabilities(): RailCapabilities
     {
+        $minCents = self::MINIMUM_AMOUNTS[$this->defaultSystem->value] ?? 100000;
+        $maxCents = self::MAXIMUM_AMOUNTS[$this->defaultSystem->value] ?? null;
+
         return new RailCapabilities(
             railType: RailType::RTGS,
             supportedCurrencies: $this->getSupportedCurrencies($this->defaultSystem),
-            minimumAmountCents: self::MINIMUM_AMOUNTS[$this->defaultSystem->value] ?? 100000,
-            maximumAmountCents: self::MAXIMUM_AMOUNTS[$this->defaultSystem->value] ?? null,
-            settlementDays: 0, // Real-time
-            isRealTime: true,
-            supportsRefunds: false, // RTGS is final
-            supportsPartialRefunds: false,
+            minimumAmount: new Money($minCents, 'USD'),
+            maximumAmount: $maxCents !== null ? new Money($maxCents, 'USD') : null,
+            supportsCredit: true,
+            supportsDebit: false,
+            supportsScheduledPayments: false,
             supportsRecurring: false,
-            requiresBeneficiaryAddress: true,
+            supportsBatchProcessing: false,
+            requiresPrenotification: false,
+            typicalSettlementDays: 0,
+            requiredFields: ['beneficiary_name', 'beneficiary_bank_id', 'beneficiary_account'],
+            additionalCapabilities: [
+                'is_real_time' => true,
+                'supports_refunds' => false,
+                'supports_partial_refunds' => false,
+                'requires_beneficiary_address' => true,
+                'rtgs_system' => $this->defaultSystem->value,
+            ],
         );
     }
 

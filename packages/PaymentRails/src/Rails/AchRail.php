@@ -61,14 +61,20 @@ final class AchRail extends AbstractPaymentRail implements AchRailInterface
         return new RailCapabilities(
             railType: RailType::ACH,
             supportedCurrencies: ['USD'],
-            minimumAmountCents: 1,
-            maximumAmountCents: 999999999999,
-            settlementDays: 2,
-            isRealTime: false,
-            supportsRefunds: true,
-            supportsPartialRefunds: true,
+            minimumAmount: new Money(1, 'USD'),
+            maximumAmount: new Money(999999999999, 'USD'),
+            supportsScheduledPayments: true,
             supportsRecurring: true,
-            requiresBeneficiaryAddress: false,
+            supportsBatchProcessing: true,
+            requiresPrenotification: false,
+            typicalSettlementDays: 2,
+            requiredFields: ['routing_number', 'account_number', 'account_type'],
+            additionalCapabilities: [
+                'supports_refunds' => true,
+                'supports_partial_refunds' => true,
+                'requires_beneficiary_address' => false,
+                'supports_same_day' => true,
+            ],
         );
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentRails\Rails;
 
+use Nexus\Common\Contracts\ClockInterface;
 use Nexus\Common\ValueObjects\Money;
 use Nexus\PaymentRails\Contracts\RailConfigurationInterface;
 use Nexus\PaymentRails\Contracts\RailTransactionPersistInterface;
@@ -70,8 +71,9 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
         private readonly RailTransactionQueryInterface $transactionQuery,
         private readonly RailTransactionPersistInterface $transactionPersist,
         LoggerInterface $logger = new NullLogger(),
+        ?ClockInterface $clock = null,
     ) {
-        parent::__construct($configuration, $logger);
+        parent::__construct($configuration, $logger, $clock);
     }
 
     public function getRailType(): RailType
@@ -84,14 +86,22 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
         return new RailCapabilities(
             railType: RailType::WIRE,
             supportedCurrencies: $this->getSupportedCurrencies(),
-            minimumAmountCents: self::DOMESTIC_MINIMUM_CENTS,
-            maximumAmountCents: self::DOMESTIC_MAXIMUM_CENTS,
-            settlementDays: 0, // Same-day domestic
-            isRealTime: true,
-            supportsRefunds: false, // Wire recalls are complex
-            supportsPartialRefunds: false,
+            minimumAmount: new Money(self::DOMESTIC_MINIMUM_CENTS, 'USD'),
+            maximumAmount: new Money(self::DOMESTIC_MAXIMUM_CENTS, 'USD'),
+            supportsCredit: true,
+            supportsDebit: false,
+            supportsScheduledPayments: true,
             supportsRecurring: false,
-            requiresBeneficiaryAddress: true,
+            supportsBatchProcessing: false,
+            requiresPrenotification: false,
+            typicalSettlementDays: 0,
+            requiredFields: ['beneficiary_name', 'beneficiary_bank_name'],
+            additionalCapabilities: [
+                'is_real_time' => true,
+                'supports_refunds' => false,
+                'supports_partial_refunds' => false,
+                'requires_beneficiary_address' => true,
+            ],
         );
     }
 
@@ -102,125 +112,118 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
     {
         $this->ensureAvailable();
 
-        // Validate the request
         $errors = $this->validateWireRequest($request);
         if (!empty($errors)) {
             throw WireValidationException::multipleErrors($errors);
         }
 
         $wireId = $this->generateReference('WIRE');
-        $estimatedFee = $this->getEstimatedFee($request->wireType, $request->amount);
+        $fee = $this->getEstimatedFee($request);
+        $expectedSettlement = $this->getEstimatedSettlement($request->wireType);
 
-        // Create wire instruction
-        $instruction = $this->createWireInstruction(
-            $request->beneficiaryName,
-            $request->beneficiaryAccountNumber,
-            $request->beneficiarySwiftCode,
-            $request->beneficiaryIban,
-            $request->beneficiaryAddress,
-            $request->intermediarySwiftCode,
-            $request->intermediaryName,
-            $request->purpose,
+        $wireResult = WireTransferResult::pending(
+            transferId: $wireId,
+            amount: $request->amount,
+            wireType: $request->wireType,
+            confirmationNumber: null,
+            expectedSettlementDate: $expectedSettlement,
         );
 
-        // Persist transaction
-        $this->transactionPersist->save($wireId, [
-            'type' => 'wire_transfer',
-            'wire_type' => $request->wireType->value,
-            'amount_cents' => $this->toAmountCents($request->amount),
-            'currency' => $request->amount->getCurrency(),
-            'beneficiary_name' => $request->beneficiaryName,
-            'status' => 'PENDING',
-            'fee_cents' => $estimatedFee,
-            'created_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::RFC3339),
-        ]);
+        $transactionResult = new RailTransactionResult(
+            transactionId: $wireResult->transferId,
+            success: $wireResult->success,
+            status: $wireResult->status,
+            railType: $this->getRailType(),
+            amount: $wireResult->amount,
+            referenceNumber: $wireResult->getReferenceNumber(),
+            errors: $wireResult->errors,
+            metadata: [
+                'wire_type' => $request->wireType->value,
+                'beneficiary_name' => $request->beneficiaryName,
+                'beneficiary_bank_name' => $request->beneficiaryBankName,
+            ],
+            fees: $fee,
+            expectedSettlementDate: $expectedSettlement,
+        );
+
+        $this->transactionPersist->save($transactionResult);
 
         $this->logOperation('Wire transfer initiated', $wireId, [
             'wire_type' => $request->wireType->value,
-            'amount' => $request->amount->getAmount(),
+            'amount_minor' => $request->amount->getAmountInMinorUnits(),
             'currency' => $request->amount->getCurrency(),
             'beneficiary' => $request->beneficiaryName,
         ]);
 
-        return new WireTransferResult(
-            success: true,
-            wireId: $wireId,
-            wireType: $request->wireType,
-            status: 'PENDING',
-            amountCents: $this->toAmountCents($request->amount),
-            currency: $request->amount->getCurrency(),
-            estimatedFeeCents: $estimatedFee,
-            estimatedSettlement: $this->getEstimatedSettlement($request->wireType),
-        );
+        return $wireResult;
     }
 
     /**
      * Create a wire instruction.
      */
-    public function createWireInstruction(
-        string $beneficiaryName,
-        string $accountNumber,
-        ?string $swiftCode = null,
-        ?string $iban = null,
-        ?string $address = null,
-        ?string $intermediarySwiftCode = null,
-        ?string $intermediaryName = null,
-        ?string $purpose = null,
-    ): WireInstruction {
-        $parsedSwift = $swiftCode !== null ? SwiftCode::fromString($swiftCode) : null;
-        $parsedIban = $iban !== null ? Iban::fromString($iban) : null;
-        $parsedIntermediary = $intermediarySwiftCode !== null 
-            ? SwiftCode::fromString($intermediarySwiftCode) 
-            : null;
-
+    public function createWireInstruction(WireTransferRequest $request): WireInstruction
+    {
         return new WireInstruction(
-            beneficiaryName: $beneficiaryName,
-            beneficiaryAccountNumber: $accountNumber,
-            beneficiarySwiftCode: $parsedSwift,
-            beneficiaryIban: $parsedIban,
-            beneficiaryAddress: $address,
-            intermediaryBankSwiftCode: $parsedIntermediary,
-            intermediaryBankName: $intermediaryName,
-            purposeOfPayment: $purpose,
+            wireType: $request->wireType,
+            amount: $request->amount,
+            beneficiaryName: $request->beneficiaryName,
+            beneficiaryAccountNumber: $request->beneficiaryAccountNumber,
+            beneficiaryBankName: $request->beneficiaryBankName,
+            beneficiarySwiftCode: $request->beneficiarySwiftCode,
+            beneficiaryIban: $request->beneficiaryIban,
+            beneficiaryAddress: $request->beneficiaryAddress,
+            beneficiaryRoutingNumber: $request->beneficiaryRoutingNumber,
+            intermediaryBankName: $request->intermediaryBankName,
+            intermediarySwiftCode: $request->intermediarySwiftCode,
+            intermediaryAccountNumber: null,
+            purposeOfPayment: $request->purposeOfPayment,
+            additionalInstructions: null,
+            originatorToBeneficiaryInfo: null,
+            referenceForBeneficiary: $request->paymentReference,
         );
     }
 
     /**
      * Get wire transfer status.
      */
-    public function getWireStatus(string $wireId): WireTransferResult
+    public function getWireStatus(string $transferId): WireTransferResult
     {
-        $transaction = $this->transactionQuery->findById($wireId);
+        $transaction = $this->transactionQuery->findById($transferId);
 
         if ($transaction === null) {
-            return new WireTransferResult(
-                success: false,
-                wireId: $wireId,
+            return WireTransferResult::failure(
+                transferId: $transferId,
+                amount: Money::zero('USD'),
                 wireType: WireType::DOMESTIC,
-                status: 'NOT_FOUND',
-                amountCents: 0,
-                currency: 'USD',
-                errorMessage: 'Wire transfer not found',
+                errors: ['Wire transfer not found'],
             );
         }
 
+        $wireType = WireType::from($transaction->metadata['wire_type'] ?? WireType::DOMESTIC->value);
+
         return new WireTransferResult(
-            success: true,
-            wireId: $wireId,
-            wireType: WireType::from($transaction->metadata['wire_type'] ?? 'domestic'),
+            transferId: $transferId,
+            success: $transaction->success,
             status: $transaction->status,
-            amountCents: $transaction->metadata['amount_cents'] ?? 0,
-            currency: $transaction->metadata['currency'] ?? 'USD',
+            amount: $transaction->amount,
+            wireType: $wireType,
             confirmationNumber: $transaction->metadata['confirmation_number'] ?? null,
+            federalReferenceNumber: $transaction->metadata['federal_reference_number'] ?? null,
+            swiftReferenceNumber: $transaction->metadata['swift_reference_number'] ?? null,
+            fee: $transaction->fees,
+            initiatedAt: $transaction->processedAt,
+            completedAt: $transaction->settledAt,
+            expectedSettlementDate: $transaction->expectedSettlementDate,
+            errors: $transaction->errors,
         );
     }
 
     /**
      * Cancel a wire transfer (request recall).
      */
-    public function cancelWire(string $wireId, string $reason): bool
+    public function cancelWire(string $transferId, string $reason): bool
     {
-        return $this->cancelTransaction($wireId, $reason);
+        return $this->cancelTransaction($transferId, $reason);
     }
 
     /**
@@ -229,20 +232,18 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
     public function getWireCutoffTime(WireType $wireType): \DateTimeImmutable
     {
         $cutoffTimes = $this->configuration->getCutoffTimes($this->getRailType());
-        
-        $cutoffKey = match ($wireType) {
-            WireType::DOMESTIC => 'domestic',
-            WireType::INTERNATIONAL => 'international',
-            WireType::URGENT => 'urgent',
-        };
 
-        $closeTime = $cutoffTimes[$cutoffKey] ?? '17:00:00';
+        $cutoffKey = $wireType->value;
 
-        $today = new \DateTimeImmutable();
-        return \DateTimeImmutable::createFromFormat(
-            'Y-m-d H:i:s',
-            $today->format('Y-m-d') . ' ' . $closeTime
-        );
+        if (isset($cutoffTimes[$cutoffKey]) && $cutoffTimes[$cutoffKey] instanceof \DateTimeImmutable) {
+            return $cutoffTimes[$cutoffKey];
+        }
+
+        if (isset($cutoffTimes['close']) && $cutoffTimes['close'] instanceof \DateTimeImmutable) {
+            return $cutoffTimes['close'];
+        }
+
+        return $this->clock->now()->setTime(17, 0);
     }
 
     /**
@@ -250,7 +251,7 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
      */
     public function canProcessSameDay(WireType $wireType): bool
     {
-        $now = new \DateTimeImmutable();
+        $now = $this->clock->now();
         $cutoff = $this->getWireCutoffTime($wireType);
 
         // Check if before cutoff and it's a business day
@@ -291,13 +292,18 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
     /**
      * Get estimated fee for a wire transfer.
      */
-    public function getEstimatedFee(WireType $wireType, Money $amount): int
+    public function getEstimatedFee(WireTransferRequest $request): Money
     {
-        return match ($wireType) {
-            WireType::DOMESTIC => self::DOMESTIC_FEE_CENTS,
+        $baseFeeCents = match ($request->wireType) {
             WireType::INTERNATIONAL => self::INTERNATIONAL_FEE_CENTS,
-            WireType::URGENT => self::DOMESTIC_FEE_CENTS * 2, // Premium for urgent
+            WireType::DOMESTIC,
+            WireType::BOOK_TRANSFER,
+            WireType::DRAWDOWN => self::DOMESTIC_FEE_CENTS,
         };
+
+        $feeCents = $request->isUrgent ? $baseFeeCents * 2 : $baseFeeCents;
+
+        return new Money($feeCents, $request->amount->getCurrency());
     }
 
     /**
@@ -322,12 +328,11 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
         $transaction = $this->transactionQuery->findById($transactionId);
 
         if ($transaction === null) {
-            return new RailTransactionResult(
-                success: false,
+            return RailTransactionResult::failure(
                 transactionId: $transactionId,
                 railType: $this->getRailType(),
-                status: 'NOT_FOUND',
-                errorMessage: 'Transaction not found',
+                amount: Money::zero('USD'),
+                errors: ['Transaction not found'],
             );
         }
 
@@ -366,7 +371,10 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
     private function ensureAvailable(): void
     {
         if (!$this->isAvailable()) {
-            throw RailUnavailableException::outsideOperatingHours($this->getRailType());
+            throw RailUnavailableException::outsideOperatingHours(
+                railType: $this->getRailType()->value,
+                nextOpenTime: $this->getNextOpenTime(),
+            );
         }
     }
 
@@ -377,20 +385,19 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
      */
     private function validateWireRequest(WireTransferRequest $request): array
     {
-        $errors = [];
+        $errors = $request->validate();
 
-        // Amount validation
-        $amountCents = $this->toAmountCents($request->amount);
-        
+        $amountMinor = $request->amount->getAmountInMinorUnits();
+
         if ($request->wireType === WireType::INTERNATIONAL) {
-            if ($amountCents < self::INTERNATIONAL_MINIMUM_CENTS) {
+            if ($amountMinor < self::INTERNATIONAL_MINIMUM_CENTS) {
                 $errors[] = sprintf(
                     'International wire minimum is $%.2f',
                     self::INTERNATIONAL_MINIMUM_CENTS / 100
                 );
             }
         } else {
-            if ($amountCents < self::DOMESTIC_MINIMUM_CENTS) {
+            if ($amountMinor < self::DOMESTIC_MINIMUM_CENTS) {
                 $errors[] = sprintf(
                     'Domestic wire minimum is $%.2f',
                     self::DOMESTIC_MINIMUM_CENTS / 100
@@ -398,31 +405,12 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
             }
         }
 
-        // Beneficiary validation
-        if (empty($request->beneficiaryName)) {
-            $errors[] = 'Beneficiary name is required.';
-        }
-
-        if (empty($request->beneficiaryAccountNumber)) {
-            $errors[] = 'Beneficiary account number is required.';
-        }
-
-        // International wire specific validation
-        if ($request->wireType === WireType::INTERNATIONAL) {
-            if (empty($request->beneficiarySwiftCode)) {
-                $errors[] = 'SWIFT/BIC code is required for international wires.';
-            } elseif (!$this->validateSwiftCode($request->beneficiarySwiftCode)) {
-                $errors[] = 'Invalid SWIFT/BIC code format.';
-            }
-
-            if (empty($request->beneficiaryAddress)) {
-                $errors[] = 'Beneficiary address is required for international wires.';
-            }
-        }
-
-        // Currency validation
         if (!$this->supportsCurrency($request->amount->getCurrency())) {
             $errors[] = sprintf('Currency %s is not supported.', $request->amount->getCurrency());
+        }
+
+        if ($request->wireType === WireType::INTERNATIONAL && $request->beneficiaryAddress === null) {
+            $errors[] = 'Beneficiary address is required for international wires.';
         }
 
         return $errors;
@@ -433,12 +421,13 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
      */
     private function getEstimatedSettlement(WireType $wireType): \DateTimeImmutable
     {
-        $now = new \DateTimeImmutable();
+        $now = $this->clock->now();
 
         if ($this->canProcessSameDay($wireType)) {
             return match ($wireType) {
-                WireType::DOMESTIC => $now->modify('+2 hours'),
-                WireType::URGENT => $now->modify('+30 minutes'),
+                WireType::BOOK_TRANSFER => $now->modify('+5 minutes'),
+                WireType::DOMESTIC,
+                WireType::DRAWDOWN => $now->modify('+2 hours'),
                 WireType::INTERNATIONAL => $now->modify('+24 hours'),
             };
         }
@@ -452,7 +441,7 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
      */
     private function getNextBusinessDay(): \DateTimeImmutable
     {
-        $date = new \DateTimeImmutable();
+        $date = $this->clock->now();
         $dayOfWeek = (int) $date->format('N');
 
         if ($dayOfWeek === 5) { // Friday
@@ -470,6 +459,30 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
      */
     private function toAmountCents(Money $money): int
     {
-        return (int) ($money->getAmount() * 100);
+        return $money->getAmountInMinorUnits();
+    }
+
+    private function getNextOpenTime(): \DateTimeImmutable
+    {
+        $cutoffTimes = $this->configuration->getCutoffTimes($this->getRailType());
+
+        if (isset($cutoffTimes['open']) && $cutoffTimes['open'] instanceof \DateTimeImmutable) {
+            $open = $cutoffTimes['open'];
+            $now = $this->clock->now();
+
+            if ($open > $now) {
+                return $open;
+            }
+
+            // If today's open time has passed, use next business day at the same time.
+            $next = $this->getNextBusinessDay();
+            return $next->setTime(
+                (int) $open->format('H'),
+                (int) $open->format('i'),
+                (int) $open->format('s'),
+            );
+        }
+
+        return $this->clock->now()->modify('+1 hour');
     }
 }

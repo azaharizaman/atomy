@@ -200,7 +200,8 @@ final class AchEntry
      */
     public function getAmountInCents(): int
     {
-        return $this->amount->getAmountInCents();
+        // Nexus\Common\ValueObjects\Money stores values in minor units (e.g., cents).
+        return $this->amount->getAmountInMinorUnits();
     }
 
     /**

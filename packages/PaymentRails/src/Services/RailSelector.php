@@ -111,7 +111,7 @@ final readonly class RailSelector implements RailSelectorInterface
     public function getOptimalDomesticRail(Money $amount, string $currency): PaymentRailInterface
     {
         $criteria = new RailSelectionCriteria(
-            amountCents: (int) ($amount->getAmount() * 100),
+            amountCents: $amount->getAmountInMinorUnits(),
             currency: $currency,
             destinationCountry: $this->getCountryForCurrency($currency),
             urgency: 'standard',
@@ -130,7 +130,7 @@ final readonly class RailSelector implements RailSelectorInterface
         string $destinationCountry,
     ): PaymentRailInterface {
         $criteria = new RailSelectionCriteria(
-            amountCents: (int) ($amount->getAmount() * 100),
+            amountCents: $amount->getAmountInMinorUnits(),
             currency: $sourceCurrency,
             destinationCountry: $destinationCountry,
             urgency: 'standard',
@@ -188,28 +188,24 @@ final readonly class RailSelector implements RailSelectorInterface
         }
 
         $capabilities = $rail->getCapabilities();
+        $amount = $this->criteriaAmountAsMoney($criteria);
 
         // Check currency support
-        if (!in_array($criteria->currency, $capabilities->supportedCurrencies, true)) {
+        if (!$capabilities->supportsCurrency($criteria->currency)) {
             return false;
         }
 
         // Check amount bounds
-        if ($criteria->amountCents < $capabilities->minimumAmountCents) {
-            return false;
-        }
-
-        if ($capabilities->maximumAmountCents !== null 
-            && $criteria->amountCents > $capabilities->maximumAmountCents) {
+        if (!$capabilities->isAmountWithinLimits($amount)) {
             return false;
         }
 
         // Check urgency requirements
-        if ($criteria->urgency === 'urgent' && $capabilities->settlementDays > 1) {
+        if ($criteria->urgency === 'urgent' && $capabilities->typicalSettlementDays > 1) {
             return false;
         }
 
-        if ($criteria->urgency === 'real-time' && !$capabilities->isRealTime) {
+        if ($criteria->urgency === 'real-time' && !$capabilities->isRealTime()) {
             return false;
         }
 
@@ -376,31 +372,31 @@ final readonly class RailSelector implements RailSelectorInterface
     {
         $maxPoints = 25.0;
 
+        $isRealTime = $capabilities->isRealTime();
+        $settlementDays = $capabilities->typicalSettlementDays;
+
         if ($criteria->urgency === 'real-time') {
-            return $capabilities->isRealTime ? $maxPoints : 0.0;
+            return $isRealTime ? $maxPoints : 0.0;
         }
 
         if ($criteria->urgency === 'urgent') {
-            if ($capabilities->isRealTime) {
+            if ($isRealTime) {
                 return $maxPoints;
             }
-            if ($capabilities->settlementDays === 0) {
-                return 20.0;
-            }
-            if ($capabilities->settlementDays === 1) {
+            if ($settlementDays === 1) {
                 return 15.0;
             }
             return 5.0;
         }
 
         // Standard: prefer faster but don't penalize slow
-        if ($capabilities->isRealTime) {
+        if ($isRealTime) {
             return 20.0;
         }
-        if ($capabilities->settlementDays <= 1) {
+        if ($settlementDays <= 1) {
             return 15.0;
         }
-        if ($capabilities->settlementDays <= 2) {
+        if ($settlementDays <= 2) {
             return 12.0;
         }
         
@@ -445,15 +441,18 @@ final readonly class RailSelector implements RailSelectorInterface
         }
 
         // Bonus for refund support
-        if ($capabilities->supportsRefunds) {
+        if ($this->supportsRefunds($capabilities)) {
             $score += 3.0;
         }
 
         // Penalty for being close to limits
-        if ($capabilities->maximumAmountCents !== null) {
-            $utilizationRatio = $criteria->amountCents / $capabilities->maximumAmountCents;
+        if ($capabilities->maximumAmount !== null) {
+            $maxMinorUnits = $capabilities->maximumAmount->getAmountInMinorUnits();
+            if ($maxMinorUnits > 0) {
+                $utilizationRatio = $criteria->amountCents / $maxMinorUnits;
             if ($utilizationRatio > 0.9) {
                 $score -= 5.0; // Close to limit
+            }
             }
         }
 
@@ -508,5 +507,15 @@ final readonly class RailSelector implements RailSelectorInterface
             'INR' => 'IN',
             default => 'US',
         };
+    }
+
+    private function criteriaAmountAsMoney(RailSelectionCriteria $criteria): Money
+    {
+        return new Money($criteria->amountCents, $criteria->currency);
+    }
+
+    private function supportsRefunds(RailCapabilities $capabilities): bool
+    {
+        return (bool) $capabilities->getCapability('supports_refunds', false);
     }
 }

@@ -47,6 +47,14 @@ final class InvalidCheckNumberException extends PaymentRailException
     }
 
     /**
+     * Create for value below minimum.
+     */
+    public static function belowMinimum(string $checkNumber): self
+    {
+        return new self($checkNumber, 'Check number must be 1 or greater');
+    }
+
+    /**
      * Create for value too large.
      */
     public static function exceedsMaximum(string $checkNumber, int $maximum): self

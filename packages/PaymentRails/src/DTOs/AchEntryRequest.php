@@ -123,25 +123,25 @@ final readonly class AchEntryRequest
         if ($this->isPrenote) {
             return match ($this->accountType) {
                 AccountType::CHECKING => $this->isDebit
-                    ? TransactionCode::PRENOTIFICATION_DEBIT_CHECKING
-                    : TransactionCode::PRENOTIFICATION_CREDIT_CHECKING,
+                    ? TransactionCode::CHECKING_DEBIT_PRENOTE
+                    : TransactionCode::CHECKING_CREDIT_PRENOTE,
                 AccountType::SAVINGS => $this->isDebit
-                    ? TransactionCode::PRENOTIFICATION_DEBIT_SAVINGS
-                    : TransactionCode::PRENOTIFICATION_CREDIT_SAVINGS,
-                default => TransactionCode::PRENOTIFICATION_CREDIT_CHECKING,
+                    ? TransactionCode::SAVINGS_DEBIT_PRENOTE
+                    : TransactionCode::SAVINGS_CREDIT_PRENOTE,
+                default => TransactionCode::CHECKING_CREDIT_PRENOTE,
             };
         }
 
         return match ($this->accountType) {
             AccountType::CHECKING => $this->isDebit
-                ? TransactionCode::DEBIT_CHECKING
-                : TransactionCode::CREDIT_CHECKING,
+                ? TransactionCode::CHECKING_DEBIT
+                : TransactionCode::CHECKING_CREDIT,
             AccountType::SAVINGS => $this->isDebit
-                ? TransactionCode::DEBIT_SAVINGS
-                : TransactionCode::CREDIT_SAVINGS,
+                ? TransactionCode::SAVINGS_DEBIT
+                : TransactionCode::SAVINGS_CREDIT,
             default => $this->isDebit
-                ? TransactionCode::DEBIT_CHECKING
-                : TransactionCode::CREDIT_CHECKING,
+                ? TransactionCode::CHECKING_DEBIT
+                : TransactionCode::CHECKING_CREDIT,
         };
     }
 

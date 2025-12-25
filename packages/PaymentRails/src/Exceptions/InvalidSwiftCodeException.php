@@ -39,6 +39,16 @@ final class InvalidSwiftCodeException extends PaymentRailException
     }
 
     /**
+     * Create for invalid format.
+     *
+     * Alias for call sites that only validate via regex.
+     */
+    public static function invalidFormat(string $swiftCode): self
+    {
+        return new self($swiftCode, 'Must be a valid SWIFT/BIC code (8 or 11 chars)');
+    }
+
+    /**
      * Create for invalid length.
      */
     public static function invalidLength(string $swiftCode): self

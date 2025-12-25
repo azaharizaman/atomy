@@ -59,11 +59,31 @@ final class InvalidRoutingNumberException extends PaymentRailException
     }
 
     /**
+     * Create for invalid length.
+     *
+     * Alias for historical call sites.
+     */
+    public static function invalidLength(string $routingNumber): self
+    {
+        return self::invalidFormat($routingNumber);
+    }
+
+    /**
      * Create for invalid checksum.
      */
     public static function invalidChecksum(string $routingNumber): self
     {
         return new self($routingNumber, 'Failed checksum validation (mod-10)');
+    }
+
+    /**
+     * Create for invalid check digit.
+     *
+     * Alias for historical call sites.
+     */
+    public static function invalidCheckDigit(string $routingNumber): self
+    {
+        return self::invalidChecksum($routingNumber);
     }
 
     /**
