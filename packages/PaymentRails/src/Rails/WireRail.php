@@ -34,7 +34,7 @@ use Psr\Log\NullLogger;
  * - SWIFT (international)
  * - CHIPS (high-value domestic)
  */
-final class WireRail extends AbstractPaymentRail implements WireRailInterface
+final readonly class WireRail extends AbstractPaymentRail implements WireRailInterface
 {
     /**
      * Minimum wire amount in cents (typically $1,000 or more for cost-efficiency).
@@ -68,8 +68,8 @@ final class WireRail extends AbstractPaymentRail implements WireRailInterface
 
     public function __construct(
         RailConfigurationInterface $configuration,
-        private readonly RailTransactionQueryInterface $transactionQuery,
-        private readonly RailTransactionPersistInterface $transactionPersist,
+        private RailTransactionQueryInterface $transactionQuery,
+        private RailTransactionPersistInterface $transactionPersist,
         LoggerInterface $logger = new NullLogger(),
         ?ClockInterface $clock = null,
     ) {

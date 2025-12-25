@@ -33,7 +33,7 @@ use Psr\Log\NullLogger;
  * - Card lifecycle management
  * - Transaction tracking and reconciliation
  */
-final class VirtualCardRail extends AbstractPaymentRail implements VirtualCardRailInterface
+final readonly class VirtualCardRail extends AbstractPaymentRail implements VirtualCardRailInterface
 {
     /**
      * Default card validity period in days.
@@ -57,8 +57,8 @@ final class VirtualCardRail extends AbstractPaymentRail implements VirtualCardRa
 
     public function __construct(
         RailConfigurationInterface $configuration,
-        private readonly RailTransactionQueryInterface $transactionQuery,
-        private readonly RailTransactionPersistInterface $transactionPersist,
+        private RailTransactionQueryInterface $transactionQuery,
+        private RailTransactionPersistInterface $transactionPersist,
         LoggerInterface $logger = new NullLogger(),
     ) {
         parent::__construct($configuration, $logger);

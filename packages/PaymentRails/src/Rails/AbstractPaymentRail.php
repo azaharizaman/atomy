@@ -20,15 +20,15 @@ use Nexus\PaymentRails\Contracts\RailConfigurationInterface;
  * Provides common functionality and enforces consistent behavior
  * across all rail implementations.
  */
-abstract class AbstractPaymentRail implements PaymentRailInterface
+abstract readonly class AbstractPaymentRail implements PaymentRailInterface
 {
     protected RailCapabilities $capabilities;
 
-    protected readonly ClockInterface $clock;
+    protected ClockInterface $clock;
 
     public function __construct(
-        protected readonly RailConfigurationInterface $configuration,
-        protected readonly LoggerInterface $logger = new NullLogger(),
+        protected RailConfigurationInterface $configuration,
+        protected LoggerInterface $logger = new NullLogger(),
         ?ClockInterface $clock = null,
     ) {
         $this->clock = $clock ?? new class implements ClockInterface {

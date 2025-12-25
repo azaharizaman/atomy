@@ -42,6 +42,9 @@ enum WebhookEventType: string
     case PAYOUT_COMPLETED = 'payout.completed';
     case PAYOUT_FAILED = 'payout.failed';
 
+    // Unknown event
+    case UNKNOWN = 'unknown';
+
     /**
      * Get human-readable label.
      */
@@ -69,6 +72,7 @@ enum WebhookEventType: string
             self::PAYOUT_CREATED => 'Payout Created',
             self::PAYOUT_COMPLETED => 'Payout Completed',
             self::PAYOUT_FAILED => 'Payout Failed',
+            self::UNKNOWN => 'Unknown Event',
         };
     }
 

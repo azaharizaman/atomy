@@ -39,13 +39,13 @@ use Nexus\PaymentRails\Contracts\RailTransactionPersistInterface;
  * - NACHA file generation and parsing
  * - Returns and NOC processing
  */
-final class AchRail extends AbstractPaymentRail implements AchRailInterface
+final readonly class AchRail extends AbstractPaymentRail implements AchRailInterface
 {
     public function __construct(
         RailConfigurationInterface $configuration,
-        private readonly NachaFormatterInterface $nachaFormatter,
-        private readonly RailTransactionQueryInterface $transactionQuery,
-        private readonly RailTransactionPersistInterface $transactionPersist,
+        private NachaFormatterInterface $nachaFormatter,
+        private RailTransactionQueryInterface $transactionQuery,
+        private RailTransactionPersistInterface $transactionPersist,
         LoggerInterface $logger = new NullLogger(),
     ) {
         parent::__construct($configuration, $logger);

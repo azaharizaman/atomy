@@ -88,4 +88,46 @@ final class CaptureResult
     {
         return $this->success && $this->status->canRefund();
     }
+
+    /**
+     * Convert to array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'success' => $this->success,
+            'captureId' => $this->captureId,
+            'transactionId' => $this->transactionId,
+            'status' => $this->status->value,
+            'capturedAmount' => $this->capturedAmount?->toArray(),
+            'feeAmount' => $this->feeAmount?->toArray(),
+            'netAmount' => $this->netAmount?->toArray(),
+            'error' => $this->error?->toArray(),
+            'capturedAt' => $this->capturedAt?->format(\DateTimeInterface::ATOM),
+            'rawResponse' => $this->rawResponse,
+        ];
+    }
+
+    /**
+     * Create from array representation.
+     *
+     * @param array<string, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            success: $data['success'],
+            captureId: $data['captureId'] ?? null,
+            transactionId: $data['transactionId'] ?? null,
+            status: TransactionStatus::from($data['status']),
+            capturedAmount: isset($data['capturedAmount']) ? Money::fromArray($data['capturedAmount']) : null,
+            feeAmount: isset($data['feeAmount']) ? Money::fromArray($data['feeAmount']) : null,
+            netAmount: isset($data['netAmount']) ? Money::fromArray($data['netAmount']) : null,
+            error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
+            capturedAt: isset($data['capturedAt']) ? new \DateTimeImmutable($data['capturedAt']) : null,
+            rawResponse: $data['rawResponse'] ?? [],
+        );
+    }
 }

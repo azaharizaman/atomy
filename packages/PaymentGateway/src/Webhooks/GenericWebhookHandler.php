@@ -152,7 +152,7 @@ final class GenericWebhookHandler implements WebhookHandlerInterface
         // Map common gateway event types
         return match ($eventType) {
             // Stripe-style events
-            'payment_intent.succeeded', 'charge.succeeded' => WebhookEventType::PAYMENT_SUCCEEDED,
+            'payment_intent.succeeded', 'charge.succeeded' => WebhookEventType::PAYMENT_CAPTURED,
             'payment_intent.payment_failed', 'charge.failed' => WebhookEventType::PAYMENT_FAILED,
             'charge.refunded' => WebhookEventType::REFUND_COMPLETED,
             'charge.refund.updated' => WebhookEventType::REFUND_FAILED,
@@ -160,17 +160,17 @@ final class GenericWebhookHandler implements WebhookHandlerInterface
             'charge.dispute.closed' => WebhookEventType::DISPUTE_CLOSED,
 
             // PayPal-style events
-            'PAYMENT.CAPTURE.COMPLETED' => WebhookEventType::PAYMENT_SUCCEEDED,
+            'PAYMENT.CAPTURE.COMPLETED' => WebhookEventType::PAYMENT_CAPTURED,
             'PAYMENT.CAPTURE.DENIED' => WebhookEventType::PAYMENT_FAILED,
             'PAYMENT.CAPTURE.REFUNDED' => WebhookEventType::REFUND_COMPLETED,
 
             // Square-style events
-            'payment.completed' => WebhookEventType::PAYMENT_SUCCEEDED,
+            'payment.completed' => WebhookEventType::PAYMENT_CAPTURED,
             'payment.failed' => WebhookEventType::PAYMENT_FAILED,
             'refund.created' => WebhookEventType::REFUND_COMPLETED,
 
-            // Default to payment succeeded for unknown types
-            default => WebhookEventType::PAYMENT_SUCCEEDED,
+            // Default to unknown for unknown types
+            default => WebhookEventType::UNKNOWN,
         };
     }
 }

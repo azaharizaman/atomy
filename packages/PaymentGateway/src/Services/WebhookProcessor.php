@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentGateway\Services;
 
+use Nexus\PaymentGateway\Contracts\WebhookDeduplicatorInterface;
 use Nexus\PaymentGateway\Contracts\WebhookHandlerInterface;
 use Nexus\PaymentGateway\Contracts\WebhookProcessorInterface;
 use Nexus\PaymentGateway\Enums\GatewayProvider;
@@ -19,7 +20,7 @@ use Psr\Log\NullLogger;
 /**
  * Processes incoming webhooks from payment gateways.
  *
- * Handles verification, parsing, and routing to appropriate handlers.
+ * Handles verification, parsing, deduplication, and routing to appropriate handlers.
  *
  * Note: This class intentionally uses mutable state for runtime configuration
  * of handlers and secrets. This follows the Gateway Registry pattern where
@@ -46,6 +47,7 @@ final class WebhookProcessor implements WebhookProcessorInterface
         private readonly TenantContextInterface $tenantContext,
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
         private readonly LoggerInterface $logger = new NullLogger(),
+        private readonly ?WebhookDeduplicatorInterface $deduplicator = null,
     ) {}
 
     /**
@@ -85,6 +87,15 @@ final class WebhookProcessor implements WebhookProcessorInterface
 
         $webhookPayload = $handler->parsePayload($payload, $headers);
 
+        // Deduplication check
+        if ($this->deduplicator?->isDuplicate($provider, $webhookPayload->eventId)) {
+            $this->logger->info('Duplicate webhook ignored', [
+                'provider' => $providerName,
+                'event_id' => $webhookPayload->eventId,
+            ]);
+            return $webhookPayload;
+        }
+
         $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
         $this->logger->info('Webhook received', [
@@ -94,6 +105,9 @@ final class WebhookProcessor implements WebhookProcessorInterface
         ]);
 
         $handler->processWebhook($webhookPayload);
+
+        // Record as processed
+        $this->deduplicator?->recordProcessed($provider, $webhookPayload->eventId);
 
         $this->eventDispatcher?->dispatch(
             WebhookReceivedEvent::fromPayload(

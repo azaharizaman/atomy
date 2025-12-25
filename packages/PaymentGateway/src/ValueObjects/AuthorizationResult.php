@@ -119,4 +119,50 @@ final class AuthorizationResult
             && $this->status->canCapture()
             && !$this->isExpired();
     }
+
+    /**
+     * Convert to array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'success' => $this->success,
+            'authorizationId' => $this->authorizationId,
+            'transactionId' => $this->transactionId,
+            'status' => $this->status->value,
+            'authorizedAmount' => $this->authorizedAmount?->toArray(),
+            'expiresAt' => $this->expiresAt?->format(\DateTimeInterface::ATOM),
+            'error' => $this->error?->toArray(),
+            'avsResult' => $this->avsResult,
+            'cvvResult' => $this->cvvResult,
+            'requires3ds' => $this->requires3ds,
+            'threeDsUrl' => $this->threeDsUrl,
+            'rawResponse' => $this->rawResponse,
+        ];
+    }
+
+    /**
+     * Create from array representation.
+     *
+     * @param array<string, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            success: $data['success'],
+            authorizationId: $data['authorizationId'] ?? null,
+            transactionId: $data['transactionId'] ?? null,
+            status: TransactionStatus::from($data['status']),
+            authorizedAmount: isset($data['authorizedAmount']) ? Money::fromArray($data['authorizedAmount']) : null,
+            expiresAt: isset($data['expiresAt']) ? new \DateTimeImmutable($data['expiresAt']) : null,
+            error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
+            avsResult: $data['avsResult'] ?? null,
+            cvvResult: $data['cvvResult'] ?? null,
+            requires3ds: $data['requires3ds'] ?? false,
+            threeDsUrl: $data['threeDsUrl'] ?? null,
+            rawResponse: $data['rawResponse'] ?? [],
+        );
+    }
 }

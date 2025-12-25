@@ -32,7 +32,7 @@ use Psr\Log\NullLogger;
  * - Stop payment processing
  * - Check void and reissue
  */
-final class CheckRail extends AbstractPaymentRail implements CheckRailInterface
+final readonly class CheckRail extends AbstractPaymentRail implements CheckRailInterface
 {
     /**
      * Maximum check amount in cents (often limited by positive pay systems).
@@ -51,8 +51,8 @@ final class CheckRail extends AbstractPaymentRail implements CheckRailInterface
 
     public function __construct(
         RailConfigurationInterface $configuration,
-        private readonly RailTransactionQueryInterface $transactionQuery,
-        private readonly RailTransactionPersistInterface $transactionPersist,
+        private RailTransactionQueryInterface $transactionQuery,
+        private RailTransactionPersistInterface $transactionPersist,
         LoggerInterface $logger = new NullLogger(),
     ) {
         parent::__construct($configuration, $logger);

@@ -26,7 +26,7 @@ use Psr\Log\NullLogger;
  * - TARGET2 (Eurozone)
  * - RTGS India
  */
-final class RtgsRail extends AbstractPaymentRail implements RtgsRailInterface
+final readonly class RtgsRail extends AbstractPaymentRail implements RtgsRailInterface
 {
     /**
      * Minimum RTGS amounts per system (typically high-value only).
@@ -60,9 +60,9 @@ final class RtgsRail extends AbstractPaymentRail implements RtgsRailInterface
 
     public function __construct(
         RailConfigurationInterface $configuration,
-        private readonly RailTransactionQueryInterface $transactionQuery,
-        private readonly RailTransactionPersistInterface $transactionPersist,
-        private readonly RtgsSystem $defaultSystem = RtgsSystem::FEDWIRE,
+        private RailTransactionQueryInterface $transactionQuery,
+        private RailTransactionPersistInterface $transactionPersist,
+        private RtgsSystem $defaultSystem = RtgsSystem::FEDWIRE,
         LoggerInterface $logger = new NullLogger(),
     ) {
         parent::__construct($configuration, $logger);
