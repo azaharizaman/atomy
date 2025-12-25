@@ -51,8 +51,8 @@ final readonly class CheckRail extends AbstractPaymentRail implements CheckRailI
 
     public function __construct(
         RailConfigurationInterface $configuration,
-        private RailTransactionQueryInterface $transactionQuery,
-        private RailTransactionPersistInterface $transactionPersist,
+        private readonly RailTransactionQueryInterface $transactionQuery,
+        private readonly RailTransactionPersistInterface $transactionPersist,
         LoggerInterface $logger = new NullLogger(),
     ) {
         parent::__construct($configuration, $logger);

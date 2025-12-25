@@ -60,9 +60,9 @@ final readonly class RtgsRail extends AbstractPaymentRail implements RtgsRailInt
 
     public function __construct(
         RailConfigurationInterface $configuration,
-        private RailTransactionQueryInterface $transactionQuery,
-        private RailTransactionPersistInterface $transactionPersist,
-        private RtgsSystem $defaultSystem = RtgsSystem::FEDWIRE,
+        private readonly RailTransactionQueryInterface $transactionQuery,
+        private readonly RailTransactionPersistInterface $transactionPersist,
+        private readonly RtgsSystem $defaultSystem = RtgsSystem::FEDWIRE,
         LoggerInterface $logger = new NullLogger(),
     ) {
         parent::__construct($configuration, $logger);

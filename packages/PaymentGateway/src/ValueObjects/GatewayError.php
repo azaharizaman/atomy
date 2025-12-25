@@ -42,7 +42,7 @@ final class GatewayError
             retryable: (bool) ($response['retryable'] ?? false),
             type: $response['type'] ?? $response['error_type'] ?? null,
             param: $response['param'] ?? null,
-            details: $response,
+            details: $response['details'] ?? $response,
         );
     }
 

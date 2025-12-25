@@ -43,9 +43,9 @@ final readonly class AchRail extends AbstractPaymentRail implements AchRailInter
 {
     public function __construct(
         RailConfigurationInterface $configuration,
-        private NachaFormatterInterface $nachaFormatter,
-        private RailTransactionQueryInterface $transactionQuery,
-        private RailTransactionPersistInterface $transactionPersist,
+        private readonly NachaFormatterInterface $nachaFormatter,
+        private readonly RailTransactionQueryInterface $transactionQuery,
+        private readonly RailTransactionPersistInterface $transactionPersist,
         LoggerInterface $logger = new NullLogger(),
     ) {
         parent::__construct($configuration, $logger);

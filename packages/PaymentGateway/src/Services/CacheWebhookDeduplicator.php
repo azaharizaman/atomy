@@ -24,10 +24,10 @@ final readonly class CacheWebhookDeduplicator implements WebhookDeduplicatorInte
         return $this->cache->has($key);
     }
 
-    public function recordProcessed(GatewayProvider $provider, string $eventId): void
+    public function recordProcessed(GatewayProvider $provider, string $eventId, int $ttlSeconds = 86400): void
     {
         $key = $this->getCacheKey($provider, $eventId);
-        $this->cache->set($key, true, $this->ttl);
+        $this->cache->set($key, true, $ttlSeconds);
     }
 
     private function getCacheKey(GatewayProvider $provider, string $eventId): string
