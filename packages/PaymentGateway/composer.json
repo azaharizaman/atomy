@@ -23,6 +23,7 @@
         "nexus/payment": "*@dev",
         "nexus/common": "*@dev",
         "nexus/connector": "*@dev",
+        "psr/event-dispatcher": "^1.0",
         "psr/log": "^3.0",
         "psr/http-client": "^1.0"
     },

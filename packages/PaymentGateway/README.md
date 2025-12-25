@@ -24,6 +24,14 @@ composer require nexus/payment-gateway
 - **Refunds** - Full and partial refunds
 - **Disputes** - Chargeback handling
 
+## Security & PCI Compliance
+
+**CRITICAL:** This package is designed to minimize PCI scope.
+
+1.  **Never Store PAN/CVV:** You must **NEVER** store raw credit card numbers (PAN) or CVV codes in your database or logs.
+2.  **Use Tokenization:** Always use client-side tokenization (e.g., Stripe Elements, PayPal JS SDK) to send card data directly to the gateway. Your server should only receive a `payment_method_id` or `token`.
+3.  **Logging Redaction:** Ensure your logging configuration redacts sensitive fields. This package's DTOs are designed to carry tokens, not raw card data.
+
 ## Quick Start
 
 ```php
