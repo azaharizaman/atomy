@@ -68,6 +68,11 @@ final class BankConnectionManagerTest extends TestCase
             ->with(ProviderType::PLAID)
             ->willReturn($provider);
 
+        // Mock crypto encrypt methods
+        $this->crypto->expects($this->exactly(2))
+            ->method('encryptString')
+            ->willReturnCallback(fn($value) => 'encrypted_' . $value);
+
         $this->persist->expects($this->once())
             ->method('save')
             ->willReturnCallback(function (BankConnectionInterface $connection) {
@@ -109,6 +114,15 @@ final class BankConnectionManagerTest extends TestCase
             ->with(ProviderType::PLAID)
             ->willReturn($provider);
 
+        // Mock crypto decrypt and encrypt
+        $this->crypto->expects($this->exactly(2))
+            ->method('decryptString')
+            ->willReturnCallback(fn($value) => str_replace('encrypted_', '', $value));
+        
+        $this->crypto->expects($this->once())
+            ->method('encryptString')
+            ->willReturnCallback(fn($value) => 'encrypted_' . $value);
+
         $this->persist->expects($this->once())
             ->method('save')
             ->willReturnArgument(0);
@@ -116,7 +130,6 @@ final class BankConnectionManagerTest extends TestCase
         $result = $this->manager->refreshConnection('conn-1');
 
         $this->assertInstanceOf(BankConnectionInterface::class, $result);
-        // In the mock implementation, we prepend 'encrypted_'
         $this->assertStringStartsWith('encrypted_', $result->getAccessToken());
         $this->assertNotEquals('encrypted_old_token', $result->getAccessToken());
     }

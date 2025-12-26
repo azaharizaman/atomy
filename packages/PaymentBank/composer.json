@@ -24,7 +24,6 @@
         "nexus/common": "*@dev",
         "nexus/connector": "*@dev",
         "nexus/crypto": "*@dev",
-        "symfony/uid": "^6.4|^7.0",
         "psr/log": "^3.0"
     },
     "require-dev": {

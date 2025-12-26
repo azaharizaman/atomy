@@ -6,6 +6,7 @@ namespace Nexus\PaymentBank\Tests\Unit\Services;
 
 use Nexus\PaymentBank\Contracts\BankStatementQueryInterface;
 use Nexus\PaymentBank\Contracts\BankTransactionQueryInterface;
+use Nexus\PaymentBank\DTOs\InternalTransaction;
 use Nexus\PaymentBank\Entities\BankStatementInterface;
 use Nexus\PaymentBank\Entities\BankTransactionInterface;
 use Nexus\PaymentBank\Services\BankReconciliationManager;
@@ -60,14 +61,9 @@ final class BankReconciliationManagerTest extends TestCase
             ->with('conn-1', $statement->getStartDate(), $statement->getEndDate())
             ->willReturn([$txn1, $txn2]);
 
-        // Mock internal transactions (e.g., from accounting system)
-        // For this test, we'll simulate matching logic if possible, but the manager currently
-        // compares against the fetched bank transactions.
-        // Wait, the manager compares bank transactions against... what?
-        // Ah, the `reconcile` method takes `internalTransactions` as an argument.
-
-        $internalTxn1 = ['id' => 'int-1', 'amount' => 100.0, 'date' => '2023-01-05'];
-        $internalTxn3 = ['id' => 'int-3', 'amount' => 300.0, 'date' => '2023-01-15'];
+        // Mock internal transactions using InternalTransaction DTO
+        $internalTxn1 = new InternalTransaction('int-1', 100.0, '2023-01-05', 'ref-1');
+        $internalTxn3 = new InternalTransaction('int-3', 300.0, '2023-01-15', 'ref-3');
 
         $result = $this->manager->reconcile('stmt-1', [$internalTxn1, $internalTxn3]);
 
@@ -78,7 +74,7 @@ final class BankReconciliationManagerTest extends TestCase
         // txn1 matches int-1 (amount and date match)
         $this->assertCount(1, $result['matched']);
         $this->assertEquals('txn-1', $result['matched'][0]['bank_transaction']->getId());
-        $this->assertEquals('int-1', $result['matched'][0]['internal_transaction']['id']);
+        $this->assertEquals('int-1', $result['matched'][0]['internal_transaction']->getId());
 
         // txn2 is unmatched in bank
         $this->assertCount(1, $result['unmatched_bank']);
@@ -86,6 +82,6 @@ final class BankReconciliationManagerTest extends TestCase
 
         // int-3 is unmatched in internal
         $this->assertCount(1, $result['unmatched_internal']);
-        $this->assertEquals('int-3', $result['unmatched_internal'][0]['id']);
+        $this->assertEquals('int-3', $result['unmatched_internal'][0]->getId());
     }
 }
