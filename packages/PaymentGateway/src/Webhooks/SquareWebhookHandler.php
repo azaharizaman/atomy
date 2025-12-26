@@ -32,18 +32,18 @@ final class SquareWebhookHandler implements WebhookHandlerInterface
     /**
      * Verify Square webhook signature.
      *
-     * SECURITY: This is a simplified implementation that requires proper signature verification.
+     * SECURITY: This is a placeholder implementation that FAILS CLOSED for security.
      * In production, this method MUST be replaced with full Square webhook verification:
      * 1. Extract the signature from x-square-signature header
      * 2. Concatenate the notification URL (from config) + payload body
      * 3. Compute HMAC-SHA256 using the webhook signature key
      * 4. Compare the computed signature with the received signature (constant-time comparison)
-     * 5. Reject any webhooks that fail verification
+     * 5. Return true only if verification succeeds
      *
      * @see https://developer.squareup.com/docs/webhooks/step3validate
      *
-     * WARNING: The current implementation accepts any non-empty signature and is NOT secure
-     * for production use. Replace this with proper HMAC-SHA256 verification.
+     * WARNING: This placeholder returns FALSE to prevent unauthorized webhook processing.
+     * Implement proper verification before enabling Square webhooks in production.
      */
     public function verifySignature(
         string $payload,
@@ -51,19 +51,24 @@ final class SquareWebhookHandler implements WebhookHandlerInterface
         string $secret,
     ): bool {
         // TODO: Implement full Square webhook signature verification
-        // Square requires the notification URL to be included in the signed string,
-        // which is not available in this interface. Consider updating the interface
-        // or storing the URL in handler configuration.
+        // Until implemented, fail closed to prevent webhook spoofing attacks
         
+        // Reject if signature or secret is missing
         if (empty($signature) || empty($secret)) {
             return false;
         }
+        
+        // SECURITY: This placeholder fails closed (returns false) to prevent
+        // unauthorized webhooks from being processed. Square requires the notification
+        // URL to be included in the signed string, which is not available in this interface.
+        // Consider updating the interface or storing the URL in handler configuration.
         
         // In production, implement proper HMAC-SHA256 verification:
         // $expectedSignature = base64_encode(hash_hmac('sha256', $notificationUrl . $payload, $secret, true));
         // return hash_equals($expectedSignature, $signature);
         
-        return true;
+        // Return false until proper verification is implemented
+        return false;
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload

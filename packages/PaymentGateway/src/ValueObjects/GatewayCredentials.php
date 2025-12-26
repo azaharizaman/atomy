@@ -120,6 +120,7 @@ final class GatewayCredentials
      *
      * @param array<string, mixed> $config Configuration array
      * @return self
+     * @throws InvalidCredentialsException If provider is invalid or missing
      */
     public static function fromArray(array $config): self
     {
@@ -127,9 +128,19 @@ final class GatewayCredentials
         
         if (!$provider instanceof GatewayProvider) {
             if (is_string($provider)) {
-                $provider = GatewayProvider::from($provider);
+                try {
+                    $provider = GatewayProvider::from($provider);
+                } catch (\ValueError $e) {
+                    $validProviders = implode(', ', array_map(
+                        fn($case) => $case->value,
+                        GatewayProvider::cases()
+                    ));
+                    throw new InvalidCredentialsException(
+                        "Invalid provider '{$provider}'. Valid providers are: {$validProviders}"
+                    );
+                }
             } else {
-                throw new InvalidCredentialsException('Provider is required');
+                throw new InvalidCredentialsException('Provider is required and must be a string or GatewayProvider enum');
             }
         }
         

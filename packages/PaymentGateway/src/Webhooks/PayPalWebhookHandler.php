@@ -32,19 +32,19 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
     /**
      * Verify PayPal webhook signature.
      *
-     * SECURITY: This is a simplified implementation that requires proper signature verification.
+     * SECURITY: This is a placeholder implementation that FAILS CLOSED for security.
      * In production, this method MUST be replaced with full PayPal webhook verification:
      * 1. Extract transmission headers (paypal-transmission-id, paypal-transmission-time, 
      *    paypal-transmission-sig, paypal-cert-url)
      * 2. Reconstruct the signed string according to PayPal's specification
      * 3. Fetch and validate the certificate from paypal-cert-url
      * 4. Verify the signature using the certificate and webhook secret
-     * 5. Reject any webhooks that fail verification
+     * 5. Return true only if verification succeeds
      *
      * @see https://developer.paypal.com/api/rest/webhooks/#verify-webhook-signature
      * 
-     * WARNING: The current implementation accepts any non-empty signature and is NOT secure
-     * for production use. Replace this with proper HMAC verification or PayPal's SDK.
+     * WARNING: This placeholder returns FALSE to prevent unauthorized webhook processing.
+     * Implement proper verification before enabling PayPal webhooks in production.
      */
     public function verifySignature(
         string $payload,
@@ -52,19 +52,21 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
         string $secret,
     ): bool {
         // TODO: Implement full PayPal webhook verification using their documented flow
-        // For now, this is a placeholder that allows webhooks through for development
-        // DO NOT use this in production without implementing proper verification
+        // Until implemented, fail closed to prevent webhook spoofing attacks
         
-        if (empty($signature)) {
+        // Reject if signature or secret is missing
+        if (empty($signature) || empty($secret)) {
             return false;
         }
         
-        // In production, implement the full verification:
-        // - Validate certificate chain
-        // - Verify HMAC-SHA256 signature
-        // - Check transmission timestamp to prevent replay attacks
+        // SECURITY: This placeholder fails closed (returns false) to prevent
+        // unauthorized webhooks from being processed. In production, implement:
+        // - Certificate chain validation
+        // - HMAC-SHA256 signature verification
+        // - Transmission timestamp validation to prevent replay attacks
         
-        return true;
+        // Return false until proper verification is implemented
+        return false;
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload

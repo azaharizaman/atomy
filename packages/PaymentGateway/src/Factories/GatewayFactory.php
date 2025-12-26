@@ -18,6 +18,21 @@ use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
 
 final class GatewayFactory implements GatewayFactoryInterface
 {
+    /**
+     * List of supported gateway providers.
+     * This is the single source of truth for available gateways.
+     * 
+     * @var array<GatewayProvider>
+     */
+    private const SUPPORTED_GATEWAYS = [
+        GatewayProvider::STRIPE,
+        GatewayProvider::PAYPAL,
+        GatewayProvider::SQUARE,
+        GatewayProvider::BRAINTREE,
+        GatewayProvider::AUTHORIZE_NET,
+        GatewayProvider::ADYEN,
+    ];
+    
     public function __construct(
         private readonly HttpClientInterface $httpClient
     ) {}
@@ -34,7 +49,6 @@ final class GatewayFactory implements GatewayFactoryInterface
             GatewayProvider::BRAINTREE => new BraintreeGateway($this->httpClient, $credentials),
             GatewayProvider::AUTHORIZE_NET => new AuthorizeNetGateway($this->httpClient, $credentials),
             GatewayProvider::ADYEN => new AdyenGateway($this->httpClient, $credentials),
-            // Add other gateways here as they are implemented
             default => throw new \InvalidArgumentException("Gateway provider {$provider->value} is not supported yet."),
         };
 
@@ -43,14 +57,7 @@ final class GatewayFactory implements GatewayFactoryInterface
     
     public function supports(GatewayProvider $provider): bool
     {
-        return in_array($provider, [
-            GatewayProvider::STRIPE,
-            GatewayProvider::PAYPAL,
-            GatewayProvider::SQUARE,
-            GatewayProvider::BRAINTREE,
-            GatewayProvider::AUTHORIZE_NET,
-            GatewayProvider::ADYEN,
-        ], true);
+        return in_array($provider, self::SUPPORTED_GATEWAYS, true);
     }
     
     /**
@@ -58,13 +65,6 @@ final class GatewayFactory implements GatewayFactoryInterface
      */
     public function getAvailableGateways(): array
     {
-        return [
-            GatewayProvider::STRIPE,
-            GatewayProvider::PAYPAL,
-            GatewayProvider::SQUARE,
-            GatewayProvider::BRAINTREE,
-            GatewayProvider::AUTHORIZE_NET,
-            GatewayProvider::ADYEN,
-        ];
+        return self::SUPPORTED_GATEWAYS;
     }
 }
