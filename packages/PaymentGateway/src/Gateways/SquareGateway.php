@@ -74,7 +74,7 @@ final class SquareGateway implements GatewayInterface
         $idempotencyKey = uniqid('sq_', true);
 
         $payload = [
-            'source_id' => $request->token, // Nonce from Square frontend
+            'source_id' => $request->paymentMethodToken, // Nonce from Square frontend
             'idempotency_key' => $idempotencyKey,
             'amount_money' => [
                 'amount' => $request->amount->getAmount(), // Square uses lowest denomination (cents)
@@ -222,6 +222,48 @@ final class SquareGateway implements GatewayInterface
     public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
     {
         throw new GatewayException("Evidence submission not implemented for Square yet.");
+    }
+
+    public function getStatus(string $transactionId): GatewayStatus
+    {
+        $this->ensureInitialized();
+        $endpoint = "/v2/payments/{$transactionId}";
+        
+        try {
+            $response = $this->sendRequest('GET', $endpoint, []);
+            $payment = $response['payment'] ?? [];
+            $status = $payment['status'] ?? null;
+
+            return match ($status) {
+                'COMPLETED' => GatewayStatus::COMPLETED,
+                'APPROVED' => GatewayStatus::AUTHORIZED,
+                'CANCELED' => GatewayStatus::CANCELLED,
+                'FAILED' => GatewayStatus::FAILED,
+                default => GatewayStatus::PENDING,
+            };
+        } catch (\Throwable $e) {
+            return GatewayStatus::FAILED;
+        }
+    }
+
+    public function supports3ds(): bool
+    {
+        return false;
+    }
+
+    public function supportsTokenization(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialCapture(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialRefund(): bool
+    {
+        return true;
     }
 
     private function ensureInitialized(): void
