@@ -30,13 +30,13 @@ final readonly class PaymentInitiationService implements PaymentInitiationServic
         $provider = $this->providerRegistry->get($connection->getProviderName());
         $initiator = $provider->getPaymentInitiation();
         
-        // Provide default empty string if reference is null, as some providers may not handle null
+        // Pass reference as-is (including null) to respect the provider interface contract
         return $initiator->initiatePayment(
             $connection,
             $sourceAccountId,
             $beneficiary,
             $amount,
-            $reference ?? '',
+            $reference,
             []
         );
     }

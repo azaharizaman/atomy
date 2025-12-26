@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentBank\Tests\Unit\Services;
 
-use Nexus\Crypto\Contracts\CryptoManagerInterface;
 use Nexus\PaymentBank\Contracts\AccountVerificationInterface;
 use Nexus\PaymentBank\Contracts\BankConnectionQueryInterface;
 use Nexus\PaymentBank\Contracts\BankProviderInterface;
@@ -17,7 +16,6 @@ use Nexus\PaymentBank\Enums\ProviderType;
 use Nexus\PaymentBank\Enums\VerificationMethod;
 use Nexus\PaymentBank\Enums\VerificationStatus;
 use Nexus\PaymentBank\Exceptions\BankConnectionNotFoundException;
-use Nexus\PaymentBank\Services\CredentialDecryptionHelper;
 use Nexus\PaymentBank\Services\VerificationService;
 use PHPUnit\Framework\TestCase;
 
@@ -25,23 +23,16 @@ final class VerificationServiceTest extends TestCase
 {
     private BankConnectionQueryInterface $connectionQuery;
     private ProviderRegistryInterface $providerRegistry;
-    private CredentialDecryptionHelper $credentialDecryptor;
     private VerificationService $service;
 
     protected function setUp(): void
     {
         $this->connectionQuery = $this->createMock(BankConnectionQueryInterface::class);
         $this->providerRegistry = $this->createMock(ProviderRegistryInterface::class);
-        
-        // Use real helper since it's final and cannot be mocked
-        // The helper won't actually decrypt in tests since connections don't have real encrypted data
-        $crypto = $this->createMock(CryptoManagerInterface::class);
-        $this->credentialDecryptor = new CredentialDecryptionHelper($crypto);
 
         $this->service = new VerificationService(
             $this->connectionQuery,
-            $this->providerRegistry,
-            $this->credentialDecryptor
+            $this->providerRegistry
         );
     }
 
