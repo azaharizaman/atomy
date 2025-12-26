@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentBank\Services;
 
-use Nexus\Crypto\Contracts\CryptoManagerInterface;
 use Nexus\PaymentBank\Contracts\BankConnectionQueryInterface;
 use Nexus\PaymentBank\Contracts\ProviderRegistryInterface;
 use Nexus\PaymentBank\Contracts\VerificationServiceInterface;
 use Nexus\PaymentBank\DTOs\AccountVerificationResult;
+use Nexus\PaymentBank\Enums\VerificationMethod;
 use Nexus\PaymentBank\Exceptions\BankConnectionNotFoundException;
 
 final readonly class VerificationService implements VerificationServiceInterface
@@ -16,7 +16,7 @@ final readonly class VerificationService implements VerificationServiceInterface
     public function __construct(
         private BankConnectionQueryInterface $connectionQuery,
         private ProviderRegistryInterface $providerRegistry,
-        private CryptoManagerInterface $crypto
+        private CredentialDecryptionHelper $credentialDecryptor
     ) {}
 
     public function verifyOwnership(string $connectionId, string $accountId, array $identityData): AccountVerificationResult
@@ -25,10 +25,20 @@ final readonly class VerificationService implements VerificationServiceInterface
         $provider = $this->providerRegistry->get($connection->getProviderName());
         $verifier = $provider->getAccountVerification();
         
-        // Decrypt credentials before passing to provider
-        $credentials = $this->decryptCredentials($connection->getCredentials());
+        // Initiate instant verification with identity data
+        // Note: This adapts the service interface (verifyOwnership) to the provider interface (initiateVerification)
+        $verificationId = $verifier->initiateVerification($connection, $accountId, VerificationMethod::INSTANT);
         
-        return $verifier->verifyOwnership($credentials, $accountId, $identityData);
+        // Complete verification with identity data
+        $verified = $verifier->completeVerification($connection, $accountId, $identityData);
+        
+        $status = $verifier->getVerificationStatus($connection, $accountId);
+        
+        return new AccountVerificationResult(
+            $accountId,
+            $status,
+            $verificationId
+        );
     }
 
     public function initiateMicroDeposits(string $connectionId, string $accountId): string
@@ -37,10 +47,8 @@ final readonly class VerificationService implements VerificationServiceInterface
         $provider = $this->providerRegistry->get($connection->getProviderName());
         $verifier = $provider->getAccountVerification();
         
-        // Decrypt credentials before passing to provider
-        $credentials = $this->decryptCredentials($connection->getCredentials());
-        
-        return $verifier->initiateMicroDeposits($credentials, $accountId);
+        // Initiate micro-deposit verification
+        return $verifier->initiateVerification($connection, $accountId, VerificationMethod::MICRO_DEPOSIT);
     }
 
     public function verifyMicroDeposits(string $connectionId, string $verificationId, array $amounts): bool
@@ -49,36 +57,15 @@ final readonly class VerificationService implements VerificationServiceInterface
         $provider = $this->providerRegistry->get($connection->getProviderName());
         $verifier = $provider->getAccountVerification();
         
-        // Decrypt credentials before passing to provider
-        $credentials = $this->decryptCredentials($connection->getCredentials());
-        
-        return $verifier->verifyMicroDeposits($credentials, $verificationId, $amounts);
+        // Complete micro-deposit verification with amounts
+        // Note: verificationId is passed as part of the accountId parameter for now
+        // This is a limitation of the current interface design
+        return $verifier->completeVerification($connection, $verificationId, $amounts);
     }
 
     private function getConnection(string $connectionId): \Nexus\PaymentBank\Entities\BankConnectionInterface
     {
         return $this->connectionQuery->findById($connectionId)
             ?? throw new BankConnectionNotFoundException($connectionId);
-    }
-
-    /**
-     * Decrypt encrypted credentials from BankConnection.
-     *
-     * @param array<string, mixed> $encryptedCredentials
-     * @return array<string, mixed>
-     */
-    private function decryptCredentials(array $encryptedCredentials): array
-    {
-        $decrypted = $encryptedCredentials;
-        
-        if (isset($encryptedCredentials['access_token'])) {
-            $decrypted['access_token'] = $this->crypto->decryptString($encryptedCredentials['access_token']);
-        }
-        
-        if (isset($encryptedCredentials['refresh_token']) && $encryptedCredentials['refresh_token'] !== null) {
-            $decrypted['refresh_token'] = $this->crypto->decryptString($encryptedCredentials['refresh_token']);
-        }
-        
-        return $decrypted;
     }
 }

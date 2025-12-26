@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentBank\Services;
 
+use Nexus\Common\Contracts\UlidInterface;
 use Nexus\Crypto\Contracts\CryptoManagerInterface;
+use Nexus\Crypto\ValueObjects\EncryptedData;
 use Nexus\PaymentBank\Contracts\BankConnectionManagerInterface;
 use Nexus\PaymentBank\Contracts\BankConnectionPersistInterface;
 use Nexus\PaymentBank\Contracts\BankConnectionQueryInterface;
@@ -15,7 +17,6 @@ use Nexus\PaymentBank\Enums\ConsentStatus;
 use Nexus\PaymentBank\Enums\ProviderType;
 use Nexus\PaymentBank\Exceptions\BankConnectionNotFoundException;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Uid\Ulid;
 
 final readonly class BankConnectionManager implements BankConnectionManagerInterface
 {
@@ -24,7 +25,8 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         private BankConnectionQueryInterface $query,
         private ProviderRegistryInterface $providerRegistry,
         private CryptoManagerInterface $crypto,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private UlidInterface $ulid
     ) {}
 
     public function initiateConnection(string $providerName, string $tenantId, array $config = []): array
@@ -53,12 +55,12 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         $refreshToken = 'mock_refresh_token';
         $expiresIn = 3600;
         
-        // Encrypt tokens before storing
-        $encryptedAccessToken = $this->crypto->encryptString($accessToken);
-        $encryptedRefreshToken = $this->crypto->encryptString($refreshToken);
+        // Encrypt tokens before storing - store as JSON-serialized EncryptedData
+        $encryptedAccessToken = $this->crypto->encrypt($accessToken)->toJson();
+        $encryptedRefreshToken = $this->crypto->encrypt($refreshToken)->toJson();
 
         $connection = new BankConnection(
-            id: (new Ulid())->toRfc4122(),
+            id: $this->ulid->generate(),
             tenantId: $tenantId,
             providerType: $providerType,
             providerConnectionId: $callbackData['institution_id'] ?? 'unknown',
@@ -91,8 +93,11 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         $provider = $this->providerRegistry->getProvider($providerType);
         
         // Decrypt tokens for refresh
-        $accessToken = $this->crypto->decryptString($connection->getAccessToken());
-        $refreshToken = $connection->getRefreshToken() ? $this->crypto->decryptString($connection->getRefreshToken()) : null;
+        $accessTokenJson = $connection->getAccessToken();
+        $accessToken = $this->crypto->decrypt(EncryptedData::fromJson($accessTokenJson));
+        
+        $refreshTokenJson = $connection->getRefreshToken();
+        $refreshToken = $refreshTokenJson ? $this->crypto->decrypt(EncryptedData::fromJson($refreshTokenJson)) : null;
         
         // PLACEHOLDER: Mock token refresh - replace with actual provider OAuth refresh token flow
         // when provider adapters are implemented
@@ -100,7 +105,7 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         $expiresIn = 3600;
 
         $updatedConnection = $connection->withAccessToken(
-            $this->crypto->encryptString($newAccessToken),
+            $this->crypto->encrypt($newAccessToken)->toJson(),
             (new \DateTimeImmutable())->modify("+{$expiresIn} seconds")
         );
         
