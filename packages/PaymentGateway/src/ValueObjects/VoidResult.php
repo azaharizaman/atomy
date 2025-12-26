@@ -91,13 +91,13 @@ final class VoidResult
     public static function fromArray(array $data): self
     {
         return new self(
-            success: $data['success'],
-            voidId: $data['voidId'] ?? null,
-            transactionId: $data['transactionId'] ?? null,
-            status: TransactionStatus::from($data['status']),
+            success: (bool) ($data['success'] ?? false),
+            voidId: $data['voidId'] ?? $data['void_id'] ?? null,
+            transactionId: $data['transactionId'] ?? $data['transaction_id'] ?? null,
+            status: TransactionStatus::tryFrom($data['status'] ?? '') ?? TransactionStatus::PENDING,
             error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
-            voidedAt: isset($data['voidedAt']) ? new \DateTimeImmutable($data['voidedAt']) : null,
-            rawResponse: $data['rawResponse'] ?? [],
+            voidedAt: isset($data['voidedAt']) ? new \DateTimeImmutable($data['voidedAt']) : (isset($data['voided_at']) ? new \DateTimeImmutable($data['voided_at']) : null),
+            rawResponse: $data['rawResponse'] ?? $data['raw_response'] ?? [],
         );
     }
 }

@@ -149,10 +149,10 @@ final class GatewayManager implements GatewayManagerInterface
         GatewayProvider $provider,
         CaptureRequest $request,
     ): CaptureResult {
-        $operation = function () use ($provider, $request) {
-            $gateway = $this->getGateway($provider);
-            $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
+        $gateway = $this->getGateway($provider);
+        $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
+        $operation = function () use ($gateway, $provider, $request, $tenantId) {
             try {
                 $result = $gateway->capture($request);
 
@@ -199,10 +199,10 @@ final class GatewayManager implements GatewayManagerInterface
         GatewayProvider $provider,
         RefundRequest $request,
     ): RefundResult {
-        $operation = function () use ($provider, $request) {
-            $gateway = $this->getGateway($provider);
-            $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
+        $gateway = $this->getGateway($provider);
+        $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
+        $operation = function () use ($gateway, $provider, $request, $tenantId) {
             try {
                 $result = $gateway->refund($request);
 
@@ -250,10 +250,10 @@ final class GatewayManager implements GatewayManagerInterface
         GatewayProvider $provider,
         VoidRequest $request,
     ): VoidResult {
-        $operation = function () use ($provider, $request) {
-            $gateway = $this->getGateway($provider);
-            $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
+        $gateway = $this->getGateway($provider);
+        $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
+        $operation = function () use ($gateway, $provider, $request, $tenantId) {
             try {
                 $result = $gateway->void($request);
 

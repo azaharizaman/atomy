@@ -96,6 +96,9 @@ final class WebhookProcessor implements WebhookProcessorInterface
             return $webhookPayload;
         }
 
+        // Record as processed immediately to prevent race conditions/loops
+        $this->deduplicator?->recordProcessed($provider, $webhookPayload->eventId, 86400);
+
         $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
         $this->logger->info('Webhook received', [
@@ -104,10 +107,19 @@ final class WebhookProcessor implements WebhookProcessorInterface
             'event_id' => $webhookPayload->eventId,
         ]);
 
-        $handler->processWebhook($webhookPayload);
-
-        // Record as processed
-        $this->deduplicator?->recordProcessed($provider, $webhookPayload->eventId, 86400);
+        try {
+            $handler->processWebhook($webhookPayload);
+        } catch (\Throwable $e) {
+            // If processing fails, we might want to allow retry depending on strategy
+            // For now, we keep it recorded as processed to prevent infinite loops
+            // but log the error
+            $this->logger->error('Webhook processing failed', [
+                'provider' => $providerName,
+                'event_id' => $webhookPayload->eventId,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
 
         $this->eventDispatcher?->dispatch(
             WebhookReceivedEvent::fromPayload(

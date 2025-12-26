@@ -124,16 +124,16 @@ final class RefundResult
     public static function fromArray(array $data): self
     {
         return new self(
-            success: $data['success'],
-            refundId: $data['refundId'] ?? null,
-            transactionId: $data['transactionId'] ?? null,
-            status: TransactionStatus::from($data['status']),
-            type: RefundType::from($data['type']),
-            refundedAmount: isset($data['refundedAmount']) ? Money::fromArray($data['refundedAmount']) : null,
+            success: (bool) ($data['success'] ?? false),
+            refundId: $data['refundId'] ?? $data['refund_id'] ?? null,
+            transactionId: $data['transactionId'] ?? $data['transaction_id'] ?? null,
+            status: TransactionStatus::tryFrom($data['status'] ?? '') ?? TransactionStatus::PENDING,
+            type: RefundType::tryFrom($data['type'] ?? '') ?? RefundType::FULL,
+            refundedAmount: isset($data['refundedAmount']) ? Money::fromArray($data['refundedAmount']) : (isset($data['refunded_amount']) ? Money::fromArray($data['refunded_amount']) : null),
             error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
             reason: $data['reason'] ?? null,
-            refundedAt: isset($data['refundedAt']) ? new \DateTimeImmutable($data['refundedAt']) : null,
-            rawResponse: $data['rawResponse'] ?? [],
+            refundedAt: isset($data['refundedAt']) ? new \DateTimeImmutable($data['refundedAt']) : (isset($data['refunded_at']) ? new \DateTimeImmutable($data['refunded_at']) : null),
+            rawResponse: $data['rawResponse'] ?? $data['raw_response'] ?? [],
         );
     }
 }

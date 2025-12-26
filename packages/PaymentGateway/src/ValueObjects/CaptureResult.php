@@ -118,16 +118,16 @@ final class CaptureResult
     public static function fromArray(array $data): self
     {
         return new self(
-            success: $data['success'],
-            captureId: $data['captureId'] ?? null,
-            transactionId: $data['transactionId'] ?? null,
-            status: TransactionStatus::from($data['status']),
-            capturedAmount: isset($data['capturedAmount']) ? Money::fromArray($data['capturedAmount']) : null,
-            feeAmount: isset($data['feeAmount']) ? Money::fromArray($data['feeAmount']) : null,
-            netAmount: isset($data['netAmount']) ? Money::fromArray($data['netAmount']) : null,
+            success: (bool) ($data['success'] ?? false),
+            captureId: $data['captureId'] ?? $data['capture_id'] ?? null,
+            transactionId: $data['transactionId'] ?? $data['transaction_id'] ?? null,
+            status: TransactionStatus::tryFrom($data['status'] ?? '') ?? TransactionStatus::PENDING,
+            capturedAmount: isset($data['capturedAmount']) ? Money::fromArray($data['capturedAmount']) : (isset($data['captured_amount']) ? Money::fromArray($data['captured_amount']) : null),
+            feeAmount: isset($data['feeAmount']) ? Money::fromArray($data['feeAmount']) : (isset($data['fee_amount']) ? Money::fromArray($data['fee_amount']) : null),
+            netAmount: isset($data['netAmount']) ? Money::fromArray($data['netAmount']) : (isset($data['net_amount']) ? Money::fromArray($data['net_amount']) : null),
             error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
-            capturedAt: isset($data['capturedAt']) ? new \DateTimeImmutable($data['capturedAt']) : null,
-            rawResponse: $data['rawResponse'] ?? [],
+            capturedAt: isset($data['capturedAt']) ? new \DateTimeImmutable($data['capturedAt']) : (isset($data['captured_at']) ? new \DateTimeImmutable($data['captured_at']) : null),
+            rawResponse: $data['rawResponse'] ?? $data['raw_response'] ?? [],
         );
     }
 }

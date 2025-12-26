@@ -82,6 +82,7 @@ class GatewayManagerIdempotencyTest extends TestCase
         $this->idempotencyManager->expects($this->once())
             ->method('execute')
             ->with(
+                GatewayProvider::STRIPE,
                 $this->equalTo($key),
                 $this->isType('callable'),
                 AuthorizationResult::class
@@ -112,6 +113,7 @@ class GatewayManagerIdempotencyTest extends TestCase
         $this->idempotencyManager->expects($this->once())
             ->method('execute')
             ->with(
+                GatewayProvider::STRIPE,
                 $this->equalTo($key),
                 $this->isType('callable'),
                 CaptureResult::class
@@ -142,6 +144,7 @@ class GatewayManagerIdempotencyTest extends TestCase
         $this->idempotencyManager->expects($this->once())
             ->method('execute')
             ->with(
+                GatewayProvider::STRIPE,
                 $this->equalTo($key),
                 $this->isType('callable'),
                 RefundResult::class
@@ -170,6 +173,7 @@ class GatewayManagerIdempotencyTest extends TestCase
         $this->idempotencyManager->expects($this->once())
             ->method('execute')
             ->with(
+                GatewayProvider::STRIPE,
                 $this->equalTo($key),
                 $this->isType('callable'),
                 VoidResult::class

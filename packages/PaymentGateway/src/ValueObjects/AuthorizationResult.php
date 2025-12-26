@@ -151,18 +151,18 @@ final class AuthorizationResult
     public static function fromArray(array $data): self
     {
         return new self(
-            success: $data['success'],
-            authorizationId: $data['authorizationId'] ?? null,
-            transactionId: $data['transactionId'] ?? null,
-            status: TransactionStatus::from($data['status']),
-            authorizedAmount: isset($data['authorizedAmount']) ? Money::fromArray($data['authorizedAmount']) : null,
-            expiresAt: isset($data['expiresAt']) ? new \DateTimeImmutable($data['expiresAt']) : null,
+            success: (bool) ($data['success'] ?? false),
+            authorizationId: $data['authorizationId'] ?? $data['authorization_id'] ?? null,
+            transactionId: $data['transactionId'] ?? $data['transaction_id'] ?? null,
+            status: TransactionStatus::tryFrom($data['status'] ?? '') ?? TransactionStatus::PENDING,
+            authorizedAmount: isset($data['authorizedAmount']) ? Money::fromArray($data['authorizedAmount']) : (isset($data['authorized_amount']) ? Money::fromArray($data['authorized_amount']) : null),
+            expiresAt: isset($data['expiresAt']) ? new \DateTimeImmutable($data['expiresAt']) : (isset($data['expires_at']) ? new \DateTimeImmutable($data['expires_at']) : null),
             error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
-            avsResult: $data['avsResult'] ?? null,
-            cvvResult: $data['cvvResult'] ?? null,
-            requires3ds: $data['requires3ds'] ?? false,
-            threeDsUrl: $data['threeDsUrl'] ?? null,
-            rawResponse: $data['rawResponse'] ?? [],
+            avsResult: $data['avsResult'] ?? $data['avs_result'] ?? null,
+            cvvResult: $data['cvvResult'] ?? $data['cvv_result'] ?? null,
+            requires3ds: (bool) ($data['requires3ds'] ?? $data['requires_3ds'] ?? false),
+            threeDsUrl: $data['threeDsUrl'] ?? $data['three_ds_url'] ?? null,
+            rawResponse: $data['rawResponse'] ?? $data['raw_response'] ?? [],
         );
     }
 }
