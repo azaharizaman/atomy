@@ -27,6 +27,17 @@ use Nexus\PaymentGateway\Exceptions\AuthorizationFailedException;
 
 /**
  * PayPal Gateway Implementation.
+ *
+ * NOTE: This class stores OAuth access tokens as mutable properties for session reuse.
+ * PayPal requires OAuth 2.0 authentication with client credentials grant, which returns
+ * access tokens valid for 8-9 hours. Storing the token avoids unnecessary auth requests
+ * for each operation.
+ *
+ * LIFECYCLE CONSIDERATIONS:
+ * - Gateway instances should be created per-request in most frameworks (not cached)
+ * - If caching gateway instances, ensure token expiry is checked before each request
+ * - In production, consider using an external token manager service for multi-instance deployments
+ * - For single-tenant, single-instance applications, this implementation is sufficient
  */
 final class PayPalGateway implements GatewayInterface
 {
@@ -34,7 +45,17 @@ final class PayPalGateway implements GatewayInterface
     private const API_URL_LIVE = 'https://api-m.paypal.com';
     
     private ?GatewayCredentials $credentials = null;
+    
+    /**
+     * OAuth access token cached for the lifetime of this instance.
+     * @var string|null
+     */
     private ?string $accessToken = null;
+    
+    /**
+     * Unix timestamp when the current access token expires.
+     * @var int|null
+     */
     private ?int $tokenExpiry = null;
 
     public function __construct(
@@ -199,12 +220,12 @@ final class PayPalGateway implements GatewayInterface
         $this->ensureInitialized();
         $this->authenticate();
 
-        // Void an authorized payment (Order)
-        // Note: In PayPal v2, you typically don't "void" an order in the same way, 
-        // but if it's authorized, you might not capture it. 
-        // However, there is no direct "void" endpoint for an Order that is just CREATED.
-        // If it's APPROVED, you can't really void it easily via API without capturing or letting it expire?
-        // Actually, for Authorizations (v2/payments/authorizations/{authorization_id}/void)
+        // Void an authorized payment (Authorization)
+        // NOTE: PayPal v2 API only supports voiding authorizations, not orders.
+        // - For CREATED/APPROVED orders that haven't been authorized, they will expire automatically
+        // - This method assumes $request->transactionId is an Authorization ID from the 
+        //   /v2/payments/authorizations endpoint
+        // - For order IDs, there is no direct void endpoint; instead, do not capture the authorization
         
         // Assuming transactionId is an Authorization ID
         $endpoint = "/v2/payments/authorizations/{$request->transactionId}/void";
@@ -217,7 +238,7 @@ final class PayPalGateway implements GatewayInterface
                 transactionId: $request->transactionId,
                 status: GatewayStatus::CANCELLED,
                 gatewayReference: $request->transactionId,
-                rawResponse: []
+                rawResponse: $response
             );
 
         } catch (\Throwable $e) {
@@ -230,8 +251,9 @@ final class PayPalGateway implements GatewayInterface
         throw new GatewayException("Evidence submission not implemented for PayPal yet.");
     }
 
-    public function getStatus(string $transactionId = ''): GatewayStatus
+    public function getStatus(): GatewayStatus
     {
+        // Check if gateway is initialized and available
         return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
     }
 

@@ -29,16 +29,43 @@ final class AdyenWebhookHandler implements WebhookHandlerInterface
         return GatewayProvider::ADYEN;
     }
 
+    /**
+     * Verify Adyen webhook signature.
+     *
+     * SECURITY: This is a simplified implementation that requires proper signature verification.
+     * In production, this method MUST be replaced with full Adyen HMAC verification:
+     * 1. Extract the HMAC signature from x-adyen-hmac-signature header
+     * 2. Construct the signing string from the notification payload according to Adyen's spec
+     * 3. Compute HMAC-SHA256 using the HMAC key from credentials
+     * 4. Base64 encode the result
+     * 5. Compare with the received signature (constant-time comparison)
+     * 6. Reject any webhooks that fail verification
+     *
+     * @see https://docs.adyen.com/development-resources/webhooks/verify-hmac-signatures
+     *
+     * WARNING: The current implementation accepts any non-empty signature and is NOT secure
+     * for production use. Replace this with proper HMAC-SHA256 verification.
+     */
     public function verifySignature(
         string $payload,
         string $signature,
         string $secret,
     ): bool {
-        // Adyen uses HMAC-SHA256 on the payload.
-        // The signature is usually in the 'notificationItems' structure or header.
+        // TODO: Implement full Adyen HMAC-SHA256 webhook verification
+        // Adyen requires specific payload fields to be concatenated in a specific order
+        // for signature verification.
         
-        // Simplified check for interface compliance.
-        return !empty($signature);
+        if (empty($signature) || empty($secret)) {
+            return false;
+        }
+        
+        // In production, implement proper HMAC verification:
+        // 1. Parse the notification items from the payload
+        // 2. Extract and concatenate required fields in the correct order
+        // 3. Compute HMAC-SHA256 and base64 encode
+        // 4. Use hash_equals for constant-time comparison
+        
+        return true;
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload

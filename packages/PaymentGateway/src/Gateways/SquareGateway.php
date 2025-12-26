@@ -225,26 +225,10 @@ final class SquareGateway implements GatewayInterface
         throw new GatewayException("Evidence submission not implemented for Square yet.");
     }
 
-    public function getStatus(string $transactionId): GatewayStatus
+    public function getStatus(): GatewayStatus
     {
-        $this->ensureInitialized();
-        $endpoint = "/v2/payments/{$transactionId}";
-        
-        try {
-            $response = $this->sendRequest('GET', $endpoint, []);
-            $payment = $response['payment'] ?? [];
-            $status = $payment['status'] ?? null;
-
-            return match ($status) {
-                'COMPLETED' => GatewayStatus::COMPLETED,
-                'APPROVED' => GatewayStatus::AUTHORIZED,
-                'CANCELED' => GatewayStatus::CANCELLED,
-                'FAILED' => GatewayStatus::FAILED,
-                default => GatewayStatus::PENDING,
-            };
-        } catch (\Throwable $e) {
-            return GatewayStatus::FAILED;
-        }
+        // Check if gateway is initialized and available
+        return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
     }
 
     public function supports3ds(): bool

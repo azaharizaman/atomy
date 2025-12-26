@@ -29,23 +29,41 @@ final class SquareWebhookHandler implements WebhookHandlerInterface
         return GatewayProvider::SQUARE;
     }
 
+    /**
+     * Verify Square webhook signature.
+     *
+     * SECURITY: This is a simplified implementation that requires proper signature verification.
+     * In production, this method MUST be replaced with full Square webhook verification:
+     * 1. Extract the signature from x-square-signature header
+     * 2. Concatenate the notification URL (from config) + payload body
+     * 3. Compute HMAC-SHA256 using the webhook signature key
+     * 4. Compare the computed signature with the received signature (constant-time comparison)
+     * 5. Reject any webhooks that fail verification
+     *
+     * @see https://developer.squareup.com/docs/webhooks/step3validate
+     *
+     * WARNING: The current implementation accepts any non-empty signature and is NOT secure
+     * for production use. Replace this with proper HMAC-SHA256 verification.
+     */
     public function verifySignature(
         string $payload,
         string $signature,
         string $secret,
     ): bool {
-        // Square signature verification involves the URL as well.
-        // Assuming the signature passed here is the one from the header 'x-square-signature'.
-        // And assuming we might need to pass the URL in a real scenario, but strictly following the interface:
+        // TODO: Implement full Square webhook signature verification
+        // Square requires the notification URL to be included in the signed string,
+        // which is not available in this interface. Consider updating the interface
+        // or storing the URL in handler configuration.
         
-        // Note: Square constructs the signature from the full URL + payload.
-        // Since the interface only provides payload, signature, and secret, 
-        // we assume the caller might have validated it or we can't fully validate without the URL.
+        if (empty($signature) || empty($secret)) {
+            return false;
+        }
         
-        // For this implementation, we'll do a basic HMAC check if possible, 
-        // but without the URL it's incomplete.
+        // In production, implement proper HMAC-SHA256 verification:
+        // $expectedSignature = base64_encode(hash_hmac('sha256', $notificationUrl . $payload, $secret, true));
+        // return hash_equals($expectedSignature, $signature);
         
-        return !empty($signature);
+        return true;
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload

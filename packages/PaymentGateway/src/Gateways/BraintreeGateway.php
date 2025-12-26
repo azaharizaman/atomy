@@ -269,8 +269,9 @@ final class BraintreeGateway implements GatewayInterface
         throw new GatewayException("Evidence submission not implemented for Braintree yet.");
     }
 
-    public function getStatus(string $transactionId = ''): GatewayStatus
+    public function getStatus(): GatewayStatus
     {
+        // Check if gateway is initialized and available
         return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
     }
 
