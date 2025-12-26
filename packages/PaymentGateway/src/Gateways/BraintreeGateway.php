@@ -269,8 +269,9 @@ final class BraintreeGateway implements GatewayInterface
         throw new GatewayException("Evidence submission not implemented for Braintree yet.");
     }
 
-    public function getStatus(string $transactionId = ''): GatewayStatus
+    public function getStatus(): GatewayStatus
     {
+        // Check if gateway is initialized and available
         return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
     }
 
@@ -303,7 +304,8 @@ final class BraintreeGateway implements GatewayInterface
 
     private function sendGraphQLRequest(string $query, array $variables): array
     {
-        $url = self::API_URL_SANDBOX; // Default to sandbox
+        // Use sandbox if credentials indicate sandbox mode, otherwise use live
+        $url = $this->credentials?->sandboxMode ? self::API_URL_SANDBOX : self::API_URL_LIVE;
 
         // Braintree Auth is typically Basic Auth with Public Key and Private Key
         // Or Access Token. We'll assume API Key / Token in credentials.

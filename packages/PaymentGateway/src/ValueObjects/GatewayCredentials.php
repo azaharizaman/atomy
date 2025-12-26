@@ -114,6 +114,46 @@ final class GatewayCredentials
     {
         return $this->webhookSecret !== null && $this->webhookSecret !== '';
     }
+    
+    /**
+     * Create credentials from configuration array.
+     *
+     * @param array<string, mixed> $config Configuration array
+     * @return self
+     * @throws InvalidCredentialsException If provider is invalid or missing
+     */
+    public static function fromArray(array $config): self
+    {
+        $provider = $config['provider'] ?? null;
+        
+        if (!$provider instanceof GatewayProvider) {
+            if (is_string($provider)) {
+                try {
+                    $provider = GatewayProvider::from($provider);
+                } catch (\ValueError $e) {
+                    $validProviders = implode(', ', array_map(
+                        fn($case) => $case->value,
+                        GatewayProvider::cases()
+                    ));
+                    throw new InvalidCredentialsException(
+                        "Invalid provider '{$provider}'. Valid providers are: {$validProviders}"
+                    );
+                }
+            } else {
+                throw new InvalidCredentialsException('Provider is required and must be a string or GatewayProvider enum');
+            }
+        }
+        
+        return new self(
+            provider: $provider,
+            apiKey: $config['apiKey'] ?? $config['api_key'] ?? '',
+            apiSecret: $config['apiSecret'] ?? $config['api_secret'] ?? null,
+            merchantId: $config['merchantId'] ?? $config['merchant_id'] ?? null,
+            webhookSecret: $config['webhookSecret'] ?? $config['webhook_secret'] ?? null,
+            sandboxMode: $config['sandboxMode'] ?? $config['sandbox_mode'] ?? false,
+            additionalConfig: $config['additionalConfig'] ?? $config['additional_config'] ?? [],
+        );
+    }
 
     /**
      * Get environment name.

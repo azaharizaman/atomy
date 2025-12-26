@@ -236,13 +236,10 @@ final class AdyenGateway implements GatewayInterface
         throw new GatewayException("Adyen dispute evidence submission not yet implemented.");
     }
 
-    public function getStatus(string $transactionId = ''): GatewayStatus
+    public function getStatus(): GatewayStatus
     {
-        // Adyen doesn't have a simple "check gateway status" endpoint that returns a single status enum.
-        // But we can check if we can reach the API.
-        // Or if transactionId is provided, check that transaction.
-        
-        // For now, return ACTIVE if initialized.
+        // Check if gateway is initialized and available
+        // Adyen doesn't have a simple "health check" endpoint, but we can verify initialization
         return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
     }
 
