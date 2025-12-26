@@ -67,21 +67,21 @@ final class BankReconciliationManagerTest extends TestCase
 
         $result = $this->manager->reconcile('stmt-1', [$internalTxn1, $internalTxn3]);
 
-        $this->assertArrayHasKey('matched', $result);
-        $this->assertArrayHasKey('unmatched_bank', $result);
-        $this->assertArrayHasKey('unmatched_internal', $result);
+        $this->assertInstanceOf(\Nexus\PaymentBank\DTOs\ReconciliationResult::class, $result);
 
         // txn1 matches int-1 (amount and date match)
-        $this->assertCount(1, $result['matched']);
-        $this->assertEquals('txn-1', $result['matched'][0]['bank_transaction']->getId());
-        $this->assertEquals('int-1', $result['matched'][0]['internal_transaction']->getId());
+        $matched = $result->getMatchedTransactions();
+        $this->assertCount(1, $matched);
+        $this->assertEquals('txn-1', $matched[0]['bank_transaction']->getId());
+        $this->assertEquals('int-1', $matched[0]['internal_transaction']->getId());
 
-        // txn2 is unmatched in bank
-        $this->assertCount(1, $result['unmatched_bank']);
-        $this->assertEquals('txn-2', $result['unmatched_bank'][0]->getId());
-
-        // int-3 is unmatched in internal
-        $this->assertCount(1, $result['unmatched_internal']);
-        $this->assertEquals('int-3', $result['unmatched_internal'][0]->getId());
+        // txn2 and int-3 are unmatched
+        $unmatched = $result->getUnmatchedTransactions();
+        $this->assertCount(2, $unmatched);
+        
+        // Verify we have both unmatched bank and unmatched internal transactions
+        $unmatchedIds = array_map(fn($txn) => $txn->getId(), $unmatched);
+        $this->assertContains('txn-2', $unmatchedIds);
+        $this->assertContains('int-3', $unmatchedIds);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentBank\Contracts;
 
+use Nexus\PaymentBank\DTOs\BankAccount;
 use Nexus\PaymentBank\DTOs\BankAccountBalance;
 use Nexus\PaymentBank\DTOs\BankTransactionList;
 
@@ -13,7 +14,7 @@ interface AccountDataProviderInterface
      * Get accounts associated with the provided credentials.
      *
      * @param array<string, mixed> $credentials Provider-specific credentials
-     * @return array<array<string, mixed>> List of accounts (raw data or DTOs)
+     * @return array<BankAccount> List of bank account DTOs
      */
     public function getAccounts(array $credentials): array;
 
@@ -22,9 +23,9 @@ interface AccountDataProviderInterface
      *
      * @param array<string, mixed> $credentials Provider-specific credentials
      * @param string $accountId Provider's account ID
-     * @return array<string, mixed> Account data
+     * @return BankAccount Bank account DTO
      */
-    public function getAccount(array $credentials, string $accountId): array;
+    public function getAccount(array $credentials, string $accountId): BankAccount;
 
     /**
      * Get the balance for a specific account.
