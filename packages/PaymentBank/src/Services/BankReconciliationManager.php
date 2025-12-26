@@ -22,9 +22,11 @@ final readonly class BankReconciliationManager
     ) {}
 
     /**
-     * @param string $statementId
-     * @param array<InternalTransaction> $internalTransactions
-     * @return array
+     * Reconcile bank transactions with internal transactions.
+     *
+     * @param string $statementId Statement to reconcile
+     * @param array<InternalTransaction> $internalTransactions Internal transactions to match
+     * @return array{matched: array, unmatched_bank: array, unmatched_internal: array} Reconciliation results
      */
     public function reconcile(string $statementId, array $internalTransactions = []): array
     {
@@ -52,8 +54,9 @@ final readonly class BankReconciliationManager
                 // Match by Amount and Date
                 $amountMatch = abs($bankTxn->getAmount() - $internalTxn->getAmount()) < self::AMOUNT_TOLERANCE;
                 
+                // Compare dates using DateTimeImmutable for consistency
                 $bankDate = $bankTxn->getDate()->format('Y-m-d');
-                $internalDate = $internalTxn->getDate();
+                $internalDate = $internalTxn->getDate()->format('Y-m-d');
                 $dateMatch = $bankDate === $internalDate;
 
                 if ($amountMatch && $dateMatch) {

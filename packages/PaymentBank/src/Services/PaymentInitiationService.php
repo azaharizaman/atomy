@@ -30,16 +30,13 @@ final readonly class PaymentInitiationService implements PaymentInitiationServic
         $provider = $this->providerRegistry->get($connection->getProviderName());
         $initiator = $provider->getPaymentInitiation();
         
-        // Default options - providers can override as needed
-        $defaultOptions = [];
-        
         return $initiator->initiatePayment(
             $connection,
             $sourceAccountId,
             $beneficiary,
             $amount,
-            $reference ?? '',
-            $defaultOptions
+            $reference,
+            []
         );
     }
 

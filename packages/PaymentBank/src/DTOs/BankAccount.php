@@ -8,6 +8,15 @@ use Nexus\PaymentBank\Enums\AccountType;
 
 final readonly class BankAccount
 {
+    /**
+     * @param string $id Account identifier
+     * @param string $name Account display name
+     * @param string $accountNumber Account number
+     * @param string $routingNumber Bank routing number
+     * @param AccountType $type Account type (checking, savings, etc.)
+     * @param BankAccountBalance $balance Current account balance
+     * @param array<string, mixed> $metadata Additional account metadata
+     */
     public function __construct(
         private string $id,
         private string $name,

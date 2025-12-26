@@ -36,6 +36,9 @@ final readonly class BankStatementManager
 
         $statements = [];
         foreach ($rawStatements as $raw) {
+            // Support both explicit start_date/end_date and single date field
+            // If only 'date' is provided, both start and end will be set to the same value,
+            // representing a single-day statement period
             $startDate = new \DateTimeImmutable($raw['start_date'] ?? $raw['date']);
             $endDate = new \DateTimeImmutable($raw['end_date'] ?? $raw['date']);
             $statement = new BankStatement(

@@ -53,6 +53,14 @@ final readonly class BankConnection implements BankConnectionInterface
         return $this->accessToken;
     }
 
+    /**
+     * Get credentials as an array.
+     * 
+     * Note: Access and refresh tokens are stored encrypted. Providers receiving
+     * these credentials must decrypt them before use with external APIs.
+     *
+     * @return array<string, mixed>
+     */
     public function getCredentials(): array
     {
         return [

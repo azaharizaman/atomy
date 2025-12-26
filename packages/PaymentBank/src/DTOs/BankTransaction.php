@@ -6,6 +6,16 @@ namespace Nexus\PaymentBank\DTOs;
 
 final readonly class BankTransaction
 {
+    /**
+     * @param string $id Transaction identifier
+     * @param string $accountId Associated account identifier
+     * @param \DateTimeImmutable $date Transaction date
+     * @param float $amount Transaction amount
+     * @param string $description Transaction description
+     * @param string|null $merchantName Merchant name (if available)
+     * @param string|null $category Transaction category (if categorized)
+     * @param array<string, mixed> $metadata Additional transaction metadata
+     */
     public function __construct(
         private string $id,
         private string $accountId,

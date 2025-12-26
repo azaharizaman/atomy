@@ -8,6 +8,14 @@ use Nexus\PaymentBank\Enums\VerificationStatus;
 
 final readonly class AccountVerificationResult
 {
+    /**
+     * @param string $accountId Account being verified
+     * @param VerificationStatus $status Current verification status
+     * @param string|null $verificationId Verification process identifier (if applicable)
+     * @param string|null $ownerName Account owner's name (if retrieved)
+     * @param string|null $ownerAddress Account owner's address (if retrieved)
+     * @param array<string, mixed> $metadata Additional verification metadata
+     */
     public function __construct(
         private string $accountId,
         private VerificationStatus $status,

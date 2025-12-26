@@ -62,8 +62,8 @@ final class BankReconciliationManagerTest extends TestCase
             ->willReturn([$txn1, $txn2]);
 
         // Mock internal transactions using InternalTransaction DTO
-        $internalTxn1 = new InternalTransaction('int-1', 100.0, '2023-01-05', 'ref-1');
-        $internalTxn3 = new InternalTransaction('int-3', 300.0, '2023-01-15', 'ref-3');
+        $internalTxn1 = new InternalTransaction('int-1', 100.0, new \DateTimeImmutable('2023-01-05'), 'ref-1');
+        $internalTxn3 = new InternalTransaction('int-3', 300.0, new \DateTimeImmutable('2023-01-15'), 'ref-3');
 
         $result = $this->manager->reconcile('stmt-1', [$internalTxn1, $internalTxn3]);
 
