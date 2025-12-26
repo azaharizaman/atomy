@@ -31,7 +31,7 @@ final readonly class BankReconciliationManager
      *
      * @param string $statementId Statement to reconcile
      * @param array<InternalTransaction> $internalTransactions Internal transactions to match
-     * @return ReconciliationResult Reconciliation results with matched and unmatched transactions
+     * @return ReconciliationResult ReconciliationResult containing matched and unmatched transactions
      */
     public function reconcile(string $statementId, array $internalTransactions = []): ReconciliationResult
     {
