@@ -13,7 +13,7 @@
     "require": {
         "php": "^8.3",
         "nexus/period": "*@dev",
-        "nexus/finance": "*@dev",
+        "nexus/accounting": "*@dev",
         "nexus/procurement": "*@dev",
         "nexus/party": "*@dev",
         "nexus/workflow": "*@dev",

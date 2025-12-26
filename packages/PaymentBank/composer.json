@@ -20,9 +20,10 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/payment": "^0.1",
-        "nexus/common": "^1.0",
-        "nexus/connector": "^1.0",
+        "nexus/payment": "*@dev",
+        "nexus/common": "*@dev",
+        "nexus/connector": "*@dev",
+        "nexus/crypto": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

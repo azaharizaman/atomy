@@ -29,7 +29,8 @@
         "nexus/data-privacy": "*@dev",
         "nexus/pdpa": "*@dev",
         "nexus/payment": "*@dev",
-        "nexus/payment-gateway": "*@dev"
+        "nexus/payment-gateway": "*@dev",
+        "nexus/payment-bank": "*@dev"
     },
     "repositories": [
         {
@@ -75,7 +76,8 @@
             "Nexus\\PDPA\\": "packages/PDPA/src/",
             "Nexus\\Payment\\": "packages/Payment/src/",
             "Nexus\\PaymentGateway\\": "packages/PaymentGateway/src/",
-            "Nexus\\PaymentRails\\": "packages/PaymentRails/src/"
+            "Nexus\\PaymentRails\\": "packages/PaymentRails/src/",
+            "Nexus\\PaymentBank\\": "packages/PaymentBank/src/"
         }
     },
     "autoload-dev": {
@@ -89,7 +91,8 @@
             "Nexus\\PDPA\\Tests\\": "packages/PDPA/tests/",
             "Nexus\\Payment\\Tests\\": "packages/Payment/tests/",
             "Nexus\\PaymentGateway\\Tests\\": "packages/PaymentGateway/tests/",
-            "Nexus\\PaymentRails\\Tests\\": "packages/PaymentRails/tests/"
+            "Nexus\\PaymentRails\\Tests\\": "packages/PaymentRails/tests/",
+            "Nexus\\PaymentBank\\Tests\\": "packages/PaymentBank/tests/"
         }
     }
 }

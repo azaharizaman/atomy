@@ -10,7 +10,7 @@
     },
     "require": {
         "php": "^8.3",
-        "nexus/finance": "*@dev"
+        "nexus/accounting": "*@dev"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

@@ -1,0 +1,203 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\PaymentBank\Entities;
+
+use Nexus\PaymentBank\Enums\ConsentStatus;
+use Nexus\PaymentBank\Enums\ProviderType;
+
+final readonly class BankConnection implements BankConnectionInterface
+{
+    /**
+     * @param array<string, mixed> $metadata Arbitrary metadata storage for provider-specific data
+     */
+    public function __construct(
+        private string $id,
+        private string $tenantId,
+        private ProviderType $providerType,
+        private string $providerConnectionId,
+        private string $accessToken,
+        private ?string $refreshToken,
+        private ?\DateTimeImmutable $expiresAt,
+        private ConsentStatus $consentStatus,
+        private array $metadata,
+        private \DateTimeImmutable $createdAt,
+        private \DateTimeImmutable $updatedAt
+    ) {}
+
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    public function getTenantId(): string
+    {
+        return $this->tenantId;
+    }
+
+    public function getProviderType(): ProviderType
+    {
+        return $this->providerType;
+    }
+
+    public function getProviderName(): string
+    {
+        return $this->providerType->value;
+    }
+
+    public function getProviderConnectionId(): string
+    {
+        return $this->providerConnectionId;
+    }
+
+    public function getAccessToken(): string
+    {
+        return $this->accessToken;
+    }
+
+    /**
+     * Get credentials as an array.
+     * 
+     * Note: Access and refresh tokens are stored encrypted. Providers receiving
+     * these credentials must decrypt them before use with external APIs.
+     *
+     * @return array<string, mixed>
+     */
+    public function getCredentials(): array
+    {
+        return [
+            'access_token' => $this->accessToken,
+            'refresh_token' => $this->refreshToken,
+            'expires_at' => $this->expiresAt?->format('c'),
+            'provider_connection_id' => $this->providerConnectionId,
+        ];
+    }
+
+    public function getRefreshToken(): ?string
+    {
+        return $this->refreshToken;
+    }
+
+    public function getExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->expiresAt;
+    }
+
+    public function getConsentStatus(): ConsentStatus
+    {
+        return $this->consentStatus;
+    }
+
+    /**
+     * Get metadata.
+     *
+     * @return array<string, mixed>
+     */
+    public function getMetadata(): array
+    {
+        return $this->metadata;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function withAccessToken(string $token, ?\DateTimeImmutable $expiresAt = null): self
+    {
+        return new self(
+            $this->id,
+            $this->tenantId,
+            $this->providerType,
+            $this->providerConnectionId,
+            $token,
+            $this->refreshToken,
+            $expiresAt ?? $this->expiresAt,
+            $this->consentStatus,
+            $this->metadata,
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
+    }
+
+    public function withRefreshToken(?string $token): self
+    {
+        return new self(
+            $this->id,
+            $this->tenantId,
+            $this->providerType,
+            $this->providerConnectionId,
+            $this->accessToken,
+            $token,
+            $this->expiresAt,
+            $this->consentStatus,
+            $this->metadata,
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
+    }
+
+    public function withConsentStatus(ConsentStatus $status): self
+    {
+        return new self(
+            $this->id,
+            $this->tenantId,
+            $this->providerType,
+            $this->providerConnectionId,
+            $this->accessToken,
+            $this->refreshToken,
+            $this->expiresAt,
+            $status,
+            $this->metadata,
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
+    }
+
+    /**
+     * Merge additional metadata with existing metadata.
+     * 
+     * Note: This method merges the new metadata with existing metadata rather than replacing it.
+     * Keys from the new metadata will override existing keys with the same name.
+     *
+     * @param array<string, mixed> $metadata New metadata to merge
+     * @return self New instance with merged metadata
+     */
+    public function withMetadata(array $metadata): self
+    {
+        return new self(
+            $this->id,
+            $this->tenantId,
+            $this->providerType,
+            $this->providerConnectionId,
+            $this->accessToken,
+            $this->refreshToken,
+            $this->expiresAt,
+            $this->consentStatus,
+            array_merge($this->metadata, $metadata),
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
+    }
+
+    public function isExpired(): bool
+    {
+        if ($this->expiresAt === null) {
+            return false;
+        }
+        return $this->expiresAt < new \DateTimeImmutable();
+    }
+
+    public function requiresRelinking(): bool
+    {
+        return $this->consentStatus === ConsentStatus::EXPIRED
+            || $this->consentStatus === ConsentStatus::REVOKED
+            || $this->isExpired();
+    }
+}
