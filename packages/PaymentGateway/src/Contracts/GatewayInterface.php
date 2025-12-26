@@ -6,12 +6,14 @@ namespace Nexus\PaymentGateway\Contracts;
 
 use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
 use Nexus\PaymentGateway\DTOs\CaptureRequest;
+use Nexus\PaymentGateway\DTOs\EvidenceSubmissionRequest;
 use Nexus\PaymentGateway\DTOs\RefundRequest;
 use Nexus\PaymentGateway\DTOs\VoidRequest;
 use Nexus\PaymentGateway\Enums\GatewayProvider;
 use Nexus\PaymentGateway\Enums\GatewayStatus;
 use Nexus\PaymentGateway\ValueObjects\AuthorizationResult;
 use Nexus\PaymentGateway\ValueObjects\CaptureResult;
+use Nexus\PaymentGateway\ValueObjects\EvidenceSubmissionResult;
 use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
 use Nexus\PaymentGateway\ValueObjects\RefundResult;
 use Nexus\PaymentGateway\ValueObjects\VoidResult;
@@ -76,6 +78,13 @@ interface GatewayInterface
      * @throws \Nexus\PaymentGateway\Exceptions\GatewayException
      */
     public function void(VoidRequest $request): VoidResult;
+
+    /**
+     * Submit evidence for a dispute/chargeback.
+     *
+     * @throws \Nexus\PaymentGateway\Exceptions\GatewayException
+     */
+    public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult;
 
     /**
      * Check gateway health/availability.

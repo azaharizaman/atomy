@@ -20,6 +20,7 @@ final readonly class PaymentCapturedEvent
         public string $transactionReference,
         public GatewayProvider $provider,
         public Money $capturedAmount,
+        public bool $finalCapture,
         public CaptureResult $result,
         public \DateTimeImmutable $occurredAt,
     ) {}
@@ -33,6 +34,7 @@ final readonly class PaymentCapturedEvent
         string $transactionReference,
         GatewayProvider $provider,
         CaptureResult $result,
+        bool $finalCapture = true,
     ): self {
         if ($result->capturedAmount === null) {
             throw new \InvalidArgumentException('CaptureResult must have a captured amount to create event');
@@ -45,6 +47,7 @@ final readonly class PaymentCapturedEvent
             transactionReference: $transactionReference,
             provider: $provider,
             capturedAmount: $result->capturedAmount,
+            finalCapture: $finalCapture,
             result: $result,
             occurredAt: new \DateTimeImmutable(),
         );

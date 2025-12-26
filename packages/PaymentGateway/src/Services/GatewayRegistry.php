@@ -16,20 +16,22 @@ use Nexus\PaymentGateway\Exceptions\GatewayNotFoundException;
  */
 final class GatewayRegistry implements GatewayRegistryInterface
 {
-    /** @var array<string, class-string<GatewayInterface>> */
+    /** @var array<string, class-string<GatewayInterface>|callable(): GatewayInterface> */
     private array $registrations = [];
 
-    public function register(GatewayProvider $provider, string $gatewayClass): void
+    public function register(GatewayProvider $provider, string|callable $gatewayClassOrFactory): void
     {
-        if (!is_a($gatewayClass, GatewayInterface::class, true)) {
-            throw new \InvalidArgumentException(sprintf(
-                'Gateway class %s must implement %s',
-                $gatewayClass,
-                GatewayInterface::class,
-            ));
+        if (is_string($gatewayClassOrFactory)) {
+            if (!is_a($gatewayClassOrFactory, GatewayInterface::class, true)) {
+                throw new \InvalidArgumentException(sprintf(
+                    'Gateway class %s must implement %s',
+                    $gatewayClassOrFactory,
+                    GatewayInterface::class,
+                ));
+            }
         }
 
-        $this->registrations[$provider->value] = $gatewayClass;
+        $this->registrations[$provider->value] = $gatewayClassOrFactory;
     }
 
     public function create(GatewayProvider $provider): GatewayInterface
@@ -38,9 +40,13 @@ final class GatewayRegistry implements GatewayRegistryInterface
             throw new GatewayNotFoundException($provider);
         }
 
-        $gatewayClass = $this->registrations[$provider->value];
+        $entry = $this->registrations[$provider->value];
 
-        return new $gatewayClass();
+        if (is_callable($entry)) {
+            return $entry();
+        }
+
+        return new $entry();
     }
 
     public function has(GatewayProvider $provider): bool

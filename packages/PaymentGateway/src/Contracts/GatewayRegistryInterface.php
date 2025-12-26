@@ -15,12 +15,12 @@ use Nexus\PaymentGateway\Enums\GatewayProvider;
 interface GatewayRegistryInterface
 {
     /**
-     * Register a gateway class for a provider.
+     * Register a gateway class or factory for a provider.
      *
      * @param GatewayProvider $provider The gateway provider
-     * @param class-string<GatewayInterface> $gatewayClass The gateway implementation class
+     * @param class-string<GatewayInterface>|callable(): GatewayInterface $gatewayClassOrFactory The gateway implementation class or factory
      */
-    public function register(GatewayProvider $provider, string $gatewayClass): void;
+    public function register(GatewayProvider $provider, string|callable $gatewayClassOrFactory): void;
 
     /**
      * Create a gateway instance for a provider.

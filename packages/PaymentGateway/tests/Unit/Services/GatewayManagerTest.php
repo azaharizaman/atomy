@@ -380,4 +380,38 @@ final class GatewayManagerTest extends TestCase
 
         $this->manager->void(GatewayProvider::STRIPE, $request);
     }
+
+    #[Test]
+    public function it_dispatches_payment_failed_event_on_failed_authorization(): void
+    {
+        $gateway = $this->createMock(GatewayInterface::class);
+        $credentials = GatewayCredentials::forStripe('sk_test_123', 'pk_test_123');
+        $this->registry->method('create')->willReturn($gateway);
+        $this->manager->registerGateway(GatewayProvider::STRIPE, $credentials);
+
+        $request = new AuthorizeRequest(
+            amount: Money::of(100, 'USD'),
+            paymentMethodToken: 'tok_123',
+            orderId: 'ord_123'
+        );
+
+        $result = new AuthorizationResult(
+            success: false,
+            authorizationId: null,
+            transactionId: null,
+            status: TransactionStatus::FAILED,
+            error: \Nexus\PaymentGateway\ValueObjects\GatewayError::cardDeclined(message: 'Card declined')
+        );
+
+        $gateway->expects($this->once())
+            ->method('authorize')
+            ->with($request)
+            ->willReturn($result);
+
+        $this->eventDispatcher->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(\Nexus\PaymentGateway\Events\PaymentFailedEvent::class));
+
+        $this->manager->authorize(GatewayProvider::STRIPE, $request);
+    }
 }

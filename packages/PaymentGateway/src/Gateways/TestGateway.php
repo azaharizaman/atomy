@@ -84,6 +84,16 @@ final class TestGateway extends AbstractGateway
         return true;
     }
 
+    public function supportsPartialCapture(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialRefund(): bool
+    {
+        return true;
+    }
+
     /**
      * Set the gateway status for testing.
      */

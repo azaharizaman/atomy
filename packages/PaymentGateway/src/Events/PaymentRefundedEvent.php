@@ -22,6 +22,7 @@ final readonly class PaymentRefundedEvent
         public GatewayProvider $provider,
         public Money $refundedAmount,
         public RefundType $refundType,
+        public ?string $reason,
         public RefundResult $result,
         public \DateTimeImmutable $occurredAt,
     ) {}
@@ -35,6 +36,7 @@ final readonly class PaymentRefundedEvent
         string $transactionReference,
         GatewayProvider $provider,
         RefundResult $result,
+        ?string $reason = null,
     ): self {
         if ($result->refundedAmount === null) {
             throw new \InvalidArgumentException('RefundResult must have a refunded amount to create event');
@@ -48,6 +50,7 @@ final readonly class PaymentRefundedEvent
             provider: $provider,
             refundedAmount: $result->refundedAmount,
             refundType: $result->type,
+            reason: $reason,
             result: $result,
             occurredAt: new \DateTimeImmutable(),
         );

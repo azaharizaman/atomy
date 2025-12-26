@@ -10,22 +10,27 @@ use Nexus\PaymentGateway\Contracts\GatewayRegistryInterface;
 use Nexus\PaymentGateway\Contracts\IdempotencyManagerInterface;
 use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
 use Nexus\PaymentGateway\DTOs\CaptureRequest;
+use Nexus\PaymentGateway\DTOs\EvidenceSubmissionRequest;
 use Nexus\PaymentGateway\DTOs\RefundRequest;
 use Nexus\PaymentGateway\DTOs\VoidRequest;
 use Nexus\PaymentGateway\Enums\GatewayProvider;
 use Nexus\PaymentGateway\Events\GatewayErrorEvent;
 use Nexus\PaymentGateway\Events\PaymentAuthorizedEvent;
 use Nexus\PaymentGateway\Events\PaymentCapturedEvent;
+use Nexus\PaymentGateway\Events\PaymentFailedEvent;
 use Nexus\PaymentGateway\Events\PaymentRefundedEvent;
 use Nexus\PaymentGateway\Events\PaymentVoidedEvent;
 use Nexus\PaymentGateway\Exceptions\AuthorizationFailedException;
 use Nexus\PaymentGateway\Exceptions\CaptureFailedException;
+use Nexus\PaymentGateway\Exceptions\GatewayException;
 use Nexus\PaymentGateway\Exceptions\GatewayNotFoundException;
 use Nexus\PaymentGateway\Exceptions\RefundFailedException;
 use Nexus\PaymentGateway\Exceptions\VoidFailedException;
 use Nexus\PaymentGateway\ValueObjects\AuthorizationResult;
 use Nexus\PaymentGateway\ValueObjects\CaptureResult;
+use Nexus\PaymentGateway\ValueObjects\EvidenceSubmissionResult;
 use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
+use Nexus\PaymentGateway\Contracts\GatewaySelectorInterface;
 use Nexus\PaymentGateway\ValueObjects\GatewayError;
 use Nexus\PaymentGateway\ValueObjects\RefundResult;
 use Nexus\PaymentGateway\ValueObjects\VoidResult;
@@ -64,6 +69,7 @@ final class GatewayManager implements GatewayManagerInterface
         private readonly ?IdempotencyManagerInterface $idempotencyManager = null,
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
         private readonly LoggerInterface $logger = new NullLogger(),
+        private readonly ?GatewaySelectorInterface $selector = null,
     ) {
     }
 
@@ -97,9 +103,10 @@ final class GatewayManager implements GatewayManagerInterface
     }
 
     public function authorize(
-        GatewayProvider $provider,
+        ?GatewayProvider $provider,
         AuthorizeRequest $request,
     ): AuthorizationResult {
+        $provider = $provider ?? $this->resolveProvider($request);
         $gateway = $this->getGateway($provider);
         $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
@@ -116,6 +123,16 @@ final class GatewayManager implements GatewayManagerInterface
                 if ($result->success) {
                     $this->eventDispatcher?->dispatch(
                         PaymentAuthorizedEvent::fromResult(
+                            tenantId: $tenantId,
+                            transactionReference: $request->orderId ?? '',
+                            provider: $provider,
+                            amount: $request->amount,
+                            result: $result,
+                        )
+                    );
+                } else {
+                    $this->eventDispatcher?->dispatch(
+                        PaymentFailedEvent::fromResult(
                             tenantId: $tenantId,
                             transactionReference: $request->orderId ?? '',
                             provider: $provider,
@@ -161,6 +178,7 @@ final class GatewayManager implements GatewayManagerInterface
                     'authorization_id' => $request->authorizationId,
                     'capture_id' => $result->captureId,
                     'amount' => $result->capturedAmount?->format(),
+                    'final_capture' => $request->finalCapture,
                 ]);
 
                 if ($result->success) {
@@ -171,6 +189,7 @@ final class GatewayManager implements GatewayManagerInterface
                             transactionReference: '',
                             provider: $provider,
                             result: $result,
+                            finalCapture: $request->finalCapture,
                         )
                     );
                 }
@@ -212,6 +231,7 @@ final class GatewayManager implements GatewayManagerInterface
                     'refund_id' => $result->refundId,
                     'amount' => $result->refundedAmount?->format(),
                     'type' => $result->type->value,
+                    'reason' => $request->reason,
                 ]);
 
                 if ($result->success) {
@@ -222,6 +242,7 @@ final class GatewayManager implements GatewayManagerInterface
                             transactionReference: '',
                             provider: $provider,
                             result: $result,
+                            reason: $request->reason,
                         )
                     );
                 }
@@ -295,6 +316,30 @@ final class GatewayManager implements GatewayManagerInterface
         return $operation();
     }
 
+    public function submitEvidence(
+        GatewayProvider $provider,
+        EvidenceSubmissionRequest $request,
+    ): EvidenceSubmissionResult {
+        $gateway = $this->getGateway($provider);
+        $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
+
+        try {
+            $result = $gateway->submitEvidence($request);
+
+            $this->logger->info('Evidence submitted', [
+                'provider' => $provider->value,
+                'dispute_id' => $request->disputeId,
+                'submission_id' => $result->submissionId,
+                'status' => $result->status,
+            ]);
+
+            return $result;
+        } catch (GatewayException $e) {
+            $this->logGatewayError($tenantId, $provider, 'submit_evidence', $e, $request->disputeId);
+            throw $e;
+        }
+    }
+
     public function getRegisteredProviders(): array
     {
         return array_map(
@@ -340,5 +385,18 @@ final class GatewayManager implements GatewayManagerInterface
                 transactionReference: $transactionReference,
             )
         );
+    }
+
+    private function resolveProvider(AuthorizeRequest $request): GatewayProvider
+    {
+        if ($this->selector) {
+            return $this->selector->select($request);
+        }
+
+        if ($this->defaultProvider) {
+            return $this->defaultProvider;
+        }
+
+        throw new GatewayException('No gateway provider specified and no selector/default available.');
     }
 }
