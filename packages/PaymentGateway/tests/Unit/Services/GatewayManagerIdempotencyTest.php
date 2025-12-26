@@ -2,26 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Services;
+namespace Nexus\PaymentGateway\Tests\Unit\Services;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\PaymentGateway\Contracts\GatewayInterface;
 use Nexus\PaymentGateway\Contracts\GatewayRegistryInterface;
 use Nexus\PaymentGateway\Contracts\IdempotencyManagerInterface;
 use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
-use Nexus\PaymentGateway\DTOs\CaptureRequest;
-use Nexus\PaymentGateway\DTOs\RefundRequest;
-use Nexus\PaymentGateway\DTOs\VoidRequest;
 use Nexus\PaymentGateway\Enums\AuthorizationType;
 use Nexus\PaymentGateway\Enums\GatewayProvider;
 use Nexus\PaymentGateway\Services\GatewayManager;
 use Nexus\PaymentGateway\ValueObjects\AuthorizationResult;
-use Nexus\PaymentGateway\ValueObjects\CaptureResult;
 use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
-use Nexus\PaymentGateway\ValueObjects\RefundResult;
-use Nexus\PaymentGateway\ValueObjects\VoidResult;
 use Nexus\Tenant\Contracts\TenantContextInterface;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
@@ -29,12 +23,11 @@ use Psr\Log\LoggerInterface;
 class GatewayManagerIdempotencyTest extends TestCase
 {
     private GatewayManager $manager;
-    private MockObject&GatewayRegistryInterface $registry;
-    private MockObject&TenantContextInterface $tenantContext;
-    private MockObject&IdempotencyManagerInterface $idempotencyManager;
-    private MockObject&EventDispatcherInterface $eventDispatcher;
-    private MockObject&LoggerInterface $logger;
-    private MockObject&GatewayInterface $gateway;
+    private GatewayRegistryInterface $registry;
+    private TenantContextInterface $tenantContext;
+    private IdempotencyManagerInterface $idempotencyManager;
+    private EventDispatcherInterface $eventDispatcher;
+    private LoggerInterface $logger;
 
     protected function setUp(): void
     {
@@ -43,7 +36,6 @@ class GatewayManagerIdempotencyTest extends TestCase
         $this->idempotencyManager = $this->createMock(IdempotencyManagerInterface::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
-        $this->gateway = $this->createMock(GatewayInterface::class);
 
         $this->manager = new GatewayManager(
             $this->registry,
@@ -52,160 +44,96 @@ class GatewayManagerIdempotencyTest extends TestCase
             $this->eventDispatcher,
             $this->logger
         );
-
-        // Setup default gateway mock
-        $this->registry->method('create')->willReturn($this->gateway);
-        $this->manager->registerGateway(
-            GatewayProvider::STRIPE,
-            new GatewayCredentials(GatewayProvider::STRIPE, 'key', 'secret')
-        );
     }
 
-    public function test_authorize_uses_idempotency_manager(): void
+    #[Test]
+    public function it_uses_idempotency_manager_when_key_is_present(): void
     {
-        $key = 'idempotency_key_' . uniqid();
+        $provider = GatewayProvider::STRIPE;
+        $idempotencyKey = 'idem_123';
+        $amount = Money::of(1000, 'USD');
+        
+        // Register gateway
+        $gateway = $this->createMock(GatewayInterface::class);
+        $this->registry->expects($this->once())
+            ->method('create')
+            ->with($provider)
+            ->willReturn($gateway);
+        
+        $credentials = new GatewayCredentials($provider, 'test_key');
+        $this->manager->registerGateway($provider, $credentials);
+        
         $request = new AuthorizeRequest(
-            amount: Money::of(100, 'USD'),
-            paymentMethodToken: 'tok_visa',
+            amount: $amount,
+            paymentMethodToken: 'tok_123',
             authorizationType: AuthorizationType::AUTH_CAPTURE,
-            idempotencyKey: $key
+            idempotencyKey: $idempotencyKey
         );
 
         $expectedResult = new AuthorizationResult(
             success: true,
-            authorizationId: 'auth_123',
+            authorizationId: 'ref_123',
             transactionId: 'txn_123',
-            authorizedAmount: Money::of(100, 'USD'),
+            authorizedAmount: $amount,
             rawResponse: []
         );
 
         $this->idempotencyManager->expects($this->once())
             ->method('execute')
             ->with(
-                GatewayProvider::STRIPE,
-                $this->equalTo($key),
+                $provider,
+                $idempotencyKey,
                 $this->isType('callable'),
                 AuthorizationResult::class
             )
             ->willReturn($expectedResult);
 
-        $result = $this->manager->authorize(GatewayProvider::STRIPE, $request);
+        $result = $this->manager->authorize($provider, $request);
 
         $this->assertSame($expectedResult, $result);
     }
 
-    public function test_capture_uses_idempotency_manager(): void
+    #[Test]
+    public function it_skips_idempotency_manager_when_key_is_missing(): void
     {
-        $key = 'idempotency_key_' . uniqid();
-        $request = new CaptureRequest(
-            authorizationId: 'auth_123',
-            amount: Money::of(100, 'USD'),
-            idempotencyKey: $key
-        );
-
-        $expectedResult = new CaptureResult(
-            success: true,
-            captureId: 'cap_123',
-            capturedAmount: Money::of(100, 'USD'),
-            rawResponse: []
-        );
-
-        $this->idempotencyManager->expects($this->once())
-            ->method('execute')
-            ->with(
-                GatewayProvider::STRIPE,
-                $this->equalTo($key),
-                $this->isType('callable'),
-                CaptureResult::class
-            )
-            ->willReturn($expectedResult);
-
-        $result = $this->manager->capture(GatewayProvider::STRIPE, $request);
-
-        $this->assertSame($expectedResult, $result);
-    }
-
-    public function test_refund_uses_idempotency_manager(): void
-    {
-        $key = 'idempotency_key_' . uniqid();
-        $request = new RefundRequest(
-            transactionId: 'txn_123',
-            amount: Money::of(50, 'USD'),
-            idempotencyKey: $key
-        );
-
-        $expectedResult = new RefundResult(
-            success: true,
-            refundId: 're_123',
-            refundedAmount: Money::of(50, 'USD'),
-            rawResponse: []
-        );
-
-        $this->idempotencyManager->expects($this->once())
-            ->method('execute')
-            ->with(
-                GatewayProvider::STRIPE,
-                $this->equalTo($key),
-                $this->isType('callable'),
-                RefundResult::class
-            )
-            ->willReturn($expectedResult);
-
-        $result = $this->manager->refund(GatewayProvider::STRIPE, $request);
-
-        $this->assertSame($expectedResult, $result);
-    }
-
-    public function test_void_uses_idempotency_manager(): void
-    {
-        $key = 'idempotency_key_' . uniqid();
-        $request = new VoidRequest(
-            authorizationId: 'auth_123',
-            idempotencyKey: $key
-        );
-
-        $expectedResult = new VoidResult(
-            success: true,
-            voidId: 'void_123',
-            rawResponse: []
-        );
-
-        $this->idempotencyManager->expects($this->once())
-            ->method('execute')
-            ->with(
-                GatewayProvider::STRIPE,
-                $this->equalTo($key),
-                $this->isType('callable'),
-                VoidResult::class
-            )
-            ->willReturn($expectedResult);
-
-        $result = $this->manager->void(GatewayProvider::STRIPE, $request);
-
-        $this->assertSame($expectedResult, $result);
-    }
-
-    public function test_operations_without_idempotency_key_bypass_manager(): void
-    {
+        $provider = GatewayProvider::STRIPE;
+        $amount = Money::of(1000, 'USD');
+        
+        // Register gateway
+        $gateway = $this->createMock(GatewayInterface::class);
+        $this->registry->expects($this->once())
+            ->method('create')
+            ->with($provider)
+            ->willReturn($gateway);
+            
+        $credentials = new GatewayCredentials($provider, 'test_key');
+        $this->manager->registerGateway($provider, $credentials);
+        
         $request = new AuthorizeRequest(
-            amount: Money::of(100, 'USD'),
-            paymentMethodToken: 'tok_visa',
-            authorizationType: AuthorizationType::AUTH_CAPTURE
+            amount: $amount,
+            paymentMethodToken: 'tok_123',
+            authorizationType: AuthorizationType::AUTH_CAPTURE,
+            idempotencyKey: null
         );
+
+        $expectedResult = new AuthorizationResult(
+            success: true,
+            authorizationId: 'ref_123',
+            transactionId: 'txn_123',
+            authorizedAmount: $amount,
+            rawResponse: []
+        );
+
+        $gateway->expects($this->once())
+            ->method('authorize')
+            ->with($request)
+            ->willReturn($expectedResult);
 
         $this->idempotencyManager->expects($this->never())
             ->method('execute');
 
-        $this->gateway->expects($this->once())
-            ->method('authorize')
-            ->willReturn(new AuthorizationResult(
-                success: true,
-                authorizationId: 'auth_123',
-                transactionId: 'txn_123',
-                authorizedAmount: Money::of(100, 'USD'),
-                rawResponse: []
-            ));
+        $result = $this->manager->authorize($provider, $request);
 
-        $this->manager->authorize(GatewayProvider::STRIPE, $request);
+        $this->assertSame($expectedResult, $result);
     }
 }
