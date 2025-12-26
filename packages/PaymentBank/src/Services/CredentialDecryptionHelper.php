@@ -36,7 +36,7 @@ final readonly class CredentialDecryptionHelper
             );
         }
         
-        if (isset($encryptedCredentials['refresh_token']) && $encryptedCredentials['refresh_token'] !== null) {
+        if (isset($encryptedCredentials['refresh_token']) && is_string($encryptedCredentials['refresh_token'])) {
             $decrypted['refresh_token'] = $this->crypto->decrypt(
                 EncryptedData::fromJson($encryptedCredentials['refresh_token'])
             );
