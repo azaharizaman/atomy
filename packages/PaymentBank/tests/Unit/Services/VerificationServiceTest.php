@@ -14,8 +14,10 @@ use Nexus\PaymentBank\Entities\BankConnection;
 use Nexus\PaymentBank\Entities\BankConnectionInterface;
 use Nexus\PaymentBank\Enums\ConsentStatus;
 use Nexus\PaymentBank\Enums\ProviderType;
+use Nexus\PaymentBank\Enums\VerificationMethod;
 use Nexus\PaymentBank\Enums\VerificationStatus;
 use Nexus\PaymentBank\Exceptions\BankConnectionNotFoundException;
+use Nexus\PaymentBank\Services\CredentialDecryptionHelper;
 use Nexus\PaymentBank\Services\VerificationService;
 use PHPUnit\Framework\TestCase;
 
@@ -23,19 +25,23 @@ final class VerificationServiceTest extends TestCase
 {
     private BankConnectionQueryInterface $connectionQuery;
     private ProviderRegistryInterface $providerRegistry;
-    private CryptoManagerInterface $crypto;
+    private CredentialDecryptionHelper $credentialDecryptor;
     private VerificationService $service;
 
     protected function setUp(): void
     {
         $this->connectionQuery = $this->createMock(BankConnectionQueryInterface::class);
         $this->providerRegistry = $this->createMock(ProviderRegistryInterface::class);
-        $this->crypto = $this->createMock(CryptoManagerInterface::class);
+        
+        // Use real helper since it's final and cannot be mocked
+        // The helper won't actually decrypt in tests since connections don't have real encrypted data
+        $crypto = $this->createMock(CryptoManagerInterface::class);
+        $this->credentialDecryptor = new CredentialDecryptionHelper($crypto);
 
         $this->service = new VerificationService(
             $this->connectionQuery,
             $this->providerRegistry,
-            $this->crypto
+            $this->credentialDecryptor
         );
     }
 
@@ -56,21 +62,24 @@ final class VerificationServiceTest extends TestCase
             ->willReturn($connection);
 
         $verifier = $this->createMock(AccountVerificationInterface::class);
-        $expectedResult = new AccountVerificationResult(
-            $accountId,
-            VerificationStatus::VERIFIED,
-            'verification-123',
-            'John Doe'
-        );
-
+        
+        // Expect initiateVerification to be called with INSTANT method
         $verifier->expects($this->once())
-            ->method('verifyOwnership')
-            ->with(
-                $this->isType('array'),
-                $accountId,
-                $identityData
-            )
-            ->willReturn($expectedResult);
+            ->method('initiateVerification')
+            ->with($connection, $accountId, VerificationMethod::INSTANT)
+            ->willReturn('verification-123');
+        
+        // Expect completeVerification to be called with identity data
+        $verifier->expects($this->once())
+            ->method('completeVerification')
+            ->with($connection, $accountId, $identityData)
+            ->willReturn(true);
+        
+        // Expect getVerificationStatus to be called
+        $verifier->expects($this->once())
+            ->method('getVerificationStatus')
+            ->with($connection, $accountId)
+            ->willReturn(VerificationStatus::VERIFIED);
 
         $provider = $this->createMock(BankProviderInterface::class);
         $provider->expects($this->once())
@@ -85,8 +94,8 @@ final class VerificationServiceTest extends TestCase
         $result = $this->service->verifyOwnership($connectionId, $accountId, $identityData);
 
         $this->assertInstanceOf(AccountVerificationResult::class, $result);
-        $this->assertTrue($result->isVerified());
         $this->assertEquals(VerificationStatus::VERIFIED, $result->getStatus());
+        $this->assertEquals('verification-123', $result->getVerificationId());
     }
 
     public function test_verify_ownership_throws_exception_when_connection_not_found(): void
@@ -115,11 +124,8 @@ final class VerificationServiceTest extends TestCase
 
         $verifier = $this->createMock(AccountVerificationInterface::class);
         $verifier->expects($this->once())
-            ->method('initiateMicroDeposits')
-            ->with(
-                $this->isType('array'),
-                $accountId
-            )
+            ->method('initiateVerification')
+            ->with($connection, $accountId, VerificationMethod::MICRO_DEPOSIT)
             ->willReturn('verification-789');
 
         $provider = $this->createMock(BankProviderInterface::class);
@@ -164,12 +170,8 @@ final class VerificationServiceTest extends TestCase
 
         $verifier = $this->createMock(AccountVerificationInterface::class);
         $verifier->expects($this->once())
-            ->method('verifyMicroDeposits')
-            ->with(
-                $this->isType('array'),
-                $verificationId,
-                $amounts
-            )
+            ->method('completeVerification')
+            ->with($connection, $verificationId, $amounts)
             ->willReturn(true);
 
         $provider = $this->createMock(BankProviderInterface::class);
@@ -214,7 +216,7 @@ final class VerificationServiceTest extends TestCase
 
         $verifier = $this->createMock(AccountVerificationInterface::class);
         $verifier->expects($this->once())
-            ->method('verifyMicroDeposits')
+            ->method('completeVerification')
             ->willReturn(false);
 
         $provider = $this->createMock(BankProviderInterface::class);

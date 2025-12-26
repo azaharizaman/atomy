@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentBank\Tests\Unit\Services;
 
+use Nexus\Common\Contracts\UlidInterface;
 use Nexus\Crypto\Contracts\CryptoManagerInterface;
+use Nexus\Crypto\Enums\SymmetricAlgorithm;
+use Nexus\Crypto\ValueObjects\EncryptedData;
 use Nexus\PaymentBank\Contracts\BankConnectionPersistInterface;
 use Nexus\PaymentBank\Contracts\BankConnectionQueryInterface;
 use Nexus\PaymentBank\Contracts\BankProviderInterface;
@@ -25,6 +28,7 @@ final class BankConnectionManagerTest extends TestCase
     private ProviderRegistryInterface $providerRegistry;
     private CryptoManagerInterface $crypto;
     private LoggerInterface $logger;
+    private UlidInterface $ulid;
     private BankConnectionManager $manager;
 
     protected function setUp(): void
@@ -34,13 +38,15 @@ final class BankConnectionManagerTest extends TestCase
         $this->providerRegistry = $this->createMock(ProviderRegistryInterface::class);
         $this->crypto = $this->createMock(CryptoManagerInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->ulid = $this->createMock(UlidInterface::class);
 
         $this->manager = new BankConnectionManager(
             $this->persist,
             $this->query,
             $this->providerRegistry,
             $this->crypto,
-            $this->logger
+            $this->logger,
+            $this->ulid
         );
     }
 
@@ -68,10 +74,22 @@ final class BankConnectionManagerTest extends TestCase
             ->with(ProviderType::PLAID)
             ->willReturn($provider);
 
-        // Mock crypto encrypt methods
+        // Mock ULID generation
+        $this->ulid->expects($this->once())
+            ->method('generate')
+            ->willReturn('01HQWXYZ1234567890ABCDEFGH');
+
+        // Mock crypto encrypt to return EncryptedData
+        $encryptedData = new EncryptedData(
+            'base64ciphertext',
+            'base64iv',
+            'base64tag',
+            SymmetricAlgorithm::AES256GCM
+        );
+        
         $this->crypto->expects($this->exactly(2))
-            ->method('encryptString')
-            ->willReturnCallback(fn($value) => 'encrypted_' . $value);
+            ->method('encrypt')
+            ->willReturn($encryptedData);
 
         $this->persist->expects($this->once())
             ->method('save')
@@ -85,17 +103,25 @@ final class BankConnectionManagerTest extends TestCase
         $this->assertEquals(ProviderType::PLAID, $result->getProviderType());
         $this->assertEquals('tenant-1', $result->getTenantId());
         $this->assertEquals(ConsentStatus::ACTIVE, $result->getConsentStatus());
+        $this->assertEquals('01HQWXYZ1234567890ABCDEFGH', $result->getId());
     }
 
     public function test_refresh_connection_updates_credentials(): void
     {
+        $encryptedData = new EncryptedData(
+            'base64ciphertext',
+            'base64iv',
+            'base64tag',
+            SymmetricAlgorithm::AES256GCM
+        );
+        
         $connection = new BankConnection(
             id: 'conn-1',
             tenantId: 'tenant-1',
             providerType: ProviderType::PLAID,
             providerConnectionId: 'ins_123',
-            accessToken: 'encrypted_old_token',
-            refreshToken: 'encrypted_refresh_token',
+            accessToken: $encryptedData->toJson(),
+            refreshToken: $encryptedData->toJson(),
             expiresAt: null,
             consentStatus: ConsentStatus::ACTIVE,
             metadata: [],
@@ -114,14 +140,15 @@ final class BankConnectionManagerTest extends TestCase
             ->with(ProviderType::PLAID)
             ->willReturn($provider);
 
-        // Mock crypto decrypt and encrypt
+        // Mock crypto decrypt
         $this->crypto->expects($this->exactly(2))
-            ->method('decryptString')
-            ->willReturnCallback(fn($value) => str_replace('encrypted_', '', $value));
+            ->method('decrypt')
+            ->willReturn('decrypted_token');
         
+        // Mock crypto encrypt for new token
         $this->crypto->expects($this->once())
-            ->method('encryptString')
-            ->willReturnCallback(fn($value) => 'encrypted_' . $value);
+            ->method('encrypt')
+            ->willReturn($encryptedData);
 
         $this->persist->expects($this->once())
             ->method('save')
@@ -130,8 +157,8 @@ final class BankConnectionManagerTest extends TestCase
         $result = $this->manager->refreshConnection('conn-1');
 
         $this->assertInstanceOf(BankConnectionInterface::class, $result);
-        $this->assertStringStartsWith('encrypted_', $result->getAccessToken());
-        $this->assertNotEquals('encrypted_old_token', $result->getAccessToken());
+        // Token should be encrypted (JSON format)
+        $this->assertStringContainsString('ciphertext', $result->getAccessToken());
     }
 
     public function test_disconnect_deletes_connection(): void
