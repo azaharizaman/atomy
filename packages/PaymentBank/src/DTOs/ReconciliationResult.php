@@ -6,11 +6,11 @@ namespace Nexus\PaymentBank\DTOs;
 
 use Nexus\PaymentBank\Contracts\ReconciliationResultInterface;
 
-final class ReconciliationResult implements ReconciliationResultInterface
+final readonly class ReconciliationResult implements ReconciliationResultInterface
 {
     public function __construct(
-        private readonly array $matchedTransactions,
-        private readonly array $unmatchedTransactions
+        private array $matchedTransactions,
+        private array $unmatchedTransactions
     ) {}
 
     public function getMatchedTransactions(): array

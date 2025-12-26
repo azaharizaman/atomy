@@ -1,7 +1,7 @@
 # Nexus PaymentBank
 
-**Version:** 1.0.0
-**Status:** Production Ready
+**Version:** 0.1.0
+**Status:** In Progress (see IMPLEMENTATION_SUMMARY.md for details)
 **PHP:** ^8.3
 **Extends:** `nexus/payment`
 
@@ -41,25 +41,29 @@ Use `BankConnectionManagerInterface` to handle the lifecycle of a bank connectio
 
 ```php
 use Nexus\PaymentBank\Contracts\BankConnectionManagerInterface;
-use Nexus\PaymentBank\DTOs\ConnectionRequest;
 
 public function connect(BankConnectionManagerInterface $manager)
 {
     // 1. Initiate connection flow
-    $result = $manager->initiateConnection(new ConnectionRequest(
-        tenantId: 'tenant-1',
+    $result = $manager->initiateConnection(
         providerName: 'plaid',
-        redirectUrl: 'https://app.example.com/callback',
-        scopes: ['transactions', 'auth']
-    ));
+        tenantId: 'tenant-1',
+        parameters: [
+            'redirect_url' => 'https://app.example.com/callback',
+            'scopes' => ['transactions', 'auth']
+        ]
+    );
 
-    // Redirect user to $result->authorizationUrl
+    // Redirect user to the authorization URL from $result
     
     // 2. Complete connection after callback
     $connection = $manager->completeConnection(
         providerName: 'plaid',
-        publicToken: 'public-token-from-callback',
-        tenantId: 'tenant-1'
+        tenantId: 'tenant-1',
+        callbackData: [
+            'public_token' => 'public-token-from-callback',
+            'institution_id' => 'ins_123'
+        ]
     );
 }
 ```
@@ -100,13 +104,16 @@ use Nexus\PaymentBank\Contracts\VerificationServiceInterface;
 public function verify(VerificationServiceInterface $service, string $connectionId, string $accountId)
 {
     // Instant verification (e.g., Plaid Identity)
-    $owner = $service->getOwnerIdentity($connectionId, $accountId);
+    $verificationResult = $service->verifyOwnership($connectionId, $accountId, [
+        'name' => 'John Doe',
+        'email' => 'john@example.com'
+    ]);
     
     // Micro-deposit verification
     $verificationId = $service->initiateMicroDeposits($connectionId, $accountId);
     
     // ... later ...
-    $verified = $service->verifyMicroDeposits($connectionId, $accountId, [0.12, 0.45]);
+    $verified = $service->verifyMicroDeposits($connectionId, $verificationId, [0.12, 0.45]);
 }
 ```
 
@@ -116,19 +123,24 @@ Use `PaymentInitiationServiceInterface` for PIS (Payment Initiation Services).
 
 ```php
 use Nexus\PaymentBank\Contracts\PaymentInitiationServiceInterface;
-use Nexus\PaymentBank\DTOs\PaymentInitiationRequest;
+use Nexus\PaymentBank\ValueObjects\Beneficiary;
 use Nexus\Common\ValueObjects\Money;
 
 public function pay(PaymentInitiationServiceInterface $service, string $connectionId, string $sourceAccountId)
 {
+    $beneficiary = new Beneficiary(
+        name: 'Acme Corp',
+        iban: 'GB82WEST12345698765432',
+        bic: 'WESTGB21XXX',
+        address: '123 Business St, London'
+    );
+
     $result = $service->initiatePayment(
         connectionId: $connectionId,
-        request: new PaymentInitiationRequest(
-            sourceAccountId: $sourceAccountId,
-            destinationAccountId: 'dest-123',
-            amount: Money::of(100, 'USD'),
-            reference: 'INV-001'
-        )
+        sourceAccountId: $sourceAccountId,
+        beneficiary: $beneficiary,
+        amount: Money::of(100, 'USD'),
+        reference: 'INV-001'
     );
     
     // Check status

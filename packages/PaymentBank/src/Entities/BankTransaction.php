@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentBank\Entities;
 
-final class BankTransaction implements BankTransactionInterface
+final readonly class BankTransaction implements BankTransactionInterface
 {
     public function __construct(
-        private readonly string $id,
-        private readonly \DateTimeImmutable $date,
-        private readonly float $amount,
-        private readonly string $description
+        private string $id,
+        private \DateTimeImmutable $date,
+        private float $amount,
+        private string $description
     ) {}
 
     public function getId(): string

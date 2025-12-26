@@ -13,14 +13,14 @@ use Nexus\PaymentBank\Entities\BankStatementInterface;
 use Nexus\PaymentBank\Exceptions\BankConnectionNotFoundException;
 use Psr\Log\LoggerInterface;
 
-final class BankStatementManager
+final readonly class BankStatementManager
 {
     public function __construct(
-        private readonly BankStatementPersistInterface $persist,
-        private readonly BankStatementQueryInterface $query,
-        private readonly BankConnectionQueryInterface $connectionQuery,
-        private readonly ProviderRegistryInterface $providerRegistry,
-        private readonly LoggerInterface $logger
+        private BankStatementPersistInterface $persist,
+        private BankStatementQueryInterface $query,
+        private BankConnectionQueryInterface $connectionQuery,
+        private ProviderRegistryInterface $providerRegistry,
+        private LoggerInterface $logger
     ) {}
 
     public function fetchStatements(string $connectionId, \DateTimeImmutable $start, \DateTimeImmutable $end): array
@@ -36,12 +36,16 @@ final class BankStatementManager
 
         $statements = [];
         foreach ($rawStatements as $raw) {
-            $date = new \DateTimeImmutable($raw['date']);
+            // Support both explicit start_date/end_date and single date field
+            // If only 'date' is provided, both start and end will be set to the same value,
+            // representing a single-day statement period
+            $startDate = new \DateTimeImmutable($raw['start_date'] ?? $raw['date']);
+            $endDate = new \DateTimeImmutable($raw['end_date'] ?? $raw['date']);
             $statement = new BankStatement(
                 id: $raw['id'],
                 connectionId: $connectionId,
-                startDate: $date,
-                endDate: $date,
+                startDate: $startDate,
+                endDate: $endDate,
                 amount: (float)$raw['amount']
             );
 

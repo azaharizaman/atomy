@@ -6,6 +6,7 @@ namespace Nexus\PaymentBank\Contracts;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\PaymentBank\DTOs\PaymentInitiationResult;
+use Nexus\PaymentBank\ValueObjects\Beneficiary;
 
 interface PaymentInitiationServiceInterface
 {
@@ -14,7 +15,7 @@ interface PaymentInitiationServiceInterface
      *
      * @param string $connectionId
      * @param string $sourceAccountId
-     * @param string $destinationAccountId
+     * @param Beneficiary $beneficiary
      * @param Money $amount
      * @param string|null $reference
      * @return PaymentInitiationResult
@@ -22,7 +23,7 @@ interface PaymentInitiationServiceInterface
     public function initiatePayment(
         string $connectionId,
         string $sourceAccountId,
-        string $destinationAccountId,
+        Beneficiary $beneficiary,
         Money $amount,
         ?string $reference = null
     ): PaymentInitiationResult;

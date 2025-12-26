@@ -44,13 +44,14 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         $providerType = ProviderType::from($providerName);
         $provider = $this->providerRegistry->getProvider($providerType);
         
-        // Mock credentials exchange
+        // Mock credentials exchange - in real implementation, this would call the provider API
         $accessToken = 'mock_access_token';
         $refreshToken = 'mock_refresh_token';
         $expiresIn = 3600;
         
-        $encryptedAccessToken = $this->encryptString($accessToken);
-        $encryptedRefreshToken = $this->encryptString($refreshToken);
+        // Encrypt tokens before storing
+        $encryptedAccessToken = $this->crypto->encryptString($accessToken);
+        $encryptedRefreshToken = $this->crypto->encryptString($refreshToken);
 
         $connection = new BankConnection(
             id: uniqid('conn_'),
@@ -85,15 +86,16 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         $providerType = $connection->getProviderType();
         $provider = $this->providerRegistry->getProvider($providerType);
         
-        $accessToken = $this->decryptString($connection->getAccessToken());
-        $refreshToken = $connection->getRefreshToken() ? $this->decryptString($connection->getRefreshToken()) : null;
+        // Decrypt tokens for refresh
+        $accessToken = $this->crypto->decryptString($connection->getAccessToken());
+        $refreshToken = $connection->getRefreshToken() ? $this->crypto->decryptString($connection->getRefreshToken()) : null;
         
-        // Mock refresh
+        // Mock refresh - in real implementation, this would call the provider API
         $newAccessToken = 'new_mock_access_token';
         $expiresIn = 3600;
 
         $updatedConnection = $connection->withAccessToken(
-            $this->encryptString($newAccessToken),
+            $this->crypto->encryptString($newAccessToken),
             (new \DateTimeImmutable())->modify("+{$expiresIn} seconds")
         );
         
@@ -137,15 +139,5 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         }
         
         return $this->persist->save($updated);
-    }
-
-    private function encryptString(string $value): string
-    {
-        return 'encrypted_' . $value;
-    }
-
-    private function decryptString(string $value): string
-    {
-        return str_replace('encrypted_', '', $value);
     }
 }

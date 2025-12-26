@@ -10,6 +10,13 @@ interface BankStatementInterface
     public function getConnectionId(): string;
     public function getStartDate(): \DateTimeImmutable;
     public function getEndDate(): \DateTimeImmutable;
-    public function getAmount(): float; // Or Money? Using float for now based on test array
+    
+    /**
+     * Get the closing balance amount for the statement period.
+     *
+     * @return float
+     */
+    public function getAmount(): float;
+    
     public function getTransactions(): array;
 }
