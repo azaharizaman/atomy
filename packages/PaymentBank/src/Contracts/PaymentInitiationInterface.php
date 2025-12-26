@@ -18,7 +18,7 @@ interface PaymentInitiationInterface
      * @param string $sourceAccountId Provider's source account ID
      * @param Beneficiary $beneficiary Recipient details
      * @param Money $amount Amount to transfer
-     * @param string $reference Payment reference/description
+     * @param string|null $reference Payment reference/description (null if not provided)
      * @param array<string, mixed> $options Provider-specific options
      * @return PaymentInitiationResult
      */
@@ -27,7 +27,7 @@ interface PaymentInitiationInterface
         string $sourceAccountId,
         Beneficiary $beneficiary,
         Money $amount,
-        string $reference,
+        ?string $reference,
         array $options = []
     ): PaymentInitiationResult;
 
