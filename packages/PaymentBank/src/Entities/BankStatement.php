@@ -6,6 +6,14 @@ namespace Nexus\PaymentBank\Entities;
 
 final readonly class BankStatement implements BankStatementInterface
 {
+    /**
+     * @param string $id
+     * @param string $connectionId
+     * @param \DateTimeImmutable $startDate
+     * @param \DateTimeImmutable $endDate
+     * @param float $amount Note: Using float for monetary amounts is not ideal. Consider using Money value objects for exact precision.
+     * @param array $transactions
+     */
     public function __construct(
         private string $id,
         private string $connectionId,

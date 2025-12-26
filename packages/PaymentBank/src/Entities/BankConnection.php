@@ -9,6 +9,9 @@ use Nexus\PaymentBank\Enums\ProviderType;
 
 final readonly class BankConnection implements BankConnectionInterface
 {
+    /**
+     * @param array<string, mixed> $metadata Arbitrary metadata storage for provider-specific data
+     */
     public function __construct(
         private string $id,
         private string $tenantId,
@@ -86,6 +89,11 @@ final readonly class BankConnection implements BankConnectionInterface
         return $this->consentStatus;
     }
 
+    /**
+     * Get metadata.
+     *
+     * @return array<string, mixed>
+     */
     public function getMetadata(): array
     {
         return $this->metadata;
@@ -152,6 +160,15 @@ final readonly class BankConnection implements BankConnectionInterface
         );
     }
 
+    /**
+     * Merge additional metadata with existing metadata.
+     * 
+     * Note: This method merges the new metadata with existing metadata rather than replacing it.
+     * Keys from the new metadata will override existing keys with the same name.
+     *
+     * @param array<string, mixed> $metadata New metadata to merge
+     * @return self New instance with merged metadata
+     */
     public function withMetadata(array $metadata): self
     {
         return new self(

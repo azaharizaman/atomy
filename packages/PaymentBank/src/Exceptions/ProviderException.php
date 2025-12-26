@@ -6,8 +6,4 @@ namespace Nexus\PaymentBank\Exceptions;
 
 class ProviderException extends PaymentBankException
 {
-    public function __construct(string $message, int $code = 0, ?\Throwable $previous = null)
-    {
-        parent::__construct($message, $code, $previous);
-    }
 }

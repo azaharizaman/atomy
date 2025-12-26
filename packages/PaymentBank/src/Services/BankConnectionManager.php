@@ -15,6 +15,7 @@ use Nexus\PaymentBank\Enums\ConsentStatus;
 use Nexus\PaymentBank\Enums\ProviderType;
 use Nexus\PaymentBank\Exceptions\BankConnectionNotFoundException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Uid\Ulid;
 
 final readonly class BankConnectionManager implements BankConnectionManagerInterface
 {
@@ -26,11 +27,13 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         private LoggerInterface $logger
     ) {}
 
-    public function initiateConnection(string $providerName, string $tenantId, array $parameters = []): array
+    public function initiateConnection(string $providerName, string $tenantId, array $config = []): array
     {
         $providerType = ProviderType::from($providerName);
         $provider = $this->providerRegistry->getProvider($providerType);
         
+        // PLACEHOLDER: Mock authorization URL - replace with actual provider API call
+        // when provider adapters are implemented
         return [
             'provider' => $providerName,
             'tenant_id' => $tenantId,
@@ -44,7 +47,8 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         $providerType = ProviderType::from($providerName);
         $provider = $this->providerRegistry->getProvider($providerType);
         
-        // Mock credentials exchange - in real implementation, this would call the provider API
+        // PLACEHOLDER: Mock credentials exchange - replace with actual provider OAuth token exchange
+        // when provider adapters (Plaid, TrueLayer, Yodlee) are implemented
         $accessToken = 'mock_access_token';
         $refreshToken = 'mock_refresh_token';
         $expiresIn = 3600;
@@ -54,7 +58,7 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         $encryptedRefreshToken = $this->crypto->encryptString($refreshToken);
 
         $connection = new BankConnection(
-            id: uniqid('conn_'),
+            id: (new Ulid())->toRfc4122(),
             tenantId: $tenantId,
             providerType: $providerType,
             providerConnectionId: $callbackData['institution_id'] ?? 'unknown',
@@ -62,7 +66,7 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
             refreshToken: $encryptedRefreshToken,
             expiresAt: (new \DateTimeImmutable())->modify("+{$expiresIn} seconds"),
             consentStatus: ConsentStatus::ACTIVE,
-            metadata: ['connected_at' => date('c')],
+            metadata: ['connected_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)],
             createdAt: new \DateTimeImmutable(),
             updatedAt: new \DateTimeImmutable()
         );
@@ -90,7 +94,8 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         $accessToken = $this->crypto->decryptString($connection->getAccessToken());
         $refreshToken = $connection->getRefreshToken() ? $this->crypto->decryptString($connection->getRefreshToken()) : null;
         
-        // Mock refresh - in real implementation, this would call the provider API
+        // PLACEHOLDER: Mock token refresh - replace with actual provider OAuth refresh token flow
+        // when provider adapters are implemented
         $newAccessToken = 'new_mock_access_token';
         $expiresIn = 3600;
 
@@ -114,7 +119,8 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         try {
             $providerType = $connection->getProviderType();
             $provider = $this->providerRegistry->getProvider($providerType);
-            // Revoke token logic here
+            // TODO: Implement token revocation when provider adapters are ready
+            // $provider->revokeToken($connection->getAccessToken());
         } catch (\Throwable $e) {
             $this->logger->warning('Failed to revoke token on provider', [
                 'connection_id' => $connectionId,

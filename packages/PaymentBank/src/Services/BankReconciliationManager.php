@@ -7,12 +7,17 @@ namespace Nexus\PaymentBank\Services;
 use Nexus\PaymentBank\Contracts\BankStatementQueryInterface;
 use Nexus\PaymentBank\Contracts\BankTransactionQueryInterface;
 use Nexus\PaymentBank\DTOs\InternalTransaction;
+use Nexus\PaymentBank\DTOs\ReconciliationResult;
 use Nexus\PaymentBank\Exceptions\BankStatementNotFoundException;
 use Psr\Log\LoggerInterface;
 
 final readonly class BankReconciliationManager
 {
-    /** @var float Tolerance for amount matching */
+    /** 
+     * Tolerance for amount matching.
+     * Note: Using float for amounts is not ideal for financial calculations.
+     * Consider using Money value objects or bcmath for exact decimal precision.
+     */
     private const float AMOUNT_TOLERANCE = 0.001;
 
     public function __construct(
@@ -26,9 +31,9 @@ final readonly class BankReconciliationManager
      *
      * @param string $statementId Statement to reconcile
      * @param array<InternalTransaction> $internalTransactions Internal transactions to match
-     * @return array{matched: array, unmatched_bank: array, unmatched_internal: array} Reconciliation results
+     * @return ReconciliationResult Reconciliation results with matched and unmatched transactions
      */
-    public function reconcile(string $statementId, array $internalTransactions = []): array
+    public function reconcile(string $statementId, array $internalTransactions = []): ReconciliationResult
     {
         $statement = $this->statementQuery->findById($statementId);
 
@@ -79,10 +84,6 @@ final readonly class BankReconciliationManager
 
         $this->logger->info("Reconciled statement $statementId: " . count($matched) . " matched.");
 
-        return [
-            'matched' => $matched,
-            'unmatched_bank' => $unmatchedBank,
-            'unmatched_internal' => $unmatchedInternal
-        ];
+        return new ReconciliationResult($matched, array_merge($unmatchedBank, $unmatchedInternal));
     }
 }
