@@ -22,8 +22,11 @@ final class GatewayFactory implements GatewayFactoryInterface
         private readonly HttpClientInterface $httpClient
     ) {}
 
-    public function create(GatewayProvider $provider, ?GatewayCredentials $credentials = null): GatewayInterface
+    public function create(GatewayProvider $provider, array $config): GatewayInterface
     {
+        // Convert config array to GatewayCredentials if provided
+        $credentials = !empty($config) ? GatewayCredentials::fromArray($config) : null;
+        
         $gateway = match ($provider) {
             GatewayProvider::STRIPE => new StripeGateway($this->httpClient, $credentials),
             GatewayProvider::PAYPAL => new PayPalGateway($this->httpClient, $credentials),
@@ -36,5 +39,32 @@ final class GatewayFactory implements GatewayFactoryInterface
         };
 
         return $gateway;
+    }
+    
+    public function supports(GatewayProvider $provider): bool
+    {
+        return in_array($provider, [
+            GatewayProvider::STRIPE,
+            GatewayProvider::PAYPAL,
+            GatewayProvider::SQUARE,
+            GatewayProvider::BRAINTREE,
+            GatewayProvider::AUTHORIZE_NET,
+            GatewayProvider::ADYEN,
+        ], true);
+    }
+    
+    /**
+     * @return array<GatewayProvider>
+     */
+    public function getAvailableGateways(): array
+    {
+        return [
+            GatewayProvider::STRIPE,
+            GatewayProvider::PAYPAL,
+            GatewayProvider::SQUARE,
+            GatewayProvider::BRAINTREE,
+            GatewayProvider::AUTHORIZE_NET,
+            GatewayProvider::ADYEN,
+        ];
     }
 }

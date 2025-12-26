@@ -70,19 +70,20 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
         $resourceId = $data['resource']['id'] ?? null;
 
         return new WebhookPayload(
-            id: $eventId,
-            provider: GatewayProvider::PAYPAL,
+            eventId: $eventId,
             eventType: $eventType,
-            payload: $data,
+            provider: GatewayProvider::PAYPAL,
             resourceId: $resourceId,
-            occurredAt: isset($data['create_time']) ? new \DateTimeImmutable($data['create_time']) : new \DateTimeImmutable(),
+            resourceType: $data['resource_type'] ?? null,
+            data: $data,
+            receivedAt: isset($data['create_time']) ? new \DateTimeImmutable($data['create_time']) : new \DateTimeImmutable(),
         );
     }
 
     public function processWebhook(WebhookPayload $payload): void
     {
         $this->logger->info('Processing PayPal webhook', [
-            'id' => $payload->id,
+            'id' => $payload->eventId,
             'type' => $payload->eventType->value,
         ]);
 

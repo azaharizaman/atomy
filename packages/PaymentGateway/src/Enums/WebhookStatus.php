@@ -8,7 +8,9 @@ enum WebhookStatus: string
 {
     case RECEIVED = 'received';
     case VERIFIED = 'verified';
+    case PROCESSING = 'processing';
     case DEDUPED = 'deduped';
     case PROCESSED = 'processed';
+    case IGNORED = 'ignored';
     case FAILED = 'failed';
 }

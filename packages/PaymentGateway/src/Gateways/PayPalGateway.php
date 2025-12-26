@@ -308,8 +308,11 @@ final class PayPalGateway implements GatewayInterface
 
     private function getBaseUrl(): string
     {
-        // Determine environment based on credentials or config
-        // For now defaulting to Sandbox if not specified, or maybe check a flag in credentials
-        return self::API_URL_SANDBOX; 
+        // Use sandbox if credentials indicate sandbox mode, otherwise use live
+        if ($this->credentials?->sandboxMode) {
+            return self::API_URL_SANDBOX;
+        }
+        
+        return self::API_URL_LIVE;
     }
 }

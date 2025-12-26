@@ -295,7 +295,8 @@ final class AuthorizeNetGateway implements GatewayInterface
 
     private function sendRequest(array $payload): array
     {
-        $url = self::API_URL_SANDBOX;
+        // Use sandbox if credentials indicate sandbox mode, otherwise use live
+        $url = $this->credentials?->sandboxMode ? self::API_URL_SANDBOX : self::API_URL_LIVE;
 
         $headers = [
             'Content-Type' => 'application/json',

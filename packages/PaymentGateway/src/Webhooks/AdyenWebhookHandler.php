@@ -62,19 +62,19 @@ final class AdyenWebhookHandler implements WebhookHandlerInterface
         $resourceId = $item['pspReference'] ?? null;
 
         return new WebhookPayload(
-            id: $eventId,
-            provider: GatewayProvider::ADYEN,
+            eventId: $eventId,
             eventType: $eventType,
-            payload: $data,
+            provider: GatewayProvider::ADYEN,
             resourceId: $resourceId,
-            occurredAt: isset($item['eventDate']) ? new \DateTimeImmutable($item['eventDate']) : new \DateTimeImmutable(),
+            data: $data,
+            receivedAt: isset($item['eventDate']) ? new \DateTimeImmutable($item['eventDate']) : new \DateTimeImmutable(),
         );
     }
 
     public function processWebhook(WebhookPayload $payload): void
     {
         $this->logger->info('Processing Adyen webhook', [
-            'id' => $payload->id,
+            'id' => $payload->eventId,
             'type' => $payload->eventType->value,
         ]);
     }

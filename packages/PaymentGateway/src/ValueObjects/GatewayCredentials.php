@@ -114,6 +114,35 @@ final class GatewayCredentials
     {
         return $this->webhookSecret !== null && $this->webhookSecret !== '';
     }
+    
+    /**
+     * Create credentials from configuration array.
+     *
+     * @param array<string, mixed> $config Configuration array
+     * @return self
+     */
+    public static function fromArray(array $config): self
+    {
+        $provider = $config['provider'] ?? null;
+        
+        if (!$provider instanceof GatewayProvider) {
+            if (is_string($provider)) {
+                $provider = GatewayProvider::from($provider);
+            } else {
+                throw new InvalidCredentialsException('Provider is required');
+            }
+        }
+        
+        return new self(
+            provider: $provider,
+            apiKey: $config['apiKey'] ?? $config['api_key'] ?? '',
+            apiSecret: $config['apiSecret'] ?? $config['api_secret'] ?? null,
+            merchantId: $config['merchantId'] ?? $config['merchant_id'] ?? null,
+            webhookSecret: $config['webhookSecret'] ?? $config['webhook_secret'] ?? null,
+            sandboxMode: $config['sandboxMode'] ?? $config['sandbox_mode'] ?? false,
+            additionalConfig: $config['additionalConfig'] ?? $config['additional_config'] ?? [],
+        );
+    }
 
     /**
      * Get environment name.

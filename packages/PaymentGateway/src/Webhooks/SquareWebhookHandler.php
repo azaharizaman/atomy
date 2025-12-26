@@ -65,19 +65,19 @@ final class SquareWebhookHandler implements WebhookHandlerInterface
         $resourceId = $data['data']['object']['payment']['id'] ?? null;
 
         return new WebhookPayload(
-            id: $eventId,
-            provider: GatewayProvider::SQUARE,
+            eventId: $eventId,
             eventType: $eventType,
-            payload: $data,
+            provider: GatewayProvider::SQUARE,
             resourceId: $resourceId,
-            occurredAt: isset($data['created_at']) ? new \DateTimeImmutable($data['created_at']) : new \DateTimeImmutable(),
+            data: $data,
+            receivedAt: isset($data['created_at']) ? new \DateTimeImmutable($data['created_at']) : new \DateTimeImmutable(),
         );
     }
 
     public function processWebhook(WebhookPayload $payload): void
     {
         $this->logger->info('Processing Square webhook', [
-            'id' => $payload->id,
+            'id' => $payload->eventId,
             'type' => $payload->eventType->value,
         ]);
     }
