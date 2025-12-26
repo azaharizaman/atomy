@@ -55,7 +55,12 @@ final readonly class BankConnection implements BankConnectionInterface
 
     public function getCredentials(): array
     {
-        return ['access_token' => $this->accessToken];
+        return [
+            'access_token' => $this->accessToken,
+            'refresh_token' => $this->refreshToken,
+            'expires_at' => $this->expiresAt?->format('c'),
+            'provider_connection_id' => $this->providerConnectionId,
+        ];
     }
 
     public function getRefreshToken(): ?string

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Nexus\PaymentBank\Contracts;
 
 use Nexus\Common\ValueObjects\Money;
-use Nexus\PaymentBank\DTOs\Beneficiary;
 use Nexus\PaymentBank\DTOs\PaymentInitiationResult;
 use Nexus\PaymentBank\Entities\BankConnectionInterface;
+use Nexus\PaymentBank\ValueObjects\Beneficiary;
 
 interface PaymentInitiationInterface
 {

@@ -10,6 +10,7 @@ use Nexus\PaymentBank\Contracts\PaymentInitiationServiceInterface;
 use Nexus\PaymentBank\Contracts\ProviderRegistryInterface;
 use Nexus\PaymentBank\DTOs\PaymentInitiationResult;
 use Nexus\PaymentBank\Exceptions\BankConnectionNotFoundException;
+use Nexus\PaymentBank\ValueObjects\Beneficiary;
 
 final readonly class PaymentInitiationService implements PaymentInitiationServiceInterface
 {
@@ -21,7 +22,7 @@ final readonly class PaymentInitiationService implements PaymentInitiationServic
     public function initiatePayment(
         string $connectionId,
         string $sourceAccountId,
-        string $destinationAccountId,
+        Beneficiary $beneficiary,
         Money $amount,
         ?string $reference = null
     ): PaymentInitiationResult {
@@ -30,11 +31,12 @@ final readonly class PaymentInitiationService implements PaymentInitiationServic
         $initiator = $provider->getPaymentInitiation();
         
         return $initiator->initiatePayment(
-            $connection->getCredentials(),
+            $connection,
             $sourceAccountId,
-            $destinationAccountId,
+            $beneficiary,
             $amount,
-            $reference
+            $reference ?? '',
+            []
         );
     }
 
@@ -44,7 +46,7 @@ final readonly class PaymentInitiationService implements PaymentInitiationServic
         $provider = $this->providerRegistry->get($connection->getProviderName());
         $initiator = $provider->getPaymentInitiation();
         
-        return $initiator->getPaymentStatus($connection->getCredentials(), $paymentId);
+        return $initiator->getPaymentStatus($connection, $paymentId);
     }
 
     private function getConnection(string $connectionId): \Nexus\PaymentBank\Entities\BankConnectionInterface

@@ -6,22 +6,32 @@ namespace Nexus\PaymentBank\Services;
 
 use Nexus\PaymentBank\Contracts\BankStatementQueryInterface;
 use Nexus\PaymentBank\Contracts\BankTransactionQueryInterface;
+use Nexus\PaymentBank\DTOs\InternalTransaction;
+use Nexus\PaymentBank\Exceptions\BankStatementNotFoundException;
 use Psr\Log\LoggerInterface;
 
-final class BankReconciliationManager
+final readonly class BankReconciliationManager
 {
+    /** @var float Tolerance for amount matching */
+    private const float AMOUNT_TOLERANCE = 0.001;
+
     public function __construct(
-        private readonly BankTransactionQueryInterface $transactionQuery,
-        private readonly BankStatementQueryInterface $statementQuery,
-        private readonly LoggerInterface $logger
+        private BankTransactionQueryInterface $transactionQuery,
+        private BankStatementQueryInterface $statementQuery,
+        private LoggerInterface $logger
     ) {}
 
+    /**
+     * @param string $statementId
+     * @param array<InternalTransaction> $internalTransactions
+     * @return array
+     */
     public function reconcile(string $statementId, array $internalTransactions = []): array
     {
         $statement = $this->statementQuery->findById($statementId);
 
         if (!$statement) {
-            throw new \RuntimeException("Statement not found: $statementId");
+            throw new BankStatementNotFoundException($statementId);
         }
 
         $bankTransactions = $this->transactionQuery->findByConnectionAndDateRange(
@@ -40,10 +50,10 @@ final class BankReconciliationManager
             $matchFound = false;
             foreach ($remainingInternalTxns as $key => $internalTxn) {
                 // Match by Amount and Date
-                $amountMatch = abs($bankTxn->getAmount() - $internalTxn['amount']) < 0.001;
+                $amountMatch = abs($bankTxn->getAmount() - $internalTxn->getAmount()) < self::AMOUNT_TOLERANCE;
                 
                 $bankDate = $bankTxn->getDate()->format('Y-m-d');
-                $internalDate = $internalTxn['date'];
+                $internalDate = $internalTxn->getDate();
                 $dateMatch = $bankDate === $internalDate;
 
                 if ($amountMatch && $dateMatch) {

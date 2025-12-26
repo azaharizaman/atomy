@@ -69,4 +69,25 @@ interface BankProviderInterface
      * @return array
      */
     public function fetchTransactions(array $credentials, \DateTimeImmutable $start, \DateTimeImmutable $end): array;
+
+    /**
+     * Get the account data provider for this bank provider.
+     *
+     * @return AccountDataProviderInterface
+     */
+    public function getAccountDataProvider(): AccountDataProviderInterface;
+
+    /**
+     * Get the payment initiation service for this bank provider.
+     *
+     * @return PaymentInitiationInterface
+     */
+    public function getPaymentInitiation(): PaymentInitiationInterface;
+
+    /**
+     * Get the account verification service for this bank provider.
+     *
+     * @return AccountVerificationInterface
+     */
+    public function getAccountVerification(): AccountVerificationInterface;
 }

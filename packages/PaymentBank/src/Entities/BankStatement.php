@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentBank\Entities;
 
-final class BankStatement implements BankStatementInterface
+final readonly class BankStatement implements BankStatementInterface
 {
     public function __construct(
-        private readonly string $id,
-        private readonly string $connectionId,
-        private readonly \DateTimeImmutable $startDate,
-        private readonly \DateTimeImmutable $endDate,
-        private readonly float $amount,
-        private readonly array $transactions = []
+        private string $id,
+        private string $connectionId,
+        private \DateTimeImmutable $startDate,
+        private \DateTimeImmutable $endDate,
+        private float $amount,
+        private array $transactions = []
     ) {}
 
     public function getId(): string

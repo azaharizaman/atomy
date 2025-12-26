@@ -13,14 +13,14 @@ use Nexus\PaymentBank\Entities\BankTransactionInterface;
 use Nexus\PaymentBank\Exceptions\BankConnectionNotFoundException;
 use Psr\Log\LoggerInterface;
 
-final class BankTransactionManager
+final readonly class BankTransactionManager
 {
     public function __construct(
-        private readonly BankTransactionPersistInterface $persist,
-        private readonly BankTransactionQueryInterface $query,
-        private readonly BankConnectionQueryInterface $connectionQuery,
-        private readonly ProviderRegistryInterface $providerRegistry,
-        private readonly LoggerInterface $logger
+        private BankTransactionPersistInterface $persist,
+        private BankTransactionQueryInterface $query,
+        private BankConnectionQueryInterface $connectionQuery,
+        private ProviderRegistryInterface $providerRegistry,
+        private LoggerInterface $logger
     ) {}
 
     public function fetchTransactions(string $connectionId, \DateTimeImmutable $start, \DateTimeImmutable $end): array
