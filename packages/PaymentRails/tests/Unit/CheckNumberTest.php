@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentRails\Tests\Unit;
 
-use Nexus\PaymentRails\Exceptions\InvalidCheckNumberException;
-use Nexus\PaymentRails\ValueObjects\CheckNumber;
 use PHPUnit\Framework\TestCase;
+use Nexus\PaymentRails\ValueObjects\CheckNumber;
+use Nexus\PaymentRails\Exceptions\InvalidCheckNumberException;
 
 final class CheckNumberTest extends TestCase
 {

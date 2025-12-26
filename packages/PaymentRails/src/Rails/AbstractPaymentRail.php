@@ -22,7 +22,7 @@ use Nexus\PaymentRails\Contracts\RailConfigurationInterface;
  */
 abstract class AbstractPaymentRail implements PaymentRailInterface
 {
-    protected RailCapabilities $capabilities;
+    protected readonly RailCapabilities $capabilities;
 
     protected readonly ClockInterface $clock;
 

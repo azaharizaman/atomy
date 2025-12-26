@@ -64,4 +64,40 @@ final class VoidResult
             rawResponse: $rawResponse,
         );
     }
+
+    /**
+     * Convert to array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'success' => $this->success,
+            'voidId' => $this->voidId,
+            'transactionId' => $this->transactionId,
+            'status' => $this->status->value,
+            'error' => $this->error?->toArray(),
+            'voidedAt' => $this->voidedAt?->format(\DateTimeInterface::ATOM),
+            'rawResponse' => $this->rawResponse,
+        ];
+    }
+
+    /**
+     * Create from array representation.
+     *
+     * @param array<string, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            success: (bool) ($data['success'] ?? false),
+            voidId: $data['voidId'] ?? $data['void_id'] ?? null,
+            transactionId: $data['transactionId'] ?? $data['transaction_id'] ?? null,
+            status: TransactionStatus::tryFrom($data['status'] ?? '') ?? TransactionStatus::PENDING,
+            error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
+            voidedAt: isset($data['voidedAt']) ? new \DateTimeImmutable($data['voidedAt']) : (isset($data['voided_at']) ? new \DateTimeImmutable($data['voided_at']) : null),
+            rawResponse: $data['rawResponse'] ?? $data['raw_response'] ?? [],
+        );
+    }
 }

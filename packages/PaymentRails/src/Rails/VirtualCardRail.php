@@ -33,7 +33,7 @@ use Psr\Log\NullLogger;
  * - Card lifecycle management
  * - Transaction tracking and reconciliation
  */
-final class VirtualCardRail extends AbstractPaymentRail implements VirtualCardRailInterface
+final readonly class VirtualCardRail extends AbstractPaymentRail implements VirtualCardRailInterface
 {
     /**
      * Default card validity period in days.

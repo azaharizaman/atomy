@@ -34,7 +34,7 @@ use Psr\Log\NullLogger;
  * - SWIFT (international)
  * - CHIPS (high-value domestic)
  */
-final class WireRail extends AbstractPaymentRail implements WireRailInterface
+final readonly class WireRail extends AbstractPaymentRail implements WireRailInterface
 {
     /**
      * Minimum wire amount in cents (typically $1,000 or more for cost-efficiency).

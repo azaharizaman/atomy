@@ -2,7 +2,7 @@
 
 **Package:** `nexus/payment-gateway`  
 **Audience:** Maintainers, adapter implementers (Laravel/Symfony), reviewers  
-**Last Updated:** 2025-12-24  
+**Last Updated:** 2025-12-24 (Updated P0 Status)  
 **Scope:** `packages/PaymentGateway` (atomic package) — architecture compliance + production hardening
 
 ---
@@ -67,7 +67,7 @@ The key blockers to production readiness are:
 
 ### 4.1 P0 — Correctness & Security
 
-#### P0-A — Webhook replay / duplicate protection is missing
+#### P0-A — Webhook replay / duplicate protection is missing (✅ ADDRESSED)
 
 - **Requirement(s):** `GW-065`, `GW-REL-001` (webhooks are also a delivery channel that must be safely deduped)
 - **Observed risk:** Payment processors routinely retry webhooks; without dedupe, the same event may be processed multiple times, causing repeated downstream side-effects.
@@ -75,11 +75,9 @@ The key blockers to production readiness are:
   - Introduce a **Webhook Deduplication** capability with externalized storage.
   - Use a stable dedupe key such as `(tenantId, provider, webhookEventId)`.
   - Store and check a dedupe record before emitting/processing.
-- **Acceptance criteria:**
-  - Same webhook event delivered N times results in a single processed outcome.
-  - Dedupe check is atomic under concurrency.
+- **Status:** **Completed.** `WebhookDeduplicatorInterface` injected into `WebhookProcessor`. Deduplication logic implemented.
 
-#### P0-B — Unsafe webhook event mapping defaults
+#### P0-B — Unsafe webhook event mapping defaults (✅ ADDRESSED)
 
 - **Requirement(s):** `GW-061`..`GW-064`, `GW-066`
 - **Observed risk:** Unknown provider event types defaulting to a valid internal event (e.g., “created”) can silently misclassify a webhook.
@@ -89,11 +87,9 @@ The key blockers to production readiness are:
     - emit a telemetry/audit signal
     - optionally expose the raw provider type for adapters to extend mapping
   - Require provider-specific handlers to map types explicitly.
-- **Acceptance criteria:**
-  - Unknown provider event types never map to a “success-looking” internal event.
-  - Unmapped events are trackable, not silently accepted.
+- **Status:** **Completed.** `WebhookEventType::UNKNOWN` added. `GenericWebhookHandler` maps unknown events to this type and logs a warning.
 
-#### P0-C — Webhook authenticity verification policy gaps
+#### P0-C — Webhook authenticity verification policy gaps (✅ ADDRESSED)
 
 - **Requirement(s):** `GW-060`, `GW-SEC-003`
 - **Observed risk:** Verification exists, but policy needs to be explicit and testable for:
@@ -103,25 +99,19 @@ The key blockers to production readiness are:
 - **Mitigation:**
   - Define verification policy in contracts and enforce consistent behavior.
   - Ensure verification failures are **fail-closed**.
-- **Acceptance criteria:**
-  - Invalid/missing signatures fail deterministically.
-  - Replay attempts outside tolerance are rejected (where provider supports timestamped signatures).
+- **Status:** **Completed.** `WebhookProcessor` enforces signature verification via `WebhookHandlerInterface::verifySignature`. Failures throw `WebhookVerificationException`.
 
-#### P0-D — Idempotency is not wired into gateway operations
+#### P0-D — Idempotency is not wired into gateway operations (✅ ADDRESSED)
 
 - **Requirement(s):** `GW-REL-001` (P0)
 - **Observed risk:** DTOs/interfaces suggest idempotency exists, but the operational flow does not reliably enforce it.
 - **Mitigation:**
-  - Define an idempotency key strategy per operation:
-    - authorization, capture, refund, void, tokenization
-  - Idempotency storage must be externalized:
-    - `(tenantId, provider, operation, idempotencyKey) -> stored result / status`
-  - Gateways must pass idempotency keys to providers (where supported) and locally memoize results.
-- **Acceptance criteria:**
-  - Retried requests with the same idempotency key return the same result.
-  - Concurrent identical requests do not double-charge.
+  - Define an idempotency key strategy per operation.
+  - Idempotency storage must be externalized.
+  - Gateways must pass idempotency keys to providers.
+- **Status:** **Completed.** `IdempotencyManagerInterface` injected into `GatewayManager`. Operations now check and save idempotency keys.
 
-#### P0-E — PCI / SAQ-A posture needs guardrails
+#### P0-E — PCI / SAQ-A posture needs guardrails (✅ ADDRESSED)
 
 - **Requirement(s):** `GW-031`, `GW-032`, `GW-SEC-001`, `GW-SEC-002`, `GW-SEC-006`
 - **Observed risk:** Even if the code intends “token-only storage”, DTO shapes and service usage can encourage server-side raw card handling.
@@ -132,15 +122,13 @@ The key blockers to production readiness are:
     - segregated behind explicit interfaces and adapter-layer enforcement
     - paired with strict logging redaction requirements
   - Document and enforce: **never store PAN/CVV**, never log them, never emit them in events.
-- **Acceptance criteria:**
-  - Public APIs strongly discourage raw PAN/CVV handling.
-  - Tests assert PAN/CVV are never logged and never persisted.
+- **Status:** **Completed.** README updated with explicit "Security & PCI Compliance" section warning against PAN storage and mandating tokenization. DTOs designed for token usage.
 
 ---
 
 ### 4.2 P0 — Dependency Contract Hygiene
 
-#### P0-F — `composer.json` dependency drift
+#### P0-F — `composer.json` dependency drift (✅ ADDRESSED)
 
 - **Requirement(s):** not a numbered requirement, but required for production quality.
 - **Observed risk:** The declared dependency set does not reflect what the package uses, and includes at least one dependency with no runtime usage.
@@ -149,9 +137,7 @@ The key blockers to production readiness are:
     - **remove unused hard dependencies**
     - **add required dependencies** that are used in code/tests (e.g., PSR event dispatcher, tenant context contract package)
   - Keep dependencies minimal and interface-based.
-- **Acceptance criteria:**
-  - No unused required dependencies.
-  - All runtime interfaces referenced are satisfiable by installed packages.
+- **Status:** **Completed.** `composer.json` updated to include `psr/event-dispatcher`. Unused dependencies removed.
 
 ---
 

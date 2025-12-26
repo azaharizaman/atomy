@@ -6,6 +6,7 @@ namespace Nexus\PaymentGateway\Tests\Unit\Services;
 
 use Nexus\PaymentGateway\Contracts\WebhookHandlerInterface;
 use Nexus\PaymentGateway\Contracts\WebhookProcessorInterface;
+use Nexus\PaymentGateway\Contracts\WebhookDeduplicatorInterface;
 use Nexus\PaymentGateway\Enums\GatewayProvider;
 use Nexus\PaymentGateway\Enums\WebhookEventType;
 use Nexus\PaymentGateway\Exceptions\GatewayException;
@@ -26,6 +27,7 @@ final class WebhookProcessorTest extends TestCase
     private TenantContextInterface&MockObject $tenantContext;
     private EventDispatcherInterface&MockObject $eventDispatcher;
     private LoggerInterface&MockObject $logger;
+    private WebhookDeduplicatorInterface&MockObject $deduplicator;
     private WebhookProcessor $processor;
 
     protected function setUp(): void
@@ -33,6 +35,7 @@ final class WebhookProcessorTest extends TestCase
         $this->tenantContext = $this->createMock(TenantContextInterface::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->deduplicator = $this->createMock(WebhookDeduplicatorInterface::class);
 
         $this->tenantContext->method('getCurrentTenantId')->willReturn('tenant_123');
 
@@ -40,6 +43,7 @@ final class WebhookProcessorTest extends TestCase
             tenantContext: $this->tenantContext,
             eventDispatcher: $this->eventDispatcher,
             logger: $this->logger,
+            deduplicator: $this->deduplicator,
         );
     }
 
@@ -412,5 +416,39 @@ final class WebhookProcessorTest extends TestCase
         );
 
         $this->assertInstanceOf(WebhookPayload::class, $result);
+    }
+
+    #[Test]
+    public function it_does_not_process_webhook_if_recording_fails(): void
+    {
+        $handler = $this->createMock(WebhookHandlerInterface::class);
+        $handler->method('getProvider')->willReturn(GatewayProvider::STRIPE);
+        $handler->method('verifySignature')->willReturn(true);
+        
+        $webhookPayload = new WebhookPayload(
+            eventId: 'evt_123',
+            eventType: WebhookEventType::PAYMENT_CAPTURED,
+            provider: GatewayProvider::STRIPE,
+            resourceId: 'pi_123',
+        );
+        $handler->method('parsePayload')->willReturn($webhookPayload);
+
+        $this->deduplicator->expects($this->once())
+            ->method('recordProcessed')
+            ->willThrowException(new \RuntimeException('Storage error'));
+
+        $handler->expects($this->never())
+            ->method('processWebhook');
+
+        $this->processor->registerHandler($handler);
+        $this->processor->setSecret(GatewayProvider::STRIPE, 'whsec_secret');
+
+        $this->expectException(\RuntimeException::class);
+
+        $this->processor->process(
+            providerName: GatewayProvider::STRIPE->value,
+            payload: '{}',
+            headers: ['stripe-signature' => 'sig'],
+        );
     }
 }

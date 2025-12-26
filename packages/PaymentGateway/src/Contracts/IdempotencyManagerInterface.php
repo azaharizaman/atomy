@@ -53,4 +53,16 @@ interface IdempotencyManagerInterface
      * Clear stored result (for cleanup).
      */
     public function clear(GatewayProvider $provider, string $idempotencyKey): void;
+
+    /**
+     * Execute an operation idempotently.
+     *
+     * @template T
+     * @param GatewayProvider $provider
+     * @param string $key
+     * @param callable(): T $operation
+     * @param class-string<T> $resultClass
+     * @return T
+     */
+    public function execute(GatewayProvider $provider, string $key, callable $operation, string $resultClass): mixed;
 }

@@ -94,4 +94,46 @@ final class RefundResult
     {
         return $this->type === RefundType::PARTIAL;
     }
+
+    /**
+     * Convert to array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'success' => $this->success,
+            'refundId' => $this->refundId,
+            'transactionId' => $this->transactionId,
+            'status' => $this->status->value,
+            'type' => $this->type->value,
+            'refundedAmount' => $this->refundedAmount?->toArray(),
+            'error' => $this->error?->toArray(),
+            'reason' => $this->reason,
+            'refundedAt' => $this->refundedAt?->format(\DateTimeInterface::ATOM),
+            'rawResponse' => $this->rawResponse,
+        ];
+    }
+
+    /**
+     * Create from array representation.
+     *
+     * @param array<string, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            success: (bool) ($data['success'] ?? false),
+            refundId: $data['refundId'] ?? $data['refund_id'] ?? null,
+            transactionId: $data['transactionId'] ?? $data['transaction_id'] ?? null,
+            status: TransactionStatus::tryFrom($data['status'] ?? '') ?? TransactionStatus::PENDING,
+            type: RefundType::tryFrom($data['type'] ?? '') ?? RefundType::FULL,
+            refundedAmount: isset($data['refundedAmount']) ? Money::fromArray($data['refundedAmount']) : (isset($data['refunded_amount']) ? Money::fromArray($data['refunded_amount']) : null),
+            error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
+            reason: $data['reason'] ?? null,
+            refundedAt: isset($data['refundedAt']) ? new \DateTimeImmutable($data['refundedAt']) : (isset($data['refunded_at']) ? new \DateTimeImmutable($data['refunded_at']) : null),
+            rawResponse: $data['rawResponse'] ?? $data['raw_response'] ?? [],
+        );
+    }
 }

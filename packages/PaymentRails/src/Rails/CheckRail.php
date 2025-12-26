@@ -32,7 +32,7 @@ use Psr\Log\NullLogger;
  * - Stop payment processing
  * - Check void and reissue
  */
-final class CheckRail extends AbstractPaymentRail implements CheckRailInterface
+final readonly class CheckRail extends AbstractPaymentRail implements CheckRailInterface
 {
     /**
      * Maximum check amount in cents (often limited by positive pay systems).

@@ -42,7 +42,7 @@ final class GatewayError
             retryable: (bool) ($response['retryable'] ?? false),
             type: $response['type'] ?? $response['error_type'] ?? null,
             param: $response['param'] ?? null,
-            details: $response,
+            details: $response['details'] ?? $response,
         );
     }
 
@@ -147,5 +147,23 @@ final class GatewayError
         }
 
         return 'An error occurred processing your payment. Please try again.';
+    }
+
+    /**
+     * Convert to array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'code' => $this->code,
+            'message' => $this->message,
+            'decline_code' => $this->declineCode,
+            'retryable' => $this->retryable,
+            'type' => $this->type,
+            'param' => $this->param,
+            'details' => $this->details,
+        ];
     }
 }

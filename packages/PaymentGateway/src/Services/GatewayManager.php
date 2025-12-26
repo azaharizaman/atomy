@@ -7,6 +7,7 @@ namespace Nexus\PaymentGateway\Services;
 use Nexus\PaymentGateway\Contracts\GatewayInterface;
 use Nexus\PaymentGateway\Contracts\GatewayManagerInterface;
 use Nexus\PaymentGateway\Contracts\GatewayRegistryInterface;
+use Nexus\PaymentGateway\Contracts\IdempotencyManagerInterface;
 use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
 use Nexus\PaymentGateway\DTOs\CaptureRequest;
 use Nexus\PaymentGateway\DTOs\RefundRequest;
@@ -60,6 +61,7 @@ final class GatewayManager implements GatewayManagerInterface
     public function __construct(
         private readonly GatewayRegistryInterface $registry,
         private readonly TenantContextInterface $tenantContext,
+        private readonly ?IdempotencyManagerInterface $idempotencyManager = null,
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
         private readonly LoggerInterface $logger = new NullLogger(),
     ) {
@@ -101,32 +103,46 @@ final class GatewayManager implements GatewayManagerInterface
         $gateway = $this->getGateway($provider);
         $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
-        try {
-            $result = $gateway->authorize($request);
+        $operation = function () use ($gateway, $provider, $request, $tenantId) {
+            try {
+                $result = $gateway->authorize($request);
 
-            $this->logger->info('Payment authorized', [
-                'provider' => $provider->value,
-                'transaction_id' => $result->transactionId,
-                'amount' => $request->amount->format(),
-            ]);
+                $this->logger->info('Payment authorized', [
+                    'provider' => $provider->value,
+                    'transaction_id' => $result->transactionId,
+                    'amount' => $request->amount->format(),
+                ]);
 
-            if ($result->success) {
-                $this->eventDispatcher?->dispatch(
-                    PaymentAuthorizedEvent::fromResult(
-                        tenantId: $tenantId,
-                        transactionReference: $request->orderId ?? '',
-                        provider: $provider,
-                        amount: $request->amount,
-                        result: $result,
-                    )
-                );
+                if ($result->success) {
+                    $this->eventDispatcher?->dispatch(
+                        PaymentAuthorizedEvent::fromResult(
+                            tenantId: $tenantId,
+                            transactionReference: $request->orderId ?? '',
+                            provider: $provider,
+                            amount: $request->amount,
+                            result: $result,
+                        )
+                    );
+                }
+
+                return $result;
+            } catch (AuthorizationFailedException $e) {
+                $this->logGatewayError($tenantId, $provider, 'authorize', $e, $request->orderId);
+                throw $e;
             }
+        };
 
-            return $result;
-        } catch (AuthorizationFailedException $e) {
-            $this->logGatewayError($tenantId, $provider, 'authorize', $e, $request->orderId);
-            throw $e;
+        if ($this->idempotencyManager && $request->idempotencyKey) {
+            /** @var AuthorizationResult */
+            return $this->idempotencyManager->execute(
+                provider: $provider,
+                key: $request->idempotencyKey,
+                operation: $operation,
+                resultClass: AuthorizationResult::class
+            );
         }
+
+        return $operation();
     }
 
     public function capture(
@@ -136,33 +152,47 @@ final class GatewayManager implements GatewayManagerInterface
         $gateway = $this->getGateway($provider);
         $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
-        try {
-            $result = $gateway->capture($request);
+        $operation = function () use ($gateway, $provider, $request, $tenantId) {
+            try {
+                $result = $gateway->capture($request);
 
-            $this->logger->info('Payment captured', [
-                'provider' => $provider->value,
-                'authorization_id' => $request->authorizationId,
-                'capture_id' => $result->captureId,
-                'amount' => $result->capturedAmount?->format(),
-            ]);
+                $this->logger->info('Payment captured', [
+                    'provider' => $provider->value,
+                    'authorization_id' => $request->authorizationId,
+                    'capture_id' => $result->captureId,
+                    'amount' => $result->capturedAmount?->format(),
+                ]);
 
-            if ($result->success) {
-                $this->eventDispatcher?->dispatch(
-                    PaymentCapturedEvent::fromResult(
-                        tenantId: $tenantId,
-                        authorizationId: $request->authorizationId,
-                        transactionReference: '',
-                        provider: $provider,
-                        result: $result,
-                    )
-                );
+                if ($result->success) {
+                    $this->eventDispatcher?->dispatch(
+                        PaymentCapturedEvent::fromResult(
+                            tenantId: $tenantId,
+                            authorizationId: $request->authorizationId,
+                            transactionReference: '',
+                            provider: $provider,
+                            result: $result,
+                        )
+                    );
+                }
+
+                return $result;
+            } catch (CaptureFailedException $e) {
+                $this->logGatewayError($tenantId, $provider, 'capture', $e, $request->authorizationId);
+                throw $e;
             }
+        };
 
-            return $result;
-        } catch (CaptureFailedException $e) {
-            $this->logGatewayError($tenantId, $provider, 'capture', $e, $request->authorizationId);
-            throw $e;
+        if ($this->idempotencyManager && $request->idempotencyKey) {
+            /** @var CaptureResult */
+            return $this->idempotencyManager->execute(
+                provider: $provider,
+                key: $request->idempotencyKey,
+                operation: $operation,
+                resultClass: CaptureResult::class
+            );
         }
+
+        return $operation();
     }
 
     public function refund(
@@ -172,34 +202,48 @@ final class GatewayManager implements GatewayManagerInterface
         $gateway = $this->getGateway($provider);
         $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
-        try {
-            $result = $gateway->refund($request);
+        $operation = function () use ($gateway, $provider, $request, $tenantId) {
+            try {
+                $result = $gateway->refund($request);
 
-            $this->logger->info('Payment refunded', [
-                'provider' => $provider->value,
-                'transaction_id' => $request->transactionId,
-                'refund_id' => $result->refundId,
-                'amount' => $result->refundedAmount?->format(),
-                'type' => $result->type->value,
-            ]);
+                $this->logger->info('Payment refunded', [
+                    'provider' => $provider->value,
+                    'transaction_id' => $request->transactionId,
+                    'refund_id' => $result->refundId,
+                    'amount' => $result->refundedAmount?->format(),
+                    'type' => $result->type->value,
+                ]);
 
-            if ($result->success) {
-                $this->eventDispatcher?->dispatch(
-                    PaymentRefundedEvent::fromResult(
-                        tenantId: $tenantId,
-                        captureId: $request->transactionId,
-                        transactionReference: '',
-                        provider: $provider,
-                        result: $result,
-                    )
-                );
+                if ($result->success) {
+                    $this->eventDispatcher?->dispatch(
+                        PaymentRefundedEvent::fromResult(
+                            tenantId: $tenantId,
+                            captureId: $request->transactionId,
+                            transactionReference: '',
+                            provider: $provider,
+                            result: $result,
+                        )
+                    );
+                }
+
+                return $result;
+            } catch (RefundFailedException $e) {
+                $this->logGatewayError($tenantId, $provider, 'refund', $e, $request->transactionId);
+                throw $e;
             }
+        };
 
-            return $result;
-        } catch (RefundFailedException $e) {
-            $this->logGatewayError($tenantId, $provider, 'refund', $e, $request->transactionId);
-            throw $e;
+        if ($this->idempotencyManager && $request->idempotencyKey) {
+            /** @var RefundResult */
+            return $this->idempotencyManager->execute(
+                provider: $provider,
+                key: $request->idempotencyKey,
+                operation: $operation,
+                resultClass: RefundResult::class
+            );
         }
+
+        return $operation();
     }
 
     public function void(
@@ -209,32 +253,46 @@ final class GatewayManager implements GatewayManagerInterface
         $gateway = $this->getGateway($provider);
         $tenantId = $this->tenantContext->getCurrentTenantId() ?? '';
 
-        try {
-            $result = $gateway->void($request);
+        $operation = function () use ($gateway, $provider, $request, $tenantId) {
+            try {
+                $result = $gateway->void($request);
 
-            $this->logger->info('Authorization voided', [
-                'provider' => $provider->value,
-                'authorization_id' => $request->authorizationId,
-                'void_id' => $result->voidId,
-            ]);
+                $this->logger->info('Authorization voided', [
+                    'provider' => $provider->value,
+                    'authorization_id' => $request->authorizationId,
+                    'void_id' => $result->voidId,
+                ]);
 
-            if ($result->success) {
-                $this->eventDispatcher?->dispatch(
-                    PaymentVoidedEvent::fromResult(
-                        tenantId: $tenantId,
-                        authorizationId: $request->authorizationId,
-                        transactionReference: '',
-                        provider: $provider,
-                        result: $result,
-                    )
-                );
+                if ($result->success) {
+                    $this->eventDispatcher?->dispatch(
+                        PaymentVoidedEvent::fromResult(
+                            tenantId: $tenantId,
+                            authorizationId: $request->authorizationId,
+                            transactionReference: '',
+                            provider: $provider,
+                            result: $result,
+                        )
+                    );
+                }
+
+                return $result;
+            } catch (VoidFailedException $e) {
+                $this->logGatewayError($tenantId, $provider, 'void', $e, $request->authorizationId);
+                throw $e;
             }
+        };
 
-            return $result;
-        } catch (VoidFailedException $e) {
-            $this->logGatewayError($tenantId, $provider, 'void', $e, $request->authorizationId);
-            throw $e;
+        if ($this->idempotencyManager && $request->idempotencyKey) {
+            /** @var VoidResult */
+            return $this->idempotencyManager->execute(
+                provider: $provider,
+                key: $request->idempotencyKey,
+                operation: $operation,
+                resultClass: VoidResult::class
+            );
         }
+
+        return $operation();
     }
 
     public function getRegisteredProviders(): array

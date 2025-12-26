@@ -26,7 +26,7 @@ use Psr\Log\NullLogger;
  * - TARGET2 (Eurozone)
  * - RTGS India
  */
-final class RtgsRail extends AbstractPaymentRail implements RtgsRailInterface
+final readonly class RtgsRail extends AbstractPaymentRail implements RtgsRailInterface
 {
     /**
      * Minimum RTGS amounts per system (typically high-value only).

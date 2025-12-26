@@ -88,4 +88,46 @@ final class CaptureResult
     {
         return $this->success && $this->status->canRefund();
     }
+
+    /**
+     * Convert to array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'success' => $this->success,
+            'captureId' => $this->captureId,
+            'transactionId' => $this->transactionId,
+            'status' => $this->status->value,
+            'capturedAmount' => $this->capturedAmount?->toArray(),
+            'feeAmount' => $this->feeAmount?->toArray(),
+            'netAmount' => $this->netAmount?->toArray(),
+            'error' => $this->error?->toArray(),
+            'capturedAt' => $this->capturedAt?->format(\DateTimeInterface::ATOM),
+            'rawResponse' => $this->rawResponse,
+        ];
+    }
+
+    /**
+     * Create from array representation.
+     *
+     * @param array<string, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            success: (bool) ($data['success'] ?? false),
+            captureId: $data['captureId'] ?? $data['capture_id'] ?? null,
+            transactionId: $data['transactionId'] ?? $data['transaction_id'] ?? null,
+            status: TransactionStatus::tryFrom($data['status'] ?? '') ?? TransactionStatus::PENDING,
+            capturedAmount: isset($data['capturedAmount']) ? Money::fromArray($data['capturedAmount']) : (isset($data['captured_amount']) ? Money::fromArray($data['captured_amount']) : null),
+            feeAmount: isset($data['feeAmount']) ? Money::fromArray($data['feeAmount']) : (isset($data['fee_amount']) ? Money::fromArray($data['fee_amount']) : null),
+            netAmount: isset($data['netAmount']) ? Money::fromArray($data['netAmount']) : (isset($data['net_amount']) ? Money::fromArray($data['net_amount']) : null),
+            error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
+            capturedAt: isset($data['capturedAt']) ? new \DateTimeImmutable($data['capturedAt']) : (isset($data['captured_at']) ? new \DateTimeImmutable($data['captured_at']) : null),
+            rawResponse: $data['rawResponse'] ?? $data['raw_response'] ?? [],
+        );
+    }
 }

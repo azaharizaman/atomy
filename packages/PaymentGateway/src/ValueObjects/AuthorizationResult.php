@@ -119,4 +119,50 @@ final class AuthorizationResult
             && $this->status->canCapture()
             && !$this->isExpired();
     }
+
+    /**
+     * Convert to array representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'success' => $this->success,
+            'authorizationId' => $this->authorizationId,
+            'transactionId' => $this->transactionId,
+            'status' => $this->status->value,
+            'authorizedAmount' => $this->authorizedAmount?->toArray(),
+            'expiresAt' => $this->expiresAt?->format(\DateTimeInterface::ATOM),
+            'error' => $this->error?->toArray(),
+            'avsResult' => $this->avsResult,
+            'cvvResult' => $this->cvvResult,
+            'requires3ds' => $this->requires3ds,
+            'threeDsUrl' => $this->threeDsUrl,
+            'rawResponse' => $this->rawResponse,
+        ];
+    }
+
+    /**
+     * Create from array representation.
+     *
+     * @param array<string, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            success: (bool) ($data['success'] ?? false),
+            authorizationId: $data['authorizationId'] ?? $data['authorization_id'] ?? null,
+            transactionId: $data['transactionId'] ?? $data['transaction_id'] ?? null,
+            status: TransactionStatus::tryFrom($data['status'] ?? '') ?? TransactionStatus::PENDING,
+            authorizedAmount: isset($data['authorizedAmount']) ? Money::fromArray($data['authorizedAmount']) : (isset($data['authorized_amount']) ? Money::fromArray($data['authorized_amount']) : null),
+            expiresAt: isset($data['expiresAt']) ? new \DateTimeImmutable($data['expiresAt']) : (isset($data['expires_at']) ? new \DateTimeImmutable($data['expires_at']) : null),
+            error: isset($data['error']) ? GatewayError::fromArray($data['error']) : null,
+            avsResult: $data['avsResult'] ?? $data['avs_result'] ?? null,
+            cvvResult: $data['cvvResult'] ?? $data['cvv_result'] ?? null,
+            requires3ds: (bool) ($data['requires3ds'] ?? $data['requires_3ds'] ?? false),
+            threeDsUrl: $data['threeDsUrl'] ?? $data['three_ds_url'] ?? null,
+            rawResponse: $data['rawResponse'] ?? $data['raw_response'] ?? [],
+        );
+    }
 }
