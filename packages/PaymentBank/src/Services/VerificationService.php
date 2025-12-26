@@ -57,9 +57,7 @@ final readonly class VerificationService implements VerificationServiceInterface
         $provider = $this->providerRegistry->get($connection->getProviderName());
         $verifier = $provider->getAccountVerification();
         
-        // Complete micro-deposit verification with amounts
-        // Note: verificationId is passed as part of the accountId parameter for now
-        // This is a limitation of the current interface design
+        // Complete micro-deposit verification using the verification identifier and the provided amounts
         return $verifier->completeVerification($connection, $verificationId, $amounts);
     }
 
