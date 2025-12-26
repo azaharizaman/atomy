@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\PaymentBank\Services;
+
+use Nexus\Common\ValueObjects\Money;
+use Nexus\PaymentBank\Contracts\BankConnectionQueryInterface;
+use Nexus\PaymentBank\Contracts\PaymentInitiationServiceInterface;
+use Nexus\PaymentBank\Contracts\ProviderRegistryInterface;
+use Nexus\PaymentBank\DTOs\PaymentInitiationResult;
+use Nexus\PaymentBank\Exceptions\BankConnectionNotFoundException;
+
+final readonly class PaymentInitiationService implements PaymentInitiationServiceInterface
+{
+    public function __construct(
+        private BankConnectionQueryInterface $connectionQuery,
+        private ProviderRegistryInterface $providerRegistry
+    ) {}
+
+    public function initiatePayment(
+        string $connectionId,
+        string $sourceAccountId,
+        string $destinationAccountId,
+        Money $amount,
+        ?string $reference = null
+    ): PaymentInitiationResult {
+        $connection = $this->getConnection($connectionId);
+        $provider = $this->providerRegistry->get($connection->getProviderName());
+        $initiator = $provider->getPaymentInitiation();
+        
+        return $initiator->initiatePayment(
+            $connection->getCredentials(),
+            $sourceAccountId,
+            $destinationAccountId,
+            $amount,
+            $reference
+        );
+    }
+
+    public function getPaymentStatus(string $connectionId, string $paymentId): string
+    {
+        $connection = $this->getConnection($connectionId);
+        $provider = $this->providerRegistry->get($connection->getProviderName());
+        $initiator = $provider->getPaymentInitiation();
+        
+        return $initiator->getPaymentStatus($connection->getCredentials(), $paymentId);
+    }
+
+    private function getConnection(string $connectionId): \Nexus\PaymentBank\Entities\BankConnectionInterface
+    {
+        return $this->connectionQuery->findById($connectionId)
+            ?? throw new BankConnectionNotFoundException($connectionId);
+    }
+}
