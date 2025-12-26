@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentGateway\Gateways;
 
-use Nexus\PaymentGateway\Contracts\GatewayInterface;
-use Nexus\Connector\Contracts\HttpClientInterface;
-use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
-use Nexus\PaymentGateway\DTOs\CaptureRequest;
-use Nexus\PaymentGateway\DTOs\EvidenceSubmissionRequest;
-use Nexus\PaymentGateway\DTOs\RefundRequest;
 use Nexus\PaymentGateway\DTOs\VoidRequest;
-use Nexus\PaymentGateway\Enums\GatewayProvider;
+use Nexus\PaymentGateway\DTOs\RefundRequest;
+use Nexus\PaymentGateway\DTOs\CaptureRequest;
 use Nexus\PaymentGateway\Enums\GatewayStatus;
-use Nexus\PaymentGateway\Exceptions\AuthorizationFailedException;
-use Nexus\PaymentGateway\Exceptions\CaptureFailedException;
-use Nexus\PaymentGateway\Exceptions\GatewayException;
-use Nexus\PaymentGateway\Exceptions\RefundFailedException;
-use Nexus\PaymentGateway\Exceptions\VoidFailedException;
-use Nexus\PaymentGateway\ValueObjects\AuthorizationResult;
-use Nexus\PaymentGateway\ValueObjects\CaptureResult;
-use Nexus\PaymentGateway\ValueObjects\EvidenceSubmissionResult;
-use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
-use Nexus\PaymentGateway\ValueObjects\RefundResult;
+use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
+use Nexus\PaymentGateway\Enums\GatewayProvider;
 use Nexus\PaymentGateway\ValueObjects\VoidResult;
+use Nexus\Connector\Contracts\HttpClientInterface;
+use Nexus\PaymentGateway\ValueObjects\RefundResult;
+use Nexus\PaymentGateway\Contracts\GatewayInterface;
+use Nexus\PaymentGateway\ValueObjects\CaptureResult;
+use Nexus\PaymentGateway\Exceptions\GatewayException;
+use Nexus\PaymentGateway\DTOs\EvidenceSubmissionRequest;
+use Nexus\PaymentGateway\Exceptions\VoidFailedException;
+use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
+use Nexus\PaymentGateway\Exceptions\RefundFailedException;
+use Nexus\PaymentGateway\ValueObjects\AuthorizationResult;
+use Nexus\PaymentGateway\Exceptions\CaptureFailedException;
+use Nexus\PaymentGateway\ValueObjects\EvidenceSubmissionResult;
+use Nexus\PaymentGateway\Exceptions\AuthorizationFailedException;
 
 /**
  * PayPal Gateway Implementation.
@@ -228,6 +228,31 @@ final class PayPalGateway implements GatewayInterface
     public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
     {
         throw new GatewayException("Evidence submission not implemented for PayPal yet.");
+    }
+
+    public function getStatus(string $transactionId = ''): GatewayStatus
+    {
+        return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
+    }
+
+    public function supports3ds(): bool
+    {
+        return false;
+    }
+
+    public function supportsTokenization(): bool
+    {
+        return false;
+    }
+
+    public function supportsPartialCapture(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialRefund(): bool
+    {
+        return true;
     }
 
     private function ensureInitialized(): void

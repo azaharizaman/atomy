@@ -78,7 +78,7 @@ final class AuthorizeNetGateway implements GatewayInterface
                     'payment' => [
                         'opaqueData' => [
                             'dataDescriptor' => 'COMMON.ACCEPT.INAPP.PAYMENT',
-                            'dataValue' => $request->token, // Nonce
+                            'dataValue' => $request->paymentMethodToken, // Nonce
                         ]
                     ],
                     'order' => [
@@ -251,6 +251,31 @@ final class AuthorizeNetGateway implements GatewayInterface
     public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
     {
         throw new GatewayException("Evidence submission not implemented for Authorize.Net yet.");
+    }
+
+    public function getStatus(string $transactionId = ''): GatewayStatus
+    {
+        return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
+    }
+
+    public function supports3ds(): bool
+    {
+        return false;
+    }
+
+    public function supportsTokenization(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialCapture(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialRefund(): bool
+    {
+        return true;
     }
 
     private function ensureInitialized(): void

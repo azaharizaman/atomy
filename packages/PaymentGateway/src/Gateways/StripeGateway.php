@@ -222,6 +222,31 @@ final class StripeGateway implements GatewayInterface
         throw new GatewayException("Evidence submission not implemented for Stripe yet.");
     }
 
+    public function getStatus(string $transactionId = ''): GatewayStatus
+    {
+        return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
+    }
+
+    public function supports3ds(): bool
+    {
+        return true;
+    }
+
+    public function supportsTokenization(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialCapture(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialRefund(): bool
+    {
+        return true;
+    }
+
     private function ensureInitialized(): void
     {
         if (!$this->isInitialized()) {

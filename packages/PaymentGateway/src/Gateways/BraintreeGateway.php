@@ -89,7 +89,7 @@ final class BraintreeGateway implements GatewayInterface
 
         $variables = [
             'input' => [
-                'paymentMethodId' => $request->token, // Nonce
+                'paymentMethodId' => $request->paymentMethodToken, // Nonce
                 'transaction' => [
                     'amount' => [
                         'value' => $request->amount->getAmount() / 100, // Braintree uses decimal
@@ -267,6 +267,31 @@ final class BraintreeGateway implements GatewayInterface
     public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
     {
         throw new GatewayException("Evidence submission not implemented for Braintree yet.");
+    }
+
+    public function getStatus(string $transactionId = ''): GatewayStatus
+    {
+        return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
+    }
+
+    public function supports3ds(): bool
+    {
+        return true;
+    }
+
+    public function supportsTokenization(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialCapture(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialRefund(): bool
+    {
+        return true;
     }
 
     private function ensureInitialized(): void

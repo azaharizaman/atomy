@@ -5,12 +5,25 @@ declare(strict_types=1);
 namespace Nexus\PaymentGateway\Gateways;
 
 use Nexus\PaymentGateway\Contracts\GatewayInterface;
-use Nexus\PaymentGateway\Contracts\HttpClientInterface;
-use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
-use Nexus\PaymentGateway\ValueObjects\TransactionResult;
-use Nexus\PaymentGateway\Enums\TransactionStatus;
+use Nexus\Connector\Contracts\HttpClientInterface;
+use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
+use Nexus\PaymentGateway\DTOs\CaptureRequest;
+use Nexus\PaymentGateway\DTOs\EvidenceSubmissionRequest;
+use Nexus\PaymentGateway\DTOs\RefundRequest;
+use Nexus\PaymentGateway\DTOs\VoidRequest;
+use Nexus\PaymentGateway\Enums\GatewayProvider;
+use Nexus\PaymentGateway\Enums\GatewayStatus;
+use Nexus\PaymentGateway\Exceptions\AuthorizationFailedException;
+use Nexus\PaymentGateway\Exceptions\CaptureFailedException;
 use Nexus\PaymentGateway\Exceptions\GatewayException;
-use Nexus\PaymentGateway\Exceptions\TransactionFailedException;
+use Nexus\PaymentGateway\Exceptions\RefundFailedException;
+use Nexus\PaymentGateway\Exceptions\VoidFailedException;
+use Nexus\PaymentGateway\ValueObjects\AuthorizationResult;
+use Nexus\PaymentGateway\ValueObjects\CaptureResult;
+use Nexus\PaymentGateway\ValueObjects\EvidenceSubmissionResult;
+use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
+use Nexus\PaymentGateway\ValueObjects\RefundResult;
+use Nexus\PaymentGateway\ValueObjects\VoidResult;
 
 /**
  * Adyen Gateway Implementation.
@@ -21,28 +34,66 @@ final class AdyenGateway implements GatewayInterface
 {
     private const API_VERSION = 'v70';
     private const TEST_URL = 'https://checkout-test.adyen.com/' . self::API_VERSION;
-    private const LIVE_URL = 'https://checkout-live.adyen.com/' . self::API_VERSION; // Note: Live URL usually has a prefix
+    
+    private ?GatewayCredentials $credentials = null;
 
     public function __construct(
         private readonly HttpClientInterface $client,
-        private readonly GatewayCredentials $credentials
-    ) {}
+        ?GatewayCredentials $credentials = null
+    ) {
+        if ($credentials) {
+            $this->initialize($credentials);
+        }
+    }
 
-    public function authorize(array $payload): TransactionResult
+    public function getProvider(): GatewayProvider
     {
-        // Adyen /payments endpoint
-        // Requires 'merchantAccount' and 'amount'
-        
-        $requestPayload = array_merge([
-            'merchantAccount' => $this->credentials->merchantId,
-            'reference' => $payload['reference'] ?? uniqid('adyen_'),
-            // Default to manual capture if not specified, though Adyen usually defaults to auto
-            // 'captureDelayHours' => -1 // Manual capture
-        ], $payload);
+        return GatewayProvider::ADYEN;
+    }
 
-        // Ensure amount is formatted correctly for Adyen (currency, value)
-        // Assuming payload['amount'] is passed as [currency => 'USD', value => 1000]
-        // If the caller passes flat amount, we might need transformation, but let's assume payload is prepared.
+    public function getName(): string
+    {
+        return 'Adyen';
+    }
+
+    public function initialize(GatewayCredentials $credentials): void
+    {
+        $this->credentials = $credentials;
+    }
+
+    public function isInitialized(): bool
+    {
+        return $this->credentials !== null;
+    }
+
+    private function ensureInitialized(): void
+    {
+        if (!$this->isInitialized()) {
+            throw new GatewayException("Adyen Gateway not initialized with credentials.");
+        }
+    }
+
+    public function authorize(AuthorizeRequest $request): AuthorizationResult
+    {
+        $this->ensureInitialized();
+
+        $requestPayload = [
+            'merchantAccount' => $this->credentials->merchantId,
+            'reference' => $request->reference ?? uniqid('adyen_'),
+            'amount' => [
+                'currency' => strtoupper($request->amount->getCurrency()),
+                'value' => $request->amount->getAmount(),
+            ],
+            'paymentMethod' => [
+                'type' => 'scheme',
+                'encryptedCardNumber' => $request->paymentMethodToken, // Assuming token is passed here
+            ],
+            'returnUrl' => $request->returnUrl ?? 'https://example.com/return',
+        ];
+
+        if (!$request->capture) {
+            $requestPayload['captureDelayHours'] = -1; // Manual capture
+        }
 
         try {
             $response = $this->sendRequest('POST', '/payments', $requestPayload);
@@ -51,40 +102,44 @@ final class AdyenGateway implements GatewayInterface
             $pspReference = $response['pspReference'] ?? null;
 
             if ($resultCode === 'Authorised') {
-                return new TransactionResult(
+                return new AuthorizationResult(
                     transactionId: $pspReference,
-                    status: TransactionStatus::AUTHORIZED,
-                    rawResponse: $response,
-                    gatewayReference: $pspReference
+                    status: GatewayStatus::AUTHORIZED,
+                    gatewayReference: $pspReference,
+                    rawResponse: $response
                 );
             }
 
             if ($resultCode === 'Refused') {
-                return new TransactionResult(
+                return new AuthorizationResult(
                     transactionId: $pspReference,
-                    status: TransactionStatus::DECLINED,
-                    rawResponse: $response,
+                    status: GatewayStatus::DECLINED,
                     gatewayReference: $pspReference,
+                    rawResponse: $response,
                     errorMessage: $response['refusalReason'] ?? 'Payment refused'
                 );
             }
 
-            throw new TransactionFailedException("Adyen Authorization Failed: {$resultCode}");
+            throw new AuthorizationFailedException("Adyen Authorization Failed: {$resultCode}");
 
         } catch (\Throwable $e) {
-            throw new GatewayException("Adyen Error: " . $e->getMessage(), 0, $e);
+            throw new AuthorizationFailedException("Adyen Error: " . $e->getMessage(), 0, $e);
         }
     }
 
-    public function capture(string $transactionId, array $payload = []): TransactionResult
+    public function capture(CaptureRequest $request): CaptureResult
     {
-        // Adyen /payments/{id}/captures
-        $endpoint = "/payments/{$transactionId}/captures";
+        $this->ensureInitialized();
+        $endpoint = "/payments/{$request->transactionId}/captures";
         
-        $requestPayload = array_merge([
+        $requestPayload = [
             'merchantAccount' => $this->credentials->merchantId,
-            'reference' => $payload['reference'] ?? uniqid('cap_'),
-        ], $payload);
+            'reference' => uniqid('cap_'),
+            'amount' => [
+                'currency' => strtoupper($request->amount->getCurrency()),
+                'value' => $request->amount->getAmount(),
+            ],
+        ];
 
         try {
             $response = $this->sendRequest('POST', $endpoint, $requestPayload);
@@ -93,64 +148,34 @@ final class AdyenGateway implements GatewayInterface
             $pspReference = $response['pspReference'] ?? null;
 
             if ($status === 'received') {
-                // Adyen captures are asynchronous. 'received' means it's processing.
-                return new TransactionResult(
-                    transactionId: $pspReference, // This is the capture reference
-                    status: TransactionStatus::PENDING, // Or COMPLETED depending on how we treat async
-                    rawResponse: $response,
-                    gatewayReference: $pspReference
-                );
-            }
-
-            throw new TransactionFailedException("Adyen Capture Failed: " . json_encode($response));
-
-        } catch (\Throwable $e) {
-            throw new GatewayException("Adyen Capture Error: " . $e->getMessage(), 0, $e);
-        }
-    }
-
-    public function refund(string $transactionId, array $payload = []): TransactionResult
-    {
-        // Adyen /payments/{id}/refunds
-        $endpoint = "/payments/{$transactionId}/refunds";
-
-        $requestPayload = array_merge([
-            'merchantAccount' => $this->credentials->merchantId,
-            'reference' => $payload['reference'] ?? uniqid('ref_'),
-        ], $payload);
-
-        try {
-            $response = $this->sendRequest('POST', $endpoint, $requestPayload);
-
-            $status = $response['status'] ?? null;
-            $pspReference = $response['pspReference'] ?? null;
-
-            if ($status === 'received') {
-                return new TransactionResult(
+                return new CaptureResult(
                     transactionId: $pspReference,
-                    status: TransactionStatus::PENDING,
-                    rawResponse: $response,
-                    gatewayReference: $pspReference
+                    status: GatewayStatus::PENDING,
+                    gatewayReference: $pspReference,
+                    rawResponse: $response
                 );
             }
 
-            throw new TransactionFailedException("Adyen Refund Failed: " . json_encode($response));
+            throw new CaptureFailedException("Adyen Capture Failed: " . json_encode($response));
 
         } catch (\Throwable $e) {
-            throw new GatewayException("Adyen Refund Error: " . $e->getMessage(), 0, $e);
+            throw new CaptureFailedException("Adyen Capture Error: " . $e->getMessage(), 0, $e);
         }
     }
 
-    public function void(string $transactionId, array $payload = []): TransactionResult
+    public function refund(RefundRequest $request): RefundResult
     {
-        // Adyen /payments/{id}/cancels
-        // Used to cancel an authorization before it is captured
-        $endpoint = "/payments/{$transactionId}/cancels";
+        $this->ensureInitialized();
+        $endpoint = "/payments/{$request->transactionId}/refunds";
 
-        $requestPayload = array_merge([
+        $requestPayload = [
             'merchantAccount' => $this->credentials->merchantId,
-            'reference' => $payload['reference'] ?? uniqid('void_'),
-        ], $payload);
+            'reference' => uniqid('ref_'),
+            'amount' => [
+                'currency' => strtoupper($request->amount->getCurrency()),
+                'value' => $request->amount->getAmount(),
+            ],
+        ];
 
         try {
             $response = $this->sendRequest('POST', $endpoint, $requestPayload);
@@ -159,39 +184,91 @@ final class AdyenGateway implements GatewayInterface
             $pspReference = $response['pspReference'] ?? null;
 
             if ($status === 'received') {
-                return new TransactionResult(
+                return new RefundResult(
                     transactionId: $pspReference,
-                    status: TransactionStatus::CANCELLED,
-                    rawResponse: $response,
-                    gatewayReference: $pspReference
+                    status: GatewayStatus::PENDING,
+                    gatewayReference: $pspReference,
+                    rawResponse: $response
                 );
             }
 
-            throw new TransactionFailedException("Adyen Void Failed: " . json_encode($response));
+            throw new RefundFailedException("Adyen Refund Failed: " . json_encode($response));
 
         } catch (\Throwable $e) {
-            throw new GatewayException("Adyen Void Error: " . $e->getMessage(), 0, $e);
+            throw new RefundFailedException("Adyen Refund Error: " . $e->getMessage(), 0, $e);
         }
     }
 
-    public function submitEvidence(string $disputeId, array $evidence): void
+    public function void(VoidRequest $request): VoidResult
     {
-        // Adyen Dispute API is separate, but for now we can stub or implement if needed.
-        // Adyen uses /disputes endpoint usually.
-        // For this iteration, we'll throw not implemented or basic stub.
+        $this->ensureInitialized();
+        $endpoint = "/payments/{$request->transactionId}/cancels";
+
+        $requestPayload = [
+            'merchantAccount' => $this->credentials->merchantId,
+            'reference' => uniqid('void_'),
+        ];
+
+        try {
+            $response = $this->sendRequest('POST', $endpoint, $requestPayload);
+
+            $status = $response['status'] ?? null;
+            $pspReference = $response['pspReference'] ?? null;
+
+            if ($status === 'received') {
+                return new VoidResult(
+                    transactionId: $pspReference,
+                    status: GatewayStatus::CANCELLED,
+                    gatewayReference: $pspReference,
+                    rawResponse: $response
+                );
+            }
+
+            throw new VoidFailedException("Adyen Void Failed: " . json_encode($response));
+
+        } catch (\Throwable $e) {
+            throw new VoidFailedException("Adyen Void Error: " . $e->getMessage(), 0, $e);
+        }
+    }
+
+    public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
+    {
         throw new GatewayException("Adyen dispute evidence submission not yet implemented.");
+    }
+
+    public function getStatus(string $transactionId = ''): GatewayStatus
+    {
+        // Adyen doesn't have a simple "check gateway status" endpoint that returns a single status enum.
+        // But we can check if we can reach the API.
+        // Or if transactionId is provided, check that transaction.
+        
+        // For now, return ACTIVE if initialized.
+        return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
+    }
+
+    public function supports3ds(): bool
+    {
+        return true;
+    }
+
+    public function supportsTokenization(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialCapture(): bool
+    {
+        return true;
+    }
+
+    public function supportsPartialRefund(): bool
+    {
+        return true;
     }
 
     private function sendRequest(string $method, string $endpoint, array $data): array
     {
-        $baseUrl = $this->credentials->sandboxMode ? self::TEST_URL : self::LIVE_URL;
-        // Note: Live URL prefix handling is complex in Adyen (e.g. [random]-[company]-checkout-live...), 
-        // usually configured in credentials. For now, we use a placeholder or assume config has full URL.
-        
-        if (!$this->credentials->sandboxMode && isset($this->credentials->additionalConfig['live_url_prefix'])) {
-            $baseUrl = "https://{$this->credentials->additionalConfig['live_url_prefix']}-checkout-live.adyenpayments.com/checkout/" . self::API_VERSION;
-        }
-
+        $baseUrl = $this->credentials->sandboxMode ? self::TEST_URL : $this->getLiveUrl();
         $url = $baseUrl . $endpoint;
 
         $headers = [
@@ -206,5 +283,14 @@ final class AdyenGateway implements GatewayInterface
         }
 
         return json_decode($response->getBody(), true);
+    }
+
+    private function getLiveUrl(): string
+    {
+        if (isset($this->credentials->additionalConfig['live_url_prefix'])) {
+            return "https://{$this->credentials->additionalConfig['live_url_prefix']}-checkout-live.adyenpayments.com/checkout/" . self::API_VERSION;
+        }
+        // Fallback or throw
+        throw new GatewayException("Adyen Live URL prefix not configured.");
     }
 }
