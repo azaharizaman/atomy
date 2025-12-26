@@ -17,6 +17,10 @@ use Nexus\PaymentGateway\Exceptions\AuthorizationFailedException;
 use Nexus\PaymentGateway\Exceptions\CaptureFailedException;
 use Nexus\PaymentGateway\Exceptions\RefundFailedException;
 use Nexus\PaymentGateway\Exceptions\VoidFailedException;
+use Nexus\PaymentGateway\Exceptions\GatewayException;
+use Nexus\PaymentGateway\Services\GatewayInvoker;
+use Nexus\PaymentGateway\Services\ExponentialBackoffStrategy;
+use Nexus\PaymentGateway\Services\NullCircuitBreaker;
 use Nexus\PaymentGateway\ValueObjects\AuthorizationResult;
 use Nexus\PaymentGateway\ValueObjects\CaptureResult;
 use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
@@ -38,9 +42,17 @@ abstract class AbstractGateway implements GatewayInterface
 
     protected LoggerInterface $logger;
 
-    public function __construct(?LoggerInterface $logger = null)
-    {
+    protected GatewayInvoker $invoker;
+
+    public function __construct(
+        ?LoggerInterface $logger = null,
+        ?GatewayInvoker $invoker = null
+    ) {
         $this->logger = $logger ?? new NullLogger();
+        $this->invoker = $invoker ?? new GatewayInvoker(
+            new ExponentialBackoffStrategy(),
+            new NullCircuitBreaker()
+        );
     }
 
     public function initialize(GatewayCredentials $credentials): void
@@ -67,8 +79,13 @@ abstract class AbstractGateway implements GatewayInterface
         $this->validateAuthorizeRequest($request);
 
         try {
-            return $this->doAuthorize($request);
+            return $this->invoker->invoke(
+                fn () => $this->doAuthorize($request),
+                $this->getProvider()->value . '.authorize'
+            );
         } catch (AuthorizationFailedException $e) {
+            throw $e;
+        } catch (GatewayException $e) {
             throw $e;
         } catch (\Throwable $e) {
             $this->logger->error('Authorization failed', [
@@ -89,8 +106,13 @@ abstract class AbstractGateway implements GatewayInterface
         $this->validateCaptureRequest($request);
 
         try {
-            return $this->doCapture($request);
+            return $this->invoker->invoke(
+                fn () => $this->doCapture($request),
+                $this->getProvider()->value . '.capture'
+            );
         } catch (CaptureFailedException $e) {
+            throw $e;
+        } catch (GatewayException $e) {
             throw $e;
         } catch (\Throwable $e) {
             $this->logger->error('Capture failed', [
@@ -111,8 +133,13 @@ abstract class AbstractGateway implements GatewayInterface
         $this->validateRefundRequest($request);
 
         try {
-            return $this->doRefund($request);
+            return $this->invoker->invoke(
+                fn () => $this->doRefund($request),
+                $this->getProvider()->value . '.refund'
+            );
         } catch (RefundFailedException $e) {
+            throw $e;
+        } catch (GatewayException $e) {
             throw $e;
         } catch (\Throwable $e) {
             $this->logger->error('Refund failed', [
@@ -133,8 +160,13 @@ abstract class AbstractGateway implements GatewayInterface
         $this->validateVoidRequest($request);
 
         try {
-            return $this->doVoid($request);
+            return $this->invoker->invoke(
+                fn () => $this->doVoid($request),
+                $this->getProvider()->value . '.void'
+            );
         } catch (VoidFailedException $e) {
+            throw $e;
+        } catch (GatewayException $e) {
             throw $e;
         } catch (\Throwable $e) {
             $this->logger->error('Void failed', [

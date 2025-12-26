@@ -7,7 +7,9 @@ namespace Nexus\PaymentGateway\Services;
 use Nexus\PaymentGateway\Contracts\WebhookDeduplicatorInterface;
 use Nexus\PaymentGateway\Contracts\WebhookHandlerInterface;
 use Nexus\PaymentGateway\Contracts\WebhookProcessorInterface;
+use Nexus\PaymentGateway\Contracts\WebhookReceiptStorageInterface;
 use Nexus\PaymentGateway\Enums\GatewayProvider;
+use Nexus\PaymentGateway\Enums\WebhookStatus;
 use Nexus\PaymentGateway\Events\WebhookReceivedEvent;
 use Nexus\PaymentGateway\Exceptions\GatewayException;
 use Nexus\PaymentGateway\Exceptions\WebhookVerificationFailedException;
@@ -48,6 +50,7 @@ final class WebhookProcessor implements WebhookProcessorInterface
         private readonly ?EventDispatcherInterface $eventDispatcher = null,
         private readonly LoggerInterface $logger = new NullLogger(),
         private readonly ?WebhookDeduplicatorInterface $deduplicator = null,
+        private readonly ?WebhookReceiptStorageInterface $receiptStorage = null,
     ) {}
 
     /**
@@ -87,12 +90,28 @@ final class WebhookProcessor implements WebhookProcessorInterface
 
         $webhookPayload = $handler->parsePayload($payload, $headers);
 
+        // Record receipt if storage is available
+        $this->receiptStorage?->recordReceipt(
+            provider: $provider,
+            eventId: $webhookPayload->eventId,
+            payload: $payload,
+            headers: $headers
+        );
+
         // Deduplication check
         if ($this->deduplicator?->isDuplicate($provider, $webhookPayload->eventId)) {
             $this->logger->info('Duplicate webhook ignored', [
                 'provider' => $providerName,
                 'event_id' => $webhookPayload->eventId,
             ]);
+            
+            $this->receiptStorage?->updateStatus(
+                provider: $provider,
+                eventId: $webhookPayload->eventId,
+                status: WebhookStatus::IGNORED,
+                errorMessage: 'Duplicate event'
+            );
+            
             return $webhookPayload;
         }
 
@@ -107,8 +126,20 @@ final class WebhookProcessor implements WebhookProcessorInterface
             'event_id' => $webhookPayload->eventId,
         ]);
 
+        $this->receiptStorage?->updateStatus(
+            provider: $provider,
+            eventId: $webhookPayload->eventId,
+            status: WebhookStatus::PROCESSING
+        );
+
         try {
             $handler->processWebhook($webhookPayload);
+            
+            $this->receiptStorage?->updateStatus(
+                provider: $provider,
+                eventId: $webhookPayload->eventId,
+                status: WebhookStatus::PROCESSED
+            );
         } catch (\Throwable $e) {
             // If processing fails, we might want to allow retry depending on strategy
             // For now, we keep it recorded as processed to prevent infinite loops
@@ -118,6 +149,14 @@ final class WebhookProcessor implements WebhookProcessorInterface
                 'event_id' => $webhookPayload->eventId,
                 'error' => $e->getMessage(),
             ]);
+            
+            $this->receiptStorage?->updateStatus(
+                provider: $provider,
+                eventId: $webhookPayload->eventId,
+                status: WebhookStatus::FAILED,
+                errorMessage: $e->getMessage()
+            );
+            
             throw $e;
         }
 

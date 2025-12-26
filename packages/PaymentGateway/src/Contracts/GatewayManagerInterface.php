@@ -50,7 +50,7 @@ interface GatewayManagerInterface
      * @throws \Nexus\PaymentGateway\Exceptions\GatewayNotFoundException
      */
     public function authorize(
-        GatewayProvider $provider,
+        ?GatewayProvider $provider,
         AuthorizeRequest $request,
     ): AuthorizationResult;
 
