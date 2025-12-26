@@ -16,7 +16,6 @@ final readonly class VerificationService implements VerificationServiceInterface
     public function __construct(
         private BankConnectionQueryInterface $connectionQuery,
         private ProviderRegistryInterface $providerRegistry,
-        private CredentialDecryptionHelper $credentialDecryptor
     ) {}
 
     public function verifyOwnership(string $connectionId, string $accountId, array $identityData): AccountVerificationResult
