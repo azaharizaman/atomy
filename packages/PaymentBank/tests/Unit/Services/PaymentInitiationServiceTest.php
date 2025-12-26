@@ -97,7 +97,7 @@ final class PaymentInitiationServiceTest extends TestCase
         $this->assertEquals('pending', $result->status);
     }
 
-    public function test_initiate_payment_without_reference_uses_default(): void
+    public function test_initiate_payment_without_reference_passes_null(): void
     {
         $connectionId = 'conn-123';
         $sourceAccountId = 'acc-456';
@@ -122,7 +122,7 @@ final class PaymentInitiationServiceTest extends TestCase
             null
         );
 
-        // Verify that empty string is passed when reference is null
+        // Verify that null is passed when reference is not provided
         $paymentInitiator->expects($this->once())
             ->method('initiatePayment')
             ->with(
@@ -130,7 +130,7 @@ final class PaymentInitiationServiceTest extends TestCase
                 $sourceAccountId,
                 $beneficiary,
                 $amount,
-                '', // Default empty string
+                null, // Null is passed as-is to respect interface contract
                 []
             )
             ->willReturn($expectedResult);
