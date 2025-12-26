@@ -58,10 +58,11 @@ interface IdempotencyManagerInterface
      * Execute an operation idempotently.
      *
      * @template T
+     * @param GatewayProvider $provider
      * @param string $key
      * @param callable(): T $operation
      * @param class-string<T> $resultClass
      * @return T
      */
-    public function execute(string $key, callable $operation, string $resultClass);
+    public function execute(GatewayProvider $provider, string $key, callable $operation, string $resultClass): mixed;
 }

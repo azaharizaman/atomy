@@ -28,7 +28,7 @@ abstract class AbstractPaymentRail implements PaymentRailInterface
 
     public function __construct(
         protected readonly RailConfigurationInterface $configuration,
-        protected LoggerInterface $logger = new NullLogger(),
+        protected readonly LoggerInterface $logger = new NullLogger(),
         ?ClockInterface $clock = null,
     ) {
         $this->clock = $clock ?? new class implements ClockInterface {

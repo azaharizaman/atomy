@@ -135,6 +135,7 @@ final class GatewayManager implements GatewayManagerInterface
         if ($this->idempotencyManager && $request->idempotencyKey) {
             /** @var AuthorizationResult */
             return $this->idempotencyManager->execute(
+                provider: $provider,
                 key: $request->idempotencyKey,
                 operation: $operation,
                 resultClass: AuthorizationResult::class
@@ -184,6 +185,7 @@ final class GatewayManager implements GatewayManagerInterface
         if ($this->idempotencyManager && $request->idempotencyKey) {
             /** @var CaptureResult */
             return $this->idempotencyManager->execute(
+                provider: $provider,
                 key: $request->idempotencyKey,
                 operation: $operation,
                 resultClass: CaptureResult::class
@@ -234,6 +236,7 @@ final class GatewayManager implements GatewayManagerInterface
         if ($this->idempotencyManager && $request->idempotencyKey) {
             /** @var RefundResult */
             return $this->idempotencyManager->execute(
+                provider: $provider,
                 key: $request->idempotencyKey,
                 operation: $operation,
                 resultClass: RefundResult::class
@@ -282,6 +285,7 @@ final class GatewayManager implements GatewayManagerInterface
         if ($this->idempotencyManager && $request->idempotencyKey) {
             /** @var VoidResult */
             return $this->idempotencyManager->execute(
+                provider: $provider,
                 key: $request->idempotencyKey,
                 operation: $operation,
                 resultClass: VoidResult::class

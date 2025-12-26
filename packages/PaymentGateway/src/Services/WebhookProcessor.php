@@ -107,7 +107,7 @@ final class WebhookProcessor implements WebhookProcessorInterface
         $handler->processWebhook($webhookPayload);
 
         // Record as processed
-        $this->deduplicator?->recordProcessed($provider, $webhookPayload->eventId);
+        $this->deduplicator?->recordProcessed($provider, $webhookPayload->eventId, 86400);
 
         $this->eventDispatcher?->dispatch(
             WebhookReceivedEvent::fromPayload(

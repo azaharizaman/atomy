@@ -24,5 +24,5 @@ interface WebhookDeduplicatorInterface
      * @param string $eventId The unique event ID from the provider
      * @param int $ttlSeconds Time-to-live for the deduplication record in seconds
      */
-    public function recordProcessed(GatewayProvider $provider, string $eventId, int $ttlSeconds = 86400): void;
+    public function recordProcessed(GatewayProvider $provider, string $eventId, int $ttlSeconds): void;
 }
