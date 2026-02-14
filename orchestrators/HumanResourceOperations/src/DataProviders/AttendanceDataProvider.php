@@ -4,28 +4,25 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\DataProviders;
 
+use Nexus\Attendance\Contracts\AttendanceQueryInterface;
+use Nexus\Attendance\Contracts\WorkScheduleQueryInterface;
+use Nexus\EmployeeProfile\Contracts\EmployeeRepositoryInterface;
 use Nexus\HumanResourceOperations\DTOs\AttendanceContext;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
- * Aggregates attendance-related data from multiple sources
- * 
- * @skeleton Requires implementation of repository dependencies
+ * Aggregates attendance-related data from multiple sources.
  */
 final readonly class AttendanceDataProvider
 {
     public function __construct(
-        // TODO: Inject repositories from Nexus\Hrm, Nexus\Attendance packages
-        // private AttendanceRepositoryInterface $attendanceRepository,
-        // private ScheduleRepositoryInterface $scheduleRepository,
-        // private EmployeeRepositoryInterface $employeeRepository,
+        private ?AttendanceQueryInterface $attendanceQuery = null,
+        private ?WorkScheduleQueryInterface $scheduleQuery = null,
+        private ?EmployeeRepositoryInterface $employeeRepository = null,
         private LoggerInterface $logger = new NullLogger()
     ) {}
 
-    /**
-     * Build attendance context for validation
-     */
     public function getAttendanceContext(
         string $employeeId,
         \DateTimeImmutable $timestamp,
@@ -37,16 +34,11 @@ final readonly class AttendanceDataProvider
         $this->logger->info('Building attendance context', [
             'employee_id' => $employeeId,
             'timestamp' => $timestamp->format('Y-m-d H:i:s'),
-            'type' => $type
+            'type' => $type,
         ]);
 
-        // TODO: Fetch employee schedule for the day
         $schedule = $this->getEmployeeSchedule($employeeId, $timestamp);
-        
-        // TODO: Fetch recent attendance records (last 7 days)
         $recentAttendance = $this->getRecentAttendance($employeeId, $timestamp);
-        
-        // TODO: Fetch employee work pattern
         $workPattern = $this->getEmployeeWorkPattern($employeeId);
 
         return new AttendanceContext(
@@ -54,12 +46,8 @@ final readonly class AttendanceDataProvider
             timestamp: $timestamp,
             type: $type,
             scheduleId: $schedule['id'] ?? null,
-            scheduledStart: isset($schedule['start']) 
-                ? new \DateTimeImmutable($schedule['start']) 
-                : null,
-            scheduledEnd: isset($schedule['end']) 
-                ? new \DateTimeImmutable($schedule['end']) 
-                : null,
+            scheduledStart: isset($schedule['start']) ? new \DateTimeImmutable($schedule['start']) : null,
+            scheduledEnd: isset($schedule['end']) ? new \DateTimeImmutable($schedule['end']) : null,
             locationId: $locationId,
             latitude: $latitude,
             longitude: $longitude,
@@ -68,32 +56,76 @@ final readonly class AttendanceDataProvider
         );
     }
 
-    /**
-     * @skeleton
-     */
     private function getEmployeeSchedule(string $employeeId, \DateTimeImmutable $date): ?array
     {
-        // TODO: Implement via Nexus\Hrm ScheduleRepository
-        return null;
+        if ($this->scheduleQuery === null) {
+            return null;
+        }
+
+        $schedule = $this->scheduleQuery->findEffectiveSchedule($employeeId, $date);
+        if ($schedule === null) {
+            return null;
+        }
+
+        return [
+            'id' => $schedule->getId()->toString(),
+            'start' => $schedule->getStartTime()->format('Y-m-d H:i:s'),
+            'end' => $schedule->getEndTime()->format('Y-m-d H:i:s'),
+            'expected_hours' => $schedule->getExpectedHours(),
+        ];
     }
 
-    /**
-     * @skeleton
-     */
     private function getRecentAttendance(string $employeeId, \DateTimeImmutable $date): array
     {
-        // TODO: Implement via Nexus\Attendance AttendanceRepository
-        // Fetch last 7 days of attendance records
-        return [];
+        if ($this->attendanceQuery === null) {
+            return [];
+        }
+
+        $start = $date->modify('-7 days');
+        $records = $this->attendanceQuery->findByEmployeeAndDateRange($employeeId, $start, $date);
+
+        return array_map(static function ($record): array {
+            return [
+                'id' => $record->getId()->toString(),
+                'date' => $record->getDate()->format('Y-m-d'),
+                'check_in' => $record->getCheckInTime()?->format('Y-m-d H:i:s'),
+                'check_out' => $record->getCheckOutTime()?->format('Y-m-d H:i:s'),
+                'location_id' => $record->getLocationId(),
+            ];
+        }, $records);
     }
 
-    /**
-     * @skeleton
-     */
     private function getEmployeeWorkPattern(string $employeeId): ?array
     {
-        // TODO: Implement via Nexus\Hrm EmployeeRepository
-        // Return typical work hours, shift pattern, etc.
+        if ($this->employeeRepository === null) {
+            return null;
+        }
+
+        $employee = $this->employeeRepository->findById($employeeId);
+        if ($employee === null) {
+            return null;
+        }
+
+        return [
+            'id' => $employeeId,
+            'work_pattern' => $this->readValue($employee, ['getWorkPattern', 'workPattern']) ?? 'default',
+            'shift' => $this->readValue($employee, ['getShiftType', 'shiftType']) ?? 'day',
+        ];
+    }
+
+    /** @param array<string> $candidates */
+    private function readValue(object $source, array $candidates): mixed
+    {
+        foreach ($candidates as $candidate) {
+            if (method_exists($source, $candidate)) {
+                return $source->{$candidate}();
+            }
+
+            if (property_exists($source, $candidate)) {
+                return $source->{$candidate};
+            }
+        }
+
         return null;
     }
 }

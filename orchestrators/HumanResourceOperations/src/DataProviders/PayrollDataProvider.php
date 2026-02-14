@@ -4,65 +4,42 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\DataProviders;
 
+use Nexus\Attendance\Contracts\AttendanceQueryInterface;
 use Nexus\Common\ValueObjects\Money;
+use Nexus\EmployeeProfile\Contracts\EmployeeRepositoryInterface;
 use Nexus\HumanResourceOperations\DTOs\PayrollContext;
+use Nexus\Leave\Contracts\LeaveRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
- * Aggregates payroll-related data from multiple sources
- * 
- * @skeleton Requires implementation of repository dependencies
+ * Aggregates payroll-related data from multiple sources.
  */
 final readonly class PayrollDataProvider
 {
     public function __construct(
-        // TODO: Inject repositories from Nexus\Hrm, Nexus\Payroll, Nexus\Attendance packages
-        // private EmployeeRepositoryInterface $employeeRepository,
-        // private PayrollRepositoryInterface $payrollRepository,
-        // private AttendanceRepositoryInterface $attendanceRepository,
-        // private LeaveRepositoryInterface $leaveRepository,
+        private ?EmployeeRepositoryInterface $employeeRepository = null,
+        private ?AttendanceQueryInterface $attendanceQuery = null,
+        private ?LeaveRepositoryInterface $leaveRepository = null,
+        private ?\Closure $earningsResolver = null,
+        private ?\Closure $deductionsResolver = null,
+        private ?\Closure $previousPayslipResolver = null,
         private LoggerInterface $logger = new NullLogger()
     ) {}
 
-    /**
-     * Build payroll context for calculation and validation
-     */
     public function getPayrollContext(
         string $employeeId,
         string $periodId,
         \DateTimeImmutable $periodStart,
         \DateTimeImmutable $periodEnd
     ): PayrollContext {
-        $this->logger->info('Building payroll context', [
-            'employee_id' => $employeeId,
-            'period_id' => $periodId,
-            'period_start' => $periodStart->format('Y-m-d'),
-            'period_end' => $periodEnd->format('Y-m-d')
-        ]);
-
-        // TODO: Fetch employee compensation details
         $baseSalary = $this->getEmployeeBaseSalary($employeeId);
-        
-        // TODO: Calculate total working hours from attendance
         $workingHours = $this->calculateWorkingHours($employeeId, $periodStart, $periodEnd);
-        
-        // TODO: Calculate overtime hours
         $overtimeHours = $this->calculateOvertimeHours($employeeId, $periodStart, $periodEnd);
-        
-        // TODO: Fetch earnings components (allowances, bonuses, etc.)
         $earnings = $this->getEarningsComponents($employeeId, $periodId);
-        
-        // TODO: Fetch deductions (tax, EPF, SOCSO, etc.)
         $deductions = $this->getDeductionsComponents($employeeId, $periodId);
-        
-        // TODO: Fetch attendance records for the period
         $attendanceRecords = $this->getAttendanceRecords($employeeId, $periodStart, $periodEnd);
-        
-        // TODO: Fetch leave records for the period
         $leaveRecords = $this->getLeaveRecords($employeeId, $periodStart, $periodEnd);
-        
-        // TODO: Fetch previous payslip for comparison
         $previousPayslip = $this->getPreviousPayslip($employeeId, $periodStart);
 
         return new PayrollContext(
@@ -81,87 +58,153 @@ final readonly class PayrollDataProvider
         );
     }
 
-    /**
-     * @skeleton
-     */
     private function getEmployeeBaseSalary(string $employeeId): Money
     {
-        // TODO: Implement via Nexus\Hrm EmployeeRepository
-        return Money::of(0, 'MYR');
+        if ($this->employeeRepository === null) {
+            return Money::zero('MYR');
+        }
+
+        $employee = $this->employeeRepository->findById($employeeId);
+        if ($employee === null) {
+            return Money::zero('MYR');
+        }
+
+        $salary = $this->readValue($employee, ['getBaseSalary', 'baseSalary', 'salary']);
+
+        if ($salary instanceof Money) {
+            return $salary;
+        }
+
+        if (is_numeric($salary)) {
+            return Money::of((float) $salary, 'MYR');
+        }
+
+        return Money::zero('MYR');
     }
 
-    /**
-     * @skeleton
-     */
-    private function calculateWorkingHours(
-        string $employeeId,
-        \DateTimeImmutable $start,
-        \DateTimeImmutable $end
-    ): float {
-        // TODO: Implement via Nexus\Attendance AttendanceRepository
-        return 0.0;
+    private function calculateWorkingHours(string $employeeId, \DateTimeImmutable $start, \DateTimeImmutable $end): float
+    {
+        if ($this->attendanceQuery === null) {
+            return 0.0;
+        }
+
+        $total = 0.0;
+        foreach ($this->attendanceQuery->findByEmployeeAndDateRange($employeeId, $start, $end) as $record) {
+            $hours = $record->getWorkHours();
+            if ($hours !== null) {
+                $total += $hours->getTotalHours();
+            }
+        }
+
+        return $total;
     }
 
-    /**
-     * @skeleton
-     */
-    private function calculateOvertimeHours(
-        string $employeeId,
-        \DateTimeImmutable $start,
-        \DateTimeImmutable $end
-    ): float {
-        // TODO: Implement via Nexus\Attendance AttendanceRepository
-        return 0.0;
+    private function calculateOvertimeHours(string $employeeId, \DateTimeImmutable $start, \DateTimeImmutable $end): float
+    {
+        if ($this->attendanceQuery === null) {
+            return 0.0;
+        }
+
+        $overtime = 0.0;
+        foreach ($this->attendanceQuery->findByEmployeeAndDateRange($employeeId, $start, $end) as $record) {
+            $hours = $record->getWorkHours();
+            if ($hours !== null) {
+                $overtime += $hours->overtimeHours;
+            }
+        }
+
+        return $overtime;
     }
 
-    /**
-     * @skeleton
-     */
     private function getEarningsComponents(string $employeeId, string $periodId): array
     {
-        // TODO: Implement via Nexus\Payroll PayrollRepository
-        return [];
+        if ($this->earningsResolver === null) {
+            return [];
+        }
+
+        return ($this->earningsResolver)($employeeId, $periodId);
     }
 
-    /**
-     * @skeleton
-     */
     private function getDeductionsComponents(string $employeeId, string $periodId): array
     {
-        // TODO: Implement via Nexus\Payroll PayrollRepository
-        return [];
+        if ($this->deductionsResolver === null) {
+            return [];
+        }
+
+        return ($this->deductionsResolver)($employeeId, $periodId);
     }
 
-    /**
-     * @skeleton
-     */
-    private function getAttendanceRecords(
-        string $employeeId,
-        \DateTimeImmutable $start,
-        \DateTimeImmutable $end
-    ): array {
-        // TODO: Implement via Nexus\Attendance AttendanceRepository
-        return [];
+    private function getAttendanceRecords(string $employeeId, \DateTimeImmutable $start, \DateTimeImmutable $end): array
+    {
+        if ($this->attendanceQuery === null) {
+            return [];
+        }
+
+        $records = $this->attendanceQuery->findByEmployeeAndDateRange($employeeId, $start, $end);
+
+        return array_map(static fn ($record): array => [
+            'id' => $record->getId()->toString(),
+            'date' => $record->getDate()->format('Y-m-d'),
+            'check_in' => $record->getCheckInTime()?->format('Y-m-d H:i:s'),
+            'check_out' => $record->getCheckOutTime()?->format('Y-m-d H:i:s'),
+        ], $records);
     }
 
-    /**
-     * @skeleton
-     */
-    private function getLeaveRecords(
-        string $employeeId,
-        \DateTimeImmutable $start,
-        \DateTimeImmutable $end
-    ): array {
-        // TODO: Implement via Nexus\Leave LeaveRepository
-        return [];
+    private function getLeaveRecords(string $employeeId, \DateTimeImmutable $start, \DateTimeImmutable $end): array
+    {
+        if ($this->leaveRepository === null) {
+            return [];
+        }
+
+        $leaves = $this->leaveRepository->findByEmployeeId($employeeId);
+
+        return array_values(array_filter($leaves, function ($leave) use ($start, $end): bool {
+            $leaveStart = $this->asDate($this->readValue($leave, ['getStartDate', 'startDate']));
+            $leaveEnd = $this->asDate($this->readValue($leave, ['getEndDate', 'endDate']));
+
+            if ($leaveStart === null || $leaveEnd === null) {
+                return false;
+            }
+
+            return $leaveStart <= $end && $leaveEnd >= $start;
+        }));
     }
 
-    /**
-     * @skeleton
-     */
     private function getPreviousPayslip(string $employeeId, \DateTimeImmutable $beforeDate): ?array
     {
-        // TODO: Implement via Nexus\Payroll PayrollRepository
+        if ($this->previousPayslipResolver === null) {
+            return null;
+        }
+
+        return ($this->previousPayslipResolver)($employeeId, $beforeDate);
+    }
+
+    /** @param array<string> $candidates */
+    private function readValue(object $source, array $candidates): mixed
+    {
+        foreach ($candidates as $candidate) {
+            if (method_exists($source, $candidate)) {
+                return $source->{$candidate}();
+            }
+
+            if (property_exists($source, $candidate)) {
+                return $source->{$candidate};
+            }
+        }
+
+        return null;
+    }
+
+    private function asDate(mixed $value): ?\DateTimeImmutable
+    {
+        if ($value instanceof \DateTimeImmutable) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            return new \DateTimeImmutable($value);
+        }
+
         return null;
     }
 }
