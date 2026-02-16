@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentGateway\Factories;
 
-use Nexus\Connector\Contracts\HttpClientInterface;
-use Nexus\PaymentGateway\Contracts\GatewayFactoryInterface;
-use Nexus\PaymentGateway\Contracts\GatewayInterface;
 use Nexus\PaymentGateway\Enums\GatewayProvider;
 use Nexus\PaymentGateway\Gateways\AdyenGateway;
 use Nexus\PaymentGateway\Gateways\PayPalGateway;
 use Nexus\PaymentGateway\Gateways\SquareGateway;
-use Nexus\PaymentGateway\Gateways\BraintreeGateway;
-use Nexus\PaymentGateway\Gateways\AuthorizeNetGateway;
 use Nexus\PaymentGateway\Gateways\StripeGateway;
+use Nexus\Connector\Contracts\HttpClientInterface;
+use Nexus\PaymentGateway\Gateways\BraintreeGateway;
+use Nexus\PaymentGateway\Contracts\GatewayInterface;
+use Nexus\PaymentGateway\Gateways\AuthorizeNetGateway;
 use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
+use Nexus\PaymentGateway\Contracts\GatewayFactoryInterface;
 
 final class GatewayFactory implements GatewayFactoryInterface
 {
@@ -39,8 +39,20 @@ final class GatewayFactory implements GatewayFactoryInterface
 
     public function create(GatewayProvider $provider, array $config): GatewayInterface
     {
-        // Convert config array to GatewayCredentials if provided
-        $credentials = !empty($config) ? GatewayCredentials::fromArray($config) : null;
+        // Validate that config is provided and contains required fields
+        if (empty($config)) {
+            throw new \InvalidArgumentException("Gateway configuration is required and must include a non-empty 'apiKey' value.");
+        }
+        
+        if (
+            !array_key_exists('apiKey', $config)
+            || !is_string($config['apiKey'])
+            || trim($config['apiKey']) === ''
+        ) {
+            throw new \InvalidArgumentException("Gateway configuration must include a non-empty 'apiKey' value.");
+        }
+
+        $credentials = GatewayCredentials::fromArray($config);
         
         $gateway = match ($provider) {
             GatewayProvider::STRIPE => new StripeGateway($this->httpClient, $credentials),

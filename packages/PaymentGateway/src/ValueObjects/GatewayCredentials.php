@@ -131,18 +131,28 @@ final class GatewayCredentials
                 try {
                     $provider = GatewayProvider::from($provider);
                 } catch (\ValueError $e) {
-                    $validProviders = implode(', ', array_map(
-                        fn($case) => $case->value,
+                    $validProvidersLines = array_map(
+                        static fn (GatewayProvider $case): string => ' - ' . $case->value,
                         GatewayProvider::cases()
-                    ));
+                    );
+                    $validProvidersMessage = implode(PHP_EOL, $validProvidersLines);
+
                     throw new InvalidCredentialsException(
-                        "Invalid provider '{$provider}'. Valid providers are: {$validProviders}"
+                        "Invalid provider '{$provider}'. Valid providers are:" . PHP_EOL . $validProvidersMessage
                     );
                 }
             } else {
                 throw new InvalidCredentialsException('Provider is required and must be a string or GatewayProvider enum');
             }
         }
+        
+        // Validate that only one naming convention is used per field to prevent ambiguity
+        self::validateKeyFormat($config, 'apiKey', 'api_key');
+        self::validateKeyFormat($config, 'apiSecret', 'api_secret');
+        self::validateKeyFormat($config, 'merchantId', 'merchant_id');
+        self::validateKeyFormat($config, 'webhookSecret', 'webhook_secret');
+        self::validateKeyFormat($config, 'sandboxMode', 'sandbox_mode');
+        self::validateKeyFormat($config, 'additionalConfig', 'additional_config');
         
         return new self(
             provider: $provider,
@@ -169,5 +179,22 @@ final class GatewayCredentials
     public function getConfig(string $key, mixed $default = null): mixed
     {
         return $this->additionalConfig[$key] ?? $default;
+    }
+
+    /**
+     * Validate that only one naming convention is used for a configuration key.
+     *
+     * @param array<string, mixed> $config The configuration array
+     * @param string $camelCaseKey The camelCase key name
+     * @param string $snakeCaseKey The snake_case key name
+     * @throws InvalidCredentialsException If both keys are present
+     */
+    private static function validateKeyFormat(array $config, string $camelCaseKey, string $snakeCaseKey): void
+    {
+        if (array_key_exists($camelCaseKey, $config) && array_key_exists($snakeCaseKey, $config)) {
+            throw new InvalidCredentialsException(
+                "Ambiguous configuration: both '{$camelCaseKey}' and '{$snakeCaseKey}' are present. Use only one naming convention."
+            );
+        }
     }
 }
