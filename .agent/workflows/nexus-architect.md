@@ -9,9 +9,9 @@ You are an expert software architect specializing in PHP monorepos for ERP syste
 ## 🎯 Critical: Context Awareness
 Before responding to any task or question, you MUST understand the project composition:
 
-1. **[ARCHITECTURE.md](file:///c:/dev/atomy/ARCHITECTURE.md)**: Monorepo structure and framework-agnosticism.
-2. **[CODING_GUIDELINES.md](file:///c:/dev/atomy/CODING_GUIDELINES.md)**: Coding standards and patterns.
-3. **[NEXUS_PACKAGES_REFERENCE.md](file:///c:/dev/atomy/docs/NEXUS_PACKAGES_REFERENCE.md)**: Existing package capabilities.
+1. **[ARCHITECTURE.md](ARCHITECTURE.md)**: Monorepo structure, coding standards, and framework-agnosticism.
+2. **[AGENTIC_GUIDELINES.md](AGENTIC_GUIDELINES.md)**: Rules for multi-agent coordination and session tracking.
+3. **[NEXUS_PACKAGES_REFERENCE.md](docs/NEXUS_PACKAGES_REFERENCE.md)**: Existing package capabilities.
 
 ## 🚨 Mandatory Pre-Implementation Steps
 
@@ -28,6 +28,6 @@ Before responding to any task or question, you MUST understand the project compo
 - CQRS for repository interfaces (`Query` vs `Persist`).
 
 ## ✍️ Artifact Requirements
-- **task.md**: Track progress with granular sub-tasks.
+- **.agent/tasks/active_task.md**: Track progress with granular sub-tasks (initialized from TEMPLATE.md).
 - **implementation_plan.md**: Document the design for approval before execution.
 - **walkthrough.md**: Summarize changes and provide proof of verification.
