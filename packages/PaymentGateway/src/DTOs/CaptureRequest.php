@@ -17,6 +17,7 @@ final readonly class CaptureRequest
      * @param string|null $description Capture description
      * @param array<string, mixed> $metadata Additional metadata
      * @param string|null $idempotencyKey Idempotency key for safe retries
+     * @param bool $finalCapture Whether this is the final capture (default: true)
      */
     public function __construct(
         public string $authorizationId,
@@ -24,6 +25,7 @@ final readonly class CaptureRequest
         public ?string $description = null,
         public array $metadata = [],
         public ?string $idempotencyKey = null,
+        public bool $finalCapture = true,
     ) {}
 
     /**

@@ -104,7 +104,7 @@ The `Nexus\PaymentGateway` package provides integrations with third-party paymen
 |----|-------------|----------|--------|
 | GW-050 | System shall receive chargeback notifications via webhook | P0 | 🔴 |
 | GW-051 | System shall track chargeback status | P0 | 🔴 |
-| GW-052 | System shall support chargeback evidence submission interface | P1 | 🔴 |
+| GW-052 | System shall support chargeback evidence submission interface | P1 | ✅ |
 | GW-053 | System shall track chargeback resolution | P1 | 🔴 |
 | GW-054 | System shall emit chargeback events | P0 | 🔴 |
 
@@ -114,9 +114,9 @@ The `Nexus\PaymentGateway` package provides integrations with third-party paymen
 |----|-------------|----------|--------|
 | GW-060 | System shall verify webhook signatures | P0 | 🔴 |
 | GW-061 | System shall support Stripe webhook events | P0 | 🔴 |
-| GW-062 | System shall support PayPal webhook events | P1 | 🔴 |
-| GW-063 | System shall support Square webhook events | P2 | 🔴 |
-| GW-064 | System shall support Adyen webhook events | P2 | 🔴 |
+| GW-062 | System shall support PayPal webhook events | P1 | ✅ |
+| GW-063 | System shall support Square webhook events | P2 | ✅ |
+| GW-064 | System shall support Adyen webhook events | P2 | ✅ |
 | GW-065 | System shall handle duplicate webhook deliveries | P0 | 🔴 |
 | GW-066 | System shall emit domain events from webhooks | P0 | 🔴 |
 | GW-067 | System shall track webhook processing status | P1 | 🔴 |
@@ -137,23 +137,40 @@ The `Nexus\PaymentGateway` package provides integrations with third-party paymen
 
 | ID | Requirement | Priority | Status |
 |----|-------------|----------|--------|
-| GW-080 | System shall support PayPal Orders API | P1 | 🔴 |
-| GW-081 | System shall support PayPal Capture | P1 | 🔴 |
-| GW-082 | System shall support PayPal Refunds | P1 | 🔴 |
+| GW-080 | System shall support PayPal Orders API | P1 | ✅ |
+| GW-081 | System shall support PayPal Capture | P1 | ✅ |
+| GW-082 | System shall support PayPal Refunds | P1 | ✅ |
 | GW-083 | System shall support PayPal Vault (tokenization) | P1 | 🔴 |
 | GW-084 | System shall support PayPal Express Checkout | P2 | 🔴 |
 
-### 2.10 Events
+### 2.10 Square Integration
 
 | ID | Requirement | Priority | Status |
 |----|-------------|----------|--------|
-| GW-090 | System shall emit PaymentAuthorizedEvent | P0 | 🔴 |
-| GW-091 | System shall emit PaymentCapturedEvent | P0 | 🔴 |
-| GW-092 | System shall emit PaymentRefundedEvent | P0 | 🔴 |
-| GW-093 | System shall emit ChargebackReceivedEvent | P0 | 🔴 |
-| GW-094 | System shall emit TokenCreatedEvent | P0 | 🔴 |
-| GW-095 | System shall emit WebhookReceivedEvent | P1 | 🔴 |
-| GW-096 | System shall emit GatewayErrorEvent | P0 | 🔴 |
+| GW-085 | System shall support Square Payments API | P2 | ✅ |
+| GW-086 | System shall support Square Refunds | P2 | ✅ |
+| GW-087 | System shall support Square Void | P2 | ✅ |
+
+### 2.11 Adyen Integration
+
+| ID | Requirement | Priority | Status |
+|----|-------------|----------|--------|
+| GW-088 | System shall support Adyen Checkout API | P2 | ✅ |
+| GW-089 | System shall support Adyen Capture | P2 | ✅ |
+| GW-090 | System shall support Adyen Refunds | P2 | ✅ |
+| GW-091 | System shall support Adyen Void | P2 | ✅ |
+
+### 2.12 Events
+
+| ID | Requirement | Priority | Status |
+|----|-------------|----------|--------|
+| GW-100 | System shall emit PaymentAuthorizedEvent | P0 | 🔴 |
+| GW-101 | System shall emit PaymentCapturedEvent | P0 | 🔴 |
+| GW-102 | System shall emit PaymentRefundedEvent | P0 | 🔴 |
+| GW-103 | System shall emit ChargebackReceivedEvent | P0 | 🔴 |
+| GW-104 | System shall emit TokenCreatedEvent | P0 | 🔴 |
+| GW-105 | System shall emit WebhookReceivedEvent | P1 | 🔴 |
+| GW-106 | System shall emit GatewayErrorEvent | P0 | 🔴 |
 
 ---
 
