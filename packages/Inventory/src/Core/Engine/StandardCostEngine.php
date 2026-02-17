@@ -58,6 +58,12 @@ final class StandardCostEngine implements ValuationEngineInterface
     {
         return $this->storage->getStandardCost($productId);
     }
+
+    public function capitalizeLandedCost(string $productId, float $additionalCost): void
+    {
+        // For standard cost, any additional landed costs are recorded as price variances
+        $this->storage->recordVariance($productId, 'landed_cost_variance', $additionalCost);
+    }
 }
 
 /**

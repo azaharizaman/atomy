@@ -73,6 +73,19 @@ final class FifoEngine implements ValuationEngineInterface
         // Return cost of oldest layer
         return $layers[0]['unit_cost'] ?? null;
     }
+
+    public function capitalizeLandedCost(string $productId, float $additionalCost): void
+    {
+        $layers = $this->storage->getLayers($productId);
+        
+        if (empty($layers)) {
+            return;
+        }
+        
+        // Target the most recent layer for landed cost capitalization
+        $lastLayer = end($layers);
+        $this->storage->updateLayerCost($productId, $lastLayer['id'], $additionalCost);
+    }
 }
 
 /**
@@ -83,4 +96,5 @@ interface CostLayerStorageInterface
     public function addLayer(string $productId, float $quantity, float $unitCost): void;
     public function getLayers(string $productId): array;
     public function consumeFromLayer(string $productId, string $layerId, float $quantity): void;
+    public function updateLayerCost(string $productId, string $layerId, float $additionalCost): void;
 }

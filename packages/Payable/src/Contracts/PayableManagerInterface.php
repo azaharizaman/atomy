@@ -118,4 +118,13 @@ interface PayableManagerInterface
      * @return array Aging buckets (0-30, 31-60, 61-90, 90+)
      */
     public function getVendorAging(string $tenantId, \DateTimeInterface $asOfDate): array;
+
+    /**
+     * Record consumption of consignment stock and initiate self-billing.
+     *
+     * @param string $vendorId Vendor ULID
+     * @param array $items Consumed items with quantities and prices
+     * @return string Generated bill ID
+     */
+    public function recordConsignmentConsumption(string $vendorId, array $items): string;
 }
