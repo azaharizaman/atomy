@@ -70,8 +70,8 @@ final class SquareGateway implements GatewayInterface
 
         $endpoint = '/v2/payments';
         
-        // Square requires an idempotency key
-        $idempotencyKey = uniqid('sq_', true);
+        // Use request's idempotency key or generate one if not provided
+        $idempotencyKey = $request->idempotencyKey ?? uniqid('sq_', true);
 
         $payload = [
             'source_id' => $request->paymentMethodToken, // Nonce from Square frontend
@@ -121,7 +121,7 @@ final class SquareGateway implements GatewayInterface
     {
         $this->ensureInitialized();
 
-        $endpoint = "/v2/payments/{$request->transactionId}/complete";
+        $endpoint = "/v2/payments/{$request->authorizationId}/complete";
         
         $payload = []; 
 
@@ -153,7 +153,8 @@ final class SquareGateway implements GatewayInterface
         $this->ensureInitialized();
 
         $endpoint = '/v2/refunds';
-        $idempotencyKey = uniqid('sq_ref_', true);
+        // Use request's idempotency key or generate one if not provided
+        $idempotencyKey = $request->idempotencyKey ?? uniqid('sq_ref_', true);
 
         $payload = [
             'idempotency_key' => $idempotencyKey,
@@ -224,26 +225,10 @@ final class SquareGateway implements GatewayInterface
         throw new GatewayException("Evidence submission not implemented for Square yet.");
     }
 
-    public function getStatus(string $transactionId): GatewayStatus
+    public function getStatus(): GatewayStatus
     {
-        $this->ensureInitialized();
-        $endpoint = "/v2/payments/{$transactionId}";
-        
-        try {
-            $response = $this->sendRequest('GET', $endpoint, []);
-            $payment = $response['payment'] ?? [];
-            $status = $payment['status'] ?? null;
-
-            return match ($status) {
-                'COMPLETED' => GatewayStatus::COMPLETED,
-                'APPROVED' => GatewayStatus::AUTHORIZED,
-                'CANCELED' => GatewayStatus::CANCELLED,
-                'FAILED' => GatewayStatus::FAILED,
-                default => GatewayStatus::PENDING,
-            };
-        } catch (\Throwable $e) {
-            return GatewayStatus::FAILED;
-        }
+        // Check if gateway is initialized and available
+        return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
     }
 
     public function supports3ds(): bool
@@ -294,6 +279,11 @@ final class SquareGateway implements GatewayInterface
 
     private function getBaseUrl(): string
     {
-        return self::API_URL_SANDBOX; 
+        // Use sandbox if credentials indicate sandbox mode, otherwise use live
+        if ($this->credentials?->sandboxMode) {
+            return self::API_URL_SANDBOX;
+        }
+        
+        return self::API_URL_LIVE;
     }
 }

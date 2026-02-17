@@ -164,52 +164,23 @@ final class AuthorizeNetGateway implements GatewayInterface
     {
         $this->ensureInitialized();
 
-        // Note: Refund requires last 4 digits of card or full card number in some cases depending on config.
-        // Assuming we have a token or linked transaction capability.
-        // For Authorize.Net, refundTransaction usually requires card number or payment profile.
-        // If we don't have it, we might need to void if unsettled, or use a different method.
-        // Here we assume we can reference the transaction.
+        // Authorize.Net refunds require either the original card details (last 4 digits)
+        // or a stored Customer Profile / Payment Profile ID linked to the original transaction.
+        // This gateway abstraction does not currently expose those details.
+        //
+        // IMPLEMENTATION OPTIONS:
+        // 1. Extend the RefundRequest to include card last 4 digits
+        // 2. Implement Customer Profile support and retrieve payment profile
+        // 3. For unsettled transactions (<24hrs), use void instead of refund
+        //
+        // Rather than attempting a non-functional placeholder call with 'XXXX' card data,
+        // we fail fast with a clear explanation.
 
-        $payload = [
-            'createTransactionRequest' => [
-                'merchantAuthentication' => $this->getAuthBlock(),
-                'transactionRequest' => [
-                    'transactionType' => 'refundTransaction',
-                    'amount' => $request->amount->getAmount() / 100,
-                    'refTransId' => $request->transactionId,
-                    'payment' => [
-                        'creditCard' => [
-                            'cardNumber' => 'XXXX', // Placeholder, often required
-                            'expirationDate' => 'XX/XX'
-                        ]
-                    ]
-                ]
-            ]
-        ];
-
-        // NOTE: Real implementation needs card details or Customer Profile ID for refunds in Auth.Net
-        // This is a simplified placeholder.
-
-        try {
-            $response = $this->sendRequest($payload);
-            $transactionResponse = $response['transactionResponse'] ?? [];
-            $responseCode = $transactionResponse['responseCode'] ?? '0';
-
-            if ($responseCode === '1') {
-                return new RefundResult(
-                    transactionId: $transactionResponse['transId'],
-                    status: GatewayStatus::REFUNDED,
-                    gatewayReference: $transactionResponse['transId'],
-                    rawResponse: $response
-                );
-            }
-
-            $errorText = $transactionResponse['errors'][0]['errorText'] ?? 'Unknown Error';
-            throw new RefundFailedException("Authorize.Net Refund Failed: {$errorText}");
-
-        } catch (\Throwable $e) {
-            throw new RefundFailedException("Authorize.Net Refund Error: " . $e->getMessage(), 0, $e);
-        }
+        throw new RefundFailedException(
+            'Authorize.Net refund requires original card details or Customer Profile ID. ' .
+            'This implementation does not yet support refunds. For recent transactions, ' .
+            'use void() instead if the transaction is still unsettled.'
+        );
     }
 
     public function void(VoidRequest $request): VoidResult
@@ -253,8 +224,9 @@ final class AuthorizeNetGateway implements GatewayInterface
         throw new GatewayException("Evidence submission not implemented for Authorize.Net yet.");
     }
 
-    public function getStatus(string $transactionId = ''): GatewayStatus
+    public function getStatus(): GatewayStatus
     {
+        // Check if gateway is initialized and available
         return $this->isInitialized() ? GatewayStatus::ACTIVE : GatewayStatus::INACTIVE;
     }
 
@@ -295,7 +267,8 @@ final class AuthorizeNetGateway implements GatewayInterface
 
     private function sendRequest(array $payload): array
     {
-        $url = self::API_URL_SANDBOX;
+        // Use sandbox if credentials indicate sandbox mode, otherwise use live
+        $url = $this->credentials?->sandboxMode ? self::API_URL_SANDBOX : self::API_URL_LIVE;
 
         $headers = [
             'Content-Type' => 'application/json',

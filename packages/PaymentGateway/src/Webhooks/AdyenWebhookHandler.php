@@ -29,16 +29,48 @@ final class AdyenWebhookHandler implements WebhookHandlerInterface
         return GatewayProvider::ADYEN;
     }
 
+    /**
+     * Verify Adyen webhook signature.
+     *
+     * SECURITY: This is a placeholder implementation that FAILS CLOSED for security.
+     * In production, this method MUST be replaced with full Adyen HMAC verification:
+     * 1. Extract the HMAC signature from x-adyen-hmac-signature header
+     * 2. Construct the signing string from the notification payload according to Adyen's spec
+     * 3. Compute HMAC-SHA256 using the HMAC key from credentials
+     * 4. Base64 encode the result
+     * 5. Compare with the received signature (constant-time comparison)
+     * 6. Return true only if verification succeeds
+     *
+     * @see https://docs.adyen.com/development-resources/webhooks/verify-hmac-signatures
+     *
+     * WARNING: This placeholder returns FALSE to prevent unauthorized webhook processing.
+     * Implement proper verification before enabling Adyen webhooks in production.
+     */
     public function verifySignature(
         string $payload,
         string $signature,
         string $secret,
     ): bool {
-        // Adyen uses HMAC-SHA256 on the payload.
-        // The signature is usually in the 'notificationItems' structure or header.
+        // TODO: Implement full Adyen HMAC-SHA256 webhook verification
+        // Until implemented, fail closed to prevent webhook spoofing attacks
         
-        // Simplified check for interface compliance.
-        return !empty($signature);
+        // Reject if signature or secret is missing
+        if (empty($signature) || empty($secret)) {
+            return false;
+        }
+        
+        // SECURITY: This placeholder fails closed (returns false) to prevent
+        // unauthorized webhooks from being processed. Adyen requires specific
+        // payload fields to be concatenated in a specific order for signature verification.
+        
+        // In production, implement proper HMAC verification:
+        // 1. Parse the notification items from the payload
+        // 2. Extract and concatenate required fields in the correct order
+        // 3. Compute HMAC-SHA256 and base64 encode
+        // 4. Use hash_equals for constant-time comparison
+        
+        // Return false until proper verification is implemented
+        return false;
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload
@@ -62,19 +94,19 @@ final class AdyenWebhookHandler implements WebhookHandlerInterface
         $resourceId = $item['pspReference'] ?? null;
 
         return new WebhookPayload(
-            id: $eventId,
-            provider: GatewayProvider::ADYEN,
+            eventId: $eventId,
             eventType: $eventType,
-            payload: $data,
+            provider: GatewayProvider::ADYEN,
             resourceId: $resourceId,
-            occurredAt: isset($item['eventDate']) ? new \DateTimeImmutable($item['eventDate']) : new \DateTimeImmutable(),
+            data: $data,
+            receivedAt: isset($item['eventDate']) ? new \DateTimeImmutable($item['eventDate']) : new \DateTimeImmutable(),
         );
     }
 
     public function processWebhook(WebhookPayload $payload): void
     {
         $this->logger->info('Processing Adyen webhook', [
-            'id' => $payload->id,
+            'id' => $payload->eventId,
             'type' => $payload->eventType->value,
         ]);
     }

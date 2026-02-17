@@ -32,25 +32,41 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
     /**
      * Verify PayPal webhook signature.
      *
-     * Note: Real PayPal verification requires fetching the certificate from the URL
-     * provided in the headers and verifying the signature against the payload.
-     * This is a simplified implementation for the interface contract.
+     * SECURITY: This is a placeholder implementation that FAILS CLOSED for security.
+     * In production, this method MUST be replaced with full PayPal webhook verification:
+     * 1. Extract transmission headers (paypal-transmission-id, paypal-transmission-time, 
+     *    paypal-transmission-sig, paypal-cert-url)
+     * 2. Reconstruct the signed string according to PayPal's specification
+     * 3. Fetch and validate the certificate from paypal-cert-url
+     * 4. Verify the signature using the certificate and webhook secret
+     * 5. Return true only if verification succeeds
+     *
+     * @see https://developer.paypal.com/api/rest/webhooks/#verify-webhook-signature
+     * 
+     * WARNING: This placeholder returns FALSE to prevent unauthorized webhook processing.
+     * Implement proper verification before enabling PayPal webhooks in production.
      */
     public function verifySignature(
         string $payload,
         string $signature,
         string $secret,
     ): bool {
-        // In a real implementation, we would:
-        // 1. Get transmission ID, timestamp, and webhook ID from headers
-        // 2. Reconstruct the signed string
-        // 3. Verify using the certificate
+        // TODO: Implement full PayPal webhook verification using their documented flow
+        // Until implemented, fail closed to prevent webhook spoofing attacks
         
-        // For now, we assume the signature passed here is the one we want to check
-        // or that the caller has handled the complex verification.
+        // Reject if signature or secret is missing
+        if (empty($signature) || empty($secret)) {
+            return false;
+        }
         
-        // TODO: Implement full PayPal signature verification logic
-        return !empty($signature);
+        // SECURITY: This placeholder fails closed (returns false) to prevent
+        // unauthorized webhooks from being processed. In production, implement:
+        // - Certificate chain validation
+        // - HMAC-SHA256 signature verification
+        // - Transmission timestamp validation to prevent replay attacks
+        
+        // Return false until proper verification is implemented
+        return false;
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload
@@ -70,19 +86,20 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
         $resourceId = $data['resource']['id'] ?? null;
 
         return new WebhookPayload(
-            id: $eventId,
-            provider: GatewayProvider::PAYPAL,
+            eventId: $eventId,
             eventType: $eventType,
-            payload: $data,
+            provider: GatewayProvider::PAYPAL,
             resourceId: $resourceId,
-            occurredAt: isset($data['create_time']) ? new \DateTimeImmutable($data['create_time']) : new \DateTimeImmutable(),
+            resourceType: $data['resource_type'] ?? null,
+            data: $data,
+            receivedAt: isset($data['create_time']) ? new \DateTimeImmutable($data['create_time']) : new \DateTimeImmutable(),
         );
     }
 
     public function processWebhook(WebhookPayload $payload): void
     {
         $this->logger->info('Processing PayPal webhook', [
-            'id' => $payload->id,
+            'id' => $payload->eventId,
             'type' => $payload->eventType->value,
         ]);
 

@@ -29,23 +29,46 @@ final class SquareWebhookHandler implements WebhookHandlerInterface
         return GatewayProvider::SQUARE;
     }
 
+    /**
+     * Verify Square webhook signature.
+     *
+     * SECURITY: This is a placeholder implementation that FAILS CLOSED for security.
+     * In production, this method MUST be replaced with full Square webhook verification:
+     * 1. Extract the signature from x-square-signature header
+     * 2. Concatenate the notification URL (from config) + payload body
+     * 3. Compute HMAC-SHA256 using the webhook signature key
+     * 4. Compare the computed signature with the received signature (constant-time comparison)
+     * 5. Return true only if verification succeeds
+     *
+     * @see https://developer.squareup.com/docs/webhooks/step3validate
+     *
+     * WARNING: This placeholder returns FALSE to prevent unauthorized webhook processing.
+     * Implement proper verification before enabling Square webhooks in production.
+     */
     public function verifySignature(
         string $payload,
         string $signature,
         string $secret,
     ): bool {
-        // Square signature verification involves the URL as well.
-        // Assuming the signature passed here is the one from the header 'x-square-signature'.
-        // And assuming we might need to pass the URL in a real scenario, but strictly following the interface:
+        // TODO: Implement full Square webhook signature verification
+        // Until implemented, fail closed to prevent webhook spoofing attacks
         
-        // Note: Square constructs the signature from the full URL + payload.
-        // Since the interface only provides payload, signature, and secret, 
-        // we assume the caller might have validated it or we can't fully validate without the URL.
+        // Reject if signature or secret is missing
+        if (empty($signature) || empty($secret)) {
+            return false;
+        }
         
-        // For this implementation, we'll do a basic HMAC check if possible, 
-        // but without the URL it's incomplete.
+        // SECURITY: This placeholder fails closed (returns false) to prevent
+        // unauthorized webhooks from being processed. Square requires the notification
+        // URL to be included in the signed string, which is not available in this interface.
+        // Consider updating the interface or storing the URL in handler configuration.
         
-        return !empty($signature);
+        // In production, implement proper HMAC-SHA256 verification:
+        // $expectedSignature = base64_encode(hash_hmac('sha256', $notificationUrl . $payload, $secret, true));
+        // return hash_equals($expectedSignature, $signature);
+        
+        // Return false until proper verification is implemented
+        return false;
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload
@@ -65,19 +88,19 @@ final class SquareWebhookHandler implements WebhookHandlerInterface
         $resourceId = $data['data']['object']['payment']['id'] ?? null;
 
         return new WebhookPayload(
-            id: $eventId,
-            provider: GatewayProvider::SQUARE,
+            eventId: $eventId,
             eventType: $eventType,
-            payload: $data,
+            provider: GatewayProvider::SQUARE,
             resourceId: $resourceId,
-            occurredAt: isset($data['created_at']) ? new \DateTimeImmutable($data['created_at']) : new \DateTimeImmutable(),
+            data: $data,
+            receivedAt: isset($data['created_at']) ? new \DateTimeImmutable($data['created_at']) : new \DateTimeImmutable(),
         );
     }
 
     public function processWebhook(WebhookPayload $payload): void
     {
         $this->logger->info('Processing Square webhook', [
-            'id' => $payload->id,
+            'id' => $payload->eventId,
             'type' => $payload->eventType->value,
         ]);
     }
