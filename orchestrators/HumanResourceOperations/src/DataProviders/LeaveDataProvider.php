@@ -69,7 +69,7 @@ final readonly class LeaveDataProvider
 
         foreach ($this->leaveRepository?->findByEmployeeId($employeeId) ?? [] as $leave) {
             $status = $this->readString($leave, ['getStatus', 'status']);
-            if ($status !== null && strtolower($status) === 'cancelled') {
+            if ($status === null || strtolower($status) !== 'approved') {
                 continue;
             }
 

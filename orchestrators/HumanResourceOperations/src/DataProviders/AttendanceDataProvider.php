@@ -84,15 +84,30 @@ final readonly class AttendanceDataProvider
         $start = $date->modify('-7 days');
         $records = $this->attendanceQuery->findByEmployeeAndDateRange($employeeId, $start, $date);
 
-        return array_map(static function ($record): array {
-            return [
-                'id' => $record->getId()->toString(),
-                'date' => $record->getDate()->format('Y-m-d'),
-                'check_in' => $record->getCheckInTime()?->format('Y-m-d H:i:s'),
-                'check_out' => $record->getCheckOutTime()?->format('Y-m-d H:i:s'),
-                'location_id' => $record->getLocationId(),
-            ];
-        }, $records);
+        $events = [];
+        foreach ($records as $record) {
+            $checkIn = $record->getCheckInTime();
+            if ($checkIn !== null) {
+                $events[] = [
+                    'id' => $record->getId()->toString() . '_in',
+                    'type' => 'check_in',
+                    'timestamp' => $checkIn->format('Y-m-d H:i:s'),
+                    'location_id' => $record->getLocationId(),
+                ];
+            }
+
+            $checkOut = $record->getCheckOutTime();
+            if ($checkOut !== null) {
+                $events[] = [
+                    'id' => $record->getId()->toString() . '_out',
+                    'type' => 'check_out',
+                    'timestamp' => $checkOut->format('Y-m-d H:i:s'),
+                    'location_id' => $record->getLocationId(),
+                ];
+            }
+        }
+
+        return $events;
     }
 
     private function getEmployeeWorkPattern(string $employeeId): ?array

@@ -147,6 +147,7 @@ final readonly class PayrollDataProvider
             'date' => $record->getDate()->format('Y-m-d'),
             'check_in' => $record->getCheckInTime()?->format('Y-m-d H:i:s'),
             'check_out' => $record->getCheckOutTime()?->format('Y-m-d H:i:s'),
+            'overtime_hours' => (float) ($record->getWorkHours()?->overtimeHours ?? 0.0),
         ], $records);
     }
 
