@@ -102,4 +102,14 @@ class PurchaseOrderException extends ProcurementOperationsException
             'Purchase order validation failed: ' . json_encode($errors)
         );
     }
+
+    /**
+     * Create exception for vendor not found.
+     */
+    public static function vendorNotFound(string $vendorId): self
+    {
+        return new self(
+            sprintf('Vendor not found: %s', $vendorId)
+        );
+    }
 }

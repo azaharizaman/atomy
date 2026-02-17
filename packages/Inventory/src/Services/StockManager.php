@@ -214,8 +214,70 @@ final readonly class StockManager implements StockManagerInterface
     {
         $onHand = $this->stockLevelRepository->getCurrentLevel($productId, $warehouseId);
         $reserved = $this->stockLevelRepository->getReservedQuantity($productId, $warehouseId);
+        $quarantined = $this->stockLevelRepository->getQuarantineQuantity($productId, $warehouseId);
         
-        return max(0.0, $onHand - $reserved);
+        return max(0.0, $onHand - ($reserved + $quarantined));
+    }
+
+    public function quarantineStock(string $productId, string $warehouseId, float $quantity): void
+    {
+        $this->logger->info('Moving stock to quarantine', [
+            'product_id' => $productId,
+            'warehouse_id' => $warehouseId,
+            'quantity' => $quantity,
+        ]);
+
+        $currentQuarantine = $this->stockLevelRepository->getQuarantineQuantity($productId, $warehouseId);
+        $this->stockLevelRepository->updateQuarantineQuantity($productId, $warehouseId, $currentQuarantine + $quantity);
+
+        $currentCost = $this->valuationEngine->getCurrentCost($productId) ?? 0.0;
+        $this->movementRepository->recordMovement(
+            $productId,
+            $warehouseId,
+            MovementType::QUARANTINE,
+            $quantity,
+            $currentCost
+        );
+    }
+
+    public function releaseFromQuarantine(string $productId, string $warehouseId, float $quantity): void
+    {
+        $this->logger->info('Releasing stock from quarantine', [
+            'product_id' => $productId,
+            'warehouse_id' => $warehouseId,
+            'quantity' => $quantity,
+        ]);
+
+        $currentQuarantine = $this->stockLevelRepository->getQuarantineQuantity($productId, $warehouseId);
+        
+        if ($currentQuarantine < $quantity) {
+            $this->logger->warning('Attempting to release more stock than in quarantine', [
+                'current' => $currentQuarantine,
+                'requested' => $quantity,
+            ]);
+            $quantity = $currentQuarantine;
+        }
+
+        $this->stockLevelRepository->updateQuarantineQuantity($productId, $warehouseId, $currentQuarantine - $quantity);
+
+        $currentCost = $this->valuationEngine->getCurrentCost($productId) ?? 0.0;
+        $this->movementRepository->recordMovement(
+            $productId,
+            $warehouseId,
+            MovementType::QUARANTINE_RELEASE,
+            -$quantity,
+            $currentCost
+        );
+    }
+
+    public function capitalizeLandedCost(string $productId, float $additionalCost): void
+    {
+        $this->logger->info('Capitalizing landed cost', [
+            'product_id' => $productId,
+            'additional_cost' => $additionalCost,
+        ]);
+
+        $this->valuationEngine->capitalizeLandedCost($productId, $additionalCost);
     }
 }
 

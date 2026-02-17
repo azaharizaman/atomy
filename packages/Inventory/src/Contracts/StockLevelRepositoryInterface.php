@@ -23,4 +23,14 @@ interface StockLevelRepositoryInterface
      * Get reserved quantity
      */
     public function getReservedQuantity(string $productId, string $warehouseId): float;
+
+    /**
+     * Get quarantine quantity
+     */
+    public function getQuarantineQuantity(string $productId, string $warehouseId): float;
+
+    /**
+     * Update quarantine quantity
+     */
+    public function updateQuarantineQuantity(string $productId, string $warehouseId, float $quantity): void;
 }

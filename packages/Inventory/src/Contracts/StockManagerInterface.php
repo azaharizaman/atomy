@@ -81,11 +81,40 @@ interface StockManagerInterface
     public function getCurrentStock(string $productId, string $warehouseId): float;
     
     /**
-     * Get available stock (on-hand minus reservations)
+     * Get available stock (on-hand minus reservations and quarantine)
      * 
      * @param string $productId Product identifier
      * @param string $warehouseId Warehouse identifier
      * @return float Available quantity
      */
     public function getAvailableStock(string $productId, string $warehouseId): float;
+
+    /**
+     * Move stock to quarantine (e.g., for quality inspection)
+     * 
+     * @param string $productId Product identifier
+     * @param string $warehouseId Warehouse identifier
+     * @param float $quantity Quantity to quarantine
+     * @return void
+     */
+    public function quarantineStock(string $productId, string $warehouseId, float $quantity): void;
+
+    /**
+     * Release stock from quarantine to available stock
+     * 
+     * @param string $productId Product identifier
+     * @param string $warehouseId Warehouse identifier
+     * @param float $quantity Quantity to release
+     * @return void
+     */
+    public function releaseFromQuarantine(string $productId, string $warehouseId, float $quantity): void;
+
+    /**
+     * Capitalize landed costs into inventory valuation
+     * 
+     * @param string $productId Product identifier
+     * @param float $additionalCost Total cost to add to inventory value
+     * @return void
+     */
+    public function capitalizeLandedCost(string $productId, float $additionalCost): void;
 }

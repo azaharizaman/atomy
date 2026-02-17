@@ -65,6 +65,20 @@ final class WeightedAverageEngine implements ValuationEngineInterface
         $current = $this->storage->getCurrent($productId);
         return $current['average_cost'] ?? null;
     }
+
+    public function capitalizeLandedCost(string $productId, float $additionalCost): void
+    {
+        $current = $this->storage->getCurrent($productId);
+        
+        if ($current === null || $current['quantity'] <= 0) {
+            return;
+        }
+        
+        $totalValue = ($current['quantity'] * $current['average_cost']) + $additionalCost;
+        $newAverage = $totalValue / $current['quantity'];
+        
+        $this->storage->update($productId, $current['quantity'], $newAverage);
+    }
 }
 
 /**

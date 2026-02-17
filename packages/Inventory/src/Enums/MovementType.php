@@ -16,4 +16,6 @@ enum MovementType: string
     case TRANSFER_IN = 'transfer_in';
     case RESERVATION = 'reservation';
     case RESERVATION_RELEASE = 'reservation_release';
+    case QUARANTINE = 'quarantine';
+    case QUARANTINE_RELEASE = 'quarantine_release';
 }

@@ -44,4 +44,13 @@ interface ValuationEngineInterface
      * @return float|null Current unit cost, null if no stock
      */
     public function getCurrentCost(string $productId): ?float;
+
+    /**
+     * Capitalize landed costs into inventory valuation
+     * 
+     * @param string $productId Product identifier
+     * @param float $additionalCost Total cost to add to inventory value
+     * @return void
+     */
+    public function capitalizeLandedCost(string $productId, float $additionalCost): void;
 }
