@@ -40,6 +40,19 @@ services:
     Nexus\Identity\Contracts\PermissionRepositoryInterface: '@App\Repository\PermissionRepository'
     Nexus\Identity\Contracts\PasswordValidatorInterface: '@App\Service\PasswordValidator'
     Nexus\Identity\Contracts\MfaVerifierInterface: '@App\Service\MfaVerifier'
+    Nexus\Identity\Contracts\AuthContextInterface: '@App\Service\AuthContext'
+
+    # ============================================
+    # Nexus Document Contract Bindings
+    # ============================================
+    Nexus\Document\Contracts\DocumentRepositoryInterface: '@App\Repository\DocumentRepository'
+    Nexus\Document\Contracts\DocumentVersionRepositoryInterface: '@App\Repository\DocumentVersionRepository'
+    Nexus\Document\Contracts\DocumentRelationshipRepositoryInterface: '@App\Repository\DocumentRelationshipRepository'
+    Nexus\Document\Contracts\LegalHoldRepositoryInterface: '@App\Repository\LegalHoldRepository'
+    Nexus\Document\Contracts\DisposalCertificationRepositoryInterface: '@App\Repository\DisposalCertificationRepository'
+    Nexus\Document\Contracts\PermissionCheckerInterface: '@App\Service\DocumentPermissionChecker'
+    Nexus\Document\Contracts\ContentProcessorInterface: '@App\Service\NullContentProcessor'
+    Nexus\Document\Contracts\RetentionPolicyInterface: '@Nexus\Document\Services\DefaultRetentionPolicy'
 
     # ============================================
     # Nexus AuditLogger Contract Bindings

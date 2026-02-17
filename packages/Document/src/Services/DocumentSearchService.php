@@ -20,7 +20,8 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
 {
     public function __construct(
         private DocumentRepositoryInterface $repository,
-        private PermissionCheckerInterface $permissions
+        private PermissionCheckerInterface $permissions,
+        private \Nexus\AuditLogger\Services\AuditLogManager $auditLogger
     ) {
     }
 
@@ -30,8 +31,23 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
     public function findByTags(array $tags, string $userId): array
     {
         $documents = $this->repository->findByTags($tags);
+        $results = $this->filterByPermissions($documents, $userId);
 
-        return $this->filterByPermissions($documents, $userId);
+        $this->auditLogger->log(
+            logName: 'document_search_tags',
+            description: sprintf("Search by tags: %s", implode(', ', $tags)),
+            subjectType: 'Search',
+            subjectId: 'tags',
+            causerType: 'User',
+            causerId: $userId,
+            properties: [
+                'tags' => $tags,
+                'result_count' => count($results),
+            ],
+            level: 1
+        );
+
+        return $results;
     }
 
     /**
@@ -61,7 +77,24 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
             });
         }
 
-        return $this->filterByPermissions($documents, $userId);
+        $results = $this->filterByPermissions($documents, $userId);
+
+        $this->auditLogger->log(
+            logName: 'document_search_type',
+            description: sprintf("Search by type: %s", $type->value),
+            subjectType: 'Search',
+            subjectId: 'type',
+            causerType: 'User',
+            causerId: $userId,
+            properties: [
+                'type' => $type->value,
+                'filters' => $filters,
+                'result_count' => count($results),
+            ],
+            level: 1
+        );
+
+        return $results;
     }
 
     /**
@@ -92,7 +125,23 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
             }
         }
 
-        return $this->filterByPermissions($filtered, $userId);
+        $results = $this->filterByPermissions($filtered, $userId);
+
+        $this->auditLogger->log(
+            logName: 'document_search_metadata',
+            description: "Search by metadata criteria",
+            subjectType: 'Search',
+            subjectId: 'metadata',
+            causerType: 'User',
+            causerId: $userId,
+            properties: [
+                'criteria' => $criteria,
+                'result_count' => count($results),
+            ],
+            level: 1
+        );
+
+        return $results;
     }
 
     /**
@@ -139,8 +188,24 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
     public function findByDateRange(\DateTimeInterface $from, \DateTimeInterface $to, string $userId): array
     {
         $documents = $this->repository->findByDateRange($from, $to);
+        $results = $this->filterByPermissions($documents, $userId);
 
-        return $this->filterByPermissions($documents, $userId);
+        $this->auditLogger->log(
+            logName: 'document_search_daterange',
+            description: sprintf("Search by date range: %s to %s", $from->format('Y-m-d'), $to->format('Y-m-d')),
+            subjectType: 'Search',
+            subjectId: 'daterange',
+            causerType: 'User',
+            causerId: $userId,
+            properties: [
+                'from' => $from->format(\DateTimeInterface::ATOM),
+                'to' => $to->format(\DateTimeInterface::ATOM),
+                'result_count' => count($results),
+            ],
+            level: 1
+        );
+
+        return $results;
     }
 
     /**

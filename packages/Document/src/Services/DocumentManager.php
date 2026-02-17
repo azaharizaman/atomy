@@ -39,7 +39,8 @@ final readonly class DocumentManager
         private PathGenerator $pathGenerator,
         private HasherInterface $hasher,
         private TenantContextInterface $tenantContext,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private ?\Nexus\Document\Contracts\AsyncBatchUploadInterface $asyncBatchProcessor = null
     ) {
     }
 
@@ -210,7 +211,7 @@ final readonly class DocumentManager
             logName: 'documents_batch_uploaded',
             description: sprintf('%d documents uploaded in batch', count($documents)),
             subjectType: 'Batch',
-            subjectId: $this->generateUlid(),
+            subjectId: (string) new Ulid(),
             causerType: 'User',
             causerId: $ownerId,
             properties: [
@@ -221,6 +222,39 @@ final readonly class DocumentManager
         );
 
         return $documents;
+    }
+
+    /**
+     * Dispatch multiple documents for background upload.
+     *
+     * @param array<array{stream: resource, metadata: array}> $files
+     * @param string $ownerId
+     * @return string Batch job identifier
+     * @throws \RuntimeException If async processor is not configured
+     */
+    public function uploadBatchAsync(array $files, string $ownerId): string
+    {
+        if (!$this->asyncBatchProcessor) {
+            throw new \RuntimeException('Async batch processor is not configured.');
+        }
+
+        $jobId = $this->asyncBatchProcessor->dispatchBatch($files, $ownerId);
+
+        $this->auditLogger->log(
+            logName: 'documents_batch_async_dispatched',
+            description: sprintf('Batch upload dispatched: %d files', count($files)),
+            subjectType: 'Batch',
+            subjectId: $jobId,
+            causerType: 'User',
+            causerId: $ownerId,
+            properties: [
+                'count' => count($files),
+                'job_id' => $jobId,
+            ],
+            level: 2
+        );
+
+        return $jobId;
     }
 
     /**

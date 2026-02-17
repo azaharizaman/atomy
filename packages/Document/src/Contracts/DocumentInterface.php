@@ -103,6 +103,26 @@ interface DocumentInterface
     public function isDeleted(): bool;
 
     /**
+     * Set the current document state.
+     */
+    public function setState(DocumentState $state): void;
+
+    /**
+     * Set the current version number.
+     */
+    public function setVersion(int $version): void;
+
+    /**
+     * Set the storage path.
+     */
+    public function setStoragePath(string $path): void;
+
+    /**
+     * Set the checksum.
+     */
+    public function setChecksum(string $checksum): void;
+
+    /**
      * Convert the document to an array representation.
      *
      * @return array<string, mixed>
