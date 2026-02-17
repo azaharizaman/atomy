@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/finance": "*@dev",
+        "nexus/accounting": "*@dev",
         "nexus/period": "*@dev",
         "psr/log": "^3.0"
     },

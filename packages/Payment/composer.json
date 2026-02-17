@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "^1.0",
+        "nexus/common": "*@dev",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^1.0"
     },

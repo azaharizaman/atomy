@@ -7,7 +7,7 @@
         "php": "^8.3",
         "psr/log": "^3.0",
         "psr/cache": "^3.0",
-        "nexus/finance": "*@dev",
+        "nexus/accounting": "*@dev",
         "nexus/currency": "*@dev",
         "nexus/geo": "*@dev",
         "nexus/party": "*@dev",
