@@ -51,4 +51,15 @@ interface AuthorizationInterface
      * @return bool True if authorized
      */
     public function canDeletePeriod(string $userId): bool;
+
+    /**
+     * Check if a user can unlock a locked period
+     * 
+     * This is a highly restricted permission that should only be granted
+     * to senior financial controllers or system administrators.
+     * 
+     * @param string $userId The user identifier
+     * @return bool True if authorized
+     */
+    public function canUnlockPeriod(string $userId): bool;
 }

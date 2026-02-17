@@ -47,7 +47,33 @@ $canPost = $periodManager->isPostingAllowed(
 // Close the current accounting period
 $periodManager->closePeriod(
     $periodId,
-    'Monthly close for October 2024'
+    'Monthly close for October 2024',
+    $userId
+);
+
+// Lock a closed period (prevents any further changes)
+$periodManager->lockPeriod(
+    $periodId,
+    'Year-end finalization',
+    $userId
+);
+
+// Lock all periods in a fiscal year
+$lockedCount = $periodManager->lockFiscalYear(
+    '2024',
+    PeriodType::Accounting,
+    'Annual audit completed',
+    $userId
+);
+
+// Get all periods for a fiscal year
+$periods = $periodManager->getPeriodsForFiscalYear('2024', PeriodType::Accounting);
+
+// Unlock a locked period (exceptional case, requires special authorization)
+$periodManager->unlockPeriod(
+    $periodId,
+    'Audit adjustment required',
+    $userId
 );
 
 // Get the currently open period
