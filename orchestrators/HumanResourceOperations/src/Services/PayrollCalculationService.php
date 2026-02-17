@@ -39,7 +39,7 @@ final readonly class PayrollCalculationService
             if ($amount instanceof Money) {
                 $total = $total->add($amount);
             } elseif (is_numeric($amount)) {
-                $total = $total->add(Money::of((float) $amount, $total->currency));
+                $total = $total->add(Money::of((float) $amount, $total->getCurrency()));
             }
         }
 
@@ -58,7 +58,7 @@ final readonly class PayrollCalculationService
             'gross_pay' => $grossPay->toArray()
         ]);
 
-        $totalDeductions = Money::zero($grossPay->currency);
+        $totalDeductions = Money::zero($grossPay->getCurrency());
 
         // Sum all deductions
         foreach ($context->deductions as $component => $amount) {
@@ -66,7 +66,7 @@ final readonly class PayrollCalculationService
                 $totalDeductions = $totalDeductions->add($amount);
             } elseif (is_numeric($amount)) {
                 $totalDeductions = $totalDeductions->add(
-                    Money::of((float) $amount, $grossPay->currency)
+                    Money::of((float) $amount, $grossPay->getCurrency())
                 );
             }
         }
@@ -90,9 +90,9 @@ final readonly class PayrollCalculationService
         // - Rest day: 2.0x
         // - Public holiday: 3.0x
         
-        $amount = $hourlyRate->amountInCents * $overtimeHours * $overtimeMultiplier;
-        
-        return Money::of((int) $amount, $hourlyRate->currency);
+        $baseAmount = $hourlyRate->getAmount() * $overtimeHours * $overtimeMultiplier;
+
+        return Money::of($baseAmount, $hourlyRate->getCurrency());
     }
 
     /**
@@ -108,11 +108,11 @@ final readonly class PayrollCalculationService
         // - PCB: Based on tax brackets
         
         return [
-            'epf_employee' => Money::zero($grossPay->currency),
-            'epf_employer' => Money::zero($grossPay->currency),
-            'socso_employee' => Money::zero($grossPay->currency),
-            'socso_employer' => Money::zero($grossPay->currency),
-            'income_tax' => Money::zero($grossPay->currency)
+            'epf_employee' => Money::zero($grossPay->getCurrency()),
+            'epf_employer' => Money::zero($grossPay->getCurrency()),
+            'socso_employee' => Money::zero($grossPay->getCurrency()),
+            'socso_employer' => Money::zero($grossPay->getCurrency()),
+            'income_tax' => Money::zero($grossPay->getCurrency())
         ];
     }
 }

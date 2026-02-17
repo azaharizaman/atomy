@@ -4,75 +4,130 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\DataProviders;
 
+use Nexus\Leave\Contracts\LeaveBalanceRepositoryInterface;
+use Nexus\Leave\Contracts\LeaveRepositoryInterface;
+use Nexus\Leave\Contracts\LeaveTypeRepositoryInterface;
+
 use Nexus\HumanResourceOperations\DTOs\LeaveContext;
 
 /**
  * Data Provider for leave operations.
- * 
- * Aggregates data from:
- * - Nexus\Hrm (employee data)
- * - Nexus\Leave (leave balances, types, existing leaves)
- * - Nexus\OrgStructure (department, reporting structure)
  */
 final readonly class LeaveDataProvider
 {
     public function __construct(
-        // Dependencies injected by consuming application
+        private ?LeaveRepositoryInterface $leaveRepository = null,
+        private ?LeaveBalanceRepositoryInterface $balanceRepository = null,
+        private ?LeaveTypeRepositoryInterface $leaveTypeRepository = null,
     ) {}
 
-    /**
-     * Get complete leave context for an application.
-     */
     public function getLeaveContext(
         string $employeeId,
         string $leaveTypeId,
         string $startDate,
         string $endDate,
-        float $daysRequested
+        float $daysRequested,
+        ?string $applicantUserId = null,
+        ?string $applicantName = null,
     ): LeaveContext {
-        // Implementation: Aggregate from multiple packages
+        $leaveType = $this->leaveTypeRepository?->findById($leaveTypeId);
+        $balance = $this->getCurrentBalance($employeeId, $leaveTypeId);
+
         return new LeaveContext(
             employeeId: $employeeId,
-            employeeName: 'Pending Implementation',
-            departmentId: 'dept-unknown',
+            employeeName: 'Employee ' . $employeeId,
+            departmentId: 'unknown',
             leaveTypeId: $leaveTypeId,
-            leaveTypeName: 'Unknown Leave Type',
-            currentBalance: 0.0,
+            leaveTypeName: $this->readString($leaveType, ['getName', 'name']) ?? 'Unknown Leave Type',
+            currentBalance: $balance,
             daysRequested: $daysRequested,
             startDate: $startDate,
             endDate: $endDate,
+            applicantUserId: $applicantUserId ?? $employeeId,
+            applicantName: $applicantName ?? ('Applicant ' . $employeeId),
+            isProxyApplication: ($applicantUserId ?? $employeeId) !== $employeeId,
+            policyRules: $this->getPolicyRules($leaveTypeId),
+            existingLeaves: $this->leaveRepository?->findByEmployeeId($employeeId) ?? [],
         );
     }
 
-    /**
-     * Get current leave balance for employee and leave type.
-     */
     public function getCurrentBalance(string $employeeId, string $leaveTypeId): float
     {
-        // Implementation: Call Nexus\Leave package
-        return 0.0;
+        $balance = $this->balanceRepository?->findByEmployeeAndType($employeeId, $leaveTypeId);
+
+        if ($balance === null) {
+            return 0.0;
+        }
+
+        return (float) ($this->readString($balance, ['getBalance']) ?? $balance->balance ?? 0.0);
     }
 
-    /**
-     * Check if dates overlap with existing approved leaves.
-     */
-    public function hasOverlappingLeaves(
-        string $employeeId,
-        string $startDate,
-        string $endDate
-    ): bool {
-        // Implementation: Check existing leaves
+    public function hasOverlappingLeaves(string $employeeId, string $startDate, string $endDate): bool
+    {
+        $requestedStart = new \DateTimeImmutable($startDate);
+        $requestedEnd = new \DateTimeImmutable($endDate);
+
+        foreach ($this->leaveRepository?->findByEmployeeId($employeeId) ?? [] as $leave) {
+            $status = $this->readString($leave, ['getStatus', 'status']);
+            if ($status === null || strtolower($status) !== 'approved') {
+                continue;
+            }
+
+            $leaveStart = $this->asDate($this->readString($leave, ['getStartDate', 'startDate', 'start_date']));
+            $leaveEnd = $this->asDate($this->readString($leave, ['getEndDate', 'endDate', 'end_date']));
+
+            if ($leaveStart === null || $leaveEnd === null) {
+                continue;
+            }
+
+            if ($leaveStart <= $requestedEnd && $leaveEnd >= $requestedStart) {
+                return true;
+            }
+        }
+
         return false;
     }
 
-    /**
-     * Get policy rules for leave type.
-     * 
-     * @return array<string, mixed>
-     */
+    /** @return array<string,mixed> */
     public function getPolicyRules(string $leaveTypeId): array
     {
-        // Implementation: Get from Nexus\Leave policy engine
-        return [];
+        $leaveType = $this->leaveTypeRepository?->findById($leaveTypeId);
+
+        return [
+            'max_consecutive_days' => $this->readString($leaveType, ['getMaxConsecutiveDays', 'maxConsecutiveDays']) ?? null,
+            'requires_documentation' => $this->readString($leaveType, ['getRequiresDocumentation', 'requiresDocumentation']) ?? false,
+        ];
+    }
+
+    /** @param array<string> $candidates */
+    private function readString(?object $source, array $candidates): mixed
+    {
+        if ($source === null) {
+            return null;
+        }
+
+        foreach ($candidates as $candidate) {
+            if (method_exists($source, $candidate)) {
+                return $source->{$candidate}();
+            }
+            if (property_exists($source, $candidate)) {
+                return $source->{$candidate};
+            }
+        }
+
+        return null;
+    }
+
+    private function asDate(mixed $value): ?\DateTimeImmutable
+    {
+        if ($value instanceof \DateTimeImmutable) {
+            return $value;
+        }
+
+        if (is_string($value) && $value !== '') {
+            return new \DateTimeImmutable($value);
+        }
+
+        return null;
     }
 }

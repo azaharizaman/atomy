@@ -66,6 +66,8 @@ final readonly class LeaveCoordinator
             startDate: $request->startDate,
             endDate: $request->endDate,
             daysRequested: $daysRequested,
+            applicantUserId: $request->applicantUserId,
+            applicantName: $request->applicantName,
         );
 
         // Step 3: Validate using Rules

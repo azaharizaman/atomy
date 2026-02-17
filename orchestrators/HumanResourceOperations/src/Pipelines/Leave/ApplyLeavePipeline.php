@@ -4,14 +4,30 @@ declare(strict_types=1);
 
 namespace Nexus\HumanResourceOperations\Pipelines\Leave;
 
+/**
+ * Leave application pipeline runner.
+ */
 final readonly class ApplyLeavePipeline
 {
-    // TODO: Implement leave application pipeline
-    // Steps:
-    // 1. Validate leave request
-    // 2. Check balance
-    // 3. Check policy compliance
-    // 4. Create leave record
-    // 5. Update balance
-    // 6. Trigger notifications
+    /**
+     * @param array<int,callable(array):array> $steps
+     */
+    public function __construct(
+        private array $steps = []
+    ) {}
+
+    /**
+     * @param array<string,mixed> $payload
+     * @return array<string,mixed>
+     */
+    public function process(array $payload): array
+    {
+        $state = $payload;
+
+        foreach ($this->steps as $step) {
+            $state = $step($state);
+        }
+
+        return $state;
+    }
 }
