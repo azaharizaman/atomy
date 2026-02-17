@@ -32,8 +32,8 @@ enum PeriodStatus: string
         return match($this) {
             self::Pending => in_array($newStatus, [self::Open], true),
             self::Open => in_array($newStatus, [self::Closed], true),
-            self::Closed => in_array($newStatus, [self::Locked, self::Open], true), // Allow reopening
-            self::Locked => false, // Cannot transition from locked
+            self::Closed => in_array($newStatus, [self::Locked, self::Open], true), // Allow reopening or locking
+            self::Locked => $newStatus === self::Closed, // Exceptional: Allow unlocking to Closed (requires special auth)
         };
     }
 

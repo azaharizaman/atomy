@@ -17,6 +17,7 @@ use Nexus\Period\Exceptions\InvalidPeriodStatusException;
 use Nexus\Period\Exceptions\NoOpenPeriodException;
 use Nexus\Period\Exceptions\PeriodNotFoundException;
 use Nexus\Period\Exceptions\PeriodReopeningUnauthorizedException;
+use Nexus\Period\Exceptions\PeriodUnlockingUnauthorizedException;
 
 /**
  * Period Manager Service
@@ -317,5 +318,111 @@ final class PeriodManager implements PeriodManagerInterface
     {
         $cacheKey = self::CACHE_PREFIX . "open:{$type->value}";
         $this->cache->forget($cacheKey);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function lockPeriod(string $periodId, string $reason, string $userId): void
+    {
+        $period = $this->findById($periodId);
+        
+        // Validate status transition
+        if (!$period->getStatus()->canTransitionTo(PeriodStatus::Locked)) {
+            throw InvalidPeriodStatusException::forTransition(
+                $period->getStatus()->value,
+                PeriodStatus::Locked->value
+            );
+        }
+        
+        // Update period status to Locked
+        $this->updatePeriodStatus($period, PeriodStatus::Locked);
+        
+        // Clear cache
+        $this->clearPeriodCache($period->getType());
+        
+        // Audit log
+        $this->auditLogger->log(
+            $periodId,
+            'period_locked',
+            "Period {$period->getName()} locked by user {$userId}. Reason: {$reason}"
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function unlockPeriod(string $periodId, string $reason, string $userId): void
+    {
+        $period = $this->findById($periodId);
+        
+        // Check authorization - unlocking requires special permission
+        if (!$this->authorization->canUnlockPeriod($userId)) {
+            throw PeriodUnlockingUnauthorizedException::forUser($userId, $periodId);
+        }
+        
+        // Validate status transition (Locked -> Closed)
+        if (!$period->getStatus()->canTransitionTo(PeriodStatus::Closed)) {
+            throw InvalidPeriodStatusException::forTransition(
+                $period->getStatus()->value,
+                PeriodStatus::Closed->value
+            );
+        }
+        
+        // Update period status to Closed (not Open, to maintain some restriction)
+        $this->updatePeriodStatus($period, PeriodStatus::Closed);
+        
+        // Clear cache
+        $this->clearPeriodCache($period->getType());
+        
+        // Audit log with high severity
+        $this->auditLogger->log(
+            $periodId,
+            'period_unlocked',
+            "[CRITICAL] Period {$period->getName()} unlocked by user {$userId}. Reason: {$reason}. " .
+            "This is an exceptional operation that should be reviewed."
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function lockFiscalYear(string $fiscalYear, PeriodType $type, string $reason, string $userId): int
+    {
+        // Get all periods for the fiscal year
+        $periods = $this->getPeriodsForFiscalYear($fiscalYear, $type);
+        
+        $lockedCount = 0;
+        
+        foreach ($periods as $period) {
+            // Only lock periods that are in Closed status
+            if ($period->getStatus() === PeriodStatus::Closed) {
+                try {
+                    $this->lockPeriod($period->getId(), $reason, $userId);
+                    $lockedCount++;
+                } catch (InvalidPeriodStatusException $e) {
+                    // Skip periods that can't be locked
+                    continue;
+                }
+            }
+        }
+        
+        // Audit log for the fiscal year lock operation
+        $this->auditLogger->log(
+            $fiscalYear,
+            'fiscal_year_locked',
+            "Fiscal year {$fiscalYear} ({$type->label()}) locked by user {$userId}. " .
+            "{$lockedCount} periods locked. Reason: {$reason}"
+        );
+        
+        return $lockedCount;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getPeriodsForFiscalYear(string $fiscalYear, PeriodType $type): array
+    {
+        return $this->listPeriods($type, $fiscalYear);
     }
 }
