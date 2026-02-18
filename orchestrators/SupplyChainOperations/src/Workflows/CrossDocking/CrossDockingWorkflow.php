@@ -4,79 +4,106 @@ declare(strict_types=1);
 
 namespace Nexus\SupplyChainOperations\Workflows\CrossDocking;
 
-use Nexus\Inventory\Events\StockReceivedEvent;
-use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
-use Nexus\Sales\Enums\SalesOrderStatus;
-use Nexus\Warehouse\Contracts\WarehouseManagerInterface;
-use Nexus\AuditLogger\Services\AuditLogManager;
+use Nexus\SupplyChainOperations\Contracts\SalesOrderProviderInterface;
+use Nexus\SupplyChainOperations\Contracts\SalesOrderInterface;
+use Nexus\SupplyChainOperations\Contracts\SalesOrderLineInterface;
+use Nexus\SupplyChainOperations\Contracts\StagingManagerInterface;
+use Nexus\SupplyChainOperations\Contracts\StockReceivedEventInterface;
+use Nexus\SupplyChainOperations\Contracts\AuditLoggerInterface;
 use Psr\Log\LoggerInterface;
 
-/**
- * Stateful workflow for Cross-Docking operations.
- * 
- * Orchestrates moving received goods directly to staging for pending sales orders.
- */
 final readonly class CrossDockingWorkflow
 {
     public function __construct(
-        private SalesOrderRepositoryInterface $salesOrderRepository,
-        private WarehouseManagerInterface $warehouseManager,
-        private AuditLogManager $auditLogger,
+        private SalesOrderProviderInterface $salesOrderProvider,
+        private StagingManagerInterface $stagingManager,
+        private AuditLoggerInterface $auditLogger,
         private LoggerInterface $logger
     ) {
     }
 
-    /**
-     * Entry point triggered when stock is received.
-     */
-    public function handleStockReceived(StockReceivedEvent $event, string $tenantId): void
+    public function handleStockReceived(StockReceivedEventInterface $event): void
     {
-        // 1. Find confirmed orders for this tenant
-        $orders = $this->salesOrderRepository->findByStatus($tenantId, SalesOrderStatus::CONFIRMED->value);
-        
-        $pendingQuantity = $event->quantity;
+        $tenantId = $event->getTenantId();
+        $productId = $event->getProductId();
+        $warehouseId = $event->getWarehouseId();
+        $receivedQuantity = $event->getQuantity();
+
+        $orders = $this->salesOrderProvider->findByStatus($tenantId, 'confirmed');
+
+        $availableQuantity = $receivedQuantity;
+        $crossDockedOrders = [];
 
         foreach ($orders as $order) {
-            if ($pendingQuantity <= 0) {
+            if ($availableQuantity <= 0) {
                 break;
             }
 
-            foreach ($order->getLines() as $line) {
-                if ($line->getProductVariantId() === $event->productId) {
-                    $this->processCrossDockLine($event, $order->getId(), $line->getId(), $pendingQuantity);
-                }
+            $requiredQuantity = $this->calculateOrderRequirement($order, $productId);
+
+            if ($requiredQuantity > 0) {
+                $allocateQty = min($requiredQuantity, $availableQuantity);
+
+                $this->processCrossDockAllocation(
+                    $tenantId,
+                    $warehouseId,
+                    $productId,
+                    $allocateQty,
+                    $order->getId(),
+                    $event->getGrnId()
+                );
+
+                $availableQuantity -= $allocateQty;
+                $crossDockedOrders[] = [
+                    'order_id' => $order->getId(),
+                    'quantity' => $allocateQty,
+                ];
             }
+        }
+
+        if (!empty($crossDockedOrders)) {
+            $this->auditLogger->log(
+                logName: 'supply_chain_cross_dock_completed',
+                description: "Cross-docked {$receivedQuantity} units of {$productId} to " . count($crossDockedOrders) . " orders"
+            );
         }
     }
 
-    private function processCrossDockLine(
-        StockReceivedEvent $event,
-        string $orderId,
-        string $lineId,
-        float &$pendingQuantity
-    ): void {
-        // In a real stateful Saga, this would be a multi-step process with state persistence
-        // For this orchestration demonstration, we coordinate the individual packets.
-        
-        $this->logger->info("Cross-docking candidate identified for Order {$orderId}, Line {$lineId}.");
+    private function calculateOrderRequirement(SalesOrderInterface $order, string $productId): float
+    {
+        $required = 0.0;
 
-        // 2. Request Warehouse to move stock to Staging
-        // We'll assume the WarehouseManager has a method for this.
-        // If not, we'd log the need and potentially create a task.
-        
-        $this->auditLogger->log(
-            logName: 'supply_chain_cross_dock_initiated',
-            message: "Cross-docking initiated for Order {$orderId} from GRN {$event->grnId}",
-            context: [
-                'product_id' => $event->productId,
-                'warehouse_id' => $event->warehouseId,
-                'order_id' => $orderId,
-                'quantity' => $event->quantity,
-            ]
+        foreach ($order->getLines() as $line) {
+            if ($line->getProductVariantId() === $productId) {
+                $required += $line->getQuantity();
+            }
+        }
+
+        return $required;
+    }
+
+    private function processCrossDockAllocation(
+        string $tenantId,
+        string $warehouseId,
+        string $productId,
+        float $quantity,
+        string $orderId,
+        ?string $grnId
+    ): void {
+        $this->logger->info("Cross-docking {$quantity} units of {$productId} for Order {$orderId}");
+
+        $this->stagingManager->moveToStaging(
+            $tenantId,
+            $warehouseId,
+            $productId,
+            $quantity,
+            $orderId,
+            $grnId
         );
 
-        // Update pending quantity for the received batch
-        // (Simplified logic: we don't check line quantity here for brevity)
-        $pendingQuantity = 0; 
+        $this->auditLogger->log(
+            logName: 'supply_chain_cross_dock_initiated',
+            description: "Cross-docking initiated for Order {$orderId} from GRN {$grnId}"
+        );
     }
 }
