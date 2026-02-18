@@ -1,0 +1,42 @@
+{
+    "name": "nexus/supply-chain-operations",
+    "description": "Nexus SupplyChainOperations Orchestrator - Coordinating end-to-end supply chain flows from procurement to fulfillment",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "nexus",
+        "orchestrator",
+        "supply-chain",
+        "inventory",
+        "procurement",
+        "fulfillment",
+        "replenishment"
+    ],
+    "require": {
+        "php": "^8.3",
+        "nexus/inventory": "*@dev",
+        "nexus/procurement": "*@dev",
+        "nexus/procurement-ml": "*@dev",
+        "nexus/warehouse": "*@dev",
+        "nexus/sales": "*@dev",
+        "nexus/geo": "*@dev",
+        "nexus/audit-logger": "*@dev",
+        "nexus/notifier": "*@dev",
+        "nexus/tenant": "*@dev",
+        "nexus/product": "*@dev",
+        "psr/log": "^3.0",
+        "psr/event-dispatcher": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\SupplyChainOperations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\SupplyChainOperations\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
