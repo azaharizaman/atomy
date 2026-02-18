@@ -7,7 +7,7 @@ namespace Nexus\SupplyChainOperations\Tests\Unit\Coordinators;
 use Nexus\Inventory\Contracts\StockManagerInterface;
 use Nexus\Procurement\Contracts\GoodsReceiptRepositoryInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderRepositoryInterface;
-use Nexus\Procurement\Contracts\GoodsReceiptInterface;
+use Nexus\Procurement\Contracts\GoodsReceiptNoteInterface;
 use Nexus\Procurement\Contracts\GoodsReceiptLineInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderLineInterface;
 use Nexus\SupplyChainOperations\Coordinators\LandedCostCoordinator;
@@ -54,7 +54,7 @@ final class LandedCostCoordinatorTest extends TestCase
         $grnLine->method('getQuantity')->willReturn(5.0);
         $grnLine->method('getPoLineReference')->willReturn('PO-LINE-001');
 
-        $grn = $this->createMock(GoodsReceiptInterface::class);
+        $grn = $this->createMock(GoodsReceiptNoteInterface::class);
         $grn->method('getId')->willReturn($grnId);
         $grn->method('getLines')->willReturn([$grnLine]);
 
@@ -96,7 +96,7 @@ final class LandedCostCoordinatorTest extends TestCase
         $grnLine->method('getQuantity')->willReturn(10.0);
         $grnLine->method('getPoLineReference')->willReturn('PO-LINE-002');
 
-        $grn = $this->createMock(GoodsReceiptInterface::class);
+        $grn = $this->createMock(GoodsReceiptNoteInterface::class);
         $grn->method('getId')->willReturn($grnId);
         $grn->method('getLines')->willReturn([$grnLine]);
 

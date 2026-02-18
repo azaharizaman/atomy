@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nexus\SupplyChainOperations\Listeners;
 
 use Nexus\Sales\Events\SalesOrderConfirmedEvent;
-use Nexus\SupplyChainOperations\Coordinators\DropshipCoordinator;
+use Nexus\SupplyChainOperations\Contracts\DropshipCoordinatorInterface;
 use Nexus\SupplyChainOperations\DataProviders\DropshipDataProvider;
 use Psr\Log\LoggerInterface;
 
@@ -23,7 +23,7 @@ final readonly class DropshipListener
     private const DROPSHIP_METADATA_KEY = 'is_dropship';
 
     public function __construct(
-        private DropshipCoordinator $dropshipCoordinator,
+        private DropshipCoordinatorInterface $dropshipCoordinator,
         private DropshipDataProvider $dataProvider,
         private LoggerInterface $logger
     ) {

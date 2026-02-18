@@ -4,23 +4,17 @@ declare(strict_types=1);
 
 namespace Nexus\SupplyChainOperations\Workflows\Rma;
 
-use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
-use Nexus\Warehouse\Contracts\WarehouseManagerInterface;
-use Nexus\Inventory\Contracts\StockManagerInterface;
-use Nexus\QualityControl\Contracts\InspectionManagerInterface;
-use Nexus\Receivable\Contracts\ReceivableManagerInterface;
-use Nexus\AuditLogger\Services\AuditLogManager;
+use Nexus\SupplyChainOperations\Contracts\SupplyChainStockManagerInterface;
+use Nexus\SupplyChainOperations\Contracts\SupplyChainReceivableManagerInterface;
+use Nexus\SupplyChainOperations\Contracts\AuditLoggerInterface;
 use Psr\Log\LoggerInterface;
 
 final readonly class RmaWorkflow
 {
     public function __construct(
-        private SalesOrderRepositoryInterface $salesOrderRepository,
-        private WarehouseManagerInterface $warehouseManager,
-        private StockManagerInterface $stockManager,
-        private InspectionManagerInterface $inspectionManager,
-        private ReceivableManagerInterface $receivableManager,
-        private AuditLogManager $auditLogger,
+        private SupplyChainStockManagerInterface $stockManager,
+        private SupplyChainReceivableManagerInterface $receivableManager,
+        private AuditLoggerInterface $auditLogger,
         private LoggerInterface $logger
     ) {
     }
@@ -33,14 +27,7 @@ final readonly class RmaWorkflow
         
         $this->auditLogger->log(
             logName: 'rma_initiated',
-            message: "RMA {$rmaId} initiated for SO {$request->salesOrderId}",
-            context: [
-                'rma_id' => $rmaId,
-                'sales_order_id' => $request->salesOrderId,
-                'customer_id' => $request->customerId,
-                'items' => $request->items,
-                'reason' => $request->reason,
-            ]
+            description: "RMA {$rmaId} initiated for SO {$request->salesOrderId}"
         );
 
         return new RmaResult(
@@ -69,12 +56,7 @@ final readonly class RmaWorkflow
 
         $this->auditLogger->log(
             logName: 'rma_received',
-            message: "RMA {$rma->rmaId} received at warehouse {$warehouseId}",
-            context: [
-                'rma_id' => $rma->rmaId,
-                'warehouse_id' => $warehouseId,
-                'items' => $rma->items,
-            ]
+            description: "RMA {$rma->rmaId} received at warehouse {$warehouseId}"
         );
 
         return $rma->withStatus(RmaStatus::PENDING_INSPECTION);
@@ -97,12 +79,10 @@ final readonly class RmaWorkflow
 
         foreach ($restockItems as $item) {
             $this->stockManager->adjustStock(
-                tenantId: $rma->getTenantId(),
                 productId: $item['product_id'],
                 warehouseId: $item['warehouse_id'],
-                quantity: $item['quantity'],
-                reason: 'rma_restock',
-                reference: $rma->rmaId
+                adjustmentQty: $item['quantity'],
+                reason: 'rma_restock'
             );
         }
 
@@ -130,13 +110,7 @@ final readonly class RmaWorkflow
 
         $this->auditLogger->log(
             logName: 'rma_processed',
-            message: "RMA {$rma->rmaId} processed - Credit: {$creditAmount}",
-            context: [
-                'rma_id' => $rma->rmaId,
-                'restock_items' => $restockItems,
-                'scrap_items' => $scrapItems,
-                'credit_amount' => $creditAmount,
-            ]
+            description: "RMA {$rma->rmaId} processed - Credit: {$creditAmount}"
         );
 
         return $rma->withStatus(RmaStatus::COMPLETED, [

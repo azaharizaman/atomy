@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Nexus\SupplyChainOperations\Workflows\WarehouseBalancing;
 
-use Nexus\Geo\Contracts\GeoRepositoryInterface;
-use Nexus\Inventory\Contracts\StockLevelRepositoryInterface;
-use Nexus\Inventory\Contracts\TransferManagerInterface;
-use Nexus\Warehouse\Contracts\WarehouseRepositoryInterface;
-use Nexus\AuditLogger\Services\AuditLogManager;
+use Nexus\SupplyChainOperations\Contracts\LocationProviderInterface;
+use Nexus\SupplyChainOperations\Contracts\StockLevelProviderInterface;
+use Nexus\SupplyChainOperations\Contracts\SupplyChainTransferManagerInterface;
+use Nexus\SupplyChainOperations\Contracts\WarehouseRepositoryInterface;
+use Nexus\SupplyChainOperations\Contracts\AuditLoggerInterface;
 use Psr\Log\LoggerInterface;
 
 final readonly class WarehouseBalancingWorkflow
 {
     public function __construct(
-        private GeoRepositoryInterface $geoRepository,
-        private StockLevelRepositoryInterface $stockLevelRepository,
+        private LocationProviderInterface $locationProvider,
+        private StockLevelProviderInterface $stockLevelRepository,
         private WarehouseRepositoryInterface $warehouseRepository,
-        private TransferManagerInterface $transferManager,
-        private AuditLogManager $auditLogger,
+        private SupplyChainTransferManagerInterface $transferManager,
+        private AuditLoggerInterface $auditLogger,
         private LoggerInterface $logger
     ) {
     }
@@ -39,7 +39,7 @@ final readonly class WarehouseBalancingWorkflow
             $stockLevels[$warehouse->getId()] = [
                 'warehouse' => $warehouse,
                 'levels' => $levels,
-                'location' => $this->geoRepository->getLocation($warehouse->getLocationId())
+                'location' => $this->locationProvider->getLocation($warehouse->getLocationId())
             ];
         }
 
@@ -54,14 +54,7 @@ final readonly class WarehouseBalancingWorkflow
 
         $this->auditLogger->log(
             logName: 'warehouse_balancing_completed',
-            message: "Warehouse balancing completed: " . count($createdTransfers) . " transfers created",
-            context: [
-                'tenant_id' => $tenantId,
-                'region_id' => $regionId,
-                'warehouses_analyzed' => count($warehouses),
-                'imbalances_found' => count($imbalances),
-                'transfers_created' => $createdTransfers,
-            ]
+            description: "Warehouse balancing completed: " . count($createdTransfers) . " transfers created"
         );
 
         return new BalancingResult(

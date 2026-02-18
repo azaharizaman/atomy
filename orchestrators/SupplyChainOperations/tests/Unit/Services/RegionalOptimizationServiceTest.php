@@ -8,6 +8,8 @@ use Nexus\Geo\Contracts\DistanceCalculatorInterface;
 use Nexus\Inventory\Contracts\StockLevelRepositoryInterface;
 use Nexus\Inventory\Contracts\StockLevelInterface;
 use Nexus\SupplyChainOperations\Services\RegionalOptimizationService;
+use Nexus\Geo\ValueObjects\Distance;
+use Nexus\Geo\ValueObjects\Coordinates;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -102,8 +104,15 @@ final class RegionalOptimizationServiceTest extends TestCase
         $this->distanceCalculator
             ->expects($this->once())
             ->method('calculate')
-            ->with(40.7128, -74.0060, 34.0522, -118.2437)
-            ->willReturn(3944.0);
+            ->with(
+                $this->callback(function (Coordinates $c) {
+                    return abs($c->latitude - 40.7128) < 0.001 && abs($c->longitude - (-74.0060)) < 0.001;
+                }),
+                $this->callback(function (Coordinates $c) {
+                    return abs($c->latitude - 34.0522) < 0.001 && abs($c->longitude - (-118.2437)) < 0.001;
+                })
+            )
+            ->willReturn(Distance::fromKilometers(3944.0));
 
         $cost = $this->service->calculateShippingCostOptimization(
             'WH-001',
@@ -142,7 +151,11 @@ final class RegionalOptimizationServiceTest extends TestCase
         $this->distanceCalculator
             ->expects($this->once())
             ->method('calculate')
-            ->willReturn(100.0);
+            ->with(
+                $this->isInstanceOf(Coordinates::class),
+                $this->isInstanceOf(Coordinates::class)
+            )
+            ->willReturn(Distance::fromKilometers(100.0));
 
         $result = $this->service->findNearestWarehouseWithStock(
             $tenantId,

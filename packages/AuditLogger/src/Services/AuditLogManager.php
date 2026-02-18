@@ -138,7 +138,12 @@ class AuditLogManager
             causerId: $causerId,
             properties: ['attributes' => $properties],
             event: 'created',
-            ...$context
+            level: $context['level'] ?? null,
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 
@@ -168,7 +173,12 @@ class AuditLogManager
                 'changes' => $this->getChanges($oldAttributes, $newAttributes),
             ],
             event: 'updated',
-            ...$context
+            level: $context['level'] ?? null,
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 
@@ -193,7 +203,12 @@ class AuditLogManager
             causerId: $causerId,
             properties: ['attributes' => $properties],
             event: 'deleted',
-            ...$context
+            level: $context['level'] ?? null,
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 
@@ -217,7 +232,11 @@ class AuditLogManager
             causerId: $causerId,
             event: 'accessed',
             level: AuditLevel::Low->value,
-            ...$context
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 
@@ -235,11 +254,15 @@ class AuditLogManager
         return $this->log(
             logName: $logName,
             description: $description,
-            causerType: null,  // System activities have null causer per BUS-AUD-0148
+            causerType: null,
             causerId: null,
             properties: $properties,
             level: $level ?? AuditLevel::Medium->value,
-            ...$context
+            batchUuid: $context['batchUuid'] ?? null,
+            ipAddress: $context['ipAddress'] ?? null,
+            userAgent: $context['userAgent'] ?? null,
+            tenantId: $context['tenantId'] ?? null,
+            retentionDays: $context['retentionDays'] ?? null
         );
     }
 

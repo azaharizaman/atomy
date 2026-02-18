@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Nexus\SupplyChainOperations\Coordinators;
 
-use Nexus\Inventory\Contracts\TransferManagerInterface;
-use Nexus\AuditLogger\Services\AuditLogManager;
+use Nexus\SupplyChainOperations\Contracts\SupplyChainTransferManagerInterface;
+use Nexus\SupplyChainOperations\Contracts\AuditLoggerInterface;
 use Psr\Log\LoggerInterface;
 
 final readonly class TransferOrderCoordinator
 {
     public function __construct(
-        private TransferManagerInterface $transferManager,
-        private AuditLogManager $auditLogger,
+        private SupplyChainTransferManagerInterface $transferManager,
+        private AuditLoggerInterface $auditLogger,
         private LoggerInterface $logger
     ) {
     }
@@ -40,14 +40,7 @@ final readonly class TransferOrderCoordinator
 
         $this->auditLogger->log(
             logName: 'supply_chain_regional_transfer_created',
-            message: "Regional transfer {$transferId} created for product {$productId}",
-            context: [
-                'transfer_id' => $transferId,
-                'product_id' => $productId,
-                'source_warehouse_id' => $sourceWarehouseId,
-                'destination_warehouse_id' => $destinationWarehouseId,
-                'quantity' => $quantity,
-            ]
+            description: "Regional transfer {$transferId} created for product {$productId}"
         );
 
         return $transferId;
