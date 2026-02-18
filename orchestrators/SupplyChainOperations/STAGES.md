@@ -26,15 +26,17 @@ This document outlines the phased development of the `SupplyChainOperations` orc
     *   Expose dynamic delivery estimates to the `Sales` module.
     *   *Implementation: `DynamicLeadTimeCoordinator`, `AvailableToPromiseResult`*
 
-## Phase 3: Lifecycle & Logistical Integrity (Domain Coordination)
+## Phase 3: Lifecycle & Logistical Integrity (Domain Coordination) ✅
 *Focus: Complex, long-running workflows across the entire enterprise.*
 
-*   **[SC-3.1] RMA & Reverse Supply Chain**
+*   **[SC-3.1] RMA & Reverse Supply Chain** ✅
     *   Orchestrate the end-to-end return lifecycle: `Sales` (Return Auth) → `Warehouse` (Receipt) → `QualityControl` (Inspection) → `Inventory` (Restock/Scrap).
     *   Ensure financial credit notes in `Receivable` match physical status.
-*   **[SC-3.2] Regional Multi-Warehouse Balancing**
+    *   *Implementation: `RmaWorkflow`, `RmaStatus`, `RmaResult`, `RmaCreatedListener`*
+*   **[SC-3.2] Regional Multi-Warehouse Balancing** ✅
     *   Coordinate `Geo` location data with `Inventory` levels to optimize regional stock distribution.
     *   Auto-generate `TransferOrders` between nodes to minimize last-mile shipping costs.
+    *   *Implementation: `WarehouseBalancingWorkflow`, `TransferOrderCoordinator`, `RegionalOptimizationService`, `BalancingResult`*
 
 ---
 **Strategy:** Library-first construction using stateless `Coordinators` for Phase 1, moving to stateful `Noms/Workflows` for Phase 3.
