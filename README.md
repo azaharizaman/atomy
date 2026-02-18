@@ -40,6 +40,7 @@ Nexus is built on a "Logic in Packages, Implementation in Applications" philosop
 To keep the codebase maintainable, documentation is structured as follows:
 
 - **[ARCHITECTURE.md](ARCHITECTURE.md)**: **Mandatory reading.** Covers architectural layers, coding standards, the Advanced Orchestrator Pattern, and authorization rules.
+- **[docs/ORCHESTRATOR_INTERFACE_SEGREGATION.md](docs/ORCHESTRATOR_INTERFACE_SEGREGATION.md)**: **Mandatory for orchestrator development.** Defines how orchestrators interact with atomic packages through interface segregation.
 - **[docs/NEXUS_PACKAGES_REFERENCE.md](docs/NEXUS_PACKAGES_REFERENCE.md)**: Inventory and capabilities of all 51+ internal packages.
 - **[docs/NEXUS_SYSTEM_OVERVIEW.md](docs/NEXUS_SYSTEM_OVERVIEW.md)**: Deep-dive reference for AI assistants and senior architects.
 

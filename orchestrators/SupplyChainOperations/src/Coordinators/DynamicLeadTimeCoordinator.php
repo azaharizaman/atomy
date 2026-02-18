@@ -5,43 +5,22 @@ declare(strict_types=1);
 namespace Nexus\SupplyChainOperations\Coordinators;
 
 use DateTimeImmutable;
-use Nexus\Inventory\Contracts\StockManagerInterface;
-use Nexus\SupplyChainOperations\Services\AtpCalculationService;
+use Nexus\SupplyChainOperations\Contracts\SupplyChainStockManagerInterface;
+use Nexus\SupplyChainOperations\Contracts\AtpCalculationServiceInterface;
+use Nexus\SupplyChainOperations\Contracts\AuditLoggerInterface;
 use Nexus\SupplyChainOperations\ValueObjects\AvailableToPromiseResult;
 use Psr\Log\LoggerInterface;
 
-/**
- * Coordinator for Available-to-Promise (ATP) calculations.
- *
- * Orchestrates ATP workflow by:
- * 1. Checking stock availability
- * 2. Delegating lead time calculations to AtpCalculationService
- * 3. Building ATP result with confidence scores
- *
- * Following the Advanced Orchestrator Pattern, this coordinator
- * delegates heavy calculations to Services while handling flow orchestration.
- *
- * @see \Nexus\SupplyChainOperations\Services\AtpCalculationService
- * @see \Nexus\SupplyChainOperations\ValueObjects\AvailableToPromiseResult
- */
 final readonly class DynamicLeadTimeCoordinator
 {
     public function __construct(
-        private AtpCalculationService $atpCalculationService,
-        private StockManagerInterface $stockManager,
+        private AtpCalculationServiceInterface $atpCalculationService,
+        private SupplyChainStockManagerInterface $stockManager,
+        private AuditLoggerInterface $auditLogger,
         private LoggerInterface $logger
     ) {
     }
 
-    /**
-     * Calculate Available-to-Promise date for a product and quantity.
-     *
-     * @param string $productId Product variant identifier
-     * @param float $requestedQuantity Quantity customer wants
-     * @param string $warehouseId Preferred warehouse
-     * @param string|null $preferredVendorId Optional preferred vendor
-     * @return AvailableToPromiseResult
-     */
     public function calculateAtpDate(
         string $productId,
         float $requestedQuantity,
@@ -52,7 +31,7 @@ final readonly class DynamicLeadTimeCoordinator
 
         $this->logger->debug("Calculating ATP for product {$productId}, qty {$requestedQuantity}");
 
-        $availableStock = $this->stockManager->getAvailableStock($productId, $warehouseId);
+        $availableStock = $this->stockManager->getCurrentStock($productId, $warehouseId);
 
         if ($availableStock >= $requestedQuantity) {
             $this->logger->info("Product {$productId} available now: {$availableStock} >= {$requestedQuantity}");
@@ -78,6 +57,11 @@ final readonly class DynamicLeadTimeCoordinator
             $this->logger->info(
                 "ATP calculated for {$productId}: {$leadTimeData['totalDays']} days, " .
                 "confidence {$confidence}, shortage {$shortageQty}"
+            );
+
+            $this->auditLogger->log(
+                logName: 'supply_chain_atp_calculated',
+                description: "ATP calculated for {$productId}: {$leadTimeData['totalDays']} days"
             );
 
             return new AvailableToPromiseResult(
@@ -115,12 +99,6 @@ final readonly class DynamicLeadTimeCoordinator
         }
     }
 
-    /**
-     * Get delivery estimates for multiple products.
-     *
-     * @param array<int, array{product_id: string, quantity: float, warehouse_id: string, vendor_id?: string}> $items
-     * @return array<string, AvailableToPromiseResult>
-     */
     public function calculateAtpForMultiple(array $items): array
     {
         $results = [];

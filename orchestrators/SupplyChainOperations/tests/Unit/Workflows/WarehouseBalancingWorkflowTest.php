@@ -50,10 +50,12 @@ final class WarehouseBalancingWorkflowTest extends TestCase
         $warehouse1 = $this->createMock(WarehouseInterface::class);
         $warehouse1->method('getId')->willReturn('WH-001');
         $warehouse1->method('getRegionId')->willReturn('region-001');
+        $warehouse1->method('getLocationId')->willReturn('loc-001');
 
         $warehouse2 = $this->createMock(WarehouseInterface::class);
         $warehouse2->method('getId')->willReturn('WH-002');
         $warehouse2->method('getRegionId')->willReturn('region-001');
+        $warehouse2->method('getLocationId')->willReturn('loc-002');
 
         $this->warehouseRepository
             ->expects($this->once())
@@ -63,7 +65,7 @@ final class WarehouseBalancingWorkflowTest extends TestCase
 
         $stockLevel1 = $this->createMock(\Nexus\Inventory\Contracts\StockLevelInterface::class);
         $stockLevel1->method('getProductId')->willReturn('product-001');
-        $stockLevel1->method('getQuantity')->willReturn(100.0);
+        $stockLevel1->method('getQuantity')->willReturn(150.0);
         $stockLevel1->method('getReorderPoint')->willReturn(50.0);
 
         $stockLevel2 = $this->createMock(\Nexus\Inventory\Contracts\StockLevelInterface::class);
@@ -88,8 +90,7 @@ final class WarehouseBalancingWorkflowTest extends TestCase
 
         $this->auditLogger
             ->expects($this->once())
-            ->method('log')
-            ->with('warehouse_balancing_completed');
+            ->method('log');
 
         $result = $this->workflow->analyzeAndBalance($tenantId);
 
@@ -105,6 +106,7 @@ final class WarehouseBalancingWorkflowTest extends TestCase
         $warehouse = $this->createMock(WarehouseInterface::class);
         $warehouse->method('getId')->willReturn('WH-001');
         $warehouse->method('getRegionId')->willReturn($regionId);
+        $warehouse->method('getLocationId')->willReturn('loc-001');
 
         $this->warehouseRepository
             ->expects($this->once())

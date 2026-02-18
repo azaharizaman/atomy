@@ -60,6 +60,38 @@ Used in `orchestrators/` to prevent "God Class" coordinators.
 | **Services** | Calculations. | Heavy lifting and cross-boundary logic. |
 | **Workflows** | Statefulness. | Manages long-running Sagas and state-machine transitions. |
 
+### 3.1 Interface Segregation (CRITICAL)
+
+**Orchestrators MUST define their own interfaces and NOT depend on atomic package interfaces directly.**
+
+See [ORCHESTRATOR_INTERFACE_SEGREGATION.md](docs/ORCHESTRATOR_INTERFACE_SEGREGATION.md) for complete guidelines.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Adapters (L3)                        │
+│   Implements orchestrator interfaces using atomic pkgs  │
+└─────────────────────────────────────────────────────────┘
+                          ▲ implements
+┌─────────────────────────────────────────────────────────┐
+│                 Orchestrators (L2)                      │
+│   - Defines own interfaces in Contracts/                │
+│   - Depends only on: php, psr/log, psr/event-dispatcher │
+│   - Publishable as standalone composer package          │
+└─────────────────────────────────────────────────────────┘
+                          ▲ uses via interfaces
+┌─────────────────────────────────────────────────────────┐
+│                Atomic Packages (L1)                     │
+│   - Publishable on their own (Common + PSR only)        │
+│   - No knowledge of orchestrator requirements           │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Why?**
+- Enables orchestrators to be published independently
+- Allows swapping atomic package implementations via adapters
+- Maintains SOLID compliance (ISP, DIP)
+- Keeps atomic packages truly atomic
+
 ---
 
 ## 4. Coding Standards (PHP 8.3+)

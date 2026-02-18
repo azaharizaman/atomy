@@ -7,7 +7,7 @@ namespace Nexus\SupplyChainOperations\Tests\Unit\Listeners;
 use Nexus\Payable\Events\InvoiceApprovedForPaymentEvent;
 use Nexus\Payable\Contracts\VendorBillInterface;
 use Nexus\Payable\Contracts\VendorBillRepositoryInterface;
-use Nexus\SupplyChainOperations\Coordinators\LandedCostCoordinator;
+use Nexus\SupplyChainOperations\Contracts\LandedCostCoordinatorInterface;
 use Nexus\SupplyChainOperations\Listeners\LandedCostListener;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -15,14 +15,14 @@ use Psr\Log\LoggerInterface;
 final class LandedCostListenerTest extends TestCase
 {
     private VendorBillRepositoryInterface $billRepository;
-    private LandedCostCoordinator $coordinator;
+    private LandedCostCoordinatorInterface $coordinator;
     private LoggerInterface $logger;
     private LandedCostListener $listener;
 
     protected function setUp(): void
     {
         $this->billRepository = $this->createMock(VendorBillRepositoryInterface::class);
-        $this->coordinator = $this->createMock(LandedCostCoordinator::class);
+        $this->coordinator = $this->createMock(LandedCostCoordinatorInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->listener = new LandedCostListener(

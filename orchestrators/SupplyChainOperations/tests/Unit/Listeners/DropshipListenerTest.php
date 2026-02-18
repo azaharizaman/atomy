@@ -7,7 +7,7 @@ namespace Nexus\SupplyChainOperations\Tests\Unit\Listeners;
 use Nexus\Sales\Events\SalesOrderConfirmedEvent;
 use Nexus\Sales\Contracts\SalesOrderInterface;
 use Nexus\Sales\Contracts\SalesOrderLineInterface;
-use Nexus\SupplyChainOperations\Coordinators\DropshipCoordinator;
+use Nexus\SupplyChainOperations\Contracts\DropshipCoordinatorInterface;
 use Nexus\SupplyChainOperations\DataProviders\DropshipDataProvider;
 use Nexus\SupplyChainOperations\Listeners\DropshipListener;
 use PHPUnit\Framework\TestCase;
@@ -15,14 +15,14 @@ use Psr\Log\LoggerInterface;
 
 final class DropshipListenerTest extends TestCase
 {
-    private DropshipCoordinator $dropshipCoordinator;
+    private DropshipCoordinatorInterface $dropshipCoordinator;
     private DropshipDataProvider $dataProvider;
     private LoggerInterface $logger;
     private DropshipListener $listener;
 
     protected function setUp(): void
     {
-        $this->dropshipCoordinator = $this->createMock(DropshipCoordinator::class);
+        $this->dropshipCoordinator = $this->createMock(DropshipCoordinatorInterface::class);
         $this->dataProvider = $this->createMock(DropshipDataProvider::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 

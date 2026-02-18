@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Nexus\Inventory\Contracts\InventoryAnalyticsRepositoryInterface;
 use Nexus\Inventory\MachineLearning\DemandForecastExtractor;
 use Nexus\Product\Contracts\ProductVariantRepositoryInterface;
+use Nexus\SupplyChainOperations\Contracts\ReplenishmentForecastServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -16,7 +17,7 @@ use Psr\Log\LoggerInterface;
  * Provides ML-based forecasting for inventory replenishment decisions,
  * including dynamic reorder points and safety stock calculations.
  */
-final readonly class ReplenishmentForecastService
+final readonly class ReplenishmentForecastService implements ReplenishmentForecastServiceInterface
 {
     public function __construct(
         private InventoryAnalyticsRepositoryInterface $analyticsRepository,

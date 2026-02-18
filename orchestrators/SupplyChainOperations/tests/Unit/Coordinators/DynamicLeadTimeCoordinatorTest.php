@@ -6,7 +6,7 @@ namespace Nexus\SupplyChainOperations\Tests\Unit\Coordinators;
 
 use Nexus\Inventory\Contracts\StockManagerInterface;
 use Nexus\SupplyChainOperations\Coordinators\DynamicLeadTimeCoordinator;
-use Nexus\SupplyChainOperations\Services\AtpCalculationService;
+use Nexus\SupplyChainOperations\Contracts\AtpCalculationServiceInterface;
 use Psr\Log\LoggerInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -17,14 +17,14 @@ use PHPUnit\Framework\TestCase;
  */
 final class DynamicLeadTimeCoordinatorTest extends TestCase
 {
-    private AtpCalculationService $atpCalculationService;
+    private AtpCalculationServiceInterface $atpCalculationService;
     private StockManagerInterface $stockManager;
     private LoggerInterface $logger;
     private DynamicLeadTimeCoordinator $coordinator;
 
     protected function setUp(): void
     {
-        $this->atpCalculationService = $this->createMock(AtpCalculationService::class);
+        $this->atpCalculationService = $this->createMock(AtpCalculationServiceInterface::class);
         $this->stockManager = $this->createMock(StockManagerInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 

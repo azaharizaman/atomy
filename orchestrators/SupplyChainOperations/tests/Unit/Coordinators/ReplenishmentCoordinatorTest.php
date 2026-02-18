@@ -8,7 +8,7 @@ use Nexus\Inventory\Contracts\StockManagerInterface;
 use Nexus\Procurement\Contracts\ProcurementManagerInterface;
 use Nexus\Procurement\Contracts\RequisitionInterface;
 use Nexus\SupplyChainOperations\Coordinators\ReplenishmentCoordinator;
-use Nexus\SupplyChainOperations\Services\ReplenishmentForecastService;
+use Nexus\SupplyChainOperations\Contracts\ReplenishmentForecastServiceInterface;
 use Nexus\AuditLogger\Services\AuditLogManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -22,7 +22,7 @@ final class ReplenishmentCoordinatorTest extends TestCase
 {
     private StockManagerInterface $stockManager;
     private ProcurementManagerInterface $procurementManager;
-    private ReplenishmentForecastService $forecastService;
+    private ReplenishmentForecastServiceInterface $forecastService;
     private AuditLogManager $auditLogger;
     private LoggerInterface $logger;
     private ReplenishmentCoordinator $coordinator;
@@ -31,7 +31,7 @@ final class ReplenishmentCoordinatorTest extends TestCase
     {
         $this->stockManager = $this->createMock(StockManagerInterface::class);
         $this->procurementManager = $this->createMock(ProcurementManagerInterface::class);
-        $this->forecastService = $this->createMock(ReplenishmentForecastService::class);
+        $this->forecastService = $this->createMock(ReplenishmentForecastServiceInterface::class);
         $this->auditLogger = $this->createMock(AuditLogManager::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 

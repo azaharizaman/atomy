@@ -17,8 +17,6 @@ final readonly class RmaResult
         private ?string $tenantId = null,
         private ?string $customerId = null
     ) {
-        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
-        $this->updatedAt = $updatedAt ?? new \DateTimeImmutable();
     }
 
     public function getTenantId(): string

@@ -14,16 +14,6 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/inventory": "*@dev",
-        "nexus/procurement": "*@dev",
-        "nexus/procurement-ml": "*@dev",
-        "nexus/warehouse": "*@dev",
-        "nexus/sales": "*@dev",
-        "nexus/geo": "*@dev",
-        "nexus/audit-logger": "*@dev",
-        "nexus/notifier": "*@dev",
-        "nexus/tenant": "*@dev",
-        "nexus/product": "*@dev",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^1.0"
     },

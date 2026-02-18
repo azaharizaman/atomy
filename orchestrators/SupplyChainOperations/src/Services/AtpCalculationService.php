@@ -6,6 +6,7 @@ namespace Nexus\SupplyChainOperations\Services;
 
 use Nexus\Inventory\Contracts\InventoryAnalyticsRepositoryInterface;
 use Nexus\ProcurementML\Contracts\DeliveryAnalyticsRepositoryInterface;
+use Nexus\SupplyChainOperations\Contracts\AtpCalculationServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -20,7 +21,7 @@ use Psr\Log\LoggerInterface;
  * This service follows the Advanced Orchestrator Pattern where
  * calculations are separated from orchestration logic.
  */
-final readonly class AtpCalculationService
+final readonly class AtpCalculationService implements AtpCalculationServiceInterface
 {
     private const Z_SCORE_95 = 1.65;
     private const SEASONAL_BUFFER_DAYS = 3;

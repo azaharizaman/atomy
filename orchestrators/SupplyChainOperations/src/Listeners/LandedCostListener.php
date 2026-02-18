@@ -6,7 +6,7 @@ namespace Nexus\SupplyChainOperations\Listeners;
 
 use Nexus\Payable\Events\InvoiceApprovedForPaymentEvent;
 use Nexus\Payable\Contracts\VendorBillRepositoryInterface;
-use Nexus\SupplyChainOperations\Coordinators\LandedCostCoordinator;
+use Nexus\SupplyChainOperations\Contracts\LandedCostCoordinatorInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -20,7 +20,7 @@ final readonly class LandedCostListener
 
     public function __construct(
         private VendorBillRepositoryInterface $billRepository,
-        private LandedCostCoordinator $coordinator,
+        private LandedCostCoordinatorInterface $coordinator,
         private LoggerInterface $logger
     ) {
     }

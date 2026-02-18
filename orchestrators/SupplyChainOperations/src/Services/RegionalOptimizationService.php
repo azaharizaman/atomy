@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\SupplyChainOperations\Services;
 
 use Nexus\Geo\Contracts\DistanceCalculatorInterface;
+use Nexus\Geo\ValueObjects\Coordinates;
 use Nexus\Inventory\Contracts\StockLevelRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
@@ -56,16 +57,14 @@ final readonly class RegionalOptimizationService
         }
 
         $distance = $this->distanceCalculator->calculate(
-            $sourceLocation['lat'],
-            $sourceLocation['lon'],
-            $destLocation['lat'],
-            $destLocation['lon']
+            new Coordinates($sourceLocation['lat'], $sourceLocation['lon']),
+            new Coordinates($destLocation['lat'], $destLocation['lon'])
         );
 
         $costPerUnit = 0.5;
-        $distanceCost = $distance * 0.1;
+        $distanceCost = $distance->toKilometers() * 0.1;
         
-        return ($quantity * $costPerUnit) + ($distance * $distanceCost);
+        return ($quantity * $costPerUnit) + ($distance->toKilometers() * $distanceCost);
     }
 
     public function findNearestWarehouseWithStock(

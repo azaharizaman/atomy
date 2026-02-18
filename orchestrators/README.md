@@ -37,9 +37,47 @@ An orchestrator is a **pure PHP package** that:
 3. Log creation event via `AuditLogger\AuditLogManager`
 4. Send welcome notification via `Notifier\NotificationManager`
 
+### SupplyChainOperations
+**Coordinates:** Inventory, Procurement, Sales, Warehouse, Receivable (via adapters)
+
+**Responsibilities:**
+- Dropship order fulfillment
+- Landed cost capitalization
+- RMA (Return Merchandise Authorization) workflows
+- Warehouse inventory balancing
+- Replenishment forecasting
+- Available-to-Promise (ATP) calculations
+
+**Architecture Note:** Uses Interface Segregation Pattern - defines own interfaces in `Contracts/` and depends only on PSR libraries. Adapters bridge to atomic packages.
+
 ---
 
 ## 🏗️ Orchestrator Architecture
+
+### Interface Segregation (CRITICAL)
+
+**Orchestrators MUST define their own interfaces and NOT depend directly on atomic package interfaces.**
+
+```
+Orchestrator composer.json MUST only depend on:
+├── php: ^8.3
+├── psr/log: ^3.0
+└── psr/event-dispatcher: ^1.0
+
+Orchestrator Contracts/ folder contains:
+├── {Orchestrator}ManagerInterface.php   # Service contracts
+├── {Entity}Interface.php                # Entity data contracts
+├── {Entity}ProviderInterface.php        # Repository contracts
+└── {Action}Interface.php                # Action-specific contracts
+```
+
+**Why?**
+- Orchestrators become independently publishable
+- Atomic packages remain unaware of orchestrator needs
+- Adapters bridge orchestrator interfaces to atomic package implementations
+- Enables implementation swappability (e.g., swap Inventory package)
+
+**Full Guidelines:** See [docs/ORCHESTRATOR_INTERFACE_SEGREGATION.md](../docs/ORCHESTRATOR_INTERFACE_SEGREGATION.md)
 
 ### Standard Folder Structure
 
@@ -94,6 +132,7 @@ orchestrators/OrchestratorName/
 ## 📖 Key References
 
 - **Architecture Guidelines:** `../ARCHITECTURE.md`
+- **Interface Segregation Pattern:** `../docs/ORCHESTRATOR_INTERFACE_SEGREGATION.md` (**CRITICAL** for orchestrator development)
 - **Coding Standards:** `../CODING_GUIDELINES.md`
 - **Package Reference:** `../docs/NEXUS_PACKAGES_REFERENCE.md`
 - **Refactoring Exercise:** `../REFACTOR_EXERCISE_12.md`
@@ -101,6 +140,6 @@ orchestrators/OrchestratorName/
 
 ---
 
-**Last Updated:** 2025-11-24  
+**Last Updated:** 2026-02-18  
 **Maintained By:** Nexus Architecture Team  
-**Current Orchestrators:** 1 (IdentityOperations)
+**Current Orchestrators:** 2 (IdentityOperations, SupplyChainOperations)

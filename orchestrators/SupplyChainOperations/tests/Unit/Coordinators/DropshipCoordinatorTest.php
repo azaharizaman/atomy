@@ -47,7 +47,7 @@ final class DropshipCoordinatorTest extends TestCase
         $salesOrder->method('getOrderNumber')->willReturn('SO-12345');
         $salesOrder->method('getId')->willReturn('so-001');
         $salesOrder->method('getCurrencyCode')->willReturn('USD');
-        $salesOrder->method('getShippingAddress')->willReturn(['street' => '123 Main St']);
+        $salesOrder->method('getShippingAddress')->willReturn('123 Main St');
         $salesOrder->method('getConfirmedBy')->willReturn('user-001');
 
         $line = $this->createMock(SalesOrderLineInterface::class);
@@ -68,7 +68,7 @@ final class DropshipCoordinatorTest extends TestCase
                     return $data['vendor_id'] === 'vendor-001'
                         && $data['type'] === 'DROPSHIP'
                         && $data['currency'] === 'USD'
-                        && $data['shipping_address'] === ['street' => '123 Main St']
+                        && $data['shipping_address'] === '123 Main St'
                         && $data['items'][0]['product_id'] === 'product-001'
                         && $data['items'][0]['quantity'] === 5.0
                         && $data['items'][0]['metadata']['is_dropship'] === true;
