@@ -1,0 +1,33 @@
+{
+    "name": "nexus/sales-operations",
+    "description": "Nexus SalesOperations Orchestrator - Order-to-Cash workflow coordination with progressive disclosure for SMB to Enterprise",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "nexus",
+        "orchestrator",
+        "sales",
+        "order-to-cash",
+        "o2c",
+        "quotation",
+        "fulfillment",
+        "invoicing"
+    ],
+    "require": {
+        "php": "^8.3",
+        "psr/log": "^3.0",
+        "psr/event-dispatcher": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\SalesOperations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\SalesOperations\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
