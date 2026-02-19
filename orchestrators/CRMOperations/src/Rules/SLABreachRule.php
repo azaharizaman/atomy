@@ -33,7 +33,7 @@ final readonly class SLABreachRule
      * @param array<string, int> $thresholds Custom SLA thresholds in hours
      */
     public function __construct(
-        private array $thresholds = self::DEFAULT_SLA_THRESHOLDS
+        private readonly array $thresholds = self::DEFAULT_SLA_THRESHOLDS
     ) {}
 
     /**

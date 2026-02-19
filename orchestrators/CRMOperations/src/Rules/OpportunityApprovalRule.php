@@ -32,7 +32,7 @@ final readonly class OpportunityApprovalRule
      * @param array<string, mixed> $thresholds Custom thresholds
      */
     public function __construct(
-        private array $thresholds = self::DEFAULT_THRESHOLDS
+        private readonly array $thresholds = self::DEFAULT_THRESHOLDS
     ) {}
 
     /**
