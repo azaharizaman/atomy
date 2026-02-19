@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Nexus\CRMOperations\Services;
 
 use Nexus\CRMOperations\Contracts\QuotationProviderInterface;
+use Nexus\CRMOperations\Exceptions\QuoteOperationException;
+use Nexus\SalesOperations\Contracts\QuotationProviderInterface as SalesQuotationProviderInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -19,11 +21,11 @@ use Psr\Log\LoggerInterface;
 final readonly class SalesIntegrationService implements QuotationProviderInterface
 {
     /**
-     * @param object $salesService Sales package service (injected via container)
+     * @param SalesQuotationProviderInterface $salesService Sales package service for quotations
      * @param LoggerInterface|null $logger Optional logger
      */
     public function __construct(
-        private object $salesService,
+        private SalesQuotationProviderInterface $salesService,
         private ?LoggerInterface $logger = null
     ) {}
 
@@ -57,12 +59,22 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
 
     /**
      * @inheritDoc
+     * @throws QuoteOperationException When quotation creation fails
      */
     public function createFromOpportunity(array $opportunityData): string
     {
         $this->logger?->info('Creating quotation from opportunity', [
             'opportunity_id' => $opportunityData['id'] ?? null,
         ]);
+
+        // Validate required fields
+        if (empty($opportunityData['title']) && empty($opportunityData['id'])) {
+            throw QuoteOperationException::creationFailed(
+                'opportunity',
+                $opportunityData['id'] ?? 'unknown',
+                'Missing required opportunity data for quotation creation'
+            );
+        }
 
         // In real implementation, this would call the Sales package
         // $quotation = $this->salesService->createQuotation([
@@ -73,7 +85,12 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
         // ]);
         // return $quotation->getId();
 
-        return sprintf('QUO-%s', uniqid());
+        // Throw exception instead of returning synthetic ID
+        throw QuoteOperationException::creationFailed(
+            'opportunity',
+            $opportunityData['id'] ?? 'unknown',
+            'Sales package integration not configured'
+        );
     }
 
     /**

@@ -23,9 +23,13 @@ final readonly class RoundRobinStrategy implements AssignmentStrategyInterface
         
         $index = $this->state->getIndex($key);
         
-        $assigneeId = $assignees[$index]['id'] ?? null;
+        // Normalize index with modulo before selection to handle overflow
+        $assigneeCount = count($assignees);
+        $normalizedIndex = $assigneeCount > 0 ? $index % $assigneeCount : 0;
         
-        $this->state->setIndex($key, ($index + 1) % count($assignees));
+        $assigneeId = $assignees[$normalizedIndex]['id'] ?? null;
+        
+        $this->state->setIndex($key, ($index + 1) % $assigneeCount);
         
         return $assigneeId;
     }

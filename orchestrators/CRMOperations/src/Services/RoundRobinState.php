@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Nexus\CRMOperations\Services;
 
+use ArrayObject;
 use Nexus\CRMOperations\Contracts\RoundRobinStateInterface;
 
 /**
  * Default implementation of RoundRobinStateInterface.
  * Manages state externally to avoid mutable reference issues.
+ * Uses ArrayObject for mutable state while keeping the class readonly.
  */
-final class RoundRobinState implements RoundRobinStateInterface
+final readonly class RoundRobinState implements RoundRobinStateInterface
 {
-    private array $indices = [];
+    private ArrayObject $indices;
+
+    public function __construct()
+    {
+        $this->indices = new ArrayObject();
+    }
 
     public function getIndex(string $key): int
     {
@@ -26,11 +33,11 @@ final class RoundRobinState implements RoundRobinStateInterface
 
     public function reset(string $key): void
     {
-        unset($this->indices[$key]);
+        $this->indices->offsetUnset($key);
     }
 
     public function resetAll(): void
     {
-        $this->indices = [];
+        $this->indices = new ArrayObject();
     }
 }

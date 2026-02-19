@@ -28,7 +28,7 @@ final readonly class RenewalManagementWorkflow
 
     public function sendRenewalReminder(string $accountId, int $daysBeforeExpiry): void
     {
-        $this->notificationProvider->notify(
+        $this->notificationProvider->notifyRole(
             'account_manager',
             'Renewal Reminder',
             sprintf('Contract for account %s expires in %d days', $accountId, $daysBeforeExpiry),

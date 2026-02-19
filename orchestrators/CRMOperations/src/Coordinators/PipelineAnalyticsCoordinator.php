@@ -63,15 +63,15 @@ final readonly class PipelineAnalyticsCoordinator
      */
     public function getPipelineSummary(string $tenantId): array
     {
-        $totalValue = $this->opportunityQuery->getTotalOpenValue();
-        $weightedValue = $this->opportunityQuery->getWeightedPipelineValue();
+        $totalValue = $this->opportunityQuery->getTotalOpenValue($tenantId);
+        $weightedValue = $this->opportunityQuery->getWeightedPipelineValue($tenantId);
 
         return [
             'total_opportunities' => $this->countOpenOpportunities($tenantId),
             'total_value' => $totalValue,
             'weighted_value' => $weightedValue,
             'average_deal_size' => $this->calculateAverageDealSize($tenantId),
-            'pipeline_count' => $this->pipelineQuery->count(),
+            'pipeline_count' => $this->pipelineQuery->count($tenantId),
         ];
     }
 
@@ -88,7 +88,7 @@ final readonly class PipelineAnalyticsCoordinator
         foreach (\Nexus\CRM\Enums\OpportunityStage::openStages() as $stage) {
             $stages[$stage->value] = [
                 'label' => $stage->label(),
-                'count' => $this->opportunityQuery->countByStage($stage),
+                'count' => $this->opportunityQuery->countByStage($stage, $tenantId),
                 'probability' => $stage->getDefaultProbability(),
             ];
         }
@@ -106,7 +106,7 @@ final readonly class PipelineAnalyticsCoordinator
     {
         $pipelines = [];
         
-        foreach ($this->pipelineQuery->findActive() as $pipeline) {
+        foreach ($this->pipelineQuery->findActive($tenantId) as $pipeline) {
             $pipelines[$pipeline->getId()] = [
                 'name' => $pipeline->getName(),
                 'stage_count' => $pipeline->getStageCount(),
@@ -205,7 +205,7 @@ final readonly class PipelineAnalyticsCoordinator
     {
         $count = 0;
         foreach (\Nexus\CRM\Enums\OpportunityStage::openStages() as $stage) {
-            $count += $this->opportunityQuery->countByStage($stage);
+            $count += $this->opportunityQuery->countByStage($stage, $tenantId);
         }
         return $count;
     }
@@ -215,7 +215,7 @@ final readonly class PipelineAnalyticsCoordinator
      */
     private function calculateAverageDealSize(string $tenantId): int
     {
-        $totalValue = $this->opportunityQuery->getTotalOpenValue();
+        $totalValue = $this->opportunityQuery->getTotalOpenValue($tenantId);
         $count = $this->countOpenOpportunities($tenantId);
 
         return $count > 0 ? (int) round($totalValue / $count) : 0;
@@ -238,7 +238,7 @@ final readonly class PipelineAnalyticsCoordinator
      */
     private function calculateProjectedRevenue(string $tenantId): array
     {
-        $weightedValue = $this->opportunityQuery->getWeightedPipelineValue();
+        $weightedValue = $this->opportunityQuery->getWeightedPipelineValue($tenantId);
         
         return [
             'this_month' => (int) round($weightedValue * 0.3),

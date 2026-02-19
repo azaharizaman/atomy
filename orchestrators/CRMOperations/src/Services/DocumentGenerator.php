@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\CRMOperations\Services;
 
+use Nexus\CRMOperations\Contracts\DocumentServiceInterface;
+use Nexus\CRMOperations\Contracts\TemplateServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -18,13 +20,13 @@ use Psr\Log\LoggerInterface;
 final readonly class DocumentGenerator
 {
     /**
-     * @param object|null $documentService Document service for storage
-     * @param object|null $templateService Template rendering service
+     * @param DocumentServiceInterface|null $documentService Document service for storage
+     * @param TemplateServiceInterface|null $templateService Template rendering service
      * @param LoggerInterface|null $logger Optional logger
      */
     public function __construct(
-        private ?object $documentService = null,
-        private ?object $templateService = null,
+        private ?DocumentServiceInterface $documentService = null,
+        private ?TemplateServiceInterface $templateService = null,
         private ?LoggerInterface $logger = null
     ) {}
 

@@ -21,4 +21,12 @@ class QuoteOperationException extends CRMOperationsException
             "quote_id: {$quoteId}, status: {$currentStatus}"
         );
     }
+
+    public static function creationFailed(string $entityType, string $entityId, string $reason): self
+    {
+        return new self(
+            sprintf('Failed to create quote from %s %s: %s', $entityType, $entityId, $reason),
+            "{$entityType}_id: {$entityId}"
+        );
+    }
 }

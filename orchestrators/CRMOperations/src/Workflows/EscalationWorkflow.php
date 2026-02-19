@@ -63,8 +63,8 @@ final readonly class EscalationWorkflow
         $breaches = [];
         $warnings = [];
 
-        // Check all active leads
-        foreach ($this->leadQuery->findByStatus(\Nexus\CRM\Enums\LeadStatus::New) as $lead) {
+        // Check all active leads for the tenant
+        foreach ($this->leadQuery->findByStatus(\Nexus\CRM\Enums\LeadStatus::New, $tenantId) as $lead) {
             $context = $this->leadContextProvider->getContext($lead->getId());
             $result = $this->slaRule->evaluateLead($lead, $context);
 
@@ -89,6 +89,7 @@ final readonly class EscalationWorkflow
 
         $this->analyticsProvider->track('sla_check_completed', [
             'entity_type' => 'lead',
+            'tenant_id' => $tenantId,
             'breach_count' => count($breaches),
             'warning_count' => count($warnings),
         ]);
@@ -115,8 +116,8 @@ final readonly class EscalationWorkflow
         $breaches = [];
         $warnings = [];
 
-        // Check all open opportunities
-        foreach ($this->opportunityQuery->findOpen() as $opportunity) {
+        // Check all open opportunities for the tenant
+        foreach ($this->opportunityQuery->findOpen($tenantId) as $opportunity) {
             $context = $this->opportunityContextProvider->getContext($opportunity->getId());
             $result = $this->slaRule->evaluateOpportunity($opportunity, $context);
 
@@ -141,6 +142,7 @@ final readonly class EscalationWorkflow
 
         $this->analyticsProvider->track('sla_check_completed', [
             'entity_type' => 'opportunity',
+            'tenant_id' => $tenantId,
             'breach_count' => count($breaches),
             'warning_count' => count($warnings),
         ]);

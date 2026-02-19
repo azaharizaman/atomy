@@ -25,7 +25,7 @@ abstract class CRMOperationsException extends Exception
      */
     public function __construct(
         string $message,
-        private ?string $context = null,
+        private readonly ?string $context = null,
         ?Throwable $previous = null
     ) {
         parent::__construct($message, 0, $previous);

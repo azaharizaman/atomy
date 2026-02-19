@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\CRMOperations\Tests\Mocks;
 
+use ArrayObject;
 use Nexus\CRMOperations\Contracts\CustomerProviderInterface;
 
 /**
@@ -11,10 +12,16 @@ use Nexus\CRMOperations\Contracts\CustomerProviderInterface;
  * 
  * @package Nexus\CRMOperations\Tests\Mocks
  */
-final class MockCustomerProvider implements CustomerProviderInterface
+final readonly class MockCustomerProvider implements CustomerProviderInterface
 {
-    private array $customers = [];
-    private array $links = [];
+    private ArrayObject $customers;
+    private ArrayObject $links;
+
+    public function __construct()
+    {
+        $this->customers = new ArrayObject();
+        $this->links = new ArrayObject();
+    }
 
     public function findById(string $id): ?array
     {
@@ -47,7 +54,7 @@ final class MockCustomerProvider implements CustomerProviderInterface
 
     public function exists(string $customerId): bool
     {
-        return isset($this->customers[$customerId]);
+        return $this->customers->offsetExists($customerId);
     }
 
     public function linkToOpportunity(string $customerId, string $opportunityId): void

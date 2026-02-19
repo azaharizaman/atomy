@@ -70,12 +70,16 @@ final readonly class SalesPlaybookWorkflow
         $steps = $this->getPlaybookSteps($playbookType, $entityId);
         $completedSteps = $this->getCompletedSteps($entityId, $playbookType);
 
+        // Guard against division by zero
+        $stepCount = count($steps);
+        $progress = $stepCount > 0 ? count($completedSteps) / $stepCount * 100 : 0;
+
         return new PlaybookStepsResult(
             playbookType: $playbookType,
             entityId: $entityId,
             steps: $steps,
             completedSteps: $completedSteps,
-            progress: count($completedSteps) / count($steps) * 100
+            progress: $progress
         );
     }
 
