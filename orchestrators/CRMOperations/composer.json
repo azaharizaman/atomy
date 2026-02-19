@@ -1,0 +1,44 @@
+{
+    "name": "nexus/crm-operations",
+    "description": "CRM Operations Orchestrator for cross-package workflow coordination in Nexus ERP",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Azahari Zaman",
+            "email": "azaharizaman@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "psr/log": "^3",
+        "psr/event-dispatcher": "^1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "nexus/crm": "*@dev",
+        "nexus/party": "*@dev",
+        "nexus/sales": "*@dev",
+        "nexus/workflow": "*@dev",
+        "nexus/notifier": "*@dev"
+    },
+    "suggest": {
+        "nexus/crm": "Required for CRM domain operations",
+        "nexus/party": "Required for customer data integration",
+        "nexus/sales": "Required for quotation and sales integration",
+        "nexus/workflow": "Required for approval workflows",
+        "nexus/notifier": "Required for notification services"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\CRMOperations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\CRMOperations\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
