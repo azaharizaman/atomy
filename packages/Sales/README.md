@@ -6,13 +6,15 @@ Framework-agnostic sales management package for quotation-to-order commercial co
 
 `Nexus\Sales` manages the complete sales process from quotation to order fulfillment, including:
 
-- **Sales Quotations**: Price quotes with validity periods
-- **Sales Orders**: Confirmed customer orders with payment terms
+- **Sales Quotations**: Price quotes with validity periods and versioning
+- **Sales Orders**: Confirmed customer orders with payment terms and fulfillment tracking
 - **Pricing Engine**: Multi-strategy pricing (list price, tiered discounts, customer-specific, promotional)
 - **Tax Calculation**: Pluggable tax calculation interface
 - **Exchange Rate Locking**: Foreign currency order protection
-- **Stock Reservation**: Integration point for inventory management
-- **Invoice Generation**: Integration point for accounts receivable
+- **Stock Reservation**: Real-time inventory integration with automatic reservation
+- **Invoice Generation**: Seamless integration with accounts receivable
+- **Credit Limit Checking**: Real-time customer credit validation
+- **Sales Returns (RMA)**: Return order processing and validation
 
 ## Key Features
 
@@ -27,8 +29,8 @@ DRAFT → SENT → ACCEPTED → CONVERTED_TO_ORDER
 Sales Order Workflow:
 ```
 DRAFT → CONFIRMED → PARTIALLY_SHIPPED → FULLY_SHIPPED → INVOICED → PAID
-                ↓
-            CANCELLED
+                 ↓
+             CANCELLED
 ```
 
 ### 2. Pricing Strategies
@@ -38,7 +40,20 @@ DRAFT → CONFIRMED → PARTIALLY_SHIPPED → FULLY_SHIPPED → INVOICED → PAI
 - **Customer-Specific**: Customer-negotiated pricing
 - **Promotional**: Time-sensitive promotional campaigns
 
-### 3. Future-Proof Architecture
+### 3. Integrated Services
+
+The package includes the following production-ready services:
+
+| Service | Purpose | Integration |
+|---------|---------|-------------|
+| [`QuoteToOrderConverter`](#quotetoorderconverter) | Converts accepted quotes to sales orders | Nexus\Sequencing |
+| [`SalesOrderManager`](#salesordermanager) | Full order lifecycle management | All packages |
+| [`ReceivableCreditLimitChecker`](#receivablecreditlimitchecker) | Real-time credit limit validation | Nexus\Receivable |
+| [`SalesReturnManager`](#salesreturnmanager) | Return order (RMA) processing | Nexus\Receivable (Phase 2) |
+| [`InventoryStockReservation`](#inventorystockreservation) | Real-time stock reservation | Nexus\Inventory |
+| [`ReceivableInvoiceManager`](#receivableinvoicemanager) | Invoice generation from orders | Nexus\Receivable |
+
+### 4. Future-Proof Architecture
 
 V1 includes schema fields for Phase 2 features:
 
@@ -64,6 +79,8 @@ composer require nexus/sales
 - `nexus/sequencing` - Auto-numbering
 - `nexus/period` - Fiscal period management
 - `nexus/audit-logger` - Audit trail
+- `nexus/inventory` - Stock management (for InventoryStockReservation)
+- `nexus/receivable` - Accounts receivable (for credit checking and invoicing)
 
 ## Architecture
 
@@ -76,9 +93,9 @@ This package follows the **Nexus Atomic Package Pattern**:
 
 Implementation is provided by `apps/Atomy` (Laravel orchestrator).
 
-## Usage
+## Quick Start Guide
 
-### Creating a Quotation
+### Step 1: Create a Quotation
 
 ```php
 use Nexus\Sales\Services\QuotationManager;
@@ -108,24 +125,7 @@ $quotation = $this->quotationManager->createQuotation(
 );
 ```
 
-### Calculating Prices
-
-```php
-use Nexus\Sales\Services\PricingEngine;
-use Nexus\Uom\ValueObjects\Quantity;
-
-// Get price with quantity-based tiering
-$unitPrice = $this->pricingEngine->getPrice(
-    tenantId: 'tenant-123',
-    productVariantId: 'variant-789',
-    quantity: new Quantity(100, 'EA'),
-    currencyCode: 'MYR',
-    customerId: 'customer-456', // Optional for customer-specific pricing
-    asOf: new DateTimeImmutable() // Optional, defaults to now
-);
-```
-
-### Converting Quote to Order
+### Step 2: Convert Quote to Order
 
 ```php
 use Nexus\Sales\Services\QuoteToOrderConverter;
@@ -133,24 +133,162 @@ use Nexus\Sales\Services\QuoteToOrderConverter;
 $order = $this->converter->convertToOrder(
     quotationId: 'quote-id',
     orderData: [
-        'payment_term' => PaymentTerm::NET_30,
+        'payment_term' => \Nexus\Sales\Enums\PaymentTerm::NET_30,
         'shipping_address' => '123 Main St',
-        'customer_purchase_order' => 'PO-12345',
+        'customer_po' => 'PO-12345',
     ]
 );
 ```
 
-### Confirming Order (Locks Exchange Rate)
+### Step 3: Confirm Order
+
+The confirmation process performs three critical operations:
+
+1. **Credit Limit Check** - Validates customer has sufficient credit
+2. **Stock Reservation** - Reserves inventory for the order
+3. **Exchange Rate Lock** - Locks foreign currency rate (if applicable)
 
 ```php
 use Nexus\Sales\Services\SalesOrderManager;
 
-// Confirms order, locks exchange rate, checks credit, reserves stock
 $this->salesOrderManager->confirmOrder(
     orderId: 'order-id',
     confirmedBy: 'user-id'
 );
 ```
+
+### Step 4: Generate Invoice
+
+```php
+$invoiceId = $this->salesOrderManager->generateInvoice(
+    orderId: 'order-id'
+);
+```
+
+## Service Reference
+
+### QuoteToOrderConverter
+
+Converts accepted quotations to sales orders, copying all line items, pricing, and customer information.
+
+**Location:** `src/Services/QuoteToOrderConverter.php`
+
+**Constructor Dependencies:**
+- `QuotationRepositoryInterface`
+- `SalesOrderRepositoryInterface`
+- `SequenceGeneratorInterface`
+- `TransactionManagerInterface`
+- `AuditLogManagerInterface`
+- `LoggerInterface`
+
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `convertToOrder(string $quotationId, array $orderData = []): SalesOrderInterface` | Converts accepted quote to order |
+| `canConvertToOrder(string $quotationId): bool` | Validates if quote can be converted |
+
+### SalesOrderManager
+
+Manages the complete sales order lifecycle including creation, confirmation, shipping, invoicing, and cancellation.
+
+**Location:** `src/Services/SalesOrderManager.php`
+
+**Constructor Dependencies:**
+- `SalesOrderRepositoryInterface`
+- `SequenceGeneratorInterface`
+- `ExchangeRateServiceInterface`
+- `CreditLimitCheckerInterface`
+- `StockReservationInterface`
+- `InvoiceManagerInterface`
+- `AuditLogManagerInterface`
+- `LoggerInterface`
+
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `createOrder(string $tenantId, string $customerId, array $lines, array $data): SalesOrderInterface` | Creates a new draft order |
+| `confirmOrder(string $orderId, string $confirmedBy): void` | Confirms order, checks credit, reserves stock |
+| `cancelOrder(string $orderId, ?string $reason = null): void` | Cancels order and releases stock |
+| `markAsShipped(string $orderId, bool $isPartialShipment = false): void` | Marks order as shipped |
+| `generateInvoice(string $orderId): string` | Generates invoice from order |
+| `findOrder(string $orderId): SalesOrderInterface` | Finds order by ID |
+| `findOrdersByCustomer(string $tenantId, string $customerId): array` | Finds orders by customer |
+
+### ReceivableCreditLimitChecker
+
+Integrates with Nexus\Receivable for real-time credit limit validation.
+
+**Location:** `src/Services/ReceivableCreditLimitChecker.php`
+
+**Constructor Dependencies:**
+- `Nexus\Receivable\Contracts\CreditLimitCheckerInterface`
+- `LoggerInterface`
+
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `checkCreditLimit(string $tenantId, string $customerId, float $orderTotal, string $currencyCode): bool` | Validates customer credit limit |
+
+**Throws:** `CreditLimitExceededException` when limit exceeded
+
+### SalesReturnManager
+
+Handles return order (RMA) processing including validation and quantity checks.
+
+**Location:** `src/Services/SalesReturnManager.php`
+
+**Constructor Dependencies:**
+- `SalesOrderRepositoryInterface`
+- `LoggerInterface`
+
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `createReturnOrder(string $salesOrderId, array $returnLineItems, string $returnReason): string` | Creates return order |
+
+### InventoryStockReservation
+
+Integrates with Nexus\Inventory for real-time stock reservation.
+
+**Location:** `src/Services/InventoryStockReservation.php`
+
+**Constructor Dependencies:**
+- `SalesOrderRepositoryInterface`
+- `Nexus\Inventory\Contracts\ReservationManagerInterface`
+- `Nexus\Inventory\Contracts\StockLevelRepositoryInterface`
+- `LoggerInterface`
+
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `reserveStockForOrder(string $salesOrderId): array` | Reserves stock for all order lines |
+| `releaseStockReservation(string $salesOrderId): void` | Releases all reservations |
+| `getOrderReservations(string $salesOrderId): array` | Gets active reservations |
+| `checkStockAvailability(string $salesOrderId): StockAvailabilityResult` | Checks availability without reserving |
+
+**Throws:** `InsufficientStockException` when stock unavailable
+
+### ReceivableInvoiceManager
+
+Integrates with Nexus\Receivable for invoice generation.
+
+**Location:** `src/Services/ReceivableInvoiceManager.php`
+
+**Constructor Dependencies:**
+- `SalesOrderRepositoryInterface`
+- `Nexus\Receivable\Contracts\ReceivableManagerInterface`
+- `LoggerInterface`
+
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `generateInvoiceFromOrder(string $salesOrderId): string` | Generates invoice from sales order |
 
 ## Pricing Engine
 
@@ -224,9 +362,7 @@ $this->salesOrderManager->confirmOrder($order->getId(), 'user-id');
 
 ### Stock Reservation (Nexus\Inventory)
 
-V1: `StubStockReservation` throws `BadMethodCallException`
-
-Phase 2: Install `nexus/inventory` and bind `StockReservationInterface`:
+Production-ready via `InventoryStockReservation`:
 
 ```php
 $this->app->singleton(
@@ -237,9 +373,7 @@ $this->app->singleton(
 
 ### Invoice Generation (Nexus\Receivable)
 
-V1: `StubInvoiceManager` throws `BadMethodCallException`
-
-Phase 2: Install `nexus/receivable` and bind `InvoiceManagerInterface`:
+Production-ready via `ReceivableInvoiceManager`:
 
 ```php
 $this->app->singleton(
@@ -250,9 +384,7 @@ $this->app->singleton(
 
 ### Credit Limit Checking (Nexus\Receivable)
 
-V1: `NoOpCreditLimitChecker` always returns `true` (no enforcement)
-
-Phase 2: Replace with real-time receivable balance checker:
+Production-ready via `ReceivableCreditLimitChecker`:
 
 ```php
 $this->app->singleton(
@@ -345,6 +477,8 @@ All state changes are logged via `Nexus\AuditLogger`:
 - Order shipped (partial/full)
 - Order invoiced
 - Order cancelled
+- Return order created
+- Stock reserved/released
 
 Example audit log entry:
 
@@ -387,11 +521,10 @@ composer test -- --coverage
    - Tax exemption certificates
    - Reverse charge mechanism
 
-5. **Sales Returns (RMA)**
-   - Return order schema
-   - Return authorization workflow
-   - Restocking fees
-   - Credit note generation
+5. **Advanced Sales Returns**
+   - Credit note integration with Nexus\Receivable
+   - Restocking fee calculation
+   - Return quality inspection workflow
 
 ## 📖 Documentation
 
@@ -415,19 +548,3 @@ MIT License - see LICENSE file for details.
 ## Support
 
 For issues and questions, please use the GitHub issue tracker.
-
-## 📖 Documentation
-
-### Package Documentation
-- **[Getting Started Guide](docs/getting-started.md)** - Quick start guide with prerequisites, concepts, and first integration
-- **[API Reference](docs/api-reference.md)** - Complete documentation of all interfaces, value objects, and exceptions
-- **[Integration Guide](docs/integration-guide.md)** - Laravel and Symfony integration examples
-- **[Basic Usage Example](docs/examples/basic-usage.php)** - Simple usage patterns
-- **[Advanced Usage Example](docs/examples/advanced-usage.php)** - Advanced scenarios and patterns
-
-### Additional Resources
-- `IMPLEMENTATION_SUMMARY.md` - Implementation progress and metrics
-- `REQUIREMENTS.md` - Detailed requirements
-- `TEST_SUITE_SUMMARY.md` - Test coverage and results
-- `VALUATION_MATRIX.md` - Package valuation metrics
-- See root `ARCHITECTURE.md` for overall system architecture

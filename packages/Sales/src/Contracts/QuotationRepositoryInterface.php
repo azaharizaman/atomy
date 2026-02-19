@@ -36,6 +36,15 @@ interface QuotationRepositoryInterface
      */
     public function save(QuotationInterface $quotation): void;
 
+    /**
+     * Mark quotation as converted to order.
+     *
+     * @param string $quotationId
+     * @param string $orderId
+     * @throws \Nexus\Sales\Exceptions\QuotationNotFoundException
+     */
+    public function markAsConvertedToOrder(string $quotationId, string $orderId): void;
+
     public function delete(string $id): void;
 
     public function exists(string $tenantId, string $quoteNumber): bool;

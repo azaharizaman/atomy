@@ -16,4 +16,11 @@ class InsufficientStockException extends SalesException
             "Requested: {$requested}, Available: {$available}."
         );
     }
+
+    public static function forOrder(string $salesOrderId, string $message): self
+    {
+        return new self(
+            "Insufficient stock for sales order '{$salesOrderId}'. {$message}"
+        );
+    }
 }
