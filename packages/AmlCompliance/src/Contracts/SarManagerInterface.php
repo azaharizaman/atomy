@@ -278,4 +278,34 @@ interface SarManagerInterface
      * @return bool True if exists
      */
     public function exists(string $sarId): bool;
+
+    /**
+     * Get SAR metrics
+     * 
+     * Returns metrics about SAR filings including counts by status,
+     * overdue SARs, and filing statistics.
+     *
+     * @param \DateTimeImmutable|null $fromDate Start date for metrics (default: 30 days ago)
+     * @param \DateTimeImmutable|null $toDate End date for metrics (default: now)
+     * @return array<string, mixed> Metrics data including:
+     *         - total_count: int
+     *         - by_status: array<string, int>
+     *         - overdue_count: int
+     *         - filed_count: int
+     *         - average_resolution_days: float
+     */
+    public function getSarMetrics(
+        ?\DateTimeImmutable $fromDate = null,
+        ?\DateTimeImmutable $toDate = null
+    ): array;
+
+    /**
+     * Get SAR by party ID
+     * 
+     * Retrieves the most recent SAR associated with a party.
+     *
+     * @param string $partyId Party ID to search for
+     * @return SuspiciousActivityReport|null The SAR if found, null otherwise
+     */
+    public function getSarByPartyId(string $partyId): ?SuspiciousActivityReport;
 }

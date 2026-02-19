@@ -222,4 +222,15 @@ final readonly class RetentionPolicyManager implements RetentionPolicyManagerInt
             $policies
         );
     }
+
+    public function getPolicyByCategory(string $category, ?\DateTimeImmutable $date = null): ?RetentionPolicy
+    {
+        try {
+            $retentionCategory = RetentionCategory::from($category);
+            return $this->getEffectivePolicy($retentionCategory, $date);
+        } catch (\ValueError $e) {
+            // Invalid category string
+            return null;
+        }
+    }
 }

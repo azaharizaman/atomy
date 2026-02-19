@@ -454,4 +454,23 @@ final readonly class AmlRiskAssessor implements AmlRiskAssessorInterface
 
         return (int) round($totalRisk / $totalWeight);
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPartiesByRiskLevel(RiskLevel $level, int $limit = 1000): array
+    {
+        // This is a placeholder implementation
+        // In production, this would query a repository/database
+        // to get parties filtered by risk level
+
+        $this->logger->debug('Getting parties by risk level', [
+            'risk_level' => $level->value,
+            'limit' => $limit,
+        ]);
+
+        // Return empty array as default - implementations should override
+        // with actual database queries
+        return [];
+    }
 }

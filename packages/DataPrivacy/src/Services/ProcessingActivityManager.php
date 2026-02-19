@@ -291,4 +291,13 @@ final readonly class ProcessingActivityManager implements ProcessingActivityMana
     {
         return 'PA-' . date('Ymd') . '-' . strtoupper(substr(md5((string)microtime(true)), 0, 6));
     }
+
+    public function getActivitiesByDataSubject(\Nexus\DataPrivacy\ValueObjects\DataSubjectId $dataSubjectId): array
+    {
+        // In production, this would query the database for activities
+        // associated with the specific data subject
+        // For now, return empty array as default
+
+        return [];
+    }
 }

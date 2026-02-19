@@ -117,4 +117,27 @@ interface AuditStorageInterface
      * @return int Number of records deleted
      */
     public function deleteExpired(array $ids): int;
+
+    /**
+     * Search audit records
+     *
+     * Searches audit records based on various criteria.
+     * Supports filtering by tenant, date range, record type, level, and more.
+     *
+     * @param array<string, mixed> $criteria Search criteria:
+     *        - tenant_id: string (required)
+     *        - from_date: \DateTimeImmutable
+     *        - to_date: \DateTimeImmutable
+     *        - record_type: string|string[]
+     *        - level: string|string[] (AuditLevel value)
+     *        - subject_type: string
+     *        - subject_id: string
+     *        - causer_type: string
+     *        - causer_id: string
+     *        - search_term: string (searches description)
+     *        - limit: int (default: 100)
+     *        - offset: int (default: 0)
+     * @return array<AuditRecordInterface> Matching records
+     */
+    public function search(array $criteria): array;
 }

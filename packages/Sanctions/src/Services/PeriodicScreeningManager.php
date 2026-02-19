@@ -394,6 +394,69 @@ final readonly class PeriodicScreeningManager implements PeriodicScreeningManage
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getScreeningMetrics(
+        ?\DateTimeImmutable $fromDate = null,
+        ?\DateTimeImmutable $toDate = null
+    ): array {
+        $fromDate = $fromDate ?? new \DateTimeImmutable('-30 days');
+        $toDate = $toDate ?? new \DateTimeImmutable();
+
+        $this->logger->info('Retrieving screening metrics', [
+            'from_date' => $fromDate->format('Y-m-d'),
+            'to_date' => $toDate->format('Y-m-d'),
+        ]);
+
+        // In production, this would query the database for actual metrics
+        // For now, return a structured default response
+        return [
+            'total_screened' => 0,
+            'matches_found' => 0,
+            'pending_review' => 0,
+            'confirmed_matches' => 0,
+            'false_positives' => 0,
+            'average_processing_time_ms' => 0.0,
+            'period_start' => $fromDate->format('Y-m-d H:i:s'),
+            'period_end' => $toDate->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function hasActiveMatches(string $partyId): bool
+    {
+        $this->validatePartyId($partyId);
+
+        $this->logger->debug('Checking for active matches', [
+            'party_id' => $partyId,
+        ]);
+
+        // In production, this would query the database for unresolved matches
+        // For now, return false as default
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getPendingReviews(int $limit = 100): array
+    {
+        if ($limit < 1 || $limit > 1000) {
+            throw new \InvalidArgumentException('Limit must be between 1 and 1000');
+        }
+
+        $this->logger->debug('Retrieving pending reviews', [
+            'limit' => $limit,
+        ]);
+
+        // In production, this would query the database for screenings with pending matches
+        // For now, return empty array
+        return [];
+    }
+
+    /**
      * Validate party ID.
      *
      * @param string $partyId

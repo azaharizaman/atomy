@@ -685,6 +685,95 @@ final class SarManager implements SarManagerInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getSarMetrics(
+        ?\DateTimeImmutable $fromDate = null,
+        ?\DateTimeImmutable $toDate = null
+    ): array {
+        $fromDate = $fromDate ?? new \DateTimeImmutable('-30 days');
+        $toDate = $toDate ?? new \DateTimeImmutable();
+
+        $totalCount = 0;
+        $byStatus = [];
+        $overdueCount = 0;
+        $filedCount = 0;
+        $resolutionDays = [];
+
+        foreach ($this->sars as $sar) {
+            // Filter by date range
+            if ($sar->createdAt < $fromDate || $sar->createdAt > $toDate) {
+                continue;
+            }
+
+            $totalCount++;
+
+            // Count by status
+            $status = $sar->status->value;
+            $byStatus[$status] = ($byStatus[$status] ?? 0) + 1;
+
+            // Count overdue
+            if ($sar->isOverdue()) {
+                $overdueCount++;
+            }
+
+            // Count filed (submitted to authority)
+            if ($sar->status->isSubmitted()) {
+                $filedCount++;
+            }
+
+            // Calculate resolution time for closed SARs
+            if ($sar->status->isFinal() && $sar->closedAt !== null) {
+                $interval = $sar->createdAt->diff($sar->closedAt);
+                $resolutionDays[] = $interval->days;
+            }
+        }
+
+        $averageResolutionDays = !empty($resolutionDays)
+            ? round(array_sum($resolutionDays) / count($resolutionDays), 2)
+            : 0.0;
+
+        $metrics = [
+            'total_count' => $totalCount,
+            'by_status' => $byStatus,
+            'overdue_count' => $overdueCount,
+            'filed_count' => $filedCount,
+            'average_resolution_days' => $averageResolutionDays,
+            'period_start' => $fromDate->format('Y-m-d'),
+            'period_end' => $toDate->format('Y-m-d'),
+        ];
+
+        $this->logger->debug('SAR metrics retrieved', $metrics);
+
+        return $metrics;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSarByPartyId(string $partyId): ?SuspiciousActivityReport
+    {
+        $mostRecent = null;
+
+        foreach ($this->sars as $sar) {
+            if ($sar->partyId === $partyId) {
+                if ($mostRecent === null || $sar->createdAt > $mostRecent->createdAt) {
+                    $mostRecent = $sar;
+                }
+            }
+        }
+
+        if ($mostRecent !== null) {
+            $this->logger->debug('SAR found by party ID', [
+                'party_id' => $partyId,
+                'sar_id' => $mostRecent->sarId,
+            ]);
+        }
+
+        return $mostRecent;
+    }
+
+    /**
      * Generate unique SAR ID
      */
     private function generateSarId(): string

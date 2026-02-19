@@ -196,4 +196,46 @@ interface PeriodicScreeningManagerInterface
         ScreeningFrequency $frequency,
         array $options = []
     ): array;
+
+    /**
+     * Get screening metrics
+     *
+     * Returns comprehensive metrics about screening operations including
+     * counts by status, match statistics, and performance data.
+     *
+     * @param \DateTimeImmutable|null $fromDate Start date for metrics (default: 30 days ago)
+     * @param \DateTimeImmutable|null $toDate End date for metrics (default: now)
+     * @return array<string, mixed> Metrics data including:
+     *         - total_screened: int
+     *         - matches_found: int
+     *         - pending_review: int
+     *         - confirmed_matches: int
+     *         - false_positives: int
+     *         - average_processing_time_ms: float
+     */
+    public function getScreeningMetrics(
+        ?\DateTimeImmutable $fromDate = null,
+        ?\DateTimeImmutable $toDate = null
+    ): array;
+
+    /**
+     * Check if party has active matches
+     *
+     * Determines if a party currently has any unresolved/active sanctions matches
+     * that require attention.
+     *
+     * @param string $partyId Party ID to check
+     * @return bool True if party has active matches requiring review
+     */
+    public function hasActiveMatches(string $partyId): bool;
+
+    /**
+     * Get pending reviews
+     *
+     * Returns all screenings that have matches pending manual review.
+     *
+     * @param int $limit Maximum number of results to return (default: 100)
+     * @return array<ScreeningResult> Array of screening results with pending matches
+     */
+    public function getPendingReviews(int $limit = 100): array;
 }
