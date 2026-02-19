@@ -16,6 +16,8 @@ use Nexus\Sales\Enums\QuoteStatus;
 use Nexus\Sales\Enums\SalesOrderStatus;
 use Nexus\Sales\Exceptions\InvalidQuoteStatusException;
 use Nexus\Sales\Exceptions\QuotationNotFoundException;
+use Nexus\Sales\ValueObjects\SalesOrderData;
+use Nexus\Sales\Services\Traits\ResolvesPaymentTerm;
 use Nexus\Sequencing\Contracts\SequenceGeneratorInterface;
 use Psr\Log\LoggerInterface;
 
@@ -27,6 +29,8 @@ use Psr\Log\LoggerInterface;
  */
 final readonly class QuoteToOrderConverter
 {
+    use ResolvesPaymentTerm;
+
     public function __construct(
         private QuotationRepositoryInterface $quotationRepository,
         private SalesOrderRepositoryInterface $salesOrderRepository,
@@ -115,7 +119,34 @@ final readonly class QuoteToOrderConverter
                 'line_sequence' => $lineSequence++,
             ];
         }
-        $orderDataBuilt['lines'] = $orderLines;
+
+        // Build order data object
+        $orderData = new SalesOrderData(
+            tenantId: $quotation->getTenantId(),
+            customerId: $quotation->getCustomerId(),
+            currencyCode: $quotation->getCurrencyCode(),
+            quoteDate: $orderDate->format('Y-m-d'),
+            lines: $orderLines,
+            orderNumber: $orderNumber,
+            warehouseId: $orderData['preferred_warehouse_id'] ?? null,
+            salespersonId: $orderData['salesperson_id'] ?? null,
+            shippingAddressId: $orderData['shipping_address_id'] ?? null,
+            billingAddressId: $orderData['billing_address_id'] ?? null,
+            paymentTerm: $orderData['payment_term'] ?? null,
+            customerPoNumber: $orderData['customer_po'] ?? null,
+            customerNotes: $orderData['notes'] ?? $quotation->getNotes(),
+            internalNotes: $orderData['internal_notes'] ?? null,
+            exchangeRate: null,
+            metadata: [
+                'subtotal' => $quotation->getSubtotal(),
+                'tax_amount' => $quotation->getTaxAmount(),
+                'discount_amount' => $quotation->getDiscountAmount(),
+                'total' => $quotation->getTotal(),
+                'source_quotation_id' => $quotation->getId(),
+                'source_quote_number' => $quotation->getQuoteNumber(),
+                'payment_due_date' => $paymentTerm->calculateDueDate($orderDate)->format('Y-m-d'),
+            ],
+        );
 
         $this->logger->info('Converting quotation to order', [
             'quotation_id' => $quotationId,
@@ -124,30 +155,30 @@ final readonly class QuoteToOrderConverter
         ]);
 
         // Wrap repository calls in transaction for atomicity
-        $salesOrder = $this->transactionManager->wrap(function () use ($orderDataBuilt, $quotationId, $quotation, $orderNumber): SalesOrderInterface {
+        $salesOrder = $this->transactionManager->wrap(function () use ($orderData, $quotationId, $quotation, $orderNumber): SalesOrderInterface {
             // Create and save the sales order via repository
-            $salesOrder = $this->salesOrderRepository->create($orderDataBuilt);
+            $salesOrder = $this->salesOrderRepository->create($orderData);
 
             // Update quotation status to CONVERTED_TO_ORDER and link to order
             $this->quotationRepository->markAsConvertedToOrder($quotationId, $salesOrder->getId());
 
+            // Log audit event inside transaction for consistency
+            $this->auditLogger->log(
+                $quotation->getTenantId(),
+                'quotation_converted',
+                "Quotation {$quotation->getQuoteNumber()} converted to order {$orderNumber}",
+                [
+                    'quotation_id' => $quotationId,
+                    'order_id' => $salesOrder->getId(),
+                    'order_number' => $orderNumber,
+                    'customer_id' => $quotation->getCustomerId(),
+                    'total' => $salesOrder->getTotal(),
+                    'currency' => $salesOrder->getCurrencyCode(),
+                ]
+            );
+
             return $salesOrder;
         });
-
-        // Log audit event
-        $this->auditLogger->log(
-            $quotation->getTenantId(),
-            'quotation_converted',
-            "Quotation {$quotation->getQuoteNumber()} converted to order {$orderNumber}",
-            [
-                'quotation_id' => $quotationId,
-                'order_id' => $salesOrder->getId(),
-                'order_number' => $orderNumber,
-                'customer_id' => $quotation->getCustomerId(),
-                'total' => $salesOrder->getTotal(),
-                'currency' => $salesOrder->getCurrencyCode(),
-            ]
-        );
 
         $this->logger->info('Quotation converted to order successfully', [
             'quotation_id' => $quotationId,
@@ -172,21 +203,5 @@ final readonly class QuoteToOrderConverter
         
         return $quotation->getStatus()->canBeConverted() 
             && $quotation->getConvertedToOrderId() === null;
-    }
-
-    /**
-     * Resolve payment term from various input formats.
-     */
-    private function resolvePaymentTerm(mixed $paymentTerm): PaymentTerm
-    {
-        if ($paymentTerm instanceof PaymentTerm) {
-            return $paymentTerm;
-        }
-
-        if (is_string($paymentTerm)) {
-            return PaymentTerm::from($paymentTerm);
-        }
-
-        return PaymentTerm::NET_30;
     }
 }

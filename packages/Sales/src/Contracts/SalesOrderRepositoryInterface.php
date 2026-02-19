@@ -38,6 +38,10 @@ interface SalesOrderRepositoryInterface
 
     /**
      * Create a new sales order from data.
+     *
+     * @param SalesOrderData $data
+     * @return SalesOrderInterface
+     * @throws \Nexus\Sales\Exceptions\DuplicateOrderNumberException
      */
     public function create(SalesOrderData $data): SalesOrderInterface;
 

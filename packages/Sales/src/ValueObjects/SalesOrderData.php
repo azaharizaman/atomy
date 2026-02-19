@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\Sales\ValueObjects;
 
+use DateTimeImmutable;
+
 /**
  * Data transfer object for creating a sales order.
  */
@@ -13,7 +15,7 @@ final readonly class SalesOrderData
      * @param string $tenantId
      * @param string $customerId
      * @param string $currencyCode
-     * @param string $quoteDate
+     * @param DateTimeImmutable|string $quoteDate
      * @param array<int, array{product_id: string, quantity: float, unit_price: float, discount_percent?: float}> $lines
      * @param string|null $orderNumber
      * @param string|null $warehouseId
@@ -31,7 +33,7 @@ final readonly class SalesOrderData
         public string $tenantId,
         public string $customerId,
         public string $currencyCode,
-        public string $quoteDate,
+        public DateTimeImmutable|string $quoteDate,
         public array $lines,
         public ?string $orderNumber = null,
         public ?string $warehouseId = null,

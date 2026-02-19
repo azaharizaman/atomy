@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Laravel\Sales\Adapters;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
 use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
 use Nexus\Sales\Contracts\StockReservationInterface;
 use Nexus\Sales\Exceptions\InsufficientStockException;
@@ -13,6 +14,7 @@ use Nexus\Sales\ValueObjects\StockAvailabilityResult;
 use Nexus\Inventory\Contracts\ReservationManagerInterface;
 use Nexus\Inventory\Contracts\StockLevelRepositoryInterface;
 use Nexus\Inventory\Exceptions\InsufficientStockException as InventoryInsufficientStockException;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -35,6 +37,7 @@ final readonly class InventoryStockReservationAdapter implements StockReservatio
         private SalesOrderRepositoryInterface $salesOrderRepository,
         private ReservationManagerInterface $reservationManager,
         private StockLevelRepositoryInterface $stockLevelRepository,
+        private TenantContextInterface $tenantContext,
         private LoggerInterface $logger
     ) {}
 
@@ -304,17 +307,32 @@ final readonly class InventoryStockReservationAdapter implements StockReservatio
     }
 
     /**
-     * Get default warehouse ID.
-     * In a production system, this would come from configuration or tenant settings.
+     * Get default warehouse ID from tenant configuration.
+     *
+     * @throws \Nexus\Sales\Exceptions\ConfigurationException
      */
     private function getDefaultWarehouseId(): string
     {
-        // TODO: Implement proper warehouse selection logic
-        // This could come from:
-        // - Tenant configuration
-        // - Order shipping address
-        // - Product default warehouse
-        return 'default';
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+        
+        if ($tenantId === null) {
+            throw new \Nexus\Sales\Exceptions\ConfigurationException(
+                "Tenant context not set. Cannot determine default warehouse."
+            );
+        }
+        
+        // Try to get warehouse ID from tenant settings/config
+        $warehouseId = Config::get("sales.warehouses.default_for_orders.{$tenantId}") 
+            ?? Config::get('sales.warehouses.default');
+        
+        if (empty($warehouseId)) {
+            throw new \Nexus\Sales\Exceptions\ConfigurationException(
+                "Default warehouse not configured for tenant: {$tenantId}. " .
+                "Please configure 'sales.warehouses.default_for_orders.{$tenantId}' or 'sales.warehouses.default' in config."
+            );
+        }
+        
+        return $warehouseId;
     }
 
     /**

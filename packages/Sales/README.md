@@ -177,6 +177,7 @@ Converts accepted quotations to sales orders, copying all line items, pricing, a
 - `QuotationRepositoryInterface`
 - `SalesOrderRepositoryInterface`
 - `SequenceGeneratorInterface`
+- `TransactionManagerInterface`
 - `AuditLogManagerInterface`
 - `LoggerInterface`
 

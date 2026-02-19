@@ -17,6 +17,8 @@ use Nexus\Sales\Enums\SalesOrderStatus;
 use Nexus\Sales\Exceptions\ExchangeRateLockedException;
 use Nexus\Sales\Exceptions\InvalidOrderStatusException;
 use Nexus\Sales\Exceptions\SalesOrderNotFoundException;
+use Nexus\Sales\ValueObjects\SalesOrderData;
+use Nexus\Sales\Services\Traits\ResolvesPaymentTerm;
 use Nexus\Sequencing\Contracts\SequenceGeneratorInterface;
 use Psr\Log\LoggerInterface;
 
@@ -25,6 +27,8 @@ use Psr\Log\LoggerInterface;
  */
 final readonly class SalesOrderManager
 {
+    use ResolvesPaymentTerm;
+
     public function __construct(
         private SalesOrderRepositoryInterface $salesOrderRepository,
         private SequenceGeneratorInterface $sequenceGenerator,
@@ -105,30 +109,31 @@ final readonly class SalesOrderManager
 
         $total = $subtotal + $taxAmount - $discountAmount;
 
-        // Build order data
-        $orderData = [
-            'tenant_id' => $tenantId,
-            'order_number' => $orderNumber,
-            'customer_id' => $customerId,
-            'order_date' => $orderDate,
-            'status' => SalesOrderStatus::DRAFT,
-            'currency_code' => $currencyCode,
-            'exchange_rate' => null,
-            'subtotal' => $subtotal,
-            'tax_amount' => $taxAmount,
-            'discount_amount' => $discountAmount,
-            'total' => $total,
-            'discount_rule' => $data['discount_rule'] ?? null,
-            'payment_term' => $paymentTerm,
-            'payment_due_date' => $paymentTerm->calculateDueDate($orderDate),
-            'shipping_address' => $data['shipping_address'] ?? null,
-            'billing_address' => $data['billing_address'] ?? null,
-            'customer_po' => $data['customer_po'] ?? null,
-            'notes' => $data['notes'] ?? null,
-            'salesperson_id' => $data['salesperson_id'] ?? null,
-            'preferred_warehouse_id' => $data['preferred_warehouse_id'] ?? null,
-            'lines' => $orderLines,
-        ];
+        // Build order data object
+        $orderData = new SalesOrderData(
+            tenantId: $tenantId,
+            customerId: $customerId,
+            currencyCode: $currencyCode,
+            quoteDate: $orderDate->format('Y-m-d'),
+            lines: $orderLines,
+            orderNumber: $orderNumber,
+            warehouseId: $data['preferred_warehouse_id'] ?? null,
+            salespersonId: $data['salesperson_id'] ?? null,
+            shippingAddressId: $data['shipping_address_id'] ?? null,
+            billingAddressId: $data['billing_address_id'] ?? null,
+            paymentTerm: $data['payment_term'] ?? null,
+            customerPoNumber: $data['customer_po'] ?? null,
+            customerNotes: $data['notes'] ?? null,
+            internalNotes: $data['internal_notes'] ?? null,
+            exchangeRate: null,
+            metadata: [
+                'subtotal' => $subtotal,
+                'tax_amount' => $taxAmount,
+                'discount_amount' => $discountAmount,
+                'total' => $total,
+                'payment_due_date' => $paymentTerm->calculateDueDate($orderDate)->format('Y-m-d'),
+            ],
+        );
 
         // Create and save the sales order via repository
         $salesOrder = $this->salesOrderRepository->create($orderData);

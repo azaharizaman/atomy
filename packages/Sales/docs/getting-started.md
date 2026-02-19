@@ -35,7 +35,7 @@ Do NOT use this package for:
 ### Concept 1: Quotation Lifecycle
 Quotations start as drafts, can be versioned (v1, v2), sent to customers, accepted or rejected, and finally converted to orders.
 
-```
+```text
 DRAFT → SENT → ACCEPTED → CONVERTED
               ↓
            REJECTED
@@ -44,7 +44,7 @@ DRAFT → SENT → ACCEPTED → CONVERTED
 ### Concept 2: Sales Order Workflow
 Orders progress through fulfillment stages, with credit checks and stock reservation at confirmation.
 
-```
+```text
 DRAFT → CONFIRMED → SHIPPED → INVOICED → PAID
             ↓
          CANCELLED
@@ -200,6 +200,10 @@ return new class extends Migration
         Schema::create('sales_order_lines', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->ulid('sales_order_id')->index();
+            $table->foreign('sales_order_id')
+                ->references('id')
+                ->on('sales_orders')
+                ->onDelete('cascade');
             $table->integer('line_number');
             $table->ulid('product_variant_id')->index();
             $table->string('product_name');
