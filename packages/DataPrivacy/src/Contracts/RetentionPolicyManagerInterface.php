@@ -92,4 +92,16 @@ interface RetentionPolicyManagerInterface
      * @return array<array<string, mixed>>
      */
     public function exportPolicies(): array;
+
+    /**
+     * Get policy by category
+     *
+     * Retrieves the effective retention policy for a specific category.
+     * Returns null if no policy exists for the category.
+     *
+     * @param string $category The retention category identifier
+     * @param \DateTimeImmutable|null $date Optional date to check for (default: now)
+     * @return RetentionPolicy|null The policy if found, null otherwise
+     */
+    public function getPolicyByCategory(string $category, ?\DateTimeImmutable $date = null): ?RetentionPolicy;
 }

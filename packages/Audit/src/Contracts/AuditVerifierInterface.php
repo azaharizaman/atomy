@@ -72,4 +72,24 @@ interface AuditVerifierInterface
      * @return string SHA-256 hash
      */
     public function calculateRecordHash(array $data): string;
+
+    /**
+     * Get integrity report
+     *
+     * Returns a comprehensive integrity report for a tenant's audit records,
+     * including chain verification results, tampering detection, and statistics.
+     *
+     * @param string $tenantId Tenant identifier
+     * @return array<string, mixed> Integrity report including:
+     *         - tenant_id: string
+     *         - verification_status: string ('valid', 'tampered', 'error')
+     *         - total_records: int
+     *         - verified_records: int
+     *         - failed_records: int
+     *         - sequence_gaps: array<int>
+     *         - tampered_records: array<string>
+     *         - last_verified_at: string
+     *         - chain_integrity: bool
+     */
+    public function getIntegrityReport(string $tenantId): array;
 }

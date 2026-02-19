@@ -107,4 +107,16 @@ interface AmlRiskAssessorInterface
      * Calculate next review date based on risk level
      */
     public function calculateNextReviewDate(RiskLevel $riskLevel): \DateTimeImmutable;
+
+    /**
+     * Get parties by risk level
+     * 
+     * Returns party IDs filtered by the specified risk level.
+     * Useful for batch operations and reporting.
+     *
+     * @param RiskLevel $level Risk level to filter by
+     * @param int $limit Maximum number of parties to return (default: 1000)
+     * @return array<string> Array of party IDs
+     */
+    public function getPartiesByRiskLevel(RiskLevel $level, int $limit = 1000): array;
 }

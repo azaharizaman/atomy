@@ -102,4 +102,46 @@ interface AuditEngineInterface
      * @return string|null Null if no records exist for tenant
      */
     public function getLastRecordHash(string $tenantId): ?string;
+
+    /**
+     * Get audit statistics
+     *
+     * Returns statistics about audit records for a tenant including
+     * counts by level, record type distribution, and temporal metrics.
+     *
+     * @param string $tenantId Tenant identifier
+     * @param \DateTimeImmutable|null $fromDate Start date for statistics (default: 30 days ago)
+     * @param \DateTimeImmutable|null $toDate End date for statistics (default: now)
+     * @return array<string, mixed> Statistics including:
+     *         - total_records: int
+     *         - by_level: array<string, int>
+     *         - by_record_type: array<string, int>
+     *         - by_causer: array<string, int>
+     *         - records_per_day: array<string, int>
+     */
+    public function getStatistics(
+        string $tenantId,
+        ?\DateTimeImmutable $fromDate = null,
+        ?\DateTimeImmutable $toDate = null
+    ): array;
+
+    /**
+     * Get aggregate statistics
+     *
+     * Returns system-wide aggregate statistics across all tenants.
+     * Useful for system monitoring and capacity planning.
+     *
+     * @param \DateTimeImmutable|null $fromDate Start date for statistics (default: 30 days ago)
+     * @param \DateTimeImmutable|null $toDate End date for statistics (default: now)
+     * @return array<string, mixed> Aggregate statistics including:
+     *         - total_records: int
+     *         - total_tenants: int
+     *         - average_records_per_tenant: float
+     *         - peak_records_day: array{date: string, count: int}
+     *         - storage_estimate_bytes: int
+     */
+    public function getAggregateStatistics(
+        ?\DateTimeImmutable $fromDate = null,
+        ?\DateTimeImmutable $toDate = null
+    ): array;
 }

@@ -186,4 +186,55 @@ final readonly class AuditEngine implements AuditEngineInterface
     {
         return (string) new Ulid();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getStatistics(
+        string $tenantId,
+        ?\DateTimeImmutable $fromDate = null,
+        ?\DateTimeImmutable $toDate = null
+    ): array {
+        $fromDate = $fromDate ?? new \DateTimeImmutable('-30 days');
+        $toDate = $toDate ?? new \DateTimeImmutable();
+
+        // In production, this would query the database for actual statistics
+        // For now, return a structured default response
+        return [
+            'total_records' => 0,
+            'by_level' => [],
+            'by_record_type' => [],
+            'by_causer' => [],
+            'records_per_day' => [],
+            'period_start' => $fromDate->format('Y-m-d'),
+            'period_end' => $toDate->format('Y-m-d'),
+            'tenant_id' => $tenantId,
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAggregateStatistics(
+        ?\DateTimeImmutable $fromDate = null,
+        ?\DateTimeImmutable $toDate = null
+    ): array {
+        $fromDate = $fromDate ?? new \DateTimeImmutable('-30 days');
+        $toDate = $toDate ?? new \DateTimeImmutable();
+
+        // In production, this would query the database for aggregate statistics
+        // For now, return a structured default response
+        return [
+            'total_records' => 0,
+            'total_tenants' => 0,
+            'average_records_per_tenant' => 0.0,
+            'peak_records_day' => [
+                'date' => $fromDate->format('Y-m-d'),
+                'count' => 0,
+            ],
+            'storage_estimate_bytes' => 0,
+            'period_start' => $fromDate->format('Y-m-d'),
+            'period_end' => $toDate->format('Y-m-d'),
+        ];
+    }
 }

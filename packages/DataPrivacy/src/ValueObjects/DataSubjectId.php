@@ -109,6 +109,21 @@ final class DataSubjectId
         return $this->value === $other->value;
     }
 
+    /**
+     * Create from a string value.
+     *
+     * Factory method for creating a DataSubjectId from a raw string value.
+     * This is useful when the ID format is already known/validated.
+     *
+     * @param string $value The raw ID value
+     * @return self
+     * @throws \Nexus\DataPrivacy\Exceptions\InvalidDataSubjectIdException If value is invalid
+     */
+    public static function fromString(string $value): self
+    {
+        return new self($value);
+    }
+
     public function __toString(): string
     {
         return $this->value;

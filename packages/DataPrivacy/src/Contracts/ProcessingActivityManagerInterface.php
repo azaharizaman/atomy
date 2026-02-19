@@ -133,4 +133,15 @@ interface ProcessingActivityManagerInterface
      * }
      */
     public function getRopaSummary(): array;
+
+    /**
+     * Get activities by data subject
+     *
+     * Returns all processing activities that involve a specific data subject.
+     * Useful for handling data subject access requests (DSARs).
+     *
+     * @param \Nexus\DataPrivacy\ValueObjects\DataSubjectId $dataSubjectId The data subject ID
+     * @return array<ProcessingActivity> Activities involving this data subject
+     */
+    public function getActivitiesByDataSubject(\Nexus\DataPrivacy\ValueObjects\DataSubjectId $dataSubjectId): array;
 }

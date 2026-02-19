@@ -234,4 +234,64 @@ final readonly class HashChainVerifier implements AuditVerifierInterface
 
         return $hashResult->getValue();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getIntegrityReport(string $tenantId): array
+    {
+        $report = [
+            'tenant_id' => $tenantId,
+            'verification_status' => 'valid',
+            'total_records' => 0,
+            'verified_records' => 0,
+            'failed_records' => 0,
+            'sequence_gaps' => [],
+            'tampered_records' => [],
+            'last_verified_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            'chain_integrity' => true,
+        ];
+
+        try {
+            // Detect sequence gaps
+            $gaps = $this->detectSequenceGaps($tenantId);
+            $report['sequence_gaps'] = $gaps;
+
+            if (!empty($gaps)) {
+                $report['verification_status'] = 'error';
+                $report['chain_integrity'] = false;
+            }
+
+            // Verify chain integrity
+            try {
+                $this->verifyChainIntegrity($tenantId);
+                $report['chain_integrity'] = true;
+            } catch (AuditTamperedException $e) {
+                $report['verification_status'] = 'tampered';
+                $report['chain_integrity'] = false;
+            }
+
+            // Count records
+            $records = $this->storage->findByTenantSequence($tenantId, 1, PHP_INT_MAX);
+            $report['total_records'] = count($records);
+
+            // Verify individual records
+            foreach ($records as $record) {
+                try {
+                    if ($this->verifyRecord($record)) {
+                        $report['verified_records']++;
+                    }
+                } catch (AuditTamperedException $e) {
+                    $report['failed_records']++;
+                    $report['tampered_records'][] = $record->getId();
+                    $report['verification_status'] = 'tampered';
+                }
+            }
+        } catch (\Exception $e) {
+            $report['verification_status'] = 'error';
+            $report['error_message'] = $e->getMessage();
+        }
+
+        return $report;
+    }
 }
