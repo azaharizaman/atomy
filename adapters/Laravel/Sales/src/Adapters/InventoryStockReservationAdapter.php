@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Laravel\Sales\Adapters;
 
+use Illuminate\Support\Facades\DB;
 use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
 use Nexus\Sales\Contracts\StockReservationInterface;
 use Nexus\Sales\Exceptions\InsufficientStockException;
@@ -28,6 +29,7 @@ final readonly class InventoryStockReservationAdapter implements StockReservatio
 {
     private const REFERENCE_TYPE = 'sales_order';
     private const DEFAULT_TTL_HOURS = 24;
+    private const RESERVATION_TABLE = 'sales_stock_reservations';
 
     public function __construct(
         private SalesOrderRepositoryInterface $salesOrderRepository,
@@ -136,25 +138,46 @@ final readonly class InventoryStockReservationAdapter implements StockReservatio
             return;
         }
 
+        $releasedCount = 0;
+        $failedCount = 0;
+
         foreach ($reservations as $reservationId => $reservation) {
             try {
+                // Release the reservation through the Inventory package's ReservationManager
                 $this->reservationManager->releaseReservation($reservationId);
+
+                // Update the status in the sales_stock_reservations table
+                $now = new \DateTimeImmutable();
+                DB::table(self::RESERVATION_TABLE)
+                    ->where('id', $reservationId)
+                    ->update([
+                        'status' => 'released',
+                        'released_quantity' => $reservation['reserved_quantity'] - $reservation['fulfilled_quantity'],
+                        'released_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+
+                $releasedCount++;
 
                 $this->logger->debug('Reservation released', [
                     'reservation_id' => $reservationId,
                     'sales_order_id' => $salesOrderId,
                 ]);
             } catch (\Throwable $e) {
+                $failedCount++;
+
                 $this->logger->error('Failed to release reservation', [
                     'reservation_id' => $reservationId,
+                    'sales_order_id' => $salesOrderId,
                     'error' => $e->getMessage(),
                 ]);
             }
         }
 
-        $this->logger->info('Stock reservations released for sales order', [
+        $this->logger->info('Stock reservations release completed', [
             'sales_order_id' => $salesOrderId,
-            'released_count' => count($reservations),
+            'released_count' => $releasedCount,
+            'failed_count' => $failedCount,
         ]);
     }
 
@@ -167,19 +190,38 @@ final readonly class InventoryStockReservationAdapter implements StockReservatio
             'sales_order_id' => $salesOrderId,
         ]);
 
-        // The Inventory package's ReservationManager doesn't have a direct method
-        // to find reservations by reference. We need to query the repository.
-        // For now, we'll use the ReservationManager's findExpired which returns
-        // all expired reservations - not ideal but works for the interface.
-        // In a production system, we'd add a method to ReservationManagerInterface.
+        // Query the sales_stock_reservations table directly to find all active reservations
+        // for this sales order. We only get reservations that are in 'active' or 'partial' status
+        // to avoid releasing already released/fulfilled reservations.
+        $records = DB::table(self::RESERVATION_TABLE)
+            ->where('sales_order_id', $salesOrderId)
+            ->whereIn('status', ['active', 'partial'])
+            ->get();
 
-        // TODO: Consider adding a findByReference method to ReservationManagerInterface
-        // For now, return empty array as we can't easily query by reference
-        // This would require either:
-        // 1. Adding a repository method to ReservationManagerInterface
-        // 2. Using event sourcing to track reservations
+        $reservations = [];
+        foreach ($records as $record) {
+            $reservations[$record->id] = [
+                'id' => $record->id,
+                'sales_order_id' => $record->sales_order_id,
+                'sales_order_line_id' => $record->sales_order_line_id,
+                'product_variant_id' => $record->product_variant_id,
+                'warehouse_id' => $record->warehouse_id,
+                'reserved_quantity' => (float) $record->reserved_quantity,
+                'allocated_quantity' => (float) $record->allocated_quantity,
+                'fulfilled_quantity' => (float) $record->fulfilled_quantity,
+                'released_quantity' => (float) $record->released_quantity,
+                'status' => $record->status,
+                'reservation_date' => $record->reservation_date,
+                'fulfillment_deadline' => $record->fulfillment_deadline,
+            ];
+        }
 
-        return [];
+        $this->logger->debug('Found reservations for sales order', [
+            'sales_order_id' => $salesOrderId,
+            'reservation_count' => count($reservations),
+        ]);
+
+        return $reservations;
     }
 
     /**
@@ -258,11 +300,7 @@ final readonly class InventoryStockReservationAdapter implements StockReservatio
      */
     private function getSalesOrder(string $salesOrderId): \Nexus\Sales\Contracts\SalesOrderInterface
     {
-        try {
-            return $this->salesOrderRepository->findById($salesOrderId);
-        } catch (\Nexus\Sales\Exceptions\SalesOrderNotFoundException $e) {
-            throw $e;
-        }
+        return $this->salesOrderRepository->findById($salesOrderId);
     }
 
     /**

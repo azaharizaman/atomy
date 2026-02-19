@@ -90,10 +90,6 @@ final readonly class ReceivableInvoiceManagerAdapter implements InvoiceManagerIn
      */
     private function getSalesOrder(string $salesOrderId): \Nexus\Sales\Contracts\SalesOrderInterface
     {
-        try {
-            return $this->salesOrderRepository->findById($salesOrderId);
-        } catch (SalesOrderNotFoundException $e) {
-            throw $e;
-        }
+        return $this->salesOrderRepository->findById($salesOrderId);
     }
 }

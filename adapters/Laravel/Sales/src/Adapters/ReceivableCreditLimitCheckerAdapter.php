@@ -50,44 +50,27 @@ final readonly class ReceivableCreditLimitCheckerAdapter implements CreditLimitC
                 $currencyCode
             );
 
-            if ($result) {
-                $this->logger->debug('Credit limit check passed', [
-                    'tenant_id' => $tenantId,
-                    'customer_id' => $customerId,
-                    'order_total' => $orderTotal,
-                ]);
-            } else {
-                // Get details for logging
-                $currentBalance = $this->receivableCreditChecker->getOutstandingBalance($tenantId, $customerId);
-                $creditLimit = $this->receivableCreditChecker->getCreditLimit($customerId);
-
+            if (!$result) {
                 $this->logger->warning('Credit limit check failed', [
                     'tenant_id' => $tenantId,
                     'customer_id' => $customerId,
                     'order_total' => $orderTotal,
-                    'current_balance' => $currentBalance,
-                    'credit_limit' => $creditLimit,
                 ]);
             }
 
             return $result;
         } catch (\Nexus\Receivable\Exceptions\CreditLimitExceededException $e) {
             // Translate to Sales package exception
-            $currentBalance = $this->receivableCreditChecker->getOutstandingBalance($tenantId, $customerId);
-            $creditLimit = $this->receivableCreditChecker->getCreditLimit($customerId);
-
             $this->logger->warning('Credit limit exceeded', [
                 'tenant_id' => $tenantId,
                 'customer_id' => $customerId,
                 'order_total' => $orderTotal,
-                'current_balance' => $currentBalance,
-                'credit_limit' => $creditLimit,
             ]);
 
             throw CreditLimitExceededException::forCustomer(
                 $customerId,
                 $orderTotal,
-                $creditLimit ?? 0.0
+                0.0 // Credit limit value not available from exception
             );
         }
     }

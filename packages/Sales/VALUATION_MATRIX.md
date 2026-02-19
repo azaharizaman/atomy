@@ -146,7 +146,7 @@
 ## Valuation Calculation
 
 ### Cost-Based Valuation
-```
+```text
 Development Cost:        $12,975
 Documentation Cost:      $1,200
 Testing & QA Cost:       $1,800
@@ -156,7 +156,7 @@ Cost-Based Value:        $39,969
 ```
 
 ### Market-Based Valuation
-```
+```text
 Comparable Product Cost: $6,000/year
 Lifetime Value (5 years): $30,000
 Customization Premium:   $8,000
@@ -165,7 +165,7 @@ Market-Based Value:      $38,000
 ```
 
 ### Income-Based Valuation
-```
+```text
 Annual Cost Savings:     $10,000
 Annual Revenue Enabled:  $50,000 (Allocation)
 Discount Rate:           10%
@@ -176,7 +176,7 @@ NPV (Income-Based):      $227,400 (High due to revenue enablement)
 ```
 
 ### **Final Package Valuation**
-```
+```text
 Weighted Average:
 - Cost-Based (30%):      $11,991
 - Market-Based (40%):     $15,200

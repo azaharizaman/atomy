@@ -7,17 +7,17 @@ namespace Nexus\Sales\ValueObjects;
 /**
  * Result of stock availability check for a sales order.
  */
-final class StockAvailabilityResult
+final readonly class StockAvailabilityResult
 {
     /**
      * @param array<string, LineItemAvailability> $lineItems Map of line ID to availability
      * @param string[] $unavailableLines Line IDs that have insufficient stock
      */
     public function __construct(
-        public readonly bool $isAvailable,
-        public readonly array $lineItems,
-        public readonly array $unavailableLines = [],
-        public readonly ?string $shortageMessage = null
+        public bool $isAvailable,
+        public array $lineItems,
+        public array $unavailableLines = [],
+        public ?string $shortageMessage = null
     ) {}
 
     /**
@@ -56,19 +56,4 @@ final class StockAvailabilityResult
             shortageMessage: $message
         );
     }
-}
-
-/**
- * Stock availability for a single line item.
- */
-final class LineItemAvailability
-{
-    public function __construct(
-        public readonly string $lineId,
-        public readonly string $productVariantId,
-        public readonly string $warehouseId,
-        public readonly float $requestedQuantity,
-        public readonly float $availableQuantity,
-        public readonly bool $isAvailable
-    ) {}
 }

@@ -52,6 +52,9 @@ final class Version20260219100400 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_SALES_RETURNS_STATUS ON sales_returns (status)');
         $this->addSql('CREATE INDEX IDX_SALES_RETURNS_CREDIT_NOTE ON sales_returns (credit_note_id)');
         $this->addSql('CREATE INDEX IDX_SALES_RETURNS_CREATED_AT ON sales_returns (created_at)');
+
+        // Foreign key constraint for sales_order_id
+        $this->addSql('ALTER TABLE sales_returns ADD CONSTRAINT FK_SALES_RETURNS_SALES_ORDER FOREIGN KEY (sales_order_id) REFERENCES sales_orders (id) ON DELETE RESTRICT');
     }
 
     public function down(Schema $schema): void

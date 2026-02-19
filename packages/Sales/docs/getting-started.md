@@ -74,7 +74,7 @@ final readonly class EloquentSalesOrderRepository implements SalesOrderRepositor
 {
     public function findById(string $orderId): ?SalesOrderInterface
     {
-        return SalesOrder::findOrFail($orderId);
+        return SalesOrder::find($orderId);
     }
     
     public function findByTenant(string $tenantId, int $page = 1, int $perPage = 20): array
@@ -128,20 +128,20 @@ public function register(): void
         \App\Repositories\EloquentQuotationRepository::class
     );
     
-    // Integration services
+    // Integration services - use adapter implementations
     $this->app->singleton(
         \Nexus\Sales\Contracts\StockReservationInterface::class,
-        \Nexus\Sales\Services\InventoryStockReservation::class
+        \Nexus\Laravel\Sales\Adapters\InventoryStockReservationAdapter::class
     );
     
     $this->app->singleton(
         \Nexus\Sales\Contracts\CreditLimitCheckerInterface::class,
-        \Nexus\Sales\Services\ReceivableCreditLimitChecker::class
+        \Nexus\Laravel\Sales\Adapters\ReceivableCreditLimitCheckerAdapter::class
     );
     
     $this->app->singleton(
         \Nexus\Sales\Contracts\InvoiceManagerInterface::class,
-        \Nexus\Sales\Services\ReceivableInvoiceManager::class
+        \Nexus\Laravel\Sales\Adapters\ReceivableInvoiceManagerAdapter::class
     );
     
     // Core services

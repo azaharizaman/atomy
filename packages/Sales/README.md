@@ -48,10 +48,10 @@ The package includes the following production-ready services:
 |---------|---------|-------------|
 | [`QuoteToOrderConverter`](#quotetoorderconverter) | Converts accepted quotes to sales orders | Nexus\Sequencing |
 | [`SalesOrderManager`](#salesordermanager) | Full order lifecycle management | All packages |
-| [`ReceivableCreditLimitChecker`](#receivablcreditlimitchecker) | Real-time credit limit validation | Nexus\Receivable |
+| [`ReceivableCreditLimitChecker`](#receivablecreditlimitchecker) | Real-time credit limit validation | Nexus\Receivable |
 | [`SalesReturnManager`](#salesreturnmanager) | Return order (RMA) processing | Nexus\Receivable (Phase 2) |
 | [`InventoryStockReservation`](#inventorystockreservation) | Real-time stock reservation | Nexus\Inventory |
-| [`ReceivableInvoiceManager`](#receivaleinvicemanager) | Invoice generation from orders | Nexus\Receivable |
+| [`ReceivableInvoiceManager`](#receivableinvoicemanager) | Invoice generation from orders | Nexus\Receivable |
 
 ### 4. Future-Proof Architecture
 

@@ -41,6 +41,7 @@ interface QuotationRepositoryInterface
      *
      * @param string $quotationId
      * @param string $orderId
+     * @throws \Nexus\Sales\Exceptions\QuotationNotFoundException
      */
     public function markAsConvertedToOrder(string $quotationId, string $orderId): void;
 

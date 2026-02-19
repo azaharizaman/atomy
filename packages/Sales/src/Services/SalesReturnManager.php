@@ -8,6 +8,7 @@ use Nexus\Sales\Contracts\SalesOrderInterface;
 use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
 use Nexus\Sales\Contracts\SalesReturnInterface;
 use Nexus\Sales\Exceptions\SalesOrderNotFoundException;
+use Nexus\Sequencing\Contracts\SequenceGeneratorInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -18,8 +19,11 @@ use Psr\Log\LoggerInterface;
  */
 final readonly class SalesReturnManager implements SalesReturnInterface
 {
+    private const FLOAT_COMPARISON_EPSILON = 0.0001;
+
     public function __construct(
         private SalesOrderRepositoryInterface $salesOrderRepository,
+        private SequenceGeneratorInterface $sequenceGenerator,
         private LoggerInterface $logger
     ) {}
 
@@ -123,9 +127,9 @@ final readonly class SalesReturnManager implements SalesReturnInterface
                 );
             }
 
-            // Check return quantity doesn't exceed ordered quantity
+            // Check return quantity doesn't exceed ordered quantity using tolerance-based comparison
             $orderedQuantity = $orderLinesMap[$productVariantId]['quantity'];
-            if ($returnQuantity > $orderedQuantity) {
+            if ($returnQuantity > $orderedQuantity + self::FLOAT_COMPARISON_EPSILON) {
                 throw new \InvalidArgumentException(
                     "Return quantity ({$returnQuantity}) exceeds ordered quantity ({$orderedQuantity}) " .
                     "for product {$productVariantId}"
@@ -135,15 +139,11 @@ final readonly class SalesReturnManager implements SalesReturnInterface
     }
 
     /**
-     * Generate a unique return order ID.
+     * Generate a unique return order ID using sequence generator.
      * In Phase 2, this would create a proper ReturnOrder entity.
      */
     private function generateReturnOrderId(string $tenantId): string
     {
-        return sprintf(
-            'RET-%s-%s',
-            $tenantId,
-            bin2hex(random_bytes(8))
-        );
+        return $this->sequenceGenerator->generate($tenantId, 'SALES_RETURN');
     }
 }

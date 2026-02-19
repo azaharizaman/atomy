@@ -72,6 +72,9 @@ final class Version20260219100200 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_QUOTATIONS_SALESPERSON ON quotations (salesperson_id)');
         $this->addSql('CREATE INDEX IDX_QUOTATIONS_QUOTE_DATE ON quotations (quote_date)');
         $this->addSql('CREATE INDEX IDX_QUOTATIONS_VALID_UNTIL ON quotations (valid_until)');
+
+        // Foreign key constraint for converted_to_order_id -> sales_orders(id)
+        $this->addSql('ALTER TABLE quotations ADD CONSTRAINT FK_QUOTATIONS_CONVERTED_TO_ORDER FOREIGN KEY (converted_to_order_id) REFERENCES sales_orders (id) ON DELETE SET NULL');
     }
 
     public function down(Schema $schema): void

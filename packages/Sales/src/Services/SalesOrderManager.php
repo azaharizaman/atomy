@@ -69,7 +69,7 @@ final readonly class SalesOrderManager
 
         $orderDate = new DateTimeImmutable();
         $currencyCode = $data['currency_code'] ?? 'MYR';
-        $paymentTerm = $data['payment_term'] ?? PaymentTerm::NET_30;
+        $paymentTerm = $this->resolvePaymentTerm($data['payment_term'] ?? null);
 
         // Calculate totals from lines
         $subtotal = 0.0;
@@ -360,5 +360,24 @@ final readonly class SalesOrderManager
     public function findOrdersByCustomer(string $tenantId, string $customerId): array
     {
         return $this->salesOrderRepository->findByCustomer($tenantId, $customerId);
+    }
+
+    /**
+     * Resolve payment term from various input formats.
+     *
+     * @param mixed $paymentTerm Payment term value (PaymentTerm enum, string, or null)
+     * @return PaymentTerm
+     */
+    private function resolvePaymentTerm(mixed $paymentTerm): PaymentTerm
+    {
+        if ($paymentTerm instanceof PaymentTerm) {
+            return $paymentTerm;
+        }
+
+        if (is_string($paymentTerm)) {
+            return PaymentTerm::from($paymentTerm);
+        }
+
+        return PaymentTerm::NET_30;
     }
 }

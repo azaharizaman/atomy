@@ -10,6 +10,7 @@ use Nexus\Sales\Contracts\QuotationInterface;
 use Nexus\Sales\Contracts\QuotationRepositoryInterface;
 use Nexus\Sales\Contracts\SalesOrderInterface;
 use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
+use Nexus\Sales\Contracts\TransactionManagerInterface;
 use Nexus\Sales\Enums\PaymentTerm;
 use Nexus\Sales\Enums\QuoteStatus;
 use Nexus\Sales\Enums\SalesOrderStatus;
@@ -31,7 +32,8 @@ final readonly class QuoteToOrderConverter
         private SalesOrderRepositoryInterface $salesOrderRepository,
         private SequenceGeneratorInterface $sequenceGenerator,
         private AuditLogManagerInterface $auditLogger,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private TransactionManagerInterface $transactionManager
     ) {}
 
     /**
@@ -121,11 +123,16 @@ final readonly class QuoteToOrderConverter
             'order_number' => $orderNumber,
         ]);
 
-        // Create and save the sales order via repository
-        $salesOrder = $this->salesOrderRepository->create($orderDataBuilt);
+        // Wrap repository calls in transaction for atomicity
+        $salesOrder = $this->transactionManager->wrap(function () use ($orderDataBuilt, $quotationId, $quotation, $orderNumber): SalesOrderInterface {
+            // Create and save the sales order via repository
+            $salesOrder = $this->salesOrderRepository->create($orderDataBuilt);
 
-        // Update quotation status to CONVERTED_TO_ORDER and link to order
-        $this->quotationRepository->markAsConvertedToOrder($quotationId, $salesOrder->getId());
+            // Update quotation status to CONVERTED_TO_ORDER and link to order
+            $this->quotationRepository->markAsConvertedToOrder($quotationId, $salesOrder->getId());
+
+            return $salesOrder;
+        });
 
         // Log audit event
         $this->auditLogger->log(
