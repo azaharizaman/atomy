@@ -283,10 +283,14 @@ final readonly class PayrollPayload implements PayloadInterface
  */
 final readonly class ErrorPayload implements PayloadInterface
 {
+    private \DateTimeImmutable $errorTimestamp;
+    
     public function __construct(
         private string $employeeId,
         private string $errorMessage,
-    ) {}
+    ) {
+        $this->errorTimestamp = new \DateTimeImmutable();
+    }
 
     public function getEmployeeId(): string
     {
@@ -325,12 +329,12 @@ final readonly class ErrorPayload implements PayloadInterface
 
     public function getPeriodStart(): DateTimeInterface
     {
-        return new \DateTime();
+        return $this->errorTimestamp;
     }
 
     public function getPeriodEnd(): DateTimeInterface
     {
-        return new \DateTime();
+        return $this->errorTimestamp;
     }
 
     public function getYtdGrossPay(): float
@@ -345,6 +349,9 @@ final readonly class ErrorPayload implements PayloadInterface
 
     public function getMetadata(): array
     {
-        return ['error' => $this->errorMessage];
+        return [
+            'error' => $this->errorMessage,
+            'error_timestamp' => $this->errorTimestamp->format(\DateTimeInterface::ATOM),
+        ];
     }
 }

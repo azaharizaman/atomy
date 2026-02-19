@@ -32,24 +32,11 @@ final class SquareWebhookHandler implements WebhookHandlerInterface
     /**
      * Verify Square webhook signature.
      *
-     * SECURITY: This is a placeholder implementation that FAILS CLOSED for security.
-     * In production, this method MUST be replaced with full Square webhook verification:
-     * 1. Extract the signature from x-square-signature header
-     * 2. Concatenate the notification URL (from config) + payload body
-     * 3. Compute HMAC-SHA256 using the webhook signature key
-     * 4. Compare the computed signature with the received signature (constant-time comparison)
-     * 5. Return true only if verification succeeds
-     *
-     * @see https://developer.squareup.com/docs/webhooks/step3validate
-     *
-     * WARNING: This placeholder returns FALSE to prevent unauthorized webhook processing.
-     * Implement proper verification before enabling Square webhooks in production.
-     */
-    /**
-     * Verify Square webhook signature.
-     *
      * SECURITY: This implements full Square webhook signature verification.
      * Square uses HMAC-SHA256 signature verification.
+     * 
+     * Signed string format MUST be:
+     * <HTTPMethod>|<notificationUrl>|<requestPath>|<base64-encoded-requestBody>|<timestamp>
      *
      * @see https://developer.squareup.com/docs/webhooks/verify
      */
@@ -65,17 +52,30 @@ final class SquareWebhookHandler implements WebhookHandlerInterface
             return false;
         }
         
-        // Get the notification URL from headers or use configured URL
-        $notificationUrl = $headers['x-square-hmacsha256-signature'] ?? '';
+        // Extract required headers
+        $httpMethod = $headers['REQUEST_METHOD'] ?? $headers['http_method'] ?? 'POST';
+        $notificationUrl = $headers['x-square-webhook-url'] ?? '';
+        $requestPath = $headers['REQUEST_URI'] ?? $headers['request_path'] ?? '/';
+        $timestamp = $headers['x-square-signature-timestamp'] ?? '';
         
-        // If notification URL is not in headers, we need it from configuration
-        // For now, use a default or require it in secret
-        $webhookUrl = $headers['x-square-webhook-url'] ?? $secret;
+        // If notification URL is not provided, we cannot verify
+        if (empty($notificationUrl)) {
+            $this->logger->warning('Square webhook verification failed: missing notification URL');
+            return false;
+        }
         
         try {
             // Construct the signed string according to Square's specification
             // Format: <HTTPMethod>|<notificationUrl>|<requestPath>|<base64-encoded-requestBody>|<timestamp>
-            $signedString = $webhookUrl . $payload;
+            $base64Payload = base64_encode($payload);
+            $signedString = sprintf(
+                '%s|%s|%s|%s|%s',
+                $httpMethod,
+                $notificationUrl,
+                $requestPath,
+                $base64Payload,
+                $timestamp
+            );
             
             // Compute the expected signature using HMAC-SHA256
             $expectedSignature = base64_encode(hash_hmac('sha256', $signedString, $secret, true));

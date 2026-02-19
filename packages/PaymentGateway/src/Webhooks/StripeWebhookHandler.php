@@ -36,8 +36,13 @@ final class StripeWebhookHandler implements WebhookHandlerInterface
     /**
      * Verify Stripe webhook signature.
      *
-     * SECURITY: This implements full Stripe webhook signature verification.
+     * SECURITY: This implements fail-closed verification for Stripe webhooks.
      * Stripe uses ECDSA with SHA-256 for signature verification.
+     * 
+     * Current implementation throws an exception to prevent insecure fallback.
+     * TODO: Implement proper Stripe ECDSA signature verification using:
+     * - OpenSSL with ECDSA (secp256k1 curve)
+     * - Or stripe-php library's signature verification
      *
      * @see https://stripe.com/docs/webhooks/signatures
      * 
@@ -46,6 +51,7 @@ final class StripeWebhookHandler implements WebhookHandlerInterface
      * @param string $secret Webhook secret from Stripe dashboard
      * @param array $headers Request headers (including timestamp)
      * @return bool True if signature is valid
+     * @throws \RuntimeException When signature verification is not properly implemented
      */
     public function verifySignature(
         string $payload,
@@ -59,73 +65,14 @@ final class StripeWebhookHandler implements WebhookHandlerInterface
             return false;
         }
 
-        // Extract timestamp from signature header
-        // Format: t=timestamp,v1=signature
-        $timestamp = null;
-        $signatures = [];
-        
-        $parts = explode(',', $signature);
-        foreach ($parts as $part) {
-            $kv = explode('=', $part, 2);
-            if (count($kv) === 2) {
-                if ($kv[0] === 't') {
-                    $timestamp = $kv[1];
-                } elseif ($kv[0] === 'v1') {
-                    $signatures[] = $kv[1];
-                }
-            }
-        }
-
-        if ($timestamp === null || empty($signatures)) {
-            $this->logger->warning('Stripe webhook verification failed: invalid signature format');
-            return false;
-        }
-
-        // Check timestamp tolerance (5 minute window)
-        $tolerance = 300; // 5 minutes
-        $currentTime = time();
-        $webhookTime = (int) $timestamp;
-        
-        if (abs($currentTime - $webhookTime) > $tolerance) {
-            $this->logger->warning('Stripe webhook verification failed: timestamp outside tolerance');
-            return false;
-        }
-
-        try {
-            // Construct signed payload
-            $signedPayload = $timestamp . '.' . $payload;
-
-            // For Stripe, we need to use the raw signature for verification
-            // In production, use Stripe's library for proper ECDSA verification
-            // Here we implement a basic HMAC fallback for testing
-            $expectedSignature = hash_hmac('sha256', $signedPayload, $secret);
-            
-            // Use timing-safe comparison
-            foreach ($signatures as $sig) {
-                if (hash_equals($expectedSignature, $sig)) {
-                    $this->logger->info('Stripe webhook verified successfully');
-                    return true;
-                }
-            }
-            
-            // Also try without timestamp prefix (older implementations)
-            $expectedSignatureAlt = hash_hmac('sha256', $payload, $secret);
-            foreach ($signatures as $sig) {
-                if (hash_equals($expectedSignatureAlt, $sig)) {
-                    $this->logger->info('Stripe webhook verified successfully (alt method)');
-                    return true;
-                }
-            }
-
-            $this->logger->warning('Stripe webhook signature mismatch');
-            return false;
-
-        } catch (\Throwable $e) {
-            $this->logger->error('Stripe webhook verification error', [
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        // CRITICAL: Throw exception to enforce fail-closed behavior
+        // DO NOT silently fall back to HMAC - this is insecure!
+        throw new \RuntimeException(
+            'Stripe webhook signature verification not properly implemented. ' .
+            'Current implementation uses HMAC-SHA256 which is insecure. ' .
+            'Must implement ECDSA verification using OpenSSL or stripe-php library. ' .
+            'See: https://stripe.com/docs/webhooks/signatures'
+        );
     }
 
     public function handle(array $payload, array $headers = []): WebhookEvent

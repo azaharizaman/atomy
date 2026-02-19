@@ -35,12 +35,14 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
      * SECURITY: This implements full PayPal webhook verification:
      * 1. Extract transmission headers (paypal-transmission-id, paypal-transmission-time, 
      *    paypal-transmission-sig, paypal-cert-url)
-     * 2. Reconstruct the signed string according to PayPal's specification
-     * 3. Fetch and validate the certificate from paypal-cert-url
-     * 4. Verify the signature using the certificate and webhook secret
+     * 2. Fetch the certificate from paypal-cert-url header
+     * 3. Reconstruct the signed string according to PayPal's specification
+     * 4. Verify the signature using the certificate's public key
      * 5. Return true only if verification succeeds
      *
      * @see https://developer.paypal.com/api/rest/webhooks/#verify-webhook-signature
+     * 
+     * @throws \RuntimeException When certificate cannot be fetched or verification fails
      */
     public function verifySignature(
         string $payload,
@@ -64,23 +66,37 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
             return false;
         }
         
-        // Validate certificate URL is from PayPal
-        if (!str_contains($certUrl, 'paypal.com')) {
+        // Validate certificate URL is from PayPal (security requirement)
+        if (!str_starts_with($certUrl, 'https://api.paypal.com') && 
+            !str_starts_with($certUrl, 'https://api.sandbox.paypal.com')) {
             $this->logger->warning('PayPal webhook verification failed: invalid cert URL');
             return false;
         }
         
         try {
+            // Fetch the certificate from PayPal's cert URL
+            $certContent = $this->fetchCertificate($certUrl);
+            
+            if (empty($certContent)) {
+                $this->logger->error('PayPal webhook verification failed: could not fetch certificate');
+                return false;
+            }
+            
+            // Extract public key from certificate
+            $publicKey = $this->extractPublicKeyFromCert($certContent);
+            
+            if ($publicKey === false) {
+                $this->logger->error('PayPal webhook verification failed: could not extract public key');
+                return false;
+            }
+            
             // Construct the signed string according to PayPal's specification
-            // Format: <transmissionId>|<timestamp>|<crc>
+            // Format: <transmissionId>|<transmissionTime>|<webhookId>|<crc32>
             $crc = crc32($payload);
-            $signedString = $transmissionId . '|' . $transmissionTime . '|' . $crc;
+            $signedString = $transmissionId . '|' . $transmissionTime . '|' . $secret . '|' . $crc;
             
-            // Verify the signature using HMAC-SHA256
-            $expectedSignature = hash_hmac('sha256', $signedString, $secret);
-            
-            // Use timing-safe comparison to prevent timing attacks
-            $result = hash_equals($expectedSignature, $signature);
+            // Verify the signature using OpenSSL with the certificate's public key
+            $result = $this->verifyWithPublicKey($signedString, $signature, $publicKey);
             
             if (!$result) {
                 $this->logger->warning('PayPal webhook signature mismatch');
@@ -94,6 +110,67 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
             ]);
             return false;
         }
+    }
+    
+    /**
+     * Fetch certificate from URL.
+     */
+    private function fetchCertificate(string $url): string
+    {
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 10,
+                'ignore_errors' => true,
+            ],
+            'ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+            ],
+        ]);
+        
+        $response = @file_get_contents($url, false, $context);
+        
+        return $response ?: '';
+    }
+    
+    /**
+     * Extract public key from PEM certificate.
+     */
+    private function extractPublicKeyFromCert(string $certContent)
+    {
+        $cert = openssl_x509_read($certContent);
+        
+        if ($cert === false) {
+            return false;
+        }
+        
+        $publicKey = openssl_pkey_get_public($cert);
+        openssl_x509_free($cert);
+        
+        return $publicKey;
+    }
+    
+    /**
+     * Verify signature using public key.
+     */
+    private function verifyWithPublicKey(string $data, string $signature, $publicKey): bool
+    {
+        // Decode base64 signature
+        $decodedSignature = base64_decode($signature, true);
+        
+        if ($decodedSignature === false) {
+            return false;
+        }
+        
+        // Verify using SHA-256 with RSA
+        $result = openssl_verify(
+            $data,
+            $decodedSignature,
+            $publicKey,
+            OPENSSL_ALGO_SHA256
+        );
+        
+        return $result === 1;
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload
