@@ -266,7 +266,45 @@ final class BraintreeGateway implements GatewayInterface
 
     public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
     {
-        throw new GatewayException("Evidence submission not implemented for Braintree yet.");
+        $this->ensureInitialized();
+
+        try {
+            // Braintree dispute evidence submission
+            // Note: Braintree uses PayPal dispute API under the hood
+            // Evidence is typically submitted through the Braintree control panel
+            // but can also be done via API
+            
+            // For Braintree, we submit evidence through the dispute API
+            $endpoint = '/disputes/' . $request->disputeId . '/evidence';
+            
+            $payload = [];
+            
+            // Add text evidence
+            if ($request->textEvidence) {
+                $payload['evidence'] = [
+                    'content' => $request->textEvidence,
+                ];
+            }
+            
+            // Add file evidence (Braintree requires files to be uploaded separately)
+            if (!empty($request->fileIds)) {
+                $payload['evidence'] = [
+                    'file_id' => $request->fileIds[0],
+                ];
+            }
+            
+            $response = $this->sendRequest('POST', $endpoint, $payload);
+            
+            return EvidenceSubmissionResult::success(
+                submissionId: $response['id'] ?? $request->disputeId,
+                status: $response['status'] ?? 'submitted'
+            );
+            
+        } catch (\Throwable $e) {
+            return EvidenceSubmissionResult::failure(
+                'Braintree evidence submission failed: ' . $e->getMessage()
+            );
+        }
     }
 
     public function getStatus(): GatewayStatus

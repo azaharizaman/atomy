@@ -1,6 +1,6 @@
 # AI Coding Agent Guidelines
 
-> This is a living document that evolves with each discovered mistake. Last updated: 2026-02-19
+> This is a living document that evolves with each discovered mistake. Last updated: 2026-02-19 (PaymentGateway & Payroll refactoring review)
 
 ## Purpose
 This document captures common mistakes made by AI coding agents and provides guidelines to avoid them. It should be updated whenever new patterns of errors are discovered.
@@ -446,6 +446,417 @@ $customerName = $customer->getName();
 
 ---
 
+## Error Signatures from PaymentGateway & Payroll Refactoring
+
+> Identified during code review on 2026-02-19
+
+### Security Issues (Webhook Verification)
+
+#### 1. Incorrect Webhook Signature Algorithm
+
+**Problem**: Using the wrong cryptographic algorithm for webhook signature verification. Each payment provider has specific algorithm requirements.
+
+**Example from Stripe Webhook Handler**:
+```php
+// WRONG - Using HMAC-SHA256 when Stripe requires ECDSA
+public function verifySignature(string $payload, string $signature, string $secret): bool
+{
+    $expectedSignature = hash_hmac('sha256', $payload, $secret);
+    return hash_equals($expectedSignature, $signature);
+}
+
+// CORRECT - Using Stripe's official verification method
+public function verifySignature(string $payload, string $signature, string $secret): bool
+{
+    try {
+        \Stripe\Webhook::constructEvent(
+            $payload,
+            $signature,
+            $secret
+        );
+        return true;
+    } catch (\Stripe\Exception\SignatureVerificationException $e) {
+        return false;
+    }
+}
+```
+
+**Why It Matters**: Using the wrong algorithm allows attackers to forge webhook payloads, potentially leading to:
+- Fraudulent payment confirmations
+- Unauthorized order fulfillment
+- Financial loss
+
+**Prevention**:
+- Always use the provider's official SDK for signature verification
+- Never implement custom cryptographic verification unless absolutely necessary
+- Document the required algorithm in code comments
+
+#### 2. Missing Certificate Validation
+
+**Problem**: Not fetching and validating certificates from provider URLs for webhook signature verification.
+
+**Example from PayPal Webhook Handler**:
+```php
+// WRONG - Not validating certificate chain
+public function verifySignature(string $payload, array $headers): bool
+{
+    $signature = $headers['paypal-transmission-sig'];
+    // Directly verifying without certificate validation
+    return openssl_verify($payload, base64_decode($signature), $publicKey) === 1;
+}
+
+// CORRECT - Full certificate validation
+public function verifySignature(string $payload, array $headers): bool
+{
+    $certUrl = $headers['paypal-cert-url'];
+    
+    // 1. Validate URL is from PayPal
+    if (!str_starts_with($certUrl, 'https://api.paypal.com/')) {
+        throw new InvalidCertificateUrlException('Certificate URL must be from PayPal domain');
+    }
+    
+    // 2. Fetch and validate certificate
+    $certificate = $this->fetchCertificate($certUrl);
+    $publicKey = openssl_pkey_get_public($certificate);
+    
+    // 3. Verify certificate chain
+    if (!$this->validateCertificateChain($certificate)) {
+        throw new CertificateValidationException('Invalid certificate chain');
+    }
+    
+    // 4. Now verify signature
+    $signature = base64_decode($headers['paypal-transmission-sig']);
+    return openssl_verify($payload, $signature, $publicKey, OPENSSL_ALGO_SHA256) === 1;
+}
+```
+
+**Why It Matters**: Without certificate validation:
+- Attackers can use self-signed certificates to forge signatures
+- Man-in-the-middle attacks become possible
+- Webhook authenticity cannot be trusted
+
+**Prevention**:
+- Always fetch certificates from provider URLs
+- Validate certificate chain and expiration
+- Verify certificate is from expected domain
+- Cache validated certificates with appropriate TTL
+
+#### 3. Incorrect Signed String Format
+
+**Problem**: Not following the provider's exact specification for constructing the signed string.
+
+**Example from Square Webhook Handler**:
+```php
+// WRONG - Incorrect signed string format
+$signedString = $payload;
+
+// CORRECT - Square requires specific format
+$signedString = implode('|', [
+    $notificationId,
+    $eventType,
+    $payload,
+    $timestamp
+]);
+
+// Example from PayPal Webhook Handler
+// WRONG - Missing required components
+$signedString = $payload;
+
+// CORRECT - PayPal requires specific format
+$signedString = implode('|', [
+    $transmissionId,
+    $timestamp,
+    $webhookId,
+    crc32($payload)
+]);
+```
+
+**Why It Matters**: Incorrect signed string format:
+- Valid webhooks will be rejected
+- Invalid webhooks might be accepted
+- Security verification becomes meaningless
+
+**Prevention**:
+- Read provider documentation carefully
+- Follow exact format specification
+- Include all required components in correct order
+- Add unit tests with provider's example payloads
+
+### Logic Issues
+
+#### 4. Missing Tenant Context
+
+**Problem**: Not requiring tenant ID in multi-tenant operations, leading to potential data leakage.
+
+**Example from Payroll Service**:
+```php
+// WRONG - No tenant context
+public function calculatePayroll(string $employeeId): PayrollResult
+{
+    $employee = $this->employeeRepository->find($employeeId);
+    // Could return data from any tenant!
+    return $this->calculate($employee);
+}
+
+// CORRECT - Tenant context required
+public function calculatePayroll(string $employeeId, string $tenantId): PayrollResult
+{
+    $employee = $this->employeeRepository->findByTenantAndId($tenantId, $employeeId);
+    if ($employee === null) {
+        throw new EmployeeNotFoundException($employeeId, $tenantId);
+    }
+    return $this->calculate($employee);
+}
+
+// CORRECT - Using TenantContext service
+public function calculatePayroll(string $employeeId): PayrollResult
+{
+    $tenantId = $this->tenantContext->getRequiredTenantId();
+    $employee = $this->employeeRepository->findByTenantAndId($tenantId, $employeeId);
+    // ...
+}
+```
+
+**Why It Matters**: Missing tenant context can lead to:
+- Cross-tenant data leakage
+- Unauthorized access to sensitive payroll data
+- Compliance violations (GDPR, SOC2)
+
+**Prevention**:
+- Always require tenant ID in multi-tenant operations
+- Use a TenantContext service to manage current tenant
+- Add middleware to validate tenant context
+- Test with multiple tenants to verify isolation
+
+#### 5. Deprecated Method Inconsistency
+
+**Problem**: Deprecated methods not passing required parameters to new implementations.
+
+**Example from PaymentGateway**:
+```php
+// WRONG - Deprecated method missing required parameter
+/**
+ * @deprecated Use processRefund() instead
+ */
+public function refund(string $transactionId, Money $amount): RefundResult
+{
+    // Missing tenantId parameter!
+    return $this->processRefund($transactionId, $amount);
+}
+
+// CORRECT - Passing all required parameters
+/**
+ * @deprecated Use processRefund() instead
+ */
+public function refund(string $transactionId, Money $amount): RefundResult
+{
+    // Use default or extract from context
+    $tenantId = $this->tenantContext->getRequiredTenantId();
+    return $this->processRefund($transactionId, $amount, $tenantId);
+}
+
+public function processRefund(string $transactionId, Money $amount, string $tenantId): RefundResult
+{
+    // Full implementation with tenant context
+}
+```
+
+**Why It Matters**: Inconsistent deprecated methods:
+- Break backward compatibility silently
+- Can cause runtime errors
+- May bypass security checks (like tenant validation)
+
+**Prevention**:
+- Ensure deprecated methods pass ALL required parameters
+- Add deprecation tests to verify behavior consistency
+- Document migration path clearly
+- Set a removal timeline in deprecation notice
+
+### Type Safety Issues
+
+#### 6. Mutable DateTime in Value Objects
+
+**Problem**: Using `\DateTime` instead of `\DateTimeImmutable` in value objects breaks immutability.
+
+**Example from Payroll Value Objects**:
+```php
+// WRONG - Mutable DateTime
+class PayPeriod
+{
+    public function __construct(
+        public readonly \DateTime $startDate,
+        public readonly \DateTime $endDate
+    ) {}
+}
+
+// This allows mutation!
+$period = new PayPeriod($start, $end);
+$period->startDate->modify('+1 day'); // Value object is now mutated!
+
+// CORRECT - Immutable DateTime
+class PayPeriod
+{
+    public function __construct(
+        public readonly \DateTimeImmutable $startDate,
+        public readonly \DateTimeImmutable $endDate
+    ) {}
+}
+
+// Now safe from mutation
+$period = new PayPeriod($start, $end);
+$newStart = $period->startDate->modify('+1 day'); // Returns new instance
+// Original $period unchanged
+```
+
+**Why It Matters**: Mutable DateTime in value objects:
+- Breaks value object semantics
+- Can cause unexpected side effects
+- Makes debugging difficult
+- Can lead to incorrect payroll calculations
+
+**Prevention**:
+- Always use `\DateTimeImmutable` in value objects
+- Use static analysis tools to catch this (PHPStan/Psalm)
+- Add coding standards rules to enforce this
+
+#### 7. Missing Type Conversion
+
+**Problem**: Not handling string-to-DateTimeInterface conversion in filters and queries.
+
+**Example from Payroll Filters**:
+```php
+// WRONG - Assuming type without conversion
+public function findByDateRange(string $startDate, string $endDate): array
+{
+    return $this->repository->createQueryBuilder('p')
+        ->where('p.payDate >= :start')
+        ->andWhere('p.payDate <= :end')
+        ->setParameter('start', $startDate) // String passed to DateTime column!
+        ->setParameter('end', $endDate)
+        ->getQuery()
+        ->getResult();
+}
+
+// CORRECT - Explicit type conversion
+public function findByDateRange(string $startDate, string $endDate): array
+{
+    $start = new \DateTimeImmutable($startDate);
+    $end = new \DateTimeImmutable($endDate);
+    
+    return $this->repository->createQueryBuilder('p')
+        ->where('p.payDate >= :start')
+        ->andWhere('p.payDate <= :end')
+        ->setParameter('start', $start)
+        ->setParameter('end', $end)
+        ->getQuery()
+        ->getResult();
+}
+
+// BETTER - With validation
+public function findByDateRange(string $startDate, string $endDate): array
+{
+    try {
+        $start = new \DateTimeImmutable($startDate);
+        $end = new \DateTimeImmutable($endDate);
+    } catch (\Exception $e) {
+        throw new InvalidDateRangeException("Invalid date format: {$startDate} - {$endDate}");
+    }
+    
+    if ($start > $end) {
+        throw new InvalidDateRangeException("Start date must be before end date");
+    }
+    
+    // ... query
+}
+```
+
+**Why It Matters**: Missing type conversion:
+- May work with some databases but fail with others
+- Can cause timezone issues
+- Makes debugging difficult
+- May lead to SQL injection if not careful
+
+**Prevention**:
+- Always convert string dates to DateTimeImmutable
+- Validate date formats
+- Handle timezone explicitly
+- Add type hints in method signatures when possible
+
+### Code Quality Issues
+
+#### 8. Duplicate Business Logic
+
+**Problem**: Same calculation logic duplicated across multiple services.
+
+**Example from Payroll Services**:
+```php
+// WRONG - Duplicated in multiple services
+class PayrollEngine
+{
+    private function calculateOvertimePay(float $regularRate, float $hours): float
+    {
+        if ($hours <= 40) {
+            return 0;
+        }
+        $overtimeHours = $hours - 40;
+        return $overtimeHours * $regularRate * 1.5;
+    }
+}
+
+class PayrollReportService
+{
+    private function calculateOvertimePay(float $regularRate, float $hours): float
+    {
+        // Same logic duplicated!
+        if ($hours <= 40) {
+            return 0;
+        }
+        $overtimeHours = $hours - 40;
+        return $overtimeHours * $regularRate * 1.5;
+    }
+}
+
+// CORRECT - Extract to dedicated calculator
+class OvertimeCalculator
+{
+    public function calculate(Money $regularRate, float $hours): Money
+    {
+        if ($hours <= 40) {
+            return Money::zero($regularRate->getCurrency());
+        }
+        $overtimeHours = $hours - 40;
+        $overtimeRate = $regularRate->multiply(1.5);
+        return $overtimeRate->multiply($overtimeHours);
+    }
+}
+
+class PayrollEngine
+{
+    public function __construct(
+        private readonly OvertimeCalculator $overtimeCalculator
+    ) {}
+    
+    private function calculateOvertimePay(Money $regularRate, float $hours): Money
+    {
+        return $this->overtimeCalculator->calculate($regularRate, $hours);
+    }
+}
+```
+
+**Why It Matters**: Duplicate business logic:
+- Changes must be made in multiple places
+- Risk of inconsistency when one location is updated
+- Harder to test thoroughly
+- Violates DRY principle
+
+**Prevention**:
+- Extract shared calculations to dedicated services
+- Use composition over duplication
+- Add static analysis to detect code duplication
+- Review codebase for similar logic before implementing
+
+---
+
 ## Testing Guidelines
 
 ### Test What Can Break
@@ -477,6 +888,14 @@ public function test_order_total_includes_tax(): void
 ---
 
 ## Changelog
+
+### 2026-02-19 - PaymentGateway & Payroll Refactoring Review
+- Added new section: "Error Signatures from PaymentGateway & Payroll Refactoring"
+- Security Issues: Incorrect webhook signature algorithm, missing certificate validation, incorrect signed string format
+- Logic Issues: Missing tenant context, deprecated method inconsistency
+- Type Safety Issues: Mutable DateTime in value objects, missing type conversion
+- Code Quality Issues: Duplicate business logic
+- Each pattern includes: problem description, incorrect code example, correct code example, and impact explanation
 
 ### 2026-02-19 - Initial Creation from PR #227
 - Added rules from Sales Package refactoring review
