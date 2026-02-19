@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Nexus\Payroll\Services;
 
 use DateTimeInterface;
+use Nexus\Payroll\Contracts\EmployeeDataProviderInterface;
+use Nexus\Payroll\Contracts\PayloadBuilderInterface;
 use Nexus\Payroll\Contracts\StatutoryCalculatorInterface;
 use Nexus\Payroll\Contracts\PayslipInterface;
 use Nexus\Payroll\Contracts\PayslipQueryInterface;
@@ -20,10 +22,12 @@ use Nexus\Payroll\ValueObjects\PayslipStatus;
 final readonly class PayrollEngine
 {
     public function __construct(
+        private EmployeeDataProviderInterface $employeeDataProvider,
         private PayslipQueryInterface $payslipQuery,
         private PayslipPersistInterface $payslipPersist,
         private ComponentQueryInterface $componentQuery,
         private EmployeeComponentQueryInterface $employeeComponentQuery,
+        private PayloadBuilderInterface $payloadBuilder,
         private StatutoryCalculatorInterface $statutoryCalculator,
     ) {
     }
@@ -68,12 +72,14 @@ final readonly class PayrollEngine
      * @param string $employeeId Employee ULID
      * @param DateTimeInterface $periodStart Period start date
      * @param DateTimeInterface $periodEnd Period end date
+     * @param string|null $tenantId Tenant ULID (optional, defaults to extracting from employee)
      * @return PayslipInterface Generated payslip
      */
     public function processEmployee(
         string $employeeId,
         DateTimeInterface $periodStart,
-        DateTimeInterface $periodEnd
+        DateTimeInterface $periodEnd,
+        ?string $tenantId = null
     ): PayslipInterface {
         // 1. Calculate earnings
         $earnings = $this->calculateEarnings($employeeId);
@@ -82,8 +88,14 @@ final readonly class PayrollEngine
         // 2. Calculate non-statutory deductions
         $nonStatutoryDeductions = $this->calculateNonStatutoryDeductions($employeeId);
         
-        // 3. Build payload for statutory calculator
-        $payload = $this->buildPayload($employeeId, $earnings, $grossPay, $periodStart, $periodEnd);
+        // 3. Build payload for statutory calculator using PayloadBuilder
+        $options = $tenantId ? ['tenantId' => $tenantId] : [];
+        $payload = $this->payloadBuilder->buildPayload(
+            $employeeId,
+            $periodStart,
+            $periodEnd,
+            $options
+        );
         
         // 4. Calculate statutory deductions and employer contributions
         $statutoryResult = $this->statutoryCalculator->calculate($payload);
@@ -200,7 +212,9 @@ final readonly class PayrollEngine
     }
     
     /**
-     * Build payload for statutory calculator.
+     * Build payload for statutory calculator using PayloadBuilder.
+     * 
+     * @deprecated Use PayloadBuilderInterface directly instead
      */
     private function buildPayload(
         string $employeeId,
@@ -209,9 +223,14 @@ final readonly class PayrollEngine
         DateTimeInterface $periodStart,
         DateTimeInterface $periodEnd
     ): PayloadInterface {
-        // This would be implemented by the application layer
-        // Returning a mock interface reference for now
-        throw new \RuntimeException("Payload building must be implemented by application layer");
+        // Delegate to the injected PayloadBuilder
+        // This method is kept for backward compatibility
+        return $this->payloadBuilder->buildPayload(
+            $employeeId,
+            $periodStart,
+            $periodEnd,
+            []
+        );
     }
     
     /**
@@ -229,7 +248,18 @@ final readonly class PayrollEngine
      */
     private function getAllActiveEmployeeIds(string $tenantId, array $filters): array
     {
-        // This would fetch from HRM package's EmployeeManager
-        throw new \RuntimeException("Employee fetching must be implemented by application layer");
+        $effectiveDate = $filters['effective_date'] ?? new \DateTime();
+        
+        // Use EmployeeDataProvider to get active employees
+        $employees = $this->employeeDataProvider->getActiveEmployees($tenantId, $effectiveDate);
+        
+        // Filter by department if specified
+        if (isset($filters['department_id'])) {
+            $employees = array_filter($employees, fn($e) => 
+                ($e->metadata['department_id'] ?? null) === $filters['department_id']
+            );
+        }
+        
+        return array_column($employees, 'employeeId');
     }
 }

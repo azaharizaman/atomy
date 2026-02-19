@@ -7,6 +7,7 @@ namespace Nexus\PaymentGateway;
 use Nexus\PaymentGateway\Contracts\GatewayInterface;
 use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
 use Nexus\PaymentGateway\DTOs\CaptureRequest;
+use Nexus\PaymentGateway\DTOs\EvidenceSubmissionRequest;
 use Nexus\PaymentGateway\DTOs\RefundRequest;
 use Nexus\PaymentGateway\DTOs\VoidRequest;
 use Nexus\PaymentGateway\Enums\AuthorizationType;
@@ -23,6 +24,7 @@ use Nexus\PaymentGateway\Services\ExponentialBackoffStrategy;
 use Nexus\PaymentGateway\Services\NullCircuitBreaker;
 use Nexus\PaymentGateway\ValueObjects\AuthorizationResult;
 use Nexus\PaymentGateway\ValueObjects\CaptureResult;
+use Nexus\PaymentGateway\ValueObjects\EvidenceSubmissionResult;
 use Nexus\PaymentGateway\ValueObjects\GatewayCredentials;
 use Nexus\PaymentGateway\ValueObjects\GatewayError;
 use Nexus\PaymentGateway\ValueObjects\RefundResult;
@@ -182,6 +184,30 @@ abstract class AbstractGateway implements GatewayInterface
         }
     }
 
+    public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
+    {
+        $this->validateEvidenceSubmissionRequest($request);
+
+        try {
+            return $this->invoker->invoke(
+                fn () => $this->doSubmitEvidence($request),
+                $this->getProvider()->value . '.submit_evidence'
+            );
+        } catch (GatewayException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            $this->logger->error('Evidence submission failed', [
+                'provider' => $this->getProvider()->value,
+                'dispute_id' => $request->disputeId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return EvidenceSubmissionResult::failure(
+                'Evidence submission failed: ' . $e->getMessage()
+            );
+        }
+    }
+
     public function getStatus(): GatewayStatus
     {
         try {
@@ -291,6 +317,13 @@ abstract class AbstractGateway implements GatewayInterface
     abstract protected function doGetStatus(): GatewayStatus;
 
     /**
+     * Submit evidence for a dispute.
+     *
+     * @return EvidenceSubmissionResult
+     */
+    abstract protected function doSubmitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult;
+
+    /**
      * Validate authorization request.
      *
      * @throws AuthorizationFailedException
@@ -364,6 +397,17 @@ abstract class AbstractGateway implements GatewayInterface
                 gatewayErrorCode: 'INVALID_AUTHORIZATION',
                 gatewayMessage: 'Authorization ID is required',
             );
+        }
+    }
+
+    /**
+     * Validate evidence submission request.
+     */
+    protected function validateEvidenceSubmissionRequest(EvidenceSubmissionRequest $request): void
+    {
+        if (empty($request->disputeId)) {
+            // Dispute ID is required but we don't throw - just log a warning
+            $this->logger->warning('Evidence submission without dispute ID');
         }
     }
 

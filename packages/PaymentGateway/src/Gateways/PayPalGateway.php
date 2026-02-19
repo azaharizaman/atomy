@@ -248,7 +248,53 @@ final class PayPalGateway implements GatewayInterface
 
     public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
     {
-        throw new GatewayException("Evidence submission not implemented for PayPal yet.");
+        $this->ensureInitialized();
+
+        try {
+            // PayPal dispute evidence submission
+            // See: https://developer.paypal.com/docs/api/reports/v1/#disputes-evidence
+            
+            $endpoint = '/v1/customer/disputes/' . $request->disputeId . '/provide-evidence';
+            
+            $payload = [];
+            
+            // Add evidence based on type
+            if ($request->textEvidence) {
+                $payload['evidence'] = [
+                    [
+                        'evidence_type' => 'PROOF_OF_FULFILLMENT_DELIVERY',
+                        'evidence_info' => [
+                            'notes' => $request->textEvidence,
+                        ],
+                    ],
+                ];
+            }
+            
+            // Add file evidence if provided
+            if (!empty($request->fileIds)) {
+                $payload['evidence'] = $payload['evidence'] ?? [];
+                foreach ($request->fileIds as $fileId) {
+                    $payload['evidence'][] = [
+                        'evidence_type' => 'FILE_ATTACHMENT',
+                        'evidence_info' => [
+                            'file_id' => $fileId,
+                        ],
+                    ];
+                }
+            }
+            
+            $response = $this->sendRequest('POST', $endpoint, $payload);
+            
+            return EvidenceSubmissionResult::success(
+                submissionId: $response['dispute_id'] ?? $request->disputeId,
+                status: $response['status'] ?? 'pending'
+            );
+            
+        } catch (\Throwable $e) {
+            return EvidenceSubmissionResult::failure(
+                'PayPal evidence submission failed: ' . $e->getMessage()
+            );
+        }
     }
 
     public function getStatus(): GatewayStatus

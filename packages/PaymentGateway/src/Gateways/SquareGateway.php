@@ -222,7 +222,46 @@ final class SquareGateway implements GatewayInterface
 
     public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
     {
-        throw new GatewayException("Evidence submission not implemented for Square yet.");
+        $this->ensureInitialized();
+
+        try {
+            // Square dispute evidence submission
+            // See: https://developer.squareup.com/docs/disputes-api/manage-disputes#submit-evidence
+            
+            $endpoint = '/v2/disputes/' . $request->disputeId . '/evidence';
+            
+            $payload = [];
+            
+            // Add text evidence if provided
+            if ($request->textEvidence) {
+                $payload['evidence'] = [
+                    'type' => 'FILE',
+                    'evidence_type' => 'REBUTTAL',
+                    'content' => base64_encode($request->textEvidence),
+                ];
+            }
+            
+            // Add file evidence if provided
+            if (!empty($request->fileIds)) {
+                $payload['evidence'] = [
+                    'type' => 'FILE',
+                    'evidence_type' => 'PROOF_OF_FULFILLMENT',
+                    'file_id' => $request->fileIds[0],
+                ];
+            }
+            
+            $response = $this->sendRequest('POST', $endpoint, $payload);
+            
+            return EvidenceSubmissionResult::success(
+                submissionId: $response['evidence']['id'] ?? $request->disputeId,
+                status: 'submitted'
+            );
+            
+        } catch (\Throwable $e) {
+            return EvidenceSubmissionResult::failure(
+                'Square evidence submission failed: ' . $e->getMessage()
+            );
+        }
     }
 
     public function getStatus(): GatewayStatus

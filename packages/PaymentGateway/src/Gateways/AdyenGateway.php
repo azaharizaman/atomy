@@ -233,7 +233,43 @@ final class AdyenGateway implements GatewayInterface
 
     public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
     {
-        throw new GatewayException("Adyen dispute evidence submission not yet implemented.");
+        $this->ensureInitialized();
+
+        try {
+            // Adyen dispute/chargeback management
+            // See: https://docs.adyen.com/online-payments/disputes#submit-evidence
+            
+            // Adyen uses a different approach - we submit dispute evidence
+            // through the /disputes/{disputeId}/supplyEvidence endpoint
+            $endpoint = '/disputes/' . $request->disputeId . '/supplyEvidence';
+            
+            $payload = [];
+            
+            // Add text evidence if provided
+            if ($request->textEvidence) {
+                $payload['defenseExplanation'] = $request->textEvidence;
+            }
+            
+            // Add file evidence if provided
+            if (!empty($request->fileIds)) {
+                $payload['documents'] = [];
+                foreach ($request->fileIds as $fileId) {
+                    $payload['documents'][] = ['documentId' => $fileId];
+                }
+            }
+            
+            $response = $this->sendRequest('POST', $endpoint, $payload);
+            
+            return EvidenceSubmissionResult::success(
+                submissionId: $response['disputeId'] ?? $request->disputeId,
+                status: $response['disputeState'] ?? 'awaiting_review'
+            );
+            
+        } catch (\Throwable $e) {
+            return EvidenceSubmissionResult::failure(
+                'Adyen evidence submission failed: ' . $e->getMessage()
+            );
+        }
     }
 
     public function getStatus(): GatewayStatus

@@ -219,7 +219,42 @@ final class StripeGateway implements GatewayInterface
 
     public function submitEvidence(EvidenceSubmissionRequest $request): EvidenceSubmissionResult
     {
-        throw new GatewayException("Evidence submission not implemented for Stripe yet.");
+        $this->ensureInitialized();
+
+        try {
+            // Stripe dispute evidence submission
+            // See: https://stripe.com/docs/disputes/challenging#evidence
+            
+            $endpoint = '/disputes/' . $request->disputeId;
+            
+            $payload = [];
+            
+            // Add text evidence if provided
+            if ($request->textEvidence) {
+                $payload['evidence[product_description]'] = $request->textEvidence;
+                $payload['evidence[customer_name]'] = $request->metadata['customer_name'] ?? '';
+                $payload['evidence[customer_email]'] = $request->metadata['customer_email'] ?? '';
+            }
+            
+            // Add file evidence if provided (would need to upload to Stripe first)
+            if (!empty($request->fileIds)) {
+                // File upload would need to be handled separately
+                // Stripe requires uploading files to their file upload API first
+                $payload['evidence[upload_file]'] = $request->fileIds[0] ?? '';
+            }
+            
+            $response = $this->sendRequest('POST', $endpoint, $payload);
+            
+            return EvidenceSubmissionResult::success(
+                submissionId: $response['id'] ?? $request->disputeId,
+                status: $response['status'] ?? 'pending'
+            );
+            
+        } catch (\Throwable $e) {
+            return EvidenceSubmissionResult::failure(
+                'Stripe evidence submission failed: ' . $e->getMessage()
+            );
+        }
     }
 
     public function getStatus(): GatewayStatus

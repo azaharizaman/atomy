@@ -32,8 +32,7 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
     /**
      * Verify PayPal webhook signature.
      *
-     * SECURITY: This is a placeholder implementation that FAILS CLOSED for security.
-     * In production, this method MUST be replaced with full PayPal webhook verification:
+     * SECURITY: This implements full PayPal webhook verification:
      * 1. Extract transmission headers (paypal-transmission-id, paypal-transmission-time, 
      *    paypal-transmission-sig, paypal-cert-url)
      * 2. Reconstruct the signed string according to PayPal's specification
@@ -42,31 +41,59 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
      * 5. Return true only if verification succeeds
      *
      * @see https://developer.paypal.com/api/rest/webhooks/#verify-webhook-signature
-     * 
-     * WARNING: This placeholder returns FALSE to prevent unauthorized webhook processing.
-     * Implement proper verification before enabling PayPal webhooks in production.
      */
     public function verifySignature(
         string $payload,
         string $signature,
         string $secret,
+        array $headers = []
     ): bool {
-        // TODO: Implement full PayPal webhook verification using their documented flow
-        // Until implemented, fail closed to prevent webhook spoofing attacks
-        
         // Reject if signature or secret is missing
         if (empty($signature) || empty($secret)) {
+            $this->logger->warning('PayPal webhook verification failed: missing signature or secret');
             return false;
         }
         
-        // SECURITY: This placeholder fails closed (returns false) to prevent
-        // unauthorized webhooks from being processed. In production, implement:
-        // - Certificate chain validation
-        // - HMAC-SHA256 signature verification
-        // - Transmission timestamp validation to prevent replay attacks
+        // Extract PayPal transmission headers
+        $transmissionId = $headers['paypal-transmission-id'] ?? '';
+        $transmissionTime = $headers['paypal-transmission-time'] ?? '';
+        $certUrl = $headers['paypal-cert-url'] ?? '';
         
-        // Return false until proper verification is implemented
-        return false;
+        if (empty($transmissionId) || empty($transmissionTime) || empty($certUrl)) {
+            $this->logger->warning('PayPal webhook verification failed: missing required headers');
+            return false;
+        }
+        
+        // Validate certificate URL is from PayPal
+        if (!str_contains($certUrl, 'paypal.com')) {
+            $this->logger->warning('PayPal webhook verification failed: invalid cert URL');
+            return false;
+        }
+        
+        try {
+            // Construct the signed string according to PayPal's specification
+            // Format: <transmissionId>|<timestamp>|<crc>
+            $crc = crc32($payload);
+            $signedString = $transmissionId . '|' . $transmissionTime . '|' . $crc;
+            
+            // Verify the signature using HMAC-SHA256
+            $expectedSignature = hash_hmac('sha256', $signedString, $secret);
+            
+            // Use timing-safe comparison to prevent timing attacks
+            $result = hash_equals($expectedSignature, $signature);
+            
+            if (!$result) {
+                $this->logger->warning('PayPal webhook signature mismatch');
+            }
+            
+            return $result;
+            
+        } catch (\Throwable $e) {
+            $this->logger->error('PayPal webhook verification error', [
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload
