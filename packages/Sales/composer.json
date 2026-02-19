@@ -11,15 +11,19 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/party": "*@dev",
-        "nexus/product": "*@dev",
-        "nexus/uom": "*@dev",
-        "nexus/currency": "*@dev",
-        "nexus/finance": "*@dev",
-        "nexus/sequencing": "*@dev",
-        "nexus/period": "*@dev",
-        "nexus/audit-logger": "*@dev",
         "psr/log": "^3.0"
+    },
+    "suggest": {
+        "nexus/party": "Required for customer data integration",
+        "nexus/product": "Required for product variant data",
+        "nexus/uom": "Required for unit of measure handling",
+        "nexus/currency": "Required for exchange rate locking",
+        "nexus/finance": "Required for financial calculations",
+        "nexus/sequencing": "Required for order number generation",
+        "nexus/period": "Required for period management",
+        "nexus/audit-logger": "Required for audit trail",
+        "nexus/inventory": "Required for stock reservation",
+        "nexus/receivable": "Required for credit checking and invoice generation"
     },
     "autoload": {
         "psr-4": {

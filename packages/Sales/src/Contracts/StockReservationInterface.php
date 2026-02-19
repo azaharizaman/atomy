@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\Sales\Contracts;
 
+use Nexus\Sales\ValueObjects\StockAvailabilityResult;
+
 /**
- * Stock reservation service contract (stub for Nexus\Inventory integration).
- * V1: Stub implementation throws NotImplementedException.
- * Phase 2: Integrate with Nexus\Inventory for real-time stock reservation.
+ * Stock reservation service contract.
+ * Integrates with Nexus\Inventory for real-time stock reservation.
  */
 interface StockReservationInterface
 {
@@ -15,18 +16,32 @@ interface StockReservationInterface
      * Reserve stock for sales order line items.
      *
      * @param string $salesOrderId
-     * @return void
+     * @return array<string, string> Map of line ID to reservation ID
      * @throws \Nexus\Sales\Exceptions\InsufficientStockException
-     * @throws \BadMethodCallException If Inventory package not installed
      */
-    public function reserveStockForOrder(string $salesOrderId): void;
+    public function reserveStockForOrder(string $salesOrderId): array;
 
     /**
      * Release stock reservation when order is cancelled.
      *
      * @param string $salesOrderId
      * @return void
-     * @throws \BadMethodCallException If Inventory package not installed
      */
     public function releaseStockReservation(string $salesOrderId): void;
+
+    /**
+     * Get all active reservations for a sales order.
+     *
+     * @param string $salesOrderId
+     * @return array<string, array<string, mixed>> Map of reservation_id to reservation details
+     */
+    public function getOrderReservations(string $salesOrderId): array;
+
+    /**
+     * Check if stock is available for all line items in the order.
+     *
+     * @param string $salesOrderId
+     * @return StockAvailabilityResult
+     */
+    public function checkStockAvailability(string $salesOrderId): StockAvailabilityResult;
 }

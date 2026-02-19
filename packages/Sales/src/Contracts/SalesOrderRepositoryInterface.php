@@ -34,6 +34,14 @@ interface SalesOrderRepositoryInterface
      */
     public function save(SalesOrderInterface $order): void;
 
+    /**
+     * Create a new sales order from data.
+     *
+     * @param array $data Order data including lines
+     * @return SalesOrderInterface
+     */
+    public function create(array $data): SalesOrderInterface;
+
     public function delete(string $id): void;
 
     public function exists(string $tenantId, string $orderNumber): bool;

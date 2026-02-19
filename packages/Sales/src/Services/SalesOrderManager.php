@@ -12,6 +12,7 @@ use Nexus\Sales\Contracts\InvoiceManagerInterface;
 use Nexus\Sales\Contracts\SalesOrderInterface;
 use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
 use Nexus\Sales\Contracts\StockReservationInterface;
+use Nexus\Sales\Enums\PaymentTerm;
 use Nexus\Sales\Enums\SalesOrderStatus;
 use Nexus\Sales\Exceptions\ExchangeRateLockedException;
 use Nexus\Sales\Exceptions\InvalidOrderStatusException;
@@ -41,7 +42,16 @@ final readonly class SalesOrderManager
      * @param string $tenantId
      * @param string $customerId
      * @param array $lines Array of line data
-     * @param array $data Additional order data
+     * @param array $data Additional order data:
+     *                     - currency_code: string (default: 'MYR')
+     *                     - payment_term: PaymentTerm enum
+     *                     - shipping_address: string|null
+     *                     - billing_address: string|null
+     *                     - customer_po: string|null
+     *                     - notes: string|null
+     *                     - salesperson_id: string|null
+     *                     - preferred_warehouse_id: string|null
+     *                     - discount_rule: DiscountRule|null
      * @return SalesOrderInterface
      */
     public function createOrder(
@@ -57,16 +67,95 @@ final readonly class SalesOrderManager
             ['prefix' => 'SO']
         );
 
-        // Create order entity (implementation-specific, will be in Atomy)
-        // For now, this signature serves as the contract definition
+        $orderDate = new DateTimeImmutable();
+        $currencyCode = $data['currency_code'] ?? 'MYR';
+        $paymentTerm = $data['payment_term'] ?? PaymentTerm::NET_30;
 
-        $this->logger->info('Sales order created', [
+        // Calculate totals from lines
+        $subtotal = 0.0;
+        $taxAmount = 0.0;
+        $discountAmount = 0.0;
+        $lineSequence = 1;
+        $orderLines = [];
+
+        foreach ($lines as $line) {
+            $lineSubtotal = ($line['quantity'] ?? 0) * ($line['unit_price'] ?? 0);
+            $lineTaxAmount = $line['tax_amount'] ?? 0.0;
+            $lineDiscount = $line['discount_amount'] ?? 0.0;
+            $lineTotal = $lineSubtotal + $lineTaxAmount - $lineDiscount;
+
+            $subtotal += $lineSubtotal;
+            $taxAmount += $lineTaxAmount;
+            $discountAmount += $lineDiscount;
+
+            $orderLines[] = [
+                'product_variant_id' => $line['product_variant_id'],
+                'quantity' => $line['quantity'],
+                'uom_code' => $line['uom_code'] ?? 'EA',
+                'unit_price' => $line['unit_price'],
+                'line_subtotal' => $lineSubtotal,
+                'tax_amount' => $lineTaxAmount,
+                'discount_amount' => $lineDiscount,
+                'line_total' => $lineTotal,
+                'discount_rule' => $line['discount_rule'] ?? null,
+                'line_notes' => $line['line_notes'] ?? null,
+                'line_sequence' => $lineSequence++,
+            ];
+        }
+
+        $total = $subtotal + $taxAmount - $discountAmount;
+
+        // Build order data
+        $orderData = [
             'tenant_id' => $tenantId,
             'order_number' => $orderNumber,
             'customer_id' => $customerId,
+            'order_date' => $orderDate,
+            'status' => SalesOrderStatus::DRAFT,
+            'currency_code' => $currencyCode,
+            'exchange_rate' => null,
+            'subtotal' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'discount_amount' => $discountAmount,
+            'total' => $total,
+            'discount_rule' => $data['discount_rule'] ?? null,
+            'payment_term' => $paymentTerm,
+            'payment_due_date' => $paymentTerm->calculateDueDate($orderDate),
+            'shipping_address' => $data['shipping_address'] ?? null,
+            'billing_address' => $data['billing_address'] ?? null,
+            'customer_po' => $data['customer_po'] ?? null,
+            'notes' => $data['notes'] ?? null,
+            'salesperson_id' => $data['salesperson_id'] ?? null,
+            'preferred_warehouse_id' => $data['preferred_warehouse_id'] ?? null,
+            'lines' => $orderLines,
+        ];
+
+        // Create and save the sales order via repository
+        $salesOrder = $this->salesOrderRepository->create($orderData);
+
+        $this->logger->info('Sales order created', [
+            'tenant_id' => $tenantId,
+            'order_id' => $salesOrder->getId(),
+            'order_number' => $orderNumber,
+            'customer_id' => $customerId,
+            'total' => $total,
+            'currency' => $currencyCode,
         ]);
 
-        return $order ?? throw new \RuntimeException('Sales order creation not implemented in package layer');
+        $this->auditLogger->log(
+            $tenantId,
+            'order_created',
+            "Sales order {$orderNumber} created",
+            [
+                'order_id' => $salesOrder->getId(),
+                'order_number' => $orderNumber,
+                'customer_id' => $customerId,
+                'total' => $total,
+                'currency' => $currencyCode,
+            ]
+        );
+
+        return $salesOrder;
     }
 
     /**
