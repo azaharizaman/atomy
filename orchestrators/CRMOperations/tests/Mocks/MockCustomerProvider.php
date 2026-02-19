@@ -64,6 +64,14 @@ final readonly class MockCustomerProvider implements CustomerProviderInterface
 
     public function getCommunicationPreferences(string $customerId): array
     {
+        // Look up customer to get their preferences, or use defaults
+        $customer = $this->findById($customerId);
+        
+        if ($customer !== null && isset($customer['communication_preferences'])) {
+            return $customer['communication_preferences'];
+        }
+        
+        // Return default preferences
         return [
             'email' => true,
             'sms' => false,

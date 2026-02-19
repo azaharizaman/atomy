@@ -38,16 +38,28 @@ final readonly class RenewalManagementWorkflow
 
     public function calculateChurnRisk(string $accountId): int
     {
+        $this->logger?->warning('calculateChurnRisk is not implemented - returning placeholder', [
+            'account_id' => $accountId,
+        ]);
+        
         return 25;
     }
 
     public function identifyUpsellOpportunities(string $accountId): array
     {
+        $this->logger?->warning('identifyUpsellOpportunities is not implemented - returning placeholder', [
+            'account_id' => $accountId,
+        ]);
+        
         return [];
     }
 
     public function trackRenewalProbability(string $renewalId): float
     {
+        $this->logger?->warning('trackRenewalProbability is not implemented - returning placeholder', [
+            'renewal_id' => $renewalId,
+        ]);
+        
         return 0.75;
     }
 }

@@ -159,8 +159,7 @@ final readonly class DocumentGenerator
         ]);
 
         if ($this->templateService !== null) {
-            // In real implementation, use the template service
-            // return $this->templateService->render($templateId, $data);
+            return $this->templateService->render($templateId, $data);
         }
 
         // Fallback: Simple template rendering
@@ -248,14 +247,13 @@ HTML,
         ]);
 
         if ($this->documentService !== null) {
-            // In real implementation, save to document service
-            // $this->documentService->create([
-            //     'title' => $title,
-            //     'content' => $content,
-            //     'type' => $type,
-            //     'entity_id' => $entityId,
-            //     'format' => $format,
-            // ]);
+            $this->documentService->create([
+                'title' => $title,
+                'content' => $content,
+                'type' => $type,
+                'entity_id' => $entityId,
+                'format' => $format,
+            ]);
         }
 
         return $documentId;
@@ -282,9 +280,21 @@ HTML,
         $results = [];
         
         foreach ($formats as $format) {
+            // Render the template for each format
+            $renderedContent = $this->renderTemplate($templateId, $data);
+            
+            // Save document for each format
+            $documentId = $this->saveDocument(
+                title: "Document - {$templateId}",
+                content: $renderedContent,
+                type: 'document',
+                entityId: $templateId,
+                format: $format
+            );
+            
             $results[$format] = [
-                'document_id' => uniqid("doc_{$format}_"),
-                'url' => "/documents/" . uniqid() . ".{$format}",
+                'document_id' => $documentId,
+                'url' => "/documents/{$documentId}.{$format}",
             ];
         }
 
@@ -306,7 +316,7 @@ HTML,
         ];
 
         if ($type !== null) {
-            return array_filter($templates, fn($t) => $t['type'] === $type);
+            return array_values(array_filter($templates, fn($t) => $t['type'] === $type));
         }
 
         return $templates;

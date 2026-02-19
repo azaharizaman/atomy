@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\CRMOperations\Workflows;
 
+use Nexus\CRM\Contracts\LeadInterface;
 use Nexus\CRM\Contracts\LeadQueryInterface;
+use Nexus\CRM\Contracts\OpportunityInterface;
 use Nexus\CRM\Contracts\OpportunityQueryInterface;
 use Nexus\CRM\Contracts\ActivityQueryInterface;
 use Nexus\CRMOperations\Contracts\NotificationProviderInterface;
@@ -147,6 +149,13 @@ final readonly class SalesPlaybookWorkflow
             'entity_id' => $entityId,
         ]);
 
+        // Validate entity type
+        if (!in_array($entityType, ['lead', 'opportunity'], true)) {
+            throw new \InvalidArgumentException(
+                sprintf('Invalid entity type: %s. Must be one of: lead, opportunity', $entityType)
+            );
+        }
+
         $recommendations = [];
 
         // Get entity data
@@ -185,7 +194,33 @@ final readonly class SalesPlaybookWorkflow
             'step_id' => $stepId,
         ]);
 
-        // In real implementation, store completion in database
+        // Validate playbook type
+        if (!in_array($playbookType, [
+            self::PLAYBOOK_NEW_LEAD,
+            self::PLAYBOOK_QUALIFICATION,
+            self::PLAYBOOK_DISCOVERY,
+            self::PLAYBOOK_PROPOSAL,
+            self::PLAYBOOK_NEGOTIATION,
+            self::PLAYBOOK_CLOSING,
+            self::PLAYBOOK_RENEWAL,
+        ], true)) {
+            throw new \InvalidArgumentException(
+                sprintf('Invalid playbook type: %s', $playbookType)
+            );
+        }
+
+        // Validate step ID exists in playbook
+        $steps = $this->getPlaybookSteps($playbookType, $entityId);
+        $validStepIds = array_column($steps, 'id');
+        if (!in_array($stepId, $validStepIds, true)) {
+            throw new \InvalidArgumentException(
+                sprintf('Invalid step ID: %s for playbook type: %s', $stepId, $playbookType)
+            );
+        }
+
+        // Persist completion to database (in real implementation)
+        $this->persistCompletion($entityId, $playbookType, $stepId);
+
         $completedAt = new \DateTimeImmutable();
 
         // Track analytics
@@ -207,6 +242,30 @@ final readonly class SalesPlaybookWorkflow
             completedAt: $completedAt,
             overallProgress: $stepsResult->progress
         );
+    }
+
+    /**
+     * Persist playbook step completion to database
+     *
+     * @param string $entityId Entity ID
+     * @param string $playbookType Playbook type
+     * @param string $stepId Step ID
+     */
+    private function persistCompletion(string $entityId, string $playbookType, string $stepId): void
+    {
+        // In real implementation, save to database
+        // $this->playbookCompletionRepository->create([
+        //     'entity_id' => $entityId,
+        //     'playbook_type' => $playbookType,
+        //     'step_id' => $stepId,
+        //     'completed_at' => new \DateTimeImmutable(),
+        // ]);
+
+        $this->logger?->debug('Persisting playbook completion', [
+            'entity_id' => $entityId,
+            'playbook_type' => $playbookType,
+            'step_id' => $stepId,
+        ]);
     }
 
     /**
@@ -243,7 +302,7 @@ final readonly class SalesPlaybookWorkflow
             self::PLAYBOOK_NEGOTIATION => [
                 ['id' => 'step_1', 'title' => 'Address Objections', 'description' => 'Handle any concerns or objections', 'order' => 1],
                 ['id' => 'step_2', 'title' => 'Negotiate Terms', 'description' => 'Discuss pricing and contract terms', 'order' => 2],
-                ['id' => 'step_3', 'title' => 'Get Approval', 'description' => 'Obain final approval from decision makers', 'order' => 3],
+                ['id' => 'step_3', 'title' => 'Obtain Approval', 'description' => 'Obtain final approval from decision makers', 'order' => 3],
             ],
             self::PLAYBOOK_CLOSING => [
                 ['id' => 'step_1', 'title' => 'Prepare Contract', 'description' => 'Generate final contract', 'order' => 1],
@@ -297,11 +356,11 @@ final readonly class SalesPlaybookWorkflow
 
     /**
      * Generate recommendations for a lead
-     * 
-     * @param object $lead Lead entity
+     *
+     * @param LeadInterface $lead Lead entity
      * @return array<int, array{action: string, reason: string, priority: string}>
      */
-    private function generateLeadRecommendations(object $lead): array
+    private function generateLeadRecommendations(LeadInterface $lead): array
     {
         $recommendations = [];
 
@@ -331,11 +390,11 @@ final readonly class SalesPlaybookWorkflow
 
     /**
      * Generate recommendations for an opportunity
-     * 
-     * @param object $opportunity Opportunity entity
+     *
+     * @param OpportunityInterface $opportunity Opportunity entity
      * @return array<int, array{action: string, reason: string, priority: string}>
      */
-    private function generateOpportunityRecommendations(object $opportunity): array
+    private function generateOpportunityRecommendations(OpportunityInterface $opportunity): array
     {
         $recommendations = [];
 

@@ -29,4 +29,12 @@ class QuoteOperationException extends CRMOperationsException
             "{$entityType}_id: {$entityId}"
         );
     }
+
+    public static function operationFailed(string $operation, string $quoteId, string $reason): self
+    {
+        return new self(
+            sprintf('Failed to %s quote %s: %s', $operation, $quoteId, $reason),
+            "quote_id: {$quoteId}, operation: {$operation}"
+        );
+    }
 }

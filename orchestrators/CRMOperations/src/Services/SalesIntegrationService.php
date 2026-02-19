@@ -68,7 +68,7 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
         ]);
 
         // Validate required fields
-        if (empty($opportunityData['title']) && empty($opportunityData['id'])) {
+        if (empty($opportunityData['title']) || empty($opportunityData['id'])) {
             throw QuoteOperationException::creationFailed(
                 'opportunity',
                 $opportunityData['id'] ?? 'unknown',
@@ -95,6 +95,7 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
 
     /**
      * @inheritDoc
+     * @throws QuoteOperationException When quotation update fails
      */
     public function update(string $quotationId, array $data): void
     {
@@ -104,6 +105,12 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
 
         // In real implementation, this would call the Sales package
         // $this->salesService->updateQuotation($quotationId, $data);
+        
+        throw QuoteOperationException::operationFailed(
+            'update',
+            $quotationId,
+            'Sales package integration not configured'
+        );
     }
 
     /**
@@ -117,6 +124,7 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
 
     /**
      * @inheritDoc
+     * @throws QuoteOperationException When marking quotation as sent fails
      */
     public function markAsSent(string $quotationId): void
     {
@@ -126,10 +134,17 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
 
         // In real implementation, this would update the quotation status
         // $this->salesService->updateQuotationStatus($quotationId, 'sent');
+        
+        throw QuoteOperationException::operationFailed(
+            'mark_as_sent',
+            $quotationId,
+            'Sales package integration not configured'
+        );
     }
 
     /**
      * @inheritDoc
+     * @throws QuoteOperationException When marking quotation as accepted fails
      */
     public function markAsAccepted(string $quotationId): void
     {
@@ -139,10 +154,17 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
 
         // In real implementation, this would update the quotation status
         // $this->salesService->updateQuotationStatus($quotationId, 'accepted');
+        
+        throw QuoteOperationException::operationFailed(
+            'mark_as_accepted',
+            $quotationId,
+            'Sales package integration not configured'
+        );
     }
 
     /**
      * @inheritDoc
+     * @throws QuoteOperationException When marking quotation as rejected fails
      */
     public function markAsRejected(string $quotationId, string $reason): void
     {
@@ -153,6 +175,12 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
 
         // In real implementation, this would update the quotation status
         // $this->salesService->updateQuotationStatus($quotationId, 'rejected', $reason);
+        
+        throw QuoteOperationException::operationFailed(
+            'mark_as_rejected',
+            $quotationId,
+            'Sales package integration not configured'
+        );
     }
 
     /**

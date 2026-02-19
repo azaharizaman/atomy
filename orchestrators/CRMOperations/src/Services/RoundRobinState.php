@@ -38,6 +38,6 @@ final readonly class RoundRobinState implements RoundRobinStateInterface
 
     public function resetAll(): void
     {
-        $this->indices = new ArrayObject();
+        $this->indices->exchangeArray([]);
     }
 }

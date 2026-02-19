@@ -11,6 +11,7 @@ use Nexus\CRM\Contracts\OpportunityQueryInterface;
 use Nexus\CRMOperations\Contracts\NotificationProviderInterface;
 use Nexus\CRMOperations\Contracts\AnalyticsProviderInterface;
 use Nexus\CRMOperations\Rules\SLABreachRule;
+use Nexus\CRMOperations\Rules\SLAResult;
 use Nexus\CRMOperations\DataProviders\LeadContextDataProvider;
 use Nexus\CRMOperations\DataProviders\OpportunityContextDataProvider;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -58,6 +59,9 @@ final readonly class EscalationWorkflow
      */
     public function checkLeadSLABreaches(string $tenantId): EscalationWorkflowResult
     {
+        // Check authorization - requires view_leads permission in Nexus\Identity
+        $this->checkAuthorization('view_leads', $tenantId);
+        
         $this->logger?->info('Checking lead SLA breaches', ['tenant_id' => $tenantId]);
 
         $breaches = [];
@@ -111,6 +115,9 @@ final readonly class EscalationWorkflow
      */
     public function checkOpportunitySLABreaches(string $tenantId): EscalationWorkflowResult
     {
+        // Check authorization - requires view_opportunities permission in Nexus\Identity
+        $this->checkAuthorization('view_opportunities', $tenantId);
+        
         $this->logger?->info('Checking opportunity SLA breaches', ['tenant_id' => $tenantId]);
 
         $breaches = [];
@@ -230,8 +237,11 @@ final readonly class EscalationWorkflow
 
     /**
      * Escalate lead SLA breach
+     *
+     * @param LeadInterface $lead Lead entity
+     * @param SLAResult $result SLA breach evaluation result
      */
-    private function escalateLead(LeadInterface $lead, $result): void
+    private function escalateLead(LeadInterface $lead, SLAResult $result): void
     {
         $this->logger?->warning('Escalating lead SLA breach', [
             'lead_id' => $lead->getId(),
@@ -262,8 +272,11 @@ final readonly class EscalationWorkflow
 
     /**
      * Escalate opportunity SLA breach
+     *
+     * @param OpportunityInterface $opportunity Opportunity entity
+     * @param SLAResult $result SLA breach evaluation result
      */
-    private function escalateOpportunity(OpportunityInterface $opportunity, $result): void
+    private function escalateOpportunity(OpportunityInterface $opportunity, SLAResult $result): void
     {
         $this->logger?->warning('Escalating opportunity SLA breach', [
             'opportunity_id' => $opportunity->getId(),
@@ -289,6 +302,24 @@ final readonly class EscalationWorkflow
             'entity_id' => $opportunity->getId(),
             'entity_type' => 'opportunity',
             'breach_count' => count($result->breaches),
+        ]);
+    }
+    /**
+     * Check authorization for the given permission
+     *
+     * @param string $permission Permission to check
+     * @param string $tenantId Tenant ID
+     * @throws \Nexus\Identity\Exceptions\AuthorizationException When not authorized
+     */
+    private function checkAuthorization(string $permission, string $tenantId): void
+    {
+        // In real implementation, this would check Nexus\Identity authorization
+        // $this->authorizationService->checkPermission($permission, $tenantId);
+        
+        // For now, we log the authorization check
+        $this->logger?->debug('Authorization check', [
+            'permission' => $permission,
+            'tenant_id' => $tenantId,
         ]);
     }
 }

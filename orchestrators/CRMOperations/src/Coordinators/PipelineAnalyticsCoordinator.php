@@ -21,6 +21,26 @@ use Psr\Log\LoggerInterface;
 final readonly class PipelineAnalyticsCoordinator
 {
     /**
+     * Default average days to close a deal
+     */
+    private const DEFAULT_AVERAGE_DAYS_TO_CLOSE = 45;
+
+    /**
+     * Default average days per stage
+     */
+    private const DEFAULT_AVERAGE_DAYS_PER_STAGE = 9;
+
+    /**
+     * Monthly revenue projection multiplier
+     */
+    private const MONTHLY_PROJECTION_MULTIPLIER = 0.3;
+
+    /**
+     * Quarterly revenue projection multiplier
+     */
+    private const QUARTERLY_PROJECTION_MULTIPLIER = 0.6;
+
+    /**
      * @param OpportunityQueryInterface $opportunityQuery Opportunity query service
      * @param PipelineQueryInterface $pipelineQuery Pipeline query service
      * @param AnalyticsProviderInterface $analyticsProvider Analytics provider
@@ -63,15 +83,15 @@ final readonly class PipelineAnalyticsCoordinator
      */
     public function getPipelineSummary(string $tenantId): array
     {
-        $totalValue = $this->opportunityQuery->getTotalOpenValue($tenantId);
-        $weightedValue = $this->opportunityQuery->getWeightedPipelineValue($tenantId);
+        $totalValue = $this->opportunityQuery->getTotalOpenValue();
+        $weightedValue = $this->opportunityQuery->getWeightedPipelineValue();
 
         return [
             'total_opportunities' => $this->countOpenOpportunities($tenantId),
             'total_value' => $totalValue,
             'weighted_value' => $weightedValue,
             'average_deal_size' => $this->calculateAverageDealSize($tenantId),
-            'pipeline_count' => $this->pipelineQuery->count($tenantId),
+            'pipeline_count' => $this->pipelineQuery->count(),
         ];
     }
 
@@ -88,7 +108,7 @@ final readonly class PipelineAnalyticsCoordinator
         foreach (\Nexus\CRM\Enums\OpportunityStage::openStages() as $stage) {
             $stages[$stage->value] = [
                 'label' => $stage->label(),
-                'count' => $this->opportunityQuery->countByStage($stage, $tenantId),
+                'count' => $this->opportunityQuery->countByStage($stage),
                 'probability' => $stage->getDefaultProbability(),
             ];
         }
@@ -106,7 +126,7 @@ final readonly class PipelineAnalyticsCoordinator
     {
         $pipelines = [];
         
-        foreach ($this->pipelineQuery->findActive($tenantId) as $pipeline) {
+        foreach ($this->pipelineQuery->findActive() as $pipeline) {
             $pipelines[$pipeline->getId()] = [
                 'name' => $pipeline->getName(),
                 'stage_count' => $pipeline->getStageCount(),
@@ -205,7 +225,7 @@ final readonly class PipelineAnalyticsCoordinator
     {
         $count = 0;
         foreach (\Nexus\CRM\Enums\OpportunityStage::openStages() as $stage) {
-            $count += $this->opportunityQuery->countByStage($stage, $tenantId);
+            $count += $this->opportunityQuery->countByStage($stage);
         }
         return $count;
     }
@@ -215,7 +235,7 @@ final readonly class PipelineAnalyticsCoordinator
      */
     private function calculateAverageDealSize(string $tenantId): int
     {
-        $totalValue = $this->opportunityQuery->getTotalOpenValue($tenantId);
+        $totalValue = $this->opportunityQuery->getTotalOpenValue();
         $count = $this->countOpenOpportunities($tenantId);
 
         return $count > 0 ? (int) round($totalValue / $count) : 0;
@@ -226,10 +246,35 @@ final readonly class PipelineAnalyticsCoordinator
      */
     private function calculatePipelineVelocity(string $tenantId): array
     {
-        // Placeholder for velocity calculation
+        $this->logger?->debug('Calculating pipeline velocity', ['tenant_id' => $tenantId]);
+        
+        // Calculate actual velocity based on closed opportunities
+        $totalDaysToClose = 0;
+        $closedCount = 0;
+        
+        foreach ($this->opportunityQuery->findWon() as $opportunity) {
+            $createdAt = $opportunity->getCreatedAt();
+            $closedAt = $opportunity->getActualCloseDate();
+            
+            if ($closedAt !== null) {
+                $totalDaysToClose += $closedAt->getTimestamp() - $createdAt->getTimestamp();
+                $closedCount++;
+            }
+        }
+        
+        $averageDaysToClose = $closedCount > 0 
+            ? (int) round($totalDaysToClose / $closedCount / 86400) 
+            : self::DEFAULT_AVERAGE_DAYS_TO_CLOSE;
+        
+        // Calculate average days per stage
+        $stageCount = iterator_count($this->pipelineQuery->findActive());
+        $averageDaysPerStage = $stageCount > 0 
+            ? (int) round($averageDaysToClose / $stageCount) 
+            : self::DEFAULT_AVERAGE_DAYS_PER_STAGE;
+
         return [
-            'average_days_to_close' => 45,
-            'average_days_per_stage' => 9,
+            'average_days_to_close' => $averageDaysToClose,
+            'average_days_per_stage' => $averageDaysPerStage,
         ];
     }
 
@@ -238,11 +283,11 @@ final readonly class PipelineAnalyticsCoordinator
      */
     private function calculateProjectedRevenue(string $tenantId): array
     {
-        $weightedValue = $this->opportunityQuery->getWeightedPipelineValue($tenantId);
+        $weightedValue = $this->opportunityQuery->getWeightedPipelineValue();
         
         return [
-            'this_month' => (int) round($weightedValue * 0.3),
-            'this_quarter' => (int) round($weightedValue * 0.6),
+            'this_month' => (int) round($weightedValue * self::MONTHLY_PROJECTION_MULTIPLIER),
+            'this_quarter' => (int) round($weightedValue * self::QUARTERLY_PROJECTION_MULTIPLIER),
             'this_year' => $weightedValue,
         ];
     }
