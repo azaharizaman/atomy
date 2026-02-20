@@ -30,6 +30,7 @@ final class AuthorizationMatrixServiceTest extends TestCase
             $this->query,
             $this->persist,
             null,
+            null,
             new NullLogger()
         );
     }

@@ -10,9 +10,12 @@ use Nexus\Treasury\Contracts\TreasuryPositionInterface;
 
 final readonly class TreasuryPosition implements TreasuryPositionInterface
 {
+    private string $id;
+
     public function __construct(
-        public string $tenantId,
-        public ?string $entityId,
+        ?string $id = null,
+        public string $tenantId = 'unknown',
+        public ?string $entityId = null,
         public Money $totalCashBalance,
         public Money $availableCashBalance,
         public Money $reservedCashBalance,
@@ -20,19 +23,31 @@ final readonly class TreasuryPosition implements TreasuryPositionInterface
         public Money $projectedInflows,
         public Money $projectedOutflows,
         public DateTimeImmutable $positionDate,
-    ) {}
+    ) {
+        $this->id = $id ?? self::generateId();
+    }
+
+    public static function generateId(): string
+    {
+        $bytes = random_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+        $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+        return 'TRE-POS-' . $uuid;
+    }
 
     public static function fromArray(array $data): self
     {
         $currency = $data['currency'] ?? 'USD';
 
         return new self(
-            tenantId: $data['tenant_id'] ?? $data['tenantId'],
+            id: $data['id'] ?? null,
+            tenantId: $data['tenant_id'] ?? $data['tenantId'] ?? 'unknown',
             entityId: $data['entity_id'] ?? $data['entityId'] ?? null,
-            totalCashBalance: Money::of($data['total_cash_balance'] ?? $data['totalCashBalance'], $currency),
-            availableCashBalance: Money::of($data['available_cash_balance'] ?? $data['availableCashBalance'], $currency),
-            reservedCashBalance: Money::of($data['reserved_cash_balance'] ?? $data['reservedCashBalance'], $currency),
-            investedCashBalance: Money::of($data['invested_cash_balance'] ?? $data['investedCashBalance'], $currency),
+            totalCashBalance: Money::of($data['total_cash_balance'] ?? $data['totalCashBalance'] ?? 0, $currency),
+            availableCashBalance: Money::of($data['available_cash_balance'] ?? $data['availableCashBalance'] ?? 0, $currency),
+            reservedCashBalance: Money::of($data['reserved_cash_balance'] ?? $data['reservedCashBalance'] ?? 0, $currency),
+            investedCashBalance: Money::of($data['invested_cash_balance'] ?? $data['investedCashBalance'] ?? 0, $currency),
             projectedInflows: Money::of($data['projected_inflows'] ?? $data['projectedInflows'] ?? 0, $currency),
             projectedOutflows: Money::of($data['projected_outflows'] ?? $data['projectedOutflows'] ?? 0, $currency),
             positionDate: new DateTimeImmutable($data['position_date'] ?? $data['positionDate'] ?? 'now'),
@@ -42,6 +57,7 @@ final readonly class TreasuryPosition implements TreasuryPositionInterface
     public function toArray(): array
     {
         return [
+            'id' => $this->id,
             'tenantId' => $this->tenantId,
             'entityId' => $this->entityId,
             'totalCashBalance' => $this->totalCashBalance->toArray(),
@@ -71,12 +87,16 @@ final readonly class TreasuryPosition implements TreasuryPositionInterface
 
     public function hasSufficientLiquidity(Money $amount): bool
     {
+        if ($this->availableCashBalance->getCurrency() !== $amount->getCurrency()) {
+            return false;
+        }
+
         return $this->availableCashBalance->greaterThanOrEqual($amount);
     }
 
     public function getId(): string
     {
-        return 'TRE-POS-' . spl_object_id($this);
+        return $this->id;
     }
 
     public function getTenantId(): string

@@ -6,7 +6,6 @@ namespace Nexus\Treasury\Services;
 
 use DateTimeImmutable;
 use Nexus\Common\ValueObjects\Money;
-use Nexus\Treasury\Contracts\TreasuryAuditInterface;
 use Nexus\Treasury\Contracts\TreasuryPolicyInterface;
 use Nexus\Treasury\Contracts\TreasuryPolicyQueryInterface;
 use Nexus\Treasury\Contracts\TreasuryPolicyPersistInterface;
@@ -22,7 +21,6 @@ final readonly class TreasuryPolicyService
     public function __construct(
         private TreasuryPolicyQueryInterface $query,
         private TreasuryPolicyPersistInterface $persist,
-        private ?TreasuryAuditInterface $audit = null,
         private LoggerInterface $logger = new NullLogger()
     ) {}
 

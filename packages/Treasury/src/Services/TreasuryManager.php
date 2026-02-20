@@ -18,6 +18,7 @@ use Nexus\Treasury\Contracts\LiquidityPoolPersistInterface;
 use Nexus\Treasury\Contracts\LiquidityPoolQueryInterface;
 use Nexus\Treasury\Contracts\TreasuryAnalyticsInterface;
 use Nexus\Treasury\Contracts\TreasuryApprovalInterface;
+use Nexus\Treasury\Support\InterestCalculator;
 use Nexus\Treasury\Contracts\TreasuryDashboardInterface;
 use Nexus\Treasury\Contracts\TreasuryForecastInterface;
 use Nexus\Treasury\Contracts\TreasuryManagerInterface;
@@ -401,11 +402,12 @@ final readonly class TreasuryManager implements TreasuryManagerInterface
         DateTimeImmutable $startDate,
         DateTimeImmutable $asOfDate
     ): Money {
-        $days = (int) $startDate->diff($asOfDate)->days;
-        $years = $days / 365;
-        $accrued = $principal->getAmount() * ($interestRate / 100) * $years;
-
-        return Money::of($accrued, $principal->getCurrency());
+        return InterestCalculator::calculateSimpleInterest(
+            $principal,
+            $interestRate,
+            $startDate,
+            $asOfDate
+        );
     }
 
     private function generateId(string $prefix): string

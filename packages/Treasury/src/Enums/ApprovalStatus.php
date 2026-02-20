@@ -63,8 +63,8 @@ enum ApprovalStatus: string
     public function canTransitionTo(self $status): bool
     {
         return match ($this) {
-            self::PENDING => in_array($status, [self::APPROVED, self::REJECTED, self::CANCELLED, self::REQUIRES_REVIEW], true),
-            self::REQUIRES_REVIEW => in_array($status, [self::APPROVED, self::REJECTED, self::CANCELLED, self::PENDING], true),
+            self::PENDING => in_array($status, [self::APPROVED, self::REJECTED, self::CANCELLED, self::REQUIRES_REVIEW, self::EXPIRED], true),
+            self::REQUIRES_REVIEW => in_array($status, [self::APPROVED, self::REJECTED, self::CANCELLED, self::PENDING, self::EXPIRED], true),
             self::APPROVED, self::REJECTED, self::CANCELLED, self::EXPIRED => false,
         };
     }

@@ -39,6 +39,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_to_array_returns_all_properties(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -66,6 +68,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_currency_returns_currency(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'EUR'),
             availableCashBalance: Money::of(80000, 'EUR'),
             investedCashBalance: Money::of(15000, 'EUR'),
@@ -86,6 +90,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_has_alerts_returns_true_when_alerts_exist(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -107,6 +113,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_has_alerts_returns_false_when_no_alerts(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -127,6 +135,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_critical_alerts_filters_critical_only(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -154,6 +164,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_id_returns_string(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -175,6 +187,8 @@ final class DashboardMetricsTest extends TestCase
     {
         $date = new DateTimeImmutable('2026-01-15');
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -196,6 +210,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_total_cash_position_returns_money(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -216,6 +232,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_available_cash_balance_returns_money(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -236,6 +254,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_projected_cash_flow_methods(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -258,6 +278,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_days_cash_on_hand_returns_float(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -278,6 +300,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_cash_conversion_cycle_returns_float(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -298,6 +322,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_pending_approvals_count_returns_int(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -318,6 +344,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_active_investments_count_returns_int(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -338,6 +366,8 @@ final class DashboardMetricsTest extends TestCase
     public function test_get_active_intercompany_loans_count_returns_int(): void
     {
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -359,6 +389,8 @@ final class DashboardMetricsTest extends TestCase
     {
         $alerts = [['type' => 'test', 'severity' => 'warning']];
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),
@@ -381,6 +413,8 @@ final class DashboardMetricsTest extends TestCase
     {
         $kpiSummary = ['days_cash_on_hand' => ['value' => 45]];
         $metrics = new DashboardMetrics(
+            id: 'TRE-DASH-001',
+            tenantId: 'tenant-001',
             totalCashPosition: Money::of(100000, 'USD'),
             availableCashBalance: Money::of(80000, 'USD'),
             investedCashBalance: Money::of(15000, 'USD'),

@@ -90,6 +90,8 @@ final readonly class TreasuryForecastService
             $riskFactors,
             $currency
         ) implements TreasuryForecastInterface {
+            private DateTimeImmutable $createdAt;
+
             public function __construct(
                 private string $id,
                 private string $tenantId,
@@ -106,7 +108,9 @@ final readonly class TreasuryForecastService
                 private array $assumptions,
                 private array $riskFactors,
                 private string $currency
-            ) {}
+            ) {
+                $this->createdAt = new DateTimeImmutable();
+            }
 
             public function getId(): string { return $this->id; }
             public function getTenantId(): string { return $this->tenantId; }
@@ -123,8 +127,8 @@ final readonly class TreasuryForecastService
             public function getAssumptions(): array { return $this->assumptions; }
             public function getRiskFactors(): array { return $this->riskFactors; }
             public function getCurrency(): string { return $this->currency; }
-            public function getCreatedAt(): DateTimeImmutable { return new DateTimeImmutable(); }
-            public function getUpdatedAt(): DateTimeImmutable { return new DateTimeImmutable(); }
+            public function getCreatedAt(): DateTimeImmutable { return $this->createdAt; }
+            public function getUpdatedAt(): DateTimeImmutable { return $this->createdAt; }
             public function getNetCashFlow(): Money { return $this->projectedInflows->subtract($this->projectedOutflows); }
         };
     }
@@ -255,7 +259,7 @@ final readonly class TreasuryForecastService
         DateTimeImmutable $endDate,
         string $currency
     ): Money {
-        return Money::of(PHP_FLOAT_MAX, $currency);
+        return Money::of('999999999999', $currency);
     }
 
     private function calculateConfidenceLevel(ForecastScenario $scenario): float

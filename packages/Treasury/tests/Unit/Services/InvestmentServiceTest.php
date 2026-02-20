@@ -13,6 +13,7 @@ use Nexus\Treasury\Entities\Investment;
 use Nexus\Treasury\Enums\InvestmentStatus;
 use Nexus\Treasury\Enums\InvestmentType;
 use Nexus\Treasury\Exceptions\InvestmentNotFoundException;
+use Nexus\Treasury\Exceptions\InvalidInvestmentStateException;
 use Nexus\Treasury\Services\InvestmentService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -88,7 +89,6 @@ final class InvestmentServiceTest extends TestCase
     public function test_mature_marks_investment_as_matured(): void
     {
         $investment = $this->createActiveInvestment();
-        $maturedInvestment = $this->createMaturedInvestment();
 
         $this->query
             ->expects($this->once())
@@ -172,7 +172,7 @@ final class InvestmentServiceTest extends TestCase
             ->with('TRE-INV-001')
             ->willReturn($maturedInvestment);
 
-        $this->expectException(InvestmentNotFoundException::class);
+        $this->expectException(InvalidInvestmentStateException::class);
 
         $this->service->earlyRedeem('TRE-INV-001');
     }
@@ -387,7 +387,6 @@ final class InvestmentServiceTest extends TestCase
     {
         $investmentDate = new DateTimeImmutable('-60 days');
         $maturityDate = new DateTimeImmutable('-30 days');
-        $now = new DateTimeImmutable();
 
         return new Investment(
             id: 'TRE-INV-002',

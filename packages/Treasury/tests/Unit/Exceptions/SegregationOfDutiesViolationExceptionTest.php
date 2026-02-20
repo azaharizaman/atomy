@@ -13,23 +13,24 @@ final class SegregationOfDutiesViolationExceptionTest extends TestCase
     {
         $exception = SegregationOfDutiesViolationException::sameUserCannotApprove('user-001', 'TXN-001');
 
-        $this->assertStringContainsString('user-001', $exception->getMessage());
-        $this->assertStringContainsString('TXN-001', $exception->getMessage());
+        $this->assertStringContainsString('****', $exception->getMessage());
+        $this->assertStringContainsString('cannot approve', $exception->getMessage());
+        $this->assertStringContainsString('they created', $exception->getMessage());
     }
 
     public function test_requires_different_approver_creates_exception(): void
     {
         $exception = SegregationOfDutiesViolationException::requiresDifferentApprover('TXN-001', 'user-001');
 
-        $this->assertStringContainsString('TXN-001', $exception->getMessage());
-        $this->assertStringContainsString('user-001', $exception->getMessage());
+        $this->assertStringContainsString('****', $exception->getMessage());
+        $this->assertStringContainsString('different user', $exception->getMessage());
     }
 
     public function test_insufficient_approvers_creates_exception(): void
     {
         $exception = SegregationOfDutiesViolationException::insufficientApprovers('TXN-001', 3, 1);
 
-        $this->assertStringContainsString('TXN-001', $exception->getMessage());
+        $this->assertStringContainsString('****', $exception->getMessage());
         $this->assertStringContainsString('3', $exception->getMessage());
         $this->assertStringContainsString('1', $exception->getMessage());
     }
@@ -38,7 +39,7 @@ final class SegregationOfDutiesViolationExceptionTest extends TestCase
     {
         $exception = SegregationOfDutiesViolationException::sameUserMultipleApprovals('user-001', 'TXN-001');
 
-        $this->assertStringContainsString('user-001', $exception->getMessage());
-        $this->assertStringContainsString('TXN-001', $exception->getMessage());
+        $this->assertStringContainsString('****', $exception->getMessage());
+        $this->assertStringContainsString('already approved', $exception->getMessage());
     }
 }

@@ -18,9 +18,9 @@ use Psr\Log\NullLogger;
 
 final class LiquidityPoolServiceTest extends TestCase
 {
-    private LiquidityPoolService $service;
-    private MockObject $query;
-    private MockObject $persist;
+    private readonly LiquidityPoolService $service;
+    private readonly MockObject $query;
+    private readonly MockObject $persist;
 
     protected function setUp(): void
     {
@@ -196,7 +196,7 @@ final class LiquidityPoolServiceTest extends TestCase
             ->with('POOL-001')
             ->willReturn($pool);
 
-        $this->expectException(LiquidityPoolNotFoundException::class);
+        $this->expectException(\Nexus\Treasury\Exceptions\InsufficientLiquidityException::class);
 
         $this->service->reserveFunds('POOL-001', Money::of(50000, 'USD'));
     }

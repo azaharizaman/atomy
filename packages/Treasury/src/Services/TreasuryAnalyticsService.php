@@ -32,7 +32,7 @@ final readonly class TreasuryAnalyticsService
     ): TreasuryAnalyticsInterface {
         $date = $asOfDate ?? new DateTimeImmutable();
 
-        $daysCashOnHand = $this->positionService->getDaysCashOnHand($tenantId);
+        $daysCashOnHand = $this->positionService->getDaysCashOnHand($tenantId, null, $date);
         $dso = $this->getDaysSalesOutstanding($tenantId);
         $dpo = $this->getDaysPayableOutstanding($tenantId);
         $dio = 0.0;
@@ -50,7 +50,14 @@ final readonly class TreasuryAnalyticsService
 
         $forecastAccuracy = $this->getForecastAccuracy($tenantId);
 
+        $position = $this->positionService->calculatePosition($tenantId, null, $date);
+        $currency = $position->getCurrency();
+
         return new TreasuryKPIs(
+            id: TreasuryKPIs::generateId(),
+            tenantId: $tenantId,
+            calculatedAt: $date,
+            currency: $currency,
             daysCashOnHand: $daysCashOnHand,
             cashConversionCycle: $cashConversionCycle,
             daysSalesOutstanding: $dso,
@@ -68,7 +75,7 @@ final readonly class TreasuryAnalyticsService
     {
         $date = $asOfDate ?? new DateTimeImmutable();
 
-        $daysCashOnHand = $this->positionService->getDaysCashOnHand($tenantId);
+        $daysCashOnHand = $this->positionService->getDaysCashOnHand($tenantId, null, $date);
         $quickRatio = $this->calculateQuickRatio($tenantId);
         $currentRatio = $this->calculateCurrentRatio($tenantId);
 
@@ -87,15 +94,13 @@ final readonly class TreasuryAnalyticsService
             'projected_inflows' => $position->getProjectedInflows()->getAmount(),
             'projected_outflows' => $position->getProjectedOutflows()->getAmount(),
             'net_cash_flow' => $position->getNetCashFlow()->getAmount(),
-            'days_cash_on_hand' => $this->positionService->getDaysCashOnHand($tenantId),
+            'days_cash_on_hand' => $this->positionService->getDaysCashOnHand($tenantId, null, $date),
             'currency' => $position->getCurrency(),
         ];
     }
 
-    public function getInvestmentMetrics(string $tenantId, ?DateTimeImmutable $asOfDate = null): array
+    public function getInvestmentMetrics(string $tenantId): array
     {
-        $date = $asOfDate ?? new DateTimeImmutable();
-
         $activeInvestments = $this->investmentQuery->findActiveByTenantId($tenantId);
         $totalInvested = $this->investmentQuery->sumPrincipalByTenantId($tenantId);
         $activeCount = $this->investmentQuery->countActiveByTenantId($tenantId);
@@ -121,10 +126,8 @@ final readonly class TreasuryAnalyticsService
         ];
     }
 
-    public function getWorkingCapitalMetrics(string $tenantId, ?DateTimeImmutable $asOfDate = null): array
+    public function getWorkingCapitalMetrics(string $tenantId): array
     {
-        $date = $asOfDate ?? new DateTimeImmutable();
-
         $dso = $this->getDaysSalesOutstanding($tenantId);
         $dpo = $this->getDaysPayableOutstanding($tenantId);
         $dio = 0.0;

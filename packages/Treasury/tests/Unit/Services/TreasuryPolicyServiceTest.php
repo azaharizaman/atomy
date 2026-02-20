@@ -18,9 +18,9 @@ use Psr\Log\NullLogger;
 
 final class TreasuryPolicyServiceTest extends TestCase
 {
-    private TreasuryPolicyService $service;
-    private MockObject $query;
-    private MockObject $persist;
+    private readonly TreasuryPolicyService $service;
+    private readonly MockObject $query;
+    private readonly MockObject $persist;
 
     protected function setUp(): void
     {
@@ -30,7 +30,6 @@ final class TreasuryPolicyServiceTest extends TestCase
         $this->service = new TreasuryPolicyService(
             $this->query,
             $this->persist,
-            null,
             new NullLogger()
         );
     }

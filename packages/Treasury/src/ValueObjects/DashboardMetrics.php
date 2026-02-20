@@ -10,7 +10,12 @@ use Nexus\Treasury\Contracts\TreasuryDashboardInterface;
 
 final readonly class DashboardMetrics implements TreasuryDashboardInterface
 {
+    private string $id;
+    private string $tenantId;
+
     public function __construct(
+        ?string $id = null,
+        ?string $tenantId = null,
         public Money $totalCashPosition,
         public Money $availableCashBalance,
         public Money $investedCashBalance,
@@ -26,13 +31,27 @@ final readonly class DashboardMetrics implements TreasuryDashboardInterface
         public array $alerts = [],
         public array $kpiSummary = [],
         public DateTimeImmutable $calculatedAt = new DateTimeImmutable(),
-    ) {}
+    ) {
+        $this->id = $id ?? self::generateId();
+        $this->tenantId = $tenantId ?? 'unknown';
+    }
+
+    public static function generateId(): string
+    {
+        $bytes = random_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+        $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+        return 'TRE-DASH-' . $uuid;
+    }
 
     public static function fromArray(array $data): self
     {
         $currency = $data['currency'] ?? 'USD';
 
         return new self(
+            id: $data['id'] ?? null,
+            tenantId: $data['tenant_id'] ?? $data['tenantId'] ?? null,
             totalCashPosition: Money::of($data['total_cash_position'] ?? $data['totalCashPosition'] ?? 0, $currency),
             availableCashBalance: Money::of($data['available_cash_balance'] ?? $data['availableCashBalance'] ?? 0, $currency),
             investedCashBalance: Money::of($data['invested_cash_balance'] ?? $data['investedCashBalance'] ?? 0, $currency),
@@ -54,6 +73,8 @@ final readonly class DashboardMetrics implements TreasuryDashboardInterface
     public function toArray(): array
     {
         return [
+            'id' => $this->id,
+            'tenantId' => $this->tenantId,
             'totalCashPosition' => $this->totalCashPosition->toArray(),
             'availableCashBalance' => $this->availableCashBalance->toArray(),
             'investedCashBalance' => $this->investedCashBalance->toArray(),
@@ -89,12 +110,12 @@ final readonly class DashboardMetrics implements TreasuryDashboardInterface
 
     public function getId(): string
     {
-        return 'TRE-DASH-' . spl_object_id($this);
+        return $this->id;
     }
 
     public function getTenantId(): string
     {
-        return 'tenant';
+        return $this->tenantId;
     }
 
     public function getDashboardDate(): DateTimeImmutable

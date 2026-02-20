@@ -88,8 +88,8 @@ final readonly class WorkingCapitalOptimizer
             public function getOptimizationOpportunities(): array { return $this->optimizationOpportunities; }
             public function getRecommendations(): array { return $this->recommendations; }
             public function getCurrency(): string { return 'USD'; }
-            public function getCreatedAt(): DateTimeImmutable { return new DateTimeImmutable(); }
-            public function getUpdatedAt(): DateTimeImmutable { return new DateTimeImmutable(); }
+            public function getCreatedAt(): DateTimeImmutable { return $this->calculationDate; }
+            public function getUpdatedAt(): DateTimeImmutable { return $this->calculationDate; }
             public function hasNegativeCycle(): bool { return $this->cashConversionCycle < 0; }
         };
     }

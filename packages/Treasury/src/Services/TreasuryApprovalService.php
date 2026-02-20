@@ -16,6 +16,7 @@ use Nexus\Treasury\Enums\ApprovalStatus;
 use Nexus\Treasury\Exceptions\DuplicateApprovalException;
 use Nexus\Treasury\Exceptions\PeriodClosedException;
 use Nexus\Treasury\Exceptions\SegregationOfDutiesViolationException;
+use Nexus\Treasury\Exceptions\TreasuryApprovalExpiredException;
 use Nexus\Treasury\Exceptions\TreasuryApprovalNotFoundException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -240,8 +241,22 @@ final readonly class TreasuryApprovalService
             return true;
         }
 
-        return $policy->isApprovalRequired() &&
-               $amount->greaterThan($policy->getApprovalThreshold());
+        if (!$policy->isApprovalRequired()) {
+            return false;
+        }
+
+        $threshold = $policy->getApprovalThreshold();
+        
+        if ($amount->getCurrency() !== $threshold->getCurrency()) {
+            $this->logger->warning('Currency mismatch in requiresApproval check', [
+                'tenant_id' => $tenantId,
+                'amount_currency' => $amount->getCurrency(),
+                'threshold_currency' => $threshold->getCurrency(),
+            ]);
+            return true;
+        }
+
+        return $amount->greaterThan($threshold);
     }
 
     public function expireApprovals(): int
@@ -289,7 +304,7 @@ final readonly class TreasuryApprovalService
     private function validateCanBeApproved(TreasuryApprovalInterface $approval, string $userId): void
     {
         if ($approval->isExpired()) {
-            throw TreasuryApprovalNotFoundException::forId($approval->getId());
+            throw TreasuryApprovalExpiredException::forId($approval->getId());
         }
 
         if (!$approval->isPending()) {

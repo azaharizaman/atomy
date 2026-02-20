@@ -268,7 +268,6 @@ final class CashConcentrationServiceTest extends TestCase
             ->willReturn('USD');
 
         $result = $this->service->getAccountsWithExcessCash(
-            tenantId: 'tenant-001',
             threshold: Money::of(5000, 'USD'),
             accountIds: ['acc-001', 'acc-002', 'acc-003']
         );
@@ -293,7 +292,6 @@ final class CashConcentrationServiceTest extends TestCase
             ->willReturn('USD');
 
         $result = $this->service->calculateConcentrationEfficiency(
-            tenantId: 'tenant-001',
             targetAccountId: 'target-acc',
             sourceAccountIds: ['acc-001', 'acc-002']
         );

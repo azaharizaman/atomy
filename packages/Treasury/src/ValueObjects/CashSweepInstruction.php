@@ -30,17 +30,51 @@ final readonly class CashSweepInstruction
     {
         $currency = $data['currency'] ?? 'USD';
 
+        $sourceAccountId = $data['source_account_id'] ?? $data['sourceAccountId'] ?? null;
+        $targetAccountId = $data['target_account_id'] ?? $data['targetAccountId'] ?? null;
+
+        $sweepThresholdData = $data['sweep_threshold'] ?? $data['sweepThreshold'] ?? null;
+        $sweepAmountData = $data['sweep_amount'] ?? $data['sweepAmount'] ?? null;
+
+        if ($sourceAccountId === null || $sourceAccountId === '') {
+            throw new InvalidArgumentException('sourceAccountId is required');
+        }
+
+        if ($targetAccountId === null || $targetAccountId === '') {
+            throw new InvalidArgumentException('targetAccountId is required');
+        }
+
+        if ($sweepThresholdData === null) {
+            throw new InvalidArgumentException('sweepThreshold is required');
+        }
+
+        if ($sweepAmountData === null) {
+            throw new InvalidArgumentException('sweepAmount is required');
+        }
+
+        $sweepThreshold = is_array($sweepThresholdData)
+            ? Money::fromArray($sweepThresholdData)
+            : Money::of($sweepThresholdData, $currency);
+
+        $sweepAmount = is_array($sweepAmountData)
+            ? Money::fromArray($sweepAmountData)
+            : Money::of($sweepAmountData, $currency);
+
+        $retainAmount = null;
+        $retainAmountData = $data['retain_amount'] ?? $data['retainAmount'] ?? null;
+        if ($retainAmountData !== null) {
+            $retainAmount = is_array($retainAmountData)
+                ? Money::fromArray($retainAmountData)
+                : Money::of($retainAmountData, $currency);
+        }
+
         return new self(
-            sourceAccountId: $data['source_account_id'] ?? $data['sourceAccountId'],
-            targetAccountId: $data['target_account_id'] ?? $data['targetAccountId'],
-            sweepThreshold: Money::of($data['sweep_threshold'] ?? $data['sweepThreshold'], $currency),
-            sweepAmount: Money::of($data['sweep_amount'] ?? $data['sweepAmount'], $currency),
+            sourceAccountId: $sourceAccountId,
+            targetAccountId: $targetAccountId,
+            sweepThreshold: $sweepThreshold,
+            sweepAmount: $sweepAmount,
             retainMinimum: $data['retain_minimum'] ?? $data['retainMinimum'] ?? true,
-            retainAmount: isset($data['retain_amount'])
-                ? Money::of($data['retain_amount'], $currency)
-                : (isset($data['retainAmount'])
-                    ? Money::of($data['retainAmount'], $currency)
-                    : null),
+            retainAmount: $retainAmount,
         );
     }
 

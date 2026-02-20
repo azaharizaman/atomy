@@ -16,6 +16,7 @@ final class TreasuryPositionTest extends TestCase
         $date = new DateTimeImmutable();
 
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: 'entity-001',
             totalCashBalance: Money::of(100000, 'USD'),
@@ -55,6 +56,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_to_array_returns_array(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -76,6 +78,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_currency_returns_currency(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'EUR'),
@@ -93,6 +96,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_net_cash_flow_calculates_correctly(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -112,6 +116,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_net_position_calculates_correctly(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -131,6 +136,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_has_sufficient_liquidity_returns_true_when_sufficient(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -148,6 +154,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_has_sufficient_liquidity_returns_false_when_insufficient(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -165,6 +172,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_id_returns_string(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -182,6 +190,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_tenant_id_returns_string(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -199,6 +208,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_entity_id_returns_value(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: 'entity-001',
             totalCashBalance: Money::of(100000, 'USD'),
@@ -217,6 +227,7 @@ final class TreasuryPositionTest extends TestCase
     {
         $date = new DateTimeImmutable('2026-01-15');
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -234,6 +245,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_total_cash_balance_returns_money(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -251,6 +263,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_available_cash_balance_returns_money(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -268,6 +281,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_reserved_cash_balance_returns_money(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -285,6 +299,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_invested_cash_balance_returns_money(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -302,6 +317,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_projected_inflows_returns_money(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -319,6 +335,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_projected_outflows_returns_money(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -336,6 +353,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_created_at_returns_date(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),
@@ -353,6 +371,7 @@ final class TreasuryPositionTest extends TestCase
     public function test_get_updated_at_returns_date(): void
     {
         $position = new TreasuryPosition(
+            id: 'TRE-POS-001',
             tenantId: 'tenant-001',
             entityId: null,
             totalCashBalance: Money::of(100000, 'USD'),

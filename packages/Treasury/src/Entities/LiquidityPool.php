@@ -24,7 +24,19 @@ final readonly class LiquidityPool implements LiquidityPoolInterface
         private array $bankAccountIds,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
-    ) {}
+    ) {
+        if ($totalBalance->getCurrency() !== $currency) {
+            throw new \InvalidArgumentException('Total balance currency must match the pool currency');
+        }
+
+        if ($availableBalance->getCurrency() !== $currency) {
+            throw new \InvalidArgumentException('Available balance currency must match the pool currency');
+        }
+
+        if ($reservedBalance->getCurrency() !== $currency) {
+            throw new \InvalidArgumentException('Reserved balance currency must match the pool currency');
+        }
+    }
 
     public function getId(): string
     {

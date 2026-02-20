@@ -6,6 +6,7 @@ namespace Nexus\Treasury\Services;
 
 use DateTimeImmutable;
 use Nexus\Common\ValueObjects\Money;
+use Nexus\Identity\Contracts\UserQueryInterface;
 use Nexus\Treasury\Contracts\AuthorizationMatrixInterface;
 use Nexus\Treasury\Contracts\AuthorizationMatrixQueryInterface;
 use Nexus\Treasury\Contracts\AuthorizationMatrixPersistInterface;
@@ -21,6 +22,7 @@ final readonly class AuthorizationMatrixService
         private AuthorizationMatrixQueryInterface $query,
         private AuthorizationMatrixPersistInterface $persist,
         private ?TenantContextInterface $tenantContext = null,
+        private ?UserQueryInterface $userQuery = null,
         private LoggerInterface $logger = new NullLogger()
     ) {}
 
@@ -265,7 +267,16 @@ final readonly class AuthorizationMatrixService
 
     private function getUserRoles(string $userId): array
     {
-        return [];
+        if ($this->userQuery === null) {
+            return [];
+        }
+
+        $roles = $this->userQuery->getUserRoles($userId);
+        
+        return array_map(
+            fn($role) => $role->getId(),
+            $roles
+        );
     }
 
     private function generateId(): string

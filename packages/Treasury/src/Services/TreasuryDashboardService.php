@@ -14,6 +14,7 @@ use Nexus\Treasury\Contracts\IntercompanyLoanQueryInterface;
 use Nexus\Treasury\Contracts\LiquidityPoolQueryInterface;
 use Nexus\Treasury\Contracts\TreasuryApprovalQueryInterface;
 use Nexus\Treasury\Contracts\TreasuryDashboardInterface;
+use Nexus\Treasury\Contracts\TreasuryPolicyQueryInterface;
 use Nexus\Treasury\ValueObjects\DashboardMetrics;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -25,6 +26,7 @@ final readonly class TreasuryDashboardService
         private InvestmentQueryInterface $investmentQuery,
         private IntercompanyLoanQueryInterface $loanQuery,
         private TreasuryApprovalQueryInterface $approvalQuery,
+        private TreasuryPolicyQueryInterface $policyQuery,
         private TreasuryPositionService $positionService,
         private ?PayableDataProviderInterface $payableProvider = null,
         private ?ReceivableDataProviderInterface $receivableProvider = null,
@@ -67,6 +69,8 @@ final readonly class TreasuryDashboardService
         );
 
         return new DashboardMetrics(
+            id: DashboardMetrics::generateId(),
+            tenantId: $tenantId,
             totalCashPosition: $position->getTotalCashBalance(),
             availableCashBalance: $position->getAvailableCashBalance(),
             investedCashBalance: $position->getInvestedCashBalance(),
@@ -262,6 +266,15 @@ final readonly class TreasuryDashboardService
 
     private function getDefaultCurrency(string $tenantId): string
     {
-        return 'USD';
+        $policy = $this->policyQuery->findEffectiveForDate(
+            $tenantId,
+            new DateTimeImmutable()
+        );
+
+        if ($policy !== null) {
+            return $policy->getMinimumCashBalance()->getCurrency();
+        }
+
+        return $_ENV['DEFAULT_CURRENCY'] ?? 'USD';
     }
 }

@@ -6,35 +6,50 @@ namespace Nexus\Treasury\Exceptions;
 
 final class SegregationOfDutiesViolationException extends TreasuryException
 {
+    private static function maskId(string $id): string
+    {
+        if (strlen($id) <= 8) {
+            return '****';
+        }
+        return substr($id, 0, 4) . '****' . substr($id, -4);
+    }
+
     public static function sameUserCannotApprove(string $userId, string $transactionId): self
     {
+        $maskedUserId = self::maskId($userId);
+        $maskedTransactionId = self::maskId($transactionId);
         return new self(
-            "Segregation of duties violation: User {$userId} cannot approve " .
-            "transaction {$transactionId} that they created"
+            "Segregation of duties violation: User {$maskedUserId} cannot approve " .
+            "transaction {$maskedTransactionId} that they created"
         );
     }
 
     public static function requiresDifferentApprover(string $transactionId, string $creatorId): self
     {
+        $maskedTransactionId = self::maskId($transactionId);
+        $maskedCreatorId = self::maskId($creatorId);
         return new self(
-            "Transaction {$transactionId} requires approval from a different user " .
-            "than the creator ({$creatorId})"
+            "Transaction {$maskedTransactionId} requires approval from a different user " .
+            "than the creator ({$maskedCreatorId})"
         );
     }
 
     public static function insufficientApprovers(string $transactionId, int $required, int $current): self
     {
+        $maskedTransactionId = self::maskId($transactionId);
         return new self(
-            "Transaction {$transactionId} requires {$required} distinct approvers, " .
+            "Transaction {$maskedTransactionId} requires {$required} distinct approvers, " .
             "but only {$current} are available"
         );
     }
 
     public static function sameUserMultipleApprovals(string $userId, string $transactionId): self
     {
+        $maskedUserId = self::maskId($userId);
+        $maskedTransactionId = self::maskId($transactionId);
         return new self(
-            "Segregation of duties violation: User {$userId} has already approved " .
-            "transaction {$transactionId}"
+            "Segregation of duties violation: User {$maskedUserId} has already approved " .
+            "transaction {$maskedTransactionId}"
         );
     }
 }

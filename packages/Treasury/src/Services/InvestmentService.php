@@ -13,6 +13,7 @@ use Nexus\Treasury\Entities\Investment;
 use Nexus\Treasury\Enums\InvestmentStatus;
 use Nexus\Treasury\Enums\InvestmentType;
 use Nexus\Treasury\Exceptions\InvestmentNotFoundException;
+use Nexus\Treasury\Exceptions\InvalidInvestmentStateException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -119,7 +120,7 @@ final readonly class InvestmentService
         $investment = $this->query->findOrFail($investmentId);
 
         if (!$investment->isActive()) {
-            throw InvestmentNotFoundException::forId($investmentId);
+            throw InvalidInvestmentStateException::notActive($investmentId);
         }
 
         $now = new DateTimeImmutable();

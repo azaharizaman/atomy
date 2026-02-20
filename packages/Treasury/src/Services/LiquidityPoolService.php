@@ -12,6 +12,7 @@ use Nexus\Treasury\Contracts\LiquidityPoolQueryInterface;
 use Nexus\Treasury\Contracts\LiquidityPoolPersistInterface;
 use Nexus\Treasury\Entities\LiquidityPool;
 use Nexus\Treasury\Enums\TreasuryStatus;
+use Nexus\Treasury\Exceptions\InsufficientLiquidityException;
 use Nexus\Treasury\Exceptions\LiquidityPoolNotFoundException;
 use Nexus\Treasury\ValueObjects\LiquidityPoolBalance;
 use Psr\Log\LoggerInterface;
@@ -179,7 +180,12 @@ final readonly class LiquidityPoolService
         $pool = $this->query->findOrFail($poolId);
 
         if (!$pool->hasSufficientLiquidity($amount)) {
-            throw LiquidityPoolNotFoundException::forId($poolId);
+            throw InsufficientLiquidityException::forAmount(
+                $poolId,
+                $pool->getCurrency(),
+                $pool->getAvailableBalance()->getAmount(),
+                $amount->getAmount()
+            );
         }
 
         $newReserved = $pool->getReservedBalance()->add($amount);

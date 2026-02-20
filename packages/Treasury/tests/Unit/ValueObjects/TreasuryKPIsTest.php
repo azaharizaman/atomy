@@ -193,6 +193,7 @@ final class TreasuryKPIsTest extends TestCase
     public function test_get_tenant_id_returns_tenant(): void
     {
         $kpis = new TreasuryKPIs(
+            tenantId: 'tenant',
             daysCashOnHand: 30.0,
             cashConversionCycle: 15.0,
             daysSalesOutstanding: 30.0,

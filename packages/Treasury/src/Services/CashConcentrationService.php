@@ -96,7 +96,20 @@ final readonly class CashConcentrationService
         $currency = null;
 
         foreach ($instructions as $instruction) {
-            $currency = $currency ?? $instruction->getCurrency();
+            if ($currency === null) {
+                $currency = $instruction->getCurrency();
+            } else {
+                $instructionCurrency = $instruction->getCurrency();
+                if ($instructionCurrency !== $currency) {
+                    $this->logger->warning('Currency mismatch in batch sweep', [
+                        'instruction_id' => $instruction->sourceAccountId,
+                        'expected_currency' => $currency,
+                        'actual_currency' => $instructionCurrency,
+                    ]);
+                    $results['failed'][] = $instruction;
+                    continue;
+                }
+            }
 
             if ($this->executeSweep($instruction)) {
                 $results['successful'][] = $instruction;
@@ -154,7 +167,6 @@ final readonly class CashConcentrationService
     }
 
     public function getAccountsWithExcessCash(
-        string $tenantId,
         Money $threshold,
         array $accountIds
     ): array {
@@ -184,7 +196,6 @@ final readonly class CashConcentrationService
     }
 
     public function calculateConcentrationEfficiency(
-        string $tenantId,
         string $targetAccountId,
         array $sourceAccountIds
     ): array {

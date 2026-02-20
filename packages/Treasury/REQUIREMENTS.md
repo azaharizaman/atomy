@@ -31,7 +31,7 @@
 | `Nexus\Treasury` | Functional Requirement | FUN-TRES-0007 | Provide method to submit treasury transaction for approval | src/Contracts/TreasuryApprovalInterface.php | ⏳ Pending | - | 2026-02-20 |
 | `Nexus\Treasury` | Functional Requirement | FUN-TRES-0008 | Provide method to approve/reject treasury transaction | src/Contracts/TreasuryApprovalInterface.php | ⏳ Pending | - | 2026-02-20 |
 | `Nexus\Treasury` | Functional Requirement | FUN-TRES-0009 | Provide method to record short-term investment | src/Contracts/InvestmentInterface.php | ⏳ Pending | - | 2026-02-20 |
-| `Nexus\Treasury` | Functional Requirement | FUN-TRES-0010 | Provide method to maturity investment | src/Contracts/InvestmentInterface.php | ⏳ Pending | - | 2026-02-20 |
+| `Nexus\Treasury` | Functional Requirement | FUN-TRES-0010 | Provide method to mature an investment | src/Contracts/InvestmentInterface.php | ⏳ Pending | - | 2026-02-20 |
 | `Nexus\Treasury` | Functional Requirement | FUN-TRES-0011 | Provide method to calculate working capital metrics | src/Contracts/WorkingCapitalOptimizerInterface.php | ⏳ Pending | - | 2026-02-20 |
 | `Nexus\Treasury` | Functional Requirement | FUN-TRES-0012 | Provide method to get treasury dashboard data | src/Contracts/TreasuryDashboardInterface.php | ⏳ Pending | - | 2026-02-20 |
 | `Nexus\Treasury` | Functional Requirement | FUN-TRES-0013 | Provide method to manage authorization limits | src/Contracts/AuthorizationMatrixInterface.php | ⏳ Pending | - | 2026-02-20 |

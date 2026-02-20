@@ -46,6 +46,7 @@ final readonly class TreasuryPositionService
         $projectedOutflows = $this->calculateProjectedOutflows($tenantId, $entityId, $currency);
 
         $position = new TreasuryPosition(
+            id: TreasuryPosition::generateId(),
             tenantId: $tenantId,
             entityId: $entityId,
             totalCashBalance: $totalCashBalance,
@@ -93,6 +94,14 @@ final readonly class TreasuryPositionService
         $position = $this->calculatePosition($tenantId, $entityId);
         $available = $position->getAvailableCashBalance();
 
+        if ($requiredAmount->getCurrency() !== $available->getCurrency()) {
+            throw new \InvalidArgumentException(sprintf(
+                'Currency mismatch in getLiquidityGap: required currency %s does not match available currency %s',
+                $requiredAmount->getCurrency(),
+                $available->getCurrency()
+            ));
+        }
+
         if ($available->greaterThanOrEqual($requiredAmount)) {
             return Money::of(0, $requiredAmount->getCurrency());
         }
@@ -102,9 +111,10 @@ final readonly class TreasuryPositionService
 
     public function getDaysCashOnHand(
         string $tenantId,
-        ?string $entityId = null
+        ?string $entityId = null,
+        ?DateTimeImmutable $asOfDate = null
     ): float {
-        $position = $this->calculatePosition($tenantId, $entityId);
+        $position = $this->calculatePosition($tenantId, $entityId, $asOfDate);
 
         $averageDailyOutflow = $this->estimateAverageDailyOutflow($tenantId, $entityId);
         if ($averageDailyOutflow <= 0) {
@@ -284,6 +294,15 @@ final readonly class TreasuryPositionService
 
     private function getDefaultCurrency(string $tenantId): string
     {
-        return 'USD';
+        $policy = $this->policyQuery->findEffectiveForDate(
+            $tenantId,
+            new DateTimeImmutable()
+        );
+
+        if ($policy !== null) {
+            return $policy->getMinimumCashBalance()->getCurrency();
+        }
+
+        return $_ENV['DEFAULT_CURRENCY'] ?? 'USD';
     }
 }

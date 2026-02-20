@@ -6,6 +6,7 @@ namespace Nexus\Treasury\ValueObjects;
 
 use Nexus\Common\ValueObjects\Money;
 use DateTimeImmutable;
+use InvalidArgumentException;
 
 final readonly class LiquidityPoolBalance
 {
@@ -19,13 +20,33 @@ final readonly class LiquidityPoolBalance
 
     public static function fromArray(array $data): self
     {
-        $currency = $data['currency'] ?? 'USD';
+        $poolId = $data['pool_id'] ?? $data['poolId'] ?? null;
+        if ($poolId === null || $poolId === '') {
+            throw new InvalidArgumentException("Missing required field 'pool_id' in LiquidityPoolBalance::fromArray");
+        }
+
+        $totalBalanceData = $data['total_balance'] ?? $data['totalBalance'] ?? null;
+        if ($totalBalanceData === null) {
+            throw new InvalidArgumentException("Missing required field 'total_balance' in LiquidityPoolBalance::fromArray");
+        }
+
+        $availableBalanceData = $data['available_balance'] ?? $data['availableBalance'] ?? null;
+        if ($availableBalanceData === null) {
+            throw new InvalidArgumentException("Missing required field 'available_balance' in LiquidityPoolBalance::fromArray");
+        }
+
+        $reservedBalanceData = $data['reserved_balance'] ?? $data['reservedBalance'] ?? null;
+        if ($reservedBalanceData === null) {
+            throw new InvalidArgumentException("Missing required field 'reserved_balance' in LiquidityPoolBalance::fromArray");
+        }
+
+        $currency = $data['currency'] ?? null;
 
         return new self(
-            poolId: $data['pool_id'] ?? $data['poolId'],
-            totalBalance: Money::of($data['total_balance'] ?? $data['totalBalance'], $currency),
-            availableBalance: Money::of($data['available_balance'] ?? $data['availableBalance'], $currency),
-            reservedBalance: Money::of($data['reserved_balance'] ?? $data['reservedBalance'], $currency),
+            poolId: $poolId,
+            totalBalance: is_array($totalBalanceData) ? Money::fromArray($totalBalanceData) : Money::of($totalBalanceData, $currency ?? 'USD'),
+            availableBalance: is_array($availableBalanceData) ? Money::fromArray($availableBalanceData) : Money::of($availableBalanceData, $currency ?? 'USD'),
+            reservedBalance: is_array($reservedBalanceData) ? Money::fromArray($reservedBalanceData) : Money::of($reservedBalanceData, $currency ?? 'USD'),
             calculatedAt: new DateTimeImmutable($data['calculated_at'] ?? $data['calculatedAt'] ?? 'now'),
         );
     }

@@ -23,11 +23,11 @@ use Psr\Log\NullLogger;
 
 final class TreasuryApprovalServiceTest extends TestCase
 {
-    private TreasuryApprovalService $service;
-    private MockObject $query;
-    private MockObject $persist;
-    private MockObject $policyQuery;
-    private AuthorizationMatrixService $authMatrixService;
+    private readonly TreasuryApprovalService $service;
+    private readonly MockObject $query;
+    private readonly MockObject $persist;
+    private readonly MockObject $policyQuery;
+    private readonly AuthorizationMatrixService $authMatrixService;
 
     protected function setUp(): void
     {
@@ -62,6 +62,7 @@ final class TreasuryApprovalServiceTest extends TestCase
         $this->authMatrixService = new AuthorizationMatrixService(
             $authQuery,
             $authPersist,
+            null,
             null,
             new NullLogger()
         );

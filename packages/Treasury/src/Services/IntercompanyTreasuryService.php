@@ -11,6 +11,7 @@ use Nexus\Treasury\Contracts\IntercompanyLoanQueryInterface;
 use Nexus\Treasury\Contracts\IntercompanyTreasuryInterface;
 use Nexus\Treasury\Entities\IntercompanyLoan;
 use Nexus\Treasury\Exceptions\IntercompanyLoanNotFoundException;
+use Nexus\Treasury\Support\InterestCalculator;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -167,23 +168,72 @@ final readonly class IntercompanyTreasuryService
         $loansFrom = $this->query->findByFromEntity($entityId);
         $loansTo = $this->query->findByToEntity($entityId);
 
-        $totalLent = 0.0;
-        $totalBorrowed = 0.0;
-        $totalInterestReceivable = 0.0;
-        $totalInterestPayable = 0.0;
+        $lentByCurrency = [];
+        $borrowedByCurrency = [];
+        $interestReceivableByCurrency = [];
+        $interestPayableByCurrency = [];
 
         foreach ($loansFrom as $loan) {
             if ($loan->isActive()) {
-                $totalLent += $loan->getOutstandingBalance()->getAmount();
-                $totalInterestReceivable += $this->calculateInterest($loan->getId())->getAmount();
+                $currency = $loan->getOutstandingBalance()->getCurrency();
+                $outstanding = $loan->getOutstandingBalance()->getAmount();
+                $interest = $this->calculateInterest($loan->getId())->getAmount();
+
+                if (!isset($lentByCurrency[$currency])) {
+                    $lentByCurrency[$currency] = 0.0;
+                }
+                if (!isset($interestReceivableByCurrency[$currency])) {
+                    $interestReceivableByCurrency[$currency] = 0.0;
+                }
+
+                $lentByCurrency[$currency] += $outstanding;
+                $interestReceivableByCurrency[$currency] += $interest;
             }
         }
 
         foreach ($loansTo as $loan) {
             if ($loan->isActive()) {
-                $totalBorrowed += $loan->getOutstandingBalance()->getAmount();
-                $totalInterestPayable += $this->calculateInterest($loan->getId())->getAmount();
+                $currency = $loan->getOutstandingBalance()->getCurrency();
+                $outstanding = $loan->getOutstandingBalance()->getAmount();
+                $interest = $this->calculateInterest($loan->getId())->getAmount();
+
+                if (!isset($borrowedByCurrency[$currency])) {
+                    $borrowedByCurrency[$currency] = 0.0;
+                }
+                if (!isset($interestPayableByCurrency[$currency])) {
+                    $interestPayableByCurrency[$currency] = 0.0;
+                }
+
+                $borrowedByCurrency[$currency] += $outstanding;
+                $interestPayableByCurrency[$currency] += $interest;
             }
+        }
+
+        $allCurrencies = array_unique(array_merge(
+            array_keys($lentByCurrency),
+            array_keys($borrowedByCurrency)
+        ));
+
+        $netByCurrency = [];
+        $netInterestByCurrency = [];
+        $totalLent = 0.0;
+        $totalBorrowed = 0.0;
+        $totalInterestReceivable = 0.0;
+        $totalInterestPayable = 0.0;
+
+        foreach ($allCurrencies as $currency) {
+            $lent = $lentByCurrency[$currency] ?? 0.0;
+            $borrowed = $borrowedByCurrency[$currency] ?? 0.0;
+            $interestRec = $interestReceivableByCurrency[$currency] ?? 0.0;
+            $interestPay = $interestPayableByCurrency[$currency] ?? 0.0;
+
+            $netByCurrency[$currency] = $lent - $borrowed;
+            $netInterestByCurrency[$currency] = $interestRec - $interestPay;
+
+            $totalLent += $lent;
+            $totalBorrowed += $borrowed;
+            $totalInterestReceivable += $interestRec;
+            $totalInterestPayable += $interestPay;
         }
 
         return [
@@ -194,6 +244,12 @@ final readonly class IntercompanyTreasuryService
             'interest_receivable' => $totalInterestReceivable,
             'interest_payable' => $totalInterestPayable,
             'net_interest' => $totalInterestReceivable - $totalInterestPayable,
+            'total_lent_by_currency' => $lentByCurrency,
+            'total_borrowed_by_currency' => $borrowedByCurrency,
+            'net_by_currency' => $netByCurrency,
+            'interest_receivable_by_currency' => $interestReceivableByCurrency,
+            'interest_payable_by_currency' => $interestPayableByCurrency,
+            'net_interest_by_currency' => $netInterestByCurrency,
         ];
     }
 
@@ -269,11 +325,12 @@ final readonly class IntercompanyTreasuryService
         DateTimeImmutable $startDate,
         DateTimeImmutable $asOfDate
     ): Money {
-        $days = (int) $startDate->diff($asOfDate)->days;
-        $years = $days / 365;
-        $accrued = $principal->getAmount() * ($interestRate / 100) * $years;
-
-        return Money::of($accrued, $principal->getCurrency());
+        return InterestCalculator::calculateSimpleInterest(
+            $principal,
+            $interestRate,
+            $startDate,
+            $asOfDate
+        );
     }
 
     private function addPaymentToSchedule(array $schedule, Money $amount, DateTimeImmutable $date): array

@@ -9,22 +9,69 @@ use Nexus\Treasury\Contracts\TreasuryAnalyticsInterface;
 
 final readonly class TreasuryKPIs implements TreasuryAnalyticsInterface
 {
+    private string $id;
+    private string $tenantId;
+    private DateTimeImmutable $calculatedAt;
+    private DateTimeImmutable $createdAt;
+    private DateTimeImmutable $updatedAt;
+    private ?string $currency;
+
     public function __construct(
-        public float $daysCashOnHand,
-        public float $cashConversionCycle,
-        public float $daysSalesOutstanding,
-        public float $daysPayableOutstanding,
-        public float $daysInventoryOutstanding,
-        public float $quickRatio,
-        public float $currentRatio,
-        public float $workingCapitalRatio,
-        public float $liquidityScore,
+        ?string $id = null,
+        ?string $tenantId = null,
+        ?DateTimeImmutable $calculatedAt = null,
+        ?DateTimeImmutable $createdAt = null,
+        ?DateTimeImmutable $updatedAt = null,
+        ?string $currency = null,
+        public float $daysCashOnHand = 0.0,
+        public float $cashConversionCycle = 0.0,
+        public float $daysSalesOutstanding = 0.0,
+        public float $daysPayableOutstanding = 0.0,
+        public float $daysInventoryOutstanding = 0.0,
+        public float $quickRatio = 0.0,
+        public float $currentRatio = 0.0,
+        public float $workingCapitalRatio = 0.0,
+        public float $liquidityScore = 0.0,
         public ?float $forecastAccuracy = null,
-    ) {}
+    ) {
+        $this->id = $id ?? self::generateId();
+        $this->tenantId = $tenantId ?? 'unknown';
+        $this->calculatedAt = $calculatedAt ?? new DateTimeImmutable();
+        $this->createdAt = $createdAt ?? $this->calculatedAt;
+        $this->updatedAt = $updatedAt ?? $this->calculatedAt;
+        $this->currency = $currency ?? 'USD';
+    }
+
+    public static function generateId(): string
+    {
+        $bytes = random_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
+        $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+        return 'TRE-KPI-' . $uuid;
+    }
 
     public static function fromArray(array $data): self
     {
         return new self(
+            id: $data['id'] ?? self::generateId(),
+            tenantId: $data['tenant_id'] ?? $data['tenantId'] ?? 'unknown',
+            calculatedAt: isset($data['calculated_at'])
+                ? new DateTimeImmutable($data['calculated_at'])
+                : (isset($data['calculatedAt'])
+                    ? new DateTimeImmutable($data['calculatedAt'])
+                    : new DateTimeImmutable()),
+            createdAt: isset($data['created_at'])
+                ? new DateTimeImmutable($data['created_at'])
+                : (isset($data['createdAt'])
+                    ? new DateTimeImmutable($data['createdAt'])
+                    : null),
+            updatedAt: isset($data['updated_at'])
+                ? new DateTimeImmutable($data['updated_at'])
+                : (isset($data['updatedAt'])
+                    ? new DateTimeImmutable($data['updatedAt'])
+                    : null),
+            currency: $data['currency'] ?? null,
             daysCashOnHand: (float) ($data['days_cash_on_hand'] ?? $data['daysCashOnHand'] ?? 0.0),
             cashConversionCycle: (float) ($data['cash_conversion_cycle'] ?? $data['cashConversionCycle'] ?? 0.0),
             daysSalesOutstanding: (float) ($data['days_sales_outstanding'] ?? $data['daysSalesOutstanding'] ?? 0.0),
@@ -43,6 +90,12 @@ final readonly class TreasuryKPIs implements TreasuryAnalyticsInterface
     public function toArray(): array
     {
         return [
+            'id' => $this->id,
+            'tenantId' => $this->tenantId,
+            'calculatedAt' => $this->calculatedAt->format('Y-m-d H:i:s'),
+            'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
+            'updatedAt' => $this->updatedAt->format('Y-m-d H:i:s'),
+            'currency' => $this->currency,
             'daysCashOnHand' => $this->daysCashOnHand,
             'cashConversionCycle' => $this->cashConversionCycle,
             'daysSalesOutstanding' => $this->daysSalesOutstanding,
@@ -80,17 +133,17 @@ final readonly class TreasuryKPIs implements TreasuryAnalyticsInterface
 
     public function getId(): string
     {
-        return 'TRE-KPI-' . spl_object_id($this);
+        return $this->id;
     }
 
     public function getTenantId(): string
     {
-        return 'tenant';
+        return $this->tenantId;
     }
 
     public function getCalculationDate(): DateTimeImmutable
     {
-        return new DateTimeImmutable();
+        return $this->calculatedAt;
     }
 
     public function getDaysCashOnHand(): float
@@ -145,16 +198,16 @@ final readonly class TreasuryKPIs implements TreasuryAnalyticsInterface
 
     public function getCurrency(): string
     {
-        return 'USD';
+        return $this->currency;
     }
 
     public function getCreatedAt(): DateTimeImmutable
     {
-        return new DateTimeImmutable();
+        return $this->createdAt;
     }
 
     public function getUpdatedAt(): DateTimeImmutable
     {
-        return new DateTimeImmutable();
+        return $this->updatedAt;
     }
 }
