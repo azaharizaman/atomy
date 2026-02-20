@@ -42,4 +42,10 @@ final class SegregationOfDutiesViolationExceptionTest extends TestCase
         $this->assertStringContainsString('****', $exception->getMessage());
         $this->assertStringContainsString('already approved', $exception->getMessage());
     }
+
+    public function test_mask_id_fully_masks_short_ids(): void
+    {
+        $masked = SegregationOfDutiesViolationException::sameUserCannotApprove('ab', 'cd');
+        $this->assertStringContainsString('****', $masked->getMessage());
+    }
 }

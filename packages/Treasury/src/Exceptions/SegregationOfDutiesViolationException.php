@@ -8,10 +8,15 @@ final class SegregationOfDutiesViolationException extends TreasuryException
 {
     private static function maskId(string $id): string
     {
-        if (strlen($id) <= 8) {
+        $length = strlen($id);
+        if ($length <= 4) {
             return '****';
         }
-        return substr($id, 0, 4) . '****' . substr($id, -4);
+        if ($length <= 12) {
+            return '****';
+        }
+        $keep = max(1, (int) ($length * 0.25));
+        return substr($id, 0, $keep) . str_repeat('*', $length - ($keep * 2)) . substr($id, -$keep);
     }
 
     public static function sameUserCannotApprove(string $userId, string $transactionId): self
