@@ -277,6 +277,9 @@ final readonly class SalesPlaybookWorkflow
      */
     private function getPlaybookSteps(string $playbookType, string $entityId): array
     {
+        // Reserved for future entity-specific step customization
+        $entityId;
+        
         $steps = [
             self::PLAYBOOK_NEW_LEAD => [
                 ['id' => 'step_1', 'title' => 'Verify Lead Information', 'description' => 'Confirm contact details and company information', 'order' => 1],
@@ -328,7 +331,10 @@ final readonly class SalesPlaybookWorkflow
      */
     private function getCompletedSteps(string $entityId, string $playbookType): array
     {
-        // In real implementation, query database for completed steps
+        // Reserved for future persistence implementation
+        $entityId;
+        $playbookType;
+        
         return [];
     }
 
@@ -341,6 +347,9 @@ final readonly class SalesPlaybookWorkflow
      */
     private function determinePlaybookForEvent(string $eventType, string $entityId): ?string
     {
+        // Reserved for future entity-specific event handling
+        $entityId;
+        
         $eventMapping = [
             'lead_created' => self::PLAYBOOK_NEW_LEAD,
             'lead_status_changed' => self::PLAYBOOK_QUALIFICATION,

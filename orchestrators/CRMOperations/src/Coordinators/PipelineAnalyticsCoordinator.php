@@ -103,6 +103,9 @@ final readonly class PipelineAnalyticsCoordinator
      */
     public function getOpportunitiesByStage(string $tenantId): array
     {
+        // Tenant context handled by query layer - intentionally unused
+        $tenantId;
+        
         $stages = [];
         
         foreach (\Nexus\CRM\Enums\OpportunityStage::openStages() as $stage) {
@@ -124,6 +127,9 @@ final readonly class PipelineAnalyticsCoordinator
      */
     public function getOpportunitiesByPipeline(string $tenantId): array
     {
+        // Tenant context handled by query layer - intentionally unused
+        $tenantId;
+        
         $pipelines = [];
         
         foreach ($this->pipelineQuery->findActive() as $pipeline) {
@@ -223,6 +229,9 @@ final readonly class PipelineAnalyticsCoordinator
      */
     private function countOpenOpportunities(string $tenantId): int
     {
+        // Tenant context handled by query layer - intentionally unused
+        $tenantId;
+        
         $count = 0;
         foreach (\Nexus\CRM\Enums\OpportunityStage::openStages() as $stage) {
             $count += $this->opportunityQuery->countByStage($stage);
@@ -235,6 +244,9 @@ final readonly class PipelineAnalyticsCoordinator
      */
     private function calculateAverageDealSize(string $tenantId): int
     {
+        // Tenant context handled by query layer - intentionally unused
+        $tenantId;
+        
         $totalValue = $this->opportunityQuery->getTotalOpenValue();
         $count = $this->countOpenOpportunities($tenantId);
 

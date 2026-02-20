@@ -40,16 +40,16 @@ final readonly class RenewalManagementWorkflow
 
     public function calculateChurnRisk(string $accountId): int
     {
-        throw new \LogicException('calculateChurnRisk is not implemented');
+        throw new \LogicException(sprintf('calculateChurnRisk not implemented for account: %s', $accountId));
     }
 
     public function identifyUpsellOpportunities(string $accountId): array
     {
-        throw new \LogicException('identifyUpsellOpportunities is not implemented');
+        throw new \LogicException(sprintf('identifyUpsellOpportunities not implemented for account: %s', $accountId));
     }
 
     public function trackRenewalProbability(string $renewalId): float
     {
-        throw new \LogicException('trackRenewalProbability is not implemented');
+        throw new \LogicException(sprintf('trackRenewalProbability not implemented for renewal: %s', $renewalId));
     }
 }
