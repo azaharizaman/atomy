@@ -6,6 +6,7 @@ namespace Nexus\Treasury\Services;
 
 use DateTimeImmutable;
 use Nexus\Common\ValueObjects\Money;
+use Nexus\Treasury\Contracts\Integration\InventoryDataProviderInterface;
 use Nexus\Treasury\Contracts\Integration\PayableDataProviderInterface;
 use Nexus\Treasury\Contracts\Integration\ReceivableDataProviderInterface;
 use Nexus\Treasury\Contracts\InvestmentQueryInterface;
@@ -23,6 +24,7 @@ final readonly class TreasuryAnalyticsService
         private TreasuryPositionService $positionService,
         private ?PayableDataProviderInterface $payableProvider = null,
         private ?ReceivableDataProviderInterface $receivableProvider = null,
+        private ?InventoryDataProviderInterface $inventoryProvider = null,
         private LoggerInterface $logger = new NullLogger()
     ) {}
 
@@ -35,12 +37,12 @@ final readonly class TreasuryAnalyticsService
         $daysCashOnHand = $this->positionService->getDaysCashOnHand($tenantId, null, $date);
         $dso = $this->getDaysSalesOutstanding($tenantId);
         $dpo = $this->getDaysPayableOutstanding($tenantId);
-        $dio = 0.0;
+        $dio = $this->getDaysInventoryOutstanding($tenantId);
         $cashConversionCycle = $dso + $dio - $dpo;
 
         $quickRatio = $this->calculateQuickRatio($tenantId);
         $currentRatio = $this->calculateCurrentRatio($tenantId);
-        $workingCapitalRatio = $currentRatio;
+        $workingCapitalRatio = $this->calculateWorkingCapitalRatio($tenantId);
 
         $liquidityScore = $this->calculateLiquidityScore(
             $daysCashOnHand,
@@ -188,14 +190,81 @@ final readonly class TreasuryAnalyticsService
         return $this->payableProvider->getDaysPayableOutstanding($tenantId);
     }
 
+    private function getDaysInventoryOutstanding(string $tenantId): float
+    {
+        if ($this->inventoryProvider === null) {
+            return 0.0;
+        }
+
+        return $this->inventoryProvider->getDaysInventoryOutstanding($tenantId);
+    }
+
     private function calculateQuickRatio(string $tenantId): float
     {
-        return 1.0;
+        if ($this->receivableProvider === null || $this->payableProvider === null) {
+            return -1.0;
+        }
+
+        $date = date('Y-m-d');
+        $receivables = $this->receivableProvider->getTotalReceivables($tenantId, $date);
+        $currentLiabilities = $this->payableProvider->getTotalPayables($tenantId, $date);
+
+        if ($currentLiabilities <= 0) {
+            return -1.0;
+        }
+
+        return $receivables / $currentLiabilities;
     }
 
     private function calculateCurrentRatio(string $tenantId): float
     {
-        return 1.5;
+        if ($this->receivableProvider === null || $this->payableProvider === null) {
+            return -1.0;
+        }
+
+        $date = date('Y-m-d');
+        $receivables = $this->receivableProvider->getTotalReceivables($tenantId, $date);
+        
+        $inventory = 0.0;
+        if ($this->inventoryProvider !== null) {
+            $inventory = $this->inventoryProvider->getTotalInventoryValue($tenantId, $date);
+        }
+
+        $currentAssets = $receivables + $inventory;
+        $currentLiabilities = $this->payableProvider->getTotalPayables($tenantId, $date);
+
+        if ($currentLiabilities <= 0) {
+            return -1.0;
+        }
+
+        return $currentAssets / $currentLiabilities;
+    }
+
+    private function calculateWorkingCapitalRatio(string $tenantId): float
+    {
+        if ($this->receivableProvider === null || $this->payableProvider === null) {
+            return -1.0;
+        }
+
+        $date = date('Y-m-d');
+        $receivables = $this->receivableProvider->getTotalReceivables($tenantId, $date);
+        
+        $inventory = 0.0;
+        if ($this->inventoryProvider !== null) {
+            $inventory = $this->inventoryProvider->getTotalInventoryValue($tenantId, $date);
+        }
+
+        $currentAssets = $receivables + $inventory;
+        $currentLiabilities = $this->payableProvider->getTotalPayables($tenantId, $date);
+
+        $workingCapital = $currentAssets - $currentLiabilities;
+        
+        $revenue = $receivables * 4;
+        if ($revenue <= 0) {
+            return -1.0;
+        }
+
+        return $workingCapital / $revenue;
     }
 
     private function calculateLiquidityScore(

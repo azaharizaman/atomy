@@ -78,6 +78,10 @@ final readonly class InvestmentService
             return $investment;
         }
 
+        if (!$investment->isActive()) {
+            throw InvalidInvestmentStateException::notActive($investmentId);
+        }
+
         $now = new DateTimeImmutable();
         $accruedInterest = $this->calculateAccruedInterest(
             $investment->getPrincipalAmount(),
@@ -117,6 +121,13 @@ final readonly class InvestmentService
 
     public function earlyRedeem(string $investmentId, float $penaltyRate = 0.0): InvestmentInterface
     {
+        if ($penaltyRate < 0 || $penaltyRate > 100) {
+            throw new \InvalidArgumentException(sprintf(
+                'Penalty rate must be between 0 and 100, got %f',
+                $penaltyRate
+            ));
+        }
+
         $investment = $this->query->findOrFail($investmentId);
 
         if (!$investment->isActive()) {
@@ -134,6 +145,10 @@ final readonly class InvestmentService
         if ($penaltyRate > 0) {
             $penalty = $accruedInterest->multiply($penaltyRate / 100);
             $accruedInterest = $accruedInterest->subtract($penalty);
+            
+            if ($accruedInterest->isNegative()) {
+                $accruedInterest = \Nexus\Common\ValueObjects\Money::of(0, $accruedInterest->getCurrency());
+            }
         }
 
         $redeemed = new Investment(
@@ -203,30 +218,52 @@ final readonly class InvestmentService
         $maturedInvestments = $this->query->findMaturedByTenantId($tenantId);
         $totalPrincipal = $this->query->sumPrincipalByTenantId($tenantId);
 
+        $currencies = [];
         $byType = [];
+        
         foreach ($activeInvestments as $investment) {
+            $currency = $investment->getPrincipalAmount()->getCurrency();
+            $currencies[$currency] = true;
+            
             $type = $investment->getInvestmentType()->value;
-            if (!isset($byType[$type])) {
-                $byType[$type] = [
+            $key = $type . '|' . $currency;
+            
+            if (!isset($byType[$key])) {
+                $byType[$key] = [
+                    'type' => $type,
+                    'currency' => $currency,
                     'count' => 0,
                     'total_principal' => 0,
-                    'avg_rate' => 0,
+                    'total_rate' => 0,
                 ];
             }
-            $byType[$type]['count']++;
-            $byType[$type]['total_principal'] += $investment->getPrincipalAmount()->getAmount();
-            $byType[$type]['avg_rate'] += $investment->getInterestRate();
+            $byType[$key]['count']++;
+            $byType[$key]['total_principal'] += $investment->getPrincipalAmount()->getAmount();
+            $byType[$key]['total_rate'] += $investment->getInterestRate();
         }
 
-        foreach ($byType as $type => &$data) {
-            $data['avg_rate'] /= $data['count'];
+        $byTypeArray = [];
+        foreach ($byType as $data) {
+            $data['avg_rate'] = $data['count'] > 0 ? $data['total_rate'] / $data['count'] : 0;
+            unset($data['total_rate']);
+            $byTypeArray[] = $data;
+        }
+
+        if (count($currencies) > 1) {
+            return [
+                'active_count' => count($activeInvestments),
+                'matured_count' => count($maturedInvestments),
+                'total_principal' => null,
+                'by_type' => $byTypeArray,
+                'error' => 'Mixed currencies detected - totals not aggregated',
+            ];
         }
 
         return [
             'active_count' => count($activeInvestments),
             'matured_count' => count($maturedInvestments),
             'total_principal' => $totalPrincipal,
-            'by_type' => $byType,
+            'by_type' => $byTypeArray,
         ];
     }
 

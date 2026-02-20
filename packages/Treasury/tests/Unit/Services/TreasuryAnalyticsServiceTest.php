@@ -43,6 +43,7 @@ final class TreasuryAnalyticsServiceTest extends TestCase
             $this->positionService,
             null,
             null,
+            null,
             new NullLogger()
         );
     }
@@ -83,6 +84,7 @@ final class TreasuryAnalyticsServiceTest extends TestCase
             $this->policyQuery,
             $investmentQuery,
             $this->positionService,
+            null,
             null,
             null,
             new NullLogger()

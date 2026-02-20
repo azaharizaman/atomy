@@ -43,11 +43,11 @@ final readonly class TreasuryDashboardService
 
         $position = $this->positionService->calculatePosition($tenantId, null, $date);
 
-        $projectedToday = $this->calculateProjectedCashFlow($tenantId, $currency, 1);
-        $projectedWeek = $this->calculateProjectedCashFlow($tenantId, $currency, 7);
-        $projectedMonth = $this->calculateProjectedCashFlow($tenantId, $currency, 30);
+        $projectedToday = $this->calculateProjectedCashFlow($tenantId, $currency, 1, $date);
+        $projectedWeek = $this->calculateProjectedCashFlow($tenantId, $currency, 7, $date);
+        $projectedMonth = $this->calculateProjectedCashFlow($tenantId, $currency, 30, $date);
 
-        $daysCashOnHand = $this->positionService->getDaysCashOnHand($tenantId);
+        $daysCashOnHand = $this->positionService->getDaysCashOnHand($tenantId, null, $date);
         $cashConversionCycle = $this->calculateCashConversionCycle($tenantId);
 
         $pendingApprovalsCount = $this->approvalQuery->countPendingByTenantId($tenantId);
@@ -55,7 +55,6 @@ final readonly class TreasuryDashboardService
         $activeIntercompanyLoansCount = $this->loanQuery->countActiveByTenantId($tenantId);
 
         $alerts = $this->generateAlerts(
-            $tenantId,
             $position->getAvailableCashBalance(),
             $daysCashOnHand,
             $cashConversionCycle,
@@ -98,7 +97,6 @@ final readonly class TreasuryDashboardService
         $pendingApprovalsCount = $this->approvalQuery->countPendingByTenantId($tenantId);
 
         return $this->generateAlerts(
-            $tenantId,
             $position->getAvailableCashBalance(),
             $daysCashOnHand,
             $cashConversionCycle,
@@ -110,7 +108,7 @@ final readonly class TreasuryDashboardService
     {
         $date = $asOfDate ?? new DateTimeImmutable();
         $position = $this->positionService->calculatePosition($tenantId, null, $date);
-        $daysCashOnHand = $this->positionService->getDaysCashOnHand($tenantId);
+        $daysCashOnHand = $this->positionService->getDaysCashOnHand($tenantId, null, $date);
         $cashConversionCycle = $this->calculateCashConversionCycle($tenantId);
 
         return $this->buildKpiSummary(
@@ -139,7 +137,7 @@ final readonly class TreasuryDashboardService
         ];
     }
 
-    private function calculateProjectedCashFlow(string $tenantId, string $currency, int $days): Money
+    private function calculateProjectedCashFlow(string $tenantId, string $currency, int $days, DateTimeImmutable $asOfDate): Money
     {
         $totalInflows = 0.0;
         $totalOutflows = 0.0;
@@ -147,7 +145,7 @@ final readonly class TreasuryDashboardService
         if ($this->receivableProvider !== null) {
             $totalReceivables = $this->receivableProvider->getTotalReceivables(
                 $tenantId,
-                (new DateTimeImmutable())->format('Y-m-d')
+                $asOfDate->format('Y-m-d')
             );
             $collectionPeriod = $this->receivableProvider->getAverageCollectionPeriod($tenantId);
             if ($collectionPeriod > 0) {
@@ -158,7 +156,7 @@ final readonly class TreasuryDashboardService
         if ($this->payableProvider !== null) {
             $totalPayables = $this->payableProvider->getTotalPayables(
                 $tenantId,
-                (new DateTimeImmutable())->format('Y-m-d')
+                $asOfDate->format('Y-m-d')
             );
             $paymentPeriod = $this->payableProvider->getAveragePaymentPeriod($tenantId);
             if ($paymentPeriod > 0) {
@@ -191,7 +189,6 @@ final readonly class TreasuryDashboardService
     }
 
     private function generateAlerts(
-        string $tenantId,
         Money $availableCash,
         float $daysCashOnHand,
         float $cashConversionCycle,

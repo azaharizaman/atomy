@@ -200,7 +200,6 @@ final readonly class CashConcentrationService
         array $sourceAccountIds
     ): array {
         $totalBalance = 0.0;
-        $targetBalance = 0.0;
         $currency = null;
 
         foreach ($sourceAccountIds as $accountId) {
@@ -217,6 +216,20 @@ final readonly class CashConcentrationService
         }
 
         $targetBalance = $this->getAccountBalance($targetAccountId);
+        $targetCurrency = $this->getAccountCurrency($targetAccountId);
+
+        if ($currency !== null && $currency !== $targetCurrency) {
+            throw new \InvalidArgumentException(sprintf(
+                'Currency mismatch in calculateConcentrationEfficiency: target account %s has currency %s but source accounts have currency %s',
+                $targetAccountId,
+                $targetCurrency,
+                $currency
+            ));
+        }
+
+        if ($currency === null) {
+            $currency = $targetCurrency;
+        }
 
         $efficiency = $totalBalance > 0 ? ($targetBalance / $totalBalance) * 100 : 0;
 

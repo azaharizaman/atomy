@@ -309,10 +309,12 @@ final class InvestmentServiceTest extends TestCase
 
         $result = $this->service->getInvestmentSummary('tenant-001');
 
-        $this->assertArrayHasKey('treasury_bill', $result['by_type']);
-        $this->assertArrayHasKey('term_deposit', $result['by_type']);
-        $this->assertEquals(1, $result['by_type']['treasury_bill']['count']);
-        $this->assertEquals(2, $result['by_type']['term_deposit']['count']);
+        $byType = $result['by_type'];
+        $this->assertCount(2, $byType);
+        
+        $types = array_column($byType, 'type');
+        $this->assertContains('treasury_bill', $types);
+        $this->assertContains('term_deposit', $types);
     }
 
     public function test_process_matured_investments_processes_active_matured(): void
