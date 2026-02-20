@@ -37,13 +37,6 @@
     "repositories": [
         {
             "type": "path",
-            "url": "../../packages/HRM/*",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path", 
             "url": "../../packages/*",
             "options": {
                 "symlink": true
