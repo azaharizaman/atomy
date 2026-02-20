@@ -152,14 +152,21 @@ final readonly class LeadConversionCoordinator
             'Pipeline ID is required for opportunity creation'
         );
 
+        // Normalize expected_close_date to DateTimeImmutable
+        $expectedCloseDate = $options['expected_close_date'] ?? null;
+        if ($expectedCloseDate === null) {
+            $expectedCloseDate = new \DateTimeImmutable('+30 days');
+        } elseif (is_string($expectedCloseDate)) {
+            $expectedCloseDate = new \DateTimeImmutable($expectedCloseDate);
+        }
+
         $opportunity = $this->opportunityPersist->create(
             tenantId: $lead->getTenantId(),
             pipelineId: $pipelineId,
             title: $lead->getTitle(),
             value: $lead->getEstimatedValue() ?? 0,
             currency: $lead->getCurrency() ?? 'USD',
-            expectedCloseDate: $options['expected_close_date'] 
-                ?? new \DateTimeImmutable('+30 days'),
+            expectedCloseDate: $expectedCloseDate,
             description: $lead->getDescription(),
             sourceLeadId: $lead->getId()
         );

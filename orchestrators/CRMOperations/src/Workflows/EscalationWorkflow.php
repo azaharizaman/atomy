@@ -190,12 +190,31 @@ final readonly class EscalationWorkflow
             $this->escalateLead($lead, $result);
         }
 
+        // Wrap results with entity_id and entity_type to match batch method shape
+        $breaches = [];
+        if ($result->hasBreaches) {
+            $breaches[] = [
+                'entity_id' => $lead->getId(),
+                'entity_type' => 'lead',
+                'breaches' => $result->breaches,
+            ];
+        }
+
+        $warnings = [];
+        if ($result->hasWarnings) {
+            $warnings[] = [
+                'entity_id' => $lead->getId(),
+                'entity_type' => 'lead',
+                'warnings' => $result->warnings,
+            ];
+        }
+
         return new EscalationWorkflowResult(
             success: true,
-            breachesFound: $result->hasBreaches ? 1 : 0,
-            warningsFound: $result->hasWarnings ? 1 : 0,
-            breaches: $result->breaches,
-            warnings: $result->warnings
+            breachesFound: count($breaches),
+            warningsFound: count($warnings),
+            breaches: $breaches,
+            warnings: $warnings
         );
     }
 
@@ -226,12 +245,31 @@ final readonly class EscalationWorkflow
             $this->escalateOpportunity($opportunity, $result);
         }
 
+        // Wrap results with entity_id and entity_type to match batch method shape
+        $breaches = [];
+        if ($result->hasBreaches) {
+            $breaches[] = [
+                'entity_id' => $opportunity->getId(),
+                'entity_type' => 'opportunity',
+                'breaches' => $result->breaches,
+            ];
+        }
+
+        $warnings = [];
+        if ($result->hasWarnings) {
+            $warnings[] = [
+                'entity_id' => $opportunity->getId(),
+                'entity_type' => 'opportunity',
+                'warnings' => $result->warnings,
+            ];
+        }
+
         return new EscalationWorkflowResult(
             success: true,
-            breachesFound: $result->hasBreaches ? 1 : 0,
-            warningsFound: $result->hasWarnings ? 1 : 0,
-            breaches: $result->breaches,
-            warnings: $result->warnings
+            breachesFound: count($breaches),
+            warningsFound: count($warnings),
+            breaches: $breaches,
+            warnings: $warnings
         );
     }
 

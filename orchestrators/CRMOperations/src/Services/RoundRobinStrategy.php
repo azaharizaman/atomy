@@ -25,7 +25,7 @@ final readonly class RoundRobinStrategy implements AssignmentStrategyInterface
         
         // Normalize index with modulo before selection to handle overflow
         $assigneeCount = count($assignees);
-        $normalizedIndex = $assigneeCount > 0 ? $index % $assigneeCount : 0;
+        $normalizedIndex = $index % $assigneeCount;
         
         $assigneeId = $assignees[$normalizedIndex]['id'] ?? null;
         
