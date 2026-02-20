@@ -217,7 +217,15 @@ HTML,
 HTML,
         ];
 
-        return $templates[$templateId] ?? $templates['default_proposal'];
+        if (!array_key_exists($templateId, $templates)) {
+            $this->logger?->warning('Template not found, using default', [
+                'requested_template_id' => $templateId,
+                'fallback_template_id' => 'default_proposal',
+            ]);
+            return $templates['default_proposal'];
+        }
+
+        return $templates[$templateId];
     }
 
     /**
@@ -239,15 +247,8 @@ HTML,
     ): string {
         $documentId = uniqid('doc_');
 
-        $this->logger?->info('Saving document', [
-            'document_id' => $documentId,
-            'title' => $title,
-            'type' => $type,
-            'entity_id' => $entityId,
-        ]);
-
         if ($this->documentService !== null) {
-            $this->documentService->create([
+            $documentId = $this->documentService->create([
                 'title' => $title,
                 'content' => $content,
                 'type' => $type,
@@ -255,6 +256,13 @@ HTML,
                 'format' => $format,
             ]);
         }
+
+        $this->logger?->info('Saving document', [
+            'document_id' => $documentId,
+            'title' => $title,
+            'type' => $type,
+            'entity_id' => $entityId,
+        ]);
 
         return $documentId;
     }
@@ -277,12 +285,12 @@ HTML,
             'formats' => $formats,
         ]);
 
+        // Render template once outside the loop (content doesn't vary by format)
+        $renderedContent = $this->renderTemplate($templateId, $data);
+
         $results = [];
         
         foreach ($formats as $format) {
-            // Render the template for each format
-            $renderedContent = $this->renderTemplate($templateId, $data);
-            
             // Save document for each format
             $documentId = $this->saveDocument(
                 title: "Document - {$templateId}",

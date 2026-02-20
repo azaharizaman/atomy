@@ -272,7 +272,7 @@ final readonly class SalesPlaybookWorkflow
      * Get playbook steps for a type
      * 
      * @param string $playbookType Playbook type
-     * @param string $entityId Entity ID
+     * @param string $entityId Entity ID (reserved for future entity-specific step customization)
      * @return array<int, array{id: string, title: string, description: string, order: int}>
      */
     private function getPlaybookSteps(string $playbookType, string $entityId): array
@@ -336,7 +336,7 @@ final readonly class SalesPlaybookWorkflow
      * Determine playbook for event
      * 
      * @param string $eventType Event type
-     * @param string $entityId Entity ID
+     * @param string $entityId Entity ID (reserved for future entity-specific event handling)
      * @return string|null Playbook type
      */
     private function determinePlaybookForEvent(string $eventType, string $entityId): ?string

@@ -218,9 +218,19 @@ final readonly class SalesIntegrationService implements QuotationProviderInterfa
         $quotation = $this->findById($quotationId);
         
         if ($quotation === null) {
-            return new \DateTimeImmutable();
+            throw QuoteOperationException::notFound($quotationId);
         }
 
-        return new \DateTimeImmutable($quotation['expiry_date'] ?? '+30 days');
+        $expiryDate = $quotation['expiry_date'] ?? null;
+        
+        if ($expiryDate === null) {
+            return new \DateTimeImmutable('+30 days');
+        }
+
+        if ($expiryDate instanceof \DateTimeImmutable) {
+            return $expiryDate;
+        }
+
+        return new \DateTimeImmutable($expiryDate);
     }
 }

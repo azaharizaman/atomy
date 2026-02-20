@@ -16,10 +16,12 @@ final readonly class RenewalManagementWorkflow
 
     public function createRenewalOpportunity(string $accountId, string $currentContractId): string
     {
-        $renewalId = uniqid('renewal_');
+        // Use cryptographically secure random ID
+        $renewalId = 'renewal_' . bin2hex(random_bytes(16));
         
         $this->logger?->info('Renewal opportunity created', [
             'account_id' => $accountId,
+            'current_contract_id' => $currentContractId,
             'renewal_id' => $renewalId
         ]);
         
@@ -38,28 +40,16 @@ final readonly class RenewalManagementWorkflow
 
     public function calculateChurnRisk(string $accountId): int
     {
-        $this->logger?->warning('calculateChurnRisk is not implemented - returning placeholder', [
-            'account_id' => $accountId,
-        ]);
-        
-        return 25;
+        throw new \LogicException('calculateChurnRisk is not implemented');
     }
 
     public function identifyUpsellOpportunities(string $accountId): array
     {
-        $this->logger?->warning('identifyUpsellOpportunities is not implemented - returning placeholder', [
-            'account_id' => $accountId,
-        ]);
-        
-        return [];
+        throw new \LogicException('identifyUpsellOpportunities is not implemented');
     }
 
     public function trackRenewalProbability(string $renewalId): float
     {
-        $this->logger?->warning('trackRenewalProbability is not implemented - returning placeholder', [
-            'renewal_id' => $renewalId,
-        ]);
-        
-        return 0.75;
+        throw new \LogicException('trackRenewalProbability is not implemented');
     }
 }

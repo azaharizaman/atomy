@@ -13,7 +13,7 @@ use Nexus\CRM\Enums\OpportunityStage;
 use Nexus\CRMOperations\Contracts\CustomerProviderInterface;
 use Nexus\CRMOperations\Contracts\NotificationProviderInterface;
 use Nexus\CRMOperations\Contracts\AnalyticsProviderInterface;
-use Psr\EventDispatcher\EventDispatcherInterface;
+use Nexus\CRMOperations\DTOs\ConversionResult;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -34,7 +34,6 @@ final readonly class LeadConversionCoordinator
      * @param CustomerProviderInterface $customerProvider Customer data provider
      * @param NotificationProviderInterface $notificationProvider Notification provider
      * @param AnalyticsProviderInterface $analyticsProvider Analytics provider
-     * @param EventDispatcherInterface $eventDispatcher Event dispatcher
      * @param LoggerInterface|null $logger Optional logger
      */
     public function __construct(
@@ -44,7 +43,6 @@ final readonly class LeadConversionCoordinator
         private CustomerProviderInterface $customerProvider,
         private NotificationProviderInterface $notificationProvider,
         private AnalyticsProviderInterface $analyticsProvider,
-        private EventDispatcherInterface $eventDispatcher,
         private ?LoggerInterface $logger = null
     ) {}
 
@@ -157,7 +155,15 @@ final readonly class LeadConversionCoordinator
         if ($expectedCloseDate === null) {
             $expectedCloseDate = new \DateTimeImmutable('+30 days');
         } elseif (is_string($expectedCloseDate)) {
-            $expectedCloseDate = new \DateTimeImmutable($expectedCloseDate);
+            try {
+                $expectedCloseDate = new \DateTimeImmutable($expectedCloseDate);
+            } catch (\Exception $e) {
+                throw new \InvalidArgumentException(
+                    sprintf('Invalid expected_close_date format: %s', $expectedCloseDate),
+                    0,
+                    $e
+                );
+            }
         }
 
         $opportunity = $this->opportunityPersist->create(
@@ -195,16 +201,4 @@ final readonly class LeadConversionCoordinator
             ]
         );
     }
-}
-
-/**
- * Conversion Result DTO
- */
-final readonly class ConversionResult
-{
-    public function __construct(
-        public string $leadId,
-        public string $opportunityId,
-        public string $customerId
-    ) {}
 }

@@ -267,9 +267,14 @@ final readonly class PipelineAnalyticsCoordinator
             : self::DEFAULT_AVERAGE_DAYS_TO_CLOSE;
         
         // Calculate average days per stage
-        $stageCount = iterator_count($this->pipelineQuery->findActive());
-        $averageDaysPerStage = $stageCount > 0 
-            ? (int) round($averageDaysToClose / $stageCount) 
+        // Sum up all stages from all active pipelines
+        $totalStageCount = 0;
+        foreach ($this->pipelineQuery->findActive() as $pipeline) {
+            $totalStageCount += $pipeline->getStageCount();
+        }
+        
+        $averageDaysPerStage = $totalStageCount > 0 
+            ? (int) round($averageDaysToClose / $totalStageCount) 
             : self::DEFAULT_AVERAGE_DAYS_PER_STAGE;
 
         return [
