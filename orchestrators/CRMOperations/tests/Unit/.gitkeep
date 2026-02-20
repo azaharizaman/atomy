@@ -1,0 +1,18 @@
+# CRM Operations Orchestrator Unit Tests
+
+This directory contains unit tests for the CRM Operations orchestrator package.
+
+## Running Tests
+
+```bash
+./vendor/bin/phpunit --testsuite Unit
+```
+
+## Test Coverage
+
+Unit tests should cover:
+- Coordinators
+- DataProviders
+- Rules
+- Workflows
+- Integration Services

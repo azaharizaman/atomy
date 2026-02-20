@@ -1,0 +1,17 @@
+# CRM Operations Orchestrator Integration Tests
+
+This directory contains integration tests for the CRM Operations orchestrator package.
+
+## Running Tests
+
+```bash
+./vendor/bin/phpunit --testsuite Integration
+```
+
+## Test Coverage
+
+Integration tests should cover:
+- Cross-package workflow execution
+- Event handling
+- External service integrations
+- End-to-end scenarios

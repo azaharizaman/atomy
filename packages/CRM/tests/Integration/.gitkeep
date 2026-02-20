@@ -1,0 +1,17 @@
+# CRM Package Integration Tests
+
+This directory contains integration tests for the CRM package.
+
+## Running Tests
+
+```bash
+./vendor/bin/phpunit --testsuite Integration
+```
+
+## Test Coverage
+
+Integration tests should cover:
+- Repository implementations
+- Database interactions
+- External service integrations
+- End-to-end workflows

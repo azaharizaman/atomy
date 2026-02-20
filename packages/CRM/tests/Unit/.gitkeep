@@ -1,0 +1,17 @@
+# CRM Package Unit Tests
+
+This directory contains unit tests for the CRM package.
+
+## Running Tests
+
+```bash
+./vendor/bin/phpunit --testsuite Unit
+```
+
+## Test Coverage
+
+Unit tests should cover:
+- Value Objects
+- Enums
+- Services
+- Domain logic
