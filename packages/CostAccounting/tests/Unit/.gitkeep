@@ -1,0 +1,11 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\CostAccounting\Tests\Unit;
+
+/**
+ * Unit tests placeholder
+ * 
+ * This directory contains unit tests for CostAccounting package.
+ */
