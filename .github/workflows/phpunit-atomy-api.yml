@@ -1,20 +1,49 @@
-name: PHP unit tests — apps/atomy-api
+name: PHP unit tests — packages
 
 on:
   push:
     paths:
-      - 'apps/atomy-api/**'
+      - 'packages/**'
   pull_request:
     paths:
-      - 'apps/atomy-api/**'
+      - 'packages/**'
 
 jobs:
-  tests:
-    name: Run tests (apps/atomy-api)
+  detect-packages:
+    name: Detect changed packages
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.find-packages.outputs.packages }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find packages with tests
+        id: find-packages
+        run: |
+          # Find all packages that have both composer.json and phpunit.xml
+          PACKAGES=$(find packages -maxdepth 2 -name "phpunit.xml" -exec dirname {} \; | while read pkg; do
+            if [ -f "$pkg/composer.json" ]; then
+              basename "$pkg"
+            fi
+          done | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          
+          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+          echo "Found packages: $PACKAGES"
+
+  test-package:
+    name: Run tests (${{ matrix.package }})
+    needs: detect-packages
+    if: needs.detect-packages.outputs.packages != '[]'
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
+        package: ${{ fromJson(needs.detect-packages.outputs.packages) }}
         php: [8.3]
 
     steps:
@@ -29,16 +58,14 @@ jobs:
 
       - name: Install Composer
         run: |
-          cd apps/atomy-api
+          cd packages/${{ matrix.package }}
           composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Prepare test dir
-        run: |
-          cd apps/atomy-api
-          mkdir -p var
-          rm -f var/test.sqlite
 
       - name: Run tests
         run: |
-          cd apps/atomy-api
-          vendor/bin/phpunit --testdox
+          cd packages/${{ matrix.package }}
+          if [ -f "phpunit.xml" ] || [ -f "phpunit.xml.dist" ]; then
+            vendor/bin/phpunit --testdox
+          else
+            echo "No phpunit configuration found, skipping tests"
+          fi

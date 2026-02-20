@@ -83,7 +83,8 @@
             "Nexus\\Sales\\": "packages/Sales/src/",
             "Nexus\\Procurement\\": "packages/Procurement/src/",
             "Nexus\\QualityControl\\": "packages/QualityControl/src/",
-            "Nexus\\Receivable\\": "packages/Receivable/src/"
+            "Nexus\\Receivable\\": "packages/Receivable/src/",
+            "Nexus\\Treasury\\": "packages/Treasury/src/"
         }
     },
     "autoload-dev": {
