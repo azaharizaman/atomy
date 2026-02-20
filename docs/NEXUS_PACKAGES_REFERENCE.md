@@ -1,9 +1,19 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.3  
-**Last Updated:** December 18, 2025  
+**Version:** 1.4  
+**Last Updated:** February 20, 2026  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
+
+**Recent Updates (February 20, 2026):**
+- **NEW:** Added `Nexus\PaymentGateway` - Payment gateway extensions (Stripe, PayPal, Square)
+- **NEW:** Added `Nexus\PaymentBank` - Direct bank integrations, Open Banking (PSD2), real-time payments
+- **NEW:** Added `Nexus\PaymentRails` - ACH, Wire, Check, RTGS, SEPA, SWIFT integrations
+- **NEW:** Added `Nexus\PaymentWallet` - Digital wallets, BNPL, mobile payments
+- **NEW:** Added `Nexus\PaymentRecurring` - Subscription billing, usage-based billing, dunning
+- **NEW:** Added `Nexus\CRM` - Lead management, opportunity tracking, sales forecasting
+- **NEW:** Added `Nexus\QualityControl` - Inspection management, defect tracking, CAPA
+- **IMPROVED:** Total package count increased from 79 to 86 atomic packages
 
 **Recent Updates (December 18, 2025):**
 - **NEW:** Added `Nexus\Payment` - Complete payment suite (100% implemented):
@@ -1294,7 +1304,362 @@ final class CustomAllocationService {
 
 ---
 
-### 🛒 **8. Sales & Procurement**
+#### **Nexus\PaymentGateway** ✅ **NEW EXTENSION**
+**Capabilities:**
+- **Multi-Gateway Integration**: Stripe, PayPal, Square, and other online payment processors
+- **Payment Method Support**: Credit/debit cards, digital wallets, bank redirects
+- **Tokenization**: Secure card tokenization and vault storage
+- **3D Secure**: 3DS authentication support for SCA compliance
+- **Refund Processing**: Full and partial refunds
+- **Dispute Management**: Chargeback handling and representment
+- **Webhook Handling**: Real-time payment status updates
+
+**When to Use:**
+- ✅ Accept online card payments
+- ✅ Integrate with Stripe, PayPal, Square
+- ✅ Handle 3D Secure authentication
+- ✅ Process refunds and disputes
+- ✅ Tokenize cards for recurring payments
+
+**Key Interfaces:**
+```php
+use Nexus\PaymentGateway\Contracts\GatewayAdapterInterface;
+use Nexus\PaymentGateway\Contracts\TokenVaultInterface;
+use Nexus\PaymentGateway\Contracts\RefundProcessorInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Process payment through Stripe gateway
+public function __construct(
+    private readonly GatewayAdapterInterface $stripeAdapter
+) {}
+
+public function processCardPayment(string $paymentId, array $cardData): PaymentResult
+{
+    return $this->stripeAdapter->charge(
+        paymentId: $paymentId,
+        amount: $cardData['amount'],
+        currency: $cardData['currency'],
+        cardToken: $cardData['token'],
+        options: ['3ds' => true]
+    );
+}
+```
+
+---
+
+#### **Nexus\PaymentBank** ✅ **NEW EXTENSION**
+**Capabilities:**
+- **Direct Bank Integration**: Real-time bank connections
+- **Open Banking (PSD2)**: European PSD2 compliance
+- **Account Verification**: Bank account verification services
+- **Real-Time Payments**: Instant payment capabilities (PPI, RTP)
+- **Payment Initiation**: Bank-to-bank payment initiation
+- **Balance Inquiry**: Real-time balance checking
+
+**When to Use:**
+- ✅ Direct bank transfers
+- ✅ Open banking compliance (PSD2)
+- ✅ Bank account verification
+- ✅ Real-time instant payments
+- ✅ Balance inquiry integration
+
+**Key Interfaces:**
+```php
+use Nexus\PaymentBank\Contracts\BankConnectionInterface;
+use Nexus\PaymentBank\Contracts\AccountVerificationInterface;
+use Nexus\PaymentBank\Contracts\RealTimePaymentInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Initiate bank transfer via open banking
+public function __construct(
+    private readonly RealTimePaymentInterface $rtp
+) {}
+
+public function initiateRealTimeTransfer(
+    string $fromAccount,
+    string $toAccount,
+    Money $amount
+): TransferResult
+{
+    return $this->rtp->initiate(
+        debtorAccount: $fromAccount,
+        creditorAccount: $toAccount,
+        amount: $amount,
+        reference: 'PAY-' . uniqid()
+    );
+}
+```
+
+---
+
+#### **Nexus\PaymentRails** ✅ **NEW EXTENSION**
+**Capabilities:**
+- **ACH Payments**: US ACH network integration
+- **Wire Transfers**: Domestic and international wire transfers
+- **Check Processing**: Physical check payments
+- **RTGS**: Real-Time Gross Settlement
+- **SEPA**: Single Euro Payments Area (Europe)
+- **SWIFT**: International wire transfers
+
+**When to Use:**
+- ✅ ACH direct debit/credit (US)
+- ✅ Wire transfer processing
+- ✅ Check payment acceptance
+- ✅ SEPA payments (Europe)
+- ✅ International wire transfers (SWIFT)
+
+**Key Interfaces:**
+```php
+use Nexus\PaymentRails\Contracts\AchPaymentInterface;
+use Nexus\PaymentRails\Contracts\WireTransferInterface;
+use Nexus\PaymentRails\Contracts\CheckProcessorInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Process ACH payment
+public function __construct(
+    private readonly AchPaymentInterface $ach
+) {}
+
+public function processAchDebit(string $customerId, Money $amount): AchResult
+{
+    return $this->ach->debit(
+        accountHolder: $customerId,
+        routingNumber: '021000021',
+        accountNumber: '123456789',
+        amount: $amount,
+        secCode: 'PPD' // Prearranged Payment and Deposit
+    );
+}
+```
+
+---
+
+#### **Nexus\PaymentWallet** ✅ **NEW EXTENSION**
+**Capabilities:**
+- **Digital Wallets**: Apple Pay, Google Pay, Samsung Pay
+- **Mobile Payments**: Contactless mobile payments
+- **BNPL**: Buy Now Pay Later services (Affirm, Klarna, Afterpay)
+- **Prepaid Cards**: Virtual and physical prepaid cards
+- **Crypto Payments**: Cryptocurrency payment support
+
+**When to Use:**
+- ✅ Accept Apple Pay, Google Pay
+- ✅ BNPL payment options
+- ✅ Prepaid card acceptance
+- ✅ Cryptocurrency payments
+
+**Key Interfaces:**
+```php
+use Nexus\PaymentWallet\Contracts\WalletPaymentInterface;
+use Nexus\PaymentWallet\Contracts\BnplProviderInterface;
+use Nexus\PaymentWallet\Contracts\CryptoPaymentInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Process BNPL payment
+public function __construct(
+    private readonly BnplProviderInterface $bnpl
+) {}
+
+public function processBnplPayment(
+    string $orderId,
+    Money $amount,
+    int $installments
+): BnplResult
+{
+    return $this->bnpl->createPayment(
+        orderId: $orderId,
+        amount: $amount,
+        installments: $installments,
+        provider: 'klarna'
+    );
+}
+```
+
+---
+
+#### **Nexus\PaymentRecurring** ✅ **NEW EXTENSION**
+**Capabilities:**
+- **Subscription Management**: Recurring billing setup and management
+- **Usage-Based Billing**: Pay-per-use pricing models
+- **Trial Periods**: Free trial and setup fee support
+- **Subscription Updates**: Plan changes, upgrades, downgrades
+- **Dunning Management**: Failed payment recovery
+- **Billing Analytics**: Revenue and churn metrics
+
+**When to Use:**
+- ✅ SaaS subscription billing
+- ✅ Membership subscriptions
+- ✅ Usage-based metering
+- ✅ Trial period management
+- ✅ Failed payment recovery
+
+**Key Interfaces:**
+```php
+use Nexus\PaymentRecurring\Contracts\SubscriptionManagerInterface;
+use Nexus\PaymentRecurring\Contracts\UsageTrackerInterface;
+use Nexus\PaymentRecurring\Contracts\BillingSchedulerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Create subscription
+public function __construct(
+    private readonly SubscriptionManagerInterface $subscriptions
+) {}
+
+public function createSubscription(
+    string $customerId,
+    string $planId
+): Subscription
+{
+    return $this->subscriptions->create(
+        customerId: $customerId,
+        planId: $planId,
+        billingPeriod: BillingPeriod::MONTHLY,
+        startDate: new \DateTimeImmutable()
+    );
+}
+
+// Track usage for usage-based billing
+public function __construct(
+    private readonly UsageTrackerInterface $usage
+) {}
+
+public function recordUsage(string $subscriptionId, float $units): void
+{
+    $this->usage->record(
+        subscriptionId: $subscriptionId,
+        quantity: $units,
+        timestamp: new \DateTimeImmutable()
+    );
+}
+```
+
+---
+
+### 📊 **CRM & Quality**
+
+#### **Nexus\CRM** ✅ **NEW**
+**Capabilities:**
+- **Lead Management**: Lead capture, qualification, and conversion
+- **Opportunity Tracking**: Sales pipeline and deal management
+- **Activity Logging**: Calls, emails, meetings, tasks
+- **Sales Forecasting**: Revenue predictions and pipeline analytics
+- **Campaign Management**: Marketing campaign tracking
+- **Contact Management**: Customer interaction history
+
+**When to Use:**
+- ✅ Lead generation and qualification
+- ✅ Sales pipeline management
+- ✅ Customer interaction tracking
+- ✅ Marketing campaign management
+- ✅ Sales forecasting
+
+**Key Interfaces:**
+```php
+use Nexus\CRM\Contracts\LeadManagerInterface;
+use Nexus\CRM\Contracts\OpportunityManagerInterface;
+use Nexus\CRM\Contracts\ActivityLoggerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Track opportunity through sales pipeline
+public function __construct(
+    private readonly OpportunityManagerInterface $opportunities
+) {}
+
+public function createOpportunity(
+    string $customerId,
+    string $productId,
+    Money $value
+): Opportunity
+{
+    return $this->opportunities->create(
+        customerId: $customerId,
+        title: 'Deal - ' . $productId,
+        value: $value,
+        stage: Stage::QUALIFICATION,
+        expectedCloseDate: new \DateTimeImmutable('+30 days')
+    );
+}
+
+public function moveToNextStage(string $opportunityId): void
+{
+    $this->opportunities->advanceStage($opportunityId);
+}
+```
+
+---
+
+#### **Nexus\QualityControl** ✅ **NEW**
+**Capabilities:**
+- **Inspection Management**: Quality inspection workflows
+- **Inspection Standards**: Configurable inspection criteria
+- **Sampling Plans**: AQL-based sampling
+- **Defect Tracking**: Non-conformance tracking
+- **Corrective Actions**: CAPA workflow management
+- **Inspection Certificates**: COA generation
+
+**When to Use:**
+- ✅ Incoming material inspection
+- ✅ In-process quality checks
+- ✅ Final product inspection
+- ✅ Non-conformance management
+- ✅ Corrective action tracking
+
+**Key Interfaces:**
+```php
+use Nexus\QualityControl\Contracts\InspectionManagerInterface;
+use Nexus\QualityControl\Contracts\InspectionInterface;
+use Nexus\QualityControl\Contracts\DefectTrackerInterface;
+```
+
+**Example:**
+```php
+// ✅ CORRECT: Perform incoming inspection
+public function __construct(
+    private readonly InspectionManagerInterface $inspector
+) {}
+
+public function performIncomingInspection(
+    string $purchaseOrderId,
+    array $items
+): InspectionResult
+{
+    $inspection = $this->inspector->create(
+        type: InspectionType::INCOMING,
+        reference: $purchaseOrderId,
+        items: $items,
+        samplingPlan: 'AQL-1.0'
+    );
+
+    foreach ($items as $item) {
+        $this->inspector->addResult(
+            inspectionId: $inspection->getId(),
+            itemId: $item['id'],
+            characteristics: $item['characteristics'],
+            decision: Decision::ACCEPT
+        );
+    }
+
+    return $this->inspector->finalize($inspection->getId());
+}
+```
+
+---
+
+- **IMPROVED:** Total package count increased from 79 to 86 atomic packages
+- **IMPROVED:** Added Payment Suite Extensions (PaymentGateway, PaymentBank, PaymentRails, PaymentWallet, PaymentRecurring)
+- **IMPROVED:** Added CRM and QualityControl packages
 
 #### **Nexus\Party**
 **Capabilities:**
@@ -3489,6 +3854,6 @@ Before implementing ANY feature, run this mental checklist:
 
 ---
 
-**Last Updated:** December 18, 2025  
+**Last Updated:** February 20, 2026  
 **Maintained By:** Nexus Architecture Team  
 **Enforcement:** Mandatory for all coding agents and developers
