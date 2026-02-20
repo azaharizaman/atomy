@@ -4,68 +4,61 @@ declare(strict_types=1);
 
 namespace Nexus\Treasury\ValueObjects;
 
-/**
- * Treasury Policy Data Value Object
- */
+use DateTimeImmutable;
+use Nexus\Common\ValueObjects\Money;
+use InvalidArgumentException;
+
 final readonly class TreasuryPolicyData
 {
     public function __construct(
         public string $name,
-        public ?string $description,
-        public float $minimumCashBalance,
-        public string $minimumCashBalanceCurrency,
-        public float $maximumSingleTransaction,
-        public string $maximumSingleTransactionCurrency,
-        public bool $approvalRequired,
-        public float $approvalThreshold,
-        public string $approvalThresholdCurrency,
+        public Money $minimumCashBalance,
+        public Money $maximumSingleTransaction,
+        public Money $approvalThreshold,
+        public bool $approvalRequired = true,
+        public ?string $description = null,
+        public ?DateTimeImmutable $effectiveFrom = null,
+        public ?DateTimeImmutable $effectiveTo = null,
     ) {
+        if ($minimumCashBalance->getCurrency() !== $maximumSingleTransaction->getCurrency()) {
+            throw new InvalidArgumentException('All monetary values must be in the same currency');
+        }
+
+        if ($minimumCashBalance->getCurrency() !== $approvalThreshold->getCurrency()) {
+            throw new InvalidArgumentException('All monetary values must be in the same currency');
+        }
     }
 
     public static function fromArray(array $data): self
     {
-        // Validate required fields
-        $requiredFields = [
-            'name',
-            'minimum_cash_balance',
-            'minimum_cash_balance_currency',
-            'maximum_single_transaction',
-            'maximum_single_transaction_currency',
-        ];
-
-        foreach ($requiredFields as $field) {
-            if (!array_key_exists($field, $data) || $data[$field] === '') {
-                throw new \InvalidArgumentException(
-                    sprintf('Missing required field: %s', $field)
-                );
-            }
-        }
-
-        // Validate numeric fields are positive numbers
-        $numericFields = [
-            'minimum_cash_balance' => 'minimum_cash_balance',
-            'maximum_single_transaction' => 'maximum_single_transaction',
-        ];
-
-        foreach ($numericFields as $field => $label) {
-            $value = (float) $data[$field];
-            if ($value < 0) {
-                throw new \InvalidArgumentException(
-                    sprintf('The field %s must be a positive number, got: %s', $label, $value)
-                );
-            }
-        }
+        $currency = $data['currency'] ?? $data['minimum_cash_balance_currency'] ?? 'USD';
 
         return new self(
             name: $data['name'],
+            minimumCashBalance: Money::of(
+                $data['minimum_cash_balance'] ?? $data['minimumCashBalance'],
+                $data['minimum_cash_balance_currency'] ?? $currency
+            ),
+            maximumSingleTransaction: Money::of(
+                $data['maximum_single_transaction'] ?? $data['maximumSingleTransaction'],
+                $data['maximum_single_transaction_currency'] ?? $currency
+            ),
+            approvalThreshold: Money::of(
+                $data['approval_threshold'] ?? $data['approvalThreshold'],
+                $data['approval_threshold_currency'] ?? $currency
+            ),
+            approvalRequired: $data['approval_required'] ?? $data['approvalRequired'] ?? true,
             description: $data['description'] ?? null,
-            minimumCashBalance: (float) $data['minimum_cash_balance'],
-            minimumCashBalanceCurrency: $data['minimum_cash_balance_currency'],
-            maximumSingleTransaction: (float) $data['maximum_single_transaction'],
-            maximumSingleTransactionCurrency: $data['maximum_single_transaction_currency'],
-            approvalRequired: (bool) ($data['approval_required'] ?? true),
-            approvalThreshold: (float) ($data['approval_threshold'] ?? 0),
-            approvalThresholdCurrency: $data['approval_threshold_currency'] ?? $data['minimum_cash_balance_currency'],
+            effectiveFrom: isset($data['effective_from'])
+                ? new DateTimeImmutable($data['effective_from'])
+                : (isset($data['effectiveFrom'])
+                    ? new DateTimeImmutable($data['effectiveFrom'])
+                    : null),
+            effectiveTo: isset($data['effective_to'])
+                ? new DateTimeImmutable($data['effective_to'])
+                : (isset($data['effectiveTo'])
+                    ? new DateTimeImmutable($data['effectiveTo'])
+                    : null),
         );
     }
 
@@ -73,14 +66,18 @@ final readonly class TreasuryPolicyData
     {
         return [
             'name' => $this->name,
+            'minimumCashBalance' => $this->minimumCashBalance->toArray(),
+            'maximumSingleTransaction' => $this->maximumSingleTransaction->toArray(),
+            'approvalThreshold' => $this->approvalThreshold->toArray(),
+            'approvalRequired' => $this->approvalRequired,
             'description' => $this->description,
-            'minimum_cash_balance' => $this->minimumCashBalance,
-            'minimum_cash_balance_currency' => $this->minimumCashBalanceCurrency,
-            'maximum_single_transaction' => $this->maximumSingleTransaction,
-            'maximum_single_transaction_currency' => $this->maximumSingleTransactionCurrency,
-            'approval_required' => $this->approvalRequired,
-            'approval_threshold' => $this->approvalThreshold,
-            'approval_threshold_currency' => $this->approvalThresholdCurrency,
+            'effectiveFrom' => $this->effectiveFrom?->format('Y-m-d'),
+            'effectiveTo' => $this->effectiveTo?->format('Y-m-d'),
         ];
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->minimumCashBalance->getCurrency();
     }
 }

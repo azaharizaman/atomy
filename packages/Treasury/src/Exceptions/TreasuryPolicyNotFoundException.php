@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Nexus\Treasury\Exceptions;
 
-use Nexus\Treasury\Exceptions\TreasuryException;
-
-/**
- * Exception thrown when a treasury policy is not found
- */
-class TreasuryPolicyNotFoundException extends TreasuryException
+final class TreasuryPolicyNotFoundException extends TreasuryException
 {
-    public function __construct(string $policyId)
+    public static function forId(string $id): self
     {
-        parent::__construct("Treasury policy not found: {$policyId}");
+        return new self("Treasury policy not found with ID: {$id}");
+    }
+
+    public static function forTenant(string $tenantId): self
+    {
+        return new self("No treasury policy found for tenant: {$tenantId}");
+    }
+
+    public static function forName(string $name, string $tenantId): self
+    {
+        return new self("Treasury policy '{$name}' not found for tenant: {$tenantId}");
     }
 }

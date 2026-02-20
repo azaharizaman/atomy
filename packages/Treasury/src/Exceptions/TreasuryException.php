@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Nexus\Treasury\Exceptions;
 
-use Exception;
+use RuntimeException;
 
-/**
- * Base exception for Treasury package
- */
-class TreasuryException extends Exception
+class TreasuryException extends RuntimeException
 {
+    public static function forReason(string $reason, int $code = 0): self
+    {
+        return new self($reason, $code);
+    }
 }

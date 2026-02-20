@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\Treasury\Enums;
 
-/**
- * Approval status for treasury transactions
- */
 enum ApprovalStatus: string
 {
     case PENDING = 'pending';
@@ -28,13 +25,47 @@ enum ApprovalStatus: string
         };
     }
 
-    public function isFinal(): bool
-    {
-        return in_array($this, [self::APPROVED, self::REJECTED, self::CANCELLED, self::EXPIRED]);
-    }
-
     public function isPending(): bool
     {
         return $this === self::PENDING;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this === self::APPROVED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this === self::REJECTED;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this === self::CANCELLED;
+    }
+
+    public function isExpired(): bool
+    {
+        return $this === self::EXPIRED;
+    }
+
+    public function requiresReview(): bool
+    {
+        return $this === self::REQUIRES_REVIEW;
+    }
+
+    public function isFinal(): bool
+    {
+        return in_array($this, [self::APPROVED, self::REJECTED, self::CANCELLED, self::EXPIRED], true);
+    }
+
+    public function canTransitionTo(self $status): bool
+    {
+        return match ($this) {
+            self::PENDING => in_array($status, [self::APPROVED, self::REJECTED, self::CANCELLED, self::REQUIRES_REVIEW], true),
+            self::REQUIRES_REVIEW => in_array($status, [self::APPROVED, self::REJECTED, self::CANCELLED, self::PENDING], true),
+            self::APPROVED, self::REJECTED, self::CANCELLED, self::EXPIRED => false,
+        };
     }
 }

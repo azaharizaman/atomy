@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\Treasury\Enums;
 
-/**
- * Investment type for short-term treasury investments
- */
 enum InvestmentType: string
 {
     case MONEY_MARKET = 'money_market';
@@ -30,6 +27,23 @@ enum InvestmentType: string
 
     public function isShortTerm(): bool
     {
-        return in_array($this, [self::OVERNIGHT, self::MONEY_MARKET, self::TERM_DEPOSIT]);
+        return in_array($this, [self::OVERNIGHT, self::MONEY_MARKET, self::COMMERCIAL_PAPER], true);
+    }
+
+    public function isGovernmentBacked(): bool
+    {
+        return $this === self::TREASURY_BILL;
+    }
+
+    public function typicalMaturityDays(): int
+    {
+        return match ($this) {
+            self::OVERNIGHT => 1,
+            self::MONEY_MARKET => 30,
+            self::COMMERCIAL_PAPER => 90,
+            self::TREASURY_BILL => 180,
+            self::TERM_DEPOSIT => 365,
+            self::FIXED_DEPOSIT => 365,
+        };
     }
 }

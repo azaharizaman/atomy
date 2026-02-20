@@ -4,129 +4,128 @@ declare(strict_types=1);
 
 namespace Nexus\Treasury\Contracts;
 
-use Nexus\Treasury\Enums\ApprovalStatus;
-use Nexus\Treasury\Enums\TreasuryStatus;
-use Nexus\Treasury\ValueObjects\AuthorizationLimit;
+use DateTimeImmutable;
+use Nexus\Common\ValueObjects\Money;
+use Nexus\Treasury\Enums\ForecastScenario;
+use Nexus\Treasury\Enums\InvestmentType;
 use Nexus\Treasury\ValueObjects\TreasuryPolicyData;
 
-/**
- * Treasury Manager Interface
- *
- * Main orchestrator for treasury operations
- */
 interface TreasuryManagerInterface
 {
-    /**
-     * Create a new treasury policy
-     */
-    public function createPolicy(
-        string $tenantId,
-        TreasuryPolicyData $policyData
-    ): TreasuryPolicyInterface;
+    public function createPolicy(string $tenantId, TreasuryPolicyData $data): TreasuryPolicyInterface;
 
-    /**
-     * Update an existing treasury policy
-     */
-    public function updatePolicy(
-        string $policyId,
-        TreasuryPolicyData $policyData
-    ): TreasuryPolicyInterface;
-
-    /**
-     * Get treasury policy by ID
-     */
     public function getPolicy(string $policyId): TreasuryPolicyInterface;
 
-    /**
-     * Get all treasury policies for a tenant
-     *
-     * @return array<TreasuryPolicyInterface>
-     */
-    public function getPolicies(string $tenantId): array;
+    public function getActivePolicy(string $tenantId): ?TreasuryPolicyInterface;
 
-    /**
-     * Update treasury policy status
-     */
-    public function updatePolicyStatus(
-        string $policyId,
-        TreasuryStatus $status
-    ): void;
-
-    /**
-     * Create authorization limit
-     */
-    public function createAuthorizationLimit(
+    public function createLiquidityPool(
         string $tenantId,
-        AuthorizationLimit $limit
-    ): AuthorizationLimitInterface;
+        string $name,
+        string $currency,
+        array $bankAccountIds,
+        ?string $description = null
+    ): LiquidityPoolInterface;
 
-    /**
-     * Get authorization limit for amount
-     */
-    public function getAuthorizationLimitForAmount(
-        string $tenantId,
-        float $amount,
-        string $currency
-    ): ?AuthorizationLimitInterface;
+    public function getLiquidityPool(string $poolId): LiquidityPoolInterface;
 
-    /**
-     * Check if transaction requires approval
-     */
-    public function requiresApproval(
+    public function calculateTreasuryPosition(
         string $tenantId,
-        float $amount,
-        string $currency
+        ?string $entityId = null,
+        ?DateTimeImmutable $asOfDate = null
+    ): TreasuryPositionInterface;
+
+    public function executeCashSweep(
+        string $tenantId,
+        string $concentrationId
     ): bool;
 
-    /**
-     * Submit transaction for approval
-     */
+    public function generateForecast(
+        string $tenantId,
+        ForecastScenario $scenario,
+        DateTimeImmutable $startDate,
+        DateTimeImmutable $endDate
+    ): TreasuryForecastInterface;
+
+    public function calculateKPIs(
+        string $tenantId,
+        ?DateTimeImmutable $asOfDate = null
+    ): TreasuryAnalyticsInterface;
+
     public function submitForApproval(
         string $tenantId,
         string $transactionType,
-        float $amount,
-        string $currency,
-        string $description,
-        string $submittedBy
+        string $transactionId,
+        Money $amount,
+        string $requestedBy,
+        ?string $description = null
     ): TreasuryApprovalInterface;
 
-    /**
-     * Approve treasury transaction
-     */
     public function approveTransaction(
         string $approvalId,
         string $approvedBy,
-        ?string $comments = null
+        ?string $notes = null
     ): TreasuryApprovalInterface;
 
-    /**
-     * Reject treasury transaction
-     */
     public function rejectTransaction(
         string $approvalId,
         string $rejectedBy,
         string $reason
     ): TreasuryApprovalInterface;
 
-    /**
-     * Get approval by ID
-     */
-    public function getApproval(string $approvalId): TreasuryApprovalInterface;
+    public function getPendingApprovals(string $tenantId): array;
 
-    /**
-     * Get pending approvals for user
-     *
-     * @return array<TreasuryApprovalInterface>
-     */
-    public function getPendingApprovals(string $userId): array;
-
-    /**
-     * Get approvals by status
-     *
-     * @return array<TreasuryApprovalInterface>
-     */
-    public function getApprovalsByStatus(
+    public function recordInvestment(
         string $tenantId,
-        ApprovalStatus $status
-    ): array;
+        InvestmentType $type,
+        string $name,
+        Money $principal,
+        float $interestRate,
+        DateTimeImmutable $maturityDate,
+        string $bankAccountId,
+        ?string $referenceNumber = null
+    ): InvestmentInterface;
+
+    public function matureInvestment(string $investmentId): InvestmentInterface;
+
+    public function calculateWorkingCapitalMetrics(
+        string $tenantId,
+        ?DateTimeImmutable $asOfDate = null
+    ): WorkingCapitalOptimizerInterface;
+
+    public function getDashboardData(
+        string $tenantId,
+        ?DateTimeImmutable $asOfDate = null
+    ): TreasuryDashboardInterface;
+
+    public function setAuthorizationLimit(
+        string $tenantId,
+        string $transactionType,
+        Money $approvalLimit,
+        ?string $userId = null,
+        ?string $roleId = null,
+        ?Money $dailyLimit = null,
+        ?Money $weeklyLimit = null,
+        ?Money $monthlyLimit = null,
+        bool $requiresDualApproval = false
+    ): AuthorizationMatrixInterface;
+
+    public function canAuthorize(
+        string $tenantId,
+        string $userId,
+        string $transactionType,
+        Money $amount
+    ): bool;
+
+    public function recordIntercompanyLoan(
+        string $tenantId,
+        string $fromEntityId,
+        string $toEntityId,
+        Money $principal,
+        float $interestRate,
+        DateTimeImmutable $startDate,
+        ?DateTimeImmutable $maturityDate = null,
+        ?string $referenceNumber = null
+    ): IntercompanyTreasuryInterface;
+
+    public function calculateIntercompanyInterest(string $loanId): Money;
 }

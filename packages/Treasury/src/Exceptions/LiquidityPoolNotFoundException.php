@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Nexus\Treasury\Exceptions;
 
-use Nexus\Treasury\Exceptions\TreasuryException;
-
-/**
- * Exception thrown when liquidity pool is not found
- */
-class LiquidityPoolNotFoundException extends TreasuryException
+final class LiquidityPoolNotFoundException extends TreasuryException
 {
-    public function __construct(string $poolId)
+    public static function forId(string $id): self
     {
-        parent::__construct("Liquidity pool not found: {$poolId}");
+        return new self("Liquidity pool not found with ID: {$id}");
+    }
+
+    public static function forTenant(string $tenantId): self
+    {
+        return new self("No liquidity pool found for tenant: {$tenantId}");
+    }
+
+    public static function forName(string $name, string $tenantId): self
+    {
+        return new self("Liquidity pool '{$name}' not found for tenant: {$tenantId}");
     }
 }

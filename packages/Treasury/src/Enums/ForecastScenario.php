@@ -4,33 +4,51 @@ declare(strict_types=1);
 
 namespace Nexus\Treasury\Enums;
 
-/**
- * Forecast scenario type
- */
 enum ForecastScenario: string
 {
-    case BEST = 'best';
-    case EXPECTED = 'expected';
-    case WORST = 'worst';
+    case OPTIMISTIC = 'optimistic';
     case BASE = 'base';
+    case PESSIMISTIC = 'pessimistic';
 
     public function label(): string
     {
         return match ($this) {
-            self::BEST => 'Best Case',
-            self::EXPECTED => 'Expected Case',
-            self::WORST => 'Worst Case',
-            self::BASE => 'Base Case',
+            self::OPTIMISTIC => 'Optimistic',
+            self::BASE => 'Base',
+            self::PESSIMISTIC => 'Pessimistic',
         };
     }
 
-    public function multiplier(): float
+    public function isOptimistic(): bool
+    {
+        return $this === self::OPTIMISTIC;
+    }
+
+    public function isBase(): bool
+    {
+        return $this === self::BASE;
+    }
+
+    public function isPessimistic(): bool
+    {
+        return $this === self::PESSIMISTIC;
+    }
+
+    public function riskFactor(): float
     {
         return match ($this) {
-            self::BEST => 1.1,
-            self::EXPECTED => 1.0,
-            self::WORST => 0.9,
+            self::OPTIMISTIC => 0.8,
             self::BASE => 1.0,
+            self::PESSIMISTIC => 1.2,
+        };
+    }
+
+    public function adjustmentPercentage(): float
+    {
+        return match ($this) {
+            self::OPTIMISTIC => 0.1,
+            self::BASE => 0.0,
+            self::PESSIMISTIC => -0.15,
         };
     }
 }

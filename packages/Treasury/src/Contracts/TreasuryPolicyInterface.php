@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\Treasury\Contracts;
 
+use DateTimeImmutable;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Treasury\Enums\TreasuryStatus;
 
-/**
- * Treasury Policy Interface
- */
 interface TreasuryPolicyInterface
 {
     public function getId(): string;
@@ -19,25 +18,25 @@ interface TreasuryPolicyInterface
 
     public function getDescription(): ?string;
 
-    public function getStatus(): TreasuryStatus;
+    public function getMinimumCashBalance(): Money;
 
-    public function getMinimumCashBalance(): float;
+    public function getMaximumSingleTransaction(): Money;
 
-    public function getMinimumCashBalanceCurrency(): string;
-
-    public function getMaximumSingleTransaction(): float;
-
-    public function getMaximumSingleTransactionCurrency(): string;
+    public function getApprovalThreshold(): Money;
 
     public function isApprovalRequired(): bool;
 
-    public function getApprovalThreshold(): float;
+    public function getStatus(): TreasuryStatus;
 
-    public function getApprovalThresholdCurrency(): string;
+    public function getEffectiveFrom(): DateTimeImmutable;
 
-    public function getCreatedAt(): \DateTimeImmutable;
+    public function getEffectiveTo(): ?DateTimeImmutable;
 
-    public function getUpdatedAt(): \DateTimeImmutable;
+    public function getCreatedAt(): DateTimeImmutable;
 
-    public function withStatus(TreasuryStatus $status): self;
+    public function getUpdatedAt(): DateTimeImmutable;
+
+    public function isActive(): bool;
+
+    public function isEffective(DateTimeImmutable $date): bool;
 }
