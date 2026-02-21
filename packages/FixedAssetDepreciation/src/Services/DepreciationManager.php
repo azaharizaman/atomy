@@ -39,7 +39,7 @@ use Nexus\FixedAssetDepreciation\Events\DepreciationRunCompletedEvent;
  *
  * @package Nexus\FixedAssetDepreciation\Services
  */
-readonly class DepreciationManager implements \Nexus\FixedAssetDepreciation\Contracts\DepreciationManagerInterface
+final readonly class DepreciationManager implements \Nexus\FixedAssetDepreciation\Contracts\DepreciationManagerInterface
 {
     public function __construct(
         private DepreciationCalculator $calculator,

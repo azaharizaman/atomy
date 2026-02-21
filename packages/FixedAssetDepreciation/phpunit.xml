@@ -19,9 +19,6 @@
         <include>
             <directory suffix=".php">src</directory>
         </include>
-        <exclude>
-            <file>src/Entities/DepreciationSchedule.php</file>
-        </exclude>
     </source>
     <coverage>
         <report>

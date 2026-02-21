@@ -22,7 +22,7 @@ use Nexus\FixedAssetDepreciation\ValueObjects\PeriodForecast;
  *
  * @package Nexus\FixedAssetDepreciation\Services
  */
-readonly class DepreciationForecastService
+final readonly class DepreciationForecastService
 {
     /**
      * Default number of periods to forecast.

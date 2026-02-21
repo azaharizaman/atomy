@@ -14,7 +14,7 @@ namespace Nexus\FixedAssetDepreciation\Exceptions;
  */
 class DepreciationException extends \RuntimeException
 {
-    protected string $errorCode = 'DEPRECIATION_ERROR';
+    protected const ERROR_CODE = 'DEPRECIATION_ERROR';
 
     public function __construct(
         string $message = '',
@@ -26,7 +26,7 @@ class DepreciationException extends \RuntimeException
 
     public function getErrorCode(): string
     {
-        return $this->errorCode;
+        return static::ERROR_CODE;
     }
 
     public static function withContext(

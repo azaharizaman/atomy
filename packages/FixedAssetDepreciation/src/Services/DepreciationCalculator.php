@@ -27,7 +27,7 @@ use Nexus\FixedAssetDepreciation\ValueObjects\PeriodForecast;
  *
  * @package Nexus\FixedAssetDepreciation\Services
  */
-readonly class DepreciationCalculator implements DepreciationCalculatorInterface
+final readonly class DepreciationCalculator implements DepreciationCalculatorInterface
 {
     public function __construct(
         private DepreciationMethodFactory $methodFactory,

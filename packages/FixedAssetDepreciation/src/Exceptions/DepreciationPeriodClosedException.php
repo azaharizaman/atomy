@@ -16,7 +16,7 @@ namespace Nexus\FixedAssetDepreciation\Exceptions;
  */
 class DepreciationPeriodClosedException extends DepreciationException
 {
-    protected string $errorCode = 'DEPRECIATION_PERIOD_CLOSED';
+    protected const ERROR_CODE = 'DEPRECIATION_PERIOD_CLOSED';
 
     /**
      * @param string $periodId The closed period identifier
@@ -111,5 +111,10 @@ class DepreciationPeriodClosedException extends DepreciationException
     public function getOperation(): string
     {
         return $this->operation;
+    }
+
+    public function getErrorCode(): string
+    {
+        return self::ERROR_CODE;
     }
 }

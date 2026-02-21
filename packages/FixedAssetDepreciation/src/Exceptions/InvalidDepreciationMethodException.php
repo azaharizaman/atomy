@@ -14,7 +14,7 @@ namespace Nexus\FixedAssetDepreciation\Exceptions;
  */
 class InvalidDepreciationMethodException extends DepreciationException
 {
-    protected string $errorCode = 'INVALID_DEPRECIATION_METHOD';
+    protected const ERROR_CODE = 'INVALID_DEPRECIATION_METHOD';
 
     public function __construct(
         public readonly string $method,
@@ -28,6 +28,11 @@ class InvalidDepreciationMethodException extends DepreciationException
         );
         
         parent::__construct($fullMessage, 0, $previous);
+    }
+
+    public function getErrorCode(): string
+    {
+        return self::ERROR_CODE;
     }
 
     public static function notSupported(string $method): self

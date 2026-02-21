@@ -27,7 +27,7 @@ use Nexus\FixedAssetDepreciation\Events\AssetRevaluedEvent;
  *
  * @package Nexus\FixedAssetDepreciation\Services
  */
-readonly class AssetRevaluationService implements AssetRevaluationInterface
+final readonly class AssetRevaluationService implements AssetRevaluationInterface
 {
     public function __construct(
         private AssetDataProviderInterface $assetProvider,

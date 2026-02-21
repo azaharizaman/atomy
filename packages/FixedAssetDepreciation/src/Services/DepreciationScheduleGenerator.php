@@ -25,7 +25,7 @@ use Nexus\FixedAssetDepreciation\ValueObjects\DepreciationSchedulePeriod;
  *
  * @package Nexus\FixedAssetDepreciation\Services
  */
-readonly class DepreciationScheduleGenerator
+final readonly class DepreciationScheduleGenerator
 {
     public function __construct(
         private DepreciationMethodFactory $methodFactory,
