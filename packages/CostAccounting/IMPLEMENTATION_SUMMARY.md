@@ -207,7 +207,7 @@ All events are PSR-14 compliant with readonly properties:
 
 ### Test Structure
 
-```
+```text
 tests/
 ├── Feature/
 │   ├── CostAllocationTest.php       # Allocation engine integration tests

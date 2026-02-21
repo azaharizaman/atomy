@@ -23,6 +23,14 @@ final readonly class CostAmount
                 'Cost amount cannot be negative'
             );
         }
+
+        $normalizedCurrency = strtoupper($currency);
+        if (!preg_match('/^[A-Z]{3}$/', $normalizedCurrency)) {
+            throw new \InvalidArgumentException(
+                sprintf('Currency must be a 3-character uppercase ISO 4217 code, got "%s"', $currency)
+            );
+        }
+        $this->currency = $normalizedCurrency;
     }
 
     public static function fromFloat(float $amount, string $currency = 'USD'): self

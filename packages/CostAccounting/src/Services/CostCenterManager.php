@@ -97,6 +97,17 @@ final readonly class CostCenterManager implements CostCenterManagerInterface
 
         $costCenter = $this->findCostCenterOrFail($costCenterId);
 
+        // Check if cost center can be modified
+        if (!$costCenter->getStatus()->canModify()) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Cannot update cost center %s: status "%s" does not allow modifications',
+                    $costCenterId,
+                    $costCenter->getStatus()->value
+                )
+            );
+        }
+
         // Update the cost center
         $costCenter->update(
             name: $data['name'] ?? $costCenter->getName(),
@@ -293,11 +304,11 @@ final readonly class CostCenterManager implements CostCenterManagerInterface
         
         while ($currentId !== null) {
             // Check for cycle - if we've visited this node before, stop to avoid infinite loop
-            if (in_array($currentId, $visited, true)) {
+            if (isset($visited[$currentId])) {
                 return false; // Cycle detected, fail safely
             }
             
-            $visited[] = $currentId;
+            $visited[$currentId] = true;
             
             $current = $this->costCenterQuery->findById($currentId);
             

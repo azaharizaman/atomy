@@ -79,8 +79,8 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
         // Calculate overhead cost
         $overheadCost = $this->calculateOverheadCost($productId, $periodId, $materialCost, $laborCost);
 
-        // Create or update product cost
-        $productCost = $this->productCostQuery->findByProduct($productId, $periodId);
+        // Create or update product cost (use CostType-aware query)
+        $productCost = $this->productCostQuery->findStandardCost($productId, $periodId);
 
         if ($productCost === null) {
             $productCost = new ProductCost(
@@ -147,8 +147,8 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
         // Calculate actual overhead cost
         $overheadCost = $this->calculateActualOverheadCost($productId, $periodId, $materialCost, $laborCost);
 
-        // Create or update product cost
-        $productCost = $this->productCostQuery->findByProduct($productId, $periodId);
+        // Create or update product cost (use CostType-aware query)
+        $productCost = $this->productCostQuery->findActualCost($productId, $periodId);
 
         if ($productCost === null) {
             $productCost = new ProductCost(
@@ -383,28 +383,6 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
         }
         
         return $product;
-    }
-
-    /**
-     * Get default cost center for product
-     *
-     * @throws \BadMethodCallException When product lookup is not implemented
-     * @throws \InvalidArgumentException When product not found
-     */
-    private function getDefaultCostCenter(string $productId): string
-    {
-        return $this->getProduct($productId)->getDefaultCostCenterId();
-    }
-
-    /**
-     * Get tenant ID for product
-     *
-     * @throws \BadMethodCallException When product lookup is not implemented
-     * @throws \InvalidArgumentException When product not found
-     */
-    private function getTenantId(string $productId): string
-    {
-        return $this->getProduct($productId)->getTenantId();
     }
 
     /**

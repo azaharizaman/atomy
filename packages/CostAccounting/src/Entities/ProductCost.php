@@ -203,4 +203,9 @@ readonly class ProductCost
             'unit' => $this->unitCost,
         ];
     }
+
+    public function getLevel(): int
+    {
+        return 0;
+    }
 }

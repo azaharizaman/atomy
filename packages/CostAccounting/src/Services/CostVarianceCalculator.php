@@ -125,7 +125,19 @@ final readonly class CostVarianceCalculator implements CostVarianceCalculatorInt
             baselineCost: $standardTotal
         );
 
-        // Dispatch event
+        // Validate tenant consistency if both costs exist
+        if ($actualCost !== null && $standardCost !== null) {
+            if ($actualCost->getTenantId() !== $standardCost->getTenantId()) {
+                $this->logger->warning('Tenant mismatch between actual and standard costs', [
+                    'product_id' => $productId,
+                    'actual_tenant_id' => $actualCost->getTenantId(),
+                    'standard_tenant_id' => $standardCost->getTenantId(),
+                    'expected_tenant_id' => $tenantId,
+                ]);
+            }
+        }
+
+        // Dispatch event using the method parameter tenantId
         $this->eventDispatcher->dispatch(new CostVarianceDetectedEvent(
             productId: $productId,
             periodId: $periodId,
@@ -135,10 +147,7 @@ final readonly class CostVarianceCalculator implements CostVarianceCalculatorInt
             totalVariance: $totalVariance,
             variancePercentage: $variancePercentage,
             isFavorable: $isFavorable,
-            tenantId: $actualCost?->getTenantId() ?? $standardCost?->getTenantId() 
-                ?? throw new \InvalidArgumentException(
-                    sprintf('Cannot determine tenant ID for product %s in period %s', $productId, $periodId)
-                ),
+            tenantId: $tenantId,
             occurredAt: new \DateTimeImmutable()
         ));
 
