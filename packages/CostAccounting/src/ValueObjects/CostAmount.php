@@ -43,7 +43,7 @@ final readonly class CostAmount
 
     public function getAmount(): float
     {
-        return $this->cents / 100;
+        return round($this->cents / 100, self::CENTS_PRECISION);
     }
 
     public function getCurrency(): string
@@ -67,8 +67,14 @@ final readonly class CostAmount
         
         $resultCents = $this->cents - $other->cents;
         
+        if ($resultCents < 0) {
+            throw new \DomainException(
+                'Subtraction result would be negative'
+            );
+        }
+        
         return new CostAmount(
-            $resultCents < 0 ? 0 : $resultCents,
+            $resultCents,
             $this->currency
         );
     }
@@ -122,7 +128,7 @@ final readonly class CostAmount
 
     public function __toString(): string
     {
-        $dollars = $this->cents / 100;
+        $dollars = round($this->cents / 100, self::CENTS_PRECISION);
         
         return sprintf('%s %.2f', $this->currency, $dollars);
     }

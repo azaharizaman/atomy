@@ -6,6 +6,7 @@ namespace Nexus\CostAccounting\Services;
 
 use Nexus\CostAccounting\Contracts\CostVarianceCalculatorInterface;
 use Nexus\CostAccounting\Contracts\ProductCostQueryInterface;
+use Nexus\CostAccounting\Entities\ProductCost;
 use Nexus\CostAccounting\Events\CostVarianceDetectedEvent;
 use Nexus\CostAccounting\ValueObjects\CostVarianceBreakdown;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -18,6 +19,9 @@ use Psr\Log\LoggerInterface;
  */
 final readonly class CostVarianceCalculator implements CostVarianceCalculatorInterface
 {
+    private const PRICE_VARIANCE_RATIO = 0.6;
+    private const RATE_VARIANCE_RATIO = 0.7;
+
     public function __construct(
         private ProductCostQueryInterface $productCostQuery,
         private EventDispatcherInterface $eventDispatcher,
@@ -69,8 +73,8 @@ final readonly class CostVarianceCalculator implements CostVarianceCalculatorInt
 
         // Calculate price, rate, and efficiency variances
         // These require additional data like quantity and price differences
-        $priceVariance = $this->calculatePriceVariance($productId, $periodId);
-        $rateVariance = $this->calculateRateVariance($productId, $periodId);
+        $priceVariance = $this->calculatePriceVariance($standardCost, $actualCost);
+        $rateVariance = $this->calculateRateVariance($standardCost, $actualCost);
         $efficiencyVariance = $this->calculateEfficiencyVariance(
             $materialVariance,
             $laborVariance,
@@ -128,14 +132,12 @@ final readonly class CostVarianceCalculator implements CostVarianceCalculatorInt
     /**
      * Calculate price variance
      * Price Variance = (Actual Price - Standard Price) × Actual Quantity
+     * 
+     * @param ProductCost|null $standardCost The standard cost (pre-fetched)
+     * @param ProductCost|null $actualCost The actual cost (pre-fetched)
      */
-    private function calculatePriceVariance(string $productId, string $periodId): float
+    private function calculatePriceVariance(?ProductCost $standardCost, ?ProductCost $actualCost): float
     {
-        // Simplified calculation - actual implementation would need
-        // detailed transaction data
-        $standardCost = $this->productCostQuery->findStandardCost($productId, $periodId);
-        $actualCost = $this->productCostQuery->findActualCost($productId, $periodId);
-
         if ($standardCost === null || $actualCost === null) {
             return 0.0;
         }
@@ -144,18 +146,18 @@ final readonly class CostVarianceCalculator implements CostVarianceCalculatorInt
         // This is a simplified heuristic
         $materialVariance = $actualCost->getMaterialCost() - $standardCost->getMaterialCost();
         
-        return $materialVariance * 0.6; // Assume 60% of material variance is price variance
+        return $materialVariance * self::PRICE_VARIANCE_RATIO;
     }
 
     /**
      * Calculate rate variance
      * Rate Variance = (Actual Rate - Standard Rate) × Actual Hours
+     * 
+     * @param ProductCost|null $standardCost The standard cost (pre-fetched)
+     * @param ProductCost|null $actualCost The actual cost (pre-fetched)
      */
-    private function calculateRateVariance(string $productId, string $periodId): float
+    private function calculateRateVariance(?ProductCost $standardCost, ?ProductCost $actualCost): float
     {
-        $standardCost = $this->productCostQuery->findStandardCost($productId, $periodId);
-        $actualCost = $this->productCostQuery->findActualCost($productId, $periodId);
-
         if ($standardCost === null || $actualCost === null) {
             return 0.0;
         }
@@ -163,7 +165,7 @@ final readonly class CostVarianceCalculator implements CostVarianceCalculatorInt
         // Rate variance is typically a portion of labor variance
         $laborVariance = $actualCost->getLaborCost() - $standardCost->getLaborCost();
         
-        return $laborVariance * 0.7; // Assume 70% of labor variance is rate variance
+        return $laborVariance * self::RATE_VARIANCE_RATIO;
     }
 
     /**

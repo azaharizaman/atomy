@@ -26,10 +26,11 @@ interface CostCenterQueryInterface
     /**
      * Find cost center by code
      * 
+     * @param string $tenantId Tenant identifier
      * @param string $code Cost center code
      * @return CostCenter|null
      */
-    public function findByCode(string $code): ?CostCenter;
+    public function findByCode(string $tenantId, string $code): ?CostCenter;
 
     /**
      * Find child cost centers

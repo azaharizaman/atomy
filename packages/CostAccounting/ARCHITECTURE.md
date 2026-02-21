@@ -518,16 +518,26 @@ Value objects are inherently immutable:
 final class CostAmount
 {
     public function __construct(
-        public readonly float $amount,
-        public readonly string $currency,
+        public readonly int $cents,
+        public readonly string $currency = 'USD',
     ) {}
+    
+    public static function fromFloat(float $amount, string $currency = 'USD'): self
+    {
+        return new self((int) round($amount * 100), $currency);
+    }
     
     public function add(CostAmount $other): self
     {
         return new self(
-            $this->amount + $other->amount,
+            $this->cents + $other->cents,
             $this->currency,
         );
+    }
+    
+    public function getAmount(): float
+    {
+        return $this->cents / 100;
     }
 }
 ```

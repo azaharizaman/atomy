@@ -32,12 +32,4 @@ enum CostPoolStatus: string
     {
         return $this === self::Active;
     }
-
-    /**
-     * Check if pool is operational
-     */
-    public function isOperational(): bool
-    {
-        return $this === self::Active;
-    }
 }

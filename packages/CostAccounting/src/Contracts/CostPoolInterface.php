@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\CostAccounting\Contracts;
 
-use Nexus\CostAccounting\Entities\CostPool;
 use Nexus\CostAccounting\Enums\AllocationMethod;
 use Nexus\CostAccounting\Enums\CostPoolStatus;
 

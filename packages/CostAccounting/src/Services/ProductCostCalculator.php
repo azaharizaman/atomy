@@ -39,19 +39,18 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
     public function calculate(
         string $productId,
         string $periodId,
-        string $costType = 'standard'
+        CostType $costType = CostType::Standard
     ): ProductCost {
         $this->logger->info('Calculating product cost', [
             'product_id' => $productId,
             'period_id' => $periodId,
-            'cost_type' => $costType,
+            'cost_type' => $costType->value,
         ]);
 
-        if ($costType === 'standard') {
-            return $this->calculateStandardCost($productId, $periodId);
-        }
-
-        return $this->calculateActualCost($productId, $periodId);
+        return match ($costType) {
+            CostType::Standard => $this->calculateStandardCost($productId, $periodId),
+            CostType::Actual => $this->calculateActualCost($productId, $periodId),
+        };
     }
 
     /**

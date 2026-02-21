@@ -7,6 +7,7 @@ namespace Nexus\CostAccounting\Services;
 use Nexus\CostAccounting\Contracts\CostCenterManagerInterface;
 use Nexus\CostAccounting\Contracts\CostCenterPersistInterface;
 use Nexus\CostAccounting\Contracts\CostCenterQueryInterface;
+use Nexus\CostAccounting\Contracts\CostPoolQueryInterface;
 use Nexus\CostAccounting\Entities\CostCenter;
 use Nexus\CostAccounting\Enums\CostCenterStatus;
 use Nexus\CostAccounting\Exceptions\CostCenterNotFoundException;
@@ -25,6 +26,7 @@ final readonly class CostCenterManager implements CostCenterManagerInterface
     public function __construct(
         private CostCenterPersistInterface $costCenterPersist,
         private CostCenterQueryInterface $costCenterQuery,
+        private CostPoolQueryInterface $costPoolQuery,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger
     ) {}
@@ -239,7 +241,7 @@ final readonly class CostCenterManager implements CostCenterManagerInterface
         }
 
         // Validate code uniqueness
-        $existing = $this->costCenterQuery->findByCode($data['code']);
+        $existing = $this->costCenterQuery->findByCode($data['tenant_id'], $data['code']);
         if ($existing !== null) {
             throw new \InvalidArgumentException(
                 sprintf('Cost center code "%s" already exists', $data['code'])
@@ -302,12 +304,22 @@ final readonly class CostCenterManager implements CostCenterManagerInterface
 
     /**
      * Check for cost pools before deletion
+     * 
+     * @throws \RuntimeException When cost pools exist for this cost center
      */
     private function checkCostPoolsBeforeDelete(string $costCenterId): void
     {
-        // This would check if there are cost pools associated with this cost center
-        // Implementation depends on CostPoolQueryInterface
-        // Placeholder - actual implementation would query cost pools
+        $costPools = $this->costPoolQuery->findByCostCenter($costCenterId);
+        
+        if (!empty($costPools)) {
+            throw new \RuntimeException(
+                sprintf(
+                    'Cannot delete cost center %s: %d cost pool(s) are associated with it',
+                    $costCenterId,
+                    count($costPools)
+                )
+            );
+        }
     }
 
     /**

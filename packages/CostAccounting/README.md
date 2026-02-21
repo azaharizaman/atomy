@@ -52,7 +52,7 @@ This package contains **pure PHP logic** and is completely framework-agnostic:
 
 ### Directory Structure
 
-```
+```text
 src/
 ├── Contracts/
 │   ├── CostAccountingManagerInterface.php     # Primary facade
@@ -211,10 +211,12 @@ try {
 ### Calculate Product Cost
 
 ```php
+use Nexus\CostAccounting\Enums\CostType;
+
 $productCost = $manager->calculateProductCost(
     productId: '01PRODUCT-A001',
     periodId: '01PERIOD-2026-Q1',
-    costType: 'standard'
+    costType: CostType::Standard
 );
 
 echo "Material: " . $productCost->getMaterialCost();

@@ -87,6 +87,17 @@ final class CostAmountTest extends TestCase
         self::assertSame(70.00, $result->getAmount());
     }
 
+    public function testSubtractThrowsWhenResultWouldBeNegative(): void
+    {
+        $cost1 = CostAmount::fromFloat(30.00);
+        $cost2 = CostAmount::fromFloat(100.00);
+        
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Subtraction result would be negative');
+        
+        $cost1->subtract($cost2);
+    }
+
     public function testSubtractDifferentCurrencyThrowsException(): void
     {
         $cost1 = CostAmount::fromFloat(100.00, 'USD');

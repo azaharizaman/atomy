@@ -123,7 +123,7 @@ All events are PSR-14 compliant with readonly properties:
 | [`CostReportInterface`](src/Contracts/CostReportInterface.php) | Report generation | `generateReport()` |
 | [`CostAuditInterface`](src/Contracts/CostAuditInterface.php) | Audit trail | `logAudit()`, `getAuditTrail()` |
 
-#### Integration Contracts (9 Interfaces)
+#### Integration Contracts (8 Interfaces)
 
 | Interface | Purpose |
 |-----------|---------|
