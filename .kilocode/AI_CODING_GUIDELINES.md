@@ -926,3 +926,167 @@ When you discover a new pattern of error:
 3. Include the correct approach
 4. Add to the checklist if applicable
 5. Update the changelog with date and description
+
+---
+
+## Lessons from FixedAssetDepreciation Package Review (PR #233)
+
+> Identified during code review on 2026-02-21
+
+### 1. Service Classes Must Be Final
+
+**Problem**: Service classes were missing the `final` keyword, allowing them to be extended when they shouldn't be.
+
+**Example**:
+```php
+// WRONG - Service class can be extended
+readonly class DepreciationCalculator implements DepreciationCalculatorInterface
+
+// CORRECT - Service class is final
+final readonly class DepreciationCalculator implements DepreciationCalculatorInterface
+```
+
+**Prevention**:
+- All service classes in `src/Services/` must be declared as `final readonly class`
+- This follows the service class guidelines and prevents unintended extension
+
+### 2. Exception Error Codes Must Be Immutable
+
+**Problem**: Exception classes had mutable `$errorCode` properties.
+
+**Example**:
+```php
+// WRONG - Mutable error code
+protected string $errorCode = 'DEPRECIATION_ERROR';
+
+// CORRECT - Use a constant
+protected const ERROR_CODE = 'DEPRECIATION_ERROR';
+
+public function getErrorCode(): string
+{
+    return static::ERROR_CODE;
+}
+```
+
+**Prevention**:
+- Use class constants for error codes instead of mutable properties
+- This ensures exception metadata remains immutable
+
+### 3. Stub Implementations Must Not Be Silent
+
+**Problem**: Methods like `runPeriodicDepreciation()` returned empty results without doing any work, silently failing.
+
+**Example**:
+```php
+// WRONG - Silent no-op
+public function runPeriodicDepreciation(string $periodId): DepreciationRunResult
+{
+    $this->logger->info('Running periodic depreciation');
+    return new DepreciationRunResult(/* empty */);
+}
+
+// CORRECT - Either implement or throw
+public function runPeriodicDepreciation(string $periodId): DepreciationRunResult
+{
+    throw new \RuntimeException('runPeriodicDepreciation not yet implemented');
+}
+```
+
+**Prevention**:
+- Never merge code with stub methods that return empty/hardcoded values without clear justification
+- If a feature isn't implemented, throw `NotImplementedException` or `RuntimeException`
+- Silent failures hide bugs and mislead callers
+
+### 4. Configuration Flags Must Have Effect
+
+**Problem**: Methods accepted configuration parameters that were never used.
+
+**Example**:
+```php
+// WRONG - Parameter ignored
+public function __construct(
+    private bool $applyToFullCost = false,
+) {}
+// $this->applyToFullCost never used in calculate()
+
+// CORRECT - Use the configuration
+public function calculate(...): DepreciationAmount
+{
+    $basis = $this->applyToFullCost ? $cost : ($cost - $salvageValue);
+    // ...
+}
+```
+
+**Prevention**:
+- Every constructor parameter must be used in the class
+- If a parameter isn't needed, remove it rather than ignoring it
+- Configuration that has no effect is misleading to users
+
+### 5. Method Return Values Must Match Documentation
+
+**Problem**: Methods like `supportsProrate()` returned true but the functionality wasn't implemented.
+
+**Example**:
+```php
+// WRONG - Advertises feature not implemented
+public function supportsProrate(): bool
+{
+    return true; // But calculate() doesn't prorate
+}
+
+// CORRECT - Return false until implemented
+public function supportsProrate(): bool
+{
+    return false;
+}
+```
+
+**Prevention**:
+- Don't advertise functionality that doesn't exist
+- Return values should match actual behavior
+- Update the return value when the feature is implemented
+
+### 6. Coverage Exclusions Hide Business Logic
+
+**Problem**: `DepreciationSchedule.php` was excluded from coverage, hiding 16 public methods.
+
+**Prevention**:
+- Don't exclude files from coverage unless absolutely necessary
+- If a file has business logic, it should be tested and included in coverage
+- Remove coverage exclusions and add tests for uncovered methods
+
+### 7. Accumulated Value Calculations Must Not Double-Count
+
+**Problem**: `DepreciationAmount.add()` was adding the amount twice.
+
+**Example**:
+```php
+// WRONG - Double counting
+accumulatedDepreciation: $this->accumulatedDepreciation + $other->accumulatedDepreciation + $other->amount
+
+// CORRECT - Sum only once
+accumulatedDepreciation: $this->accumulatedDepreciation + $other->accumulatedDepreciation
+```
+
+**Prevention**:
+- Be careful with arithmetic in accumulation calculations
+- Test edge cases where values are added/subtracted
+- Verify totals match expected values
+
+### 8. Guard Against Division by Zero
+
+**Problem**: Methods could divide by zero when depreciable base or useful life was zero.
+
+**Prevention**:
+- Always validate inputs before division operations
+- Add guards for zero/negative values in financial calculations
+- Throw clear exceptions with meaningful messages
+
+### 9. Contract Interfaces Must Support Real Use Cases
+
+**Problem**: `AssetDataProviderInterface.getAccumulatedDepreciation()` didn't support depreciation type or as-of date.
+
+**Prevention**:
+- Design interfaces for real-world queries
+- Consider multi-tenancy, point-in-time, and type-specific lookups
+- Don't simplify interfaces in ways that lose important capabilities

@@ -84,7 +84,8 @@
             "Nexus\\Procurement\\": "packages/Procurement/src/",
             "Nexus\\QualityControl\\": "packages/QualityControl/src/",
             "Nexus\\Receivable\\": "packages/Receivable/src/",
-            "Nexus\\Treasury\\": "packages/Treasury/src/"
+            "Nexus\\Treasury\\": "packages/Treasury/src/",
+            "Nexus\\FixedAssetDepreciation\\": "packages/FixedAssetDepreciation/src/"
         }
     },
     "autoload-dev": {
@@ -100,7 +101,8 @@
             "Nexus\\PaymentGateway\\Tests\\": "packages/PaymentGateway/tests/",
             "Nexus\\PaymentRails\\Tests\\": "packages/PaymentRails/tests/",
             "Nexus\\PaymentBank\\Tests\\": "packages/PaymentBank/tests/",
-            "Nexus\\SupplyChainOperations\\Tests\\": "orchestrators/SupplyChainOperations/tests/"
+            "Nexus\\SupplyChainOperations\\Tests\\": "orchestrators/SupplyChainOperations/tests/",
+            "Nexus\\FixedAssetDepreciation\\Tests\\": "packages/FixedAssetDepreciation/tests/"
         }
     }
 }
