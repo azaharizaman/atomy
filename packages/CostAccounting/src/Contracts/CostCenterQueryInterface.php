@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\CostAccounting\Contracts;
 
 use Nexus\CostAccounting\Entities\CostCenter;
+use Nexus\CostAccounting\Enums\CostCenterStatus;
 use Nexus\CostAccounting\ValueObjects\CostCenterHierarchy;
 
 /**
@@ -68,8 +69,8 @@ interface CostCenterQueryInterface
      * Find cost centers by status
      * 
      * @param string $tenantId Tenant identifier
-     * @param string $status Cost center status
+     * @param CostCenterStatus $status Cost center status
      * @return array<CostCenter>
      */
-    public function findByStatus(string $tenantId, string $status): array;
+    public function findByStatus(string $tenantId, CostCenterStatus $status): array;
 }

@@ -9,6 +9,7 @@ use Nexus\CostAccounting\Contracts\Integration\ManufacturingDataProviderInterfac
 use Nexus\CostAccounting\Contracts\ProductCostCalculatorInterface;
 use Nexus\CostAccounting\Contracts\ProductCostPersistInterface;
 use Nexus\CostAccounting\Contracts\ProductCostQueryInterface;
+use Nexus\CostAccounting\Contracts\ProductQueryInterface;
 use Nexus\CostAccounting\Entities\ProductCost;
 use Nexus\CostAccounting\Enums\CostType;
 use Nexus\CostAccounting\Events\ProductCostCalculatedEvent;
@@ -24,14 +25,19 @@ use Psr\Log\LoggerInterface;
  */
 final readonly class ProductCostCalculator implements ProductCostCalculatorInterface
 {
+    private ?ProductQueryInterface $productQuery;
+
     public function __construct(
         private ProductCostQueryInterface $productCostQuery,
         private ProductCostPersistInterface $productCostPersist,
         private InventoryDataProviderInterface $inventoryProvider,
         private ManufacturingDataProviderInterface $manufacturingProvider,
         private EventDispatcherInterface $eventDispatcher,
-        private LoggerInterface $logger
-    ) {}
+        private LoggerInterface $logger,
+        ?ProductQueryInterface $productQuery = null
+    ) {
+        $this->productQuery = $productQuery;
+    }
 
     /**
      * {@inheritdoc}
@@ -58,6 +64,10 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
      */
     public function calculateStandardCost(string $productId, string $periodId): ProductCost
     {
+        // Get product for currency and cost center
+        $product = $this->getProduct($productId);
+        $currency = $product->getCurrency() ?? 'USD';
+
         // Get material cost from inventory
         $materialCost = $this->getMaterialCost($productId, $periodId);
 
@@ -78,7 +88,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
                 periodId: $periodId,
                 tenantId: $this->getTenantId($productId),
                 costType: CostType::Standard,
-                currency: 'USD',
+                currency: $currency,
                 materialCost: $materialCost,
                 laborCost: $laborCost,
                 overheadCost: $overheadCost
@@ -99,7 +109,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
             overheadCost: $overheadCost,
             totalCost: $productCost->getTotalCost(),
             unitCost: $productCost->getUnitCost(),
-            costType: 'standard',
+            costType: CostType::Standard->value,
             tenantId: $productCost->getTenantId(),
             occurredAt: new \DateTimeImmutable()
         ));
@@ -120,6 +130,10 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
      */
     public function calculateActualCost(string $productId, string $periodId): ProductCost
     {
+        // Get product for currency and cost center
+        $product = $this->getProduct($productId);
+        $currency = $product->getCurrency() ?? 'USD';
+
         // Get actual material cost from inventory transactions
         $materialCost = $this->getActualMaterialCost($productId, $periodId);
 
@@ -140,7 +154,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
                 periodId: $periodId,
                 tenantId: $this->getTenantId($productId),
                 costType: CostType::Actual,
-                currency: 'USD',
+                currency: $currency,
                 materialCost: $materialCost,
                 laborCost: $laborCost,
                 overheadCost: $overheadCost
@@ -161,7 +175,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
             overheadCost: $overheadCost,
             totalCost: $productCost->getTotalCost(),
             unitCost: $productCost->getUnitCost(),
-            costType: 'actual',
+            costType: CostType::Actual->value,
             tenantId: $productCost->getTenantId(),
             occurredAt: new \DateTimeImmutable()
         ));
@@ -211,13 +225,22 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
                 $periodId
             );
 
-            if ($componentCost !== null) {
-                $quantity = $component['quantity'] ?? 1;
-                $totalMaterial += $componentCost->getMaterialCost() * $quantity;
-                $totalLabor += $componentCost->getLaborCost() * $quantity;
-                $totalOverhead += $componentCost->getOverheadCost() * $quantity;
-                $level = max($level, 1);
+            if ($componentCost === null) {
+                $this->logger->warning('Component cost not found for rollup', [
+                    'product_id' => $component['product_id'],
+                    'period_id' => $periodId,
+                ]);
+                continue;
             }
+
+            $quantity = $component['quantity'] ?? 1;
+            $totalMaterial += $componentCost->getMaterialCost() * $quantity;
+            $totalLabor += $componentCost->getLaborCost() * $quantity;
+            $totalOverhead += $componentCost->getOverheadCost() * $quantity;
+
+            // Get child component's level and add 1
+            $childLevel = $componentCost->getLevel() ?? 1;
+            $level = max($level, $childLevel + 1);
         }
 
         $totalCost = $totalMaterial + $totalLabor + $totalOverhead;
@@ -320,40 +343,64 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
     }
 
     /**
-     * Calculate actual overhead cost
+     * Calculate actual overhead cost.
+     * Note: materialCost and laborCost parameters are intentionally unused.
+     * The overhead is determined by the manufacturing provider.
      */
     private function calculateActualOverheadCost(
         string $productId,
         string $periodId,
-        float $materialCost,
-        float $laborCost
+        float $materialCost,  // Intentionally unused - kept for API consistency
+        float $laborCost     // Intentionally unused - kept for API consistency
     ): float {
         // Get actual overhead allocation
         return $this->manufacturingProvider->getActualOverheadCost($productId, $periodId);
     }
 
     /**
+     * Get product by ID
+     *
+     * @throws \BadMethodCallException When product query is not injected
+     * @throws \InvalidArgumentException When product not found
+     */
+    private function getProduct(string $productId): object
+    {
+        if ($this->productQuery === null) {
+            throw new \BadMethodCallException(
+                'ProductQueryInterface is not injected. Cannot resolve product.'
+            );
+        }
+        
+        $product = $this->productQuery->findById($productId);
+        if ($product === null) {
+            throw new \InvalidArgumentException(
+                sprintf('Product with ID %s not found', $productId)
+            );
+        }
+        
+        return $product;
+    }
+
+    /**
      * Get default cost center for product
-     * 
+     *
      * @throws \BadMethodCallException When product lookup is not implemented
+     * @throws \InvalidArgumentException When product not found
      */
     private function getDefaultCostCenter(string $productId): string
     {
-        throw new \BadMethodCallException(
-            'Product lookup is not implemented. Inject a ProductQueryInterface to resolve product cost center.'
-        );
+        return $this->getProduct($productId)->getDefaultCostCenterId();
     }
 
     /**
      * Get tenant ID for product
-     * 
+     *
      * @throws \BadMethodCallException When product lookup is not implemented
+     * @throws \InvalidArgumentException When product not found
      */
     private function getTenantId(string $productId): string
     {
-        throw new \BadMethodCallException(
-            'Product lookup is not implemented. Inject a ProductQueryInterface to resolve product tenant.'
-        );
+        return $this->getProduct($productId)->getTenantId();
     }
 
     /**

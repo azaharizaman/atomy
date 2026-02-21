@@ -285,7 +285,7 @@ updateCostCenter(string $costCenterId, array $data): CostCenter
 getCostCenterHierarchy(?string $rootCostCenterId = null): CostCenterHierarchy
 createCostPool(array $data): CostPool
 allocatePoolCosts(string $poolId, string $periodId): array
-calculateProductCost(string $productId, string $periodId, string $costType): ProductCost
+calculateProductCost(string $productId, string $periodId, CostType $costType): ProductCost
 performCostRollup(string $productId, string $periodId): ProductCostSnapshot
 calculateVariances(string $productId, string $periodId): CostVarianceBreakdown
 ```
@@ -308,7 +308,8 @@ allocateReciprocal(array $pools, string $periodId): array
 Handles product cost calculations:
 
 ```php
-calculate(string $productId, string $periodId, string $costType): ProductCost
+calculate(string $productId, string $periodId, CostType $costType): ProductCost
+Note: Uses CostType enum (Standard, Actual) for type-safe cost type handling.
 calculateStandardCost(string $productId, string $periodId): ProductCost
 calculateActualCost(string $productId, string $periodId): ProductCost
 rollup(string $productId, string $periodId): ProductCostSnapshot
@@ -456,6 +457,7 @@ This package follows strict coding standards:
 - **[Requirements](REQUIREMENTS.md)** - Complete requirements traceability (78 requirements)
 - **[Getting Started Guide](docs/getting-started.md)** - Quick start guide
 - **[API Reference](docs/api-reference.md)** - Complete API documentation
+- **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - Implementation details and progress
 
 ### Additional Resources
 

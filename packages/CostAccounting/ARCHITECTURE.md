@@ -19,7 +19,7 @@ This package handles all cost management functions distinct from general finance
 
 ### Namespace
 
-```
+```text
 Nexus\CostAccounting
 ```
 
@@ -89,7 +89,7 @@ The package follows the atomicity principle - it addresses ONE business domain:
 
 ## 3. Directory Structure
 
-```
+```text
 packages/CostAccounting/
 ├── src/
 │   ├── Contracts/

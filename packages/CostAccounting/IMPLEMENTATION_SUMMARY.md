@@ -4,7 +4,7 @@
 **Application:** `consuming application` (Laravel 12)  
 **Status:** ✅ Complete  
 **Date:** February 21, 2026  
-**Branch:** `feature-cost-accounting`
+**Branch:** `feature/cost-accounting-package`
 
 ## Overview
 

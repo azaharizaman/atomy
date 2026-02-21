@@ -91,6 +91,21 @@ final readonly class CostVarianceBreakdown
         return $this->totalVariance > 0;
     }
 
+    /**
+     * Get the variance breakdown as an associative array.
+     *
+     * @return array{
+     *     price: float,
+     *     rate: float,
+     *     efficiency: float,
+     *     material: float,
+     *     labor: float,
+     *     overhead: float,
+     *     total: float,
+     *     percentage: float,
+     *     baseline: float
+     * }
+     */
     public function getBreakdown(): array
     {
         return [

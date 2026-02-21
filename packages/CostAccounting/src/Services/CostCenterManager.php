@@ -90,15 +90,6 @@ final readonly class CostCenterManager implements CostCenterManagerInterface
     {
         $costCenter = $this->findCostCenterOrFail($costCenterId);
 
-        // Validate status change if being modified
-        if (isset($data['status']) && $data['status'] !== $costCenter->getStatus()) {
-            if (!$data['status']->canModify()) {
-                throw new \InvalidArgumentException(
-                    'Cannot modify inactive cost center'
-                );
-            }
-        }
-
         // Update the cost center
         $costCenter->update(
             name: $data['name'] ?? $costCenter->getName(),

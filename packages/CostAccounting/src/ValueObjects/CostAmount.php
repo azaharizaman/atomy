@@ -81,6 +81,12 @@ final readonly class CostAmount
 
     public function multiply(float $factor): CostAmount
     {
+        if ($factor < 0) {
+            throw new \InvalidArgumentException(
+                'Factor must be non-negative'
+            );
+        }
+        
         $resultCents = (int) round($this->cents * $factor);
         
         return new CostAmount(
@@ -91,9 +97,9 @@ final readonly class CostAmount
 
     public function divide(float $divisor): CostAmount
     {
-        if ($divisor === 0.0) {
+        if ($divisor <= 0) {
             throw new \InvalidArgumentException(
-                'Cannot divide by zero'
+                'Divisor must be positive'
             );
         }
         
