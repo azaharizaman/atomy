@@ -236,8 +236,8 @@ final class DepreciationSchedulePeriodTest extends TestCase
     public function getDepreciableAmount_returnsCorrectValue(): void
     {
         // depreciable amount = bookValueAtPeriodStart - bookValueAtPeriodEnd + depreciationAmount
-        // = 10000 - 9000 + 1000 = 2000 - but actually it's just the depreciation amount
-        $this->assertEquals(1000.00, $this->period->getDepreciableAmount());
+        // = 10000 - 9000 + 1000 = 2000
+        $this->assertEquals(2000.00, $this->period->getDepreciableAmount());
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -245,8 +245,7 @@ final class DepreciationSchedulePeriodTest extends TestCase
     {
         // January has 31 days
         $days = $this->period->getDaysInPeriod();
-        $this->assertGreaterThanOrEqual(28, $days);
-        $this->assertLessThanOrEqual(31, $days);
+        $this->assertEquals(31, $days);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

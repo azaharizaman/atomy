@@ -359,5 +359,31 @@ class DepreciationAdjustmentTest extends TestCase
 
         self::assertIsArray($json);
         self::assertSame('adj_015', $json['id']);
+
+        // Test actual JSON encoding
+        $encoded = json_encode($adjustment);
+        self::assertIsString($encoded);
+        $decoded = json_decode($encoded, true);
+        self::assertSame('adj_015', $decoded['id']);
+    }
+
+    public function testIsApprovedWithOnlyApprovedAtSet(): void
+    {
+        $adjustment = new DepreciationAdjustment(
+            id: 'adj_013',
+            scheduleId: 'sch_013',
+            assetId: 'asset_013',
+            tenantId: 'tenant_013',
+            adjustmentType: 'test',
+            previousValues: [],
+            newValues: [],
+            remainingDepreciationBefore: 1000.0,
+            remainingDepreciationAfter: 900.0,
+            reason: 'Test',
+            adjustmentDate: new DateTimeImmutable(),
+            approvedAt: new DateTimeImmutable(),
+        );
+
+        self::assertTrue($adjustment->isApproved());
     }
 }

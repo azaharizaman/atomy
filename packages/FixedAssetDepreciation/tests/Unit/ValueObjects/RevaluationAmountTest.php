@@ -6,7 +6,6 @@ namespace Nexus\FixedAssetDepreciation\Tests\Unit\ValueObjects;
 
 use PHPUnit\Framework\TestCase;
 use Nexus\FixedAssetDepreciation\ValueObjects\RevaluationAmount;
-use Nexus\FixedAssetDepreciation\Enums\RevaluationType;
 
 /**
  * Test cases for RevaluationAmount value object.
@@ -224,5 +223,10 @@ final class RevaluationAmountTest extends TestCase
         $this->assertArrayHasKey('previous_value', $array);
         $this->assertArrayHasKey('new_value', $array);
         $this->assertArrayHasKey('depreciation_impact', $array);
+        $this->assertEquals(5000.00, $array['amount']);
+        $this->assertEquals('USD', $array['currency']);
+        $this->assertEquals(10000.00, $array['previous_value']);
+        $this->assertEquals(15000.00, $array['new_value']);
+        $this->assertEquals(1000.00, $array['depreciation_impact']);
     }
 }

@@ -15,7 +15,7 @@ use Nexus\FixedAssetDepreciation\Enums\DepreciationMethodType;
  */
 final class Declining150DepreciationMethodTest extends TestCase
 {
-    private Declining150DepreciationMethod $method;
+    private readonly Declining150DepreciationMethod $method;
 
     protected function setUp(): void
     {
@@ -29,21 +29,13 @@ final class Declining150DepreciationMethodTest extends TestCase
     {
         $defaultMethod = new Declining150DepreciationMethod();
         
-        $reflection = new \ReflectionClass($defaultMethod);
-        $switchProperty = $reflection->getProperty('switchToStraightLine');
-        $switchProperty->setAccessible(true);
-        
-        $this->assertTrue($switchProperty->getValue($defaultMethod));
+        $this->assertTrue($defaultMethod->isSwitchToStraightLineEnabled());
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
     public function constructor_createsInstanceWithCustomValues(): void
     {
-        $reflection = new \ReflectionClass($this->method);
-        $switchProperty = $reflection->getProperty('switchToStraightLine');
-        $switchProperty->setAccessible(true);
-        
-        $this->assertTrue($switchProperty->getValue($this->method));
+        $this->assertTrue($this->method->isSwitchToStraightLineEnabled());
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\FixedAssetDepreciation\Test\Unit\Entities;
+namespace Nexus\FixedAssetDepreciation\Tests\Unit\Entities;
 
 use DateTimeImmutable;
 use Nexus\FixedAssetDepreciation\Entities\AssetRevaluation;
@@ -11,7 +11,7 @@ use Nexus\FixedAssetDepreciation\ValueObjects\BookValue;
 use Nexus\FixedAssetDepreciation\ValueObjects\RevaluationAmount;
 use PHPUnit\Framework\TestCase;
 
-class AssetRevaluationTest extends TestCase
+final class AssetRevaluationTest extends TestCase
 {
     public function testConstructorInitializesAllProperties(): void
     {

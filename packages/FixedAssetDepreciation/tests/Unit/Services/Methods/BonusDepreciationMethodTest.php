@@ -30,25 +30,14 @@ final class BonusDepreciationMethodTest extends TestCase
     {
         $defaultMethod = new BonusDepreciationMethod();
         
-        $reflection = new \ReflectionClass($defaultMethod);
-        $bonusRateProperty = $reflection->getProperty('bonusRate');
-        $bonusRateProperty->setAccessible(true);
-        
-        $this->assertEquals(1.0, $bonusRateProperty->getValue($defaultMethod));
+        $this->assertEquals(1.0, $defaultMethod->getBonusRate());
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
     public function constructor_createsInstanceWithCustomValues(): void
     {
-        $reflection = new \ReflectionClass($this->method);
-        $bonusRateProperty = $reflection->getProperty('bonusRate');
-        $bonusRateProperty->setAccessible(true);
-        
-        $applyToFullCostProperty = $reflection->getProperty('applyToFullCost');
-        $applyToFullCostProperty->setAccessible(true);
-        
-        $this->assertEquals(0.50, $bonusRateProperty->getValue($this->method));
-        $this->assertTrue($applyToFullCostProperty->getValue($this->method));
+        $this->assertEquals(0.50, $this->method->getBonusRate());
+        $this->assertTrue($this->method->appliesToFullCost());
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -72,6 +61,7 @@ final class BonusDepreciationMethodTest extends TestCase
 
         // With 100% bonus rate, the full cost should be depreciated
         $this->assertInstanceOf(\Nexus\FixedAssetDepreciation\ValueObjects\DepreciationAmount::class, $result);
+        $this->assertEquals(10000.00, $result->getAmount());
         $this->assertEquals('USD', $result->currency);
     }
 
@@ -168,9 +158,9 @@ final class BonusDepreciationMethodTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function supportsProrate_returnsTrue(): void
+    public function supportsProrate_returnsFalse(): void
     {
-        $this->assertTrue($this->method->supportsProrate());
+        $this->assertFalse($this->method->supportsProrate());
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -267,20 +257,12 @@ final class BonusDepreciationMethodTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function getBonusRate_returnsCorrectRate(): void
     {
-        $reflection = new \ReflectionClass($this->method);
-        $bonusRateProperty = $reflection->getProperty('bonusRate');
-        $bonusRateProperty->setAccessible(true);
-        
-        $this->assertEquals(0.50, $bonusRateProperty->getValue($this->method));
+        $this->assertEquals(0.50, $this->method->getBonusRate());
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
     public function isApplyToFullCost_returnsCorrectValue(): void
     {
-        $reflection = new \ReflectionClass($this->method);
-        $applyToFullCostProperty = $reflection->getProperty('applyToFullCost');
-        $applyToFullCostProperty->setAccessible(true);
-        
-        $this->assertTrue($applyToFullCostProperty->getValue($this->method));
+        $this->assertTrue($this->method->appliesToFullCost());
     }
 }

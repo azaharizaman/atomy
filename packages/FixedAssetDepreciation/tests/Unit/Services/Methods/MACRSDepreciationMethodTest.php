@@ -69,6 +69,50 @@ final class MACRSDepreciationMethodTest extends TestCase
         );
 
         $this->assertInstanceOf(\Nexus\FixedAssetDepreciation\ValueObjects\DepreciationAmount::class, $result);
+        $this->assertGreaterThan(0, $result->getAmount());
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function calculate_withPropertyClass_returnsCorrectDepreciation(): void
+    {
+        $result = $this->method->calculate(
+            cost: 10000.00,
+            salvageValue: 1000.00,
+            startDate: new \DateTimeImmutable('2024-01-01'),
+            endDate: new \DateTimeImmutable('2024-01-31'),
+            options: [
+                'useful_life_months' => 60,
+                'accumulated_depreciation' => 0.0,
+                'remaining_months' => 60,
+                'currency' => 'USD',
+                'recovery_period' => 5,
+                'property_class' => 7,
+            ]
+        );
+
+        $this->assertInstanceOf(\Nexus\FixedAssetDepreciation\ValueObjects\DepreciationAmount::class, $result);
+        $this->assertGreaterThan(0, $result->getAmount());
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function calculate_withConvention_returnsCorrectDepreciation(): void
+    {
+        $result = $this->method->calculate(
+            cost: 10000.00,
+            salvageValue: 1000.00,
+            startDate: new \DateTimeImmutable('2024-01-01'),
+            endDate: new \DateTimeImmutable('2024-01-31'),
+            options: [
+                'useful_life_months' => 60,
+                'accumulated_depreciation' => 0.0,
+                'remaining_months' => 60,
+                'currency' => 'USD',
+                'recovery_period' => 5,
+                'convention' => 'half-year',
+            ]
+        );
+
+        $this->assertInstanceOf(\Nexus\FixedAssetDepreciation\ValueObjects\DepreciationAmount::class, $result);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

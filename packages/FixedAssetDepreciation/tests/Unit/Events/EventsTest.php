@@ -6,7 +6,6 @@ namespace Nexus\FixedAssetDepreciation\Tests\Unit\Events;
 
 use PHPUnit\Framework\TestCase;
 use Nexus\FixedAssetDepreciation\Events\DepreciationRunCompletedEvent;
-use Nexus\FixedAssetDepreciation\ValueObjects\DepreciationRunResult;
 
 /**
  * Test cases for Event classes.
@@ -124,9 +123,9 @@ final class EventsTest extends TestCase
             completedDate: new \DateTimeImmutable('2024-01-31 10:05:00')
         );
 
-        // 5 minutes = 300 seconds (but diff->s gives seconds portion only)
+        // 5 minutes = 300 seconds
         $duration = $event->getDurationInSeconds();
-        $this->assertGreaterThanOrEqual(0, $duration);
+        $this->assertEquals(300, $duration);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

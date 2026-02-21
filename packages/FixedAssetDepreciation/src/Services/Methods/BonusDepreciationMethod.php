@@ -218,6 +218,10 @@ final readonly class BonusDepreciationMethod implements DepreciationMethodInterf
             $errors[] = 'Cost must be positive';
         }
 
+        if ($salvageValue < 0) {
+            $errors[] = 'Salvage value cannot be negative';
+        }
+
         $bonusRate = $options['bonus_rate'] ?? $this->bonusRate;
         if ($bonusRate < 0 || $bonusRate > 1) {
             $errors[] = 'Bonus rate must be between 0 and 1';

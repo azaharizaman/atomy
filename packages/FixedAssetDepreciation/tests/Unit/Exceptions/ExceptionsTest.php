@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Nexus\FixedAssetDepreciation\Test\Unit\Exceptions;
+namespace Nexus\FixedAssetDepreciation\Tests\Unit\Exceptions;
 
 use Nexus\FixedAssetDepreciation\Exceptions\DepreciationCalculationException;
 use Nexus\FixedAssetDepreciation\Exceptions\DepreciationException;
 use PHPUnit\Framework\TestCase;
 
-class ExceptionsTest extends TestCase
+final class ExceptionsTest extends TestCase
 {
     public function testDepreciationExceptionWithContext(): void
     {

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Nexus\FixedAssetDepreciation\Test\Unit\Entities;
+namespace Nexus\FixedAssetDepreciation\Tests\Unit\Entities;
 
 use DateTimeImmutable;
 use Nexus\FixedAssetDepreciation\Entities\DepreciationMethod;
 use Nexus\FixedAssetDepreciation\Enums\DepreciationMethodType;
 use PHPUnit\Framework\TestCase;
 
-class DepreciationMethodTest extends TestCase
+final class DepreciationMethodTest extends TestCase
 {
     public function testConstructorInitializesAllProperties(): void
     {

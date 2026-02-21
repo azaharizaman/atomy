@@ -283,10 +283,10 @@ final class DepreciationRunResultTest extends TestCase
 
         $array = $result->toArray();
         
-        $this->assertArrayHasKey('period_id', $array);
-        $this->assertArrayHasKey('total_assets', $array);
-        $this->assertArrayHasKey('success_count', $array);
-        $this->assertArrayHasKey('failure_count', $array);
-        $this->assertArrayHasKey('total_depreciation', $array);
+        $this->assertArrayHasKey('periodId', $array);
+        $this->assertArrayHasKey('totalAssets', $array);
+        $this->assertArrayHasKey('successCount', $array);
+        $this->assertArrayHasKey('failureCount', $array);
+        $this->assertArrayHasKey('totalDepreciation', $array);
     }
 }

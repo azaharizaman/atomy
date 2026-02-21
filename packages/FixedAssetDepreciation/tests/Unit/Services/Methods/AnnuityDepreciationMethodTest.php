@@ -30,25 +30,14 @@ final class AnnuityDepreciationMethodTest extends TestCase
     {
         $defaultMethod = new AnnuityDepreciationMethod();
         
-        $reflection = new \ReflectionClass($defaultMethod);
-        $interestRateProperty = $reflection->getProperty('interestRate');
-        $interestRateProperty->setAccessible(true);
-        
-        $this->assertEquals(0.10, $interestRateProperty->getValue($defaultMethod));
+        $this->assertEquals(0.10, $defaultMethod->getInterestRate());
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
     public function constructor_createsInstanceWithCustomValues(): void
     {
-        $reflection = new \ReflectionClass($this->method);
-        $interestRateProperty = $reflection->getProperty('interestRate');
-        $interestRateProperty->setAccessible(true);
-        
-        $includeInterestProperty = $reflection->getProperty('includeInterestInExpense');
-        $includeInterestProperty->setAccessible(true);
-        
-        $this->assertEquals(0.10, $interestRateProperty->getValue($this->method));
-        $this->assertFalse($includeInterestProperty->getValue($this->method));
+        $this->assertEquals(0.10, $this->method->getInterestRate());
+        $this->assertFalse($this->method->isInterestIncludedInExpense());
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
