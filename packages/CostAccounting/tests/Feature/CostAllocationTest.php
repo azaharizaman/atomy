@@ -10,13 +10,15 @@ use Nexus\CostAccounting\Contracts\CostCenterQueryInterface;
 use Nexus\CostAccounting\Contracts\CostPoolPersistInterface;
 use Nexus\CostAccounting\Contracts\CostPoolQueryInterface;
 use Nexus\CostAccounting\Contracts\ProductCostCalculatorInterface;
+use Nexus\CostAccounting\Contracts\CostVarianceCalculatorInterface;
+use Nexus\CostAccounting\Contracts\Integration\TenantContextInterface;
 use Nexus\CostAccounting\Entities\CostAllocationRule;
 use Nexus\CostAccounting\Entities\CostCenter;
 use Nexus\CostAccounting\Entities\CostPool;
 use Nexus\CostAccounting\Enums\AllocationMethod;
 use Nexus\CostAccounting\Enums\CostCenterStatus;
+use Nexus\CostAccounting\Enums\CostPoolStatus;
 use Nexus\CostAccounting\Services\CostAccountingManager;
-use Nexus\CostAccounting\Services\CostVarianceCalculator;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -41,6 +43,7 @@ final class CostAllocationTest extends TestCase
     private $mockCostAllocationEngine;
     private $mockProductCostCalculator;
     private $mockVarianceCalculator;
+    private $mockTenantContext;
     private $mockLogger;
 
     protected function setUp(): void
@@ -51,7 +54,8 @@ final class CostAllocationTest extends TestCase
         $this->mockCostPoolPersist = $this->createMock(CostPoolPersistInterface::class);
         $this->mockCostAllocationEngine = $this->createMock(CostAllocationEngineInterface::class);
         $this->mockProductCostCalculator = $this->createMock(ProductCostCalculatorInterface::class);
-        $this->mockVarianceCalculator = $this->createMock(CostVarianceCalculator::class);
+        $this->mockVarianceCalculator = $this->createMock(CostVarianceCalculatorInterface::class);
+        $this->mockTenantContext = $this->createMock(TenantContextInterface::class);
         $this->mockLogger = $this->createMock(LoggerInterface::class);
 
         $this->manager = new CostAccountingManager(
@@ -62,6 +66,7 @@ final class CostAllocationTest extends TestCase
             $this->mockProductCostCalculator,
             $this->mockCostAllocationEngine,
             $this->mockVarianceCalculator,
+            $this->mockTenantContext,
             $this->mockLogger
         );
     }
@@ -123,7 +128,7 @@ final class CostAllocationTest extends TestCase
             tenantId: 'tenant_1',
             allocationMethod: AllocationMethod::Direct,
             totalAmount: 1000.00,
-            status: 'inactive'
+            status: CostPoolStatus::Inactive
         );
 
         $this->mockCostPoolQuery
@@ -146,7 +151,7 @@ final class CostAllocationTest extends TestCase
             'cc_1' => 0.6,
             'cc_2' => 0.4,
         ]);
-        $pool->updateAmount(500.00);
+        $pool = $pool->withTotalAmount(500.00);
 
         $this->mockCostPoolQuery
             ->expects(self::once())
@@ -322,8 +327,8 @@ final class CostAllocationTest extends TestCase
             isActive: true
         );
 
-        $pool->addAllocationRule($rule1);
-        $pool->addAllocationRule($rule2);
+        $pool = $pool->withAllocationRule($rule1);
+        $pool = $pool->withAllocationRule($rule2);
 
         $this->mockCostPoolQuery
             ->expects(self::once())
@@ -377,7 +382,7 @@ final class CostAllocationTest extends TestCase
                 allocationMethod: $method,
                 isActive: true
             );
-            $pool->addAllocationRule($rule);
+            $pool = $pool->withAllocationRule($rule);
         }
 
         return $pool;

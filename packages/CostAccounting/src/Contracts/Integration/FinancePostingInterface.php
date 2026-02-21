@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\CostAccounting\Contracts\Integration;
 
+use Nexus\CostAccounting\ValueObjects\CostAmount;
+
 /**
  * Finance Posting Interface
  * 
@@ -25,14 +27,14 @@ interface FinancePostingInterface
      * 
      * @param string $sourceCostCenterId Source cost center
      * @param string $targetCostCenterId Target cost center
-     * @param float $amount Allocation amount
+     * @param CostAmount $amount Allocation amount
      * @param string $periodId Fiscal period
      * @return string Journal entry ID
      */
     public function postAllocation(
         string $sourceCostCenterId,
         string $targetCostCenterId,
-        float $amount,
+        CostAmount $amount,
         string $periodId
     ): string;
 

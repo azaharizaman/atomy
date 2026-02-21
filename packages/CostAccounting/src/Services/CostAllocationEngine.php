@@ -81,9 +81,14 @@ final readonly class CostAllocationEngine implements CostAllocationEngineInterfa
         }
 
         // Execute allocation based on method
+        $costCenterIds = array_map(
+            fn($rule) => $rule->getReceivingCostCenterId(),
+            $rules
+        );
+        
         $result = match ($pool->getAllocationMethod()) {
             AllocationMethod::Direct => $this->allocateDirect($pool, $rules),
-            AllocationMethod::StepDown => $this->allocateStepDown($pool, $periodId, array_keys($rules)),
+            AllocationMethod::StepDown => $this->allocateStepDown($pool, $periodId, $costCenterIds),
             AllocationMethod::Reciprocal => $this->allocateReciprocal([$pool], $periodId),
             default => $this->allocateDirect($pool, $rules),
         };
@@ -232,7 +237,7 @@ final readonly class CostAllocationEngine implements CostAllocationEngineInterfa
     public function allocateStepDown(CostPool $pool, string $periodId, array $order): array
     {
         $allocations = [];
-        $remainingPool = $pool;
+        $remainingAmount = $pool->getTotalAmount();
         
         foreach ($order as $costCenterId) {
             $rules = $pool->getAllocationRules();
@@ -246,8 +251,9 @@ final readonly class CostAllocationEngine implements CostAllocationEngineInterfa
             }
             
             if ($ruleForCenter !== null) {
-                $allocationAmount = $remainingPool->getTotalAmount() * $ruleForCenter->getAllocationRatio();
+                $allocationAmount = $remainingAmount * $ruleForCenter->getAllocationRatio();
                 $allocations[$costCenterId] = $allocationAmount;
+                $remainingAmount -= $allocationAmount;
             }
         }
 
@@ -330,10 +336,10 @@ final readonly class CostAllocationEngine implements CostAllocationEngineInterfa
         $totalAllocated = 0.0;
         
         foreach ($allocations as $poolAllocations) {
-            foreach ($poolAllocations as $amount) {
+            foreach ($poolAllocations as $costCenterId => $amount) {
                 $totalAllocated += $amount;
+                $resultAllocations[$costCenterId] = ($resultAllocations[$costCenterId] ?? 0.0) + $amount;
             }
-            $resultAllocations = array_merge($resultAllocations, $poolAllocations);
         }
 
         return [

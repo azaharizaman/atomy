@@ -9,6 +9,7 @@ use Nexus\CostAccounting\Contracts\CostPoolQueryInterface;
 use Nexus\CostAccounting\Entities\CostAllocationRule;
 use Nexus\CostAccounting\Entities\CostPool;
 use Nexus\CostAccounting\Enums\AllocationMethod;
+use Nexus\CostAccounting\Enums\CostPoolStatus;
 use Nexus\CostAccounting\Events\CostAllocatedEvent;
 use Nexus\CostAccounting\Exceptions\AllocationCycleDetectedException;
 use Nexus\CostAccounting\Exceptions\InsufficientCostPoolException;
@@ -78,7 +79,7 @@ final class CostAllocationEngineTest extends TestCase
             tenantId: 'tenant_1',
             allocationMethod: AllocationMethod::Direct,
             totalAmount: 1000.00,
-            status: 'inactive'
+            status: CostPoolStatus::Inactive
         );
 
         $this->expectException(\InvalidArgumentException::class);
@@ -113,8 +114,46 @@ final class CostAllocationEngineTest extends TestCase
             'cc_2' => 0.4,
         ]);
 
-        // Set pool amount less than required for allocation
-        $pool->updateAmount(500.00);
+        // Set pool amount to 200 which is less than 1000 (the original pool amount * ratios sum of 1.0)
+        // This will cause expectedTotal (200 * 1.0 = 200) to exceed available funds check to fail
+        // Actually ratios sum to 1.0, so we need to use a smaller amount that makes expectedTotal > totalAmount
+        // Since ratios sum to 1.0, we can't trigger via that. Let's use original pool amount which is 1000
+        // But set the total amount to trigger - the condition is totalAmount < expectedTotal - 0.01
+        // With ratios 0.6 + 0.4 = 1.0, expectedTotal = totalAmount * 1.0 = totalAmount
+        // So this will never trigger. We need ratios that sum > 1.0 to create insufficiency
+        
+        // Use ratios that sum to more than 1.0 (over-allocated) to trigger insufficiency
+        $pool = new CostPool(
+            id: 'pool_1',
+            code: 'POOL001',
+            name: 'Test Pool',
+            costCenterId: 'cc_source',
+            periodId: 'period_1',
+            tenantId: 'tenant_1',
+            allocationMethod: AllocationMethod::Direct,
+            totalAmount: 500.00
+        );
+        
+        // Add rules with ratios summing to 1.5 (over-allocation)
+        $rule1 = new CostAllocationRule(
+            id: 'rule_1',
+            costPoolId: 'pool_1',
+            receivingCostCenterId: 'cc_1',
+            allocationRatio: 0.6,
+            tenantId: 'tenant_1',
+            allocationMethod: AllocationMethod::Direct,
+            isActive: true
+        );
+        $rule2 = new CostAllocationRule(
+            id: 'rule_2',
+            costPoolId: 'pool_1',
+            receivingCostCenterId: 'cc_2',
+            allocationRatio: 0.9,
+            tenantId: 'tenant_1',
+            allocationMethod: AllocationMethod::Direct,
+            isActive: true
+        );
+        $pool = $pool->withAllocationRule($rule1)->withAllocationRule($rule2);
 
         $this->expectException(InsufficientCostPoolException::class);
 
@@ -222,7 +261,7 @@ final class CostAllocationEngineTest extends TestCase
             activityDriverId: 'driver_1',
             isActive: true
         );
-        $pool->addAllocationRule($rule);
+        $pool = $pool->withAllocationRule($rule);
 
         $this->mockPoolQuery
             ->expects(self::once())
@@ -286,7 +325,7 @@ final class CostAllocationEngineTest extends TestCase
                 allocationMethod: $method,
                 isActive: true
             );
-            $pool->addAllocationRule($rule);
+            $pool = $pool->withAllocationRule($rule);
         }
 
         return $pool;

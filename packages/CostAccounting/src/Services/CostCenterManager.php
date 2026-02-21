@@ -154,10 +154,10 @@ final readonly class CostCenterManager implements CostCenterManagerInterface
     {
         $costCenter = $this->findCostCenterOrFail($costCenterId);
 
-        // Validate status change
-        if (!$status->canModify() && $costCenter->getStatus()->canModify()) {
+        // Validate status change - cannot re-activate a non-modifiable (inactive) status
+        if ($status->canModify() && !$costCenter->getStatus()->canModify()) {
             throw new \InvalidArgumentException(
-                'Cannot change status from active/pending to inactive'
+                'Cannot re-activate a non-modifiable cost center status'
             );
         }
 

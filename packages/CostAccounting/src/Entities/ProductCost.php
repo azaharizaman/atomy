@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Nexus\CostAccounting\Entities;
 
+use Nexus\CostAccounting\Enums\CostType;
+
 /**
  * Product Cost Entity
  * 
  * Stores calculated product costs with cost rollup
  * information including material, labor, and overhead.
  */
-class ProductCost
+readonly class ProductCost
 {
     private string $id;
     private string $productId;
@@ -21,7 +23,7 @@ class ProductCost
     private float $overheadCost;
     private float $totalCost;
     private float $unitCost;
-    private string $costType; // actual, standard
+    private CostType $costType;
     private string $currency;
     private string $tenantId;
     private \DateTimeImmutable $calculatedAt;
@@ -34,11 +36,15 @@ class ProductCost
         string $costCenterId,
         string $periodId,
         string $tenantId,
-        string $costType = 'standard',
+        CostType $costType = CostType::Standard,
         string $currency = 'USD',
         float $materialCost = 0.0,
         float $laborCost = 0.0,
-        float $overheadCost = 0.0
+        float $overheadCost = 0.0,
+        float $unitCost = 0.0,
+        ?\DateTimeImmutable $calculatedAt = null,
+        ?\DateTimeImmutable $createdAt = null,
+        ?\DateTimeImmutable $updatedAt = null
     ) {
         $this->id = $id;
         $this->productId = $productId;
@@ -51,10 +57,10 @@ class ProductCost
         $this->laborCost = $laborCost;
         $this->overheadCost = $overheadCost;
         $this->totalCost = $materialCost + $laborCost + $overheadCost;
-        $this->unitCost = 0.0;
-        $this->calculatedAt = new \DateTimeImmutable();
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->unitCost = $unitCost;
+        $this->calculatedAt = $calculatedAt ?? new \DateTimeImmutable();
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
+        $this->updatedAt = $updatedAt ?? new \DateTimeImmutable();
     }
 
     public function getId(): string
@@ -102,7 +108,7 @@ class ProductCost
         return $this->unitCost;
     }
 
-    public function getCostType(): string
+    public function getCostType(): CostType
     {
         return $this->costType;
     }
@@ -134,31 +140,57 @@ class ProductCost
 
     public function isStandardCost(): bool
     {
-        return $this->costType === 'standard';
+        return $this->costType === CostType::Standard;
     }
 
     public function isActualCost(): bool
     {
-        return $this->costType === 'actual';
+        return $this->costType === CostType::Actual;
     }
 
-    public function calculateUnitCost(float $quantity): void
+    public function withUnitCost(float $quantity): self
     {
-        $this->unitCost = $quantity > 0 ? $this->totalCost / $quantity : 0.0;
-        $this->updatedAt = new \DateTimeImmutable();
+        $unitCost = $quantity > 0 ? $this->totalCost / $quantity : 0.0;
+        
+        return new self(
+            $this->id,
+            $this->productId,
+            $this->costCenterId,
+            $this->periodId,
+            $this->tenantId,
+            $this->costType,
+            $this->currency,
+            $this->materialCost,
+            $this->laborCost,
+            $this->overheadCost,
+            $unitCost,
+            $this->calculatedAt,
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
     }
 
-    public function updateCosts(
+    public function withCosts(
         float $materialCost,
         float $laborCost,
         float $overheadCost
-    ): void {
-        $this->materialCost = $materialCost;
-        $this->laborCost = $laborCost;
-        $this->overheadCost = $overheadCost;
-        $this->totalCost = $materialCost + $laborCost + $overheadCost;
-        $this->calculatedAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+    ): self {
+        return new self(
+            $this->id,
+            $this->productId,
+            $this->costCenterId,
+            $this->periodId,
+            $this->tenantId,
+            $this->costType,
+            $this->currency,
+            $materialCost,
+            $laborCost,
+            $overheadCost,
+            $this->unitCost,
+            new \DateTimeImmutable(),
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
     }
 
     public function getCostBreakdown(): array

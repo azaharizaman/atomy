@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\CostAccounting\Entities;
 
 use Nexus\CostAccounting\Enums\AllocationMethod;
+use Nexus\CostAccounting\Enums\CostPoolStatus;
 
 /**
  * Cost Pool Entity
@@ -12,7 +13,7 @@ use Nexus\CostAccounting\Enums\AllocationMethod;
  * Aggregates indirect costs for allocation to
  * receiving cost centers.
  */
-class CostPool
+readonly class CostPool
 {
     private string $id;
     private string $code;
@@ -21,7 +22,7 @@ class CostPool
     private string $costCenterId;
     private float $totalAmount;
     private AllocationMethod $allocationMethod;
-    private string $status;
+    private CostPoolStatus $status;
     private string $periodId;
     private string $tenantId;
     private array $allocationRules;
@@ -38,7 +39,10 @@ class CostPool
         AllocationMethod $allocationMethod,
         float $totalAmount = 0.0,
         ?string $description = null,
-        string $status = 'active'
+        CostPoolStatus $status = CostPoolStatus::Active,
+        array $allocationRules = [],
+        ?\DateTimeImmutable $createdAt = null,
+        ?\DateTimeImmutable $updatedAt = null
     ) {
         $this->id = $id;
         $this->code = $code;
@@ -50,9 +54,9 @@ class CostPool
         $this->totalAmount = $totalAmount;
         $this->description = $description;
         $this->status = $status;
-        $this->allocationRules = [];
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->allocationRules = $allocationRules;
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
+        $this->updatedAt = $updatedAt ?? new \DateTimeImmutable();
     }
 
     public function getId(): string
@@ -90,7 +94,7 @@ class CostPool
         return $this->allocationMethod;
     }
 
-    public function getStatus(): string
+    public function getStatus(): CostPoolStatus
     {
         return $this->status;
     }
@@ -122,39 +126,106 @@ class CostPool
 
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === CostPoolStatus::Active;
     }
 
-    public function addAllocationRule(CostAllocationRule $rule): void
+    public function withAllocationRule(CostAllocationRule $rule): self
     {
-        $this->allocationRules[] = $rule;
-        $this->updatedAt = new \DateTimeImmutable();
+        return new self(
+            $this->id,
+            $this->code,
+            $this->name,
+            $this->costCenterId,
+            $this->periodId,
+            $this->tenantId,
+            $this->allocationMethod,
+            $this->totalAmount,
+            $this->description,
+            $this->status,
+            [...$this->allocationRules, $rule],
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
     }
 
-    public function removeAllocationRule(string $ruleId): void
+    public function withoutAllocationRule(string $ruleId): self
     {
-        $this->allocationRules = array_filter(
+        $filteredRules = array_values(array_filter(
             $this->allocationRules,
             fn($rule) => $rule->getId() !== $ruleId
+        ));
+
+        return new self(
+            $this->id,
+            $this->code,
+            $this->name,
+            $this->costCenterId,
+            $this->periodId,
+            $this->tenantId,
+            $this->allocationMethod,
+            $this->totalAmount,
+            $this->description,
+            $this->status,
+            $filteredRules,
+            $this->createdAt,
+            new \DateTimeImmutable()
         );
-        $this->updatedAt = new \DateTimeImmutable();
     }
 
-    public function updateAmount(float $amount): void
+    public function withTotalAmount(float $amount): self
     {
-        $this->totalAmount = $amount;
-        $this->updatedAt = new \DateTimeImmutable();
+        return new self(
+            $this->id,
+            $this->code,
+            $this->name,
+            $this->costCenterId,
+            $this->periodId,
+            $this->tenantId,
+            $this->allocationMethod,
+            $amount,
+            $this->description,
+            $this->status,
+            $this->allocationRules,
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
     }
 
-    public function changeAllocationMethod(AllocationMethod $method): void
+    public function withAllocationMethod(AllocationMethod $method): self
     {
-        $this->allocationMethod = $method;
-        $this->updatedAt = new \DateTimeImmutable();
+        return new self(
+            $this->id,
+            $this->code,
+            $this->name,
+            $this->costCenterId,
+            $this->periodId,
+            $this->tenantId,
+            $method,
+            $this->totalAmount,
+            $this->description,
+            $this->status,
+            $this->allocationRules,
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
     }
 
-    public function changeStatus(string $status): void
+    public function withStatus(CostPoolStatus $status): self
     {
-        $this->status = $status;
-        $this->updatedAt = new \DateTimeImmutable();
+        return new self(
+            $this->id,
+            $this->code,
+            $this->name,
+            $this->costCenterId,
+            $this->periodId,
+            $this->tenantId,
+            $this->allocationMethod,
+            $this->totalAmount,
+            $this->description,
+            $status,
+            $this->allocationRules,
+            $this->createdAt,
+            new \DateTimeImmutable()
+        );
     }
 }

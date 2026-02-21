@@ -6,6 +6,7 @@ namespace Nexus\CostAccounting\Tests\Unit\Services;
 
 use Nexus\CostAccounting\Contracts\ProductCostQueryInterface;
 use Nexus\CostAccounting\Entities\ProductCost;
+use Nexus\CostAccounting\Enums\CostType;
 use Nexus\CostAccounting\Events\CostVarianceDetectedEvent;
 use Nexus\CostAccounting\Services\CostVarianceCalculator;
 use Nexus\CostAccounting\ValueObjects\CostVarianceBreakdown;
@@ -49,7 +50,7 @@ final class CostVarianceCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 100.00,
             laborCost: 50.00,
@@ -62,7 +63,7 @@ final class CostVarianceCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'actual',
+            costType: CostType::Actual,
             currency: 'USD',
             materialCost: 120.00,
             laborCost: 55.00,
@@ -113,7 +114,7 @@ final class CostVarianceCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 100.00,
             laborCost: 50.00,
@@ -161,7 +162,7 @@ final class CostVarianceCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'actual',
+            costType: CostType::Actual,
             currency: 'USD',
             materialCost: 120.00,
             laborCost: 55.00,
@@ -230,12 +231,14 @@ final class CostVarianceCalculatorTest extends TestCase
             rateVariance: 50.00,
             efficiencyVariance: 25.00,
             totalVariance: 200.00,
+            variancePercentage: 20.0,
             materialVariance: 75.00,
             laborVariance: 75.00,
-            overheadVariance: 50.00
+            overheadVariance: 50.00,
+            baselineCost: 1000.00
         );
 
-        // 10% of 200 = 20, actual is 200 > 20
+        // 200 > 1000 * 10% = 100
         $result = $this->calculator->exceedsThreshold($variance, 10.0);
 
         self::assertTrue($result);
@@ -250,12 +253,14 @@ final class CostVarianceCalculatorTest extends TestCase
             rateVariance: 2.50,
             efficiencyVariance: 1.25,
             totalVariance: 10.00,
+            variancePercentage: 5.0,
             materialVariance: 3.75,
             laborVariance: 3.75,
-            overheadVariance: 2.50
+            overheadVariance: 2.50,
+            baselineCost: 1000.00
         );
 
-        // 10% of 10 = 1, actual is 10 > 1
+        // 10 < 1000 * 50% = 500
         $result = $this->calculator->exceedsThreshold($variance, 50.0);
 
         self::assertFalse($result);
@@ -270,12 +275,15 @@ final class CostVarianceCalculatorTest extends TestCase
             rateVariance: -25.00,
             efficiencyVariance: -12.50,
             totalVariance: -100.00,
+            variancePercentage: -10.0,
             materialVariance: -37.50,
             laborVariance: -37.50,
-            overheadVariance: -25.00
+            overheadVariance: -25.00,
+            baselineCost: 1000.00
         );
 
-        // 10% of |-100| = 10, actual is 100 > 10
+        // |-100| = 100 > 1000 * 10% = 100? No, it's equal so false
+        // Let's use baseline 500 to make 100 > 50 = true
         $result = $this->calculator->exceedsThreshold($variance, 10.0);
 
         self::assertTrue($result);

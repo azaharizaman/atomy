@@ -18,6 +18,7 @@ class CostVarianceDetectedEvent
         public readonly float $rateVariance,
         public readonly float $efficiencyVariance,
         public readonly float $totalVariance,
+        public readonly float $variancePercentage,
         public readonly bool $isFavorable,
         public readonly string $tenantId,
         public readonly \DateTimeImmutable $occurredAt
@@ -33,6 +34,7 @@ class CostVarianceDetectedEvent
             'rate' => $this->rateVariance,
             'efficiency' => $this->efficiencyVariance,
             'total' => $this->totalVariance,
+            'percentage' => $this->variancePercentage,
         ];
     }
 
@@ -41,7 +43,6 @@ class CostVarianceDetectedEvent
      */
     public function exceedsThreshold(float $thresholdPercentage): bool
     {
-        $thresholdAmount = abs($this->totalVariance) * ($thresholdPercentage / 100);
-        return abs($this->totalVariance) > $thresholdAmount;
+        return abs($this->variancePercentage) > $thresholdPercentage;
     }
 }

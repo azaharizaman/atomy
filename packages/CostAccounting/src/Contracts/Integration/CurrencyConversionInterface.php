@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\CostAccounting\Contracts\Integration;
 
+use DateTimeImmutable;
+use Nexus\Common\ValueObjects\Money;
+use Nexus\CostAccounting\ValueObjects\CostAmount;
+
 /**
  * Currency Conversion Interface
  * 
@@ -15,32 +19,32 @@ interface CurrencyConversionInterface
     /**
      * Convert amount between currencies
      * 
-     * @param float $amount Amount to convert
+     * @param CostAmount|Money $amount Amount to convert
      * @param string $fromCurrency Source currency code
      * @param string $toCurrency Target currency code
-     * @param string|null $date Conversion date
-     * @return float
+     * @param DateTimeImmutable|null $date Conversion date
+     * @return CostAmount|Money
      */
     public function convert(
-        float $amount,
+        CostAmount|Money $amount,
         string $fromCurrency,
         string $toCurrency,
-        ?string $date = null
-    ): float;
+        ?DateTimeImmutable $date = null
+    ): CostAmount|Money;
 
     /**
      * Get exchange rate
      * 
      * @param string $fromCurrency Source currency code
      * @param string $toCurrency Target currency code
-     * @param string|null $date Rate date
-     * @return float
+     * @param DateTimeImmutable|null $date Rate date
+     * @return Money
      */
     public function getExchangeRate(
         string $fromCurrency,
         string $toCurrency,
-        ?string $date = null
-    ): float;
+        ?DateTimeImmutable $date = null
+    ): Money;
 
     /**
      * Validate currency

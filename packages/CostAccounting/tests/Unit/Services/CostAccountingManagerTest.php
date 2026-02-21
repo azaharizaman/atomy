@@ -10,11 +10,15 @@ use Nexus\CostAccounting\Contracts\CostCenterQueryInterface;
 use Nexus\CostAccounting\Contracts\CostPoolPersistInterface;
 use Nexus\CostAccounting\Contracts\CostPoolQueryInterface;
 use Nexus\CostAccounting\Contracts\ProductCostCalculatorInterface;
+use Nexus\CostAccounting\Contracts\CostVarianceCalculatorInterface;
+use Nexus\CostAccounting\Contracts\Integration\TenantContextInterface;
 use Nexus\CostAccounting\Entities\CostCenter;
 use Nexus\CostAccounting\Entities\CostPool;
 use Nexus\CostAccounting\Entities\ProductCost;
 use Nexus\CostAccounting\Enums\AllocationMethod;
 use Nexus\CostAccounting\Enums\CostCenterStatus;
+use Nexus\CostAccounting\Enums\CostPoolStatus;
+use Nexus\CostAccounting\Enums\CostType;
 use Nexus\CostAccounting\Exceptions\CostCenterNotFoundException;
 use Nexus\CostAccounting\Exceptions\CostPoolNotFoundException;
 use Nexus\CostAccounting\Services\CostAccountingManager;
@@ -40,6 +44,7 @@ final class CostAccountingManagerTest extends TestCase
     private $mockProductCostCalculator;
     private $mockCostAllocationEngine;
     private $mockVarianceCalculator;
+    private $mockTenantContext;
     private $mockLogger;
 
     protected function setUp(): void
@@ -50,7 +55,8 @@ final class CostAccountingManagerTest extends TestCase
         $this->mockCostPoolPersist = $this->createMock(CostPoolPersistInterface::class);
         $this->mockProductCostCalculator = $this->createMock(ProductCostCalculatorInterface::class);
         $this->mockCostAllocationEngine = $this->createMock(CostAllocationEngineInterface::class);
-        $this->mockVarianceCalculator = $this->createMock(CostVarianceCalculator::class);
+        $this->mockVarianceCalculator = $this->createMock(CostVarianceCalculatorInterface::class);
+        $this->mockTenantContext = $this->createMock(TenantContextInterface::class);
         $this->mockLogger = $this->createMock(LoggerInterface::class);
 
         $this->manager = new CostAccountingManager(
@@ -61,6 +67,7 @@ final class CostAccountingManagerTest extends TestCase
             $this->mockProductCostCalculator,
             $this->mockCostAllocationEngine,
             $this->mockVarianceCalculator,
+            $this->mockTenantContext,
             $this->mockLogger
         );
     }
@@ -337,7 +344,7 @@ final class CostAccountingManagerTest extends TestCase
             costCenterId: 'cc_123',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 100.00,
             laborCost: 50.00,
@@ -395,9 +402,11 @@ final class CostAccountingManagerTest extends TestCase
             rateVariance: 50.00,
             efficiencyVariance: 25.00,
             totalVariance: 175.00,
+            variancePercentage: 17.5,
             materialVariance: 75.00,
             laborVariance: 60.00,
-            overheadVariance: 40.00
+            overheadVariance: 40.00,
+            baselineCost: 1000.00
         );
 
         $this->mockVarianceCalculator

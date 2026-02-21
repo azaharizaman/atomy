@@ -366,6 +366,7 @@ linkBudget(string $costCenterId, string $budgetId): void
 | [`InvalidAllocationRuleException`](src/Exceptions/InvalidAllocationRuleException.php) | Invalid allocation rule |
 | [`AllocationCycleDetectedException`](src/Exceptions/AllocationCycleDetectedException.php) | Circular allocation dependency |
 | [`InsufficientCostPoolException`](src/Exceptions/InsufficientCostPoolException.php) | Insufficient pool balance |
+| [`CostPoolNotFoundException`](src/Exceptions/CostPoolNotFoundException.php) | Cost pool not found |
 | [`ProductCostNotFoundException`](src/Exceptions/ProductCostNotFoundException.php) | Product cost not found |
 
 ## Configuration
@@ -411,7 +412,7 @@ This package implements **78 requirements** covering:
 
 For detailed requirements, see [REQUIREMENTS.md](REQUIREMENTS.md).
 
-## Architecture
+## Architecture (see ARCHITECTURE.md)
 
 For detailed architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md) which covers:
 

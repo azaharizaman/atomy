@@ -10,6 +10,7 @@ use Nexus\CostAccounting\Contracts\ProductCostCalculatorInterface;
 use Nexus\CostAccounting\Contracts\ProductCostPersistInterface;
 use Nexus\CostAccounting\Contracts\ProductCostQueryInterface;
 use Nexus\CostAccounting\Entities\ProductCost;
+use Nexus\CostAccounting\Enums\CostType;
 use Nexus\CostAccounting\Events\ProductCostCalculatedEvent;
 use Nexus\CostAccounting\ValueObjects\ProductCostSnapshot;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -77,7 +78,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
                 costCenterId: $this->getDefaultCostCenter($productId),
                 periodId: $periodId,
                 tenantId: $this->getTenantId($productId),
-                costType: 'standard',
+                costType: CostType::Standard,
                 currency: 'USD',
                 materialCost: $materialCost,
                 laborCost: $laborCost,
@@ -85,7 +86,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
             );
             $this->productCostPersist->save($productCost);
         } else {
-            $productCost->updateCosts($materialCost, $laborCost, $overheadCost);
+            $productCost = $productCost->withCosts($materialCost, $laborCost, $overheadCost);
             $this->productCostPersist->update($productCost);
         }
 
@@ -139,7 +140,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
                 costCenterId: $this->getDefaultCostCenter($productId),
                 periodId: $periodId,
                 tenantId: $this->getTenantId($productId),
-                costType: 'actual',
+                costType: CostType::Actual,
                 currency: 'USD',
                 materialCost: $materialCost,
                 laborCost: $laborCost,
@@ -147,7 +148,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
             );
             $this->productCostPersist->save($productCost);
         } else {
-            $productCost->updateCosts($materialCost, $laborCost, $overheadCost);
+            $productCost = $productCost->withCosts($materialCost, $laborCost, $overheadCost);
             $this->productCostPersist->update($productCost);
         }
 
@@ -265,7 +266,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
         }
 
         $unitCost = $productCost->getTotalCost() / $quantity;
-        $productCost->calculateUnitCost($quantity);
+        $productCost = $productCost->withUnitCost($quantity);
         $this->productCostPersist->update($productCost);
 
         return $unitCost;
@@ -334,20 +335,26 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
 
     /**
      * Get default cost center for product
+     * 
+     * @throws \BadMethodCallException When product lookup is not implemented
      */
     private function getDefaultCostCenter(string $productId): string
     {
-        // This would typically come from product data
-        return 'cc_default';
+        throw new \BadMethodCallException(
+            'Product lookup is not implemented. Inject a ProductQueryInterface to resolve product cost center.'
+        );
     }
 
     /**
      * Get tenant ID for product
+     * 
+     * @throws \BadMethodCallException When product lookup is not implemented
      */
     private function getTenantId(string $productId): string
     {
-        // This would typically come from product data
-        return 'tenant_default';
+        throw new \BadMethodCallException(
+            'Product lookup is not implemented. Inject a ProductQueryInterface to resolve product tenant.'
+        );
     }
 
     /**

@@ -10,7 +10,10 @@ use Nexus\CostAccounting\Contracts\CostCenterQueryInterface;
 use Nexus\CostAccounting\Contracts\CostPoolPersistInterface;
 use Nexus\CostAccounting\Contracts\CostPoolQueryInterface;
 use Nexus\CostAccounting\Contracts\ProductCostCalculatorInterface;
+use Nexus\CostAccounting\Contracts\CostVarianceCalculatorInterface;
+use Nexus\CostAccounting\Contracts\Integration\TenantContextInterface;
 use Nexus\CostAccounting\Entities\ProductCost;
+use Nexus\CostAccounting\Enums\CostType;
 use Nexus\CostAccounting\Services\CostAccountingManager;
 use Nexus\CostAccounting\Services\CostVarianceCalculator;
 use Nexus\CostAccounting\ValueObjects\ProductCostSnapshot;
@@ -38,6 +41,7 @@ final class ProductCostRollupTest extends TestCase
     private $mockCostAllocationEngine;
     private $mockProductCostCalculator;
     private $mockVarianceCalculator;
+    private $mockTenantContext;
     private $mockLogger;
 
     protected function setUp(): void
@@ -48,7 +52,8 @@ final class ProductCostRollupTest extends TestCase
         $this->mockCostPoolPersist = $this->createMock(CostPoolPersistInterface::class);
         $this->mockCostAllocationEngine = $this->createMock(CostAllocationEngineInterface::class);
         $this->mockProductCostCalculator = $this->createMock(ProductCostCalculatorInterface::class);
-        $this->mockVarianceCalculator = $this->createMock(CostVarianceCalculator::class);
+        $this->mockVarianceCalculator = $this->createMock(CostVarianceCalculatorInterface::class);
+        $this->mockTenantContext = $this->createMock(TenantContextInterface::class);
         $this->mockLogger = $this->createMock(LoggerInterface::class);
 
         $this->manager = new CostAccountingManager(
@@ -59,6 +64,7 @@ final class ProductCostRollupTest extends TestCase
             $this->mockProductCostCalculator,
             $this->mockCostAllocationEngine,
             $this->mockVarianceCalculator,
+            $this->mockTenantContext,
             $this->mockLogger
         );
     }
@@ -77,7 +83,7 @@ final class ProductCostRollupTest extends TestCase
             costCenterId: 'cc_manufacturing',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 50.00,
             laborCost: 25.00,
@@ -87,13 +93,13 @@ final class ProductCostRollupTest extends TestCase
         $this->mockProductCostCalculator
             ->expects(self::once())
             ->method('calculate')
-            ->with($productId, $periodId, 'standard')
+            ->with($productId, $periodId, CostType::Standard)
             ->willReturn($productCost);
 
-        $result = $this->manager->calculateProductCost($productId, $periodId, 'standard');
+        $result = $this->manager->calculateProductCost($productId, $periodId, CostType::Standard);
 
         self::assertInstanceOf(ProductCost::class, $result);
-        self::assertSame('standard', $result->getCostType());
+        self::assertSame(CostType::Standard, $result->getCostType());
         self::assertSame(50.00, $result->getMaterialCost());
         self::assertSame(25.00, $result->getLaborCost());
         self::assertSame(15.00, $result->getOverheadCost());
@@ -114,7 +120,7 @@ final class ProductCostRollupTest extends TestCase
             costCenterId: 'cc_manufacturing',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'actual',
+            costType: CostType::Actual,
             currency: 'USD',
             materialCost: 55.00,
             laborCost: 28.00,
@@ -124,13 +130,13 @@ final class ProductCostRollupTest extends TestCase
         $this->mockProductCostCalculator
             ->expects(self::once())
             ->method('calculate')
-            ->with($productId, $periodId, 'actual')
+            ->with($productId, $periodId, CostType::Actual)
             ->willReturn($productCost);
 
-        $result = $this->manager->calculateProductCost($productId, $periodId, 'actual');
+        $result = $this->manager->calculateProductCost($productId, $periodId, CostType::Actual);
 
         self::assertInstanceOf(ProductCost::class, $result);
-        self::assertSame('actual', $result->getCostType());
+        self::assertSame(CostType::Actual, $result->getCostType());
         self::assertSame(55.00, $result->getMaterialCost());
     }
 
@@ -213,21 +219,12 @@ final class ProductCostRollupTest extends TestCase
             costCenterId: 'cc_mfg',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 100.00,
             laborCost: 50.00,
             overheadCost: 25.00
         );
-
-        $this->mockProductCostCalculator
-            ->expects(self::once())
-            ->method('calculate')
-            ->with($productId, $periodId, 'standard')
-            ->willReturn($standardCost);
-
-        $result1 = $this->manager->calculateProductCost($productId, $periodId, 'standard');
-        self::assertSame(175.00, $result1->getTotalCost());
 
         // Step 2: Calculate actual cost
         $actualCost = new ProductCost(
@@ -236,20 +233,23 @@ final class ProductCostRollupTest extends TestCase
             costCenterId: 'cc_mfg',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'actual',
+            costType: CostType::Actual,
             currency: 'USD',
             materialCost: 110.00,
             laborCost: 55.00,
             overheadCost: 30.00
         );
 
+        // Set up mock to return standard and actual costs on consecutive calls
         $this->mockProductCostCalculator
-            ->expects(self::once())
+            ->expects(self::exactly(2))
             ->method('calculate')
-            ->with($productId, $periodId, 'actual')
-            ->willReturn($actualCost);
+            ->willReturnOnConsecutiveCalls($standardCost, $actualCost);
 
-        $result2 = $this->manager->calculateProductCost($productId, $periodId, 'actual');
+        $result1 = $this->manager->calculateProductCost($productId, $periodId, CostType::Standard);
+        self::assertSame(175.00, $result1->getTotalCost());
+
+        $result2 = $this->manager->calculateProductCost($productId, $periodId, CostType::Actual);
         self::assertSame(195.00, $result2->getTotalCost());
 
         // Step 3: Perform rollup
@@ -286,9 +286,11 @@ final class ProductCostRollupTest extends TestCase
                 rateVariance: 10.00,
                 efficiencyVariance: 5.00,
                 totalVariance: 35.00,
+                variancePercentage: 10.0,
                 materialVariance: 15.00,
                 laborVariance: 12.00,
-                overheadVariance: 8.00
+                overheadVariance: 8.00,
+                baselineCost: 350.00
             ));
 
         $result4 = $this->manager->calculateVariances($productId, $periodId);
@@ -347,7 +349,7 @@ final class ProductCostRollupTest extends TestCase
             costCenterId: 'cc_mfg',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 1000.00,
             laborCost: 500.00,

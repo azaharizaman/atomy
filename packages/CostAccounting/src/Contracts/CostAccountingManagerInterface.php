@@ -7,6 +7,7 @@ namespace Nexus\CostAccounting\Contracts;
 use Nexus\CostAccounting\Entities\CostCenter;
 use Nexus\CostAccounting\Entities\CostPool;
 use Nexus\CostAccounting\Entities\ProductCost;
+use Nexus\CostAccounting\Enums\CostType;
 use Nexus\CostAccounting\ValueObjects\CostCenterHierarchy;
 use Nexus\CostAccounting\ValueObjects\ProductCostSnapshot;
 use Nexus\CostAccounting\ValueObjects\CostVarianceBreakdown;
@@ -67,13 +68,13 @@ interface CostAccountingManagerInterface
      * 
      * @param string $productId Product identifier
      * @param string $periodId Fiscal period identifier
-     * @param string $costType Cost type (actual/standard)
+     * @param CostType $costType Cost type (actual/standard)
      * @return ProductCost
      */
     public function calculateProductCost(
         string $productId,
         string $periodId,
-        string $costType = 'standard'
+        CostType $costType = CostType::Standard
     ): ProductCost;
 
     /**

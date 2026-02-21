@@ -8,23 +8,42 @@ namespace Nexus\CostAccounting\ValueObjects;
  * Cost Amount Value Object
  * 
  * Immutable value object representing a monetary cost amount.
+ * Uses integer cents internally to avoid floating-point precision errors.
  */
 final readonly class CostAmount
 {
+    private const CENTS_PRECISION = 2;
+
     public function __construct(
-        private float $amount,
+        private int $cents,
         private string $currency = 'USD'
     ) {
-        if ($amount < 0) {
+        if ($cents < 0) {
             throw new \InvalidArgumentException(
                 'Cost amount cannot be negative'
             );
         }
     }
 
+    public static function fromFloat(float $amount, string $currency = 'USD'): self
+    {
+        $cents = (int) round($amount * 100);
+        return new self($cents, $currency);
+    }
+
+    public static function fromCents(int $cents, string $currency = 'USD'): self
+    {
+        return new self($cents, $currency);
+    }
+
+    public function getCents(): int
+    {
+        return $this->cents;
+    }
+
     public function getAmount(): float
     {
-        return $this->amount;
+        return $this->cents / 100;
     }
 
     public function getCurrency(): string
@@ -37,7 +56,7 @@ final readonly class CostAmount
         $this->validateCurrency($other);
         
         return new CostAmount(
-            $this->amount + $other->amount,
+            $this->cents + $other->cents,
             $this->currency
         );
     }
@@ -46,16 +65,20 @@ final readonly class CostAmount
     {
         $this->validateCurrency($other);
         
+        $resultCents = $this->cents - $other->cents;
+        
         return new CostAmount(
-            $this->amount - $other->amount,
+            $resultCents < 0 ? 0 : $resultCents,
             $this->currency
         );
     }
 
     public function multiply(float $factor): CostAmount
     {
+        $resultCents = (int) round($this->cents * $factor);
+        
         return new CostAmount(
-            $this->amount * $factor,
+            $resultCents,
             $this->currency
         );
     }
@@ -68,8 +91,10 @@ final readonly class CostAmount
             );
         }
         
+        $resultCents = (int) round($this->cents / $divisor);
+        
         return new CostAmount(
-            $this->amount / $divisor,
+            $resultCents,
             $this->currency
         );
     }
@@ -78,26 +103,28 @@ final readonly class CostAmount
     {
         $this->validateCurrency($other);
         
-        return $this->amount > $other->amount;
+        return $this->cents > $other->cents;
     }
 
     public function isLessThan(CostAmount $other): bool
     {
         $this->validateCurrency($other);
         
-        return $this->amount < $other->amount;
+        return $this->cents < $other->cents;
     }
 
     public function isEqualTo(CostAmount $other): bool
     {
         $this->validateCurrency($other);
         
-        return $this->amount === $other->amount;
+        return $this->cents === $other->cents;
     }
 
     public function __toString(): string
     {
-        return sprintf('%s %.2f', $this->currency, $this->amount);
+        $dollars = $this->cents / 100;
+        
+        return sprintf('%s %.2f', $this->currency, $dollars);
     }
 
     private function validateCurrency(CostAmount $other): void

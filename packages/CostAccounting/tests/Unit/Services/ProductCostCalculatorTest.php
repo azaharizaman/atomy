@@ -9,6 +9,7 @@ use Nexus\CostAccounting\Contracts\Integration\ManufacturingDataProviderInterfac
 use Nexus\CostAccounting\Contracts\ProductCostPersistInterface;
 use Nexus\CostAccounting\Contracts\ProductCostQueryInterface;
 use Nexus\CostAccounting\Entities\ProductCost;
+use Nexus\CostAccounting\Enums\CostType;
 use Nexus\CostAccounting\Services\ProductCostCalculator;
 use Nexus\CostAccounting\ValueObjects\ProductCostSnapshot;
 use PHPUnit\Framework\TestCase;
@@ -86,7 +87,7 @@ final class ProductCostCalculatorTest extends TestCase
             ->expects(self::once())
             ->method('dispatch');
 
-        $result = $this->calculator->calculate($productId, $periodId, 'standard');
+        $result = $this->calculator->calculate($productId, $periodId, CostType::Standard);
 
         self::assertInstanceOf(ProductCost::class, $result);
         self::assertSame(100.00, $result->getMaterialCost());
@@ -132,7 +133,7 @@ final class ProductCostCalculatorTest extends TestCase
             ->expects(self::once())
             ->method('dispatch');
 
-        $result = $this->calculator->calculate($productId, $periodId, 'actual');
+        $result = $this->calculator->calculate($productId, $periodId, CostType::Actual);
 
         self::assertInstanceOf(ProductCost::class, $result);
         self::assertSame('actual', $result->getCostType());
@@ -149,7 +150,7 @@ final class ProductCostCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 80.00,
             laborCost: 40.00,
@@ -184,7 +185,7 @@ final class ProductCostCalculatorTest extends TestCase
             ->expects(self::once())
             ->method('dispatch');
 
-        $result = $this->calculator->calculate($productId, $periodId, 'standard');
+        $result = $this->calculator->calculate($productId, $periodId, CostType::Standard);
 
         self::assertSame(100.00, $result->getMaterialCost());
         self::assertSame(50.00, $result->getLaborCost());
@@ -201,27 +202,12 @@ final class ProductCostCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 100.00,
             laborCost: 50.00,
             overheadCost: 25.00
         );
-
-        $this->mockQuery
-            ->expects(self::once())
-            ->method('findByProduct')
-            ->with($productId, $periodId)
-            ->willReturn($productCost);
-
-        $this->mockManufacturingProvider
-            ->expects(self::once())
-            ->method('getBillOfMaterials')
-            ->with($productId)
-            ->willReturn([
-                ['product_id' => 'comp_1', 'quantity' => 2],
-                ['product_id' => 'comp_2', 'quantity' => 3],
-            ]);
 
         $componentCost1 = new ProductCost(
             id: 'pc_comp1',
@@ -229,7 +215,7 @@ final class ProductCostCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 10.00,
             laborCost: 5.00,
@@ -242,17 +228,27 @@ final class ProductCostCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 20.00,
             laborCost: 8.00,
             overheadCost: 4.00
         );
 
+        $this->mockManufacturingProvider
+            ->expects(self::once())
+            ->method('getBillOfMaterials')
+            ->with($productId)
+            ->willReturn([
+                ['product_id' => 'comp_1', 'quantity' => 2],
+                ['product_id' => 'comp_2', 'quantity' => 3],
+            ]);
+
         $this->mockQuery
-            ->expects(self::exactly(2))
+            ->expects(self::exactly(3))
             ->method('findByProduct')
             ->willReturnMap([
+                [$productId, $periodId, $productCost],
                 ['comp_1', $periodId, $componentCost1],
                 ['comp_2', $periodId, $componentCost2],
             ]);
@@ -296,7 +292,7 @@ final class ProductCostCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 100.00,
             laborCost: 50.00,
@@ -329,7 +325,7 @@ final class ProductCostCalculatorTest extends TestCase
             costCenterId: 'cc_1',
             periodId: $periodId,
             tenantId: 'tenant_1',
-            costType: 'standard',
+            costType: CostType::Standard,
             currency: 'USD',
             materialCost: 100.00,
             laborCost: 50.00,

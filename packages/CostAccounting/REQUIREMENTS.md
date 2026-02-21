@@ -159,8 +159,7 @@ Following the repository design pattern:
 
 ## Package Structure Overview
 
-```
-packages/CostAccounting/
+```text
 ├── src/
 │   ├── Contracts/
 │   │   ├── CostAccountingManagerInterface.php

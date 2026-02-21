@@ -16,15 +16,16 @@ final class CostAmountTest extends TestCase
 {
     public function testCreateWithDefaultCurrency(): void
     {
-        $cost = new CostAmount(100.00);
+        $cost = CostAmount::fromFloat(100.00);
         
         self::assertSame(100.00, $cost->getAmount());
+        self::assertSame(10000, $cost->getCents());
         self::assertSame('USD', $cost->getCurrency());
     }
 
     public function testCreateWithCustomCurrency(): void
     {
-        $cost = new CostAmount(100.00, 'EUR');
+        $cost = CostAmount::fromFloat(100.00, 'EUR');
         
         self::assertSame(100.00, $cost->getAmount());
         self::assertSame('EUR', $cost->getCurrency());
@@ -32,9 +33,18 @@ final class CostAmountTest extends TestCase
 
     public function testCreateWithZero(): void
     {
-        $cost = new CostAmount(0.0);
+        $cost = CostAmount::fromFloat(0.0);
         
         self::assertSame(0.0, $cost->getAmount());
+        self::assertSame(0, $cost->getCents());
+    }
+
+    public function testCreateWithFromCents(): void
+    {
+        $cost = CostAmount::fromCents(10050);
+        
+        self::assertSame(100.50, $cost->getAmount());
+        self::assertSame(10050, $cost->getCents());
     }
 
     public function testNegativeAmountThrowsException(): void
@@ -42,13 +52,13 @@ final class CostAmountTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Cost amount cannot be negative');
         
-        new CostAmount(-100.00);
+        CostAmount::fromFloat(-100.00);
     }
 
     public function testAddSameCurrency(): void
     {
-        $cost1 = new CostAmount(100.00);
-        $cost2 = new CostAmount(50.00);
+        $cost1 = CostAmount::fromFloat(100.00);
+        $cost2 = CostAmount::fromFloat(50.00);
         
         $result = $cost1->add($cost2);
         
@@ -58,8 +68,8 @@ final class CostAmountTest extends TestCase
 
     public function testAddDifferentCurrencyThrowsException(): void
     {
-        $cost1 = new CostAmount(100.00, 'USD');
-        $cost2 = new CostAmount(50.00, 'EUR');
+        $cost1 = CostAmount::fromFloat(100.00, 'USD');
+        $cost2 = CostAmount::fromFloat(50.00, 'EUR');
         
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Currency mismatch');
@@ -69,8 +79,8 @@ final class CostAmountTest extends TestCase
 
     public function testSubtractSameCurrency(): void
     {
-        $cost1 = new CostAmount(100.00);
-        $cost2 = new CostAmount(30.00);
+        $cost1 = CostAmount::fromFloat(100.00);
+        $cost2 = CostAmount::fromFloat(30.00);
         
         $result = $cost1->subtract($cost2);
         
@@ -79,8 +89,8 @@ final class CostAmountTest extends TestCase
 
     public function testSubtractDifferentCurrencyThrowsException(): void
     {
-        $cost1 = new CostAmount(100.00, 'USD');
-        $cost2 = new CostAmount(30.00, 'GBP');
+        $cost1 = CostAmount::fromFloat(100.00, 'USD');
+        $cost2 = CostAmount::fromFloat(30.00, 'GBP');
         
         $this->expectException(\InvalidArgumentException::class);
         
@@ -89,7 +99,7 @@ final class CostAmountTest extends TestCase
 
     public function testMultiply(): void
     {
-        $cost = new CostAmount(100.00);
+        $cost = CostAmount::fromFloat(100.00);
         
         $result = $cost->multiply(1.5);
         
@@ -98,7 +108,7 @@ final class CostAmountTest extends TestCase
 
     public function testMultiplyByZero(): void
     {
-        $cost = new CostAmount(100.00);
+        $cost = CostAmount::fromFloat(100.00);
         
         $result = $cost->multiply(0);
         
@@ -107,7 +117,7 @@ final class CostAmountTest extends TestCase
 
     public function testDivide(): void
     {
-        $cost = new CostAmount(100.00);
+        $cost = CostAmount::fromFloat(100.00);
         
         $result = $cost->divide(4);
         
@@ -116,7 +126,7 @@ final class CostAmountTest extends TestCase
 
     public function testDivideByZeroThrowsException(): void
     {
-        $cost = new CostAmount(100.00);
+        $cost = CostAmount::fromFloat(100.00);
         
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Cannot divide by zero');
@@ -126,24 +136,24 @@ final class CostAmountTest extends TestCase
 
     public function testIsGreaterThanReturnsTrue(): void
     {
-        $cost1 = new CostAmount(100.00);
-        $cost2 = new CostAmount(50.00);
+        $cost1 = CostAmount::fromFloat(100.00);
+        $cost2 = CostAmount::fromFloat(50.00);
         
         self::assertTrue($cost1->isGreaterThan($cost2));
     }
 
     public function testIsGreaterThanReturnsFalseWhenLess(): void
     {
-        $cost1 = new CostAmount(50.00);
-        $cost2 = new CostAmount(100.00);
+        $cost1 = CostAmount::fromFloat(50.00);
+        $cost2 = CostAmount::fromFloat(100.00);
         
         self::assertFalse($cost1->isGreaterThan($cost2));
     }
 
     public function testIsGreaterThanThrowsOnCurrencyMismatch(): void
     {
-        $cost1 = new CostAmount(100.00, 'USD');
-        $cost2 = new CostAmount(50.00, 'EUR');
+        $cost1 = CostAmount::fromFloat(100.00, 'USD');
+        $cost2 = CostAmount::fromFloat(50.00, 'EUR');
         
         $this->expectException(\InvalidArgumentException::class);
         
@@ -152,40 +162,47 @@ final class CostAmountTest extends TestCase
 
     public function testIsLessThanReturnsTrue(): void
     {
-        $cost1 = new CostAmount(50.00);
-        $cost2 = new CostAmount(100.00);
+        $cost1 = CostAmount::fromFloat(50.00);
+        $cost2 = CostAmount::fromFloat(100.00);
         
         self::assertTrue($cost1->isLessThan($cost2));
     }
 
     public function testIsLessThanReturnsFalseWhenGreater(): void
     {
-        $cost1 = new CostAmount(100.00);
-        $cost2 = new CostAmount(50.00);
+        $cost1 = CostAmount::fromFloat(100.00);
+        $cost2 = CostAmount::fromFloat(50.00);
         
         self::assertFalse($cost1->isLessThan($cost2));
     }
 
     public function testIsEqualToReturnsTrue(): void
     {
-        $cost1 = new CostAmount(100.00);
-        $cost2 = new CostAmount(100.00);
+        $cost1 = CostAmount::fromFloat(100.00);
+        $cost2 = CostAmount::fromFloat(100.00);
         
         self::assertTrue($cost1->isEqualTo($cost2));
     }
 
     public function testIsEqualToReturnsFalse(): void
     {
-        $cost1 = new CostAmount(100.00);
-        $cost2 = new CostAmount(100.01);
+        $cost1 = CostAmount::fromFloat(100.00);
+        $cost2 = CostAmount::fromFloat(100.01);
         
         self::assertFalse($cost1->isEqualTo($cost2));
     }
 
     public function testToString(): void
     {
-        $cost = new CostAmount(123.45);
+        $cost = CostAmount::fromFloat(123.45);
         
         self::assertSame('USD 123.45', (string) $cost);
+    }
+
+    public function testPrecisionWithRounding(): void
+    {
+        $cost = CostAmount::fromFloat(0.345);
+        
+        self::assertSame(0.35, $cost->getAmount());
     }
 }

@@ -6,6 +6,7 @@ namespace Nexus\CostAccounting\Contracts;
 
 use Nexus\CostAccounting\Entities\CostPool;
 use Nexus\CostAccounting\Enums\AllocationMethod;
+use Nexus\CostAccounting\Enums\CostPoolStatus;
 
 /**
  * Cost Pool Interface
@@ -52,7 +53,7 @@ interface CostPoolInterface
     /**
      * Get the status
      */
-    public function getStatus(): string;
+    public function getStatus(): CostPoolStatus;
 
     /**
      * Get the period ID
@@ -72,10 +73,10 @@ interface CostPoolInterface
     /**
      * Update the total amount
      */
-    public function updateAmount(float $amount): void;
+    public function withTotalAmount(float $amount): self;
 
     /**
      * Change allocation method
      */
-    public function changeAllocationMethod(AllocationMethod $method): void;
+    public function withAllocationMethod(AllocationMethod $method): self;
 }

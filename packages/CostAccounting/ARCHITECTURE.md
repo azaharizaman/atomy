@@ -598,7 +598,7 @@ All public methods MUST have unit tests following the testing requirements.
 
 #### Test Structure
 
-```
+```text
 tests/
 ├── Unit/
 │   ├── Services/

@@ -12,6 +12,8 @@ namespace Nexus\CostAccounting\ValueObjects;
  */
 final readonly class CostVarianceBreakdown
 {
+    private float $baselineCost;
+
     public function __construct(
         private string $productId,
         private string $periodId,
@@ -19,10 +21,14 @@ final readonly class CostVarianceBreakdown
         private float $rateVariance,
         private float $efficiencyVariance,
         private float $totalVariance,
+        private float $variancePercentage,
         private float $materialVariance,
         private float $laborVariance,
-        private float $overheadVariance
-    ) {}
+        private float $overheadVariance,
+        float $baselineCost = 0.0
+    ) {
+        $this->baselineCost = $baselineCost;
+    }
 
     public function getProductId(): string
     {
@@ -52,6 +58,16 @@ final readonly class CostVarianceBreakdown
     public function getTotalVariance(): float
     {
         return $this->totalVariance;
+    }
+
+    public function getVariancePercentage(): float
+    {
+        return $this->variancePercentage;
+    }
+
+    public function getBaselineCost(): float
+    {
+        return $this->baselineCost;
     }
 
     public function getMaterialVariance(): float
@@ -89,6 +105,8 @@ final readonly class CostVarianceBreakdown
             'labor' => $this->laborVariance,
             'overhead' => $this->overheadVariance,
             'total' => $this->totalVariance,
+            'percentage' => $this->variancePercentage,
+            'baseline' => $this->baselineCost,
         ];
     }
 }

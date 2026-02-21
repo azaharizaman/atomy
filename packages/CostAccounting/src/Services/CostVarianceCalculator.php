@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\CostAccounting\Services;
 
+use Nexus\CostAccounting\Contracts\CostVarianceCalculatorInterface;
 use Nexus\CostAccounting\Contracts\ProductCostQueryInterface;
 use Nexus\CostAccounting\Events\CostVarianceDetectedEvent;
 use Nexus\CostAccounting\ValueObjects\CostVarianceBreakdown;
@@ -15,7 +16,7 @@ use Psr\Log\LoggerInterface;
  * 
  * Calculates and analyzes variances between actual and standard costs.
  */
-final readonly class CostVarianceCalculator
+final readonly class CostVarianceCalculator implements CostVarianceCalculatorInterface
 {
     public function __construct(
         private ProductCostQueryInterface $productCostQuery,
@@ -80,6 +81,12 @@ final readonly class CostVarianceCalculator
 
         $isFavorable = $totalVariance < 0;
 
+        // Calculate variance percentage (variance relative to standard cost)
+        $standardTotal = $standardMaterial + $standardLabor + $standardOverhead;
+        $variancePercentage = $standardTotal > 0 
+            ? ($totalVariance / $standardTotal) * 100 
+            : 0.0;
+
         // Create variance breakdown
         $varianceBreakdown = new CostVarianceBreakdown(
             productId: $productId,
@@ -88,9 +95,11 @@ final readonly class CostVarianceCalculator
             rateVariance: $rateVariance,
             efficiencyVariance: $efficiencyVariance,
             totalVariance: $totalVariance,
+            variancePercentage: $variancePercentage,
             materialVariance: $materialVariance,
             laborVariance: $laborVariance,
-            overheadVariance: $overheadVariance
+            overheadVariance: $overheadVariance,
+            baselineCost: $standardTotal
         );
 
         // Dispatch event
@@ -101,6 +110,7 @@ final readonly class CostVarianceCalculator
             rateVariance: $rateVariance,
             efficiencyVariance: $efficiencyVariance,
             totalVariance: $totalVariance,
+            variancePercentage: $variancePercentage,
             isFavorable: $isFavorable,
             tenantId: $actualCost?->getTenantId() ?? $standardCost?->getTenantId() ?? 'unknown',
             occurredAt: new \DateTimeImmutable()
@@ -178,7 +188,13 @@ final readonly class CostVarianceCalculator
      */
     public function exceedsThreshold(CostVarianceBreakdown $variance, float $thresholdPercentage): bool
     {
-        $thresholdAmount = abs($variance->getTotalVariance()) * ($thresholdPercentage / 100);
+        $baseline = $variance->getBaselineCost();
+        
+        if ($baseline <= 0) {
+            return false;
+        }
+        
+        $thresholdAmount = abs($baseline) * ($thresholdPercentage / 100);
         
         return abs($variance->getTotalVariance()) > $thresholdAmount;
     }

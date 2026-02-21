@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace Nexus\CostAccounting\Services;
 
 use Nexus\CostAccounting\Contracts\CostAccountingManagerInterface;
+use Nexus\CostAccounting\Contracts\CostAllocationEngineInterface;
 use Nexus\CostAccounting\Contracts\CostCenterManagerInterface;
 use Nexus\CostAccounting\Contracts\CostCenterQueryInterface;
 use Nexus\CostAccounting\Contracts\CostPoolPersistInterface;
 use Nexus\CostAccounting\Contracts\CostPoolQueryInterface;
+use Nexus\CostAccounting\Contracts\CostVarianceCalculatorInterface;
+use Nexus\CostAccounting\Contracts\Integration\TenantContextInterface;
 use Nexus\CostAccounting\Contracts\ProductCostCalculatorInterface;
-use Nexus\CostAccounting\Contracts\CostAllocationEngineInterface;
 use Nexus\CostAccounting\Entities\CostCenter;
 use Nexus\CostAccounting\Entities\CostPool;
 use Nexus\CostAccounting\Entities\ProductCost;
 use Nexus\CostAccounting\Enums\AllocationMethod;
 use Nexus\CostAccounting\Enums\CostCenterStatus;
+use Nexus\CostAccounting\Enums\CostPoolStatus;
+use Nexus\CostAccounting\Enums\CostType;
 use Nexus\CostAccounting\Exceptions\CostCenterNotFoundException;
 use Nexus\CostAccounting\Exceptions\CostPoolNotFoundException;
 use Nexus\CostAccounting\ValueObjects\CostCenterHierarchy;
@@ -38,7 +42,8 @@ final readonly class CostAccountingManager implements CostAccountingManagerInter
         private CostPoolPersistInterface $costPoolPersist,
         private ProductCostCalculatorInterface $productCostCalculator,
         private CostAllocationEngineInterface $costAllocationEngine,
-        private CostVarianceCalculator $varianceCalculator,
+        private CostVarianceCalculatorInterface $varianceCalculator,
+        private TenantContextInterface $tenantContext,
         private LoggerInterface $logger
     ) {}
 
@@ -80,11 +85,14 @@ final readonly class CostAccountingManager implements CostAccountingManagerInter
         }
 
         // Get all root cost centers and build full hierarchy
-        // This is a simplified implementation
-        $rootCostCenters = $this->costCenterQuery->findRootCostCenters(
-            // Get tenant from context - simplified
-            'default'
-        );
+        // Get tenant from context
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+        
+        if ($tenantId === null) {
+            throw new \RuntimeException('No tenant context available');
+        }
+
+        $rootCostCenters = $this->costCenterQuery->findRootCostCenters($tenantId);
 
         return new CostCenterHierarchy($rootCostCenters);
     }
@@ -126,7 +134,9 @@ final readonly class CostAccountingManager implements CostAccountingManagerInter
             allocationMethod: $data['allocation_method'] ?? AllocationMethod::Direct,
             totalAmount: $data['total_amount'] ?? 0.0,
             description: $data['description'] ?? null,
-            status: $data['status'] ?? 'active'
+            status: isset($data['status']) 
+                ? CostPoolStatus::from($data['status']) 
+                : CostPoolStatus::Active
         );
 
         // Persist
@@ -161,7 +171,7 @@ final readonly class CostAccountingManager implements CostAccountingManagerInter
 
         // Update pool amount (reduce by allocated amount)
         $newAmount = $pool->getTotalAmount() - $result['total_allocated'];
-        $pool->updateAmount(max(0, $newAmount));
+        $pool = $pool->withTotalAmount(max(0, $newAmount));
         $this->costPoolPersist->save($pool);
 
         $this->logger->info('Pool costs allocated', [
@@ -178,7 +188,7 @@ final readonly class CostAccountingManager implements CostAccountingManagerInter
     public function calculateProductCost(
         string $productId,
         string $periodId,
-        string $costType = 'standard'
+        CostType $costType = CostType::Standard
     ): ProductCost {
         $this->logger->info('Calculating product cost via facade', [
             'product_id' => $productId,
