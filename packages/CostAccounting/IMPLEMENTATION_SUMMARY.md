@@ -98,7 +98,7 @@ All events are PSR-14 compliant with readonly properties:
 
 ### Contracts (28 Interfaces)
 
-#### Core Contracts (19 Interfaces)
+#### Core Contracts (20 Interfaces)
 
 | Interface | Purpose | Key Methods |
 |-----------|---------|-------------|

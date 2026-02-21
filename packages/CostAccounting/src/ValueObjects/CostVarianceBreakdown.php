@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace Nexus\CostAccounting\ValueObjects;
 
+use Nexus\CostAccounting\Contracts\CostVarianceInterface;
+
 /**
  * Cost Variance Breakdown Value Object
  * 
  * Tracks variance between actual and standard costs
  * with breakdown by type.
  */
-final readonly class CostVarianceBreakdown
+final readonly class CostVarianceBreakdown implements CostVarianceInterface
 {
     public function __construct(
+        private string $id,
         private string $productId,
+        private string $costCenterId,
         private string $periodId,
+        private string $tenantId,
         private float $priceVariance,
         private float $rateVariance,
         private float $efficiencyVariance,
@@ -29,6 +34,21 @@ final readonly class CostVarianceBreakdown
     public function getProductId(): string
     {
         return $this->productId;
+    }
+
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    public function getCostCenterId(): string
+    {
+        return $this->costCenterId;
+    }
+
+    public function getTenantId(): string
+    {
+        return $this->tenantId;
     }
 
     public function getPeriodId(): string

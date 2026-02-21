@@ -88,6 +88,13 @@ final readonly class CostCenterManager implements CostCenterManagerInterface
      */
     public function update(string $costCenterId, array $data): CostCenter
     {
+        // Explicitly reject status changes in update() - use updateStatus() instead
+        if (array_key_exists('status', $data)) {
+            throw new \InvalidArgumentException(
+                'Status cannot be updated via update(). Use updateStatus() method instead.'
+            );
+        }
+
         $costCenter = $this->findCostCenterOrFail($costCenterId);
 
         // Update the cost center
@@ -279,15 +286,30 @@ final readonly class CostCenterManager implements CostCenterManagerInterface
     /**
      * Check if a cost center is a descendant of another
      */
-    private function isDescendant(string $potentialDescendantId, string $ancestorId): bool
+    private function isDescendant(string $costCenterId, string $potentialAncestorId): bool
     {
-        $current = $this->costCenterQuery->findById($potentialDescendantId);
+        $visited = [];
+        $currentId = $costCenterId;
         
-        while ($current !== null && $current->hasParent()) {
-            if ($current->getParentCostCenterId() === $ancestorId) {
+        while ($currentId !== null) {
+            // Check for cycle - if we've visited this node before, stop to avoid infinite loop
+            if (in_array($currentId, $visited, true)) {
+                return false; // Cycle detected, fail safely
+            }
+            
+            $visited[] = $currentId;
+            
+            $current = $this->costCenterQuery->findById($currentId);
+            
+            if ($current === null) {
+                return false;
+            }
+            
+            if ($current->getParentCostCenterId() === $potentialAncestorId) {
                 return true;
             }
-            $current = $this->costCenterQuery->findById($current->getParentCostCenterId());
+            
+            $currentId = $current->getParentCostCenterId();
         }
         
         return false;

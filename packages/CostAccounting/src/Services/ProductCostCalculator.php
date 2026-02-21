@@ -25,7 +25,7 @@ use Psr\Log\LoggerInterface;
  */
 final readonly class ProductCostCalculator implements ProductCostCalculatorInterface
 {
-    private ?ProductQueryInterface $productQuery;
+    private ProductQueryInterface $productQuery;
 
     public function __construct(
         private ProductCostQueryInterface $productCostQuery,
@@ -34,7 +34,7 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
         private ManufacturingDataProviderInterface $manufacturingProvider,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger,
-        ?ProductQueryInterface $productQuery = null
+        ProductQueryInterface $productQuery
     ) {
         $this->productQuery = $productQuery;
     }
@@ -64,9 +64,11 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
      */
     public function calculateStandardCost(string $productId, string $periodId): ProductCost
     {
-        // Get product for currency and cost center
+        // Get product for currency, cost center, and tenant
         $product = $this->getProduct($productId);
         $currency = $product->getCurrency() ?? 'USD';
+        $costCenterId = $product->getDefaultCostCenterId();
+        $tenantId = $product->getTenantId();
 
         // Get material cost from inventory
         $materialCost = $this->getMaterialCost($productId, $periodId);
@@ -84,9 +86,9 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
             $productCost = new ProductCost(
                 id: $this->generateId(),
                 productId: $productId,
-                costCenterId: $this->getDefaultCostCenter($productId),
+                costCenterId: $costCenterId,
                 periodId: $periodId,
-                tenantId: $this->getTenantId($productId),
+                tenantId: $tenantId,
                 costType: CostType::Standard,
                 currency: $currency,
                 materialCost: $materialCost,
@@ -130,9 +132,11 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
      */
     public function calculateActualCost(string $productId, string $periodId): ProductCost
     {
-        // Get product for currency and cost center
+        // Get product for currency, cost center, and tenant
         $product = $this->getProduct($productId);
         $currency = $product->getCurrency() ?? 'USD';
+        $costCenterId = $product->getDefaultCostCenterId();
+        $tenantId = $product->getTenantId();
 
         // Get actual material cost from inventory transactions
         $materialCost = $this->getActualMaterialCost($productId, $periodId);
@@ -150,9 +154,9 @@ final readonly class ProductCostCalculator implements ProductCostCalculatorInter
             $productCost = new ProductCost(
                 id: $this->generateId(),
                 productId: $productId,
-                costCenterId: $this->getDefaultCostCenter($productId),
+                costCenterId: $costCenterId,
                 periodId: $periodId,
-                tenantId: $this->getTenantId($productId),
+                tenantId: $tenantId,
                 costType: CostType::Actual,
                 currency: $currency,
                 materialCost: $materialCost,

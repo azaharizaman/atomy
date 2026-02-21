@@ -45,11 +45,13 @@ final readonly class CostVarianceCalculator implements CostVarianceCalculatorInt
     /**
      * Calculate variances for a product
      */
-    public function calculate(string $productId, string $periodId): CostVarianceBreakdown
+    public function calculate(string $productId, string $periodId, string $costCenterId, string $tenantId): CostVarianceBreakdown
     {
         $this->logger->info('Calculating cost variances', [
             'product_id' => $productId,
             'period_id' => $periodId,
+            'cost_center_id' => $costCenterId,
+            'tenant_id' => $tenantId,
         ]);
 
         // Get standard cost
@@ -107,8 +109,11 @@ final readonly class CostVarianceCalculator implements CostVarianceCalculatorInt
 
         // Create variance breakdown
         $varianceBreakdown = new CostVarianceBreakdown(
+            id: uuid_create(UUID_TYPE_RANDOM),
             productId: $productId,
+            costCenterId: $costCenterId,
             periodId: $periodId,
+            tenantId: $tenantId,
             priceVariance: $priceVariance,
             rateVariance: $rateVariance,
             efficiencyVariance: $efficiencyVariance,
@@ -207,6 +212,13 @@ final readonly class CostVarianceCalculator implements CostVarianceCalculatorInt
      */
     public function exceedsThreshold(CostVarianceBreakdown $variance, float $thresholdPercentage): bool
     {
+        // Validate threshold percentage is non-negative
+        if ($thresholdPercentage < 0) {
+            throw new \InvalidArgumentException(
+                sprintf('Threshold percentage must be non-negative, got %f', $thresholdPercentage)
+            );
+        }
+        
         $baseline = $variance->getBaselineCost();
         
         // When baseline is zero or negative, flag any non-zero variance as exceeding threshold

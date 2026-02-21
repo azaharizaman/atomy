@@ -18,9 +18,11 @@ interface CostVarianceCalculatorInterface
      * 
      * @param string $productId Product identifier
      * @param string $periodId Fiscal period identifier
+     * @param string $costCenterId Cost center identifier
+     * @param string $tenantId Tenant identifier
      * @return CostVarianceBreakdown
      */
-    public function calculate(string $productId, string $periodId): CostVarianceBreakdown;
+    public function calculate(string $productId, string $periodId, string $costCenterId, string $tenantId): CostVarianceBreakdown;
 
     /**
      * Check if variance exceeds investigation threshold

@@ -134,9 +134,9 @@ final readonly class CostAmount
 
     public function __toString(): string
     {
-        $dollars = round($this->cents / 100, self::CENTS_PRECISION);
+        $majorUnits = round($this->cents / 100, self::CENTS_PRECISION);
         
-        return sprintf('%s %.2f', $this->currency, $dollars);
+        return sprintf('%s %.2f', $this->currency, $majorUnits);
     }
 
     private function validateCurrency(CostAmount $other): void
