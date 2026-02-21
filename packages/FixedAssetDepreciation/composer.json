@@ -1,0 +1,28 @@
+{
+    "name": "nexus/fixed-asset-depreciation",
+    "description": "Framework-agnostic fixed asset depreciation calculation engine with progressive delivery (SB→MB→LE)",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nexus\\FixedAssetDepreciation\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.3",
+        "psr/log": "^3.0"
+    },
+    "suggest": {
+        "nexus/finance": "For GL posting of depreciation entries",
+        "nexus/tax": "For tax depreciation calculations (differs from book depreciation)",
+        "nexus/currency": "For multi-currency asset depreciation",
+        "nexus/audit": "For audit trail of depreciation calculations",
+        "nexus/setting": "For tier configuration"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require-dev": {
+        "phpunit/phpunit": "^11",
+        "psr/event-dispatcher": "^1.0"
+    }
+}

@@ -16,6 +16,7 @@ This document serves as the single source of truth for the architectural integri
 8. [Requirements Composition Guidelines](#8-requirements-composition-guidelines)
 9. [Decision Matrix: Where Does Logic Go?](#9-decision-matrix-where-does-logic-go)
 10. [Correct vs Incorrect Execution Examples](#10-correct-vs-incorrect-execution-examples)
+11. [Testing Final Readonly Classes](#11-testing-final-readonly-classes)
 
 ---
 
@@ -1200,6 +1201,312 @@ final readonly class TenantManager
     }
 }
 ```
+
+---
+
+## 11. Testing Final Readonly Classes
+
+This section addresses how to test `final readonly` service classes when mocking is not allowed.
+
+### 11.1 Why Final Classes Cannot Be Mocked
+
+PHPUnit's mock objects work by creating a subclass at runtime. The `final` keyword explicitly prevents this:
+
+```
+Mock Object (extends MyClass)
+    └── ❌ Cannot extend final class
+```
+
+This is **intentional and beneficial**. It enforces:
+- **Interface-driven design**: Mock the interface, not the implementation
+- **Implementation hiding**: Tests shouldn't depend on internal details
+- **Liskov Substitution**: Any implementation of the interface should work
+
+### 11.2 The Golden Rule: Mock Interfaces, Not Implementations
+
+Since all services depend on interfaces (per Section 6), you should **always mock the interface**:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\Inventory\Tests\Unit\Services;
+
+use Nexus\Inventory\Contracts\StockRepositoryInterface;
+use Nexus\Inventory\Services\StockManager;
+use PHPUnit\Framework\TestCase;
+
+final class StockManagerTest extends TestCase
+{
+    public function testReceiveStockCreatesNewStockWhenNotExists(): void
+    {
+        $repository = $this->createMock(StockRepositoryInterface::class);
+        $repository
+            ->method('find')
+            ->willReturn(null);
+        $repository
+            ->expects($this->once())
+            ->method('save');
+
+        $stockManager = new StockManager(
+            repository: $repository,
+            auditLogger: null,
+            logger: $this->createStub(LoggerInterface::class)
+        );
+
+        $result = $stockManager->receiveStock('PROD-001', 'WH-001', 10.0);
+
+        $this->assertEquals(10.0, $result->quantity);
+    }
+}
+```
+
+### 11.3 Testing Final Class Implementations Directly
+
+To test the final class itself, use **real dependencies** (not mocks):
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\Inventory\Tests\Integration\Services;
+
+use Nexus\Inventory\Contracts\StockRepositoryInterface;
+use Nexus\Inventory\Services\StockManager;
+use PHPUnit\Framework\TestCase;
+
+final class StockManagerIntegrationTest extends TestCase
+{
+    private StockManager $stockManager;
+    private InMemoryStockRepository $repository;
+
+    protected function setUp(): void
+    {
+        $this->repository = new InMemoryStockRepository();
+        $this->stockManager = new StockManager(
+            repository: $this->repository,
+            auditLogger: null,
+            logger: new NullLogger()
+        );
+    }
+
+    public function testReceiveStockIncreasesQuantity(): void
+    {
+        $this->stockManager->receiveStock('PROD-001', 'WH-001', 10.0);
+        $this->stockManager->receiveStock('PROD-001', 'WH-001', 5.0);
+
+        $stock = $this->repository->find('PROD-001', 'WH-001');
+        $this->assertEquals(15.0, $stock->quantity);
+    }
+}
+```
+
+### 11.4 Creating Test Stubs Instead of Mocks
+
+For complex scenarios, create test stubs rather than using mocks:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\Inventory\Tests\Support;
+
+use Nexus\Inventory\Contracts\StockRepositoryInterface;
+use Nexus\Inventory\Domain\Stock;
+
+final class InMemoryStockRepository implements StockRepositoryInterface
+{
+    private array $stocks = [];
+
+    public function find(string $productId, string $warehouseId): ?Stock
+    {
+        $key = "{$productId}:{$warehouseId}";
+        return $this->stocks[$key] ?? null;
+    }
+
+    public function save(Stock $stock): void
+    {
+        $key = "{$stock->productId}:{$stock->warehouseId}";
+        $this->stocks[$key] = $stock;
+    }
+
+    public function findByProduct(string $productId): array
+    {
+        return array_filter(
+            $this->stocks,
+            fn(Stock $s) => $s->productId === $productId
+        );
+    }
+}
+```
+
+### 11.5 Using Anonymous Classes for Simple Test Doubles
+
+For one-off test implementations:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\Inventory\Tests\Unit\Services;
+
+use Nexus\Inventory\Contracts\StockRepositoryInterface;
+use Nexus\Inventory\Domain\Stock;
+use PHPUnit\Framework\TestCase;
+
+final class StockManagerTest extends TestCase
+{
+    public function testReceiveStockWithAnonymousStub(): void
+    {
+        $savedStocks = [];
+
+        $repository = new class($savedStocks) implements StockRepositoryInterface {
+            public function __construct(private array &$storage) {}
+            
+            public function find(string $productId, string $warehouseId): ?Stock
+            {
+                return $this->storage["{$productId}:{$warehouseId}"] ?? null;
+            }
+            
+            public function save(Stock $stock): void
+            {
+                $this->storage["{$stock->productId}:{$stock->warehouseId}"] = $stock;
+            }
+            
+            public function findByProduct(string $productId): array
+            {
+                return [];
+            }
+        };
+
+        $stockManager = new StockManager(
+            repository: $repository,
+            auditLogger: null,
+            logger: new NullLogger()
+        );
+
+        $stockManager->receiveStock('PROD-001', 'WH-001', 10.0);
+
+        $this->assertArrayHasKey('PROD-001:WH-001', $savedStocks);
+    }
+}
+```
+
+### 11.6 Strategy Matrix: When to Use What
+
+| Scenario | Strategy | Why |
+|----------|----------|-----|
+| Testing a service that uses dependencies | Mock the dependency **interface** | Isolates unit, fast |
+| Testing a final class implementation | Use **real or stub implementations** | Tests actual behavior |
+| Complex dependency behavior | Create a **test stub class** | Reusable, explicit |
+| Simple one-off dependency | Use **anonymous class** | Quick, inline |
+| Need to verify method calls | Use PHPUnit **mock on interface** | Asserts behavior |
+
+### 11.7 Layer 1 Package Testing Guidelines
+
+For atomic packages (Layer 1), follow this testing structure:
+
+```
+packages/Inventory/
+├── tests/
+│   ├── Unit/
+│   │   └── Services/
+│   │       └── StockManagerTest.php      # Mocks interfaces
+│   ├── Integration/
+│   │   └── Services/
+│   │       └── StockManagerTest.php      # Uses real/stub implementations
+│   └── Support/
+│       ├── InMemoryStockRepository.php   # Test stub
+│       └── StockFactory.php              # Test data builder
+```
+
+### 11.8 Common Anti-Patterns to Avoid
+
+**❌ WRONG: Trying to mock a final class**
+
+```php
+$this->createMock(StockManager::class); // Error: Cannot mock final class
+```
+
+**❌ WRONG: Removing `final` for testability**
+
+```php
+class StockManager // ❌ Lost immutability guarantee!
+```
+
+**❌ WRONG: Testing through the implementation instead of interface**
+
+```php
+$mock = $this->createMock(StockManager::class); // Wrong - mock the interface!
+$mock = $this->createMock(StockManagerInterface::class); // Correct
+```
+
+**✅ CORRECT: Mock the interface, test with real implementations**
+
+```php
+$mockRepo = $this->createMock(StockRepositoryInterface::class);
+$manager = new StockManager($mockRepo, ...);
+```
+
+### 11.9 When to Reconsider the Design
+
+If you find yourself needing to mock a final class implementation, consider:
+
+1. **Is the interface too specific?** Broaden the interface to allow multiple implementations
+2. **Is the class doing too much?** Split into smaller, focused services
+3. **Should this be an integration test?** Test the whole flow instead of mocking
+4. **Can you use a fake instead?** Fakes are often clearer than mocks
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\Payment\Tests\Support;
+
+use Nexus\Payment\Contracts\PaymentGatewayInterface;
+use Nexus\Payment\Domain\PaymentResult;
+
+final class FakePaymentGateway implements PaymentGatewayInterface
+{
+    private bool $shouldSucceed = true;
+    private array $charges = [];
+
+    public function setShouldSucceed(bool $value): void
+    {
+        $this->shouldSucceed = $value;
+    }
+
+    public function charge(string $amount, string $currency): PaymentResult
+    {
+        $this->charges[] = ['amount' => $amount, 'currency' => $currency];
+        
+        return $this->shouldSucceed
+            ? PaymentResult::success('txn_' . uniqid())
+            : PaymentResult::failed('Card declined');
+    }
+
+    public function getCharges(): array
+    {
+        return $this->charges;
+    }
+}
+```
+
+### 11.10 Summary
+
+| Problem | Solution |
+|---------|----------|
+| Cannot mock final class | Mock the **interface** instead |
+| Need to test final class directly | Use **real or stub implementations** |
+| Complex mock setup | Create a **test fake/stub** |
+| Verifying interactions | Mock **interface** with PHPUnit |
+
+**Remember**: The `final readonly` constraint enforces good design. If you can't test it easily, the design likely needs adjustment, not the test approach.
 
 ---
 
