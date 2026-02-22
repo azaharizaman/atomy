@@ -13,7 +13,6 @@ use Nexus\FinanceOperations\DTOs\BudgetVarianceResult;
 use Nexus\FinanceOperations\DTOs\BudgetThresholdRequest;
 use Nexus\FinanceOperations\DTOs\BudgetThresholdResult;
 use Nexus\FinanceOperations\Services\BudgetMonitoringService;
-use Nexus\FinanceOperations\Rules\BudgetAvailableRule;
 use Nexus\FinanceOperations\Exceptions\BudgetTrackingException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
@@ -268,7 +267,7 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                         $request->tenantId,
                         $exceeded['budgetId'] ?? $request->budgetId,
                         $exceeded['threshold'],
-                        $exceeded['utilizationPercent']
+                        (float) $exceeded['utilizationPercent']
                     ) {
                         public function __construct(
                             public string $tenantId,

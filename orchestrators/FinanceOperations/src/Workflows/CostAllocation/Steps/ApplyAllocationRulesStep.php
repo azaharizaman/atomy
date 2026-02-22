@@ -86,19 +86,19 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
             // Simulated cost drivers (basis for allocation)
             $costDrivers = [
                 'CC001' => [
-                    'revenue' => 500000.00,
+                    'revenue' => '500000.00',
                     'headcount' => 25,
                     'floor_area' => 1500,
                     'machine_hours' => 1200,
                 ],
                 'CC002' => [
-                    'revenue' => 350000.00,
+                    'revenue' => '350000.00',
                     'headcount' => 18,
                     'floor_area' => 1000,
                     'machine_hours' => 800,
                 ],
                 'CC003' => [
-                    'revenue' => 150000.00,
+                    'revenue' => '150000.00',
                     'headcount' => 12,
                     'floor_area' => 500,
                     'machine_hours' => 400,
@@ -166,7 +166,11 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
 
                 $allocations[$sourceName] = [
                     'source_type' => $sourceData['source_type'],
-                    'total_allocated' => array_sum(array_column($sourceAllocations, 'allocated_amount')),
+                    'total_allocated' => array_reduce(
+                        $sourceAllocations,
+                        fn(string $carry, array $item): string => bcadd($carry, $item['allocated_amount'], 2),
+                        '0'
+                    ),
                     'allocation_basis' => $allocationBasis,
                     'allocations' => $sourceAllocations,
                 ];

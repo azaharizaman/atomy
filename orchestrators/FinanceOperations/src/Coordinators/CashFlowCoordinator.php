@@ -111,7 +111,7 @@ final readonly class CashFlowCoordinator implements CashFlowCoordinatorInterface
             $result = new CashPositionResult(
                 success: $serviceResult->success,
                 bankAccountId: $request->bankAccountId,
-                balance: (float)$balance,
+                balance: $balance,
                 currency: $serviceResult->currency,
                 asOfDate: $serviceResult->asOfDate,
                 balances: $balances,

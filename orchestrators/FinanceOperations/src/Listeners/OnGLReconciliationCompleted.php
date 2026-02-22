@@ -85,6 +85,8 @@ final class OnGLReconciliationCompleted
             // Invoke the notification service
             try {
                 $this->notificationService->notifyReconciliationCompleted([
+                    'tenant' => $event->tenantId,
+                    'period' => $event->periodId,
                     'is_reconciled' => $event->isReconciled,
                     'discrepancy_count' => count($event->discrepancies),
                 ]);

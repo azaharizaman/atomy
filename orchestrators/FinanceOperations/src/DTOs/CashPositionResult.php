@@ -15,7 +15,7 @@ final readonly class CashPositionResult
     public function __construct(
         public bool $success,
         public string $bankAccountId,
-        public float $balance,
+        public string $balance,
         public string $currency,
         public \DateTimeImmutable $asOfDate,
         public array $balances = [],
