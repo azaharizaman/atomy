@@ -104,7 +104,7 @@ final readonly class CashFlowCoordinator implements CashFlowCoordinatorInterface
             $balance = "0";
             $balances = [];
             foreach ($serviceResult->positions as $position) {
-                $balances[$position['bank_account_id']] = (float)$position['balance'];
+                $balances[$position['bank_account_id']] = $position['balance'];
                 $balance = bcadd($balance, (string)$position['balance'], 2);
             }
 
@@ -112,9 +112,6 @@ final readonly class CashFlowCoordinator implements CashFlowCoordinatorInterface
                 success: $serviceResult->success,
                 bankAccountId: $request->bankAccountId,
                 balance: (float)$balance,
-                success: $serviceResult->success,
-                bankAccountId: $request->bankAccountId,
-                balance: $balance,
                 currency: $serviceResult->currency,
                 asOfDate: $serviceResult->asOfDate,
                 balances: $balances,

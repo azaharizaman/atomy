@@ -118,4 +118,27 @@ final class BudgetTrackingException extends CoordinationException
             ['tenant_id' => $tenantId, 'budget_id' => $budgetId]
         );
     }
+
+    /**
+     * Create exception for generic coordination check failure.
+     *
+     * Used when a budget check fails due to unexpected errors (timeouts,
+     * network issues, etc.) rather than the budget not existing.
+     */
+    public static function checkFailed(
+        string $tenantId,
+        string $budgetId,
+        \Throwable $cause
+    ): self {
+        return new self(
+            sprintf('Budget check failed for %s: %s', $budgetId, $cause->getMessage()),
+            'BudgetTrackingCoordinator',
+            [
+                'tenant_id' => $tenantId,
+                'budget_id' => $budgetId,
+                'error' => $cause->getMessage(),
+            ],
+            $cause
+        );
+    }
 }

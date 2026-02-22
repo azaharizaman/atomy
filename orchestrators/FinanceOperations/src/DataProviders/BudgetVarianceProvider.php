@@ -195,7 +195,7 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
                     'actual' => $actual,
                     'variance' => $variance,
                     'variance_percent' => bccomp($budgeted, '0', 2) !== 0
-                        ? round((float) bcdiv($variance, $budgeted, 4) * 100, 2)
+                        ? bcmul(bcdiv($variance, $budgeted, 4), '100', 2)
                         : '0',
                     'is_favorable' => $isFavorable,
                 ];
@@ -239,7 +239,7 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
                 'total_committed' => $totalCommitted,
                 'available_budget' => bcsub(bcsub($totalBudgeted, $totalActual, 2), $totalCommitted, 2),
                 'variance_percent' => bccomp($totalBudgeted, '0', 2) !== 0
-                    ? round((float) bcdiv($totalVariance, $totalBudgeted, 4) * 100, 2)
+                    ? bcmul(bcdiv($totalVariance, $totalBudgeted, 4), '100', 2)
                     : '0',
                 'favorable_count' => $favorableCount,
                 'unfavorable_count' => $unfavorableCount,
@@ -302,10 +302,30 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
      */
     private function getCommonCurrency(array $items): ?string
     {
-        foreach ($items as $item) {
-            return $item['currency'] ?? null;
+        if (empty($items)) {
+            return null;
         }
-        return null;
+
+        $currencies = [];
+        foreach ($items as $item) {
+            $currency = $item['currency'] ?? null;
+            if ($currency === null) {
+                // Missing currency - treat as inconsistent
+                return null;
+            }
+            $currencies[] = $currency;
+        }
+
+        // Check if all currencies are the same
+        $firstCurrency = $currencies[0];
+        foreach ($currencies as $currency) {
+            if ($currency !== $firstCurrency) {
+                // Inconsistent currencies
+                return null;
+            }
+        }
+
+        return $firstCurrency;
     }
 
     /**

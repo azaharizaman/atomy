@@ -145,20 +145,21 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
                 }
 
                 foreach ($costDrivers as $costCenter => $drivers) {
-                    $basisValue = $drivers[$allocationBasis] ?? 0;
-                    $allocationPercentage = $basisValue / $basisTotal;
-                    
+                    $basisValue = $drivers[$allocationBasis] ?? '0';
+                    $allocationPercentage = bcdiv($basisValue, $basisTotal, 6);
+
+                    $allocatedAmountRaw = bcmul($totalToAllocate, $allocationPercentage, 8);
                     $allocatedAmount = match ($roundingMethod) {
-                        'ceil' => ceil($totalToAllocate * $allocationPercentage * 100) / 100,
-                        'floor' => floor($totalToAllocate * $allocationPercentage * 100) / 100,
-                        default => round($totalToAllocate * $allocationPercentage, 2),
+                        'ceil' => number_format(ceil((float)$allocatedAmountRaw), 2, '.', ''),
+                        'floor' => number_format(floor((float)$allocatedAmountRaw), 2, '.', ''),
+                        default => number_format((float)$allocatedAmountRaw, 2, '.', ''),
                     };
 
                     $sourceAllocations[$costCenter] = [
                         'basis_type' => $allocationBasis,
                         'basis_value' => $basisValue,
                         'basis_total' => $basisTotal,
-                        'allocation_percentage' => $allocationPercentage * 100,
+                        'allocation_percentage' => bcmul($allocationPercentage, '100', 4),
                         'allocated_amount' => $allocatedAmount,
                     ];
                 }
@@ -173,12 +174,14 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
 
             // Calculate totals per cost center
             $costCenterTotals = [];
+            $totalAllocated = '0';
             foreach ($allocations as $sourceAlloc) {
                 foreach ($sourceAlloc['allocations'] as $costCenter => $allocData) {
                     if (!isset($costCenterTotals[$costCenter])) {
-                        $costCenterTotals[$costCenter] = 0;
+                        $costCenterTotals[$costCenter] = '0';
                     }
-                    $costCenterTotals[$costCenter] += $allocData['allocated_amount'];
+                    $costCenterTotals[$costCenter] = bcadd($costCenterTotals[$costCenter], $allocData['allocated_amount'], 2);
+                    $totalAllocated = bcadd($totalAllocated, $allocData['allocated_amount'], 2);
                 }
             }
 
@@ -190,7 +193,7 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
                 'rounding_method' => $roundingMethod,
                 'allocated_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
                 'currency' => $gatheredCosts['currency'] ?? 'MYR',
-                'total_allocated' => array_sum($costCenterTotals),
+                'total_allocated' => $totalAllocated,
                 'source_count' => count($allocations),
                 'allocations' => $allocations,
                 'cost_center_totals' => $costCenterTotals,

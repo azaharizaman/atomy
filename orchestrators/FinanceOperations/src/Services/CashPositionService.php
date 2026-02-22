@@ -244,6 +244,17 @@ final readonly class CashPositionService
             $balance = (string)($position['balance'] ?? $position['available_balance'] ?? '0');
             $currency = $position['currency'] ?? $targetCurrency;
 
+            // Fail fast if currencies differ and we have no converter
+            if ($currency !== $targetCurrency && $this->currencyConverter === null) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        'Cannot consolidate balances: currency mismatch (%s vs %s) and no currency converter available',
+                        $currency,
+                        $targetCurrency
+                    )
+                );
+            }
+
             // Convert currency if needed
             if ($currency !== $targetCurrency && $this->currencyConverter !== null) {
                 $converted = $this->currencyConverter->convert(

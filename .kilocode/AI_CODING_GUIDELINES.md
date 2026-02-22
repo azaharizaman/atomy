@@ -164,7 +164,7 @@ $table->unique(['tenant_id', 'order_number']);
 
 ### Migration Naming Convention
 
-```
+```text
 Version{YYYYMMDDHHMMSS}.php
 ```
 

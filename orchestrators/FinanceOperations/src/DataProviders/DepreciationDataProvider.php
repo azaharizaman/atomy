@@ -56,12 +56,13 @@ final readonly class DepreciationDataProvider implements DepreciationDataProvide
 
         try {
             $runs = $this->depreciationManager->getRunsByPeriod($tenantId, $periodId);
+            $runsArray = iterator_to_array($runs);
 
             $totalDepreciation = '0';
             $assetsProcessed = 0;
             $runDetails = [];
 
-            foreach ($runs as $run) {
+            foreach ($runsArray as $run) {
                 $runDetails[] = [
                     'run_id' => $run->getId(),
                     'status' => $run->getStatus(),
@@ -77,12 +78,12 @@ final readonly class DepreciationDataProvider implements DepreciationDataProvide
 
             return [
                 'period_id' => $periodId,
-                'runs_count' => count($runs),
+                'runs_count' => count($runsArray),
                 'total_depreciation' => $totalDepreciation,
                 'assets_processed' => $assetsProcessed,
                 'runs' => $runDetails,
-                'has_pending_runs' => $this->hasPendingRuns($runs),
-                'last_run_at' => $this->getLastRunAt($runs),
+                'has_pending_runs' => $this->hasPendingRuns($runsArray),
+                'last_run_at' => $this->getLastRunAt($runsArray),
             ];
         } catch (\Throwable $e) {
             $this->logger->error('Failed to fetch depreciation run summary', [

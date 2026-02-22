@@ -264,36 +264,37 @@ final readonly class BudgetMonitoringService
             }
 
             foreach ($variances as $variance) {
-                $budgeted = (float)($variance['budgeted'] ?? 0);
-                $actual = (float)($variance['actual'] ?? 0);
+                $budgeted = (string)($variance['budgeted'] ?? '0');
+                $actual = (string)($variance['actual'] ?? '0');
 
-                if ($budgeted <= 0) {
+                if (bccomp($budgeted, '0', 2) <= 0) {
                     continue;
                 }
 
-                $utilizationPercent = ($actual / $budgeted) * 100;
+                // Calculate utilization as string using BCMath
+                $utilizationStr = bcdiv(bcmul($actual, '100', 4), $budgeted, 4);
 
                 // Sort thresholds descending to find highest exceeded
                 $sortedThresholds = $request->thresholds;
                 rsort($sortedThresholds);
 
                 foreach ($sortedThresholds as $threshold) {
-                    if ($utilizationPercent >= $threshold) {
+                    if (bccomp($utilizationStr, (string)$threshold, 2) >= 0) {
                         $exceededThresholds[] = [
                             'budgetId' => $variance['budget_id'] ?? $variance['id'] ?? '',
                             'budgetName' => $variance['budget_name'] ?? $variance['name'] ?? 'Unknown',
                             'costCenterId' => $variance['cost_center_id'] ?? null,
                             'threshold' => $threshold,
-                            'utilizationPercent' => round($utilizationPercent, 2),
-                            'budgeted' => (string)$budgeted,
-                            'actual' => (string)$actual,
+                            'utilizationPercent' => number_format((float)$utilizationStr, 2, '.', ''),
+                            'budgeted' => $budgeted,
+                            'actual' => $actual,
                             'exceededAt' => date('Y-m-d H:i:s'),
                         ];
 
                         $warnings[] = sprintf(
-                            'Budget %s at %.1f%% utilization (threshold: %d%%)',
+                            'Budget %s at %s%% utilization (threshold: %d%%)',
                             $variance['budget_id'] ?? $variance['name'] ?? 'unknown',
-                            $utilizationPercent,
+                            $utilizationStr,
                             $threshold
                         );
                         break; // Only report highest threshold exceeded

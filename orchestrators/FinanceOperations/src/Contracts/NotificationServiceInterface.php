@@ -19,8 +19,8 @@ interface NotificationServiceInterface
      *                                   - type: string
      *                                   - budget_id: string
      *                                   - severity: string
-     *                                   - threshold: float
-     *                                   - actual: float
+     *                                   - threshold: string
+     *                                   - actual: string
      * @return void
      */
     public function sendAlert(array $data): void;

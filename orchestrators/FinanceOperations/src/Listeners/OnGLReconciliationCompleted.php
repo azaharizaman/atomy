@@ -20,13 +20,17 @@ use Psr\Log\NullLogger;
  * 
  * @since 1.0.0
  */
-final readonly class OnGLReconciliationCompleted
+final class OnGLReconciliationCompleted
 {
+    private LoggerInterface $logger;
+
     public function __construct(
         private ?NotificationServiceInterface $notificationService = null,
         private ?TaskServiceInterface $taskService = null,
-        private LoggerInterface $logger = new NullLogger(),
-    ) {}
+        ?LoggerInterface $logger = null,
+    ) {
+        $this->logger = $logger ?? new NullLogger();
+    }
 
     /**
      * Handle the GL reconciliation completed event.
@@ -54,8 +58,14 @@ final readonly class OnGLReconciliationCompleted
 
             if ($this->taskService !== null) {
                 foreach ($event->discrepancies as $discrepancy) {
+                    // Sanitize discrepancy for logging - only include non-sensitive identifiers
+                    $sanitizedDiscrepancy = [
+                        'id' => $discrepancy['id'] ?? null,
+                        'type' => $discrepancy['type'] ?? null,
+                        'status' => $discrepancy['status'] ?? null,
+                    ];
                     $this->logger->info('Creating adjustment task', [
-                        'discrepancy' => $discrepancy,
+                        'discrepancy' => $sanitizedDiscrepancy,
                     ]);
                     // Invoke the task service
                     try {

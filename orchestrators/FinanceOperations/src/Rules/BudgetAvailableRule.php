@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Rules;
 
+use Nexus\FinanceOperations\Contracts\BudgetAvailableRuleInterface;
 use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
@@ -21,7 +22,7 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
  * @see ARCHITECTURE.md Section 4 for rule patterns
  * @since 1.0.0
  */
-final readonly class BudgetAvailableRule implements RuleInterface
+final readonly class BudgetAvailableRule implements BudgetAvailableRuleInterface
 {
     /**
      * @param object $budgetQuery BudgetQueryInterface for budget operations

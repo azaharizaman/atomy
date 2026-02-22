@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Coordinators;
 
+use Nexus\FinanceOperations\Contracts\BudgetAvailableRuleInterface;
 use Nexus\FinanceOperations\Contracts\BudgetTrackingCoordinatorInterface;
 use Nexus\FinanceOperations\Contracts\BudgetVarianceProviderInterface;
 use Nexus\FinanceOperations\DTOs\BudgetCheckRequest;
@@ -40,7 +41,7 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
     public function __construct(
         private BudgetMonitoringService $budgetService,
         private BudgetVarianceProviderInterface $budgetDataProvider,
-        private BudgetAvailableRule $budgetAvailableRule,
+        private BudgetAvailableRuleInterface $budgetAvailableRule,
         private ?EventDispatcherInterface $eventDispatcher = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
@@ -162,9 +163,10 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                 'error' => $e->getMessage(),
             ]);
 
-            throw BudgetTrackingException::budgetNotFound(
+            throw BudgetTrackingException::checkFailed(
                 $request->tenantId,
-                $request->budgetId
+                $request->budgetId,
+                $e
             );
         }
     }
