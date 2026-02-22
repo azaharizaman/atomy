@@ -123,7 +123,26 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
                 
                 // Determine allocation basis based on source type
                 $allocationBasis = $this->determineAllocationBasis($sourceName, $costDriver);
-                $basisTotal = $driverTotals[$allocationBasis] ?? 1;
+                
+                // Validate that the allocation basis exists
+                if (!isset($driverTotals[$allocationBasis])) {
+                    $this->logger->warning('Unknown allocation basis, skipping', [
+                        'basis' => $allocationBasis,
+                        'source' => $sourceName,
+                    ]);
+                    continue;
+                }
+                
+                $basisTotal = $driverTotals[$allocationBasis];
+
+                // Validate that basisTotal is not zero
+                if (bccomp($basisTotal, '0', 2) === 0) {
+                    $this->logger->warning('Allocation basis total is zero, skipping', [
+                        'basis' => $allocationBasis,
+                        'source' => $sourceName,
+                    ]);
+                    continue;
+                }
 
                 foreach ($costDrivers as $costCenter => $drivers) {
                     $basisValue = $drivers[$allocationBasis] ?? 0;

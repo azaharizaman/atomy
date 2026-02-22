@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Services;
 
+use Nexus\FinanceOperations\Contracts\CurrencyConverterInterface;
 use Nexus\FinanceOperations\Contracts\TreasuryDataProviderInterface;
 use Nexus\FinanceOperations\DTOs\CashFlow\CashPositionRequest;
 use Nexus\FinanceOperations\DTOs\CashFlow\CashPositionResult;
@@ -29,7 +30,7 @@ final readonly class CashPositionService
 {
     public function __construct(
         private TreasuryDataProviderInterface $dataProvider,
-        private ?object $currencyConverter = null,  // CurrencyConverterInterface
+        private ?CurrencyConverterInterface $currencyConverter = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 

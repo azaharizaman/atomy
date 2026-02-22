@@ -106,14 +106,16 @@ final readonly class CostAccountingDataProvider implements CostAccountingDataPro
                     'allocated_at' => $allocation->getAllocatedAt()->format('Y-m-d H:i:s'),
                 ];
                 // Accumulate total
-                $byCostCenter[$costCenterId]['total'] = (string)(
-                    (float) $byCostCenter[$costCenterId]['total'] + (float) $allocation->getAmount()
+                $byCostCenter[$costCenterId]['total'] = bcadd(
+                    $byCostCenter[$costCenterId]['total'],
+                    $allocation->getAmount(),
+                    2
                 );
             }
 
             // Calculate total allocated
             foreach ($byCostCenter as $center) {
-                $totalAllocated = (string)((float) $totalAllocated + (float) $center['total']);
+                $totalAllocated = bcadd($totalAllocated, $center['total'], 2);
             }
 
             return [
@@ -203,7 +205,7 @@ final readonly class CostAccountingDataProvider implements CostAccountingDataPro
 
             $actualBalance = $actualCosts->getBalance();
             $variance = $budgetData !== null
-                ? (string)((float) $budgetData['amount'] - (float) $actualBalance)
+                ? bcsub($budgetData['amount'], $actualBalance, 2)
                 : null;
 
             return [
@@ -215,8 +217,8 @@ final readonly class CostAccountingDataProvider implements CostAccountingDataPro
                 'currency' => $actualCosts->getCurrency(),
                 'budget' => $budgetData,
                 'variance' => $variance,
-                'variance_percent' => $budgetData !== null && (float) $budgetData['amount'] !== 0.0
-                    ? round(((float) $variance / (float) $budgetData['amount']) * 100, 2)
+                'variance_percent' => $budgetData !== null && bccomp($budgetData['amount'], '0', 2) !== 0
+                    ? (float) bcmul(bcdiv($variance, $budgetData['amount'], 4), '100', 2)
                     : null,
                 'responsible_person' => $costCenter->getResponsiblePerson(),
                 'department' => $costCenter->getDepartment(),

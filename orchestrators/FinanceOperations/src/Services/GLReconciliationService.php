@@ -8,6 +8,7 @@ use Nexus\FinanceOperations\DTOs\GLPosting\GLReconciliationRequest;
 use Nexus\FinanceOperations\DTOs\GLPosting\GLReconciliationResult;
 use Nexus\FinanceOperations\DTOs\GLPosting\ConsistencyCheckRequest;
 use Nexus\FinanceOperations\DTOs\GLPosting\ConsistencyCheckResult;
+use Nexus\FinanceOperations\Enums\SubledgerType;
 use Nexus\FinanceOperations\Exceptions\GLReconciliationException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -80,12 +81,13 @@ final readonly class GLReconciliationService
                     $variance
                 );
 
+                // Return result indicating proposal pending approval
                 return new GLReconciliationResult(
-                    success: $adjustmentResult['success'],
-                    subledgerType: $request->subledgerType,
+                    success: false, // proposal pending approval
+                    subledgerType: $request->subledgerType->value,
                     subledgerBalance: $subledgerBalance,
                     glBalance: $glBalance,
-                    variance: '0', // After adjustment
+                    variance: $variance, // Keep actual variance until approved
                     discrepancies: [],
                 );
             }

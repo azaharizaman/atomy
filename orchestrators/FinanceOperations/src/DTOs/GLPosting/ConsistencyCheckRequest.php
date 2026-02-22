@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\DTOs\GLPosting;
 
+use Nexus\FinanceOperations\Enums\SubledgerType;
+
 /**
  * Request DTO for GL consistency check operations.
  *
@@ -17,11 +19,11 @@ final readonly class ConsistencyCheckRequest
     /**
      * @param string $tenantId Tenant identifier
      * @param string $periodId Accounting period to check
-     * @param array<string> $subledgerTypes Subledger types to check: 'receivable', 'payable', 'asset'
+     * @param array<SubledgerType> $subledgerTypes Subledger types to check
      */
     public function __construct(
         public string $tenantId,
         public string $periodId,
-        public array $subledgerTypes = ['receivable', 'payable', 'asset'],
+        public array $subledgerTypes = [SubledgerType::RECEIVABLE, SubledgerType::PAYABLE, SubledgerType::ASSET],
     ) {}
 }

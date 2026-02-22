@@ -54,6 +54,20 @@ final readonly class OnBudgetThresholdExceeded
                     'severity' => $severity,
                     'budget_id' => $event->budgetId,
                 ]);
+                // Invoke the notification service
+                try {
+                    $this->notificationService->sendAlert([
+                        'type' => 'budget_threshold',
+                        'budget_id' => $event->budgetId,
+                        'severity' => $severity,
+                        'threshold' => $event->threshold ?? 0,
+                        'actual' => $event->actualPercent ?? 0,
+                    ]);
+                } catch (\Throwable $e) {
+                    $this->logger->error('Failed to send budget threshold alert', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
 
             // Create approval workflow for critical thresholds
@@ -61,6 +75,18 @@ final readonly class OnBudgetThresholdExceeded
                 $this->logger->info('Creating budget approval workflow', [
                     'budget_id' => $event->budgetId,
                 ]);
+                // Invoke the workflow service
+                try {
+                    $this->workflowService->createApprovalWorkflow([
+                        'type' => 'budget_threshold',
+                        'budget_id' => $event->budgetId,
+                        'severity' => $severity,
+                    ]);
+                } catch (\Throwable $e) {
+                    $this->logger->error('Failed to create budget approval workflow', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
 
             $this->logger->info('Budget threshold event processed', [

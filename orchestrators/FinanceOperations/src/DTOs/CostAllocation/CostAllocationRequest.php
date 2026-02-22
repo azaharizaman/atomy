@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\DTOs\CostAllocation;
 
+use Nexus\FinanceOperations\Enums\AllocationMethod;
+
 /**
  * Request DTO for cost allocation operations.
  *
@@ -19,7 +21,7 @@ final readonly class CostAllocationRequest
      * @param string $periodId Accounting period for allocation
      * @param string $sourceCostPoolId Source cost pool to allocate from
      * @param array<string> $targetCostCenterIds Target cost center IDs
-     * @param string $allocationMethod Allocation method: 'proportional', 'equal', 'manual'
+     * @param AllocationMethod $allocationMethod Allocation method enum
      * @param array<string, mixed> $options Additional allocation options
      */
     public function __construct(
@@ -27,7 +29,7 @@ final readonly class CostAllocationRequest
         public string $periodId,
         public string $sourceCostPoolId,
         public array $targetCostCenterIds = [],
-        public string $allocationMethod = 'proportional',
+        public AllocationMethod $allocationMethod = AllocationMethod::PROPORTIONAL,
         public array $options = [],
     ) {}
 }

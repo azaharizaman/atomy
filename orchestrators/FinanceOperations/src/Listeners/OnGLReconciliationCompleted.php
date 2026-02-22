@@ -55,6 +55,14 @@ final readonly class OnGLReconciliationCompleted
                         $this->logger->info('Creating adjustment task', [
                             'discrepancy' => $discrepancy,
                         ]);
+                        // Invoke the task service
+                        try {
+                            $this->taskService->createAdjustmentTask($discrepancy);
+                        } catch (\Throwable $e) {
+                            $this->logger->error('Failed to create adjustment task', [
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
                     }
                 }
             }
@@ -62,6 +70,17 @@ final readonly class OnGLReconciliationCompleted
             // Notify finance team
             if ($this->notificationService !== null) {
                 $this->logger->info('Sending reconciliation notification');
+                // Invoke the notification service
+                try {
+                    $this->notificationService->notifyReconciliationCompleted([
+                        'is_reconciled' => $event->isReconciled,
+                        'discrepancy_count' => count($event->discrepancies ?? []),
+                    ]);
+                } catch (\Throwable $e) {
+                    $this->logger->error('Failed to send reconciliation notification', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
 
             $this->logger->info('GL reconciliation event processed successfully');

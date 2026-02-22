@@ -57,7 +57,7 @@ final readonly class DepreciationDataProvider implements DepreciationDataProvide
                     'completed_at' => $run->getCompletedAt()?->format('Y-m-d H:i:s'),
                     'errors' => $run->getErrors(),
                 ];
-                $totalDepreciation = (string)((float) $totalDepreciation + (float) $run->getTotalDepreciation());
+                $totalDepreciation = bcadd($totalDepreciation, $run->getTotalDepreciation(), 2);
                 $assetsProcessed += $run->getAssetsCount();
             }
 

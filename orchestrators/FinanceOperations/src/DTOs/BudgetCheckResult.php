@@ -12,7 +12,7 @@ final readonly class BudgetCheckResult
     public function __construct(
         public bool $success,
         public string $budgetId,
-        public float $availableAmount,
+        public string $availableAmount,
         public bool $isAvailable,
         public ?string $errorMessage = null,
     ) {}

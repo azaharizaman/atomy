@@ -304,10 +304,10 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
      * Determine if variance is favorable based on account type.
      *
      * For revenue/income accounts (typically 4xxx):
-     *   - Positive variance (actual > budget) is favorable
+     *   - Negative variance (budgeted - actual) is favorable
      *
      * For expense accounts (typically 5xxx-9xxx):
-     *   - Negative variance (actual < budget) is favorable
+     *   - Positive variance (actual < budget) is favorable
      */
     private function isVarianceFavorable(string $variance, string $accountCode): bool
     {
@@ -318,12 +318,13 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
         $prefix = substr($accountCode, 0, 1);
 
         // Revenue/income accounts (typically start with 4)
+        // For revenue, when actual > budget (negative variance), it's favorable
         if ($prefix === '4') {
-            return $varianceValue >= 0;
+            return $varianceValue <= 0;
         }
 
         // Expense accounts (typically start with 5-9)
-        // For expenses, under-budget (negative variance) is favorable
+        // For expenses, under-budget (positive variance) is favorable
         return $varianceValue >= 0;
     }
 }

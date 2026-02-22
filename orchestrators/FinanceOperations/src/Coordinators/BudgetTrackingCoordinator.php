@@ -98,6 +98,22 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                 'costCenterId' => $request->options['cost_center_id'] ?? null,
             ]);
 
+            // Short-circuit if rule validation fails
+            if (!$ruleResult->passed) {
+                $this->logger->warning('Budget availability rule failed', [
+                    'budget_id' => $request->budgetId,
+                    'violations' => $ruleResult->violations,
+                ]);
+
+                return new BudgetCheckResult(
+                    success: false,
+                    budgetId: $request->budgetId,
+                    availableAmount: $ruleResult->violations[0]['available'] ?? '0',
+                    isAvailable: false,
+                    errorMessage: $ruleResult->violations[0]['message'] ?? 'Budget availability check failed',
+                );
+            }
+
             // Convert to service DTO
             $serviceRequest = new \Nexus\FinanceOperations\DTOs\BudgetTracking\BudgetCheckRequest(
                 tenantId: $request->tenantId,
@@ -114,7 +130,7 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
             $result = new BudgetCheckResult(
                 success: true,
                 budgetId: $serviceResult->budgetId,
-                availableAmount: (float)$serviceResult->availableAmount,
+                availableAmount: $serviceResult->availableAmount,
                 isAvailable: $serviceResult->available,
             );
 

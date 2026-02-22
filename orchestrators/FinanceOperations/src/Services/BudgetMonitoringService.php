@@ -53,7 +53,7 @@ final readonly class BudgetMonitoringService
             // Get budget data
             $budgetData = $this->dataProvider->getBudgetData(
                 $request->tenantId,
-                '', // period not needed for availability check
+                $request->periodId ?? '',
                 $request->budgetId
             );
 
@@ -67,8 +67,27 @@ final readonly class BudgetMonitoringService
                 $budgeted = $budgetData['budgeted'];
                 $actual = $budgetData['actual'] ?? '0';
                 $committed = $budgetData['committed'] ?? '0';
+            } elseif (isset($budgetData['budgets'])) {
+                // Search in budget lines (provider returns 'budgets' array)
+                foreach ($budgetData['budgets'] as $line) {
+                    $lineBudgetId = $line['budget_id'] ?? $line['id'] ?? null;
+                    $lineCostCenter = $line['cost_center_id'] ?? null;
+                    $lineAccount = $line['account_id'] ?? $line['account_code'] ?? null;
+
+                    // Match by budget ID, cost center, or account
+                    $matches = ($lineBudgetId === $request->budgetId) ||
+                        ($request->costCenterId && $lineCostCenter === $request->costCenterId) ||
+                        ($request->accountId && $lineAccount === $request->accountId);
+
+                    if ($matches) {
+                        $budgeted = $line['budgeted'] ?? $line['budgeted_amount'] ?? $line['amount'] ?? '0';
+                        $actual = $line['actual'] ?? '0';
+                        $committed = $line['committed'] ?? '0';
+                        break;
+                    }
+                }
             } elseif (isset($budgetData['lines'])) {
-                // Search in budget lines
+                // Search in budget lines (legacy format)
                 foreach ($budgetData['lines'] as $line) {
                     $lineBudgetId = $line['budget_id'] ?? $line['id'] ?? null;
                     $lineCostCenter = $line['cost_center_id'] ?? null;
