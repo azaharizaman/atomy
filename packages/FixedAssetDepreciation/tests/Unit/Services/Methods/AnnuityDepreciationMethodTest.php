@@ -122,14 +122,11 @@ final class AnnuityDepreciationMethodTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function calculate_withZeroInterestRate_throwsException(): void
+    public function calculate_withZeroInterestRate_fallsBackToStraightLine(): void
     {
         $zeroRateMethod = new AnnuityDepreciationMethod(interestRate: 0.0);
         
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('interest rate');
-        
-        $zeroRateMethod->calculate(
+        $result = $zeroRateMethod->calculate(
             cost: 10000.00,
             salvageValue: 1000.00,
             startDate: new \DateTimeImmutable('2024-01-01'),
@@ -141,6 +138,12 @@ final class AnnuityDepreciationMethodTest extends TestCase
                 'currency' => 'USD',
             ]
         );
+
+        // With zero interest rate, falls back to straight-line depreciation
+        // (cost - salvage) / useful_life = (10000 - 1000) / 12 = 750
+        $this->assertInstanceOf(\Nexus\FixedAssetDepreciation\ValueObjects\DepreciationAmount::class, $result);
+        $this->assertEquals(750.00, $result->getAmount());
+        $this->assertEquals(750.00, $result->accumulatedDepreciation);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -254,7 +257,7 @@ final class AnnuityDepreciationMethodTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function getMinimumUsefulLifeMonths_returns12(): void
+    public function getMinimumUsefulLifeMonths_returns1(): void
     {
         $this->assertEquals(1, $this->method->getMinimumUsefulLifeMonths());
     }

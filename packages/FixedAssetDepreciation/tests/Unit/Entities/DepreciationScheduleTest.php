@@ -178,7 +178,7 @@ final class DepreciationScheduleTest extends TestCase
         
         // The accumulated should be at least 3000 (first period)
         $result = $this->schedule->getAccumulatedDepreciation($asOfDate);
-        $this->assertGreaterThanOrEqual(3000.00, $result);
+        $this->assertSame(3000.00, $result);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
