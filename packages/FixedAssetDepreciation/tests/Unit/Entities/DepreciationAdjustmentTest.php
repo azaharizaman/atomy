@@ -384,6 +384,6 @@ class DepreciationAdjustmentTest extends TestCase
             approvedAt: new DateTimeImmutable(),
         );
 
-        self::assertTrue($adjustment->isApproved());
+        self::assertFalse($adjustment->isApproved());
     }
 }

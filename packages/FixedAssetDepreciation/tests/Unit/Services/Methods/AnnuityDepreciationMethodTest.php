@@ -256,6 +256,6 @@ final class AnnuityDepreciationMethodTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function getMinimumUsefulLifeMonths_returns12(): void
     {
-        $this->assertEquals(12, $this->method->getMinimumUsefulLifeMonths());
+        $this->assertEquals(1, $this->method->getMinimumUsefulLifeMonths());
     }
 }

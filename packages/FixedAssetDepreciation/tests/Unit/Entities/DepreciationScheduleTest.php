@@ -20,8 +20,8 @@ use Nexus\FixedAssetDepreciation\ValueObjects\DepreciationSchedulePeriod;
  */
 final class DepreciationScheduleTest extends TestCase
 {
-    private DepreciationSchedule $schedule;
-    private array $testPeriods;
+    private readonly DepreciationSchedule $schedule;
+    private readonly array $testPeriods;
 
     protected function setUp(): void
     {
