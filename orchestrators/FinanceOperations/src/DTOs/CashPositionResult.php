@@ -10,7 +10,7 @@ namespace Nexus\FinanceOperations\DTOs;
 final readonly class CashPositionResult
 {
     /**
-     * @param array<string, mixed> $balances
+     * @param array<string, string> $balances Each balance value is a decimal string to preserve monetary precision
      */
     public function __construct(
         public bool $success,

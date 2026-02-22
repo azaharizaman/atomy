@@ -141,4 +141,26 @@ final class BudgetTrackingException extends CoordinationException
             $cause
         );
     }
+
+    /**
+     * Create exception for threshold check failure.
+     *
+     * Used when a threshold check fails due to unexpected errors.
+     */
+    public static function thresholdCheckFailed(
+        string $tenantId,
+        string $budgetId,
+        \Throwable $cause
+    ): self {
+        return new self(
+            sprintf('Threshold check failed for budget %s: %s', $budgetId, $cause->getMessage()),
+            'BudgetTrackingCoordinator',
+            [
+                'tenant_id' => $tenantId,
+                'budget_id' => $budgetId,
+                'error' => $cause->getMessage(),
+            ],
+            $cause
+        );
+    }
 }

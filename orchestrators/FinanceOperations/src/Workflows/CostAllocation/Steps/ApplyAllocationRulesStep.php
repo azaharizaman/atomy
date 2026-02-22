@@ -106,10 +106,13 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
             ];
 
             // Calculate driver totals
+            // All values are kept as strings to maintain BCmath precision
             $driverTotals = [];
             foreach ($costDrivers as $drivers) {
                 foreach ($drivers as $driver => $value) {
-                    $driverTotals[$driver] = ($driverTotals[$driver] ?? 0) + $value;
+                    // Cast to string to ensure BCmath functions receive string arguments
+                    $currentTotal = isset($driverTotals[$driver]) ? (string)$driverTotals[$driver] : '0';
+                    $driverTotals[$driver] = bcadd($currentTotal, (string)$value, 2);
                 }
             }
 
@@ -146,7 +149,7 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
 
                 foreach ($costDrivers as $costCenter => $drivers) {
                     $basisValue = $drivers[$allocationBasis] ?? '0';
-                    $allocationPercentage = bcdiv($basisValue, $basisTotal, 6);
+                    $allocationPercentage = bcdiv((string)$basisValue, (string)$basisTotal, 6);
 
                     $allocatedAmountRaw = bcmul($totalToAllocate, $allocationPercentage, 8);
                     $allocatedAmount = match ($roundingMethod) {

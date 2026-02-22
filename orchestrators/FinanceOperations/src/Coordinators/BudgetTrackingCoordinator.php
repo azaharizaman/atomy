@@ -12,6 +12,7 @@ use Nexus\FinanceOperations\DTOs\BudgetVarianceRequest;
 use Nexus\FinanceOperations\DTOs\BudgetVarianceResult;
 use Nexus\FinanceOperations\DTOs\BudgetThresholdRequest;
 use Nexus\FinanceOperations\DTOs\BudgetThresholdResult;
+use Nexus\FinanceOperations\Events\BudgetExceededEvent;
 use Nexus\FinanceOperations\Services\BudgetMonitoringService;
 use Nexus\FinanceOperations\Exceptions\BudgetTrackingException;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -137,19 +138,12 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
 
             // Dispatch event if budget is exceeded
             if (!$serviceResult->available) {
-                $this->eventDispatcher?->dispatch(new class(
+                $this->eventDispatcher?->dispatch(new BudgetExceededEvent(
                     $request->tenantId,
                     $request->budgetId,
                     (string)$request->amount,
                     $serviceResult->availableAmount
-                ) {
-                    public function __construct(
-                        public string $tenantId,
-                        public string $budgetId,
-                        public string $requestedAmount,
-                        public string $availableAmount,
-                    ) {}
-                });
+                ));
             }
 
             return $result;
@@ -266,7 +260,7 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                     $this->eventDispatcher?->dispatch(new class(
                         $request->tenantId,
                         $exceeded['budgetId'] ?? $request->budgetId,
-                        $exceeded['threshold'],
+                        (float) $exceeded['threshold'],
                         (float) $exceeded['utilizationPercent']
                     ) {
                         public function __construct(
@@ -283,15 +277,14 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
         } catch (\Throwable $e) {
             $this->logger->error('Threshold check coordination failed', [
                 'tenant_id' => $request->tenantId,
+                'budget_id' => $request->budgetId,
                 'error' => $e->getMessage(),
             ]);
 
-            return new BudgetThresholdResult(
-                success: false,
-                budgetId: $request->budgetId,
-                thresholds: [],
-                alerts: [],
-                errorMessage: $e->getMessage(),
+            throw BudgetTrackingException::thresholdCheckFailed(
+                $request->tenantId,
+                $request->budgetId,
+                $e
             );
         }
     }
