@@ -1,6 +1,6 @@
 # AI Coding Agent Guidelines
 
-> This is a living document that evolves with each discovered mistake. Last updated: 2026-02-19 (PaymentGateway & Payroll refactoring review)
+> This is a living document that evolves with each discovered mistake. Last updated: 2026-02-22 (FinanceOperations PR #235 review)
 
 ## Purpose
 This document captures common mistakes made by AI coding agents and provides guidelines to avoid them. It should be updated whenever new patterns of errors are discovered.
@@ -857,6 +857,110 @@ class PayrollEngine
 
 ---
 
+## Lessons from FinanceOperations PR #235
+
+> Identified during code review on 2026-02-22
+
+### 1. Float Arithmetic for Monetary Values
+
+**Problem**: Using PHP floats for monetary calculations leads to precision errors.
+
+**Solution**: Use BCMath functions (`bcadd`, `bcsub`, `bcmul`, `bcdiv`) or the moneyphp library.
+
+```php
+// WRONG - Float arithmetic
+$total = $amount * $quantity;
+
+// CORRECT - BCMath
+$total = bcmul((string)$amount, (string)$quantity, 2);
+```
+
+### 2. Type Safety with Enums
+
+**Problem**: Using string literals instead of typed enums leads to type errors and typos.
+
+**Solution**: Use PHP 8.1+ native enums for type safety.
+
+```php
+// WRONG - String literals
+public function setType(string $type): void { ... }
+
+// CORRECT - Native enum
+public function setType(SubledgerType $type): void { ... }
+```
+
+### 3. Listener Services Must Actually Invoke Dependencies
+
+**Problem**: Listener classes were created but the injected services were never called.
+
+**Solution**: Always verify that injected dependencies are actually invoked in the method body.
+
+```php
+// WRONG - Empty listener
+public function handle(BudgetExceededEvent $event): void
+{
+    $this->notificationService; // Never called!
+}
+
+// CORRECT - Actually invoke
+public function handle(BudgetExceededEvent $event): void
+{
+    $this->notificationService->sendBudgetAlert($event->getBudgetId());
+}
+```
+
+### 4. Correct Array Key Usage
+
+**Problem**: Using incorrect array keys leads to null values and logic errors.
+
+**Solution**: Always verify the exact key names from provider/data source.
+
+```php
+// WRONG - Wrong key
+$accountId = $data['accountId']; // Should be 'bank_account_id'
+
+// CORRECT - Correct key
+$accountId = $data['bank_account_id'];
+```
+
+### 5. Always Use Validation Results
+
+**Problem**: Rules were validated but results were ignored.
+
+**Solution**: Always use the validation result to make decisions.
+
+```php
+// WRONG - Validation ignored
+$this->ruleValidator->validate($request);
+return $this->processRequest($request); // Proceeds regardless
+
+// CORRECT - Use validation result
+$result = $this->ruleValidator->validate($request);
+if (!$result->isValid()) {
+    throw new ValidationException($result->getErrors());
+}
+```
+
+### 6. DTOs for Monetary Values Should Use String
+
+**Problem**: Using `float` for monetary DTO properties loses precision.
+
+**Solution**: Use `string` for monetary values in DTOs.
+
+```php
+// WRONG - Float for money
+class BudgetCheckResult {
+    public float $availableAmount;
+}
+
+// CORRECT - String for money
+class BudgetCheckResult {
+    public string $availableAmount; // Store as string, convert when needed
+}
+```
+
+---
+
 ## Testing Guidelines
 
 ### Test What Can Break
@@ -888,6 +992,15 @@ public function test_order_total_includes_tax(): void
 ---
 
 ## Changelog
+
+### 2026-02-22 - FinanceOperations PR #235 Review
+- Added new section: "Lessons from FinanceOperations PR #235"
+- Float Arithmetic for Monetary Values: Use BCMath or moneyphp library instead of PHP floats
+- Type Safety with Enums: Use PHP 8.1+ native enums instead of string literals
+- Listener Services Must Actually Invoke Dependencies: Verify injected services are called
+- Correct Array Key Usage: Always verify exact key names from provider/data source
+- Always Use Validation Results: Don't ignore validation results in decision making
+- DTOs for Monetary Values Should Use String: Use string instead of float for money in DTOs
 
 ### 2026-02-19 - PaymentGateway & Payroll Refactoring Review
 - Added new section: "Error Signatures from PaymentGateway & Payroll Refactoring"

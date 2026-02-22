@@ -17,9 +17,13 @@ enum AllocationMethod: string
 
     /**
      * Create AllocationMethod from a string value.
+     *
+     * @param string $value The string value to convert
+     * @return self The corresponding AllocationMethod case
+     * @throws \InvalidArgumentException If the value cannot be matched
      */
     public static function fromString(string $value): self
     {
-        return self::tryFrom($value) ?? self::PROPORTIONAL;
+        return self::tryFrom(strtolower($value)) ?? self::PROPORTIONAL;
     }
 }

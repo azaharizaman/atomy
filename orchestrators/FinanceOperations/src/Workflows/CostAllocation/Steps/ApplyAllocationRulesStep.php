@@ -107,7 +107,7 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
 
             // Calculate driver totals
             $driverTotals = [];
-            foreach ($costDrivers as $cc => $drivers) {
+            foreach ($costDrivers as $drivers) {
                 foreach ($drivers as $driver => $value) {
                     $driverTotals[$driver] = ($driverTotals[$driver] ?? 0) + $value;
                 }
@@ -126,7 +126,7 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
                 
                 // Validate that the allocation basis exists
                 if (!isset($driverTotals[$allocationBasis])) {
-                    $this->logger->warning('Unknown allocation basis, skipping', [
+                    $this->getLogger()->warning('Unknown allocation basis, skipping', [
                         'basis' => $allocationBasis,
                         'source' => $sourceName,
                     ]);
@@ -136,8 +136,8 @@ final readonly class ApplyAllocationRulesStep implements WorkflowStepInterface
                 $basisTotal = $driverTotals[$allocationBasis];
 
                 // Validate that basisTotal is not zero
-                if (bccomp($basisTotal, '0', 2) === 0) {
-                    $this->logger->warning('Allocation basis total is zero, skipping', [
+                if (bccomp((string)$basisTotal, '0', 2) === 0) {
+                    $this->getLogger()->warning('Allocation basis total is zero, skipping', [
                         'basis' => $allocationBasis,
                         'source' => $sourceName,
                     ]);

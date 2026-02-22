@@ -107,13 +107,16 @@ final readonly class BudgetMonitoringService
                 }
             }
 
-            // Calculate available amount
-            $availableAmount = (string)((float)$budgeted - (float)$actual - (float)$committed);
+            // Calculate available amount using BCMath for precision
+            $temp = bcsub($budgeted, $actual, 2);
+            $availableAmount = bcsub($temp, $committed, 2);
+            
+            $actualPlusCommitted = bcadd($actual, $committed, 2);
             $utilizationPercent = (float)$budgeted > 0 
-                ? round((((float)$actual + (float)$committed) / (float)$budgeted) * 100, 2)
+                ? round((float)bcdiv($actualPlusCommitted, $budgeted, 4) * 100, 2)
                 : 0.0;
 
-            $isAvailable = (float)$request->amount <= (float)$availableAmount;
+            $isAvailable = bccomp($request->amount, $availableAmount, 2) <= 0;
             $warning = null;
 
             if (!$isAvailable) {
@@ -193,23 +196,23 @@ final readonly class BudgetMonitoringService
                 ));
             }
 
-            // Calculate totals
-            $totalBudgeted = array_sum(array_map(
-                fn($v) => (float)($v['budgeted'] ?? 0),
-                $variances
-            ));
-            $totalActual = array_sum(array_map(
-                fn($v) => (float)($v['actual'] ?? 0),
-                $variances
-            ));
-            $totalVariance = $totalBudgeted - $totalActual;
+            // Calculate totals using BCMath for precision
+            $totalBudgeted = '0';
+            $totalActual = '0';
+            
+            foreach ($variances as $v) {
+                $totalBudgeted = bcadd($totalBudgeted, (string)($v['budgeted'] ?? '0'), 2);
+                $totalActual = bcadd($totalActual, (string)($v['actual'] ?? '0'), 2);
+            }
+            
+            $totalVariance = bcsub($totalBudgeted, $totalActual, 2);
 
             return new BudgetVarianceResult(
                 success: true,
                 variances: $variances,
-                totalBudgeted: (string)round($totalBudgeted, 2),
-                totalActual: (string)round($totalActual, 2),
-                totalVariance: (string)round($totalVariance, 2),
+                totalBudgeted: $totalBudgeted,
+                totalActual: $totalActual,
+                totalVariance: $totalVariance,
             );
         } catch (\Throwable $e) {
             $this->logger->error('Variance calculation failed', [

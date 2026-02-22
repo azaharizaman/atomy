@@ -168,7 +168,7 @@ final readonly class CashPositionService
 
             $totalInflows = $this->sumAmounts($inflows);
             $totalOutflows = $this->sumAmounts($outflows);
-            $netCashFlow = (string)((float)$totalInflows - (float)$totalOutflows);
+            $netCashFlow = bcsub($totalInflows, $totalOutflows, 2);
 
             return new CashFlowForecastResult(
                 success: true,
@@ -238,25 +238,27 @@ final readonly class CashPositionService
      */
     private function consolidateBalances(array $positions, string $targetCurrency): string
     {
-        $total = 0.0;
+        $total = '0';
 
         foreach ($positions as $position) {
-            $balance = (float)($position['balance'] ?? $position['available_balance'] ?? 0);
+            $balance = (string)($position['balance'] ?? $position['available_balance'] ?? '0');
             $currency = $position['currency'] ?? $targetCurrency;
 
             // Convert currency if needed
             if ($currency !== $targetCurrency && $this->currencyConverter !== null) {
-                $balance = (float)$this->currencyConverter->convert(
-                    (string)$balance,
+                $converted = $this->currencyConverter->convert(
+                    $balance,
                     $currency,
                     $targetCurrency
                 );
+                // Handle conversion result - could be string or array
+                $balance = is_array($converted) ? ($converted['amount'] ?? $converted['result'] ?? '0') : (string)$converted;
             }
 
-            $total += $balance;
+            $total = bcadd($total, $balance, 2);
         }
 
-        return (string)round($total, 2);
+        return $total;
     }
 
     /**
@@ -267,10 +269,10 @@ final readonly class CashPositionService
      */
     private function sumAmounts(array $transactions): string
     {
-        $total = 0.0;
+        $total = '0';
         foreach ($transactions as $tx) {
-            $total += (float)($tx['amount'] ?? 0);
+            $total = bcadd($total, (string)($tx['amount'] ?? '0'), 2);
         }
-        return (string)round($total, 2);
+        return $total;
     }
 }

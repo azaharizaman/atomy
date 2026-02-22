@@ -5,8 +5,22 @@ declare(strict_types=1);
 namespace Nexus\FinanceOperations\DataProviders;
 
 use Nexus\FinanceOperations\Contracts\DepreciationDataProviderInterface;
+use Nexus\FinanceOperations\Contracts\DepreciationManagerInterface;
+use Nexus\FinanceOperations\Contracts\AssetQueryInterface;
+use Nexus\FinanceOperations\Contracts\LedgerQueryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+
+/**
+ * Run status constants for depreciation runs.
+ */
+final class DepreciationRunStatus
+{
+    public const string PENDING = 'pending';
+    public const string RUNNING = 'running';
+    public const string COMPLETED = 'completed';
+    public const string FAILED = 'failed';
+}
 
 /**
  * Data provider for depreciation data aggregation.
@@ -24,9 +38,9 @@ use Psr\Log\NullLogger;
 final readonly class DepreciationDataProvider implements DepreciationDataProviderInterface
 {
     public function __construct(
-        private object $depreciationManager,  // DepreciationManagerInterface
-        private object $assetQuery,  // AssetQueryInterface
-        private ?object $glQuery = null,  // LedgerQueryInterface
+        private DepreciationManagerInterface $depreciationManager,
+        private AssetQueryInterface $assetQuery,
+        private ?LedgerQueryInterface $glQuery = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -94,35 +108,56 @@ final readonly class DepreciationDataProvider implements DepreciationDataProvide
         $result = [];
 
         foreach ($assetIds as $assetId) {
+            // Default structure with all expected keys
+            $assetResult = [
+                'asset_id' => $assetId,
+                'asset_code' => null,
+                'asset_name' => null,
+                'original_cost' => null,
+                'accumulated_depreciation' => null,
+                'book_value' => null,
+                'currency' => null,
+                'depreciation_method' => null,
+                'useful_life' => null,
+                'remaining_life' => null,
+                'status' => null,
+                'success' => false,
+                'error' => null,
+            ];
+
             try {
                 $asset = $this->assetQuery->find($tenantId, $assetId);
+                
+                if ($asset === null) {
+                    $assetResult['error'] = 'Asset not found';
+                    $result[] = $assetResult;
+                    continue;
+                }
+
                 $bookValue = $this->depreciationManager->getBookValue($tenantId, $assetId);
 
-                $result[] = [
-                    'asset_id' => $assetId,
-                    'asset_code' => $asset->getCode(),
-                    'asset_name' => $asset->getName(),
-                    'original_cost' => $asset->getOriginalCost(),
-                    'accumulated_depreciation' => $bookValue->getAccumulatedDepreciation(),
-                    'book_value' => $bookValue->getNetBookValue(),
-                    'currency' => $asset->getCurrency(),
-                    'depreciation_method' => $asset->getDepreciationMethod(),
-                    'useful_life' => $asset->getUsefulLife(),
-                    'remaining_life' => $bookValue->getRemainingLife(),
-                    'status' => $asset->getStatus(),
-                ];
+                $assetResult['asset_code'] = $asset->getCode();
+                $assetResult['asset_name'] = $asset->getName();
+                $assetResult['original_cost'] = $asset->getOriginalCost();
+                $assetResult['accumulated_depreciation'] = $bookValue->getAccumulatedDepreciation();
+                $assetResult['book_value'] = $bookValue->getNetBookValue();
+                $assetResult['currency'] = $asset->getCurrency();
+                $assetResult['depreciation_method'] = $asset->getDepreciationMethod();
+                $assetResult['useful_life'] = $asset->getUsefulLife();
+                $assetResult['remaining_life'] = $bookValue->getRemainingLife();
+                $assetResult['status'] = $asset->getStatus();
+                $assetResult['success'] = true;
+                $assetResult['error'] = null;
             } catch (\Throwable $e) {
                 $this->logger->warning('Failed to fetch asset book value', [
                     'tenant_id' => $tenantId,
                     'asset_id' => $assetId,
                     'error' => $e->getMessage(),
                 ]);
-
-                $result[] = [
-                    'asset_id' => $assetId,
-                    'error' => $e->getMessage(),
-                ];
+                $assetResult['error'] = $e->getMessage();
             }
+
+            $result[] = $assetResult;
         }
 
         return $result;
@@ -183,7 +218,8 @@ final readonly class DepreciationDataProvider implements DepreciationDataProvide
     private function hasPendingRuns(array $runs): bool
     {
         foreach ($runs as $run) {
-            if ($run->getStatus() === 'pending' || $run->getStatus() === 'running') {
+            $status = $run->getStatus();
+            if ($status === DepreciationRunStatus::PENDING || $status === DepreciationRunStatus::RUNNING) {
                 return true;
             }
         }

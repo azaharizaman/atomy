@@ -59,7 +59,8 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
     public function hasRequiredData(string $tenantId, string $periodId): bool
     {
         try {
-            $budgets = $this->budgetDataProvider->getBudgetData($tenantId, $periodId);
+            $budgetData = $this->budgetDataProvider->getBudgetData($tenantId, $periodId);
+            $budgets = $budgetData['budgets'] ?? [];
             return count($budgets) > 0;
         } catch (\Throwable $e) {
             return false;
@@ -110,7 +111,7 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                     budgetId: $request->budgetId,
                     availableAmount: $ruleResult->violations[0]['available'] ?? '0',
                     isAvailable: false,
-                    errorMessage: $ruleResult->violations[0]['message'] ?? 'Budget availability check failed',
+                    errorMessage: $ruleResult->message ?? 'Budget availability check failed',
                 );
             }
 
@@ -263,9 +264,9 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                 foreach ($serviceResult->exceededThresholds as $exceeded) {
                     $this->eventDispatcher?->dispatch(new class(
                         $request->tenantId,
-                        $exceeded['budget_id'] ?? $request->budgetId,
+                        $exceeded['budgetId'] ?? $request->budgetId,
                         $exceeded['threshold'],
-                        $exceeded['actual_percent']
+                        $exceeded['utilizationPercent']
                     ) {
                         public function __construct(
                             public string $tenantId,

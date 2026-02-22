@@ -31,6 +31,7 @@ final readonly class GLReconciliationService
     public function __construct(
         private GLReconciliationProviderInterface $dataProvider,
         private LoggerInterface $logger = new NullLogger(),
+        private string $suspenseAccountId = '9999',
     ) {}
 
     /**
@@ -66,9 +67,9 @@ final readonly class GLReconciliationService
 
             $subledgerBalance = $subledgerData['balance'] ?? '0';
             $glBalance = $glData['balance'] ?? '0';
-            $variance = (string)((float)$subledgerBalance - (float)$glBalance);
+            $variance = bcsub($subledgerBalance, $glBalance, 2);
 
-            $isReconciled = abs((float)$variance) < 0.01;
+            $isReconciled = bccomp($variance, '0.01', 2) < 0 || bccomp($variance, '-0.01', 2) === 0;
 
             if (!$isReconciled && $request->autoAdjust) {
                 // Attempt automatic adjustment
@@ -88,7 +89,14 @@ final readonly class GLReconciliationService
                     subledgerBalance: $subledgerBalance,
                     glBalance: $glBalance,
                     variance: $variance, // Keep actual variance until approved
-                    discrepancies: [],
+                    discrepancies: [
+                        [
+                            'type' => 'adjustment_proposal',
+                            'reference' => $adjustmentResult['adjustment_id'],
+                            'amount' => $adjustmentResult['adjustment_amount'],
+                            'description' => $adjustmentResult['message'],
+                        ],
+                    ],
                 );
             }
 
@@ -107,7 +115,7 @@ final readonly class GLReconciliationService
 
             return new GLReconciliationResult(
                 success: $isReconciled,
-                subledgerType: $request->subledgerType,
+                subledgerType: $request->subledgerType->value,
                 subledgerBalance: $subledgerBalance,
                 glBalance: $glBalance,
                 variance: $variance,
@@ -157,11 +165,12 @@ final readonly class GLReconciliationService
             $inconsistencies = [];
 
             foreach ($request->subledgerTypes as $type) {
-                $typeStatus = $status['details'][$type] ?? $status[$type] ?? null;
+                $typeValue = $type->value;
+                $typeStatus = $status['details'][$typeValue] ?? $status[$typeValue] ?? null;
                 
                 if ($typeStatus === null) {
-                    $checks[$type] = [
-                        'subledgerType' => $type,
+                    $checks[$typeValue] = [
+                        'subledgerType' => $typeValue,
                         'consistent' => false,
                         'subledgerBalance' => '0',
                         'glBalance' => '0',
@@ -174,8 +183,8 @@ final readonly class GLReconciliationService
                 $isReconciled = $typeStatus['is_reconciled'] ?? ($typeStatus['consistent'] ?? false);
                 $variance = $typeStatus['variance'] ?? '0';
                 
-                $checks[$type] = [
-                    'subledgerType' => $type,
+                $checks[$typeValue] = [
+                    'subledgerType' => $typeValue,
                     'consistent' => $isReconciled,
                     'subledgerBalance' => $typeStatus['subledger_balance'] ?? '0',
                     'glBalance' => $typeStatus['gl_balance'] ?? '0',
@@ -185,7 +194,7 @@ final readonly class GLReconciliationService
                 if (!$isReconciled) {
                     $allConsistent = false;
                     $inconsistencies[] = [
-                        'subledgerType' => $type,
+                        'subledgerType' => $typeValue,
                         'type' => 'variance',
                         'description' => sprintf('Variance of %s detected', $variance),
                         'amount' => $variance,
@@ -235,17 +244,18 @@ final readonly class GLReconciliationService
     /**
      * Get control account for subledger type.
      *
-     * @param string $subledgerType The subledger type
+     * @param SubledgerType $subledgerType The subledger type
      * @return string Control account code
      */
-    private function getControlAccountForSubledger(string $subledgerType): string
+    private function getControlAccountForSubledger(SubledgerType $subledgerType): string
     {
-        return match ($subledgerType) {
+        $typeValue = $subledgerType->value;
+        return match ($typeValue) {
             'receivable', 'AR' => 'AR_CONTROL',
             'payable', 'AP' => 'AP_CONTROL',
             'asset', 'FA' => 'ASSET_CONTROL',
             'inventory', 'INV' => 'INVENTORY_CONTROL',
-            default => strtoupper($subledgerType) . '_CONTROL',
+            default => strtoupper($typeValue) . '_CONTROL',
         };
     }
 
@@ -253,14 +263,15 @@ final readonly class GLReconciliationService
      * Filter discrepancies by subledger type.
      *
      * @param array<int, array<string, mixed>> $discrepancies All discrepancies
-     * @param string $subledgerType Subledger type to filter by
+     * @param SubledgerType $subledgerType Subledger type to filter by
      * @return array<int, array<string, mixed>> Filtered discrepancies
      */
-    private function filterDiscrepanciesByType(array $discrepancies, string $subledgerType): array
+    private function filterDiscrepanciesByType(array $discrepancies, SubledgerType $subledgerType): array
     {
+        $typeValue = $subledgerType->value;
         return array_values(array_filter(
             $discrepancies,
-            fn($d) => ($d['subledger_type'] ?? $d['type'] ?? '') === $subledgerType
+            fn($d) => ($d['subledger_type'] ?? $d['type'] ?? '') === $typeValue
         ));
     }
 
@@ -274,16 +285,16 @@ final readonly class GLReconciliationService
      *
      * @param string $tenantId The tenant identifier
      * @param string $periodId The period identifier
-     * @param string $subledgerType The subledger type
-     * @param string $subledgerBalance Subledger balance
-     * @param string $glBalance GL balance
+     * @param SubledgerType $subledgerType The subledger type
+     * @param string $subledgerBalance Subledger balance (for logging/validation)
+     * @param string $glBalance GL balance (for logging/validation)
      * @param string $variance The variance amount
      * @return array<string, mixed> Adjustment result
      */
     private function createAdjustingEntries(
         string $tenantId,
         string $periodId,
-        string $subledgerType,
+        SubledgerType $subledgerType,
         string $subledgerBalance,
         string $glBalance,
         string $variance
@@ -291,16 +302,20 @@ final readonly class GLReconciliationService
         $this->logger->warning('Creating adjusting entries', [
             'tenant_id' => $tenantId,
             'period_id' => $periodId,
-            'subledger_type' => $subledgerType,
+            'subledger_type' => $subledgerType->value,
+            'subledger_balance' => $subledgerBalance,
+            'gl_balance' => $glBalance,
             'variance' => $variance,
         ]);
 
-        // Determine the adjustment direction
-        $varianceAmount = (float)$variance;
-        $isDebitAdjustment = $varianceAmount > 0; // Subledger > GL means we need to debit GL
+        // Determine the adjustment direction using BCMath
+        $isDebitAdjustment = bccomp($variance, '0', 2) > 0; // Subledger > GL means we need to debit GL
 
         // Get the control account for the subledger
         $controlAccountId = $this->getControlAccountForSubledger($subledgerType);
+
+        // Calculate absolute value of variance for the adjustment amounts
+        $absVariance = bccomp($variance, '0', 2) >= 0 ? $variance : bcmul($variance, '-1', 2);
 
         // Create adjustment journal entry lines
         // Debit/Credit the difference to balance the GL to the subledger
@@ -312,23 +327,23 @@ final readonly class GLReconciliationService
                 'line_number' => 1,
                 'account_type' => 'control',
                 'account_id' => $controlAccountId,
-                'debit' => abs($varianceAmount),
-                'credit' => 0,
+                'debit' => $absVariance,
+                'credit' => '0',
                 'description' => sprintf(
                     'Reconciliation adjustment - %s subledger to GL variance',
-                    $subledgerType
+                    $subledgerType->value
                 ),
             ];
             // Credit to suspense/reconciliation account
             $adjustmentLines[] = [
                 'line_number' => 2,
                 'account_type' => 'suspense',
-                'account_id' => '9999', // Suspense account
-                'debit' => 0,
-                'credit' => abs($varianceAmount),
+                'account_id' => $this->suspenseAccountId,
+                'debit' => '0',
+                'credit' => $absVariance,
                 'description' => sprintf(
                     'Reconciliation suspense - %s variance',
-                    $subledgerType
+                    $subledgerType->value
                 ),
             ];
         } else {
@@ -337,30 +352,30 @@ final readonly class GLReconciliationService
                 'line_number' => 1,
                 'account_type' => 'control',
                 'account_id' => $controlAccountId,
-                'debit' => 0,
-                'credit' => abs($varianceAmount),
+                'debit' => '0',
+                'credit' => $absVariance,
                 'description' => sprintf(
                     'Reconciliation adjustment - %s subledger to GL variance',
-                    $subledgerType
+                    $subledgerType->value
                 ),
             ];
             // Debit from suspense/reconciliation account
             $adjustmentLines[] = [
                 'line_number' => 2,
                 'account_type' => 'suspense',
-                'account_id' => '9999', // Suspense account
-                'debit' => abs($varianceAmount),
-                'credit' => 0,
+                'account_id' => $this->suspenseAccountId,
+                'debit' => $absVariance,
+                'credit' => '0',
                 'description' => sprintf(
                     'Reconciliation suspense - %s variance',
-                    $subledgerType
+                    $subledgerType->value
                 ),
             ];
         }
 
         // Generate adjustment proposal ID
         $adjustmentId = sprintf('ADJ-%s-%s-%s', 
-            strtoupper($subledgerType), 
+            strtoupper($subledgerType->value), 
             $periodId, 
             bin2hex(random_bytes(4))
         );
@@ -376,7 +391,7 @@ final readonly class GLReconciliationService
             'journal_lines' => $adjustmentLines,
             'message' => sprintf(
                 'Adjustment proposal created for %s variance. Requires approval before posting.',
-                $subledgerType
+                $subledgerType->value
             ),
             'created_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
             'requires_approval' => true,

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Nexus\FinanceOperations\DataProviders;
 
 use Nexus\FinanceOperations\Contracts\BudgetVarianceProviderInterface;
+use Nexus\FinanceOperations\Contracts\BudgetQueryInterface;
+use Nexus\FinanceOperations\Contracts\LedgerQueryInterface;
+use Nexus\FinanceOperations\Contracts\CostQueryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -24,9 +27,9 @@ use Psr\Log\NullLogger;
 final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInterface
 {
     public function __construct(
-        private object $budgetQuery,  // BudgetQueryInterface
-        private object $glQuery,  // LedgerQueryInterface
-        private ?object $costQuery = null,  // CostQueryInterface
+        private BudgetQueryInterface $budgetQuery,
+        private LedgerQueryInterface $glQuery,
+        private ?CostQueryInterface $costQuery = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -146,7 +149,12 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
                     $actual['account_code'],
                     $actual['cost_center_id']
                 );
-                $actualsByKey[$key] = $actual['actual_amount'];
+                // Aggregate by summing instead of overwriting
+                if (isset($actualsByKey[$key])) {
+                    $actualsByKey[$key] = bcadd($actualsByKey[$key], (string) $actual['actual_amount'], 2);
+                } else {
+                    $actualsByKey[$key] = (string) $actual['actual_amount'];
+                }
             }
 
             $variances = [];
@@ -164,7 +172,7 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
 
                 $budgeted = $budget['budgeted_amount'];
                 $actual = $actualsByKey[$key] ?? '0';
-                $variance = (string)((float) $budgeted - (float) $actual);
+                $variance = bcsub($budgeted, $actual, 2);
 
                 // Determine if favorable or unfavorable
                 // For revenue accounts, positive variance is favorable
@@ -186,15 +194,15 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
                     'budgeted' => $budgeted,
                     'actual' => $actual,
                     'variance' => $variance,
-                    'variance_percent' => (float) $budgeted !== 0.0
-                        ? round(((float) $variance / (float) $budgeted) * 100, 2)
-                        : 0.0,
+                    'variance_percent' => bccomp($budgeted, '0', 2) !== 0
+                        ? round((float) bcdiv($variance, $budgeted, 4) * 100, 2)
+                        : '0',
                     'is_favorable' => $isFavorable,
                 ];
 
-                $totalBudgeted = (string)((float) $totalBudgeted + (float) $budgeted);
-                $totalActual = (string)((float) $totalActual + (float) $actual);
-                $totalVariance = (string)((float) $totalVariance + (float) $variance);
+                $totalBudgeted = bcadd($totalBudgeted, $budgeted, 2);
+                $totalActual = bcadd($totalActual, $actual, 2);
+                $totalVariance = bcadd($totalVariance, $variance, 2);
             }
 
             // Get committed costs if available
@@ -211,7 +219,7 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
                             'type' => $item->getType(),
                             'vendor_id' => $item->getVendorId(),
                         ];
-                        $totalCommitted = (string)((float) $totalCommitted + (float) $item->getAmount());
+                        $totalCommitted = bcadd($totalCommitted, $item->getAmount(), 2);
                     }
                 } catch (\Throwable $e) {
                     $this->logger->warning('Failed to fetch committed costs', [
@@ -229,10 +237,10 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
                 'total_actual' => $totalActual,
                 'total_variance' => $totalVariance,
                 'total_committed' => $totalCommitted,
-                'available_budget' => (string)((float) $totalBudgeted - (float) $totalActual - (float) $totalCommitted),
-                'variance_percent' => (float) $totalBudgeted !== 0.0
-                    ? round(((float) $totalVariance / (float) $totalBudgeted) * 100, 2)
-                    : 0.0,
+                'available_budget' => bcsub(bcsub($totalBudgeted, $totalActual, 2), $totalCommitted, 2),
+                'variance_percent' => bccomp($totalBudgeted, '0', 2) !== 0
+                    ? round((float) bcdiv($totalVariance, $totalBudgeted, 4) * 100, 2)
+                    : '0',
                 'favorable_count' => $favorableCount,
                 'unfavorable_count' => $unfavorableCount,
                 'variances' => $variances,
@@ -266,11 +274,11 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
      */
     private function calculateTotalBudget(array $items): string
     {
-        $total = 0.0;
+        $total = '0';
         foreach ($items as $item) {
-            $total += (float) ($item['budgeted_amount'] ?? 0);
+            $total = bcadd($total, (string) ($item['budgeted_amount'] ?? '0'), 2);
         }
-        return (string) $total;
+        return $total;
     }
 
     /**
@@ -280,11 +288,11 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
      */
     private function calculateTotalActual(array $items): string
     {
-        $total = 0.0;
+        $total = '0';
         foreach ($items as $item) {
-            $total += (float) ($item['actual_amount'] ?? 0);
+            $total = bcadd($total, (string) ($item['actual_amount'] ?? '0'), 2);
         }
-        return (string) $total;
+        return $total;
     }
 
     /**
@@ -311,8 +319,6 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
      */
     private function isVarianceFavorable(string $variance, string $accountCode): bool
     {
-        $varianceValue = (float) $variance;
-
         // Determine account type from account code prefix
         // This is a simplified approach - real implementation would use account type from COA
         $prefix = substr($accountCode, 0, 1);
@@ -320,11 +326,11 @@ final readonly class BudgetVarianceProvider implements BudgetVarianceProviderInt
         // Revenue/income accounts (typically start with 4)
         // For revenue, when actual > budget (negative variance), it's favorable
         if ($prefix === '4') {
-            return $varianceValue <= 0;
+            return bccomp($variance, '0', 2) <= 0;
         }
 
         // Expense accounts (typically start with 5-9)
         // For expenses, under-budget (positive variance) is favorable
-        return $varianceValue >= 0;
+        return bccomp($variance, '0', 2) >= 0;
     }
 }

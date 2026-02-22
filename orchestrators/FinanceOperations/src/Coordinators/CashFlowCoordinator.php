@@ -101,14 +101,17 @@ final readonly class CashFlowCoordinator implements CashFlowCoordinatorInterface
             $serviceResult = $this->cashPositionService->getPosition($serviceRequest);
 
             // Convert back to interface DTO
-            $balance = 0.0;
+            $balance = "0";
             $balances = [];
             foreach ($serviceResult->positions as $position) {
                 $balances[$position['bank_account_id']] = (float)$position['balance'];
-                $balance += (float)$position['balance'];
+                $balance = bcadd($balance, (string)$position['balance'], 2);
             }
 
             $result = new CashPositionResult(
+                success: $serviceResult->success,
+                bankAccountId: $request->bankAccountId,
+                balance: (float)$balance,
                 success: $serviceResult->success,
                 bankAccountId: $request->bankAccountId,
                 balance: $balance,
@@ -216,13 +219,11 @@ final readonly class CashFlowCoordinator implements CashFlowCoordinatorInterface
             // Get reconciliation data from provider
             $reconData = $this->treasuryDataProvider->getBankReconciliationData(
                 $request->tenantId,
-                $request->bankAccountId,
-                $request->periodId
+                $request->bankAccountId
             );
 
             $matched = $reconData['matched_count'] ?? 0;
             $unmatched = $reconData['unmatched_count'] ?? 0;
-            $discrepancies = $reconData['discrepancies'] ?? [];
 
             // Dispatch completion event
             $this->eventDispatcher?->dispatch(new class(

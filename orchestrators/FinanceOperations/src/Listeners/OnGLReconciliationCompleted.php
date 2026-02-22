@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Listeners;
 
+use Nexus\FinanceOperations\Contracts\NotificationServiceInterface;
+use Nexus\FinanceOperations\Contracts\TaskServiceInterface;
+use Nexus\FinanceOperations\DTOs\GLReconciliationCompletedEvent;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -20,74 +23,68 @@ use Psr\Log\NullLogger;
 final readonly class OnGLReconciliationCompleted
 {
     public function __construct(
-        private ?object $notificationService = null,
-        private ?object $taskService = null,
+        private ?NotificationServiceInterface $notificationService = null,
+        private ?TaskServiceInterface $taskService = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
     /**
      * Handle the GL reconciliation completed event.
      * 
-     * @param object $event The reconciliation event containing:
-     *                      - tenantId: string
-     *                      - periodId: string
-     *                      - subledgerType: string
-     *                      - isReconciled: bool
-     *                      - discrepancies: array
+     * @param GLReconciliationCompletedEvent $event The reconciliation event containing:
+     *                                              - tenantId: string
+     *                                              - periodId: string
+     *                                              - subledgerType: string
+     *                                              - isReconciled: bool
+     *                                              - discrepancies: array
      */
-    public function handle(object $event): void
+    public function handle(GLReconciliationCompletedEvent $event): void
     {
         $this->logger->info('Handling GL reconciliation completed event', [
-            'tenant_id' => $event->tenantId ?? 'unknown',
-            'subledger_type' => $event->subledgerType ?? 'unknown',
-            'is_reconciled' => $event->isReconciled ?? false,
+            'tenant_id' => $event->tenantId,
+            'subledger_type' => $event->subledgerType,
+            'is_reconciled' => $event->isReconciled,
         ]);
 
-        try {
-            // If not reconciled, create adjustment tasks
-            if (!$event->isReconciled && !empty($event->discrepancies)) {
-                $this->logger->warning('Reconciliation discrepancies found', [
-                    'discrepancy_count' => count($event->discrepancies),
-                ]);
+        // If not reconciled, create adjustment tasks
+        if (!$event->isReconciled && !empty($event->discrepancies)) {
+            $this->logger->warning('Reconciliation discrepancies found', [
+                'discrepancy_count' => count($event->discrepancies),
+            ]);
 
-                if ($this->taskService !== null) {
-                    foreach ($event->discrepancies as $discrepancy) {
-                        $this->logger->info('Creating adjustment task', [
-                            'discrepancy' => $discrepancy,
+            if ($this->taskService !== null) {
+                foreach ($event->discrepancies as $discrepancy) {
+                    $this->logger->info('Creating adjustment task', [
+                        'discrepancy' => $discrepancy,
+                    ]);
+                    // Invoke the task service
+                    try {
+                        $this->taskService->createAdjustmentTask($discrepancy);
+                    } catch (\Throwable $e) {
+                        $this->logger->error('Failed to create adjustment task', [
+                            'error' => $e->getMessage(),
                         ]);
-                        // Invoke the task service
-                        try {
-                            $this->taskService->createAdjustmentTask($discrepancy);
-                        } catch (\Throwable $e) {
-                            $this->logger->error('Failed to create adjustment task', [
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
                     }
                 }
             }
-
-            // Notify finance team
-            if ($this->notificationService !== null) {
-                $this->logger->info('Sending reconciliation notification');
-                // Invoke the notification service
-                try {
-                    $this->notificationService->notifyReconciliationCompleted([
-                        'is_reconciled' => $event->isReconciled,
-                        'discrepancy_count' => count($event->discrepancies ?? []),
-                    ]);
-                } catch (\Throwable $e) {
-                    $this->logger->error('Failed to send reconciliation notification', [
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-
-            $this->logger->info('GL reconciliation event processed successfully');
-        } catch (\Throwable $e) {
-            $this->logger->error('Exception in GL reconciliation event handler', [
-                'error' => $e->getMessage(),
-            ]);
         }
+
+        // Notify finance team
+        if ($this->notificationService !== null) {
+            $this->logger->info('Sending reconciliation notification');
+            // Invoke the notification service
+            try {
+                $this->notificationService->notifyReconciliationCompleted([
+                    'is_reconciled' => $event->isReconciled,
+                    'discrepancy_count' => count($event->discrepancies),
+                ]);
+            } catch (\Throwable $e) {
+                $this->logger->error('Failed to send reconciliation notification', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $this->logger->info('GL reconciliation event processed successfully');
     }
 }
