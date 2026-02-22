@@ -1090,3 +1090,182 @@ accumulatedDepreciation: $this->accumulatedDepreciation + $other->accumulatedDep
 - Design interfaces for real-world queries
 - Consider multi-tenancy, point-in-time, and type-specific lookups
 - Don't simplify interfaces in ways that lose important capabilities
+
+---
+
+## Test Writing Guidelines (from FixedAssetDepreciation PR #234)
+
+> Identified during code review on 2026-02-22
+
+### 1. Namespace Consistency
+
+**Rule**: Always use the correct namespace segment "Tests" (plural), not "Test" (singular).
+
+```php
+// WRONG
+namespace Nexus\FixedAssetDepreciation\Test\Unit\Entities;
+
+// CORRECT
+namespace Nexus\FixedAssetDepreciation\Tests\Unit\Entities;
+```
+
+### 2. Test Class Modifiers
+
+**Rule**: Mark test classes as `final` for consistency and to prevent unintended extension.
+
+```php
+// CORRECT
+final class AssetRevaluationTest extends TestCase
+```
+
+### 3. Date Test Values Must Be Deterministic
+
+**Rule**: Avoid boundary dates that can produce ambiguous inclusive/exclusive behavior. Use dates clearly inside the expected period.
+
+```php
+// WRONG - boundary date
+$asOfDate = new DateTimeImmutable('2024-02-01'); // Exactly on period boundary
+
+// CORRECT - date inside period
+$asOfDate = new DateTimeImmutable('2024-01-15'); // Clearly in period 1
+// or
+$asOfDate = new DateTimeImmutable('2024-01-31'); // End of period 1
+```
+
+### 4. String Interpolation for Dates
+
+**Rule**: Use proper zero-padding for date components to avoid invalid months.
+
+```php
+// WRONG - produces invalid months for periodNumber >= 10
+$date = "2024-0{$periodNumber}-01"; // "2024-010-01" is invalid
+
+// CORRECT - use sprintf or str_pad
+$date = sprintf('%04d-%02d-%02d', 2024, $periodNumber, 1);
+// or
+$date = '2024-' . str_pad($periodNumber, 2, '0', STR_PAD_LEFT) . '-01';
+```
+
+### 5. Match Test Assertions to Implementation
+
+**Rule**: Verify the actual implementation behavior before writing assertions. Don't assume behavior—check the source code.
+
+```php
+// WRONG - assuming supportsProrate returns true
+$this->assertTrue($method->supportsProrate());
+
+// CORRECT - check implementation and assert accordingly
+$this->assertFalse($method->supportsProrate()); // Based on actual behavior
+```
+
+### 6. Use Public API Instead of Reflection
+
+**Rule**: Test through public methods, not reflection. If you need reflection to test, the API may need improvement.
+
+```php
+// WRONG - testing private state via reflection
+$reflection = new ReflectionClass($method);
+$property = $reflection->getProperty('bonusRate');
+$property->setAccessible(true);
+$value = $property->getValue($method);
+
+// CORRECT - use public accessors
+$value = $method->getBonusRate();
+```
+
+### 7. Add Readonly to Test Properties
+
+**Rule**: Use PHP 8.3 readonly modifier for properties that are only assigned once (in setUp or constructor).
+
+```php
+// CORRECT
+private readonly DepreciationSchedule $schedule;
+private readonly array $testPeriods;
+```
+
+### 8. Exact Value Assertions
+
+**Rule**: Use exact assertions (assertEquals/assertSame) instead of loose assertions when possible.
+
+```php
+// WRONG - too loose
+$this->assertGreaterThanOrEqual(3000.00, $result);
+
+// CORRECT - exact value
+$this->assertSame(3000.00, $result);
+```
+
+### 9. Match Test Method Names to Assertions
+
+**Rule**: Keep test method names in sync with what they actually test.
+
+```php
+// WRONG
+public function testGetMinimumUsefulLifeMonths_returns12(): void
+{
+    $this->assertEquals(1, $this->method->getMinimumUsefulLifeMonths());
+}
+
+// CORRECT
+public function testGetMinimumUsefulLifeMonths_returns1(): void
+{
+    $this->assertEquals(1, $this->method->getMinimumUsefulLifeMonths());
+}
+```
+
+### 10. Remove Unused Imports
+
+**Rule**: Clean up any unused use statements to keep code tidy.
+
+```php
+// Remove this if not used
+use Nexus\FixedAssetDepreciation\ValueObjects\DepreciationRunResult;
+```
+
+### 11. Test Production Behavior, Not Assumptions
+
+**Rule**: When testing methods that may have fallback behavior, verify the actual behavior instead of expecting exceptions.
+
+```php
+// WRONG - assuming it throws
+$this->expectException(InvalidArgumentException::class);
+$method->calculate($cost, $life, 0); // interest rate
+
+// CORRECT - test actual fallback behavior
+$result = $method->calculate($cost, $life, 0);
+$this->assertInstanceOf(DepreciationAmount::class, $result);
+```
+
+### 12. Validate toArray Key Formats
+
+**Rule**: Ensure toArray() methods return consistent key formats (camelCase or snake_case) and match test expectations.
+
+```php
+// If implementation uses camelCase
+return [
+    'periodId' => $this->periodId,
+    'totalAssets' => $this->totalAssets,
+];
+
+// Test must match
+$this->assertArrayHasKey('periodId', $array);
+$this->assertArrayHasKey('totalAssets', $array);
+```
+
+### 13. JSON Serialization Tests
+
+**Rule**: Test actual JSON encoding, not just that jsonSerialize() returns an array.
+
+```php
+// WRONG - only checks return type
+$this->assertIsArray($adjustment->jsonSerialize());
+
+// CORRECT - tests actual JSON encoding
+$json = json_encode($adjustment);
+$this->assertNotFalse($json);
+$this->assertJson($json);
+$decoded = json_decode($json, true);
+$this->assertEquals('adj_015', $decoded['id']);
+```
+
+---

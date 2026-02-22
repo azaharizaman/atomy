@@ -173,7 +173,7 @@ final class DepreciationScheduleTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function getAccumulatedDepreciation_withAsOfDate_returnsAccumulatedUpToDate(): void
     {
-        // Calculate as of end of period 1
+        // Calculate as of start of period 2 (returns accumulated through period 1)
         $asOfDate = new \DateTimeImmutable('2024-02-01');
         
         // The accumulated should be at least 3000 (first period)
