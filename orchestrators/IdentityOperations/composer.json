@@ -1,6 +1,6 @@
 {
-    "name": "nexus/settings-management",
-    "description": "Non-operational orchestrator for system-wide configuration management - defines interfaces for settings, feature flags, period, and audit operations",
+    "name": "nexus/identity-operations",
+    "description": "Non-operational orchestrator for user lifecycle management - defines interfaces for Identity, Tenant, and AuditLogger operations",
     "type": "library",
     "license": "MIT",
     "require": {
@@ -14,12 +14,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\\SettingsManagement\\": "src/"
+            "Nexus\\IdentityOperations\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\\SettingsManagement\\Tests\\": "tests/"
+            "Nexus\\IdentityOperations\\Tests\\": "tests/"
         }
     },
     "repositories": [
