@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Laravel\Identity\Adapters;
 
 use Nexus\Identity\Contracts\CacheRepositoryInterface;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Cache\Store;
 use Psr\Log\LoggerInterface;
 
@@ -13,10 +14,17 @@ use Psr\Log\LoggerInterface;
  */
 class CacheRepositoryAdapter implements CacheRepositoryInterface
 {
+    /**
+     * @var Repository
+     */
+    private $cache;
+
     public function __construct(
-        private readonly Store $cache,
+        Repository $cache,
         private readonly LoggerInterface $logger
-    ) {}
+    ) {
+        $this->cache = $cache;
+    }
 
     /**
      * {@inheritdoc}
@@ -40,7 +48,17 @@ class CacheRepositoryAdapter implements CacheRepositoryInterface
      */
     public function remember(string $key, int $ttl, callable $callback): mixed
     {
-        $value = $this->cache->remember($key, $ttl, $callback);
+        // Implement remember logic manually since we're using Repository
+        // (Store interface doesn't have remember() method)
+        $value = $this->cache->get($key);
+        
+        if ($value !== null) {
+            return $value;
+        }
+        
+        $value = $callback();
+        $this->cache->put($key, $value, $ttl);
+        
         return $value;
     }
 
