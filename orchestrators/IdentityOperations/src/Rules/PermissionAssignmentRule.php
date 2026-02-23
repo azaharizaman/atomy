@@ -55,13 +55,11 @@ final readonly class PermissionAssignmentRule implements UserValidationRuleInter
 
         // Check if user already has this permission
         if ($this->permissionValidator->userHasPermission($userId, $permission, $tenantId)) {
-            return ValidationResult::failed([
-                [
-                    'rule' => $this->getName(),
-                    'message' => "User '{$userId}' already has permission '{$permission}'",
-                    'severity' => 'warning',
-                ],
-            ]);
+            return ValidationResult::passed()->withWarning(
+                $this->getName(),
+                "User '{$userId}' already has permission '{$permission}'",
+                'warning',
+            );
         }
 
         return ValidationResult::passed();

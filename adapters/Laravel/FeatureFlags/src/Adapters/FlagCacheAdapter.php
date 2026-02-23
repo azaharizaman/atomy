@@ -55,8 +55,7 @@ class FlagCacheAdapter implements FlagCacheInterface
      */
     public function delete(string $key): bool
     {
-        $this->cache->forget($key);
-        return true;
+        return $this->cache->forget($key);
     }
 
     /**
@@ -64,10 +63,13 @@ class FlagCacheAdapter implements FlagCacheInterface
      */
     public function deleteMultiple(array $keys): bool
     {
+        $allSuccess = true;
         foreach ($keys as $key) {
-            $this->cache->forget($key);
+            if (!$this->cache->forget($key)) {
+                $allSuccess = false;
+            }
         }
-        return true;
+        return $allSuccess;
     }
 
     /**

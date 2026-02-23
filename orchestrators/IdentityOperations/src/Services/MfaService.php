@@ -101,7 +101,7 @@ final readonly class MfaService implements MfaServiceInterface
 
             // Check remaining attempts
             $attempts = $this->verifier->getFailedAttempts($request->userId);
-            $remaining = self::MAX_VERIFICATION_ATTEMPTS - $attempts;
+            $remaining = max(0, self::MAX_VERIFICATION_ATTEMPTS - $attempts);
 
             $this->auditLogger->log(
                 'mfa.verification_failed',

@@ -23,9 +23,8 @@ class SettingRepositoryAdapter implements SettingRepositoryInterface
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        $cached = $this->cache->get("setting:{$key}");
-        if ($cached !== null) {
-            return $cached;
+        if ($this->cache->has("setting:{$key}")) {
+            return $this->cache->get("setting:{$key}");
         }
         
         return $default;

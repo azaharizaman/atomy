@@ -36,6 +36,21 @@ final readonly class ValidationResult
     }
 
     /**
+     * Add a warning to the result while keeping it passed.
+     */
+    public function withWarning(string $rule, string $message, string $severity = 'warning'): self
+    {
+        $errors = $this->errors;
+        $errors[] = [
+            'rule' => $rule,
+            'message' => $message,
+            'severity' => $severity,
+        ];
+
+        return new self(passed: true, errors: $errors);
+    }
+
+    /**
      * Add an error to the result.
      */
     public function withError(string $rule, string $message, string $severity = 'error'): self

@@ -25,8 +25,10 @@ class SettingsCacheAdapter implements SettingsCacheInterface
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        $value = $this->cache->get($key);
-        return $value ?? $default;
+        if ($this->cache->has($key)) {
+            return $this->cache->get($key);
+        }
+        return $default;
     }
 
     /**

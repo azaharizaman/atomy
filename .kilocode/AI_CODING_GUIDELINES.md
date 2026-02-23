@@ -73,7 +73,7 @@ public function remember(string $key, int $ttl, callable $callback): mixed
 - Alternatively, implement the logic manually by checking `get()`, calling callback if null, then `put()`
 - Check Laravel documentation to verify which interface provides which methods
 
-### 2. Database Operations Must Be Atomic
+### 3. Database Operations Must Be Atomic
 
 **Problem**: Multiple repository calls without transaction wrapping can lead to partial state updates.
 
@@ -104,7 +104,7 @@ public function convertQuoteToOrder(QuoteId $quoteId): Order
 - Consider rollback scenarios and ensure data consistency
 - Ask: "If the second operation fails, what happens to the first?"
 
-### 3. Foreign Key Constraints Are Mandatory
+### 4. Foreign Key Constraints Are Mandatory
 
 **Problem**: Missing FK constraints lead to orphaned records and referential integrity issues.
 
@@ -129,7 +129,7 @@ $table->foreign('product_id')->references('id')->on('products')->onDelete('restr
   - `SET NULL`: Clear reference (only if column is nullable)
 - Document the reasoning for the chosen action in migration comments
 
-### 4. Proper ID Generation
+### 5. Proper ID Generation
 
 **Problem**: Using inappropriate ID generation methods.
 
@@ -1107,21 +1107,22 @@ public function createUser(array $data): UserCreateResult
 
 ### 4. DateTime Format Standards
 
-**Problem**: Using deprecated `ISO8601` constant instead of `DateTimeInterface::ATOM`.
+**Problem**: Using `DateTime::ISO8601` produces a non-standard ISO-8601 string (missing the colon in timezone offset). Use `DateTimeInterface::ATOM` for standard ISO-8601 output.
 
 **Example**:
 ```php
-// WRONG - Using deprecated constant
+// WRONG - Using non-standard ISO8601 constant
 $dateString = $date->format(\DateTime::ISO8601);
 
-// CORRECT - Using ATOM constant
+// CORRECT - Using ATOM constant for RFC3339/ISO-8601 compliance
 $dateString = $date->format(DateTimeInterface::ATOM);
 ```
 
 **Prevention**:
-- Never use deprecated `ISO8601` constant
+- Never use `DateTime::ISO8601` as it produces non-standard output
 - Always use `DateTimeInterface::ATOM` for ISO-8601 formatted dates
-- This ensures compatibility with PHP 8+ and avoids deprecation warnings
+- This ensures the timezone offset includes the colon (e.g., `+00:00` instead of `+0000`)
+- Use `DateTimeInterface::ATOM` for RFC3339 compliance
 
 ### 5. Interface Definition Requirements
 

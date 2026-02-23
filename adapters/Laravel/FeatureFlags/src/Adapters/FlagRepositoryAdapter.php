@@ -88,7 +88,6 @@ class FlagRepositoryAdapter implements FlagRepositoryInterface
      */
     public function all(?string $tenantId = null): array
     {
-        // Implementation would load from database
-        return [];
+        throw new \BadMethodCallException('FlagRepositoryAdapter::all() is not yet implemented. This adapter currently supports cache-only storage.');
     }
 }

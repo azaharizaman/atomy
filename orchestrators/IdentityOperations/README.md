@@ -143,7 +143,7 @@ This orchestrator follows the **Advanced Orchestrator Pattern** with these princ
 
 ## Directory Structure
 
-```
+```text
 src/
 ├── Coordinators/           # Entry points for operations
 ├── DataProviders/         # Cross-package data aggregation
@@ -185,7 +185,7 @@ composer require nexus/identity-operations
 
 ## Architecture Layers
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    Adapters (L3)                        │
 │   Implements orchestrator interfaces                    │

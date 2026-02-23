@@ -6,9 +6,7 @@ This adapter provides Laravel-specific implementations for the Setting package, 
 
 The Setting package is an atomic package that must remain independently publishable. This adapter layer provides the concrete implementations that integrate Setting with the Laravel framework:
 
-- **Database persistence** - Uses Laravel's Eloquent ORM
 - **Cache integration** - Uses Laravel's cache system
-- **Schema validation** - Uses Laravel's validation system
 
 ## Installation
 
@@ -20,7 +18,9 @@ composer require nexus/laravel-setting-adapter
 
 ### SettingRepositoryAdapter
 
-Implements `Nexus\Setting\Contracts\SettingRepositoryInterface` by using Laravel's database for persistence.
+Implements `Nexus\Setting\Contracts\SettingRepositoryInterface` using cache-only storage.
+
+> **TODO:** Database persistence is not yet implemented. Currently delegates to SettingsCacheAdapter.
 
 ### SettingsCacheAdapter
 

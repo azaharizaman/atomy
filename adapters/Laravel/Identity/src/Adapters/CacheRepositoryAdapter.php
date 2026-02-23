@@ -6,7 +6,6 @@ namespace Nexus\Laravel\Identity\Adapters;
 
 use Nexus\Identity\Contracts\CacheRepositoryInterface;
 use Illuminate\Contracts\Cache\Repository;
-use Illuminate\Contracts\Cache\Store;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -14,25 +13,17 @@ use Psr\Log\LoggerInterface;
  */
 class CacheRepositoryAdapter implements CacheRepositoryInterface
 {
-    /**
-     * @var Repository
-     */
-    private $cache;
-
     public function __construct(
-        Repository $cache,
+        private readonly Repository $cache,
         private readonly LoggerInterface $logger
-    ) {
-        $this->cache = $cache;
-    }
+    ) {}
 
     /**
      * {@inheritdoc}
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        $value = $this->cache->get($key);
-        return $value ?? $default;
+        return $this->cache->get($key, $default);
     }
 
     /**
@@ -48,18 +39,7 @@ class CacheRepositoryAdapter implements CacheRepositoryInterface
      */
     public function remember(string $key, int $ttl, callable $callback): mixed
     {
-        // Implement remember logic manually since we're using Repository
-        // (Store interface doesn't have remember() method)
-        $value = $this->cache->get($key);
-        
-        if ($value !== null) {
-            return $value;
-        }
-        
-        $value = $callback();
-        $this->cache->put($key, $value, $ttl);
-        
-        return $value;
+        return $this->cache->remember($key, $ttl, $callback);
     }
 
     /**
@@ -101,11 +81,7 @@ class CacheRepositoryAdapter implements CacheRepositoryInterface
      */
     public function add(string $key, mixed $value, int $ttl): bool
     {
-        // Check if key exists first
-        if ($this->has($key)) {
-            return false;
-        }
-        return $this->put($key, $value, $ttl);
+        return $this->cache->add($key, $value, $ttl);
     }
 
     /**
@@ -125,10 +101,13 @@ class CacheRepositoryAdapter implements CacheRepositoryInterface
      */
     public function putMany(array $values, int $ttl): bool
     {
+        $success = true;
         foreach ($values as $key => $value) {
-            $this->put($key, $value, $ttl);
+            if (!$this->put($key, $value, $ttl)) {
+                $success = false;
+            }
         }
-        return true;
+        return $success;
     }
 
     /**
@@ -136,19 +115,26 @@ class CacheRepositoryAdapter implements CacheRepositoryInterface
      */
     public function forgetMany(array $keys): bool
     {
+        $success = true;
         foreach ($keys as $key) {
-            $this->forget($key);
+            if (!$this->forget($key)) {
+                $success = false;
+            }
         }
-        return true;
+        return $success;
     }
 
     /**
      * {@inheritdoc}
+     * 
+     * Flushing is intentionally disabled for security reasons.
+     * Use forget() or forgetMany() for targeted cache invalidation.
+     * 
+     * @throws \RuntimeException Always thrown to prevent accidental full cache flush
      */
     public function flush(): bool
     {
-        $this->logger->warning('Cache flush called on Identity cache');
-        return false;
+        throw new \RuntimeException('Cache flush is disabled for security reasons. Use forget() or forgetMany() for targeted invalidation.');
     }
 
     /**
