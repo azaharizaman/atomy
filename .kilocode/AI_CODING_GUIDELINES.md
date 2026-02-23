@@ -1050,7 +1050,7 @@ class UserCreationException extends \Exception
 // CORRECT - Readonly exception property
 class UserCreationException extends \Exception
 {
-    readonly private string $context;
+    private readonly string $context;
     
     public function __construct(string $message, string $context)
     {
@@ -1199,7 +1199,7 @@ public function test_order_total_includes_tax(): void
 - PII Leakage Prevention: Never log full user data arrays, hash sensitive data like emails
 - PHP 8.3 Readonly Properties: Mark exception properties as readonly for PHP 8.3 compliance
 - Error Message Security: Never return raw exception messages to callers
-- DateTime Format Standards: Use DateTimeInterface::ATOM instead of deprecated ISO8601
+- DateTime Format Standards: DateTime::ISO8601 produces a non-standard format; use DateTimeInterface::ATOM instead
 - Interface Definition Requirements: Ensure all referenced interfaces are properly defined
 
 ### 2026-02-22 - FinanceOperations PR #235 Review

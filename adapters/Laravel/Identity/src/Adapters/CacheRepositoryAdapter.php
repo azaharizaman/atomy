@@ -52,11 +52,12 @@ class CacheRepositoryAdapter implements CacheRepositoryInterface
 
     /**
      * {@inheritdoc}
+     * 
+     * Delegates to Laravel cache repository's increment method.
+     * Note: Not all cache stores support atomic increment (e.g., ArrayStore).
      */
     public function increment(string $key, int $value = 1): int
     {
-        // Laravel cache doesn't support increment directly on all stores
-        // This would need a custom implementation
         return $this->cache->increment($key, $value);
     }
 
@@ -139,11 +140,14 @@ class CacheRepositoryAdapter implements CacheRepositoryInterface
 
     /**
      * {@inheritdoc}
+     * 
+     * Note: Returns 0 to indicate TTL retrieval is not supported by Laravel cache.
+     * This does NOT mean "no TTL" or "key not found" - those are semantically different.
+     * Laravel's cache repository does not expose TTL information.
      */
     public function getTtl(string $key): int
     {
-        // Laravel cache doesn't expose TTL directly
-        // This would need a custom implementation
+        $this->logger->debug('getTtl called but is not supported by Laravel cache repository', ['key' => $key]);
         return 0;
     }
 }

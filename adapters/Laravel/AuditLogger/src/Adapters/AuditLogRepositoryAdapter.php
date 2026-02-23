@@ -29,7 +29,9 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             'causer_type' => $data['causer_type'] ?? null,
             'causer_id' => isset($data['causer_id']) ? substr($data['causer_id'], 0, 8) . '...' : null,
             'timestamp' => $data['created_at'] ?? (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
-            'data_keys' => array_keys($data['changes'] ?? $data),
+            'data_keys' => isset($data['changes']) && is_array($data['changes']) 
+                ? array_keys($data['changes']) 
+                : array_keys($data),
         ]);
         
         // Implementation would use Eloquent model
@@ -57,7 +59,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
         string $sortBy = 'created_at',
         string $sortDirection = 'desc'
     ): array {
-        $this->logger->debug('Searching audit logs', ['filters' => $filters]);
+        $this->logger->debug('Searching audit logs', ['filter_keys' => array_keys($filters)]);
         
         return [
             'data' => [],
@@ -70,12 +72,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function getBySubject(string $subjectType, $subjectId, int $limit = 100): array
     {
-        $this->logger->debug('Getting audit logs by subject', [
-            'subject_type' => $subjectType,
-            'subject_id' => $subjectId,
-        ]);
-        
-        return [];
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 
     /**
@@ -83,7 +80,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function getByCauser(string $causerType, $causerId, int $limit = 100): array
     {
-        return [];
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 
     /**
@@ -91,7 +88,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function getByBatchUuid(string $batchUuid): array
     {
-        return [];
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 
     /**
@@ -99,7 +96,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function getByLevel(int $level, int $limit = 100): array
     {
-        return [];
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 
     /**
@@ -107,7 +104,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function getByTenant($tenantId, int $limit = 100): array
     {
-        return [];
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 
     /**
@@ -115,7 +112,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function getExpired(?\DateTimeInterface $beforeDate = null, int $limit = 1000): array
     {
-        return [];
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 
     /**
@@ -123,7 +120,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function deleteExpired(?\DateTimeInterface $beforeDate = null): int
     {
-        return 0;
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 
     /**
@@ -131,7 +128,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function deleteByIds(array $ids): int
     {
-        return 0;
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 
     /**
@@ -139,13 +136,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function getStatistics(array $filters = []): array
     {
-        return [
-            'total_count' => 0,
-            'by_log_name' => [],
-            'by_level' => [],
-            'by_event' => [],
-            'by_date' => [],
-        ];
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 
     /**
@@ -153,6 +144,6 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function exportToArray(array $filters = [], int $limit = 10000): array
     {
-        return [];
+        throw new \BadMethodCallException(__METHOD__ . '() is not yet implemented');
     }
 }

@@ -7,6 +7,7 @@ This adapter provides Laravel-specific implementations for the Setting package, 
 The Setting package is an atomic package that must remain independently publishable. This adapter layer provides the concrete implementations that integrate Setting with the Laravel framework:
 
 - **Cache integration** - Uses Laravel's cache system
+- **Authorization integration** - Provides SettingsAuthorizerAdapter for integrating with Laravel's authorization system
 
 ## Installation
 
