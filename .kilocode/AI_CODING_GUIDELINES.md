@@ -34,6 +34,45 @@ public function getOrderReservations(OrderId $orderId): array
 - Never merge code with stub implementations that silently return empty/hardcoded values
 - Code reviews must flag any method returning `[]`, `''`, `0`, `null`, or hardcoded values without clear justification
 
+### 2. Laravel Cache: Use Repository, Not Store
+
+**Problem**: Laravel's `Illuminate\Contracts\Cache\Store` interface does NOT have a `remember()` method. Only `Illuminate\Contracts\Cache\Repository` has it. Calling a method that doesn't exist causes runtime errors.
+
+**Example from PR #237 additional fix**:
+```php
+// WRONG - Using Store interface which doesn't have remember()
+public function __construct(
+    private readonly Store $cache  // Store doesn't have remember()!
+) {}
+
+public function remember(string $key, int $ttl, callable $callback): mixed
+{
+    return $this->cache->remember($key, $ttl, $callback); // FAILS!
+}
+
+// CORRECT - Use Repository interface or implement manually
+public function __construct(
+    private readonly Repository $cache  // Repository has remember()
+) {}
+
+// OR implement manually:
+public function remember(string $key, int $ttl, callable $callback): mixed
+{
+    $value = $this->cache->get($key);
+    if ($value !== null) {
+        return $value;
+    }
+    $value = $callback();
+    $this->cache->put($key, $value, $ttl);
+    return $value;
+}
+```
+
+**Prevention**:
+- When using Laravel cache, type-hint `Repository` instead of `Store` if you need methods like `remember()`
+- Alternatively, implement the logic manually by checking `get()`, calling callback if null, then `put()`
+- Check Laravel documentation to verify which interface provides which methods
+
 ### 2. Database Operations Must Be Atomic
 
 **Problem**: Multiple repository calls without transaction wrapping can lead to partial state updates.
