@@ -22,7 +22,7 @@ class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
      */
     public function create(array $data): AuditLogInterface
     {
-        $this->logger->info('Creating audit log', $data);
+        $this->logger->info('Creating audit log', ['keys' => array_keys($data)]);
         
         // Implementation would use Eloquent model
         throw new \RuntimeException('AuditLogRepositoryAdapter::create() not implemented - requires AuditLog model');

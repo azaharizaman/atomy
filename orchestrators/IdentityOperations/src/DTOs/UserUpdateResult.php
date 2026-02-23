@@ -22,7 +22,7 @@ final readonly class UserUpdateResult
             success: true,
             userId: $userId,
             message: $message ?? 'User updated successfully',
-            updatedAt: (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601),
+            updatedAt: (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
         );
     }
 

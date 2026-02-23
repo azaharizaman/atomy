@@ -22,7 +22,7 @@ final readonly class UserActivateResult
             success: true,
             userId: $userId,
             message: $message ?? 'User activated successfully',
-            activatedAt: (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601),
+            activatedAt: (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
         );
     }
 

@@ -1,6 +1,6 @@
 # AI Coding Agent Guidelines
 
-> This is a living document that evolves with each discovered mistake. Last updated: 2026-02-22 (FinanceOperations PR #235 review)
+> This is a living document that evolves with each discovered mistake. Last updated: 2026-02-23 (CodeRabbit PR #237 review)
 
 ## Purpose
 This document captures common mistakes made by AI coding agents and provides guidelines to avoid them. It should be updated whenever new patterns of errors are discovered.
@@ -961,6 +961,167 @@ class BudgetCheckResult {
 
 ---
 
+## Lessons from CodeRabbit PR #237
+
+> Identified during code review on 2026-02-23
+
+### 1. PII Leakage Prevention in Logging
+
+**Problem**: Logging full user data arrays or raw sensitive data like email addresses can leak PII (Personally Identifiable Information).
+
+**Example**:
+```php
+// WRONG - Logging full user data
+$this->logger->info('User data', ['user' => $userData]);
+
+// WRONG - Logging raw email
+$this->logger->info('Processing user', ['email' => $user->email]);
+
+// CORRECT - Log only keys
+$this->logger->info('User data', ['keys' => array_keys($userData)]);
+
+// CORRECT - Hash sensitive data before logging
+$this->logger->info('Processing user', ['email_hash' => hash('sha256', $user->email)]);
+```
+
+**Prevention**:
+- Never log full user data arrays
+- Always log only keys: `['keys' => array_keys($data)]`
+- Always hash sensitive data like email addresses before logging: use `hash('sha256', $email)`
+- Use logging libraries that support PII redaction
+
+### 2. PHP 8.3 Readonly Properties
+
+**Problem**: Exception properties that don't change should be marked as `readonly` for PHP 8.3 compliance.
+
+**Example**:
+```php
+// WRONG - Non-readonly exception property
+class UserCreationException extends \Exception
+{
+    private string $context;
+    
+    public function __construct(string $message, string $context)
+    {
+        parent::__construct($message);
+        $this->context = $context;
+    }
+}
+
+// CORRECT - Readonly exception property
+class UserCreationException extends \Exception
+{
+    readonly private string $context;
+    
+    public function __construct(string $message, string $context)
+    {
+        parent::__construct($message);
+        $this->context = $context;
+    }
+}
+```
+
+**Prevention**:
+- All exception properties that don't change after construction should be marked as `readonly`
+- This ensures immutability and PHP 8.3 compliance
+- Use `readonly private string $propertyName;` syntax
+
+### 3. Error Message Security
+
+**Problem**: Returning raw exception messages (`$e->getMessage()`) to callers can leak internal system details.
+
+**Example**:
+```php
+// WRONG - Leaking internal error details
+public function createUser(array $data): UserCreateResult
+{
+    try {
+        // ... user creation logic
+    } catch (\Exception $e) {
+        return UserCreateResult::failure(
+            message: 'Failed to create user: ' . $e->getMessage()
+        );
+    }
+}
+
+// CORRECT - Generic failure message
+public function createUser(array $data): UserCreateResult
+{
+    try {
+        // ... user creation logic
+    } catch (\Exception $e) {
+        // Log the actual error internally, but don't expose to caller
+        $this->logger->error('User creation failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return UserCreateResult::failure();
+    }
+}
+```
+
+**Prevention**:
+- Never return raw exception messages (`$e->getMessage()`) to callers
+- Always use generic failure messages to prevent leaking internal system details
+- Log detailed errors internally for debugging
+- Return user-friendly messages that don't expose implementation details
+
+### 4. DateTime Format Standards
+
+**Problem**: Using deprecated `ISO8601` constant instead of `DateTimeInterface::ATOM`.
+
+**Example**:
+```php
+// WRONG - Using deprecated constant
+$dateString = $date->format(\DateTime::ISO8601);
+
+// CORRECT - Using ATOM constant
+$dateString = $date->format(DateTimeInterface::ATOM);
+```
+
+**Prevention**:
+- Never use deprecated `ISO8601` constant
+- Always use `DateTimeInterface::ATOM` for ISO-8601 formatted dates
+- This ensures compatibility with PHP 8+ and avoids deprecation warnings
+
+### 5. Interface Definition Requirements
+
+**Problem**: Missing interface definitions cause critical runtime errors when interfaces are referenced but not defined.
+
+**Example**:
+```php
+// WRONG - Interface not defined
+class UserService implements UserServiceInterface // UserServiceInterface doesn't exist!
+{
+    public function getUser(string $id): User
+    {
+        // ...
+    }
+}
+
+// CORRECT - Define the interface first
+interface UserServiceInterface
+{
+    public function getUser(string $id): User;
+}
+
+class UserService implements UserServiceInterface
+{
+    public function getUser(string $id): User
+    {
+        // ...
+    }
+}
+```
+
+**Prevention**:
+- Always ensure all referenced interfaces are properly defined/imported before using them
+- Run static analysis tools (PHPStan, Psalm) to catch missing interfaces
+- Verify all `implements` statements have corresponding interface definitions
+- Missing interface definitions cause critical runtime errors
+
+---
+
 ## Testing Guidelines
 
 ### Test What Can Break
@@ -992,6 +1153,14 @@ public function test_order_total_includes_tax(): void
 ---
 
 ## Changelog
+
+### 2026-02-23 - CodeRabbit PR #237 Review
+- Added new section: "Lessons from CodeRabbit PR #237"
+- PII Leakage Prevention: Never log full user data arrays, hash sensitive data like emails
+- PHP 8.3 Readonly Properties: Mark exception properties as readonly for PHP 8.3 compliance
+- Error Message Security: Never return raw exception messages to callers
+- DateTime Format Standards: Use DateTimeInterface::ATOM instead of deprecated ISO8601
+- Interface Definition Requirements: Ensure all referenced interfaces are properly defined
 
 ### 2026-02-22 - FinanceOperations PR #235 Review
 - Added new section: "Lessons from FinanceOperations PR #235"

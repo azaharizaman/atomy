@@ -22,7 +22,7 @@ final readonly class UserDeactivateResult
             success: true,
             userId: $userId,
             message: $message ?? 'User deactivated successfully',
-            deactivatedAt: (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601),
+            deactivatedAt: (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
         );
     }
 

@@ -205,3 +205,11 @@ interface SessionManagerInterface
     public function invalidateUserSessions(string $userId): void;
     public function invalidateSession(string $sessionId): void;
 }
+
+/**
+ * Interface for audit logging.
+ */
+interface AuditLoggerInterface
+{
+    public function log(string $event, string $entityId, array $data = []): void;
+}

@@ -22,7 +22,7 @@ final readonly class UserSuspendResult
             success: true,
             userId: $userId,
             message: $message ?? 'User suspended successfully',
-            suspendedAt: (new \DateTimeImmutable())->format(\DateTimeInterface::ISO8601),
+            suspendedAt: (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
         );
     }
 

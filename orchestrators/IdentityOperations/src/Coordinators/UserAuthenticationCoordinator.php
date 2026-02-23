@@ -35,7 +35,7 @@ final readonly class UserAuthenticationCoordinator implements UserAuthentication
     public function authenticate(string $email, string $password, ?string $tenantId = null): UserContext
     {
         $this->logger->info('Processing authentication', [
-            'email' => $email,
+            'email' => hash('sha256', $email),
             'tenant_id' => $tenantId,
         ]);
 

@@ -26,7 +26,7 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
     public function authenticate(string $email, string $password, ?string $tenantId = null): UserContext
     {
         $this->logger->info('Authenticating user', [
-            'email' => $email,
+            'email' => hash('sha256', $email),
             'tenant_id' => $tenantId,
         ]);
 
@@ -41,7 +41,7 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         $this->auditLogger->log(
             'user.authenticated',
             $user['id'],
-            ['email' => $email, 'tenant_id' => $tenantId]
+            ['email' => hash('sha256', $email), 'tenant_id' => $tenantId]
         );
 
         return new UserContext(

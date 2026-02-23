@@ -29,7 +29,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
     public function createUser(UserCreateRequest $request): UserCreateResult
     {
         $this->logger->info('Creating user', [
-            'email' => $request->email,
+            'email' => hash('sha256', $request->email),
             'tenant_id' => $request->tenantId,
         ]);
 
@@ -61,7 +61,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
                 'user.created',
                 $userId,
                 [
-                    'email' => $request->email,
+                    'email' => hash('sha256', $request->email),
                     'tenant_id' => $request->tenantId,
                     'roles' => $request->roles,
                 ]
@@ -79,11 +79,12 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
 
         } catch (\Throwable $e) {
             $this->logger->error('Failed to create user', [
+                'user_id' => $request->userId ?? null,
                 'error' => $e->getMessage(),
             ]);
 
             return UserCreateResult::failure(
-                message: 'Failed to create user: ' . $e->getMessage()
+                message: 'Failed to create user'
             );
         }
     }
@@ -125,7 +126,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
             ]);
 
             return UserUpdateResult::failure(
-                message: 'Failed to update user: ' . $e->getMessage()
+                message: 'Failed to update user'
             );
         }
     }

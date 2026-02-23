@@ -9,7 +9,7 @@ namespace Nexus\IdentityOperations\Exceptions;
  */
 class IdentityOperationsException extends \RuntimeException
 {
-    private array $context;
+    private readonly array $context;
 
     public function __construct(string $message, array $context = [], ?\Throwable $previous = null)
     {
