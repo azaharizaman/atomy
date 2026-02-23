@@ -1,0 +1,42 @@
+{
+    "name": "nexus/system-administration",
+    "description": "Non-operational orchestrator for platform-level administration and observability - coordinates Monitoring, AuditLogger, Compliance, and Notifier packages",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev",
+        "nexus/monitoring": "*@dev",
+        "nexus/audit-logger": "*@dev",
+        "nexus/compliance": "*@dev",
+        "nexus/notifier": "*@dev",
+        "nexus/identity": "*@dev",
+        "nexus/tenant": "*@dev",
+        "psr/log": "^3.0",
+        "psr/event-dispatcher": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\SystemAdministration\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\SystemAdministration\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../packages/*",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

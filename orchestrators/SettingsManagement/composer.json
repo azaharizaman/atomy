@@ -1,0 +1,42 @@
+{
+    "name": "nexus/settings-management",
+    "description": "Non-operational orchestrator for system-wide configuration management - coordinates Setting, FeatureFlags, Period, and Backoffice packages",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev",
+        "nexus/setting": "*@dev",
+        "nexus/feature-flags": "*@dev",
+        "nexus/period": "*@dev",
+        "nexus/backoffice": "*@dev",
+        "nexus/audit-logger": "*@dev",
+        "nexus/identity": "*@dev",
+        "psr/log": "^3.0",
+        "psr/event-dispatcher": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\SettingsManagement\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\SettingsManagement\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../packages/*",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
