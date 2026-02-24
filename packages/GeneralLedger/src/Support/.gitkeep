@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Support Directory
+ * 
+ * This directory will contain supporting classes for the GeneralLedger package.
+ * 
+ * Planned support classes:
+ * - Traits: Reusable code patterns
+ * - Interfaces: Additional contracts beyond Contracts/
+ * - Data Transfer Objects: Request/Response objects
+ * - Helpers: Utility functions
+ * 
+ * @see packages/GeneralLedger/ARCHITECTURAL.md for support class specifications
+ */

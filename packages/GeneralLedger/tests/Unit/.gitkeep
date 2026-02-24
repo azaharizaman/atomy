@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Unit Tests Directory
+ * 
+ * This directory will contain unit tests for the GeneralLedger package.
+ * 
+ * Test structure follows the same structure as src/:
+ * - Contracts/: Tests for interface implementations
+ * - Entities/: Tests for entity classes
+ * - Enums/: Tests for enum classes
+ * - Exceptions/: Tests for exception classes
+ * - Services/: Tests for service classes
+ * - ValueObjects/: Tests for value object classes
+ * 
+ * @see phpunit.xml for test configuration
+ */

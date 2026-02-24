@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Entities Directory
+ * 
+ * This directory will contain entity classes for the GeneralLedger package.
+ * 
+ * Planned entities:
+ * - Ledger: Represents a general ledger for a tenant
+ * - Account: GL account within a ledger
+ * - Transaction: Individual debit/credit transaction
+ * - AccountBalance: Running balance for an account
+ * 
+ * @see packages/GeneralLedger/ARCHITECTURAL.md for entity specifications
+ */
