@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\GeneralLedger\Contracts;
 
+use Nexus\GeneralLedger\Enums\SubledgerType;
 use Nexus\GeneralLedger\Enums\TransactionType;
 use Nexus\GeneralLedger\ValueObjects\AccountBalance;
 use Nexus\GeneralLedger\ValueObjects\PostingResult;
@@ -48,7 +49,7 @@ interface SubledgerPostingInterface
      * 
      * @param string $subledgerId Subledger identifier (e.g., customer ID, vendor ID)
      * @param string $periodId Period ULID
-     * @returnotal_de array{tbits: AccountBalance, total_credits: AccountBalance}
+     * @return array{total_debits: AccountBalance, total_credits: AccountBalance}
      */
     public function getPostedAmounts(string $subledgerId, string $periodId): array;
 
@@ -80,7 +81,7 @@ final readonly class SubledgerPostingRequest
 {
     /**
      * @param string $subledgerId Subledger identifier (customer ID, vendor ID, asset ID)
-     * @param string $subledgerType Type of subledger (RECEIVABLE, PAYABLE, ASSET)
+     * @param SubledgerType $subledgerType Type of subledger (RECEIVABLE, PAYABLE, ASSET)
      * @param string $ledgerAccountId Target GL account ULID
      * @param TransactionType $type Transaction type (DEBIT or CREDIT)
      * @param AccountBalance $amount Amount to post
@@ -93,7 +94,7 @@ final readonly class SubledgerPostingRequest
      */
     public function __construct(
         public string $subledgerId,
-        public string $subledgerType,
+        public SubledgerType $subledgerType,
         public string $ledgerAccountId,
         public TransactionType $type,
         public AccountBalance $amount,

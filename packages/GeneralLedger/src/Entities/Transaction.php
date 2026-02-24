@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Nexus\GeneralLedger\Entities;
 
 use Nexus\GeneralLedger\Enums\TransactionType;
+use Nexus\GeneralLedger\Enums\BalanceType;
 use Nexus\GeneralLedger\ValueObjects\AccountBalance;
+use Brick\Math\BigDecimal;
 
 /**
  * Transaction Entity
@@ -148,10 +150,16 @@ final readonly class Transaction
      * Create a reversed version of this transaction
      * 
      * The reversed transaction will have the opposite type (debit becomes credit
-     * and vice versa) and the same amount. The original transaction will be
-     * marked as reversed.
+     * and vice versa) and the same amount. The caller is responsible for
+     * calculating the correct running balance using BalanceCalculationService
+     * before creating the reversal transaction.
+     *
+     * @param string $reversalId The ID for the reversal transaction
+     * @param string $reversalPeriodId The period ID for the reversal
+     * @param AccountBalance $runningBalance The pre-calculated running balance
+     * @throws \RuntimeException If the transaction has already been reversed
      */
-    public function reverse(string $reversalId, string $reversalPeriodId): array
+    public function reverse(string $reversalId, string $reversalPeriodId, AccountBalance $runningBalance): array
     {
         if (!$this->canReverse()) {
             throw new \RuntimeException(
@@ -169,7 +177,7 @@ final readonly class Transaction
             journalEntryId: $this->journalEntryId,
             type: $reversalType,
             amount: $this->amount,
-            runningBalance: $this->runningBalance, // Balance is recalculated by the service
+            runningBalance: $runningBalance,
             periodId: $reversalPeriodId,
             postingDate: new \DateTimeImmutable(),
             transactionDate: $this->transactionDate,
@@ -206,16 +214,18 @@ final readonly class Transaction
      * This returns the amount with the correct sign based on transaction type
      * and account balance type. For debit-balanced accounts, debits are positive.
      * For credit-balanced accounts, credits are positive.
+     *
+     * @param BalanceType $balanceType The balance type of the account
      */
-    public function getEffectiveBalanceImpact(AccountBalance $accountBalanceType): \Nexus\Common\ValueObjects\Money
+    public function getEffectiveBalanceImpact(BalanceType $balanceType): BigDecimal
     {
         return match ($this->type) {
-            TransactionType::DEBIT => $accountBalanceType->isDebit() 
-                ? $this->amount->getAmount() 
-                : $this->amount->getAmount()->negate(),
-            TransactionType::CREDIT => $accountBalanceType->isCredit() 
-                ? $this->amount->getAmount() 
-                : $this->amount->getAmount()->negate(),
+            TransactionType::DEBIT => $balanceType->isDebit() 
+                ? BigDecimal::of($this->amount->getAmountInMinorUnits()) 
+                : BigDecimal::of(-$this->amount->getAmountInMinorUnits()),
+            TransactionType::CREDIT => $balanceType->isCredit() 
+                ? BigDecimal::of($this->amount->getAmountInMinorUnits()) 
+                : BigDecimal::of(-$this->amount->getAmountInMinorUnits()),
         };
     }
 

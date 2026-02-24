@@ -154,6 +154,12 @@ final readonly class Ledger
             );
         }
 
+        if ($this->isArchived()) {
+            throw new \RuntimeException(
+                sprintf('Ledger %s is archived and cannot be closed', $this->id)
+            );
+        }
+
         return new self(
             id: $this->id,
             tenantId: $this->tenantId,
@@ -205,6 +211,12 @@ final readonly class Ledger
         if ($this->isActive()) {
             throw new \RuntimeException(
                 sprintf('Ledger %s is already active', $this->id)
+            );
+        }
+
+        if ($this->isArchived()) {
+            throw new \RuntimeException(
+                sprintf('Ledger %s is archived and cannot be reactivated', $this->id)
             );
         }
 

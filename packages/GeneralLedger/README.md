@@ -261,7 +261,7 @@ graph TB
     AP -->|Posts to| GL
     AST -->|Posts to| GL
     JE -->|Validates against| GL
-    COA -.->|References| GL
+    COA <--|References| GL
     FO -->|Coordinates| GL
 ```
 

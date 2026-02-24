@@ -17,6 +17,7 @@ final readonly class TransactionDetail
 {
     /**
      * @param string $ledgerAccountId Ledger account ULID
+     * @param string $journalEntryId Source journal entry ULID (required)
      * @param TransactionType $type Transaction type (DEBIT or CREDIT)
      * @param AccountBalance $amount Transaction amount with balance type
      * @param string|null $journalEntryLineId Source journal entry line ULID
@@ -26,6 +27,7 @@ final readonly class TransactionDetail
      */
     public function __construct(
         public string $ledgerAccountId,
+        public string $journalEntryId,
         public TransactionType $type,
         public AccountBalance $amount,
         public ?string $journalEntryLineId = null,
@@ -38,6 +40,12 @@ final readonly class TransactionDetail
                 'Transaction amount cannot be zero'
             );
         }
+
+        if (empty($this->journalEntryId)) {
+            throw new \InvalidArgumentException(
+                'Journal entry ID is required'
+            );
+        }
     }
 
     /**
@@ -45,6 +53,7 @@ final readonly class TransactionDetail
      */
     public static function debit(
         string $ledgerAccountId,
+        string $journalEntryId,
         AccountBalance $amount,
         ?string $journalEntryLineId = null,
         ?string $description = null,
@@ -53,6 +62,7 @@ final readonly class TransactionDetail
     ): self {
         return new self(
             ledgerAccountId: $ledgerAccountId,
+            journalEntryId: $journalEntryId,
             type: TransactionType::DEBIT,
             amount: $amount,
             journalEntryLineId: $journalEntryLineId,
@@ -67,6 +77,7 @@ final readonly class TransactionDetail
      */
     public static function credit(
         string $ledgerAccountId,
+        string $journalEntryId,
         AccountBalance $amount,
         ?string $journalEntryLineId = null,
         ?string $description = null,
@@ -75,6 +86,7 @@ final readonly class TransactionDetail
     ): self {
         return new self(
             ledgerAccountId: $ledgerAccountId,
+            journalEntryId: $journalEntryId,
             type: TransactionType::CREDIT,
             amount: $amount,
             journalEntryLineId: $journalEntryLineId,

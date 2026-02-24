@@ -8,6 +8,7 @@ use Nexus\GeneralLedger\Contracts\LedgerAccountQueryInterface;
 use Nexus\GeneralLedger\Contracts\TransactionQueryInterface;
 use Nexus\GeneralLedger\Enums\BalanceType;
 use Nexus\GeneralLedger\Enums\TransactionType;
+use Nexus\GeneralLedger\Exceptions\AccountNotFoundException;
 use Nexus\Common\ValueObjects\Money;
 use Nexus\GeneralLedger\ValueObjects\AccountBalance;
 
@@ -113,6 +114,7 @@ final readonly class BalanceCalculationService
      * @param string $ledgerAccountId LedgerAccount ULID
      * @param string $periodId Period ULID
      * @return array{total_debits: AccountBalance, total_credits: AccountBalance, net_balance: AccountBalance}
+     * @throws \Nexus\GeneralLedger\Exceptions\LedgerAccountNotFoundException When account not found
      */
     public function getAccountTotals(
         string $ledgerAccountId,
@@ -121,9 +123,14 @@ final readonly class BalanceCalculationService
         $totalDebits = $this->transactionQuery->getTotalDebits($ledgerAccountId, $periodId);
         $totalCredits = $this->transactionQuery->getTotalCredits($ledgerAccountId, $periodId);
 
-        // Calculate net balance
+        // Calculate net balance - throw exception if account not found
         $account = $this->accountQuery->findById($ledgerAccountId);
-        $balanceType = $account?->balanceType ?? BalanceType::DEBIT;
+        
+        if ($account === null) {
+            throw new AccountNotFoundException($ledgerAccountId);
+        }
+        
+        $balanceType = $account->balanceType;
 
         $netBalance = match ($balanceType) {
             BalanceType::DEBIT => new AccountBalance(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\GeneralLedger\Contracts;
 
 use Nexus\GeneralLedger\Entities\Transaction;
+use Nexus\GeneralLedger\ValueObjects\AccountBalance;
 
 /**
  * Transaction Persist Interface
@@ -54,8 +55,8 @@ interface TransactionPersistInterface
      * Update running balance for a transaction
      * 
      * @param string $id Transaction ULID
-     * @param \Nexus\GeneralLedger\ValueObjects\AccountBalance $newBalance New running balance
+     * @param AccountBalance $newBalance New running balance
      * @return void
      */
-    public function updateRunningBalance(string $id, \Nexus\GeneralLedger\ValueObjects\AccountBalance $newBalance): void;
+    public function updateRunningBalance(string $id, AccountBalance $newBalance): void;
 }

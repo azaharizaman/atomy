@@ -185,7 +185,6 @@ final readonly class TrialBalance
 |--------------|---------|
 | `AccountBalance` | Represents balance (debit/credit nature, amount) |
 | `TransactionDetail` | Complete transaction with source reference |
-| `TrialBalanceSummary` | Aggregated trial balance data |
 | `PostingResult` | Result of a posting operation |
 
 ### Enums
@@ -473,7 +472,7 @@ The FinanceOperations orchestrator coordinates GL posting workflows.
 
 Following the pattern from the Treasury package:
 
-```
+```text
 packages/GeneralLedger/
 ├── composer.json
 ├── phpunit.xml

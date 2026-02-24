@@ -9,6 +9,8 @@ use Nexus\GeneralLedger\Contracts\LedgerPersistInterface;
 use Nexus\GeneralLedger\Entities\Ledger;
 use Nexus\GeneralLedger\Enums\LedgerStatus;
 use Nexus\GeneralLedger\Enums\LedgerType;
+use Nexus\GeneralLedger\Exceptions\LedgerAlreadyActiveException;
+use Nexus\GeneralLedger\Exceptions\LedgerAlreadyClosedException;
 use Nexus\GeneralLedger\Exceptions\LedgerNotFoundException;
 use Symfony\Component\Uid\Ulid;
 
@@ -122,9 +124,7 @@ final readonly class LedgerService
         $ledger = $this->getLedger($ledgerId);
 
         if ($ledger->isClosed()) {
-            throw new \RuntimeException(
-                sprintf('Ledger %s is already closed', $ledgerId)
-            );
+            throw new LedgerAlreadyClosedException($ledgerId);
         }
 
         $closedLedger = $ledger->close();
@@ -162,9 +162,7 @@ final readonly class LedgerService
         $ledger = $this->getLedger($ledgerId);
 
         if ($ledger->isActive()) {
-            throw new \RuntimeException(
-                sprintf('Ledger %s is already active', $ledgerId)
-            );
+            throw new LedgerAlreadyActiveException($ledgerId);
         }
 
         $reactivatedLedger = $ledger->reactivate();

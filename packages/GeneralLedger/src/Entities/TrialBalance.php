@@ -81,10 +81,26 @@ final readonly class TrialBalance
         \DateTimeImmutable $asOfDate,
         array $lines,
     ): self {
-        $currency = match (count($lines)) {
-            0 => 'USD',
-            default => $lines[0]->currency,
-        };
+        if (empty($lines)) {
+            throw new \InvalidArgumentException(
+                'Trial balance must have at least one line'
+            );
+        }
+
+        // All lines must have the same currency
+        $currency = $lines[0]->currency;
+        foreach ($lines as $index => $line) {
+            if ($line->currency !== $currency) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        'Line %d has currency %s, expected %s',
+                        $index,
+                        $line->currency,
+                        $currency
+                    )
+                );
+            }
+        }
 
         $totalDebits = Money::zero($currency);
         $totalCredits = Money::zero($currency);

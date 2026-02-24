@@ -130,6 +130,9 @@ final readonly class AccountBalance
 
     /**
      * Add another balance to this one
+     * 
+     * When adding balances with different types (debit + credit),
+     * the amounts are netted against each other.
      */
     public function add(AccountBalance $other): self
     {
@@ -139,13 +142,24 @@ final readonly class AccountBalance
             );
         }
 
-        $newAmount = $this->amount->add($other->amount);
+        // Get signed amounts for proper netting
+        $thisSigned = $this->amount;
+        $otherSigned = $other->amount;
         
-        // Determine new balance type
+        // Negate the other amount if it has opposite balance type
+        if ($this->balanceType !== $other->balanceType) {
+            $otherSigned = $otherSigned->negate();
+        }
+        
+        $newAmount = $thisSigned->add($otherSigned);
+        
+        // Determine new balance type based on the sign of the result
         $newType = match (true) {
             $newAmount->isZero() => BalanceType::NONE,
             $newAmount->isPositive() => $this->balanceType,
-            default => $this->balanceType->isDebit() ? BalanceType::CREDIT : BalanceType::DEBIT,
+            default => $this->balanceType === BalanceType::DEBIT 
+                ? BalanceType::CREDIT 
+                : BalanceType::DEBIT,
         };
 
         return new self(

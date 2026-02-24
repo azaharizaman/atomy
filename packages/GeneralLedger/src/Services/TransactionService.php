@@ -107,7 +107,7 @@ final readonly class TransactionService
                 id: (string) Ulid::generate(),
                 ledgerAccountId: $detail->ledgerAccountId,
                 journalEntryLineId: $detail->journalEntryLineId ?? (string) Ulid::generate(),
-                journalEntryId: (string) Ulid::generate(),
+                journalEntryId: $detail->journalEntryId,
                 type: $detail->type,
                 amount: $detail->amount,
                 runningBalance: $newBalance,
@@ -235,6 +235,7 @@ final readonly class TransactionService
             $reversalType = $originalTransaction->type->opposite();
             $detail = new TransactionDetail(
                 ledgerAccountId: $originalTransaction->ledgerAccountId,
+                journalEntryId: (string) Ulid::generate(),
                 type: $reversalType,
                 amount: $originalTransaction->amount,
                 journalEntryLineId: $originalTransaction->journalEntryLineId,
