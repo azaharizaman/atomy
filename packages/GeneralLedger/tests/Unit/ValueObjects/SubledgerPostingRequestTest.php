@@ -34,8 +34,16 @@ final class SubledgerPostingRequestTest extends TestCase
 
         $this->assertEquals('sub-id', $request->subledgerId);
         $this->assertEquals(SubledgerType::RECEIVABLE, $request->subledgerType);
-        $this->assertEquals('USD', $request->getCurrency());
+        $this->assertEquals('acc-id', $request->ledgerAccountId);
+        $this->assertEquals(TransactionType::DEBIT, $request->type);
+        $this->assertSame($amount, $request->amount);
+        $this->assertEquals('period-id', $request->periodId);
+        $this->assertSame($now, $request->postingDate);
+        $this->assertEquals('doc-id', $request->sourceDocumentId);
+        $this->assertEquals('line-id', $request->sourceDocumentLineId);
         $this->assertEquals('Description', $request->description);
+        $this->assertEquals('REF', $request->reference);
+        $this->assertEquals('USD', $request->getCurrency());
     }
 
     public function test_it_validates_type_alignment(): void

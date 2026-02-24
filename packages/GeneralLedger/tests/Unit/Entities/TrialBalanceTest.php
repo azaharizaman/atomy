@@ -96,18 +96,21 @@ final class TrialBalanceTest extends TestCase
         ];
 
         $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Line 1 has currency EUR, expected USD');
         TrialBalance::create('id', 'ledger-id', 'period-id', new \DateTimeImmutable(), $lines);
     }
 
     public function test_line_validates_debit_and_credit_not_both_positive(): void
     {
         $this->expectException(InvalidTrialBalanceLineException::class);
+        $this->expectExceptionMessage('Account cannot have both debit and credit balance');
         new TrialBalanceLine('a1', '1000', 'Cash', 'USD', Money::of('100.00', 'USD'), Money::of('100.00', 'USD'));
     }
 
     public function test_line_validates_currency_match(): void
     {
         $this->expectException(InvalidTrialBalanceLineException::class);
+        $this->expectExceptionMessage('Debit balance currency EUR does not match line currency USD');
         new TrialBalanceLine('a1', '1000', 'Cash', 'USD', Money::of('100.00', 'EUR'), Money::zero('EUR'));
     }
 

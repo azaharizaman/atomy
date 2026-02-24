@@ -18,10 +18,10 @@ use Nexus\GeneralLedger\Exceptions\InvalidCurrencyException;
 
 final class LedgerServiceTest extends TestCase
 {
-    private MockObject&LedgerQueryInterface $queryRepository;
-    private MockObject&LedgerPersistInterface $persistRepository;
-    private MockObject&IdGeneratorInterface $idGenerator;
-    private LedgerService $service;
+    private readonly MockObject&LedgerQueryInterface $queryRepository;
+    private readonly MockObject&LedgerPersistInterface $persistRepository;
+    private readonly MockObject&IdGeneratorInterface $idGenerator;
+    private readonly LedgerService $service;
 
     protected function setUp(): void
     {
@@ -190,7 +190,12 @@ final class LedgerServiceTest extends TestCase
         
         $this->queryRepository->expects($this->once())
             ->method('findById')
+            ->with($ledgerId)
             ->willReturn($ledger);
+
+        $this->persistRepository->expects($this->once())
+            ->method('save')
+            ->with($this->callback(fn(Ledger $l) => $l->isArchived()));
 
         $result = $this->service->archiveLedger($ledgerId);
         $this->assertTrue($result->isArchived());
@@ -203,7 +208,12 @@ final class LedgerServiceTest extends TestCase
         
         $this->queryRepository->expects($this->once())
             ->method('findById')
+            ->with($ledgerId)
             ->willReturn($ledger);
+
+        $this->persistRepository->expects($this->once())
+            ->method('save')
+            ->with($this->callback(fn(Ledger $l) => $l->isActive()));
 
         $result = $this->service->reactivateLedger($ledgerId);
         $this->assertTrue($result->isActive());
@@ -216,6 +226,7 @@ final class LedgerServiceTest extends TestCase
         
         $this->queryRepository->expects($this->once())
             ->method('findById')
+            ->with($ledgerId)
             ->willReturn($ledger);
 
         $this->assertTrue($this->service->canPostTransactions($ledgerId));

@@ -46,6 +46,7 @@ final class LedgerAccountTest extends TestCase
         $reopened = $closed->reopen();
 
         $this->assertTrue($reopened->isActive);
+        $this->assertTrue($reopened->canPostTransactions());
         $this->assertNull($reopened->closedAt);
     }
 

@@ -42,4 +42,32 @@ final class EnumsTest extends TestCase
         $this->assertEquals('AP', SubledgerType::PAYABLE->getControlAccountPrefix());
         $this->assertEquals('FA', SubledgerType::ASSET->getControlAccountPrefix());
     }
+
+    public function test_ledger_type(): void
+    {
+        $this->assertTrue(LedgerType::STATUTORY->isStatutory());
+        $this->assertFalse(LedgerType::STATUTORY->isManagement());
+        $this->assertTrue(LedgerType::MANAGEMENT->isManagement());
+        $this->assertFalse(LedgerType::MANAGEMENT->isStatutory());
+        $this->assertEquals('Statutory Ledger', LedgerType::STATUTORY->label());
+        $this->assertEquals('Management Ledger', LedgerType::MANAGEMENT->label());
+    }
+
+    public function test_ledger_status(): void
+    {
+        $this->assertTrue(LedgerStatus::ACTIVE->isActive());
+        $this->assertFalse(LedgerStatus::ACTIVE->isClosed());
+        $this->assertTrue(LedgerStatus::ACTIVE->canPostTransactions());
+        
+        $this->assertTrue(LedgerStatus::CLOSED->isClosed());
+        $this->assertFalse(LedgerStatus::CLOSED->isActive());
+        $this->assertFalse(LedgerStatus::CLOSED->canPostTransactions());
+        
+        $this->assertTrue(LedgerStatus::ARCHIVED->isArchived());
+        $this->assertFalse(LedgerStatus::ARCHIVED->canPostTransactions());
+        
+        $this->assertEquals('Active', LedgerStatus::ACTIVE->label());
+        $this->assertEquals('Closed', LedgerStatus::CLOSED->label());
+        $this->assertEquals('Archived', LedgerStatus::ARCHIVED->label());
+    }
 }

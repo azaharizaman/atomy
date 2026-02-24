@@ -2,7 +2,7 @@
 
 **Package:** `nexus/general-ledger`  
 **Feature Branch:** `feature/general-ledger-package`  
-**Status:** ✅ Core Package Complete (Integrated and Validated) | 🧪 Test Coverage: 83%  
+**Status:** ✅ Core Package Complete (Integrated and Validated) | 🧪 Test Coverage: 86%  
 **Created:** 2026-02-24  
 **Last Updated:** 2026-02-24
 
@@ -17,19 +17,19 @@ The **Nexus\GeneralLedger** package is the **Layer-1 atomic package** that serve
 ## Testing & Quality Assurance
 
 ### 🧪 Test Coverage
-- **Line Coverage**: 83.79%
-- **Method Coverage**: 64.20%
-- **Total Tests**: 103
-- **Total Assertions**: 360
+- **Line Coverage**: 85.98%
+- **Method Coverage**: 70.37%
+- **Total Tests**: 112
+- **Total Assertions**: 436
 
 ### Key Test Suites
 - `LedgerServiceTest`: Validates ledger lifecycle and creation rules.
 - `AccountServiceTest`: Ensures account registration and status management integrity.
-- `TransactionServiceTest`: Tests posting logic, batch operations, and reversal flows.
-- `BalanceCalculationServiceTest`: Verifies complex debit/credit netting rules and period activity.
+- `TransactionServiceTest`: Tests posting logic, batch operations, and reversal flows with persistence verification.
+- `BalanceCalculationServiceTest`: Verifies complex debit/credit netting rules and period activity with strict parameter matching.
 - `TrialBalanceServiceTest`: Validates mathematical accuracy of generated reports and unusual activity detection.
-- `Entities/ValueObjects Tests`: Comprehensive unit tests for domain logic and value object integrity.
-- `Enums Tests`: Verifies type-safe enumerations and their helper methods.
+- `Entities/ValueObjects Tests`: Comprehensive unit tests for domain logic and value object integrity with strict typing and numeric literals.
+- `Enums Tests`: Verifies type-safe enumerations (LedgerType, LedgerStatus, BalanceType, etc.) and their helper methods.
 
 ---
 

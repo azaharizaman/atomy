@@ -115,7 +115,7 @@ final readonly class BalanceCalculationService implements BalanceCalculationInte
      * @param string $ledgerAccountId LedgerAccount ULID
      * @param string $periodId Period ULID
      * @return array{total_debits: AccountBalance, total_credits: AccountBalance, net_balance: AccountBalance}
-     * @throws \Nexus\GeneralLedger\Exceptions\LedgerAccountNotFoundException When account not found
+     * @throws AccountNotFoundException When account not found
      */
     public function getAccountTotals(
         string $ledgerAccountId,
@@ -150,7 +150,7 @@ final readonly class BalanceCalculationService implements BalanceCalculationInte
                         ? BalanceType::DEBIT
                         : BalanceType::NONE),
             ),
-            default => AccountBalance::zero(),
+            default => AccountBalance::zero($totalDebits->getCurrency()),
         };
 
         return [

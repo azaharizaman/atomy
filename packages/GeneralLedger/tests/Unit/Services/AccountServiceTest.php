@@ -15,9 +15,9 @@ use Nexus\GeneralLedger\Exceptions\GeneralLedgerException;
 
 final class AccountServiceTest extends TestCase
 {
-    private MockObject&LedgerAccountQueryInterface $queryRepository;
-    private MockObject&LedgerAccountPersistInterface $persistRepository;
-    private AccountService $service;
+    private readonly MockObject&LedgerAccountQueryInterface $queryRepository;
+    private readonly MockObject&LedgerAccountPersistInterface $persistRepository;
+    private readonly AccountService $service;
 
     protected function setUp(): void
     {
@@ -189,6 +189,7 @@ final class AccountServiceTest extends TestCase
         
         $this->queryRepository->expects($this->once())
             ->method('findPostableAccounts')
+            ->with($ledgerId)
             ->willReturn($accounts);
 
         $result = $this->service->getPostableAccounts($ledgerId);

@@ -9,9 +9,9 @@ use Nexus\GeneralLedger\Contracts\LedgerAccountQueryInterface;
 use Nexus\GeneralLedger\Contracts\LedgerQueryInterface;
 use Nexus\GeneralLedger\Contracts\TransactionQueryInterface;
 use Nexus\GeneralLedger\Contracts\BalanceCalculationInterface;
+use Nexus\GeneralLedger\Contracts\IdGeneratorInterface;
 use Nexus\GeneralLedger\Entities\TrialBalance;
 use Nexus\GeneralLedger\Entities\TrialBalanceLine;
-use Symfony\Component\Uid\Ulid;
 
 /**
  * Trial Balance Service
@@ -25,6 +25,7 @@ final readonly class TrialBalanceService
         private LedgerAccountQueryInterface $accountQuery,
         private TransactionQueryInterface $transactionQuery,
         private BalanceCalculationInterface $balanceService,
+        private IdGeneratorInterface $idGenerator,
     ) {}
 
     /**
@@ -86,7 +87,7 @@ final readonly class TrialBalanceService
         }
 
         return TrialBalance::create(
-            id: (string) Ulid::generate(),
+            id: $this->idGenerator->generate(),
             ledgerId: $ledgerId,
             periodId: $periodId,
             asOfDate: new \DateTimeImmutable(),
@@ -153,7 +154,7 @@ final readonly class TrialBalanceService
         }
 
         return TrialBalance::create(
-            id: (string) Ulid::generate(),
+            id: $this->idGenerator->generate(),
             ledgerId: $ledgerId,
             periodId: 'ASOF',
             asOfDate: $asOfDate,

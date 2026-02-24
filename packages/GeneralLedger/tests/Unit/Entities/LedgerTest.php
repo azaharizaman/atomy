@@ -76,6 +76,23 @@ final class LedgerTest extends TestCase
         $this->assertNull($reactivated->closedAt);
     }
 
+    public function test_it_cannot_be_archived_twice(): void
+    {
+        $ledger = Ledger::create('id', 'tenant', 'Name', 'USD', LedgerType::STATUTORY);
+        $archived = $ledger->archive();
+
+        $this->expectException(LedgerArchivedException::class);
+        $archived->archive();
+    }
+
+    public function test_it_cannot_be_reactivated_if_already_active(): void
+    {
+        $ledger = Ledger::create('id', 'tenant', 'Name', 'USD', LedgerType::STATUTORY);
+        
+        $this->expectException(LedgerAlreadyActiveException::class);
+        $ledger->reactivate();
+    }
+
     public function test_it_throws_exception_on_invalid_currency(): void
     {
         $this->expectException(\InvalidArgumentException::class);

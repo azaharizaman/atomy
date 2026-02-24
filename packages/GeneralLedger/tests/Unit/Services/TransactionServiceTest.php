@@ -200,6 +200,10 @@ final class TransactionServiceTest extends TestCase
             ->method('generate')
             ->willReturnOnConsecutiveCalls('tx-1', 'tx-2');
 
+        $this->persistRepository->expects($this->exactly(2))
+            ->method('save')
+            ->with($this->isInstanceOf(Transaction::class));
+
         $result = $this->service->postBatch($ledgerId, $details, $periodId, $now, $now);
 
         $this->assertTrue($result->isSuccessful());
@@ -326,6 +330,9 @@ final class TransactionServiceTest extends TestCase
             journalEntryLineId: null // Missing
         );
 
+        $this->balanceService->expects($this->never())->method('calculateNewBalance');
+        $this->persistRepository->expects($this->never())->method('save');
+
         $result = $this->service->postTransaction('ledger-id', $detail, 'period-id', new \DateTimeImmutable(), new \DateTimeImmutable());
 
         $this->assertFalse($result->isSuccessful());
@@ -356,6 +363,9 @@ final class TransactionServiceTest extends TestCase
             ->method('findById')
             ->willReturn($account);
 
+        $this->balanceService->expects($this->never())->method('calculateNewBalance');
+        $this->persistRepository->expects($this->never())->method('save');
+
         $result = $this->service->postTransaction($ledgerId, $detail, 'period-id', new \DateTimeImmutable(), new \DateTimeImmutable());
 
         $this->assertFalse($result->isSuccessful());
@@ -377,6 +387,8 @@ final class TransactionServiceTest extends TestCase
         $this->ledgerQuery->expects($this->once())
             ->method('findById')
             ->willReturn(null);
+
+        $this->persistRepository->expects($this->never())->method('save');
 
         $result = $this->service->postBatch($ledgerId, $details, 'p', new \DateTimeImmutable(), new \DateTimeImmutable());
 

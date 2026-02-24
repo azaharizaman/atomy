@@ -16,9 +16,9 @@ use Nexus\Common\ValueObjects\Money;
 
 final class BalanceCalculationServiceTest extends TestCase
 {
-    private MockObject&TransactionQueryInterface $transactionQuery;
-    private MockObject&LedgerAccountQueryInterface $accountQuery;
-    private BalanceCalculationService $service;
+    private readonly MockObject&TransactionQueryInterface $transactionQuery;
+    private readonly MockObject&LedgerAccountQueryInterface $accountQuery;
+    private readonly BalanceCalculationService $service;
 
     protected function setUp(): void
     {
@@ -42,7 +42,7 @@ final class BalanceCalculationServiceTest extends TestCase
             BalanceType::DEBIT
         );
 
-        $this->assertEquals('150.00', $newBalance->amount->getAmount());
+        $this->assertEquals(150.00, $newBalance->amount->getAmount());
         $this->assertEquals(BalanceType::DEBIT, $newBalance->balanceType);
     }
 
@@ -58,7 +58,7 @@ final class BalanceCalculationServiceTest extends TestCase
             BalanceType::DEBIT
         );
 
-        $this->assertEquals('60.00', $newBalance->amount->getAmount());
+        $this->assertEquals(60.00, $newBalance->amount->getAmount());
         $this->assertEquals(BalanceType::DEBIT, $newBalance->balanceType);
     }
 
@@ -74,7 +74,7 @@ final class BalanceCalculationServiceTest extends TestCase
             BalanceType::CREDIT
         );
 
-        $this->assertEquals('150.00', $newBalance->amount->getAmount());
+        $this->assertEquals(150.00, $newBalance->amount->getAmount());
         $this->assertEquals(BalanceType::CREDIT, $newBalance->balanceType);
     }
 
@@ -90,7 +90,7 @@ final class BalanceCalculationServiceTest extends TestCase
             BalanceType::DEBIT
         );
 
-        $this->assertEquals('50.00', $newBalance->amount->getAmount());
+        $this->assertEquals(50.00, $newBalance->amount->getAmount());
         $this->assertEquals(BalanceType::CREDIT, $newBalance->balanceType);
     }
 
@@ -101,7 +101,7 @@ final class BalanceCalculationServiceTest extends TestCase
 
         $this->transactionQuery->expects($this->once())
             ->method('getAccountBalance')
-            ->with($accountId)
+            ->with($accountId, $this->isInstanceOf(\DateTimeImmutable::class))
             ->willReturn($expectedBalance);
 
         $result = $this->service->getAccountBalance($accountId);
@@ -118,9 +118,11 @@ final class BalanceCalculationServiceTest extends TestCase
 
         $this->transactionQuery->expects($this->once())
             ->method('getTotalDebits')
+            ->with($accountId, $periodId)
             ->willReturn($debits);
         $this->transactionQuery->expects($this->once())
             ->method('getTotalCredits')
+            ->with($accountId, $periodId)
             ->willReturn($credits);
 
         $account = \Nexus\GeneralLedger\Entities\LedgerAccount::create(
@@ -128,13 +130,14 @@ final class BalanceCalculationServiceTest extends TestCase
         );
         $this->accountQuery->expects($this->once())
             ->method('findById')
+            ->with($accountId)
             ->willReturn($account);
 
         $result = $this->service->getAccountTotals($accountId, $periodId);
 
-        $this->assertEquals('100.00', $result['total_debits']->amount->getAmount());
-        $this->assertEquals('40.00', $result['total_credits']->amount->getAmount());
-        $this->assertEquals('60.00', $result['net_balance']->amount->getAmount());
+        $this->assertEquals(100.00, $result['total_debits']->amount->getAmount());
+        $this->assertEquals(40.00, $result['total_credits']->amount->getAmount());
+        $this->assertEquals(60.00, $result['net_balance']->amount->getAmount());
         $this->assertEquals(BalanceType::DEBIT, $result['net_balance']->balanceType);
     }
 
@@ -163,15 +166,17 @@ final class BalanceCalculationServiceTest extends TestCase
 
         $this->accountQuery->expects($this->once())
             ->method('findByLedger')
+            ->with($ledgerId)
             ->willReturn($accounts);
 
         $this->transactionQuery->expects($this->once())
             ->method('getAccountBalance')
+            ->with('a1', $asOfDate)
             ->willReturn(AccountBalance::debit(Money::of('100.00', 'USD')));
 
         $result = $this->service->getAllAccountBalances($ledgerId, $asOfDate);
         $this->assertCount(1, $result);
-        $this->assertEquals('100.00', $result['a1']->amount->getAmount());
+        $this->assertEquals(100.00, $result['a1']->amount->getAmount());
     }
 
     public function test_it_can_get_period_activity(): void
@@ -179,13 +184,13 @@ final class BalanceCalculationServiceTest extends TestCase
         $accountId = 'acc-id';
         $periodId = 'period-id';
         
-        $this->transactionQuery->expects($this->once())->method('getTotalDebits')->willReturn(AccountBalance::debit(Money::of('100.00', 'USD')));
-        $this->transactionQuery->expects($this->once())->method('getTotalCredits')->willReturn(AccountBalance::credit(Money::of('50.00', 'USD')));
-        $this->accountQuery->expects($this->once())->method('findById')->willReturn(
+        $this->transactionQuery->expects($this->once())->method('getTotalDebits')->with($accountId, $periodId)->willReturn(AccountBalance::debit(Money::of('100.00', 'USD')));
+        $this->transactionQuery->expects($this->once())->method('getTotalCredits')->with($accountId, $periodId)->willReturn(AccountBalance::credit(Money::of('50.00', 'USD')));
+        $this->accountQuery->expects($this->once())->method('findById')->with($accountId)->willReturn(
             \Nexus\GeneralLedger\Entities\LedgerAccount::create($accountId, 'l', 'c', '1', 'n', BalanceType::DEBIT)
         );
 
         $activity = $this->service->getPeriodActivity($accountId, $periodId);
-        $this->assertEquals('150.00', $activity->getAmount());
+        $this->assertEquals(150.00, $activity->getAmount());
     }
 }

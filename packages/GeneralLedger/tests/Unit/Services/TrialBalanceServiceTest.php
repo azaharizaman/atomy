@@ -11,6 +11,7 @@ use Nexus\GeneralLedger\Contracts\LedgerQueryInterface;
 use Nexus\GeneralLedger\Contracts\LedgerAccountQueryInterface;
 use Nexus\GeneralLedger\Contracts\TransactionQueryInterface;
 use Nexus\GeneralLedger\Contracts\BalanceCalculationInterface;
+use Nexus\GeneralLedger\Contracts\IdGeneratorInterface;
 use Nexus\GeneralLedger\Entities\Ledger;
 use Nexus\GeneralLedger\Entities\LedgerAccount;
 use Nexus\GeneralLedger\Entities\TrialBalance;
@@ -21,11 +22,12 @@ use Nexus\Common\ValueObjects\Money;
 
 final class TrialBalanceServiceTest extends TestCase
 {
-    private MockObject&LedgerQueryInterface $ledgerQuery;
-    private MockObject&LedgerAccountQueryInterface $accountQuery;
-    private MockObject&TransactionQueryInterface $transactionQuery;
-    private MockObject&BalanceCalculationInterface $balanceService;
-    private TrialBalanceService $service;
+    private readonly MockObject&LedgerQueryInterface $ledgerQuery;
+    private readonly MockObject&LedgerAccountQueryInterface $accountQuery;
+    private readonly MockObject&TransactionQueryInterface $transactionQuery;
+    private readonly MockObject&BalanceCalculationInterface $balanceService;
+    private readonly MockObject&IdGeneratorInterface $idGenerator;
+    private readonly TrialBalanceService $service;
 
     protected function setUp(): void
     {
@@ -33,12 +35,14 @@ final class TrialBalanceServiceTest extends TestCase
         $this->accountQuery = $this->createMock(LedgerAccountQueryInterface::class);
         $this->transactionQuery = $this->createMock(TransactionQueryInterface::class);
         $this->balanceService = $this->createMock(BalanceCalculationInterface::class);
+        $this->idGenerator = $this->createMock(IdGeneratorInterface::class);
         
         $this->service = new TrialBalanceService(
             $this->ledgerQuery,
             $this->accountQuery,
             $this->transactionQuery,
-            $this->balanceService
+            $this->balanceService,
+            $this->idGenerator
         );
     }
 
@@ -70,11 +74,16 @@ final class TrialBalanceServiceTest extends TestCase
                 ['a2', $periodId, AccountBalance::credit(Money::of('100.00', 'USD'))],
             ]);
 
+        $this->idGenerator->expects($this->once())
+            ->method('generate')
+            ->willReturn('tb-id');
+
         $result = $this->service->generateTrialBalance($ledgerId, $periodId);
 
         $this->assertInstanceOf(TrialBalance::class, $result);
         $this->assertCount(2, $result->lines);
         $this->assertTrue($result->isBalanced);
+        $this->assertEquals('tb-id', $result->id);
     }
 
     public function test_it_can_generate_trial_balance_as_of_date(): void
@@ -102,6 +111,10 @@ final class TrialBalanceServiceTest extends TestCase
             ->with('a1', $asOfDate)
             ->willReturn(AccountBalance::debit(Money::of('100.00', 'USD')));
 
+        $this->idGenerator->expects($this->once())
+            ->method('generate')
+            ->willReturn('tb-id');
+
         $result = $this->service->generateTrialBalanceAsOfDate($ledgerId, $asOfDate);
 
         $this->assertInstanceOf(TrialBalance::class, $result);
@@ -116,11 +129,16 @@ final class TrialBalanceServiceTest extends TestCase
         $ledger = Ledger::create($ledgerId, 'tenant-id', 'Main', 'USD', LedgerType::STATUTORY);
         $accounts = [LedgerAccount::create('a1', $ledgerId, 'coa-1', '1000', 'Cash', BalanceType::DEBIT)];
 
-        $this->ledgerQuery->expects($this->once())->method('findById')->willReturn($ledger);
-        $this->accountQuery->expects($this->once())->method('findByLedger')->willReturn($accounts);
+        $this->ledgerQuery->expects($this->once())->method('findById')->with($ledgerId)->willReturn($ledger);
+        $this->accountQuery->expects($this->once())->method('findByLedger')->with($ledgerId)->willReturn($accounts);
         $this->balanceService->expects($this->once())
             ->method('getAccountBalanceForPeriod')
+            ->with('a1', $periodId)
             ->willReturn(AccountBalance::debit(Money::of('100.00', 'USD')));
+
+        $this->idGenerator->expects($this->once())
+            ->method('generate')
+            ->willReturn('tb-id');
 
         $summary = $this->service->getTrialBalanceSummary($ledgerId, $periodId);
 
