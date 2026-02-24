@@ -186,7 +186,7 @@ final readonly class TrialBalance
             'account_count' => count($this->lines),
             'debit_count' => $this->getDebitCount(),
             'credit_count' => $this->getCreditCount(),
-            'generated_at' => $this->generatedAt->format(\DateTimeInterface::ISO8601),
+            'generated_at' => $this->generatedAt->format(\DateTimeInterface::ATOM),
         ];
     }
 }
