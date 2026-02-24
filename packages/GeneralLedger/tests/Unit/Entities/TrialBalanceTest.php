@@ -25,9 +25,9 @@ final class TrialBalanceTest extends TestCase
 
         $this->assertEquals('id', $tb->id);
         $this->assertTrue($tb->isBalanced);
-        $this->assertEquals('100.00', $tb->totalDebits->getAmount());
-        $this->assertEquals('100.00', $tb->totalCredits->getAmount());
-        $this->assertEquals(0, $tb->getDifference()->getAmount());
+        $this->assertEquals(100.00, $tb->totalDebits->getAmount());
+        $this->assertEquals(100.00, $tb->totalCredits->getAmount());
+        $this->assertEquals(0.0, $tb->getDifference()->getAmount());
         $this->assertEquals(1, $tb->getDebitCount());
         $this->assertEquals(1, $tb->getCreditCount());
     }
@@ -43,10 +43,10 @@ final class TrialBalanceTest extends TestCase
         $tb = TrialBalance::create('id', 'ledger-id', 'period-id', $now, $lines);
 
         $this->assertFalse($tb->isBalanced);
-        $this->assertEquals('10.00', $tb->getDifference()->getAmount());
+        $this->assertEquals(10.00, $tb->getDifference()->getAmount());
         
         $summary = $tb->getSummary();
-        $this->assertEquals('10.00', $summary['difference']);
+        $this->assertEquals(10.00, $summary['difference']);
         $this->assertFalse($summary['is_balanced']);
     }
 
@@ -56,13 +56,13 @@ final class TrialBalanceTest extends TestCase
         $this->assertTrue($debitLine->isDebit());
         $this->assertFalse($debitLine->isCredit());
         $this->assertFalse($debitLine->isZero());
-        $this->assertEquals('100.00', $debitLine->getNetBalance()->getAmount());
+        $this->assertEquals(100.00, $debitLine->getNetBalance()->getAmount());
         
         $zeroLine = new TrialBalanceLine('a3', '3000', 'Old', 'USD', Money::zero('USD'), Money::zero('USD'));
         $this->assertTrue($zeroLine->isZero());
         
         $array = $debitLine->toArray();
-        $this->assertEquals('100.00', $array['debit_balance']);
+        $this->assertEquals(100.00, $array['debit_balance']);
         $this->assertEquals(BalanceType::DEBIT->value, $array['balance_type']);
     }
 

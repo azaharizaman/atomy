@@ -102,7 +102,7 @@ packages/GeneralLedger/
 
 ### 1. Ledger Management
 - Multi-currency support per ledger with ISO 4217 validation.
-- State-machine based status transitions (Active, Closed, Archived).
+- State‑machine‑based status transitions (Active, Closed, Archived).
 - Framework-agnostic ID generation.
 - **Fixed**: Resolved namespace bug in `Ledger` entity.
 

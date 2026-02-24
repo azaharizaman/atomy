@@ -48,9 +48,7 @@ final readonly class LedgerService
     ): Ledger {
         // Validate currency format (ISO 4217 - 3 uppercase letters)
         if (!preg_match('/^[A-Z]{3}$/', $currency)) {
-            throw new InvalidCurrencyException(
-                sprintf('Invalid currency code: %s. Expected ISO 4217 format (e.g., USD, EUR)', $currency)
-            );
+            throw InvalidCurrencyException::forCode($currency);
         }
 
         $ledger = Ledger::create(

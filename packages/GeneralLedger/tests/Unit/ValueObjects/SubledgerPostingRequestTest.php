@@ -9,6 +9,7 @@ use Nexus\GeneralLedger\ValueObjects\SubledgerPostingRequest;
 use Nexus\GeneralLedger\ValueObjects\AccountBalance;
 use Nexus\GeneralLedger\Enums\SubledgerType;
 use Nexus\GeneralLedger\Enums\TransactionType;
+use Nexus\GeneralLedger\Exceptions\InvalidPostingException;
 use Nexus\Common\ValueObjects\Money;
 
 final class SubledgerPostingRequestTest extends TestCase
@@ -46,9 +47,9 @@ final class SubledgerPostingRequestTest extends TestCase
         $this->assertEquals('USD', $request->getCurrency());
     }
 
-    public function test_it_validates_type_alignment(): void
+    public function test_it_validates_debit_type_requires_debit_balance(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidPostingException::class);
         $this->expectExceptionMessage('Debit subledger posting must have a debit-typed AccountBalance');
         
         new SubledgerPostingRequest(
@@ -57,6 +58,24 @@ final class SubledgerPostingRequestTest extends TestCase
             'acc-id',
             TransactionType::DEBIT,
             AccountBalance::credit(Money::of('100.00', 'USD')),
+            'p',
+            new \DateTimeImmutable(),
+            'd',
+            'l'
+        );
+    }
+
+    public function test_it_validates_credit_type_requires_credit_balance(): void
+    {
+        $this->expectException(InvalidPostingException::class);
+        $this->expectExceptionMessage('Credit subledger posting must have a credit-typed AccountBalance');
+        
+        new SubledgerPostingRequest(
+            'sub-id',
+            SubledgerType::RECEIVABLE,
+            'acc-id',
+            TransactionType::CREDIT,
+            AccountBalance::debit(Money::of('100.00', 'USD')),
             'p',
             new \DateTimeImmutable(),
             'd',

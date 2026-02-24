@@ -23,7 +23,7 @@ final class AccountBalanceTest extends TestCase
         $money = Money::of('100.00', 'USD');
         $balance = AccountBalance::debit($money);
         $this->assertTrue($balance->isDebit());
-        $this->assertEquals(100.00, $balance->amount->getAmount());
+        $this->assertSame(100.0, $balance->amount->getAmount());
     }
 
     public function test_it_can_create_credit_balance(): void
@@ -31,7 +31,7 @@ final class AccountBalanceTest extends TestCase
         $money = Money::of('100.00', 'USD');
         $balance = AccountBalance::credit($money);
         $this->assertTrue($balance->isCredit());
-        $this->assertEquals(100.00, $balance->amount->getAmount());
+        $this->assertSame(100.0, $balance->amount->getAmount());
     }
 
     public function test_it_can_add_balances(): void
@@ -41,7 +41,7 @@ final class AccountBalanceTest extends TestCase
         $result = $b1->add($b2);
         
         $this->assertTrue($result->isDebit());
-        $this->assertEquals(150.00, $result->amount->getAmount());
+        $this->assertSame(150.0, $result->amount->getAmount());
     }
 
     public function test_it_can_net_balances(): void
@@ -51,7 +51,7 @@ final class AccountBalanceTest extends TestCase
         $result = $b1->add($b2);
         
         $this->assertTrue($result->isDebit());
-        $this->assertEquals(60.00, $result->amount->getAmount());
+        $this->assertSame(60.0, $result->amount->getAmount());
     }
 
     public function test_it_can_subtract_balances(): void
@@ -61,7 +61,17 @@ final class AccountBalanceTest extends TestCase
         $result = $b1->subtract($b2);
         
         $this->assertTrue($result->isDebit());
-        $this->assertEquals(60.00, $result->amount->getAmount());
+        $this->assertSame(60.0, $result->amount->getAmount());
+    }
+
+    public function test_it_switches_type_on_subtraction_overflow(): void
+    {
+        $b1 = AccountBalance::debit(Money::of('40.00', 'USD'));
+        $b2 = AccountBalance::debit(Money::of('100.00', 'USD'));
+        $result = $b1->subtract($b2);
+        
+        $this->assertTrue($result->isCredit());
+        $this->assertSame(60.0, $result->amount->getAmount());
     }
 
     public function test_it_gets_signed_amount(): void
@@ -69,10 +79,21 @@ final class AccountBalanceTest extends TestCase
         $balance = AccountBalance::debit(Money::of('100.00', 'USD'));
         
         // Debit balance on debit account is positive
-        $this->assertEquals(100.00, $balance->getSignedAmount(BalanceType::DEBIT)->getAmount());
+        $this->assertSame(100.0, $balance->getSignedAmount(BalanceType::DEBIT)->getAmount());
         
         // Debit balance on credit account is negative
-        $this->assertEquals(-100.00, $balance->getSignedAmount(BalanceType::CREDIT)->getAmount());
+        $this->assertSame(-100.0, $balance->getSignedAmount(BalanceType::CREDIT)->getAmount());
+    }
+
+    public function test_it_gets_signed_amount_for_credit_balance(): void
+    {
+        $balance = AccountBalance::credit(Money::of('100.00', 'USD'));
+        
+        // Credit balance on credit account is positive
+        $this->assertSame(100.0, $balance->getSignedAmount(BalanceType::CREDIT)->getAmount());
+        
+        // Credit balance on debit account is negative
+        $this->assertSame(-100.0, $balance->getSignedAmount(BalanceType::DEBIT)->getAmount());
     }
 
     public function test_it_throws_when_none_account_type_passed_to_get_signed_amount(): void

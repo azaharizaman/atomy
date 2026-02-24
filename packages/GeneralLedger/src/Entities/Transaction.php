@@ -8,6 +8,7 @@ use Nexus\GeneralLedger\Enums\TransactionType;
 use Nexus\GeneralLedger\Enums\BalanceType;
 use Nexus\GeneralLedger\ValueObjects\AccountBalance;
 use Nexus\GeneralLedger\Exceptions\TransactionAlreadyReversedException;
+use Nexus\GeneralLedger\Exceptions\InvalidTransactionException;
 use Nexus\Common\ValueObjects\Money;
 
 /**
@@ -57,7 +58,7 @@ final readonly class Transaction
     ) {
         // Validate that amount is positive
         if (!$this->amount->getAmount()->isPositive()) {
-            throw new \InvalidArgumentException(
+            throw new InvalidTransactionException(
                 'Transaction amount must be positive'
             );
         }

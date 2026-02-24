@@ -107,6 +107,15 @@ final readonly class TrialBalance
             );
         }
 
+        // Validate all elements are TrialBalanceLine instances
+        foreach ($lines as $index => $line) {
+            if (!$line instanceof TrialBalanceLine) {
+                throw new \InvalidArgumentException(
+                    sprintf('Line %d is not an instance of TrialBalanceLine', $index)
+                );
+            }
+        }
+
         // All lines must have the same currency
         $currency = $lines[0]->currency;
         foreach ($lines as $index => $line) {

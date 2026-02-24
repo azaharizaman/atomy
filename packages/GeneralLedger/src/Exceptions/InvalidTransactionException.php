@@ -7,12 +7,8 @@ namespace Nexus\GeneralLedger\Exceptions;
 /**
  * Invalid Transaction Exception
  * 
- * Thrown when a transaction entity is in an invalid state.
+ * Thrown when a transaction is invalid or in an incorrect state.
  */
-final class InvalidTransactionException extends GeneralLedgerException
+class InvalidTransactionException extends GeneralLedgerException
 {
-    public function __construct(string $message)
-    {
-        parent::__construct($message);
-    }
 }
