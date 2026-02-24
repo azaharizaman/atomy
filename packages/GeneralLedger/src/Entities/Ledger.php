@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\GeneralLedger\Exceptions;
+namespace Nexus\GeneralLedger\Entities;
 
 use Nexus\GeneralLedger\Enums\LedgerStatus;
 use Nexus\GeneralLedger\Enums\LedgerType;

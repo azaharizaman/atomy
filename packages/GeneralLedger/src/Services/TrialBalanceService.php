@@ -8,6 +8,7 @@ use Nexus\Common\ValueObjects\Money;
 use Nexus\GeneralLedger\Contracts\LedgerAccountQueryInterface;
 use Nexus\GeneralLedger\Contracts\LedgerQueryInterface;
 use Nexus\GeneralLedger\Contracts\TransactionQueryInterface;
+use Nexus\GeneralLedger\Contracts\BalanceCalculationInterface;
 use Nexus\GeneralLedger\Entities\TrialBalance;
 use Nexus\GeneralLedger\Entities\TrialBalanceLine;
 use Symfony\Component\Uid\Ulid;
@@ -23,7 +24,7 @@ final readonly class TrialBalanceService
         private LedgerQueryInterface $ledgerQuery,
         private LedgerAccountQueryInterface $accountQuery,
         private TransactionQueryInterface $transactionQuery,
-        private BalanceCalculationService $balanceService,
+        private BalanceCalculationInterface $balanceService,
     ) {}
 
     /**

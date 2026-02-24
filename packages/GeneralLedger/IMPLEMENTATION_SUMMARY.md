@@ -2,7 +2,7 @@
 
 **Package:** `nexus/general-ledger`  
 **Feature Branch:** `feature/general-ledger-package`  
-**Status:** ✅ Core Package Complete (Integrated and Validated)  
+**Status:** ✅ Core Package Complete (Integrated and Validated) | 🧪 Test Coverage: 83%  
 **Created:** 2026-02-24  
 **Last Updated:** 2026-02-24
 
@@ -11,6 +11,25 @@
 ## Overview
 
 The **Nexus\GeneralLedger** package is the **Layer-1 atomic package** that serves as the single source of financial truth for the Nexus ERP system. It manages core accounting transactions, ledger accounts, and trial balance calculations.
+
+---
+
+## Testing & Quality Assurance
+
+### 🧪 Test Coverage
+- **Line Coverage**: 83.79%
+- **Method Coverage**: 64.20%
+- **Total Tests**: 103
+- **Total Assertions**: 360
+
+### Key Test Suites
+- `LedgerServiceTest`: Validates ledger lifecycle and creation rules.
+- `AccountServiceTest`: Ensures account registration and status management integrity.
+- `TransactionServiceTest`: Tests posting logic, batch operations, and reversal flows.
+- `BalanceCalculationServiceTest`: Verifies complex debit/credit netting rules and period activity.
+- `TrialBalanceServiceTest`: Validates mathematical accuracy of generated reports and unusual activity detection.
+- `Entities/ValueObjects Tests`: Comprehensive unit tests for domain logic and value object integrity.
+- `Enums Tests`: Verifies type-safe enumerations and their helper methods.
 
 ---
 
@@ -33,7 +52,8 @@ packages/GeneralLedger/
     │   ├── LedgerAccountPersistInterface.php
     │   ├── TransactionQueryInterface.php
     │   ├── TransactionPersistInterface.php
-    │   └── SubledgerPostingInterface.php
+    │   ├── SubledgerPostingInterface.php
+    │   └── BalanceCalculationInterface.php # Added for DI
     │
     ├── Entities/                # Domain Entities
     │   ├── Ledger.php
@@ -83,12 +103,14 @@ packages/GeneralLedger/
 - Multi-currency support per ledger with ISO 4217 validation.
 - State-machine based status transitions (Active, Closed, Archived).
 - Framework-agnostic ID generation.
+- **Fixed**: Resolved namespace bug in `Ledger` entity.
 
 ### 2. Transaction Processing
 - Atomic recording with real-time balance computation.
 - Mandatory source document traceability.
 - Atomic batch posting with database transaction support.
 - Standardized reversal logic with domain-specific exceptions.
+- **Refactored**: Decoupled `TransactionService` from concrete `BalanceCalculationService` via `BalanceCalculationInterface`.
 
 ### 3. Account Structure
 - Balance type enforcement (Debit vs Credit).

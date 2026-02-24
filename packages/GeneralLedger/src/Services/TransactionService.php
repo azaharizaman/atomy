@@ -10,6 +10,7 @@ use Nexus\GeneralLedger\Contracts\LedgerAccountQueryInterface;
 use Nexus\GeneralLedger\Contracts\LedgerQueryInterface;
 use Nexus\GeneralLedger\Contracts\TransactionPersistInterface;
 use Nexus\GeneralLedger\Contracts\TransactionQueryInterface;
+use Nexus\GeneralLedger\Contracts\BalanceCalculationInterface;
 use Nexus\GeneralLedger\Entities\Ledger;
 use Nexus\GeneralLedger\Entities\LedgerAccount;
 use Nexus\GeneralLedger\Entities\Transaction;
@@ -35,7 +36,7 @@ final readonly class TransactionService
         private TransactionPersistInterface $persistRepository,
         private LedgerQueryInterface $ledgerQuery,
         private LedgerAccountQueryInterface $accountQuery,
-        private BalanceCalculationService $balanceService,
+        private BalanceCalculationInterface $balanceService,
         private IdGeneratorInterface $idGenerator,
         private DatabaseTransactionInterface $db,
     ) {}

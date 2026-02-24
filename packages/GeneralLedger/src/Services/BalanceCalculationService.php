@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\GeneralLedger\Services;
 
+use Nexus\GeneralLedger\Contracts\BalanceCalculationInterface;
 use Nexus\GeneralLedger\Contracts\LedgerAccountQueryInterface;
 use Nexus\GeneralLedger\Contracts\TransactionQueryInterface;
 use Nexus\GeneralLedger\Enums\BalanceType;
@@ -18,7 +19,7 @@ use Nexus\GeneralLedger\ValueObjects\AccountBalance;
  * Service for calculating account balances based on transactions.
  * Handles the complexity of debit/credit accounting rules.
  */
-final readonly class BalanceCalculationService
+final readonly class BalanceCalculationService implements BalanceCalculationInterface
 {
     public function __construct(
         private TransactionQueryInterface $transactionQuery,
