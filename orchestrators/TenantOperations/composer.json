@@ -1,17 +1,11 @@
 {
     "name": "nexus/tenant-operations",
-    "description": "Non-operational orchestrator for multi-tenant lifecycle management - coordinates Tenant, Setting, FeatureFlags, Backoffice, and AuditLogger packages",
+    "description": "Non-operational orchestrator for multi-tenant lifecycle management - defines interfaces for tenant, setting, feature flags, backoffice, and audit operations",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.3",
         "nexus/common": "*@dev",
-        "nexus/tenant": "*@dev",
-        "nexus/setting": "*@dev",
-        "nexus/feature-flags": "*@dev",
-        "nexus/backoffice": "*@dev",
-        "nexus/audit-logger": "*@dev",
-        "nexus/identity": "*@dev",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^3.0"
     },

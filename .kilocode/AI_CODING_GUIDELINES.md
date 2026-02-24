@@ -1,6 +1,6 @@
 # AI Coding Agent Guidelines
 
-> This is a living document that evolves with each discovered mistake. Last updated: 2026-02-22 (FinanceOperations PR #235 review)
+> This is a living document that evolves with each discovered mistake. Last updated: 2026-02-23 (CodeRabbit PR #237 review)
 
 ## Purpose
 This document captures common mistakes made by AI coding agents and provides guidelines to avoid them. It should be updated whenever new patterns of errors are discovered.
@@ -34,7 +34,46 @@ public function getOrderReservations(OrderId $orderId): array
 - Never merge code with stub implementations that silently return empty/hardcoded values
 - Code reviews must flag any method returning `[]`, `''`, `0`, `null`, or hardcoded values without clear justification
 
-### 2. Database Operations Must Be Atomic
+### 2. Laravel Cache: Use Repository, Not Store
+
+**Problem**: Laravel's `Illuminate\Contracts\Cache\Store` interface does NOT have a `remember()` method. Only `Illuminate\Contracts\Cache\Repository` has it. Calling a method that doesn't exist causes runtime errors.
+
+**Example from PR #237 additional fix**:
+```php
+// WRONG - Using Store interface which doesn't have remember()
+public function __construct(
+    private readonly Store $cache  // Store doesn't have remember()!
+) {}
+
+public function remember(string $key, int $ttl, callable $callback): mixed
+{
+    return $this->cache->remember($key, $ttl, $callback); // FAILS!
+}
+
+// CORRECT - Use Repository interface or implement manually
+public function __construct(
+    private readonly Repository $cache  // Repository has remember()
+) {}
+
+// OR implement manually:
+public function remember(string $key, int $ttl, callable $callback): mixed
+{
+    $value = $this->cache->get($key);
+    if ($value !== null) {
+        return $value;
+    }
+    $value = $callback();
+    $this->cache->put($key, $value, $ttl);
+    return $value;
+}
+```
+
+**Prevention**:
+- When using Laravel cache, type-hint `Repository` instead of `Store` if you need methods like `remember()`
+- Alternatively, implement the logic manually by checking `get()`, calling callback if null, then `put()`
+- Check Laravel documentation to verify which interface provides which methods
+
+### 3. Database Operations Must Be Atomic
 
 **Problem**: Multiple repository calls without transaction wrapping can lead to partial state updates.
 
@@ -65,7 +104,7 @@ public function convertQuoteToOrder(QuoteId $quoteId): Order
 - Consider rollback scenarios and ensure data consistency
 - Ask: "If the second operation fails, what happens to the first?"
 
-### 3. Foreign Key Constraints Are Mandatory
+### 4. Foreign Key Constraints Are Mandatory
 
 **Problem**: Missing FK constraints lead to orphaned records and referential integrity issues.
 
@@ -90,7 +129,7 @@ $table->foreign('product_id')->references('id')->on('products')->onDelete('restr
   - `SET NULL`: Clear reference (only if column is nullable)
 - Document the reasoning for the chosen action in migration comments
 
-### 4. Proper ID Generation
+### 5. Proper ID Generation
 
 **Problem**: Using inappropriate ID generation methods.
 
@@ -961,6 +1000,168 @@ class BudgetCheckResult {
 
 ---
 
+## Lessons from CodeRabbit PR #237
+
+> Identified during code review on 2026-02-23
+
+### 1. PII Leakage Prevention in Logging
+
+**Problem**: Logging full user data arrays or raw sensitive data like email addresses can leak PII (Personally Identifiable Information).
+
+**Example**:
+```php
+// WRONG - Logging full user data
+$this->logger->info('User data', ['user' => $userData]);
+
+// WRONG - Logging raw email
+$this->logger->info('Processing user', ['email' => $user->email]);
+
+// CORRECT - Log only keys
+$this->logger->info('User data', ['keys' => array_keys($userData)]);
+
+// CORRECT - Hash sensitive data before logging
+$this->logger->info('Processing user', ['email_hash' => hash('sha256', $user->email)]);
+```
+
+**Prevention**:
+- Never log full user data arrays
+- Always log only keys: `['keys' => array_keys($data)]`
+- Always hash sensitive data like email addresses before logging: use `hash('sha256', $email)`
+- Use logging libraries that support PII redaction
+
+### 2. PHP 8.3 Readonly Properties
+
+**Problem**: Exception properties that don't change should be marked as `readonly` for PHP 8.3 compliance.
+
+**Example**:
+```php
+// WRONG - Non-readonly exception property
+class UserCreationException extends \Exception
+{
+    private string $context;
+    
+    public function __construct(string $message, string $context)
+    {
+        parent::__construct($message);
+        $this->context = $context;
+    }
+}
+
+// CORRECT - Readonly exception property
+class UserCreationException extends \Exception
+{
+    private readonly string $context;
+    
+    public function __construct(string $message, string $context)
+    {
+        parent::__construct($message);
+        $this->context = $context;
+    }
+}
+```
+
+**Prevention**:
+- All exception properties that don't change after construction should be marked as `readonly`
+- This ensures immutability and PHP 8.3 compliance
+- Use `readonly private string $propertyName;` syntax
+
+### 3. Error Message Security
+
+**Problem**: Returning raw exception messages (`$e->getMessage()`) to callers can leak internal system details.
+
+**Example**:
+```php
+// WRONG - Leaking internal error details
+public function createUser(array $data): UserCreateResult
+{
+    try {
+        // ... user creation logic
+    } catch (\Exception $e) {
+        return UserCreateResult::failure(
+            message: 'Failed to create user: ' . $e->getMessage()
+        );
+    }
+}
+
+// CORRECT - Generic failure message
+public function createUser(array $data): UserCreateResult
+{
+    try {
+        // ... user creation logic
+    } catch (\Exception $e) {
+        // Log the actual error internally, but don't expose to caller
+        $this->logger->error('User creation failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return UserCreateResult::failure();
+    }
+}
+```
+
+**Prevention**:
+- Never return raw exception messages (`$e->getMessage()`) to callers
+- Always use generic failure messages to prevent leaking internal system details
+- Log detailed errors internally for debugging
+- Return user-friendly messages that don't expose implementation details
+
+### 4. DateTime Format Standards
+
+**Problem**: Using `DateTime::ISO8601` produces a non-standard ISO-8601 string (missing the colon in timezone offset). Use `DateTimeInterface::ATOM` for standard ISO-8601 output.
+
+**Example**:
+```php
+// WRONG - Using non-standard ISO8601 constant
+$dateString = $date->format(\DateTime::ISO8601);
+
+// CORRECT - Using ATOM constant for RFC3339/ISO-8601 compliance
+$dateString = $date->format(DateTimeInterface::ATOM);
+```
+
+**Prevention**:
+- Never use `DateTime::ISO8601` as it produces non-standard output
+- Always use `DateTimeInterface::ATOM` for ISO-8601 formatted dates
+- This ensures the timezone offset includes the colon (e.g., `+00:00` instead of `+0000`)
+- Use `DateTimeInterface::ATOM` for RFC3339 compliance
+
+### 5. Interface Definition Requirements
+
+**Problem**: Missing interface definitions cause critical runtime errors when interfaces are referenced but not defined.
+
+**Example**:
+```php
+// WRONG - Interface not defined
+class UserService implements UserServiceInterface // UserServiceInterface doesn't exist!
+{
+    public function getUser(string $id): User
+    {
+        // ...
+    }
+}
+
+// CORRECT - Define the interface first
+interface UserServiceInterface
+{
+    public function getUser(string $id): User;
+}
+
+class UserService implements UserServiceInterface
+{
+    public function getUser(string $id): User
+    {
+        // ...
+    }
+}
+```
+
+**Prevention**:
+- Always ensure all referenced interfaces are properly defined/imported before using them
+- Run static analysis tools (PHPStan, Psalm) to catch missing interfaces
+- Verify all `implements` statements have corresponding interface definitions
+- Missing interface definitions cause critical runtime errors
+
+---
+
 ## Testing Guidelines
 
 ### Test What Can Break
@@ -992,6 +1193,14 @@ public function test_order_total_includes_tax(): void
 ---
 
 ## Changelog
+
+### 2026-02-23 - CodeRabbit PR #237 Review
+- Added new section: "Lessons from CodeRabbit PR #237"
+- PII Leakage Prevention: Never log full user data arrays, hash sensitive data like emails
+- PHP 8.3 Readonly Properties: Mark exception properties as readonly for PHP 8.3 compliance
+- Error Message Security: Never return raw exception messages to callers
+- DateTime Format Standards: DateTime::ISO8601 produces a non-standard format; use DateTimeInterface::ATOM instead
+- Interface Definition Requirements: Ensure all referenced interfaces are properly defined
 
 ### 2026-02-22 - FinanceOperations PR #235 Review
 - Added new section: "Lessons from FinanceOperations PR #235"

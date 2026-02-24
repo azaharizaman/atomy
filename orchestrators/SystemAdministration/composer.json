@@ -1,17 +1,11 @@
 {
     "name": "nexus/system-administration",
-    "description": "Non-operational orchestrator for platform-level administration and observability - coordinates Monitoring, AuditLogger, Compliance, and Notifier packages",
+    "description": "Non-operational orchestrator for platform-level administration and observability - defines interfaces for monitoring, audit, compliance, and notification operations",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.3",
         "nexus/common": "*@dev",
-        "nexus/monitoring": "*@dev",
-        "nexus/audit-logger": "*@dev",
-        "nexus/compliance": "*@dev",
-        "nexus/notifier": "*@dev",
-        "nexus/identity": "*@dev",
-        "nexus/tenant": "*@dev",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^3.0"
     },
