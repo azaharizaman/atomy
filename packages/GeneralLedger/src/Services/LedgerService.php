@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\GeneralLedger\Services;
 
+use Nexus\GeneralLedger\Contracts\IdGeneratorInterface;
 use Nexus\GeneralLedger\Contracts\LedgerQueryInterface;
 use Nexus\GeneralLedger\Contracts\LedgerPersistInterface;
 use Nexus\GeneralLedger\Entities\Ledger;
@@ -12,7 +13,6 @@ use Nexus\GeneralLedger\Enums\LedgerType;
 use Nexus\GeneralLedger\Exceptions\LedgerAlreadyActiveException;
 use Nexus\GeneralLedger\Exceptions\LedgerAlreadyClosedException;
 use Nexus\GeneralLedger\Exceptions\LedgerNotFoundException;
-use Symfony\Component\Uid\Ulid;
 
 /**
  * Ledger Service
@@ -25,6 +25,7 @@ final readonly class LedgerService
     public function __construct(
         private LedgerQueryInterface $queryRepository,
         private LedgerPersistInterface $persistRepository,
+        private IdGeneratorInterface $idGenerator,
     ) {}
 
     /**
@@ -44,8 +45,15 @@ final readonly class LedgerService
         string $currency,
         ?string $description = null,
     ): Ledger {
+        // Validate currency format (ISO 4217 - 3 uppercase letters)
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+            throw new \InvalidArgumentException(
+                sprintf('Invalid currency code: %s. Expected ISO 4217 format (e.g., USD, EUR)', $currency)
+            );
+        }
+
         $ledger = Ledger::create(
-            id: Ulid::generate(),
+            id: $this->idGenerator->generate(),
             tenantId: $tenantId,
             name: $name,
             currency: $currency,
@@ -123,10 +131,6 @@ final readonly class LedgerService
     {
         $ledger = $this->getLedger($ledgerId);
 
-        if ($ledger->isClosed()) {
-            throw new LedgerAlreadyClosedException($ledgerId);
-        }
-
         $closedLedger = $ledger->close();
         $this->persistRepository->save($closedLedger);
 
@@ -161,42 +165,10 @@ final readonly class LedgerService
     {
         $ledger = $this->getLedger($ledgerId);
 
-        if ($ledger->isActive()) {
-            throw new LedgerAlreadyActiveException($ledgerId);
-        }
-
         $reactivatedLedger = $ledger->reactivate();
         $this->persistRepository->save($reactivatedLedger);
 
         return $reactivatedLedger;
-    }
-
-    /**
-     * Update ledger status
-     * 
-     * @param string $ledgerId Ledger ULID
-     * @param LedgerStatus $status New status
-     * @return Ledger Updated ledger
-     * @throws LedgerNotFoundException If ledger not found
-     */
-    public function updateStatus(string $ledgerId, LedgerStatus $status): Ledger
-    {
-        $ledger = $this->getLedger($ledgerId);
-        $this->persistRepository->updateStatus($ledgerId, $status);
-
-        return new Ledger(
-            id: $ledger->id,
-            tenantId: $ledger->tenantId,
-            name: $ledger->name,
-            currency: $ledger->currency,
-            type: $ledger->type,
-            status: $status,
-            createdAt: $ledger->createdAt,
-            closedAt: $status === LedgerStatus::CLOSED 
-                ? ($ledger->closedAt ?? new \DateTimeImmutable()) 
-                : null,
-            description: $ledger->description,
-        );
     }
 
     /**

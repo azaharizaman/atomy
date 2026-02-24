@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\GeneralLedger\ValueObjects;
 
 use Nexus\GeneralLedger\Enums\TransactionType;
+use Nexus\GeneralLedger\Enums\BalanceType;
 
 /**
  * Transaction Detail Value Object
@@ -44,6 +45,19 @@ final readonly class TransactionDetail
         if (empty($this->journalEntryId)) {
             throw new \InvalidArgumentException(
                 'Journal entry ID is required'
+            );
+        }
+
+        // Validate that TransactionType aligns with AccountBalance balance type
+        $balanceType = $this->amount->balanceType;
+        if ($this->type === TransactionType::DEBIT && $balanceType !== BalanceType::DEBIT) {
+            throw new \InvalidArgumentException(
+                'Debit transaction must have a debit-typed AccountBalance'
+            );
+        }
+        if ($this->type === TransactionType::CREDIT && $balanceType !== BalanceType::CREDIT) {
+            throw new \InvalidArgumentException(
+                'Credit transaction must have a credit-typed AccountBalance'
             );
         }
     }
@@ -135,6 +149,7 @@ final readonly class TransactionDetail
     {
         return [
             'ledger_account_id' => $this->ledgerAccountId,
+            'journal_entry_id' => $this->journalEntryId,
             'type' => $this->type->value,
             'amount' => $this->amount->toArray(),
             'journal_entry_line_id' => $this->journalEntryLineId,

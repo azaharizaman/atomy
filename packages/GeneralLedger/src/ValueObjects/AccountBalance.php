@@ -29,10 +29,24 @@ final readonly class AccountBalance
         public Money $amount,
         public BalanceType $balanceType,
     ) {
+        // Amount must be positive
+        if (!$this->amount->isPositive() && !$this->amount->isZero()) {
+             throw new \InvalidArgumentException(
+                'Amount must be positive or zero'
+            );
+        }
+
         // Zero balance should be marked as NONE
         if ($this->amount->isZero() && $this->balanceType !== BalanceType::NONE) {
             throw new \InvalidArgumentException(
                 'Zero amount must have BalanceType::NONE'
+            );
+        }
+
+        // Positive balance should NOT be marked as NONE
+        if ($this->amount->isPositive() && $this->balanceType === BalanceType::NONE) {
+            throw new \InvalidArgumentException(
+                'Positive amount must have DEBIT or CREDIT balance type'
             );
         }
     }
@@ -58,7 +72,7 @@ final readonly class AccountBalance
         }
 
         return new self(
-            amount: $amount,
+            amount: $amount->abs(),
             balanceType: BalanceType::DEBIT,
         );
     }
@@ -73,7 +87,7 @@ final readonly class AccountBalance
         }
 
         return new self(
-            amount: $amount,
+            amount: $amount->abs(),
             balanceType: BalanceType::CREDIT,
         );
     }
@@ -142,28 +156,40 @@ final readonly class AccountBalance
             );
         }
 
+        if ($other->isZero()) {
+            return $this;
+        }
+
+        if ($this->isZero()) {
+            return $other;
+        }
+
+        // Determine base type for sign calculation
+        // If current is NONE, we use the other's type
+        $baseType = ($this->balanceType === BalanceType::NONE) 
+            ? $other->balanceType 
+            : $this->balanceType;
+
         // Get signed amounts for proper netting
         $thisSigned = $this->amount;
         $otherSigned = $other->amount;
         
-        // Negate the other amount if it has opposite balance type
-        if ($this->balanceType !== $other->balanceType) {
+        // Negate the other amount if it has opposite balance type relative to baseType
+        if ($baseType !== $other->balanceType) {
             $otherSigned = $otherSigned->negate();
         }
         
-        $newAmount = $thisSigned->add($otherSigned);
+        $newAmountValue = $thisSigned->add($otherSigned);
         
-        // Determine new balance type based on the sign of the result
+        // Determine new balance type based on the sign of the result relative to baseType
         $newType = match (true) {
-            $newAmount->isZero() => BalanceType::NONE,
-            $newAmount->isPositive() => $this->balanceType,
-            default => $this->balanceType === BalanceType::DEBIT 
-                ? BalanceType::CREDIT 
-                : BalanceType::DEBIT,
+            $newAmountValue->isZero() => BalanceType::NONE,
+            $newAmountValue->isPositive() => $baseType,
+            default => $baseType->opposite(),
         };
 
         return new self(
-            amount: $newAmount->abs(),
+            amount: $newAmountValue->abs(),
             balanceType: $newType,
         );
     }
@@ -179,9 +205,14 @@ final readonly class AccountBalance
             );
         }
 
+        if ($other->isZero()) {
+            return $this;
+        }
+
+        // Subtraction is equivalent to adding the opposite balance type
         return $this->add(new self(
-            amount: $other->amount->negate(),
-            balanceType: $other->balanceType,
+            amount: $other->amount,
+            balanceType: $other->balanceType->opposite(),
         ));
     }
 
@@ -199,6 +230,14 @@ final readonly class AccountBalance
     public function getAmount(): Money
     {
         return $this->amount;
+    }
+
+    /**
+     * Get the amount in minor units
+     */
+    public function getAmountInMinorUnits(): string
+    {
+        return $this->amount->getAmountInMinorUnits();
     }
 
     /**

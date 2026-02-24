@@ -14,7 +14,8 @@
         "nexus/common": "^1.0",
         "nexus/chart-of-account": "^1.0",
         "nexus/journal-entry": "^1.0",
-        "nexus/period": "^1.0"
+        "nexus/period": "^1.0",
+        "brick/math": "^0.12"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"

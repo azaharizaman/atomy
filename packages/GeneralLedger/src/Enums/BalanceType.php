@@ -40,6 +40,18 @@ enum BalanceType: string
     }
 
     /**
+     * Get the opposite balance type
+     */
+    public function opposite(): self
+    {
+        return match ($this) {
+            self::DEBIT => self::CREDIT,
+            self::CREDIT => self::DEBIT,
+            self::NONE => self::NONE,
+        };
+    }
+
+    /**
      * Get human-readable label
      */
     public function label(): string

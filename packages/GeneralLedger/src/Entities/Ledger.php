@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Nexus\GeneralLedger\Entities;
+namespace Nexus\GeneralLedger\Exceptions;
 
 use Nexus\GeneralLedger\Enums\LedgerStatus;
 use Nexus\GeneralLedger\Enums\LedgerType;
+use Nexus\GeneralLedger\Exceptions\LedgerAlreadyActiveException;
+use Nexus\GeneralLedger\Exceptions\LedgerAlreadyClosedException;
+use Nexus\GeneralLedger\Exceptions\LedgerArchivedException;
 
 /**
  * Ledger Entity
@@ -149,15 +152,11 @@ final readonly class Ledger
     public function close(): self
     {
         if ($this->isClosed()) {
-            throw new \RuntimeException(
-                sprintf('Ledger %s is already closed', $this->id)
-            );
+            throw new LedgerAlreadyClosedException($this->id);
         }
 
         if ($this->isArchived()) {
-            throw new \RuntimeException(
-                sprintf('Ledger %s is archived and cannot be closed', $this->id)
-            );
+            throw new LedgerArchivedException($this->id);
         }
 
         return new self(
@@ -182,9 +181,7 @@ final readonly class Ledger
     public function archive(): self
     {
         if ($this->isArchived()) {
-            throw new \RuntimeException(
-                sprintf('Ledger %s is already archived', $this->id)
-            );
+            throw new LedgerArchivedException($this->id);
         }
 
         return new self(
@@ -209,15 +206,11 @@ final readonly class Ledger
     public function reactivate(): self
     {
         if ($this->isActive()) {
-            throw new \RuntimeException(
-                sprintf('Ledger %s is already active', $this->id)
-            );
+            throw new LedgerAlreadyActiveException($this->id);
         }
 
         if ($this->isArchived()) {
-            throw new \RuntimeException(
-                sprintf('Ledger %s is archived and cannot be reactivated', $this->id)
-            );
+            throw new LedgerArchivedException($this->id);
         }
 
         return new self(

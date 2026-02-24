@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\GeneralLedger\Contracts;
 
-use Nexus\GeneralLedger\Enums\SubledgerType;
-use Nexus\GeneralLedger\Enums\TransactionType;
 use Nexus\GeneralLedger\ValueObjects\AccountBalance;
 use Nexus\GeneralLedger\ValueObjects\PostingResult;
+use Nexus\GeneralLedger\ValueObjects\SubledgerPostingRequest;
+use Nexus\GeneralLedger\ValueObjects\ValidationResult;
 
 /**
  * Subledger Posting Interface
@@ -70,82 +70,4 @@ interface SubledgerPostingInterface
      * @return bool True if has posted transactions
      */
     public function hasPostedTransactions(string $subledgerId, string $periodId): bool;
-}
-
-/**
- * Subledger Posting Request
- * 
- * Value object representing a request to post from a subledger to GL.
- */
-final readonly class SubledgerPostingRequest
-{
-    /**
-     * @param string $subledgerId Subledger identifier (customer ID, vendor ID, asset ID)
-     * @param SubledgerType $subledgerType Type of subledger (RECEIVABLE, PAYABLE, ASSET)
-     * @param string $ledgerAccountId Target GL account ULID
-     * @param TransactionType $type Transaction type (DEBIT or CREDIT)
-     * @param AccountBalance $amount Amount to post
-     * @param string $periodId Period ULID
-     * @param \DateTimeImmutable $postingDate Date to post
-     * @param string $sourceDocumentId Source document ID (invoice, bill, etc.)
-     * @param string $sourceDocumentLineId Source document line ID
-     * @param string|null $description Description
-     * @param string|null $reference External reference
-     */
-    public function __construct(
-        public string $subledgerId,
-        public SubledgerType $subledgerType,
-        public string $ledgerAccountId,
-        public TransactionType $type,
-        public AccountBalance $amount,
-        public string $periodId,
-        public \DateTimeImmutable $postingDate,
-        public string $sourceDocumentId,
-        public string $sourceDocumentLineId,
-        public ?string $description = null,
-        public ?string $reference = null,
-    ) {}
-
-    /**
-     * Get the currency from the amount
-     */
-    public function getCurrency(): string
-    {
-        return $this->amount->getCurrency();
-    }
-}
-
-/**
- * Validation Result
- * 
- * Value object representing the result of validation.
- */
-final readonly class ValidationResult
-{
-    /**
-     * @param bool $isValid Whether validation passed
-     * @param array<string> $errors Validation errors
-     * @param array<string, mixed> $warnings Validation warnings
-     */
-    private function __construct(
-        public bool $isValid,
-        public array $errors,
-        public array $warnings,
-    ) {}
-
-    /**
-     * Create a successful validation result
-     */
-    public static function valid(array $warnings = []): self
-    {
-        return new self(isValid: true, errors: [], warnings: $warnings);
-    }
-
-    /**
-     * Create a failed validation result
-     */
-    public static function invalid(array $errors, array $warnings = []): self
-    {
-        return new self(isValid: false, errors: $errors, warnings: $warnings);
-    }
 }

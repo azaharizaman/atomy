@@ -7,6 +7,7 @@ namespace Nexus\GeneralLedger\Entities;
 use Nexus\GeneralLedger\Enums\TransactionType;
 use Nexus\GeneralLedger\Enums\BalanceType;
 use Nexus\GeneralLedger\ValueObjects\AccountBalance;
+use Nexus\GeneralLedger\Exceptions\TransactionAlreadyReversedException;
 use Brick\Math\BigDecimal;
 
 /**
@@ -61,20 +62,9 @@ final readonly class Transaction
             );
         }
 
-        // Validate transaction date is not in the future
-        $now = new \DateTimeImmutable();
-        if ($this->transactionDate > $now) {
-            throw new \InvalidArgumentException(
-                'Transaction date cannot be in the future'
-            );
-        }
-
-        // Validate posting date is not in the future
-        if ($this->postingDate > $now) {
-            throw new \InvalidArgumentException(
-                'Posting date cannot be in the future'
-            );
-        }
+        // Time-dependent validations (future dates) removed from constructor
+        // to improve testability and prevent race conditions.
+        // These should be implemented in the service layer using a clock.
     }
 
     /**
@@ -157,14 +147,12 @@ final readonly class Transaction
      * @param string $reversalId The ID for the reversal transaction
      * @param string $reversalPeriodId The period ID for the reversal
      * @param AccountBalance $runningBalance The pre-calculated running balance
-     * @throws \RuntimeException If the transaction has already been reversed
+     * @throws TransactionAlreadyReversedException If the transaction has already been reversed
      */
     public function reverse(string $reversalId, string $reversalPeriodId, AccountBalance $runningBalance): array
     {
         if (!$this->canReverse()) {
-            throw new \RuntimeException(
-                sprintf('Transaction %s has already been reversed', $this->id)
-            );
+            throw new TransactionAlreadyReversedException($this->id);
         }
 
         // Create the reversal transaction with opposite type
@@ -219,13 +207,15 @@ final readonly class Transaction
      */
     public function getEffectiveBalanceImpact(BalanceType $balanceType): BigDecimal
     {
+        $amountInMinorUnits = $this->amount->getAmount()->getAmountInMinorUnits();
+
         return match ($this->type) {
             TransactionType::DEBIT => $balanceType->isDebit() 
-                ? BigDecimal::of($this->amount->getAmountInMinorUnits()) 
-                : BigDecimal::of(-$this->amount->getAmountInMinorUnits()),
+                ? BigDecimal::of($amountInMinorUnits) 
+                : BigDecimal::of($amountInMinorUnits)->negated(),
             TransactionType::CREDIT => $balanceType->isCredit() 
-                ? BigDecimal::of($this->amount->getAmountInMinorUnits()) 
-                : BigDecimal::of(-$this->amount->getAmountInMinorUnits()),
+                ? BigDecimal::of($amountInMinorUnits) 
+                : BigDecimal::of($amountInMinorUnits)->negated(),
         };
     }
 
