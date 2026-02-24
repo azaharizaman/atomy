@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * ValueObjects Directory
+ * 
+ * This directory will contain value object classes for the GeneralLedger package.
+ * 
+ * Planned value objects:
+ * - AccountBalance: Immutable balance representation
+ * - TrialBalance: Trial balance report data
+ * - PostingResult: Result of a posting operation
+ * - TransactionLine: Individual line in a transaction
+ * 
+ * @see packages/GeneralLedger/ARCHITECTURAL.md for value object specifications
+ */

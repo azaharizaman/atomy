@@ -1,0 +1,35 @@
+{
+    "name": "nexus/general-ledger",
+    "description": "Atomic package for general ledger management - central transaction hub for all financial entries, ledger account management, transaction recording, balance calculation, and trial balance generation",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nexus Team",
+            "email": "team@nexus.example.com"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "^1.0",
+        "nexus/chart-of-account": "^1.0",
+        "nexus/journal-entry": "^1.0",
+        "nexus/period": "^1.0",
+        "brick/math": "^0.12"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\GeneralLedger\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\GeneralLedger\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Services Directory
+ * 
+ * This directory will contain service classes for the GeneralLedger package.
+ * 
+ * Planned services:
+ * - GeneralLedgerManager: Main service implementing GeneralLedgerManagerInterface
+ * - BalanceCalculator: Calculates account balances
+ * - TrialBalanceGenerator: Generates trial balance reports
+ * - TransactionRecorder: Records and validates transactions
+ * 
+ * @see packages/GeneralLedger/ARCHITECTURAL.md for service specifications
+ */

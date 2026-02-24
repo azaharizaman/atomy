@@ -1,0 +1,7 @@
+vendor/
+node_modules/
+.git/
+.vscode/
+.devcontainer/
+package-lock.json
+composer.lock

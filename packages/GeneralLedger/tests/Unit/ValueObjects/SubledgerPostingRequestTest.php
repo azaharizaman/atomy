@@ -1,0 +1,85 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\GeneralLedger\Tests\Unit\ValueObjects;
+
+use PHPUnit\Framework\TestCase;
+use Nexus\GeneralLedger\ValueObjects\SubledgerPostingRequest;
+use Nexus\GeneralLedger\ValueObjects\AccountBalance;
+use Nexus\GeneralLedger\Enums\SubledgerType;
+use Nexus\GeneralLedger\Enums\TransactionType;
+use Nexus\GeneralLedger\Exceptions\InvalidPostingException;
+use Nexus\Common\ValueObjects\Money;
+
+final class SubledgerPostingRequestTest extends TestCase
+{
+    public function test_it_can_be_instantiated(): void
+    {
+        $amount = AccountBalance::debit(Money::of('100.00', 'USD'));
+        $now = new \DateTimeImmutable();
+        
+        $request = new SubledgerPostingRequest(
+            'sub-id',
+            SubledgerType::RECEIVABLE,
+            'acc-id',
+            TransactionType::DEBIT,
+            $amount,
+            'period-id',
+            $now,
+            'doc-id',
+            'line-id',
+            'Description',
+            'REF'
+        );
+
+        $this->assertEquals('sub-id', $request->subledgerId);
+        $this->assertEquals(SubledgerType::RECEIVABLE, $request->subledgerType);
+        $this->assertEquals('acc-id', $request->ledgerAccountId);
+        $this->assertEquals(TransactionType::DEBIT, $request->type);
+        $this->assertSame($amount, $request->amount);
+        $this->assertEquals('period-id', $request->periodId);
+        $this->assertSame($now, $request->postingDate);
+        $this->assertEquals('doc-id', $request->sourceDocumentId);
+        $this->assertEquals('line-id', $request->sourceDocumentLineId);
+        $this->assertEquals('Description', $request->description);
+        $this->assertEquals('REF', $request->reference);
+        $this->assertEquals('USD', $request->getCurrency());
+    }
+
+    public function test_it_validates_debit_type_requires_debit_balance(): void
+    {
+        $this->expectException(InvalidPostingException::class);
+        $this->expectExceptionMessage('Debit subledger posting must have a debit-typed AccountBalance');
+        
+        new SubledgerPostingRequest(
+            'sub-id',
+            SubledgerType::RECEIVABLE,
+            'acc-id',
+            TransactionType::DEBIT,
+            AccountBalance::credit(Money::of('100.00', 'USD')),
+            'p',
+            new \DateTimeImmutable(),
+            'd',
+            'l'
+        );
+    }
+
+    public function test_it_validates_credit_type_requires_credit_balance(): void
+    {
+        $this->expectException(InvalidPostingException::class);
+        $this->expectExceptionMessage('Credit subledger posting must have a credit-typed AccountBalance');
+        
+        new SubledgerPostingRequest(
+            'sub-id',
+            SubledgerType::RECEIVABLE,
+            'acc-id',
+            TransactionType::CREDIT,
+            AccountBalance::debit(Money::of('100.00', 'USD')),
+            'p',
+            new \DateTimeImmutable(),
+            'd',
+            'l'
+        );
+    }
+}
