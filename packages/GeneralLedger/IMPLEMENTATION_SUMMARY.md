@@ -45,6 +45,7 @@ packages/GeneralLedger/
 └── src/
     ├── Contracts/              # CQRS Interfaces & Support
     │   ├── DatabaseTransactionInterface.php
+    │   ├── GeneralLedgerManagerInterface.php
     │   ├── IdGeneratorInterface.php
     │   ├── LedgerQueryInterface.php
     │   ├── LedgerPersistInterface.php

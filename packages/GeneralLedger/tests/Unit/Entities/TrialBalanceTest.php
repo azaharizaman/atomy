@@ -7,6 +7,8 @@ namespace Nexus\GeneralLedger\Tests\Unit\Entities;
 use PHPUnit\Framework\TestCase;
 use Nexus\GeneralLedger\Entities\TrialBalance;
 use Nexus\GeneralLedger\Entities\TrialBalanceLine;
+use Nexus\GeneralLedger\Enums\BalanceType;
+use Nexus\GeneralLedger\Exceptions\InvalidTrialBalanceLineException;
 use Nexus\Common\ValueObjects\Money;
 
 final class TrialBalanceTest extends TestCase
@@ -61,7 +63,7 @@ final class TrialBalanceTest extends TestCase
         
         $array = $debitLine->toArray();
         $this->assertEquals('100.00', $array['debit_balance']);
-        $this->assertEquals('debit', $array['balance_type']);
+        $this->assertEquals(BalanceType::DEBIT->value, $array['balance_type']);
     }
 
     public function test_it_can_get_debit_and_credit_accounts(): void
@@ -99,13 +101,32 @@ final class TrialBalanceTest extends TestCase
 
     public function test_line_validates_debit_and_credit_not_both_positive(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidTrialBalanceLineException::class);
         new TrialBalanceLine('a1', '1000', 'Cash', 'USD', Money::of('100.00', 'USD'), Money::of('100.00', 'USD'));
     }
 
     public function test_line_validates_currency_match(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidTrialBalanceLineException::class);
         new TrialBalanceLine('a1', '1000', 'Cash', 'USD', Money::of('100.00', 'EUR'), Money::zero('EUR'));
+    }
+
+    public function test_line_validates_negative_debit(): void
+    {
+        $this->expectException(InvalidTrialBalanceLineException::class);
+        new TrialBalanceLine('a1', '1000', 'Cash', 'USD', Money::of('-100.00', 'USD'), Money::zero('USD'));
+    }
+
+    public function test_line_validates_negative_credit(): void
+    {
+        $this->expectException(InvalidTrialBalanceLineException::class);
+        new TrialBalanceLine('a1', '1000', 'Cash', 'USD', Money::zero('USD'), Money::of('-100.00', 'USD'));
+    }
+
+    public function test_line_validates_zero_balance_currency_consistency(): void
+    {
+        $this->expectException(InvalidTrialBalanceLineException::class);
+        // Even if zero, the Money object must match the line currency
+        new TrialBalanceLine('a1', '1000', 'Cash', 'USD', Money::zero('EUR'), Money::zero('EUR'));
     }
 }

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Nexus\GeneralLedger\Entities;
 
 use Nexus\Common\ValueObjects\Money;
+use Nexus\GeneralLedger\Exceptions\InvalidTrialBalanceLineException;
+use Nexus\GeneralLedger\Enums\BalanceType;
 
 /**
  * Trial Balance Line
@@ -29,22 +31,35 @@ final readonly class TrialBalanceLine
         public Money $debitBalance,
         public Money $creditBalance,
     ) {
+        // Reject negative amounts
+        if ($debitBalance->isNegative()) {
+            throw new InvalidTrialBalanceLineException(
+                sprintf('Debit balance for account %s cannot be negative', $this->accountCode)
+            );
+        }
+
+        if ($creditBalance->isNegative()) {
+            throw new InvalidTrialBalanceLineException(
+                sprintf('Credit balance for account %s cannot be negative', $this->accountCode)
+            );
+        }
+
         // Either debit or credit should be positive, not both
         if ($debitBalance->isPositive() && $creditBalance->isPositive()) {
-            throw new \InvalidArgumentException(
+            throw new InvalidTrialBalanceLineException(
                 'Account cannot have both debit and credit balance'
             );
         }
 
-        // Validate currency consistency
-        if ($debitBalance->isPositive() && $debitBalance->getCurrency() !== $currency) {
-            throw new \InvalidArgumentException(
+        // Validate currency consistency even when a balance is zero
+        if ($debitBalance->getCurrency() !== $currency) {
+            throw new InvalidTrialBalanceLineException(
                 sprintf('Debit balance currency %s does not match line currency %s', $debitBalance->getCurrency(), $currency)
             );
         }
 
-        if ($creditBalance->isPositive() && $creditBalance->getCurrency() !== $currency) {
-            throw new \InvalidArgumentException(
+        if ($creditBalance->getCurrency() !== $currency) {
+            throw new InvalidTrialBalanceLineException(
                 sprintf('Credit balance currency %s does not match line currency %s', $creditBalance->getCurrency(), $currency)
             );
         }
@@ -97,7 +112,9 @@ final readonly class TrialBalanceLine
             'debit_balance' => $this->debitBalance->getAmount(),
             'credit_balance' => $this->creditBalance->getAmount(),
             'net_balance' => $this->getNetBalance()->getAmount(),
-            'balance_type' => $this->isDebit() ? 'debit' : ($this->isCredit() ? 'credit' : 'zero'),
+            'balance_type' => $this->isDebit() 
+                ? BalanceType::DEBIT->value 
+                : ($this->isCredit() ? BalanceType::CREDIT->value : BalanceType::NONE->value),
         ];
     }
 }

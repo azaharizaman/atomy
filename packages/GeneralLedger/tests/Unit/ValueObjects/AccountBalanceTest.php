@@ -75,6 +75,14 @@ final class AccountBalanceTest extends TestCase
         $this->assertEquals('-100.00', $balance->getSignedAmount(BalanceType::CREDIT)->getAmount());
     }
 
+    public function test_it_throws_when_none_account_type_passed_to_get_signed_amount(): void
+    {
+        $balance = AccountBalance::debit(Money::of('100.00', 'USD'));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('BalanceType::NONE is not a valid account type');
+        $balance->getSignedAmount(BalanceType::NONE);
+    }
+
     public function test_it_can_convert_to_array(): void
     {
         $balance = AccountBalance::debit(Money::of('100.00', 'USD'));

@@ -6,6 +6,7 @@ namespace Nexus\GeneralLedger\ValueObjects;
 
 use Nexus\GeneralLedger\Enums\SubledgerType;
 use Nexus\GeneralLedger\Enums\TransactionType;
+use Nexus\GeneralLedger\Enums\BalanceType;
 
 /**
  * Subledger Posting Request
@@ -39,7 +40,20 @@ final readonly class SubledgerPostingRequest
         public string $sourceDocumentLineId,
         public ?string $description = null,
         public ?string $reference = null,
-    ) {}
+    ) {
+        // Validate that TransactionType aligns with AccountBalance balance type
+        $balanceType = $this->amount->balanceType;
+        if ($this->type === TransactionType::DEBIT && $balanceType !== BalanceType::DEBIT) {
+            throw new \InvalidArgumentException(
+                'Debit subledger posting must have a debit-typed AccountBalance'
+            );
+        }
+        if ($this->type === TransactionType::CREDIT && $balanceType !== BalanceType::CREDIT) {
+            throw new \InvalidArgumentException(
+                'Credit subledger posting must have a credit-typed AccountBalance'
+            );
+        }
+    }
 
     /**
      * Get the currency from the amount

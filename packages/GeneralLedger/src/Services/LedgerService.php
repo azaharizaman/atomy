@@ -13,6 +13,7 @@ use Nexus\GeneralLedger\Enums\LedgerType;
 use Nexus\GeneralLedger\Exceptions\LedgerAlreadyActiveException;
 use Nexus\GeneralLedger\Exceptions\LedgerAlreadyClosedException;
 use Nexus\GeneralLedger\Exceptions\LedgerNotFoundException;
+use Nexus\GeneralLedger\Exceptions\InvalidCurrencyException;
 
 /**
  * Ledger Service
@@ -47,7 +48,7 @@ final readonly class LedgerService
     ): Ledger {
         // Validate currency format (ISO 4217 - 3 uppercase letters)
         if (!preg_match('/^[A-Z]{3}$/', $currency)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidCurrencyException(
                 sprintf('Invalid currency code: %s. Expected ISO 4217 format (e.g., USD, EUR)', $currency)
             );
         }

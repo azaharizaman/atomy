@@ -178,7 +178,7 @@ final readonly class TrialBalance
      */
     public function getDebitAccounts(): array
     {
-        return array_filter($this->lines, fn($line) => $line->debitBalance->isPositive());
+        return array_values(array_filter($this->lines, fn($line) => $line->debitBalance->isPositive()));
     }
 
     /**
@@ -186,7 +186,7 @@ final readonly class TrialBalance
      */
     public function getCreditAccounts(): array
     {
-        return array_filter($this->lines, fn($line) => $line->creditBalance->isPositive());
+        return array_values(array_filter($this->lines, fn($line) => $line->creditBalance->isPositive()));
     }
 
     /**

@@ -14,6 +14,7 @@ use Nexus\GeneralLedger\Entities\Ledger;
 use Nexus\GeneralLedger\Enums\LedgerType;
 use Nexus\GeneralLedger\Enums\LedgerStatus;
 use Nexus\GeneralLedger\Exceptions\LedgerNotFoundException;
+use Nexus\GeneralLedger\Exceptions\InvalidCurrencyException;
 
 final class LedgerServiceTest extends TestCase
 {
@@ -65,7 +66,7 @@ final class LedgerServiceTest extends TestCase
 
     public function test_it_throws_exception_on_invalid_currency_when_creating_ledger(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidCurrencyException::class);
         $this->expectExceptionMessage('Invalid currency code: US. Expected ISO 4217 format');
 
         $this->service->createLedger(

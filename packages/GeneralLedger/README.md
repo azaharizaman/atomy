@@ -48,7 +48,7 @@ $ledger = $ledgerService->createLedger(
     description: 'Main statutory ledger'
 );
 
-echo $ledger->id; // ULID string
+echo $ledger->id; // generated ID string
 ```
 
 ### Calculating Account Balances

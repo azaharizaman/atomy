@@ -30,6 +30,7 @@ This document serves as the absolute source of truth for Gemini CLI agents worki
 - **Interface First**: Define the contract in `src/Contracts/` before implementation.
 - **Validation**:
     - For bug fixes: **Reproduce the failure with a test case first.**
+    - For new features: **Write at least one happy-path and one edge-case test before opening a PR.**
     - Run `composer test` or relevant test suites after changes.
 - **Documentation**: Update `IMPLEMENTATION_SUMMARY.md` in the affected package after every change.
 - **Multi-Tenancy**: Always filter by `tenantId`. Guard against cross-tenant data leakage.
@@ -39,7 +40,7 @@ This document serves as the absolute source of truth for Gemini CLI agents worki
 - ❌ NO `use Illuminate\*` or `use Symfony\*` in Layers 1 or 2.
 - ❌ NO direct imports of Layer 1 packages in Orchestrators.
 - ❌ NO generic `object` types for dependencies.
-- ❌ NO mutable arrays in `readonly` classes (use `ArrayObject`).
+- ❌ NO mutable collection objects (e.g., `ArrayObject`) in `readonly` properties; use native arrays or immutable collections instead (readonly + native array preserves immutability while ArrayObject breaks it).
 - ❌ NO synthetic return values (e.g., fake IDs) on failure; throw exceptions instead.
 
 ## 📂 Key References

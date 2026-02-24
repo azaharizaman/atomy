@@ -98,9 +98,18 @@ final readonly class AccountBalance
      * Returns positive for debit balances on debit-balanced accounts,
      * and negative for credit balances on debit-balanced accounts.
      * For credit-balanced accounts, this is reversed.
+     * 
+     * @param BalanceType $accountType The natural balance type of the account (DEBIT or CREDIT)
+     * @throws \InvalidArgumentException If BalanceType::NONE is passed as accountType
      */
     public function getSignedAmount(BalanceType $accountType): Money
     {
+        if ($accountType === BalanceType::NONE) {
+            throw new \InvalidArgumentException(
+                'BalanceType::NONE is not a valid account type for getSignedAmount'
+            );
+        }
+
         if ($this->amount->isZero()) {
             return $this->amount;
         }
@@ -235,7 +244,7 @@ final readonly class AccountBalance
     /**
      * Get the amount in minor units
      */
-    public function getAmountInMinorUnits(): string
+    public function getAmountInMinorUnits(): int
     {
         return $this->amount->getAmountInMinorUnits();
     }

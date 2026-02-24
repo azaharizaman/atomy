@@ -19,6 +19,7 @@ use Nexus\GeneralLedger\Exceptions\GeneralLedgerException;
 use Nexus\GeneralLedger\Exceptions\InvalidPostingException;
 use Nexus\GeneralLedger\Exceptions\LedgerNotFoundException;
 use Nexus\GeneralLedger\Exceptions\PeriodClosedException;
+use Nexus\GeneralLedger\Exceptions\BatchPostingException;
 use Nexus\GeneralLedger\ValueObjects\AccountBalance;
 use Nexus\GeneralLedger\ValueObjects\PostingResult;
 use Nexus\GeneralLedger\ValueObjects\TransactionDetail;
@@ -187,7 +188,7 @@ final readonly class TransactionService
                         $successfulTransactions[] = $result->getTransactionId();
                     } else {
                         // In a atomic batch, if one fails, we roll back everything
-                        throw new \RuntimeException(
+                        throw new BatchPostingException(
                             sprintf('Batch item %d failed: %s', $index, $result->errorMessage)
                         );
                     }
@@ -258,7 +259,8 @@ final readonly class TransactionService
                 [$reversal, $originalWithRef] = $originalTransaction->reverse(
                     $this->idGenerator->generate(),
                     $periodId,
-                    $newBalance
+                    $newBalance,
+                    $reason
                 );
 
                 // Update original transaction to mark it as reversed

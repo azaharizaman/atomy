@@ -37,4 +37,22 @@ final class SubledgerPostingRequestTest extends TestCase
         $this->assertEquals('USD', $request->getCurrency());
         $this->assertEquals('Description', $request->description);
     }
+
+    public function test_it_validates_type_alignment(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Debit subledger posting must have a debit-typed AccountBalance');
+        
+        new SubledgerPostingRequest(
+            'sub-id',
+            SubledgerType::RECEIVABLE,
+            'acc-id',
+            TransactionType::DEBIT,
+            AccountBalance::credit(Money::of('100.00', 'USD')),
+            'p',
+            new \DateTimeImmutable(),
+            'd',
+            'l'
+        );
+    }
 }

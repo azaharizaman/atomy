@@ -99,13 +99,13 @@ final class TransactionTest extends TestCase
             'p', new \DateTimeImmutable(), new \DateTimeImmutable()
         );
 
-        // Debit impact on Debit account is positive (10000 minor units)
+        // Debit impact on Debit account is positive
         $impact = $tx->getEffectiveBalanceImpact(BalanceType::DEBIT);
-        $this->assertEquals('10000', (string)$impact);
+        $this->assertEquals('100.00', $impact->getAmount());
 
         // Debit impact on Credit account is negative
         $impact = $tx->getEffectiveBalanceImpact(BalanceType::CREDIT);
-        $this->assertEquals('-10000', (string)$impact);
+        $this->assertEquals('-100.00', $impact->getAmount());
         
         $creditTx = Transaction::create(
             'id', 'acc-id', 'line-id', 'je-id', 
@@ -117,10 +117,10 @@ final class TransactionTest extends TestCase
         
         // Credit impact on Credit account is positive
         $impact = $creditTx->getEffectiveBalanceImpact(BalanceType::CREDIT);
-        $this->assertEquals('10000', (string)$impact);
+        $this->assertEquals('100.00', $impact->getAmount());
         
         // Credit impact on Debit account is negative
         $impact = $creditTx->getEffectiveBalanceImpact(BalanceType::DEBIT);
-        $this->assertEquals('-10000', (string)$impact);
+        $this->assertEquals('-100.00', $impact->getAmount());
     }
 }

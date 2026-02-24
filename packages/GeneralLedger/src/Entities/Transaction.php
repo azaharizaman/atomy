@@ -8,7 +8,7 @@ use Nexus\GeneralLedger\Enums\TransactionType;
 use Nexus\GeneralLedger\Enums\BalanceType;
 use Nexus\GeneralLedger\ValueObjects\AccountBalance;
 use Nexus\GeneralLedger\Exceptions\TransactionAlreadyReversedException;
-use Brick\Math\BigDecimal;
+use Nexus\Common\ValueObjects\Money;
 
 /**
  * Transaction Entity
@@ -147,10 +147,17 @@ final readonly class Transaction
      * @param string $reversalId The ID for the reversal transaction
      * @param string $reversalPeriodId The period ID for the reversal
      * @param AccountBalance $runningBalance The pre-calculated running balance
+     * @param string|null $reason Optional reason for reversal
+     * @param \DateTimeImmutable|null $postingDate Optional posting date for the reversal
      * @throws TransactionAlreadyReversedException If the transaction has already been reversed
      */
-    public function reverse(string $reversalId, string $reversalPeriodId, AccountBalance $runningBalance): array
-    {
+    public function reverse(
+        string $reversalId, 
+        string $reversalPeriodId, 
+        AccountBalance $runningBalance,
+        ?string $reason = null,
+        ?\DateTimeImmutable $postingDate = null,
+    ): array {
         if (!$this->canReverse()) {
             throw new TransactionAlreadyReversedException($this->id);
         }
@@ -167,10 +174,10 @@ final readonly class Transaction
             amount: $this->amount,
             runningBalance: $runningBalance,
             periodId: $reversalPeriodId,
-            postingDate: new \DateTimeImmutable(),
+            postingDate: $postingDate ?? new \DateTimeImmutable(),
             transactionDate: $this->transactionDate,
             createdAt: new \DateTimeImmutable(),
-            description: 'Reversal: ' . ($this->description ?? $this->id),
+            description: $reason ? 'Reversal: ' . $reason : 'Reversal: ' . ($this->description ?? $this->id),
             reference: 'Reversal of ' . $this->id,
             reversedById: null,
         );
@@ -205,17 +212,17 @@ final readonly class Transaction
      *
      * @param BalanceType $balanceType The balance type of the account
      */
-    public function getEffectiveBalanceImpact(BalanceType $balanceType): BigDecimal
+    public function getEffectiveBalanceImpact(BalanceType $balanceType): Money
     {
-        $amountInMinorUnits = $this->amount->getAmount()->getAmountInMinorUnits();
+        $amount = $this->amount->getAmount();
 
         return match ($this->type) {
             TransactionType::DEBIT => $balanceType->isDebit() 
-                ? BigDecimal::of($amountInMinorUnits) 
-                : BigDecimal::of($amountInMinorUnits)->negated(),
+                ? $amount 
+                : $amount->negate(),
             TransactionType::CREDIT => $balanceType->isCredit() 
-                ? BigDecimal::of($amountInMinorUnits) 
-                : BigDecimal::of($amountInMinorUnits)->negated(),
+                ? $amount 
+                : $amount->negate(),
         };
     }
 
