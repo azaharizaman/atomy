@@ -1,20 +1,39 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Project context
+context: |
+  Project: Atomy (Nexus) - A high-performance, multi-tenant Enterprise ERP/SaaS platform.
+  Tech Stack: PHP 8.3+, Laravel/Symfony (Adapters), Composer, PSR interfaces.
+  Architecture: Three-Layer Architecture:
+    1. Layer 1: Atomic Packages (packages/) - Pure PHP, zero framework dependencies, owns domain truth.
+    2. Layer 2: Orchestrators (orchestrators/) - Cross-package workflow coordination, stateless, own interfaces.
+    3. Layer 3: Adapters (adapters/) - Framework-specific concrete implementations (Laravel/Symfony), bridges L1 and L2.
+  
+  Coding Standards:
+    - Mandatory strict typing: declare(strict_types=1);
+    - Immutability: final readonly class for services, readonly for VO properties.
+    - Dependency Injection: Constructor injection using specific interfaces. NEVER use generic object.
+    - CQRS: Split repositories into {Entity}QueryInterface and {Entity}PersistInterface.
+    - Exceptions: Use domain-specific exceptions, never generic \Exception.
+    - Multi-Tenancy: Always filter by tenantId.
+    - Safety: Guard against division by zero and empty array operations.
+  
+  Conventions:
+    - Discovery first: Search existing packages before implementing new features.
+    - Interface first: Define contracts in src/Contracts/ before implementation.
+    - Implementation Summary: Update IMPLEMENTATION_SUMMARY.md in the affected package after changes.
+    - Tests: Reproduce bugs with tests first; write happy-path and edge-case tests for new features.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+# Per-artifact rules
+rules:
+  proposal:
+    - Follow the Three-Layer Architecture strictly.
+    - Identify which atomic packages and orchestrators are involved.
+    - Ensure zero framework dependencies in Layers 1 and 2.
+  spec:
+    - Define interfaces in src/Contracts/ for any new service.
+    - Ensure strict typing and immutability are preserved.
+  tasks:
+    - Include steps for updating documentation (IMPLEMENTATION_SUMMARY.md).
+    - Include steps for running 'composer test' in affected packages.
+    - Break tasks into atomic, verifiable units.

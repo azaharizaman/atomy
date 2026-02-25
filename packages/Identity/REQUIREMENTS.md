@@ -123,7 +123,7 @@ Total Requirements: 401
 | `Nexus\Identity` | Functional Requirement | FUN-IDE-1408 | Support password expiration policy (force change after N days) |  |  |  |  |
 | `Nexus\Identity` | Functional Requirement | FUN-IDE-1409 | Support user search and filtering (by email, status, role) |  |  |  |  |
 | `Nexus\Identity` | Functional Requirement | FUN-IDE-1410 | Support bulk user operations (import, export, bulk role assignment) |  |  |  |  |
-| `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1429 | Framework-agnostic core with zero Laravel dependencies in packages/domain/identity-security/src/ |  |  |  |  |
+| `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1429 | Framework-agnostic core with zero Laravel dependencies in packages/Identity/src/ |  |  |  |  |
 | `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1430 | Clear contract definitions in src/Contracts/ for extensibility |  |  |  |  |
 | `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1431 | Comprehensive test coverage (>90% code coverage for authentication and authorization logic) |  |  |  |  |
 | `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1432 | Support plugin architecture for custom authentication providers |  |  |  |  |
@@ -324,7 +324,7 @@ Total Requirements: 401
 | `Nexus\Identity` | Functional Requirement | FUN-IDE-1408 | Support password expiration policy (force change after N days) |  |  |  |  |
 | `Nexus\Identity` | Functional Requirement | FUN-IDE-1409 | Support user search and filtering (by email, status, role) |  |  |  |  |
 | `Nexus\Identity` | Functional Requirement | FUN-IDE-1410 | Support bulk user operations (import, export, bulk role assignment) |  |  |  |  |
-| `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1429 | Framework-agnostic core with zero Laravel dependencies in packages/domain/identity-security/src/ |  |  |  |  |
+| `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1429 | Framework-agnostic core with zero Laravel dependencies in packages/Identity/src/ |  |  |  |  |
 | `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1430 | Clear contract definitions in src/Contracts/ for extensibility |  |  |  |  |
 | `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1431 | Comprehensive test coverage (>90% code coverage for authentication and authorization logic) |  |  |  |  |
 | `Nexus\Identity` | Maintainability Requirement | MAINT-IDE-1432 | Support plugin architecture for custom authentication providers |  |  |  |  |

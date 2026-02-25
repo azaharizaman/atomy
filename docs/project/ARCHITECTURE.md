@@ -354,7 +354,7 @@ orchestrators/AccountingOperations/
 
 **Orchestrators MUST define their own interfaces and NOT depend on atomic package interfaces directly.**
 
-See [ORCHESTRATOR_INTERFACE_SEGREGATION.md](docs/ORCHESTRATOR_INTERFACE_SEGREGATION.md) for complete guidelines.
+See [ORCHESTRATOR_INTERFACE_SEGREGATION.md](ORCHESTRATOR_INTERFACE_SEGREGATION.md) for complete guidelines.
 
 ### Why Interface Segregation Matters
 

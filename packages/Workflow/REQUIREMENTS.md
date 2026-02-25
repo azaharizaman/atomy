@@ -1,93 +1,186 @@
 # Requirements: Workflow
 
-**Package:** `Nexus\Workflow`  
-**Total Requirements:** 47  
-**Last Updated:** 2025-11-26
-
----
-
-## Requirements Summary
-
-| Category | Count | Complete | Pending |
-|----------|-------|----------|---------|
-| Architectural | 10 | 10 | 0 |
-| Business | 12 | 12 | 0 |
-| Functional | 18 | 18 | 0 |
-| Security | 4 | 4 | 0 |
-| Performance | 3 | 3 | 0 |
-
----
-
-## Detailed Requirements
+Total Requirements: 180
 
 | Package Namespace | Requirements Type | Code | Requirement Statements | Files/Folders | Status | Notes on Status | Date Last Updated |
 |-------------------|-------------------|------|------------------------|---------------|--------|-----------------|-------------------|
-| `Nexus\Workflow` | Architectural | ARC-WOR-0001 | Package MUST be framework-agnostic with no Laravel/Symfony dependencies | composer.json | ✅ Complete | Only PHP 8.3+ | 2025-11-26 |
-| `Nexus\Workflow` | Architectural | ARC-WOR-0002 | All external dependencies MUST be defined as interfaces | src/Contracts/ | ✅ Complete | 18 interfaces | 2025-11-26 |
-| `Nexus\Workflow` | Architectural | ARC-WOR-0003 | All properties MUST be readonly | src/ | ✅ Complete | All classes use readonly | 2025-11-26 |
-| `Nexus\Workflow` | Architectural | ARC-WOR-0004 | Package MUST require PHP 8.3+ | composer.json | ✅ Complete | `"php": "^8.3"` | 2025-11-26 |
-| `Nexus\Workflow` | Architectural | ARC-WOR-0005 | Package MUST use PSR-4 autoloading | composer.json | ✅ Complete | Nexus\Workflow\ namespace | 2025-11-26 |
-| `Nexus\Workflow` | Architectural | ARC-WOR-0006 | All classes MUST use strict_types | src/ | ✅ Complete | All files | 2025-11-26 |
-| `Nexus\Workflow` | Architectural | ARC-WOR-0007 | Service classes MUST be final readonly | src/Services/ | ✅ Complete | 6 services | 2025-11-26 |
-| `Nexus\Workflow` | Architectural | ARC-WOR-0008 | Core engines MUST be internal to package | src/Core/ | ✅ Complete | 4 engines | 2025-11-26 |
-| `Nexus\Workflow` | Architectural | ARC-WOR-0009 | Value objects MUST be immutable | src/ValueObjects/ | ✅ Complete | 10 value objects | 2025-11-26 |
-| `Nexus\Workflow` | Architectural | ARC-WOR-0010 | Exceptions MUST have static factory methods | src/Exceptions/ | ✅ Complete | 13 exceptions | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0001 | System MUST support state machine workflows with defined states and transitions | src/Core/StateEngine.php | ✅ Complete | Guard validation | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0002 | System MUST support user tasks with assignment | src/Services/TaskManager.php | ✅ Complete | User and role assignment | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0003 | System MUST support multi-approver workflows | src/Core/ApprovalEngine.php | ✅ Complete | 5 strategies | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0004 | System MUST support task delegation | src/Services/DelegationService.php | ✅ Complete | Date ranges, chain limits | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0005 | System MUST support SLA tracking | src/Services/SlaService.php | ✅ Complete | ON_TRACK, AT_RISK, BREACHED | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0006 | System MUST support escalation rules | src/Services/EscalationService.php | ✅ Complete | Rule-based escalation | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0007 | System MUST support workflow history | src/Contracts/HistoryInterface.php | ✅ Complete | Full audit trail | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0008 | System MUST support workflow locking | src/Services/WorkflowManager.php | ✅ Complete | lock/unlock methods | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0009 | System MUST support conditional transitions | src/Core/ConditionEngine.php | ✅ Complete | Expression evaluation | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0010 | System MUST support compensation on failure | src/Core/CompensationEngine.php | ✅ Complete | Rollback activities | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0011 | System MUST support timer-based transitions | src/Contracts/TimerInterface.php | ✅ Complete | Timer entity | 2025-11-26 |
-| `Nexus\Workflow` | Business | BUS-WOR-0012 | System MUST support extensible activities | src/Contracts/ActivityInterface.php | ✅ Complete | Plugin architecture | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0001 | Provide method to instantiate workflow | WorkflowManager::instantiate() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0002 | Provide method to apply transition | WorkflowManager::apply() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0003 | Provide method to check if transition allowed | WorkflowManager::can() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0004 | Provide method to get workflow history | WorkflowManager::history() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0005 | Provide method to lock workflow | WorkflowManager::lock() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0006 | Provide method to unlock workflow | WorkflowManager::unlock() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0007 | Provide method to create task | TaskManager::createTask() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0008 | Provide method to complete task | TaskManager::completeTask() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0009 | Provide method to delegate task | TaskManager::delegateTask() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0010 | Provide method to get inbox tasks | InboxService::forUser() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0011 | Provide method to filter pending tasks | InboxService::pending() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0012 | Provide method to process escalations | EscalationService::processEscalations() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0013 | Provide method to define escalation rule | EscalationService::defineRule() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0014 | Provide method to track SLA | SlaService::trackSla() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0015 | Provide method to get SLA status | SlaService::getSlaStatus() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0016 | Provide method to get breached workflows | SlaService::getBreaches() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0017 | Provide method to create delegation | DelegationService::createDelegation() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Functional | FUN-WOR-0018 | Provide method to revoke delegation | DelegationService::revokeDelegation() | ✅ Complete | - | 2025-11-26 |
-| `Nexus\Workflow` | Security | SEC-WOR-0001 | Task actions MUST validate user authorization | TaskManager::validateUserCanAct() | ✅ Complete | Prevents unauthorized actions | 2025-11-26 |
-| `Nexus\Workflow` | Security | SEC-WOR-0002 | Workflow lock MUST prevent unauthorized transitions | WorkflowManager::apply() | ✅ Complete | Throws WorkflowLockedException | 2025-11-26 |
-| `Nexus\Workflow` | Security | SEC-WOR-0003 | Delegation chain MUST be limited | DelegationChainExceededException | ✅ Complete | Max 3 levels default | 2025-11-26 |
-| `Nexus\Workflow` | Security | SEC-WOR-0004 | Guard conditions MUST use safe evaluator | ConditionEngine | ✅ Complete | No unsafe eval() | 2025-11-26 |
-| `Nexus\Workflow` | Performance | PERF-WOR-0001 | Transition validation SHOULD be O(1) | StateEngine::canTransition() | ✅ Complete | Direct state lookup | 2025-11-26 |
-| `Nexus\Workflow` | Performance | PERF-WOR-0002 | Inbox queries MUST support pagination | InboxService::filter() | ✅ Complete | Limit/offset support | 2025-11-26 |
-| `Nexus\Workflow` | Performance | PERF-WOR-0003 | History retrieval MUST be paginated | HistoryRepositoryInterface | ✅ Complete | Pagination parameters | 2025-11-26 |
-
----
-
-## Requirement Types
-
-- **ARC** - Architectural Requirement
-- **BUS** - Business Requirements
-- **FUN** - Functional Requirement
-- **SEC** - Security Requirement
-- **PERF** - Performance Requirement
-
-## Status Indicators
-
-- ✅ Complete
-- ⏳ Pending
-- 🚧 In Progress
-- ❌ Blocked
-
----
-
-**Prepared By:** Nexus Architecture Team  
-**Last Updated:** 2025-11-26
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0405 | Package must be framework-agnostic with no Laravel dependencies in core services |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0406 | All data structures defined via interfaces (WorkflowInterface, TaskInterface) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0407 | All persistence operations via repository interface |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0408 | Business logic in service layer (WorkflowManager, TaskManager) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0409 | All database migrations in application layer (apps/consuming application) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0410 | All Eloquent models in application layer |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0411 | Repository implementations in application layer |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0412 | Traits and middleware in application layer (Laravel-specific) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0413 | IoC container bindings in application service provider |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Architechtural Requirement | ARC-WOR-0414 | Package composer.json must not depend on laravel/framework |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0415 | A user cannot approve their own submission (configurable per workflow) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0416 | All state changes must be ACID-compliant |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0417 | Escalations occur automatically when deadlines exceeded |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0418 | Compensation executes in reverse order of activities |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0419 | Delegation chains cannot exceed 3 levels |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0420 | Level 1 definitions must be 100% compatible with Level 2/3 |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0421 | Workflow instance tied to single model instance |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0422 | Parallel tasks must all complete before proceeding |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0423 | Task assignment checked against delegation rules |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Business Requirements | BUS-WOR-0424 | Multi-approver tasks follow configured strategy |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0425 | Provide HasWorkflow trait for Eloquent models |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0426 | Support in-model workflow definitions with zero database dependencies |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0427 | Provide workflow()->apply($transition) method |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0428 | Provide workflow()->can($transition) method |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0429 | Provide workflow()->history() method |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0430 | Support guard conditions on transitions |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0431 | Support transition hooks (before, after) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0432 | Support database-driven workflow definitions (JSON format) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0433 | Support User Task states that create inbox tasks |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0434 | Support conditional routing based on workflow data |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0435 | Support parallel approval flows (AND gateways) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0436 | Support inclusive gateways (OR routing) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0437 | Support multi-approver strategies on single task (unison, majority, quorum, weighted, first) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0438 | Provide task inbox API/service |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0439 | Support task actions (approve, reject, request changes) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0440 | Support workflow data schema validation |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0441 | Support plugin activities via onEntry/onExit hooks |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0442 | Support task escalation rules |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0443 | Support SLA tracking per workflow instance |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0444 | Support user delegation with date ranges |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0445 | Support compensation/rollback logic |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0446 | Support approval matrix configuration |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0447 | Support event-driven timer system |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0448 | Execute state transition (apply method) with events fired |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0449 | Validate transition is allowed before execution |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0450 | Wrap all state changes in database transaction |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0451 | Store current state in model's status column (configurable) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0452 | Fire Laravel events (TransitionStarted, TransitionCompleted) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0453 | Store state changes in workflow_history table |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0454 | Include timestamps, actors, and comments in history |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0455 | Define guard callable in transition array |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0456 | Execute callbacks before/after transition |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0457 | Store definitions in workflow_definitions table |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0458 | Override in-model definitions when DB definition exists |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0459 | Hot-reload on definition changes |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0460 | Create record in workflow_tasks table for user tasks |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0461 | Support assignment to user_id or role string |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0462 | Pause workflow until task is completed |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0463 | Evaluate condition expression on transitions |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0464 | Access workflow data via data.field_name |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0465 | Support operators: ==, !=, >, <, >=, <=, AND, OR, NOT, IN |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0466 | Automatically select valid transition |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0467 | Define multiple tasks in parallel array |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0468 | Create all tasks simultaneously |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0469 | Wait for all tasks to complete before proceeding |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0470 | Track completion status per task |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0471 | Evaluate multiple condition expressions for OR routing |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0472 | Activate all paths where condition is true |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0473 | Synchronize at join point |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0474 | Support strategy: unison - all assignees must approve |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0475 | Support strategy: majority - >50% must approve |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0476 | Support strategy: quorum - configurable threshold (e.g., 3 of 5) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0477 | Support strategy: weighted - votes have different weights |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0478 | Support strategy: first - first approval wins |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0479 | Extensible via ApprovalStrategyContract |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0480 | Query: WorkflowInbox::forUser($userId)->pending() |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0481 | Support filtering by workflow type, priority, due date |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0482 | Support sorting |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0483 | Auto-check delegation rules |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0484 | Validate user has permission to act |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0485 | Store action in workflow_history |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0486 | Support comments and attachments |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0487 | Trigger next workflow transition |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0488 | Define dataSchema in JSON definition |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0489 | Validate on workflow instantiation |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0490 | Validate on data updates |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0491 | Type support: string, number, boolean, date, array, object |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0492 | Fire-and-forget execution (async via queue) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0493 | Access workflow data as inputs |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0494 | Built-in plugins: email, Slack, webhook, database update |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0495 | Extensible via ActivityContract |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0496 | Define automation.escalation array in state |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0497 | Support after: "48 hours" - time threshold |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0498 | Support action: "notify" - send reminder |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0499 | Support action: "reassign" - change task assignee |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0500 | Store escalation history |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0501 | Process via scheduled command |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0502 | Define automation.sla in state or workflow root |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0503 | Support duration: "3 days" - total allowed time |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0504 | Support onBreach - actions to fire (notifications, etc.) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0505 | Track SLA status: on_track, at_risk, breached |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0506 | Calculate based on business hours (configurable) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0507 | Store delegation in workflow_delegations table |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0508 | Fields: delegator_id, delegatee_id, starts_at, ends_at |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0509 | Automatically route new tasks to delegatee |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0510 | Log delegation in task history |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0511 | Max delegation chain depth: 3 levels |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0512 | Define compensation array on activities |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0513 | Execute in reverse order on failure |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0514 | Example: Delete created records, send cancellation emails |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0515 | Implement ActivityContract::compensate() method |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0516 | Store threshold-based routing rules in database |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0517 | Example: Amount $0-$5K → Manager, $5K-$50K → Director, $50K+ → VP |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0518 | Apply automatically during workflow instantiation |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0519 | Admin UI for configuration (optional) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0520 | Store timers in workflow_timers table |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0521 | Index on trigger_at timestamp |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0522 | Scheduled worker processes due timers |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0523 | Support: SLA checks, escalations, reminders, scheduled tasks |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0524 | NOT cron-based (event-driven for scalability) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0525 | Provide plugin interface for custom activities (ActivityContract) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0526 | Methods: execute(), compensate(), getName(), getSchema() |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0527 | Auto-discover in configured directories |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0528 | Register via service provider or config |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0529 | Provide plugin interface for custom conditions (ConditionEvaluatorContract) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0530 | Method: evaluate($context, $expression): bool |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0531 | Built-in: amount, role, attribute, date, custom |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0532 | Register custom evaluators via config |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0533 | Provide plugin interface for approval strategies (ApprovalStrategyContract) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0534 | Methods: canProceed($task, $approvals): bool |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0535 | Built-in: unison, majority, quorum, weighted, first |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0536 | Register custom strategies via config |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0537 | Provide plugin interface for custom triggers (TriggerContract) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0538 | Types: webhook, schedule, event, manual |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0539 | Auto-start workflows based on trigger rules |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0540 | Support custom storage backends (StorageContract) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0541 | Built-in: Eloquent (MySQL, PostgreSQL, SQLite, SQL Server) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Functional Requirement | FUN-WOR-0542 | Optional: Redis, MongoDB adapters |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Maintainability Requirement | MAINT-WOR-0563 | Framework-agnostic core (zero Laravel dependencies in src/Core/) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Maintainability Requirement | MAINT-WOR-0564 | Laravel adapter pattern (all framework-specific code in src/Adapters/Laravel/) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Maintainability Requirement | MAINT-WOR-0565 | Comprehensive test coverage (> 80% code coverage, > 90% for core engine) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Maintainability Requirement | MAINT-WOR-0566 | Clear separation of concerns (state management, task management, timer management are independent) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Performance Requirement | PERF-WOR-0543 | State transition execution time < 100ms (excluding async plugin activities) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Performance Requirement | PERF-WOR-0544 | Task inbox query (1,000 pending tasks) < 500ms (with proper database indexes) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Performance Requirement | PERF-WOR-0545 | Escalation/SLA check job (10,000 active workflows) < 2 seconds (indexed workflow_timers table) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Performance Requirement | PERF-WOR-0546 | Workflow instantiation < 200ms (including validation) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Performance Requirement | PERF-WOR-0547 | Parallel gateway synchronization (10 tasks) < 100ms (token-based coordination) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Reliability Requirement | REL-WOR-0554 | All state changes must be ACID-compliant (wrapped in database transactions) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Reliability Requirement | REL-WOR-0555 | Failed plugin activities must not block transitions (fire-and-forget or queue-based execution) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Reliability Requirement | REL-WOR-0556 | Concurrency control for task actions (prevent duplicate approvals via database locking) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Reliability Requirement | REL-WOR-0557 | State corruption protection (validate state machine integrity before transitions) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Reliability Requirement | REL-WOR-0558 | Automatic retry for transient failures (configurable retry policy for queued activities) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Scalability Requirement | SCL-WOR-0559 | Support async/queued execution of activities (Laravel Queue integration) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Scalability Requirement | SCL-WOR-0560 | Horizontal scaling of timer workers (multiple workers can process timers concurrently) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Scalability Requirement | SCL-WOR-0561 | Efficient database queries (proper indexes on state, assignee, trigger_at columns) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Scalability Requirement | SCL-WOR-0562 | Support for 100,000+ concurrent workflow instances (optimized for large-scale ERP deployments) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Security Requirement | SEC-WOR-0548 | Prevent unauthorized task actions (validate at engine level, not just API) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Security Requirement | SEC-WOR-0549 | Sanitize condition expressions (prevent code injection in conditions) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Security Requirement | SEC-WOR-0550 | Tenant isolation (auto-scope queries when nexus-tenancy detected) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Security Requirement | SEC-WOR-0551 | Plugin sandboxing (prevent malicious plugin code execution) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Security Requirement | SEC-WOR-0552 | Audit all state changes (immutable history log) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | Security Requirement | SEC-WOR-0553 | Role-based access control (integration with permission systems) |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0567 | As a developer, I want to add a HasWorkflow trait to my Eloquent model to manage its status column |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0568 | As a developer, I want to define a state machine (states and transitions) as an array inside my model, requiring zero database tables |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0569 | As a developer, I want to call $model->workflow()->apply('transition') to execute a state change |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0570 | As a developer, I want to call $model->workflow()->can('transition') to check if a transition is allowed for UI logic |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0571 | As a developer, I want to call $model->workflow()->history() to see all state transitions |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0572 | As a developer, I want to promote my in-model workflow to a database-driven JSON definition without refactoring code |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0573 | As a developer, I want to define "User Task" steps that halt the workflow and assign tasks to specific users or roles |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0574 | As a developer, I want to use conditional routing (e.g., "if amount > 10,000, add Director approval") |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0575 | As a developer, I want parallel approval flows (e.g., "Finance AND HR must both approve") |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0576 | As a developer, I want to configure multi-approver strategies (unison vote, majority vote, quorum) for a single step |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0577 | As an end-user, I want one inbox showing all my pending tasks across all workflows |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0578 | As an end-user, I want to approve/reject tasks with comments and attachments |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0579 | As a developer, I want to automatically escalate overdue tasks to a manager after 48 hours |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0580 | As a developer, I want to define SLA policies for entire workflows with breach notifications |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0581 | As a manager, I want to delegate my task inbox to an assistant for specific date ranges |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0582 | As a developer, I want to define compensation/rollback logic for failed workflows |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0583 | As an admin, I want to configure approval matrices based on amount thresholds without code changes |  | Skeleton Created | Complete package and application skeleton created | 2025-11-17 |
+| `Nexus\Workflow` | User Story | USE-WOR-0584 | As a developer, I want to track and report on SLA compliance rates per workflow type |  |  | Skeleton Created | Complete package and application skeleton created |
