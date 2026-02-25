@@ -54,11 +54,3 @@ final readonly class TenantCodeUniqueRule implements TenantValidationRuleInterfa
         ]);
     }
 }
-
-/**
- * Interface for checking tenant code uniqueness.
- */
-interface TenantCodeCheckerInterface
-{
-    public function isCodeUnique(string $tenantCode): bool;
-}

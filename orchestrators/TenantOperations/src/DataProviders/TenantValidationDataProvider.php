@@ -46,21 +46,3 @@ final readonly class TenantValidationDataProvider
         return $this->configQuery->get($tenantId, $configKey);
     }
 }
-
-/**
- * Interface for querying tenant status.
- */
-interface TenantStatusQueryInterface
-{
-    public function isActive(string $tenantId): bool;
-    public function getStatus(string $tenantId): ?string;
-}
-
-/**
- * Interface for querying configuration.
- */
-interface ConfigurationQueryInterface
-{
-    public function exists(string $tenantId, string $configKey): bool;
-    public function get(string $tenantId, string $configKey): ?array;
-}
