@@ -18,4 +18,9 @@ interface ProjectQueryInterface
      * @return array<\Nexus\ProjectManagementOperations\DTOs\MilestoneDTO>
      */
     public function getMilestones(string $projectId): array;
+
+    /**
+     * Get project owner (Customer ID)
+     */
+    public function getProjectOwner(string $projectId): string;
 }
