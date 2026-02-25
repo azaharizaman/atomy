@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Nexus\TenantOperations\DTOs;
 
+use Nexus\Common\Contracts\OperationResultInterface;
+
 /**
  * Result of a validation operation.
+ * 
+ * Implements OperationResultInterface for standardization.
  */
-final readonly class ValidationResult
+final readonly class ValidationResult implements OperationResultInterface
 {
     /**
      * @param array<int, array{rule: string, message: string, severity: string}> $errors
@@ -16,6 +20,41 @@ final readonly class ValidationResult
         public bool $passed,
         public array $errors = [],
     ) {}
+
+    /**
+     * @inheritDoc
+     */
+    public function isSuccess(): bool
+    {
+        return $this->passed;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getMessage(): string
+    {
+        return $this->passed ? 'Validation passed' : 'Validation failed';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getData(): array
+    {
+        return [];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getIssues(): array
+    {
+        return array_map(fn($e) => [
+            'rule' => $e['rule'],
+            'message' => $e['message']
+        ], $this->errors);
+    }
 
     /**
      * Create a passed validation result.
