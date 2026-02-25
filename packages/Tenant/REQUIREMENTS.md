@@ -1,169 +1,96 @@
 # Requirements: Tenant
 
-**Total Requirements:** 47
+Total Requirements: 90
 
 | Package Namespace | Requirements Type | Code | Requirement Statements | Files/Folders | Status | Notes on Status | Date Last Updated |
 |-------------------|-------------------|------|------------------------|---------------|--------|-----------------|-------------------|
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0001 | Package MUST be framework-agnostic with zero framework dependencies | composer.json, src/ | ✅ Complete | Pure PHP 8.3+, PSR-3 only | 2025-11-25 |
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0002 | Package MUST require PHP ^8.3 | composer.json | ✅ Complete | Updated from ^8.2 | 2025-11-25 |
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0003 | All interfaces MUST follow Interface Segregation Principle (ISP) | src/Contracts/ | ✅ Complete | Fat repository split into 3 interfaces | 2025-11-25 |
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0004 | Package MUST follow CQRS pattern (separate Write/Read models) | src/Contracts/ | ✅ Complete | TenantPersistenceInterface vs TenantQueryInterface | 2025-11-25 |
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0005 | Services MUST be stateless (except request-scoped context manager) | src/Services/ | ✅ Complete | External state storage for impersonation | 2025-11-25 |
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0006 | Enums MUST be in src/Enums/ folder using native PHP enums | src/Enums/ | ✅ Complete | Moved from ValueObjects/ | 2025-11-25 |
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0007 | All classes MUST use `declare(strict_types=1);` | src/ | ✅ Complete | Strict typing enforced | 2025-11-25 |
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0008 | Constructor properties MUST use readonly modifier | src/Services/, src/Events/ | ✅ Complete | All injected deps are readonly | 2025-11-25 |
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0009 | NO framework references in docblocks | src/Contracts/ | ✅ Complete | Removed "Eloquent", "Laravel" mentions | 2025-11-25 |
-| `Nexus\Tenant` | Architectural Requirement | ARC-TNT-0010 | NO global helpers (date(), config(), app(), etc.) | src/Services/ | ✅ Complete | Replaced date() with DateTimeImmutable | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0001 | System MUST support unique tenant codes (alphanumeric) | src/Contracts/TenantInterface.php | ✅ Complete | getCode() method required | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0002 | System MUST validate tenant code uniqueness before creation | src/Services/TenantLifecycleService.php | ✅ Complete | TenantValidationInterface::codeExists() | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0003 | System MUST support custom domain per tenant | src/Contracts/TenantInterface.php | ✅ Complete | getDomain() method | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0004 | System MUST validate domain uniqueness before assignment | src/Services/TenantLifecycleService.php | ✅ Complete | TenantValidationInterface::domainExists() | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0005 | System MUST support five tenant statuses (Pending, Active, Trial, Suspended, Archived) | src/Enums/TenantStatus.php | ✅ Complete | Native PHP enum | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0006 | System MUST validate status transitions | src/Enums/TenantStatus.php | ✅ Complete | canTransitionTo() method | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0007 | System MUST support tenant suspension with reason tracking | src/Services/TenantLifecycleService.php | ✅ Complete | suspendTenant() with optional reason | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0008 | System MUST support tenant reactivation from suspended state | src/Services/TenantLifecycleService.php | ✅ Complete | reactivateTenant() method | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0009 | System MUST support soft delete (archive) with retention policy | src/Services/TenantLifecycleService.php | ✅ Complete | archiveTenant() uses delete() | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0010 | System MUST support hard delete (permanent) for data purging | src/Services/TenantLifecycleService.php | ✅ Complete | deleteTenant() uses forceDelete() | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0011 | System MUST support hierarchical tenants (parent-child) | src/Contracts/TenantInterface.php | ✅ Complete | getParentId(), getChildren() | 2025-11-25 |
-| `Nexus\Tenant` | Business Requirements | BUS-TNT-0012 | System MUST block access to suspended tenants | src/Services/TenantContextManager.php | ✅ Complete | Throws TenantSuspendedException | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0001 | Provide TenantContextInterface for getting/setting current tenant | src/Contracts/TenantContextInterface.php | ✅ Complete | Interface with 5 methods | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0002 | Provide TenantContextManager implementing context interface | src/Services/TenantContextManager.php | ✅ Complete | Uses TenantQueryInterface | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0003 | Provide TenantPersistenceInterface for write operations | src/Contracts/TenantPersistenceInterface.php | ✅ Complete | ISP-compliant write model | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0004 | Provide TenantQueryInterface for read operations | src/Contracts/TenantQueryInterface.php | ✅ Complete | ISP-compliant read model | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0005 | Provide TenantValidationInterface for validation operations | src/Contracts/TenantValidationInterface.php | ✅ Complete | ISP-compliant validation | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0006 | Provide TenantLifecycleService for CRUD operations | src/Services/TenantLifecycleService.php | ✅ Complete | Uses split interfaces | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0007 | Provide TenantResolverService for multi-strategy identification | src/Services/TenantResolverService.php | ✅ Complete | 5 resolution strategies | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0008 | Provide TenantImpersonationService for secure impersonation | src/Services/TenantImpersonationService.php | ✅ Complete | Refactored to stateless | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0009 | Provide TenantStatusService for business logic filtering | src/Services/TenantStatusService.php | ✅ Complete | Domain service extracted from repository | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0010 | Provide EventDispatcherInterface for event handling | src/Contracts/EventDispatcherInterface.php | ✅ Complete | Framework-agnostic event contract | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0011 | Provide ImpersonationStorageInterface for external state | src/Contracts/ImpersonationStorageInterface.php | ✅ Complete | Stateless architecture compliance | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0012 | Provide immutable event value objects for all lifecycle events | src/Events/ | ✅ Complete | 9 event classes created | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0013 | Support domain-based tenant identification | src/Services/TenantResolverService.php | ✅ Complete | resolveByDomain() method | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0014 | Support subdomain-based tenant identification | src/Services/TenantResolverService.php | ✅ Complete | resolveBySubdomain() method | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0015 | Support header-based tenant identification | src/Services/TenantResolverService.php | ✅ Complete | Requires app implementation | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0016 | Support path-based tenant identification | src/Services/TenantResolverService.php | ✅ Complete | Requires app implementation | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0017 | Support session-based tenant identification | src/Services/TenantResolverService.php | ✅ Complete | Requires app implementation | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0018 | Provide cache integration for tenant data | src/Services/TenantContextManager.php | ✅ Complete | CacheRepositoryInterface with 1hr TTL | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0019 | Provide TenantStatus enum with transition validation | src/Enums/TenantStatus.php | ✅ Complete | Native PHP 8.3 enum | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0020 | Provide IdentificationStrategy enum | src/Enums/IdentificationStrategy.php | ✅ Complete | Native PHP 8.3 enum | 2025-11-25 |
-| `Nexus\Tenant` | Functional Requirement | FUN-TNT-0021 | Provide comprehensive exception hierarchy | src/Exceptions/ | ✅ Complete | 7 domain-specific exceptions | 2025-11-25 |
-| `Nexus\Tenant` | Integration Requirement | INT-TNT-0001 | Application MUST implement TenantPersistenceInterface using ORM | Application Layer | ⏳ Pending | Implementation guide provided | 2025-11-25 |
-| `Nexus\Tenant` | Integration Requirement | INT-TNT-0002 | Application MUST implement TenantQueryInterface using ORM | Application Layer | ⏳ Pending | Implementation guide provided | 2025-11-25 |
-| `Nexus\Tenant` | Integration Requirement | INT-TNT-0003 | Application MUST implement TenantValidationInterface | Application Layer | ⏳ Pending | Implementation guide provided | 2025-11-25 |
-| `Nexus\Tenant` | Integration Requirement | INT-TNT-0004 | Application MUST implement EventDispatcherInterface | Application Layer | ⏳ Pending | Laravel/Symfony examples provided | 2025-11-25 |
-| `Nexus\Tenant` | Integration Requirement | INT-TNT-0005 | Application MUST implement ImpersonationStorageInterface | Application Layer | ⏳ Pending | Session/cache examples provided | 2025-11-25 |
-| `Nexus\Tenant` | Integration Requirement | INT-TNT-0006 | Application MUST implement CacheRepositoryInterface | Application Layer | ⏳ Pending | Implementation guide provided | 2025-11-25 |
-| `Nexus\Tenant` | Integration Requirement | INT-TNT-0007 | Application MUST provide PSR-3 LoggerInterface implementation | Application Layer | ⏳ Pending | Any PSR-3 compatible logger | 2025-11-25 |
-| `Nexus\Tenant` | Test Requirement | TST-TNT-0001 | Unit tests for TenantLifecycleService with 80%+ coverage | tests/Unit/ | ⏳ Pending | Planned Phase 4 | 2025-11-25 |
-| `Nexus\Tenant` | Test Requirement | TST-TNT-0002 | Unit tests for TenantImpersonationService with 80%+ coverage | tests/Unit/ | ⏳ Pending | Planned Phase 4 | 2025-11-25 |
-| `Nexus\Tenant` | Test Requirement | TST-TNT-0003 | Unit tests for TenantContextManager with 80%+ coverage | tests/Unit/ | ⏳ Pending | Planned Phase 4 | 2025-11-25 |
-| `Nexus\Tenant` | Test Requirement | TST-TNT-0004 | Unit tests for TenantResolverService with 80%+ coverage | tests/Unit/ | ⏳ Pending | Planned Phase 4 | 2025-11-25 |
-| `Nexus\Tenant` | Test Requirement | TST-TNT-0005 | Unit tests for TenantStatusService with 80%+ coverage | tests/Unit/ | ⏳ Pending | Planned Phase 4 | 2025-11-25 |
-| `Nexus\Tenant` | Test Requirement | TST-TNT-0006 | Integration tests for tenant lifecycle workflows | tests/Feature/ | ⏳ Pending | Planned Phase 4 | 2025-11-25 |
-| `Nexus\Tenant` | Test Requirement | TST-TNT-0007 | Integration tests for impersonation workflows | tests/Feature/ | ⏳ Pending | Planned Phase 4 | 2025-11-25 |
-
----
-
-## Requirements Summary
-
-### By Type
-- **Architectural Requirements:** 10/10 (100% complete)
-- **Business Requirements:** 12/12 (100% complete)
-- **Functional Requirements:** 21/21 (100% complete)
-- **Integration Requirements:** 0/7 (0% - application layer)
-- **Test Requirements:** 0/7 (0% - planned Phase 4)
-
-### By Status
-- ✅ **Complete:** 43/47 (91.5%)
-- ⏳ **Pending:** 4/47 (8.5%) - Application layer implementation
-- 🚧 **In Progress:** 0/47 (0%)
-- ❌ **Blocked:** 0/47 (0%)
-
-### Coverage Metrics
-- **Core Package Implementation:** 100% complete
-- **Architectural Compliance:** 100% complete
-- **Application Integration Examples:** 100% complete (documentation)
-- **Automated Tests:** 0% complete (planned)
-
----
-
-## Key Requirement Changes (v1.0 → v1.1)
-
-### Added Requirements (ISP Refactoring)
-- ARC-TNT-0003: Interface Segregation Principle compliance
-- ARC-TNT-0004: CQRS pattern implementation
-- ARC-TNT-0005: Stateless architecture (except request-scoped)
-- FUN-TNT-0003: TenantPersistenceInterface (Write Model)
-- FUN-TNT-0004: TenantQueryInterface (Read Model)
-- FUN-TNT-0005: TenantValidationInterface
-- FUN-TNT-0009: TenantStatusService (domain logic)
-- FUN-TNT-0010: EventDispatcherInterface
-- FUN-TNT-0011: ImpersonationStorageInterface
-- FUN-TNT-0012: Event value objects (9 classes)
-
-### Modified Requirements
-- ARC-TNT-0002: PHP version ^8.2 → ^8.3
-- ARC-TNT-0006: Enums moved to src/Enums/
-- FUN-TNT-0006: TenantLifecycleService refactored to use split interfaces
-- FUN-TNT-0008: TenantImpersonationService refactored to stateless
-
-### Deprecated Requirements
-- Old fat TenantRepositoryInterface (backward compatibility maintained)
-
----
-
-## Compliance Verification
-
-### ISP Compliance Checklist
-- [x] No interface has more than 5 methods
-- [x] Each interface serves single responsibility
-- [x] Write operations separated from read operations
-- [x] Validation operations in dedicated interface
-- [x] Services inject only interfaces they need
-
-### CQRS Compliance Checklist
-- [x] Write Model defined (TenantPersistenceInterface)
-- [x] Read Model defined (TenantQueryInterface)
-- [x] No pagination in domain layer (raw collections)
-- [x] Business logic in domain service (TenantStatusService)
-- [x] Application layer handles query optimization
-
-### Stateless Architecture Checklist
-- [x] No persistent state in services
-- [x] External storage for impersonation state
-- [x] Event value objects (no stateful dispatcher)
-- [x] Request-scoped state documented as exception
-- [x] All services testable with mocked dependencies
-
-### Framework Agnosticism Checklist
-- [x] Zero framework dependencies in composer.json
-- [x] No framework mentions in docblocks
-- [x] No global helpers (date(), config(), etc.)
-- [x] Pure PHP 8.3+ implementation
-- [x] PSR interfaces only external dependency
-
----
-
-## Notes
-
-### Integration Requirements (Pending)
-These requirements are intentionally marked as "Pending" because they must be implemented by the consuming application layer. The package provides:
-- Interface contracts
-- Integration guides with framework-specific examples (Laravel, Symfony)
-- Working code examples in documentation
-
-### Test Requirements (Planned Phase 4)
-Automated testing is high priority but deferred to ensure architectural compliance first. Test suite will include:
-- Unit tests with mocked interfaces
-- Integration tests for workflows
-- Event dispatching tests
-- 80%+ code coverage target
-
-### Backward Compatibility
-The old `TenantRepositoryInterface` is maintained as deprecated to support existing applications. Migration guide provided in REFACTORING_SUMMARY.md. Planned removal in v2.0 (Q2 2026).
-
----
-
-**Last Updated:** November 25, 2025  
-**Author:** Nexus Architecture Team  
-**Review Status:** Approved
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0576 | Package MUST be framework-agnostic with no Laravel dependencies in core services | packages/Tenant/composer.json (only psr/log dependency) | ✅ Complete | Verified: No laravel/* dependencies | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0577 | All data structures defined via interfaces (TenantInterface) | packages/Tenant/src/Contracts/TenantInterface.php (33 methods) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0578 | All persistence operations via repository interface (TenantRepositoryInterface) | packages/Tenant/src/Contracts/TenantRepositoryInterface.php (20 methods) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0579 | Business logic in service layer (TenantContextManager, TenantLifecycleService) | packages/Tenant/src/Services/ (5 service classes) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0580 | All database migrations in application layer (apps/consuming application) | consuming application (e.g., Laravel app)database/migrations/2025_11_17_100000_create_tenants_table.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0581 | All Eloquent models in application layer | consuming application (e.g., Laravel app)app/Models/Tenant.php, TenantImpersonation.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0582 | Repository implementations in application layer | consuming application (e.g., Laravel app)app/Repositories/DbTenantRepository.php (20 methods) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0583 | Global Scopes for automatic query filtering in application layer (Laravel-specific) | consuming application (e.g., Laravel app)app/Scopes/TenantScope.php, app/Traits/BelongsToTenant.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0584 | IoC container bindings in application service provider | consuming application (e.g., Laravel app)app/Providers/TenantServiceProvider.php::register() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0585 | Package composer.json MUST NOT depend on laravel/framework | packages/Tenant/composer.json (only psr/log dependency) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0586 | Cache operations via CacheRepositoryInterface contract only | packages/Tenant/src/Contracts/CacheRepositoryInterface.php, consuming application (e.g., Laravel app)app/Services/LaravelCacheRepository.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Architechtural Requirement | ARC-TEN-0587 | Context propagation to queued jobs handled by application layer | [Future] consuming application (e.g., Laravel app)app/Jobs/Middleware/SetTenantContext.php | ⏳ Pending | To be implemented when job queue is added | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0588 | Tenant ID MUST be set before any database operations can occur | packages/Tenant/src/Services/TenantContextManager.php::requireTenant(), consuming application (e.g., Laravel app)app/Scopes/TenantScope.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0589 | Tenant codes MUST be unique across the entire system | packages/Tenant/src/Services/TenantLifecycleService.php::create(), consuming application (e.g., Laravel app)database/migrations/*::unique('code') | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0590 | Tenant domains MUST be unique if domain-based identification is used | packages/Tenant/src/Services/TenantLifecycleService.php::create(), consuming application (e.g., Laravel app)database/migrations/*::unique('domain') | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0591 | Only one tenant context can be active per request/process at a time | packages/Tenant/src/Services/TenantContextManager.php (single $currentTenantId property) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0592 | Suspended tenants CANNOT access the system except for admin/billing | packages/Tenant/src/Services/TenantContextManager.php::setTenant() (throws TenantSuspendedException) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0593 | Super admin users can impersonate any tenant for support purposes | packages/Tenant/src/Services/TenantImpersonationService.php::startImpersonation() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0594 | Impersonation sessions MUST log original user, target tenant, and timestamp | packages/Tenant/src/Services/TenantImpersonationService.php, consuming application (e.g., Laravel app)database/migrations/*::tenant_impersonations | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0595 | Tenant creation MUST trigger automated setup (default roles, permissions, initial data) | [Future] packages/Tenant/src/Services/TenantEventDispatcher.php::tenantCreated(), consuming application (e.g., Laravel app)app/Listeners/* | ⏳ Pending | Event system ready, listeners to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0596 | Trial tenants auto-suspend after trial period expires unless converted | [Future] consuming application (e.g., Laravel app)app/Console/Commands/ExpireTrialTenantsCommand.php | ⏳ Pending | Scheduled command to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0597 | Tenant deletion MUST be soft delete with configurable retention period before hard delete | consuming application (e.g., Laravel app)app/Models/Tenant.php (SoftDeletes trait), consuming application (e.g., Laravel app)config/tenant.php::retention_days | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0598 | All tenant state changes MUST be ACID-compliant transactions | packages/Tenant/src/Services/TenantLifecycleService.php (all state change methods) | ✅ Complete | Laravel DB transactions enforced at repository level | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0599 | Cross-tenant data access MUST be explicitly prevented at query level | consuming application (e.g., Laravel app)app/Scopes/TenantScope.php::apply(), consuming application (e.g., Laravel app)app/Traits/BelongsToTenant.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0600 | Tenant context MUST persist across queued jobs and background processes | [Future] consuming application (e.g., Laravel app)app/Jobs/Middleware/SetTenantContext.php | ⏳ Pending | To be implemented with job queue | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0601 | Maximum concurrent sessions per tenant can be enforced (enterprise feature) | [Future] packages/Tenant/src/Services/TenantSessionManager.php | ⏳ Pending | Enterprise feature to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0602 | Tenant timezone settings override system default for all date/time operations | packages/Tenant/src/ValueObjects/TenantSettings.php::$timezone, consuming application (e.g., Laravel app)app/Models/Tenant.php::getTimezone() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0603 | Tenant locale settings determine default language and number formatting | packages/Tenant/src/ValueObjects/TenantSettings.php::$locale, consuming application (e.g., Laravel app)app/Models/Tenant.php::getLocale() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0604 | Subscription status changes (active, suspended, cancelled) trigger lifecycle events | packages/Tenant/src/Services/TenantEventDispatcher.php (9 events), packages/Tenant/src/Services/TenantLifecycleService.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0605 | Read-only mode can be enabled per tenant for maintenance or migration | consuming application (e.g., Laravel app)database/migrations/*::$table->boolean('is_readonly'), consuming application (e.g., Laravel app)app/Models/Tenant.php::isReadonly() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0606 | Tenant metadata (custom settings) stored as JSON with schema validation | consuming application (e.g., Laravel app)database/migrations/*::$table->json('metadata'), packages/Tenant/src/ValueObjects/TenantSettings.php::$metadata | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0607 | Multi-database strategy support (single DB with tenant_id vs separate databases per tenant) | consuming application (e.g., Laravel app)database/migrations/*::$table->string('database_name'), consuming application (e.g., Laravel app)config/tenant.php::multi_database | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0608 | Tenant branding (logo, colors, name) customizable per tenant | consuming application (e.g., Laravel app)database/migrations/*::$table->json('metadata') (stores branding in metadata field) | ✅ Complete | Branding stored in metadata JSON | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0609 | Storage quota enforcement per tenant with configurable limits | consuming application (e.g., Laravel app)database/migrations/*::$table->bigInteger('storage_quota_mb'), consuming application (e.g., Laravel app)app/Models/Tenant.php::getStorageQuotaMb() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0610 | API rate limiting applied per tenant, not per user | consuming application (e.g., Laravel app)database/migrations/*::$table->integer('rate_limit_per_minute'), consuming application (e.g., Laravel app)app/Models/Tenant.php::getRateLimitPerMinute() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0611 | Billing cycle start date tracked per tenant for subscription management | consuming application (e.g., Laravel app)database/migrations/*::$table->timestamp('billing_cycle_starts_at'), consuming application (e.g., Laravel app)app/Models/Tenant.php::getBillingCycleStartsAt() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0612 | Parent-child tenant relationships supported (holding companies with subsidiaries) | consuming application (e.g., Laravel app)database/migrations/*::$table->string('parent_id'), consuming application (e.g., Laravel app)app/Models/Tenant.php::parent(), children() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0613 | Child tenants inherit configuration from parent unless explicitly overridden | [Future] packages/Tenant/src/Services/TenantConfigurationInheritanceService.php | ⏳ Pending | Inheritance logic to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0614 | Impersonation requires specific permission and generates audit trail | packages/Tenant/src/Services/TenantImpersonationService.php, consuming application (e.g., Laravel app)app/Models/TenantImpersonation.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Business Requirements | BUS-TEN-0615 | Tenant onboarding workflow tracks setup progress (0-100% completion) | [Future] consuming application (e.g., Laravel app)database/migrations/*::$table->integer('onboarding_progress'), packages/Tenant/src/Services/TenantOnboardingService.php | ⏳ Pending | Onboarding wizard to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0616 | Identify current tenant from request context (domain, subdomain, header, or session) | packages/Tenant/src/Services/TenantResolverService.php::resolve(), consuming application (e.g., Laravel app)app/Http/Middleware/IdentifyTenant.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0617 | Set and retrieve current tenant ID globally within request/process scope | packages/Tenant/src/Services/TenantContextManager.php::setTenant(), getCurrentTenantId() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0618 | Clear tenant context (logout, process completion, exception handling) | packages/Tenant/src/Services/TenantContextManager.php::clearTenant() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0619 | Validate tenant exists and is active before setting context | packages/Tenant/src/Services/TenantContextManager.php::setTenant() (validates status) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0620 | Cache tenant configuration data to reduce database queries | packages/Tenant/src/Services/TenantContextManager.php (uses CacheRepositoryInterface) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0621 | Support multiple tenant identification strategies (domain, subdomain, path, header, token) | packages/Tenant/src/ValueObjects/IdentificationStrategy.php (5 strategies), packages/Tenant/src/Services/TenantResolverService.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0622 | Create new tenant with required fields (code, name, email, status) | packages/Tenant/src/Services/TenantLifecycleService.php::create(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::store() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0623 | Activate tenant (change status from pending to active) | packages/Tenant/src/Services/TenantLifecycleService.php::activate(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::activate() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0624 | Suspend tenant (prevent access, retain data, reversible) | packages/Tenant/src/Services/TenantLifecycleService.php::suspend(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::suspend() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0625 | Reactivate suspended tenant (restore access) | packages/Tenant/src/Services/TenantLifecycleService.php::reactivate(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::reactivate() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0626 | Archive tenant (soft delete with retention policy) | packages/Tenant/src/Services/TenantLifecycleService.php::archive(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::destroy() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0627 | Permanently delete tenant data (hard delete after retention period) | packages/Tenant/src/Services/TenantLifecycleService.php::delete(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::forceDestroy() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0628 | Update tenant metadata (name, email, domain, settings) | packages/Tenant/src/Services/TenantLifecycleService.php::update(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::update() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0629 | Retrieve tenant by ID, code, or domain | packages/Tenant/src/Contracts/TenantRepositoryInterface.php::findById(), findByCode(), findByDomain() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0630 | List all tenants with filtering (status, date range, search) | packages/Tenant/src/Contracts/TenantRepositoryInterface.php::all(), search(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::index() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0631 | Impersonate tenant as support user (set context + log impersonation) | packages/Tenant/src/Services/TenantImpersonationService.php::startImpersonation(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::impersonate() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0632 | Stop impersonation and restore original user context | packages/Tenant/src/Services/TenantImpersonationService.php::endImpersonation(), consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::stopImpersonation() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0633 | Track impersonation history (who, when, which tenant, duration) | consuming application (e.g., Laravel app)app/Models/TenantImpersonation.php, consuming application (e.g., Laravel app)database/migrations/*::tenant_impersonations | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0634 | Emit events for tenant lifecycle changes (created, activated, suspended, deleted) | packages/Tenant/src/Services/TenantEventDispatcher.php (9 event types) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0635 | Configure tenant-specific settings (timezone, locale, currency, date format) | packages/Tenant/src/ValueObjects/TenantSettings.php, consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::update() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0636 | Export tenant configuration for backup or migration | [Future] packages/Tenant/src/Services/TenantExportService.php | ⏳ Pending | Export service to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0637 | Import tenant configuration from backup | [Future] packages/Tenant/src/Services/TenantImportService.php | ⏳ Pending | Import service to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0638 | Clone tenant (duplicate configuration for new tenant) | [Future] packages/Tenant/src/Services/TenantLifecycleService.php::clone() | ⏳ Pending | Clone functionality to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0639 | Generate tenant usage reports (storage, users, API calls) | [Future] packages/Tenant/src/Services/TenantUsageReportService.php | ⏳ Pending | Usage analytics to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0640 | Check tenant feature flags and plan entitlements | consuming application (e.g., Laravel app)database/migrations/*::$table->json('feature_flags'), consuming application (e.g., Laravel app)app/Models/Tenant.php::getFeatureFlags() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0641 | Enforce tenant plan limits (max users, max storage, modules) | consuming application (e.g., Laravel app)database/migrations/*::storage_quota_mb, max_users, consuming application (e.g., Laravel app)app/Models/Tenant.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0642 | Switch tenant context for multi-tenant admin dashboard | packages/Tenant/src/Services/TenantContextManager.php::setTenant(), clearTenant() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0643 | Resolve tenant from API authentication token | packages/Tenant/src/Services/TenantResolverService.php::resolve() (token strategy) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0644 | Middleware to automatically set tenant context from request | consuming application (e.g., Laravel app)app/Http/Middleware/IdentifyTenant.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0645 | Provide scoped database connection for tenant-specific queries | [Future] consuming application (e.g., Laravel app)app/Services/TenantDatabaseConnectionManager.php | ⏳ Pending | Connection manager for multi-database strategy | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0646 | Support separate database per tenant (multi-database strategy) | consuming application (e.g., Laravel app)database/migrations/*::$table->string('database_name'), consuming application (e.g., Laravel app)config/tenant.php::multi_database | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0647 | Support single database with tenant_id column (shared database strategy) | consuming application (e.g., Laravel app)app/Scopes/TenantScope.php, consuming application (e.g., Laravel app)app/Traits/BelongsToTenant.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0648 | Validate tenant-scoped file uploads (prevent cross-tenant access) | [Future] consuming application (e.g., Laravel app)app/Http/Middleware/ValidateTenantFileAccess.php | ⏳ Pending | File access validation to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0649 | Generate tenant-specific API keys and secrets | [Future] consuming application (e.g., Laravel app)app/Services/TenantApiKeyService.php | ⏳ Pending | API key management to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0650 | Rotate tenant API keys with zero downtime | [Future] consuming application (e.g., Laravel app)app/Services/TenantApiKeyService.php::rotate() | ⏳ Pending | Key rotation to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0651 | Configure webhook endpoints per tenant for event notifications | [Future] consuming application (e.g., Laravel app)database/migrations/*::tenant_webhooks, consuming application (e.g., Laravel app)app/Services/TenantWebhookService.php | ⏳ Pending | Webhook system to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0652 | Test tenant context isolation (prevent data leakage) | consuming application (e.g., Laravel app)app/Scopes/TenantScope.php, consuming application (e.g., Laravel app)app/Traits/BelongsToTenant.php (automatic isolation) | ✅ Complete | Global scope enforces isolation | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0653 | RESTful API endpoints for tenant management (CRUD operations) | consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php (14 endpoints), consuming application (e.g., Laravel app)routes/api_tenant.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0654 | Dashboard showing tenant statistics (total, active, suspended, trial) | consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::statistics(), consuming application (e.g., Laravel app)app/Repositories/DbTenantRepository.php::getStatistics() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | Functional Requirement | FUN-TEN-0655 | Tenant onboarding wizard with step-by-step setup | [Future] consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantOnboardingController.php | ⏳ Pending | Onboarding wizard UI to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0656 | As a system admin, I want to create new tenants with automated provisioning | consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::store(), packages/Tenant/src/Services/TenantEventDispatcher.php::tenantCreated() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0657 | As a system admin, I want to suspend misbehaving tenants immediately | consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::suspend(), packages/Tenant/src/Services/TenantLifecycleService.php::suspend() | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0658 | As a support engineer, I want to impersonate tenants to troubleshoot issues | consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::impersonate(), packages/Tenant/src/Services/TenantImpersonationService.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0659 | As a tenant admin, I want to customize my tenant's branding and settings | consuming application (e.g., Laravel app)app/Http/Controllers/Api/TenantController.php::update(), packages/Tenant/src/ValueObjects/TenantSettings.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0660 | As a developer, I want automatic tenant isolation without manual filtering | consuming application (e.g., Laravel app)app/Scopes/TenantScope.php, consuming application (e.g., Laravel app)app/Traits/BelongsToTenant.php (automatic global scope) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0661 | As a billing manager, I want to track tenant subscription status and billing cycles | consuming application (e.g., Laravel app)database/migrations/*::billing_cycle_starts_at, status, consuming application (e.g., Laravel app)app/Models/Tenant.php | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0662 | As a system admin, I want to migrate tenants between databases without downtime | [Future] consuming application (e.g., Laravel app)app/Services/TenantMigrationService.php | ⏳ Pending | Database migration tools to be implemented | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0663 | As a compliance officer, I want complete audit logs of all tenant administrative actions | consuming application (e.g., Laravel app)app/Models/TenantImpersonation.php (impersonation logs), packages/Tenant/src/Services/TenantEventDispatcher.php (events) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0664 | As a tenant user, I want seamless experience without knowing about multi-tenancy | consuming application (e.g., Laravel app)app/Http/Middleware/IdentifyTenant.php (transparent), consuming application (e.g., Laravel app)app/Scopes/TenantScope.php (automatic) | ✅ Complete | - | 2025-01-17 |
+| `Nexus\Tenant` | User Story | USE-TEN-0665 | As a system architect, I want to switch between shared and separate database strategies | consuming application (e.g., Laravel app)config/tenant.php::multi_database, database_prefix, consuming application (e.g., Laravel app)database/migrations/*::database_name | ✅ Complete | - | 2025-01-17 |

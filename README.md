@@ -39,16 +39,16 @@ Nexus is built on a "Logic in Packages, Implementation in Applications" philosop
 
 To keep the codebase maintainable, documentation is structured as follows:
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: **Mandatory reading.** Covers architectural layers, coding standards, the Advanced Orchestrator Pattern, and authorization rules.
-- **[docs/ORCHESTRATOR_INTERFACE_SEGREGATION.md](docs/ORCHESTRATOR_INTERFACE_SEGREGATION.md)**: **Mandatory for orchestrator development.** Defines how orchestrators interact with atomic packages through interface segregation.
-- **[docs/NEXUS_PACKAGES_REFERENCE.md](docs/NEXUS_PACKAGES_REFERENCE.md)**: Inventory and capabilities of all 51+ internal packages.
-- **[docs/NEXUS_SYSTEM_OVERVIEW.md](docs/NEXUS_SYSTEM_OVERVIEW.md)**: Deep-dive reference for AI assistants and senior architects.
+- **[ARCHITECTURE.md](docs/project/ARCHITECTURE.md)**: **Mandatory reading.** Covers architectural layers, coding standards, the Advanced Orchestrator Pattern, and authorization rules.
+- **[ORCHESTRATOR_INTERFACE_SEGREGATION.md](docs/project/ORCHESTRATOR_INTERFACE_SEGREGATION.md)**: **Mandatory for orchestrator development.** Defines how orchestrators interact with atomic packages through interface segregation.
+- **[NEXUS_PACKAGES_REFERENCE.md](docs/project/NEXUS_PACKAGES_REFERENCE.md)**: Inventory and capabilities of all 51+ internal packages.
+- **[NEXUS_SYSTEM_OVERVIEW.md](docs/project/NEXUS_SYSTEM_OVERVIEW.md)**: Deep-dive reference for AI assistants and senior architects.
 
 ---
 
 ## 🤝 Contributing
 
-Before contributing, please review the **[ARCHITECTURE.md](ARCHITECTURE.md)** to ensure your code follows our strict standards:
+Before contributing, please review the **[ARCHITECTURE.md](docs/project/ARCHITECTURE.md)** to ensure your code follows our strict standards:
 1. **Framework Agnosticism**: No framework-specific code in packages or orchestrators.
 2. **Contract-Driven**: Define requirements via interfaces; use primary dependency injection.
 3. **Stateless Logic**: Externalize all long-term state via storage interfaces.

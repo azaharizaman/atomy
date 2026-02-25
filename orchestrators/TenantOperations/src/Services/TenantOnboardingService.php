@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Nexus\TenantOperations\Services;
 
+use Nexus\TenantOperations\Contracts\AdminCreatorAdapterInterface;
+use Nexus\TenantOperations\Contracts\AuditLoggerAdapterInterface;
+use Nexus\TenantOperations\Contracts\CompanyCreatorAdapterInterface;
+use Nexus\TenantOperations\Contracts\FeatureConfiguratorAdapterInterface;
+use Nexus\TenantOperations\Contracts\SettingsInitializerAdapterInterface;
+use Nexus\TenantOperations\Contracts\TenantCreatorAdapterInterface;
 use Nexus\TenantOperations\Contracts\TenantOnboardingServiceInterface;
 use Nexus\TenantOperations\DTOs\TenantOnboardingRequest;
 use Nexus\TenantOperations\DTOs\TenantOnboardingResult;
@@ -24,12 +30,12 @@ use Psr\Log\NullLogger;
 final readonly class TenantOnboardingService implements TenantOnboardingServiceInterface
 {
     public function __construct(
-        private TenantCreatorInterface $tenantCreator,
-        private SettingsInitializerInterface $settingsInitializer,
-        private FeatureConfiguratorInterface $featureConfigurator,
-        private CompanyCreatorInterface $companyCreator,
-        private AdminCreatorInterface $adminCreator,
-        private AuditLoggerInterface $auditLogger,
+        private TenantCreatorAdapterInterface $tenantCreator,
+        private SettingsInitializerAdapterInterface $settingsInitializer,
+        private FeatureConfiguratorAdapterInterface $featureConfigurator,
+        private CompanyCreatorAdapterInterface $companyCreator,
+        private AdminCreatorAdapterInterface $adminCreator,
+        private AuditLoggerAdapterInterface $auditLogger,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -133,58 +139,4 @@ final readonly class TenantOnboardingService implements TenantOnboardingServiceI
             isAdmin: true,
         );
     }
-}
-
-/**
- * Interface for tenant creation.
- */
-interface TenantCreatorInterface
-{
-    public function create(string $code, string $name, string $domain): string;
-}
-
-/**
- * Interface for settings initialization.
- */
-interface SettingsInitializerInterface
-{
-    /**
-     * @param array<string, mixed> $settings
-     */
-    public function initialize(string $tenantId, array $settings): void;
-}
-
-/**
- * Interface for feature configuration.
- */
-interface FeatureConfiguratorInterface
-{
-    /**
-     * @param array<string, bool> $features
-     */
-    public function configure(string $tenantId, array $features): void;
-}
-
-/**
- * Interface for company creation.
- */
-interface CompanyCreatorInterface
-{
-    public function createDefaultStructure(string $tenantId, string $companyName): string;
-}
-
-/**
- * Interface for admin user creation.
- */
-interface AdminCreatorInterface
-{
-    public function create(string $tenantId, string $email, string $password, bool $isAdmin = false): string;
-}
-
-/**
- * Interface for audit logging.
- */
-interface AuditLoggerInterface
-{
-    public function log(string $event, string $tenantId, array $data): void;
 }

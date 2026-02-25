@@ -11,6 +11,7 @@ use Nexus\Sales\Contracts\CreditLimitCheckerInterface;
 use Nexus\Sales\Contracts\InvoiceManagerInterface;
 use Nexus\Sales\Contracts\SalesOrderInterface;
 use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
+use Nexus\Sales\Contracts\SalesSettingInterface;
 use Nexus\Sales\Contracts\StockReservationInterface;
 use Nexus\Sales\Enums\PaymentTerm;
 use Nexus\Sales\Enums\SalesOrderStatus;
@@ -33,6 +34,7 @@ final readonly class SalesOrderManager
         private SalesOrderRepositoryInterface $salesOrderRepository,
         private SequenceGeneratorInterface $sequenceGenerator,
         private ExchangeRateServiceInterface $exchangeRateService,
+        private SalesSettingInterface $salesSetting,
         private CreditLimitCheckerInterface $creditLimitChecker,
         private StockReservationInterface $stockReservation,
         private InvoiceManagerInterface $invoiceManager,
@@ -192,7 +194,7 @@ final readonly class SalesOrderManager
 
         // 2. Lock exchange rate (if foreign currency)
         if ($order->getExchangeRate() === null) {
-            $baseCurrency = 'MYR'; // TODO: Get from tenant settings
+            $baseCurrency = $this->salesSetting->getBaseCurrency($order->getTenantId());
             if ($order->getCurrencyCode() !== $baseCurrency) {
                 $exchangeRate = $this->exchangeRateService->getRate(
                     $order->getCurrencyCode(),

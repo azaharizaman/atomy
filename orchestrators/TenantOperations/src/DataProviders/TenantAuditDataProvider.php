@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Nexus\TenantOperations\DataProviders;
 
+use Nexus\TenantOperations\Contracts\AuditLogQueryAdapterInterface;
+
 /**
  * Data provider for tenant audit logs.
  */
 final readonly class TenantAuditDataProvider
 {
     public function __construct(
-        private AuditLogQueryInterface $auditLogQuery,
+        private AuditLogQueryAdapterInterface $auditLogQuery,
     ) {}
 
     /**
@@ -40,22 +42,4 @@ final readonly class TenantAuditDataProvider
     {
         $this->auditLogQuery->log($tenantId, $event, $data);
     }
-}
-
-/**
- * Interface for querying audit logs.
- */
-interface AuditLogQueryInterface
-{
-    /**
-     * @return array<int, array{id: string, event: string, tenant_id: string, data: array, created_at: string}>
-     */
-    public function getLogsForTenant(string $tenantId, ?int $limit = 100): array;
-
-    /**
-     * @return array<int, array{id: string, event: string, tenant_id: string, data: array, created_at: string}>
-     */
-    public function getLogsByEvent(string $tenantId, string $event, ?int $limit = 100): array;
-
-    public function log(string $tenantId, string $event, array $data): void;
 }

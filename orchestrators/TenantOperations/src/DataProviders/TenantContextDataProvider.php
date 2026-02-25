@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\TenantOperations\DataProviders;
 
+use Nexus\TenantOperations\Contracts\FeatureQueryAdapterInterface;
+use Nexus\TenantOperations\Contracts\SettingsQueryAdapterInterface;
 use Nexus\TenantOperations\Contracts\TenantContextProviderInterface;
+use Nexus\TenantOperations\Contracts\TenantQueryAdapterInterface;
 use Nexus\TenantOperations\DTOs\TenantContext;
 
 /**
@@ -15,9 +18,9 @@ use Nexus\TenantOperations\DTOs\TenantContext;
 final readonly class TenantContextDataProvider implements TenantContextProviderInterface
 {
     public function __construct(
-        private TenantQueryInterface $tenantQuery,
-        private SettingsQueryInterface $settingsQuery,
-        private FeatureQueryInterface $featureQuery,
+        private TenantQueryAdapterInterface $tenantQuery,
+        private SettingsQueryAdapterInterface $settingsQuery,
+        private FeatureQueryAdapterInterface $featureQuery,
     ) {}
 
     public function getContext(string $tenantId): TenantContext
@@ -54,39 +57,4 @@ final readonly class TenantContextDataProvider implements TenantContextProviderI
     {
         return $this->tenantQuery->exists($tenantId);
     }
-}
-
-/**
- * Interface for querying tenant data.
- */
-interface TenantQueryInterface
-{
-    /**
-     * @return array{id: string, code: string, name: string, status: string, plan?: string}|null
-     */
-    public function findById(string $tenantId): ?array;
-
-    public function exists(string $tenantId): bool;
-}
-
-/**
- * Interface for querying settings data.
- */
-interface SettingsQueryInterface
-{
-    /**
-     * @return array<string, mixed>
-     */
-    public function getSettings(string $tenantId): array;
-}
-
-/**
- * Interface for querying feature data.
- */
-interface FeatureQueryInterface
-{
-    /**
-     * @return array<string, bool>
-     */
-    public function getFeatures(string $tenantId): array;
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\TenantOperations\Rules;
 
+use Nexus\TenantOperations\Contracts\TenantDomainCheckerInterface;
 use Nexus\TenantOperations\Contracts\TenantValidationRuleInterface;
 use Nexus\TenantOperations\DTOs\TenantOnboardingRequest;
 use Nexus\TenantOperations\DTOs\ValidationResult;
@@ -53,12 +54,4 @@ final readonly class TenantDomainUniqueRule implements TenantValidationRuleInter
             ],
         ]);
     }
-}
-
-/**
- * Interface for checking tenant domain uniqueness.
- */
-interface TenantDomainCheckerInterface
-{
-    public function isDomainUnique(string $domain): bool;
 }
