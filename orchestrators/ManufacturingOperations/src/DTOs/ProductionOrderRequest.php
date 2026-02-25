@@ -17,5 +17,9 @@ readonly class ProductionOrderRequest
         public ?string $estimatedLaborCost = null,
         public ?string $estimatedOverheadCost = null,
         public ?CurrencyCode $currency = null,
-    ) {}
+    ) {
+        if ($this->quantity <= 0) {
+            throw new \InvalidArgumentException("quantity must be a positive number");
+        }
+    }
 }

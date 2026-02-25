@@ -8,7 +8,15 @@ The system SHALL coordinate the release of a production order by verifying stock
 - **AND** all required materials are available in stock
 - **THEN** the system SHALL reserve the materials in Inventory
 - **AND** create the initial Quality Control checklist
-- **AND** update the production order status to 'In Progress'
+- **AND** update the production order status to InProgress
+
+#### Scenario: Atomic Release with Compensation
+- **WHEN** a production order is being released
+- **AND** any step fails after materials are reserved (e.g., QC initialization or status update)
+- **THEN** the system SHALL perform compensating actions to maintain consistency:
+    - **SHALL** unreserve any materials reserved in Inventory for this release
+    - **SHALL** revert/delete any partially created Quality Control artifacts
+    - **SHALL** NOT update the production order status to InProgress
 
 #### Scenario: Release blocked by material shortage
 - **WHEN** a production order is released

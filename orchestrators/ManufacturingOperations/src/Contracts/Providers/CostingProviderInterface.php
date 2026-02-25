@@ -29,11 +29,20 @@ interface CostingProviderInterface
 
     /**
      * Get labor costs for a specific order.
+     * 
+     * @return \Nexus\ManufacturingOperations\DTOs\LaborCost[]
      */
-    public function getLaborCosts(string $tenantId, string $orderId): string;
+    public function getLaborCosts(string $tenantId, string $orderId): array;
 
     /**
      * Get overhead costs for a specific order.
+     * 
+     * @return \Nexus\ManufacturingOperations\DTOs\OverheadCost[]
      */
-    public function getOverheadCosts(string $tenantId, string $orderId): string;
+    public function getOverheadCosts(string $tenantId, string $orderId): array;
+
+    /**
+     * Get the currency used for a specific order.
+     */
+    public function getCurrencyForOrder(string $tenantId, string $orderId): CurrencyCode;
 }

@@ -12,6 +12,16 @@ readonly class CostCalculationResult
         public string $estimatedOverheadCost,
         public CurrencyCode $currency,
     ) {
+        $decimalPattern = '/^[+-]?\d+(\.\d+)?$/';
+        if (!preg_match($decimalPattern, $this->estimatedMaterialCost)) {
+            throw new \InvalidArgumentException("estimatedMaterialCost must be a valid decimal string");
+        }
+        if (!preg_match($decimalPattern, $this->estimatedLaborCost)) {
+            throw new \InvalidArgumentException("estimatedLaborCost must be a valid decimal string");
+        }
+        if (!preg_match($decimalPattern, $this->estimatedOverheadCost)) {
+            throw new \InvalidArgumentException("estimatedOverheadCost must be a valid decimal string");
+        }
     }
 
     public function getTotal(): string

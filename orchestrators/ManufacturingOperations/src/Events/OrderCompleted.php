@@ -4,12 +4,4 @@ declare(strict_types=1);
 
 namespace Nexus\ManufacturingOperations\Events;
 
-use Nexus\ManufacturingOperations\DTOs\ProductionOrder;
-
-final readonly class OrderCompleted
-{
-    public function __construct(
-        public string $tenantId,
-        public ProductionOrder $order,
-    ) {}
-}
+final readonly class OrderCompleted extends OrderLifecycleEvent {}

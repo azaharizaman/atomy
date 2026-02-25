@@ -28,6 +28,9 @@ interface QualityProviderInterface
 
     /**
      * Remove an inspection record (used for rollbacks).
+     * 
+     * This operation SHOULD be idempotent. If the inspection record does not exist, 
+     * it should be treated as a no-op success. Transient errors should throw exceptions.
      */
     public function deleteInspection(string $tenantId, string $inspectionId): void;
 }

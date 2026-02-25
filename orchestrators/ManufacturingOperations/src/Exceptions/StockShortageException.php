@@ -19,7 +19,11 @@ final class StockShortageException extends ManufacturingOperationsException
             return new self("Stock shortage encountered: No details provided.");
         }
         
-        $details = implode(', ', array_map(fn($sku, $qty) => "{$sku}: {$qty}", array_keys($shortages), $shortages));
+        $details = implode(', ', array_map(
+            fn($sku, $qty) => sprintf("%s: %s", $sku, number_format((float)$qty, 4, '.', '')), 
+            array_keys($shortages), 
+            $shortages
+        ));
         return new self("Stock shortage encountered: {$details}");
     }
 }

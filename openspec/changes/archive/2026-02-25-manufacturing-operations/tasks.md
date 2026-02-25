@@ -31,4 +31,4 @@
 
 - [x] 5.1 Create `orchestrators/ManufacturingOperations/IMPLEMENTATION_SUMMARY.md`
 - [x] 5.2 Run `composer test` and ensure 100% pass rate
-- [ ] 5.3 Run static analysis (e.g., PHPStan) to verify type safety (SKIPPED: phpstan not found in environment)
+- [ ] 5.3 Run static analysis (e.g., PHPStan) to verify type safety.

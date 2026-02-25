@@ -176,13 +176,27 @@ final class ManufacturingOrchestratorTest extends TestCase
             dueDate: new \DateTimeImmutable('+1 week'),
             reservationId: 'RES-1'
         );
+        
+        $orderCompleted = new ProductionOrder(
+            id: $orderId,
+            orderNumber: 'PO-001',
+            productId: 'P-100',
+            quantity: 10.0,
+            status: ProductionOrderStatus::Completed,
+            dueDate: new \DateTimeImmutable('+1 week'),
+            reservationId: 'RES-1'
+        );
 
-        $this->manufacturingProvider->method('getOrder')->willReturn($order);
+        $this->manufacturingProvider->expects($this->exactly(2))
+            ->method('getOrder')
+            ->willReturnOnConsecutiveCalls($order, $orderCompleted);
+            
         $this->qualityProvider->method('checkCompliance')->willReturn(true);
         
         $this->costingProvider->method('getMaterialCosts')->willReturn([]);
-        $this->costingProvider->method('getLaborCosts')->willReturn('50.00');
-        $this->costingProvider->method('getOverheadCosts')->willReturn('20.00');
+        $this->costingProvider->method('getLaborCosts')->willReturn([]);
+        $this->costingProvider->method('getOverheadCosts')->willReturn([]);
+        $this->costingProvider->method('getCurrencyForOrder')->willReturn(CurrencyCode::USD);
 
         $this->inventoryProvider->expects($this->once())->method('issueStock');
         $this->inventoryProvider->expects($this->once())->method('receiveStock');
@@ -192,7 +206,10 @@ final class ManufacturingOrchestratorTest extends TestCase
             ->method('updateOrderStatus')
             ->with('tenant-1', $orderId, ProductionOrderStatus::Completed);
 
-        $this->orchestrator->completeOrder('tenant-1', $orderId);
+        $result = $this->orchestrator->completeOrder('tenant-1', $orderId);
+        
+        $this->assertSame($orderCompleted, $result);
+        $this->assertEquals(ProductionOrderStatus::Completed, $result->status);
     }
 
     #[Test]

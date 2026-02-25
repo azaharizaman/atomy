@@ -229,17 +229,24 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
         
         // 4. Calculate and Record Actual Costs (Computation instead of hardcoded placeholder)
         $actualMaterialCosts = $this->costingProvider->getMaterialCosts($tenantId, $orderId);
-        $totalActualMaterial = "0.0000";
+        $totalActual = "0.0000";
         foreach ($actualMaterialCosts as $cost) {
-            $totalActualMaterial = bcadd($totalActualMaterial, $cost->totalCost, 4);
+            $totalActual = bcadd($totalActual, $cost->totalCost, 4);
         }
 
-        $laborCost = $this->costingProvider->getLaborCosts($tenantId, $orderId);
-        $overheadCost = $this->costingProvider->getOverheadCosts($tenantId, $orderId);
-        
-        $totalActual = bcadd(bcadd($totalActualMaterial, $laborCost, 4), $overheadCost, 4);
+        $laborCosts = $this->costingProvider->getLaborCosts($tenantId, $orderId);
+        foreach ($laborCosts as $cost) {
+            $totalActual = bcadd($totalActual, $cost->totalCost, 4);
+        }
 
-        $this->costingProvider->recordActualCost($tenantId, $orderId, $totalActual, \Nexus\ManufacturingOperations\DTOs\CurrencyCode::USD);
+        $overheadCosts = $this->costingProvider->getOverheadCosts($tenantId, $orderId);
+        foreach ($overheadCosts as $cost) {
+            $totalActual = bcadd($totalActual, $cost->totalCost, 4);
+        }
+        
+        $orderCurrency = $this->costingProvider->getCurrencyForOrder($tenantId, $orderId);
+
+        $this->costingProvider->recordActualCost($tenantId, $orderId, $totalActual, $orderCurrency);
 
         // 5. Update Status
         $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, ProductionOrderStatus::Completed);

@@ -12,5 +12,20 @@ readonly class StockCheckRequest
     public function __construct(
         public array $items,
         public ?string $warehouseId = null,
-    ) {}
+    ) {
+        if (empty($this->items)) {
+            throw new \InvalidArgumentException("items array cannot be empty");
+        }
+        foreach ($this->items as $sku => $quantity) {
+            if (empty($sku)) {
+                throw new \InvalidArgumentException("sku cannot be empty");
+            }
+            if ($quantity <= 0) {
+                throw new \InvalidArgumentException("quantity must be greater than zero");
+            }
+        }
+        if ($this->warehouseId !== null && empty($this->warehouseId)) {
+            throw new \InvalidArgumentException("warehouseId cannot be empty if provided");
+        }
+    }
 }
