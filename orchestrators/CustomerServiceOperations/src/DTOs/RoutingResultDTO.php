@@ -8,8 +8,8 @@ readonly class RoutingResultDTO
 {
     public function __construct(
         public string $ticketId,
-        public ?string $agentId,
         public bool $success,
+        public ?string $agentId = null,
         public string $reason = '',
     ) {}
 }

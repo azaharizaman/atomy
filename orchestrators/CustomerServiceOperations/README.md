@@ -46,7 +46,9 @@ src/
 │   ├── AgentInterface.php
 │   ├── MessageInterface.php
 │   ├── KnowledgeBaseArticleInterface.php
-│   ├── SLAInterface.php
+│   ├── SlaInterface.php
+│   ├── TicketRepositoryInterface.php
+│   ├── TicketLifecycleWorkflowInterface.php
 │   └── ...
 ├── Coordinators/        # Stateless traffic cops
 │   ├── TicketRoutingCoordinator.php

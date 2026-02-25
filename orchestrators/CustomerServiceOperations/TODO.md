@@ -8,7 +8,7 @@
 - [x] Directory Structure
 - [x] `composer.json`
 - [x] `README.md`
-- [ ] `VALUATION_MATRIX.md`
+- [x] `VALUATION_MATRIX.md`
 
 ## 2. Contracts (Priority: HIGH)
 - [x] `TicketInterface.php`
@@ -16,8 +16,9 @@
 - [x] `AgentInterface.php`
 - [x] `MessageInterface.php`
 - [x] `KnowledgeBaseArticleInterface.php`
-- [x] `SLAInterface.php`
-- [x] `TicketProviderInterface.php`
+- [x] `SlaInterface.php`
+- [x] `TicketRepositoryInterface.php`
+- [x] `TicketLifecycleWorkflowInterface.php`
 
 ## 3. Enums & DTOs
 - [x] `TicketStatus.php`

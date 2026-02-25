@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Nexus\CustomerServiceOperations\Coordinators;
 
-use Nexus\CustomerServiceOperations\Contracts\TicketProviderInterface;
-use Nexus\CustomerServiceOperations\Contracts\AgentInterface;
+use Nexus\CustomerServiceOperations\Contracts\TicketRepositoryInterface;
 use Nexus\CustomerServiceOperations\DTOs\RoutingResultDTO;
 
 class TicketRoutingCoordinator
 {
     public function __construct(
-        private TicketProviderInterface $ticketProvider,
-        // Other dependencies would be injected here
+        private readonly TicketRepositoryInterface $ticketRepository,
     ) {}
 
     public function routeTicket(string $ticketId): RoutingResultDTO

@@ -34,7 +34,7 @@ Initial valuation matrix for the scaffolded CustomerServiceOperations orchestrat
 
 ## Risk Assessment Summary
 
-### High Risk Items
+### High-Risk Items
 
 | Item | Risk Level | Reason | Mitigation |
 |------|------------|--------|------------|
