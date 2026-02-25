@@ -34,7 +34,7 @@ Automate the financial and communication flows triggered by project milestones.
 - [x] **Task: Implement Billing Automation Flow** d72286c
     - [ ] **Write Failing Tests:** Write a test where completing a milestone results in a call to `createDraftInvoice` in the `Receivable` contract.
     - [ ] **Implement:** Create `MilestoneBillingService` to orchestrate billing actions.
-- [ ] **Task: Implement Notification & Revenue Update Flow**
+- [x] **Task: Implement Notification & Revenue Update Flow** f2cd7e7
     - [ ] **Write Failing Tests:** Write a test where completing a milestone triggers a `Messaging` notification and an `updateEarnedRevenue` call in `Budget`.
     - [ ] **Implement:** Update `MilestoneBillingService` to include notification and budget update logic.
 - [ ] **Task: Conductor - User Manual Verification 'Phase 3: Milestone Billing Bridge' (Protocol in workflow.md)**
