@@ -25,7 +25,7 @@ Implement the core logic to reconcile project progress with financial and time-b
     - [ ] **Implement:** Create `TimelineDriftService` to identify schedule deviations.
 - [x] **Task: Conductor - User Manual Verification 'Phase 2: Project Health Monitoring' (Protocol in workflow.md)**
 
-## Phase 3: Milestone Billing Bridge
+## Phase 3: Milestone Billing Bridge [checkpoint: 7d3c192]
 Automate the financial and communication flows triggered by project milestones.
 
 - [x] **Task: Define Billing & Notification Contracts** 42c131a
@@ -37,7 +37,7 @@ Automate the financial and communication flows triggered by project milestones.
 - [x] **Task: Implement Notification & Revenue Update Flow** f2cd7e7
     - [ ] **Write Failing Tests:** Write a test where completing a milestone triggers a `Messaging` notification and an `updateEarnedRevenue` call in `Budget`.
     - [ ] **Implement:** Update `MilestoneBillingService` to include notification and budget update logic.
-- [ ] **Task: Conductor - User Manual Verification 'Phase 3: Milestone Billing Bridge' (Protocol in workflow.md)**
+- [x] **Task: Conductor - User Manual Verification 'Phase 3: Milestone Billing Bridge' (Protocol in workflow.md)**
 
 ## Phase 4: Integration & Documentation
 Finalize the orchestrator and provide documentation for its usage.
