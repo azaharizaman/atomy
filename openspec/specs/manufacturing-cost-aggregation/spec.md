@@ -11,7 +11,7 @@ The system SHALL aggregate material, labor, and overhead costs to calculate the 
 - **AND** return a consolidated cost DTO (COGS)
 
 ### Requirement: Unit of Measure Normalization
-The system SHALL use the `UomServiceInterface` to normalize all material quantities and prices to a standard base unit before cost calculation.
+The system SHALL use the `UomProviderInterface` to normalize all material quantities and prices to a standard base unit before cost calculation.
 
 #### Scenario: Handle multiple UoMs
 - **WHEN** materials are recorded in 'kg' but costed in 'g'
@@ -23,6 +23,6 @@ The system MUST ensure high precision and consistent currency handling for all c
 #### Acceptance Criteria:
 - **Numeric Precision**: All cost calculations SHALL use a decimal precision of at least 4 decimal places.
 - **Rounding Mode**: The system SHALL use 'Half Up' rounding for final totals.
-- **Currency Normalization**: All costs MUST be normalized to the order's primary currency before aggregation.
+- **Currency Normalization**: All costs MUST be normalized to the order's primary currency before aggregation using the `UomProviderInterface`.
 - **Exchange Rates**: Currency conversion SHALL use the exchange rate active at the time of the transaction/calculation.
 - **Aggregation Logic**: Rounding SHALL ONLY occur at the final total calculation step, not on individual line items, to prevent accumulated rounding errors.

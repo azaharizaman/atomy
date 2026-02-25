@@ -17,7 +17,7 @@ readonly class StockCheckRequest
             throw new \InvalidArgumentException("items array cannot be empty");
         }
         foreach ($this->items as $sku => $quantity) {
-            if (empty($sku)) {
+            if ($sku === '') {
                 throw new \InvalidArgumentException("sku cannot be empty");
             }
             if ($quantity <= 0) {

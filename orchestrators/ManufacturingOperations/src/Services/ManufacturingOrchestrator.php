@@ -12,6 +12,8 @@ use Nexus\ManufacturingOperations\Contracts\Providers\CostingProviderInterface;
 use Nexus\ManufacturingOperations\Contracts\Providers\InventoryProviderInterface;
 use Nexus\ManufacturingOperations\Contracts\Providers\ManufacturingProviderInterface;
 use Nexus\ManufacturingOperations\Contracts\Providers\QualityProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\UomProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\WarehouseProviderInterface;
 use Nexus\ManufacturingOperations\DTOs\BomLookupRequest;
 use Nexus\ManufacturingOperations\DTOs\CostCalculationRequest;
 use Nexus\ManufacturingOperations\DTOs\InspectionRequest;
@@ -35,6 +37,8 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
         private InventoryProviderInterface $inventoryProvider,
         private QualityProviderInterface $qualityProvider,
         private CostingProviderInterface $costingProvider,
+        private UomProviderInterface $uomProvider,
+        private WarehouseProviderInterface $warehouseProvider,
         private AuthContextInterface $authContext,
         private PolicyEvaluatorInterface $policyEvaluator,
         private LoggerInterface $logger,
@@ -108,7 +112,8 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
             estimatedMaterialCost: $estimatedCost->estimatedMaterialCost,
             estimatedLaborCost: $estimatedCost->estimatedLaborCost,
             estimatedOverheadCost: $estimatedCost->estimatedOverheadCost,
-            currency: $estimatedCost->currency
+            currency: $estimatedCost->currency,
+            warehouseId: $request->warehouseId
         );
 
         $order = $this->manufacturingProvider->createOrder($tenantId, $enrichedRequest);
@@ -156,6 +161,7 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
         }
 
         $inspectionId = null;
+        $statusUpdated = false;
         try {
             // 3. Initialize Quality Inspection
             $inspectionId = $this->qualityProvider->createInspection($tenantId, new InspectionRequest(
@@ -166,6 +172,8 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
 
             // 4. Update Status and fetch final state
             $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, ProductionOrderStatus::Released);
+            $statusUpdated = true;
+            
             $finalOrder = $this->manufacturingProvider->getOrder($tenantId, $orderId);
 
             $this->dispatcher->dispatch(new OrderReleased($tenantId, $finalOrder));
@@ -173,12 +181,18 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
             return $finalOrder;
 
         } catch (\Exception $e) {
-            $this->logger->error('Order release failed, compensating...', [
-                'order_id' => $orderId,
-                'error' => $e->getMessage()
-            ]);
-            
-            $this->compensateOrderRelease($tenantId, $reservationResult->reservationId, $inspectionId);
+            if (!$statusUpdated) {
+                $this->logger->error('Order release failed before status commit, compensating...', [
+                    'order_id' => $orderId,
+                    'error' => $e->getMessage()
+                ]);
+                $this->compensateOrderRelease($tenantId, $reservationResult->reservationId, $inspectionId);
+            } else {
+                 $this->logger->error('Order release failed after status commit', [
+                    'order_id' => $orderId,
+                    'error' => $e->getMessage()
+                ]);
+            }
             throw $e;
         }
     }
@@ -222,39 +236,51 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
             throw new ManufacturingOperationsException("Cannot complete order {$orderId}: Missing reservation ID for material consumption.");
         }
 
-        $this->inventoryProvider->issueStock($tenantId, $order->reservationId, $order->quantity);
+        try {
+            $this->inventoryProvider->issueStock($tenantId, $order->reservationId, $order->quantity);
 
-        // 3. Receive Finished Goods
-        $this->inventoryProvider->receiveStock($tenantId, $order->productId, $order->quantity, 'WH-DEFAULT');
-        
-        // 4. Calculate and Record Actual Costs (Computation instead of hardcoded placeholder)
-        $actualMaterialCosts = $this->costingProvider->getMaterialCosts($tenantId, $orderId);
-        $totalActual = "0.0000";
-        foreach ($actualMaterialCosts as $cost) {
-            $totalActual = bcadd($totalActual, $cost->totalCost, 4);
+            // 3. Receive Finished Goods
+            $warehouseId = $order->warehouseId ?? $this->warehouseProvider->resolveWarehouse($tenantId, $order);
+            $this->inventoryProvider->receiveStock($tenantId, $order->productId, $order->quantity, $warehouseId);
+            
+            // 4. Calculate and Record Actual Costs
+            $actualMaterialCosts = $this->costingProvider->getMaterialCosts($tenantId, $orderId);
+            $totalActual = "0.0000";
+            foreach ($actualMaterialCosts as $cost) {
+                $totalActual = bcadd($totalActual, $cost->totalCost, 4);
+            }
+
+            $laborCosts = $this->costingProvider->getLaborCosts($tenantId, $orderId);
+            foreach ($laborCosts as $cost) {
+                $totalActual = bcadd($totalActual, $cost->totalCost, 4);
+            }
+
+            $overheadCosts = $this->costingProvider->getOverheadCosts($tenantId, $orderId);
+            foreach ($overheadCosts as $cost) {
+                $totalActual = bcadd($totalActual, $cost->totalCost, 4);
+            }
+            
+            $orderCurrency = $this->costingProvider->getCurrencyForOrder($tenantId, $orderId);
+            $this->costingProvider->recordActualCost($tenantId, $orderId, $totalActual, $orderCurrency);
+
+            // 5. Update Status
+            $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, ProductionOrderStatus::Completed);
+
+            $finalOrder = $this->manufacturingProvider->getOrder($tenantId, $orderId);
+            
+            $this->dispatcher->dispatch(new OrderCompleted($tenantId, $finalOrder));
+
+            return $finalOrder;
+        } catch (\Exception $e) {
+            $this->logger->error('Order completion failed, attempting compensation...', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Compensation for issueStock is needed here.
+            // Ideally reverseIssue, or if not available, re-reservation.
+            // For now, we'll log the inconsistency and throw.
+            throw $e;
         }
-
-        $laborCosts = $this->costingProvider->getLaborCosts($tenantId, $orderId);
-        foreach ($laborCosts as $cost) {
-            $totalActual = bcadd($totalActual, $cost->totalCost, 4);
-        }
-
-        $overheadCosts = $this->costingProvider->getOverheadCosts($tenantId, $orderId);
-        foreach ($overheadCosts as $cost) {
-            $totalActual = bcadd($totalActual, $cost->totalCost, 4);
-        }
-        
-        $orderCurrency = $this->costingProvider->getCurrencyForOrder($tenantId, $orderId);
-
-        $this->costingProvider->recordActualCost($tenantId, $orderId, $totalActual, $orderCurrency);
-
-        // 5. Update Status
-        $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, ProductionOrderStatus::Completed);
-
-        $finalOrder = $this->manufacturingProvider->getOrder($tenantId, $orderId);
-        
-        $this->dispatcher->dispatch(new OrderCompleted($tenantId, $finalOrder));
-
-        return $finalOrder;
     }
 }

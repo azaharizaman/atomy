@@ -17,5 +17,6 @@ readonly class ProductionOrder
         public ?\DateTimeImmutable $completionDate = null,
         public ?string $reservationId = null,
         public ?string $bomId = null,
+        public ?string $warehouseId = null,
     ) {}
 }

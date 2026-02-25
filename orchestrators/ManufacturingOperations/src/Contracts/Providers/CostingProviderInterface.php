@@ -17,6 +17,8 @@ interface CostingProviderInterface
 
     /**
      * Record actual costs incurred during production.
+     * 
+     * @param string $amount Must be a non-negative decimal string matching /^\d+(\.\d+)?$/
      */
     public function recordActualCost(string $tenantId, string $orderId, string $amount, CurrencyCode $currency): void;
 

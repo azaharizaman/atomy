@@ -10,5 +10,10 @@ readonly class OverheadCost
         public string $code,
         public string $description,
         public string $totalCost,
-    ) {}
+    ) {
+        $decimalPattern = '/^\d+(\.\d+)?$/';
+        if (!preg_match($decimalPattern, $this->totalCost)) {
+            throw new \InvalidArgumentException("totalCost must be a valid non-negative decimal string");
+        }
+    }
 }

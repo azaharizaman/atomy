@@ -15,8 +15,10 @@ readonly class MaterialCost
         if ($this->quantity <= 0) {
             throw new \InvalidArgumentException("quantity must be a positive number");
         }
-        if (!is_numeric($this->totalCost) || (float)$this->totalCost < 0) {
-            throw new \InvalidArgumentException("totalCost must be a non-negative numeric string");
+        
+        $decimalPattern = '/^\d+(\.\d+)?$/';
+        if (!preg_match($decimalPattern, $this->totalCost)) {
+            throw new \InvalidArgumentException("totalCost must be a valid non-negative decimal string");
         }
     }
 }

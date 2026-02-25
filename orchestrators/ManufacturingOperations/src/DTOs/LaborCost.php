@@ -12,5 +12,17 @@ readonly class LaborCost
         public float $hours,
         public string $hourlyRate,
         public string $totalCost,
-    ) {}
+    ) {
+        if ($this->hours <= 0) {
+            throw new \InvalidArgumentException("hours must be a positive number");
+        }
+
+        $decimalPattern = '/^\d+(\.\d+)?$/';
+        if (!preg_match($decimalPattern, $this->hourlyRate)) {
+            throw new \InvalidArgumentException("hourlyRate must be a valid non-negative decimal string");
+        }
+        if (!preg_match($decimalPattern, $this->totalCost)) {
+            throw new \InvalidArgumentException("totalCost must be a valid non-negative decimal string");
+        }
+    }
 }

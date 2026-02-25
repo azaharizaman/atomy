@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\ManufacturingOperations\DTOs;
 
-readonly class CostCalculationResult
+final readonly class CostCalculationResult
 {
     public function __construct(
         public string $estimatedMaterialCost,
@@ -12,15 +12,15 @@ readonly class CostCalculationResult
         public string $estimatedOverheadCost,
         public CurrencyCode $currency,
     ) {
-        $decimalPattern = '/^[+-]?\d+(\.\d+)?$/';
+        $decimalPattern = '/^\d+(\.\d+)?$/';
         if (!preg_match($decimalPattern, $this->estimatedMaterialCost)) {
-            throw new \InvalidArgumentException("estimatedMaterialCost must be a valid decimal string");
+            throw new \InvalidArgumentException("estimatedMaterialCost must be a valid non-negative decimal string");
         }
         if (!preg_match($decimalPattern, $this->estimatedLaborCost)) {
-            throw new \InvalidArgumentException("estimatedLaborCost must be a valid decimal string");
+            throw new \InvalidArgumentException("estimatedLaborCost must be a valid non-negative decimal string");
         }
         if (!preg_match($decimalPattern, $this->estimatedOverheadCost)) {
-            throw new \InvalidArgumentException("estimatedOverheadCost must be a valid decimal string");
+            throw new \InvalidArgumentException("estimatedOverheadCost must be a valid non-negative decimal string");
         }
     }
 
