@@ -30,7 +30,8 @@
         "nexus/pdpa": "*@dev",
         "nexus/payment": "*@dev",
         "nexus/payment-gateway": "*@dev",
-        "nexus/payment-bank": "*@dev"
+        "nexus/payment-bank": "*@dev",
+        "nexus/manufacturing-operations": "*@dev"
     },
     "repositories": [
         {
@@ -69,6 +70,7 @@
     "autoload": {
         "psr-4": {
             "Nexus\\ProcurementOperations\\": "orchestrators/ProcurementOperations/src/",
+            "Nexus\\Orchestrators\\ManufacturingOperations\\": "orchestrators/ManufacturingOperations/src/",
             "Nexus\\Sanctions\\": "packages/Sanctions/src/",
             "Nexus\\AmlCompliance\\": "packages/AmlCompliance/src/",
             "Nexus\\KycVerification\\": "packages/KycVerification/src/",
@@ -92,6 +94,7 @@
     "autoload-dev": {
         "psr-4": {
             "Nexus\\ProcurementOperations\\Tests\\": "orchestrators/ProcurementOperations/tests/",
+            "Nexus\\Orchestrators\\ManufacturingOperations\\Tests\\": "orchestrators/ManufacturingOperations/tests/",
             "Nexus\\Sanctions\\Tests\\": "packages/Sanctions/tests/",
             "Nexus\\AmlCompliance\\Tests\\": "packages/AmlCompliance/tests/",
             "Nexus\\KycVerification\\Tests\\": "packages/KycVerification/tests/",
