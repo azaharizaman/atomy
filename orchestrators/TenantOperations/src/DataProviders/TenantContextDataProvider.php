@@ -55,38 +55,3 @@ final readonly class TenantContextDataProvider implements TenantContextProviderI
         return $this->tenantQuery->exists($tenantId);
     }
 }
-
-/**
- * Interface for querying tenant data.
- */
-interface TenantQueryInterface
-{
-    /**
-     * @return array{id: string, code: string, name: string, status: string, plan?: string}|null
-     */
-    public function findById(string $tenantId): ?array;
-
-    public function exists(string $tenantId): bool;
-}
-
-/**
- * Interface for querying settings data.
- */
-interface SettingsQueryInterface
-{
-    /**
-     * @return array<string, mixed>
-     */
-    public function getSettings(string $tenantId): array;
-}
-
-/**
- * Interface for querying feature data.
- */
-interface FeatureQueryInterface
-{
-    /**
-     * @return array<string, bool>
-     */
-    public function getFeatures(string $tenantId): array;
-}

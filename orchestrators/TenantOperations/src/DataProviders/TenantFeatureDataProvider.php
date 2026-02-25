@@ -81,25 +81,3 @@ final readonly class TenantFeatureDataProvider implements TenantFeatureProviderI
         return $this->featureToggle->disable($tenantId, $featureKey);
     }
 }
-
-/**
- * Interface for querying feature flags.
- */
-interface FeatureQueryInterface
-{
-    public function isEnabled(string $tenantId, string $featureKey): bool;
-
-    /**
-     * @return array<string, bool>
-     */
-    public function getAll(string $tenantId): array;
-}
-
-/**
- * Interface for toggling feature flags.
- */
-interface FeatureToggleInterface
-{
-    public function enable(string $tenantId, string $featureKey): bool;
-    public function disable(string $tenantId, string $featureKey): bool;
-}

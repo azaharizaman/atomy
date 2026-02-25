@@ -54,11 +54,3 @@ final readonly class TenantDomainUniqueRule implements TenantValidationRuleInter
         ]);
     }
 }
-
-/**
- * Interface for checking tenant domain uniqueness.
- */
-interface TenantDomainCheckerInterface
-{
-    public function isDomainUnique(string $domain): bool;
-}
