@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\TenantOperations\Rules;
 
+use Nexus\TenantOperations\Contracts\TenantCodeCheckerInterface;
 use Nexus\TenantOperations\Contracts\TenantValidationRuleInterface;
 use Nexus\TenantOperations\DTOs\TenantOnboardingRequest;
 use Nexus\TenantOperations\DTOs\ValidationResult;
@@ -53,12 +54,4 @@ final readonly class TenantCodeUniqueRule implements TenantValidationRuleInterfa
             ],
         ]);
     }
-}
-
-/**
- * Interface for checking tenant code uniqueness.
- */
-interface TenantCodeCheckerInterface
-{
-    public function isCodeUnique(string $tenantCode): bool;
 }
