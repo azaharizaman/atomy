@@ -31,7 +31,7 @@ Automate the financial and communication flows triggered by project milestones.
 - [x] **Task: Define Billing & Notification Contracts** 42c131a
     - [ ] **Write Failing Tests:** Create a test to ensure `BillingBridge` requires `Receivable` and `Messaging` contracts.
     - [ ] **Implement:** Define `ReceivablePersistInterface` and `MessagingServiceInterface` in `src/Contracts/`.
-- [ ] **Task: Implement Billing Automation Flow**
+- [x] **Task: Implement Billing Automation Flow** d72286c
     - [ ] **Write Failing Tests:** Write a test where completing a milestone results in a call to `createDraftInvoice` in the `Receivable` contract.
     - [ ] **Implement:** Create `MilestoneBillingService` to orchestrate billing actions.
 - [ ] **Task: Implement Notification & Revenue Update Flow**
