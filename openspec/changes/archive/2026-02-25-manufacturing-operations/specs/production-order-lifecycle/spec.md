@@ -7,7 +7,7 @@ The system SHALL coordinate the planning of a production order by validating the
 - **WHEN** a production order is planned
 - **THEN** the system SHALL validate the BOM for the product
 - **AND** calculate estimated material, labor, and overhead costs
-- **AND** dispatch an `OrderPlanned` domain event
+- **AND** dispatch an `OrderPlanned` domain event upon success
 - **AND** create a production order in `Planned` status
 
 ### Requirement: Orchestrated Production Order Release
@@ -62,4 +62,5 @@ The system MUST ensure that all orchestration operations (Stock check, Quality i
 - **WHEN** Tenant A releases a production order
 - **THEN** the system SHALL ONLY check and reserve stock belonging to Tenant A
 - **AND** SHALL ONLY create Quality Control artifacts belonging to Tenant A
-- **AND** SHALL NOT leak data or reserve stock from Tenant B
+- **AND** SHALL ONLY perform costing calculations and create/store costing artifacts (e.g., cost records, ledger entries) for Tenant A
+- **AND** SHALL NOT record, apply, or expose any costing data or reserve stock belonging to Tenant B

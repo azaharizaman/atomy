@@ -9,6 +9,7 @@ use Nexus\Identity\Contracts\PolicyEvaluatorInterface;
 use Nexus\ManufacturingOperations\Contracts\ManufacturingOrchestratorInterface;
 use Nexus\ManufacturingOperations\Contracts\Providers\BomProviderInterface;
 use Nexus\ManufacturingOperations\Contracts\Providers\CostingProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\CurrencyProviderInterface;
 use Nexus\ManufacturingOperations\Contracts\Providers\InventoryProviderInterface;
 use Nexus\ManufacturingOperations\Contracts\Providers\ManufacturingProviderInterface;
 use Nexus\ManufacturingOperations\Contracts\Providers\QualityProviderInterface;
@@ -39,6 +40,7 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
         private CostingProviderInterface $costingProvider,
         private UomProviderInterface $uomProvider,
         private WarehouseProviderInterface $warehouseProvider,
+        private CurrencyProviderInterface $currencyProvider,
         private AuthContextInterface $authContext,
         private PolicyEvaluatorInterface $policyEvaluator,
         private LoggerInterface $logger,
@@ -49,7 +51,12 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
     {
         $user = $this->authContext->getCurrentUser();
         if (!$user) {
-             throw new \RuntimeException("Unauthorized: No authenticated user context.");
+            $this->logger->warning("Unauthorized access attempt", [
+                'tenant_id' => $tenantId,
+                'action' => $action,
+                'resource' => is_string($resource) ? $resource : get_class($resource),
+            ]);
+            throw new \RuntimeException("Unauthorized: No authenticated user context.");
         }
 
         if (!$this->policyEvaluator->evaluate($user, $action, $resource, ['tenant_id' => $tenantId])) {
@@ -118,7 +125,15 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
 
         $order = $this->manufacturingProvider->createOrder($tenantId, $enrichedRequest);
 
-        $this->dispatcher->dispatch(new OrderPlanned($tenantId, $order));
+        try {
+            $this->dispatcher->dispatch(new OrderPlanned($tenantId, $order));
+        } catch (\Exception $e) {
+            $this->logger->error("Failed to dispatch OrderPlanned event", [
+                'tenant_id' => $tenantId,
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return $order;
     }
@@ -186,7 +201,7 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
                     'order_id' => $orderId,
                     'error' => $e->getMessage()
                 ]);
-                $this->compensateOrderRelease($tenantId, $reservationResult->reservationId, $inspectionId);
+                $this->compensateOrderRelease($tenantId, $orderId, $reservationResult->reservationId, $inspectionId);
             } else {
                  $this->logger->error('Order release failed after status commit', [
                     'order_id' => $orderId,
@@ -197,20 +212,40 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
         }
     }
 
-    private function compensateOrderRelease(string $tenantId, string $reservationId, ?string $inspectionId): void
+    private function compensateOrderRelease(string $tenantId, string $orderId, string $reservationId, ?string $inspectionId): void
     {
-        try {
-            $this->inventoryProvider->releaseReservation($tenantId, $reservationId);
-            if ($inspectionId) {
-                $this->qualityProvider->deleteInspection($tenantId, $inspectionId);
+        $maxRetries = 3;
+        $success = false;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                $this->inventoryProvider->releaseReservation($tenantId, $reservationId);
+                if ($inspectionId) {
+                    $this->qualityProvider->deleteInspection($tenantId, $inspectionId);
+                }
+                $success = true;
+                break;
+            } catch (\Exception $e) {
+                $this->logger->warning("Release compensation attempt {$attempt} failed", [
+                    'order_id' => $orderId,
+                    'error' => $e->getMessage()
+                ]);
+                if ($attempt < $maxRetries) {
+                    usleep(100000 * $attempt); // Exponential-ish backoff
+                }
             }
-        } catch (\Exception $e) {
-            $this->logger->critical('Release compensation failed!', [
+        }
+
+        if (!$success) {
+            $this->logger->critical('Release compensation failed after max retries!', [
                 'tenant_id' => $tenantId,
+                'order_id' => $orderId,
                 'reservation_id' => $reservationId,
                 'inspection_id' => $inspectionId,
-                'error' => $e->getMessage()
             ]);
+            
+            // Mark order for manual intervention or block automated transitions
+            $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, ProductionOrderStatus::Closed); // Or a specific error status
         }
     }
 
@@ -243,24 +278,29 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
             $warehouseId = $order->warehouseId ?? $this->warehouseProvider->resolveWarehouse($tenantId, $order);
             $this->inventoryProvider->receiveStock($tenantId, $order->productId, $order->quantity, $warehouseId);
             
-            // 4. Calculate and Record Actual Costs
-            $actualMaterialCosts = $this->costingProvider->getMaterialCosts($tenantId, $orderId);
+            // 4. Calculate and Record Actual Costs with Normalization
+            $orderCurrency = $this->costingProvider->getCurrencyForOrder($tenantId, $orderId);
+            $now = new \DateTimeImmutable();
             $totalActual = "0.0000";
+
+            $actualMaterialCosts = $this->costingProvider->getMaterialCosts($tenantId, $orderId);
             foreach ($actualMaterialCosts as $cost) {
-                $totalActual = bcadd($totalActual, $cost->totalCost, 4);
+                $normalized = $this->currencyProvider->convertAmount($cost->totalCost, $cost->currency, $orderCurrency, $now);
+                $totalActual = bcadd($totalActual, $normalized, 4);
             }
 
             $laborCosts = $this->costingProvider->getLaborCosts($tenantId, $orderId);
             foreach ($laborCosts as $cost) {
-                $totalActual = bcadd($totalActual, $cost->totalCost, 4);
+                $normalized = $this->currencyProvider->convertAmount($cost->totalCost, $cost->currency, $orderCurrency, $now);
+                $totalActual = bcadd($totalActual, $normalized, 4);
             }
 
             $overheadCosts = $this->costingProvider->getOverheadCosts($tenantId, $orderId);
             foreach ($overheadCosts as $cost) {
-                $totalActual = bcadd($totalActual, $cost->totalCost, 4);
+                $normalized = $this->currencyProvider->convertAmount($cost->totalCost, $cost->currency, $orderCurrency, $now);
+                $totalActual = bcadd($totalActual, $normalized, 4);
             }
             
-            $orderCurrency = $this->costingProvider->getCurrencyForOrder($tenantId, $orderId);
             $this->costingProvider->recordActualCost($tenantId, $orderId, $totalActual, $orderCurrency);
 
             // 5. Update Status
@@ -276,10 +316,7 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
                 'order_id' => $orderId,
                 'error' => $e->getMessage()
             ]);
-            
-            // Compensation for issueStock is needed here.
-            // Ideally reverseIssue, or if not available, re-reservation.
-            // For now, we'll log the inconsistency and throw.
+            // Re-reservation or manual correction needed
             throw $e;
         }
     }

@@ -24,27 +24,21 @@ readonly class ProductionOrderRequest
         }
 
         $decimalPattern = '/^\d+(\.\d+)?$/';
+        
+        $costs = [
+            'estimatedMaterialCost' => $this->estimatedMaterialCost,
+            'estimatedLaborCost' => $this->estimatedLaborCost,
+            'estimatedOverheadCost' => $this->estimatedOverheadCost,
+        ];
+
         $hasCost = false;
-
-        if ($this->estimatedMaterialCost !== null) {
-            if (!preg_match($decimalPattern, $this->estimatedMaterialCost)) {
-                throw new \InvalidArgumentException("estimatedMaterialCost must be a valid decimal string");
+        foreach ($costs as $name => $value) {
+            if ($value !== null) {
+                if (!preg_match($decimalPattern, $value)) {
+                    throw new \InvalidArgumentException("{$name} must be a valid decimal string");
+                }
+                $hasCost = true;
             }
-            $hasCost = true;
-        }
-
-        if ($this->estimatedLaborCost !== null) {
-            if (!preg_match($decimalPattern, $this->estimatedLaborCost)) {
-                throw new \InvalidArgumentException("estimatedLaborCost must be a valid decimal string");
-            }
-            $hasCost = true;
-        }
-
-        if ($this->estimatedOverheadCost !== null) {
-            if (!preg_match($decimalPattern, $this->estimatedOverheadCost)) {
-                throw new \InvalidArgumentException("estimatedOverheadCost must be a valid decimal string");
-            }
-            $hasCost = true;
         }
 
         if ($hasCost && $this->currency === null) {

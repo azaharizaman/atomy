@@ -10,6 +10,7 @@ readonly class OverheadCost
         public string $code,
         public string $description,
         public string $totalCost,
+        public CurrencyCode $currency,
     ) {
         $decimalPattern = '/^\d+(\.\d+)?$/';
         if (!preg_match($decimalPattern, $this->totalCost)) {

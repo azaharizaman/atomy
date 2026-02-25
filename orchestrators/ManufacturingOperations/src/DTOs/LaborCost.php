@@ -12,6 +12,7 @@ readonly class LaborCost
         public float $hours,
         public string $hourlyRate,
         public string $totalCost,
+        public CurrencyCode $currency,
     ) {
         if ($this->hours <= 0) {
             throw new \InvalidArgumentException("hours must be a positive number");
