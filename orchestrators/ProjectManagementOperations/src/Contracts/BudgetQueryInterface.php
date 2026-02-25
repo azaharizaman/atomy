@@ -17,4 +17,14 @@ interface BudgetQueryInterface
      * Get total actual labor cost for a project
      */
     public function getActualLaborCost(string $projectId): Money;
+
+    /**
+     * Get expense budget for a project
+     */
+    public function getExpenseBudget(string $projectId): Money;
+
+    /**
+     * Get total actual expense cost for a project
+     */
+    public function getActualExpenseCost(string $projectId): Money;
 }
