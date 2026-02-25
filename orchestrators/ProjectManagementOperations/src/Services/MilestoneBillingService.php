@@ -43,6 +43,15 @@ final readonly class MilestoneBillingService
             ]
         );
 
+        $this->messagingService->sendNotification(
+            $tenantId,
+            $customerId,
+            'milestone_completed',
+            ['milestone_name' => $milestone->name]
+        );
+
+        $this->budgetPersist->updateEarnedRevenue($milestone->projectId, $amount);
+
         return $invoiceId;
     }
 }

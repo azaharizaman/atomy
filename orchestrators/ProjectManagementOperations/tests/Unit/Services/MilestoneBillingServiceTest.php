@@ -44,7 +44,14 @@ final class MilestoneBillingServiceTest extends TestCase
             ->willReturn('inv-001');
 
         $messagingService = $this->createMock(MessagingServiceInterface::class);
+        $messagingService->expects($this->once())
+            ->method('sendNotification')
+            ->with($tenantId, $customerId, 'milestone_completed', ['milestone_name' => 'Milestone 1']);
+
         $budgetPersist = $this->createMock(BudgetPersistInterface::class);
+        $budgetPersist->expects($this->once())
+            ->method('updateEarnedRevenue')
+            ->with($projectId, Money::of(1000.00, 'MYR'));
 
         $service = new MilestoneBillingService(
             $projectQuery,
