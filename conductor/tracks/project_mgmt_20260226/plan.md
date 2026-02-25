@@ -17,7 +17,7 @@ Implement the core logic to reconcile project progress with financial and time-b
 - [x] **Task: Implement Labor Health Logic** 679bd83
     - [ ] **Write Failing Tests:** Write a test that provides `Attendance` data and expects a labor-to-budget percentage calculation.
     - [ ] **Implement:** Create `LaborHealthService` to compare hours recorded in `Attendance` against `Budget` allocations.
-- [ ] **Task: Implement Expense Health Logic**
+- [x] **Task: Implement Expense Health Logic** 36794c5
     - [ ] **Write Failing Tests:** Write a test that reconciles material expenses from `Inventory` (mocked via contract) with `Budget` limits.
     - [ ] **Implement:** Create `ExpenseHealthService` to aggregate costs and check against budget thresholds.
 - [ ] **Task: Implement Timeline Drift Detection**
