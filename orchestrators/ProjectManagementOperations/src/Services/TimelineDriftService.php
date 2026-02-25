@@ -6,9 +6,10 @@ namespace Nexus\ProjectManagementOperations\Services;
 
 use Nexus\ProjectManagementOperations\Contracts\ProjectQueryInterface;
 use Nexus\ProjectManagementOperations\Contracts\SchedulerQueryInterface;
+use Nexus\ProjectManagementOperations\Contracts\TimelineDriftServiceInterface;
 use Nexus\ProjectManagementOperations\DTOs\TimelineHealthDTO;
 
-final readonly class TimelineDriftService
+final readonly class TimelineDriftService implements TimelineDriftServiceInterface
 {
     public function __construct(
         private ProjectQueryInterface $projectQuery,

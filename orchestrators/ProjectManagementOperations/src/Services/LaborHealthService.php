@@ -7,9 +7,10 @@ namespace Nexus\ProjectManagementOperations\Services;
 use Nexus\ProjectManagementOperations\Contracts\AttendanceQueryInterface;
 use Nexus\ProjectManagementOperations\Contracts\BudgetQueryInterface;
 use Nexus\ProjectManagementOperations\Contracts\ProjectQueryInterface;
+use Nexus\ProjectManagementOperations\Contracts\LaborHealthServiceInterface;
 use Nexus\ProjectManagementOperations\DTOs\LaborHealthDTO;
 
-final readonly class LaborHealthService
+final readonly class LaborHealthService implements LaborHealthServiceInterface
 {
     public function __construct(
         private ProjectQueryInterface $projectQuery,

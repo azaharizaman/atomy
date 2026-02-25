@@ -6,9 +6,10 @@ namespace Nexus\ProjectManagementOperations\Services;
 
 use Nexus\ProjectManagementOperations\Contracts\BudgetQueryInterface;
 use Nexus\ProjectManagementOperations\Contracts\ProjectQueryInterface;
+use Nexus\ProjectManagementOperations\Contracts\ExpenseHealthServiceInterface;
 use Nexus\ProjectManagementOperations\DTOs\ExpenseHealthDTO;
 
-final readonly class ExpenseHealthService
+final readonly class ExpenseHealthService implements ExpenseHealthServiceInterface
 {
     public function __construct(
         private ProjectQueryInterface $projectQuery,

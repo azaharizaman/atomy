@@ -9,9 +9,10 @@ use Nexus\ProjectManagementOperations\Contracts\BudgetPersistInterface;
 use Nexus\ProjectManagementOperations\Contracts\MessagingServiceInterface;
 use Nexus\ProjectManagementOperations\Contracts\ProjectQueryInterface;
 use Nexus\ProjectManagementOperations\Contracts\ReceivablePersistInterface;
+use Nexus\ProjectManagementOperations\Contracts\MilestoneBillingServiceInterface;
 use Nexus\ProjectManagementOperations\DTOs\MilestoneDTO;
 
-final readonly class MilestoneBillingService
+final readonly class MilestoneBillingService implements MilestoneBillingServiceInterface
 {
     public function __construct(
         private ProjectQueryInterface $projectQuery,
