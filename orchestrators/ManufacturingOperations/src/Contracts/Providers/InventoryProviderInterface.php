@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers;
+namespace Nexus\ManufacturingOperations\Contracts\Providers;
 
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\StockCheckRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\StockReservationRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\StockReservationResult;
+use Nexus\ManufacturingOperations\DTOs\StockCheckRequest;
+use Nexus\ManufacturingOperations\DTOs\StockReservationRequest;
+use Nexus\ManufacturingOperations\DTOs\StockReservationResult;
 
 interface InventoryProviderInterface
 {
@@ -19,7 +19,7 @@ interface InventoryProviderInterface
     /**
      * Reserve stock for a production order.
      * 
-     * @throws \Nexus\Orchestrators\ManufacturingOperations\Exceptions\StockShortageException
+     * @throws \Nexus\ManufacturingOperations\Exceptions\StockShortageException
      */
     public function reserveStock(string $tenantId, StockReservationRequest $request): StockReservationResult;
 

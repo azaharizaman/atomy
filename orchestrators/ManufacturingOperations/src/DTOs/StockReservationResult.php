@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\DTOs;
+namespace Nexus\ManufacturingOperations\DTOs;
 
 readonly class StockReservationResult
 {
     public function __construct(
-        public string $reservationId,
-        public bool $success,
+        public ?string $reservationId = null,
+        public bool $success = false,
         public array $shortages = [],
-    ) {}
+    ) {
+        if ($this->success && empty($this->reservationId)) {
+            throw new \InvalidArgumentException("reservationId must be provided on success");
+        }
+    }
 }

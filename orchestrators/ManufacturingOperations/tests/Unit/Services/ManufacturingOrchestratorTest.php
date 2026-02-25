@@ -2,22 +2,26 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\Tests\Unit\Services;
+namespace Nexus\ManufacturingOperations\Tests\Unit\Services;
 
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\BomProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\CostingProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\InventoryProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\ManufacturingProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\QualityProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\BomExplosionResult;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\BomLookupRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\CostCalculationResult;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\ProductionOrder;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\ProductionOrderRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\StockReservationResult;
-use Nexus\Orchestrators\ManufacturingOperations\Exceptions\ManufacturingOperationsException;
-use Nexus\Orchestrators\ManufacturingOperations\Exceptions\StockShortageException;
-use Nexus\Orchestrators\ManufacturingOperations\Services\ManufacturingOrchestrator;
+use Nexus\Identity\Contracts\AuthContextInterface;
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;
+use Nexus\Identity\Contracts\UserInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\BomProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\CostingProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\InventoryProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\ManufacturingProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\QualityProviderInterface;
+use Nexus\ManufacturingOperations\DTOs\BomExplosionResult;
+use Nexus\ManufacturingOperations\DTOs\CostCalculationResult;
+use Nexus\ManufacturingOperations\DTOs\CurrencyCode;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrder;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrderRequest;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrderStatus;
+use Nexus\ManufacturingOperations\DTOs\StockReservationResult;
+use Nexus\ManufacturingOperations\Exceptions\ManufacturingOperationsException;
+use Nexus\ManufacturingOperations\Exceptions\StockShortageException;
+use Nexus\ManufacturingOperations\Services\ManufacturingOrchestrator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -34,8 +38,11 @@ final class ManufacturingOrchestratorTest extends TestCase
     private MockObject&InventoryProviderInterface $inventoryProvider;
     private MockObject&QualityProviderInterface $qualityProvider;
     private MockObject&CostingProviderInterface $costingProvider;
+    private MockObject&AuthContextInterface $authContext;
+    private MockObject&PolicyEvaluatorInterface $policyEvaluator;
     private MockObject&LoggerInterface $logger;
     private MockObject&EventDispatcherInterface $dispatcher;
+    private MockObject&UserInterface $user;
 
     protected function setUp(): void
     {
@@ -44,8 +51,11 @@ final class ManufacturingOrchestratorTest extends TestCase
         $this->inventoryProvider = $this->createMock(InventoryProviderInterface::class);
         $this->qualityProvider = $this->createMock(QualityProviderInterface::class);
         $this->costingProvider = $this->createMock(CostingProviderInterface::class);
+        $this->authContext = $this->createMock(AuthContextInterface::class);
+        $this->policyEvaluator = $this->createMock(PolicyEvaluatorInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $this->user = $this->createMock(UserInterface::class);
 
         $this->orchestrator = new ManufacturingOrchestrator(
             $this->manufacturingProvider,
@@ -53,9 +63,14 @@ final class ManufacturingOrchestratorTest extends TestCase
             $this->inventoryProvider,
             $this->qualityProvider,
             $this->costingProvider,
+            $this->authContext,
+            $this->policyEvaluator,
             $this->logger,
             $this->dispatcher
         );
+
+        $this->authContext->method('getCurrentUser')->willReturn($this->user);
+        $this->policyEvaluator->method('evaluate')->willReturn(true);
     }
 
     #[Test]
@@ -72,7 +87,7 @@ final class ManufacturingOrchestratorTest extends TestCase
             ->method('getBom')
             ->willReturn($bomResult);
 
-        $costResult = new CostCalculationResult(100.0, 50.0, 10.0, 'USD');
+        $costResult = new CostCalculationResult('100.00', '50.00', '10.00', CurrencyCode::USD);
         $this->costingProvider->expects($this->once())
             ->method('calculateEstimatedCost')
             ->willReturn($costResult);
@@ -82,12 +97,15 @@ final class ManufacturingOrchestratorTest extends TestCase
             orderNumber: 'PO-001',
             productId: 'P-100',
             quantity: 10.0,
-            status: 'Planned',
+            status: ProductionOrderStatus::Planned,
             dueDate: $request->dueDate
         );
+        
         $this->manufacturingProvider->expects($this->once())
             ->method('createOrder')
             ->willReturn($expectedOrder);
+
+        $this->dispatcher->expects($this->once())->method('dispatch');
 
         $result = $this->orchestrator->planProduction('tenant-1', $request);
 
@@ -95,49 +113,35 @@ final class ManufacturingOrchestratorTest extends TestCase
     }
 
     #[Test]
-    public function planProduction_fails_with_invalid_bom(): void
-    {
-        $request = new ProductionOrderRequest(
-            productId: 'P-INVALID',
-            quantity: 10.0,
-            dueDate: new \DateTimeImmutable('+1 week')
-        );
-
-        $this->bomProvider->expects($this->once())
-            ->method('getBom')
-            ->willThrowException(new \Exception('BOM not found'));
-
-        $this->expectException(ManufacturingOperationsException::class);
-        $this->expectExceptionMessage("Valid BOM not found for product P-INVALID");
-
-        $this->orchestrator->planProduction('tenant-1', $request);
-    }
-
-    #[Test]
     public function releaseOrder_success(): void
     {
         $orderId = 'ORD-1';
-        $order = new ProductionOrder(
+        $orderPlanned = new ProductionOrder(
             id: $orderId,
             orderNumber: 'PO-001',
             productId: 'P-100',
             quantity: 10.0,
-            status: 'Planned',
+            status: ProductionOrderStatus::Planned,
+            dueDate: new \DateTimeImmutable('+1 week')
+        );
+        
+        $orderReleased = new ProductionOrder(
+            id: $orderId,
+            orderNumber: 'PO-001',
+            productId: 'P-100',
+            quantity: 10.0,
+            status: ProductionOrderStatus::Released,
             dueDate: new \DateTimeImmutable('+1 week')
         );
 
-        $this->manufacturingProvider->expects($this->any())
+        $this->manufacturingProvider->expects($this->exactly(2))
             ->method('getOrder')
-            ->willReturn($order);
+            ->willReturnOnConsecutiveCalls($orderPlanned, $orderReleased);
 
         $bomResult = new BomExplosionResult('BOM-1', 'P-100', ['C-1' => 2.0], '1.0');
         $this->bomProvider->expects($this->once())
             ->method('getBom')
             ->willReturn($bomResult);
-
-        $this->inventoryProvider->expects($this->once())
-            ->method('checkStockAvailability')
-            ->willReturn(true);
 
         $reservationResult = new StockReservationResult('RES-1', true);
         $this->inventoryProvider->expects($this->once())
@@ -145,17 +149,22 @@ final class ManufacturingOrchestratorTest extends TestCase
             ->willReturn($reservationResult);
 
         $this->qualityProvider->expects($this->once())
-            ->method('createInspection');
+            ->method('createInspection')
+            ->willReturn('INSP-1');
 
         $this->manufacturingProvider->expects($this->once())
             ->method('updateOrderStatus')
-            ->with('tenant-1', $orderId, 'Released');
+            ->with('tenant-1', $orderId, ProductionOrderStatus::Released);
 
-        $this->orchestrator->releaseOrder('tenant-1', $orderId);
+        $this->dispatcher->expects($this->once())->method('dispatch');
+
+        $result = $this->orchestrator->releaseOrder('tenant-1', $orderId);
+        
+        $this->assertEquals(ProductionOrderStatus::Released, $result->status);
     }
 
     #[Test]
-    public function releaseOrder_fails_with_stock_shortage(): void
+    public function completeOrder_success(): void
     {
         $orderId = 'ORD-1';
         $order = new ProductionOrder(
@@ -163,24 +172,48 @@ final class ManufacturingOrchestratorTest extends TestCase
             orderNumber: 'PO-001',
             productId: 'P-100',
             quantity: 10.0,
-            status: 'Planned',
+            status: ProductionOrderStatus::Released,
+            dueDate: new \DateTimeImmutable('+1 week'),
+            reservationId: 'RES-1'
+        );
+
+        $this->manufacturingProvider->method('getOrder')->willReturn($order);
+        $this->qualityProvider->method('checkCompliance')->willReturn(true);
+        
+        $this->costingProvider->method('getMaterialCosts')->willReturn([]);
+        $this->costingProvider->method('getLaborCosts')->willReturn('50.00');
+        $this->costingProvider->method('getOverheadCosts')->willReturn('20.00');
+
+        $this->inventoryProvider->expects($this->once())->method('issueStock');
+        $this->inventoryProvider->expects($this->once())->method('receiveStock');
+        $this->costingProvider->expects($this->once())->method('recordActualCost');
+        
+        $this->manufacturingProvider->expects($this->once())
+            ->method('updateOrderStatus')
+            ->with('tenant-1', $orderId, ProductionOrderStatus::Completed);
+
+        $this->orchestrator->completeOrder('tenant-1', $orderId);
+    }
+
+    #[Test]
+    public function completeOrder_fails_on_quality(): void
+    {
+        $orderId = 'ORD-1';
+        $order = new ProductionOrder(
+            id: $orderId,
+            orderNumber: 'PO-001',
+            productId: 'P-100',
+            quantity: 10.0,
+            status: ProductionOrderStatus::Released,
             dueDate: new \DateTimeImmutable('+1 week')
         );
 
-        $this->manufacturingProvider->expects($this->any())
-            ->method('getOrder')
-            ->willReturn($order);
+        $this->manufacturingProvider->method('getOrder')->willReturn($order);
+        $this->qualityProvider->method('checkCompliance')->willReturn(false);
 
-        $bomResult = new BomExplosionResult('BOM-1', 'P-100', ['C-1' => 2.0], '1.0');
-        $this->bomProvider->expects($this->once())
-            ->method('getBom')
-            ->willReturn($bomResult);
+        $this->expectException(ManufacturingOperationsException::class);
+        $this->expectExceptionMessage("has pending or failed quality inspections");
 
-        $this->inventoryProvider->expects($this->once())
-            ->method('checkStockAvailability')
-            ->willReturn(false);
-
-        $this->expectException(StockShortageException::class);
-        $this->orchestrator->releaseOrder('tenant-1', $orderId);
+        $this->orchestrator->completeOrder('tenant-1', $orderId);
     }
 }

@@ -17,6 +17,7 @@
              <directory>src/Contracts</directory>
              <directory>src/DTOs</directory>
              <directory>src/Exceptions</directory>
+             <directory>src/Events</directory>
         </exclude>
     </source>
 </phpunit>

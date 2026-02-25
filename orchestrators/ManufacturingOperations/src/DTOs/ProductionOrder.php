@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\DTOs;
+namespace Nexus\ManufacturingOperations\DTOs;
 
 readonly class ProductionOrder
 {
@@ -11,10 +11,11 @@ readonly class ProductionOrder
         public string $orderNumber,
         public string $productId,
         public float $quantity,
-        public string $status, // Planned, Released, InProgress, Completed, Closed
+        public ProductionOrderStatus $status,
         public \DateTimeImmutable $dueDate,
         public ?\DateTimeImmutable $startDate = null,
         public ?\DateTimeImmutable $completionDate = null,
         public ?string $reservationId = null,
+        public ?string $bomId = null,
     ) {}
 }

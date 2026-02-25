@@ -14,12 +14,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\\Orchestrators\\ManufacturingOperations\\": "src/"
+            "Nexus\\ManufacturingOperations\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\\Orchestrators\\ManufacturingOperations\\Tests\\": "tests/"
+            "Nexus\\ManufacturingOperations\\Tests\\": "tests/"
         }
     },
     "repositories": [

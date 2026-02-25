@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\DTOs;
+namespace Nexus\ManufacturingOperations\DTOs;
 
 readonly class BomExplosionResult
 {

@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers;
+namespace Nexus\ManufacturingOperations\Contracts\Providers;
 
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\ProductionOrder;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\ProductionOrderRequest;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrder;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrderRequest;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrderStatus;
 
 interface ManufacturingProviderInterface
 {
@@ -17,12 +18,12 @@ interface ManufacturingProviderInterface
     /**
      * Update the status of a production order.
      */
-    public function updateOrderStatus(string $tenantId, string $orderId, string $status): void;
+    public function updateOrderStatus(string $tenantId, string $orderId, ProductionOrderStatus $status): void;
 
     /**
      * Get details of a production order.
      * 
-     * @throws \Nexus\Orchestrators\ManufacturingOperations\Exceptions\OrderNotFoundException
+     * @throws \Nexus\ManufacturingOperations\Exceptions\OrderNotFoundException
      */
     public function getOrder(string $tenantId, string $orderId): ProductionOrder;
 

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Nexus\ManufacturingOperations\DTOs;
 
-readonly class InspectionRequest
+readonly class MaterialCost
 {
     public function __construct(
-        public string $orderId,
         public string $productId,
-        public InspectionType $type,
-        public ?string $operationId = null,
+        public string $totalCost,
+        public CurrencyCode $currency,
+        public float $quantity,
     ) {}
 }

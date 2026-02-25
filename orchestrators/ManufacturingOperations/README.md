@@ -20,14 +20,14 @@ It defines its own required interfaces (Providers) in `src/Contracts/Providers/`
 - `ManufacturingProviderInterface`: Work Order and Operation management.
 - `BomProviderInterface`: BOM explosion and validation.
 - `InventoryProviderInterface`: Stock checks, reservations, issues, and receipts.
-- `QualityProviderInterface`: Inspection management.
-- `CostingProviderInterface`: Cost estimation and recording.
+- `QualityProviderInterface`: Inspection management and compliance.
+- `CostingProviderInterface`: Cost estimation and recording (material, labor, overhead).
 
 ## Usage
 
 ```php
-use Nexus\Orchestrators\ManufacturingOperations\Services\ManufacturingOrchestrator;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\ProductionOrderRequest;
+use Nexus\ManufacturingOperations\Services\ManufacturingOrchestrator;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrderRequest;
 
 // 1. Plan Production
 $request = new ProductionOrderRequest(
@@ -41,7 +41,7 @@ $order = $orchestrator->planProduction($tenantId, $request);
 $releasedOrder = $orchestrator->releaseOrder($tenantId, $order->id);
 
 // 3. Complete Order (Check Quality, Issue Stock, Receive Goods)
-$completedOrder = $orchestrator->completeOrder($tenantId, $order->id);
+$completedOrder = $orchestrator->completeOrder($tenantId, $releasedOrder->id);
 ```
 
 ## Testing

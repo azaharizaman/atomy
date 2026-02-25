@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\Exceptions;
+namespace Nexus\ManufacturingOperations\Exceptions;
 
 final class QualityCheckInitializationException extends ManufacturingOperationsException
 {

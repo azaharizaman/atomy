@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers;
+namespace Nexus\ManufacturingOperations\Contracts\Providers;
 
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\CostCalculationRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\CostCalculationResult;
+use Nexus\ManufacturingOperations\DTOs\CostCalculationRequest;
+use Nexus\ManufacturingOperations\DTOs\CostCalculationResult;
+use Nexus\ManufacturingOperations\DTOs\CurrencyCode;
 
 interface CostingProviderInterface
 {
@@ -17,5 +18,22 @@ interface CostingProviderInterface
     /**
      * Record actual costs incurred during production.
      */
-    public function recordActualCost(string $tenantId, string $orderId, float $amount, string $currency): void;
+    public function recordActualCost(string $tenantId, string $orderId, string $amount, CurrencyCode $currency): void;
+
+    /**
+     * Get material costs for a specific order.
+     * 
+     * @return \Nexus\ManufacturingOperations\DTOs\MaterialCost[]
+     */
+    public function getMaterialCosts(string $tenantId, string $orderId): array;
+
+    /**
+     * Get labor costs for a specific order.
+     */
+    public function getLaborCosts(string $tenantId, string $orderId): string;
+
+    /**
+     * Get overhead costs for a specific order.
+     */
+    public function getOverheadCosts(string $tenantId, string $orderId): string;
 }

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\Contracts;
+namespace Nexus\ManufacturingOperations\Contracts;
 
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\ProductionOrderRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\ProductionOrder;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrderRequest;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrder;
 
 interface ManufacturingOrchestratorInterface
 {

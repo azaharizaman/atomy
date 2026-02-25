@@ -2,23 +2,28 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\Services;
+namespace Nexus\ManufacturingOperations\Services;
 
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\ManufacturingOrchestratorInterface;
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\BomProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\CostingProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\InventoryProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\ManufacturingProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\Contracts\Providers\QualityProviderInterface;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\BomLookupRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\CostCalculationRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\InspectionRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\ProductionOrder;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\ProductionOrderRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\StockCheckRequest;
-use Nexus\Orchestrators\ManufacturingOperations\DTOs\StockReservationRequest;
-use Nexus\Orchestrators\ManufacturingOperations\Exceptions\ManufacturingOperationsException;
-use Nexus\Orchestrators\ManufacturingOperations\Exceptions\StockShortageException;
+use Nexus\Identity\Contracts\AuthContextInterface;
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;
+use Nexus\ManufacturingOperations\Contracts\ManufacturingOrchestratorInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\BomProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\CostingProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\InventoryProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\ManufacturingProviderInterface;
+use Nexus\ManufacturingOperations\Contracts\Providers\QualityProviderInterface;
+use Nexus\ManufacturingOperations\DTOs\BomLookupRequest;
+use Nexus\ManufacturingOperations\DTOs\CostCalculationRequest;
+use Nexus\ManufacturingOperations\DTOs\InspectionRequest;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrder;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrderRequest;
+use Nexus\ManufacturingOperations\DTOs\ProductionOrderStatus;
+use Nexus\ManufacturingOperations\DTOs\StockReservationRequest;
+use Nexus\ManufacturingOperations\Events\OrderCompleted;
+use Nexus\ManufacturingOperations\Events\OrderPlanned;
+use Nexus\ManufacturingOperations\Events\OrderReleased;
+use Nexus\ManufacturingOperations\Exceptions\ManufacturingOperationsException;
+use Nexus\ManufacturingOperations\Exceptions\StockShortageException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
@@ -30,12 +35,34 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
         private InventoryProviderInterface $inventoryProvider,
         private QualityProviderInterface $qualityProvider,
         private CostingProviderInterface $costingProvider,
+        private AuthContextInterface $authContext,
+        private PolicyEvaluatorInterface $policyEvaluator,
         private LoggerInterface $logger,
         private EventDispatcherInterface $dispatcher,
     ) {}
 
+    private function authorize(string $tenantId, string $action, mixed $resource): void
+    {
+        $user = $this->authContext->getCurrentUser();
+        if (!$user) {
+             throw new \RuntimeException("Unauthorized: No authenticated user context.");
+        }
+
+        if (!$this->policyEvaluator->evaluate($user, $action, $resource, ['tenant_id' => $tenantId])) {
+            $this->logger->warning("Access denied", [
+                'user_id' => $user->getId(),
+                'action' => $action,
+                'resource' => is_string($resource) ? $resource : get_class($resource),
+                'tenant_id' => $tenantId,
+            ]);
+            throw new \RuntimeException("Access denied: You do not have permission to perform '{$action}'.");
+        }
+    }
+
     public function planProduction(string $tenantId, ProductionOrderRequest $request): ProductionOrder
     {
+        $this->authorize($tenantId, 'manufacturing:plan', $request->productId);
+
         $this->logger->info('Planning production order', [
             'tenant_id' => $tenantId,
             'product_id' => $request->productId,
@@ -67,25 +94,47 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
         
         $this->logger->info('Estimated production cost calculated', [
             'total' => $estimatedCost->getTotal(),
-            'currency' => $estimatedCost->currency,
+            'currency' => $estimatedCost->currency->value,
         ]);
 
-        // 3. Create Order (Planned)
-        return $this->manufacturingProvider->createOrder($tenantId, $request);
+        // 3. Enrich Request with Plan Data
+        $enrichedRequest = new ProductionOrderRequest(
+            productId: $request->productId,
+            quantity: $request->quantity,
+            dueDate: $request->dueDate,
+            priority: $request->priority,
+            bomId: $bomResult->bomId,
+            routingId: $request->routingId,
+            estimatedMaterialCost: $estimatedCost->estimatedMaterialCost,
+            estimatedLaborCost: $estimatedCost->estimatedLaborCost,
+            estimatedOverheadCost: $estimatedCost->estimatedOverheadCost,
+            currency: $estimatedCost->currency
+        );
+
+        $order = $this->manufacturingProvider->createOrder($tenantId, $enrichedRequest);
+
+        $this->dispatcher->dispatch(new OrderPlanned($tenantId, $order));
+
+        return $order;
     }
 
     public function releaseOrder(string $tenantId, string $orderId): ProductionOrder
     {
+        $this->authorize($tenantId, 'manufacturing:release', $orderId);
+
         $this->logger->info('Releasing production order', ['order_id' => $orderId]);
 
         $order = $this->manufacturingProvider->getOrder($tenantId, $orderId);
 
-        if ($order->status !== 'Planned') {
-            throw new ManufacturingOperationsException("Order {$orderId} cannot be released from status {$order->status}");
+        if ($order->status !== ProductionOrderStatus::Planned) {
+            throw new ManufacturingOperationsException("Order {$orderId} cannot be released from status {$order->status->value}");
         }
 
         // 1. Get Requirements (Explode BOM)
-        $bomRequest = new BomLookupRequest(productId: $order->productId); // Should rely on order's BOM ID if available
+        $bomRequest = new BomLookupRequest(
+            productId: $order->productId,
+            bomId: $order->bomId
+        );
         $bomResult = $this->bomProvider->getBom($tenantId, $bomRequest);
 
         // Calculate required quantities
@@ -94,13 +143,7 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
             $requirements[$componentId] = $qtyPerUnit * $order->quantity;
         }
 
-        // 2. Check Stock
-        $stockCheck = new StockCheckRequest($requirements);
-        if (!$this->inventoryProvider->checkStockAvailability($tenantId, $stockCheck)) {
-            throw StockShortageException::forShortages('Insufficient stock for production release');
-        }
-
-        // 3. Reserve Stock
+        // 2. Reserve Stock (Atomic)
         $reservationRequest = new StockReservationRequest(
             orderId: $orderId,
             items: $requirements
@@ -112,34 +155,61 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
             throw StockShortageException::forShortages($reservationResult->shortages);
         }
 
-        // 4. Initialize Quality Inspection (if required)
+        $inspectionId = null;
         try {
-            $this->qualityProvider->createInspection($tenantId, new InspectionRequest(
+            // 3. Initialize Quality Inspection
+            $inspectionId = $this->qualityProvider->createInspection($tenantId, new InspectionRequest(
                 orderId: $orderId,
                 productId: $order->productId,
-                type: 'Final' // Default to final inspection
+                type: \Nexus\ManufacturingOperations\DTOs\InspectionType::Final
             ));
+
+            // 4. Update Status and fetch final state
+            $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, ProductionOrderStatus::Released);
+            $finalOrder = $this->manufacturingProvider->getOrder($tenantId, $orderId);
+
+            $this->dispatcher->dispatch(new OrderReleased($tenantId, $finalOrder));
+
+            return $finalOrder;
+
         } catch (\Exception $e) {
-            $this->logger->error('Failed to initialize quality inspection', ['error' => $e->getMessage()]);
-            // Rollback reservation
-            $this->inventoryProvider->releaseReservation($tenantId, $reservationResult->reservationId);
+            $this->logger->error('Order release failed, compensating...', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
+            
+            $this->compensateOrderRelease($tenantId, $reservationResult->reservationId, $inspectionId);
             throw $e;
         }
+    }
 
-        // 5. Update Status
-        $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, 'Released');
-
-        return $this->manufacturingProvider->getOrder($tenantId, $orderId);
+    private function compensateOrderRelease(string $tenantId, string $reservationId, ?string $inspectionId): void
+    {
+        try {
+            $this->inventoryProvider->releaseReservation($tenantId, $reservationId);
+            if ($inspectionId) {
+                $this->qualityProvider->deleteInspection($tenantId, $inspectionId);
+            }
+        } catch (\Exception $e) {
+            $this->logger->critical('Release compensation failed!', [
+                'tenant_id' => $tenantId,
+                'reservation_id' => $reservationId,
+                'inspection_id' => $inspectionId,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     public function completeOrder(string $tenantId, string $orderId): ProductionOrder
     {
+        $this->authorize($tenantId, 'manufacturing:complete', $orderId);
+
         $this->logger->info('Completing production order', ['order_id' => $orderId]);
 
         $order = $this->manufacturingProvider->getOrder($tenantId, $orderId);
 
-        if ($order->status !== 'Released' && $order->status !== 'InProgress') {
-             throw new ManufacturingOperationsException("Order {$orderId} cannot be completed from status {$order->status}");
+        if ($order->status !== ProductionOrderStatus::Released && $order->status !== ProductionOrderStatus::InProgress) {
+             throw new ManufacturingOperationsException("Order {$orderId} cannot be completed from status {$order->status->value}");
         }
 
         // 1. Verify Quality Compliance
@@ -147,24 +217,37 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
             throw new ManufacturingOperationsException("Order {$orderId} has pending or failed quality inspections");
         }
 
-        // 2. Consume Materials (Issue Stock)
-        if ($order->reservationId) {
-            // Assume issueStock handles consuming the reservation for the order quantity
-            $this->inventoryProvider->issueStock($tenantId, $order->reservationId, $order->quantity);
-        } else {
-            $this->logger->warning("Order {$orderId} completed without reservation ID.");
+        // 2. Issue Stock (Consumption) - Fail fast if no reservation
+        if (!$order->reservationId) {
+            throw new ManufacturingOperationsException("Cannot complete order {$orderId}: Missing reservation ID for material consumption.");
         }
 
+        $this->inventoryProvider->issueStock($tenantId, $order->reservationId, $order->quantity);
+
         // 3. Receive Finished Goods
-        // Assuming default warehouse for now, or provider logic
         $this->inventoryProvider->receiveStock($tenantId, $order->productId, $order->quantity, 'WH-DEFAULT');
         
-        // 4. Calculate Final Costs
-        $this->costingProvider->recordActualCost($tenantId, $orderId, 0.0, 'USD'); // Placeholder
+        // 4. Calculate and Record Actual Costs (Computation instead of hardcoded placeholder)
+        $actualMaterialCosts = $this->costingProvider->getMaterialCosts($tenantId, $orderId);
+        $totalActualMaterial = "0.0000";
+        foreach ($actualMaterialCosts as $cost) {
+            $totalActualMaterial = bcadd($totalActualMaterial, $cost->totalCost, 4);
+        }
+
+        $laborCost = $this->costingProvider->getLaborCosts($tenantId, $orderId);
+        $overheadCost = $this->costingProvider->getOverheadCosts($tenantId, $orderId);
+        
+        $totalActual = bcadd(bcadd($totalActualMaterial, $laborCost, 4), $overheadCost, 4);
+
+        $this->costingProvider->recordActualCost($tenantId, $orderId, $totalActual, \Nexus\ManufacturingOperations\DTOs\CurrencyCode::USD);
 
         // 5. Update Status
-        $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, 'Completed');
+        $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, ProductionOrderStatus::Completed);
 
-        return $this->manufacturingProvider->getOrder($tenantId, $orderId);
+        $finalOrder = $this->manufacturingProvider->getOrder($tenantId, $orderId);
+        
+        $this->dispatcher->dispatch(new OrderCompleted($tenantId, $finalOrder));
+
+        return $finalOrder;
     }
 }

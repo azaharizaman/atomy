@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Orchestrators\ManufacturingOperations\DTOs;
+namespace Nexus\ManufacturingOperations\DTOs;
 
 /**
  * Result DTO for production order operations.
@@ -17,11 +17,11 @@ readonly class ProductionOrderResult
     public function __construct(
         public bool $success,
         public ?string $orderId = null,
-        public ?string $status = null,
+        public ?ProductionOrderStatus $status = null,
         public ?string $message = null,
         public ?array $errors = null,
-        public ?\DateTimeInterface $createdAt = null,
-        public ?\DateTimeInterface $updatedAt = null,
+        public ?\DateTimeImmutable $createdAt = null,
+        public ?\DateTimeImmutable $updatedAt = null,
         public ?array $metadata = null,
     ) {}
 
@@ -30,10 +30,10 @@ readonly class ProductionOrderResult
      */
     public static function success(
         string $orderId,
-        string $status,
+        ProductionOrderStatus $status,
         ?string $message = null,
-        ?\DateTimeInterface $createdAt = null,
-        ?\DateTimeInterface $updatedAt = null,
+        ?\DateTimeImmutable $createdAt = null,
+        ?\DateTimeImmutable $updatedAt = null,
         ?array $metadata = null
     ): self {
         return new self(
