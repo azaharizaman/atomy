@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: ProjectManagement Orchestrator**
+- [~] **Track: ProjectManagement Orchestrator**
   *Link: [./tracks/project_mgmt_20260226/](./tracks/project_mgmt_20260226/)*
