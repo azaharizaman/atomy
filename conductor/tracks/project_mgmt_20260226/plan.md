@@ -20,7 +20,7 @@ Implement the core logic to reconcile project progress with financial and time-b
 - [x] **Task: Implement Expense Health Logic** 36794c5
     - [ ] **Write Failing Tests:** Write a test that reconciles material expenses from `Inventory` (mocked via contract) with `Budget` limits.
     - [ ] **Implement:** Create `ExpenseHealthService` to aggregate costs and check against budget thresholds.
-- [ ] **Task: Implement Timeline Drift Detection**
+- [x] **Task: Implement Timeline Drift Detection** 4a17284
     - [ ] **Write Failing Tests:** Write a test that compares `Projects` milestone completion dates with `Scheduler` anticipated dates.
     - [ ] **Implement:** Create `TimelineDriftService` to identify schedule deviations.
 - [ ] **Task: Conductor - User Manual Verification 'Phase 2: Project Health Monitoring' (Protocol in workflow.md)**
