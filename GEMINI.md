@@ -7,12 +7,12 @@ This document serves as the absolute source of truth for Gemini CLI agents worki
 1.  **Layer 1: Atomic Packages (`packages/`)**
     - Pure PHP 8.3+, zero framework dependencies.
     - MUST define own interfaces in `src/Contracts/`.
-    - No direct dependencies on other atomic packages or orchestrators.
+    - No direct dependencies on other atomic packages or orchestrators (except NExus\Common).
 2.  **Layer 2: Orchestrators (`orchestrators/`)**
     - Cross-package workflow coordination.
-    - **CRITICAL**: Must define OWN interfaces (e.g., `src/Contracts/SupplyChainStockManagerInterface.php`) and cannot depend on Layer 1 interfaces directly.
+    - **CRITICAL**: Must define OWN interfaces (e.g., `src/Contracts/SupplyChainStockManagerInterface.php`) and cannot depend on Layer 1 interfaces directly. Orchestrators package are stateless and only contain business logic to coordinate multiple atomic packages, they should not contain any domain logic that belongs to a single package. If an orchestrator is only coordinating one package, then it should be refactored into that package instead. Orchestrator package must be publishable to Packagist independently of the main Nexus repository, and should not have any dependencies on the main Nexus repository. Orchestrators can depend on other orchestrators, but should avoid doing so if possible to prevent tight coupling.
 3.  **Layer 3: Adapters (`adapters/`)**
-    - Framework-specific (Laravel) concrete implementations.
+    - Framework-specific (Laravel/Symfony/etc) concrete implementations. Each framework adaptors must be in their own subdirectory (e.g., `adapters/Laravel/`) and can depend on Layer 1 and Layer 2 interfaces.
     - Bridges Orchestrator interfaces to Atomic Packages.
 
 ## 🚨 The Golden Rule of Implementation
