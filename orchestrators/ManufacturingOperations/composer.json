@@ -1,0 +1,36 @@
+{
+    "name": "nexus/manufacturing-operations",
+    "description": "Production-ready orchestrator for manufacturing operations - coordinates production lifecycles, BOM reconciliation, costing, quality control, and work center management across multiple user groups",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev",
+        "psr/log": "^3.0",
+        "psr/event-dispatcher": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Orchestrators\\ManufacturingOperations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Orchestrators\\ManufacturingOperations\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../packages/*",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
