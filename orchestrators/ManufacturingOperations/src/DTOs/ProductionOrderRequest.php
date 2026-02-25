@@ -9,6 +9,7 @@ readonly class ProductionOrderRequest
     public function __construct(
         public string $productId,
         public float $quantity,
+        public string $uom,
         public \DateTimeImmutable $dueDate,
         public ProductionPriority $priority = ProductionPriority::Normal,
         public ?string $bomId = null,

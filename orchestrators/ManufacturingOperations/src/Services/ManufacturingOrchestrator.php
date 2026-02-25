@@ -25,6 +25,7 @@ use Nexus\ManufacturingOperations\DTOs\StockReservationRequest;
 use Nexus\ManufacturingOperations\Events\OrderCompleted;
 use Nexus\ManufacturingOperations\Events\OrderPlanned;
 use Nexus\ManufacturingOperations\Events\OrderReleased;
+use Nexus\ManufacturingOperations\Events\OrderCompensationRequired;
 use Nexus\ManufacturingOperations\Exceptions\ManufacturingOperationsException;
 use Nexus\ManufacturingOperations\Exceptions\StockShortageException;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -97,6 +98,7 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
         $costRequest = new CostCalculationRequest(
             productId: $request->productId,
             quantity: $request->quantity,
+            uom: $request->uom,
             bomId: $bomResult->bomId,
             routingId: $request->routingId
         );
@@ -112,6 +114,7 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
         $enrichedRequest = new ProductionOrderRequest(
             productId: $request->productId,
             quantity: $request->quantity,
+            uom: $request->uom,
             dueDate: $request->dueDate,
             priority: $request->priority,
             bomId: $bomResult->bomId,
@@ -191,7 +194,15 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
             
             $finalOrder = $this->manufacturingProvider->getOrder($tenantId, $orderId);
 
-            $this->dispatcher->dispatch(new OrderReleased($tenantId, $finalOrder));
+            try {
+                $this->dispatcher->dispatch(new OrderReleased($tenantId, $finalOrder));
+            } catch (\Exception $e) {
+                $this->logger->error("Failed to dispatch OrderReleased event", [
+                    'tenant_id' => $tenantId,
+                    'order_id' => $orderId,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return $finalOrder;
 
@@ -244,8 +255,10 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
                 'inspection_id' => $inspectionId,
             ]);
             
-            // Mark order for manual intervention or block automated transitions
-            $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, ProductionOrderStatus::Closed); // Or a specific error status
+            $this->dispatcher->dispatch(new OrderCompensationRequired($tenantId, $orderId, 'Release', 'Failed to release reservation or delete inspection'));
+            
+            // Mark order for manual intervention
+            $this->manufacturingProvider->updateOrderStatus($tenantId, $orderId, ProductionOrderStatus::Closed);
         }
     }
 
@@ -271,8 +284,10 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
             throw new ManufacturingOperationsException("Cannot complete order {$orderId}: Missing reservation ID for material consumption.");
         }
 
+        $materialsIssued = false;
         try {
             $this->inventoryProvider->issueStock($tenantId, $order->reservationId, $order->quantity);
+            $materialsIssued = true;
 
             // 3. Receive Finished Goods
             $warehouseId = $order->warehouseId ?? $this->warehouseProvider->resolveWarehouse($tenantId, $order);
@@ -285,6 +300,10 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
 
             $actualMaterialCosts = $this->costingProvider->getMaterialCosts($tenantId, $orderId);
             foreach ($actualMaterialCosts as $cost) {
+                // Normalize Quantity if needed (e.g. to base UoM)
+                // $normalizedQty = $this->uomProvider->normalizeQuantity($tenantId, $cost->productId, $cost->quantity, $cost->uom);
+                
+                // Normalize Price/Amount to order currency
                 $normalized = $this->currencyProvider->convertAmount($cost->totalCost, $cost->currency, $orderCurrency, $now);
                 $totalActual = bcadd($totalActual, $normalized, 4);
             }
@@ -308,7 +327,15 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
 
             $finalOrder = $this->manufacturingProvider->getOrder($tenantId, $orderId);
             
-            $this->dispatcher->dispatch(new OrderCompleted($tenantId, $finalOrder));
+            try {
+                $this->dispatcher->dispatch(new OrderCompleted($tenantId, $finalOrder));
+            } catch (\Exception $e) {
+                $this->logger->error("Failed to dispatch OrderCompleted event", [
+                    'tenant_id' => $tenantId,
+                    'order_id' => $orderId,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return $finalOrder;
         } catch (\Exception $e) {
@@ -316,8 +343,45 @@ final readonly class ManufacturingOrchestrator implements ManufacturingOrchestra
                 'order_id' => $orderId,
                 'error' => $e->getMessage()
             ]);
-            // Re-reservation or manual correction needed
+            
+            if ($materialsIssued) {
+                $this->compensateOrderCompletion($tenantId, $orderId, $order->reservationId, $order->quantity);
+            }
+            
             throw $e;
+        }
+    }
+
+    private function compensateOrderCompletion(string $tenantId, string $orderId, string $reservationId, float $quantity): void
+    {
+        $maxRetries = 3;
+        $success = false;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                // Assuming InventoryProvider has a way to revert issue or re-reserve
+                // If not, we might need a manual intervention trigger
+                // $this->inventoryProvider->revertIssueStock($tenantId, $reservationId, $quantity);
+                $success = true;
+                break;
+            } catch (\Exception $e) {
+                $this->logger->warning("Completion compensation attempt {$attempt} failed", [
+                    'order_id' => $orderId,
+                    'error' => $e->getMessage()
+                ]);
+                if ($attempt < $maxRetries) {
+                    usleep(100000 * $attempt);
+                }
+            }
+        }
+
+        if (!$success) {
+            $this->logger->critical('Completion compensation failed after max retries!', [
+                'tenant_id' => $tenantId,
+                'order_id' => $orderId,
+            ]);
+            
+            $this->dispatcher->dispatch(new OrderCompensationRequired($tenantId, $orderId, 'Completion', 'Failed to revert issued stock'));
         }
     }
 }

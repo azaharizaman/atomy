@@ -11,6 +11,7 @@ readonly class ProductionOrder
         public string $orderNumber,
         public string $productId,
         public float $quantity,
+        public string $uom,
         public ProductionOrderStatus $status,
         public \DateTimeImmutable $dueDate,
         public ?\DateTimeImmutable $startDate = null,

@@ -9,6 +9,7 @@ readonly class CostCalculationRequest
     public function __construct(
         public string $productId,
         public float $quantity,
+        public string $uom,
         public ?string $bomId = null,
         public ?string $routingId = null,
     ) {

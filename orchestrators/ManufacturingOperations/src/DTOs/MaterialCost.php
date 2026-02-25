@@ -11,6 +11,7 @@ readonly class MaterialCost
         public string $totalCost,
         public CurrencyCode $currency,
         public float $quantity,
+        public string $uom,
     ) {
         if ($this->quantity <= 0) {
             throw new \InvalidArgumentException("quantity must be a positive number");
