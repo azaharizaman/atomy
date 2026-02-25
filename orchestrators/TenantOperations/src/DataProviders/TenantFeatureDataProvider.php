@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\TenantOperations\DataProviders;
 
+use Nexus\TenantOperations\Contracts\FeatureQueryAdapterInterface;
+use Nexus\TenantOperations\Contracts\FeatureToggleAdapterInterface;
 use Nexus\TenantOperations\Contracts\TenantFeatureProviderInterface;
 
 /**
@@ -12,8 +14,8 @@ use Nexus\TenantOperations\Contracts\TenantFeatureProviderInterface;
 final readonly class TenantFeatureDataProvider implements TenantFeatureProviderInterface
 {
     public function __construct(
-        private FeatureQueryInterface $featureQuery,
-        private FeatureToggleInterface $featureToggle,
+        private FeatureQueryAdapterInterface $featureQuery,
+        private FeatureToggleAdapterInterface $featureToggle,
     ) {}
 
     public function isFeatureEnabled(string $tenantId, string $featureKey): bool
@@ -80,26 +82,4 @@ final readonly class TenantFeatureDataProvider implements TenantFeatureProviderI
     {
         return $this->featureToggle->disable($tenantId, $featureKey);
     }
-}
-
-/**
- * Interface for querying feature flags.
- */
-interface FeatureQueryInterface
-{
-    public function isEnabled(string $tenantId, string $featureKey): bool;
-
-    /**
-     * @return array<string, bool>
-     */
-    public function getAll(string $tenantId): array;
-}
-
-/**
- * Interface for toggling feature flags.
- */
-interface FeatureToggleInterface
-{
-    public function enable(string $tenantId, string $featureKey): bool;
-    public function disable(string $tenantId, string $featureKey): bool;
 }
