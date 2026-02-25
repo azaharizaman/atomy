@@ -1,0 +1,31 @@
+{
+    "name": "nexus/customer-service-operations",
+    "description": "Nexus CustomerServiceOperations Orchestrator - Post-sales support and service excellence coordination",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "nexus",
+        "orchestrator",
+        "customer-service",
+        "ticketing",
+        "sla",
+        "knowledge-base"
+    ],
+    "require": {
+        "php": "^8.3",
+        "psr/log": "^3.0",
+        "psr/event-dispatcher": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\CustomerServiceOperations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\CustomerServiceOperations\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
