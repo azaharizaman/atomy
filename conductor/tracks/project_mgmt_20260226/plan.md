@@ -28,7 +28,7 @@ Implement the core logic to reconcile project progress with financial and time-b
 ## Phase 3: Milestone Billing Bridge
 Automate the financial and communication flows triggered by project milestones.
 
-- [ ] **Task: Define Billing & Notification Contracts**
+- [x] **Task: Define Billing & Notification Contracts** 42c131a
     - [ ] **Write Failing Tests:** Create a test to ensure `BillingBridge` requires `Receivable` and `Messaging` contracts.
     - [ ] **Implement:** Define `ReceivablePersistInterface` and `MessagingServiceInterface` in `src/Contracts/`.
 - [ ] **Task: Implement Billing Automation Flow**
