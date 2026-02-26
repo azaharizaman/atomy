@@ -123,9 +123,15 @@ class ReportingCoordinatorTest extends TestCase
             ->with($this->stringContains('Forecast failed or timed out'));
 
         $expectedDataWithFailure = [
-            '2023' => 1000,
-            'forecast_unavailable' => true,
-            'forecast_error' => 'Prediction job failed'
+            'historical' => $historicalData,
+            'forecast' => null,
+            'metadata' => [
+                'forecast_unavailable' => true,
+                'forecast_error' => 'Prediction job failed',
+                'forecast_status' => 'failed',
+                'confidence' => null,
+                'model_version' => null,
+            ]
         ];
 
         $exportResult = $this->createMock(ExportResult::class);

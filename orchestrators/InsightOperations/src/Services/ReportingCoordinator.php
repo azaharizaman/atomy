@@ -53,6 +53,7 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
 
                 // Polling for completion
                 $maxAttempts = $parameters['forecast_max_attempts'] ?? 10;
+                $pollIntervalMs = $parameters['forecast_poll_interval_ms'] ?? 100;
                 $attempt = 0;
                 $status = 'pending';
 
@@ -62,7 +63,7 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
                         break;
                     }
                     $attempt++;
-                    usleep(100000); // 100ms
+                    usleep($pollIntervalMs * 1000);
                 }
 
                 if ($status === 'completed') {
@@ -84,8 +85,17 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
                             'model_id' => $modelId,
                             'template_id' => $reportTemplateId,
                         ]);
-                        $reportData['forecast_unavailable'] = true;
-                        $reportData['forecast_error'] = 'Empty result from prediction service';
+                        $reportData = [
+                            'historical' => $reportData,
+                            'forecast' => null,
+                            'metadata' => [
+                                'forecast_unavailable' => true,
+                                'forecast_error' => 'Empty result from prediction service',
+                                'forecast_status' => 'failed',
+                                'confidence' => null,
+                                'model_version' => null,
+                            ]
+                        ];
                     }
                 } else {
                     $this->logger->error("Forecast failed or timed out", [
@@ -94,8 +104,17 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
                         'attempts' => $attempt,
                         'model_id' => $modelId,
                     ]);
-                    $reportData['forecast_unavailable'] = true;
-                    $reportData['forecast_error'] = ($status === 'failed') ? 'Prediction job failed' : 'Forecast timeout';
+                    $reportData = [
+                        'historical' => $reportData,
+                        'forecast' => null,
+                        'metadata' => [
+                            'forecast_unavailable' => true,
+                            'forecast_error' => ($status === 'failed') ? 'Prediction job failed' : 'Forecast timeout',
+                            'forecast_status' => ($status === 'failed') ? 'failed' : 'timeout',
+                            'confidence' => null,
+                            'model_version' => null,
+                        ]
+                    ];
                 }
             }
 
@@ -104,7 +123,7 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
             $filePath = $exportResult->getFilePathOrFail();
 
             // 4. Store
-            $storagePath = "reports/" . date('Y/m/d/') . basename($filePath);
+            $storagePath = "reports/" . gmdate('Y/m/d/') . basename($filePath);
             $stream = fopen($filePath, 'r');
             
             if ($stream === false) {
