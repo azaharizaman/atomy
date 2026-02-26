@@ -6,6 +6,7 @@ namespace Nexus\InsightOperations\Services;
 
 use Nexus\Export\Contracts\ExportGeneratorInterface;
 use Nexus\InsightOperations\Contracts\ReportingPipelineCoordinatorInterface;
+use Nexus\MachineLearning\Contracts\PredictionServiceInterface;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
 use Nexus\QueryEngine\Contracts\AnalyticsRepositoryInterface;
 use Nexus\Storage\Contracts\StorageDriverInterface;
@@ -20,6 +21,7 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
 {
     public function __construct(
         private AnalyticsRepositoryInterface $queryEngine,
+        private PredictionServiceInterface $predictionService,
         private ExportGeneratorInterface $exportGenerator,
         private StorageDriverInterface $storageDriver,
         private NotificationManagerInterface $notificationManager,
@@ -37,13 +39,38 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
         ]);
 
         try {
-            // 1. Execute Query
-            $data = $this->queryEngine->executeQuery($reportTemplateId, $parameters);
+            // 1. Execute Historical Query
+            $historicalResult = $this->queryEngine->executeQuery($reportTemplateId, $parameters);
+            $reportData = $historicalResult->getData();
 
-            // 2. Render/Export
-            $filePath = $this->exportGenerator->generate($data, $deliveryOptions['format'] ?? 'pdf');
+            // 2. Append Forecasted Data if requested
+            if ($parameters['include_forecast'] ?? false) {
+                $modelId = $parameters['forecast_model_id'] ?? $reportTemplateId;
+                $this->logger->info("Appending forecasted data using model: {$modelId}");
+                
+                // Fetch synchronous prediction (simplified for orchestrator)
+                // In a production scenario, this might involve checking async job status
+                $forecastContext = ['historical_data' => $reportData, 'parameters' => $parameters];
+                $predictionResult = $this->predictionService->getPrediction(
+                    $this->predictionService->predictAsync($modelId, $forecastContext)
+                );
 
-            // 3. Store
+                if ($predictionResult) {
+                    $reportData = [
+                        'historical' => $reportData,
+                        'forecast' => $predictionResult->getData(),
+                        'metadata' => [
+                            'confidence' => $predictionResult->getConfidence(),
+                            'model_version' => $predictionResult->getModelVersion(),
+                        ]
+                    ];
+                }
+            }
+
+            // 3. Render/Export
+            $filePath = $this->exportGenerator->generate($reportData, $deliveryOptions['format'] ?? 'pdf');
+
+            // 4. Store
             $storagePath = "reports/" . date('Y/m/d/') . basename($filePath);
             $stream = fopen($filePath, 'r');
             
