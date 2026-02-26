@@ -52,6 +52,7 @@ final class MfaServiceTest extends TestCase
     {
         $request = new MfaEnableRequest(
             userId: 'user-123',
+            tenantId: 'tenant-1',
             method: MfaMethod::TOTP
         );
 
@@ -59,7 +60,7 @@ final class MfaServiceTest extends TestCase
 
         $this->enroller->expects($this->once())
             ->method('enroll')
-            ->with('user-123', MfaMethod::TOTP)
+            ->with('user-123', 'tenant-1', MfaMethod::TOTP)
             ->willReturn($result);
 
         $this->auditLogger->expects($this->once())
@@ -74,9 +75,10 @@ final class MfaServiceTest extends TestCase
 
     public function testEnableFailure(): void
     {
-        $request = new MfaEnableRequest(userId: 'user-1', method: MfaMethod::TOTP);
+        $request = new MfaEnableRequest(userId: 'user-1', tenantId: 'tenant-1', method: MfaMethod::TOTP);
         $this->enroller->expects($this->once())
             ->method('enroll')
+            ->with('user-1', 'tenant-1', MfaMethod::TOTP)
             ->willThrowException(new \Exception('Error'));
 
         $result = $this->service->enable($request);
@@ -162,12 +164,15 @@ final class MfaServiceTest extends TestCase
 
     public function testGetStatus(): void
     {
-        $status = ['totp' => true];
+        $statusResult = new MfaStatusResult('user-1', ['totp' => true]);
         $this->enroller->expects($this->once())
             ->method('getStatus')
-            ->willReturn($status);
+            ->with('user-1', 'tenant-1')
+            ->willReturn($statusResult);
 
-        $this->assertEquals($status, $this->service->getStatus('user-1'));
+        $result = $this->service->getStatus('user-1', 'tenant-1');
+        $this->assertSame($statusResult, $result);
+        $this->assertTrue($result->isEnrolled(MfaMethod::TOTP));
     }
 
     public function testGenerateBackupCodes(): void

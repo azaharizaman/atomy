@@ -6,13 +6,17 @@ namespace Nexus\IdentityOperations\DTOs;
 
 /**
  * Request DTO for user update with per-field presence tracking.
+ * 
+ * Immutable implementation using wither methods.
  */
-final class UserUpdateRequest
+final readonly class UserUpdateRequest
 {
-    private array $presentFields = [];
-
+    /**
+     * @param array<string, bool> $presentFields
+     */
     private function __construct(
-        public readonly string $userId,
+        public string $userId,
+        private array $presentFields = [],
         private ?string $firstName = null,
         private ?string $lastName = null,
         private ?string $phone = null,
@@ -29,51 +33,107 @@ final class UserUpdateRequest
 
     public function setFirstName(?string $firstName): self
     {
-        $this->firstName = $firstName;
-        $this->presentFields['first_name'] = true;
-        return $this;
+        return new self(
+            userId: $this->userId,
+            presentFields: array_merge($this->presentFields, ['first_name' => true]),
+            firstName: $firstName,
+            lastName: $this->lastName,
+            phone: $this->phone,
+            locale: $this->locale,
+            timezone: $this->timezone,
+            metadata: $this->metadata,
+            updatedBy: $this->updatedBy,
+        );
     }
 
     public function setLastName(?string $lastName): self
     {
-        $this->lastName = $lastName;
-        $this->presentFields['last_name'] = true;
-        return $this;
+        return new self(
+            userId: $this->userId,
+            presentFields: array_merge($this->presentFields, ['last_name' => true]),
+            firstName: $this->firstName,
+            lastName: $lastName,
+            phone: $this->phone,
+            locale: $this->locale,
+            timezone: $this->timezone,
+            metadata: $this->metadata,
+            updatedBy: $this->updatedBy,
+        );
     }
 
     public function setPhone(?string $phone): self
     {
-        $this->phone = $phone;
-        $this->presentFields['phone'] = true;
-        return $this;
+        return new self(
+            userId: $this->userId,
+            presentFields: array_merge($this->presentFields, ['phone' => true]),
+            firstName: $this->firstName,
+            lastName: $this->lastName,
+            phone: $phone,
+            locale: $this->locale,
+            timezone: $this->timezone,
+            metadata: $this->metadata,
+            updatedBy: $this->updatedBy,
+        );
     }
 
     public function setLocale(?string $locale): self
     {
-        $this->locale = $locale;
-        $this->presentFields['locale'] = true;
-        return $this;
+        return new self(
+            userId: $this->userId,
+            presentFields: array_merge($this->presentFields, ['locale' => true]),
+            firstName: $this->firstName,
+            lastName: $this->lastName,
+            phone: $this->phone,
+            locale: $locale,
+            timezone: $this->timezone,
+            metadata: $this->metadata,
+            updatedBy: $this->updatedBy,
+        );
     }
 
     public function setTimezone(?string $timezone): self
     {
-        $this->timezone = $timezone;
-        $this->presentFields['timezone'] = true;
-        return $this;
+        return new self(
+            userId: $this->userId,
+            presentFields: array_merge($this->presentFields, ['timezone' => true]),
+            firstName: $this->firstName,
+            lastName: $this->lastName,
+            phone: $this->phone,
+            locale: $this->locale,
+            timezone: $timezone,
+            metadata: $this->metadata,
+            updatedBy: $this->updatedBy,
+        );
     }
 
     public function setMetadata(?array $metadata): self
     {
-        $this->metadata = $metadata;
-        $this->presentFields['metadata'] = true;
-        return $this;
+        return new self(
+            userId: $this->userId,
+            presentFields: array_merge($this->presentFields, ['metadata' => true]),
+            firstName: $this->firstName,
+            lastName: $this->lastName,
+            phone: $this->phone,
+            locale: $this->locale,
+            timezone: $this->timezone,
+            metadata: $metadata,
+            updatedBy: $this->updatedBy,
+        );
     }
 
     public function setUpdatedBy(?string $updatedBy): self
     {
-        $this->updatedBy = $updatedBy;
-        $this->presentFields['updated_by'] = true;
-        return $this;
+        return new self(
+            userId: $this->userId,
+            presentFields: array_merge($this->presentFields, ['updated_by' => true]),
+            firstName: $this->firstName,
+            lastName: $this->lastName,
+            phone: $this->phone,
+            locale: $this->locale,
+            timezone: $this->timezone,
+            metadata: $this->metadata,
+            updatedBy: $updatedBy,
+        );
     }
 
     public function has(string $field): bool

@@ -11,7 +11,7 @@ use Nexus\IdentityOperations\DTOs\MfaStatusResult;
  */
 interface MfaEnrollmentCheckerInterface
 {
-    public function isEnrolled(string $userId, ?string $tenantId = null): bool;
+    public function isEnrolled(string $userId, string $tenantId): bool;
 
-    public function getEnrollmentStatus(string $userId, ?string $tenantId = null): MfaStatusResult;
+    public function getEnrollmentStatus(string $userId, string $tenantId): MfaStatusResult;
 }

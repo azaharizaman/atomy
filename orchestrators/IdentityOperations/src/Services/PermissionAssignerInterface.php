@@ -9,5 +9,5 @@ namespace Nexus\IdentityOperations\Services;
  */
 interface PermissionAssignerInterface
 {
-    public function assign(string $userId, string $permission, string $tenantId, ?\DateTimeInterface $expiresAt = null): string;
+    public function assignPermission(string $userId, string $permission, string $tenantId, ?\DateTimeInterface $expiresAt = null): string;
 }

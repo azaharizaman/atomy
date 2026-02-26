@@ -36,7 +36,7 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
         ]);
 
         try {
-            $permissionId = $this->permissionAssigner->assign(
+            $permissionId = $this->permissionAssigner->assignPermission(
                 userId: $request->userId,
                 permission: $request->permission,
                 tenantId: $request->tenantId,
@@ -131,7 +131,7 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
     public function assignRole(string $userId, string $roleId, string $tenantId, string $assignedBy): bool
     {
         try {
-            $this->roleAssigner->assign($userId, $roleId, $tenantId);
+            $this->roleAssigner->assignRole($userId, $roleId, $tenantId);
 
             $this->auditLogger->log(
                 'role.assigned',

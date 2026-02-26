@@ -53,11 +53,11 @@ final class PermissionDataProviderTest extends TestCase
             
             public function getUserPermissions(string $userId, string $tenantId): array { 
                 $this->lastGetUserPermissionsArgs = [$userId, $tenantId];
-                return []; 
+                return ['view']; 
             }
             public function getUserRoles(string $userId, string $tenantId): array { 
                 $this->lastGetUserRolesArgs = [$userId, $tenantId];
-                return []; 
+                return ['admin']; 
             }
         };
         $this->dataProvider = new PermissionDataProvider($this->permissionQuery);
@@ -99,5 +99,19 @@ final class PermissionDataProviderTest extends TestCase
         $this->permissionQuery->roleExistsResult = true;
         $this->assertTrue($this->dataProvider->roleExists('role-1', 'tenant-1'));
         $this->assertEquals(['role-1', 'tenant-1'], $this->permissionQuery->lastRoleExistsArg);
+    }
+
+    public function testGetUserPermissions(): void
+    {
+        $result = $this->dataProvider->getUserPermissions('user-1', 'tenant-1');
+        $this->assertEquals(['view'], $result);
+        $this->assertEquals(['user-1', 'tenant-1'], $this->permissionQuery->lastGetUserPermissionsArgs);
+    }
+
+    public function testGetUserRoles(): void
+    {
+        $result = $this->dataProvider->getUserRoles('user-1', 'tenant-1');
+        $this->assertEquals(['admin'], $result);
+        $this->assertEquals(['user-1', 'tenant-1'], $this->permissionQuery->lastGetUserRolesArgs);
     }
 }

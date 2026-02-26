@@ -112,13 +112,18 @@ final readonly class SessionManager implements SessionManagerInterface
     public function revokeAllSessionsForTenant(string $userId, string $tenantId): void
     {
         $sessions = $this->sessionRepository->findActiveByUserId($userId);
+        $revoked = false;
         foreach ($sessions as $session) {
             $metadata = $session->getMetadata();
             if (isset($metadata['tenant_id']) && $metadata['tenant_id'] === $tenantId) {
                 $session->revoke();
+                $revoked = true;
             }
         }
-        $this->sessionRepository->getEntityManager()->flush();
+        
+        if ($revoked) {
+            $this->sessionRepository->getEntityManager()->flush();
+        }
     }
 
     public function revokeOtherSessions(string $userId, string $currentToken): void

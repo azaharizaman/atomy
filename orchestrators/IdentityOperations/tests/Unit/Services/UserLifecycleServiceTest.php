@@ -98,6 +98,10 @@ final class UserLifecycleServiceTest extends TestCase
             ->method('setAccessEnabled')
             ->with('user-123', true);
 
+        $this->auditLogger->expects($this->once())
+            ->method('log')
+            ->with('user.activated', 'user-123');
+
         $result = $this->service->activate($request);
 
         $this->assertTrue($result->success);
@@ -135,6 +139,10 @@ final class UserLifecycleServiceTest extends TestCase
         $this->sessionManager->expects($this->once())
             ->method('invalidateUserSessions')
             ->with('user-123', 'tenant-1');
+
+        $this->auditLogger->expects($this->once())
+            ->method('log')
+            ->with('user.deactivated', 'user-123');
 
         $result = $this->service->deactivate($request);
 

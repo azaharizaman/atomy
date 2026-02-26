@@ -40,6 +40,7 @@ final readonly class MfaService implements MfaServiceInterface
         try {
             $result = $this->enroller->enroll(
                 userId: $request->userId,
+                tenantId: $request->tenantId,
                 method: $request->method,
                 phone: $request->phone,
                 email: $request->email,
@@ -154,9 +155,9 @@ final readonly class MfaService implements MfaServiceInterface
         }
     }
 
-    public function getStatus(string $userId): array
+    public function getStatus(string $userId, string $tenantId): MfaStatusResult
     {
-        return $this->enroller->getStatus($userId);
+        return $this->enroller->getStatus($userId, $tenantId);
     }
 
     public function generateBackupCodes(string $userId): array

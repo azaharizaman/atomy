@@ -9,5 +9,5 @@ namespace Nexus\IdentityOperations\Services;
  */
 interface TenantUserAssignerInterface
 {
-    public function assign(string $userId, string $tenantId, array $roles): string;
+    public function assignTenantRoles(string $userId, string $tenantId, array $roles): string;
 }

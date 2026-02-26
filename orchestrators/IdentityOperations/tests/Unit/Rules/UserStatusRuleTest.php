@@ -33,30 +33,28 @@ final class UserStatusRuleTest extends TestCase
         $this->assertTrue($result->passed);
     }
 
-    public function testEvaluateFailedForSuspended(): void
+    /**
+     * @dataProvider invalidStatusProvider
+     */
+    public function testEvaluateFailedForInvalidStatus(UserStatus $status, string $expectedMessage): void
     {
         $this->checker->expects($this->once())
             ->method('getStatus')
             ->with('user-123')
-            ->willReturn(UserStatus::Suspended);
+            ->willReturn($status);
 
         $result = $this->rule->evaluate('user-123');
 
         $this->assertFalse($result->passed);
-        $this->assertEquals("User status 'suspended' does not allow this operation", $result->errors[0]['message']);
+        $this->assertEquals($expectedMessage, $result->errors[0]['message']);
     }
 
-    public function testEvaluateFailedForDeactivated(): void
+    public static function invalidStatusProvider(): array
     {
-        $this->checker->expects($this->once())
-            ->method('getStatus')
-            ->with('user-123')
-            ->willReturn(UserStatus::Deactivated);
-
-        $result = $this->rule->evaluate('user-123');
-
-        $this->assertFalse($result->passed);
-        $this->assertEquals("User status 'deactivated' does not allow this operation", $result->errors[0]['message']);
+        return [
+            'suspended' => [UserStatus::Suspended, "User status 'suspended' does not allow this operation"],
+            'deactivated' => [UserStatus::Deactivated, "User status 'deactivated' does not allow this operation"],
+        ];
     }
 
     public function testEvaluateFailedForNotFound(): void

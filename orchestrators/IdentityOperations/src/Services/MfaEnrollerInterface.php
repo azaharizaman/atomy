@@ -13,7 +13,7 @@ use Nexus\IdentityOperations\DTOs\MfaStatusResult;
  */
 interface MfaEnrollerInterface
 {
-    public function enroll(string $userId, MfaMethod $method, ?string $phone = null, ?string $email = null): MfaEnableResult;
+    public function enroll(string $userId, string $tenantId, MfaMethod $method, ?string $phone = null, ?string $email = null): MfaEnableResult;
 
-    public function getStatus(string $userId): MfaStatusResult;
+    public function getStatus(string $userId, string $tenantId): MfaStatusResult;
 }

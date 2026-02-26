@@ -11,6 +11,7 @@ final readonly class MfaEnableRequest
 {
     public function __construct(
         public string $userId,
+        public string $tenantId,
         public MfaMethod $method,
         public ?string $phone = null,
         public ?string $email = null,

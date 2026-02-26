@@ -28,10 +28,8 @@ final class UserPermissionServiceTest extends TestCase
     private readonly LoggerInterface|MockObject $logger;
     private readonly UserPermissionService $service;
 
-    public function __construct(?string $name = null, array $data = [], $dataName = '')
+    protected function setUp(): void
     {
-        parent::__construct($name, $data, $dataName);
-        
         $this->permissionAssigner = $this->createMock(PermissionAssignerInterface::class);
         $this->permissionRevoker = $this->createMock(PermissionRevokerInterface::class);
         $this->permissionChecker = $this->createMock(PermissionCheckerInterface::class);
@@ -61,7 +59,7 @@ final class UserPermissionServiceTest extends TestCase
         );
 
         $this->permissionAssigner->expects($this->once())
-            ->method('assign')
+            ->method('assignPermission')
             ->with('user-123', 'view.reports', 'tenant-1', null)
             ->willReturn('perm-123');
 
@@ -80,7 +78,7 @@ final class UserPermissionServiceTest extends TestCase
             assignedBy: 'admin-1'
         );
         $this->permissionAssigner->expects($this->once())
-            ->method('assign')
+            ->method('assignPermission')
             ->willThrowException(new \Exception('Error'));
 
         $result = $this->service->assign($request);
@@ -154,7 +152,7 @@ final class UserPermissionServiceTest extends TestCase
     public function testAssignRoleSuccessfully(): void
     {
         $this->roleAssigner->expects($this->once())
-            ->method('assign')
+            ->method('assignRole')
             ->with('user-123', 'admin', 'tenant-1')
             ->willReturn('assignment-123');
 
@@ -166,7 +164,7 @@ final class UserPermissionServiceTest extends TestCase
     public function testAssignRoleFailure(): void
     {
         $this->roleAssigner->expects($this->once())
-            ->method('assign')
+            ->method('assignRole')
             ->willThrowException(new \Exception('Error'));
 
         $result = $this->service->assignRole('user-1', 'admin', 'tenant-1', 'admin-1');

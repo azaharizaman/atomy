@@ -49,7 +49,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
             // Assign to tenant if provided
             $tenantUserId = null;
             if ($request->tenantId !== null) {
-                $tenantUserId = $this->tenantUserAssigner->assign(
+                $tenantUserId = $this->tenantUserAssigner->assignTenantRoles(
                     userId: $userId,
                     tenantId: $request->tenantId,
                     roles: $request->roles,
@@ -126,7 +126,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
     public function assignToTenant(string $userId, string $tenantId, array $roles): bool
     {
         try {
-            $this->tenantUserAssigner->assign($userId, $tenantId, $roles);
+            $this->tenantUserAssigner->assignTenantRoles($userId, $tenantId, $roles);
 
             $this->auditLogger->log(
                 'user.assigned_to_tenant',

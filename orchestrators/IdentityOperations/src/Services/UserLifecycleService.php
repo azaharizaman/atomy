@@ -62,6 +62,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         } catch (\Throwable $e) {
             $this->logger->error('Failed to suspend user', [
                 'user_id' => $request->userId,
+                'tenant_id' => $request->tenantId,
                 'error' => $e->getMessage(),
             ]);
 
@@ -92,7 +93,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
                 $request->userId,
                 [
                     'activated_by' => $request->activatedBy,
-                    'reason' => $request->reason,
+                    'reason' => null,
                     'tenant_id' => $request->tenantId,
                 ]
             );
@@ -104,6 +105,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         } catch (\Throwable $e) {
             $this->logger->error('Failed to activate user', [
                 'user_id' => $request->userId,
+                'tenant_id' => $request->tenantId,
                 'error' => $e->getMessage(),
             ]);
 
@@ -150,6 +152,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         } catch (\Throwable $e) {
             $this->logger->error('Failed to deactivate user', [
                 'user_id' => $request->userId,
+                'tenant_id' => $request->tenantId,
                 'error' => $e->getMessage(),
             ]);
 

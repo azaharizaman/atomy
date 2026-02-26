@@ -24,7 +24,7 @@ final class MfaEnrollmentRuleTest extends TestCase
     {
         $this->checker->expects($this->once())
             ->method('isEnrolled')
-            ->with('user-123', null)
+            ->with('user-123', 'default')
             ->willReturn(false);
 
         $result = $this->rule->evaluate(['user_id' => 'user-123', 'require_mfa' => false]);

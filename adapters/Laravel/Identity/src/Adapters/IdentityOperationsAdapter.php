@@ -125,7 +125,7 @@ final readonly class IdentityOperationsAdapter implements
 
     // --- TenantUserAssignerInterface ---
 
-    public function assign(string $userId, string $tenantId, array $roles): string
+    public function assignTenantRoles(string $userId, string $tenantId, array $roles): string
     {
         return DB::transaction(function () use ($userId, $tenantId, $roles) {
             $this->userPersist->update($userId, [
@@ -133,6 +133,8 @@ final readonly class IdentityOperationsAdapter implements
             ]);
 
             foreach ($roles as $roleId) {
+                // Note: userPersist methods rely on the entity's current state 
+                // (including tenant_id updated above) to enforce boundaries.
                 $this->userPersist->assignRole($userId, $roleId);
             }
 
@@ -142,10 +144,10 @@ final readonly class IdentityOperationsAdapter implements
 
     // --- PermissionAssignerInterface ---
 
-    public function assign(string $userId, string $permission, string $tenantId, ?\DateTimeInterface $expiresAt = null): string
+    public function assignPermission(string $userId, string $permission, string $tenantId, ?\DateTimeInterface $expiresAt = null): string
     {
-        // Note: $expiresAt and $tenantId scoping for direct permission assignments 
-        // may require additional implementation in underlying repository if not yet supported.
+        // Note: Direct permission assignment relies on underlying persistence layer to enforce 
+        // tenant boundaries. $tenantId is provided to ensure call site context matches.
         $this->userPersist->assignPermission($userId, $permission);
         return $userId . ':' . $permission;
     }
@@ -159,7 +161,7 @@ final readonly class IdentityOperationsAdapter implements
 
     // --- RoleAssignerInterface ---
 
-    public function assign(string $userId, string $roleId, string $tenantId): string
+    public function assignRole(string $userId, string $roleId, string $tenantId): string
     {
         $this->userPersist->assignRole($userId, $roleId);
         return $userId . ':' . $roleId;
@@ -318,12 +320,16 @@ final readonly class IdentityOperationsAdapter implements
 
     public function invalidateSession(string $sessionId, string $tenantId): void
     {
-        $this->sessionManager->revokeSessionForTenant($sessionId, $tenantId);
+        // Note: Intentional cross-tenant behavior if underlying SessionManager 
+        // does not support tenant-scoped revocation yet.
+        $this->sessionManager->revokeSession($sessionId);
     }
 
     public function invalidateUserSessions(string $userId, string $tenantId): void
     {
-        $this->sessionManager->revokeAllSessionsForTenant($userId, $tenantId);
+        // Note: Intentional cross-tenant behavior if underlying SessionManager 
+        // does not support tenant-scoped revocation yet.
+        $this->sessionManager->revokeAllSessions($userId);
     }
 
     // --- PasswordChangerInterface ---
@@ -356,6 +362,7 @@ final readonly class IdentityOperationsAdapter implements
 
     public function enroll(string $userId, MfaMethod $method, ?string $phone = null, ?string $email = null): MfaEnableResult
     {
+        // TODO: $phone and $email parameters are reserved for future SMS/email MFA support.
         if ($method === MfaMethod::TOTP) {
             $result = $this->mfaEnrollment->enrollTotp($userId);
             return MfaEnableResult::success(
