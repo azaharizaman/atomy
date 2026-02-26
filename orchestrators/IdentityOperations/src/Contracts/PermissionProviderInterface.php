@@ -14,29 +14,29 @@ interface PermissionProviderInterface
      *
      * @return array<int, array{id: string, name: string, description: string}>
      */
-    public function getAllPermissions(): array;
+    public function getAllPermissions(string $tenantId): array;
 
     /**
      * Get all available roles.
      *
      * @return array<int, array{id: string, name: string, permissions: array<int, string>}>
      */
-    public function getAllRoles(): array;
+    public function getAllRoles(string $tenantId): array;
 
     /**
      * Get permissions for a role.
      *
      * @return array<int, string>
      */
-    public function getRolePermissions(string $roleId): array;
+    public function getRolePermissions(string $roleId, string $tenantId): array;
 
     /**
      * Check if permission exists.
      */
-    public function permissionExists(string $permission): bool;
+    public function permissionExists(string $permission, string $tenantId): bool;
 
     /**
      * Check if role exists.
      */
-    public function roleExists(string $roleId): bool;
+    public function roleExists(string $roleId, string $tenantId): bool;
 }

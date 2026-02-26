@@ -11,6 +11,8 @@ use Nexus\IdentityOperations\DTOs\MfaVerifyResult;
 use Nexus\IdentityOperations\DTOs\MfaDisableRequest;
 use Nexus\IdentityOperations\DTOs\MfaDisableResult;
 
+use Nexus\IdentityOperations\DTOs\MfaStatusResult;
+
 /**
  * Service interface for MFA operations.
  */
@@ -34,7 +36,7 @@ interface MfaServiceInterface
     /**
      * Get MFA status for a user.
      */
-    public function getStatus(string $userId): array;
+    public function getStatus(string $userId, string $tenantId): MfaStatusResult;
 
     /**
      * Generate backup codes for a user.

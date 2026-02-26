@@ -36,7 +36,7 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
         ]);
 
         try {
-            $permissionId = $this->permissionAssigner->assign(
+            $permissionId = $this->permissionAssigner->assignPermission(
                 userId: $request->userId,
                 permission: $request->permission,
                 tenantId: $request->tenantId,
@@ -80,7 +80,7 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
         ]);
 
         try {
-            $this->permissionRevoker->revoke(
+            $this->permissionRevoker->revokePermission(
                 userId: $request->userId,
                 permission: $request->permission,
                 tenantId: $request->tenantId,
@@ -113,17 +113,17 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
         }
     }
 
-    public function hasPermission(string $userId, string $permission, ?string $tenantId = null): bool
+    public function hasPermission(string $userId, string $permission, string $tenantId): bool
     {
         return $this->permissionChecker->check($userId, $permission, $tenantId);
     }
 
-    public function getUserPermissions(string $userId, ?string $tenantId = null): array
+    public function getUserPermissions(string $userId, string $tenantId): array
     {
         return $this->permissionChecker->getAll($userId, $tenantId);
     }
 
-    public function getUserRoles(string $userId, ?string $tenantId = null): array
+    public function getUserRoles(string $userId, string $tenantId): array
     {
         return $this->permissionChecker->getRoles($userId, $tenantId);
     }
@@ -131,7 +131,7 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
     public function assignRole(string $userId, string $roleId, string $tenantId, string $assignedBy): bool
     {
         try {
-            $this->roleAssigner->assign($userId, $roleId, $tenantId);
+            $this->roleAssigner->assignRole($userId, $roleId, $tenantId);
 
             $this->auditLogger->log(
                 'role.assigned',
@@ -158,7 +158,7 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
     public function revokeRole(string $userId, string $roleId, string $tenantId, string $revokedBy): bool
     {
         try {
-            $this->roleRevoker->revoke($userId, $roleId, $tenantId);
+            $this->roleRevoker->revokeRole($userId, $roleId, $tenantId);
 
             $this->auditLogger->log(
                 'role.revoked',
@@ -181,46 +181,4 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
             return false;
         }
     }
-}
-
-/**
- * Interface for assigning permissions.
- */
-interface PermissionAssignerInterface
-{
-    public function assign(string $userId, string $permission, ?string $tenantId = null, ?string $expiresAt = null): string;
-}
-
-/**
- * Interface for revoking permissions.
- */
-interface PermissionRevokerInterface
-{
-    public function revoke(string $userId, string $permission, ?string $tenantId = null): void;
-}
-
-/**
- * Interface for checking permissions.
- */
-interface PermissionCheckerInterface
-{
-    public function check(string $userId, string $permission, ?string $tenantId = null): bool;
-    public function getAll(string $userId, ?string $tenantId = null): array;
-    public function getRoles(string $userId, ?string $tenantId = null): array;
-}
-
-/**
- * Interface for assigning roles.
- */
-interface RoleAssignerInterface
-{
-    public function assign(string $userId, string $roleId, string $tenantId): void;
-}
-
-/**
- * Interface for revoking roles.
- */
-interface RoleRevokerInterface
-{
-    public function revoke(string $userId, string $roleId, string $tenantId): void;
 }

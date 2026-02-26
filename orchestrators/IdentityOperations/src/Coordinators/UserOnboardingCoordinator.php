@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Coordinators;
 
 use Nexus\IdentityOperations\Contracts\UserOnboardingCoordinatorInterface;
+use Nexus\IdentityOperations\Contracts\UserOnboardingServiceInterface;
+use Nexus\IdentityOperations\Contracts\UserContextProviderInterface;
 use Nexus\IdentityOperations\DTOs\UserCreateRequest;
 use Nexus\IdentityOperations\DTOs\UserCreateResult;
 use Nexus\IdentityOperations\DTOs\UserUpdateRequest;
 use Nexus\IdentityOperations\DTOs\UserUpdateResult;
-use Nexus\IdentityOperations\Services\UserOnboardingService;
-use Nexus\IdentityOperations\DataProviders\UserContextDataProvider;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -20,8 +20,8 @@ use Psr\Log\NullLogger;
 final readonly class UserOnboardingCoordinator implements UserOnboardingCoordinatorInterface
 {
     public function __construct(
-        private UserOnboardingService $onboardingService,
-        private UserContextDataProvider $contextDataProvider,
+        private UserOnboardingServiceInterface $onboardingService,
+        private UserContextProviderInterface $contextDataProvider,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 

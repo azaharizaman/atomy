@@ -12,7 +12,7 @@ use Nexus\IdentityOperations\DTOs\ValidationResult;
  */
 final readonly class UserStatusRule implements UserValidationRuleInterface
 {
-    private const ALLOWED_STATUSES = ['active', 'pending'];
+    private const ALLOWED_STATUSES = [UserStatus::Active];
 
     public function __construct(
         private UserStatusCheckerInterface $userStatusChecker,
@@ -56,7 +56,7 @@ final readonly class UserStatusRule implements UserValidationRuleInterface
             return ValidationResult::failed([
                 [
                     'rule' => $this->getName(),
-                    'message' => "User status '{$status}' does not allow this operation",
+                    'message' => "User status '{$status->value}' does not allow this operation",
                     'severity' => 'error',
                 ],
             ]);
@@ -64,18 +64,4 @@ final readonly class UserStatusRule implements UserValidationRuleInterface
 
         return ValidationResult::passed();
     }
-}
-
-/**
- * Interface for checking user status.
- */
-interface UserStatusCheckerInterface
-{
-    public function getStatus(string $userId): ?string;
-
-    public function isActive(string $userId): bool;
-
-    public function isSuspended(string $userId): bool;
-
-    public function isDeactivated(string $userId): bool;
 }

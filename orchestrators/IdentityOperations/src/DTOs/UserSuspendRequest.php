@@ -10,7 +10,7 @@ namespace Nexus\IdentityOperations\DTOs;
 final readonly class UserSuspendRequest
 {
     public function __construct(
-        public string $userId,
+        public string $userId, public string $tenantId,
         public string $suspendedBy,
         public ?string $reason = null,
         public ?array $metadata = null,

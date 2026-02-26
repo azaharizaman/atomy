@@ -49,7 +49,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
             // Assign to tenant if provided
             $tenantUserId = null;
             if ($request->tenantId !== null) {
-                $tenantUserId = $this->tenantUserAssigner->assign(
+                $tenantUserId = $this->tenantUserAssigner->assignTenantRoles(
                     userId: $userId,
                     tenantId: $request->tenantId,
                     roles: $request->roles,
@@ -79,7 +79,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
 
         } catch (\Throwable $e) {
             $this->logger->error('Failed to create user', [
-                'user_id' => $request->userId ?? null,
+                'email_hash' => hash('sha256', $request->email),
                 'error' => $e->getMessage(),
             ]);
 
@@ -96,22 +96,14 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
         ]);
 
         try {
-            $this->userUpdater->update(
-                userId: $request->userId,
-                firstName: $request->firstName,
-                lastName: $request->lastName,
-                phone: $request->phone,
-                locale: $request->locale,
-                timezone: $request->timezone,
-                metadata: $request->metadata,
-            );
+            $this->userUpdater->update($request);
 
             // Log audit
             $this->auditLogger->log(
                 'user.updated',
                 $request->userId,
                 [
-                    'updated_by' => $request->updatedBy,
+                    'updated_by' => $request->getUpdatedBy(),
                 ]
             );
 
@@ -134,7 +126,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
     public function assignToTenant(string $userId, string $tenantId, array $roles): bool
     {
         try {
-            $this->tenantUserAssigner->assign($userId, $tenantId, $roles);
+            $this->tenantUserAssigner->assignTenantRoles($userId, $tenantId, $roles);
 
             $this->auditLogger->log(
                 'user.assigned_to_tenant',
@@ -171,61 +163,4 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
             return false;
         }
     }
-}
-
-/**
- * Interface for user creation.
- */
-interface UserCreatorInterface
-{
-    public function create(
-        string $email,
-        string $password,
-        string $firstName,
-        string $lastName,
-        ?string $phone = null,
-        ?string $locale = null,
-        ?string $timezone = null,
-        ?array $metadata = null,
-    ): string;
-}
-
-/**
- * Interface for user updates.
- */
-interface UserUpdaterInterface
-{
-    public function update(
-        string $userId,
-        ?string $firstName = null,
-        ?string $lastName = null,
-        ?string $phone = null,
-        ?string $locale = null,
-        ?string $timezone = null,
-        ?array $metadata = null,
-    ): void;
-}
-
-/**
- * Interface for tenant user assignment.
- */
-interface TenantUserAssignerInterface
-{
-    public function assign(string $userId, string $tenantId, array $roles): string;
-}
-
-/**
- * Interface for notifications.
- */
-interface NotificationSenderInterface
-{
-    public function sendWelcome(string $userId, ?string $temporaryPassword = null): void;
-}
-
-/**
- * Interface for audit logging.
- */
-interface AuditLoggerInterface
-{
-    public function log(string $event, string $entityId, array $data = []): void;
 }

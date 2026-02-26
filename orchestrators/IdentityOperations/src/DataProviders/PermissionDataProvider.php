@@ -18,59 +18,34 @@ final readonly class PermissionDataProvider implements PermissionProviderInterfa
     /**
      * @return array<int, array{id: string, name: string, description: string}>
      */
-    public function getAllPermissions(): array
+    public function getAllPermissions(string $tenantId): array
     {
-        return $this->permissionQuery->findAll();
+        return $this->permissionQuery->findAll($tenantId);
     }
 
     /**
      * @return array<int, array{id: string, name: string, permissions: array<int, string>}>
      */
-    public function getAllRoles(): array
+    public function getAllRoles(string $tenantId): array
     {
-        return $this->permissionQuery->findAllRoles();
+        return $this->permissionQuery->findAllRoles($tenantId);
     }
 
     /**
      * @return array<int, string>
      */
-    public function getRolePermissions(string $roleId): array
+    public function getRolePermissions(string $roleId, string $tenantId): array
     {
-        return $this->permissionQuery->findRolePermissions($roleId);
+        return $this->permissionQuery->findRolePermissions($roleId, $tenantId);
     }
 
-    public function permissionExists(string $permission): bool
+    public function permissionExists(string $permission, string $tenantId): bool
     {
-        return $this->permissionQuery->exists($permission);
+        return $this->permissionQuery->exists($permission, $tenantId);
     }
 
-    public function roleExists(string $roleId): bool
+    public function roleExists(string $roleId, string $tenantId): bool
     {
-        return $this->permissionQuery->roleExists($roleId);
+        return $this->permissionQuery->roleExists($roleId, $tenantId);
     }
-}
-
-/**
- * Interface for querying permission data.
- */
-interface PermissionQueryInterface
-{
-    /**
-     * @return array<int, array{id: string, name: string, description: string}>
-     */
-    public function findAll(): array;
-
-    /**
-     * @return array<int, array{id: string, name: string, permissions: array<int, string>}>
-     */
-    public function findAllRoles(): array;
-
-    /**
-     * @return array<int, string>
-     */
-    public function findRolePermissions(string $roleId): array;
-
-    public function exists(string $permission): bool;
-
-    public function roleExists(string $roleId): bool;
 }

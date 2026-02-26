@@ -35,22 +35,22 @@ interface UserPersistInterface
     /**
      * Assign a role to a user
      */
-    public function assignRole(string $userId, string $roleId): void;
+    public function assignRole(string $userId, string $roleId, ?string $tenantId = null): void;
 
     /**
      * Revoke a role from a user
      */
-    public function revokeRole(string $userId, string $roleId): void;
+    public function revokeRole(string $userId, string $roleId, ?string $tenantId = null): void;
 
     /**
      * Assign a permission directly to a user
      */
-    public function assignPermission(string $userId, string $permissionId): void;
+    public function assignPermission(string $userId, string $permissionId, ?string $tenantId = null): void;
 
     /**
      * Revoke a permission from a user
      */
-    public function revokePermission(string $userId, string $permissionId): void;
+    public function revokePermission(string $userId, string $permissionId, ?string $tenantId = null): void;
 
     /**
      * Update user's last login timestamp
