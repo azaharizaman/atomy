@@ -64,6 +64,11 @@ class ReportingCoordinatorTest extends TestCase
             ->method('predictAsync')
             ->willReturn('job_123');
 
+        $this->predictionService->expects($this->exactly(2))
+            ->method('getStatus')
+            ->with('job_123')
+            ->willReturnOnConsecutiveCalls('processing', 'completed');
+
         $predictionResult = $this->createMock(PredictionResultInterface::class);
         $predictionResult->method('getData')->willReturn($forecastData);
         $predictionResult->method('getConfidence')->willReturn(0.92);
@@ -80,6 +85,7 @@ class ReportingCoordinatorTest extends TestCase
             'metadata' => [
                 'confidence' => 0.92,
                 'model_version' => 'v1.0',
+                'forecast_status' => 'success',
             ]
         ];
 
@@ -97,5 +103,39 @@ class ReportingCoordinatorTest extends TestCase
         $result = $this->coordinator->runPipeline('test_report', $params);
         
         $this->assertStringContainsString('report.pdf', $result);
+    }
+
+    public function test_it_handles_forecast_failure(): void
+    {
+        $params = ['include_forecast' => true, 'forecast_model_id' => 'sales_model'];
+        $historicalData = ['2023' => 1000];
+
+        $queryResult = $this->createMock(QueryResultInterface::class);
+        $queryResult->method('getData')->willReturn($historicalData);
+
+        $this->queryEngine->method('executeQuery')->willReturn($queryResult);
+
+        $this->predictionService->method('predictAsync')->willReturn('job_failed');
+        $this->predictionService->method('getStatus')->willReturn('failed');
+
+        $this->logger->expects($this->once())
+            ->method('error')
+            ->with($this->stringContains('Forecast failed or timed out'));
+
+        $expectedDataWithFailure = [
+            '2023' => 1000,
+            'forecast_unavailable' => true,
+            'forecast_error' => 'Prediction job failed'
+        ];
+
+        $exportResult = $this->createMock(ExportResult::class);
+        $exportResult->method('getFilePathOrFail')->willReturn('/tmp/report.pdf');
+
+        $this->exportGenerator->expects($this->once())
+            ->method('generate')
+            ->with($expectedDataWithFailure, 'pdf')
+            ->willReturn($exportResult);
+
+        $this->coordinator->runPipeline('test_report', $params);
     }
 }

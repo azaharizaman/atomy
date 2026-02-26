@@ -46,24 +46,56 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
             // 2. Append Forecasted Data if requested
             if ($parameters['include_forecast'] ?? false) {
                 $modelId = $parameters['forecast_model_id'] ?? $reportTemplateId;
-                $this->logger->info("Appending forecasted data using model: {$modelId}");
+                $this->logger->info("Initiating forecast for model: {$modelId}");
                 
-                // Fetch synchronous prediction (simplified for orchestrator)
-                // In a production scenario, this might involve checking async job status
                 $forecastContext = ['historical_data' => $reportData, 'parameters' => $parameters];
-                $predictionResult = $this->predictionService->getPrediction(
-                    $this->predictionService->predictAsync($modelId, $forecastContext)
-                );
+                $jobId = $this->predictionService->predictAsync($modelId, $forecastContext);
 
-                if ($predictionResult) {
-                    $reportData = [
-                        'historical' => $reportData,
-                        'forecast' => $predictionResult->getData(),
-                        'metadata' => [
-                            'confidence' => $predictionResult->getConfidence(),
-                            'model_version' => $predictionResult->getModelVersion(),
-                        ]
-                    ];
+                // Polling for completion
+                $maxAttempts = $parameters['forecast_max_attempts'] ?? 10;
+                $attempt = 0;
+                $status = 'pending';
+
+                while ($attempt < $maxAttempts) {
+                    $status = $this->predictionService->getStatus($jobId);
+                    if ($status === 'completed' || $status === 'failed') {
+                        break;
+                    }
+                    $attempt++;
+                    usleep(100000); // 100ms
+                }
+
+                if ($status === 'completed') {
+                    $predictionResult = $this->predictionService->getPrediction($jobId);
+
+                    if ($predictionResult) {
+                        $reportData = [
+                            'historical' => $reportData,
+                            'forecast' => $predictionResult->getData(),
+                            'metadata' => [
+                                'confidence' => $predictionResult->getConfidence(),
+                                'model_version' => $predictionResult->getModelVersion(),
+                                'forecast_status' => 'success',
+                            ]
+                        ];
+                    } else {
+                        $this->logger->warning("Forecast result unavailable despite completed status", [
+                            'job_id' => $jobId,
+                            'model_id' => $modelId,
+                            'template_id' => $reportTemplateId,
+                        ]);
+                        $reportData['forecast_unavailable'] = true;
+                        $reportData['forecast_error'] = 'Empty result from prediction service';
+                    }
+                } else {
+                    $this->logger->error("Forecast failed or timed out", [
+                        'job_id' => $jobId,
+                        'status' => $status,
+                        'attempts' => $attempt,
+                        'model_id' => $modelId,
+                    ]);
+                    $reportData['forecast_unavailable'] = true;
+                    $reportData['forecast_error'] = ($status === 'failed') ? 'Prediction job failed' : 'Forecast timeout';
                 }
             }
 
