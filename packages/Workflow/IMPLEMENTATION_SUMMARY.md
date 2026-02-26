@@ -151,7 +151,7 @@ Domain-specific exceptions with static factory methods:
 - [ ] Event-driven timers with cron expressions
 
 ### Phase 6: Integration & Operations (Planned)
-- [ ] Monitoring integration (Nexus\Monitoring)
+- [ ] Monitoring integration (Nexus\Telemetry)
 - [ ] Audit logging integration (Nexus\AuditLogger)
 - [ ] Event streaming integration (Nexus\EventStream for critical workflows)
 - [ ] Performance benchmarks

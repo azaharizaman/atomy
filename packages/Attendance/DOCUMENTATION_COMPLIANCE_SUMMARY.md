@@ -277,7 +277,7 @@ The Attendance package provides **critical HR infrastructure** for the Nexus eco
 - `Nexus\Payroll` - Attendance data for payroll calculation
 - `Nexus\Hrm` - Leave management integration (absence vs. attendance)
 - `Nexus\Reporting` - Workforce analytics and compliance reports
-- `Nexus\Analytics` - Attendance pattern analysis, productivity metrics
+- `Nexus\QueryEngine` - Attendance pattern analysis, productivity metrics
 
 **Impact Radius:** 4 downstream packages (critical dependency)
 

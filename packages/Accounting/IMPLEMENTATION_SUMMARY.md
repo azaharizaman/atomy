@@ -389,7 +389,7 @@ The Accounting package requires the following packages:
 - **Nexus\Period** - Fiscal Period Management (required for date range validation)
 
 ### Optional Dependencies
-- **Nexus\Analytics** - Budget data for variance analysis (can be null if no budgets exist)
+- **Nexus\QueryEngine** - Budget data for variance analysis (can be null if no budgets exist)
 - **Nexus\AuditLogger** - Audit trail for compliance (recommended for financial operations)
 - **Nexus\Setting** - Configuration management (e.g., default compliance standard)
 
@@ -400,7 +400,7 @@ The Accounting package requires the following packages:
 The following interfaces are referenced but not yet implemented:
 - `Nexus\Finance\Contracts\JournalEntryServiceInterface` - for closing entries
 - `Nexus\AuditLogger\Contracts\AuditLoggerInterface` - for audit trails
-- `Nexus\Analytics\Contracts\BudgetRepositoryInterface` - for budget variance
+- `Nexus\QueryEngine\Contracts\BudgetRepositoryInterface` - for budget variance
 - `Nexus\Setting\Contracts\SettingsManagerInterface` - for configuration
 
 These will be resolved when the respective packages are fully implemented.

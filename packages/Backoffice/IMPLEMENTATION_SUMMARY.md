@@ -302,7 +302,7 @@ Bindings:
 - **Nexus\Tenant** - Multi-tenancy support via TenantContextInterface
 - **Nexus\Identity** - User management for staff-user relationships
 - **Nexus\AuditLogger** - Audit trail for organizational changes
-- **Nexus\Monitoring** - Telemetry tracking for performance metrics
+- **Nexus\Telemetry** - Telemetry tracking for performance metrics
 - **Nexus\Workflow** - Approval workflows for transfers (optional)
 
 ## File Structure

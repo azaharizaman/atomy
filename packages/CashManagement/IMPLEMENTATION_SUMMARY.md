@@ -297,7 +297,7 @@ if ($workflowInstance->isTimedOut()) {
 }
 ```
 
-### 7. Nexus\Analytics (KPI Storage)
+### 7. Nexus\QueryEngine (KPI Storage)
 
 **Cash Conversion Cycle:**
 ```php
@@ -766,7 +766,7 @@ GET    /api/v1/cash-management/cash-position/consolidated
 ### Optional
 
 - `nexus/intelligence` - AI features
-- `nexus/analytics` - KPI calculation
+- `nexus/query-engine` - KPI calculation
 
 ---
 

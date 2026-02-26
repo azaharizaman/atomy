@@ -231,7 +231,7 @@ ESTIMATED PACKAGE VALUE: $121,600
 - **Excel Formatter (Phase 2):** PhpSpreadsheet integration - Expected value add: $8,000
 - **Advanced Templates (Phase 3):** Charts, images, custom fonts - Expected value add: $12,000
 - **Export Scheduling (Phase 3):** Recurring exports via Nexus\Scheduler - Expected value add: $6,000
-- **Export Analytics (Phase 4):** Track export usage, performance metrics via Nexus\Analytics - Expected value add: $5,000
+- **Export Analytics (Phase 4):** Track export usage, performance metrics via Nexus\QueryEngine - Expected value add: $5,000
 
 **Total Future Enhancement Value:** $41,000
 

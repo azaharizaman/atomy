@@ -229,7 +229,7 @@ interface UserProvisioningInterface
 - **`Nexus\Identity`**: User provisioning via `UserProvisioningInterface`
 - **`Nexus\Tenant`**: Multi-tenant context
 - **`Nexus\AuditLogger`**: SSO event logging
-- **`Nexus\Monitoring`**: SSO metrics (optional)
+- **`Nexus\Telemetry`**: SSO metrics (optional)
 - **`Nexus\Crypto`**: Config encryption (optional)
 
 ---
@@ -238,7 +238,7 @@ interface UserProvisioningInterface
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
-| **SSO Login Success Rate** | > 99% | Track via `Nexus\Monitoring` |
+| **SSO Login Success Rate** | > 99% | Track via `Nexus\Telemetry` |
 | **JIT Provisioning Success Rate** | > 95% | Track via `Nexus\AuditLogger` |
 | **SSO Session Performance** | < 200ms | Track callback response time |
 | **SAML Signature Validation** | 100% | Zero false positives |

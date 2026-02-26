@@ -1,0 +1,25 @@
+{
+    "name": "nexus/intelligence-operations",
+    "description": "Nexus IntelligenceOperations Orchestrator - Managing AI/ML model lifecycles",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/machine-learning": "*@dev",
+        "nexus/query-engine": "*@dev",
+        "nexus/telemetry": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\IntelligenceOperations": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\IntelligenceOperations\Tests": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

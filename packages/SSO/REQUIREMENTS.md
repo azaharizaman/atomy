@@ -88,7 +88,7 @@ The `Nexus\SSO` package provides enterprise Single Sign-On capabilities for the 
 | `Nexus\SSO` | Performance Requirement | PERF-SSO-2069 | Implement SSO session caching | P1 | ⏳ Planning | Reduce session lookups | - |
 | `Nexus\SSO` | Observability Requirement | OBS-SSO-2070 | Log SSO login attempts | P0 | ⏳ Planning | Security auditing | Nexus\AuditLogger |
 | `Nexus\SSO` | Observability Requirement | OBS-SSO-2071 | Log SSO failures (with reason) | P0 | ⏳ Planning | Debugging support | Psr\Log |
-| `Nexus\SSO` | Observability Requirement | OBS-SSO-2072 | Track SSO metrics (success rate) | P1 | ⏳ Planning | Monitor SSO health | Nexus\Monitoring |
+| `Nexus\SSO` | Observability Requirement | OBS-SSO-2072 | Track SSO metrics (success rate) | P1 | ⏳ Planning | Monitor SSO health | Nexus\Telemetry |
 | `Nexus\SSO` | Observability Requirement | OBS-SSO-2073 | Track JIT provisioning events | P0 | ⏳ Planning | User creation tracking | Nexus\AuditLogger |
 | `Nexus\SSO` | User Story | USE-SSO-2074 | As an employee, I want to log in with my Azure AD account | P0 | ⏳ Planning | Enterprise SSO | - |
 | `Nexus\SSO` | User Story | USE-SSO-2075 | As an employee, I want to log in with my Google Workspace account | P0 | ⏳ Planning | Google SSO | - |
@@ -164,7 +164,7 @@ The `Nexus\SSO` package provides enterprise Single Sign-On capabilities for the 
 - **`Nexus\Identity`**: User provisioning bridge (via `UserProvisioningInterface`)
 - **`Nexus\Tenant`**: Multi-tenant context
 - **`Nexus\AuditLogger`**: SSO event logging
-- **`Nexus\Monitoring`**: SSO metrics tracking (optional)
+- **`Nexus\Telemetry`**: SSO metrics tracking (optional)
 - **`Nexus\Crypto`**: Config encryption (optional)
 
 ---

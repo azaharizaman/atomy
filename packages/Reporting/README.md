@@ -4,7 +4,7 @@
 
 ## Overview
 
-`Nexus\Reporting` transforms raw analytics data from `Nexus\Analytics` into user-facing reports with:
+`Nexus\Reporting` transforms raw analytics data from `Nexus\QueryEngine` into user-facing reports with:
 
 - **Scheduled Generation**: Daily, weekly, monthly, and cron-based report scheduling
 - **Multi-Format Export**: PDF, Excel, CSV, JSON, HTML via `Nexus\Export`

@@ -12,11 +12,11 @@ composer require nexus/laravel-monitoring-adapter
 
 ### TelemetryTrackerAdapter
 
-Implements `Nexus\Monitoring\Contracts\TelemetryTrackerInterface` using Laravel's logging/caching.
+Implements `Nexus\Telemetry\Contracts\TelemetryTrackerInterface` using Laravel's logging/caching.
 
 ### MetricStorageAdapter
 
-Implements `Nexus\Monitoring\Contracts\MetricStorageInterface` using Laravel's database.
+Implements `Nexus\Telemetry\Contracts\MetricStorageInterface` using Laravel's database.
 
 ## Service Provider
 

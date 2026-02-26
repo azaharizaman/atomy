@@ -99,7 +99,7 @@ Frameworks:
 Optional Integrations:
   🔗 Nexus\Party          - Access control
   🔗 Nexus\AuditLogger    - Change tracking
-  🔗 Nexus\Monitoring     - Metrics
+  🔗 Nexus\Telemetry     - Metrics
 
 🚀 GETTING STARTED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

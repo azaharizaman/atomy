@@ -159,7 +159,7 @@
 | `nexus/product` | Product tax categories | ProductRepositoryInterface |
 | `nexus/tenant` | Multi-tenancy context | TenantContextInterface |
 | `nexus/audit-logger` | Optional audit trails | AuditLogManagerInterface |
-| `nexus/monitoring` | Optional telemetry | TelemetryTrackerInterface |
+| `nexus/telemetry` | Optional telemetry | TelemetryTrackerInterface |
 | `nexus/storage` | Optional file storage | StorageInterface |
 
 ### PSR Interfaces

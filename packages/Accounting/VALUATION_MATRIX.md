@@ -156,7 +156,7 @@
   
 - **Depended By:** 
   - `Nexus\Statutory` - for statutory financial reporting
-  - `Nexus\Analytics` - for financial KPIs
+  - `Nexus\QueryEngine` - for financial KPIs
   - `Nexus\Reporting` - for embedding financial statements in reports
   
 - **Coupling Risk:** **Medium** - Moderate dependencies but all via interfaces (low coupling)

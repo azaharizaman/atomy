@@ -84,7 +84,7 @@ All required layer 1 packages **already exist**:
 | `Nexus\FeatureFlags` | `packages/FeatureFlags/` | Feature flag management | ✅ Complete |
 | `Nexus\Identity` | `packages/Identity/` | Authentication, RBAC, MFA | ✅ Complete |
 | `Nexus\AuditLogger` | `packages/AuditLogger/` | Timeline feeds and audit trails | ✅ Complete |
-| `Nexus\Monitoring` | `packages/Monitoring/` | Observability and telemetry | ✅ Complete |
+| `Nexus\Telemetry` | `packages/Monitoring/` | Observability and telemetry | ✅ Complete |
 | `Nexus\Backoffice` | `packages/Backoffice/` | Company structure | ✅ Complete |
 | `Nexus\Notifier` | `packages/Notifier/` | Multi-channel notifications | ✅ Complete |
 | `Nexus\Period` | `packages/Period/` | Fiscal period management | ✅ Complete |
@@ -199,7 +199,7 @@ interface FeatureFlagCoordinatorInterface
 **Purpose:** Coordinate platform-level administration and observability.
 
 **Packages Coordinated:**
-- `Nexus\Monitoring` - Health checks, metrics, alerts
+- `Nexus\Telemetry` - Health checks, metrics, alerts
 - `Nexus\AuditLogger` - System audit trails
 - `Nexus\Compliance` - System-level compliance
 - `Nexus\Notifier` - System notifications

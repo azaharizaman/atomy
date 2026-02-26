@@ -383,8 +383,8 @@
     },
     {
       "id": "Monitoring",
-      "name": "Nexus\\Monitoring",
-      "namespace": "Nexus\\Monitoring",
+      "name": "Nexus\\Telemetry",
+      "namespace": "Nexus\\Telemetry",
       "businessDomain": "Foundation & Infrastructure",
       "verticals": ["Foundation & Infrastructure"],
       "nature": "architectural",
@@ -1301,8 +1301,8 @@
     },
     {
       "id": "Analytics",
-      "name": "Nexus\\Analytics",
-      "namespace": "Nexus\\Analytics",
+      "name": "Nexus\\QueryEngine",
+      "namespace": "Nexus\\QueryEngine",
       "businessDomain": "Reporting & Data",
       "verticals": ["Reporting & Data"],
       "nature": "analytical",

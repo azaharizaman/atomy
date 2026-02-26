@@ -109,7 +109,7 @@ All mandatory documentation files have been created following the standards defi
   
 - **Depended By:** 
   - `Nexus\Statutory` (statutory reporting)
-  - `Nexus\Analytics` (financial KPIs)
+  - `Nexus\QueryEngine` (financial KPIs)
   - `Nexus\Reporting` (embedded statements)
 
 ### Business Impact

@@ -354,7 +354,7 @@ consuming application (e.g., Laravel app)app/Services/Sales/ReceivableInvoiceAda
 | **Nexus\Reporting** | ✅ 75% | Report engine |
 | **Nexus\Export** | ✅ 95% | Multi-format export |
 | **Nexus\Import** | ✅ 80% | Data import |
-| **Nexus\Analytics** | ✅ 70% | Business intelligence |
+| **Nexus\QueryEngine** | ✅ 70% | Business intelligence |
 | **Nexus\Document** | ✅ 85% | Document management |
 | **Nexus\Storage** | ✅ 95% | File storage abstraction |
 

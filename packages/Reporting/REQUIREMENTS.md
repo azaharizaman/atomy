@@ -89,7 +89,7 @@
 
 | Package Namespace | Requirements Type | Code | Requirement Statements | Files/Folders | Status | Notes on Status | Date Last Updated |
 |-------------------|-------------------|------|------------------------|---------------|--------|-----------------|-------------------|
-| `Nexus\Reporting` | Integration Requirement | INT-REP-0001 | MUST integrate with Nexus\Analytics for data retrieval | src/Core/Engine/ReportGenerator.php | ✅ Complete | AnalyticsManagerInterface | 2025-11-30 |
+| `Nexus\Reporting` | Integration Requirement | INT-REP-0001 | MUST integrate with Nexus\QueryEngine for data retrieval | src/Core/Engine/ReportGenerator.php | ✅ Complete | AnalyticsManagerInterface | 2025-11-30 |
 | `Nexus\Reporting` | Integration Requirement | INT-REP-0002 | MUST integrate with Nexus\Export for file rendering | src/Core/Engine/ReportGenerator.php | ✅ Complete | ExportManagerInterface | 2025-11-30 |
 | `Nexus\Reporting` | Integration Requirement | INT-REP-0003 | MUST integrate with Nexus\Notifier for distribution | src/Core/Engine/ReportDistributor.php | ✅ Complete | NotificationManagerInterface | 2025-11-30 |
 | `Nexus\Reporting` | Integration Requirement | INT-REP-0004 | MUST integrate with Nexus\Scheduler for automation | src/Core/Engine/ReportJobHandler.php | ✅ Complete | ScheduleManagerInterface | 2025-11-30 |

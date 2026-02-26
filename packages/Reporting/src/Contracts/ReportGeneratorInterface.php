@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Reporting\Contracts;
 
-use Nexus\Analytics\Contracts\QueryResultInterface;
+use Nexus\QueryEngine\Contracts\QueryResultInterface;
 use Nexus\Reporting\ValueObjects\ReportFormat;
 use Nexus\Reporting\ValueObjects\ReportResult;
 

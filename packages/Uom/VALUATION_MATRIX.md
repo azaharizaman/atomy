@@ -166,7 +166,7 @@
 4. **Nexus\Procurement** - Purchase order quantities
 5. **Nexus\Manufacturing** - BOM ingredient quantities
 6. **Nexus\Warehouse** - Bin capacity and stock levels
-7. **Nexus\Analytics** - Quantity aggregations
+7. **Nexus\QueryEngine** - Quantity aggregations
 8. **Nexus\Reporting** - UoM-aware reports
 
 **Estimated impact:** 8-10 packages × 5-10 integration points each = **40-80 integration points**

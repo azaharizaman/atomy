@@ -86,7 +86,7 @@ This package defines the domain model and core contracts for managing channel-ag
 1. **Nexus\Party:** `senderPartyId` field links to Party entity
 2. **Nexus\AuditLogger:** Optional audit logging on message persistence
 3. **Nexus\Connector:** External sending via MessagingConnectorInterface
-4. **Nexus\Monitoring:** Optional telemetry tracking
+4. **Nexus\Telemetry:** Optional telemetry tracking
 5. **Nexus\Tenant:** Multi-tenant isolation via tenantId field
 6. **Nexus\SSO:** User attribution for senderPartyId
 

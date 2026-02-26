@@ -19,7 +19,7 @@
 - Adding monitoring, logging, notifications, or storage
 
 **Example Scenarios:**
-- "I need to track metrics" → Check the guide → Use `Nexus\Monitoring`
+- "I need to track metrics" → Check the guide → Use `Nexus\Telemetry`
 - "I need to send emails" → Check the guide → Use `Nexus\Notifier`
 - "I need to store files" → Check the guide → Use `Nexus\Storage`
 - "I need auto-numbering" → Check the guide → Use `Nexus\Sequencing`
@@ -33,7 +33,7 @@
 Located at the bottom of the guide. Just Ctrl+F and search for what you need:
 
 ```
-I need to track metrics → Nexus\Monitoring → TelemetryTrackerInterface
+I need to track metrics → Nexus\Telemetry → TelemetryTrackerInterface
 I need to log actions → Nexus\AuditLogger → AuditLogManagerInterface
 I need to send notifications → Nexus\Notifier → NotificationManagerInterface
 ```
@@ -134,11 +134,11 @@ public function sendPaymentReminder(string $invoiceId): void
 // ❌ WRONG: Building custom metrics without checking
 class CustomMetricsCollector {
     private array $counters = [];
-    // ... reimplementing Nexus\Monitoring
+    // ... reimplementing Nexus\Telemetry
 }
 ```
 
-**Correct:** Check guide → Find `Nexus\Monitoring` → Inject `TelemetryTrackerInterface`
+**Correct:** Check guide → Find `Nexus\Telemetry` → Inject `TelemetryTrackerInterface`
 
 ### ❌ Mistake 2: Not Using the Decision Matrix
 

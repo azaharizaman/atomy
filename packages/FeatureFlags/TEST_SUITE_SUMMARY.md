@@ -259,7 +259,7 @@ jobs:
 1. **Load Testing:** High-concurrency evaluation not yet tested
 2. **Custom Evaluator Edge Cases:** Application-specific evaluators require app-layer tests
 3. **Cache Eviction Strategies:** LRU/TTL behavior tested in consuming app
-4. **Monitoring Integration:** Telemetry tracking tested when `Nexus\Monitoring` integrated
+4. **Monitoring Integration:** Telemetry tracking tested when `Nexus\Telemetry` integrated
 
 ---
 
@@ -320,7 +320,7 @@ class FeatureFlagTest extends TestCase
 ### Example Monitoring Integration
 
 ```php
-// Using Nexus\Monitoring package
+// Using Nexus\Telemetry package
 $this->telemetry->increment('feature_flags.evaluations', tags: [
     'flag_key' => $flagKey,
     'result' => $result ? 'enabled' : 'disabled',

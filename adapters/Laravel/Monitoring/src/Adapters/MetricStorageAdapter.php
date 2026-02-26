@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Nexus\Laravel\Monitoring\Adapters;
 
 use DateTimeInterface;
-use Nexus\Monitoring\Contracts\MetricStorageInterface;
-use Nexus\Monitoring\ValueObjects\AggregationSpec;
-use Nexus\Monitoring\ValueObjects\Metric;
-use Nexus\Monitoring\ValueObjects\QuerySpec;
+use Nexus\Telemetry\Contracts\MetricStorageInterface;
+use Nexus\Telemetry\ValueObjects\AggregationSpec;
+use Nexus\Telemetry\ValueObjects\Metric;
+use Nexus\Telemetry\ValueObjects\QuerySpec;
 use Psr\Log\LoggerInterface;
 
 /**
