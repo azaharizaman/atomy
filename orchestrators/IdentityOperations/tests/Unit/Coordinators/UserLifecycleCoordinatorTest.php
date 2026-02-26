@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\Coordinators;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\Coordinators\UserLifecycleCoordinator;
 use Nexus\IdentityOperations\Contracts\UserLifecycleServiceInterface;
 use Nexus\IdentityOperations\Contracts\UserContextProviderInterface;
@@ -18,10 +19,10 @@ use Psr\Log\LoggerInterface;
 
 final class UserLifecycleCoordinatorTest extends TestCase
 {
-    private $lifecycleService;
-    private $contextDataProvider;
-    private $logger;
-    private $coordinator;
+    private UserLifecycleServiceInterface|MockObject $lifecycleService;
+    private UserContextProviderInterface|MockObject $contextDataProvider;
+    private LoggerInterface|MockObject $logger;
+    private UserLifecycleCoordinator $coordinator;
 
     protected function setUp(): void
     {
@@ -52,7 +53,7 @@ final class UserLifecycleCoordinatorTest extends TestCase
 
     public function testSuspend(): void
     {
-        $request = new UserSuspendRequest(userId: 'user-123', suspendedBy: 'admin-1');
+        $request = new UserSuspendRequest(userId: 'user-123', tenantId: 'tenant-1', suspendedBy: 'admin-1');
         $result = UserSuspendResult::success('user-123');
 
         $this->lifecycleService->expects($this->once())
@@ -65,7 +66,7 @@ final class UserLifecycleCoordinatorTest extends TestCase
 
     public function testActivate(): void
     {
-        $request = new UserActivateRequest(userId: 'user-123', activatedBy: 'admin-1');
+        $request = new UserActivateRequest(userId: 'user-123', tenantId: 'tenant-1', activatedBy: 'admin-1');
         $result = UserActivateResult::success('user-123');
 
         $this->lifecycleService->expects($this->once())
@@ -78,7 +79,7 @@ final class UserLifecycleCoordinatorTest extends TestCase
 
     public function testDeactivate(): void
     {
-        $request = new UserDeactivateRequest(userId: 'user-123', deactivatedBy: 'admin-1');
+        $request = new UserDeactivateRequest(userId: 'user-123', tenantId: 'tenant-1', deactivatedBy: 'admin-1');
         $result = UserDeactivateResult::success('user-123');
 
         $this->lifecycleService->expects($this->once())
@@ -93,9 +94,9 @@ final class UserLifecycleCoordinatorTest extends TestCase
     {
         $this->lifecycleService->expects($this->once())
             ->method('forceLogout')
-            ->with('user-1', 'admin-1')
+            ->with('user-1', 'admin-1', 'tenant-1')
             ->willReturn(true);
 
-        $this->assertTrue($this->coordinator->forceLogout('user-1', 'admin-1'));
+        $this->assertTrue($this->coordinator->forceLogout('user-1', 'admin-1', 'tenant-1'));
     }
 }

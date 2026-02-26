@@ -40,4 +40,45 @@ final class TenantUserDataProviderTest extends TestCase
 
         $this->assertTrue($this->dataProvider->userBelongsToTenant('user-1', 'tenant-1'));
     }
+
+    public function testUserDoesNotBelongToTenant(): void
+    {
+        $this->tenantUserQuery->expects($this->once())
+            ->method('userBelongsToTenant')
+            ->with('user-1', 'tenant-1')
+            ->willReturn(false);
+
+        $this->assertFalse($this->dataProvider->userBelongsToTenant('user-1', 'tenant-1'));
+    }
+
+    public function testGetUserTenantRoles(): void
+    {
+        $roles = ['admin', 'editor'];
+        $this->tenantUserQuery->expects($this->once())
+            ->method('getUserRoles')
+            ->with('user-1', 'tenant-1')
+            ->willReturn($roles);
+
+        $this->assertEquals($roles, $this->dataProvider->getUserTenantRoles('user-1', 'tenant-1'));
+    }
+
+    public function testIsTenantActive(): void
+    {
+        $this->tenantUserQuery->expects($this->once())
+            ->method('isTenantActive')
+            ->with('tenant-1')
+            ->willReturn(true);
+
+        $this->assertTrue($this->dataProvider->isTenantActive('tenant-1'));
+    }
+
+    public function testIsTenantInactive(): void
+    {
+        $this->tenantUserQuery->expects($this->once())
+            ->method('isTenantActive')
+            ->with('tenant-1')
+            ->willReturn(false);
+
+        $this->assertFalse($this->dataProvider->isTenantActive('tenant-1'));
+    }
 }

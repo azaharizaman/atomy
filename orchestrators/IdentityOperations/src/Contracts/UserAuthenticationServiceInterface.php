@@ -24,7 +24,7 @@ interface UserAuthenticationServiceInterface
     /**
      * Logout user and invalidate session.
      */
-    public function logout(string $userId, ?string $sessionId = null, ?string $tenantId = null): bool;
+    public function logout(string $userId, ?string $sessionId, string $tenantId): bool;
 
     /**
      * Validate current session.

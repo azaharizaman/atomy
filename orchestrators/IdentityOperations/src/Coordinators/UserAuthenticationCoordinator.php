@@ -49,7 +49,7 @@ final readonly class UserAuthenticationCoordinator implements UserAuthentication
         return $this->authService->refreshToken($refreshToken, $tenantId);
     }
 
-    public function logout(string $userId, ?string $sessionId = null, ?string $tenantId = null): bool
+    public function logout(string $userId, ?string $sessionId, string $tenantId): bool
     {
         $this->logger->info('Processing logout', [
             'user_id' => $userId,

@@ -66,13 +66,14 @@ final readonly class UserLifecycleCoordinator implements UserLifecycleCoordinato
         return $this->lifecycleService->deactivate($request);
     }
 
-    public function forceLogout(string $userId, string $performedBy): bool
+    public function forceLogout(string $userId, string $performedBy, string $tenantId): bool
     {
         $this->logger->info('Processing force logout', [
             'user_id' => $userId,
             'performed_by' => $performedBy,
+            'tenant_id' => $tenantId,
         ]);
 
-        return $this->lifecycleService->forceLogout($userId, $performedBy);
+        return $this->lifecycleService->forceLogout($userId, $performedBy, $tenantId);
     }
 }

@@ -9,6 +9,9 @@ namespace Nexus\IdentityOperations\DTOs;
  */
 final readonly class RefreshTokenPayload
 {
+    /**
+     * @param list<string> $scopes
+     */
     public function __construct(
         public string $userId,
         public string $tenantId,

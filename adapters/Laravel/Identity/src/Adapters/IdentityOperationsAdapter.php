@@ -18,6 +18,7 @@ use Nexus\Identity\ValueObjects\UserStatus as PackageUserStatus;
 use Nexus\IdentityOperations\DTOs\RefreshTokenPayload;
 use Nexus\IdentityOperations\DTOs\UserUpdateRequest;
 use Nexus\IdentityOperations\DTOs\MfaEnableResult;
+use Nexus\IdentityOperations\DTOs\MfaStatusResult;
 use Nexus\IdentityOperations\DTOs\MfaMethod;
 use Nexus\IdentityOperations\Services\AuthenticatorInterface;
 use Nexus\IdentityOperations\Services\TokenManagerInterface as OrchestratorTokenManagerInterface;
@@ -32,10 +33,15 @@ use Nexus\IdentityOperations\Services\NotificationSenderInterface;
 use Nexus\IdentityOperations\Services\TenantUserAssignerInterface;
 use Nexus\IdentityOperations\Services\UserCreatorInterface;
 use Nexus\IdentityOperations\Services\UserUpdaterInterface;
+use Nexus\IdentityOperations\Services\PermissionAssignerInterface;
+use Nexus\IdentityOperations\Services\PermissionRevokerInterface;
+use Nexus\IdentityOperations\Services\RoleAssignerInterface;
+use Nexus\IdentityOperations\Services\RoleRevokerInterface;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Adapter for IdentityOperations orchestrator.
@@ -55,7 +61,11 @@ final readonly class IdentityOperationsAdapter implements
     AuthenticatorInterface,
     OrchestratorTokenManagerInterface,
     PasswordChangerInterface,
-    SessionValidatorInterface
+    SessionValidatorInterface,
+    PermissionAssignerInterface,
+    PermissionRevokerInterface,
+    RoleAssignerInterface,
+    RoleRevokerInterface
 {
     public function __construct(
         private UserPersistInterface $userPersist,
@@ -103,29 +113,63 @@ final readonly class IdentityOperationsAdapter implements
 
     // --- UserUpdaterInterface ---
 
-    public function update(string $userId, UserUpdateRequest $request): void
+    public function update(UserUpdateRequest $request): void
     {
         $data = $request->toArray();
         if (empty($data)) {
             return;
         }
 
-        $this->userPersist->update($userId, $data);
+        $this->userPersist->update($request->userId, $data);
     }
 
     // --- TenantUserAssignerInterface ---
 
     public function assign(string $userId, string $tenantId, array $roles): string
     {
-        $this->userPersist->update($userId, [
-            'tenant_id' => $tenantId,
-        ]);
+        return DB::transaction(function () use ($userId, $tenantId, $roles) {
+            $this->userPersist->update($userId, [
+                'tenant_id' => $tenantId,
+            ]);
 
-        foreach ($roles as $roleId) {
-            $this->userPersist->assignRole($userId, $roleId);
-        }
+            foreach ($roles as $roleId) {
+                $this->userPersist->assignRole($userId, $roleId);
+            }
 
-        return $userId . ':' . $tenantId;
+            return $userId . ':' . $tenantId;
+        });
+    }
+
+    // --- PermissionAssignerInterface ---
+
+    public function assign(string $userId, string $permission, string $tenantId, ?\DateTimeInterface $expiresAt = null): string
+    {
+        // Note: $expiresAt and $tenantId scoping for direct permission assignments 
+        // may require additional implementation in underlying repository if not yet supported.
+        $this->userPersist->assignPermission($userId, $permission);
+        return $userId . ':' . $permission;
+    }
+
+    // --- PermissionRevokerInterface ---
+
+    public function revoke(string $userId, string $permission, string $tenantId): void
+    {
+        $this->userPersist->revokePermission($userId, $permission);
+    }
+
+    // --- RoleAssignerInterface ---
+
+    public function assign(string $userId, string $roleId, string $tenantId): string
+    {
+        $this->userPersist->assignRole($userId, $roleId);
+        return $userId . ':' . $roleId;
+    }
+
+    // --- RoleRevokerInterface ---
+
+    public function revoke(string $userId, string $roleId, string $tenantId): void
+    {
+        $this->userPersist->revokeRole($userId, $roleId);
     }
 
     // --- NotificationSenderInterface ---
@@ -175,6 +219,11 @@ final readonly class IdentityOperationsAdapter implements
 
     // --- AuthenticatorInterface ---
 
+    /**
+     * @param string|null $tenantId Note: $tenantId is intentionally unused because 
+     *                              UserAuthenticatorInterface only accepts Credentials 
+     *                              without tenant-scoped authentication support.
+     */
     public function authenticate(string $email, string $password, ?string $tenantId = null): array
     {
         $user = $this->userAuthenticator->authenticate(new Credentials($email, $password));
@@ -204,7 +253,7 @@ final readonly class IdentityOperationsAdapter implements
         return [
             'id' => $user->getId(),
             'email' => $user->getEmail(),
-            'first_name' => $user->getName(),
+            'first_name' => $user->getName(), // UserInterface has getName, not getFirstName/LastName
             'last_name' => null,
             'status' => PackageUserStatus::from($user->getStatus()),
             'permissions' => $permissions,
@@ -242,13 +291,18 @@ final readonly class IdentityOperationsAdapter implements
     {
         $user = $this->identityTokenManager->validateToken($refreshToken);
         
-        if ($user->getTenantId() !== $tenantId) {
+        $tokenTenantId = $user->getTenantId();
+        if ($tokenTenantId === null) {
+            throw new \RuntimeException('Token is missing required tenant context');
+        }
+
+        if ($tokenTenantId !== $tenantId) {
             throw new \RuntimeException('Token tenant ID mismatch');
         }
 
         return new RefreshTokenPayload(
             userId: $user->getId(),
-            tenantId: $user->getTenantId() ?? 'default',
+            tenantId: $tokenTenantId,
         );
     }
 
@@ -264,12 +318,12 @@ final readonly class IdentityOperationsAdapter implements
 
     public function invalidateSession(string $sessionId, string $tenantId): void
     {
-        $this->sessionManager->revokeSession($sessionId);
+        $this->sessionManager->revokeSessionForTenant($sessionId, $tenantId);
     }
 
     public function invalidateUserSessions(string $userId, string $tenantId): void
     {
-        $this->sessionManager->revokeAllSessions($userId);
+        $this->sessionManager->revokeAllSessionsForTenant($userId, $tenantId);
     }
 
     // --- PasswordChangerInterface ---
@@ -314,9 +368,16 @@ final readonly class IdentityOperationsAdapter implements
         return MfaEnableResult::failure($userId, "MFA method {$method->value} enrollment not implemented in adapter");
     }
 
-    public function getStatus(string $userId): array
+    public function getStatus(string $userId): MfaStatusResult
     {
-        return $this->mfaEnrollment->getUserEnrollments($userId);
+        $enrollments = $this->mfaEnrollment->getUserEnrollments($userId);
+        
+        $status = [];
+        foreach ($enrollments as $enrollment) {
+            $status[$enrollment['method']] = true;
+        }
+
+        return new MfaStatusResult($userId, $status);
     }
 
     // --- MfaVerifierInterface ---
@@ -326,6 +387,11 @@ final readonly class IdentityOperationsAdapter implements
         if ($method === MfaMethod::TOTP) {
             return $this->mfaVerification->verifyTotp($userId, $code);
         }
+
+        $this->logger->warning('Unsupported MFA method verification attempt', [
+            'user_id' => $userId,
+            'method' => $method->value
+        ]);
 
         return false;
     }

@@ -22,24 +22,32 @@ final class PermissionDataProviderTest extends TestCase
             public $existsResult = true;
             public $roleExistsResult = true;
             
+            public $lastFindAllResult;
+            public $lastFindAllRolesResult;
             public $lastFindRolePermissionsArg;
             public $lastExistsArg;
             public $lastRoleExistsArg;
             public $lastGetUserPermissionsArgs;
             public $lastGetUserRolesArgs;
 
-            public function findAll(): array { return $this->findAllResult; }
-            public function findAllRoles(): array { return $this->findAllRolesResult; }
-            public function findRolePermissions(string $roleId): array { 
-                $this->lastFindRolePermissionsArg = $roleId;
+            public function findAll(string $tenantId): array { 
+                $this->lastFindAllResult = $tenantId;
+                return $this->findAllResult; 
+            }
+            public function findAllRoles(string $tenantId): array { 
+                $this->lastFindAllRolesResult = $tenantId;
+                return $this->findAllRolesResult; 
+            }
+            public function findRolePermissions(string $roleId, string $tenantId): array { 
+                $this->lastFindRolePermissionsArg = [$roleId, $tenantId];
                 return $this->findRolePermissionsResult; 
             }
-            public function exists(string $permission): bool { 
-                $this->lastExistsArg = $permission;
+            public function exists(string $permission, string $tenantId): bool { 
+                $this->lastExistsArg = [$permission, $tenantId];
                 return $this->existsResult; 
             }
-            public function roleExists(string $roleId): bool { 
-                $this->lastRoleExistsArg = $roleId;
+            public function roleExists(string $roleId, string $tenantId): bool { 
+                $this->lastRoleExistsArg = [$roleId, $tenantId];
                 return $this->roleExistsResult; 
             }
             
@@ -59,35 +67,37 @@ final class PermissionDataProviderTest extends TestCase
     {
         $permissions = [['id' => '1', 'name' => 'view', 'description' => 'View']];
         $this->permissionQuery->findAllResult = $permissions;
-        $this->assertEquals($permissions, $this->dataProvider->getAllPermissions());
+        $this->assertEquals($permissions, $this->dataProvider->getAllPermissions('tenant-1'));
+        $this->assertEquals('tenant-1', $this->permissionQuery->lastFindAllResult);
     }
 
     public function testGetAllRoles(): void
     {
         $roles = [['id' => '1', 'name' => 'admin', 'permissions' => ['*']]];
         $this->permissionQuery->findAllRolesResult = $roles;
-        $this->assertEquals($roles, $this->dataProvider->getAllRoles());
+        $this->assertEquals($roles, $this->dataProvider->getAllRoles('tenant-1'));
+        $this->assertEquals('tenant-1', $this->permissionQuery->lastFindAllRolesResult);
     }
 
     public function testGetRolePermissions(): void
     {
         $perms = ['view', 'edit'];
         $this->permissionQuery->findRolePermissionsResult = $perms;
-        $this->assertEquals($perms, $this->dataProvider->getRolePermissions('role-1'));
-        $this->assertEquals('role-1', $this->permissionQuery->lastFindRolePermissionsArg);
+        $this->assertEquals($perms, $this->dataProvider->getRolePermissions('role-1', 'tenant-1'));
+        $this->assertEquals(['role-1', 'tenant-1'], $this->permissionQuery->lastFindRolePermissionsArg);
     }
 
     public function testPermissionExists(): void
     {
         $this->permissionQuery->existsResult = true;
-        $this->assertTrue($this->dataProvider->permissionExists('view'));
-        $this->assertEquals('view', $this->permissionQuery->lastExistsArg);
+        $this->assertTrue($this->dataProvider->permissionExists('view', 'tenant-1'));
+        $this->assertEquals(['view', 'tenant-1'], $this->permissionQuery->lastExistsArg);
     }
 
     public function testRoleExists(): void
     {
         $this->permissionQuery->roleExistsResult = true;
-        $this->assertTrue($this->dataProvider->roleExists('role-1'));
-        $this->assertEquals('role-1', $this->permissionQuery->lastRoleExistsArg);
+        $this->assertTrue($this->dataProvider->roleExists('role-1', 'tenant-1'));
+        $this->assertEquals(['role-1', 'tenant-1'], $this->permissionQuery->lastRoleExistsArg);
     }
 }

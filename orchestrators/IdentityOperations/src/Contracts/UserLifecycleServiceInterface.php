@@ -16,33 +16,15 @@ use Nexus\IdentityOperations\DTOs\UserDeactivateResult;
  */
 interface UserLifecycleServiceInterface
 {
-    /**
-     * Suspend a user.
-     */
     public function suspend(UserSuspendRequest $request): UserSuspendResult;
 
-    /**
-     * Activate a suspended user.
-     */
     public function activate(UserActivateRequest $request): UserActivateResult;
 
-    /**
-     * Deactivate a user permanently.
-     */
     public function deactivate(UserDeactivateRequest $request): UserDeactivateResult;
 
-    /**
-     * Force logout for a user.
-     */
     public function forceLogout(string $userId, string $performedBy, string $tenantId): bool;
 
-    /**
-     * Disable user access.
-     */
     public function disableAccess(string $userId): void;
 
-    /**
-     * Enable user access.
-     */
     public function enableAccess(string $userId): void;
 }

@@ -82,13 +82,17 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         );
     }
 
-    public function logout(string $userId, ?string $sessionId = null, ?string $tenantId = null): bool
+    public function logout(string $userId, ?string $sessionId, string $tenantId): bool
     {
+        if (empty($tenantId)) {
+            throw new \InvalidArgumentException('Tenant ID is required for logout');
+        }
+
         try {
             if ($sessionId !== null) {
-                $this->tokenManager->invalidateSession($sessionId, $tenantId ?? 'default');
+                $this->tokenManager->invalidateSession($sessionId, $tenantId);
             } else {
-                $this->tokenManager->invalidateUserSessions($userId, $tenantId ?? 'default');
+                $this->tokenManager->invalidateUserSessions($userId, $tenantId);
             }
 
             $this->auditLogger->log(
@@ -101,6 +105,7 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         } catch (\Throwable $e) {
             $this->logger->error('Failed to logout user', [
                 'user_id' => $userId,
+                'tenant_id' => $tenantId,
                 'error' => $e->getMessage(),
             ]);
 
@@ -172,6 +177,7 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         } catch (\Throwable $e) {
             $this->logger->error('Failed to invalidate sessions', [
                 'user_id' => $userId,
+                'tenant_id' => $tenantId,
                 'error' => $e->getMessage(),
             ]);
 

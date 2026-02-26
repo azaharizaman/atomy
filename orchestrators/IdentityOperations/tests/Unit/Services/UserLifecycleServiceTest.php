@@ -128,6 +128,10 @@ final class UserLifecycleServiceTest extends TestCase
             ->method('deactivate')
             ->with('user-123');
 
+        $this->stateManager->expects($this->once())
+            ->method('setAccessEnabled')
+            ->with('user-123', false);
+
         $this->sessionManager->expects($this->once())
             ->method('invalidateUserSessions')
             ->with('user-123', 'tenant-1');

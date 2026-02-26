@@ -75,6 +75,10 @@ class IdentityAdapterServiceProvider extends ServiceProvider
             \Nexus\IdentityOperations\Services\TokenManagerInterface::class,
             \Nexus\IdentityOperations\Services\PasswordChangerInterface::class,
             \Nexus\IdentityOperations\Services\SessionValidatorInterface::class,
+            \Nexus\IdentityOperations\Services\PermissionAssignerInterface::class,
+            \Nexus\IdentityOperations\Services\PermissionRevokerInterface::class,
+            \Nexus\IdentityOperations\Services\RoleAssignerInterface::class,
+            \Nexus\IdentityOperations\Services\RoleRevokerInterface::class,
         ];
 
         foreach ($interfaces as $interface) {
@@ -116,6 +120,10 @@ class IdentityAdapterServiceProvider extends ServiceProvider
             \Nexus\IdentityOperations\Services\TokenManagerInterface::class,
             \Nexus\IdentityOperations\Services\PasswordChangerInterface::class,
             \Nexus\IdentityOperations\Services\SessionValidatorInterface::class,
+            \Nexus\IdentityOperations\Services\PermissionAssignerInterface::class,
+            \Nexus\IdentityOperations\Services\PermissionRevokerInterface::class,
+            \Nexus\IdentityOperations\Services\RoleAssignerInterface::class,
+            \Nexus\IdentityOperations\Services\RoleRevokerInterface::class,
         ];
     }
 }

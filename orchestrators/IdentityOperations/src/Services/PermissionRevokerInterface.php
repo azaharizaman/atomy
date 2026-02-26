@@ -9,5 +9,5 @@ namespace Nexus\IdentityOperations\Services;
  */
 interface PermissionRevokerInterface
 {
-    public function revoke(string $userId, string $permission, ?string $tenantId = null): void;
+    public function revoke(string $userId, string $permission, string $tenantId): void;
 }

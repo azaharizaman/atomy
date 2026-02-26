@@ -88,7 +88,7 @@ final class UserOnboardingServiceTest extends TestCase
 
         $this->userUpdater->expects($this->once())
             ->method('update')
-            ->with('user-123', $request);
+            ->with($request);
 
         $this->auditLogger->expects($this->once())
             ->method('log')

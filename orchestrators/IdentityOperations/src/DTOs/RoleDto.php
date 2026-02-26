@@ -9,6 +9,9 @@ namespace Nexus\IdentityOperations\DTOs;
  */
 final readonly class RoleDto
 {
+    /**
+     * @param array<string|PermissionDto> $permissions
+     */
     public function __construct(
         public string $id,
         public string $name,

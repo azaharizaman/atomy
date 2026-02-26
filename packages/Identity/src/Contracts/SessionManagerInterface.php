@@ -42,9 +42,19 @@ interface SessionManagerInterface
     public function revokeSession(string $token): void;
 
     /**
+     * Revoke a specific session for a tenant
+     */
+    public function revokeSessionForTenant(string $token, string $tenantId): void;
+
+    /**
      * Revoke all sessions for a user
      */
     public function revokeAllSessions(string $userId): void;
+
+    /**
+     * Revoke all sessions for a user within a tenant
+     */
+    public function revokeAllSessionsForTenant(string $userId, string $tenantId): void;
 
     /**
      * Revoke all sessions except the current one

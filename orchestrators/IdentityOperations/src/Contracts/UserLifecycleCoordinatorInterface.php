@@ -34,5 +34,5 @@ interface UserLifecycleCoordinatorInterface extends CoordinatorInterface
     /**
      * Force logout for a user.
      */
-    public function forceLogout(string $userId, string $performedBy): bool;
+    public function forceLogout(string $userId, string $performedBy, string $tenantId): bool;
 }

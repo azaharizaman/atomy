@@ -62,6 +62,7 @@ final class UserPermissionServiceTest extends TestCase
 
         $this->permissionAssigner->expects($this->once())
             ->method('assign')
+            ->with('user-123', 'view.reports', 'tenant-1', null)
             ->willReturn('perm-123');
 
         $result = $this->service->assign($request);
@@ -96,7 +97,8 @@ final class UserPermissionServiceTest extends TestCase
         );
 
         $this->permissionRevoker->expects($this->once())
-            ->method('revoke');
+            ->method('revoke')
+            ->with('user-123', 'view.reports', 'tenant-1');
 
         $result = $this->service->revoke($request);
 

@@ -11,5 +11,5 @@ use Nexus\IdentityOperations\DTOs\UserUpdateRequest;
  */
 interface UserUpdaterInterface
 {
-    public function update(string $userId, UserUpdateRequest $request): void;
+    public function update(UserUpdateRequest $request): void;
 }

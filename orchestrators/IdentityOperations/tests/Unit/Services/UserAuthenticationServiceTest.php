@@ -103,7 +103,6 @@ final class UserAuthenticationServiceTest extends TestCase
             ->with('user-123', 'tenant-1')
             ->willReturn('new-access-token');
 
-        // Note: refreshToken service method might need to be updated to take tenantId too
         $result = $this->service->refreshToken('refresh-token', 'tenant-1');
 
         $this->assertEquals('user-123', $result->userId);

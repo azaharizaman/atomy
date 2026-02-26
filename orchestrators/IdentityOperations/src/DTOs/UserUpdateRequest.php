@@ -11,7 +11,7 @@ final class UserUpdateRequest
 {
     private array $presentFields = [];
 
-    public function __construct(
+    private function __construct(
         public readonly string $userId,
         private ?string $firstName = null,
         private ?string $lastName = null,
@@ -19,11 +19,8 @@ final class UserUpdateRequest
         private ?string $locale = null,
         private ?string $timezone = null,
         private ?array $metadata = null,
-    ) {
-        // We can't easily track presence in constructor without Optional wrapper,
-        // so we'll rely on setter methods or an options array if preferred.
-        // But the prompt says "Replace the long nullable parameter list... with a single request/DTO object".
-    }
+        private ?string $updatedBy = null,
+    ) {}
 
     public static function create(string $userId): self
     {
@@ -72,6 +69,13 @@ final class UserUpdateRequest
         return $this;
     }
 
+    public function setUpdatedBy(?string $updatedBy): self
+    {
+        $this->updatedBy = $updatedBy;
+        $this->presentFields['updated_by'] = true;
+        return $this;
+    }
+
     public function has(string $field): bool
     {
         return isset($this->presentFields[$field]);
@@ -83,16 +87,32 @@ final class UserUpdateRequest
     public function getLocale(): ?string { return $this->locale; }
     public function getTimezone(): ?string { return $this->timezone; }
     public function getMetadata(): ?array { return $this->metadata; }
+    public function getUpdatedBy(): ?string { return $this->updatedBy; }
     
     public function toArray(): array
     {
         $data = [];
-        if ($this->has('first_name')) $data['first_name'] = $this->firstName;
-        if ($this->has('last_name')) $data['last_name'] = $this->lastName;
-        if ($this->has('phone')) $data['phone'] = $this->phone;
-        if ($this->has('locale')) $data['locale'] = $this->locale;
-        if ($this->has('timezone')) $data['timezone'] = $this->timezone;
-        if ($this->has('metadata')) $data['metadata'] = $this->metadata;
+        if ($this->has('first_name')) {
+            $data['first_name'] = $this->firstName;
+        }
+        if ($this->has('last_name')) {
+            $data['last_name'] = $this->lastName;
+        }
+        if ($this->has('phone')) {
+            $data['phone'] = $this->phone;
+        }
+        if ($this->has('locale')) {
+            $data['locale'] = $this->locale;
+        }
+        if ($this->has('timezone')) {
+            $data['timezone'] = $this->timezone;
+        }
+        if ($this->has('metadata')) {
+            $data['metadata'] = $this->metadata;
+        }
+        if ($this->has('updated_by')) {
+            $data['updated_by'] = $this->updatedBy;
+        }
         return $data;
     }
 }

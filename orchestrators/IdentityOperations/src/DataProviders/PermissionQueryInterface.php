@@ -19,13 +19,13 @@ interface PermissionQueryInterface
      */
     public function getUserRoles(string $userId, string $tenantId): array;
 
-    public function findAll(): array;
+    public function findAll(string $tenantId): array;
 
-    public function findAllRoles(): array;
+    public function findAllRoles(string $tenantId): array;
 
-    public function findRolePermissions(string $roleId): array;
+    public function findRolePermissions(string $roleId, string $tenantId): array;
 
-    public function exists(string $permission): bool;
+    public function exists(string $permission, string $tenantId): bool;
 
-    public function roleExists(string $roleId): bool;
+    public function roleExists(string $roleId, string $tenantId): bool;
 }

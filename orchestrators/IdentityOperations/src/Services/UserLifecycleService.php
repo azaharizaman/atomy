@@ -174,6 +174,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         } catch (\Throwable $e) {
             $this->logger->error('Failed to force logout user', [
                 'user_id' => $userId,
+                'tenant_id' => $tenantId,
                 'error' => $e->getMessage(),
             ]);
 

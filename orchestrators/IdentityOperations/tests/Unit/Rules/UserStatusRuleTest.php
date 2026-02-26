@@ -46,6 +46,19 @@ final class UserStatusRuleTest extends TestCase
         $this->assertEquals("User status 'suspended' does not allow this operation", $result->errors[0]['message']);
     }
 
+    public function testEvaluateFailedForDeactivated(): void
+    {
+        $this->checker->expects($this->once())
+            ->method('getStatus')
+            ->with('user-123')
+            ->willReturn(UserStatus::Deactivated);
+
+        $result = $this->rule->evaluate('user-123');
+
+        $this->assertFalse($result->passed);
+        $this->assertEquals("User status 'deactivated' does not allow this operation", $result->errors[0]['message']);
+    }
+
     public function testEvaluateFailedForNotFound(): void
     {
         $this->checker->expects($this->once())
@@ -57,5 +70,13 @@ final class UserStatusRuleTest extends TestCase
 
         $this->assertFalse($result->passed);
         $this->assertEquals("User 'user-123' not found", $result->errors[0]['message']);
+    }
+
+    public function testEvaluateFailedForInvalidSubjectType(): void
+    {
+        $result = $this->rule->evaluate(null);
+
+        $this->assertFalse($result->passed);
+        $this->assertEquals('Invalid subject type for this rule. Expected user ID string.', $result->errors[0]['message']);
     }
 }
