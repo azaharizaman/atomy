@@ -20,14 +20,20 @@ final class MfaEnrollmentRuleTest extends TestCase
         $this->rule = new MfaEnrollmentRule($this->checker);
     }
 
+    public function testEvaluateFailsWhenTenantIdIsMissing(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->rule->evaluate(['user_id' => 'user-123', 'require_mfa' => false]);
+    }
+
     public function testEvaluatePassedWhenNotRequired(): void
     {
         $this->checker->expects($this->once())
             ->method('isEnrolled')
-            ->with('user-123', 'default')
+            ->with('user-123', 'tenant-1')
             ->willReturn(false);
 
-        $result = $this->rule->evaluate(['user_id' => 'user-123', 'require_mfa' => false]);
+        $result = $this->rule->evaluate(['user_id' => 'user-123', 'require_mfa' => false, 'tenant_id' => 'tenant-1']);
 
         $this->assertTrue($result->passed);
     }

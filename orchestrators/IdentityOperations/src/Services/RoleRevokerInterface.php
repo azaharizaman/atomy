@@ -9,5 +9,5 @@ namespace Nexus\IdentityOperations\Services;
  */
 interface RoleRevokerInterface
 {
-    public function revoke(string $userId, string $roleId, string $tenantId): void;
+    public function revokeRole(string $userId, string $roleId, string $tenantId): void;
 }

@@ -61,7 +61,9 @@ final class UserLifecycleServiceTest extends TestCase
 
         $this->auditLogger->expects($this->once())
             ->method('log')
-            ->with('user.suspended', 'user-123');
+            ->with('user.suspended', 'user-123', $this->callback(function($data) {
+                return $data['tenant_id'] === 'tenant-1';
+            }));
 
         $result = $this->service->suspend($request);
 
@@ -100,7 +102,9 @@ final class UserLifecycleServiceTest extends TestCase
 
         $this->auditLogger->expects($this->once())
             ->method('log')
-            ->with('user.activated', 'user-123');
+            ->with('user.activated', 'user-123', $this->callback(function($data) {
+                return $data['tenant_id'] === 'tenant-1';
+            }));
 
         $result = $this->service->activate($request);
 
@@ -142,7 +146,9 @@ final class UserLifecycleServiceTest extends TestCase
 
         $this->auditLogger->expects($this->once())
             ->method('log')
-            ->with('user.deactivated', 'user-123');
+            ->with('user.deactivated', 'user-123', $this->callback(function($data) {
+                return $data['tenant_id'] === 'tenant-1';
+            }));
 
         $result = $this->service->deactivate($request);
 
@@ -167,6 +173,12 @@ final class UserLifecycleServiceTest extends TestCase
         $this->sessionManager->expects($this->once())
             ->method('invalidateUserSessions')
             ->with('user-123', 'tenant-1');
+
+        $this->auditLogger->expects($this->once())
+            ->method('log')
+            ->with('user.force_logout', 'user-123', $this->callback(function($data) {
+                return $data['tenant_id'] === 'tenant-1';
+            }));
 
         $result = $this->service->forceLogout('user-123', 'admin-1', 'tenant-1');
 

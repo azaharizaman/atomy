@@ -40,7 +40,7 @@ final readonly class MfaEnrollmentRule implements UserValidationRuleInterface
 
         $userId = $subject['user_id'];
         $requireMfa = $subject['require_mfa'] ?? false;
-        $tenantId = $subject['tenant_id'] ?? 'default';
+        $tenantId = $subject['tenant_id'] ?? throw new \InvalidArgumentException('Missing required tenant_id in MFA enrollment rule subject.');
 
         $isEnrolled = $this->mfaEnrollmentChecker->isEnrolled($userId, $tenantId);
 

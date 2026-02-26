@@ -16,6 +16,8 @@ use Nexus\IdentityOperations\DTOs\MfaDisableResult;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+use Nexus\IdentityOperations\DTOs\MfaStatusResult;
+
 /**
  * Coordinator for MFA management.
  */
@@ -66,9 +68,9 @@ final readonly class MfaCoordinator implements MfaCoordinatorInterface
         return $this->mfaService->disable($request);
     }
 
-    public function getStatus(string $userId): array
+    public function getStatus(string $userId, string $tenantId): MfaStatusResult
     {
-        return $this->mfaService->getStatus($userId);
+        return $this->mfaService->getStatus($userId, $tenantId);
     }
 
     public function generateBackupCodes(string $userId): array

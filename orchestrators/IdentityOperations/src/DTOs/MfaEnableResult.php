@@ -35,10 +35,11 @@ final readonly class MfaEnableResult
         );
     }
 
-    public static function failure(?string $message = null): self
+    public static function failure(string $userId, ?string $message = null): self
     {
         return new self(
             success: false,
+            userId: $userId,
             message: $message ?? 'Failed to enable MFA',
         );
     }

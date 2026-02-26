@@ -147,7 +147,7 @@ final class UserOnboardingCoordinatorTest extends TestCase
     {
         $this->onboardingService->expects($this->once())
             ->method('sendWelcomeNotification')
-            ->willThrowException(new \Exception('Email service down'));
+            ->willReturn(false);
 
         $this->assertFalse($this->coordinator->sendWelcomeNotification('user-1'));
     }

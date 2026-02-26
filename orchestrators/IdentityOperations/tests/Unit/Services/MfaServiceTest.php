@@ -14,6 +14,7 @@ use Nexus\IdentityOperations\Services\BackupCodeGeneratorInterface;
 use Nexus\IdentityOperations\Services\AuditLoggerInterface;
 use Nexus\IdentityOperations\DTOs\MfaEnableRequest;
 use Nexus\IdentityOperations\DTOs\MfaEnableResult;
+use Nexus\IdentityOperations\DTOs\MfaStatusResult;
 use Nexus\IdentityOperations\DTOs\MfaVerifyRequest;
 use Nexus\IdentityOperations\DTOs\MfaDisableRequest;
 use Nexus\IdentityOperations\DTOs\MfaMethod;

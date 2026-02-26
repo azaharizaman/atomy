@@ -79,7 +79,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
 
         } catch (\Throwable $e) {
             $this->logger->error('Failed to create user', [
-                'user_id' => $request->userId ?? null,
+                'email_hash' => hash('sha256', $request->email),
                 'error' => $e->getMessage(),
             ]);
 

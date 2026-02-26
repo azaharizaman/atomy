@@ -95,7 +95,7 @@ final class UserPermissionServiceTest extends TestCase
         );
 
         $this->permissionRevoker->expects($this->once())
-            ->method('revoke')
+            ->method('revokePermission')
             ->with('user-123', 'view.reports', 'tenant-1');
 
         $result = $this->service->revoke($request);
@@ -112,7 +112,7 @@ final class UserPermissionServiceTest extends TestCase
             revokedBy: 'admin-1'
         );
         $this->permissionRevoker->expects($this->once())
-            ->method('revoke')
+            ->method('revokePermission')
             ->willThrowException(new \Exception('Error'));
 
         $result = $this->service->revoke($request);
@@ -131,22 +131,24 @@ final class UserPermissionServiceTest extends TestCase
 
     public function testGetUserPermissions(): void
     {
-        $perms = [];
+        $perms = ['view'];
         $this->permissionChecker->expects($this->once())
             ->method('getAll')
+            ->with('user-1', 'tenant-1')
             ->willReturn($perms);
 
-        $this->assertEquals($perms, $this->service->getUserPermissions('user-1'));
+        $this->assertEquals($perms, $this->service->getUserPermissions('user-1', 'tenant-1'));
     }
 
     public function testGetUserRoles(): void
     {
-        $roles = [];
+        $roles = ['admin'];
         $this->permissionChecker->expects($this->once())
             ->method('getRoles')
+            ->with('user-1', 'tenant-1')
             ->willReturn($roles);
 
-        $this->assertEquals($roles, $this->service->getUserRoles('user-1'));
+        $this->assertEquals($roles, $this->service->getUserRoles('user-1', 'tenant-1'));
     }
 
     public function testAssignRoleSuccessfully(): void
@@ -174,7 +176,7 @@ final class UserPermissionServiceTest extends TestCase
     public function testRevokeRoleSuccessfully(): void
     {
         $this->roleRevoker->expects($this->once())
-            ->method('revoke')
+            ->method('revokeRole')
             ->with('user-123', 'admin', 'tenant-1');
 
         $result = $this->service->revokeRole('user-123', 'admin', 'tenant-1', 'admin-1');
@@ -185,7 +187,7 @@ final class UserPermissionServiceTest extends TestCase
     public function testRevokeRoleFailure(): void
     {
         $this->roleRevoker->expects($this->once())
-            ->method('revoke')
+            ->method('revokeRole')
             ->with('user-1', 'admin', 'tenant-1')
             ->willThrowException(new \Exception('Error'));
 

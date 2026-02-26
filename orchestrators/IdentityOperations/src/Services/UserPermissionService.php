@@ -80,7 +80,7 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
         ]);
 
         try {
-            $this->permissionRevoker->revoke(
+            $this->permissionRevoker->revokePermission(
                 userId: $request->userId,
                 permission: $request->permission,
                 tenantId: $request->tenantId,
@@ -113,17 +113,17 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
         }
     }
 
-    public function hasPermission(string $userId, string $permission, ?string $tenantId = null): bool
+    public function hasPermission(string $userId, string $permission, string $tenantId): bool
     {
         return $this->permissionChecker->check($userId, $permission, $tenantId);
     }
 
-    public function getUserPermissions(string $userId, ?string $tenantId = null): array
+    public function getUserPermissions(string $userId, string $tenantId): array
     {
         return $this->permissionChecker->getAll($userId, $tenantId);
     }
 
-    public function getUserRoles(string $userId, ?string $tenantId = null): array
+    public function getUserRoles(string $userId, string $tenantId): array
     {
         return $this->permissionChecker->getRoles($userId, $tenantId);
     }
@@ -158,7 +158,7 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
     public function revokeRole(string $userId, string $roleId, string $tenantId, string $revokedBy): bool
     {
         try {
-            $this->roleRevoker->revoke($userId, $roleId, $tenantId);
+            $this->roleRevoker->revokeRole($userId, $roleId, $tenantId);
 
             $this->auditLogger->log(
                 'role.revoked',
