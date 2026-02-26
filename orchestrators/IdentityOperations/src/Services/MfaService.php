@@ -38,12 +38,17 @@ final readonly class MfaService implements MfaServiceInterface
         ]);
 
         try {
-            $enrollment = $this->enroller->enroll(
+            $result = $this->enroller->enroll(
                 userId: $request->userId,
-                method: $request->method->value,
+                tenantId: $request->tenantId,
+                method: $request->method,
                 phone: $request->phone,
                 email: $request->email,
             );
+
+            if (!$result->success) {
+                return $result;
+            }
 
             $this->auditLogger->log(
                 'mfa.enabled',
@@ -51,15 +56,7 @@ final readonly class MfaService implements MfaServiceInterface
                 ['method' => $request->method->value]
             );
 
-            // Generate backup codes
-            $backupCodes = $this->generateBackupCodes($request->userId);
-
-            return MfaEnableResult::success(
-                userId: $request->userId,
-                secret: $enrollment['secret'] ?? null,
-                qrCodeUrl: $enrollment['qr_code_url'] ?? null,
-                backupCodes: $backupCodes,
-            );
+            return $result;
 
         } catch (\Throwable $e) {
             $this->logger->error('Failed to enable MFA', [
@@ -68,7 +65,8 @@ final readonly class MfaService implements MfaServiceInterface
             ]);
 
             return MfaEnableResult::failure(
-                message: 'Failed to enable MFA: ' . $e->getMessage()
+                $request->userId,
+                'Failed to enable MFA: ' . $e->getMessage()
             );
         }
     }
@@ -83,8 +81,8 @@ final readonly class MfaService implements MfaServiceInterface
         try {
             $isValid = $this->verifier->verify(
                 userId: $request->userId,
+                method: $request->method,
                 code: $request->code,
-                method: $request->method->value,
             );
 
             if ($isValid) {
@@ -157,9 +155,9 @@ final readonly class MfaService implements MfaServiceInterface
         }
     }
 
-    public function getStatus(string $userId): array
+    public function getStatus(string $userId, string $tenantId): MfaStatusResult
     {
-        return $this->enroller->getStatus($userId);
+        return $this->enroller->getStatus($userId, $tenantId);
     }
 
     public function generateBackupCodes(string $userId): array
@@ -171,45 +169,4 @@ final readonly class MfaService implements MfaServiceInterface
     {
         return $this->verifier->verifyBackupCode($userId, $code);
     }
-}
-
-/**
- * Interface for MFA enrollment.
- */
-interface MfaEnrollerInterface
-{
-    /**
-     * @return array{secret: string, qr_code_url: string}
-     */
-    public function enroll(string $userId, string $method, ?string $phone = null, ?string $email = null): array;
-
-    public function getStatus(string $userId): array;
-}
-
-/**
- * Interface for MFA verification.
- */
-interface MfaVerifierInterface
-{
-    public function verify(string $userId, string $code, string $method): bool;
-
-    public function verifyBackupCode(string $userId, string $code): bool;
-
-    public function getFailedAttempts(string $userId): int;
-}
-
-/**
- * Interface for MFA disabling.
- */
-interface MfaDisablerInterface
-{
-    public function disable(string $userId): void;
-}
-
-/**
- * Interface for backup code generation.
- */
-interface BackupCodeGeneratorInterface
-{
-    public function generate(string $userId): array;
 }

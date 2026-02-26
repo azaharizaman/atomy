@@ -40,7 +40,7 @@ final readonly class MfaEnrollmentRule implements UserValidationRuleInterface
 
         $userId = $subject['user_id'];
         $requireMfa = $subject['require_mfa'] ?? false;
-        $tenantId = $subject['tenant_id'] ?? null;
+        $tenantId = $subject['tenant_id'] ?? throw new \InvalidArgumentException('Missing required tenant_id in MFA enrollment rule subject.');
 
         $isEnrolled = $this->mfaEnrollmentChecker->isEnrolled($userId, $tenantId);
 
@@ -56,14 +56,4 @@ final readonly class MfaEnrollmentRule implements UserValidationRuleInterface
 
         return ValidationResult::passed();
     }
-}
-
-/**
- * Interface for checking MFA enrollment.
- */
-interface MfaEnrollmentCheckerInterface
-{
-    public function isEnrolled(string $userId, ?string $tenantId = null): bool;
-
-    public function getEnrollmentStatus(string $userId, ?string $tenantId = null): array;
 }

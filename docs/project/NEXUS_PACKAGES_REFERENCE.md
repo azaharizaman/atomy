@@ -1,9 +1,16 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.4  
-**Last Updated:** February 20, 2026  
+**Version:** 1.5  
+**Last Updated:** February 26, 2026  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
+
+**Recent Updates (February 26, 2026):**
+- **ARCHITECTURAL RESTRUCTURING:** Renamed `Nexus\Analytics` to `Nexus\QueryEngine` and `Nexus\Monitoring` to `Nexus\Telemetry`.
+- **NEW:** Added `Nexus\DataExchangeOperations` - High-integrity data movement (Import/Export/Storage).
+- **NEW:** Added `Nexus\InsightOperations` - Business intelligence pipeline (Query -> Render -> Notify).
+- **NEW:** Added `Nexus\IntelligenceOperations` - AI/ML model lifecycle management.
+- **NEW:** Added `Nexus\ConnectivityOperations` - Resilient 3rd-party integration gateway.
 
 **Recent Updates (February 20, 2026):**
 - **NEW:** Added `Nexus\PaymentGateway` - Payment gateway extensions (Stripe, PayPal, Square)
@@ -54,6 +61,12 @@
 - Added `Nexus\ProcurementML` - Procurement-specific ML feature extractors
 - Added `Nexus\PerformanceReview` - Employee performance review management
 
+**Previous Updates (February 2026):**
+- Added `Nexus\DataExchangeOperations` orchestrator - Coordination of bulk data movement (onboarding/offboarding)
+- Added `Nexus\InsightOperations` orchestrator - Automated reporting and dashboard snapshots
+- Added `Nexus\IntelligenceOperations` orchestrator - AI/ML model deployment and performance tracking
+- Added `Nexus\ConnectivityOperations` orchestrator - Smart gateway for 3rd-party integrations
+
 **Previous Updates (November 2025):**
 - Added `Nexus\Manufacturing` - Complete MRP II (BOM, Routing, Work Orders, Capacity Planning, ML Forecasting)
 - Added `Nexus\FeatureFlags` - Feature flag management system
@@ -80,7 +93,7 @@
 
 | ❌ Violation | ✅ Correct Approach |
 |-------------|---------------------|
-| Creating custom metrics collector | Use `Nexus\Monitoring\Contracts\TelemetryTrackerInterface` |
+| Creating custom metrics collector | Use `Nexus\Telemetry\Contracts\TelemetryTrackerInterface` |
 | Writing custom audit logging | Use `Nexus\AuditLogger\Contracts\AuditLogManagerInterface` |
 | Building notification system | Use `Nexus\Notifier\Contracts\NotificationManagerInterface` |
 | Implementing file storage | Use `Nexus\Storage\Contracts\StorageInterface` |
@@ -304,7 +317,7 @@ final readonly class IdentityUserProvisioner implements UserProvisioningInterfac
 
 ### 📊 **2. Observability & Monitoring**
 
-#### **Nexus\Monitoring**
+#### **Nexus\Telemetry**
 **Capabilities:**
 - Metrics tracking (counters, gauges, histograms)
 - Performance monitoring (APM, distributed tracing)
@@ -366,7 +379,7 @@ public function appendEvent(string $streamName, EventInterface $event): void
 // Creating custom PrometheusMetricsCollector violates DRY principle
 final class CustomMetricsCollector {
     private Counter $eventsCounter;
-    // ... duplicates Nexus\Monitoring functionality
+    // ... duplicates Nexus\Telemetry functionality
 }
 ```
 
@@ -1141,7 +1154,7 @@ use Nexus\Document\Contracts\DocumentManagerInterface;
 use Nexus\EventStream\Contracts\StreamReaderInterface;
 use Nexus\Import\Contracts\DuplicateDetectorInterface;
 use Nexus\Manufacturing\Contracts\BomManagerInterface;
-use Nexus\Monitoring\Contracts\HealthCheckerInterface;
+use Nexus\Telemetry\Contracts\HealthCheckerInterface;
 ```
 
 **Example:**
@@ -1750,7 +1763,7 @@ use Nexus\Inventory\Contracts\TransferManagerInterface;
 **Key Interfaces:**
 ```php
 use Nexus\Messaging\Contracts\MessageConsumerInterface;
-use Nexus\Monitoring\Contracts\MetricExporterInterface;
+use Nexus\Telemetry\Contracts\MetricExporterInterface;
 use Nexus\Product\Contracts\ProductRepositoryInterface;
 use Nexus\Setting\Contracts\SettingRepositoryInterface;
 use Nexus\Statutory\Contracts\TaxonomyAdapterInterface;
@@ -1830,8 +1843,8 @@ final class CustomBomExploder {
 
 **Key Interfaces:**
 ```php
-use Nexus\Analytics\Contracts\AnalyticsManagerInterface;
-use Nexus\Analytics\Contracts\PredictionEngineInterface;
+use Nexus\QueryEngine\Contracts\AnalyticsManagerInterface;
+use Nexus\QueryEngine\Contracts\PredictionEngineInterface;
 use Nexus\Audit\Contracts\AuditReportGeneratorInterface;
 use Nexus\Connector\Contracts\ConnectorManagerInterface;
 use Nexus\DataProcessor\Contracts\OcrProcessorInterface;
@@ -2214,7 +2227,7 @@ use Nexus\MachineLearning\Contracts\ModelLoaderInterface;
 
 **Key Interfaces:**
 ```php
-use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
+use Nexus\Telemetry\Contracts\TelemetryTrackerInterface;
 use Nexus\YourPackage\Contracts\CacheRepositoryInterface;
 ```
 
@@ -2495,7 +2508,7 @@ final class CustomFieldTransformer {
 
 ---
 
-#### **Nexus\Analytics**
+#### **Nexus\QueryEngine**
 **Capabilities:**
 - Business intelligence
 - Predictive modeling
@@ -3432,6 +3445,75 @@ use Nexus\ProcurementOperations\Coordinators\ThreeWayMatchCoordinator;
 
 ---
 
+### **Nexus\DataExchangeOperations** ✅ **NEW**
+
+**Capabilities:**
+- High-integrity data onboarding (bulk imports)
+- Automated file cleanup after ingestion
+- Multi-format data offboarding (CSV, PDF, JSON)
+- Integrated notifications for transfer status
+
+**Packages Orchestrated:**
+| Package | Purpose |
+|---------|---------|
+| `Nexus\Import` | Data ingestion & validation |
+| `Nexus\Export` | Data formatting & generation |
+| `Nexus\Storage` | File persistence |
+| `Nexus\Notifier` | Status notifications |
+
+---
+
+### **Nexus\InsightOperations** ✅ **NEW**
+
+**Capabilities:**
+- Automated reporting pipelines (Query → Render → Notify)
+- Dashboard snapshot management for historical analysis
+- Recipient-scoped delivery (Email, Slack, Storage)
+
+**Packages Orchestrated:**
+| Package | Purpose |
+|---------|---------|
+| `Nexus\QueryEngine` | Data extraction & aggregation |
+| `Nexus\Export` | Report rendering |
+| `Nexus\Storage` | Snapshot & report storage |
+| `Nexus\Notifier` | Delivery notifications |
+
+---
+
+### **Nexus\IntelligenceOperations** ✅ **NEW**
+
+**Capabilities:**
+- AI/ML model lifecycle orchestration
+- Automated retraining triggers based on data drift
+- Model performance and cost monitoring
+
+**Packages Orchestrated:**
+| Package | Purpose |
+|---------|---------|
+| `Nexus\MachineLearning` | Model serving & training |
+| `Nexus\QueryEngine` | Training data extraction |
+| `Nexus\Telemetry` | Performance tracking |
+
+---
+
+### **Nexus\ConnectivityOperations** ✅ **NEW**
+
+**Capabilities:**
+- Smart Gateway for all 3rd-party integrations
+- Resilient connectivity (Circuit breakers, Retries)
+- Automated API key rotation and encryption
+- Real-time health tracking of external endpoints
+
+**Packages Orchestrated:**
+| Package | Purpose |
+|---------|---------|
+| `Nexus\Connector` | HTTP communication |
+| `Nexus\Crypto` | Secret rotation & encryption |
+| `Nexus\Telemetry` | Health & latency tracking |
+| `Nexus\FeatureFlags` | Kill-switches & rollout control |
+
+---
+
 ## 🚧 **22. Areas Needing Improvement**
 
 This section highlights packages and orchestrators that require additional development.
@@ -3641,7 +3723,7 @@ final class CustomMetricsCollector {
     }
 }
 
-// ✅ CORRECT: Use Nexus\Monitoring
+// ✅ CORRECT: Use Nexus\Telemetry
 public function __construct(
     private readonly TelemetryTrackerInterface $telemetry
 ) {}
@@ -3715,7 +3797,7 @@ public function getInvoices(): array {
 
 | I Need To... | Use This Package | Interface to Inject |
 |--------------|------------------|---------------------|
-| Track metrics/performance | `Nexus\Monitoring` | `TelemetryTrackerInterface` |
+| Track metrics/performance | `Nexus\Telemetry` | `TelemetryTrackerInterface` |
 | Log user actions | `Nexus\AuditLogger` | `AuditLogManagerInterface` |
 | **Manage company structure** | **`Nexus\Backoffice`** | **`CompanyManagerInterface`** |
 | **Extract text from documents/OCR** | **`Nexus\DataProcessor`** | **`OcrProcessorInterface`** |

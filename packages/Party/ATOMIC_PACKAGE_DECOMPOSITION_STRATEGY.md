@@ -223,7 +223,7 @@ $vendorEmail = $vendor->getParty()->getPrimaryEmail();
 
 **Purpose:** Customer-specific business logic and lifecycle management  
 **Estimated Size:** ~3,500 lines  
-**Depends On:** `Nexus\Party`, `Nexus\Marketing`, `Nexus\Analytics`
+**Depends On:** `Nexus\Party`, `Nexus\Marketing`, `Nexus\QueryEngine`
 
 #### Responsibilities:
 - ✅ Customer segmentation (RFM, behavioral, demographic)
@@ -466,7 +466,7 @@ packages/PartyCompliance/
 
 **Purpose:** Business intelligence and analytics for parties  
 **Estimated Size:** ~2,000 lines  
-**Depends On:** `Nexus\Party`, `Nexus\Analytics`, `Nexus\MachineLearning`
+**Depends On:** `Nexus\Party`, `Nexus\QueryEngine`, `Nexus\MachineLearning`
 
 #### Responsibilities:
 - ✅ Party health scoring

@@ -24,7 +24,7 @@ Total Requirements: 139
 | `Nexus\Accounting` | Architechtural Requirement | ARC-ACC-2008 | Package composer.json MUST NOT depend on laravel/framework |  |  |  |  |
 | `Nexus\Accounting` | Architechtural Requirement | ARC-ACC-2009 | MUST inject LedgerRepositoryInterface from Nexus\Finance for reading GL data |  |  |  |  |
 | `Nexus\Accounting` | Architechtural Requirement | ARC-ACC-2010 | MUST inject PeriodManagerInterface from Nexus\Period for fiscal period operations |  |  |  |  |
-| `Nexus\Accounting` | Architechtural Requirement | ARC-ACC-2011 | MUST inject AnalyticsInterface from Nexus\Analytics for budget/forecast data |  |  |  |  |
+| `Nexus\Accounting` | Architechtural Requirement | ARC-ACC-2011 | MUST inject AnalyticsInterface from Nexus\QueryEngine for budget/forecast data |  |  |  |  |
 | `Nexus\Accounting` | Architechtural Requirement | ARC-ACC-2012 | MUST inject SettingsManagerInterface from Nexus\Setting for configuration |  |  |  |  |
 | `Nexus\Accounting` | Architechtural Requirement | ARC-ACC-2013 | Use Value Objects for ReportingPeriod, StatementLineItem, ComplianceStandard |  |  |  |  |
 | `Nexus\Accounting` | Architechtural Requirement | ARC-ACC-2014 | Separate Core/ folder for report generation engine (ReportBuilder, StatementCompiler) |  |  |  |  |
@@ -62,7 +62,7 @@ Total Requirements: 139
 | `Nexus\Accounting` | Functional Requirement | FUN-ACC-2213 | Post automated depreciation entries at period-end |  |  |  |  |
 | `Nexus\Accounting` | Functional Requirement | FUN-ACC-2214 | Transfer net income to retained earnings at year-end |  |  |  |  |
 | `Nexus\Accounting` | Functional Requirement | FUN-ACC-2215 | Generate budget vs actual variance reports |  |  |  |  |
-| `Nexus\Accounting` | Functional Requirement | FUN-ACC-2216 | Support budget import from Nexus\Analytics forecasts |  |  |  |  |
+| `Nexus\Accounting` | Functional Requirement | FUN-ACC-2216 | Support budget import from Nexus\QueryEngine forecasts |  |  |  |  |
 | `Nexus\Accounting` | Functional Requirement | FUN-ACC-2217 | Calculate key financial ratios (current ratio, debt-to-equity, ROA, ROE) |  |  |  |  |
 | `Nexus\Accounting` | Functional Requirement | FUN-ACC-2219 | Generate account reconciliation worksheets |  |  |  |  |
 | `Nexus\Accounting` | Functional Requirement | FUN-ACC-2220 | Support drill-down from statement line items to source transactions |  |  |  |  |
@@ -119,7 +119,7 @@ Total Requirements: 139
 | `Nexus\Accounting` | Security and Compliance Requirement | SEC-ACC-2510 | Support report access expiration for time-limited sharing |  |  |  |  |
 | `Nexus\Accounting` | Integration Requirement | INT-ACC-2601 | MUST integrate with Nexus\Finance for reading GL data via LedgerRepositoryInterface |  |  |  |  |
 | `Nexus\Accounting` | Integration Requirement | INT-ACC-2602 | MUST integrate with Nexus\Period for fiscal period operations |  |  |  |  |
-| `Nexus\Accounting` | Integration Requirement | INT-ACC-2603 | MUST integrate with Nexus\Analytics for budget and forecast data |  |  |  |  |
+| `Nexus\Accounting` | Integration Requirement | INT-ACC-2603 | MUST integrate with Nexus\QueryEngine for budget and forecast data |  |  |  |  |
 | `Nexus\Accounting` | Integration Requirement | INT-ACC-2604 | MUST integrate with Nexus\Setting for report configuration and preferences |  |  |  |  |
 | `Nexus\Accounting` | Integration Requirement | INT-ACC-2605 | MUST integrate with Nexus\AuditLogger for comprehensive audit trails |  |  |  |  |
 | `Nexus\Accounting` | Integration Requirement | INT-ACC-2606 | MUST integrate with Nexus\Notifier for report distribution and alerts |  |  |  |  |

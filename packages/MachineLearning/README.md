@@ -356,7 +356,7 @@ $settings->set('machinelearning.feature_schema.v1', [
 - **Nexus\AuditLogger**: Decision audit trail (GDPR compliance)
 - **Nexus\Storage**: Model artifact storage (for MLflow downloads)
 - **Nexus\Crypto** (optional): API key encryption
-- **Nexus\Monitoring** (optional): Metrics tracking
+- **Nexus\Telemetry** (optional): Metrics tracking
 
 ### Domain Package Integration
 - **Nexus\Receivable**: Invoice anomaly detection (InvoiceAnomalyExtractor)

@@ -298,7 +298,7 @@ This package integrates with:
 - **Nexus\Tenant** - Multi-tenancy context
 - **Nexus\Identity** - Authorization and role management
 - **Nexus\AuditLogger** - Organizational change tracking
-- **Nexus\Monitoring** - Performance metrics and health checks
+- **Nexus\Telemetry** - Performance metrics and health checks
 - **Nexus\Hrm** - Human resources management
 - **Nexus\Payroll** - Payroll processing (staff assignment data)
 - **Nexus\Finance** - Cost center and budget management

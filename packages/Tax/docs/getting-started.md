@@ -36,7 +36,7 @@ The Tax package requires these Nexus packages:
 
 **Optional Dependencies** (for enhanced features):
 - `nexus/audit-logger` - Audit trail logging
-- `nexus/monitoring` - Telemetry and metrics
+- `nexus/telemetry` - Telemetry and metrics
 - `nexus/storage` - Exemption certificate PDF storage
 
 ---

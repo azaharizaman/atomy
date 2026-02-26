@@ -294,7 +294,7 @@ packages/SSO/
 - **Nexus\Identity**: User management, roles, permissions (via `UserProvisioningInterface`)
 - **Nexus\Tenant**: Multi-tenancy support (SSO configs scoped by tenant)
 - **Nexus\AuditLogger**: Audit trail for SSO events
-- **Nexus\Monitoring**: Telemetry for SSO metrics
+- **Nexus\Telemetry**: Telemetry for SSO metrics
 
 ## 📖 Documentation
 

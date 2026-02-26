@@ -348,10 +348,10 @@ $articleManager = new ArticleManager(
 );
 ```
 
-### With Nexus\Monitoring
+### With Nexus\Telemetry
 
 ```php
-use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
+use Nexus\Telemetry\Contracts\TelemetryTrackerInterface;
 
 $articleManager = new ArticleManager(
     repository: $repository,

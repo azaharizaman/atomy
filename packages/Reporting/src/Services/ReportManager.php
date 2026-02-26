@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\Reporting\Services;
 
-use Nexus\Analytics\Contracts\AnalyticsAuthorizerInterface;
-use Nexus\Analytics\Contracts\AnalyticsManagerInterface;
-use Nexus\Analytics\Contracts\QueryResultInterface;
+use Nexus\QueryEngine\Contracts\AnalyticsAuthorizerInterface;
+use Nexus\QueryEngine\Contracts\AnalyticsManagerInterface;
+use Nexus\QueryEngine\Contracts\QueryResultInterface;
 use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
 use Nexus\Reporting\Contracts\ReportDefinitionInterface;
 use Nexus\Reporting\Contracts\ReportDistributorInterface;

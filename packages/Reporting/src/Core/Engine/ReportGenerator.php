@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\Reporting\Core\Engine;
 
-use Nexus\Analytics\Contracts\AnalyticsAuthorizerInterface;
-use Nexus\Analytics\Contracts\AnalyticsManagerInterface;
-use Nexus\Analytics\Contracts\QueryResultInterface;
+use Nexus\QueryEngine\Contracts\AnalyticsAuthorizerInterface;
+use Nexus\QueryEngine\Contracts\AnalyticsManagerInterface;
+use Nexus\QueryEngine\Contracts\QueryResultInterface;
 use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
 use Nexus\Export\Contracts\ExportDestination;
 use Nexus\Export\Contracts\ExportManagerInterface;

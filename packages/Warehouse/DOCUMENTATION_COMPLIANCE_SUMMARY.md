@@ -237,7 +237,7 @@ The Warehouse package has been successfully created with full compliance to all 
 3. **Nexus\Tenant** - Tenant context for multi-tenancy
 4. **Nexus\Inventory** (optional) - Stock levels by bin location
 5. **Nexus\AuditLogger** (optional) - Audit trail for warehouse operations
-6. **Nexus\Monitoring** (optional) - Performance metrics for TSP optimization
+6. **Nexus\Telemetry** (optional) - Performance metrics for TSP optimization
 
 ### Phase 2 Features (Deferred)
 1. **Work Order Management** - WMS work orders (receiving, picking, packing, shipping)

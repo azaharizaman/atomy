@@ -161,7 +161,7 @@ Nexus\Party          → senderPartyId, recipientPartyId
 Nexus\AuditLogger    → Optional audit logging
 Nexus\Connector      → External provider integration
 Nexus\Tenant         → Multi-tenant isolation
-Nexus\Monitoring     → Optional telemetry
+Nexus\Telemetry     → Optional telemetry
 Nexus\SSO            → User attribution
 
 🏆 KEY ADVANTAGES

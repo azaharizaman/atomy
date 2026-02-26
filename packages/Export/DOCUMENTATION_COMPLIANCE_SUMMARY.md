@@ -268,7 +268,7 @@ All 15 mandatory items completed with comprehensive content:
 
 1. **Export Builder UI** - Visual tool for creating ExportDefinitions
 2. **Template Library** - Reusable templates for common exports
-3. **Export Analytics** - Track export usage patterns via Nexus\Analytics
+3. **Export Analytics** - Track export usage patterns via Nexus\QueryEngine
 
 ---
 

@@ -200,7 +200,7 @@
   - `Nexus\Payable` - User permissions for bill access
   - `Nexus\Finance` - Audit logging, user access
   - `Nexus\Hrm` - Employee user accounts
-  - `Nexus\Monitoring` - User activity tracking
+  - `Nexus\Telemetry` - User activity tracking
   - **All 50+ packages** indirectly (authentication/authorization)
   
 **Coupling Risk:** **High** - Identity is the most depended-upon package in the entire monorepo. Changes must be backward-compatible.

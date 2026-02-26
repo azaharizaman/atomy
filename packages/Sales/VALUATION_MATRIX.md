@@ -116,7 +116,7 @@
 
 ### Internal Package Dependencies
 - **Depends On:** Nexus\Party, Nexus\Product, Nexus\Currency, Nexus\Inventory, Nexus\Receivable, Nexus\Sequencing, Nexus\AuditLogger
-- **Depended By:** Nexus\Orchestrator, Nexus\Analytics
+- **Depended By:** Nexus\Orchestrator, Nexus\QueryEngine
 - **Coupling Risk:** Medium (well-defined interfaces)
 
 ### Maintenance Risk

@@ -11,7 +11,7 @@ use Nexus\FeatureFlags\ValueObjects\EvaluationContext;
 /**
  * Monitoring decorator for FeatureFlagManagerInterface.
  *
- * Tracks metrics using TelemetryTrackerInterface from Nexus\Monitoring.
+ * Tracks metrics using TelemetryTrackerInterface from Nexus\Telemetry.
  *
  * Metrics tracked:
  * - flag_evaluation_duration_ms (timing)

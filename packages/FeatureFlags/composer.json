@@ -26,7 +26,7 @@
         "phpunit/phpunit": "^10.0"
     },
     "suggest": {
-        "nexus/monitoring": "For telemetry tracking and performance metrics",
+        "nexus/telemetry": "For telemetry tracking and performance metrics",
         "nexus/audit-logger": "For audit trail of flag definition changes"
     },
     "autoload": {

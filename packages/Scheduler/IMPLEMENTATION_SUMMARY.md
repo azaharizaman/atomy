@@ -28,7 +28,7 @@ Nexus\Scheduler orchestrates stateless scheduling, execution, and recurrence man
 
 ### Phase 4: Advanced Features (Planned)
 - [ ] Calendar export module (`CalendarExporterInterface`) implementation with ICS helpers.
-- [ ] SLA-aware telemetry bundle (histograms/counters) using Nexus\Monitoring.
+- [ ] SLA-aware telemetry bundle (histograms/counters) using Nexus\Telemetry.
 - [ ] Snapshot + audit trail guidance for high-volume installations.
 
 ## What Was Completed
@@ -39,7 +39,7 @@ Nexus\Scheduler orchestrates stateless scheduling, execution, and recurrence man
 ## What Is Planned for Future
 - Adapter packages for common storage/queue backends plus optional calendar export helpers.
 - Native integration examples for Laravel queue workers and Symfony Messenger transports.
-- Automated compliance tooling (health checks, telemetry dashboards) powered by Nexus\Monitoring.
+- Automated compliance tooling (health checks, telemetry dashboards) powered by Nexus\Telemetry.
 
 ## What Was NOT Implemented (and Why)
 - **Reference persistence adapters:** Deferred until consuming applications confirm preferred storage engines (Doctrine vs. custom DAL).

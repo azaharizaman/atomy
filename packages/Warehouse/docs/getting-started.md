@@ -88,7 +88,7 @@ The package uses the **Traveling Salesman Problem (TSP)** algorithm to find the 
 **Optional integrations:**
 - **`Nexus\Inventory`** - Stock levels and product locations
 - **`Nexus\AuditLogger`** - Track warehouse operations
-- **`Nexus\Monitoring`** - Performance metrics for pick operations
+- **`Nexus\Telemetry`** - Performance metrics for pick operations
 
 ## Basic Setup
 

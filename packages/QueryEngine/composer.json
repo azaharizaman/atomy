@@ -1,0 +1,31 @@
+{
+    "name": "nexus/query-engine",
+    "description": "High-performance framework-agnostic query execution and data aggregation engine for the Nexus ERP system",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "nexus",
+        "query-engine",
+        "analytics",
+        "business-intelligence",
+        "data-analysis",
+        "predictive-modeling",
+        "queries",
+        "php"
+    ],
+    "authors": [
+        {
+            "name": "Nexus Team"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\QueryEngine\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

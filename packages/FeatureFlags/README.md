@@ -851,7 +851,7 @@ public function register(): void
 
 - PHP 8.3+
 - PSR-3 Logger implementation
-- (Optional) Nexus\Monitoring for metrics
+- (Optional) Nexus\Telemetry for metrics
 - (Optional) Nexus\AuditLogger for change audit trail
 - (Optional) Nexus\EventStream for historical state queries
 

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Coordinators;
 
 use Nexus\IdentityOperations\Contracts\UserAuthenticationCoordinatorInterface;
+use Nexus\IdentityOperations\Contracts\UserAuthenticationServiceInterface;
+use Nexus\IdentityOperations\Contracts\UserContextProviderInterface;
 use Nexus\IdentityOperations\DTOs\UserContext;
-use Nexus\IdentityOperations\Services\UserAuthenticationService;
-use Nexus\IdentityOperations\DataProviders\UserContextDataProvider;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -17,8 +17,8 @@ use Psr\Log\NullLogger;
 final readonly class UserAuthenticationCoordinator implements UserAuthenticationCoordinatorInterface
 {
     public function __construct(
-        private UserAuthenticationService $authService,
-        private UserContextDataProvider $contextDataProvider,
+        private UserAuthenticationServiceInterface $authService,
+        private UserContextProviderInterface $contextDataProvider,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -32,7 +32,7 @@ final readonly class UserAuthenticationCoordinator implements UserAuthentication
         return $this->contextDataProvider->userExists($userId);
     }
 
-    public function authenticate(string $email, string $password, ?string $tenantId = null): UserContext
+    public function authenticate(string $email, string $password, string $tenantId): UserContext
     {
         $this->logger->info('Processing authentication', [
             'email' => hash('sha256', $email),
@@ -42,21 +42,22 @@ final readonly class UserAuthenticationCoordinator implements UserAuthentication
         return $this->authService->authenticate($email, $password, $tenantId);
     }
 
-    public function refreshToken(string $refreshToken): UserContext
+    public function refreshToken(string $refreshToken, string $tenantId): UserContext
     {
-        $this->logger->info('Processing token refresh');
+        $this->logger->info('Processing token refresh', ['tenant_id' => $tenantId]);
 
-        return $this->authService->refreshToken($refreshToken);
+        return $this->authService->refreshToken($refreshToken, $tenantId);
     }
 
-    public function logout(string $userId, ?string $sessionId = null): bool
+    public function logout(string $userId, ?string $sessionId, string $tenantId): bool
     {
         $this->logger->info('Processing logout', [
             'user_id' => $userId,
             'session_id' => $sessionId,
+            'tenant_id' => $tenantId,
         ]);
 
-        return $this->authService->logout($userId, $sessionId);
+        return $this->authService->logout($userId, $sessionId, $tenantId);
     }
 
     public function validateSession(string $sessionId): bool

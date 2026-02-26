@@ -16,7 +16,7 @@ declare(strict_types=1);
  * 
  * Prerequisites:
  * - Laravel or Symfony application with Nexus\Warehouse installed
- * - Nexus\Inventory, Nexus\AuditLogger, Nexus\Monitoring packages installed
+ * - Nexus\Inventory, Nexus\AuditLogger, Nexus\Telemetry packages installed
  * - Large warehouse dataset (1000+ bins)
  */
 

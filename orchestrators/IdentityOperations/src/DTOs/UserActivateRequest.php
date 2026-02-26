@@ -10,7 +10,7 @@ namespace Nexus\IdentityOperations\DTOs;
 final readonly class UserActivateRequest
 {
     public function __construct(
-        public string $userId,
+        public string $userId, public string $tenantId,
         public string $activatedBy,
         public ?string $reason = null,
     ) {}

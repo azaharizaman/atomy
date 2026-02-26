@@ -416,7 +416,7 @@ You can adopt features progressively as your needs grow.
 
 - **`Nexus\Party`** - Access control via Party IDs (L3.5)
 - **`Nexus\AuditLogger`** - Audit trail for all changes (optional)
-- **`Nexus\Monitoring`** - Metrics tracking (optional)
+- **`Nexus\Telemetry`** - Metrics tracking (optional)
 - **`Nexus\Tenant`** - Multi-tenant scoping (via repository)
 
 ## License

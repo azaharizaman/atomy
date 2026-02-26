@@ -1277,7 +1277,7 @@ class SalesIntegrationService
 
 namespace Nexus\CRM\Services;
 
-use Nexus\Analytics\Contracts\ForecastServiceInterface;
+use Nexus\QueryEngine\Contracts\ForecastServiceInterface;
 use Nexus\CRM\Contracts\OpportunityInterface;
 
 /**
@@ -1602,7 +1602,7 @@ graph LR
     "require": {
         "php": "^8.3",
         "nexus/party": "*@dev",
-        "nexus/analytics": "*@dev",
+        "nexus/query-engine": "*@dev",
         "nexus/workflow": "*@dev",
         "nexus/notifier": "*@dev",
         "nexus/sequencing": "*@dev",

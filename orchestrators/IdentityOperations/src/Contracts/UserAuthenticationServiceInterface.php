@@ -14,17 +14,17 @@ interface UserAuthenticationServiceInterface
     /**
      * Authenticate a user with credentials.
      */
-    public function authenticate(string $email, string $password, ?string $tenantId = null): UserContext;
+    public function authenticate(string $email, string $password, string $tenantId): UserContext;
 
     /**
      * Refresh authentication token.
      */
-    public function refreshToken(string $refreshToken): UserContext;
+    public function refreshToken(string $refreshToken, string $tenantId): UserContext;
 
     /**
      * Logout user and invalidate session.
      */
-    public function logout(string $userId, ?string $sessionId = null): bool;
+    public function logout(string $userId, ?string $sessionId, string $tenantId): bool;
 
     /**
      * Validate current session.
@@ -44,5 +44,5 @@ interface UserAuthenticationServiceInterface
     /**
      * Invalidate all sessions for a user.
      */
-    public function invalidateAllSessions(string $userId): bool;
+    public function invalidateAllSessions(string $userId, string $tenantId): bool;
 }

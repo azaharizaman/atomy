@@ -269,7 +269,7 @@ Customer feedback from Phase 1 deployments will determine which Phase 2 features
 |---------|---------|-------------------|
 | `Nexus\Inventory` | Stock levels | Query inventory by bin location |
 | `Nexus\AuditLogger` | Audit trail | Inject `AuditLoggerInterface` into `WarehouseManager` |
-| `Nexus\Monitoring` | Performance metrics | Track TSP optimization time, distance reduction |
+| `Nexus\Telemetry` | Performance metrics | Track TSP optimization time, distance reduction |
 | `Nexus\Notifier` | Notifications | Notify pickers when pick list is ready |
 
 ---
@@ -377,7 +377,7 @@ No package-level configuration required. All behavior controlled via:
 - **`Nexus\Tenant`** - Multi-tenancy support
 - **`Nexus\Inventory`** - Stock level management
 - **`Nexus\AuditLogger`** - Audit trail integration
-- **`Nexus\Monitoring`** - Performance metrics
+- **`Nexus\Telemetry`** - Performance metrics
 
 ---
 

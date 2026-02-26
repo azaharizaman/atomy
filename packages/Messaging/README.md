@@ -471,7 +471,7 @@ renderSubject(string, array): ?string
 | **Nexus\AuditLogger** | Optional `$auditLogger` callback | Log "message_sent", "message_received" events |
 | **Nexus\Connector** | Application layer uses it | External API integration |
 | **Nexus\Tenant** | `tenantId` field | Multi-tenant isolation |
-| **Nexus\Monitoring** | Optional `TelemetryTrackerInterface` | Track message metrics |
+| **Nexus\Telemetry** | Optional `TelemetryTrackerInterface` | Track message metrics |
 | **Nexus\SSO** | User attribution | `senderPartyId` from authenticated user |
 
 ---

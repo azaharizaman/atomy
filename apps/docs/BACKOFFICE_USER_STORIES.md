@@ -828,7 +828,7 @@ Advanced reporting, organizational charts, units, and analytics. **Implement aft
 - Phase 2 complete (Hierarchy established)
 - `Nexus\Reporting` (v1.0+) - Report generation engine
 - `Nexus\Export` (v1.0+) - Multi-format data export (PDF, Excel, CSV)
-- `Nexus\Analytics` (optional) - Advanced analytics and visualizations
+- `Nexus\QueryEngine` (optional) - Advanced analytics and visualizations
 
 ---
 
@@ -887,14 +887,14 @@ Nice-to-have features for enhanced functionality. **Implement last.**
 | **Nexus\Tenant** | ^1.0 | Multi-tenant context management, tenant isolation | All phases (Critical) |
 | **Nexus\Identity** | ^1.0 | User authentication, RBAC, permission checking | All phases (Critical) |
 | **Nexus\AuditLogger** | ^1.0 | Activity logging, transfer approval trails, org change tracking | Phase 2+ (High) |
-| **Nexus\Monitoring** | ^1.0 | Performance tracking, telemetry, health checks | All phases (Recommended) |
+| **Nexus\Telemetry** | ^1.0 | Performance tracking, telemetry, health checks | All phases (Recommended) |
 | **Nexus\Reporting** | ^1.0 | Report generation engine (company/staff/department summaries) | Phase 3+ (High) |
 | **Nexus\Export** | ^1.0 | Multi-format data export (PDF, Excel, CSV) | Phase 3+ (High) |
 | **Nexus\Import** | ^1.0 | Bulk staff import with validation | Phase 4 (Medium) |
 | **Nexus\Connector** | ^1.0 | System integration hub (provision/revoke accounts) | Phase 4 (Medium) |
 | **Nexus\Compliance** | ^1.0 | GDPR compliance, data retention policies | Phase 4 (Medium) |
 | **Nexus\Workflow** | ^1.0 | Multi-level approval workflows (transfer approvals) | Phase 2 (Optional) |
-| **Nexus\Analytics** | ^1.0 | Advanced analytics and visualizations | Phase 3+ (Optional) |
+| **Nexus\QueryEngine** | ^1.0 | Advanced analytics and visualizations | Phase 3+ (Optional) |
 | **Nexus\DataProcessor** | ^1.0 | ETL and data processing (org data sync) | Phase 4 (Optional) |
 | **Nexus\Notifier** | ^1.0 | Multi-channel notifications (transfer updates, org changes) | Phase 2+ (Optional) |
 
@@ -1057,7 +1057,7 @@ Nice-to-have features for enhanced functionality. **Implement last.**
 **Rollout Strategy:**
 - Enable all default flags for new tenants
 - Existing tenants: Enable flags incrementally based on implementation phase completion
-- Monitor feature adoption metrics via `Nexus\Monitoring` telemetry
+- Monitor feature adoption metrics via `Nexus\Telemetry` telemetry
 
 ---
 
@@ -1135,7 +1135,7 @@ CREATE INDEX idx_units_tenant_status ON units(tenant_id, status);
 **Migration Path (v1.x → v2.0):**
 1. Implement segregated interface adapters in application layer
 2. Gradually migrate controllers/services to use segregated interfaces
-3. Monitor usage metrics via `Nexus\Monitoring`
+3. Monitor usage metrics via `Nexus\Telemetry`
 4. Deprecate legacy interfaces in v1.5 (Q1 2026)
 5. Remove legacy interfaces in v2.0 (Q3 2026)
 
@@ -1156,7 +1156,7 @@ CREATE INDEX idx_units_tenant_status ON units(tenant_id, status);
 **Package Integration Order:**
 
 1. **First:** `Nexus\Tenant` + `Nexus\Identity` (required before any implementation)
-2. **Second:** `Nexus\AuditLogger` + `Nexus\Monitoring` (needed for Phase 2+)
+2. **Second:** `Nexus\AuditLogger` + `Nexus\Telemetry` (needed for Phase 2+)
 3. **Third:** `Nexus\Reporting` + `Nexus\Export` (needed for Phase 3+)
 4. **Last:** `Nexus\Import`, `Nexus\Connector`, `Nexus\Compliance` (Phase 4 advanced features)
 
@@ -1170,7 +1170,7 @@ CREATE INDEX idx_units_tenant_status ON units(tenant_id, status);
     
     // Phase 2+ dependencies
     Nexus\AuditLogger\AuditLoggerServiceProvider::class,
-    Nexus\Monitoring\MonitoringServiceProvider::class,
+    Nexus\Telemetry\MonitoringServiceProvider::class,
     
     // Phase 3+ dependencies
     Nexus\Reporting\ReportingServiceProvider::class,
@@ -1289,7 +1289,7 @@ CREATE INDEX idx_units_tenant_status ON units(tenant_id, status);
 - `Nexus\Tenant` - Multi-tenancy framework
 - `Nexus\Identity` - Authentication and authorization
 - `Nexus\AuditLogger` - Audit trail management
-- `Nexus\Monitoring` - Performance monitoring
+- `Nexus\Telemetry` - Performance monitoring
 - `Nexus\Reporting` - Report generation
 - `Nexus\Export` - Data export
 - `Nexus\Import` - Bulk data import

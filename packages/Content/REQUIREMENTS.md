@@ -72,7 +72,7 @@
 |-------------------|-------------------|------|------------------------|---------------|--------|-----------------|-------------------|
 | `Nexus\Content` | Integration Requirement | INT-CNT-0001 | MUST integrate with Nexus\Party for access control (L3.5) | src/ValueObjects/Article.php | ✅ Complete | Uses PartyId as string | 2025-11-24 |
 | `Nexus\Content` | Integration Requirement | INT-CNT-0002 | SHOULD integrate with Nexus\AuditLogger for change tracking | src/Services/ArticleManager.php | ✅ Complete | Optional injection | 2025-11-24 |
-| `Nexus\Content` | Integration Requirement | INT-CNT-0003 | SHOULD integrate with Nexus\Monitoring for metrics tracking | src/Services/ArticleManager.php | ✅ Complete | Optional injection | 2025-11-24 |
+| `Nexus\Content` | Integration Requirement | INT-CNT-0003 | SHOULD integrate with Nexus\Telemetry for metrics tracking | src/Services/ArticleManager.php | ✅ Complete | Optional injection | 2025-11-24 |
 
 ---
 

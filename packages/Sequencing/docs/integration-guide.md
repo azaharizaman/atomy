@@ -229,7 +229,7 @@ final readonly class PurchaseOrderController
 1. **Use Interfaces Everywhere** – Services already depend on interfaces; ensure your container bindings follow the same pattern.
 2. **Transaction Boundaries** – Wrap counter increments in the same DB transaction as business operations. If using Laravel, call `SequenceManager::generate()` inside `DB::transaction()`.
 3. **Tenant Context** – Read tenant identifier from `Nexus\Tenant\Contracts\TenantContextInterface` (or your own context provider) and pass it into `scopeIdentifier`.
-4. **Telemetry** – Decorate `SequenceManager` with `Nexus\Monitoring\Contracts\TelemetryTrackerInterface` inside your application to capture throughput metrics.
+4. **Telemetry** – Decorate `SequenceManager` with `Nexus\Telemetry\Contracts\TelemetryTrackerInterface` inside your application to capture throughput metrics.
 
 ## Troubleshooting
 

@@ -125,7 +125,7 @@
 - **Depends On:** 
   - `Nexus\Tenant` (for multi-tenant context)
   - `Nexus\AuditLogger` (optional, for audit trail)
-  - `Nexus\Monitoring` (optional, for telemetry)
+  - `Nexus\Telemetry` (optional, for telemetry)
 - **Depended By:** All domain packages (Receivable, Payable, Inventory, etc.)
 - **Coupling Risk:** Low (interface-based dependencies)
 

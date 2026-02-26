@@ -31,6 +31,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         $this->logger->info('Suspending user', [
             'user_id' => $request->userId,
             'suspended_by' => $request->suspendedBy,
+            'tenant_id' => $request->tenantId,
         ]);
 
         try {
@@ -38,7 +39,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
             $this->disableAccess($request->userId);
 
             // Invalidate sessions
-            $this->sessionManager->invalidateUserSessions($request->userId);
+            $this->sessionManager->invalidateUserSessions($request->userId, $request->tenantId);
 
             // Update user state
             $this->stateManager->suspend($request->userId);
@@ -50,6 +51,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
                 [
                     'suspended_by' => $request->suspendedBy,
                     'reason' => $request->reason,
+                    'tenant_id' => $request->tenantId,
                 ]
             );
 
@@ -60,6 +62,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         } catch (\Throwable $e) {
             $this->logger->error('Failed to suspend user', [
                 'user_id' => $request->userId,
+                'tenant_id' => $request->tenantId,
                 'error' => $e->getMessage(),
             ]);
 
@@ -74,6 +77,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         $this->logger->info('Activating user', [
             'user_id' => $request->userId,
             'activated_by' => $request->activatedBy,
+            'tenant_id' => $request->tenantId,
         ]);
 
         try {
@@ -89,7 +93,8 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
                 $request->userId,
                 [
                     'activated_by' => $request->activatedBy,
-                    'reason' => $request->reason,
+                    'reason' => null,
+                    'tenant_id' => $request->tenantId,
                 ]
             );
 
@@ -100,6 +105,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         } catch (\Throwable $e) {
             $this->logger->error('Failed to activate user', [
                 'user_id' => $request->userId,
+                'tenant_id' => $request->tenantId,
                 'error' => $e->getMessage(),
             ]);
 
@@ -114,6 +120,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         $this->logger->info('Deactivating user', [
             'user_id' => $request->userId,
             'deactivated_by' => $request->deactivatedBy,
+            'tenant_id' => $request->tenantId,
         ]);
 
         try {
@@ -121,7 +128,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
             $this->disableAccess($request->userId);
 
             // Invalidate all sessions
-            $this->sessionManager->invalidateUserSessions($request->userId);
+            $this->sessionManager->invalidateUserSessions($request->userId, $request->tenantId);
 
             // Update user state
             $this->stateManager->deactivate($request->userId);
@@ -134,6 +141,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
                     'deactivated_by' => $request->deactivatedBy,
                     'reason' => $request->reason,
                     'preserve_data' => $request->preserveData,
+                    'tenant_id' => $request->tenantId,
                 ]
             );
 
@@ -144,6 +152,7 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         } catch (\Throwable $e) {
             $this->logger->error('Failed to deactivate user', [
                 'user_id' => $request->userId,
+                'tenant_id' => $request->tenantId,
                 'error' => $e->getMessage(),
             ]);
 
@@ -153,21 +162,22 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         }
     }
 
-    public function forceLogout(string $userId, string $performedBy): bool
+    public function forceLogout(string $userId, string $performedBy, string $tenantId): bool
     {
         try {
-            $this->sessionManager->invalidateUserSessions($userId);
+            $this->sessionManager->invalidateUserSessions($userId, $tenantId);
 
             $this->auditLogger->log(
                 'user.force_logout',
                 $userId,
-                ['performed_by' => $performedBy]
+                ['performed_by' => $performedBy, 'tenant_id' => $tenantId]
             );
 
             return true;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to force logout user', [
                 'user_id' => $userId,
+                'tenant_id' => $tenantId,
                 'error' => $e->getMessage(),
             ]);
 
@@ -184,32 +194,4 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
     {
         $this->stateManager->setAccessEnabled($userId, true);
     }
-}
-
-/**
- * Interface for user state management.
- */
-interface UserStateManagerInterface
-{
-    public function suspend(string $userId): void;
-    public function activate(string $userId): void;
-    public function deactivate(string $userId): void;
-    public function setAccessEnabled(string $userId, bool $enabled): void;
-}
-
-/**
- * Interface for session management.
- */
-interface SessionManagerInterface
-{
-    public function invalidateUserSessions(string $userId): void;
-    public function invalidateSession(string $sessionId): void;
-}
-
-/**
- * Interface for audit logging.
- */
-interface AuditLoggerInterface
-{
-    public function log(string $event, string $entityId, array $data = []): void;
 }
