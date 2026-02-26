@@ -80,7 +80,8 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
 
         try {
             // Generate export
-            $filePath = $this->exportGenerator->generate($query, $format);
+            $exportResult = $this->exportGenerator->generate($query, $format);
+            $filePath = $exportResult->getFilePathOrFail();
 
             // Move to final storage (e.g., S3)
             $finalPath = "exports/" . basename($filePath);

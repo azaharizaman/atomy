@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Export\Contracts;
 
 use Nexus\Export\ValueObjects\ExportDefinition;
+use Nexus\Export\ValueObjects\ExportResult;
 
 /**
  * Export generator contract
@@ -36,4 +37,13 @@ interface ExportGeneratorInterface
      * @return string Semantic version range (e.g., '1.0-1.2')
      */
     public function supportsSchemaVersion(): string;
+
+    /**
+     * Generate export from data.
+     *
+     * @param array $data
+     * @param string $format
+     * @return ExportResult
+     */
+    public function generate(array $data, string $format): ExportResult;
 }

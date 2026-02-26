@@ -6,6 +6,7 @@ namespace Nexus\InsightOperations\Services;
 
 use Nexus\Export\Contracts\ExportGeneratorInterface;
 use Nexus\InsightOperations\Contracts\ReportingPipelineCoordinatorInterface;
+use Nexus\MachineLearning\Contracts\PredictionServiceInterface;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
 use Nexus\QueryEngine\Contracts\AnalyticsRepositoryInterface;
 use Nexus\Storage\Contracts\StorageDriverInterface;
@@ -20,6 +21,7 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
 {
     public function __construct(
         private AnalyticsRepositoryInterface $queryEngine,
+        private PredictionServiceInterface $predictionService,
         private ExportGeneratorInterface $exportGenerator,
         private StorageDriverInterface $storageDriver,
         private NotificationManagerInterface $notificationManager,
@@ -37,22 +39,102 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
         ]);
 
         try {
-            // 1. Execute Query
-            $data = $this->queryEngine->executeQuery($reportTemplateId, $parameters);
+            // 1. Execute Historical Query
+            $historicalResult = $this->queryEngine->executeQuery($reportTemplateId, $parameters);
+            $reportData = $historicalResult->getData();
 
-            // 2. Render/Export
-            $filePath = $this->exportGenerator->generate($data, $deliveryOptions['format'] ?? 'pdf');
+            // 2. Append Forecasted Data if requested
+            if ($parameters['include_forecast'] ?? false) {
+                $modelId = $parameters['forecast_model_id'] ?? $reportTemplateId;
+                $this->logger->info("Initiating forecast for model: {$modelId}");
+                
+                $forecastContext = ['historical_data' => $reportData, 'parameters' => $parameters];
+                $jobId = $this->predictionService->predictAsync($modelId, $forecastContext);
 
-            // 3. Store
-            $storagePath = "reports/" . date('Y/m/d/') . basename($filePath);
+                // Polling for completion
+                $maxAttempts = $parameters['forecast_max_attempts'] ?? 10;
+                $pollIntervalMs = $parameters['forecast_poll_interval_ms'] ?? 100;
+                $attempt = 0;
+                $status = 'pending';
+
+                while ($attempt < $maxAttempts) {
+                    $status = $this->predictionService->getStatus($jobId);
+                    if ($status === 'completed' || $status === 'failed') {
+                        break;
+                    }
+                    $attempt++;
+                    usleep($pollIntervalMs * 1000);
+                }
+
+                if ($status === 'completed') {
+                    $predictionResult = $this->predictionService->getPrediction($jobId);
+
+                    if ($predictionResult) {
+                        $reportData = [
+                            'historical' => $reportData,
+                            'forecast' => $predictionResult->getData(),
+                            'metadata' => [
+                                'confidence' => $predictionResult->getConfidence(),
+                                'model_version' => $predictionResult->getModelVersion(),
+                                'forecast_status' => 'success',
+                            ]
+                        ];
+                    } else {
+                        $this->logger->warning("Forecast result unavailable despite completed status", [
+                            'job_id' => $jobId,
+                            'model_id' => $modelId,
+                            'template_id' => $reportTemplateId,
+                        ]);
+                        $reportData = [
+                            'historical' => $reportData,
+                            'forecast' => null,
+                            'metadata' => [
+                                'forecast_unavailable' => true,
+                                'forecast_error' => 'Empty result from prediction service',
+                                'forecast_status' => 'failed',
+                                'confidence' => null,
+                                'model_version' => null,
+                            ]
+                        ];
+                    }
+                } else {
+                    $this->logger->error("Forecast failed or timed out", [
+                        'job_id' => $jobId,
+                        'status' => $status,
+                        'attempts' => $attempt,
+                        'model_id' => $modelId,
+                    ]);
+                    $reportData = [
+                        'historical' => $reportData,
+                        'forecast' => null,
+                        'metadata' => [
+                            'forecast_unavailable' => true,
+                            'forecast_error' => ($status === 'failed') ? 'Prediction job failed' : 'Forecast timeout',
+                            'forecast_status' => ($status === 'failed') ? 'failed' : 'timeout',
+                            'confidence' => null,
+                            'model_version' => null,
+                        ]
+                    ];
+                }
+            }
+
+            // 3. Render/Export
+            $exportResult = $this->exportGenerator->generate($reportData, $deliveryOptions['format'] ?? 'pdf');
+            $filePath = $exportResult->getFilePathOrFail();
+
+            // 4. Store
+            $storagePath = "reports/" . gmdate('Y/m/d/') . basename($filePath);
             $stream = fopen($filePath, 'r');
             
             if ($stream === false) {
                 throw new \RuntimeException("Failed to open report file for reading: {$filePath}");
             }
 
-            $this->storageDriver->put($storagePath, $stream);
-            fclose($stream);
+            try {
+                $this->storageDriver->put($storagePath, $stream);
+            } finally {
+                fclose($stream);
+            }
 
             // 4. Notify
             if (!empty($deliveryOptions['recipients'])) {
