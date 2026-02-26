@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The **Nexus\Reporting** package has been successfully implemented as a **Presentation Layer Orchestrator** that transforms Analytics query results into multi-format, distributable, scheduled reports with automated lifecycle management. This package does **not** reimplement data querying—it consumes `Nexus\Analytics` results and orchestrates their transformation through `Nexus\Export`, distribution via `Nexus\Notifier`, and retention via `Nexus\Storage`.
+The **Nexus\Reporting** package has been successfully implemented as a **Presentation Layer Orchestrator** that transforms Analytics query results into multi-format, distributable, scheduled reports with automated lifecycle management. This package does **not** reimplement data querying—it consumes `Nexus\QueryEngine` results and orchestrates their transformation through `Nexus\Export`, distribution via `Nexus\Notifier`, and retention via `Nexus\Storage`.
 
 ### Key Achievements
 
@@ -218,7 +218,7 @@ If report distribution fails, the generated PDF/Excel file is preserved for manu
 
 ### Dependencies
 - **External Dependencies:** 2 (psr/log ^3.0, symfony/uid ^7.0)
-- **Internal Package Dependencies:** 6 (nexus/analytics, nexus/export, nexus/scheduler, nexus/notifier, nexus/storage, nexus/audit-logger)
+- **Internal Package Dependencies:** 6 (nexus/query-engine, nexus/export, nexus/scheduler, nexus/notifier, nexus/storage, nexus/audit-logger)
 
 ---
 

@@ -188,7 +188,7 @@ Payment Received (Later)
 2. **Architectural Simplicity**: Avoids dual-mode complexity in Finance package
 3. **Accurate Financial Reporting**: Prevents revenue manipulation
 
-**Cash-basis reporting** is handled by `Nexus\Analytics` as a **reporting view**, not a transactional mode.
+**Cash-basis reporting** is handled by `Nexus\QueryEngine` as a **reporting view**, not a transactional mode.
 
 ## Payment Allocation Strategies
 

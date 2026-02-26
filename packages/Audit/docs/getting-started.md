@@ -27,7 +27,7 @@ This package is designed for:
 Do NOT use this package for:
 - ❌ Application logging (use PSR-3 logger instead)
 - ❌ Debug logging (use Monolog or similar)
-- ❌ Performance metrics (use Nexus\Monitoring)
+- ❌ Performance metrics (use Nexus\Telemetry)
 - ❌ User activity feeds (use Nexus\AuditLogger for timeline views)
 
 ## Core Concepts

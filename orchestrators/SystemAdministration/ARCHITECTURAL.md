@@ -518,7 +518,7 @@ SystemAdministration monitors itself:
 ```
 nexus/system-administration
 ├── nexus/common (^1.0)
-├── nexus/monitoring (^1.0)
+├── nexus/telemetry (^1.0)
 ├── nexus/audit-logger (^1.0)
 ├── nexus/compliance (^1.0)
 ├── nexus/notifier (^1.0)

@@ -126,7 +126,7 @@ The monorepo is architecturally ready to implement Nexus\Compliance and Nexus\St
 **Evidence**:
 - Nexus\EventStream uses Core/Engine for event store
 - Nexus\Finance uses Core/ for PostingEngine
-- Nexus\Analytics uses Core/ for QueryExecutor
+- Nexus\QueryEngine uses Core/ for QueryExecutor
 
 **Assessment**: Both Compliance and Statutory are complex packages requiring Core/:
 - **Nexus\Compliance**: Core/Engine/RuleEngine, Core/Engine/ValidationPipeline

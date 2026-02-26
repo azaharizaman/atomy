@@ -237,7 +237,7 @@ stateDiagram-v2
 graph TB
     CRM[Nexus\CRM] -->|Converts to| Sales[Nexus\Sales]
     CRM -->|Uses Customer Data| Party[Nexus\Party]
-    CRM -->|Analytics| Analytics[Nexus\Analytics]
+    CRM -->|Analytics| Analytics[Nexus\QueryEngine]
     CRM -->|Workflow Automation| Workflow[Nexus\Workflow]
     CRM -->|Notifications| Notifier[Nexus\Notifier]
     

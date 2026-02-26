@@ -116,7 +116,7 @@
 | league/oauth2-client | Library | Low | Industry-standard library, very stable. Abstracted via interface. |
 
 ### Internal Package Dependencies
-- **Depends On:** `Nexus\Tenant`, `Nexus\AuditLogger`, `Nexus\Monitoring` (via interfaces)
+- **Depends On:** `Nexus\Tenant`, `Nexus\AuditLogger`, `Nexus\Telemetry` (via interfaces)
 - **Depended By:** `Nexus\Identity` (conceptually), any application-level code.
 - **Coupling Risk:** Low, due to contract-driven design.
 

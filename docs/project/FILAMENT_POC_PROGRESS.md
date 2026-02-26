@@ -58,7 +58,7 @@
   - [x] Created `AnalyticsManagerInterface.php`
   - [x] Implemented interface in `AnalyticsManager` (stub methods)
   - [x] Registered `AnalyticsServiceProvider` in `bootstrap/app.php`
-  - [x] Added `nexus/analytics` to `composer.json`
+  - [x] Added `nexus/query-engine` to `composer.json`
 
 - [x] Created test environment setup
   - [x] Created `.env` file (gitignored)

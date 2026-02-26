@@ -322,7 +322,7 @@ services:
       $jurisdictionResolver: '@Nexus\Tax\Contracts\TaxJurisdictionResolverInterface'
       $nexusManager: '@Nexus\Tax\Contracts\TaxNexusManagerInterface'
       $exemptionManager: '@Nexus\Tax\Contracts\TaxExemptionManagerInterface'
-      $telemetry: '@Nexus\Monitoring\Contracts\TelemetryTrackerInterface'
+      $telemetry: '@Nexus\Telemetry\Contracts\TelemetryTrackerInterface'
       $auditLogger: '@Nexus\AuditLogger\Contracts\AuditLogManagerInterface'
   
   # Bind interface to implementation

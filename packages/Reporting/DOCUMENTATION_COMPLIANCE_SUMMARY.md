@@ -91,7 +91,7 @@ Reporting & Data - Core infrastructure for business intelligence output
 
 ### Package Dependencies
 **Depends On:**
-- `Nexus\Analytics` - Query execution for data retrieval
+- `Nexus\QueryEngine` - Query execution for data retrieval
 - `Nexus\Export` - PDF, Excel, CSV, JSON rendering
 - `Nexus\Storage` - File storage abstraction
 - `Nexus\Notifier` - Distribution channels (email, Slack, webhook)

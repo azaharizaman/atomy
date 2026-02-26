@@ -1,0 +1,26 @@
+{
+    "name": "nexus/connectivity-operations",
+    "description": "Nexus ConnectivityOperations Orchestrator - Resilient and secure 3rd-party integration gateway",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/connector": "*@dev",
+        "nexus/crypto": "*@dev",
+        "nexus/telemetry": "*@dev",
+        "nexus/feature-flags": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\ConnectivityOperations": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\ConnectivityOperations\Tests": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

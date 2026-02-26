@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Laravel\Monitoring\Adapters;
 
-use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
+use Nexus\Telemetry\Contracts\TelemetryTrackerInterface;
 use Psr\Log\LoggerInterface;
 
 /**

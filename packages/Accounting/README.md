@@ -410,7 +410,7 @@ The Accounting package requires these contracts to be implemented by the consumi
 ### From `Nexus\Period`
 - `PeriodManagerInterface` - Fiscal period validation, locking
 
-### From `Nexus\Analytics`
+### From `Nexus\QueryEngine`
 - `BudgetRepositoryInterface` - Budget data for variance analysis
 
 ### From `Nexus\Setting`

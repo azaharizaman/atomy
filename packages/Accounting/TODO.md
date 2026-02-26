@@ -336,7 +336,7 @@ The `VarianceCalculator` references `BudgetRepositoryInterface` for budget varia
 
 declare(strict_types=1);
 
-namespace Nexus\Analytics\Contracts;
+namespace Nexus\QueryEngine\Contracts;
 
 interface BudgetRepositoryInterface
 {

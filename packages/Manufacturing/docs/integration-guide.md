@@ -256,14 +256,14 @@ final readonly class MlForecastProvider implements ForecastProviderInterface
 }
 ```
 
-### Nexus\Monitoring Integration
+### Nexus\Telemetry Integration
 
 Track manufacturing metrics with the Monitoring package.
 
 ```php
 namespace App\Services\Manufacturing;
 
-use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
+use Nexus\Telemetry\Contracts\TelemetryTrackerInterface;
 use Nexus\Manufacturing\Services\WorkOrderManager as BaseWorkOrderManager;
 
 final readonly class MonitoredWorkOrderManager

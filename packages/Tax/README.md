@@ -72,7 +72,7 @@ This package requires the following Nexus packages:
 - `nexus/product` - Product tax categories
 - `nexus/tenant` - Multi-tenancy context
 - `nexus/audit-logger` - Optional audit trail logging
-- `nexus/monitoring` - Optional telemetry tracking
+- `nexus/telemetry` - Optional telemetry tracking
 - `nexus/storage` - Optional exemption certificate PDF storage
 
 ---

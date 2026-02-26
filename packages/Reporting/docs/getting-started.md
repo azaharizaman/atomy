@@ -5,7 +5,7 @@
 - **PHP 8.3 or higher**
 - **Composer**
 - **Required Nexus Packages:**
-  - `nexus/analytics` - Query execution engine
+  - `nexus/query-engine` - Query execution engine
   - `nexus/export` - File rendering (PDF, Excel, CSV, HTML, JSON)
   - `nexus/scheduler` - Scheduled report jobs
   - `nexus/notifier` - Multi-channel distribution
@@ -36,9 +36,9 @@ This will install the Reporting package along with its dependencies.
 - **Audit trail requirements** - Full lineage from query to generated report
 
 ### ❌ Do NOT use Nexus Reporting for:
-- **Ad-hoc data queries** - Use `Nexus\Analytics` directly
+- **Ad-hoc data queries** - Use `Nexus\QueryEngine` directly
 - **File export only** - Use `Nexus\Export` directly
-- **Real-time dashboards** - Use `Nexus\Analytics` with caching
+- **Real-time dashboards** - Use `Nexus\QueryEngine` with caching
 - **One-off file downloads** - Use `Nexus\Export` with streaming
 
 ---
@@ -189,7 +189,7 @@ use Nexus\Reporting\ValueObjects\ReportResult;
 use Nexus\Reporting\ValueObjects\ReportFormat;
 use Nexus\Reporting\ValueObjects\RetentionTier;
 use Nexus\Reporting\Exceptions\ReportGenerationException;
-use Nexus\Analytics\Contracts\AnalyticsManagerInterface;
+use Nexus\QueryEngine\Contracts\AnalyticsManagerInterface;
 use Nexus\Export\Contracts\ExportManagerInterface;
 use Nexus\Storage\Contracts\StorageInterface;
 use Symfony\Component\Uid\Ulid;

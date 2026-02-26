@@ -481,7 +481,7 @@ php artisan routing:optimize-batch     # Batch optimize routes
 ### Constraint Violation Tracking
 
 ```php
-// Log to Nexus\Analytics
+// Log to Nexus\QueryEngine
 foreach ($result->metrics->violations as $violation) {
     $analyticsLogger->logEvent('routing.constraint_violation', [
         'type' => $violation->type,

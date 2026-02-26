@@ -54,7 +54,7 @@ Nexus\Finance         → Receives post commands → Creates Journal Entries
 - **`Nexus\Setting`**: Feature flags and configuration
 - **`Nexus\Workflow`**: High-value variance escalation and reversal approval
 - **`Nexus\Intelligence`** (optional): AI-powered classification and forecasting
-- **`Nexus\Analytics`** (optional): Cash Conversion Cycle and bank fee analysis
+- **`Nexus\QueryEngine`** (optional): Cash Conversion Cycle and bank fee analysis
 
 ## Features
 
@@ -184,7 +184,7 @@ $featureManager->isEnabled('multi_currency_banking')
 ## Optional Dependencies
 
 - `nexus/intelligence` - AI classification/forecasting
-- `nexus/analytics` - KPI calculation
+- `nexus/query-engine` - KPI calculation
 
 ## Installation
 

@@ -121,9 +121,9 @@ Ratio: 2.26:1 (226% documentation coverage)
 
 ## Comparison to Reference Implementations
 
-### Nexus\Monitoring (Reference Implementation)
+### Nexus\Telemetry (Reference Implementation)
 
-| Metric | Nexus\Monitoring | Nexus\Notifier | Compliance |
+| Metric | Nexus\Telemetry | Nexus\Notifier | Compliance |
 |--------|------------------|----------------|------------|
 | **Mandatory Files** | 15/15 | 15/15 | ✅ Equal |
 | **Documentation Lines** | ~4,150 | ~3,150 | ✅ Good |

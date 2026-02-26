@@ -259,7 +259,7 @@ ESTIMATED PACKAGE VALUE: $65,000
 ### Medium-Term (1 year)
 1. **Real-Time Alerting:** Implement webhook/notification system for critical events
 2. **Advanced Analytics:** Add trend analysis, anomaly detection
-3. **Integration with Monitoring:** Connect to Nexus\Monitoring for telemetry
+3. **Integration with Monitoring:** Connect to Nexus\Telemetry for telemetry
 
 ### Long-Term (2+ years)
 1. **AI-Powered Insights:** Machine learning for pattern recognition

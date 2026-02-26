@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/analytics": "*@dev",
+        "nexus/query-engine": "*@dev",
         "nexus/export": "*@dev",
         "nexus/scheduler": "*@dev",
         "nexus/notifier": "*@dev",

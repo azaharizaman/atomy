@@ -290,7 +290,7 @@ Documentation references to other packages validated:
 - `Nexus\Party` - For PostalAddress value object ✅
 - `Nexus\Connector` - For circuit breaker pattern ✅
 - `Nexus\Tenant` - For TenantContextInterface ✅
-- `Nexus\Monitoring` - For TelemetryTrackerInterface ✅
+- `Nexus\Telemetry` - For TelemetryTrackerInterface ✅
 - `Nexus\Notifier` - For cost alerting ✅
 - `Nexus\Routing` - For route optimization (mentioned as separate package) ✅
 

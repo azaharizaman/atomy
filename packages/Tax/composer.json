@@ -14,7 +14,7 @@
         "nexus/product": "*@dev",
         "nexus/tenant": "*@dev",
         "nexus/audit-logger": "*@dev",
-        "nexus/monitoring": "*@dev",
+        "nexus/telemetry": "*@dev",
         "nexus/storage": "*@dev"
     },
     "require-dev": {

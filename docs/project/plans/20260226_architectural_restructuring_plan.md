@@ -14,13 +14,13 @@ These packages provide the "what" (technical capability) without knowing the "wh
 
 | Current Package | New Package Name | Rationale |
 | :--- | :--- | :--- |
-| `Nexus\Analytics` | **`Nexus\QueryEngine`** | Shifts focus from the outcome (Analytics) to the mechanism (Querying/Aggregation). This is a foundational engine used by multiple higher-level operations. |
-| `Nexus\Monitoring` | **`Nexus\Telemetry`** | Distinguishes between raw data capture (Telemetry) and the active business process of "Monitoring" which often involves alerting and intervention logic. |
+| `Nexus\QueryEngine` | **`Nexus\QueryEngine`** | Shifts focus from the outcome (Analytics) to the mechanism (Querying/Aggregation). This is a foundational engine used by multiple higher-level operations. |
+| `Nexus\Telemetry` | **`Nexus\Telemetry`** | Distinguishes between raw data capture (Telemetry) and the active business process of "Monitoring" which often involves alerting and intervention logic. |
 
 ### **Execution Steps for Renaming:**
 1.  Update `composer.json` in the respective package.
 2.  Rename directory: `packages/Analytics` -> `packages/QueryEngine`, etc.
-3.  Perform a global namespace search-and-replace (e.g., `Nexus\Analytics` -> `Nexus\QueryEngine`).
+3.  Perform a global namespace search-and-replace (e.g., `Nexus\QueryEngine` -> `Nexus\QueryEngine`).
 4.  Update references in root `composer.json` and other package dependencies.
 
 ---

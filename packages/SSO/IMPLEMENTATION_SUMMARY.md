@@ -481,14 +481,14 @@ class SsoManager implements SsoManagerInterface
 }
 ```
 
-### With Nexus\Monitoring
+### With Nexus\Telemetry
 
 **Integration Type:** Optional Telemetry
 
 SSO metrics tracked via `TelemetryTrackerInterface`:
 
 ```php
-use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
+use Nexus\Telemetry\Contracts\TelemetryTrackerInterface;
 
 $this->telemetry?->increment('sso.logins', tags: [
     'provider' => $providerName,

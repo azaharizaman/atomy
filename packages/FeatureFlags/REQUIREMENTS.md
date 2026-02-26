@@ -187,14 +187,14 @@ The Nexus\FeatureFlags package provides a production-grade feature flag manageme
 
 ### FUN-014: Metrics Tracking Integration
 **Priority:** Medium  
-**Description:** Track evaluation metrics via Nexus\Monitoring (optional).
+**Description:** Track evaluation metrics via Nexus\Telemetry (optional).
 
 **Acceptance Criteria:**
 - ✅ Metric: flag_evaluation_duration_ms (timing)
 - ✅ Metric: flag_evaluation_total (counter)
 - ✅ Metric: flag_evaluation_errors_total (counter)
 - ✅ Metric: bulk_evaluation_duration_ms (timing)
-- ✅ Graceful degradation if Nexus\Monitoring not installed
+- ✅ Graceful degradation if Nexus\Telemetry not installed
 
 ---
 
@@ -445,7 +445,7 @@ The Nexus\FeatureFlags package provides a production-grade feature flag manageme
 **Description:** Provide visibility into flag usage and performance.
 
 **Acceptance Criteria:**
-- ✅ Optional metrics via Nexus\Monitoring
+- ✅ Optional metrics via Nexus\Telemetry
 - ✅ Audit logs via Nexus\AuditLogger
 - ✅ Debug-level logging for cache hits/misses
 - ✅ Warning-level logging for stale cache

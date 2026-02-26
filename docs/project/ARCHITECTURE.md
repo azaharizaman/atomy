@@ -91,7 +91,7 @@ Core infrastructure and multi-tenancy support - these packages are used by almos
 | **AuditLogger** | `Nexus\AuditLogger` | Timeline feeds and audit trails | `AuditLogManagerInterface`, `TimelineProviderInterface` |
 | **EventStream** | `Nexus\EventStream` | Event sourcing for critical domains | `EventStoreInterface`, `EventPublisherInterface` |
 | **Setting** | `Nexus\Setting` | Application settings management | `SettingManagerInterface`, `SettingRepositoryInterface` |
-| **Monitoring** | `Nexus\Monitoring` | Observability and telemetry | `MonitorInterface`, `MetricsCollectorInterface` |
+| **Monitoring** | `Nexus\Telemetry` | Observability and telemetry | `MonitorInterface`, `MetricsCollectorInterface` |
 | **FeatureFlags** | `Nexus\FeatureFlags` | Feature flag management | `FeatureFlagManagerInterface`, `FeatureToggleInterface` |
 
 ### 2.2 Identity & Security (4 packages)
@@ -183,7 +183,7 @@ Reporting, export, import, and analytics.
 | **Reporting** | `Nexus\Reporting` | Report engine | `ReportBuilderInterface`, `ReportRendererInterface` |
 | **Export** | `Nexus\Export` | Multi-format export | `ExportManagerInterface`, `ExporterInterface`, `FormatConverterInterface` |
 | **Import** | `Nexus\Import` | Data import with validation | `ImportManagerInterface`, `ValidationRuleInterface`, `DataParserInterface` |
-| **Analytics** | `Nexus\Analytics` | Business intelligence | `AnalyticsEngineInterface`, `DataWarehouseInterface`, `DashboardInterface` |
+| **Analytics** | `Nexus\QueryEngine` | Business intelligence | `AnalyticsEngineInterface`, `DataWarehouseInterface`, `DashboardInterface` |
 | **Currency** | `Nexus\Currency` | Multi-currency management | `CurrencyManagerInterface`, `ExchangeRateInterface` |
 | **Document** | `Nexus\Document` | Document management | `DocumentManagerInterface`, `VersionControlInterface`, `ContentProcessorInterface` |
 

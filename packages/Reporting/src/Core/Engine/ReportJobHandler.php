@@ -146,7 +146,7 @@ final readonly class ReportJobHandler implements JobHandlerInterface
                 shouldRetry: false
             );
 
-        } catch (\Nexus\Analytics\Exceptions\QueryExecutionException $e) {
+        } catch (\Nexus\QueryEngine\Exceptions\QueryExecutionException $e) {
             // Retry transient query failures
             $this->logger->warning('Query execution failed, will retry', [
                 'job_id' => $job->id,

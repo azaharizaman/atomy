@@ -187,7 +187,7 @@ The system MUST provide dashboard data:
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `nexus/monitoring` | *@dev | Health checks, metrics, alerts |
+| `nexus/telemetry` | *@dev | Health checks, metrics, alerts |
 | `nexus/audit-logger` | *@dev | Audit trail logging |
 | `nexus/compliance` | *@dev | Compliance rules and reporting |
 | `nexus/notifier` | *@dev | Multi-channel notifications |

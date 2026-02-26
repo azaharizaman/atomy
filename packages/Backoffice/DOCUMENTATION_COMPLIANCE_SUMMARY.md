@@ -214,7 +214,7 @@ The Backoffice package documentation has been successfully standardized accordin
 - `Nexus\Tenant\Contracts\TenantContextInterface` - Multi-tenancy
 - `Nexus\Identity\Contracts\AuthorizationManagerInterface` - Authorization
 - `Nexus\AuditLogger\Contracts\AuditLogManagerInterface` - Change tracking
-- `Nexus\Monitoring\Contracts\TelemetryTrackerInterface` - Metrics
+- `Nexus\Telemetry\Contracts\TelemetryTrackerInterface` - Metrics
 - `Psr\Log\LoggerInterface` - Logging
 
 ### Consuming Package Integration

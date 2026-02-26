@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Nexus\Laravel\Monitoring\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Nexus\Monitoring\Contracts\TelemetryTrackerInterface;
-use Nexus\Monitoring\Contracts\MetricStorageInterface;
+use Nexus\Telemetry\Contracts\TelemetryTrackerInterface;
+use Nexus\Telemetry\Contracts\MetricStorageInterface;
 use Nexus\Laravel\Monitoring\Adapters\TelemetryTrackerAdapter;
 use Nexus\Laravel\Monitoring\Adapters\MetricStorageAdapter;
 

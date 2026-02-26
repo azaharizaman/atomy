@@ -719,7 +719,7 @@ Per user directive (2024-11-24), the following items are deferred until after 10
   - `nexus/product` - Product tax categories
   - `nexus/tenant` - Multi-tenancy
   - `nexus/audit-logger` - Optional audit trails
-  - `nexus/monitoring` - Optional telemetry
+  - `nexus/telemetry` - Optional telemetry
   - `nexus/storage` - Optional file storage
 
 ---

@@ -119,7 +119,7 @@
 | symfony/uid ^7.0 | Library | Low | Stable, well-maintained |
 
 ### Internal Package Dependencies
-- **Depends On:** Nexus\Analytics, Nexus\Export, Nexus\Scheduler, Nexus\Notifier, Nexus\Storage, Nexus\AuditLogger
+- **Depends On:** Nexus\QueryEngine, Nexus\Export, Nexus\Scheduler, Nexus\Notifier, Nexus\Storage, Nexus\AuditLogger
 - **Depended By:** Application layer (Filament dashboards)
 - **Coupling Risk:** Medium (6 package dependencies)
 

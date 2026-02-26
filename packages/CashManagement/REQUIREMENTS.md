@@ -53,7 +53,7 @@
 | `Nexus\CashManagement` | Integration Requirement | INT-CASH-0008 | Package MUST integrate with Nexus\Setting for configuration | composer.json | ✅ Complete | Dependency declared | 2024-11-24 |
 | `Nexus\CashManagement` | Integration Requirement | INT-CASH-0009 | Package MUST integrate with Nexus\Workflow for approvals | composer.json | ✅ Complete | Dependency declared | 2024-11-24 |
 | `Nexus\CashManagement` | Integration Requirement | INT-CASH-0010 | Package SHOULD integrate with Nexus\Intelligence for AI features | composer.json | ✅ Complete | Optional dev dependency | 2024-11-24 |
-| `Nexus\CashManagement` | Integration Requirement | INT-CASH-0011 | Package SHOULD integrate with Nexus\Analytics for KPI tracking | composer.json | ✅ Complete | Optional dev dependency | 2024-11-24 |
+| `Nexus\CashManagement` | Integration Requirement | INT-CASH-0011 | Package SHOULD integrate with Nexus\QueryEngine for KPI tracking | composer.json | ✅ Complete | Optional dev dependency | 2024-11-24 |
 | `Nexus\CashManagement` | Security Requirement | SEC-CASH-0001 | System MUST use cryptographic hashing for statement deduplication | src/ValueObjects/StatementHash.php | ✅ Complete | SHA-256 | 2024-11-24 |
 | `Nexus\CashManagement` | Security Requirement | SEC-CASH-0002 | System MUST enforce segregation of duties for GL posting | src/Contracts/PendingAdjustmentInterface.php | ✅ Complete | Manual approval required | 2024-11-24 |
 | `Nexus\CashManagement` | Security Requirement | SEC-CASH-0003 | System MUST audit all reconciliation actions | src/Contracts/ReconciliationInterface.php | ✅ Complete | Via AuditLogger | 2024-11-24 |

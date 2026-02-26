@@ -212,7 +212,7 @@ All constraint violations are logged for analytics:
 $metrics = $result->metrics;
 
 foreach ($metrics->violations as $violation) {
-    // Log to Nexus\Analytics
+    // Log to Nexus\QueryEngine
     $analyticsLogger->logConstraintViolation($violation);
 }
 
