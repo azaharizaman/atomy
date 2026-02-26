@@ -68,7 +68,8 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
             }
 
             // 3. Render/Export
-            $filePath = $this->exportGenerator->generate($reportData, $deliveryOptions['format'] ?? 'pdf');
+            $exportResult = $this->exportGenerator->generate($reportData, $deliveryOptions['format'] ?? 'pdf');
+            $filePath = $exportResult->getFilePathOrFail();
 
             // 4. Store
             $storagePath = "reports/" . date('Y/m/d/') . basename($filePath);
@@ -78,8 +79,11 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
                 throw new \RuntimeException("Failed to open report file for reading: {$filePath}");
             }
 
-            $this->storageDriver->put($storagePath, $stream);
-            fclose($stream);
+            try {
+                $this->storageDriver->put($storagePath, $stream);
+            } finally {
+                fclose($stream);
+            }
 
             // 4. Notify
             if (!empty($deliveryOptions['recipients'])) {

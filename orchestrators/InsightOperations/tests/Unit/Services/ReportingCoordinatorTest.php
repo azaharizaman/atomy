@@ -13,18 +13,19 @@ use Nexus\Notifier\Contracts\NotificationManagerInterface;
 use Nexus\QueryEngine\Contracts\AnalyticsRepositoryInterface;
 use Nexus\QueryEngine\Contracts\QueryResultInterface;
 use Nexus\Storage\Contracts\StorageDriverInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 class ReportingCoordinatorTest extends TestCase
 {
-    private $queryEngine;
-    private $predictionService;
-    private $exportGenerator;
-    private $storageDriver;
-    private $notificationManager;
-    private $logger;
-    private $coordinator;
+    private readonly AnalyticsRepositoryInterface&MockObject $queryEngine;
+    private readonly PredictionServiceInterface&MockObject $predictionService;
+    private readonly ExportGeneratorInterface&MockObject $exportGenerator;
+    private readonly StorageDriverInterface&MockObject $storageDriver;
+    private readonly NotificationManagerInterface&MockObject $notificationManager;
+    private readonly LoggerInterface&MockObject $logger;
+    private readonly ReportingCoordinator $coordinator;
 
     protected function setUp(): void
     {
@@ -83,7 +84,7 @@ class ReportingCoordinatorTest extends TestCase
         ];
 
         $exportResult = $this->createMock(ExportResult::class);
-        $exportResult->method('getFilePath')->willReturn('/tmp/report.pdf');
+        $exportResult->method('getFilePathOrFail')->willReturn('/tmp/report.pdf');
 
         $this->exportGenerator->expects($this->once())
             ->method('generate')
