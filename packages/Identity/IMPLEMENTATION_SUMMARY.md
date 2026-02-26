@@ -38,6 +38,11 @@ Applied CQRS (Command Query Responsibility Segregation) pattern to all 7 reposit
 
 Original repository interfaces now extend both Query and Persist for backward compatibility, marked with `@deprecated` annotation.
 
+### Ecosystem Integration (February 2026)
+- **IdentityOperations (L2):** Fully supported via `IdentityOperationsAdapter` in Layer 3.
+- **Orchestration:** Integrated into user onboarding, lifecycle, and MFA workflows.
+- **Audit Logging:** Comprehensive event tracking across all IAM operations.
+
 ---
 
 ## Implementation Plan

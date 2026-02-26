@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Coordinators;
 
 use Nexus\IdentityOperations\Contracts\UserAuthenticationCoordinatorInterface;
+use Nexus\IdentityOperations\Contracts\UserAuthenticationServiceInterface;
+use Nexus\IdentityOperations\Contracts\UserContextProviderInterface;
 use Nexus\IdentityOperations\DTOs\UserContext;
-use Nexus\IdentityOperations\Services\UserAuthenticationService;
-use Nexus\IdentityOperations\DataProviders\UserContextDataProvider;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -17,8 +17,8 @@ use Psr\Log\NullLogger;
 final readonly class UserAuthenticationCoordinator implements UserAuthenticationCoordinatorInterface
 {
     public function __construct(
-        private UserAuthenticationService $authService,
-        private UserContextDataProvider $contextDataProvider,
+        private UserAuthenticationServiceInterface $authService,
+        private UserContextProviderInterface $contextDataProvider,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 

@@ -34,6 +34,50 @@ class IdentityAdapterServiceProvider extends ServiceProvider
                 logger: $app['log']
             );
         });
+
+        // Register IdentityOperations orchestrator adapter
+        $this->registerIdentityOperationsAdapters();
+    }
+
+    /**
+     * Register adapters for IdentityOperations orchestrator.
+     */
+    private function registerIdentityOperationsAdapters(): void
+    {
+        $this->app->singleton(\Nexus\Laravel\Identity\Adapters\IdentityOperationsAdapter::class, function ($app) {
+            return new \Nexus\Laravel\Identity\Adapters\IdentityOperationsAdapter(
+                userPersist: $app[\Nexus\Identity\Contracts\UserPersistInterface::class],
+                userQuery: $app[\Nexus\Identity\Contracts\UserQueryInterface::class],
+                userAuthenticator: $app[\Nexus\Identity\Contracts\UserAuthenticatorInterface::class],
+                identityTokenManager: $app[\Nexus\Identity\Contracts\TokenManagerInterface::class],
+                sessionManager: $app[\Nexus\Identity\Contracts\SessionManagerInterface::class],
+                mfaEnrollment: $app[\Nexus\Identity\Contracts\MfaEnrollmentServiceInterface::class],
+                mfaVerification: $app[\Nexus\Identity\Contracts\MfaVerificationServiceInterface::class],
+                notificationManager: $app[\Nexus\Notifier\Contracts\NotificationManagerInterface::class],
+                auditLogRepository: $app[\Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface::class],
+                logger: $app['log']
+            );
+        });
+
+        $interfaces = [
+            \Nexus\IdentityOperations\Services\UserCreatorInterface::class,
+            \Nexus\IdentityOperations\Services\UserUpdaterInterface::class,
+            \Nexus\IdentityOperations\Services\TenantUserAssignerInterface::class,
+            \Nexus\IdentityOperations\Services\NotificationSenderInterface::class,
+            \Nexus\IdentityOperations\Services\AuditLoggerInterface::class,
+            \Nexus\IdentityOperations\Services\MfaEnrollerInterface::class,
+            \Nexus\IdentityOperations\Services\MfaVerifierInterface::class,
+            \Nexus\IdentityOperations\Services\MfaDisablerInterface::class,
+            \Nexus\IdentityOperations\Services\BackupCodeGeneratorInterface::class,
+            \Nexus\IdentityOperations\Services\AuthenticatorInterface::class,
+            \Nexus\IdentityOperations\Services\TokenManagerInterface::class,
+            \Nexus\IdentityOperations\Services\PasswordChangerInterface::class,
+            \Nexus\IdentityOperations\Services\SessionValidatorInterface::class,
+        ];
+
+        foreach ($interfaces as $interface) {
+            $this->app->alias(\Nexus\Laravel\Identity\Adapters\IdentityOperationsAdapter::class, $interface);
+        }
     }
 
     /**

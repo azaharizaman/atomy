@@ -1,0 +1,193 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\IdentityOperations\Tests\Unit\Services;
+
+use PHPUnit\Framework\TestCase;
+use Nexus\IdentityOperations\Services\MfaService;
+use Nexus\IdentityOperations\Services\MfaEnrollerInterface;
+use Nexus\IdentityOperations\Services\MfaVerifierInterface;
+use Nexus\IdentityOperations\Services\MfaDisablerInterface;
+use Nexus\IdentityOperations\Services\BackupCodeGeneratorInterface;
+use Nexus\IdentityOperations\Services\AuditLoggerInterface;
+use Nexus\IdentityOperations\DTOs\MfaEnableRequest;
+use Nexus\IdentityOperations\DTOs\MfaVerifyRequest;
+use Nexus\IdentityOperations\DTOs\MfaDisableRequest;
+use Nexus\IdentityOperations\DTOs\MfaMethod;
+use Psr\Log\LoggerInterface;
+
+final class MfaServiceTest extends TestCase
+{
+    private $enroller;
+    private $verifier;
+    private $disabler;
+    private $backupCodeGenerator;
+    private $auditLogger;
+    private $logger;
+    private $service;
+
+    protected function setUp(): void
+    {
+        $this->enroller = $this->createMock(MfaEnrollerInterface::class);
+        $this->verifier = $this->createMock(MfaVerifierInterface::class);
+        $this->disabler = $this->createMock(MfaDisablerInterface::class);
+        $this->backupCodeGenerator = $this->createMock(BackupCodeGeneratorInterface::class);
+        $this->auditLogger = $this->createMock(AuditLoggerInterface::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
+
+        $this->service = new MfaService(
+            $this->enroller,
+            $this->verifier,
+            $this->disabler,
+            $this->backupCodeGenerator,
+            $this->auditLogger,
+            $this->logger
+        );
+    }
+
+    public function testEnableTotpSuccessfully(): void
+    {
+        $request = new MfaEnableRequest(
+            userId: 'user-123',
+            method: MfaMethod::TOTP
+        );
+
+        $this->enroller->expects($this->once())
+            ->method('enroll')
+            ->with('user-123', 'totp')
+            ->willReturn(['secret' => 'base32secret', 'qr_code_url' => 'otpauth://...']);
+
+        $this->backupCodeGenerator->expects($this->once())
+            ->method('generate')
+            ->with('user-123')
+            ->willReturn(['code1', 'code2']);
+
+        $this->auditLogger->expects($this->once())
+            ->method('log')
+            ->with('mfa.enabled', 'user-123');
+
+        $result = $this->service->enable($request);
+
+        $this->assertTrue($result->success);
+        $this->assertEquals('base32secret', $result->secret);
+        $this->assertCount(2, $result->backupCodes);
+    }
+
+    public function testEnableFailure(): void
+    {
+        $request = new MfaEnableRequest(userId: 'user-1', method: MfaMethod::TOTP);
+        $this->enroller->expects($this->once())
+            ->method('enroll')
+            ->willThrowException(new \Exception('Error'));
+
+        $result = $this->service->enable($request);
+        $this->assertFalse($result->success);
+    }
+
+    public function testVerifyMfaSuccessfully(): void
+    {
+        $request = new MfaVerifyRequest(
+            userId: 'user-123',
+            code: '123456',
+            method: MfaMethod::TOTP
+        );
+
+        $this->verifier->expects($this->once())
+            ->method('verify')
+            ->with('user-123', '123456', 'totp')
+            ->willReturn(true);
+
+        $this->auditLogger->expects($this->once())
+            ->method('log')
+            ->with('mfa.verified', 'user-123');
+
+        $result = $this->service->verify($request);
+
+        $this->assertTrue($result->success);
+    }
+
+    public function testVerifyMfaFailure(): void
+    {
+        $request = new MfaVerifyRequest(
+            userId: 'user-123',
+            code: 'wrong',
+            method: MfaMethod::TOTP
+        );
+
+        $this->verifier->expects($this->once())
+            ->method('verify')
+            ->willReturn(false);
+
+        $this->verifier->expects($this->once())
+            ->method('getFailedAttempts')
+            ->willReturn(1);
+
+        $result = $this->service->verify($request);
+
+        $this->assertFalse($result->success);
+        $this->assertEquals(4, $result->remainingAttempts);
+    }
+
+    public function testDisableMfaSuccessfully(): void
+    {
+        $request = new MfaDisableRequest(
+            userId: 'user-123',
+            disabledBy: 'admin-1',
+            reason: 'Lost device'
+        );
+
+        $this->disabler->expects($this->once())
+            ->method('disable')
+            ->with('user-123');
+
+        $this->auditLogger->expects($this->once())
+            ->method('log')
+            ->with('mfa.disabled', 'user-123');
+
+        $result = $this->service->disable($request);
+
+        $this->assertTrue($result->success);
+    }
+
+    public function testDisableMfaFailure(): void
+    {
+        $request = new MfaDisableRequest(userId: 'user-1', disabledBy: 'admin-1');
+        $this->disabler->expects($this->once())
+            ->method('disable')
+            ->willThrowException(new \Exception('Error'));
+
+        $result = $this->service->disable($request);
+        $this->assertFalse($result->success);
+    }
+
+    public function testGetStatus(): void
+    {
+        $status = ['totp' => true];
+        $this->enroller->expects($this->once())
+            ->method('getStatus')
+            ->willReturn($status);
+
+        $this->assertEquals($status, $this->service->getStatus('user-1'));
+    }
+
+    public function testGenerateBackupCodes(): void
+    {
+        $codes = ['1', '2'];
+        $this->backupCodeGenerator->expects($this->once())
+            ->method('generate')
+            ->willReturn($codes);
+
+        $this->assertEquals($codes, $this->service->generateBackupCodes('user-1'));
+    }
+
+    public function testValidateBackupCode(): void
+    {
+        $this->verifier->expects($this->once())
+            ->method('verifyBackupCode')
+            ->with('user-1', 'code')
+            ->willReturn(true);
+
+        $this->assertTrue($this->service->validateBackupCode('user-1', 'code'));
+    }
+}

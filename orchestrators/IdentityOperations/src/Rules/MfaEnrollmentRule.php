@@ -57,13 +57,3 @@ final readonly class MfaEnrollmentRule implements UserValidationRuleInterface
         return ValidationResult::passed();
     }
 }
-
-/**
- * Interface for checking MFA enrollment.
- */
-interface MfaEnrollmentCheckerInterface
-{
-    public function isEnrolled(string $userId, ?string $tenantId = null): bool;
-
-    public function getEnrollmentStatus(string $userId, ?string $tenantId = null): array;
-}

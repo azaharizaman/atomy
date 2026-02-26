@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Coordinators;
 
 use Nexus\IdentityOperations\Contracts\UserLifecycleCoordinatorInterface;
+use Nexus\IdentityOperations\Contracts\UserLifecycleServiceInterface;
+use Nexus\IdentityOperations\Contracts\UserContextProviderInterface;
 use Nexus\IdentityOperations\DTOs\UserSuspendRequest;
 use Nexus\IdentityOperations\DTOs\UserSuspendResult;
 use Nexus\IdentityOperations\DTOs\UserActivateRequest;
 use Nexus\IdentityOperations\DTOs\UserActivateResult;
 use Nexus\IdentityOperations\DTOs\UserDeactivateRequest;
 use Nexus\IdentityOperations\DTOs\UserDeactivateResult;
-use Nexus\IdentityOperations\Services\UserLifecycleService;
-use Nexus\IdentityOperations\DataProviders\UserContextDataProvider;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -24,8 +24,8 @@ use Psr\Log\NullLogger;
 final readonly class UserLifecycleCoordinator implements UserLifecycleCoordinatorInterface
 {
     public function __construct(
-        private UserLifecycleService $lifecycleService,
-        private UserContextDataProvider $contextDataProvider,
+        private UserLifecycleServiceInterface $lifecycleService,
+        private UserContextProviderInterface $contextDataProvider,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 

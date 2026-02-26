@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Coordinators;
 
 use Nexus\IdentityOperations\Contracts\MfaCoordinatorInterface;
+use Nexus\IdentityOperations\Contracts\MfaServiceInterface;
+use Nexus\IdentityOperations\Contracts\UserContextProviderInterface;
 use Nexus\IdentityOperations\DTOs\MfaEnableRequest;
 use Nexus\IdentityOperations\DTOs\MfaEnableResult;
 use Nexus\IdentityOperations\DTOs\MfaVerifyRequest;
 use Nexus\IdentityOperations\DTOs\MfaVerifyResult;
 use Nexus\IdentityOperations\DTOs\MfaDisableRequest;
 use Nexus\IdentityOperations\DTOs\MfaDisableResult;
-use Nexus\IdentityOperations\Services\MfaService;
-use Nexus\IdentityOperations\DataProviders\UserContextDataProvider;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -22,8 +22,8 @@ use Psr\Log\NullLogger;
 final readonly class MfaCoordinator implements MfaCoordinatorInterface
 {
     public function __construct(
-        private MfaService $mfaService,
-        private UserContextDataProvider $contextDataProvider,
+        private MfaServiceInterface $mfaService,
+        private UserContextProviderInterface $contextDataProvider,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 

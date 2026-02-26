@@ -185,31 +185,3 @@ final readonly class UserLifecycleService implements UserLifecycleServiceInterfa
         $this->stateManager->setAccessEnabled($userId, true);
     }
 }
-
-/**
- * Interface for user state management.
- */
-interface UserStateManagerInterface
-{
-    public function suspend(string $userId): void;
-    public function activate(string $userId): void;
-    public function deactivate(string $userId): void;
-    public function setAccessEnabled(string $userId, bool $enabled): void;
-}
-
-/**
- * Interface for session management.
- */
-interface SessionManagerInterface
-{
-    public function invalidateUserSessions(string $userId): void;
-    public function invalidateSession(string $sessionId): void;
-}
-
-/**
- * Interface for audit logging.
- */
-interface AuditLoggerInterface
-{
-    public function log(string $event, string $entityId, array $data = []): void;
-}

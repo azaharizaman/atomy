@@ -52,34 +52,3 @@ final readonly class UserContextDataProvider implements UserContextProviderInter
         return $this->userQuery->isActive($userId);
     }
 }
-
-/**
- * Interface for querying user data.
- */
-interface UserQueryInterface
-{
-    /**
-     * @return array{id: string, email: string, first_name: string, last_name: string, tenant_id: string|null, status: string}|null
-     */
-    public function findById(string $userId): ?array;
-
-    public function exists(string $userId): bool;
-
-    public function isActive(string $userId): bool;
-}
-
-/**
- * Interface for querying permission data.
- */
-interface PermissionQueryInterface
-{
-    /**
-     * @return array<int, string>
-     */
-    public function getUserPermissions(string $userId, ?string $tenantId = null): array;
-
-    /**
-     * @return array<int, string>
-     */
-    public function getUserRoles(string $userId, ?string $tenantId = null): array;
-}

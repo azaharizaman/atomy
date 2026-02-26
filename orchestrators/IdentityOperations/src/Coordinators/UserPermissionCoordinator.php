@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Coordinators;
 
 use Nexus\IdentityOperations\Contracts\UserPermissionCoordinatorInterface;
+use Nexus\IdentityOperations\Contracts\UserPermissionServiceInterface;
+use Nexus\IdentityOperations\Contracts\UserContextProviderInterface;
 use Nexus\IdentityOperations\DTOs\PermissionAssignRequest;
 use Nexus\IdentityOperations\DTOs\PermissionAssignResult;
 use Nexus\IdentityOperations\DTOs\PermissionRevokeRequest;
 use Nexus\IdentityOperations\DTOs\PermissionRevokeResult;
-use Nexus\IdentityOperations\Services\UserPermissionService;
-use Nexus\IdentityOperations\DataProviders\UserContextDataProvider;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -20,8 +20,8 @@ use Psr\Log\NullLogger;
 final readonly class UserPermissionCoordinator implements UserPermissionCoordinatorInterface
 {
     public function __construct(
-        private UserPermissionService $permissionService,
-        private UserContextDataProvider $contextDataProvider,
+        private UserPermissionServiceInterface $permissionService,
+        private UserContextProviderInterface $contextDataProvider,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 

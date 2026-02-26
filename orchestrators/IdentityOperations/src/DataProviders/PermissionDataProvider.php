@@ -49,28 +49,3 @@ final readonly class PermissionDataProvider implements PermissionProviderInterfa
         return $this->permissionQuery->roleExists($roleId);
     }
 }
-
-/**
- * Interface for querying permission data.
- */
-interface PermissionQueryInterface
-{
-    /**
-     * @return array<int, array{id: string, name: string, description: string}>
-     */
-    public function findAll(): array;
-
-    /**
-     * @return array<int, array{id: string, name: string, permissions: array<int, string>}>
-     */
-    public function findAllRoles(): array;
-
-    /**
-     * @return array<int, string>
-     */
-    public function findRolePermissions(string $roleId): array;
-
-    public function exists(string $permission): bool;
-
-    public function roleExists(string $roleId): bool;
-}
