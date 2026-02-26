@@ -1,6 +1,6 @@
 {
     "name": "nexus/query-engine",
-    "description": "Framework-agnostic analytics and business intelligence engine with query execution, predictive modeling, and data aggregation capabilities",
+    "description": "High-performance framework-agnostic query execution and data aggregation engine for the Nexus ERP system",
     "type": "library",
     "license": "MIT",
     "keywords": [

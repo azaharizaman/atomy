@@ -45,7 +45,14 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
 
             // 3. Store
             $storagePath = "reports/" . date('Y/m/d/') . basename($filePath);
-            $this->storageDriver->put($storagePath, file_get_contents($filePath));
+            $stream = fopen($filePath, 'r');
+            
+            if ($stream === false) {
+                throw new \RuntimeException("Failed to open report file for reading: {$filePath}");
+            }
+
+            $this->storageDriver->put($storagePath, $stream);
+            fclose($stream);
 
             // 4. Notify
             if (!empty($deliveryOptions['recipients'])) {

@@ -84,7 +84,13 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
 
             // Move to final storage (e.g., S3)
             $finalPath = "exports/" . basename($filePath);
-            $this->storageDriver->put($finalPath, file_get_contents($filePath));
+            $content = file_get_contents($filePath);
+            
+            if ($content === false) {
+                throw new \RuntimeException("Failed to read generated export file at: {$filePath}");
+            }
+
+            $this->storageDriver->put($finalPath, $content);
 
             // Notify recipients
             foreach ($recipients as $recipient) {

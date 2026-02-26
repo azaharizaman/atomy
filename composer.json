@@ -69,10 +69,6 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\\DataExchangeOperations\\": "orchestrators/DataExchangeOperations/src/",
-            "Nexus\\InsightOperations\\": "orchestrators/InsightOperations/src/",
-            "Nexus\\IntelligenceOperations\\": "orchestrators/IntelligenceOperations/src/",
-            "Nexus\\ConnectivityOperations\\": "orchestrators/ConnectivityOperations/src/",
             "Nexus\\ProcurementOperations\\": "orchestrators/ProcurementOperations/src/",
             "Nexus\\ManufacturingOperations\\": "orchestrators/ManufacturingOperations/src/",
             "Nexus\\Sanctions\\": "packages/Sanctions/src/",
@@ -97,10 +93,6 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\\DataExchangeOperations\\Tests\\": "orchestrators/DataExchangeOperations/tests/",
-            "Nexus\\InsightOperations\\Tests\\": "orchestrators/InsightOperations/tests/",
-            "Nexus\\IntelligenceOperations\\Tests\\": "orchestrators/IntelligenceOperations/tests/",
-            "Nexus\\ConnectivityOperations\\Tests\\": "orchestrators/ConnectivityOperations/tests/",
             "Nexus\\ProcurementOperations\\Tests\\": "orchestrators/ProcurementOperations/tests/",
             "Nexus\\ManufacturingOperations\\Tests\\": "orchestrators/ManufacturingOperations/tests/",
             "Nexus\\Sanctions\\Tests\\": "packages/Sanctions/tests/",

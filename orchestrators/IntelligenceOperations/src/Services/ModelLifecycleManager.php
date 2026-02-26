@@ -59,7 +59,8 @@ final readonly class ModelLifecycleManager implements ModelLifecycleCoordinatorI
         // $trainingData = $this->queryEngine->fetchDataset($modelId);
 
         // Initiate training job
-        $jobId = bin2hex(random_bytes(8));
+        // TODO: Delegate to a centralized Sequencing service
+        $jobId = bin2hex(random_bytes(16));
         
         $this->telemetry->trackEvent('model_retraining_started', ['model_id' => $modelId, 'job_id' => $jobId]);
 
