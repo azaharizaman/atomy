@@ -10,7 +10,7 @@ namespace Nexus\IdentityOperations\DTOs;
 final readonly class UserDeactivateRequest
 {
     public function __construct(
-        public string $userId,
+        public string $userId, public string $tenantId,
         public string $deactivatedBy,
         public ?string $reason = null,
         public bool $preserveData = true,

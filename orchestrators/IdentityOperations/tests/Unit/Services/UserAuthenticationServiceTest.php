@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\Services;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\Services\UserAuthenticationService;
 use Nexus\IdentityOperations\Services\AuthenticatorInterface;
 use Nexus\IdentityOperations\Services\TokenManagerInterface;
@@ -12,17 +13,18 @@ use Nexus\IdentityOperations\Services\PasswordChangerInterface;
 use Nexus\IdentityOperations\Services\SessionValidatorInterface;
 use Nexus\IdentityOperations\Services\AuditLoggerInterface;
 use Nexus\IdentityOperations\DTOs\UserContext;
+use Nexus\IdentityOperations\DTOs\RefreshTokenPayload;
 use Psr\Log\LoggerInterface;
 
 final class UserAuthenticationServiceTest extends TestCase
 {
-    private $authenticator;
-    private $tokenManager;
-    private $passwordChanger;
-    private $sessionValidator;
-    private $auditLogger;
-    private $logger;
-    private $service;
+    private AuthenticatorInterface|MockObject $authenticator;
+    private TokenManagerInterface|MockObject $tokenManager;
+    private PasswordChangerInterface|MockObject $passwordChanger;
+    private SessionValidatorInterface|MockObject $sessionValidator;
+    private AuditLoggerInterface|MockObject $auditLogger;
+    private LoggerInterface|MockObject $logger;
+    private UserAuthenticationService $service;
 
     protected function setUp(): void
     {
@@ -67,12 +69,12 @@ final class UserAuthenticationServiceTest extends TestCase
 
         $this->tokenManager->expects($this->once())
             ->method('generateRefreshToken')
-            ->with('user-123')
+            ->with('user-123', 'tenant-1')
             ->willReturn('refresh-token');
 
         $this->tokenManager->expects($this->once())
             ->method('createSession')
-            ->with('user-123', 'access-token')
+            ->with('user-123', 'access-token', 'tenant-1')
             ->willReturn('session-1');
 
         $result = $this->service->authenticate('test@example.com', 'password', 'tenant-1');
@@ -84,10 +86,12 @@ final class UserAuthenticationServiceTest extends TestCase
 
     public function testRefreshTokenSuccessfully(): void
     {
+        $payload = new RefreshTokenPayload('user-123', 'tenant-1');
+        
         $this->tokenManager->expects($this->once())
             ->method('validateRefreshToken')
-            ->with('refresh-token')
-            ->willReturn(['user_id' => 'user-123', 'tenant_id' => 'tenant-1']);
+            ->with('refresh-token', 'tenant-1')
+            ->willReturn($payload);
 
         $this->authenticator->expects($this->once())
             ->method('getUserById')
@@ -99,7 +103,8 @@ final class UserAuthenticationServiceTest extends TestCase
             ->with('user-123', 'tenant-1')
             ->willReturn('new-access-token');
 
-        $result = $this->service->refreshToken('refresh-token');
+        // Note: refreshToken service method might need to be updated to take tenantId too
+        $result = $this->service->refreshToken('refresh-token', 'tenant-1');
 
         $this->assertEquals('user-123', $result->userId);
         $this->assertEquals('new-access-token', $result->accessToken);
@@ -107,15 +112,16 @@ final class UserAuthenticationServiceTest extends TestCase
 
     public function testLogoutSuccessfully(): void
     {
+        // logout needs tenantId now if it calls invalidateSession
         $this->tokenManager->expects($this->once())
             ->method('invalidateSession')
-            ->with('session-1');
+            ->with('session-1', 'tenant-1');
 
         $this->auditLogger->expects($this->once())
             ->method('log')
             ->with('user.logged_out', 'user-123');
 
-        $result = $this->service->logout('user-123', 'session-1');
+        $result = $this->service->logout('user-123', 'session-1', 'tenant-1');
 
         $this->assertTrue($result);
     }
@@ -124,13 +130,13 @@ final class UserAuthenticationServiceTest extends TestCase
     {
         $this->tokenManager->expects($this->once())
             ->method('invalidateUserSessions')
-            ->with('user-123');
+            ->with('user-123', 'tenant-1');
 
         $this->auditLogger->expects($this->once())
             ->method('log')
             ->with('user.logged_out', 'user-123');
 
-        $result = $this->service->logout('user-123');
+        $result = $this->service->logout('user-123', null, 'tenant-1');
 
         $this->assertTrue($result);
     }
@@ -139,9 +145,10 @@ final class UserAuthenticationServiceTest extends TestCase
     {
         $this->tokenManager->expects($this->once())
             ->method('invalidateUserSessions')
+            ->with('user-123', 'tenant-1')
             ->willThrowException(new \Exception('Error'));
 
-        $result = $this->service->logout('user-123');
+        $result = $this->service->logout('user-123', null, 'tenant-1');
 
         $this->assertFalse($result);
     }
@@ -204,9 +211,9 @@ final class UserAuthenticationServiceTest extends TestCase
     {
         $this->tokenManager->expects($this->once())
             ->method('invalidateUserSessions')
-            ->with('user-123');
+            ->with('user-123', 'tenant-1');
 
-        $result = $this->service->invalidateAllSessions('user-123');
+        $result = $this->service->invalidateAllSessions('user-123', 'tenant-1');
 
         $this->assertTrue($result);
     }
@@ -215,9 +222,10 @@ final class UserAuthenticationServiceTest extends TestCase
     {
         $this->tokenManager->expects($this->once())
             ->method('invalidateUserSessions')
+            ->with('user-123', 'tenant-1')
             ->willThrowException(new \Exception('Error'));
 
-        $result = $this->service->invalidateAllSessions('user-123');
+        $result = $this->service->invalidateAllSessions('user-123', 'tenant-1');
 
         $this->assertFalse($result);
     }

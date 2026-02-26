@@ -10,13 +10,14 @@ use Nexus\IdentityOperations\Contracts\UserAuthenticationServiceInterface;
 use Nexus\IdentityOperations\Contracts\UserContextProviderInterface;
 use Nexus\IdentityOperations\DTOs\UserContext;
 use Psr\Log\LoggerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 
 final class UserAuthenticationCoordinatorTest extends TestCase
 {
-    private $authService;
-    private $contextDataProvider;
-    private $logger;
-    private $coordinator;
+    private UserAuthenticationServiceInterface|MockObject $authService;
+    private UserContextProviderInterface|MockObject $contextDataProvider;
+    private LoggerInterface|MockObject $logger;
+    private UserAuthenticationCoordinator $coordinator;
 
     protected function setUp(): void
     {
@@ -80,10 +81,10 @@ final class UserAuthenticationCoordinatorTest extends TestCase
 
         $this->authService->expects($this->once())
             ->method('refreshToken')
-            ->with('token')
+            ->with('token', 'tenant-1')
             ->willReturn($context);
 
-        $result = $this->coordinator->refreshToken('token');
+        $result = $this->coordinator->refreshToken('token', 'tenant-1');
 
         $this->assertSame($context, $result);
     }
@@ -92,10 +93,10 @@ final class UserAuthenticationCoordinatorTest extends TestCase
     {
         $this->authService->expects($this->once())
             ->method('logout')
-            ->with('user-123', 'session-1')
+            ->with('user-123', 'session-1', 'tenant-1')
             ->willReturn(true);
 
-        $this->assertTrue($this->coordinator->logout('user-123', 'session-1'));
+        $this->assertTrue($this->coordinator->logout('user-123', 'session-1', 'tenant-1'));
     }
 
     public function testValidateSession(): void

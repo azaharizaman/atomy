@@ -23,7 +23,7 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
-    public function authenticate(string $email, string $password, ?string $tenantId = null): UserContext
+    public function authenticate(string $email, string $password, string $tenantId): UserContext
     {
         $this->logger->info('Authenticating user', [
             'email' => hash('sha256', $email),
@@ -34,8 +34,8 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
 
         // Generate tokens
         $accessToken = $this->tokenManager->generateAccessToken($user['id'], $tenantId);
-        $refreshToken = $this->tokenManager->generateRefreshToken($user['id']);
-        $sessionId = $this->tokenManager->createSession($user['id'], $accessToken);
+        $refreshToken = $this->tokenManager->generateRefreshToken($user['id'], $tenantId);
+        $sessionId = $this->tokenManager->createSession($user['id'], $accessToken, $tenantId);
 
         // Log audit
         $this->auditLogger->log(
@@ -59,22 +59,22 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         );
     }
 
-    public function refreshToken(string $refreshToken): UserContext
+    public function refreshToken(string $refreshToken, string $tenantId): UserContext
     {
         $this->logger->info('Refreshing token');
 
-        $tokenData = $this->tokenManager->validateRefreshToken($refreshToken);
+        $payload = $this->tokenManager->validateRefreshToken($refreshToken, $tenantId);
         
-        $user = $this->authenticator->getUserById($tokenData['user_id']);
+        $user = $this->authenticator->getUserById($payload->userId);
         
-        $accessToken = $this->tokenManager->generateAccessToken($user['id'], $tokenData['tenant_id'] ?? null);
+        $accessToken = $this->tokenManager->generateAccessToken($user['id'], $payload->tenantId);
 
         return new UserContext(
             userId: $user['id'],
             email: $user['email'],
             firstName: $user['first_name'] ?? null,
             lastName: $user['last_name'] ?? null,
-            tenantId: $tokenData['tenant_id'] ?? null,
+            tenantId: $payload->tenantId,
             status: $user['status'],
             permissions: $user['permissions'] ?? [],
             roles: $user['roles'] ?? [],
@@ -82,19 +82,19 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         );
     }
 
-    public function logout(string $userId, ?string $sessionId = null): bool
+    public function logout(string $userId, ?string $sessionId = null, ?string $tenantId = null): bool
     {
         try {
             if ($sessionId !== null) {
-                $this->tokenManager->invalidateSession($sessionId);
+                $this->tokenManager->invalidateSession($sessionId, $tenantId ?? 'default');
             } else {
-                $this->tokenManager->invalidateUserSessions($userId);
+                $this->tokenManager->invalidateUserSessions($userId, $tenantId ?? 'default');
             }
 
             $this->auditLogger->log(
                 'user.logged_out',
                 $userId,
-                ['session_id' => $sessionId]
+                ['session_id' => $sessionId, 'tenant_id' => $tenantId]
             );
 
             return true;
@@ -157,15 +157,15 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         }
     }
 
-    public function invalidateAllSessions(string $userId): bool
+    public function invalidateAllSessions(string $userId, string $tenantId): bool
     {
         try {
-            $this->tokenManager->invalidateUserSessions($userId);
+            $this->tokenManager->invalidateUserSessions($userId, $tenantId);
 
             $this->auditLogger->log(
                 'user.sessions_invalidated',
                 $userId,
-                []
+                ['tenant_id' => $tenantId]
             );
 
             return true;

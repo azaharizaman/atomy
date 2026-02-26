@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\Services;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\Services\UserLifecycleService;
 use Nexus\IdentityOperations\Services\UserStateManagerInterface;
 use Nexus\IdentityOperations\Services\SessionManagerInterface;
@@ -16,11 +17,11 @@ use Psr\Log\LoggerInterface;
 
 final class UserLifecycleServiceTest extends TestCase
 {
-    private $stateManager;
-    private $sessionManager;
-    private $auditLogger;
-    private $logger;
-    private $service;
+    private readonly UserStateManagerInterface|MockObject $stateManager;
+    private readonly SessionManagerInterface|MockObject $sessionManager;
+    private readonly AuditLoggerInterface|MockObject $auditLogger;
+    private readonly LoggerInterface|MockObject $logger;
+    private readonly UserLifecycleService $service;
 
     protected function setUp(): void
     {
@@ -41,6 +42,7 @@ final class UserLifecycleServiceTest extends TestCase
     {
         $request = new UserSuspendRequest(
             userId: 'user-123',
+            tenantId: 'tenant-1',
             suspendedBy: 'admin-1',
             reason: 'Policy violation'
         );
@@ -51,7 +53,7 @@ final class UserLifecycleServiceTest extends TestCase
 
         $this->sessionManager->expects($this->once())
             ->method('invalidateUserSessions')
-            ->with('user-123');
+            ->with('user-123', 'tenant-1');
 
         $this->stateManager->expects($this->once())
             ->method('suspend')
@@ -68,7 +70,7 @@ final class UserLifecycleServiceTest extends TestCase
 
     public function testSuspendFailure(): void
     {
-        $request = new UserSuspendRequest(userId: 'user-123', suspendedBy: 'admin-1');
+        $request = new UserSuspendRequest(userId: 'user-123', tenantId: 'tenant-1', suspendedBy: 'admin-1');
         
         $this->stateManager->expects($this->once())
             ->method('setAccessEnabled')
@@ -84,6 +86,7 @@ final class UserLifecycleServiceTest extends TestCase
     {
         $request = new UserActivateRequest(
             userId: 'user-123',
+            tenantId: 'tenant-1',
             activatedBy: 'admin-1'
         );
 
@@ -102,7 +105,7 @@ final class UserLifecycleServiceTest extends TestCase
 
     public function testActivateFailure(): void
     {
-        $request = new UserActivateRequest(userId: 'user-123', activatedBy: 'admin-1');
+        $request = new UserActivateRequest(userId: 'user-123', tenantId: 'tenant-1', activatedBy: 'admin-1');
         
         $this->stateManager->expects($this->once())
             ->method('activate')
@@ -117,12 +120,17 @@ final class UserLifecycleServiceTest extends TestCase
     {
         $request = new UserDeactivateRequest(
             userId: 'user-123',
+            tenantId: 'tenant-1',
             deactivatedBy: 'admin-1'
         );
 
         $this->stateManager->expects($this->once())
             ->method('deactivate')
             ->with('user-123');
+
+        $this->sessionManager->expects($this->once())
+            ->method('invalidateUserSessions')
+            ->with('user-123', 'tenant-1');
 
         $result = $this->service->deactivate($request);
 
@@ -131,7 +139,7 @@ final class UserLifecycleServiceTest extends TestCase
 
     public function testDeactivateFailure(): void
     {
-        $request = new UserDeactivateRequest(userId: 'user-123', deactivatedBy: 'admin-1');
+        $request = new UserDeactivateRequest(userId: 'user-123', tenantId: 'tenant-1', deactivatedBy: 'admin-1');
         
         $this->stateManager->expects($this->once())
             ->method('setAccessEnabled')
@@ -146,9 +154,9 @@ final class UserLifecycleServiceTest extends TestCase
     {
         $this->sessionManager->expects($this->once())
             ->method('invalidateUserSessions')
-            ->with('user-123');
+            ->with('user-123', 'tenant-1');
 
-        $result = $this->service->forceLogout('user-123', 'admin-1');
+        $result = $this->service->forceLogout('user-123', 'admin-1', 'tenant-1');
 
         $this->assertTrue($result);
     }
@@ -157,9 +165,10 @@ final class UserLifecycleServiceTest extends TestCase
     {
         $this->sessionManager->expects($this->once())
             ->method('invalidateUserSessions')
+            ->with('user-123', 'tenant-1')
             ->willThrowException(new \Exception('Error'));
 
-        $result = $this->service->forceLogout('user-123', 'admin-1');
+        $result = $this->service->forceLogout('user-123', 'admin-1', 'tenant-1');
 
         $this->assertFalse($result);
     }

@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\DataProviders;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\DataProviders\TenantUserDataProvider;
 use Nexus\IdentityOperations\DataProviders\TenantUserQueryInterface;
 
 final class TenantUserDataProviderTest extends TestCase
 {
-    private $tenantUserQuery;
-    private $dataProvider;
+    private readonly TenantUserQueryInterface|MockObject $tenantUserQuery;
+    private readonly TenantUserDataProvider $dataProvider;
 
     protected function setUp(): void
     {

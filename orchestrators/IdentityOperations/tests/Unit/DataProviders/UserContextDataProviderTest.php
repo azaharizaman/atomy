@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\DataProviders;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\DataProviders\UserContextDataProvider;
 use Nexus\IdentityOperations\DataProviders\UserQueryInterface;
 use Nexus\IdentityOperations\DataProviders\PermissionQueryInterface;
@@ -12,9 +13,9 @@ use Nexus\IdentityOperations\DTOs\UserContext;
 
 final class UserContextDataProviderTest extends TestCase
 {
-    private $userQuery;
-    private $permissionQuery;
-    private $dataProvider;
+    private readonly UserQueryInterface|MockObject $userQuery;
+    private readonly PermissionQueryInterface|MockObject $permissionQuery;
+    private readonly UserContextDataProvider $dataProvider;
 
     protected function setUp(): void
     {
@@ -60,7 +61,14 @@ final class UserContextDataProviderTest extends TestCase
     {
         $this->userQuery->expects($this->once())
             ->method('findById')
+            ->with('invalid')
             ->willReturn(null);
+
+        // Ensure no permission/role lookups run for anonymous users
+        $this->permissionQuery->expects($this->never())
+            ->method('getUserPermissions');
+        $this->permissionQuery->expects($this->never())
+            ->method('getUserRoles');
 
         $context = $this->dataProvider->getContext('invalid');
 

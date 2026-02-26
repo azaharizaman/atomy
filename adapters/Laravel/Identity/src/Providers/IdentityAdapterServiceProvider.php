@@ -55,6 +55,8 @@ class IdentityAdapterServiceProvider extends ServiceProvider
                 mfaVerification: $app[\Nexus\Identity\Contracts\MfaVerificationServiceInterface::class],
                 notificationManager: $app[\Nexus\Notifier\Contracts\NotificationManagerInterface::class],
                 auditLogRepository: $app[\Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface::class],
+                cache: $app[\Nexus\Identity\Contracts\CacheRepositoryInterface::class],
+                passwordHasher: $app[\Nexus\Identity\Contracts\PasswordHasherInterface::class],
                 logger: $app['log']
             );
         });
@@ -100,6 +102,20 @@ class IdentityAdapterServiceProvider extends ServiceProvider
         return [
             CacheRepositoryInterface::class,
             PermissionCheckerInterface::class,
+            \Nexus\Laravel\Identity\Adapters\IdentityOperationsAdapter::class,
+            \Nexus\IdentityOperations\Services\UserCreatorInterface::class,
+            \Nexus\IdentityOperations\Services\UserUpdaterInterface::class,
+            \Nexus\IdentityOperations\Services\TenantUserAssignerInterface::class,
+            \Nexus\IdentityOperations\Services\NotificationSenderInterface::class,
+            \Nexus\IdentityOperations\Services\AuditLoggerInterface::class,
+            \Nexus\IdentityOperations\Services\MfaEnrollerInterface::class,
+            \Nexus\IdentityOperations\Services\MfaVerifierInterface::class,
+            \Nexus\IdentityOperations\Services\MfaDisablerInterface::class,
+            \Nexus\IdentityOperations\Services\BackupCodeGeneratorInterface::class,
+            \Nexus\IdentityOperations\Services\AuthenticatorInterface::class,
+            \Nexus\IdentityOperations\Services\TokenManagerInterface::class,
+            \Nexus\IdentityOperations\Services\PasswordChangerInterface::class,
+            \Nexus\IdentityOperations\Services\SessionValidatorInterface::class,
         ];
     }
 }

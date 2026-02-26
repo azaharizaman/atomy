@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\Services;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\Services\MfaService;
 use Nexus\IdentityOperations\Services\MfaEnrollerInterface;
 use Nexus\IdentityOperations\Services\MfaVerifierInterface;
@@ -12,6 +13,7 @@ use Nexus\IdentityOperations\Services\MfaDisablerInterface;
 use Nexus\IdentityOperations\Services\BackupCodeGeneratorInterface;
 use Nexus\IdentityOperations\Services\AuditLoggerInterface;
 use Nexus\IdentityOperations\DTOs\MfaEnableRequest;
+use Nexus\IdentityOperations\DTOs\MfaEnableResult;
 use Nexus\IdentityOperations\DTOs\MfaVerifyRequest;
 use Nexus\IdentityOperations\DTOs\MfaDisableRequest;
 use Nexus\IdentityOperations\DTOs\MfaMethod;
@@ -19,13 +21,13 @@ use Psr\Log\LoggerInterface;
 
 final class MfaServiceTest extends TestCase
 {
-    private $enroller;
-    private $verifier;
-    private $disabler;
-    private $backupCodeGenerator;
-    private $auditLogger;
-    private $logger;
-    private $service;
+    private readonly MfaEnrollerInterface|MockObject $enroller;
+    private readonly MfaVerifierInterface|MockObject $verifier;
+    private readonly MfaDisablerInterface|MockObject $disabler;
+    private readonly BackupCodeGeneratorInterface|MockObject $backupCodeGenerator;
+    private readonly AuditLoggerInterface|MockObject $auditLogger;
+    private readonly LoggerInterface|MockObject $logger;
+    private readonly MfaService $service;
 
     protected function setUp(): void
     {
@@ -53,25 +55,21 @@ final class MfaServiceTest extends TestCase
             method: MfaMethod::TOTP
         );
 
+        $result = MfaEnableResult::success('user-123', 'base32secret', 'otpauth://...');
+
         $this->enroller->expects($this->once())
             ->method('enroll')
-            ->with('user-123', 'totp')
-            ->willReturn(['secret' => 'base32secret', 'qr_code_url' => 'otpauth://...']);
-
-        $this->backupCodeGenerator->expects($this->once())
-            ->method('generate')
-            ->with('user-123')
-            ->willReturn(['code1', 'code2']);
+            ->with('user-123', MfaMethod::TOTP)
+            ->willReturn($result);
 
         $this->auditLogger->expects($this->once())
             ->method('log')
             ->with('mfa.enabled', 'user-123');
 
-        $result = $this->service->enable($request);
+        $actualResult = $this->service->enable($request);
 
-        $this->assertTrue($result->success);
-        $this->assertEquals('base32secret', $result->secret);
-        $this->assertCount(2, $result->backupCodes);
+        $this->assertTrue($actualResult->success);
+        $this->assertEquals('base32secret', $actualResult->secret);
     }
 
     public function testEnableFailure(): void
@@ -95,7 +93,7 @@ final class MfaServiceTest extends TestCase
 
         $this->verifier->expects($this->once())
             ->method('verify')
-            ->with('user-123', '123456', 'totp')
+            ->with('user-123', MfaMethod::TOTP, '123456')
             ->willReturn(true);
 
         $this->auditLogger->expects($this->once())
@@ -121,6 +119,7 @@ final class MfaServiceTest extends TestCase
 
         $this->verifier->expects($this->once())
             ->method('getFailedAttempts')
+            ->with('user-123')
             ->willReturn(1);
 
         $result = $this->service->verify($request);

@@ -3,7 +3,8 @@
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         cacheDirectory=".phpunit.cache">
+         cacheDirectory=".phpunit.cache"
+         requireCoverageMetadata="true">
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
@@ -17,4 +18,7 @@
             <text outputFile="php://stdout" showUncoveredFiles="true"/>
         </report>
     </coverage>
+    <php>
+        <!-- Custom coverage thresholds for CI -->
+    </php>
 </phpunit>

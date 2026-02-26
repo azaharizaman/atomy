@@ -9,7 +9,7 @@ namespace Nexus\IdentityOperations\Rules;
  */
 interface UserStatusCheckerInterface
 {
-    public function getStatus(string $userId): ?string;
+    public function getStatus(string $userId): ?UserStatus;
 
     public function isActive(string $userId): bool;
 

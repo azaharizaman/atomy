@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\Rules;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\Rules\MfaEnrollmentRule;
 use Nexus\IdentityOperations\Rules\MfaEnrollmentCheckerInterface;
 
 final class MfaEnrollmentRuleTest extends TestCase
 {
-    private $checker;
-    private $rule;
+    private readonly MfaEnrollmentCheckerInterface|MockObject $checker;
+    private readonly MfaEnrollmentRule $rule;
 
     protected function setUp(): void
     {

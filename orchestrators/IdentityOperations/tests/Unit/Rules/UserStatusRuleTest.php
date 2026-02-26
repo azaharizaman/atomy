@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\Rules;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\Rules\UserStatusRule;
 use Nexus\IdentityOperations\Rules\UserStatusCheckerInterface;
+use Nexus\IdentityOperations\Rules\UserStatus;
 
 final class UserStatusRuleTest extends TestCase
 {
-    private $checker;
-    private $rule;
+    private readonly UserStatusCheckerInterface|MockObject $checker;
+    private readonly UserStatusRule $rule;
 
     protected function setUp(): void
     {
@@ -24,7 +26,7 @@ final class UserStatusRuleTest extends TestCase
         $this->checker->expects($this->once())
             ->method('getStatus')
             ->with('user-123')
-            ->willReturn('active');
+            ->willReturn(UserStatus::Active);
 
         $result = $this->rule->evaluate('user-123');
 
@@ -36,7 +38,7 @@ final class UserStatusRuleTest extends TestCase
         $this->checker->expects($this->once())
             ->method('getStatus')
             ->with('user-123')
-            ->willReturn('suspended');
+            ->willReturn(UserStatus::Suspended);
 
         $result = $this->rule->evaluate('user-123');
 

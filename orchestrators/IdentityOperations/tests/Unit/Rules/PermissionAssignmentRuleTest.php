@@ -42,6 +42,9 @@ final class PermissionAssignmentRuleTest extends TestCase
             ->method('permissionExists')
             ->willReturn(false);
 
+        $this->validator->expects($this->never())
+            ->method('userHasPermission');
+
         $result = $this->rule->evaluate(['permission' => 'invalid', 'user_id' => 'user-123']);
 
         $this->assertFalse($result->passed);

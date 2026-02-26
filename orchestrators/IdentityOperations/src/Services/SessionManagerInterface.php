@@ -9,6 +9,6 @@ namespace Nexus\IdentityOperations\Services;
  */
 interface SessionManagerInterface
 {
-    public function invalidateUserSessions(string $userId): void;
-    public function invalidateSession(string $sessionId): void;
+    public function invalidateUserSessions(string $userId, string $tenantId): void;
+    public function invalidateSession(string $sessionId, string $tenantId): void;
 }

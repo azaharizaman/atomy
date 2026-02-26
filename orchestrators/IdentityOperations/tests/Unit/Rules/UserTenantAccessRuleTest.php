@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\Rules;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\Rules\UserTenantAccessRule;
 use Nexus\IdentityOperations\Rules\TenantAccessCheckerInterface;
 
 final class UserTenantAccessRuleTest extends TestCase
 {
-    private $checker;
-    private $rule;
+    private readonly TenantAccessCheckerInterface|MockObject $checker;
+    private readonly UserTenantAccessRule $rule;
 
     protected function setUp(): void
     {
@@ -23,7 +24,7 @@ final class UserTenantAccessRuleTest extends TestCase
     {
         $this->checker->expects($this->once())
             ->method('hasAccess')
-            ->with('user-123', 'tenant-1')
+            ->with($this->equalTo('user-123'), $this->equalTo('tenant-1'))
             ->willReturn(true);
 
         $result = $this->rule->evaluate(['user_id' => 'user-123', 'tenant_id' => 'tenant-1']);
@@ -35,6 +36,7 @@ final class UserTenantAccessRuleTest extends TestCase
     {
         $this->checker->expects($this->once())
             ->method('hasAccess')
+            ->with($this->equalTo('user-123'), $this->equalTo('tenant-1'))
             ->willReturn(false);
 
         $result = $this->rule->evaluate(['user_id' => 'user-123', 'tenant_id' => 'tenant-1']);

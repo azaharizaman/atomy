@@ -9,5 +9,8 @@ namespace Nexus\IdentityOperations\Services;
  */
 interface BackupCodeGeneratorInterface
 {
+    /**
+     * @return list<string>
+     */
     public function generate(string $userId): array;
 }

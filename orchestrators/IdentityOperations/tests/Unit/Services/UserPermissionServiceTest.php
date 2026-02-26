@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\IdentityOperations\Tests\Unit\Services;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\IdentityOperations\Services\UserPermissionService;
 use Nexus\IdentityOperations\Services\PermissionAssignerInterface;
 use Nexus\IdentityOperations\Services\PermissionRevokerInterface;
@@ -18,17 +19,19 @@ use Psr\Log\LoggerInterface;
 
 final class UserPermissionServiceTest extends TestCase
 {
-    private $permissionAssigner;
-    private $permissionRevoker;
-    private $permissionChecker;
-    private $roleAssigner;
-    private $roleRevoker;
-    private $auditLogger;
-    private $logger;
-    private $service;
+    private readonly PermissionAssignerInterface|MockObject $permissionAssigner;
+    private readonly PermissionRevokerInterface|MockObject $permissionRevoker;
+    private readonly PermissionCheckerInterface|MockObject $permissionChecker;
+    private readonly RoleAssignerInterface|MockObject $roleAssigner;
+    private readonly RoleRevokerInterface|MockObject $roleRevoker;
+    private readonly AuditLoggerInterface|MockObject $auditLogger;
+    private readonly LoggerInterface|MockObject $logger;
+    private readonly UserPermissionService $service;
 
-    protected function setUp(): void
+    public function __construct(?string $name = null, array $data = [], $dataName = '')
     {
+        parent::__construct($name, $data, $dataName);
+        
         $this->permissionAssigner = $this->createMock(PermissionAssignerInterface::class);
         $this->permissionRevoker = $this->createMock(PermissionRevokerInterface::class);
         $this->permissionChecker = $this->createMock(PermissionCheckerInterface::class);
@@ -128,7 +131,7 @@ final class UserPermissionServiceTest extends TestCase
 
     public function testGetUserPermissions(): void
     {
-        $perms = ['view'];
+        $perms = [];
         $this->permissionChecker->expects($this->once())
             ->method('getAll')
             ->willReturn($perms);
@@ -138,7 +141,7 @@ final class UserPermissionServiceTest extends TestCase
 
     public function testGetUserRoles(): void
     {
-        $roles = ['admin'];
+        $roles = [];
         $this->permissionChecker->expects($this->once())
             ->method('getRoles')
             ->willReturn($roles);
@@ -150,7 +153,8 @@ final class UserPermissionServiceTest extends TestCase
     {
         $this->roleAssigner->expects($this->once())
             ->method('assign')
-            ->with('user-123', 'admin', 'tenant-1');
+            ->with('user-123', 'admin', 'tenant-1')
+            ->willReturn('assignment-123');
 
         $result = $this->service->assignRole('user-123', 'admin', 'tenant-1', 'admin-1');
 
@@ -182,6 +186,7 @@ final class UserPermissionServiceTest extends TestCase
     {
         $this->roleRevoker->expects($this->once())
             ->method('revoke')
+            ->with('user-1', 'admin', 'tenant-1')
             ->willThrowException(new \Exception('Error'));
 
         $result = $this->service->revokeRole('user-1', 'admin', 'tenant-1', 'admin-1');

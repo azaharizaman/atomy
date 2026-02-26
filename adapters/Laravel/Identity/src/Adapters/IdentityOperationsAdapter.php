@@ -11,7 +11,14 @@ use Nexus\Identity\Contracts\UserQueryInterface;
 use Nexus\Identity\Contracts\UserAuthenticatorInterface;
 use Nexus\Identity\Contracts\TokenManagerInterface as IdentityTokenManagerInterface;
 use Nexus\Identity\Contracts\SessionManagerInterface;
+use Nexus\Identity\Contracts\CacheRepositoryInterface;
+use Nexus\Identity\Contracts\PasswordHasherInterface;
 use Nexus\Identity\ValueObjects\Credentials;
+use Nexus\Identity\ValueObjects\UserStatus as PackageUserStatus;
+use Nexus\IdentityOperations\DTOs\RefreshTokenPayload;
+use Nexus\IdentityOperations\DTOs\UserUpdateRequest;
+use Nexus\IdentityOperations\DTOs\MfaEnableResult;
+use Nexus\IdentityOperations\DTOs\MfaMethod;
 use Nexus\IdentityOperations\Services\AuthenticatorInterface;
 use Nexus\IdentityOperations\Services\TokenManagerInterface as OrchestratorTokenManagerInterface;
 use Nexus\IdentityOperations\Services\PasswordChangerInterface;
@@ -60,6 +67,8 @@ final readonly class IdentityOperationsAdapter implements
         private MfaVerificationServiceInterface $mfaVerification,
         private NotificationManagerInterface $notificationManager,
         private AuditLogRepositoryInterface $auditLogRepository,
+        private CacheRepositoryInterface $cache,
+        private PasswordHasherInterface $passwordHasher,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -75,16 +84,18 @@ final readonly class IdentityOperationsAdapter implements
         ?string $timezone = null,
         ?array $metadata = null,
     ): string {
+        $hashedPassword = $this->passwordHasher->hash($password);
+
         $user = $this->userPersist->create([
             'email' => $email,
-            'password' => $password,
+            'password_hash' => $hashedPassword,
             'first_name' => $firstName,
             'last_name' => $lastName,
             'phone' => $phone,
             'locale' => $locale,
             'timezone' => $timezone,
             'metadata' => $metadata,
-            'status' => 'active',
+            'status' => PackageUserStatus::ACTIVE->value,
         ]);
 
         return $user->getId();
@@ -92,23 +103,12 @@ final readonly class IdentityOperationsAdapter implements
 
     // --- UserUpdaterInterface ---
 
-    public function update(
-        string $userId,
-        ?string $firstName = null,
-        ?string $lastName = null,
-        ?string $phone = null,
-        ?string $locale = null,
-        ?string $timezone = null,
-        ?array $metadata = null,
-    ): void {
-        $data = array_filter([
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'phone' => $phone,
-            'locale' => $locale,
-            'timezone' => $timezone,
-            'metadata' => $metadata,
-        ], fn($value) => $value !== null);
+    public function update(string $userId, UserUpdateRequest $request): void
+    {
+        $data = $request->toArray();
+        if (empty($data)) {
+            return;
+        }
 
         $this->userPersist->update($userId, $data);
     }
@@ -132,10 +132,32 @@ final readonly class IdentityOperationsAdapter implements
 
     public function sendWelcome(string $userId, ?string $temporaryPassword = null): void
     {
-        $this->logger->info('Sending welcome notification', [
-            'user_id' => $userId,
-            'has_temp_password' => $temporaryPassword !== null,
-        ]);
+        try {
+            $user = $this->userQuery->findById($userId);
+            
+            $notification = new class($temporaryPassword) extends \Nexus\Notifier\Services\AbstractNotification {
+                public function __construct(private ?string $temporaryPassword) {}
+                public function toEmail(): array { 
+                    return [
+                        'subject' => 'Welcome to Atomy',
+                        'template' => 'welcome',
+                        'data' => ['temporary_password' => $this->temporaryPassword],
+                    ];
+                }
+                public function toSms(): ?string { return null; }
+                public function toPush(): ?array { return null; }
+                public function toInApp(): ?array { return null; }
+            };
+
+            /** @var \Nexus\Notifier\Contracts\NotifiableInterface $user */
+            $this->notificationManager->send($user, $notification);
+            $this->logger->info('Welcome notification sent', ['user_id' => $userId]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to send welcome notification', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     // --- AuditLoggerInterface ---
@@ -157,79 +179,95 @@ final readonly class IdentityOperationsAdapter implements
     {
         $user = $this->userAuthenticator->authenticate(new Credentials($email, $password));
         
-        // Map UserInterface to array expected by orchestrator
-        return [
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'first_name' => $user->getFirstName(),
-            'last_name' => $user->getLastName(),
-            'status' => $user->getStatus()->value,
-            'permissions' => [], // Should be resolved from user
-            'roles' => [], // Should be resolved from user
-        ];
+        return $this->mapUserToArray($user);
     }
 
     public function getUserById(string $userId): array
     {
         $user = $this->userQuery->findById($userId);
         
+        return $this->mapUserToArray($user);
+    }
+
+    private function mapUserToArray(\Nexus\Identity\Contracts\UserInterface $user): array
+    {
+        $permissions = array_map(
+            fn($p) => $p->getName(),
+            $this->userQuery->getUserPermissions($user->getId())
+        );
+
+        $roles = array_map(
+            fn($r) => $r->getName(),
+            $this->userQuery->getUserRoles($user->getId())
+        );
+
         return [
             'id' => $user->getId(),
             'email' => $user->getEmail(),
-            'first_name' => $user->getFirstName(),
-            'last_name' => $user->getLastName(),
-            'status' => $user->getStatus()->value,
-            'permissions' => [],
-            'roles' => [],
+            'first_name' => $user->getName(),
+            'last_name' => null,
+            'status' => PackageUserStatus::from($user->getStatus()),
+            'permissions' => $permissions,
+            'roles' => $roles,
         ];
     }
 
     // --- OrchestratorTokenManagerInterface ---
 
-    public function generateAccessToken(string $userId, ?string $tenantId = null): string
+    public function generateAccessToken(string $userId, string $tenantId): string
     {
         $token = $this->identityTokenManager->generateToken(
             $userId, 
             'Access Token',
-            [],
+            ['tenant_id' => $tenantId],
             (new \DateTimeImmutable())->modify('+1 hour')
         );
         
         return $token->getValue();
     }
 
-    public function generateRefreshToken(string $userId): string
+    public function generateRefreshToken(string $userId, string $tenantId): string
     {
-        // Identity package doesn't have native refresh tokens yet, 
-        // we'll use a permanent API token as a placeholder.
-        $token = $this->identityTokenManager->generateToken($userId, 'Refresh Token');
+        $token = $this->identityTokenManager->generateToken(
+            $userId,
+            'Refresh Token',
+            ['tenant_id' => $tenantId, 'refresh_token' => true],
+            (new \DateTimeImmutable())->modify('+30 days')
+        );
+        
         return $token->getValue();
     }
 
-    public function validateRefreshToken(string $refreshToken): array
+    public function validateRefreshToken(string $refreshToken, string $tenantId): RefreshTokenPayload
     {
         $user = $this->identityTokenManager->validateToken($refreshToken);
-        return [
-            'user_id' => $user->getId(),
-            'tenant_id' => $user->getTenantId(),
-        ];
+        
+        if ($user->getTenantId() !== $tenantId) {
+            throw new \RuntimeException('Token tenant ID mismatch');
+        }
+
+        return new RefreshTokenPayload(
+            userId: $user->getId(),
+            tenantId: $user->getTenantId() ?? 'default',
+        );
     }
 
-    public function createSession(string $userId, string $accessToken): string
+    public function createSession(string $userId, string $accessToken, string $tenantId): string
     {
         $session = $this->sessionManager->createSession($userId, [
             'access_token_hint' => substr($accessToken, 0, 8),
+            'tenant_id' => $tenantId,
         ]);
         
         return $session->getValue();
     }
 
-    public function invalidateSession(string $sessionId): void
+    public function invalidateSession(string $sessionId, string $tenantId): void
     {
         $this->sessionManager->revokeSession($sessionId);
     }
 
-    public function invalidateUserSessions(string $userId): void
+    public function invalidateUserSessions(string $userId, string $tenantId): void
     {
         $this->sessionManager->revokeAllSessions($userId);
     }
@@ -238,10 +276,10 @@ final readonly class IdentityOperationsAdapter implements
 
     public function changeWithVerification(string $userId, string $currentPassword, string $newPassword): void
     {
-        // This logic should be in Identity package, but we can bridge it
         $user = $this->userQuery->findById($userId);
         if ($this->userAuthenticator->verifyCredentials(new Credentials($user->getEmail(), $currentPassword))) {
-            $this->userPersist->update($userId, ['password' => $newPassword]);
+            $hashedPassword = $this->passwordHasher->hash($newPassword);
+            $this->userPersist->update($userId, ['password_hash' => $hashedPassword]);
         } else {
             throw new \RuntimeException('Invalid current password');
         }
@@ -249,7 +287,8 @@ final readonly class IdentityOperationsAdapter implements
 
     public function resetByAdmin(string $userId, string $newPassword): void
     {
-        $this->userPersist->update($userId, ['password' => $newPassword]);
+        $hashedPassword = $this->passwordHasher->hash($newPassword);
+        $this->userPersist->update($userId, ['password_hash' => $hashedPassword]);
     }
 
     // --- SessionValidatorInterface ---
@@ -261,17 +300,18 @@ final readonly class IdentityOperationsAdapter implements
 
     // --- MfaEnrollerInterface ---
 
-    public function enroll(string $userId, string $method, ?string $phone = null, ?string $email = null): array
+    public function enroll(string $userId, MfaMethod $method, ?string $phone = null, ?string $email = null): MfaEnableResult
     {
-        if ($method === 'totp') {
+        if ($method === MfaMethod::TOTP) {
             $result = $this->mfaEnrollment->enrollTotp($userId);
-            return [
-                'secret' => $result['secret']->getValue(),
-                'qr_code_url' => $result['qrCodeUri'],
-            ];
+            return MfaEnableResult::success(
+                $userId,
+                $result['secret']->getValue(),
+                $result['qrCodeUri']
+            );
         }
 
-        throw new \RuntimeException("MFA method {$method} enrollment not implemented in adapter");
+        return MfaEnableResult::failure($userId, "MFA method {$method->value} enrollment not implemented in adapter");
     }
 
     public function getStatus(string $userId): array
@@ -281,23 +321,33 @@ final readonly class IdentityOperationsAdapter implements
 
     // --- MfaVerifierInterface ---
 
-    public function verify(string $userId, string $code, string $method): bool
+    public function verify(string $userId, MfaMethod $method, string $code): bool
     {
-        if ($method === 'totp') {
+        if ($method === MfaMethod::TOTP) {
             return $this->mfaVerification->verifyTotp($userId, $code);
         }
 
         return false;
     }
 
-    public function verifyBackupCode(string $userId, string $code): bool
+    public function verifyBackupCode(string $userId, string $code, ?string $tenantId = null): bool
     {
         return $this->mfaVerification->verifyBackupCode($userId, $code);
     }
 
-    public function getFailedAttempts(string $userId): int
+    public function getFailedAttempts(string $userId, ?string $tenantId = null): int
     {
-        return 0; 
+        $key = sprintf('mfa_failed_attempts:%s:%s', $userId, $tenantId ?? 'default');
+        
+        try {
+            return (int) $this->cache->get($key, 0);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to read failed login attempts from cache', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+            return 0;
+        }
     }
 
     // --- MfaDisablerInterface ---

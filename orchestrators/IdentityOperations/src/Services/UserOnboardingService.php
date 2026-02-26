@@ -96,15 +96,7 @@ final readonly class UserOnboardingService implements UserOnboardingServiceInter
         ]);
 
         try {
-            $this->userUpdater->update(
-                userId: $request->userId,
-                firstName: $request->firstName,
-                lastName: $request->lastName,
-                phone: $request->phone,
-                locale: $request->locale,
-                timezone: $request->timezone,
-                metadata: $request->metadata,
-            );
+            $this->userUpdater->update($request->userId, $request);
 
             // Log audit
             $this->auditLogger->log(

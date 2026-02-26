@@ -14,17 +14,17 @@ interface UserAuthenticationCoordinatorInterface extends CoordinatorInterface
     /**
      * Authenticate a user with credentials.
      */
-    public function authenticate(string $email, string $password, ?string $tenantId = null): UserContext;
+    public function authenticate(string $email, string $password, string $tenantId): UserContext;
 
     /**
      * Refresh authentication token.
      */
-    public function refreshToken(string $refreshToken): UserContext;
+    public function refreshToken(string $refreshToken, string $tenantId): UserContext;
 
     /**
      * Logout user and invalidate session.
      */
-    public function logout(string $userId, ?string $sessionId = null): bool;
+    public function logout(string $userId, ?string $sessionId = null, ?string $tenantId = null): bool;
 
     /**
      * Validate current session.

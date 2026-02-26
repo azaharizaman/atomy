@@ -32,7 +32,7 @@ final readonly class UserAuthenticationCoordinator implements UserAuthentication
         return $this->contextDataProvider->userExists($userId);
     }
 
-    public function authenticate(string $email, string $password, ?string $tenantId = null): UserContext
+    public function authenticate(string $email, string $password, string $tenantId): UserContext
     {
         $this->logger->info('Processing authentication', [
             'email' => hash('sha256', $email),
@@ -42,21 +42,22 @@ final readonly class UserAuthenticationCoordinator implements UserAuthentication
         return $this->authService->authenticate($email, $password, $tenantId);
     }
 
-    public function refreshToken(string $refreshToken): UserContext
+    public function refreshToken(string $refreshToken, string $tenantId): UserContext
     {
-        $this->logger->info('Processing token refresh');
+        $this->logger->info('Processing token refresh', ['tenant_id' => $tenantId]);
 
-        return $this->authService->refreshToken($refreshToken);
+        return $this->authService->refreshToken($refreshToken, $tenantId);
     }
 
-    public function logout(string $userId, ?string $sessionId = null): bool
+    public function logout(string $userId, ?string $sessionId = null, ?string $tenantId = null): bool
     {
         $this->logger->info('Processing logout', [
             'user_id' => $userId,
             'session_id' => $sessionId,
+            'tenant_id' => $tenantId,
         ]);
 
-        return $this->authService->logout($userId, $sessionId);
+        return $this->authService->logout($userId, $sessionId, $tenantId);
     }
 
     public function validateSession(string $sessionId): bool

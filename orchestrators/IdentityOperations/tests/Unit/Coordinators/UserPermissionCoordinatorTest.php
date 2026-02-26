@@ -99,6 +99,7 @@ final class UserPermissionCoordinatorTest extends TestCase
         $perms = ['view'];
         $this->permissionService->expects($this->once())
             ->method('getUserPermissions')
+            ->with('user-1')
             ->willReturn($perms);
 
         $this->assertEquals($perms, $this->coordinator->getUserPermissions('user-1'));
@@ -109,6 +110,7 @@ final class UserPermissionCoordinatorTest extends TestCase
         $roles = ['admin'];
         $this->permissionService->expects($this->once())
             ->method('getUserRoles')
+            ->with('user-1')
             ->willReturn($roles);
 
         $this->assertEquals($roles, $this->coordinator->getUserRoles('user-1'));
