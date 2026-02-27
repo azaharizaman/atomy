@@ -69,6 +69,7 @@
     },
     "autoload": {
         "psr-4": {
+            "Nexus\\ProjectManagementOperations\\": "orchestrators/ProjectManagementOperations/src/",
             "Nexus\\ProcurementOperations\\": "orchestrators/ProcurementOperations/src/",
             "Nexus\\ManufacturingOperations\\": "orchestrators/ManufacturingOperations/src/",
             "Nexus\\Sanctions\\": "packages/Sanctions/src/",
@@ -93,6 +94,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "Nexus\\ProjectManagementOperations\\Tests\\": "orchestrators/ProjectManagementOperations/tests/",
             "Nexus\\ProcurementOperations\\Tests\\": "orchestrators/ProcurementOperations/tests/",
             "Nexus\\ManufacturingOperations\\Tests\\": "orchestrators/ManufacturingOperations/tests/",
             "Nexus\\Sanctions\\Tests\\": "packages/Sanctions/tests/",
