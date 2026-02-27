@@ -1,0 +1,11 @@
+api_platform:
+    title: Canary atomy API
+    description: Module management and user API for atomy
+    version: 1.0.0
+    enable_docs: true
+    swagger:
+        api_keys: []
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']
