@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Service\Settings\Adapters;
 
-use App\Repository\FeatureFlagRepository;
+use Nexus\FeatureFlags\Contracts\FlagRepositoryInterface;
 use Nexus\SettingsManagement\Contracts\FeatureFlagProviderInterface;
 
 final readonly class FeatureFlagProvider implements FeatureFlagProviderInterface
 {
     public function __construct(
-        private FeatureFlagRepository $flagRepository
+        private FlagRepositoryInterface $flagRepository
     ) {}
 
     public function getFlag(string $flagKey, string $tenantId): ?array
     {
-        $flag = $this->flagRepository->find($flagKey, $tenantId);
+        $flag = $this->flagRepository->findByName($flagKey, $tenantId);
         if (!$flag) return null;
 
         return [
@@ -29,23 +29,31 @@ final readonly class FeatureFlagProvider implements FeatureFlagProviderInterface
 
     public function getAllFlags(string $tenantId): array
     {
-        return $this->flagRepository->all($tenantId);
+        $flags = $this->flagRepository->all($tenantId);
+        
+        return array_map(fn($flag) => [
+            'name' => $flag->getName(),
+            'enabled' => $flag->isEnabled(),
+            'strategy' => $flag->getStrategy()->value,
+            'value' => $flag->getValue(),
+            'metadata' => $flag->getMetadata(),
+        ], $flags);
     }
 
     public function evaluateFlag(string $flagKey, string $tenantId, array $context = []): bool
     {
-        $flag = $this->flagRepository->find($flagKey, $tenantId);
+        $flag = $this->flagRepository->findByName($flagKey, $tenantId);
         return $flag ? $flag->isEnabled() : false;
     }
 
     public function flagExists(string $flagKey, string $tenantId): bool
     {
-        return $this->flagRepository->find($flagKey, $tenantId) !== null;
+        return $this->flagRepository->findByName($flagKey, $tenantId) !== null;
     }
 
     public function getTargetingRules(string $flagKey, string $tenantId): array
     {
-        return []; // Simple implementation
+        return [];
     }
 
     public function isFlagEnabled(string $flagKey, string $tenantId): bool

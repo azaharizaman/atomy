@@ -9,6 +9,7 @@ use ApiPlatform\State\ProcessorInterface;
 use App\ApiResource\Tenant as TenantResource;
 use Nexus\TenantOperations\Contracts\TenantLifecycleCoordinatorInterface;
 use Nexus\TenantOperations\DTOs\TenantDeleteRequest;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
@@ -19,7 +20,8 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 final class TenantLifecycleProcessor implements ProcessorInterface
 {
     public function __construct(
-        private readonly TenantLifecycleCoordinatorInterface $lifecycleCoordinator
+        private readonly TenantLifecycleCoordinatorInterface $lifecycleCoordinator,
+        private readonly Security $security
     ) {}
 
     /**
@@ -35,10 +37,13 @@ final class TenantLifecycleProcessor implements ProcessorInterface
         }
 
         if ($operation->getMethod() === 'DELETE') {
+            $actorId = $this->security->getUser()?->getUserIdentifier() ?? 'system';
+
             $request = new TenantDeleteRequest(
                 tenantId: $id,
-                force: false,
-                reason: 'Requested via API'
+                deletedBy: $actorId,
+                reason: 'Requested via API',
+                exportData: false
             );
 
             $result = $this->lifecycleCoordinator->delete($request);

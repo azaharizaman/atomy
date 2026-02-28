@@ -25,9 +25,11 @@ final class TenantImpersonationController extends AbstractController
 
     public function start(string $id, Request $request): JsonResponse
     {
+        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+
         $startRequest = new ImpersonationStartRequest(
+            adminUserId: $actorId,
             targetTenantId: $id,
-            impersonatorUserId: 'superadmin', // Should be from security context
             reason: $request->get('reason', 'Support activity')
         );
 
@@ -45,9 +47,12 @@ final class TenantImpersonationController extends AbstractController
 
     public function stop(string $id, Request $request): JsonResponse
     {
+        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+
         $endRequest = new ImpersonationEndRequest(
-            targetTenantId: $id,
-            impersonationToken: $request->headers->get('X-Impersonation-Token') ?? ''
+            adminUserId: $actorId,
+            sessionId: $request->headers->get('X-Impersonation-Session-ID'),
+            reason: $request->get('reason', 'Session ended')
         );
 
         $result = $this->impersonationCoordinator->endImpersonation($endRequest);

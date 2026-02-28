@@ -99,6 +99,12 @@ final class Tenant
     #[Groups(['tenant:write'])]
     public ?string $adminName = null;
 
+    #[Groups(['tenant:write'])]
+    public ?string $adminPassword = null;
+
+    #[Groups(['tenant:read', 'tenant:write'])]
+    public ?string $plan = 'starter';
+
     #[Groups(['tenant:read'])]
     public ?string $createdAt = null;
 }

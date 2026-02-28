@@ -43,7 +43,11 @@ final class SettingRepository extends ServiceEntityRepository implements Setting
     public function set(string $key, mixed $value): void
     {
         $tenantId = $this->tenantContext->getCurrentTenantId();
-        
+        $this->setForTenant($key, $value, $tenantId);
+    }
+
+    public function setForTenant(string $key, mixed $value, ?string $tenantId): void
+    {
         $setting = $this->findOneBy(['key' => $key, 'tenantId' => $tenantId]);
         
         if (!$setting) {
@@ -60,6 +64,11 @@ final class SettingRepository extends ServiceEntityRepository implements Setting
     public function delete(string $key): void
     {
         $tenantId = $this->tenantContext->getCurrentTenantId();
+        $this->deleteForTenant($key, $tenantId);
+    }
+
+    public function deleteForTenant(string $key, ?string $tenantId): void
+    {
         $setting = $this->findOneBy(['key' => $key, 'tenantId' => $tenantId]);
         
         if ($setting) {

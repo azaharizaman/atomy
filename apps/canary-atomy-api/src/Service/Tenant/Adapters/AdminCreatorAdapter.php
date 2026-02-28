@@ -19,7 +19,7 @@ final readonly class AdminCreatorAdapter implements AdminCreatorAdapterInterface
             'email' => $email,
             'name' => explode('@', $email)[0],
             'roles' => $isAdmin ? ['ROLE_TENANT_ADMIN'] : ['ROLE_USER'],
-            'tenant_id' => $tenantId,
+            'tenantId' => $tenantId,
         ]);
 
         return $user->getId();

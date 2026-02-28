@@ -34,18 +34,19 @@ final class TenantOnboardingProcessor implements ProcessorInterface
         }
 
         $request = new TenantOnboardingRequest(
-            name: $data->name ?? '',
-            code: $data->code ?? '',
+            tenantCode: $data->code ?? '',
+            tenantName: $data->name ?? '',
             domain: $data->domain ?? '',
             adminEmail: $data->adminEmail ?? '',
-            adminName: $data->adminName ?? '',
-            options: []
+            adminPassword: $data->adminPassword ?? 'password123',
+            plan: $data->plan ?? 'starter',
+            metadata: []
         );
 
         // Validate prerequisites
         $validation = $this->onboardingCoordinator->validatePrerequisites($request);
         if (!$validation->isValid()) {
-            throw new BadRequestHttpException(implode(', ', $validation->getErrors()));
+            throw new BadRequestHttpException(implode(', ', array_map(fn($e) => $e['message'], $validation->getErrors())));
         }
 
         // Onboard tenant

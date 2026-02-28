@@ -26,8 +26,11 @@ final class TenantLifecycleController extends AbstractController
 
     public function suspend(string $id, Request $request): JsonResponse
     {
+        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+
         $suspendRequest = new TenantSuspendRequest(
             tenantId: $id,
+            suspendedBy: $actorId,
             reason: 'Suspended via API'
         );
 
@@ -42,8 +45,11 @@ final class TenantLifecycleController extends AbstractController
 
     public function activate(string $id, Request $request): JsonResponse
     {
+        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+
         $activateRequest = new TenantActivateRequest(
-            tenantId: $id
+            tenantId: $id,
+            activatedBy: $actorId
         );
 
         $result = $this->lifecycleCoordinator->activate($activateRequest);
@@ -57,8 +63,11 @@ final class TenantLifecycleController extends AbstractController
 
     public function archive(string $id, Request $request): JsonResponse
     {
+        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+
         $archiveRequest = new TenantArchiveRequest(
             tenantId: $id,
+            archivedBy: $actorId,
             reason: 'Archived via API'
         );
 

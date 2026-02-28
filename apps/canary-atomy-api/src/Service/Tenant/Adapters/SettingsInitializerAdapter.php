@@ -16,11 +16,15 @@ final readonly class SettingsInitializerAdapter implements SettingsInitializerAd
     public function initialize(string $tenantId, array $settings): void
     {
         foreach ($settings as $key => $value) {
-            $this->settingRepository->set($key, $value);
+            $this->settingRepository->setForTenant($key, $value, $tenantId);
         }
 
         // Defaults if not provided
-        if (!isset($settings['timezone'])) $this->settingRepository->set('timezone', 'UTC');
-        if (!isset($settings['currency'])) $this->settingRepository->set('currency', 'USD');
+        if (!isset($settings['timezone'])) {
+            $this->settingRepository->setForTenant('timezone', 'UTC', $tenantId);
+        }
+        if (!isset($settings['currency'])) {
+            $this->settingRepository->setForTenant('currency', 'USD', $tenantId);
+        }
     }
 }
