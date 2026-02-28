@@ -1,4 +1,7 @@
 import { getModules } from "@/lib/api";
+import { ContentHeader } from "@/components/ContentHeader";
+import { ContentCard } from "@/components/ContentCard";
+import { FolderOpen } from "lucide-react";
 
 export default async function ModulesPage() {
   let modules: Awaited<ReturnType<typeof getModules>> = [];
@@ -7,91 +10,58 @@ export default async function ModulesPage() {
   try {
     modules = await getModules();
   } catch (e) {
-    error = e && typeof e === "object" && "message" in e ? String(e.message) : "Failed to load modules";
+    error =
+      e && typeof e === "object" && "message" in e
+        ? String((e as { message: string }).message)
+        : "Failed to load modules";
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">
-          Modules
-        </h1>
-        <p className="mt-1 text-zinc-400">
-          Available and installed Nexus modules
-        </p>
+    <div className="flex flex-col">
+      <div className="border-b border-[var(--border)] bg-white px-8 py-6">
+        <ContentHeader
+          title="Modules"
+          tabs={[
+            { id: "folder", label: "Folder", href: "/" },
+            { id: "modules", label: "Modules", href: "/modules" },
+            { id: "users", label: "Users", href: "/users" },
+            { id: "feature-flags", label: "Feature Flags", href: "/feature-flags" },
+          ]}
+          activeTab="modules"
+          itemCount={modules.length}
+          showViewToggle={true}
+        />
       </div>
 
-      {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-200">
-          {error}
-        </div>
-      )}
+      <div className="flex-1 px-8 py-6">
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+            {error}
+          </div>
+        )}
 
-      <div className="overflow-hidden rounded-xl border border-[var(--border)]">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--surface)]">
-              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">
-                Module
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">
-                Version
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">
-                Status
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">
-                Installed
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {modules.length === 0 && !error ? (
-              <tr>
-                <td colSpan={4} className="px-4 py-12 text-center text-zinc-500">
-                  No modules found
-                </td>
-              </tr>
-            ) : (
-              modules.map((m) => (
-                <tr
-                  key={m.id}
-                  className="border-b border-[var(--border)] last:border-0 hover:bg-zinc-800/30"
-                >
-                  <td className="px-4 py-3">
-                    <div>
-                      <span className="font-medium text-[var(--foreground)]">
-                        {m.name}
-                      </span>
-                      {m.description && (
-                        <p className="text-sm text-zinc-500">{m.description}</p>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-zinc-400">
-                    {m.version ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        m.isInstalled
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-zinc-500/20 text-zinc-400"
-                      }`}
-                    >
-                      {m.isInstalled ? "Installed" : "Available"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-zinc-500">
-                    {m.installedAt
-                      ? new Date(m.installedAt).toLocaleDateString()
-                      : "—"}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {modules.length === 0 && !error ? (
+            <div className="col-span-full flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--surface)] py-16 text-center">
+              <FolderOpen className="h-12 w-12 text-[var(--text-muted-light)]" />
+              <p className="mt-4 text-[var(--text-muted)]">No modules found</p>
+            </div>
+          ) : (
+            modules.map((m) => (
+              <ContentCard
+                key={m.id}
+                title={m.name}
+                subtitle={m.description ?? undefined}
+                count={m.version ?? "—"}
+                editedAt={
+                  m.installedAt
+                    ? new Date(m.installedAt).toLocaleDateString()
+                    : undefined
+                }
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getModules, getUsers, getFeatureFlags } from "@/lib/api";
+import { ContentHeader } from "@/components/ContentHeader";
+import { ContentCard } from "@/components/ContentCard";
 
 export default async function DashboardPage() {
   let modulesCount = 0;
@@ -17,73 +19,83 @@ export default async function DashboardPage() {
     usersCount = users.length;
     flagsCount = flags.length;
   } catch (e) {
-    apiError = e && typeof e === "object" && "message" in e ? String(e.message) : "Failed to connect to API";
+    apiError =
+      e && typeof e === "object" && "message" in e
+        ? String((e as { message: string }).message)
+        : "Failed to connect to API";
   }
 
   const cards = [
     {
       href: "/modules",
-      label: "Modules",
-      count: modulesCount,
-      description: "Available and installed Nexus modules",
+      title: "Modules",
+      subtitle: "Available and installed Nexus modules",
+      count: `${modulesCount} items`,
+      editedAt: "just now",
     },
     {
       href: "/users",
-      label: "Users",
-      count: usersCount,
-      description: "Tenant-scoped user accounts",
+      title: "Users",
+      subtitle: "Tenant-scoped user accounts",
+      count: `${usersCount} users`,
+      editedAt: "recently",
     },
     {
       href: "/feature-flags",
-      label: "Feature Flags",
-      count: flagsCount,
-      description: "Feature toggles and rollout config",
+      title: "Feature Flags",
+      subtitle: "Feature toggles and rollout config",
+      count: `${flagsCount} flags`,
+      editedAt: "recently",
     },
   ];
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">
-          Dashboard
-        </h1>
-        <p className="mt-1 text-zinc-400">
-          Overview of your Atomy Nexus instance
-        </p>
+    <div className="flex flex-col">
+      <div className="border-b border-[var(--border)] bg-white px-8 py-6">
+        <ContentHeader
+          title="Dashboard"
+          tabs={[
+            { id: "folder", label: "Folder", href: "/" },
+            { id: "modules", label: "Modules", href: "/modules" },
+            { id: "users", label: "Users", href: "/users" },
+            { id: "feature-flags", label: "Feature Flags", href: "/feature-flags" },
+          ]}
+          activeTab="folder"
+          itemCount={3}
+          showViewToggle={true}
+        />
       </div>
 
-      {apiError && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-200">
-          <p className="font-medium">API connection issue</p>
-          <p className="mt-1 text-sm text-amber-200/80">{apiError}</p>
-          <p className="mt-2 text-sm">
-            Ensure <code className="rounded bg-zinc-800 px-1">canary-atomy-api</code> is running on{" "}
-            <code className="rounded bg-zinc-800 px-1">
-              {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}
-            </code>
-          </p>
-        </div>
-      )}
+      <div className="flex-1 px-8 py-6">
+        {apiError && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+            <p className="font-medium">API connection issue</p>
+            <p className="mt-1 text-sm text-amber-700/90">{apiError}</p>
+            <p className="mt-2 text-sm">
+              Ensure{" "}
+              <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-sm">
+                canary-atomy-api
+              </code>{" "}
+              is running on{" "}
+              <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-sm">
+                {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}
+              </code>
+            </p>
+          </div>
+        )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {cards.map(({ href, label, count, description }) => (
-          <Link
-            key={href}
-            href={href}
-            className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 transition-colors hover:border-[var(--accent-muted)]/50 hover:bg-zinc-800/50"
-          >
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm font-medium text-zinc-400">{label}</span>
-              <span className="text-2xl font-semibold text-[var(--accent)]">
-                {count}
-              </span>
-            </div>
-            <p className="mt-2 text-sm text-zinc-500">{description}</p>
-            <span className="mt-4 inline-block text-sm font-medium text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-100">
-              View →
-            </span>
-          </Link>
-        ))}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {cards.map(({ href, title, subtitle, count, editedAt }) => (
+            <ContentCard
+              key={href}
+              href={href}
+              title={title}
+              subtitle={subtitle}
+              count={count}
+              editedAt={editedAt}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
