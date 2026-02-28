@@ -1,8 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useAuth } from "@/lib/auth";
-import { X, Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, Loader2 } from "lucide-react";
+
+const formSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  password: z.string().min(1, {
+    message: "Password is required.",
+  }),
+  tenantId: z.string().min(1, {
+    message: "Tenant ID is required.",
+  }),
+});
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -10,110 +42,101 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const { login, isLoading, error } = useAuth();
-  const [email, setEmail] = useState("tony@stark.example.com");
-  const [password, setPassword] = useState("password123");
-  const [tenantId, setTenantId] = useState("STARK");
+  const { login, isLoading, error: authError } = useAuth();
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "tony@stark.example.com",
+      password: "password123",
+      tenantId: "STARK",
+    },
+  });
 
-  if (!isOpen) return null;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await login(email, password, tenantId);
+      await login(values.email, values.password, values.tenantId);
       onClose();
     } catch (err) {
-      // Error is handled by AuthContext
+      console.error(err);
     }
-  };
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md animate-in fade-in zoom-in duration-200 rounded-2xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-100 p-6">
-          <h2 className="text-xl font-bold text-gray-900">Sign in to Atomy</h2>
-          <button
-            onClick={onClose}
-            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">Welcome back</DialogTitle>
+          <DialogDescription>
+            Enter your credentials to access your Nexus account.
+          </DialogDescription>
+        </DialogHeader>
+        
+        {authError && (
+          <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            <p>{authError}</p>
+          </div>
+        )}
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="tony@stark.example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••••" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="tenantId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tenant ID</FormLabel>
+                  <FormControl>
+                    <Input placeholder="STARK" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </Button>
+          </form>
+        </Form>
+        
+        <div className="mt-4 text-center text-xs text-muted-foreground">
+          <p>Demo: tony@stark.example.com (STARK), bruce@wayne.example.com (WAYNE)</p>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-6">
-          {error && (
-            <div className="mb-6 flex gap-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
-              <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
-              <p>{error}</p>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 focus:border-[var(--accent)] focus:bg-white focus:ring-1 focus:ring-[var(--accent)] transition-all outline-none"
-                placeholder="tony@stark.example.com"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 focus:border-[var(--accent)] focus:bg-white focus:ring-1 focus:ring-[var(--accent)] transition-all outline-none"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Tenant ID (Code)
-              </label>
-              <input
-                type="text"
-                value={tenantId}
-                onChange={(e) => setTenantId(e.target.value)}
-                required
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 focus:border-[var(--accent)] focus:bg-white focus:ring-1 focus:ring-[var(--accent)] transition-all outline-none"
-                placeholder="STARK"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-3 font-semibold text-white shadow-lg shadow-[var(--accent)]/30 hover:bg-[var(--accent)]/90 active:scale-[0.98] transition-all disabled:opacity-70 disabled:active:scale-100"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              "Sign in"
-            )}
-          </button>
-          
-          <div className="mt-4 text-center">
-            <p className="text-xs text-gray-500">
-              Demo accounts: tony@stark.example.com (STARK), bruce@wayne.example.com (WAYNE)
-            </p>
-          </div>
-        </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
