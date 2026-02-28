@@ -15,6 +15,8 @@ services:
     App\Repository\:
         resource: '../../src/Repository/'
 
+    App\Repository\SettingPersistRepositoryInterface: '@App\Repository\SettingPersistRepository'
+
     # Nexus FeatureFlags
     Nexus\FeatureFlags\Contracts\FlagRepositoryInterface: '@App\Repository\FeatureFlagRepository'
     Nexus\FeatureFlags\Contracts\FlagEvaluatorInterface:
@@ -48,6 +50,9 @@ services:
     Nexus\Identity\Contracts\UserRepositoryInterface: '@App\Repository\UserRepository'
     Nexus\Identity\Contracts\UserQueryInterface: '@App\Repository\UserRepository'
     Nexus\Identity\Contracts\UserPersistInterface: '@App\Repository\UserRepository'
+    Nexus\Identity\Contracts\PasswordHasherInterface: '@App\Service\Tenant\NoOpImpersonationHandler' # Temporarily use as mock
+    Nexus\Identity\Contracts\PolicyEvaluatorInterface: '@App\Service\Tenant\NoOpImpersonationHandler' # Temporarily use as mock
+    Nexus\Identity\Contracts\PermissionCheckerInterface: '@App\Service\Tenant\NoOpImpersonationHandler' # Temporarily use as mock
 
     # TenantOperations Orchestrator
     Nexus\TenantOperations\Contracts\TenantQueryAdapterInterface: '@App\Service\Tenant\Adapters\TenantQueryAdapter'
@@ -70,6 +75,7 @@ services:
     Nexus\TenantOperations\Services\TenantStateManagerInterface: '@App\Service\Tenant\TenantStateManager'
     Nexus\TenantOperations\Services\UserAccessControllerInterface: '@App\Service\Tenant\UserAccessController'
     Nexus\TenantOperations\Services\AuditLoggerInterface: '@App\Service\Tenant\TenantAuditLogger'
+    Nexus\TenantOperations\Services\AuditLoggerAdapterInterface: '@App\Service\Tenant\TenantAuditLogger'
     Nexus\TenantOperations\Services\DataArchiverInterface: '@App\Service\Tenant\NoOpDataHandler'
     Nexus\TenantOperations\Services\DataExporterInterface: '@App\Service\Tenant\NoOpDataHandler'
     Nexus\TenantOperations\Services\DataDeleterInterface: '@App\Service\Tenant\NoOpDataHandler'

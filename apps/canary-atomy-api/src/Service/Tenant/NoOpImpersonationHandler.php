@@ -25,6 +25,8 @@ final readonly class NoOpImpersonationHandler implements ImpersonationSessionMan
 
     public function getActiveSession(string $adminUserId): ?array { return null; }
 
+    public function findSessionById(string $sessionId): ?array { return null; }
+
     public function hasPermission(string $adminUserId): bool { return true; }
 
     public function hasImpersonationPermission(string $adminUserId): bool { return true; }

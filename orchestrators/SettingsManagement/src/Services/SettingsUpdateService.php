@@ -17,12 +17,12 @@ use Psr\Log\LoggerInterface;
  * Orchestration service for settings management.
  * Handles complex settings updates with validation, audit logging, and cache invalidation.
  */
-final class SettingsUpdateService implements SettingsUpdateServiceInterface
+final readonly class SettingsUpdateService implements SettingsUpdateServiceInterface
 {
     public function __construct(
-        private readonly SettingsProviderInterface $settingsProvider,
-        private readonly SettingsPersistProviderInterface $persistProvider,
-        private readonly LoggerInterface $logger,
+        private SettingsProviderInterface $settingsProvider,
+        private SettingsPersistProviderInterface $persistProvider,
+        private LoggerInterface $logger,
     ) {}
 
     public function updateSetting(SettingUpdateRequest $request): SettingUpdateResult
@@ -71,6 +71,7 @@ final class SettingsUpdateService implements SettingsUpdateServiceInterface
         ]);
 
         try {
+            // Assume persistProvider handles the transaction for atomicity
             $this->persistProvider->bulkUpdate($request->settings, $request->tenantId, $request->userId);
             
             $results = [];

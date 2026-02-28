@@ -7,14 +7,13 @@ namespace App\Repository;
 use App\Entity\Setting;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
-use Nexus\Setting\Contracts\SettingRepositoryInterface;
 
 /**
  * Setting Repository (Persistence/Write Concerns).
  * 
  * Implements atomic upsert for settings.
  */
-final readonly class SettingPersistRepository
+final readonly class SettingPersistRepository implements SettingPersistRepositoryInterface
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
@@ -30,19 +29,7 @@ final readonly class SettingPersistRepository
     public function setForTenant(string $key, mixed $value, ?string $tenantId): void
     {
         $this->entityManager->wrapInTransaction(function() use ($key, $value, $tenantId) {
-            $setting = $this->entityManager->getRepository(Setting::class)->findOneBy([
-                'key' => $key,
-                'tenantId' => $tenantId
-            ]);
-
-            if (!$setting) {
-                $setting = new Setting($key, $value);
-                $setting->setTenantId($tenantId);
-                $this->entityManager->persist($setting);
-            } else {
-                $setting->setValue($value);
-            }
-
+            $this->persistForTenant($key, $value, $tenantId);
             $this->entityManager->flush();
         });
     }
@@ -70,8 +57,31 @@ final readonly class SettingPersistRepository
 
     public function bulkSet(array $settings): void
     {
-        foreach ($settings as $key => $value) {
-            $this->set($key, $value);
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+        $this->entityManager->wrapInTransaction(function() use ($settings, $tenantId) {
+            foreach ($settings as $key => $value) {
+                $this->persistForTenant($key, $value, $tenantId);
+            }
+            $this->entityManager->flush();
+        });
+    }
+
+    /**
+     * Internal non-transactional persist logic.
+     */
+    private function persistForTenant(string $key, mixed $value, ?string $tenantId): void
+    {
+        $setting = $this->entityManager->getRepository(Setting::class)->findOneBy([
+            'key' => $key,
+            'tenantId' => $tenantId
+        ]);
+
+        if (!$setting) {
+            $setting = new Setting($key, $value);
+            $setting->setTenantId($tenantId);
+            $this->entityManager->persist($setting);
+        } else {
+            $setting->setValue($value);
         }
     }
 }

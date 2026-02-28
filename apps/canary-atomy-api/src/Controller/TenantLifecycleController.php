@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\ApiResource\Tenant as TenantResource;
+use App\Entity\User;
+use Nexus\Identity\Contracts\PolicyEvaluatorInterface;
 use Nexus\TenantOperations\Contracts\TenantLifecycleCoordinatorInterface;
 use Nexus\TenantOperations\DTOs\TenantSuspendRequest;
 use Nexus\TenantOperations\DTOs\TenantActivateRequest;
@@ -21,17 +22,24 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 final class TenantLifecycleController extends AbstractController
 {
     public function __construct(
-        private readonly TenantLifecycleCoordinatorInterface $lifecycleCoordinator
+        private readonly TenantLifecycleCoordinatorInterface $lifecycleCoordinator,
+        private readonly PolicyEvaluatorInterface $policyEvaluator
     ) {}
 
     public function suspend(string $id, Request $request): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_TENANT_ADMIN');
-        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'Authentication required'], 401);
+        }
+
+        if (!$this->policyEvaluator->evaluate($user, 'tenant.suspend', $id)) {
+            return $this->json(['error' => 'Access denied'], 403);
+        }
 
         $suspendRequest = new TenantSuspendRequest(
             tenantId: $id,
-            suspendedBy: $actorId,
+            suspendedBy: $user->getUserIdentifier(),
             reason: 'Suspended via API'
         );
 
@@ -46,12 +54,18 @@ final class TenantLifecycleController extends AbstractController
 
     public function activate(string $id, Request $request): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_SUPER_ADMIN');
-        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'Authentication required'], 401);
+        }
+
+        if (!$this->policyEvaluator->evaluate($user, 'tenant.activate', $id)) {
+            return $this->json(['error' => 'Access denied'], 403);
+        }
 
         $activateRequest = new TenantActivateRequest(
             tenantId: $id,
-            activatedBy: $actorId
+            activatedBy: $user->getUserIdentifier()
         );
 
         $result = $this->lifecycleCoordinator->activate($activateRequest);
@@ -65,12 +79,18 @@ final class TenantLifecycleController extends AbstractController
 
     public function archive(string $id, Request $request): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_SUPER_ADMIN');
-        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'Authentication required'], 401);
+        }
+
+        if (!$this->policyEvaluator->evaluate($user, 'tenant.archive', $id)) {
+            return $this->json(['error' => 'Access denied'], 403);
+        }
 
         $archiveRequest = new TenantArchiveRequest(
             tenantId: $id,
-            archivedBy: $actorId,
+            archivedBy: $user->getUserIdentifier(),
             reason: 'Archived via API'
         );
 

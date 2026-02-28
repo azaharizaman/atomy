@@ -28,4 +28,9 @@ interface ImpersonationSessionManagerInterface
      * @return array{session_id: string, target_tenant_id: string, expires_at: string}|null
      */
     public function getActiveSession(string $adminUserId): ?array;
+
+    /**
+     * @return array{session_id: string, target_tenant_id: string, expires_at: string}|null
+     */
+    public function findSessionById(string $sessionId): ?array;
 }

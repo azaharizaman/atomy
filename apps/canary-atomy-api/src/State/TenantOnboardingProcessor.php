@@ -7,6 +7,7 @@ namespace App\State;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\ApiResource\Tenant as TenantResource;
+use Nexus\Tenant\Enums\TenantStatus;
 use Nexus\TenantOperations\Contracts\TenantOnboardingCoordinatorInterface;
 use Nexus\TenantOperations\DTOs\TenantOnboardingRequest;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -61,7 +62,7 @@ final class TenantOnboardingProcessor implements ProcessorInterface
         }
 
         $data->id = $result->getTenantId();
-        $data->status = 'active';
+        $data->status = TenantStatus::Active;
 
         return $data;
     }

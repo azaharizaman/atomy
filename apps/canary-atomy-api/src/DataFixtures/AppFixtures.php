@@ -93,35 +93,66 @@ final class AppFixtures extends Fixture
             $manager->persist($flag);
 
             // 6. Create Users for each Tenant
-            $adminUser = new User($data['email']);
-            $adminUser->setName($data['name'] . ' Administrator');
-            $adminUser->setRoles([RoleEnum::ADMIN->value, RoleEnum::USER->value]);
-            $adminUser->setStatus(UserStatus::ACTIVE);
-            $adminUser->setTenantId($tenant->getId());
-            $adminUser->setPassword($this->passwordHasher->hashPassword($adminUser, 'password123'));
-            $manager->persist($adminUser);
+            $this->createUser(
+                $manager,
+                $data['email'],
+                $data['name'] . ' Administrator',
+                [RoleEnum::ADMIN],
+                UserStatus::ACTIVE,
+                $tenant->getId(),
+                'password123'
+            );
 
             // Add some regular users (5-10 per tenant)
             $userCount = rand(5, 10);
             for ($i = 1; $i <= $userCount; $i++) {
-                $u = new User(strtolower($data['code']) . ".user$i@example.com");
-                $u->setName($data['code'] . " User $i");
-                $u->setRoles([RoleEnum::USER->value]);
-                $u->setStatus(rand(0, 10) > 8 ? UserStatus::SUSPENDED : UserStatus::ACTIVE);
-                $u->setTenantId($tenant->getId());
-                $u->setPassword($this->passwordHasher->hashPassword($u, 'password123'));
-                $manager->persist($u);
+                $this->createUser(
+                    $manager,
+                    strtolower($data['code']) . ".user$i@example.com",
+                    $data['code'] . " User $i",
+                    [RoleEnum::USER],
+                    rand(0, 10) > 8 ? UserStatus::SUSPENDED : UserStatus::ACTIVE,
+                    $tenant->getId(),
+                    'password123'
+                );
             }
         }
 
         // 7. Create Platform Super Admin
-        $admin = new User('admin@nexus.platform');
-        $admin->setName('Platform Admin');
-        $admin->setRoles([RoleEnum::SUPER_ADMIN->value]);
-        $admin->setStatus(UserStatus::ACTIVE);
-        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'nexus-admin-secret'));
-        $manager->persist($admin);
+        $this->createUser(
+            $manager,
+            'admin@nexus.platform',
+            'Platform Admin',
+            [RoleEnum::SUPER_ADMIN],
+            UserStatus::ACTIVE,
+            null,
+            'nexus-admin-secret'
+        );
 
         $manager->flush();
+    }
+
+    /**
+     * @param RoleEnum[] $roles
+     */
+    private function createUser(
+        ObjectManager $manager,
+        string $email,
+        string $name,
+        array $roles,
+        UserStatus $status,
+        ?string $tenantId,
+        string $plainPassword
+    ): User {
+        $user = new User($email);
+        $user->setName($name);
+        $user->setEnumRoles($roles);
+        $user->setStatus($status);
+        $user->setTenantId($tenantId);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
+        
+        $manager->persist($user);
+        
+        return $user;
     }
 }

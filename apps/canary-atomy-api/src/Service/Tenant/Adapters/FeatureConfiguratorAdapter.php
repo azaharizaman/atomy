@@ -23,16 +23,18 @@ final readonly class FeatureConfiguratorAdapter implements FeatureConfiguratorAd
             ];
         }
 
-        foreach ($features as $name => $enabled) {
-            // Find specifically for this tenant, avoiding global fallback
-            $flags = $this->flagRepository->all($tenantId);
-            $flag = null;
-            foreach ($flags as $f) {
-                if ($f->getName() === $name && $f->getTenantId() === $tenantId) {
-                    $flag = $f;
-                    break;
-                }
+        // Fetch all flags for this tenant once
+        $existingFlags = $this->flagRepository->all($tenantId);
+        $flagsByName = [];
+        foreach ($existingFlags as $f) {
+            // We only care about tenant-specific flags here to avoid mutating global fallbacks
+            if ($f->getTenantId() === $tenantId) {
+                $flagsByName[$f->getName()] = $f;
             }
+        }
+
+        foreach ($features as $name => $enabled) {
+            $flag = $flagsByName[$name] ?? null;
             
             if (!$flag) {
                 $flag = new FeatureFlag($name);

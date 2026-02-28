@@ -81,7 +81,7 @@ class Setting
         $this->id = (new Ulid())->toBase32();
         $this->key = $key;
         $this->value = $value;
-        $this->type = gettype($value);
+        $this->type = $this->resolveTypeName($value);
     }
 
     public function getId(): string { return $this->id; }
@@ -93,9 +93,26 @@ class Setting
     public function isReadOnly(): bool { return $this->isReadOnly; }
     public function getTenantId(): ?string { return $this->tenantId; }
 
-    public function setValue(mixed $value): self { $this->value = $value; $this->type = gettype($value); return $this; }
+    public function setValue(mixed $value): self 
+    { 
+        $this->value = $value; 
+        $this->type = $this->resolveTypeName($value); 
+        return $this; 
+    }
+    
     public function setScope(string $scope): self { $this->scope = $scope; return $this; }
     public function setEncrypted(bool $isEncrypted): self { $this->isEncrypted = $isEncrypted; return $this; }
     public function setReadOnly(bool $isReadOnly): self { $this->isReadOnly = $isReadOnly; return $this; }
     public function setTenantId(?string $tenantId): self { $this->tenantId = $tenantId; return $this; }
+
+    private function resolveTypeName(mixed $value): string
+    {
+        return match (gettype($value)) {
+            'integer' => 'int',
+            'double' => 'float',
+            'boolean' => 'bool',
+            'NULL' => 'null',
+            default => gettype($value),
+        };
+    }
 }

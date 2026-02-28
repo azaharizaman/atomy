@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Settings\Adapters;
 
-use App\Repository\SettingPersistRepository;
+use App\Repository\SettingPersistRepositoryInterface;
 use App\Service\TenantContext;
 use Nexus\Setting\Contracts\SettingRepositoryInterface;
 use Nexus\SettingsManagement\Contracts\SettingsProviderInterface;
@@ -15,7 +15,7 @@ final readonly class SettingsProvider implements SettingsProviderInterface, Sett
 {
     public function __construct(
         private SettingRepositoryInterface $settingRepository,
-        private SettingPersistRepository $persistRepository,
+        private SettingPersistRepositoryInterface $persistRepository,
         private TenantContext $tenantContext
     ) {}
 

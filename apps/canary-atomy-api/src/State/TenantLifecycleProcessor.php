@@ -37,7 +37,7 @@ final class TenantLifecycleProcessor implements ProcessorInterface
     {
         $id = $uriVariables['id'] ?? null;
         if (!$id) {
-            return;
+            throw new BadRequestHttpException('Tenant ID is required');
         }
 
         if ($operation->getMethod() === 'DELETE') {
