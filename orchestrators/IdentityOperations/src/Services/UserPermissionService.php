@@ -113,17 +113,17 @@ final readonly class UserPermissionService implements UserPermissionServiceInter
         }
     }
 
-    public function hasPermission(string $userId, string $permission, string $tenantId): bool
+    public function hasPermission(string $userId, string $permission, ?string $tenantId = null): bool
     {
         return $this->permissionChecker->check($userId, $permission, $tenantId);
     }
 
-    public function getUserPermissions(string $userId, string $tenantId): array
+    public function getUserPermissions(string $userId, ?string $tenantId = null): array
     {
         return $this->permissionChecker->getAll($userId, $tenantId);
     }
 
-    public function getUserRoles(string $userId, string $tenantId): array
+    public function getUserRoles(string $userId, ?string $tenantId = null): array
     {
         return $this->permissionChecker->getRoles($userId, $tenantId);
     }

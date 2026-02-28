@@ -54,6 +54,83 @@ services:
     Nexus\Identity\Contracts\PolicyEvaluatorInterface: '@App\Service\Tenant\NoOpImpersonationHandler' # Temporarily use as mock
     Nexus\Identity\Contracts\PermissionCheckerInterface: '@App\Service\Tenant\NoOpImpersonationHandler' # Temporarily use as mock
 
+    # IdentityOperations Orchestrator
+    Nexus\IdentityOperations\Contracts\UserContextProviderInterface: '@App\Service\Identity\Adapters\UserContextAdapter'
+    Nexus\IdentityOperations\Contracts\UserAuthenticationServiceInterface: '@Nexus\IdentityOperations\Services\UserAuthenticationService'
+    Nexus\IdentityOperations\Contracts\UserLifecycleServiceInterface: '@Nexus\IdentityOperations\Services\UserLifecycleService'
+    Nexus\IdentityOperations\Contracts\UserPermissionServiceInterface: '@Nexus\IdentityOperations\Services\UserPermissionService'
+    Nexus\IdentityOperations\Contracts\UserOnboardingServiceInterface: '@Nexus\IdentityOperations\Services\UserOnboardingService'
+    Nexus\IdentityOperations\Contracts\MfaServiceInterface: '@Nexus\IdentityOperations\Services\MfaService'
+
+    Nexus\IdentityOperations\Contracts\UserAuthenticationCoordinatorInterface: '@Nexus\IdentityOperations\Coordinators\UserAuthenticationCoordinator'
+    Nexus\IdentityOperations\Contracts\UserLifecycleCoordinatorInterface: '@Nexus\IdentityOperations\Coordinators\UserLifecycleCoordinator'
+    Nexus\IdentityOperations\Contracts\UserPermissionCoordinatorInterface: '@Nexus\IdentityOperations\Coordinators\UserPermissionCoordinator'
+    Nexus\IdentityOperations\Contracts\UserOnboardingCoordinatorInterface: '@Nexus\IdentityOperations\Coordinators\UserOnboardingCoordinator'
+    Nexus\IdentityOperations\Contracts\MfaCoordinatorInterface: '@Nexus\IdentityOperations\Coordinators\MfaCoordinator'
+
+    Nexus\IdentityOperations\Services\AuthenticatorInterface: '@App\Service\Identity\Adapters\AuthenticatorAdapter'
+    Nexus\IdentityOperations\Services\TokenManagerInterface: '@App\Service\Identity\Adapters\TokenManagerAdapter'
+    Nexus\IdentityOperations\Services\PasswordChangerInterface: '@App\Service\Identity\Adapters\PasswordChangerAdapter'
+    Nexus\IdentityOperations\Services\SessionValidatorInterface: '@App\Service\Identity\Adapters\TokenManagerAdapter'
+    Nexus\IdentityOperations\Services\AuditLoggerInterface: '@App\Service\Identity\Adapters\UserAuditLoggerAdapter'
+    Nexus\IdentityOperations\Services\UserStateManagerInterface: '@App\Service\Identity\Adapters\UserStateManagerAdapter'
+    Nexus\IdentityOperations\Services\SessionManagerInterface: '@App\Service\Identity\Adapters\TokenManagerAdapter'
+    Nexus\IdentityOperations\Services\UserCreatorInterface: '@App\Service\Identity\Adapters\UserOnboardingAdapter'
+    Nexus\IdentityOperations\Services\UserUpdaterInterface: '@App\Service\Identity\Adapters\UserOnboardingAdapter'
+    Nexus\IdentityOperations\Services\TenantUserAssignerInterface: '@App\Service\Identity\Adapters\UserOnboardingAdapter'
+    Nexus\IdentityOperations\Services\NotificationSenderInterface: '@App\Service\Identity\Adapters\NotificationSenderAdapter'
+    Nexus\IdentityOperations\Services\MfaEnrollerInterface: '@App\Service\Identity\Adapters\MfaAdapter'
+    Nexus\IdentityOperations\Services\MfaVerifierInterface: '@App\Service\Identity\Adapters\MfaAdapter'
+    Nexus\IdentityOperations\Services\MfaDisablerInterface: '@App\Service\Identity\Adapters\MfaAdapter'
+    Nexus\IdentityOperations\Services\BackupCodeGeneratorInterface: '@App\Service\Identity\Adapters\MfaAdapter'
+    Nexus\IdentityOperations\Services\PermissionAssignerInterface: '@App\Service\Identity\Adapters\UserPermissionAdapter'
+    Nexus\IdentityOperations\Services\PermissionRevokerInterface: '@App\Service\Identity\Adapters\UserPermissionAdapter'
+    Nexus\IdentityOperations\Services\PermissionCheckerInterface: '@App\Service\Identity\Adapters\UserPermissionAdapter'
+    Nexus\IdentityOperations\Services\RoleAssignerInterface: '@App\Service\Identity\Adapters\UserPermissionAdapter'
+    Nexus\IdentityOperations\Services\RoleRevokerInterface: '@App\Service\Identity\Adapters\UserPermissionAdapter'
+
+    # IdentityOperations Services (Internal)
+    Nexus\IdentityOperations\Services\UserAuthenticationService:
+        autowire: true
+    
+    Nexus\IdentityOperations\Services\UserLifecycleService:
+        autowire: true
+    
+    Nexus\IdentityOperations\Services\UserPermissionService:
+        autowire: true
+    
+    Nexus\IdentityOperations\Services\UserOnboardingService:
+        autowire: true
+    
+    Nexus\IdentityOperations\Services\MfaService:
+        autowire: true
+
+    # IdentityOperations Coordinators
+    Nexus\IdentityOperations\Coordinators\UserAuthenticationCoordinator:
+        autowire: true
+    
+    Nexus\IdentityOperations\Coordinators\UserLifecycleCoordinator:
+        autowire: true
+    
+    Nexus\IdentityOperations\Coordinators\UserPermissionCoordinator:
+        autowire: true
+    
+    Nexus\IdentityOperations\Coordinators\UserOnboardingCoordinator:
+        autowire: true
+    
+    Nexus\IdentityOperations\Coordinators\MfaCoordinator:
+        autowire: true
+
+    # IdentityOperations DataProviders
+    Nexus\IdentityOperations\DataProviders\UserContextDataProvider:
+        autowire: true
+    
+    Nexus\IdentityOperations\DataProviders\PermissionDataProvider:
+        autowire: true
+    
+    Nexus\IdentityOperations\DataProviders\TenantUserDataProvider:
+        autowire: true
+
     # TenantOperations Orchestrator
     Nexus\TenantOperations\Contracts\TenantQueryAdapterInterface: '@App\Service\Tenant\Adapters\TenantQueryAdapter'
     Nexus\TenantOperations\Contracts\SettingsQueryAdapterInterface: '@App\Service\Tenant\Adapters\SettingsQueryAdapter'

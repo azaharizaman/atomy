@@ -83,76 +83,54 @@ final class AppFixtures extends Fixture
             $timezone = new Setting('app.timezone', $data['code'] === 'STARK' ? 'America/New_York' : 'UTC');
             $timezone->setTenantId($tenant->getId());
             $manager->persist($timezone);
-
-            // 5. Create Tenant-Specific Flags (Overrides)
-            $flag = new FeatureFlag('api.v2_beta');
-            $flag->setEnabled($data['code'] !== 'INITECH');
-            $flag->setStrategy(FlagStrategy::SYSTEM_WIDE);
-            $flag->setOverride($data['code'] === 'STARK' ? FlagOverride::FORCE_ON : null);
-            $flag->setTenantId($tenant->getId());
-            $manager->persist($flag);
-
-            // 6. Create Users for each Tenant
-            $this->createUser(
-                $manager,
-                $data['email'],
-                $data['name'] . ' Administrator',
-                [RoleEnum::ADMIN],
-                UserStatus::ACTIVE,
-                $tenant->getId(),
-                'password123'
-            );
-
-            // Add some regular users (5-10 per tenant)
-            $userCount = rand(5, 10);
-            for ($i = 1; $i <= $userCount; $i++) {
-                $this->createUser(
-                    $manager,
-                    strtolower($data['code']) . ".user$i@example.com",
-                    $data['code'] . " User $i",
-                    [RoleEnum::USER],
-                    rand(0, 10) > 8 ? UserStatus::SUSPENDED : UserStatus::ACTIVE,
-                    $tenant->getId(),
-                    'password123'
-                );
-            }
         }
 
-        // 7. Create Platform Super Admin
-        $this->createUser(
-            $manager,
-            'admin@nexus.platform',
-            'Platform Admin',
-            [RoleEnum::SUPER_ADMIN],
-            UserStatus::ACTIVE,
-            null,
-            'nexus-admin-secret'
-        );
+        // 5. Create Tenant-Specific Flags (Overrides)
+        foreach ($tenants as $tenant) {
+            $flag = new FeatureFlag('auth.mfa_enabled');
+            $flag->setTenantId($tenant->getId());
+            $flag->setEnabled($tenant->getCode() === 'STARK'); // Only Stark Industries has MFA by default
+            $flag->setStrategy(FlagStrategy::TENANT_LIST);
+            $manager->persist($flag);
+
+            $betaFlag = new FeatureFlag('api.v2_beta');
+            $betaFlag->setTenantId($tenant->getId());
+            $betaFlag->setEnabled($tenant->getCode() !== 'INITECH');
+            $betaFlag->setStrategy(FlagStrategy::SYSTEM_WIDE);
+            $betaFlag->setOverride($tenant->getCode() === 'STARK' ? FlagOverride::FORCE_ON : null);
+            $manager->persist($betaFlag);
+        }
+
+        // 6. Create Diverse Users
+        $usersData = [
+            ['email' => 'system@nexus.example.com', 'name' => 'System Admin', 'roles' => ['ROLE_SUPER_ADMIN'], 'tenant' => null, 'status' => UserStatus::ACTIVE],
+            ['email' => 'tony@stark.example.com', 'name' => 'Tony Stark', 'roles' => [RoleEnum::TENANT_ADMIN->value], 'tenant' => 'STARK', 'status' => UserStatus::ACTIVE],
+            ['email' => 'pepper@stark.example.com', 'name' => 'Pepper Potts', 'roles' => [RoleEnum::TENANT_ADMIN->value], 'tenant' => 'STARK', 'status' => UserStatus::ACTIVE],
+            ['email' => 'happy@stark.example.com', 'name' => 'Happy Hogan', 'roles' => [RoleEnum::USER->value], 'tenant' => 'STARK', 'status' => UserStatus::ACTIVE],
+            ['email' => 'bruce@wayne.example.com', 'name' => 'Bruce Wayne', 'roles' => [RoleEnum::TENANT_ADMIN->value], 'tenant' => 'WAYNE', 'status' => UserStatus::ACTIVE],
+            ['email' => 'alfred@wayne.example.com', 'name' => 'Alfred Pennyworth', 'roles' => [RoleEnum::USER->value], 'tenant' => 'WAYNE', 'status' => UserStatus::ACTIVE],
+            ['email' => 'clark@globex.example.com', 'name' => 'Clark Kent', 'roles' => [RoleEnum::USER->value], 'tenant' => 'GLOBEX', 'status' => UserStatus::PENDING_ACTIVATION],
+            ['email' => 'lex@oscorp.example.com', 'name' => 'Lex Luthor', 'roles' => [RoleEnum::USER->value], 'tenant' => 'OSCORP', 'status' => UserStatus::SUSPENDED],
+        ];
+
+        foreach ($usersData as $data) {
+            $user = new User($data['email']);
+            $user->setName($data['name']);
+            $user->setRoles($data['roles']);
+            $user->setStatus($data['status']);
+            $user->setPassword($this->passwordHasher->hashPassword($user, 'password123'));
+            
+            if ($data['tenant'] !== null) {
+                $tenant = array_filter($tenants, fn($t) => $t->getCode() === $data['tenant']);
+                $tenant = reset($tenant);
+                if ($tenant) {
+                    $user->setTenantId($tenant->getId());
+                }
+            }
+            
+            $manager->persist($user);
+        }
 
         $manager->flush();
-    }
-
-    /**
-     * @param RoleEnum[] $roles
-     */
-    private function createUser(
-        ObjectManager $manager,
-        string $email,
-        string $name,
-        array $roles,
-        UserStatus $status,
-        ?string $tenantId,
-        string $plainPassword
-    ): User {
-        $user = new User($email);
-        $user->setName($name);
-        $user->setEnumRoles($roles);
-        $user->setStatus($status);
-        $user->setTenantId($tenantId);
-        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
-        
-        $manager->persist($user);
-        
-        return $user;
     }
 }
