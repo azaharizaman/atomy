@@ -25,6 +25,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[ORM\Entity(repositoryClass: SettingRepository::class)]
 #[ORM\Table(name: 'settings')]
+#[ORM\UniqueConstraint(name: 'unique_setting_per_tenant', columns: ['setting_key', 'tenant_id'])]
 #[ApiResource(
     operations: [
         new GetCollection(normalizationContext: ['groups' => ['setting:read']]),
@@ -45,8 +46,7 @@ class Setting
     #[Groups(['setting:read'])]
     private string $id;
 
-    #[ORM\Column(type: 'string', length: 100)]
-    #[ORM\Id]
+    #[ORM\Column(name: 'setting_key', type: 'string', length: 100)]
     #[ApiProperty(identifier: true)]
     #[Assert\NotBlank]
     #[Groups(['setting:read', 'setting:write'])]
@@ -72,7 +72,7 @@ class Setting
     #[Groups(['setting:read', 'setting:write'])]
     private bool $isReadOnly = false;
 
-    #[ORM\Column(type: 'string', length: 26, nullable: true)]
+    #[ORM\Column(name: 'tenant_id', type: 'string', length: 26, nullable: true)]
     #[Groups(['setting:read', 'setting:write'])]
     private ?string $tenantId = null;
 

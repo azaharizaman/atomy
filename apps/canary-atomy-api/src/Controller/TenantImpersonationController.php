@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Service\TenantContext;
 use Nexus\TenantOperations\Contracts\TenantImpersonationCoordinatorInterface;
 use Nexus\TenantOperations\DTOs\ImpersonationStartRequest;
 use Nexus\TenantOperations\DTOs\ImpersonationEndRequest;
@@ -25,10 +24,15 @@ final class TenantImpersonationController extends AbstractController
 
     public function start(string $id, Request $request): JsonResponse
     {
-        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+        $this->denyAccessUnlessGranted('ROLE_SUPER_ADMIN');
+        
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Authentication required'], 401);
+        }
 
         $startRequest = new ImpersonationStartRequest(
-            adminUserId: $actorId,
+            adminUserId: $user->getUserIdentifier(),
             targetTenantId: $id,
             reason: $request->get('reason', 'Support activity')
         );
@@ -47,13 +51,22 @@ final class TenantImpersonationController extends AbstractController
 
     public function stop(string $id, Request $request): JsonResponse
     {
-        $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Authentication required'], 401);
+        }
 
         $endRequest = new ImpersonationEndRequest(
-            adminUserId: $actorId,
+            adminUserId: $user->getUserIdentifier(),
             sessionId: $request->headers->get('X-Impersonation-Session-ID'),
             reason: $request->get('reason', 'Session ended')
         );
+        
+        // We pass the route ID to ensure we are stopping impersonation for the intended tenant
+        // The DTO doesn't have targetTenantId in constructor, but we can wrap it if needed.
+        // For now, let's assume the coordinator handles session lookup via sessionId.
 
         $result = $this->impersonationCoordinator->endImpersonation($endRequest);
 

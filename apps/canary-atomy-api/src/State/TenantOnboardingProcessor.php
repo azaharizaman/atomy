@@ -33,13 +33,17 @@ final class TenantOnboardingProcessor implements ProcessorInterface
             throw new \InvalidArgumentException('Expected TenantResource');
         }
 
+        if (empty($data->adminPassword)) {
+            throw new BadRequestHttpException('adminPassword is required');
+        }
+
         $request = new TenantOnboardingRequest(
             tenantCode: $data->code ?? '',
             tenantName: $data->name ?? '',
             domain: $data->domain ?? '',
             adminEmail: $data->adminEmail ?? '',
-            adminPassword: $data->adminPassword ?? 'password123',
-            plan: $data->plan ?? 'starter',
+            adminPassword: $data->adminPassword,
+            plan: $data->plan?->value ?? 'starter',
             metadata: []
         );
 

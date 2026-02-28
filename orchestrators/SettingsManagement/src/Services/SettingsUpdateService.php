@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\SettingsManagement\Services;
 
 use Nexus\SettingsManagement\Contracts\SettingsProviderInterface;
+use Nexus\SettingsManagement\Contracts\SettingsPersistProviderInterface;
 use Nexus\SettingsManagement\Contracts\SettingsUpdateServiceInterface;
 use Nexus\SettingsManagement\DTOs\Settings\BulkSettingUpdateRequest;
 use Nexus\SettingsManagement\DTOs\Settings\BulkSettingUpdateResult;
@@ -20,6 +21,7 @@ final class SettingsUpdateService implements SettingsUpdateServiceInterface
 {
     public function __construct(
         private readonly SettingsProviderInterface $settingsProvider,
+        private readonly SettingsPersistProviderInterface $persistProvider,
         private readonly LoggerInterface $logger,
     ) {}
 
@@ -31,18 +33,15 @@ final class SettingsUpdateService implements SettingsUpdateServiceInterface
             'user_id' => $request->userId,
         ]);
 
-        // Get current value
         $oldValue = null;
         if ($request->tenantId) {
             $existing = $this->settingsProvider->getSetting($request->key, $request->tenantId);
             $oldValue = $existing['value'] ?? null;
         }
 
-        // In production, this would call the atomic package to persist
-        // For now, we simulate the operation
         try {
-            // Simulate setting update - in real implementation, this would call
-            // the Setting package's persist interface
+            $this->persistProvider->update($request->key, $request->value, $request->tenantId, $request->userId);
+
             $this->logger->info('Setting updated successfully', [
                 'key' => $request->key,
                 'old_value' => $oldValue,
@@ -71,38 +70,22 @@ final class SettingsUpdateService implements SettingsUpdateServiceInterface
             'tenant_id' => $request->tenantId,
         ]);
 
-        $results = [];
-        $failedKeys = [];
-
-        // Process each setting
-        foreach ($request->settings as $key => $value) {
-            $result = $this->updateSetting(new SettingUpdateRequest(
-                key: $key,
-                value: $value,
-                tenantId: $request->tenantId,
-                userId: $request->userId,
-                reason: $request->reason,
-            ));
-
-            $results[] = $result;
-
-            if (!$result->success) {
-                $failedKeys[$key] = $result->error;
+        try {
+            $this->persistProvider->bulkUpdate($request->settings, $request->tenantId, $request->userId);
+            
+            $results = [];
+            foreach ($request->settings as $key => $value) {
+                $results[] = SettingUpdateResult::success($key, null, $value);
             }
-        }
 
-        if (!empty($failedKeys)) {
-            $this->logger->warning('Some settings failed to update', [
-                'failed_keys' => $failedKeys,
+            return BulkSettingUpdateResult::success($results);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed bulk update', [
+                'error' => $e->getMessage(),
             ]);
 
-            return BulkSettingUpdateResult::failure(
-                'Some settings failed to update',
-                array_keys($failedKeys)
-            );
+            return BulkSettingUpdateResult::failure($e->getMessage(), array_keys($request->settings));
         }
-
-        return BulkSettingUpdateResult::success($results);
     }
 
     public function resolveSettingValue(string $key, ?string $tenantId, ?string $userId): mixed

@@ -12,6 +12,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Nexus\FeatureFlags\Enums\FlagOverride;
 use Nexus\FeatureFlags\Enums\FlagStrategy;
+use Nexus\Identity\ValueObjects\RoleEnum;
 use Nexus\Identity\ValueObjects\UserStatus;
 use Nexus\Tenant\Enums\TenantStatus;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -94,7 +95,7 @@ final class AppFixtures extends Fixture
             // 6. Create Users for each Tenant
             $adminUser = new User($data['email']);
             $adminUser->setName($data['name'] . ' Administrator');
-            $adminUser->setRoles(['ROLE_ADMIN', 'ROLE_USER']);
+            $adminUser->setRoles([RoleEnum::ADMIN->value, RoleEnum::USER->value]);
             $adminUser->setStatus(UserStatus::ACTIVE);
             $adminUser->setTenantId($tenant->getId());
             $adminUser->setPassword($this->passwordHasher->hashPassword($adminUser, 'password123'));
@@ -105,7 +106,7 @@ final class AppFixtures extends Fixture
             for ($i = 1; $i <= $userCount; $i++) {
                 $u = new User(strtolower($data['code']) . ".user$i@example.com");
                 $u->setName($data['code'] . " User $i");
-                $u->setRoles(['ROLE_USER']);
+                $u->setRoles([RoleEnum::USER->value]);
                 $u->setStatus(rand(0, 10) > 8 ? UserStatus::SUSPENDED : UserStatus::ACTIVE);
                 $u->setTenantId($tenant->getId());
                 $u->setPassword($this->passwordHasher->hashPassword($u, 'password123'));
@@ -116,7 +117,7 @@ final class AppFixtures extends Fixture
         // 7. Create Platform Super Admin
         $admin = new User('admin@nexus.platform');
         $admin->setName('Platform Admin');
-        $admin->setRoles(['ROLE_SUPER_ADMIN']);
+        $admin->setRoles([RoleEnum::SUPER_ADMIN->value]);
         $admin->setStatus(UserStatus::ACTIVE);
         $admin->setPassword($this->passwordHasher->hashPassword($admin, 'nexus-admin-secret'));
         $manager->persist($admin);

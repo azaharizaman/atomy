@@ -26,6 +26,7 @@ final class TenantLifecycleController extends AbstractController
 
     public function suspend(string $id, Request $request): JsonResponse
     {
+        $this->denyAccessUnlessGranted('ROLE_TENANT_ADMIN');
         $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
 
         $suspendRequest = new TenantSuspendRequest(
@@ -45,6 +46,7 @@ final class TenantLifecycleController extends AbstractController
 
     public function activate(string $id, Request $request): JsonResponse
     {
+        $this->denyAccessUnlessGranted('ROLE_SUPER_ADMIN');
         $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
 
         $activateRequest = new TenantActivateRequest(
@@ -63,6 +65,7 @@ final class TenantLifecycleController extends AbstractController
 
     public function archive(string $id, Request $request): JsonResponse
     {
+        $this->denyAccessUnlessGranted('ROLE_SUPER_ADMIN');
         $actorId = $this->getUser()?->getUserIdentifier() ?? 'system';
 
         $archiveRequest = new TenantArchiveRequest(

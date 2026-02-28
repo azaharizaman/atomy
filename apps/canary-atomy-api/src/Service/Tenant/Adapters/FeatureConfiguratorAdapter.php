@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Service\Tenant\Adapters;
 
 use App\Entity\FeatureFlag;
-use App\Repository\FeatureFlagRepository;
+use Nexus\FeatureFlags\Contracts\FlagRepositoryInterface;
 use Nexus\TenantOperations\Contracts\FeatureConfiguratorAdapterInterface;
 
 final readonly class FeatureConfiguratorAdapter implements FeatureConfiguratorAdapterInterface
 {
     public function __construct(
-        private FeatureFlagRepository $flagRepository
+        private FlagRepositoryInterface $flagRepository
     ) {}
 
     public function configure(string $tenantId, array $features): void
@@ -24,7 +24,15 @@ final readonly class FeatureConfiguratorAdapter implements FeatureConfiguratorAd
         }
 
         foreach ($features as $name => $enabled) {
-            $flag = $this->flagRepository->findByName($name, $tenantId);
+            // Find specifically for this tenant, avoiding global fallback
+            $flags = $this->flagRepository->all($tenantId);
+            $flag = null;
+            foreach ($flags as $f) {
+                if ($f->getName() === $name && $f->getTenantId() === $tenantId) {
+                    $flag = $f;
+                    break;
+                }
+            }
             
             if (!$flag) {
                 $flag = new FeatureFlag($name);

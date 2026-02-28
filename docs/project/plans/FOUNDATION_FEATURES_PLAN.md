@@ -28,7 +28,7 @@ Decouples business packages using a modular, asynchronous communication layer.
     *   **Internal Event Stream:** Decouple package interactions (Accounting reacting to a Sales event).
     *   **Asynchronous Job Queuing:** Offload heavy tasks from the API request lifecycle.
 *   **Nexus Packages:** `EventStream`, `Notifier`, `Connector`.
-*   **Impact:** Provides the standardized infrastructure for "announcing" changes and integrating with 3rd party systems.
+*   **Impact:** Provides the standardized infrastructure for "announcing" changes and integrating with third-party systems.
 
 ### 3. ComplianceOperations (Privacy & Data Governance) - **HIGH**
 **The "Legal Shield"**
@@ -54,10 +54,10 @@ Protects the platform from "Noisy Neighbor" syndrome and manages resource constr
 
 ### 5. ConnectivityOperations (Unified Integration Layer) - **MEDIUM-HIGH**
 **The "Bridge"**
-Standardizes how the platform interacts with 3rd party services.
+Standardizes how the platform interacts with third-party services.
 
 *   **Capabilities:**
-    *   **OAuth Credential Management:** Securely storing 3rd party tokens (Slack, Google, etc.).
+    *   **OAuth Credential Management:** Securely storing third-party tokens (Slack, Google, etc.).
     *   **External API Key Management:** Allowing customers to generate tokens for their own developers.
     *   **Standardized Messaging:** One interface to send notifications via Email, Slack, or SMS.
 *   **Nexus Packages:** `Connector`, `Messaging`, `QueryEngine`.

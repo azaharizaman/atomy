@@ -13,6 +13,8 @@ use App\State\TenantCollectionProvider;
 use App\State\TenantItemProvider;
 use App\State\TenantOnboardingProcessor;
 use App\State\TenantLifecycleProcessor;
+use Nexus\Tenant\Enums\TenantStatus;
+use Nexus\Tenant\Enums\TenantPlan;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 /**
@@ -25,52 +27,61 @@ use Symfony\Component\Serializer\Attribute\Groups;
         new GetCollection(
             uriTemplate: '/tenants',
             normalizationContext: ['groups' => ['tenant:read']],
-            provider: TenantCollectionProvider::class
+            provider: TenantCollectionProvider::class,
+            security: 'is_granted("ROLE_USER")'
         ),
         new Get(
             uriTemplate: '/tenants/{id}',
             normalizationContext: ['groups' => ['tenant:read']],
-            provider: TenantItemProvider::class
+            provider: TenantItemProvider::class,
+            security: 'is_granted("ROLE_USER") and object.id == user.tenantId'
         ),
         new Post(
             uriTemplate: '/tenants',
             denormalizationContext: ['groups' => ['tenant:write']],
             normalizationContext: ['groups' => ['tenant:read']],
-            processor: TenantOnboardingProcessor::class
+            processor: TenantOnboardingProcessor::class,
+            security: 'is_granted("ROLE_SUPER_ADMIN")'
         ),
         new Post(
             uriTemplate: '/tenants/{id}/suspend',
             status: 200,
             controller: 'App\Controller\TenantLifecycleController::suspend',
-            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Suspend a tenant')
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Suspend a tenant'),
+            security: 'is_granted("ROLE_SUPER_ADMIN") or (is_granted("ROLE_TENANT_ADMIN") and id == user.tenantId)'
         ),
         new Post(
             uriTemplate: '/tenants/{id}/activate',
             status: 200,
             controller: 'App\Controller\TenantLifecycleController::activate',
-            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Activate a suspended tenant')
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Activate a suspended tenant'),
+            security: 'is_granted("ROLE_SUPER_ADMIN")'
         ),
         new Post(
             uriTemplate: '/tenants/{id}/archive',
             status: 200,
             controller: 'App\Controller\TenantLifecycleController::archive',
-            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Archive a tenant')
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Archive a tenant'),
+            security: 'is_granted("ROLE_SUPER_ADMIN")'
         ),
         new Post(
             uriTemplate: '/tenants/{id}/impersonate',
             status: 200,
             controller: 'App\Controller\TenantImpersonationController::start',
-            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Start tenant impersonation')
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Start tenant impersonation'),
+            security: 'is_granted("ROLE_SUPER_ADMIN")'
         ),
         new Post(
             uriTemplate: '/tenants/{id}/stop-impersonate',
             status: 200,
             controller: 'App\Controller\TenantImpersonationController::stop',
-            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'End tenant impersonation')
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'End tenant impersonation'),
+            security: 'is_granted("ROLE_USER")'
         ),
         new Delete(
             uriTemplate: '/tenants/{id}',
-            processor: TenantLifecycleProcessor::class
+            processor: TenantLifecycleProcessor::class,
+            security: 'is_granted("ROLE_SUPER_ADMIN")'
         ),
     ],
     normalizationContext: ['groups' => ['tenant:read']],
@@ -91,7 +102,7 @@ final class Tenant
     public ?string $domain = null;
 
     #[Groups(['tenant:read'])]
-    public ?string $status = null;
+    public ?TenantStatus $status = null;
 
     #[Groups(['tenant:write'])]
     public ?string $adminEmail = null;
@@ -103,7 +114,7 @@ final class Tenant
     public ?string $adminPassword = null;
 
     #[Groups(['tenant:read', 'tenant:write'])]
-    public ?string $plan = 'starter';
+    public ?TenantPlan $plan = TenantPlan::Starter;
 
     #[Groups(['tenant:read'])]
     public ?string $createdAt = null;

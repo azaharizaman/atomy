@@ -98,6 +98,7 @@ services:
 
     # SettingsManagement Orchestrator
     Nexus\SettingsManagement\Contracts\SettingsProviderInterface: '@App\Service\Settings\Adapters\SettingsProvider'
+    Nexus\SettingsManagement\Contracts\SettingsPersistProviderInterface: '@App\Service\Settings\Adapters\SettingsProvider'
     Nexus\SettingsManagement\Contracts\FeatureFlagProviderInterface: '@App\Service\Settings\Adapters\FeatureFlagProvider'
     Nexus\SettingsManagement\Contracts\FiscalPeriodProviderInterface: '@App\Service\Settings\Adapters\FiscalPeriodProvider'
 
