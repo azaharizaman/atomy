@@ -25,7 +25,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[ORM\Entity(repositoryClass: SettingRepository::class)]
 #[ORM\Table(name: 'settings')]
-#[ORM\UniqueConstraint(name: 'unique_setting_per_tenant', columns: ['setting_key', 'tenant_id'])]
+#[ORM\UniqueConstraint(name: 'unique_setting_per_tenant', columns: ['key', 'tenant_id'])]
 #[ApiResource(
     operations: [
         new GetCollection(normalizationContext: ['groups' => ['setting:read']]),
@@ -46,7 +46,7 @@ class Setting
     #[Groups(['setting:read'])]
     private string $id;
 
-    #[ORM\Column(name: 'setting_key', type: 'string', length: 100)]
+    #[ORM\Column(name: 'key', type: 'string', length: 100)]
     #[ApiProperty(identifier: true)]
     #[Assert\NotBlank]
     #[Groups(['setting:read', 'setting:write'])]
