@@ -8,18 +8,18 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\FeatureFlag as FeatureFlagResource;
 use App\Service\TenantContext;
-use Nexus\FeatureFlags\Contracts\FlagRepositoryInterface;
+use Nexus\SettingsManagement\Contracts\FeatureFlagCoordinatorInterface;
 
 /**
  * Collection provider for FeatureFlag resource.
  *
- * Fetches feature flags for the current tenant using the FeatureFlags package.
+ * Fetches feature flags for the current tenant using the SettingsManagement orchestrator.
  * Multi-tenant aware - returns tenant-specific flags with global fallback.
  */
 final class FeatureFlagCollectionProvider implements ProviderInterface
 {
     public function __construct(
-        private readonly FlagRepositoryInterface $flagRepository,
+        private readonly FeatureFlagCoordinatorInterface $flagCoordinator,
         private readonly TenantContext $tenantContext
     ) {}
 
@@ -35,7 +35,7 @@ final class FeatureFlagCollectionProvider implements ProviderInterface
         $tenantId = $this->tenantContext->getCurrentTenantId();
 
         // Get all flags for the tenant (includes global flags as fallback)
-        $flags = $this->flagRepository->all($tenantId);
+        $flags = $this->flagCoordinator->getAllFeatureFlags($tenantId);
 
         foreach ($flags as $flag) {
             $featureFlag = new FeatureFlagResource();
