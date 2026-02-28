@@ -14,12 +14,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\InsightOperations": "src/"
+            "Nexus\\InsightOperations\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\InsightOperations\Tests": "tests/"
+            "Nexus\\InsightOperations\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "dev",

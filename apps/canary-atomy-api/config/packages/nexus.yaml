@@ -1,0 +1,68 @@
+# framework:
+#     messenger:
+#         # Uncomment this to send real-time events via messenger
+#         # transports:
+#         #     async: '%env(MESSENGER_TRANSPORT_DSN)%'
+#         # routing:
+#         #     'Nexus\Common\Events\DomainEventInterface': async
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    # Repositories (Auto-wired by Symfony because they implement the interfaces)
+    App\Repository\:
+        resource: '../../src/Repository/'
+
+    # Nexus FeatureFlags
+    Nexus\FeatureFlags\Contracts\FlagRepositoryInterface: '@App\Repository\FeatureFlagRepository'
+    Nexus\FeatureFlags\Contracts\FlagEvaluatorInterface:
+        class: Nexus\FeatureFlags\Core\Engine\DefaultFlagEvaluator
+    
+    Nexus\FeatureFlags\Contracts\FeatureFlagManagerInterface:
+        class: Nexus\FeatureFlags\Services\FeatureFlagManager
+        arguments:
+            $auditChange: '@App\Service\Audit\FeatureFlagAuditLogger'
+
+    # Nexus Setting
+    Nexus\Setting\Contracts\SettingRepositoryInterface: '@App\Repository\SettingRepository'
+    Nexus\Setting\Contracts\SettingsCacheInterface: '@App\Service\Cache\SymfonySettingsCache'
+    
+    Nexus\Setting\Services\SettingsManager:
+        arguments:
+            $userRepository: '@App\Repository\SettingRepository'
+            $tenantRepository: '@App\Repository\SettingRepository'
+            $applicationRepository: '@App\Repository\SettingRepository' # For boilerplate, all use same repo
+            $protectedKeys: ['nexus.license_key']
+
+    # Nexus Tenant
+    Nexus\Tenant\Contracts\TenantPersistenceInterface: '@App\Repository\TenantRepository'
+    Nexus\Tenant\Contracts\TenantQueryInterface: '@App\Repository\TenantRepository'
+    Nexus\Tenant\Contracts\TenantRepositoryInterface: '@App\Repository\TenantRepository'
+
+    # Nexus Identity
+    Nexus\Identity\Contracts\UserRepositoryInterface: '@App\Repository\UserRepository'
+    Nexus\Identity\Contracts\UserQueryInterface: '@App\Repository\UserRepository'
+    Nexus\Identity\Contracts\UserPersistInterface: '@App\Repository\UserRepository'
+
+    # TenantOperations Orchestrator
+    Nexus\TenantOperations\Contracts\TenantQueryAdapterInterface: '@App\Service\Tenant\Adapters\TenantQueryAdapter'
+    Nexus\TenantOperations\Contracts\SettingsQueryAdapterInterface: '@App\Service\Tenant\Adapters\SettingsQueryAdapter'
+    Nexus\TenantOperations\Contracts\FeatureQueryAdapterInterface: '@App\Service\Tenant\Adapters\FeatureQueryAdapter'
+
+    Nexus\TenantOperations\DataProviders\TenantContextDataProvider:
+        autowire: true
+
+    Nexus\TenantOperations\Services\TenantStateManagerInterface: '@App\Service\Tenant\TenantStateManager'
+    Nexus\TenantOperations\Services\UserAccessControllerInterface: '@App\Service\Tenant\UserAccessController'
+    Nexus\TenantOperations\Services\AuditLoggerInterface: '@App\Service\Tenant\TenantAuditLogger'
+    Nexus\TenantOperations\Services\DataArchiverInterface: '@App\Service\Tenant\NoOpDataHandler'
+    Nexus\TenantOperations\Services\DataExporterInterface: '@App\Service\Tenant\NoOpDataHandler'
+    Nexus\TenantOperations\Services\DataDeleterInterface: '@App\Service\Tenant\NoOpDataHandler'
+
+    Nexus\TenantOperations\Services\TenantLifecycleService:
+        autowire: true
+
+    Nexus\TenantOperations\Coordinators\TenantLifecycleCoordinator:
+        autowire: true

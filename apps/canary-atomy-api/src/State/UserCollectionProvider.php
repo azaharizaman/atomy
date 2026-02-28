@@ -7,15 +7,21 @@ namespace App\State;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\User as UserResource;
+use App\Repository\UserRepository;
+use App\Service\TenantContext;
 
 /**
  * Collection provider for User resource.
  *
- * This returns sample data for testing.
- * In production, this would query the User entity filtered by tenant.
+ * Fetches users from the database, filtered by tenant context.
  */
 final class UserCollectionProvider implements ProviderInterface
 {
+    public function __construct(
+        private readonly UserRepository $userRepository,
+        private readonly TenantContext $tenantContext
+    ) {}
+
     /**
      * @param array<string, mixed> $uriVariables
      * @param array<string, mixed> $context
@@ -24,43 +30,23 @@ final class UserCollectionProvider implements ProviderInterface
      */
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): iterable
     {
-        // This is sample data for testing
-        // In production, this would fetch from the User entity filtered by tenant
-        $sampleUsers = [
-            [
-                'id' => 'user-001',
-                'email' => 'admin@example.com',
-                'name' => 'Admin User',
-                'status' => 'active',
-                'roles' => ['ROLE_ADMIN', 'ROLE_USER'],
-                'createdAt' => '2024-01-01T00:00:00+00:00',
-            ],
-            [
-                'id' => 'user-002',
-                'email' => 'john.doe@example.com',
-                'name' => 'John Doe',
-                'status' => 'active',
-                'roles' => ['ROLE_USER'],
-                'createdAt' => '2024-01-15T00:00:00+00:00',
-            ],
-            [
-                'id' => 'user-003',
-                'email' => 'jane.smith@example.com',
-                'name' => 'Jane Smith',
-                'status' => 'active',
-                'roles' => ['ROLE_USER'],
-                'createdAt' => '2024-02-01T00:00:00+00:00',
-            ],
-        ];
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+        
+        $criteria = [];
+        if ($tenantId !== null) {
+            $criteria['tenantId'] = $tenantId;
+        }
 
-        foreach ($sampleUsers as $userData) {
+        $users = $this->userRepository->findBy($criteria);
+
+        foreach ($users as $userData) {
             $user = new UserResource();
-            $user->id = $userData['id'];
-            $user->email = $userData['email'];
-            $user->name = $userData['name'];
-            $user->status = $userData['status'];
-            $user->roles = $userData['roles'];
-            $user->createdAt = $userData['createdAt'];
+            $user->id = $userData->getId();
+            $user->email = $userData->getEmail();
+            $user->name = $userData->getName();
+            $user->status = $userData->getStatus();
+            $user->roles = $userData->getRoles();
+            $user->createdAt = $userData->getCreatedAt()->format(\DateTimeInterface::ISO8601);
 
             yield $user;
         }

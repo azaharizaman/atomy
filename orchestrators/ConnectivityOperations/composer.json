@@ -13,12 +13,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\ConnectivityOperations": "src/"
+            "Nexus\\ConnectivityOperations\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\ConnectivityOperations\Tests": "tests/"
+            "Nexus\\ConnectivityOperations\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "dev",

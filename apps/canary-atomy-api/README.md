@@ -152,7 +152,7 @@ docker-compose down
 http://localhost:8000/api
 ```
 
-### Available Endpoints
+### Available EndpointsT
 
 #### Modules
 

@@ -26,7 +26,7 @@ interface FlagRepositoryInterface
      * @param string|null $tenantId The tenant ID for scoping (null for global)
      * @return FlagDefinitionInterface|null The flag definition or null if not found
      */
-    public function find(string $name, ?string $tenantId = null): ?FlagDefinitionInterface;
+    public function findByName(string $name, ?string $tenantId = null): ?FlagDefinitionInterface;
 
     /**
      * Find multiple flag definitions by names (bulk operation).

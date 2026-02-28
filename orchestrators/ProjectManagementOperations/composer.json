@@ -10,12 +10,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\ProjectManagementOperations": "src/"
+            "Nexus\\ProjectManagementOperations\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\ProjectManagementOperations\Tests": "tests/"
+            "Nexus\\ProjectManagementOperations\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "dev",

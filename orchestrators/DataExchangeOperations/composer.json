@@ -13,12 +13,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\DataExchangeOperations": "src/"
+            "Nexus\\DataExchangeOperations\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\DataExchangeOperations\Tests": "tests/"
+            "Nexus\\DataExchangeOperations\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "dev",

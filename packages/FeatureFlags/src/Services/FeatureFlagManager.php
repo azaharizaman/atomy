@@ -44,7 +44,7 @@ final readonly class FeatureFlagManager implements FeatureFlagManagerInterface
         $tenantId = $context->tenantId;
 
         // Load flag from repository
-        $flag = $this->repository->find($name, $tenantId);
+        $flag = $this->repository->findByName($name, $tenantId);
 
         // Fail-closed security: return default if flag not found
         if ($flag === null) {

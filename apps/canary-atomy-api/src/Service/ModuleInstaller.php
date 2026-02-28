@@ -21,7 +21,8 @@ final class ModuleInstaller
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly ModuleRegistry $moduleRegistry
+        private readonly ModuleRegistry $moduleRegistry,
+        private readonly \Symfony\Component\HttpKernel\KernelInterface $kernel
     ) {}
 
     /**
@@ -172,13 +173,16 @@ final class ModuleInstaller
      */
     private function postInstall(InstalledModule $module): void
     {
-        // This can be extended to:
-        // - Create default settings
-        // - Initialize database tables
-        // - Set up default data
-        // - Trigger events
+        $application = new \Symfony\Bundle\FrameworkBundle\Console\Application($this->kernel);
+        $application->setAutoExit(false);
 
-        // For now, this is a placeholder for the installation lifecycle
+        // 1. Run migrations for the package if they exist
+        $input = new \Symfony\Component\Console\Input\StringInput('doctrine:schema:update --force --no-interaction');
+        $application->run($input, new \Symfony\Component\Console\Output\NullOutput());
+
+        // 2. Load module-specific seed data if available
+        // $input = new \Symfony\Component\Console\Input\StringInput('doctrine:fixtures:load --append --no-interaction');
+        // $application->run($input, new \Symfony\Component\Console\Output\NullOutput());
     }
 
     /**
@@ -186,11 +190,6 @@ final class ModuleInstaller
      */
     private function preUninstall(InstalledModule $module): void
     {
-        // This can be extended to:
-        // - Clean up module data
-        // - Remove settings
-        // - Trigger events
-
-        // For now, this is a placeholder for the uninstallation lifecycle
+        // Cleanup logic here
     }
 }

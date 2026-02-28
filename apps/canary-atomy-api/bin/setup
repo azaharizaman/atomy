@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Canary ERP API Boilerplate Setup Script
+# Automatically bootstraps the application environment
+
+set -e
+
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$APP_DIR"
+
+echo "🚀 Starting Canary ERP API Setup..."
+
+# 1. Install Dependencies
+echo "📦 Installing composer dependencies..."
+composer install --no-interaction --quiet
+
+# 2. Database Initialization
+echo "💾 Initializing database..."
+mkdir -p var
+php bin/console doctrine:database:create --if-not-exists --no-interaction
+php bin/console doctrine:schema:update --force --no-interaction
+
+# 3. Data Seeding
+echo "🌱 Seeding User Acceptance Test (UAT) data..."
+php bin/console doctrine:fixtures:load --no-interaction
+
+# 4. Finalizing
+echo "✨ Setup complete! API is ready at http://localhost:8000"
+echo "🔑 Credentials for UAT:"
+echo "   - Platform Admin: admin@nexus.platform / nexus-admin-secret"
+echo "   - ACME Admin: admin@acme.example.com / password123"

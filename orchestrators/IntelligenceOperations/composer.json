@@ -12,12 +12,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\IntelligenceOperations": "src/"
+            "Nexus\\IntelligenceOperations\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\IntelligenceOperations\Tests": "tests/"
+            "Nexus\\IntelligenceOperations\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "dev",
