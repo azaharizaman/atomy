@@ -1,4 +1,7 @@
 import { getFeatureFlags } from "@/lib/api";
+import { ContentHeader } from "@/components/ContentHeader";
+import { ContentCard } from "@/components/ContentCard";
+import { Bookmark } from "lucide-react";
 
 export default async function FeatureFlagsPage() {
   let flags: Awaited<ReturnType<typeof getFeatureFlags>> = [];
@@ -7,88 +10,54 @@ export default async function FeatureFlagsPage() {
   try {
     flags = await getFeatureFlags();
   } catch (e) {
-    error = e && typeof e === "object" && "message" in e ? String(e.message) : "Failed to load feature flags";
+    error =
+      e && typeof e === "object" && "message" in e
+        ? String((e as { message: string }).message)
+        : "Failed to load feature flags";
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">
-          Feature Flags
-        </h1>
-        <p className="mt-1 text-zinc-400">
-          Feature toggles and rollout configuration
-        </p>
+    <div className="flex flex-col">
+      <div className="border-b border-[var(--border)] bg-white px-8 py-6">
+        <ContentHeader
+          title="Feature Flags"
+          tabs={[
+            { id: "folder", label: "Folder", href: "/" },
+            { id: "modules", label: "Modules", href: "/modules" },
+            { id: "users", label: "Users", href: "/users" },
+            { id: "feature-flags", label: "Feature Flags", href: "/feature-flags" },
+          ]}
+          activeTab="feature-flags"
+          itemCount={flags.length}
+          showViewToggle={true}
+        />
       </div>
 
-      {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-200">
-          {error}
-        </div>
-      )}
+      <div className="flex-1 px-8 py-6">
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+            {error}
+          </div>
+        )}
 
-      <div className="overflow-hidden rounded-xl border border-[var(--border)]">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--surface)]">
-              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">
-                Flag
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">
-                Status
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">
-                Strategy
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">
-                Value
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">
-                Scope
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {flags.length === 0 && !error ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-zinc-500">
-                  No feature flags found
-                </td>
-              </tr>
-            ) : (
-              flags.map((f) => (
-                <tr
-                  key={f.name}
-                  className="border-b border-[var(--border)] last:border-0 hover:bg-zinc-800/30"
-                >
-                  <td className="px-4 py-3 font-mono text-sm text-[var(--foreground)]">
-                    {f.name}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        f.enabled
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-zinc-500/20 text-zinc-400"
-                      }`}
-                    >
-                      {f.enabled ? "Enabled" : "Disabled"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-zinc-400">
-                    {f.strategy ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-sm text-zinc-500">
-                    {f.value != null ? String(f.value) : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-zinc-500">
-                    {f.scope ?? "—"}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {flags.length === 0 && !error ? (
+            <div className="col-span-full flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--surface)] py-16 text-center">
+              <Bookmark className="h-12 w-12 text-[var(--text-muted-light)]" />
+              <p className="mt-4 text-[var(--text-muted)]">No feature flags found</p>
+            </div>
+          ) : (
+            flags.map((f) => (
+              <ContentCard
+                key={f.name}
+                title={f.name}
+                subtitle={f.strategy ?? undefined}
+                count={f.enabled ? "Enabled" : "Disabled"}
+                editedAt={f.scope ?? undefined}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
