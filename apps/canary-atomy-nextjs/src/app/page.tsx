@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { getModules, getUsers, getFeatureFlags } from "@/lib/api";
 import { ContentHeader } from "@/components/ContentHeader";
 import { ContentCard } from "@/components/ContentCard";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 export default async function DashboardPage() {
   let modulesCount = 0;
@@ -51,7 +52,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="border-b border-[var(--border)] bg-white px-8 py-6">
+      <div className="border-b bg-card px-8 py-6">
         <ContentHeader
           title="Dashboard"
           tabs={[
@@ -61,27 +62,20 @@ export default async function DashboardPage() {
             { id: "feature-flags", label: "Feature Flags", href: "/feature-flags" },
           ]}
           activeTab="folder"
-          itemCount={3}
+          itemCount={cards.length}
           showViewToggle={true}
         />
       </div>
 
       <div className="flex-1 px-8 py-6">
         {apiError && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
-            <p className="font-medium">API connection issue</p>
-            <p className="mt-1 text-sm text-amber-700/90">{apiError}</p>
-            <p className="mt-2 text-sm">
-              Ensure{" "}
-              <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-sm">
-                canary-atomy-api
-              </code>{" "}
-              is running on{" "}
-              <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-sm">
-                {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}
-              </code>
-            </p>
-          </div>
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>API connection issue</AlertTitle>
+            <AlertDescription>
+              {apiError}. Ensure canary-atomy-api is running on {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}.
+            </AlertDescription>
+          </Alert>
         )}
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

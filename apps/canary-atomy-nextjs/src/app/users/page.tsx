@@ -3,9 +3,20 @@
 import React, { useEffect, useState } from "react";
 import { getUsers, suspendUser, activateUser, User } from "@/lib/api";
 import { ContentHeader } from "@/components/ContentHeader";
-import { ContentCard } from "@/components/ContentCard";
-import { Users as UsersIcon, UserX, UserCheck, Loader2 } from "lucide-react";
+import { DataTable } from "@/components/DataTable";
+import { ColumnDef } from "@tanstack/react-table";
+import { UserX, UserCheck, Loader2, MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function UsersPage() {
   const { auth } = useAuth();
@@ -55,9 +66,90 @@ export default function UsersPage() {
     }
   };
 
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">{user.name || "N/A"}</span>
+            <span className="text-xs text-muted-foreground">{user.email}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string;
+        return (
+          <Badge variant={status === "active" ? "default" : "destructive"}>
+            {status}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Joined",
+      cell: ({ row }) => {
+        const date = row.getValue("createdAt") as string;
+        return date ? new Date(date).toLocaleDateString() : "—";
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const user = row.original;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(user.id)}
+              >
+                Copy user ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {user.status === "active" ? (
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => handleSuspend(user.id)}
+                  disabled={actionLoading === user.id}
+                >
+                  <UserX className="mr-2 h-4 w-4" />
+                  Suspend User
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  className="text-green-600"
+                  onClick={() => handleActivate(user.id)}
+                  disabled={actionLoading === user.id}
+                >
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Activate User
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="flex flex-col">
-      <div className="border-b border-[var(--border)] bg-white px-8 py-6">
+      <div className="border-b bg-card px-8 py-6">
         <ContentHeader
           title="Users"
           tabs={[
@@ -68,77 +160,23 @@ export default function UsersPage() {
           ]}
           activeTab="users"
           itemCount={users.length}
-          showViewToggle={true}
+          showViewToggle={false}
         />
       </div>
 
       <div className="flex-1 px-8 py-6">
         {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+          <div className="mb-6 rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive">
             {error}
           </div>
         )}
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {users.length === 0 && !error ? (
-              <div className="col-span-full flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--surface)] py-16 text-center">
-                <UsersIcon className="h-12 w-12 text-[var(--text-muted-light)]" />
-                <p className="mt-4 text-[var(--text-muted)]">No users found</p>
-              </div>
-            ) : (
-              users.map((u) => (
-                <div key={u.id} className="group relative">
-                  <ContentCard
-                    title={u.name ?? u.email}
-                    subtitle={u.email}
-                    count={u.status ?? "—"}
-                    editedAt={
-                      u.createdAt
-                        ? new Date(u.createdAt).toLocaleDateString()
-                        : undefined
-                    }
-                  />
-                  
-                  {auth && (
-                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {u.status === "active" ? (
-                        <button
-                          onClick={() => handleSuspend(u.id)}
-                          disabled={actionLoading === u.id}
-                          className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                          title="Suspend User"
-                        >
-                          {actionLoading === u.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <UserX className="h-4 w-4" />
-                          )}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleActivate(u.id)}
-                          disabled={actionLoading === u.id}
-                          className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
-                          title="Activate User"
-                        >
-                          {actionLoading === u.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <UserCheck className="h-4 w-4" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+          <DataTable columns={columns} data={users} searchKey="name" />
         )}
       </div>
     </div>
