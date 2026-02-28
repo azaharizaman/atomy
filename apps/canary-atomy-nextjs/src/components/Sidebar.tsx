@@ -42,7 +42,7 @@ export function Sidebar() {
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
+    return pathname === href || pathname.startsWith(href + "/");
   };
 
   const userInitial = auth?.email?.[0]?.toUpperCase() || "A";
@@ -79,6 +79,7 @@ export function Sidebar() {
           size="sm"
           onClick={() => setCollapsed(!collapsed)}
           className="mt-3 mx-2 text-[hsl(var(--sidebar-foreground))]/70 hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-accent-foreground))]"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -142,6 +143,7 @@ export function Sidebar() {
               size="sm"
               onClick={() => setFavoritesExpanded(!favoritesExpanded)}
               className="w-full justify-start gap-2 px-3 text-[hsl(var(--sidebar-foreground))]/70 hover:bg-[hsl(var(--sidebar-accent))]/30"
+              aria-label={favoritesExpanded ? "Collapse favorites" : "Expand favorites"}
             >
               <span className="flex-1 text-left">Collections</span>
               <ChevronRight
@@ -207,6 +209,7 @@ export function Sidebar() {
                   collapsed ? "px-0 justify-center" : ""
                 }`}
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="h-5 w-5 shrink-0" />
                 {!collapsed && <span className="text-sm font-medium">Sign out</span>}
@@ -219,6 +222,7 @@ export function Sidebar() {
                   collapsed ? "px-0 justify-center" : ""
                 }`}
                 title="Sign in"
+                aria-label="Sign in"
               >
                 <LogIn className="h-5 w-5 shrink-0" />
                 {!collapsed && <span className="text-sm font-medium">Sign in</span>}
@@ -235,4 +239,3 @@ export function Sidebar() {
     </>
   );
 }
-

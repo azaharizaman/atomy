@@ -116,7 +116,12 @@ export default function UsersPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(user.id)}
+                onClick={() => {
+                  navigator.clipboard.writeText(user.id).catch((err) => {
+                    console.error("Clipboard write failed:", err);
+                    setError("Failed to copy user ID to clipboard");
+                  });
+                }}
               >
                 Copy user ID
               </DropdownMenuItem>
@@ -166,7 +171,11 @@ export default function UsersPage() {
 
       <div className="flex-1 px-8 py-6">
         {error && (
-          <div className="mb-6 rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive">
+          <div 
+            role="alert" 
+            aria-live="assertive"
+            className="mb-6 rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive"
+          >
             {error}
           </div>
         )}

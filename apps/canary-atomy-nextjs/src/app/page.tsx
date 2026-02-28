@@ -20,6 +20,7 @@ export default async function DashboardPage() {
     usersCount = users.length;
     flagsCount = flags.length;
   } catch (e) {
+    console.error("Dashboard API Error:", e);
     apiError =
       e && typeof e === "object" && "message" in e
         ? String((e as { message: string }).message)
@@ -73,7 +74,12 @@ export default async function DashboardPage() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>API connection issue</AlertTitle>
             <AlertDescription>
-              {apiError}. Ensure canary-atomy-api is running on {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}.
+              Unable to connect to API. Please try again later.
+              {process.env.NODE_ENV === "development" && (
+                <div className="mt-2 text-xs font-mono opacity-70">
+                  Debug: {apiError} ({process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"})
+                </div>
+              )}
             </AlertDescription>
           </Alert>
         )}

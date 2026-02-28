@@ -57,8 +57,11 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     try {
       await login(values.email, values.password, values.tenantId);
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      form.setError("root", { 
+        message: err.message || "Invalid email or password. Please try again." 
+      });
     }
   }
 
@@ -72,10 +75,10 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </DialogDescription>
         </DialogHeader>
         
-        {authError && (
+        {(authError || form.formState.errors.root) && (
           <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
             <AlertCircle className="h-4 w-4" />
-            <p>{authError}</p>
+            <p>{authError || form.formState.errors.root?.message}</p>
           </div>
         )}
 

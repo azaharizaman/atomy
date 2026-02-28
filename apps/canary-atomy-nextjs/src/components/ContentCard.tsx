@@ -27,15 +27,22 @@ export function ContentCard({ title, subtitle, href, count, editedAt }: ContentC
           <span className="text-xs text-muted-foreground/70">Edited {editedAt}</span>
         )}
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute right-2 top-2 h-8 w-8 text-muted-foreground hover:text-foreground"
-        aria-label="More options"
-      >
-        <MoreVertical className="h-4 w-4" />
-      </Button>
     </CardContent>
+  );
+
+  const actionButton = (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="absolute right-2 top-2 h-8 w-8 text-muted-foreground hover:text-foreground z-10"
+      aria-label="More options"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
+      <MoreVertical className="h-4 w-4" />
+    </Button>
   );
 
   const className =
@@ -43,18 +50,21 @@ export function ContentCard({ title, subtitle, href, count, editedAt }: ContentC
 
   if (href) {
     return (
-      <Link href={href} className={className}>
-        <Card className="border-0 shadow-none bg-transparent">
-          {content}
-        </Card>
-      </Link>
+      <div className="relative group">
+        <Link href={href} className={className}>
+          <Card className="border-0 shadow-none bg-transparent">
+            {content}
+          </Card>
+        </Link>
+        {actionButton}
+      </div>
     );
   }
 
   return (
     <Card className={className}>
+      {actionButton}
       {content}
     </Card>
   );
 }
-
