@@ -28,7 +28,7 @@ final class Version20260226150000 extends AbstractMigration
             installed_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
             installed_by VARCHAR(255) NOT NULL,
             metadata JSON NOT NULL,
-            tenant_id VARCHAR(26) DEFAULT NULL,
+            tenant_id VARCHAR(36) DEFAULT NULL,
             PRIMARY KEY(id)
         )');
 
