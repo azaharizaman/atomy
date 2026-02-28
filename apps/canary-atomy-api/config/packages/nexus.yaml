@@ -15,10 +15,15 @@ services:
     App\Repository\:
         resource: '../../src/Repository/'
 
+    App\Repository\SettingPersistRepositoryInterface: '@App\Repository\SettingPersistRepository'
+
     # Nexus FeatureFlags
     Nexus\FeatureFlags\Contracts\FlagRepositoryInterface: '@App\Repository\FeatureFlagRepository'
     Nexus\FeatureFlags\Contracts\FlagEvaluatorInterface:
         class: Nexus\FeatureFlags\Core\Engine\DefaultFlagEvaluator
+    
+    Nexus\FeatureFlags\Core\Engine\PercentageHasher:
+        autowire: true
     
     Nexus\FeatureFlags\Contracts\FeatureFlagManagerInterface:
         class: Nexus\FeatureFlags\Services\FeatureFlagManager
@@ -45,11 +50,24 @@ services:
     Nexus\Identity\Contracts\UserRepositoryInterface: '@App\Repository\UserRepository'
     Nexus\Identity\Contracts\UserQueryInterface: '@App\Repository\UserRepository'
     Nexus\Identity\Contracts\UserPersistInterface: '@App\Repository\UserRepository'
+    Nexus\Identity\Contracts\PasswordHasherInterface: '@App\Service\Tenant\NoOpImpersonationHandler' # Temporarily use as mock
+    Nexus\Identity\Contracts\PolicyEvaluatorInterface: '@App\Service\Tenant\NoOpImpersonationHandler' # Temporarily use as mock
+    Nexus\Identity\Contracts\PermissionCheckerInterface: '@App\Service\Tenant\NoOpImpersonationHandler' # Temporarily use as mock
 
     # TenantOperations Orchestrator
     Nexus\TenantOperations\Contracts\TenantQueryAdapterInterface: '@App\Service\Tenant\Adapters\TenantQueryAdapter'
     Nexus\TenantOperations\Contracts\SettingsQueryAdapterInterface: '@App\Service\Tenant\Adapters\SettingsQueryAdapter'
     Nexus\TenantOperations\Contracts\FeatureQueryAdapterInterface: '@App\Service\Tenant\Adapters\FeatureQueryAdapter'
+    Nexus\TenantOperations\Contracts\TenantOnboardingCoordinatorInterface: '@Nexus\TenantOperations\Services\TenantOnboardingService'
+    Nexus\TenantOperations\Contracts\TenantLifecycleCoordinatorInterface: '@Nexus\TenantOperations\Coordinators\TenantLifecycleCoordinator'
+    Nexus\TenantOperations\Contracts\TenantImpersonationCoordinatorInterface: '@Nexus\TenantOperations\Coordinators\TenantImpersonationCoordinator'
+    
+    Nexus\TenantOperations\Contracts\TenantCreatorAdapterInterface: '@App\Service\Tenant\Adapters\TenantCreatorAdapter'
+    Nexus\TenantOperations\Contracts\AdminCreatorAdapterInterface: '@App\Service\Tenant\Adapters\AdminCreatorAdapter'
+    Nexus\TenantOperations\Contracts\SettingsInitializerAdapterInterface: '@App\Service\Tenant\Adapters\SettingsInitializerAdapter'
+    Nexus\TenantOperations\Contracts\FeatureConfiguratorAdapterInterface: '@App\Service\Tenant\Adapters\FeatureConfiguratorAdapter'
+    Nexus\TenantOperations\Contracts\AuditLoggerAdapterInterface: '@App\Service\Tenant\TenantAuditLogger'
+    Nexus\TenantOperations\Contracts\CompanyCreatorAdapterInterface: '@App\Service\Tenant\NoOpDataHandler'
 
     Nexus\TenantOperations\DataProviders\TenantContextDataProvider:
         autowire: true
@@ -57,12 +75,65 @@ services:
     Nexus\TenantOperations\Services\TenantStateManagerInterface: '@App\Service\Tenant\TenantStateManager'
     Nexus\TenantOperations\Services\UserAccessControllerInterface: '@App\Service\Tenant\UserAccessController'
     Nexus\TenantOperations\Services\AuditLoggerInterface: '@App\Service\Tenant\TenantAuditLogger'
+    Nexus\TenantOperations\Services\AuditLoggerAdapterInterface: '@App\Service\Tenant\TenantAuditLogger'
     Nexus\TenantOperations\Services\DataArchiverInterface: '@App\Service\Tenant\NoOpDataHandler'
     Nexus\TenantOperations\Services\DataExporterInterface: '@App\Service\Tenant\NoOpDataHandler'
     Nexus\TenantOperations\Services\DataDeleterInterface: '@App\Service\Tenant\NoOpDataHandler'
+    
+    Nexus\TenantOperations\Services\ImpersonationSessionManagerInterface: '@App\Service\Tenant\NoOpImpersonationHandler'
+    Nexus\TenantOperations\Services\ImpersonationPermissionCheckerInterface: '@App\Service\Tenant\NoOpImpersonationHandler'
+    Nexus\TenantOperations\Rules\ImpersonationPermissionCheckerInterface: '@App\Service\Tenant\NoOpImpersonationHandler'
 
     Nexus\TenantOperations\Services\TenantLifecycleService:
         autowire: true
 
     Nexus\TenantOperations\Coordinators\TenantLifecycleCoordinator:
+        autowire: true
+
+    Nexus\TenantOperations\Coordinators\TenantImpersonationCoordinator:
+        autowire: true
+
+    Nexus\TenantOperations\Services\TenantOnboardingService:
+        autowire: true
+
+    Nexus\TenantOperations\Services\TenantImpersonationService:
+        autowire: true
+
+    Nexus\TenantOperations\Rules\ImpersonationAllowedRule:
+        autowire: true
+
+    # SettingsManagement Orchestrator
+    Nexus\SettingsManagement\Contracts\SettingsProviderInterface: '@App\Service\Settings\Adapters\SettingsProvider'
+    Nexus\SettingsManagement\Contracts\SettingsPersistProviderInterface: '@App\Service\Settings\Adapters\SettingsProvider'
+    Nexus\SettingsManagement\Contracts\FeatureFlagProviderInterface: '@App\Service\Settings\Adapters\FeatureFlagProvider'
+    Nexus\SettingsManagement\Contracts\FiscalPeriodProviderInterface: '@App\Service\Settings\Adapters\FiscalPeriodProvider'
+
+    Nexus\SettingsManagement\Contracts\SettingsCoordinatorInterface: '@Nexus\SettingsManagement\Coordinators\SettingsCoordinator'
+    Nexus\SettingsManagement\Contracts\FeatureFlagCoordinatorInterface: '@Nexus\SettingsManagement\Coordinators\FeatureFlagCoordinator'
+    Nexus\SettingsManagement\Contracts\FiscalPeriodCoordinatorInterface: '@Nexus\SettingsManagement\Coordinators\FiscalPeriodCoordinator'
+
+    Nexus\SettingsManagement\Contracts\SettingsUpdateServiceInterface: '@Nexus\SettingsManagement\Services\SettingsUpdateService'
+    Nexus\SettingsManagement\Contracts\FeatureFlagServiceInterface: '@Nexus\SettingsManagement\Services\FeatureFlagService'
+    Nexus\SettingsManagement\Contracts\FiscalPeriodServiceInterface: '@Nexus\SettingsManagement\Services\FiscalPeriodService'
+    Nexus\SettingsManagement\Contracts\ConfigurationSyncServiceInterface: '@Nexus\SettingsManagement\Services\ConfigurationSyncService'
+
+    Nexus\SettingsManagement\Services\SettingsUpdateService:
+        autowire: true
+    
+    Nexus\SettingsManagement\Services\FeatureFlagService:
+        autowire: true
+    
+    Nexus\SettingsManagement\Services\FiscalPeriodService:
+        autowire: true
+    
+    Nexus\SettingsManagement\Services\ConfigurationSyncService:
+        autowire: true
+
+    Nexus\SettingsManagement\Coordinators\SettingsCoordinator:
+        autowire: true
+    
+    Nexus\SettingsManagement\Coordinators\FeatureFlagCoordinator:
+        autowire: true
+
+    Nexus\SettingsManagement\Coordinators\FiscalPeriodCoordinator:
         autowire: true

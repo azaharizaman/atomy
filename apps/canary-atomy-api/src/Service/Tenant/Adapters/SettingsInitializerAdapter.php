@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Service\Tenant\Adapters;
+
+use App\Repository\SettingRepository;
+use Nexus\TenantOperations\Contracts\SettingsInitializerAdapterInterface;
+
+final readonly class SettingsInitializerAdapter implements SettingsInitializerAdapterInterface
+{
+    public function __construct(
+        private SettingRepository $settingRepository
+    ) {}
+
+    public function initialize(string $tenantId, array $settings): void
+    {
+        foreach ($settings as $key => $value) {
+            $this->settingRepository->setForTenant($key, $value, $tenantId);
+        }
+
+        // Defaults if not provided
+        if (!isset($settings['timezone'])) {
+            $this->settingRepository->setForTenant('timezone', 'UTC', $tenantId);
+        }
+        if (!isset($settings['currency'])) {
+            $this->settingRepository->setForTenant('currency', 'USD', $tenantId);
+        }
+    }
+}

@@ -14,6 +14,7 @@ use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Nexus\Identity\Contracts\UserInterface as NexusUserInterface;
+use Nexus\Identity\ValueObjects\RoleEnum;
 use Nexus\Identity\ValueObjects\UserStatus;
 use Symfony\Bridge\Doctrine\Types\UlidType;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -109,8 +110,42 @@ class User implements SymfonyUserInterface, PasswordAuthenticatedUserInterface, 
 
     // Symfony UserInterface
     public function getUserIdentifier(): string { return $this->email; }
-    public function getRoles(): array { $roles = $this->roles; $roles[] = 'ROLE_USER'; return array_unique($roles); }
-    public function setRoles(array $roles): self { $this->roles = $roles; return $this; }
+    
+    public function getRoles(): array 
+    { 
+        $roles = $this->roles; 
+        $roles[] = RoleEnum::USER->value; 
+        return array_unique($roles); 
+    }
+    
+    public function setRoles(array $roles): self 
+    { 
+        $this->roles = $roles; 
+        return $this; 
+    }
+
+    /**
+     * @param RoleEnum[] $roles
+     */
+    public function setEnumRoles(array $roles): self
+    {
+        $this->roles = array_map(fn(RoleEnum $role) => $role->value, $roles);
+        return $this;
+    }
+
+    public function addRole(RoleEnum $role): self
+    {
+        if (!in_array($role->value, $this->roles, true)) {
+            $this->roles[] = $role->value;
+        }
+        return $this;
+    }
+
+    public function hasRole(RoleEnum $role): bool
+    {
+        return in_array($role->value, $this->getRoles(), true);
+    }
+
     public function eraseCredentials(): void {}
 
     // PasswordAuthenticatedUserInterface

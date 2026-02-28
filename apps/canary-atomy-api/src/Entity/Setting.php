@@ -25,6 +25,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[ORM\Entity(repositoryClass: SettingRepository::class)]
 #[ORM\Table(name: 'settings')]
+#[ORM\UniqueConstraint(name: 'unique_setting_per_tenant', columns: ['setting_key', 'tenant_id'])]
 #[ApiResource(
     operations: [
         new GetCollection(normalizationContext: ['groups' => ['setting:read']]),
@@ -45,8 +46,7 @@ class Setting
     #[Groups(['setting:read'])]
     private string $id;
 
-    #[ORM\Column(type: 'string', length: 100)]
-    #[ORM\Id]
+    #[ORM\Column(name: 'setting_key', type: 'string', length: 100)]
     #[ApiProperty(identifier: true)]
     #[Assert\NotBlank]
     #[Groups(['setting:read', 'setting:write'])]
@@ -72,7 +72,7 @@ class Setting
     #[Groups(['setting:read', 'setting:write'])]
     private bool $isReadOnly = false;
 
-    #[ORM\Column(type: 'string', length: 26, nullable: true)]
+    #[ORM\Column(name: 'tenant_id', type: 'string', length: 26, nullable: true)]
     #[Groups(['setting:read', 'setting:write'])]
     private ?string $tenantId = null;
 
@@ -81,7 +81,7 @@ class Setting
         $this->id = (new Ulid())->toBase32();
         $this->key = $key;
         $this->value = $value;
-        $this->type = gettype($value);
+        $this->type = $this->resolveTypeName($value);
     }
 
     public function getId(): string { return $this->id; }
@@ -93,9 +93,26 @@ class Setting
     public function isReadOnly(): bool { return $this->isReadOnly; }
     public function getTenantId(): ?string { return $this->tenantId; }
 
-    public function setValue(mixed $value): self { $this->value = $value; $this->type = gettype($value); return $this; }
+    public function setValue(mixed $value): self 
+    { 
+        $this->value = $value; 
+        $this->type = $this->resolveTypeName($value); 
+        return $this; 
+    }
+    
     public function setScope(string $scope): self { $this->scope = $scope; return $this; }
     public function setEncrypted(bool $isEncrypted): self { $this->isEncrypted = $isEncrypted; return $this; }
     public function setReadOnly(bool $isReadOnly): self { $this->isReadOnly = $isReadOnly; return $this; }
     public function setTenantId(?string $tenantId): self { $this->tenantId = $tenantId; return $this; }
+
+    private function resolveTypeName(mixed $value): string
+    {
+        return match (gettype($value)) {
+            'integer' => 'int',
+            'double' => 'float',
+            'boolean' => 'bool',
+            'NULL' => 'null',
+            default => gettype($value),
+        };
+    }
 }

@@ -11,7 +11,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Nexus\Setting\Contracts\SettingRepositoryInterface;
 
 /**
- * Setting Repository.
+ * Setting Repository (Query/Read Concerns).
  * 
  * @extends ServiceEntityRepository<Setting>
  */
@@ -28,58 +28,24 @@ final class SettingRepository extends ServiceEntityRepository implements Setting
     {
         $tenantId = $this->tenantContext->getCurrentTenantId();
         
-        // Tenant inheritance:
-        // 1. Check for tenant-specific setting
         if ($tenantId !== null) {
             $setting = $this->findOneBy(['key' => $key, 'tenantId' => $tenantId]);
             if ($setting) return $setting->getValue();
         }
 
-        // 2. Check for global setting (no tenant ID)
         $setting = $this->findOneBy(['key' => $key, 'tenantId' => null]);
         return $setting ? $setting->getValue() : $default;
-    }
-
-    public function set(string $key, mixed $value): void
-    {
-        $tenantId = $this->tenantContext->getCurrentTenantId();
-        
-        $setting = $this->findOneBy(['key' => $key, 'tenantId' => $tenantId]);
-        
-        if (!$setting) {
-            $setting = new Setting($key, $value);
-            $setting->setTenantId($tenantId);
-            $this->getEntityManager()->persist($setting);
-        } else {
-            $setting->setValue($value);
-        }
-
-        $this->getEntityManager()->flush();
-    }
-
-    public function delete(string $key): void
-    {
-        $tenantId = $this->tenantContext->getCurrentTenantId();
-        $setting = $this->findOneBy(['key' => $key, 'tenantId' => $tenantId]);
-        
-        if ($setting) {
-            $this->getEntityManager()->remove($setting);
-            $this->getEntityManager()->flush();
-        }
     }
 
     public function has(string $key): bool
     {
         $tenantId = $this->tenantContext->getCurrentTenantId();
-        $criteria = ['key' => $key];
         
-        if ($tenantId !== null) {
-            $criteria['tenantId'] = $tenantId;
-            if ($this->count($criteria) > 0) return true;
+        if ($tenantId !== null && $this->count(['key' => $key, 'tenantId' => $tenantId]) > 0) {
+            return true;
         }
 
-        $criteria['tenantId'] = null;
-        return $this->count($criteria) > 0;
+        return $this->count(['key' => $key, 'tenantId' => null]) > 0;
     }
 
     public function getAll(): array
@@ -134,12 +100,20 @@ final class SettingRepository extends ServiceEntityRepository implements Setting
         ];
     }
 
-    public function bulkSet(array $settings): void
-    {
-        foreach ($settings as $key => $value) {
-            $this->set($key, $value);
-        }
-    }
+    /**
+     * @deprecated Use SettingPersistRepository::set()
+     */
+    public function set(string $key, mixed $value): void { throw new \LogicException('Use SettingPersistRepository for writes'); }
 
-    public function isWritable(): bool { return true; }
+    /**
+     * @deprecated Use SettingPersistRepository::delete()
+     */
+    public function delete(string $key): void { throw new \LogicException('Use SettingPersistRepository for writes'); }
+
+    /**
+     * @deprecated Use SettingPersistRepository::bulkSet()
+     */
+    public function bulkSet(array $settings): void { throw new \LogicException('Use SettingPersistRepository for writes'); }
+
+    public function isWritable(): bool { return false; }
 }

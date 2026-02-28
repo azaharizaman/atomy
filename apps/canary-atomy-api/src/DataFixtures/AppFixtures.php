@@ -12,6 +12,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Nexus\FeatureFlags\Enums\FlagOverride;
 use Nexus\FeatureFlags\Enums\FlagStrategy;
+use Nexus\Identity\ValueObjects\RoleEnum;
 use Nexus\Identity\ValueObjects\UserStatus;
 use Nexus\Tenant\Enums\TenantStatus;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -54,60 +55,104 @@ final class AppFixtures extends Fixture
 
         // 3. Create Tenants
         $tenantsData = [
-            ['code' => 'ACME', 'name' => 'Acme Corp', 'email' => 'admin@acme.example.com'],
+            ['code' => 'ACME', 'name' => 'Acme Corporation', 'email' => 'admin@acme.example.com'],
             ['code' => 'GLOBEX', 'name' => 'Globex Corporation', 'email' => 'admin@globex.example.com'],
-            ['code' => 'INITECH', 'name' => 'Initech', 'email' => 'admin@initech.example.com'],
+            ['code' => 'INITECH', 'name' => 'Initech Industries', 'email' => 'admin@initech.example.com'],
+            ['code' => 'STARK', 'name' => 'Stark Industries', 'email' => 'admin@stark.example.com'],
+            ['code' => 'WAYNE', 'name' => 'Wayne Enterprises', 'email' => 'admin@wayne.example.com'],
+            ['code' => 'UMBRELLA', 'name' => 'Umbrella Corporation', 'email' => 'admin@umbrella.example.com'],
+            ['code' => 'OSCORP', 'name' => 'Oscorp Technologies', 'email' => 'admin@oscorp.example.com'],
+            ['code' => 'BUYNLARGE', 'name' => 'Buy n Large', 'email' => 'admin@bnl.example.com'],
+            ['code' => 'VERIDIAN', 'name' => 'Veridian Dynamics', 'email' => 'admin@veridian.example.com'],
+            ['code' => 'MASSIVE', 'name' => 'Massive Dynamic', 'email' => 'admin@massive.example.com'],
         ];
 
         $tenants = [];
         foreach ($tenantsData as $data) {
             $tenant = new Tenant($data['code'], $data['name'], $data['email']);
-            $tenant->setStatus(TenantStatus::Active);
+            $tenant->setStatus($data['code'] === 'OSCORP' ? TenantStatus::Suspended : TenantStatus::Active);
+            $tenant->setDomain(strtolower($data['code']) . '.example.com');
             $manager->persist($tenant);
             $tenants[] = $tenant;
 
             // 4. Create Tenant-Specific Settings
-            $currency = new Setting('app.currency', $data['code'] === 'ACME' ? 'USD' : 'EUR');
+            $currency = new Setting('app.currency', in_array($data['code'], ['ACME', 'STARK', 'WAYNE']) ? 'USD' : 'EUR');
             $currency->setTenantId($tenant->getId());
             $manager->persist($currency);
 
+            $timezone = new Setting('app.timezone', $data['code'] === 'STARK' ? 'America/New_York' : 'UTC');
+            $timezone->setTenantId($tenant->getId());
+            $manager->persist($timezone);
+
             // 5. Create Tenant-Specific Flags (Overrides)
             $flag = new FeatureFlag('api.v2_beta');
-            $flag->setEnabled(true);
+            $flag->setEnabled($data['code'] !== 'INITECH');
             $flag->setStrategy(FlagStrategy::SYSTEM_WIDE);
-            $flag->setOverride(FlagOverride::FORCE_ON);
+            $flag->setOverride($data['code'] === 'STARK' ? FlagOverride::FORCE_ON : null);
             $flag->setTenantId($tenant->getId());
             $manager->persist($flag);
 
             // 6. Create Users for each Tenant
-            $user = new User($data['email']);
-            $user->setName($data['name'] . ' Admin');
-            $user->setRoles(['ROLE_ADMIN', 'ROLE_USER']);
-            $user->setStatus(UserStatus::ACTIVE);
-            $user->setTenantId($tenant->getId());
-            $user->setPassword($this->passwordHasher->hashPassword($user, 'password123'));
-            $manager->persist($user);
+            $this->createUser(
+                $manager,
+                $data['email'],
+                $data['name'] . ' Administrator',
+                [RoleEnum::ADMIN],
+                UserStatus::ACTIVE,
+                $tenant->getId(),
+                'password123'
+            );
 
-            // Add some regular users
-            for ($i = 1; $i <= 3; $i++) {
-                $u = new User(strtolower($data['code']) . ".user$i@example.com");
-                $u->setName($data['code'] . " User $i");
-                $u->setRoles(['ROLE_USER']);
-                $u->setStatus(UserStatus::ACTIVE);
-                $u->setTenantId($tenant->getId());
-                $u->setPassword($this->passwordHasher->hashPassword($u, 'password123'));
-                $manager->persist($u);
+            // Add some regular users (5-10 per tenant)
+            $userCount = rand(5, 10);
+            for ($i = 1; $i <= $userCount; $i++) {
+                $this->createUser(
+                    $manager,
+                    strtolower($data['code']) . ".user$i@example.com",
+                    $data['code'] . " User $i",
+                    [RoleEnum::USER],
+                    rand(0, 10) > 8 ? UserStatus::SUSPENDED : UserStatus::ACTIVE,
+                    $tenant->getId(),
+                    'password123'
+                );
             }
         }
 
         // 7. Create Platform Super Admin
-        $admin = new User('admin@nexus.platform');
-        $admin->setName('Platform Admin');
-        $admin->setRoles(['ROLE_SUPER_ADMIN']);
-        $admin->setStatus(UserStatus::ACTIVE);
-        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'nexus-admin-secret'));
-        $manager->persist($admin);
+        $this->createUser(
+            $manager,
+            'admin@nexus.platform',
+            'Platform Admin',
+            [RoleEnum::SUPER_ADMIN],
+            UserStatus::ACTIVE,
+            null,
+            'nexus-admin-secret'
+        );
 
         $manager->flush();
+    }
+
+    /**
+     * @param RoleEnum[] $roles
+     */
+    private function createUser(
+        ObjectManager $manager,
+        string $email,
+        string $name,
+        array $roles,
+        UserStatus $status,
+        ?string $tenantId,
+        string $plainPassword
+    ): User {
+        $user = new User($email);
+        $user->setName($name);
+        $user->setEnumRoles($roles);
+        $user->setStatus($status);
+        $user->setTenantId($tenantId);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
+        
+        $manager->persist($user);
+        
+        return $user;
     }
 }
