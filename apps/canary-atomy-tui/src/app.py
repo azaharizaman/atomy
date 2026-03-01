@@ -13,14 +13,12 @@ class Sidebar(Vertical):
 
     def compose(self) -> ComposeResult:
         yield Label("NEXUS CANARY", id="app-title")
-        yield ListView(
-            ListItem(Label("Tenants"), id="nav-tenants"),
-            ListItem(Label("Users"), id="nav-users"),
-            ListItem(Label("Features"), id="nav-features"),
-            ListItem(Label("Modules"), id="nav-modules"),
-            ListItem(Label("Feature Flags"), id="nav-flags"),
-            id="nav-list"
-        )
+        with ListView(id="nav-list"):
+            yield ListItem(Label("Tenants"), id="nav-tenants")
+            yield ListItem(Label("Users"), id="nav-users")
+            yield ListItem(Label("Features"), id="nav-features")
+            yield ListItem(Label("Modules"), id="nav-modules")
+            yield ListItem(Label("Feature Flags"), id="nav-flags")
 
     def on_mount(self) -> None:
         if self.active_id:
@@ -35,16 +33,12 @@ class Sidebar(Vertical):
 
 class LoginScreen(Screen):
     def compose(self) -> ComposeResult:
-        yield Grid(
-            Vertical(
-                Label("Atomy Admin Login", id="login-title"),
-                Input(placeholder="Email", id="email", value="system@nexus.example.com"),
-                Input(placeholder="Password", password=True, id="password", value="password123"),
-                Button("Login", variant="primary", id="login-btn"),
-                id="login-form"
-            ),
-            id="login-container"
-        )
+        with Grid(id="login-container"):
+            with Vertical(id="login-form"):
+                yield Label("Atomy Admin Login", id="login-title")
+                yield Input(placeholder="Email", id="email", value="system@nexus.example.com")
+                yield Input(placeholder="Password", password=True, id="password", value="password123")
+                yield Button("Login", variant="primary", id="login-btn")
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "login-btn":
@@ -64,14 +58,11 @@ class BaseScreen(Screen):
     TITLE = ""
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Horizontal(
-            Sidebar(id="sidebar", active_id=self.ACTIVE_NAV),
-            Vertical(
-                Label(self.TITLE, id="screen-title"),
-                self.get_content(),
-                id="main-content"
-            )
-        )
+        with Horizontal():
+            yield Sidebar(id="sidebar", active_id=self.ACTIVE_NAV)
+            with Vertical(id="main-content"):
+                yield Label(self.TITLE, id="screen-title")
+                yield from self.get_content()
         yield Footer()
 
     def get_content(self) -> ComposeResult:
