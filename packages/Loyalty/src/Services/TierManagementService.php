@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Loyalty\Services;
 
 use DateTimeImmutable;
+use Nexus\Loyalty\Contracts\LoyaltySettingsInterface;
 use Nexus\Loyalty\Contracts\TierManagerInterface;
 use Nexus\Loyalty\Entities\LoyaltyProfile;
 use Nexus\Loyalty\ValueObjects\TierStatus;
@@ -16,18 +17,10 @@ use Nexus\Loyalty\ValueObjects\TierStatus;
 final readonly class TierManagementService implements TierManagerInterface
 {
     /**
-     * @param array<string, array{threshold: int, name: string, benefits: array<string>}> $tierConfig Configuration for each tier level.
-     * @param int $defaultRetentionMonths Number of months a member retains a tier.
-     * @param int $evaluationWindowDays Sliding window for qualifying points (e.g., 365).
+     * @param LoyaltySettingsInterface $settings Injected settings interface.
      */
     public function __construct(
-        private array $tierConfig = [
-            'bronze' => ['threshold' => 0, 'name' => 'Bronze Status', 'benefits' => ['standard_support']],
-            'gold' => ['threshold' => 5000, 'name' => 'Gold Status', 'benefits' => ['standard_support', 'free_shipping']],
-            'platinum' => ['threshold' => 15000, 'name' => 'Platinum Status', 'benefits' => ['priority_support', 'free_shipping', 'exclusive_events']],
-        ],
-        private int $defaultRetentionMonths = 12,
-        private int $evaluationWindowDays = 365
+        private LoyaltySettingsInterface $settings
     ) {
     }
 
@@ -62,10 +55,10 @@ final readonly class TierManagementService implements TierManagerInterface
         $bestTier = 'bronze';
         
         // Sort config by threshold descending to find the highest qualifying tier first
-        $sortedTiers = $this->tierConfig;
-        uasort($sortedTiers, fn($a, $b) => $b['threshold'] <=> $a['threshold']);
+        $tierConfig = $this->settings->getTierConfig();
+        uasort($tierConfig, fn($a, $b) => $b['threshold'] <=> $a['threshold']);
 
-        foreach ($sortedTiers as $tierId => $config) {
+        foreach ($tierConfig as $tierId => $config) {
             if ($points >= $config['threshold']) {
                 $bestTier = $tierId;
                 break;
@@ -79,8 +72,8 @@ final readonly class TierManagementService implements TierManagerInterface
             return $profile->tier;
         }
 
-        $config = $this->tierConfig[$bestTier];
-        $expiry = $now->modify(sprintf("+%d months", $this->defaultRetentionMonths));
+        $config = $this->settings->getTierConfig()[$bestTier];
+        $expiry = $now->modify(sprintf("+%d months", $this->settings->getDefaultRetentionMonths()));
 
         return new TierStatus(
             $bestTier,
@@ -96,7 +89,8 @@ final readonly class TierManagementService implements TierManagerInterface
      */
     private function isHigherTier(string $tierA, string $tierB): bool
     {
-        $tiers = array_keys($this->tierConfig);
+        $tierConfig = $this->settings->getTierConfig();
+        $tiers = array_keys($tierConfig);
         $posA = array_search($tierA, $tiers);
         $posB = array_search($tierB, $tiers);
 

@@ -9,13 +9,28 @@ use Nexus\Common\ValueObjects\Money;
 use Nexus\Loyalty\Exceptions\AccrualCapExceededException;
 use Nexus\Loyalty\Enums\RoundingStrategy;
 use Nexus\Loyalty\Services\PointCalculationEngine;
+use Nexus\Loyalty\Contracts\LoyaltySettingsInterface;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 
 final class PointCalculatorTest extends TestCase
 {
+    private LoyaltySettingsInterface|MockObject $settings;
+
+    protected function setUp(): void
+    {
+        $this->settings = $this->createMock(LoyaltySettingsInterface::class);
+        $this->settings->method('getBaseRate')->willReturn(1.0);
+        $this->settings->method('getExperientialRewards')->willReturn([
+            'social_share' => 50,
+            'eco_action' => 100,
+            'on_time_payment' => 200,
+        ]);
+    }
+
     public function test_it_calculates_points_with_multipliers(): void
     {
-        $engine = new PointCalculationEngine(RoundingStrategy::Floor, 1.0);
+        $engine = new PointCalculationEngine($this->settings, RoundingStrategy::Floor);
         $amount = new Money(1000, 'USD'); // $10.00
 
         // 10 * 1.0 * 1.5 = 15
@@ -26,7 +41,7 @@ final class PointCalculatorTest extends TestCase
 
     public function test_it_validates_currency_consistency(): void
     {
-        $engine = new PointCalculationEngine();
+        $engine = new PointCalculationEngine($this->settings);
         $amount = new Money(1000, 'USD');
 
         $this->expectException(InvalidArgumentException::class);
@@ -39,13 +54,13 @@ final class PointCalculatorTest extends TestCase
         $amount = new Money(1000, 'USD'); // $10.00
         $multipliers = ['promo' => 1.55]; // 10 * 1.55 = 15.5
 
-        $floorEngine = new PointCalculationEngine(RoundingStrategy::Floor);
+        $floorEngine = new PointCalculationEngine($this->settings, RoundingStrategy::Floor);
         $this->assertEquals(15, $floorEngine->calculateAccrual($amount, 'USD', $multipliers));
 
-        $ceilEngine = new PointCalculationEngine(RoundingStrategy::Ceil);
+        $ceilEngine = new PointCalculationEngine($this->settings, RoundingStrategy::Ceil);
         $this->assertEquals(16, $ceilEngine->calculateAccrual($amount, 'USD', $multipliers));
 
-        $nearestEngine = new PointCalculationEngine(RoundingStrategy::Nearest);
+        $nearestEngine = new PointCalculationEngine($this->settings, RoundingStrategy::Nearest);
         $this->assertEquals(16, $nearestEngine->calculateAccrual($amount, 'USD', $multipliers));
     }
 
@@ -55,17 +70,17 @@ final class PointCalculatorTest extends TestCase
         $multipliers = ['m1' => 1.5, 'm2' => 2.0];
 
         // Multiplicative: 10 * 1.5 * 2.0 = 30
-        $multiEngine = new PointCalculationEngine(RoundingStrategy::Floor, 1.0, null, true);
+        $multiEngine = new PointCalculationEngine($this->settings, RoundingStrategy::Floor, null, true);
         $this->assertEquals(30, $multiEngine->calculateAccrual($amount, 'USD', $multipliers));
 
         // Additive: 10 * (1.0 + (0.5 + 1.0)) = 10 * 2.5 = 25
-        $additiveEngine = new PointCalculationEngine(RoundingStrategy::Floor, 1.0, null, false);
+        $additiveEngine = new PointCalculationEngine($this->settings, RoundingStrategy::Floor, null, false);
         $this->assertEquals(25, $additiveEngine->calculateAccrual($amount, 'USD', $multipliers));
     }
 
     public function test_accrual_safety_caps(): void
     {
-        $engine = new PointCalculationEngine(RoundingStrategy::Floor, 1.0, 100);
+        $engine = new PointCalculationEngine($this->settings, RoundingStrategy::Floor, 100);
         $amount = new Money(20000, 'USD'); // $200.00
 
         try {
@@ -78,14 +93,14 @@ final class PointCalculatorTest extends TestCase
 
     public function test_refund_clawback_logic(): void
     {
-        $engine = new PointCalculationEngine();
+        $engine = new PointCalculationEngine($this->settings);
         $this->assertEquals(50, $engine->calculateClawback(100, 0.5));
         $this->assertEquals(100, $engine->calculateClawback(100, 1.0));
     }
 
     public function test_it_calculates_experiential_rewards(): void
     {
-        $engine = new PointCalculationEngine();
+        $engine = new PointCalculationEngine($this->settings);
         $this->assertEquals(50, $engine->calculateExperientialReward('social_share'));
         $this->assertEquals(200, $engine->calculateExperientialReward('on_time_payment'));
         

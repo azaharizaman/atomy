@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Loyalty\Services;
 
 use DateTimeImmutable;
+use Nexus\Loyalty\Contracts\LoyaltySettingsInterface;
 use Nexus\Loyalty\ValueObjects\PointBucket;
 
 /**
@@ -14,10 +15,10 @@ use Nexus\Loyalty\ValueObjects\PointBucket;
 final readonly class ExpiryService
 {
     /**
-     * @param int $defaultExpiryMonths Standard points lifespan.
+     * @param LoyaltySettingsInterface $settings Injected settings interface.
      */
     public function __construct(
-        private int $defaultExpiryMonths = 12
+        private LoyaltySettingsInterface $settings
     ) {
     }
 
@@ -29,7 +30,7 @@ final readonly class ExpiryService
      */
     public function calculateExpiryDate(DateTimeImmutable $accruedAt): DateTimeImmutable
     {
-        return $accruedAt->modify(sprintf("+%d months", $this->defaultExpiryMonths));
+        return $accruedAt->modify(sprintf("+%d months", $this->settings->getDefaultExpiryMonths()));
     }
 
     /**

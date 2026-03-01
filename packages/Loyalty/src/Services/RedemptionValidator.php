@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Loyalty\Services;
 
 use DateTimeImmutable;
+use Nexus\Loyalty\Contracts\LoyaltySettingsInterface;
 use Nexus\Loyalty\Contracts\RedemptionValidatorInterface;
 use Nexus\Loyalty\Exceptions\InsufficientPointsException;
 use Nexus\Loyalty\Exceptions\InvalidRedemptionRequestException;
@@ -17,12 +18,10 @@ use Nexus\Loyalty\Entities\LoyaltyProfile;
 final readonly class RedemptionValidator implements RedemptionValidatorInterface
 {
     /**
-     * @param int $minBalanceThreshold Minimum required balance to redeem.
-     * @param int $incrementalStep Step multiplier for redemptions (e.g., 500 pts).
+     * @param LoyaltySettingsInterface $settings Injected settings interface.
      */
     public function __construct(
-        private int $minBalanceThreshold = 1000,
-        private int $incrementalStep = 100
+        private LoyaltySettingsInterface $settings
     ) {
     }
 
@@ -47,16 +46,16 @@ final readonly class RedemptionValidator implements RedemptionValidatorInterface
         }
 
         // 2. Minimum balance threshold (FUN-LOY-302)
-        if ($profile->balance->totalAvailable < $this->minBalanceThreshold) {
+        if ($profile->balance->totalAvailable < $this->settings->getMinBalanceThreshold()) {
             throw InvalidRedemptionRequestException::forConstraint(
-                sprintf("Minimum balance of %d required for redemptions.", $this->minBalanceThreshold)
+                sprintf("Minimum balance of %d required for redemptions.", $this->settings->getMinBalanceThreshold())
             );
         }
 
         // 3. Incremental multiples (FUN-LOY-303)
-        if ($pointsToRedeem % $this->incrementalStep !== 0) {
+        if ($pointsToRedeem % $this->settings->getIncrementalStep() !== 0) {
             throw InvalidRedemptionRequestException::forConstraint(
-                sprintf("Points must be redeemed in multiples of %d.", $this->incrementalStep)
+                sprintf("Points must be redeemed in multiples of %d.", $this->settings->getIncrementalStep())
             );
         }
 

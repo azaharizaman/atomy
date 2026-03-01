@@ -6,6 +6,7 @@ namespace Nexus\Loyalty\Services;
 
 use InvalidArgumentException;
 use Nexus\Common\ValueObjects\Money;
+use Nexus\Loyalty\Contracts\LoyaltySettingsInterface;
 use Nexus\Loyalty\Contracts\PointCalculatorInterface;
 use Nexus\Loyalty\Exceptions\AccrualCapExceededException;
 use Nexus\Loyalty\Enums\RoundingStrategy;
@@ -17,23 +18,17 @@ use Nexus\Loyalty\Enums\RoundingStrategy;
 final readonly class PointCalculationEngine implements PointCalculatorInterface
 {
     /**
+     * @param LoyaltySettingsInterface $settings Injected settings interface.
      * @param RoundingStrategy $defaultRounding Strategy for fractional point handling.
-     * @param float $baseRate Default rate of points per currency unit (e.g., 1.5 pts / $1).
      * @param int|null $maxPointsPerTransaction Safety cap per transaction.
      * @param bool $isMultiplicative Whether multiple multipliers are applied multiplicative or additive.
-     * @param array<string, int> $experientialRewards Map of event types to point values.
      * @param int $minorUnitsPerUnit Number of minor units per major unit (e.g., 100 for USD).
      */
     public function __construct(
+        private LoyaltySettingsInterface $settings,
         private RoundingStrategy $defaultRounding = RoundingStrategy::Floor,
-        private float $baseRate = 1.0,
         private ?int $maxPointsPerTransaction = null,
         private bool $isMultiplicative = true,
-        private array $experientialRewards = [
-            'social_share' => 50,
-            'eco_action' => 100,
-            'on_time_payment' => 200,
-        ],
         private int $minorUnitsPerUnit = 100
     ) {
     }
@@ -56,7 +51,7 @@ final readonly class PointCalculationEngine implements PointCalculatorInterface
         $combinedMultiplier = $this->calculateCombinedMultiplier($multipliers);
 
         // 2. Base points using minor units getter and dynamic divisor
-        $rawPoints = ($amount->getAmountInMinorUnits() / $this->minorUnitsPerUnit) * $this->baseRate * $combinedMultiplier;
+        $rawPoints = ($amount->getAmountInMinorUnits() / $this->minorUnitsPerUnit) * $this->settings->getBaseRate() * $combinedMultiplier;
 
         // 3. Apply rounding
         $finalPoints = $this->defaultRounding->apply((float) $rawPoints);
@@ -74,8 +69,8 @@ final readonly class PointCalculationEngine implements PointCalculatorInterface
      */
     public function calculateExperientialReward(string $eventType, array $context = []): int
     {
-        // Allow override via context or fallback to injected config
-        return (int) ($context['points_override'] ?? $this->experientialRewards[$eventType] ?? 0);
+        // Allow override via context or fallback to injected settings
+        return (int) ($context['points_override'] ?? $this->settings->getExperientialRewards()[$eventType] ?? 0);
     }
 
     /**
