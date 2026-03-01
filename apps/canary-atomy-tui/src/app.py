@@ -38,8 +38,8 @@ class LoginScreen(Screen):
         yield Grid(
             Vertical(
                 Label("Atomy Admin Login", id="login-title"),
-                Input(placeholder="Email", id="email", value="admin@atomy.dev"),
-                Input(placeholder="Password", password=True, id="password", value="secret"),
+                Input(placeholder="Email", id="email", value="system@nexus.example.com"),
+                Input(placeholder="Password", password=True, id="password", value="password123"),
                 Button("Login", variant="primary", id="login-btn"),
                 id="login-form"
             ),
