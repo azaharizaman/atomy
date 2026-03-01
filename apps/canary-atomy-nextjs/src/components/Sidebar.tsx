@@ -99,7 +99,8 @@ export function Sidebar() {
               <Link
                 key={href}
                 href={href}
-                title={label}
+                aria-label={label}
+                aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                   active
                     ? "bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))]"
@@ -145,7 +146,7 @@ export function Sidebar() {
               className="w-full justify-start gap-2 px-3 text-[hsl(var(--sidebar-foreground))]/70 hover:bg-[hsl(var(--sidebar-accent))]/30"
               aria-label={favoritesExpanded ? "Collapse favorites" : "Expand favorites"}
             >
-              <span className="flex-1 text-left">Collections</span>
+              <span className="flex-1 text-left">Favorites</span>
               <ChevronRight
                 className={`h-4 w-4 transition-transform ${favoritesExpanded ? "rotate-90" : ""}`}
               />

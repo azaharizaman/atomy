@@ -23,7 +23,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [actionLoading, setActionId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<Set<string>>(new Set());
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -43,26 +43,30 @@ export default function UsersPage() {
   }, []);
 
   const handleSuspend = async (id: string) => {
-    setActionId(id);
+    setActionLoading(new Set(actionLoading).add(id));
     try {
       await suspendUser(id, "Suspended via Canary UI");
       await loadUsers();
     } catch (e: any) {
       alert(e.message || "Failed to suspend user");
     } finally {
-      setActionId(null);
+      const newSet = new Set(actionLoading);
+      newSet.delete(id);
+      setActionLoading(newSet);
     }
   };
 
   const handleActivate = async (id: string) => {
-    setActionId(id);
+    setActionLoading(new Set(actionLoading).add(id));
     try {
       await activateUser(id);
       await loadUsers();
     } catch (e: any) {
       alert(e.message || "Failed to activate user");
     } finally {
-      setActionId(null);
+      const newSet = new Set(actionLoading);
+      newSet.delete(id);
+      setActionLoading(newSet);
     }
   };
 
@@ -97,7 +101,10 @@ export default function UsersPage() {
       header: "Joined",
       cell: ({ row }) => {
         const date = row.getValue("createdAt") as string;
-        return date ? new Date(date).toLocaleDateString() : "—";
+        if (!date) return "—";
+        const parsed = Date.parse(date);
+        if (isNaN(parsed)) return "—";
+        return new Date(parsed).toLocaleDateString();
       },
     },
     {
@@ -130,7 +137,7 @@ export default function UsersPage() {
                 <DropdownMenuItem
                   className="text-destructive"
                   onClick={() => handleSuspend(user.id)}
-                  disabled={actionLoading === user.id}
+                  disabled={actionLoading.has(user.id)}
                 >
                   <UserX className="mr-2 h-4 w-4" />
                   Suspend User
@@ -139,7 +146,7 @@ export default function UsersPage() {
                 <DropdownMenuItem
                   className="text-green-600"
                   onClick={() => handleActivate(user.id)}
-                  disabled={actionLoading === user.id}
+                  disabled={actionLoading.has(user.id)}
                 >
                   <UserCheck className="mr-2 h-4 w-4" />
                   Activate User

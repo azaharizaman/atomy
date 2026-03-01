@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -47,11 +47,19 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "tony@stark.example.com",
-      password: "password123",
-      tenantId: "STARK",
+      email: "",
+      password: "",
+      tenantId: "",
     },
   });
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      form.reset();
+      form.clearErrors();
+    }
+  }, [isOpen, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {

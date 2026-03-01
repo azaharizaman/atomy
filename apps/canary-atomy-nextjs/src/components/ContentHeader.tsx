@@ -87,13 +87,13 @@ export function ContentHeader({
         <div className="border-b">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             {tabs.map((tab) => {
-              const href = tab.href ?? (tab.id === "folder" ? "/" : `/${tab.id}`);
+              const href = tab.href !== undefined ? tab.href : (tab.id === "folder" ? "/" : `/${tab.id}`);
               const isActive =
                 activeTab === tab.id ||
                 (href === "/" && pathname === "/") ||
-                (href !== "/" && pathname.startsWith(href));
+                (href !== "/" && (pathname === href || pathname.startsWith(href + "/")));
               
-              if (href) {
+              if (tab.href !== undefined) {
                 return (
                   <Link
                     key={tab.id}
