@@ -14,7 +14,9 @@ use Nexus\Loyalty\ValueObjects\PointBucket;
 final readonly class PointBalance
 {
     /**
-     * @param int $totalAvailable Points currently available for redemption.
+     * @param int $totalAvailable Points currently available for redemption. 
+     *                             MUST match the sum of remaining points in non-expired buckets.
+     *                             Use PointBalance::fromBuckets() to ensure this consistency.
      * @param int $lifetimeEarned Total points ever accrued by the member.
      * @param array<PointBucket> $buckets Collection of individual accrual buckets.
      */

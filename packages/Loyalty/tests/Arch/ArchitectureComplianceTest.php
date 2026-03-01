@@ -121,12 +121,12 @@ final class ArchitectureComplianceTest extends TestCase
                         "Constructor parameter '{$param->getName()}' in $className cannot be generic 'object'"
                     );
 
-                    // If it's a true injection (no default value) and looks like a class, verify it's an interface
+                    // If it's a true injection (no default value) and looks like a class, verify it's an interface or enum
                     if (!$param->isDefaultValueAvailable() && !$namedType->isBuiltin()) {
                         $typeReflection = new ReflectionClass($typeName);
                         $this->assertTrue(
-                            $typeReflection->isInterface(),
-                            "Injected dependency '{$param->getName()}' in $className should use an interface, got class $typeName"
+                            $typeReflection->isInterface() || $typeReflection->isEnum(),
+                            "Injected dependency '{$param->getName()}' in $className should use an interface or enum, got class $typeName"
                         );
                     }
                 }

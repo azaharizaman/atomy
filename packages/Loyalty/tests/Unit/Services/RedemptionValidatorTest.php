@@ -11,15 +11,18 @@ use Nexus\Loyalty\ValueObjects\PointBucket;
 use Nexus\Loyalty\ValueObjects\TierStatus;
 use Nexus\Loyalty\Services\RedemptionValidator;
 use Nexus\Loyalty\Contracts\LoyaltySettingsInterface;
+use Nexus\Loyalty\Contracts\IdempotencyStoreInterface;
 use Nexus\Loyalty\Exceptions\InsufficientPointsException;
 use Nexus\Loyalty\Exceptions\InvalidRedemptionRequestException;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use RuntimeException;
 
 final class RedemptionValidatorTest extends TestCase
 {
     private RedemptionValidator $validator;
     private LoyaltySettingsInterface|MockObject $settings;
+    private IdempotencyStoreInterface|MockObject $idempotencyStore;
 
     protected function setUp(): void
     {
@@ -27,13 +30,54 @@ final class RedemptionValidatorTest extends TestCase
         $this->settings->method('getMinBalanceThreshold')->willReturn(1000);
         $this->settings->method('getIncrementalStep')->willReturn(100);
 
-        $this->validator = new RedemptionValidator($this->settings);
+        $this->idempotencyStore = $this->createMock(IdempotencyStoreInterface::class);
+
+        $this->validator = new RedemptionValidator($this->settings, $this->idempotencyStore);
     }
 
     public function test_it_validates_basic_redemption(): void
     {
         $profile = $this->createProfile(2000);
         $this->assertTrue($this->validator->validateRedemption($profile, 500));
+    }
+
+    public function test_it_handles_idempotency(): void
+    {
+        $profile = $this->createProfile(2000);
+        $token = 'existing-token';
+
+        $this->idempotencyStore->expects($this->once())
+            ->method('has')
+            ->with($token)
+            ->willReturn(true);
+
+        $this->assertTrue($this->validator->validateRedemption($profile, 500, $token));
+    }
+
+    public function test_it_marks_token_as_processed(): void
+    {
+        $profile = $this->createProfile(2000);
+        $token = 'new-token';
+
+        $this->idempotencyStore->method('has')->willReturn(false);
+        $this->idempotencyStore->expects($this->once())
+            ->method('mark')
+            ->with($token);
+
+        $this->assertTrue($this->validator->validateRedemption($profile, 500, $token));
+    }
+
+    public function test_it_fails_on_inconsistent_balance(): void
+    {
+        $now = new DateTimeImmutable();
+        $bucket = new PointBucket('b1', 1000, 1000, $now);
+        // Inconsistent: totalAvailable (2000) != sum of buckets (1000)
+        $balance = new PointBalance(2000, 2000, [$bucket]);
+        $profile = new LoyaltyProfile('m1', 't1', $balance, new TierStatus('b', 'B', $now));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Data Integrity Violation');
+        $this->validator->validateRedemption($profile, 500);
     }
 
     public function test_it_enforces_minimum_balance(): void

@@ -16,6 +16,14 @@ use Psr\Log\LoggerInterface;
 final readonly class AdjustmentService implements AdjustmentServiceInterface
 {
     private const string HASH_ALGO = 'sha256';
+
+    /**
+     * List of metadata keys that are safe to log in audit trails.
+     * These keys are chosen because they represent operational or debug info
+     * (e.g., channel, source) and do not contain PII, tokens, or sensitive identifiers.
+     * The sanitizeMetadata() method uses this allowlist to filter out any potentially
+     * sensitive metadata before logging.
+     */
     private const array ALLOWED_METADATA_KEYS = ['channel', 'source', 'campaign_id'];
 
     /**
