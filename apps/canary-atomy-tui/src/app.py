@@ -47,9 +47,9 @@ class LoginScreen(Screen):
             
             result = await atomy_client.login(email, password)
             if result:
-                self.app.pop_screen()
                 self.app.notify("Login successful")
-                self.app.post_message(Navigated("nav-tenants"))
+                # Directly switch to tenants screen
+                self.app.switch_screen(TenantsScreen())
             else:
                 self.app.notify("Login failed", severity="error")
 
@@ -346,10 +346,6 @@ class AtomyTUI(App):
             self.switch_screen(ModulesScreen())
         elif event.item.id == "nav-flags":
             self.switch_screen(FeatureFlagsScreen())
-
-    def on_navigated(self, message: Navigated) -> None:
-        if message.target_id == "nav-tenants":
-            self.switch_screen(TenantsScreen())
 
     def action_focus_sidebar(self) -> None:
         try:
