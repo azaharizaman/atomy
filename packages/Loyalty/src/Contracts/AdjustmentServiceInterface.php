@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Loyalty\Contracts;
 
-use Nexus\Loyalty\Models\LoyaltyProfile;
+use Nexus\Loyalty\Entities\LoyaltyProfile;
 
 /**
  * Interface for manual point adjustments with mandatory auditing fields.

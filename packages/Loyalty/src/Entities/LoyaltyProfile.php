@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Loyalty\Models;
+namespace Nexus\Loyalty\Entities;
+
+use Nexus\Loyalty\ValueObjects\PointBalance;
+use Nexus\Loyalty\ValueObjects\TierStatus;
 
 /**
  * The root aggregate model for a member's loyalty status within a tenant.

@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use Nexus\Loyalty\Contracts\RedemptionValidatorInterface;
 use Nexus\Loyalty\Exceptions\InsufficientPointsException;
 use Nexus\Loyalty\Exceptions\InvalidRedemptionRequestException;
-use Nexus\Loyalty\Models\LoyaltyProfile;
+use Nexus\Loyalty\Entities\LoyaltyProfile;
 
 /**
  * Service for validating point redemption requests against balance and business constraints.

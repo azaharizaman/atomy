@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Loyalty\Models;
+namespace Nexus\Loyalty\ValueObjects;
 
 use DateTimeImmutable;
+use Nexus\Loyalty\ValueObjects\PointBucket;
 
 /**
  * Value Object representing a collection of point buckets and the aggregate balance.

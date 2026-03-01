@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Nexus\Loyalty\Tests\Security;
 
 use DateTimeImmutable;
-use Nexus\Loyalty\Models\LoyaltyProfile;
-use Nexus\Loyalty\Models\PointBalance;
-use Nexus\Loyalty\Models\PointBucket;
-use Nexus\Loyalty\Models\TierStatus;
+use Nexus\Loyalty\Entities\LoyaltyProfile;
+use Nexus\Loyalty\ValueObjects\PointBalance;
+use Nexus\Loyalty\ValueObjects\PointBucket;
+use Nexus\Loyalty\ValueObjects\TierStatus;
 use Nexus\Loyalty\Services\RedemptionValidator;
 use PHPUnit\Framework\TestCase;
 

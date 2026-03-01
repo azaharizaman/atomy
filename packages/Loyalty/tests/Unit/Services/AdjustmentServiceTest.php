@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Nexus\Loyalty\Tests\Unit\Services;
 
 use DateTimeImmutable;
-use Nexus\Loyalty\Models\LoyaltyProfile;
-use Nexus\Loyalty\Models\PointBalance;
-use Nexus\Loyalty\Models\TierStatus;
+use Nexus\Loyalty\Entities\LoyaltyProfile;
+use Nexus\Loyalty\ValueObjects\PointBalance;
+use Nexus\Loyalty\ValueObjects\TierStatus;
 use Nexus\Loyalty\Services\AdjustmentService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;

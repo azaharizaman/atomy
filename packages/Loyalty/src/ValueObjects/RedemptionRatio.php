@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Loyalty\Models;
+namespace Nexus\Loyalty\ValueObjects;
 
 use InvalidArgumentException;
 use Nexus\Common\ValueObjects\Money;

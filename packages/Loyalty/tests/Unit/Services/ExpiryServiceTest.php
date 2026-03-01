@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Loyalty\Tests\Unit\Services;
 
 use DateTimeImmutable;
-use Nexus\Loyalty\Models\PointBucket;
+use Nexus\Loyalty\ValueObjects\PointBucket;
 use Nexus\Loyalty\Services\ExpiryService;
 use PHPUnit\Framework\TestCase;
 

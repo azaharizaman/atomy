@@ -6,8 +6,8 @@ namespace Nexus\Loyalty\Services;
 
 use DateTimeImmutable;
 use Nexus\Loyalty\Contracts\TierManagerInterface;
-use Nexus\Loyalty\Models\LoyaltyProfile;
-use Nexus\Loyalty\Models\TierStatus;
+use Nexus\Loyalty\Entities\LoyaltyProfile;
+use Nexus\Loyalty\ValueObjects\TierStatus;
 
 /**
  * Service for evaluating member tier status and managing progression/retention.

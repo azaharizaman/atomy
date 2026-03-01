@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use Nexus\Common\ValueObjects\Money;
 use Nexus\Loyalty\Contracts\PointCalculatorInterface;
 use Nexus\Loyalty\Exceptions\AccrualCapExceededException;
-use Nexus\Loyalty\Models\RoundingStrategy;
+use Nexus\Loyalty\Enums\RoundingStrategy;
 
 /**
  * Service for calculating point accrual for transactions and experiential events.

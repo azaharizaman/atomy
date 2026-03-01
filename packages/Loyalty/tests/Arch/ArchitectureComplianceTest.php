@@ -51,14 +51,23 @@ final class ArchitectureComplianceTest extends TestCase
     /**
      * Requirement: ARC-LOY-003 - All Value Objects MUST use `readonly` properties for immutability
      */
-    public function test_models_are_readonly(): void
+    public function test_value_objects_are_readonly(): void
     {
-        foreach ($this->getClassesInNamespace('Nexus\Loyalty\Models') as $className) {
+        foreach ($this->getClassesInNamespace('Nexus\Loyalty\ValueObjects') as $className) {
             $reflection = new ReflectionClass($className);
-            if ($reflection->isEnum()) {
-                continue;
-            }
-            $this->assertTrue($reflection->isReadOnly(), "Model $className must be readonly");
+            $this->assertTrue($reflection->isReadOnly(), "ValueObject $className must be readonly");
+        }
+    }
+
+    /**
+     * Requirement: ARC-LOY-002 - Entities MUST be defined as `final readonly class`
+     */
+    public function test_entities_are_readonly(): void
+    {
+        foreach ($this->getClassesInNamespace('Nexus\Loyalty\Entities') as $className) {
+            $reflection = new ReflectionClass($className);
+            $this->assertTrue($reflection->isFinal(), "Entity $className must be final");
+            $this->assertTrue($reflection->isReadOnly(), "Entity $className must be readonly");
         }
     }
 

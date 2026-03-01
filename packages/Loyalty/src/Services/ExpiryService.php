@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Loyalty\Services;
 
 use DateTimeImmutable;
-use Nexus\Loyalty\Models\PointBucket;
+use Nexus\Loyalty\ValueObjects\PointBucket;
 
 /**
  * Service for calculating point expiry dates and evaluating expired points for write-off.

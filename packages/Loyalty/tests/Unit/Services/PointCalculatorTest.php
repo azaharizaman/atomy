@@ -7,7 +7,7 @@ namespace Nexus\Loyalty\Tests\Unit\Services;
 use InvalidArgumentException;
 use Nexus\Common\ValueObjects\Money;
 use Nexus\Loyalty\Exceptions\AccrualCapExceededException;
-use Nexus\Loyalty\Models\RoundingStrategy;
+use Nexus\Loyalty\Enums\RoundingStrategy;
 use Nexus\Loyalty\Services\PointCalculationEngine;
 use PHPUnit\Framework\TestCase;
 

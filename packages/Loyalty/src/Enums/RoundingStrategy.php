@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Loyalty\Models;
+namespace Nexus\Loyalty\Enums;
 
 /**
  * Enumerated Rounding Strategies for point calculation.

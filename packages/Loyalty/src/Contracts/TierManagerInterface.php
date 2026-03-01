@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\Loyalty\Contracts;
 
-use Nexus\Loyalty\Models\LoyaltyProfile;
-use Nexus\Loyalty\Models\TierStatus;
+use Nexus\Loyalty\Entities\LoyaltyProfile;
+use Nexus\Loyalty\ValueObjects\TierStatus;
 
 /**
  * Interface for evaluating and managing loyalty tier status.

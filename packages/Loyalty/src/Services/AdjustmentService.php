@@ -6,7 +6,7 @@ namespace Nexus\Loyalty\Services;
 
 use InvalidArgumentException;
 use Nexus\Loyalty\Contracts\AdjustmentServiceInterface;
-use Nexus\Loyalty\Models\LoyaltyProfile;
+use Nexus\Loyalty\Entities\LoyaltyProfile;
 use Psr\Log\LoggerInterface;
 
 /**

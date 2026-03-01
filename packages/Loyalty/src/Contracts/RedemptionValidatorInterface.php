@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\Loyalty\Contracts;
 
-use Nexus\Loyalty\Models\LoyaltyProfile;
-use Nexus\Loyalty\Models\RedemptionRatio;
+use Nexus\Loyalty\Entities\LoyaltyProfile;
+use Nexus\Loyalty\ValueObjects\RedemptionRatio;
 
 /**
  * Interface for validating point redemption requests against member balance and constraints.
