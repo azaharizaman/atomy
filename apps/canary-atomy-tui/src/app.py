@@ -3,6 +3,7 @@ from textual.widgets import Header, Footer, Static, ListItem, ListView, Label, D
 from textual.containers import Container, Horizontal, Vertical, Grid
 from textual.screen import Screen
 from textual.binding import Binding
+from textual.message import Message
 from api_client import atomy_client
 
 class Sidebar(Vertical):
@@ -310,7 +311,7 @@ class AtomyTUI(App):
         Binding("ctrl+s", "focus_sidebar", "Focus Sidebar"),
     ]
 
-    class Navigated(App.Message):
+    class Navigated(Message):
         def __init__(self, target_id: str) -> None:
             self.target_id = target_id
             super().__init__()
