@@ -16,12 +16,14 @@ use Nexus\Identity\ValueObjects\UserStatus;
 use Symfony\Bridge\Doctrine\Security\User\UserLoaderInterface;
 use Symfony\Component\Security\Core\User\UserInterface as SymfonyUserInterface;
 
+use Symfony\Component\Security\Core\User\UserProviderInterface;
+
 /**
  * User Repository.
  * 
  * @extends ServiceEntityRepository<User>
  */
-final class UserRepository extends ServiceEntityRepository implements UserRepositoryInterface, UserQueryInterface, UserPersistInterface, UserLoaderInterface
+final class UserRepository extends ServiceEntityRepository implements UserRepositoryInterface, UserQueryInterface, UserPersistInterface, UserLoaderInterface, UserProviderInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -120,9 +122,24 @@ final class UserRepository extends ServiceEntityRepository implements UserReposi
     public function lockAccount(string $userId, string $reason): void { $this->update($userId, ['status' => UserStatus::LOCKED->value]); }
     public function unlockAccount(string $userId): void { $this->update($userId, ['status' => UserStatus::ACTIVE->value]); }
 
-    // Symfony UserLoaderInterface
-    public function loadUserByIdentifier(string $identifier): ?SymfonyUserInterface
+    // Symfony UserLoaderInterface & UserProviderInterface
+    public function loadUserByIdentifier(string $identifier): SymfonyUserInterface
     {
-        return $this->findOneBy(['email' => $identifier]);
+        $user = $this->findOneBy(['email' => $identifier]);
+        if (!$user) {
+            throw new UserNotFoundException(sprintf('User with identifier "%s" not found.', $identifier));
+        }
+        return $user;
+    }
+
+    // Symfony UserProviderInterface
+    public function refreshUser(SymfonyUserInterface $user): SymfonyUserInterface
+    {
+        return $this->findByEmail($user->getUserIdentifier());
+    }
+
+    public function supportsClass(string $class): bool
+    {
+        return User::class === $class || is_subclass_of($class, User::class);
     }
 }

@@ -3,6 +3,9 @@ api_platform:
     description: Module management and user API for atomy
     version: 1.0.0
     enable_docs: true
+    formats:
+        jsonld: ['application/ld+json']
+        json: ['application/json']
     swagger:
         api_keys: []
     defaults:

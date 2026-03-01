@@ -55,7 +55,7 @@ class LoginScreen(Screen):
             if result:
                 self.app.pop_screen()
                 self.app.notify("Login successful")
-                self.app.post_message(self.app.Navigated("nav-tenants"))
+                self.app.post_message(Navigated("nav-tenants"))
             else:
                 self.app.notify("Login failed", severity="error")
 
@@ -97,11 +97,20 @@ class TenantsScreen(BaseScreen):
         await self.refresh_tenants()
 
     async def refresh_tenants(self):
-        table = self.query_one("#tenants-table")
-        table.clear()
-        tenants = await atomy_client.get_tenants()
-        for t in tenants:
-            table.add_row(t.get("id"), t.get("name"), t.get("status"), t.get("createdAt"), key=t.get("id"))
+        try:
+            table = self.query_one("#tenants-table")
+            table.clear()
+            tenants = await atomy_client.get_tenants()
+            for t in tenants:
+                table.add_row(
+                    str(t.get("id", "")),
+                    str(t.get("name", "N/A")),
+                    str(t.get("status", "N/A")),
+                    str(t.get("createdAt", "N/A")),
+                    key=t.get("id")
+                )
+        except Exception as e:
+            self.app.notify(f"Error loading tenants: {e}", severity="error")
 
     async def action_suspend(self):
         table = self.query_one("#tenants-table")
@@ -146,11 +155,19 @@ class UsersScreen(BaseScreen):
         await self.refresh_users()
 
     async def refresh_users(self):
-        table = self.query_one("#users-table")
-        table.clear()
-        users = await atomy_client.get_users()
-        for u in users:
-            table.add_row(u.get("id"), u.get("email"), ", ".join(u.get("roles", [])), key=u.get("id"))
+        try:
+            table = self.query_one("#users-table")
+            table.clear()
+            users = await atomy_client.get_users()
+            for u in users:
+                table.add_row(
+                    str(u.get("id", "")),
+                    str(u.get("email", "N/A")),
+                    ", ".join(u.get("roles", [])),
+                    key=u.get("id")
+                )
+        except Exception as e:
+            self.app.notify(f"Error loading users: {e}", severity="error")
 
     async def action_refresh(self):
         await self.refresh_users()
@@ -180,35 +197,38 @@ class ModulesScreen(BaseScreen):
         await self.refresh_modules()
 
     async def refresh_modules(self):
-        import os
-        table = self.query_one("#modules-table")
-        table.clear()
-        
-        # 1. Get remote installed modules from API
-        installed_modules = await atomy_client.get_modules()
-        installed_ids = {m.get("id") for m in installed_modules}
-        
-        # 2. Scan local orchestrators/ folder
-        # app.py is in apps/canary-atomy-tui/src/app.py
-        # orchestrators is in orchestrators/
-        app_dir = os.path.dirname(os.path.abspath(__file__))
-        monorepo_root = os.path.abspath(os.path.join(app_dir, "..", "..", ".."))
-        orchestrators_path = os.path.join(monorepo_root, "orchestrators")
-        
-        local_ids = set()
-        if os.path.exists(orchestrators_path):
-            for entry in os.scandir(orchestrators_path):
-                if entry.is_dir() and not entry.name.startswith("."):
-                    module_id = entry.name
-                    local_ids.add(module_id)
-                    status = "Installed" if module_id in installed_ids else "Available (Local)"
-                    table.add_row(module_id, status, entry.path, key=module_id)
-        
-        # 3. Add remote-only modules if any
-        for m in installed_modules:
-            mid = m.get("id")
-            if mid not in local_ids:
-                table.add_row(mid, "Installed (Remote)", "N/A", key=mid)
+        try:
+            import os
+            table = self.query_one("#modules-table")
+            table.clear()
+            
+            # 1. Get remote installed modules from API
+            installed_modules = await atomy_client.get_modules()
+            installed_ids = {m.get("id") for m in installed_modules}
+            
+            # 2. Scan local orchestrators/ folder
+            # app.py is in apps/canary-atomy-tui/src/app.py
+            # orchestrators is in orchestrators/
+            app_dir = os.path.dirname(os.path.abspath(__file__))
+            monorepo_root = os.path.abspath(os.path.join(app_dir, "..", "..", ".."))
+            orchestrators_path = os.path.join(monorepo_root, "orchestrators")
+            
+            local_ids = set()
+            if os.path.exists(orchestrators_path):
+                for entry in os.scandir(orchestrators_path):
+                    if entry.is_dir() and not entry.name.startswith("."):
+                        module_id = entry.name
+                        local_ids.add(module_id)
+                        status = "Installed" if module_id in installed_ids else "Available (Local)"
+                        table.add_row(module_id, status, entry.path, key=module_id)
+            
+            # 3. Add remote-only modules if any
+            for m in installed_modules:
+                mid = m.get("id")
+                if mid not in local_ids:
+                    table.add_row(mid, "Installed (Remote)", "N/A", key=mid)
+        except Exception as e:
+            self.app.notify(f"Error loading modules: {e}", severity="error")
 
     async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         module_id = event.row_key.value
@@ -241,14 +261,27 @@ class FeatureFlagsScreen(BaseScreen):
         await self.refresh_flags()
 
     async def refresh_flags(self):
-        table = self.query_one("#flags-table")
-        table.clear()
-        flags = await atomy_client.get_feature_flags()
-        for f in flags:
-            table.add_row(f.get("name"), str(f.get("enabled")), f.get("strategy", "default"), key=f.get("name"))
+        try:
+            table = self.query_one("#flags-table")
+            table.clear()
+            flags = await atomy_client.get_feature_flags()
+            for f in flags:
+                table.add_row(
+                    str(f.get("name", "N/A")),
+                    str(f.get("enabled", "N/A")),
+                    str(f.get("strategy", "default")),
+                    key=f.get("name")
+                )
+        except Exception as e:
+            self.app.notify(f"Error loading flags: {e}", severity="error")
 
     async def action_refresh(self):
         await self.refresh_flags()
+
+class Navigated(Message):
+    def __init__(self, target_id: str) -> None:
+        self.target_id = target_id
+        super().__init__()
 
 class AtomyTUI(App):
     CSS = """
@@ -308,11 +341,6 @@ class AtomyTUI(App):
         Binding("ctrl+s", "focus_sidebar", "Focus Sidebar"),
     ]
 
-    class Navigated(Message):
-        def __init__(self, target_id: str) -> None:
-            self.target_id = target_id
-            super().__init__()
-
     def on_mount(self) -> None:
         self.push_screen(LoginScreen())
 
@@ -328,12 +356,15 @@ class AtomyTUI(App):
         elif event.item.id == "nav-flags":
             self.switch_screen(FeatureFlagsScreen())
 
-    def on_atomy_tui_navigated(self, message: Navigated) -> None:
+    def on_navigated(self, message: Navigated) -> None:
         if message.target_id == "nav-tenants":
             self.switch_screen(TenantsScreen())
 
     def action_focus_sidebar(self) -> None:
-        self.query_one("#nav-list").focus()
+        try:
+            self.query_one("#nav-list").focus()
+        except:
+            pass
 
 if __name__ == "__main__":
     app = AtomyTUI()

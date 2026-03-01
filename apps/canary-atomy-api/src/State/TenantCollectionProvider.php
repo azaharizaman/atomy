@@ -9,6 +9,8 @@ use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Tenant as TenantResource;
 use Nexus\Tenant\Contracts\TenantQueryInterface;
 
+use Nexus\Tenant\Enums\TenantStatus;
+
 /**
  * Collection provider for Tenant resource.
  *
@@ -37,7 +39,7 @@ final class TenantCollectionProvider implements ProviderInterface
             $resource->name = $tenant->getName();
             $resource->code = $tenant->getCode();
             $resource->domain = $tenant->getDomain();
-            $resource->status = $tenant->getStatus();
+            $resource->status = TenantStatus::from($tenant->getStatus());
             $resource->createdAt = $tenant->getCreatedAt()?->format('Y-m-d H:i:s');
 
             yield $resource;

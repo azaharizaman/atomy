@@ -5,15 +5,8 @@ security:
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory:
-            memory:
-                users:
-                    admin:
-                        password: $2y$10$N/PfTuMxmA62AP3hGrgCKusUly6rtj8aWYklXPKONIYxyy83zl32C
-                        roles: ['ROLE_USER', 'ROLE_ADMIN']
-                    user:
-                        password: $2y$10$vcBl7HvHpIkxXIaLqT.fGOH8tWSvnKx53WYF7HK9ljzsBC6voWDte
-                        roles: ['ROLE_USER']
+        app_user_provider:
+            id: App\Repository\UserRepository
 
     firewalls:
         dev:
@@ -23,7 +16,9 @@ security:
         main:
             stateless: true
             lazy: true
-            provider: users_in_memory
+            provider: app_user_provider
+            custom_authenticators:
+                - App\Security\JWTAuthenticator
             http_basic: ~
 
             # Activate different ways to authenticate:
