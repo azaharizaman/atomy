@@ -40,7 +40,6 @@ class LoginScreen(Screen):
                 Label("Atomy Admin Login", id="login-title"),
                 Input(placeholder="Email", id="email", value="admin@atomy.dev"),
                 Input(placeholder="Password", password=True, id="password", value="secret"),
-                Input(placeholder="Tenant ID", id="tenant-id", value="00000000-0000-0000-0000-000000000000"),
                 Button("Login", variant="primary", id="login-btn"),
                 id="login-form"
             ),
@@ -51,9 +50,8 @@ class LoginScreen(Screen):
         if event.button.id == "login-btn":
             email = self.query_one("#email").value
             password = self.query_one("#password").value
-            tenant_id = self.query_one("#tenant-id").value
             
-            result = await atomy_client.login(email, password, tenant_id)
+            result = await atomy_client.login(email, password)
             if result:
                 self.app.pop_screen()
                 self.app.notify("Login successful")

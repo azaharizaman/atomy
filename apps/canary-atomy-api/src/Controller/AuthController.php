@@ -25,10 +25,12 @@ final class AuthController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $email = $data['email'] ?? '';
         $password = $data['password'] ?? '';
+        // If tenantId is not provided, we pass an empty string
+        // System admin users might not have a tenantId or exist in a default one
         $tenantId = $data['tenantId'] ?? '';
 
-        if (empty($email) || empty($password) || empty($tenantId)) {
-            return new JsonResponse(['message' => 'Missing credentials or tenant ID'], 400);
+        if (empty($email) || empty($password)) {
+            return new JsonResponse(['message' => 'Missing credentials'], 400);
         }
 
         try {
@@ -55,8 +57,8 @@ final class AuthController extends AbstractController
         $refreshToken = $data['refreshToken'] ?? '';
         $tenantId = $data['tenantId'] ?? '';
 
-        if (empty($refreshToken) || empty($tenantId)) {
-            return new JsonResponse(['message' => 'Missing refresh token or tenant ID'], 400);
+        if (empty($refreshToken)) {
+            return new JsonResponse(['message' => 'Missing refresh token'], 400);
         }
 
         try {
@@ -78,8 +80,8 @@ final class AuthController extends AbstractController
         $sessionId = $data['sessionId'] ?? null;
         $tenantId = $data['tenantId'] ?? '';
 
-        if (empty($userId) || empty($tenantId)) {
-            return new JsonResponse(['message' => 'Missing user ID or tenant ID'], 400);
+        if (empty($userId)) {
+            return new JsonResponse(['message' => 'Missing user ID'], 400);
         }
 
         try {
