@@ -97,6 +97,16 @@ class AtomyClient:
                 return response.json()
             return []
 
+    async def get_modules(self):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.base_url}/api/modules",
+                headers=self._get_headers()
+            )
+            if response.status_code == 200:
+                return response.json()
+            return []
+
     async def install_module(self, module_id):
         async with httpx.AsyncClient() as client:
             response = await client.post(
