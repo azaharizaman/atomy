@@ -275,7 +275,6 @@ class AtomyTUI(App):
     }
     #screen-title {
         padding: 1;
-        font-size: 2;
         text-style: bold;
         color: $primary;
     }
