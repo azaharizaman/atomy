@@ -26,7 +26,7 @@ final readonly class AuthenticatorAdapter implements AuthenticatorInterface
             throw new \RuntimeException('User not found');
         }
 
-        if ($tenantId !== null) {
+        if ($tenantId !== null && $tenantId !== '') {
             // Resolve tenantId if it's a code
             $resolvedTenantId = $tenantId;
             $tenant = $this->tenantRepository->findByCode($tenantId);

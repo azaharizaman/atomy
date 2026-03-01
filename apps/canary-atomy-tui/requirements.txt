@@ -1,0 +1,4 @@
+textual[dev]
+httpx
+pydantic
+python-dotenv

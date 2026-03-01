@@ -35,16 +35,28 @@ final class FeatureFlagCollectionProvider implements ProviderInterface
         $tenantId = $this->tenantContext->getCurrentTenantId();
 
         // Get all flags for the tenant (includes global flags as fallback)
-        $flags = $this->flagCoordinator->getAllFeatureFlags($tenantId);
+        // If tenantId is null, we pass empty string to get global flags
+        $flags = $this->flagCoordinator->getAllFlags($tenantId ?? '');
 
         foreach ($flags as $flag) {
             $featureFlag = new FeatureFlagResource();
-            $featureFlag->name = $flag->getName();
-            $featureFlag->enabled = $flag->isEnabled();
-            $featureFlag->strategy = $flag->getStrategy()->value;
-            $featureFlag->value = $flag->getValue();
-            $featureFlag->override = $flag->getOverride()?->value;
-            $featureFlag->metadata = $flag->getMetadata();
+            
+            if (is_array($flag)) {
+                $featureFlag->name = $flag['name'] ?? $flag['key'] ?? 'unknown';
+                $featureFlag->enabled = (bool)($flag['enabled'] ?? false);
+                $featureFlag->strategy = $flag['strategy'] ?? 'system_wide';
+                $featureFlag->value = $flag['value'] ?? null;
+                $featureFlag->override = $flag['override'] ?? null;
+                $featureFlag->metadata = $flag['metadata'] ?? [];
+            } else {
+                $featureFlag->name = $flag->getName();
+                $featureFlag->enabled = $flag->isEnabled();
+                $featureFlag->strategy = $flag->getStrategy() instanceof \BackedEnum ? $flag->getStrategy()->value : (string)$flag->getStrategy();
+                $featureFlag->value = $flag->getValue();
+                $featureFlag->override = $flag->getOverride() instanceof \BackedEnum ? $flag->getOverride()->value : $flag->getOverride();
+                $featureFlag->metadata = $flag->getMetadata();
+            }
+            
             $featureFlag->scope = $tenantId !== null ? 'tenant' : 'global';
 
             yield $featureFlag;
