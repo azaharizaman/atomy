@@ -2,7 +2,10 @@ import httpx
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Calculate path relative to this file
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ENV_PATH = os.path.join(_BASE_DIR, ".env")
+load_dotenv(_ENV_PATH)
 
 class AtomyClient:
     def __init__(self):

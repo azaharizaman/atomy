@@ -3,7 +3,7 @@ from textual.widgets import Header, Footer, Static, ListItem, ListView, Label, D
 from textual.containers import Container, Horizontal, Vertical, Grid
 from textual.screen import Screen
 from textual.binding import Binding
-from .api_client import atomy_client
+from api_client import atomy_client
 
 class Sidebar(Vertical):
     def __init__(self, *args, active_id: str = None, **kwargs):
@@ -190,7 +190,12 @@ class ModulesScreen(BaseScreen):
         installed_ids = {m.get("id") for m in installed_modules}
         
         # 2. Scan local orchestrators/ folder
-        orchestrators_path = os.path.abspath(os.path.join(os.getcwd(), "orchestrators"))
+        # app.py is in apps/canary-atomy-tui/src/app.py
+        # orchestrators is in orchestrators/
+        app_dir = os.path.dirname(os.path.abspath(__file__))
+        monorepo_root = os.path.abspath(os.path.join(app_dir, "..", "..", ".."))
+        orchestrators_path = os.path.join(monorepo_root, "orchestrators")
+        
         local_ids = set()
         if os.path.exists(orchestrators_path):
             for entry in os.scandir(orchestrators_path):
