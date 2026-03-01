@@ -14,20 +14,21 @@ use Psr\Log\LoggerInterface;
 
 final class AdjustmentServiceTest extends TestCase
 {
+    private const string TEST_SECRET = 'test-secret-key';
+
     public function test_manual_adjustment_audit(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
-        $secret = 'test-secret';
-        $service = new AdjustmentService($logger, $secret);
+        $service = new AdjustmentService($logger, self::TEST_SECRET);
 
         $now = new DateTimeImmutable();
         $balance = new PointBalance(1000, 1000, []);
         $tier = new TierStatus('bronze', 'Bronze Status', $now);
         $profile = new LoyaltyProfile('member-123', 'tenant-456', $balance, $tier);
 
-        $expectedMemberHash = hash_hmac('sha256', 'member-123', $secret);
-        $expectedTenantHash = hash_hmac('sha256', 'tenant-456', $secret);
-        $expectedAdminHash = hash_hmac('sha256', 'admin-99', $secret);
+        $expectedMemberHash = hash_hmac('sha256', 'member-123', self::TEST_SECRET);
+        $expectedTenantHash = hash_hmac('sha256', 'tenant-456', self::TEST_SECRET);
+        $expectedAdminHash = hash_hmac('sha256', 'admin-99', self::TEST_SECRET);
 
         // Expect logger to be called with pseudonymized info
         $logger->expects($this->once())
@@ -49,7 +50,7 @@ final class AdjustmentServiceTest extends TestCase
     public function test_it_clamps_negative_balance(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
-        $service = new AdjustmentService($logger);
+        $service = new AdjustmentService($logger, self::TEST_SECRET);
 
         $now = new DateTimeImmutable();
         $balance = new PointBalance(100, 100, []);
@@ -65,7 +66,7 @@ final class AdjustmentServiceTest extends TestCase
     public function test_it_sanitizes_metadata(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
-        $service = new AdjustmentService($logger);
+        $service = new AdjustmentService($logger, self::TEST_SECRET);
 
         $now = new DateTimeImmutable();
         $balance = new PointBalance(100, 100, []);
@@ -88,5 +89,15 @@ final class AdjustmentServiceTest extends TestCase
             }));
 
         $service->adjustPoints($profile, 10, 'TEST', 'admin', $metadata);
+    }
+
+    public function test_it_throws_on_empty_secret(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("requires a non-empty secretKey");
+        
+        new AdjustmentService($logger, '   ');
     }
 }

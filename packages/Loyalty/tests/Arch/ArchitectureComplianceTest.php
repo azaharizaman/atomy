@@ -9,6 +9,7 @@ use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionUnionType;
 use ReflectionIntersectionType;
+use ReflectionType;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
@@ -101,22 +102,53 @@ final class ArchitectureComplianceTest extends TestCase
                 $type = $param->getType();
                 $this->assertNotNull($type, "Constructor parameter '{$param->getName()}' in $className must have a type hint");
                 
-                $typesToCheck = [];
-                if ($type instanceof ReflectionNamedType) {
-                    $typesToCheck[] = $type;
-                } elseif ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
-                    $typesToCheck = $type->getTypes();
-                }
+                $namedTypes = $this->flattenNamedTypes($type);
 
-                foreach ($typesToCheck as $namedType) {
+                foreach ($namedTypes as $namedType) {
+                    $typeName = $namedType->getName();
                     $this->assertNotEquals(
                         'object',
-                        $namedType->getName(),
+                        $typeName,
                         "Constructor parameter '{$param->getName()}' in $className cannot be generic 'object'"
                     );
+
+                    // If it's a true injection (no default value) and looks like a class, verify it's an interface
+                    if (!$param->isDefaultValueAvailable() && !$namedType->isBuiltin()) {
+                        $typeReflection = new ReflectionClass($typeName);
+                        $this->assertTrue(
+                            $typeReflection->isInterface(),
+                            "Injected dependency '{$param->getName()}' in $className should use an interface, got class $typeName"
+                        );
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Recursively flatten ReflectionType into ReflectionNamedType array.
+     * Handles Union, Intersection, and DNF types.
+     * 
+     * @return array<ReflectionNamedType>
+     */
+    private function flattenNamedTypes(?ReflectionType $type): array
+    {
+        if ($type === null) {
+            return [];
+        }
+
+        if ($type instanceof ReflectionNamedType) {
+            return [$type];
+        }
+
+        $types = [];
+        if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
+            foreach ($type->getTypes() as $subType) {
+                $types = array_merge($types, $this->flattenNamedTypes($subType));
+            }
+        }
+
+        return $types;
     }
 
     private function getFiles(): array
@@ -130,16 +162,26 @@ final class ArchitectureComplianceTest extends TestCase
         return $files;
     }
 
-    private function getClassesInNamespace(string $namespace): array
+    /**
+     * Extract FQCNs from files within a specific root namespace.
+     */
+    private function getClassesInNamespace(string $namespacePrefix): array
     {
         $classes = [];
-        $namespaceNormalized = rtrim($namespace, '\\');
+        $namespacePrefix = rtrim($namespacePrefix, '\\');
         
         foreach ($this->getFiles() as $file) {
             $content = file_get_contents($file);
-            if (preg_match('/namespace\s+' . preg_quote($namespaceNormalized, '/') . '/', $content)) {
-                if (preg_match('/(class|interface|enum)\s+(\w+)/', $content, $matches)) {
-                    $classes[] = $namespaceNormalized . '\\' . $matches[2];
+            
+            // Extract actual declared namespace
+            if (preg_match('/namespace\s+([^;]+);/', $content, $nsMatches)) {
+                $declaredNamespace = trim($nsMatches[1]);
+                
+                // Only process files within our target namespace prefix
+                if (str_starts_with($declaredNamespace, $namespacePrefix)) {
+                    if (preg_match('/(class|interface|enum)\s+(\w+)/', $content, $matches)) {
+                        $classes[] = $declaredNamespace . '\\' . $matches[2];
+                    }
                 }
             }
         }

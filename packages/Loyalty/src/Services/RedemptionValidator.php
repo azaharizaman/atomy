@@ -33,8 +33,12 @@ final readonly class RedemptionValidator implements RedemptionValidatorInterface
     {
         // 0. Idempotency Check (FUN-LOY-402, SEC-LOY-002)
         if ($idempotencyToken !== null) {
-            // TODO: Delegate to an IdempotencyStore or Service to check for duplicate requests
-            // if ($this->idempotencyStore->has($idempotencyToken)) return true;
+            /** 
+             * @todo Integration with an IdempotencyStore is required before production.
+             * 1. Inject an IdempotencyStoreInterface via constructor.
+             * 2. Check if token exists: if ($this->idempotencyStore->has($idempotencyToken)) return true;
+             * 3. Ensure the store is updated upon successful redemption processing.
+             */
         }
 
         // 1. Aggregate Balance Check (totalAvailable is already filtered for expiry in PointBalance)

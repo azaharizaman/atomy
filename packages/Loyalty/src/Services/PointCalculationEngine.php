@@ -22,6 +22,7 @@ final readonly class PointCalculationEngine implements PointCalculatorInterface
      * @param int|null $maxPointsPerTransaction Safety cap per transaction.
      * @param bool $isMultiplicative Whether multiple multipliers are applied multiplicative or additive.
      * @param array<string, int> $experientialRewards Map of event types to point values.
+     * @param int $minorUnitsPerUnit Number of minor units per major unit (e.g., 100 for USD).
      */
     public function __construct(
         private RoundingStrategy $defaultRounding = RoundingStrategy::Floor,
@@ -32,7 +33,8 @@ final readonly class PointCalculationEngine implements PointCalculatorInterface
             'social_share' => 50,
             'eco_action' => 100,
             'on_time_payment' => 200,
-        ]
+        ],
+        private int $minorUnitsPerUnit = 100
     ) {
     }
 
@@ -53,8 +55,8 @@ final readonly class PointCalculationEngine implements PointCalculatorInterface
         // 1. Calculate combined multiplier
         $combinedMultiplier = $this->calculateCombinedMultiplier($multipliers);
 
-        // 2. Base points using minor units getter
-        $rawPoints = ($amount->getAmountInMinorUnits() / 100) * $this->baseRate * $combinedMultiplier;
+        // 2. Base points using minor units getter and dynamic divisor
+        $rawPoints = ($amount->getAmountInMinorUnits() / $this->minorUnitsPerUnit) * $this->baseRate * $combinedMultiplier;
 
         // 3. Apply rounding
         $finalPoints = $this->defaultRounding->apply((float) $rawPoints);

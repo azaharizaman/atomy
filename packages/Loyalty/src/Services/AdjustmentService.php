@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Loyalty\Services;
 
+use InvalidArgumentException;
 use Nexus\Loyalty\Contracts\AdjustmentServiceInterface;
 use Nexus\Loyalty\Models\LoyaltyProfile;
 use Psr\Log\LoggerInterface;
@@ -20,11 +21,15 @@ final readonly class AdjustmentService implements AdjustmentServiceInterface
     /**
      * @param LoggerInterface $auditLogger PSR-3 Logger for audit trails.
      * @param string $secretKey Secret key for identifier pseudonymization.
+     * @throws InvalidArgumentException If secretKey is empty or whitespace.
      */
     public function __construct(
         private LoggerInterface $auditLogger,
-        private string $secretKey = 'default-secret-key'
+        private string $secretKey
     ) {
+        if (trim($this->secretKey) === '') {
+            throw new InvalidArgumentException("AdjustmentService requires a non-empty secretKey for pseudonymization.");
+        }
     }
 
     /**
