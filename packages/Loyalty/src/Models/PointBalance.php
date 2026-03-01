@@ -28,8 +28,8 @@ final readonly class PointBalance
      * Factory to calculate balance from a list of buckets.
      *
      * @param array<PointBucket> $buckets List of buckets.
-     * @param DateTimeImmutable $now Current time for expiry evaluation.
      * @param int $lifetimeEarned Cumulative points earned over the member's life.
+     * @param DateTimeImmutable $now Current time for expiry evaluation.
      * @return self
      */
     public static function fromBuckets(array $buckets, int $lifetimeEarned, DateTimeImmutable $now = new DateTimeImmutable()): self

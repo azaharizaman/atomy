@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Loyalty\Services;
 
+use DateTimeImmutable;
 use Nexus\Loyalty\Contracts\RedemptionValidatorInterface;
 use Nexus\Loyalty\Exceptions\InsufficientPointsException;
 use Nexus\Loyalty\Exceptions\InvalidRedemptionRequestException;
@@ -30,7 +31,13 @@ final readonly class RedemptionValidator implements RedemptionValidatorInterface
      */
     public function validateRedemption(LoyaltyProfile $profile, int $pointsToRedeem, ?string $idempotencyToken = null): bool
     {
-        // 1. Balance check
+        // 0. Idempotency Check (FUN-LOY-402, SEC-LOY-002)
+        if ($idempotencyToken !== null) {
+            // TODO: Delegate to an IdempotencyStore or Service to check for duplicate requests
+            // if ($this->idempotencyStore->has($idempotencyToken)) return true;
+        }
+
+        // 1. Aggregate Balance Check (totalAvailable is already filtered for expiry in PointBalance)
         if ($profile->balance->totalAvailable < $pointsToRedeem) {
             throw InsufficientPointsException::forMember($profile->memberId, $pointsToRedeem, $profile->balance->totalAvailable);
         }
@@ -50,9 +57,14 @@ final readonly class RedemptionValidator implements RedemptionValidatorInterface
         }
 
         // 4. FIFO Expiry Prioritization Logic Check (FUN-LOY-304)
-        // Ensure buckets can cover the redemption points
+        // Ensure non-expired, non-empty buckets can cover the redemption points
         $totalDeductible = 0;
+        $now = new DateTimeImmutable();
         foreach ($profile->balance->buckets as $bucket) {
+            if ($bucket->isExpired($now) || $bucket->remainingPoints <= 0) {
+                continue;
+            }
+
             $totalDeductible += $bucket->remainingPoints;
             if ($totalDeductible >= $pointsToRedeem) {
                 break;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Loyalty\Tests\Unit\Services;
 
+use InvalidArgumentException;
 use Nexus\Common\ValueObjects\Money;
 use Nexus\Loyalty\Exceptions\AccrualCapExceededException;
 use Nexus\Loyalty\Models\RoundingStrategy;
@@ -21,6 +22,16 @@ final class PointCalculatorTest extends TestCase
         $points = $engine->calculateAccrual($amount, 'USD', ['tier' => 1.5]);
 
         $this->assertEquals(15, $points);
+    }
+
+    public function test_it_validates_currency_consistency(): void
+    {
+        $engine = new PointCalculationEngine();
+        $amount = new Money(1000, 'USD');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Currency mismatch');
+        $engine->calculateAccrual($amount, 'EUR');
     }
 
     public function test_rounding_strategies(): void
@@ -57,8 +68,12 @@ final class PointCalculatorTest extends TestCase
         $engine = new PointCalculationEngine(RoundingStrategy::Floor, 1.0, 100);
         $amount = new Money(20000, 'USD'); // $200.00
 
-        $this->expectException(AccrualCapExceededException::class);
-        $engine->calculateAccrual($amount, 'USD');
+        try {
+            $engine->calculateAccrual($amount, 'USD');
+            $this->fail('AccrualCapExceededException was not thrown');
+        } catch (AccrualCapExceededException $e) {
+            $this->assertStringContainsString('exceeds transaction cap of 100', $e->getMessage());
+        }
     }
 
     public function test_refund_clawback_logic(): void
@@ -73,5 +88,11 @@ final class PointCalculatorTest extends TestCase
         $engine = new PointCalculationEngine();
         $this->assertEquals(50, $engine->calculateExperientialReward('social_share'));
         $this->assertEquals(200, $engine->calculateExperientialReward('on_time_payment'));
+        
+        // Unknown event type returns 0
+        $this->assertEquals(0, $engine->calculateExperientialReward('unknown_event'));
+
+        // Override via context
+        $this->assertEquals(500, $engine->calculateExperientialReward('social_share', ['points_override' => 500]));
     }
 }

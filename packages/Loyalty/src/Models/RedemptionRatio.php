@@ -15,10 +15,12 @@ final readonly class RedemptionRatio
     /**
      * @param int $pointsPerUnit The number of points that equals 1 unit of the given currency.
      * @param string $currency The currency being valued (e.g., 'USD').
+     * @param int $minorUnitsPerUnit Number of minor units per major unit (e.g., 100 for USD).
      */
     public function __construct(
         public int $pointsPerUnit,
-        public string $currency
+        public string $currency,
+        public int $minorUnitsPerUnit = 100
     ) {
     }
 
@@ -30,7 +32,7 @@ final readonly class RedemptionRatio
      */
     public function calculateValue(int $points): Money
     {
-        $amountInMinorUnits = (int) round(($points / $this->pointsPerUnit) * 100);
+        $amountInMinorUnits = (int) round(($points / $this->pointsPerUnit) * $this->minorUnitsPerUnit);
         return new Money($amountInMinorUnits, $this->currency);
     }
 
@@ -42,6 +44,7 @@ final readonly class RedemptionRatio
      */
     public function calculatePoints(Money $amount): int
     {
-        return (int) round(($amount->amount / 100) * $this->pointsPerUnit);
+        // Convert cents to units before multiplying by pointsPerUnit
+        return (int) round(($amount->getAmountInMinorUnits() / $this->minorUnitsPerUnit) * $this->pointsPerUnit);
     }
 }

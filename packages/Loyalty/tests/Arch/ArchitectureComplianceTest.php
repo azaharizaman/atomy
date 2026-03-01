@@ -6,6 +6,9 @@ namespace Nexus\Loyalty\Tests\Arch;
 
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use ReflectionNamedType;
+use ReflectionUnionType;
+use ReflectionIntersectionType;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
@@ -63,10 +66,22 @@ final class ArchitectureComplianceTest extends TestCase
      */
     public function test_no_framework_dependencies(): void
     {
+        $forbiddenPatterns = [
+            '/use\s+Illuminate\\\\/',
+            '/use\s+Symfony\\\\/',
+            '/\\\\Illuminate\\\\/',
+            '/\\\\Symfony\\\\/',
+        ];
+
         foreach ($this->getFiles() as $file) {
             $content = file_get_contents($file);
-            $this->assertStringNotContainsString('Illuminate', $content, "Forbidden Laravel dependency found in $file");
-            $this->assertStringNotContainsString('Symfony', $content, "Forbidden Symfony dependency found in $file");
+            foreach ($forbiddenPatterns as $pattern) {
+                $this->assertDoesNotMatchRegularExpression(
+                    $pattern,
+                    $content,
+                    "Forbidden framework dependency pattern matched in $file"
+                );
+            }
         }
     }
 
@@ -85,7 +100,21 @@ final class ArchitectureComplianceTest extends TestCase
             foreach ($constructor->getParameters() as $param) {
                 $type = $param->getType();
                 $this->assertNotNull($type, "Constructor parameter '{$param->getName()}' in $className must have a type hint");
-                $this->assertFalse($type->getName() === 'object', "Constructor parameter '{$param->getName()}' in $className cannot be generic 'object'");
+                
+                $typesToCheck = [];
+                if ($type instanceof ReflectionNamedType) {
+                    $typesToCheck[] = $type;
+                } elseif ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
+                    $typesToCheck = $type->getTypes();
+                }
+
+                foreach ($typesToCheck as $namedType) {
+                    $this->assertNotEquals(
+                        'object',
+                        $namedType->getName(),
+                        "Constructor parameter '{$param->getName()}' in $className cannot be generic 'object'"
+                    );
+                }
             }
         }
     }
@@ -104,11 +133,13 @@ final class ArchitectureComplianceTest extends TestCase
     private function getClassesInNamespace(string $namespace): array
     {
         $classes = [];
+        $namespaceNormalized = rtrim($namespace, '\\');
+        
         foreach ($this->getFiles() as $file) {
             $content = file_get_contents($file);
-            if (preg_match('/namespace\s+' . preg_quote($namespace, '/') . '/', $content)) {
+            if (preg_match('/namespace\s+' . preg_quote($namespaceNormalized, '/') . '/', $content)) {
                 if (preg_match('/(class|interface|enum)\s+(\w+)/', $content, $matches)) {
-                    $classes[] = $namespace . '' . $matches[2];
+                    $classes[] = $namespaceNormalized . '\\' . $matches[2];
                 }
             }
         }

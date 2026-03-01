@@ -72,6 +72,27 @@ final class RedemptionValidatorTest extends TestCase
         $this->assertTrue($this->service->validateRedemption($profile, 1500));
     }
 
+    public function test_fifo_excludes_expired_buckets(): void
+    {
+        $now = new DateTimeImmutable();
+        $expiredBucket = new PointBucket('b1', 1000, 1000, $now->modify('-2 years'), $now->modify('-1 year'));
+        $validBucket = new PointBucket('b2', 500, 500, $now->modify('-1 month'));
+
+        // Note: PointBalance::fromBuckets already filters expired buckets for totalAvailable,
+        // but RedemptionValidator also does its own check during FIFO loop.
+        $balance = PointBalance::fromBuckets([$expiredBucket, $validBucket], 1500, $now);
+        $profile = new LoyaltyProfile(
+            'member-123',
+            'tenant-456',
+            $balance,
+            new TierStatus('bronze', 'Bronze', $now)
+        );
+
+        // Available points is only 500 from valid bucket. Requesting 600 should fail.
+        $this->expectException(InsufficientPointsException::class);
+        $this->service->validateRedemption($profile, 600);
+    }
+
     private function createProfile(int $availablePoints): LoyaltyProfile
     {
         $now = new DateTimeImmutable();

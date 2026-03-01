@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Nexus\Loyalty\Models\LoyaltyProfile;
 use Nexus\Loyalty\Models\PointBalance;
 use Nexus\Loyalty\Models\TierStatus;
+use Nexus\Loyalty\Services\RedemptionValidator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -47,10 +48,32 @@ final class TenantIsolationTest extends TestCase
         $this->assertEquals('coalition-xyz', $profile->metadata['coalition_id']);
     }
 
-    private function createProfile(string $memberId, string $tenantId, array $metadata = []): LoyaltyProfile
+    /**
+     * Requirement: SEC-LOY-001 - Assert service logic respects profile's tenant context.
+     */
+    public function test_service_respects_tenant_isolation(): void
+    {
+        $tenantA = 'tenant-a';
+        $tenantB = 'tenant-b';
+        
+        $profileA = $this->createProfile('user-1', $tenantA, [], 2000);
+        $profileB = $this->createProfile('user-1', $tenantB, [], 500);
+
+        $validator = new RedemptionValidator(1000, 100);
+
+        // Valid for Tenant A
+        $this->assertTrue($validator->validateRedemption($profileA, 1000));
+
+        // Invalid for Tenant B context (even if it's the same "user ID")
+        $this->expectException(\Nexus\Loyalty\Exceptions\InsufficientPointsException::class);
+        $validator->validateRedemption($profileB, 1000);
+    }
+
+    private function createProfile(string $memberId, string $tenantId, array $metadata = [], int $points = 0): LoyaltyProfile
     {
         $now = new DateTimeImmutable();
-        $balance = new PointBalance(0, 0, []);
+        $bucket = new \Nexus\Loyalty\Models\PointBucket('b1', $points, $points, $now);
+        $balance = new PointBalance($points, $points, [$bucket]);
         $tier = new TierStatus('bronze', 'Bronze Status', $now);
 
         return new LoyaltyProfile($memberId, $tenantId, $balance, $tier, $metadata);

@@ -16,7 +16,7 @@ use Nexus\Loyalty\Models\TierStatus;
 final readonly class TierManagementService implements TierManagerInterface
 {
     /**
-     * @param array<string, array<string, mixed>> $tierConfig Configuration for each tier level.
+     * @param array<string, array{threshold: int, name: string, benefits: array<string>}> $tierConfig Configuration for each tier level.
      * @param int $defaultRetentionMonths Number of months a member retains a tier.
      * @param int $evaluationWindowDays Sliding window for qualifying points (e.g., 365).
      */
@@ -48,7 +48,6 @@ final readonly class TierManagementService implements TierManagerInterface
     public function recalculateTierStatus(LoyaltyProfile $profile, int $lookBackDays): TierStatus
     {
         // In a real system, we would query the historical ledger for points earned in $lookBackDays
-        // For this implementation, we use the provided profile's qualifying points context.
         $qualifyingPoints = $profile->metadata['qualifying_points_window'] ?? 0;
 
         return $this->evaluateNewStatus($profile, (int) $qualifyingPoints);
@@ -59,10 +58,17 @@ final readonly class TierManagementService implements TierManagerInterface
      */
     private function evaluateNewStatus(LoyaltyProfile $profile, int $points): TierStatus
     {
+        // Explicitly choose the tier with the highest threshold <= points (FUN-LOY-002)
         $bestTier = 'bronze';
-        foreach ($this->tierConfig as $tierId => $config) {
+        
+        // Sort config by threshold descending to find the highest qualifying tier first
+        $sortedTiers = $this->tierConfig;
+        uasort($sortedTiers, fn($a, $b) => $b['threshold'] <=> $a['threshold']);
+
+        foreach ($sortedTiers as $tierId => $config) {
             if ($points >= $config['threshold']) {
                 $bestTier = $tierId;
+                break;
             }
         }
 
@@ -91,6 +97,13 @@ final readonly class TierManagementService implements TierManagerInterface
     private function isHigherTier(string $tierA, string $tierB): bool
     {
         $tiers = array_keys($this->tierConfig);
-        return array_search($tierA, $tiers) > array_search($tierB, $tiers);
+        $posA = array_search($tierA, $tiers);
+        $posB = array_search($tierB, $tiers);
+
+        // Treat unknown tiers as lowest (position -1)
+        $valA = ($posA === false) ? -1 : $posA;
+        $valB = ($posB === false) ? -1 : $posB;
+
+        return $valA > $valB;
     }
 }
