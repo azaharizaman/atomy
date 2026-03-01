@@ -10,6 +10,8 @@ use Nexus\Loyalty\ValueObjects\PointBalance;
 use Nexus\Loyalty\ValueObjects\PointBucket;
 use Nexus\Loyalty\ValueObjects\TierStatus;
 use Nexus\Loyalty\Services\RedemptionValidator;
+use Nexus\Loyalty\Contracts\LoyaltySettingsInterface;
+use Nexus\Loyalty\Contracts\IdempotencyStoreInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -61,7 +63,13 @@ final class TenantIsolationTest extends TestCase
         $profileA = $this->createProfile('user-1', $tenantA, [], 2000);
         $profileB = $this->createProfile('user-1', $tenantB, [], 500);
 
-        $validator = new RedemptionValidator(1000, 100);
+        $settings = $this->createMock(LoyaltySettingsInterface::class);
+        $settings->method('getMinBalanceThreshold')->willReturn(1000);
+        $settings->method('getIncrementalStep')->willReturn(100);
+
+        $idempotencyStore = $this->createMock(IdempotencyStoreInterface::class);
+
+        $validator = new RedemptionValidator($settings, $idempotencyStore);
 
         // Valid for Profile A (which has 2000 pts)
         $this->assertTrue($validator->validateRedemption($profileA, 1000));
