@@ -11,6 +11,7 @@ use Nexus\IdentityOperations\DTOs\MfaVerifyRequest;
 use Nexus\IdentityOperations\DTOs\MfaVerifyResult;
 use Nexus\IdentityOperations\DTOs\MfaDisableRequest;
 use Nexus\IdentityOperations\DTOs\MfaDisableResult;
+use Nexus\IdentityOperations\DTOs\MfaStatusResult;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 

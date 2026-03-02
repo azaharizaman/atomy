@@ -25,7 +25,7 @@ final class TenantRepository extends ServiceEntityRepository implements TenantRe
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Tenant);
+        parent::__construct($registry, Tenant::class);
     }
 
     /**

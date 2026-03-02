@@ -48,19 +48,31 @@ cp .env .env.local
 The default configuration uses PostgreSQL. Update `DATABASE_URL` in `.env.local` if needed:
 
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres?serverVersion=16"
+DATABASE_URL="postgresql://postgres:secret@localhost:5432/atomy_dev?serverVersion=16"
 ```
 
 ### 3. Set Up the Database
 
-Create the database and run migrations:
+Create the database, run migrations, and load seed data:
 
 ```bash
-# Create database
+# Create database (or use existing, e.g. atomy_dev)
 php bin/console doctrine:database:create
 
 # Run migrations
-php bin/console doctrine:migrations:migrate
+php bin/console doctrine:migrations:migrate -n
+
+# Load seed data (tenants, users, feature flags, settings)
+php bin/console doctrine:fixtures:load -n
+```
+
+**Fresh start** (drop and recreate everything):
+
+```bash
+php bin/console doctrine:database:drop --force
+php bin/console doctrine:database:create
+php bin/console doctrine:migrations:migrate -n
+php bin/console doctrine:fixtures:load -n
 ```
 
 ### 4. Start the Development Server
@@ -83,7 +95,7 @@ Configure your database connection in `.env`:
 
 ```bash
 # PostgreSQL (default)
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres?serverVersion=16"
+DATABASE_URL="postgresql://postgres:secret@localhost:5432/atomy_dev?serverVersion=16"
 
 # MySQL/MariaDB alternative
 DATABASE_URL="mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8.0.32&charset=utf8mb4"

@@ -54,11 +54,3 @@ final readonly class ImpersonationAllowedRule implements TenantValidationRuleInt
         ]);
     }
 }
-
-/**
- * Interface for checking impersonation permissions.
- */
-interface ImpersonationPermissionCheckerInterface
-{
-    public function hasImpersonationPermission(string $adminUserId): bool;
-}
