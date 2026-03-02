@@ -1,0 +1,27 @@
+{
+    "name": "nexus/esg-operations",
+    "description": "ESG operations and AI analytics orchestrator.",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Nexus\ESGOperations": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\ESGOperations\Tests": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.3",
+        "nexus/esg": "*@dev",
+        "nexus/sustainability-data": "*@dev",
+        "nexus/esg-regulatory": "*@dev",
+        "nexus/document": "*@dev",
+        "nexus/machine-learning": "*@dev"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    }
+}

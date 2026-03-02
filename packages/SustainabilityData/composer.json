@@ -1,0 +1,23 @@
+{
+    "name": "nexus/sustainability-data",
+    "description": "Raw sustainability event lakehouse for the Atomy (Nexus) ERP.",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Nexus\SustainabilityData": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\SustainabilityData\Tests": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.3",
+        "nexus/common": "*@dev"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    }
+}

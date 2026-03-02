@@ -1,0 +1,28 @@
+{
+    "name": "nexus/quotation-intelligence",
+    "description": "AI-driven quotation normalization and intelligence orchestrator.",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Nexus\QuotationIntelligence": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\QuotationIntelligence\\Tests\\": "tests/",
+            "Nexus\\Finance\\": "tests/Stubs/Nexus/Finance/"
+        }
+    },
+    "require": {
+        "php": ">=8.3",
+        "nexus/procurement": "*",
+        "nexus/machine-learning": "*",
+        "nexus/document": "*",
+        "nexus/uom": "*",
+        "nexus/currency": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    }
+}

@@ -1,3 +1,8 @@
+---
+name: scaffold-l1-package
+description: Scaffolds a new Layer 1 (Pure PHP) package according to Nexus standards.
+---
+
 # Scaffold Layer 1 Package (Atomic Package)
 
 This skill automates the creation of a new Layer 1 Atomic Package in the `packages/` directory, adhering strictly to the project's Three-Layer Architecture.

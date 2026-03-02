@@ -1,3 +1,8 @@
+---
+name: architectural-design
+description: Generates high-fidelity, highly technical architectural design documents for new features, packages, or system-wide changes.
+---
+
 # Architectural Design (Senior Architect)
 
 This skill generates high-fidelity, highly technical architectural design documents for new features, packages, or system-wide changes. The output is a comprehensive, multi-page document suitable for senior architectural review.

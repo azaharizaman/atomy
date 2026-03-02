@@ -1,3 +1,8 @@
+---
+name: test-improvement
+description: Analyzes existing tests and proposes improvements for better coverage and reliability.
+---
+
 # Test Improvement (QA Automation)
 
 This skill automates the expansion of test coverage, ensuring high-quality verification with modern PHP syntax.

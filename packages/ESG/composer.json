@@ -1,0 +1,23 @@
+{
+    "name": "nexus/esg",
+    "description": "Framework-agnostic sustainability truth foundation for the Atomy (Nexus) ERP.",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Nexus\ESG": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\ESG\Tests": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.3",
+        "nexus/common": "*@dev"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    }
+}
