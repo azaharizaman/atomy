@@ -14,7 +14,7 @@ declare(strict_types=1);
 use Nexus\Sales\Contracts\SalesOrderManagerInterface;
 use Nexus\Sales\Contracts\PricingStrategyInterface;
 use Nexus\Sales\Contracts\StockReservationInterface;
-use Nexus\Sales\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 class AdvancedOrderService
 {

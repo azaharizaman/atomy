@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Services;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Contracts\TaxReportingInterface;
 use Nexus\Tax\ValueObjects\ComplianceReportLine;
 use Psr\Log\LoggerInterface;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Services;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Contracts\TaxCalculatorInterface;
 use Nexus\Tax\Contracts\TaxExemptionManagerInterface;
 use Nexus\Tax\Contracts\TaxJurisdictionResolverInterface;

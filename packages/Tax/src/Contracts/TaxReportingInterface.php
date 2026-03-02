@@ -46,13 +46,13 @@ interface TaxReportingInterface
      * @param \DateTimeInterface $periodStart Period start
      * @param \DateTimeInterface $periodEnd Period end
      * 
-     * @return \Nexus\Currency\ValueObjects\Money Total tax collected
+     * @return \Nexus\Common\ValueObjects\Money Total tax collected
      */
     public function getTotalTaxCollected(
         string $jurisdictionCode,
         \DateTimeInterface $periodStart,
         \DateTimeInterface $periodEnd
-    ): \Nexus\Currency\ValueObjects\Money;
+    ): \Nexus\Common\ValueObjects\Money;
 
     /**
      * Get tax collected by tax type for jurisdiction
@@ -63,7 +63,7 @@ interface TaxReportingInterface
      * @param \DateTimeInterface $periodStart Period start
      * @param \DateTimeInterface $periodEnd Period end
      * 
-     * @return array<string, \Nexus\Currency\ValueObjects\Money> Tax type => amount
+     * @return array<string, \Nexus\Common\ValueObjects\Money> Tax type => amount
      */
     public function getTaxByType(
         string $jurisdictionCode,
@@ -80,7 +80,7 @@ interface TaxReportingInterface
      * @param \DateTimeInterface $periodStart Period start
      * @param \DateTimeInterface $periodEnd Period end
      * 
-     * @return array<string, array{amount: \Nexus\Currency\ValueObjects\Money, count: int}>
+     * @return array<string, array{amount: \Nexus\Common\ValueObjects\Money, count: int}>
      */
     public function getExemptionsSummary(
         string $jurisdictionCode,

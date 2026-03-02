@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "nexus/currency": "*@dev",
+        "nexus/common": "*@dev",
         "php": "^8.3",
         "psr/cache": "^3.0",
         "psr/log": "^3.0"

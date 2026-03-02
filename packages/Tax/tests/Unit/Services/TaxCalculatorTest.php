@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Tests\Unit\Services;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Contracts\TaxJurisdictionResolverInterface;
 use Nexus\Tax\Contracts\TaxRateRepositoryInterface;
 use Nexus\Tax\Exceptions\TaxRateNotFoundException;

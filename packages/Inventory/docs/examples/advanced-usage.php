@@ -20,7 +20,7 @@ use Nexus\Inventory\Contracts\{
     TransferManagerInterface
 };
 use Nexus\Inventory\Enums\{IssueReason, ReleaseReason, TransferStatus};
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 // Assume dependency injection container provides these
 /** @var StockManagerInterface $stockManager */

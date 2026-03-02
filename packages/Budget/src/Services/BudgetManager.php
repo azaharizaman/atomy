@@ -29,7 +29,7 @@ use Nexus\Budget\ValueObjects\BudgetAllocation;
 use Nexus\Budget\ValueObjects\BudgetVariance;
 use Nexus\Budget\ValueObjects\BudgetAvailabilityResult;
 use Nexus\Currency\Contracts\CurrencyConverterInterface;
-use Nexus\Finance\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Finance\Contracts\AccountInterface;
 use Nexus\Period\Contracts\PeriodManagerInterface;
 use Nexus\Setting\Contracts\SettingsManagerInterface;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Budget\Enums;
 
-use Nexus\Finance\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 /**
  * Approval Level enum

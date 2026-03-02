@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\ValueObjects;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Enums\ServiceClassification;
 use Nexus\Tax\Enums\TaxCalculationMethod;
 use Nexus\Tax\Enums\TaxType;

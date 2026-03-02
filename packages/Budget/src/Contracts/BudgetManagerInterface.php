@@ -6,7 +6,7 @@ namespace Nexus\Budget\Contracts;
 
 use Nexus\Budget\ValueObjects\BudgetVariance;
 use Nexus\Budget\ValueObjects\BudgetAvailabilityResult;
-use Nexus\Finance\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 /**
  * Budget Manager service contract

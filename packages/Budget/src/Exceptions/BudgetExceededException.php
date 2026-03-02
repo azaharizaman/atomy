@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Budget\Exceptions;
 
 use Nexus\Budget\Enums\ApprovalLevel;
-use Nexus\Finance\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 /**
  * Budget Exceeded Exception

@@ -55,7 +55,7 @@ interface BudgetTransactionRepositoryInterface
      * 
      * @param string $accountId Account identifier
      * @param string $periodId Period identifier
-     * @return \Nexus\Uom\ValueObjects\Money
+     * @return \Nexus\Common\ValueObjects\Money
      */
-    public function sumCommitmentsByAccount(string $accountId, string $periodId): \Nexus\Uom\ValueObjects\Money;
+    public function sumCommitmentsByAccount(string $accountId, string $periodId): \Nexus\Common\ValueObjects\Money;
 }

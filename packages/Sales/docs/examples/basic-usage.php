@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 use Nexus\Sales\Contracts\SalesOrderManagerInterface;
 use Nexus\Sales\Contracts\SalesOrderRepositoryInterface;
-use Nexus\Sales\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 // ============================================
 // Step 1: Initialize Manager
