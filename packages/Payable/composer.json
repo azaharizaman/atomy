@@ -9,9 +9,11 @@
         }
     },
     "require": {
-        "php": "^8.3",
-        "nexus/accounting": "*@dev"
+        "php": "^8.3"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "nexus/accounting": "Optional integration dependency; currently not referenced by package src."
+    }
 }

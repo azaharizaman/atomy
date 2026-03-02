@@ -19,11 +19,9 @@
         }
     ],
     "require": {
-        "php": "^8.3",
-        "nexus/payment": "*@dev",
         "nexus/common": "*@dev",
-        "nexus/connector": "*@dev",
         "nexus/crypto": "*@dev",
+        "php": "^8.3",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -32,6 +30,8 @@
         "friendsofphp/php-cs-fixer": "^3.0"
     },
     "suggest": {
+        "nexus/connector": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/payment": "Optional integration dependency; currently not referenced by package src.",
         "nexus/payment-rails": "For ACH/Wire transmission via bank rails"
     },
     "autoload": {

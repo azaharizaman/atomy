@@ -10,11 +10,9 @@
         }
     ],
     "require": {
-        "php": "^8.3",
         "geocoder-php/google-maps-provider": "^4.7",
         "geocoder-php/nominatim-provider": "^5.7",
-        "nexus/party": "*@dev",
-        "nexus/connector": "*@dev",
+        "php": "^8.3",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -26,5 +24,9 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "nexus/connector": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/party": "Optional integration dependency; currently not referenced by package src."
+    }
 }

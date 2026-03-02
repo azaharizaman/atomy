@@ -9,11 +9,13 @@
         }
     },
     "require": {
-        "php": "^8.3",
-        "nexus/inventory": "*@dev",
         "nexus/routing": "*@dev",
+        "php": "^8.3",
         "psr/log": "^3.0"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "nexus/inventory": "Optional integration dependency; currently not referenced by package src."
+    }
 }

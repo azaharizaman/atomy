@@ -11,8 +11,6 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/accounting": "*@dev",
-        "nexus/period": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -29,5 +27,9 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "nexus/accounting": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/period": "Optional integration dependency; currently not referenced by package src."
+    }
 }

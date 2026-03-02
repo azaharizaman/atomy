@@ -11,11 +11,6 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/inventory": "*@dev",
-        "nexus/product": "*@dev",
-        "nexus/uom": "*@dev",
-        "nexus/warehouse": "*@dev",
-        "nexus/machine-learning": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -23,6 +18,11 @@
     },
     "suggest": {
         "nexus/event-stream": "Event sourcing for production state replay and audit trail",
+        "nexus/inventory": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/machine-learning": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/product": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/uom": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/warehouse": "Optional integration dependency; currently not referenced by package src.",
         "nexus/workflow": "Advanced work order approval workflows and state machine extensions"
     },
     "autoload": {

@@ -7,7 +7,10 @@ Method: Parallelized per-package audit workers (one worker per package/orchestra
 ## 1) Executive Summary
 
 - Total reviewed: 107 code units.
-- Atomic packages with cross-package dependencies in `composer.json` (violating atomicity rule in `docs/project/ARCHITECTURE.md`): 31.
+- Layer 1 dependency sanitization completed:
+  - moved 60 unused `nexus/*` dependencies from `require` to `suggest` across 19 atomic packages.
+  - post-sanitization check found 0 remaining unused `nexus/*` entries in atomic `require`.
+- Remaining true Layer 1 boundary violations (source-level cross-package imports): 28 atomic packages.
 - Atomic packages with zero local tests: 51/88.
 - Atomic packages missing required metadata docs:
   - missing `IMPLEMENTATION_SUMMARY.md`: 25
@@ -22,8 +25,37 @@ Method: Parallelized per-package audit workers (one worker per package/orchestra
 ### Critical
 
 1. **Atomicity boundary is widely violated in Layer 1**
-- Rule says atomic packages should not depend on other atomic packages; many do at composer level and source level.
-- Examples: `Assets`, `Budget`, `CashManagement`, `FieldService`, `Manufacturing`, `Sales`, `Tax`, `Payment*` subpackages.
+- Composer-only drift was sanitized (unused dependencies moved to `suggest`).
+- True violations now refer to source-level imports across package boundaries (`use Nexus\\OtherPackage\\...`) and still require refactoring.
+- True Layer 1 violators:
+  - `Assets` -> `Period`, `Scheduler`, `Setting`
+  - `Audit` -> `Crypto`
+  - `Budget` -> `AuditLogger`, `Currency`, `Finance`, `Intelligence`, `MachineLearning`, `Notifier`, `Period`, `Procurement`, `Setting`, `Workflow`
+  - `Connector` -> `Crypto`
+  - `Crypto` -> `Scheduler`
+  - `Currency` -> `Finance`
+  - `Document` -> `AuditLogger`, `Crypto`, `Storage`, `Tenant`
+  - `EventStream` -> `Crypto`
+  - `FieldService` -> `Backoffice`, `Document`, `Geo`, `Inventory`, `Sequencing`, `Warehouse`
+  - `GDPR` -> `DataPrivacy`
+  - `Inventory` -> `MachineLearning`
+  - `MachineLearning` -> `Setting`
+  - `PDPA` -> `DataPrivacy`
+  - `Party` -> `Geo`
+  - `Payable` -> `AuditLogger`, `Currency`, `Finance`, `MachineLearning`, `Period`, `Setting`
+  - `Payment` -> `Currency`
+  - `PaymentBank` -> `Crypto`
+  - `PaymentGateway` -> `Connector`, `Tenant`
+  - `PayrollMysStatutory` -> `Payroll`
+  - `ProcurementML` -> `MachineLearning`, `Scheduler`
+  - `Product` -> `Sequencing`, `Setting`, `Uom`
+  - `Receivable` -> `Currency`, `MachineLearning`
+  - `Reporting` -> `AuditLogger`, `Export`, `Notifier`, `QueryEngine`, `Scheduler`, `Storage`
+  - `Routing` -> `Geo`
+  - `Sales` -> `AuditLogger`, `Currency`, `Sequencing`, `Uom`
+  - `Tax` -> `Currency`
+  - `Treasury` -> `Identity`
+  - `Warehouse` -> `Geo`, `Routing`
 
 2. **Orchestrator interface segregation is widely violated in Layer 2**
 - Rule says orchestrators should define/use own contracts, not import atomic contracts directly.
@@ -147,6 +179,8 @@ Per your instruction, this review used rough estimation (without failing on brok
 - Where these conflict (e.g., 0 local tests but high claimed coverage), result is marked as confidence risk.
 
 ## 7) Full Matrix - Atomic Packages
+
+Note: The `Composer Atomic Dep Violation` column below is the original scan snapshot; use Section 1 and Section 2 (Layer 1 sanitization update) as the current source of truth after dependency cleanup.
 
 | Package | Src LOC | Test Files | Cross Uses in Src | Composer Atomic Dep Violation | TODO Markers | Risk | Notes |
 |---|---:|---:|---:|---|---:|---|---|

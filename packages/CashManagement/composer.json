@@ -10,16 +10,8 @@
         }
     ],
     "require": {
-        "php": "^8.3",
         "nexus/finance": "*@dev",
-        "nexus/receivable": "*@dev",
-        "nexus/payable": "*@dev",
-        "nexus/period": "*@dev",
-        "nexus/currency": "*@dev",
-        "nexus/sequencing": "*@dev",
-        "nexus/import": "*@dev",
-        "nexus/setting": "*@dev",
-        "nexus/workflow": "*@dev",
+        "php": "^8.3",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -38,5 +30,15 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "nexus/currency": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/import": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/payable": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/period": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/receivable": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/sequencing": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/setting": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/workflow": "Optional integration dependency; currently not referenced by package src."
+    }
 }

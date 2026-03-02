@@ -10,12 +10,12 @@
     },
     "require": {
         "php": "^8.3",
-        "nexus/uom": "*@dev",
         "psr/log": "^3.0"
     },
     "suggest": {
         "nexus/event-stream": "Event sourcing for stock replay and temporal queries (recommended for large enterprises)",
-        "nexus/machine-learning": "Demand forecasting and stock optimization (requires minimum 90 days of historical data)"
+        "nexus/machine-learning": "Demand forecasting and stock optimization (requires minimum 90 days of historical data)",
+        "nexus/uom": "Optional integration dependency; currently not referenced by package src."
     },
     "minimum-stability": "dev",
     "prefer-stable": true

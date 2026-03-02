@@ -4,18 +4,10 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": "^8.3",
-        "psr/log": "^3.0",
-        "psr/cache": "^3.0",
-        "nexus/accounting": "*@dev",
         "nexus/currency": "*@dev",
-        "nexus/geo": "*@dev",
-        "nexus/party": "*@dev",
-        "nexus/product": "*@dev",
-        "nexus/tenant": "*@dev",
-        "nexus/audit-logger": "*@dev",
-        "nexus/telemetry": "*@dev",
-        "nexus/storage": "*@dev"
+        "php": "^8.3",
+        "psr/cache": "^3.0",
+        "psr/log": "^3.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"
@@ -31,5 +23,15 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "nexus/accounting": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/audit-logger": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/geo": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/party": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/product": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/storage": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/telemetry": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/tenant": "Optional integration dependency; currently not referenced by package src."
+    }
 }

@@ -19,10 +19,8 @@
         }
     ],
     "require": {
-        "php": "^8.3",
-        "nexus/payment": "^0.1",
         "nexus/common": "^1.0",
-        "nexus/scheduler": "^1.0",
+        "php": "^8.3",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -44,5 +42,9 @@
     "prefer-stable": true,
     "config": {
         "sort-packages": true
+    },
+    "suggest": {
+        "nexus/payment": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/scheduler": "Optional integration dependency; currently not referenced by package src."
     }
 }

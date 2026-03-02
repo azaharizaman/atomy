@@ -9,14 +9,8 @@
         }
     },
     "require": {
-        "php": "^8.3",
-        "nexus/accounting": "*@dev",
-        "nexus/party": "*@dev",
-        "nexus/sales": "*@dev",
         "nexus/currency": "*@dev",
-        "nexus/period": "*@dev",
-        "nexus/sequencing": "*@dev",
-        "nexus/audit-logger": "*@dev",
+        "php": "^8.3",
         "psr/log": "^3.0"
     },
     "autoload-dev": {
@@ -25,5 +19,13 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "nexus/accounting": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/audit-logger": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/party": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/period": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/sales": "Optional integration dependency; currently not referenced by package src.",
+        "nexus/sequencing": "Optional integration dependency; currently not referenced by package src."
+    }
 }
