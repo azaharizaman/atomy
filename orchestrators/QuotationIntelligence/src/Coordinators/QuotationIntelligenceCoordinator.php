@@ -8,13 +8,13 @@ use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterf
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Nexus\QuotationIntelligence\Contracts\QuoteNormalizationServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\RiskAssessmentServiceInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorDocumentRepositoryInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorTenantRepositoryInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorProcurementManagerInterface;
 use Nexus\QuotationIntelligence\DTOs\NormalizedQuoteLine;
 use Nexus\QuotationIntelligence\ValueObjects\ExtractionEvidence;
 use Nexus\QuotationIntelligence\ValueObjects\QuoteSnippet;
-use Nexus\Document\Contracts\ContentProcessorInterface;
-use Nexus\Document\Contracts\DocumentRepositoryInterface;
-use Nexus\Tenant\Contracts\TenantRepositoryInterface;
-use Nexus\Procurement\Contracts\ProcurementManagerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -23,10 +23,10 @@ use Psr\Log\LoggerInterface;
 final readonly class QuotationIntelligenceCoordinator implements QuotationIntelligenceCoordinatorInterface
 {
     public function __construct(
-        private ContentProcessorInterface $documentProcessor,
-        private DocumentRepositoryInterface $documentRepository,
-        private TenantRepositoryInterface $tenantRepository,
-        private ProcurementManagerInterface $procurementManager,
+        private OrchestratorContentProcessorInterface $documentProcessor,
+        private OrchestratorDocumentRepositoryInterface $documentRepository,
+        private OrchestratorTenantRepositoryInterface $tenantRepository,
+        private OrchestratorProcurementManagerInterface $procurementManager,
         private SemanticMapperInterface $semanticMapper,
         private QuoteNormalizationServiceInterface $normalizationService,
         private RiskAssessmentServiceInterface $riskAssessmentService,
@@ -80,6 +80,12 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
 
         // 5. Loop through extracted lines and apply intelligence
         foreach ($extractedLines as $line) {
+            // Guard against non-array extracted items before using offset access
+            if (!is_array($line)) {
+                $this->logger->warning('Skipping non-array quote line item', ['type' => gettype($line)]);
+                continue;
+            }
+
             // Validation: Ensure required keys exist and have valid values
             if (!isset($line['description']) || empty($line['description'])) {
                 $this->logger->warning('Skipping quote line missing description', [
@@ -120,7 +126,11 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
                 $mapping['code'] = $mappingResult['code'] ?? 'unknown';
                 $mapping['confidence'] = $mappingResult['confidence'] ?? 0.0;
             } catch (\Throwable $e) {
-                $this->logger->error('Semantic mapping failed for line', ['description' => $line['description'], 'error' => $e->getMessage()]);
+                $this->logger->error('Semantic mapping failed for line', [
+                    'rfq_line_id' => $line['rfq_line_id'] ?? null,
+                    'error' => $e->getMessage(),
+                    'description_hash' => hash('sha256', (string)$line['description'])
+                ]);
             }
 
             // B. Normalization (UoM) with error handling
