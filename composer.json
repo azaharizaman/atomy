@@ -32,7 +32,12 @@
         "nexus/payment-gateway": "*@dev",
         "nexus/payment-bank": "*@dev",
         "nexus/manufacturing-operations": "*@dev",
-        "nexus/loyalty": "*@dev"
+        "nexus/loyalty": "*@dev",
+        "nexus/quotation-intelligence": "*@dev",
+        "nexus/esg": "*@dev",
+        "nexus/sustainability-data": "*@dev",
+        "nexus/esg-regulatory": "*@dev",
+        "nexus/esg-operations": "*@dev"
     },
     "repositories": [
         {
@@ -91,7 +96,19 @@
             "Nexus\\Treasury\\": "packages/Treasury/src/",
             "Nexus\\FixedAssetDepreciation\\": "packages/FixedAssetDepreciation/src/",
             "Nexus\\GeneralLedger\\": "packages/GeneralLedger/src/",
-            "Nexus\\Loyalty\\": "packages/Loyalty/src/"
+            "Nexus\\Loyalty\\": "packages/Loyalty/src/",
+            "Nexus\\QuotationIntelligence\\": "orchestrators/QuotationIntelligence/src/",
+            "Nexus\\Document\\": "packages/Document/src/",
+            "Nexus\\MachineLearning\\": "packages/MachineLearning/src/",
+            "Nexus\\Uom\\": "packages/Uom/src/",
+            "Nexus\\Currency\\": "packages/Currency/src/",
+            "Nexus\\EventStream\\": "packages/EventStream/src/",
+            "Nexus\\Common\\": "packages/Common/src/",
+            "Nexus\\JournalEntry\\": "packages/JournalEntry/src/",
+            "Nexus\\ESG\\": "packages/ESG/src/",
+            "Nexus\\SustainabilityData\\": "packages/SustainabilityData/src/",
+            "Nexus\\ESGRegulatory\\": "packages/ESGRegulatory/src/",
+            "Nexus\\ESGOperations\\": "orchestrators/ESGOperations/src/"
         }
     },
     "autoload-dev": {
@@ -112,7 +129,13 @@
             "Nexus\\SupplyChainOperations\\Tests\\": "orchestrators/SupplyChainOperations/tests/",
             "Nexus\\FixedAssetDepreciation\\Tests\\": "packages/FixedAssetDepreciation/tests/",
             "Nexus\\GeneralLedger\\Tests\\": "packages/GeneralLedger/tests/",
-            "Nexus\\Loyalty\\Tests\\": "packages/Loyalty/tests/"
+            "Nexus\\Loyalty\\Tests\\": "packages/Loyalty/tests/",
+            "Nexus\\QuotationIntelligence\\Tests\\": "orchestrators/QuotationIntelligence/tests/",
+            "Nexus\\Finance\\": "orchestrators/QuotationIntelligence/tests/Stubs/Nexus/Finance/",
+            "Nexus\\ESG\\Tests\\": "packages/ESG/tests/",
+            "Nexus\\SustainabilityData\\Tests\\": "packages/SustainabilityData/tests/",
+            "Nexus\\ESGRegulatory\\Tests\\": "packages/ESGRegulatory/tests/",
+            "Nexus\\ESGOperations\\Tests\\": "orchestrators/ESGOperations/tests/"
         }
     }
 }

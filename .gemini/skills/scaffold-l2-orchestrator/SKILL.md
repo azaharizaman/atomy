@@ -1,3 +1,8 @@
+---
+name: scaffold-l2-orchestrator
+description: Scaffolds a new Layer 2 (Orchestrator) package according to Nexus standards.
+---
+
 # Scaffold Layer 2 Orchestrator
 
 This skill automates the creation of a new Layer 2 Orchestrator package in the `orchestrators/` directory, specifically for cross-package coordination.

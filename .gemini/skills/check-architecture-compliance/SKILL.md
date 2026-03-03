@@ -1,3 +1,8 @@
+---
+name: check-architecture-compliance
+description: Verifies that the codebase adheres to the Three-Layer Architecture and Atomy Core Mandates.
+---
+
 # Check Architecture Compliance
 
 This skill automates the validation of a package against the project's strict architectural mandates.

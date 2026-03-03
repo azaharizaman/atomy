@@ -1,3 +1,8 @@
+---
+name: research
+description: Performs deep research on industry standards, competitor ERP systems, and modern tech trends.
+---
+
 # Research Analysis (Market & Technical)
 
 This skill performs deep research on industry standards, competitor ERP systems, and modern tech trends.

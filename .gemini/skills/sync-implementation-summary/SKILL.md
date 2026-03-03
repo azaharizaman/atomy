@@ -1,3 +1,8 @@
+---
+name: sync-implementation-summary
+description: Synchronizes the IMPLEMENTATION_SUMMARY.md file within a package after changes.
+---
+
 # Sync Implementation Summary
 
 This skill automates the maintenance of `IMPLEMENTATION_SUMMARY.md` by analyzing the current codebase of a package.
