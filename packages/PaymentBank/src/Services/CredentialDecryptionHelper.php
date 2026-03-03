@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentBank\Services;
 
-use Nexus\Crypto\Contracts\CryptoManagerInterface;
-use Nexus\Crypto\ValueObjects\EncryptedData;
+use Nexus\PaymentBank\Contracts\CredentialEncryptionInterface;
+use Nexus\PaymentBank\ValueObjects\EncryptedSecret;
 
 /**
  * Helper for decrypting credentials stored as JSON-serialized EncryptedData.
@@ -17,7 +17,7 @@ use Nexus\Crypto\ValueObjects\EncryptedData;
 final readonly class CredentialDecryptionHelper
 {
     public function __construct(
-        private CryptoManagerInterface $crypto
+        private CredentialEncryptionInterface $crypto
     ) {}
 
     /**
@@ -32,13 +32,13 @@ final readonly class CredentialDecryptionHelper
         
         if (isset($encryptedCredentials['access_token']) && is_string($encryptedCredentials['access_token'])) {
             $decrypted['access_token'] = $this->crypto->decrypt(
-                EncryptedData::fromJson($encryptedCredentials['access_token'])
+                EncryptedSecret::fromJson($encryptedCredentials['access_token'])
             );
         }
         
         if (isset($encryptedCredentials['refresh_token']) && is_string($encryptedCredentials['refresh_token'])) {
             $decrypted['refresh_token'] = $this->crypto->decrypt(
-                EncryptedData::fromJson($encryptedCredentials['refresh_token'])
+                EncryptedSecret::fromJson($encryptedCredentials['refresh_token'])
             );
         }
         

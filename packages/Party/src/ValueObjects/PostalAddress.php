@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Party\ValueObjects;
 
-use Nexus\Geo\ValueObjects\Coordinates;
+use Nexus\Party\ValueObjects\Coordinates;
 
 /**
  * Postal Address value object.

@@ -9,9 +9,9 @@ use Nexus\Warehouse\Contracts\PickRouteResult;
 use Nexus\Warehouse\Contracts\BinLocationRepositoryInterface;
 use Nexus\Warehouse\Contracts\BinLocationInterface;
 use Nexus\Warehouse\Exceptions\BinLocationNotFoundException;
-use Nexus\Routing\Contracts\RouteOptimizerInterface;
-use Nexus\Routing\ValueObjects\RouteStop;
-use Nexus\Geo\ValueObjects\Coordinates;
+use Nexus\Warehouse\Contracts\RouteOptimizerInterface;
+use Nexus\Warehouse\ValueObjects\RouteStop;
+use Nexus\Warehouse\ValueObjects\Coordinates;
 use Psr\Log\LoggerInterface;
 
 /**

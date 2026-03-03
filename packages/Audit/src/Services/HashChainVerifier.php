@@ -10,9 +10,9 @@ use Nexus\Audit\Contracts\AuditVerifierInterface;
 use Nexus\Audit\Exceptions\AuditSequenceException;
 use Nexus\Audit\Exceptions\AuditTamperedException;
 use Nexus\Audit\Exceptions\SignatureVerificationException;
-use Nexus\Crypto\Contracts\AsymmetricSignerInterface;
-use Nexus\Crypto\Contracts\HasherInterface;
-use Nexus\Crypto\ValueObjects\HashAlgorithm;
+use Nexus\Audit\Contracts\SignerInterface;
+use Nexus\Audit\Contracts\HasherInterface;
+use Nexus\Audit\Enums\HashAlgorithm;
 
 /**
  * Hash Chain Verifier Service
@@ -27,7 +27,7 @@ final readonly class HashChainVerifier implements AuditVerifierInterface
     public function __construct(
         private AuditStorageInterface $storage,
         private HasherInterface $hasher,
-        private ?AsymmetricSignerInterface $signer = null
+        private ?SignerInterface $signer = null
     ) {}
 
     /**
@@ -230,9 +230,7 @@ final readonly class HashChainVerifier implements AuditVerifierInterface
         ]);
 
         // Calculate SHA-256 hash
-        $hashResult = $this->hasher->hash($hashInput, HashAlgorithm::SHA256);
-
-        return $hashResult->getValue();
+        return $this->hasher->hash($hashInput, HashAlgorithm::SHA256);
     }
 
     /**

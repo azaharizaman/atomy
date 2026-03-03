@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Routing\ValueObjects;
 
-use Nexus\Geo\ValueObjects\Coordinates;
+use Nexus\Routing\ValueObjects\Coordinates;
 
 /**
  * Immutable value object representing a route stop

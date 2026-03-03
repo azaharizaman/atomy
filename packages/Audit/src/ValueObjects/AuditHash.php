@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Audit\ValueObjects;
 
-use Nexus\Crypto\ValueObjects\HashAlgorithm;
+use Nexus\Audit\Enums\HashAlgorithm;
 
 /**
  * Audit Hash Value Object

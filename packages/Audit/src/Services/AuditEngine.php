@@ -12,9 +12,9 @@ use Nexus\Audit\Exceptions\HashChainException;
 use Nexus\Audit\ValueObjects\AuditLevel;
 use Nexus\Audit\ValueObjects\AuditSignature;
 use Nexus\Audit\ValueObjects\RetentionPolicy;
-use Nexus\Crypto\Contracts\AsymmetricSignerInterface;
-use Nexus\Crypto\Contracts\HasherInterface;
-use Nexus\Crypto\ValueObjects\HashAlgorithm;
+use Nexus\Audit\Contracts\SignerInterface;
+use Nexus\Audit\Contracts\HasherInterface;
+use Nexus\Audit\Enums\HashAlgorithm;
 use Symfony\Component\Uid\Ulid;
 
 /**
@@ -31,8 +31,7 @@ final readonly class AuditEngine implements AuditEngineInterface
         private AuditStorageInterface $storage,
         private AuditSequenceManagerInterface $sequenceManager,
         private AuditVerifierInterface $verifier,
-        private HasherInterface $hasher,
-        private ?AsymmetricSignerInterface $signer = null
+        private ?SignerInterface $signer = null
     ) {}
 
     /**
@@ -171,12 +170,9 @@ final readonly class AuditEngine implements AuditEngineInterface
         $dataToSign = json_encode($recordData, JSON_THROW_ON_ERROR);
 
         // Generate signature (requires private key - injected via signer)
-        $signedData = $this->signer->sign($dataToSign, $signedBy);
+        $signedData = $signature = $this->signer->sign($dataToSign, $signedBy);
 
-        return AuditSignature::ed25519(
-            $signedData->getSignature(),
-            $signedBy
-        );
+        return AuditSignature::ed25519($signature, $signedBy);
     }
 
     /**
