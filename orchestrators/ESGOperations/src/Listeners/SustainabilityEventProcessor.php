@@ -53,18 +53,25 @@ final readonly class SustainabilityEventProcessor
      */
     private function extractField(mixed $event, string $field): ?string
     {
-        if (is_array($event)) {
-            return $event[$field] ?? null;
-        }
+        $value = null;
 
-        if (is_object($event)) {
+        if (is_array($event)) {
+            $value = $event[$field] ?? null;
+        } elseif (is_object($event)) {
             $method = 'get' . ucfirst($field);
             if (method_exists($event, $method)) {
-                return (string)$event->$method();
+                $value = $event->$method();
+            } elseif (property_exists($event, $field)) {
+                $value = $event->$field;
             }
-            if (property_exists($event, $field)) {
-                return (string)$event->$field;
-            }
+        }
+
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_scalar($value) || $value instanceof \Stringable) {
+            return (string)$value;
         }
 
         return null;

@@ -11,6 +11,11 @@ use Nexus\EventStream\Contracts\EventInterface;
  */
 final readonly class QuoteUploaded implements EventInterface
 {
+    public const EVENT_NAME = 'quotation.uploaded';
+    public const EVENT_TYPE = 'IntegrationEvent';
+    public const AGGREGATE_TYPE = 'rfq';
+    public const VERSION = 1;
+
     private string $eventId;
     private \DateTimeImmutable $occurredAt;
 
@@ -37,12 +42,12 @@ final readonly class QuoteUploaded implements EventInterface
 
     public function getEventName(): string
     {
-        return 'quotation.uploaded';
+        return self::EVENT_NAME;
     }
 
     public function getEventType(): string
     {
-        return 'IntegrationEvent';
+        return self::EVENT_TYPE;
     }
 
     public function getAggregateId(): string
@@ -52,12 +57,12 @@ final readonly class QuoteUploaded implements EventInterface
 
     public function getAggregateType(): string
     {
-        return 'rfq';
+        return self::AGGREGATE_TYPE;
     }
 
     public function getVersion(): int
     {
-        return 1;
+        return self::VERSION;
     }
 
     public function getPayload(): array

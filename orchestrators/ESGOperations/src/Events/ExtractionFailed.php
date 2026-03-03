@@ -21,6 +21,10 @@ final readonly class ExtractionFailed implements EventInterface
         public float $confidence,
         public array $rawMetadata = []
     ) {
+        if ($this->confidence < 0.0 || $this->confidence > 1.0) {
+            throw new \InvalidArgumentException("Confidence score must be between 0.0 and 1.0, got: {$this->confidence}");
+        }
+
         $this->eventId = bin2hex(random_bytes(16));
         $this->occurredAt = new \DateTimeImmutable();
     }
