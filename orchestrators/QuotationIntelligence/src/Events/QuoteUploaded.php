@@ -11,6 +11,9 @@ use Nexus\EventStream\Contracts\EventInterface;
  */
 final readonly class QuoteUploaded implements EventInterface
 {
+    private string $eventId;
+    private \DateTimeImmutable $occurredAt;
+
     /**
      * @param string $tenantId
      * @param string $documentId Reference to the document in Nexus\Storage
@@ -23,11 +26,13 @@ final readonly class QuoteUploaded implements EventInterface
         public string $rfqId,
         public string $vendorId
     ) {
+        $this->eventId = bin2hex(random_bytes(16));
+        $this->occurredAt = new \DateTimeImmutable();
     }
 
     public function getEventId(): string
     {
-        return bin2hex(random_bytes(16));
+        return $this->eventId;
     }
 
     public function getEventName(): string
@@ -72,7 +77,7 @@ final readonly class QuoteUploaded implements EventInterface
 
     public function getOccurredAt(): \DateTimeImmutable
     {
-        return new \DateTimeImmutable();
+        return $this->occurredAt;
     }
 
     public function getCausationId(): ?string

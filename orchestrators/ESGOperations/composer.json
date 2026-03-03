@@ -5,12 +5,12 @@
     "license": "proprietary",
     "autoload": {
         "psr-4": {
-            "Nexus\ESGOperations": "src/"
+            "Nexus\\ESGOperations\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\ESGOperations\Tests": "tests/"
+            "Nexus\\ESGOperations\\Tests\\": "tests/"
         }
     },
     "require": {

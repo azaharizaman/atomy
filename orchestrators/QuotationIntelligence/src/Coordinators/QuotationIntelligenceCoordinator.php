@@ -40,10 +40,10 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
             'document_id' => $documentId,
         ]);
 
-        // 1. Fetch document metadata
+        // 1. Fetch document metadata and enforce tenant ownership
         $document = $this->documentRepository->findById($documentId);
-        if (!$document) {
-            throw new \InvalidArgumentException("Document {$documentId} not found");
+        if (!$document || $document->getTenantId() !== $tenantId) {
+            throw new \InvalidArgumentException("Document {$documentId} not found or access denied");
         }
 
         // 2. Extract structured data using Nexus\Document ML capabilities

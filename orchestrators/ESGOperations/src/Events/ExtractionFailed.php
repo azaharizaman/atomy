@@ -11,6 +11,9 @@ use Nexus\EventStream\Contracts\EventInterface;
  */
 final readonly class ExtractionFailed implements EventInterface
 {
+    private string $eventId;
+    private \DateTimeImmutable $occurredAt;
+
     public function __construct(
         public string $tenantId,
         public string $documentId,
@@ -18,9 +21,11 @@ final readonly class ExtractionFailed implements EventInterface
         public float $confidence,
         public array $rawMetadata = []
     ) {
+        $this->eventId = bin2hex(random_bytes(16));
+        $this->occurredAt = new \DateTimeImmutable();
     }
 
-    public function getEventId(): string { return bin2hex(random_bytes(16)); }
+    public function getEventId(): string { return $this->eventId; }
     public function getEventName(): string { return 'esg.extraction.failed'; }
     public function getEventType(): string { return 'FailureEvent'; }
     public function getAggregateId(): string { return $this->documentId; }
@@ -35,7 +40,7 @@ final readonly class ExtractionFailed implements EventInterface
         ];
     }
     public function getMetadata(): array { return $this->rawMetadata; }
-    public function getOccurredAt(): \DateTimeImmutable { return new \DateTimeImmutable(); }
+    public function getOccurredAt(): \DateTimeImmutable { return $this->occurredAt; }
     public function getCausationId(): ?string { return null; }
     public function getCorrelationId(): ?string { return null; }
     public function getStreamName(): ?string { return 'esg-failures-' . $this->tenantId; }

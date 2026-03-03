@@ -5,12 +5,12 @@
     "license": "proprietary",
     "autoload": {
         "psr-4": {
-            "Nexus\SustainabilityData": "src/"
+            "Nexus\\SustainabilityData\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\SustainabilityData\Tests": "tests/"
+            "Nexus\\SustainabilityData\\Tests\\": "tests/"
         }
     },
     "require": {

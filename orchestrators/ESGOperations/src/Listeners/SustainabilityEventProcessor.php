@@ -21,11 +21,52 @@ final readonly class SustainabilityEventProcessor
     /**
      * Handle the event.
      * 
-     * @param mixed $event The event object (Assuming generic event from stream)
+     * @param mixed $event The event object or array payload
      */
     public function handle(mixed $event): void
     {
-        // Extraction of tenantId and eventId from payload
-        // $this->coordinator->processEvent($tenantId, $eventId);
+        try {
+            $tenantId = $this->extractField($event, 'tenantId') ?: $this->extractField($event, 'tenant_id');
+            $eventId = $this->extractField($event, 'eventId') ?: $this->extractField($event, 'event_id');
+
+            if (!$tenantId || !$eventId) {
+                throw new \InvalidArgumentException('Sustainability event missing required tenantId or eventId');
+            }
+
+            $this->logger->info('Sustainability event received for processing', [
+                'tenant_id' => $tenantId,
+                'event_id' => $eventId,
+            ]);
+
+            $this->coordinator->processEvent($tenantId, $eventId);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to process sustainability event', [
+                'error' => $e->getMessage(),
+                'event' => is_object($event) ? get_class($event) : gettype($event),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Helper to extract a field from mixed event.
+     */
+    private function extractField(mixed $event, string $field): ?string
+    {
+        if (is_array($event)) {
+            return $event[$field] ?? null;
+        }
+
+        if (is_object($event)) {
+            $method = 'get' . ucfirst($field);
+            if (method_exists($event, $method)) {
+                return (string)$event->$method();
+            }
+            if (property_exists($event, $field)) {
+                return (string)$event->$field;
+            }
+        }
+
+        return null;
     }
 }
