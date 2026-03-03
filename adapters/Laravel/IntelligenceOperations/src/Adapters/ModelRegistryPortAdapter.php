@@ -13,14 +13,14 @@ final readonly class ModelRegistryPortAdapter implements ModelRegistryPortInterf
 
     public function registerVersion(string $modelId, string $version, array $configuration): bool
     {
-        $this->repository->storeModelConfiguration(array_merge($configuration, [
+        $storedId = $this->repository->storeModelConfiguration(array_merge($configuration, [
             'model_name' => $modelId,
             'version' => $version,
             'active' => true,
             'deployed_at' => gmdate('Y-m-d H:i:s'),
         ]));
 
-        return true;
+        return $storedId !== '';
     }
 
     public function getCurrentVersion(string $modelId): ?array

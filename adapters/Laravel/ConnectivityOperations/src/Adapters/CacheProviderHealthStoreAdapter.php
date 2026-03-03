@@ -15,6 +15,21 @@ final readonly class CacheProviderHealthStoreAdapter implements ProviderHealthSt
 
     public function record(string $providerId, array $snapshot): void
     {
+        if (method_exists($this->cache, 'lock')) {
+            $lock = $this->cache->lock(self::KEY . ':lock', 5);
+            if ($lock->get()) {
+                try {
+                    $all = $this->all();
+                    $all[$providerId] = $snapshot;
+                    $this->cache->put(self::KEY, $all, 86400);
+                } finally {
+                    $lock->release();
+                }
+
+                return;
+            }
+        }
+
         $all = $this->all();
         $all[$providerId] = $snapshot;
 

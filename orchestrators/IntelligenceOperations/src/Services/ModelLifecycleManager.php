@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\IntelligenceOperations\Services;
 
+use Nexus\IntelligenceOperations\Coordinators\ModelLifecycleCoordinator;
 use Nexus\IntelligenceOperations\Contracts\ModelLifecycleCoordinatorInterface;
 
 /**
@@ -11,7 +12,7 @@ use Nexus\IntelligenceOperations\Contracts\ModelLifecycleCoordinatorInterface;
  */
 final readonly class ModelLifecycleManager implements ModelLifecycleCoordinatorInterface
 {
-    public function __construct(private \Nexus\IntelligenceOperations\Coordinators\ModelLifecycleCoordinator $coordinator) {}
+    public function __construct(private ModelLifecycleCoordinator $coordinator) {}
 
     public function deployModel(string $modelId, string $version, array $config = []): bool
     {

@@ -23,6 +23,11 @@ final class ReportingPipelineIntegrationTest extends TestCase
 {
     public function test_pipeline_and_snapshot_workflows_complete(): void
     {
+        $tracker = new class {
+            /** @var array<int, string> */
+            public array $tempFiles = [];
+        };
+
         $coordinator = new ReportingCoordinator(
             new ReportingPipelineWorkflow(
                 new ReportingPipelineRule(),
@@ -35,11 +40,13 @@ final class ReportingPipelineIntegrationTest extends TestCase
                         return ['status' => 'success', 'data' => ['value' => 120], 'confidence' => 0.88, 'model_version' => 'v1', 'error' => null];
                     }
                 },
-                new class implements ReportExportPortInterface {
+                new class($tracker) implements ReportExportPortInterface {
+                    public function __construct(private object $tracker) {}
                     public function export(array $reportData, string $format): array
                     {
                         $f = tempnam(sys_get_temp_dir(), 'report_');
                         file_put_contents($f, json_encode($reportData));
+                        $this->tracker->tempFiles[] = $f;
 
                         return ['file_path' => $f, 'size_bytes' => filesize($f) ?: 0, 'metadata' => ['format' => $format]];
                     }
@@ -69,5 +76,11 @@ final class ReportingPipelineIntegrationTest extends TestCase
 
         self::assertStringContainsString('reports/', $reportPath);
         self::assertStringContainsString('snapshots/tenant-x/ops-dashboard/', $snapshotPath);
+
+        foreach ($tracker->tempFiles as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
     }
 }

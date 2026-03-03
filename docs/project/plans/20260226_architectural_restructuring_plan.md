@@ -1,14 +1,13 @@
 # 20260226: Architectural Restructuring Plan - Data & Intelligence Ecosystem
 
 ## Status (Updated: March 3, 2026)
-This plan is now in execution-close state for the four orchestrators in scope.
+This plan is now nearing execution completion for the four orchestrators in scope.
 
 ## 1. Phase Completion
 
 ### Phase 1: Foundation (Renaming)
 - `QueryEngine` package naming and package-level identity are in place.
 - `Telemetry` package naming and package-level identity are in place.
-- Plan examples were corrected to remove no-op rename text.
 
 Status: `Completed`
 
@@ -43,7 +42,7 @@ Status: `Completed`
 Status: `Completed (Scope: 4 targeted orchestrators)`
 
 ## 2. Remaining Backlog Outside This Plan
-- Layer 1 true-boundary violations remain in other atomic packages (current TSV shows 18 rows).
+- Layer 1 true-boundary violations remain in other atomic packages (`docs/project/.layer1-true-violations.tsv` shows 18 rows).
 - Those violations are upstream and not in this plan's direct four-orchestrator scope.
 
 ## 3. Final Note

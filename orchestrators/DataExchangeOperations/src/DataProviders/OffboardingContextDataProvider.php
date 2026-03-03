@@ -6,7 +6,7 @@ namespace Nexus\DataExchangeOperations\DataProviders;
 
 use Nexus\DataExchangeOperations\DTOs\DataOffboardingRequest;
 
-final class OffboardingContextDataProvider
+final readonly class OffboardingContextDataProvider
 {
     /**
      * @return array<string, mixed>

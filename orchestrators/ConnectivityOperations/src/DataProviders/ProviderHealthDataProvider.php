@@ -19,7 +19,17 @@ final readonly class ProviderHealthDataProvider
         $statuses = [];
 
         foreach ($snapshots as $providerId => $snapshot) {
-            $statuses[$providerId] = (string) ($snapshot['status'] ?? 'unknown');
+            if (
+                is_array($snapshot) &&
+                isset($snapshot['status']) &&
+                (is_string($snapshot['status']) || is_scalar($snapshot['status']))
+            ) {
+                $status = trim((string) $snapshot['status']);
+                $statuses[$providerId] = $status !== '' ? $status : 'unknown';
+                continue;
+            }
+
+            $statuses[$providerId] = 'unknown';
         }
 
         return $statuses;

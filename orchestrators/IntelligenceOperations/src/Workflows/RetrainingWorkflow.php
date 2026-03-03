@@ -10,6 +10,8 @@ use Nexus\IntelligenceOperations\Contracts\ModelTrainingPortInterface;
 
 final readonly class RetrainingWorkflow
 {
+    private const DRIFT_THRESHOLD = 0.20;
+
     public function __construct(
         private DataDriftPortInterface $driftPort,
         private ModelTrainingPortInterface $trainingPort,
@@ -24,7 +26,7 @@ final readonly class RetrainingWorkflow
 
         $driftScore = $this->driftPort->calculateDriftScore($modelId);
         $jobId = $this->trainingPort->queueRetraining($modelId, [
-            'trigger' => $driftScore >= 0.20 ? 'drift' : 'scheduled',
+            'trigger' => $driftScore >= self::DRIFT_THRESHOLD ? 'drift' : 'scheduled',
             'drift_score' => $driftScore,
             'queued_at' => gmdate(DATE_ATOM),
         ]);

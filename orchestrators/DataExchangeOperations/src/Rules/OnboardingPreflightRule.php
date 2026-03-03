@@ -21,7 +21,7 @@ final readonly class OnboardingPreflightRule
             throw new \InvalidArgumentException('sourcePath is required for onboarding.');
         }
 
-        if (!$this->storage->exists($request->sourcePath) && !is_file($request->sourcePath)) {
+        if (!$this->storage->exists($request->sourcePath)) {
             throw new \InvalidArgumentException(sprintf('Onboarding source does not exist: %s', $request->sourcePath));
         }
     }

@@ -6,7 +6,7 @@ namespace Nexus\ConnectivityOperations\Rules;
 
 use Nexus\ConnectivityOperations\DTOs\ProviderCallRequest;
 
-final class ProviderCallRule
+final readonly class ProviderCallRule
 {
     public function assert(ProviderCallRequest $request): void
     {

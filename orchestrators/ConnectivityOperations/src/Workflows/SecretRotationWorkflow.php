@@ -21,11 +21,15 @@ final readonly class SecretRotationWorkflow
         }
 
         $success = $this->secretRotationPort->rotate($providerId);
-        $this->telemetryPort->increment(
-            'connectivity.secret_rotation.' . ($success ? 'success' : 'failure'),
-            1.0,
-            ['provider' => $providerId]
-        );
+        try {
+            $this->telemetryPort->increment(
+                'connectivity.secret_rotation.' . ($success ? 'success' : 'failure'),
+                1.0,
+                ['provider' => $providerId]
+            );
+        } catch (\Throwable) {
+            // Telemetry must not alter secret-rotation success/failure semantics.
+        }
 
         return $success;
     }

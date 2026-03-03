@@ -16,8 +16,7 @@ final readonly class NotificationPortAdapter implements NotificationPortInterfac
         $this->logger->info('Data exchange notifications dispatched.', [
             'template' => $template,
             'recipient_count' => count($recipients),
-            'recipients' => $recipients,
-            'context' => $context,
+            'context_keys' => array_keys($context),
         ]);
     }
 }

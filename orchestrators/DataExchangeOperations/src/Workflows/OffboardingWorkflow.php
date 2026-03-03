@@ -34,45 +34,60 @@ final readonly class OffboardingWorkflow
             payload: ['destination' => $request->destination, 'format' => $request->format],
         ));
 
-        $this->preflightRule->assert($request);
+        try {
+            $this->preflightRule->assert($request);
 
-        $this->taskStore->save(new DataExchangeTaskStatus(
-            taskId: $request->taskId,
-            type: 'offboarding',
-            status: 'exporting',
-            updatedAt: new DateTimeImmutable(),
-        ));
+            $this->taskStore->save(new DataExchangeTaskStatus(
+                taskId: $request->taskId,
+                type: 'offboarding',
+                status: 'exporting',
+                updatedAt: new DateTimeImmutable(),
+            ));
 
-        $exported = $this->exportPort->export($request);
+            $exported = $this->exportPort->export($request);
 
-        $destinationPath = rtrim($request->destination, '/') . '/' . basename($exported['source_path']);
-        $stored = $this->storage->store($destinationPath, $exported['source_path']);
+            $destinationPath = rtrim($request->destination, '/') . '/' . basename($exported['source_path']);
+            $stored = $this->storage->store($destinationPath, $exported['source_path']);
 
-        $result = new DataOffboardingResult(
-            taskId: $request->taskId,
-            sourcePath: $exported['source_path'],
-            storedUri: $stored['uri'],
-            sizeBytes: $stored['size_bytes'],
-            exportMetadata: $exported['metadata'],
-        );
+            $result = new DataOffboardingResult(
+                taskId: $request->taskId,
+                sourcePath: $exported['source_path'],
+                storedUri: $stored['uri'],
+                sizeBytes: $stored['size_bytes'],
+                exportMetadata: $exported['metadata'],
+            );
 
-        if ($request->recipients !== []) {
-            $this->notifier->notify($request->recipients, 'data_offboarding_ready', [
-                'task_id' => $request->taskId,
-                'uri' => $stored['uri'],
-                'format' => $request->format,
-                'size_bytes' => $stored['size_bytes'],
-            ]);
+            if ($request->recipients !== []) {
+                $this->notifier->notify($request->recipients, 'data_offboarding_ready', [
+                    'task_id' => $request->taskId,
+                    'uri' => $stored['uri'],
+                    'format' => $request->format,
+                    'size_bytes' => $stored['size_bytes'],
+                ]);
+            }
+
+            $this->taskStore->save(new DataExchangeTaskStatus(
+                taskId: $request->taskId,
+                type: 'offboarding',
+                status: 'completed',
+                updatedAt: new DateTimeImmutable(),
+                payload: $result->toArray(),
+            ));
+
+            return $result;
+        } catch (\Throwable $e) {
+            $this->taskStore->save(new DataExchangeTaskStatus(
+                taskId: $request->taskId,
+                type: 'offboarding',
+                status: 'failed',
+                updatedAt: new DateTimeImmutable(),
+                payload: [
+                    'error' => $e->getMessage(),
+                    'exception' => $e::class,
+                ],
+            ));
+
+            throw $e;
         }
-
-        $this->taskStore->save(new DataExchangeTaskStatus(
-            taskId: $request->taskId,
-            type: 'offboarding',
-            status: 'completed',
-            updatedAt: new DateTimeImmutable(),
-            payload: $result->toArray(),
-        ));
-
-        return $result;
     }
 }

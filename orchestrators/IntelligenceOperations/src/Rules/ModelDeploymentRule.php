@@ -6,7 +6,7 @@ namespace Nexus\IntelligenceOperations\Rules;
 
 use Nexus\IntelligenceOperations\DTOs\ModelDeploymentRequest;
 
-final class ModelDeploymentRule
+final readonly class ModelDeploymentRule
 {
     public function assert(ModelDeploymentRequest $request): void
     {

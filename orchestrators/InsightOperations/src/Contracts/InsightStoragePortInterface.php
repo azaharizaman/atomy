@@ -7,7 +7,7 @@ namespace Nexus\InsightOperations\Contracts;
 interface InsightStoragePortInterface
 {
     /**
-     * @param resource|string $content
+     * @param mixed $content
      */
     public function put(string $path, mixed $content): void;
 }

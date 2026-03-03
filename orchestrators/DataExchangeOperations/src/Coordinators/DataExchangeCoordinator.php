@@ -24,7 +24,10 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
 
     public function onboard(string $sourcePath, string $tenantId, array $options = []): string
     {
-        $taskId = $options['task_id'] ?? self::generateTaskId('onboard');
+        $rawTaskId = $options['task_id'] ?? null;
+        $taskId = is_string($rawTaskId) && trim($rawTaskId) !== ''
+            ? $rawTaskId
+            : self::generateTaskId('onboard');
 
         try {
             $this->onboardingWorkflow->run(new DataOnboardingRequest(

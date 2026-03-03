@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\InsightOperations\Services;
 
+use Nexus\InsightOperations\Coordinators\ReportingCoordinator as RealReportingCoordinator;
 use Nexus\InsightOperations\Contracts\ReportingPipelineCoordinatorInterface;
 
 /**
@@ -11,7 +12,7 @@ use Nexus\InsightOperations\Contracts\ReportingPipelineCoordinatorInterface;
  */
 final readonly class ReportingCoordinator implements ReportingPipelineCoordinatorInterface
 {
-    public function __construct(private \Nexus\InsightOperations\Coordinators\ReportingCoordinator $coordinator) {}
+    public function __construct(private RealReportingCoordinator $coordinator) {}
 
     public function runPipeline(string $reportTemplateId, array $parameters = [], array $deliveryOptions = []): string
     {

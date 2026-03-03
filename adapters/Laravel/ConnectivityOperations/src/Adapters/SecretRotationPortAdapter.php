@@ -13,6 +13,10 @@ final readonly class SecretRotationPortAdapter implements SecretRotationPortInte
 
     public function rotate(string $providerId): bool
     {
+        if (trim($providerId) === '' || !preg_match('/^[A-Za-z0-9_-]+$/', $providerId)) {
+            throw new \InvalidArgumentException('providerId must be a non-empty alphanumeric identifier with optional "_" or "-".');
+        }
+
         $this->keyRotation->rotateKey('integration.' . $providerId . '.api_key');
 
         return true;

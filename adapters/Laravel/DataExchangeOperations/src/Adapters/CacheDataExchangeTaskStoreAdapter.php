@@ -21,17 +21,37 @@ final readonly class CacheDataExchangeTaskStoreAdapter implements DataExchangeTa
 
     public function find(string $taskId): ?DataExchangeTaskStatus
     {
-        $raw = $this->cache->get(self::KEY_PREFIX . $taskId);
+        $cacheKey = self::KEY_PREFIX . $taskId;
+        $raw = $this->cache->get($cacheKey);
         if (!is_array($raw)) {
             return null;
         }
 
+        if (
+            !isset($raw['task_id'], $raw['type'], $raw['status'], $raw['updated_at']) ||
+            !is_string($raw['task_id']) ||
+            !is_string($raw['type']) ||
+            !is_string($raw['status']) ||
+            !is_string($raw['updated_at']) ||
+            !is_array($raw['payload'] ?? [])
+        ) {
+            $this->cache->forget($cacheKey);
+            return null;
+        }
+
+        try {
+            $updatedAt = new \DateTimeImmutable($raw['updated_at']);
+        } catch (\Throwable) {
+            $this->cache->forget($cacheKey);
+            return null;
+        }
+
         return new DataExchangeTaskStatus(
-            taskId: (string) $raw['task_id'],
-            type: (string) $raw['type'],
-            status: (string) $raw['status'],
-            updatedAt: new \DateTimeImmutable((string) $raw['updated_at']),
-            payload: is_array($raw['payload'] ?? null) ? $raw['payload'] : [],
+            taskId: $raw['task_id'],
+            type: $raw['type'],
+            status: $raw['status'],
+            updatedAt: $updatedAt,
+            payload: $raw['payload'],
         );
     }
 }

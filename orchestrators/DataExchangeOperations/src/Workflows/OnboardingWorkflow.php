@@ -32,37 +32,66 @@ final readonly class OnboardingWorkflow
             payload: ['source_path' => $request->sourcePath, 'tenant_id' => $request->tenantId],
         ));
 
-        $this->preflightRule->assert($request);
+        try {
+            $this->preflightRule->assert($request);
 
-        $this->taskStore->save(new DataExchangeTaskStatus(
-            taskId: $request->taskId,
-            type: 'onboarding',
-            status: 'importing',
-            updatedAt: new DateTimeImmutable(),
-        ));
+            $this->taskStore->save(new DataExchangeTaskStatus(
+                taskId: $request->taskId,
+                type: 'onboarding',
+                status: 'importing',
+                updatedAt: new DateTimeImmutable(),
+            ));
 
-        $imported = $this->importPort->import($request);
+            $imported = $this->importPort->import($request);
+            if (!is_array($imported)) {
+                throw new \UnexpectedValueException('Import adapter returned invalid payload; expected array.');
+            }
 
-        if ((bool) ($request->options['cleanup'] ?? true)) {
-            $this->storage->delete($request->sourcePath);
+            $recordsProcessed = $imported['records_processed'] ?? null;
+            $recordsFailed = $imported['records_failed'] ?? null;
+            $warnings = $imported['warnings'] ?? null;
+            $details = $imported['details'] ?? null;
+
+            if (!is_int($recordsProcessed) || !is_int($recordsFailed) || !is_array($warnings) || !is_array($details)) {
+                throw new \UnexpectedValueException(
+                    'Import adapter payload must contain records_processed(int), records_failed(int), warnings(array), and details(array).'
+                );
+            }
+
+            if ((bool) ($request->options['cleanup'] ?? true)) {
+                $this->storage->delete($request->sourcePath);
+            }
+
+            $result = new DataOnboardingResult(
+                taskId: $request->taskId,
+                recordsProcessed: $recordsProcessed,
+                recordsFailed: $recordsFailed,
+                warnings: $warnings,
+                details: $details,
+            );
+
+            $this->taskStore->save(new DataExchangeTaskStatus(
+                taskId: $request->taskId,
+                type: 'onboarding',
+                status: 'completed',
+                updatedAt: new DateTimeImmutable(),
+                payload: $result->toArray(),
+            ));
+
+            return $result;
+        } catch (\Throwable $e) {
+            $this->taskStore->save(new DataExchangeTaskStatus(
+                taskId: $request->taskId,
+                type: 'onboarding',
+                status: 'failed',
+                updatedAt: new DateTimeImmutable(),
+                payload: [
+                    'error' => $e->getMessage(),
+                    'exception' => $e::class,
+                ],
+            ));
+
+            throw $e;
         }
-
-        $result = new DataOnboardingResult(
-            taskId: $request->taskId,
-            recordsProcessed: $imported['records_processed'],
-            recordsFailed: $imported['records_failed'],
-            warnings: $imported['warnings'],
-            details: $imported['details'],
-        );
-
-        $this->taskStore->save(new DataExchangeTaskStatus(
-            taskId: $request->taskId,
-            type: 'onboarding',
-            status: 'completed',
-            updatedAt: new DateTimeImmutable(),
-            payload: $result->toArray(),
-        ));
-
-        return $result;
     }
 }

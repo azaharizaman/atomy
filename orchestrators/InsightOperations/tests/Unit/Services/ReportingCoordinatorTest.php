@@ -26,6 +26,11 @@ final class ReportingCoordinatorTest extends TestCase
         $tracker = new class {
             /** @var array<int, string> */
             public array $storedPaths = [];
+            /** @var array<string, mixed>|null */
+            public ?array $lastExportedPayload = null;
+            public ?string $forecastModelId = null;
+            /** @var array<int, string> */
+            public array $tempFiles = [];
         };
 
         $coordinator = new ReportingCoordinator(
@@ -37,9 +42,12 @@ final class ReportingCoordinatorTest extends TestCase
                         return ['revenue' => 1000.0, 'cost' => 400.0];
                     }
                 },
-                new class implements ForecastPortInterface {
+                new class($tracker) implements ForecastPortInterface {
+                    public function __construct(private object $tracker) {}
                     public function forecast(string $modelId, array $context, int $maxAttempts, int $pollIntervalMs): array
                     {
+                        $this->tracker->forecastModelId = $modelId;
+
                         return [
                             'status' => 'success',
                             'data' => ['value' => 1200.0],
@@ -49,11 +57,14 @@ final class ReportingCoordinatorTest extends TestCase
                         ];
                     }
                 },
-                new class implements ReportExportPortInterface {
+                new class($tracker) implements ReportExportPortInterface {
+                    public function __construct(private object $tracker) {}
                     public function export(array $reportData, string $format): array
                     {
                         $file = tempnam(sys_get_temp_dir(), 'insight_report_');
                         file_put_contents($file, json_encode($reportData));
+                        $this->tracker->lastExportedPayload = $reportData;
+                        $this->tracker->tempFiles[] = $file;
 
                         return [
                             'file_path' => $file,
@@ -99,10 +110,24 @@ final class ReportingCoordinatorTest extends TestCase
 
         self::assertStringContainsString('reports/', $path);
         self::assertNotEmpty($tracker->storedPaths);
+        self::assertSame('sales-model', $tracker->forecastModelId);
+        self::assertArrayHasKey('forecast', $tracker->lastExportedPayload ?? []);
+        self::assertNotEmpty($tracker->lastExportedPayload['forecast'] ?? null);
+
+        foreach ($tracker->tempFiles as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
     }
 
     public function test_capture_snapshot_returns_snapshot_path(): void
     {
+        $tracker = new class {
+            /** @var array<int, string> */
+            public array $tempFiles = [];
+        };
+
         $coordinator = new ReportingCoordinator(
             new ReportingPipelineWorkflow(
                 new ReportingPipelineRule(),
@@ -115,11 +140,13 @@ final class ReportingCoordinatorTest extends TestCase
                         return ['status' => 'success', 'data' => [], 'confidence' => 1.0, 'model_version' => 'v1', 'error' => null];
                     }
                 },
-                new class implements ReportExportPortInterface {
+                new class($tracker) implements ReportExportPortInterface {
+                    public function __construct(private object $tracker) {}
                     public function export(array $reportData, string $format): array
                     {
                         $file = tempnam(sys_get_temp_dir(), 'insight_snapshot_');
                         file_put_contents($file, 'x');
+                        $this->tracker->tempFiles[] = $file;
 
                         return ['file_path' => $file, 'size_bytes' => 1, 'metadata' => []];
                     }
@@ -150,5 +177,11 @@ final class ReportingCoordinatorTest extends TestCase
         $snapshotPath = $coordinator->captureSnapshot('dashboard-a', 'tenant-a');
 
         self::assertStringContainsString('snapshots/tenant-a/dashboard-a/', $snapshotPath);
+
+        foreach ($tracker->tempFiles as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
     }
 }

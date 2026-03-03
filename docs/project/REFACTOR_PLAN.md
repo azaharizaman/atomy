@@ -9,4 +9,4 @@ This planning document has been executed and is now retained only as a completio
 - Stale/no-op restructuring instructions were corrected.
 - Historical review notes were reduced to a concise, actionable summary.
 
-No further action is required in this file.
+For ongoing updates and history, see the IMPLEMENTATION_SUMMARY.md in the affected package(s), and update that file after each code change.

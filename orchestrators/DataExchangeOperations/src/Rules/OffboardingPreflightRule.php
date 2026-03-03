@@ -6,7 +6,7 @@ namespace Nexus\DataExchangeOperations\Rules;
 
 use Nexus\DataExchangeOperations\DTOs\DataOffboardingRequest;
 
-final class OffboardingPreflightRule
+final readonly class OffboardingPreflightRule
 {
     private const SUPPORTED_FORMATS = ['csv', 'json', 'pdf', 'xlsx'];
 

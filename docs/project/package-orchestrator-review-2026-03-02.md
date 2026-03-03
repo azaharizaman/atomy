@@ -3,7 +3,7 @@
 Date: 2026-03-02
 Resolution Update: 2026-03-03
 
-## Resolution Summary for March 3, 2026 Remediation
+## Resolution Summary for March 3, 2026, Remediation
 
 ### Closed Critical Findings (Target Scope)
 1. `DataExchangeOperations`, `InsightOperations`, `IntelligenceOperations`, and `ConnectivityOperations` were refactored to orchestrator-owned interfaces.
@@ -27,7 +27,7 @@ Resolution Update: 2026-03-03
 ## Remaining Open Items (Not Closed in This Remediation)
 1. Layer 1 true-boundary violations in atomic packages outside this targeted orchestrator scope.
 - Current tracker: `docs/project/.layer1-true-violations.tsv`
-- Current count in file: 18
+- Count as of 2026-03-03: 18
 2. Other orchestrators not part of this targeted remediation still require separate pass.
 
 ## Archive Note

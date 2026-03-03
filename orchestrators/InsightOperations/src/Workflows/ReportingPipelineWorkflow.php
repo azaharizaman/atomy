@@ -34,7 +34,7 @@ final readonly class ReportingPipelineWorkflow
         $forecastData = null;
         $metadata = ['forecast_status' => 'not_requested'];
 
-        if ((bool) ($request->parameters['include_forecast'] ?? false)) {
+        if (filter_var($request->parameters['include_forecast'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
             $modelId = (string) ($request->parameters['forecast_model_id'] ?? $request->reportTemplateId);
             $forecastResult = $this->forecastPort->forecast(
                 $modelId,
@@ -71,6 +71,10 @@ final readonly class ReportingPipelineWorkflow
             $this->storagePort->put($storagePath, $stream);
         } finally {
             fclose($stream);
+            $exportedPath = $exported['file_path'] ?? null;
+            if (is_string($exportedPath) && is_file($exportedPath)) {
+                unlink($exportedPath);
+            }
         }
 
         $recipients = $request->deliveryOptions['recipients'] ?? [];

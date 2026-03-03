@@ -15,8 +15,8 @@ final readonly class InsightNotificationPortAdapter implements InsightNotificati
     {
         $this->logger->info('Insight notification dispatched.', [
             'template' => $template,
-            'recipients' => $recipients,
-            'payload' => $payload,
+            'recipient_count' => count($recipients),
+            'payload_summary' => array_keys($payload),
         ]);
     }
 }

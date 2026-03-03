@@ -62,16 +62,12 @@ final readonly class ModelTelemetryPortAdapter implements ModelTelemetryPortInte
     {
         $raw = $this->cache->get(self::CACHE_PREFIX . $modelId);
         if (!is_array($raw)) {
-            return [
-                'accuracy' => 0.90,
-                'latency_ms' => 100.0,
-                'drift_score' => 0.0,
-            ];
+            return [];
         }
 
         return [
-            'accuracy' => (float) ($raw['accuracy'] ?? 0.90),
-            'latency_ms' => (float) ($raw['latency_ms'] ?? 100.0),
+            'accuracy' => (float) ($raw['accuracy'] ?? 0.0),
+            'latency_ms' => (float) ($raw['latency_ms'] ?? 0.0),
             'drift_score' => (float) ($raw['drift_score'] ?? 0.0),
         ];
     }
@@ -81,7 +77,15 @@ final readonly class ModelTelemetryPortAdapter implements ModelTelemetryPortInte
         $current = $this->modelMetrics($modelId);
 
         if (str_contains($metric, 'deploy.success')) {
-            $current['accuracy'] = max($current['accuracy'], 0.90);
+            $current['accuracy'] = max((float) ($current['accuracy'] ?? 0.0), $value);
+        }
+
+        if (str_contains($metric, 'drift')) {
+            $current['drift_score'] = $value;
+        }
+
+        if (str_contains($metric, 'latency')) {
+            $current['latency_ms'] = $value;
         }
 
         $this->cache->put(self::CACHE_PREFIX . $modelId, $current, 86400);

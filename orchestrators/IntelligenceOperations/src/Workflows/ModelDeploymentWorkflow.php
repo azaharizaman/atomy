@@ -22,12 +22,22 @@ final readonly class ModelDeploymentWorkflow
         $this->rule->assert($request);
 
         $started = microtime(true);
-        $success = $this->registryPort->registerVersion($request->modelId, $request->version, $request->config);
+        $success = false;
+        $thrown = null;
+        try {
+            $success = $this->registryPort->registerVersion($request->modelId, $request->version, $request->config);
+        } catch (\Throwable $e) {
+            $thrown = $e;
+        } finally {
+            $tags = ['model_id' => $request->modelId, 'version' => $request->version];
+            $this->telemetryPort->increment('intelligence.model.deploy.total', 1.0, $tags);
+            $this->telemetryPort->increment('intelligence.model.deploy.' . ($success ? 'success' : 'failure'), 1.0, $tags);
+            $this->telemetryPort->timing('intelligence.model.deploy.duration_ms', (microtime(true) - $started) * 1000, $tags);
+        }
 
-        $tags = ['model_id' => $request->modelId, 'version' => $request->version];
-        $this->telemetryPort->increment('intelligence.model.deploy.total', 1.0, $tags);
-        $this->telemetryPort->increment('intelligence.model.deploy.' . ($success ? 'success' : 'failure'), 1.0, $tags);
-        $this->telemetryPort->timing('intelligence.model.deploy.duration_ms', (microtime(true) - $started) * 1000, $tags);
+        if ($thrown !== null) {
+            throw $thrown;
+        }
 
         return $success;
     }

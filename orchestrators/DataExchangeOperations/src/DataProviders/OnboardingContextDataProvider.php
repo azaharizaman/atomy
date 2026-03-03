@@ -13,14 +13,19 @@ final class OnboardingContextDataProvider
      */
     public function build(DataOnboardingRequest $request): array
     {
-        $fileSize = @filesize($request->sourcePath);
+        $fileSize = filesize($request->sourcePath);
+        $sourceSha256 = null;
+        if (is_file($request->sourcePath)) {
+            $hash = hash_file('sha256', $request->sourcePath);
+            $sourceSha256 = is_string($hash) ? $hash : null;
+        }
 
         return [
             'tenant_id' => $request->tenantId,
             'source_path' => $request->sourcePath,
-            'source_file_size_bytes' => $fileSize === false ? 0 : $fileSize,
+            'source_file_size_bytes' => $fileSize === false ? null : $fileSize,
             'cleanup_after_import' => (bool) ($request->options['cleanup'] ?? true),
-            'source_sha256' => is_file($request->sourcePath) ? (string) hash_file('sha256', $request->sourcePath) : null,
+            'source_sha256' => $sourceSha256,
         ];
     }
 }

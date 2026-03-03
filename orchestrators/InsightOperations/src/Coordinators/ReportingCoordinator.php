@@ -20,7 +20,10 @@ final readonly class ReportingCoordinator implements ReportingPipelineCoordinato
 
     public function runPipeline(string $reportTemplateId, array $parameters = [], array $deliveryOptions = []): string
     {
-        $pipelineId = $deliveryOptions['pipeline_id'] ?? sprintf('pipe_%s', bin2hex(random_bytes(10)));
+        $rawPipelineId = $deliveryOptions['pipeline_id'] ?? null;
+        $pipelineId = is_string($rawPipelineId) && trim($rawPipelineId) !== ''
+            ? $rawPipelineId
+            : sprintf('pipe_%s', bin2hex(random_bytes(10)));
 
         $result = $this->pipelineWorkflow->run(new ReportingPipelineRequest(
             pipelineId: $pipelineId,

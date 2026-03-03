@@ -8,11 +8,11 @@ final class DashboardSnapshotRule
 {
     public function assert(string $dashboardId, string $tenantId): void
     {
-        if ($dashboardId === '') {
+        if (trim($dashboardId) === '') {
             throw new \InvalidArgumentException('dashboardId is required.');
         }
 
-        if ($tenantId === '') {
+        if (trim($tenantId) === '') {
             throw new \InvalidArgumentException('tenantId is required.');
         }
     }

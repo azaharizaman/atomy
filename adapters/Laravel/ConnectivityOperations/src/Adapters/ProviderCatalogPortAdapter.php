@@ -11,7 +11,10 @@ final class ProviderCatalogPortAdapter implements ProviderCatalogPortInterface
     public function providers(): array
     {
         $providers = config('connectivity_operations.providers', []);
+        if (!is_array($providers)) {
+            return [];
+        }
 
-        return is_array($providers) ? array_values(array_map('strval', $providers)) : [];
+        return array_values(array_filter($providers, static fn (mixed $provider): bool => is_string($provider) && trim($provider) !== ''));
     }
 }
