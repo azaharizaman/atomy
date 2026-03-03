@@ -173,7 +173,6 @@ final class ExemptionCertificateTest extends TestCase
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
 
-        $amount = Money::of('100.00', 'USD');
         $taxableAmountString = $certificate->applyToAmount('100.00');
         $taxableAmount = Money::of($taxableAmountString, 'USD');
 

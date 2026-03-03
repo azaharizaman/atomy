@@ -162,11 +162,16 @@ final readonly class TaxCalculator implements TaxCalculatorInterface
         }
 
         // Partial adjustment - calculate proportional tax
-        $adjustmentRatio = bcdiv(
-            $adjustmentAmount->format(['symbol' => false, 'decimals' => 6]),
-            $original->netAmount->format(['symbol' => false, 'decimals' => 6]),
-            6
-        );
+        $denominator = $original->netAmount->format(['symbol' => false, 'decimals' => 6]);
+        $adjustmentRatio = '0.000000';
+
+        if (bccomp($denominator, '0.000000', 6) !== 0) {
+            $adjustmentRatio = bcdiv(
+                $adjustmentAmount->format(['symbol' => false, 'decimals' => 6]),
+                $denominator,
+                6
+            );
+        }
 
         $adjustedTaxAmount = Money::of(
             bcmul($original->totalTaxAmount->format(['symbol' => false, 'decimals' => 4]), $adjustmentRatio, 4),

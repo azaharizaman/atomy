@@ -44,7 +44,8 @@ final readonly class BudgetManager implements BudgetManagerInterface
 {
     public function __construct(
         private BudgetRepositoryInterface $budgetRepository,
-        private BudgetTransactionRepositoryInterface $transactionRepository,
+        private BudgetTransactionPersistInterface $transactionPersist,
+        private BudgetTransactionQueryInterface $transactionQuery,
         private BudgetApprovalWorkflowInterface $workflowService,
         private PeriodManagerInterface $periodManager,
         private CurrencyConverterInterface $currencyConverter,
@@ -172,7 +173,7 @@ final readonly class BudgetManager implements BudgetManagerInterface
         }
 
         // Record commitment
-        $this->transactionRepository->recordCommitment(
+        $this->transactionPersist->recordCommitment(
             budgetId: $budgetId,
             amount: $amount,
             accountId: $accountId,
@@ -211,21 +212,22 @@ final readonly class BudgetManager implements BudgetManagerInterface
         string $sourceId,
         int $sourceLineNumber
     ): void {
-        $transactions = $this->transactionRepository->findBySource(
+        $transactions = $this->transactionQuery->findBySource(
             sourceType: $sourceType,
             sourceId: $sourceId
         );
         
         foreach ($transactions as $transaction) {
             if ($transaction->getType() === TransactionType::Commitment &&
-                $transaction->getBudgetId() === $budgetId
+                $transaction->getBudgetId() === $budgetId &&
+                $transaction->getAmount()->equals($amount)
             ) {
-                $this->transactionRepository->releaseCommitment($transaction->getId());
+                $this->transactionPersist->releaseCommitment($transaction->getId());
                 
                 $this->auditLogger->log(
                     $transaction->getBudgetId(),
                     'commitment_released',
-                    "Released commitment {$transaction->getAmount()} (Document: {$sourceId}, Type: {$sourceType}, Line: {$sourceLineNumber})"
+                    "Released commitment {$amount} (Document: {$sourceId}, Type: {$sourceType}, Line: {$sourceLineNumber})"
                 );
             }
         }
@@ -250,7 +252,7 @@ final readonly class BudgetManager implements BudgetManagerInterface
         }
 
         // Record actual transaction
-        $this->transactionRepository->recordActual(
+        $this->transactionPersist->recordActual(
             $budgetId,
             $amount,
             $sourceId,
