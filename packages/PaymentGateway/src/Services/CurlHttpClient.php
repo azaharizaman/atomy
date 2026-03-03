@@ -51,12 +51,21 @@ final class CurlHttpClient implements HttpClientInterface
                 }
             }
 
-            $options[CURLOPT_POSTFIELDS] = str_contains($contentType, 'application/x-www-form-urlencoded')
-                ? http_build_query($payload)
-                : json_encode($payload, JSON_THROW_ON_ERROR);
+            try {
+                $options[CURLOPT_POSTFIELDS] = str_contains($contentType, 'application/x-www-form-urlencoded')
+                    ? http_build_query($payload)
+                    : json_encode($payload, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                curl_close($curl);
+                throw new \RuntimeException('Failed to encode request payload: ' . $e->getMessage(), 0, $e);
+            }
         }
 
-        curl_setopt_array($curl, $options);
+        if (curl_setopt_array($curl, $options) === false) {
+            $error = curl_error($curl);
+            curl_close($curl);
+            throw new \RuntimeException('Failed to set cURL options: ' . $error);
+        }
 
         $body = curl_exec($curl);
         if ($body === false) {
