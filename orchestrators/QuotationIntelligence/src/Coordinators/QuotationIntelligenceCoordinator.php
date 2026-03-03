@@ -82,22 +82,34 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
         foreach ($extractedLines as $line) {
             // Validation: Ensure required keys exist and have valid values
             if (!isset($line['description']) || empty($line['description'])) {
-                $this->logger->warning('Skipping quote line missing description', ['line' => $line]);
+                $this->logger->warning('Skipping quote line missing description', [
+                    'rfq_line_id' => $line['rfq_line_id'] ?? null,
+                    'has_description' => false
+                ]);
                 continue;
             }
 
             if (!isset($line['quantity']) || !is_numeric($line['quantity'])) {
-                $this->logger->warning('Skipping quote line with invalid quantity', ['line' => $line]);
+                $this->logger->warning('Skipping quote line with invalid quantity', [
+                    'rfq_line_id' => $line['rfq_line_id'] ?? null,
+                    'quantity_present' => isset($line['quantity']),
+                    'quantity' => isset($line['quantity']) ? (float)$line['quantity'] : null
+                ]);
                 continue;
             }
 
             if (!isset($line['unit_price']) || !is_numeric($line['unit_price'])) {
-                $this->logger->warning('Skipping quote line with invalid unit price', ['line' => $line]);
+                $this->logger->warning('Skipping quote line with invalid unit price', [
+                    'rfq_line_id' => $line['rfq_line_id'] ?? null,
+                    'unit_price_present' => isset($line['unit_price'])
+                ]);
                 continue;
             }
 
             if (!isset($line['rfq_line_id']) || empty($line['rfq_line_id'])) {
-                $this->logger->warning('Skipping quote line missing rfq_line_id', ['line' => $line]);
+                $this->logger->warning('Skipping quote line missing rfq_line_id', [
+                    'has_rfq_line_id' => false
+                ]);
                 continue;
             }
 

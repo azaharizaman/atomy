@@ -16,6 +16,11 @@ final readonly class QuoteUploaded implements EventInterface
     public const AGGREGATE_TYPE = 'rfq';
     public const VERSION = 1;
 
+    public string $tenantId;
+    public string $documentId;
+    public string $rfqId;
+    public string $vendorId;
+
     private string $eventId;
     private \DateTimeImmutable $occurredAt;
 
@@ -26,10 +31,10 @@ final readonly class QuoteUploaded implements EventInterface
      * @param string $vendorId Submitting vendor
      */
     public function __construct(
-        public string $tenantId,
-        public string $documentId,
-        public string $rfqId,
-        public string $vendorId
+        string $tenantId,
+        string $documentId,
+        string $rfqId,
+        string $vendorId
     ) {
         $this->tenantId = trim($tenantId);
         $this->documentId = trim($documentId);
