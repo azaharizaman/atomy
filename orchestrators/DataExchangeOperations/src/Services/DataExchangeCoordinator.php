@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\DataExchangeOperations\Services;
 
-use Nexus\DataExchangeOperations\Coordinators\DataExchangeCoordinator as Coordinator;
+use Nexus\DataExchangeOperations\Coordinators\DataExchangeCoordinator as BaseDataExchangeCoordinator;
 use Nexus\DataExchangeOperations\Contracts\DataOffboardingCoordinatorInterface;
 use Nexus\DataExchangeOperations\Contracts\DataOnboardingCoordinatorInterface;
 
@@ -13,7 +13,7 @@ use Nexus\DataExchangeOperations\Contracts\DataOnboardingCoordinatorInterface;
  */
 final readonly class DataExchangeCoordinator implements DataOnboardingCoordinatorInterface, DataOffboardingCoordinatorInterface
 {
-    public function __construct(private Coordinator $coordinator) {}
+    public function __construct(private BaseDataExchangeCoordinator $coordinator) {}
 
     public function onboard(string $sourcePath, string $tenantId, array $options = []): string
     {

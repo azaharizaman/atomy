@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Laravel\IntelligenceOperations\Adapters;
 
+use Illuminate\Support\Str;
 use Nexus\IntelligenceOperations\Contracts\ModelTrainingPortInterface;
 use Nexus\MachineLearning\Contracts\ModelRepositoryInterface;
 
@@ -13,7 +14,7 @@ final readonly class ModelTrainingPortAdapter implements ModelTrainingPortInterf
 
     public function queueRetraining(string $modelId, array $context): string
     {
-        $jobId = sprintf('retrain_%s', bin2hex(random_bytes(10)));
+        $jobId = sprintf('retrain_%s', (string) Str::uuid());
 
         $this->repository->recordUsage(
             tenantId: (string) ($context['tenant_id'] ?? 'system'),

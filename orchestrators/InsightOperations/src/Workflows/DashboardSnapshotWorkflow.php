@@ -22,7 +22,7 @@ final readonly class DashboardSnapshotWorkflow
         $this->rule->assert($dashboardId, $tenantId);
 
         $snapshot = $this->snapshotPort->snapshot($dashboardId, $tenantId);
-        $payload = json_encode($snapshot, JSON_THROW_ON_ERROR);
+        $payload = json_encode($snapshot->toArray(), JSON_THROW_ON_ERROR);
 
         $path = sprintf('snapshots/%s/%s/%s.json', $tenantId, $dashboardId, gmdate('YmdHis'));
         $this->storagePort->put($path, $payload);

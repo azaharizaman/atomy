@@ -56,6 +56,7 @@ final class IntegrationGatewayIntegrationTest extends TestCase
             new IntegrationHealthWorkflow(
                 new class implements ProviderCatalogPortInterface {
                     public function providers(): array { return ['stripe', 'twilio']; }
+                    public function getConfig(string $providerId): array { return []; }
                 },
                 new class implements ProviderCallPortInterface {
                     public function call(string $providerId, string $endpoint, array $payload, array $options): array

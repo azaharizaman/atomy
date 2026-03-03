@@ -25,48 +25,18 @@ final class IntegrationGatewayTest extends TestCase
     public function test_call_tracks_health_and_returns_response(): void
     {
         $healthStore = new InMemoryProviderHealthStore();
-
-        $gateway = new IntegrationGateway(
-            new ProviderCallWorkflow(
-                new ProviderCallRule(),
-                new ProviderFeatureFlagRule(new class implements FeatureFlagPortInterface {
-                    public function isEnabled(string $flag, array $context = []): bool { return true; }
-                }),
-                new class implements ProviderCallPortInterface {
-                    public function call(string $providerId, string $endpoint, array $payload, array $options): array
-                    {
-                        return ['ok' => true, 'provider' => $providerId, 'endpoint' => $endpoint];
-                    }
-                },
-                new class implements ConnectivityTelemetryPortInterface {
-                    public function increment(string $metric, float $value = 1.0, array $tags = []): void {}
-                    public function timing(string $metric, float $milliseconds, array $tags = []): void {}
-                },
-                $healthStore
-            ),
-            new SecretRotationWorkflow(
-                new class implements SecretRotationPortInterface {
-                    public function rotate(string $providerId): bool { return true; }
-                },
-                new class implements ConnectivityTelemetryPortInterface {
-                    public function increment(string $metric, float $value = 1.0, array $tags = []): void {}
-                    public function timing(string $metric, float $milliseconds, array $tags = []): void {}
+        $gateway = $this->createIntegrationGateway(
+            healthStore: $healthStore,
+            providerCallPort: new class implements ProviderCallPortInterface {
+                public function call(string $providerId, string $endpoint, array $payload, array $options): array
+                {
+                    return ['ok' => true, 'provider' => $providerId, 'endpoint' => $endpoint];
                 }
-            ),
-            new IntegrationHealthWorkflow(
-                new class implements ProviderCatalogPortInterface {
-                    public function providers(): array { return ['stripe']; }
-                },
-                new class implements ProviderCallPortInterface {
-                    public function call(string $providerId, string $endpoint, array $payload, array $options): array
-                    {
-                        return ['status' => 'ok'];
-                    }
-                },
-                $healthStore,
-                new ProviderHealthDataProvider($healthStore)
-            ),
-            new NullLogger()
+            },
+            providerCatalogPort: new class implements ProviderCatalogPortInterface {
+                public function providers(): array { return ['stripe']; }
+                public function getConfig(string $providerId): array { return []; }
+            }
         );
 
         $result = $gateway->call('stripe', 'https://api.stripe.test/charge', ['amount' => 100]);
@@ -78,47 +48,63 @@ final class IntegrationGatewayTest extends TestCase
     public function test_rotate_secrets_returns_true_when_port_succeeds(): void
     {
         $healthStore = new InMemoryProviderHealthStore();
+        $gateway = $this->createIntegrationGateway(
+            healthStore: $healthStore,
+            secretRotationPort: new class implements SecretRotationPortInterface {
+                public function rotate(string $providerId): bool { return $providerId === 'twilio'; }
+            },
+            providerCatalogPort: new class implements ProviderCatalogPortInterface {
+                public function providers(): array { return []; }
+                public function getConfig(string $providerId): array { return []; }
+            }
+        );
 
-        $gateway = new IntegrationGateway(
+        self::assertTrue($gateway->rotateSecrets('twilio'));
+    }
+
+    private function createIntegrationGateway(
+        InMemoryProviderHealthStore $healthStore,
+        ?ProviderCallPortInterface $providerCallPort = null,
+        ?SecretRotationPortInterface $secretRotationPort = null,
+        ?ProviderCatalogPortInterface $providerCatalogPort = null,
+    ): IntegrationGateway {
+        $providerCallPort ??= new class implements ProviderCallPortInterface {
+            public function call(string $providerId, string $endpoint, array $payload, array $options): array
+            {
+                return ['status' => 'ok'];
+            }
+        };
+        $secretRotationPort ??= new class implements SecretRotationPortInterface {
+            public function rotate(string $providerId): bool { return true; }
+        };
+        $providerCatalogPort ??= new class implements ProviderCatalogPortInterface {
+            public function providers(): array { return []; }
+            public function getConfig(string $providerId): array { return []; }
+        };
+
+        $telemetryPort = new class implements ConnectivityTelemetryPortInterface {
+            public function increment(string $metric, float $value = 1.0, array $tags = []): void {}
+            public function timing(string $metric, float $milliseconds, array $tags = []): void {}
+        };
+
+        return new IntegrationGateway(
             new ProviderCallWorkflow(
                 new ProviderCallRule(),
                 new ProviderFeatureFlagRule(new class implements FeatureFlagPortInterface {
                     public function isEnabled(string $flag, array $context = []): bool { return true; }
                 }),
-                new class implements ProviderCallPortInterface {
-                    public function call(string $providerId, string $endpoint, array $payload, array $options): array
-                    {
-                        return ['status' => 'ok'];
-                    }
-                },
-                new class implements ConnectivityTelemetryPortInterface {
-                    public function increment(string $metric, float $value = 1.0, array $tags = []): void {}
-                    public function timing(string $metric, float $milliseconds, array $tags = []): void {}
-                },
+                $providerCallPort,
+                $telemetryPort,
                 $healthStore
             ),
-            new SecretRotationWorkflow(
-                new class implements SecretRotationPortInterface {
-                    public function rotate(string $providerId): bool { return $providerId === 'twilio'; }
-                },
-                new class implements ConnectivityTelemetryPortInterface {
-                    public function increment(string $metric, float $value = 1.0, array $tags = []): void {}
-                    public function timing(string $metric, float $milliseconds, array $tags = []): void {}
-                }
-            ),
+            new SecretRotationWorkflow($secretRotationPort, $telemetryPort),
             new IntegrationHealthWorkflow(
-                new class implements ProviderCatalogPortInterface {
-                    public function providers(): array { return []; }
-                },
-                new class implements ProviderCallPortInterface {
-                    public function call(string $providerId, string $endpoint, array $payload, array $options): array { return []; }
-                },
+                $providerCatalogPort,
+                $providerCallPort,
                 $healthStore,
                 new ProviderHealthDataProvider($healthStore)
             ),
             new NullLogger()
         );
-
-        self::assertTrue($gateway->rotateSecrets('twilio'));
     }
 }

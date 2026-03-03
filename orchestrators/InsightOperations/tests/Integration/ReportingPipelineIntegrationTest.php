@@ -12,6 +12,7 @@ use Nexus\InsightOperations\Contracts\ReportDataQueryPortInterface;
 use Nexus\InsightOperations\Contracts\ReportExportPortInterface;
 use Nexus\InsightOperations\Coordinators\ReportingCoordinator;
 use Nexus\InsightOperations\DataProviders\PipelineContextDataProvider;
+use Nexus\InsightOperations\DTOs\DashboardSnapshotDto;
 use Nexus\InsightOperations\Rules\DashboardSnapshotRule;
 use Nexus\InsightOperations\Rules\ReportingPipelineRule;
 use Nexus\InsightOperations\Workflows\DashboardSnapshotWorkflow;
@@ -62,7 +63,15 @@ final class ReportingPipelineIntegrationTest extends TestCase
             new DashboardSnapshotWorkflow(
                 new DashboardSnapshotRule(),
                 new class implements DashboardSnapshotPortInterface {
-                    public function snapshot(string $dashboardId, string $tenantId): array { return ['dashboard' => $dashboardId, 'tenant' => $tenantId]; }
+                    public function snapshot(string $dashboardId, string $tenantId): DashboardSnapshotDto
+                    {
+                        return new DashboardSnapshotDto(
+                            tenantId: $tenantId,
+                            dashboardId: $dashboardId,
+                            capturedAt: gmdate(DATE_ATOM),
+                            queryHistory: [],
+                        );
+                    }
                 },
                 new class implements InsightStoragePortInterface {
                     public function put(string $path, mixed $content): void {}

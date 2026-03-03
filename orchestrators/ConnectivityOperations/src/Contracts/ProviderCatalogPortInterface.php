@@ -10,4 +10,9 @@ interface ProviderCatalogPortInterface
      * @return array<int, string>
      */
     public function providers(): array;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfig(string $providerId): array;
 }

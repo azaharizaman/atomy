@@ -12,6 +12,7 @@ use Nexus\InsightOperations\Contracts\ReportDataQueryPortInterface;
 use Nexus\InsightOperations\Contracts\ReportExportPortInterface;
 use Nexus\InsightOperations\Coordinators\ReportingCoordinator;
 use Nexus\InsightOperations\DataProviders\PipelineContextDataProvider;
+use Nexus\InsightOperations\DTOs\DashboardSnapshotDto;
 use Nexus\InsightOperations\Rules\DashboardSnapshotRule;
 use Nexus\InsightOperations\Rules\ReportingPipelineRule;
 use Nexus\InsightOperations\Workflows\DashboardSnapshotWorkflow;
@@ -88,9 +89,14 @@ final class ReportingCoordinatorTest extends TestCase
             new DashboardSnapshotWorkflow(
                 new DashboardSnapshotRule(),
                 new class implements DashboardSnapshotPortInterface {
-                    public function snapshot(string $dashboardId, string $tenantId): array
+                    public function snapshot(string $dashboardId, string $tenantId): DashboardSnapshotDto
                     {
-                        return ['dashboard_id' => $dashboardId, 'tenant_id' => $tenantId];
+                        return new DashboardSnapshotDto(
+                            tenantId: $tenantId,
+                            dashboardId: $dashboardId,
+                            capturedAt: gmdate(DATE_ATOM),
+                            queryHistory: [],
+                        );
                     }
                 },
                 new class implements InsightStoragePortInterface {
@@ -162,9 +168,14 @@ final class ReportingCoordinatorTest extends TestCase
             new DashboardSnapshotWorkflow(
                 new DashboardSnapshotRule(),
                 new class implements DashboardSnapshotPortInterface {
-                    public function snapshot(string $dashboardId, string $tenantId): array
+                    public function snapshot(string $dashboardId, string $tenantId): DashboardSnapshotDto
                     {
-                        return ['dashboard_id' => $dashboardId, 'tenant_id' => $tenantId, 'widgets' => []];
+                        return new DashboardSnapshotDto(
+                            tenantId: $tenantId,
+                            dashboardId: $dashboardId,
+                            capturedAt: gmdate(DATE_ATOM),
+                            queryHistory: [['widgets' => []]],
+                        );
                     }
                 },
                 new class implements InsightStoragePortInterface {

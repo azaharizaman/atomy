@@ -17,4 +17,16 @@ final class ProviderCatalogPortAdapter implements ProviderCatalogPortInterface
 
         return array_values(array_filter($providers, static fn (mixed $provider): bool => is_string($provider) && trim($provider) !== ''));
     }
+
+    public function getConfig(string $providerId): array
+    {
+        $allConfigs = config('connectivity_operations.provider_configs', []);
+        if (!is_array($allConfigs)) {
+            return [];
+        }
+
+        $config = $allConfigs[$providerId] ?? [];
+
+        return is_array($config) ? $config : [];
+    }
 }
