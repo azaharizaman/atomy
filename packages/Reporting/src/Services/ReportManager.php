@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\Reporting\Services;
 
-use Nexus\QueryEngine\Contracts\AnalyticsAuthorizerInterface;
-use Nexus\QueryEngine\Contracts\AnalyticsManagerInterface;
-use Nexus\QueryEngine\Contracts\QueryResultInterface;
-use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
+use Nexus\Reporting\Contracts\AnalyticsAuthorizerInterface;
+use Nexus\Reporting\Contracts\AnalyticsManagerInterface;
+use Nexus\Reporting\Contracts\QueryResultInterface;
+use Nexus\Reporting\Contracts\AuditLogManagerInterface;
 use Nexus\Reporting\Contracts\ReportDefinitionInterface;
 use Nexus\Reporting\Contracts\ReportDistributorInterface;
 use Nexus\Reporting\Contracts\ReportGeneratorInterface;
@@ -15,13 +15,15 @@ use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 use Nexus\Reporting\Exceptions\ReportNotFoundException;
 use Nexus\Reporting\Exceptions\UnauthorizedReportException;
 use Nexus\Reporting\ValueObjects\DistributionResult;
+use Nexus\Reporting\ValueObjects\RecurrenceType;
 use Nexus\Reporting\ValueObjects\ReportFormat;
 use Nexus\Reporting\ValueObjects\ReportResult;
 use Nexus\Reporting\ValueObjects\ReportSchedule;
 use Nexus\Reporting\ValueObjects\ScheduleType;
-use Nexus\Scheduler\Contracts\ScheduleManagerInterface;
-use Nexus\Scheduler\ValueObjects\JobType;
-use Nexus\Scheduler\ValueObjects\ScheduleDefinition;
+use Nexus\Reporting\ValueObjects\ScheduleRecurrence;
+use Nexus\Reporting\Contracts\ScheduleManagerInterface;
+use Nexus\Reporting\ValueObjects\JobType;
+use Nexus\Reporting\ValueObjects\ScheduleDefinition;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -216,7 +218,7 @@ final readonly class ReportManager
     /**
      * Distribute a generated report to recipients.
      *
-     * @param array<\Nexus\Notifier\Contracts\NotifiableInterface> $recipients
+     * @param array<\Nexus\Reporting\Contracts\NotifiableInterface> $recipients
      * @param array<string, mixed> $options
      * @throws ReportNotFoundException
      */
@@ -415,20 +417,20 @@ final readonly class ReportManager
     /**
      * Convert ReportSchedule to Scheduler's ScheduleRecurrence.
      */
-    private function convertToScheduleRecurrence(ReportSchedule $schedule): ?\Nexus\Scheduler\ValueObjects\ScheduleRecurrence
+    private function convertToScheduleRecurrence(ReportSchedule $schedule): ?ScheduleRecurrence
     {
         if (!$schedule->type->isRecurring()) {
             return null;
         }
 
-        return new \Nexus\Scheduler\ValueObjects\ScheduleRecurrence(
+        return new ScheduleRecurrence(
             type: match ($schedule->type) {
-                ScheduleType::DAILY => \Nexus\Scheduler\ValueObjects\RecurrenceType::DAILY,
-                ScheduleType::WEEKLY => \Nexus\Scheduler\ValueObjects\RecurrenceType::WEEKLY,
-                ScheduleType::MONTHLY => \Nexus\Scheduler\ValueObjects\RecurrenceType::MONTHLY,
-                ScheduleType::YEARLY => \Nexus\Scheduler\ValueObjects\RecurrenceType::YEARLY,
-                ScheduleType::CRON => \Nexus\Scheduler\ValueObjects\RecurrenceType::CRON,
-                default => \Nexus\Scheduler\ValueObjects\RecurrenceType::ONCE,
+                ScheduleType::DAILY => RecurrenceType::DAILY,
+                ScheduleType::WEEKLY => RecurrenceType::WEEKLY,
+                ScheduleType::MONTHLY => RecurrenceType::MONTHLY,
+                ScheduleType::YEARLY => RecurrenceType::YEARLY,
+                ScheduleType::CRON => RecurrenceType::CRON,
+                default => RecurrenceType::ONCE,
             },
             interval: 1,
             cronExpression: $schedule->cronExpression,

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Nexus\Reporting\Core\Engine;
 
-use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
-use Nexus\Notifier\Contracts\NotifiableInterface;
-use Nexus\Notifier\Contracts\NotificationInterface;
-use Nexus\Notifier\Contracts\NotificationManagerInterface;
-use Nexus\Notifier\ValueObjects\ChannelType;
-use Nexus\Notifier\ValueObjects\Priority;
+use Nexus\Reporting\Contracts\AuditLogManagerInterface;
+use Nexus\Reporting\Contracts\NotifiableInterface;
+use Nexus\Reporting\Contracts\NotificationInterface;
+use Nexus\Reporting\Contracts\NotificationManagerInterface;
+use Nexus\Reporting\ValueObjects\ChannelType;
+use Nexus\Reporting\ValueObjects\Priority;
 use Nexus\Reporting\Contracts\ReportDistributorInterface;
 use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 use Nexus\Reporting\Exceptions\ReportDistributionException;
@@ -17,10 +17,10 @@ use Nexus\Reporting\Exceptions\ReportNotFoundException;
 use Nexus\Reporting\ValueObjects\DistributionResult;
 use Nexus\Reporting\ValueObjects\DistributionStatus;
 use Nexus\Reporting\ValueObjects\ReportResult;
-use Nexus\Scheduler\Contracts\ScheduleManagerInterface;
-use Nexus\Scheduler\ValueObjects\JobType;
-use Nexus\Scheduler\ValueObjects\ScheduleDefinition;
-use Nexus\Storage\Contracts\StorageDriverInterface;
+use Nexus\Reporting\Contracts\ScheduleManagerInterface;
+use Nexus\Reporting\ValueObjects\JobType;
+use Nexus\Reporting\ValueObjects\ScheduleDefinition;
+use Nexus\Reporting\Contracts\StorageDriverInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -341,6 +341,7 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                         'error' => $dbEx->getMessage(),
                     ]);
                 }
+            }
         }
 
         $this->logger->info('Retry distribution completed', [
@@ -418,9 +419,9 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                 return Priority::NORMAL;
             }
 
-            public function getCategory(): \Nexus\Notifier\ValueObjects\Category
+            public function getCategory(): \Nexus\Reporting\ValueObjects\Category
             {
-                return \Nexus\Notifier\ValueObjects\Category::TRANSACTIONAL;
+                return \Nexus\Reporting\ValueObjects\Category::TRANSACTIONAL;
             }
         };
     }

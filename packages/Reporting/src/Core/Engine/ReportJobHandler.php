@@ -8,11 +8,10 @@ use Nexus\Reporting\Contracts\ReportDistributorInterface;
 use Nexus\Reporting\Contracts\ReportGeneratorInterface;
 use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 use Nexus\Reporting\Exceptions\ReportNotFoundException;
-use Nexus\Scheduler\Contracts\JobHandlerInterface;
-use Nexus\Scheduler\Enums\JobType;
-use Nexus\Scheduler\ValueObjects\JobResult;
-use Nexus\Scheduler\ValueObjects\JobStatus;
-use Nexus\Scheduler\ValueObjects\ScheduledJob;
+use Nexus\Reporting\Contracts\JobHandlerInterface;
+use Nexus\Reporting\ValueObjects\JobType;
+use Nexus\Reporting\ValueObjects\JobResult;
+use Nexus\Reporting\ValueObjects\ScheduledJob;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -144,30 +143,6 @@ final readonly class ReportJobHandler implements JobHandlerInterface
             return JobResult::failure(
                 error: $e->getMessage(),
                 shouldRetry: false
-            );
-
-        } catch (\Nexus\QueryEngine\Exceptions\QueryExecutionException $e) {
-            // Retry transient query failures
-            $this->logger->warning('Query execution failed, will retry', [
-                'job_id' => $job->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return JobResult::failure(
-                error: $e->getMessage(),
-                shouldRetry: true
-            );
-
-        } catch (\Nexus\Export\Exceptions\ExportException $e) {
-            // Retry transient export failures
-            $this->logger->warning('Export failed, will retry', [
-                'job_id' => $job->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return JobResult::failure(
-                error: $e->getMessage(),
-                shouldRetry: true
             );
 
         } catch (\Throwable $e) {
