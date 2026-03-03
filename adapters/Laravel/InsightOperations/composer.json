@@ -1,0 +1,30 @@
+{
+    "name": "nexus/laravel-insight-operations-adapter",
+    "description": "Laravel adapters for InsightOperations orchestrator ports",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "illuminate/support": "^11.0|^12.0",
+        "nexus/insight-operations": "*@dev",
+        "nexus/query-engine": "*@dev",
+        "nexus/machine-learning": "*@dev",
+        "nexus/export": "*@dev",
+        "nexus/storage": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Laravel\\InsightOperations\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nexus\\Laravel\\InsightOperations\\Providers\\InsightOperationsAdapterServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

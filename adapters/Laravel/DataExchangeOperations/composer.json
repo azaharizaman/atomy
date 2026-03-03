@@ -1,0 +1,30 @@
+{
+    "name": "nexus/laravel-data-exchange-operations-adapter",
+    "description": "Laravel adapters for DataExchangeOperations orchestrator ports",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/cache": "^11.0|^12.0",
+        "nexus/data-exchange-operations": "*@dev",
+        "nexus/import": "*@dev",
+        "nexus/export": "*@dev",
+        "nexus/storage": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Laravel\\DataExchangeOperations\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nexus\\Laravel\\DataExchangeOperations\\Providers\\DataExchangeOperationsAdapterServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

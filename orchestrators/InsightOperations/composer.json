@@ -5,11 +5,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/query-engine": "*@dev",
-        "nexus/machine-learning": "*@dev",
-        "nexus/export": "*@dev",
-        "nexus/storage": "*@dev",
-        "nexus/notifier": "*@dev",
         "psr/log": "^3.0"
     },
     "autoload": {

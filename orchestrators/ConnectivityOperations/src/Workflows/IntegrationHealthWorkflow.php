@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nexus\ConnectivityOperations\Workflows;
+
+use Nexus\ConnectivityOperations\Contracts\ProviderCallPortInterface;
+use Nexus\ConnectivityOperations\Contracts\ProviderCatalogPortInterface;
+use Nexus\ConnectivityOperations\Contracts\ProviderHealthStoreInterface;
+use Nexus\ConnectivityOperations\DataProviders\ProviderHealthDataProvider;
+
+final readonly class IntegrationHealthWorkflow
+{
+    public function __construct(
+        private ProviderCatalogPortInterface $providerCatalog,
+        private ProviderCallPortInterface $providerCallPort,
+        private ProviderHealthStoreInterface $healthStore,
+        private ProviderHealthDataProvider $healthDataProvider,
+    ) {}
+
+    /**
+     * @return array<string, string>
+     */
+    public function run(): array
+    {
+        foreach ($this->providerCatalog->providers() as $providerId) {
+            try {
+                $this->providerCallPort->call($providerId, '/health', [], ['method' => 'GET', 'timeout' => 5]);
+                $this->healthStore->record($providerId, [
+                    'status' => 'healthy',
+                    'last_checked_at' => gmdate(DATE_ATOM),
+                ]);
+            } catch (\Throwable $e) {
+                $this->healthStore->record($providerId, [
+                    'status' => 'degraded',
+                    'error' => $e->getMessage(),
+                    'last_checked_at' => gmdate(DATE_ATOM),
+                ]);
+            }
+        }
+
+        return $this->healthDataProvider->statuses();
+    }
+}
