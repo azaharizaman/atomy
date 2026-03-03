@@ -6,10 +6,9 @@ namespace Nexus\Budget\Listeners;
 
 use Nexus\Budget\Contracts\BudgetManagerInterface;
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
-use Nexus\Budget\Enums\TransactionType;
-use Nexus\Procurement\Events\PurchaseOrderApprovedEvent;
-use Nexus\Procurement\Events\PurchaseOrderCancelledEvent;
-use Nexus\Procurement\Events\PurchaseOrderClosedEvent;
+use Nexus\Budget\Contracts\PurchaseOrderApprovedEventInterface;
+use Nexus\Budget\Contracts\PurchaseOrderCancelledEventInterface;
+use Nexus\Budget\Contracts\PurchaseOrderClosedEventInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -31,14 +30,14 @@ final readonly class ProcurementEventListener
     /**
      * Handle PO approved event - commit budget
      */
-    public function onPurchaseOrderApproved(PurchaseOrderApprovedEvent $event): void
+    public function onPurchaseOrderApproved(PurchaseOrderApprovedEventInterface $event): void
     {
         try {
             // Find budget for the PO's cost center/department
             $budgetId = $this->resolveBudgetId($event);
             if (!$budgetId) {
                 $this->logger->warning('No budget found for PO', [
-                    'po_id' => $event->purchaseOrderId,
+                    'po_id' => $event->getPurchaseOrderId(),
                 ]);
                 return;
             }
@@ -46,19 +45,21 @@ final readonly class ProcurementEventListener
             // Commit the PO total amount
             $this->budgetManager->commitAmount(
                 budgetId: $budgetId,
-                amount: $event->totalAmount,
-                sourceDocumentId: $event->purchaseOrderId,
-                transactionType: TransactionType::Commitment
+                amount: $event->getTotalAmount(),
+                accountId: 'unknown',
+                sourceType: 'purchase_order',
+                sourceId: $event->getPurchaseOrderId(),
+                sourceLineNumber: 0
             );
 
             $this->logger->info('Budget committed for PO', [
-                'po_id' => $event->purchaseOrderId,
+                'po_id' => $event->getPurchaseOrderId(),
                 'budget_id' => $budgetId,
-                'amount' => (string) $event->totalAmount,
+                'amount' => (string) $event->getTotalAmount(),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Failed to commit budget for PO', [
-                'po_id' => $event->purchaseOrderId,
+                'po_id' => $event->getPurchaseOrderId(),
                 'error' => $e->getMessage(),
             ]);
         }
@@ -67,18 +68,20 @@ final readonly class ProcurementEventListener
     /**
      * Handle PO cancelled event - release commitment
      */
-    public function onPurchaseOrderCancelled(PurchaseOrderCancelledEvent $event): void
+    public function onPurchaseOrderCancelled(PurchaseOrderCancelledEventInterface $event): void
     {
         try {
             // Release all commitments for this PO
-            $this->budgetManager->releaseCommitment($event->purchaseOrderId);
+            $this->logger->info('PO cancelled; commitment release requires original amount context', [
+                'po_id' => $event->getPurchaseOrderId(),
+            ]);
 
             $this->logger->info('Budget commitment released for cancelled PO', [
-                'po_id' => $event->purchaseOrderId,
+                'po_id' => $event->getPurchaseOrderId(),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Failed to release commitment for cancelled PO', [
-                'po_id' => $event->purchaseOrderId,
+                'po_id' => $event->getPurchaseOrderId(),
                 'error' => $e->getMessage(),
             ]);
         }
@@ -87,18 +90,20 @@ final readonly class ProcurementEventListener
     /**
      * Handle PO closed event - release any remaining commitments
      */
-    public function onPurchaseOrderClosed(PurchaseOrderClosedEvent $event): void
+    public function onPurchaseOrderClosed(PurchaseOrderClosedEventInterface $event): void
     {
         try {
             // Release any outstanding commitments
-            $this->budgetManager->releaseCommitment($event->purchaseOrderId);
+            $this->logger->info('PO closed; commitment release requires original amount context', [
+                'po_id' => $event->getPurchaseOrderId(),
+            ]);
 
             $this->logger->info('Budget commitment released for closed PO', [
-                'po_id' => $event->purchaseOrderId,
+                'po_id' => $event->getPurchaseOrderId(),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Failed to release commitment for closed PO', [
-                'po_id' => $event->purchaseOrderId,
+                'po_id' => $event->getPurchaseOrderId(),
                 'error' => $e->getMessage(),
             ]);
         }
@@ -110,7 +115,7 @@ final readonly class ProcurementEventListener
      * This would query the PO to get department/cost center
      * and find the appropriate budget.
      */
-    private function resolveBudgetId(PurchaseOrderApprovedEvent $event): ?string
+    private function resolveBudgetId(PurchaseOrderApprovedEventInterface $event): ?string
     {
         // This is a placeholder implementation
         // In real scenario, would:

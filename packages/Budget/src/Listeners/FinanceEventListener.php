@@ -6,11 +6,9 @@ namespace Nexus\Budget\Listeners;
 
 use Nexus\Budget\Contracts\BudgetManagerInterface;
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
-use Nexus\Budget\Enums\TransactionType;
+use Nexus\Budget\Contracts\JournalEntryPostedEventInterface;
+use Nexus\Budget\Contracts\JournalEntryReversedEventInterface;
 use Nexus\Budget\Services\BudgetVarianceInvestigator;
-use Nexus\Budget\ValueObjects\BudgetVariance;
-use Nexus\Finance\Events\JournalEntryPostedEvent;
-use Nexus\Finance\Events\JournalEntryReversedEvent;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -32,11 +30,11 @@ final readonly class FinanceEventListener
     /**
      * Handle journal entry posted event - record actual spending
      */
-    public function onJournalEntryPosted(JournalEntryPostedEvent $event): void
+    public function onJournalEntryPosted(JournalEntryPostedEventInterface $event): void
     {
         try {
             // Process each line item in the JE
-            foreach ($event->lineItems as $line) {
+            foreach ($event->getLineItems() as $line) {
                 $budgetId = $this->resolveBudgetIdFromAccount($line['account_id']);
                 if (!$budgetId) {
                     continue; // Skip if no budget mapping
@@ -48,9 +46,10 @@ final readonly class FinanceEventListener
                 $this->budgetManager->recordActual(
                     budgetId: $budgetId,
                     amount: $amount,
-                    sourceDocumentId: $event->journalEntryId,
-                    transactionType: TransactionType::Actual,
-                    releaseCommitment: true // Auto-release matching commitment
+                    accountId: $line['account_id'],
+                    sourceType: 'journal_entry_line',
+                    sourceId: $event->getJournalEntryId(),
+                    sourceLineNumber: 0
                 );
 
                 // Check variance after recording actual
@@ -58,12 +57,12 @@ final readonly class FinanceEventListener
             }
 
             $this->logger->info('Budget actuals recorded for JE', [
-                'je_id' => $event->journalEntryId,
-                'line_count' => count($event->lineItems),
+                'je_id' => $event->getJournalEntryId(),
+                'line_count' => count($event->getLineItems()),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Failed to record budget actuals for JE', [
-                'je_id' => $event->journalEntryId,
+                'je_id' => $event->getJournalEntryId(),
                 'error' => $e->getMessage(),
             ]);
         }
@@ -72,7 +71,7 @@ final readonly class FinanceEventListener
     /**
      * Handle journal entry reversed event - reverse the actual
      */
-    public function onJournalEntryReversed(JournalEntryReversedEvent $event): void
+    public function onJournalEntryReversed(JournalEntryReversedEventInterface $event): void
     {
         try {
             // In a real implementation, would:
@@ -81,12 +80,12 @@ final readonly class FinanceEventListener
             // 3. Update budget balances
             
             $this->logger->info('Budget actuals reversed for JE', [
-                'je_id' => $event->journalEntryId,
-                'original_je_id' => $event->originalJournalEntryId,
+                'je_id' => $event->getJournalEntryId(),
+                'original_je_id' => $event->getOriginalJournalEntryId(),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Failed to reverse budget actuals for JE', [
-                'je_id' => $event->journalEntryId,
+                'je_id' => $event->getJournalEntryId(),
                 'error' => $e->getMessage(),
             ]);
         }

@@ -6,12 +6,12 @@ namespace Nexus\Budget\Services;
 
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
 use Nexus\Budget\Contracts\BudgetAnalyticsRepositoryInterface;
+use Nexus\Budget\Contracts\NotificationManagerInterface;
+use Nexus\Budget\Contracts\SettingsGatewayInterface;
+use Nexus\Budget\Contracts\AuditLoggerInterface;
 use Nexus\Budget\Enums\AlertSeverity;
 use Nexus\Budget\Events\BudgetUtilizationAlertEvent;
 use Nexus\Budget\ValueObjects\UtilizationAlert;
-use Nexus\Setting\Contracts\SettingsManagerInterface;
-use Nexus\Notifier\Contracts\NotificationManagerInterface;
-use Nexus\AuditLogger\Contracts\AuditLoggerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
@@ -27,7 +27,7 @@ final readonly class UtilizationAlertManager
         private BudgetRepositoryInterface $budgetRepository,
         private BudgetAnalyticsRepositoryInterface $analyticsRepository,
         private NotificationManagerInterface $notificationManager,
-        private SettingsManagerInterface $settings,
+        private SettingsGatewayInterface $settings,
         private AuditLoggerInterface $auditLogger,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger
