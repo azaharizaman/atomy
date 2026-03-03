@@ -20,8 +20,16 @@ final class CurlHttpClient implements HttpClientInterface
 
         if ($normalizedMethod === 'GET' && $payload !== []) {
             $query = http_build_query($payload);
+            
+            // Handle fragment preservation: insert query before '#'
+            $fragment = '';
+            if (($hashPos = strpos($url, '#')) !== false) {
+                $fragment = substr($url, $hashPos);
+                $url = substr($url, 0, $hashPos);
+            }
+
             $separator = str_contains($url, '?') ? '&' : '?';
-            $url .= $separator . $query;
+            $url .= $separator . $query . $fragment;
         }
 
         $curl = curl_init($url);
@@ -31,6 +39,18 @@ final class CurlHttpClient implements HttpClientInterface
 
         $headerLines = [];
         foreach ($headers as $key => $value) {
+            // Validate header name (RFC 7230 token)
+            if (!preg_match("/^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/", (string) $key)) {
+                curl_close($curl);
+                throw new \InvalidArgumentException("Invalid HTTP header name: {$key}");
+            }
+
+            // Prevent CRLF injection in values
+            if (str_contains((string) $value, "\r") || str_contains((string) $value, "\n")) {
+                curl_close($curl);
+                throw new \InvalidArgumentException("Invalid HTTP header value for '{$key}': contains newlines.");
+            }
+
             $headerLines[] = $key . ': ' . $value;
         }
 
