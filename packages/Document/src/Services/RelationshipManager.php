@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Document\Services;
 
-use Nexus\AuditLogger\Services\AuditLogManager;
+use Nexus\Document\Contracts\AuditLogManagerInterface;
 use Nexus\Document\Contracts\DocumentInterface;
 use Nexus\Document\Contracts\DocumentRelationshipInterface;
 use Nexus\Document\Contracts\DocumentRelationshipRepositoryInterface;
@@ -25,7 +25,7 @@ final readonly class RelationshipManager
         private DocumentRelationshipRepositoryInterface $relationshipRepository,
         private DocumentRepositoryInterface $documentRepository,
         private PermissionCheckerInterface $permissions,
-        private AuditLogManager $auditLogger,
+        private AuditLogManagerInterface $auditLogger,
         private LoggerInterface $logger
     ) {
     }

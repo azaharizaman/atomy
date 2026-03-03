@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Nexus\Document\Services;
 
-use Nexus\AuditLogger\Services\AuditLogManager;
-use Nexus\Crypto\Contracts\HasherInterface;
+use Nexus\Document\Contracts\AuditLogManagerInterface;
+use Nexus\Document\Contracts\HasherInterface;
 use Nexus\Document\Contracts\DocumentInterface;
 use Nexus\Document\Contracts\DocumentRepositoryInterface;
 use Nexus\Document\Contracts\DocumentVersionInterface;
 use Nexus\Document\Contracts\DocumentVersionRepositoryInterface;
 use Nexus\Document\Contracts\PermissionCheckerInterface;
+use Nexus\Document\Contracts\StorageDriverInterface;
 use Nexus\Document\Core\PathGenerator;
 use Nexus\Document\Exceptions\PermissionDeniedException;
 use Nexus\Document\Exceptions\VersionNotFoundException;
-use Nexus\Storage\Contracts\StorageDriverInterface;
+use Nexus\Document\ValueObjects\Visibility;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -31,7 +32,7 @@ final readonly class VersionManager
         private PathGenerator $pathGenerator,
         private HasherInterface $hasher,
         private PermissionCheckerInterface $permissions,
-        private AuditLogManager $auditLogger,
+        private AuditLogManagerInterface $auditLogger,
         private LoggerInterface $logger
     ) {
     }
@@ -76,7 +77,7 @@ final readonly class VersionManager
 
         // Store new version file
         rewind($stream);
-        $this->storage->put($newStoragePath, $stream, \Nexus\Storage\ValueObjects\Visibility::Private);
+        $this->storage->put($newStoragePath, $stream, Visibility::Private);
 
         // Create version record
         $version = $this->versionRepository->create([

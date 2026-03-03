@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Document\Services;
 
-use Nexus\AuditLogger\Services\AuditLogManager;
+use Nexus\Document\Contracts\AuditLogManagerInterface;
 use Nexus\Document\Contracts\DisposalCertificationInterface;
 use Nexus\Document\Contracts\DisposalCertificationRepositoryInterface;
 use Nexus\Document\Contracts\DocumentInterface;
@@ -12,11 +12,11 @@ use Nexus\Document\Contracts\DocumentRepositoryInterface;
 use Nexus\Document\Contracts\LegalHoldInterface;
 use Nexus\Document\Contracts\LegalHoldRepositoryInterface;
 use Nexus\Document\Contracts\RetentionPolicyInterface;
+use Nexus\Document\Contracts\StorageDriverInterface;
+use Nexus\Document\Contracts\TenantContextInterface;
 use Nexus\Document\Exceptions\DocumentNotFoundException;
 use Nexus\Document\Exceptions\RetentionPolicyViolationException;
 use Nexus\Document\ValueObjects\DocumentState;
-use Nexus\Storage\Contracts\StorageDriverInterface;
-use Nexus\Tenant\Contracts\TenantContextInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Uid\Ulid;
 
@@ -35,7 +35,7 @@ final readonly class RetentionService
         private DisposalCertificationRepositoryInterface $disposalCertificationRepository,
         private StorageDriverInterface $storage,
         private TenantContextInterface $tenantContext,
-        private AuditLogManager $auditLogger,
+        private AuditLogManagerInterface $auditLogger,
         private LoggerInterface $logger
     ) {
     }

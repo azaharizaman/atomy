@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Nexus\Document\Services;
 
-use Nexus\AuditLogger\Services\AuditLogManager;
-use Nexus\Crypto\Contracts\HasherInterface;
+use Nexus\Document\Contracts\AuditLogManagerInterface;
+use Nexus\Document\Contracts\HasherInterface;
 use Nexus\Document\Contracts\ContentProcessorInterface;
 use Nexus\Document\Contracts\DocumentInterface;
 use Nexus\Document\Contracts\DocumentRepositoryInterface;
 use Nexus\Document\Contracts\PermissionCheckerInterface;
+use Nexus\Document\Contracts\StorageDriverInterface;
+use Nexus\Document\Contracts\TenantContextInterface;
 use Nexus\Document\Core\PathGenerator;
 use Nexus\Document\Exceptions\ChecksumMismatchException;
 use Nexus\Document\Exceptions\PermissionDeniedException;
 use Nexus\Document\Exceptions\StorageException;
 use Nexus\Document\ValueObjects\ContentAnalysisResult;
 use Nexus\Document\ValueObjects\DocumentState;
-use Nexus\Storage\Contracts\StorageDriverInterface;
-use Nexus\Storage\ValueObjects\Visibility;
-use Nexus\Tenant\Contracts\TenantContextInterface;
+use Nexus\Document\ValueObjects\Visibility;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Uid\Ulid;
 
@@ -35,7 +35,7 @@ final readonly class DocumentManager
         private StorageDriverInterface $storage,
         private PermissionCheckerInterface $permissions,
         private ContentProcessorInterface $contentProcessor,
-        private AuditLogManager $auditLogger,
+        private AuditLogManagerInterface $auditLogger,
         private PathGenerator $pathGenerator,
         private HasherInterface $hasher,
         private TenantContextInterface $tenantContext,

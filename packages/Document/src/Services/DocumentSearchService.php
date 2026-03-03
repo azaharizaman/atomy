@@ -8,6 +8,7 @@ use Nexus\Document\Contracts\DocumentInterface;
 use Nexus\Document\Contracts\DocumentRepositoryInterface;
 use Nexus\Document\Contracts\DocumentSearchInterface;
 use Nexus\Document\Contracts\PermissionCheckerInterface;
+use Nexus\Document\Contracts\AuditLogManagerInterface;
 use Nexus\Document\ValueObjects\DocumentType;
 
 /**
@@ -21,7 +22,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
     public function __construct(
         private DocumentRepositoryInterface $repository,
         private PermissionCheckerInterface $permissions,
-        private \Nexus\AuditLogger\Services\AuditLogManager $auditLogger
+        private AuditLogManagerInterface $auditLogger
     ) {
     }
 
