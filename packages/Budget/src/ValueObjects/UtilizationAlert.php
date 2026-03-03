@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Budget\ValueObjects;
 
 use Nexus\Budget\Enums\AlertSeverity;
-use Nexus\Finance\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 /**
  * Utilization Alert value object

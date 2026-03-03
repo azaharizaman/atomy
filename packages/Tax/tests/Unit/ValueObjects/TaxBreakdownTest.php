@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Tests\Unit\ValueObjects;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Enums\TaxLevel;
 use Nexus\Tax\Enums\TaxType;
 use Nexus\Tax\ValueObjects\TaxBreakdown;
@@ -43,9 +43,9 @@ final class TaxBreakdownTest extends TestCase
             taxLines: [$taxLine],
         );
 
-        $this->assertSame('100.00', $breakdown->netAmount->getAmount());
-        $this->assertSame('7.25', $breakdown->totalTaxAmount->getAmount());
-        $this->assertSame('107.25', $breakdown->grossAmount->getAmount());
+        $this->assertSame(10000, $breakdown->netAmount->getAmountInMinorUnits());
+        $this->assertSame(725, $breakdown->totalTaxAmount->getAmountInMinorUnits());
+        $this->assertSame(10725, $breakdown->grossAmount->getAmountInMinorUnits());
         $this->assertCount(1, $breakdown->taxLines);
         $this->assertFalse($breakdown->isReverseCharge);
     }
@@ -196,6 +196,6 @@ final class TaxBreakdownTest extends TestCase
         );
 
         $this->assertTrue($breakdown->isReverseCharge);
-        $this->assertSame('0.00', $breakdown->totalTaxAmount->getAmount());
+        $this->assertSame(0, $breakdown->totalTaxAmount->getAmountInMinorUnits());
     }
 }

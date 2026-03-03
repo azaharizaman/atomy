@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Budget\ValueObjects;
 
-use Nexus\Finance\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 /**
  * Budget Variance value object
@@ -65,11 +65,11 @@ final readonly class BudgetVariance
     {
         if ($this->isRevenueBudget) {
             // For revenue: over budget means actual < allocated (underperforming)
-            return $this->actual->isLessThan($this->allocated);
+            return $this->actual->lessThan($this->allocated);
         }
 
         // For expense: over budget means actual > allocated
-        return $this->actual->isGreaterThan($this->allocated);
+        return $this->actual->greaterThan($this->allocated);
     }
 
     /**
@@ -79,11 +79,11 @@ final readonly class BudgetVariance
     {
         if ($this->isRevenueBudget) {
             // For revenue: under budget means actual > allocated (overperforming)
-            return $this->actual->isGreaterThan($this->allocated);
+            return $this->actual->greaterThan($this->allocated);
         }
 
         // For expense: under budget means actual < allocated
-        return $this->actual->isLessThan($this->allocated);
+        return $this->actual->lessThan($this->allocated);
     }
 
     /**

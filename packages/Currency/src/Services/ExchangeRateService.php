@@ -12,7 +12,7 @@ use Nexus\Currency\Exceptions\ExchangeRateNotFoundException;
 use Nexus\Currency\Exceptions\ExchangeRateProviderException;
 use Nexus\Currency\ValueObjects\CurrencyPair;
 use Nexus\Finance\ValueObjects\ExchangeRate;
-use Nexus\Finance\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 

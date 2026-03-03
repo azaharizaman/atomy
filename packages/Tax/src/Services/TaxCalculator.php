@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Services;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Contracts\TaxCalculatorInterface;
 use Nexus\Tax\Contracts\TaxExemptionManagerInterface;
 use Nexus\Tax\Contracts\TaxJurisdictionResolverInterface;
@@ -162,14 +162,19 @@ final readonly class TaxCalculator implements TaxCalculatorInterface
         }
 
         // Partial adjustment - calculate proportional tax
-        $adjustmentRatio = bcdiv(
-            $adjustmentAmount->getAmount(),
-            $original->netAmount->getAmount(),
-            6
-        );
+        $denominator = $original->netAmount->format(['symbol' => false, 'decimals' => 6]);
+        $adjustmentRatio = '0.000000';
+
+        if (bccomp($denominator, '0.000000', 6) !== 0) {
+            $adjustmentRatio = bcdiv(
+                $adjustmentAmount->format(['symbol' => false, 'decimals' => 6]),
+                $denominator,
+                6
+            );
+        }
 
         $adjustedTaxAmount = Money::of(
-            bcmul($original->totalTaxAmount->getAmount(), $adjustmentRatio, 4),
+            bcmul($original->totalTaxAmount->format(['symbol' => false, 'decimals' => 4]), $adjustmentRatio, 4),
             $original->totalTaxAmount->getCurrency()
         );
 
@@ -178,11 +183,11 @@ final readonly class TaxCalculator implements TaxCalculatorInterface
             fn(TaxLine $line) => new TaxLine(
                 rate: $line->rate,
                 taxableBase: Money::of(
-                    bcmul($line->taxableBase->getAmount(), $adjustmentRatio, 4),
+                    bcmul($line->taxableBase->format(['symbol' => false, 'decimals' => 4]), $adjustmentRatio, 4),
                     $line->taxableBase->getCurrency()
                 ),
                 amount: Money::of(
-                    bcmul($line->amount->getAmount(), $adjustmentRatio, 4),
+                    bcmul($line->amount->format(['symbol' => false, 'decimals' => 4]), $adjustmentRatio, 4),
                     $line->amount->getCurrency()
                 ),
                 description: "Adjustment: {$line->description}",

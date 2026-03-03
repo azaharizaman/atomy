@@ -54,9 +54,9 @@ interface TaxNexusManagerInterface
      * @param string $jurisdictionCode Jurisdiction code
      * @param \DateTimeInterface $asOfDate End date for calculation
      * 
-     * @return \Nexus\Currency\ValueObjects\Money Total revenue
+     * @return \Nexus\Common\ValueObjects\Money Total revenue
      */
-    public function getTrailingRevenue(string $jurisdictionCode, \DateTimeInterface $asOfDate): \Nexus\Currency\ValueObjects\Money;
+    public function getTrailingRevenue(string $jurisdictionCode, \DateTimeInterface $asOfDate): \Nexus\Common\ValueObjects\Money;
 
     /**
      * Get transaction count in jurisdiction for trailing 12 months

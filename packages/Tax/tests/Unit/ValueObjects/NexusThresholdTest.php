@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Tests\Unit\ValueObjects;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\ValueObjects\NexusThreshold;
 use PHPUnit\Framework\TestCase;
 
@@ -21,7 +21,7 @@ final class NexusThresholdTest extends TestCase
         );
 
         $this->assertSame('US-CA', $threshold->jurisdictionCode);
-        $this->assertSame('500000.00', $threshold->revenueThreshold->getAmount());
+        $this->assertSame(500000.0, $threshold->revenueThreshold->getAmount());
         $this->assertSame(200, $threshold->transactionThreshold);
         $this->assertSame('calendar_year', $threshold->calculationPeriod);
     }

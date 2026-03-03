@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Tests\Unit\ValueObjects;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\ValueObjects\TaxRate;
 use PHPUnit\Framework\TestCase;
 
@@ -130,7 +130,7 @@ final class TaxRateTest extends TestCase
         $baseAmount = Money::of('100.00', 'USD');
         $taxAmount = $rate->calculateTaxAmount($baseAmount);
 
-        $this->assertSame('7.2500', $taxAmount->getAmount());
+        $this->assertSame('7.2500', $taxAmount->format(['decimals' => 4, 'symbol' => false]));
         $this->assertSame('USD', $taxAmount->getCurrency());
     }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\Tests\Unit\ValueObjects;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Enums\TaxType;
 use Nexus\Tax\ValueObjects\TaxAdjustmentContext;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +27,7 @@ final class TaxAdjustmentContextTest extends TestCase
         $this->assertSame('ADJ-001', $context->adjustmentId);
         $this->assertSame('TXN-001', $context->originalTransactionId);
         $this->assertSame('Customer refund', $context->reason);
-        $this->assertSame('-100.00', $context->adjustmentAmount->getAmount());
+        $this->assertSame(-100.0, $context->adjustmentAmount->getAmount());
         $this->assertSame(TaxType::SalesTax, $context->taxType);
         $this->assertFalse($context->isFullReversal);
     }

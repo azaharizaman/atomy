@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Tax\ValueObjects;
 
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 use Nexus\Tax\Enums\TaxType;
 
 /**
@@ -78,10 +78,7 @@ final readonly class TaxAdjustmentContext
      */
     public function getAbsoluteAmount(): Money
     {
-        return Money::of(
-            ltrim($this->adjustmentAmount->getAmount(), '-'),
-            $this->adjustmentAmount->getCurrency()
-        );
+        return $this->adjustmentAmount->abs();
     }
 
     /**

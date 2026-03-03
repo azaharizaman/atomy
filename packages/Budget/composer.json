@@ -12,6 +12,7 @@
     ],
     "require": {
         "nexus/audit-logger": "*@dev",
+        "nexus/common": "*@dev",
         "nexus/currency": "*@dev",
         "nexus/machine-learning": "*@dev",
         "nexus/notifier": "*@dev",

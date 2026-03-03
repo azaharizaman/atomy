@@ -99,28 +99,28 @@ interface BudgetRepositoryInterface
      * Update allocated amount
      * 
      * @param string $id Budget identifier
-     * @param \Nexus\Uom\ValueObjects\Money $amount Allocated amount
+     * @param \Nexus\Common\ValueObjects\Money $amount Allocated amount
      * @return void
      */
-    public function updateAllocated(string $id, \Nexus\Uom\ValueObjects\Money $amount): void;
+    public function updateAllocated(string $id, \Nexus\Common\ValueObjects\Money $amount): void;
 
     /**
      * Update committed amount
      * 
      * @param string $id Budget identifier
-     * @param \Nexus\Uom\ValueObjects\Money $amount Committed amount
+     * @param \Nexus\Common\ValueObjects\Money $amount Committed amount
      * @return void
      */
-    public function updateCommitted(string $id, \Nexus\Uom\ValueObjects\Money $amount): void;
+    public function updateCommitted(string $id, \Nexus\Common\ValueObjects\Money $amount): void;
 
     /**
      * Update actual amount
      * 
      * @param string $id Budget identifier
-     * @param \Nexus\Uom\ValueObjects\Money $amount Actual amount
+     * @param \Nexus\Common\ValueObjects\Money $amount Actual amount
      * @return void
      */
-    public function updateActual(string $id, \Nexus\Uom\ValueObjects\Money $amount): void;
+    public function updateActual(string $id, \Nexus\Common\ValueObjects\Money $amount): void;
 
     /**
      * Delete budget
@@ -129,4 +129,13 @@ interface BudgetRepositoryInterface
      * @return void
      */
     public function delete(string $id): void;
+
+    /**
+     * Create a simulation from an existing budget
+     * 
+     * @param string $baseBudgetId Base budget identifier
+     * @param array<string, mixed> $modifications Optional modifications
+     * @return BudgetInterface
+     */
+    public function createSimulation(string $baseBudgetId, array $modifications = []): BudgetInterface;
 }

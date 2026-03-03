@@ -10,6 +10,7 @@
         }
     ],
     "require": {
+        "nexus/common": "*@dev",
         "php": "^8.3",
         "psr/log": "^3.0"
     },

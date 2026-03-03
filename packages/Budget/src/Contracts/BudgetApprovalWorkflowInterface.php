@@ -17,7 +17,7 @@ interface BudgetApprovalWorkflowInterface
      * Request budget override approval
      * 
      * @param string $budgetId Budget identifier
-     * @param \Nexus\Uom\ValueObjects\Money $requestedAmount Requested amount
+     * @param \Nexus\Common\ValueObjects\Money $requestedAmount Requested amount
      * @param string $requestorId Requestor user identifier
      * @param string $reason Override reason
      * @param array<string, mixed> $context Additional context
@@ -25,7 +25,7 @@ interface BudgetApprovalWorkflowInterface
      */
     public function requestBudgetOverrideApproval(
         string $budgetId,
-        \Nexus\Uom\ValueObjects\Money $requestedAmount,
+        \Nexus\Common\ValueObjects\Money $requestedAmount,
         string $requestorId,
         string $reason,
         array $context = []
@@ -36,7 +36,7 @@ interface BudgetApprovalWorkflowInterface
      * 
      * @param string $fromBudgetId Source budget identifier
      * @param string $toBudgetId Target budget identifier
-     * @param \Nexus\Uom\ValueObjects\Money $amount Transfer amount
+     * @param \Nexus\Common\ValueObjects\Money $amount Transfer amount
      * @param string $requestorId Requestor user identifier
      * @param string $reason Reallocation reason
      * @return string Workflow instance identifier
@@ -44,7 +44,7 @@ interface BudgetApprovalWorkflowInterface
     public function requestReallocationApproval(
         string $fromBudgetId,
         string $toBudgetId,
-        \Nexus\Uom\ValueObjects\Money $amount,
+        \Nexus\Common\ValueObjects\Money $amount,
         string $requestorId,
         string $reason
     ): string;
@@ -67,13 +67,13 @@ interface BudgetApprovalWorkflowInterface
      * Request budget rollover approval
      * 
      * @param string $budgetId Budget identifier
-     * @param \Nexus\Uom\ValueObjects\Money $carryoverAmount Amount to carry over
+     * @param \Nexus\Common\ValueObjects\Money $carryoverAmount Amount to carry over
      * @param string $nextPeriodId Next period identifier
      * @return string Workflow instance identifier
      */
     public function requestRolloverApproval(
         string $budgetId,
-        \Nexus\Uom\ValueObjects\Money $carryoverAmount,
+        \Nexus\Common\ValueObjects\Money $carryoverAmount,
         string $nextPeriodId
     ): string;
 
@@ -81,16 +81,16 @@ interface BudgetApprovalWorkflowInterface
      * Request budget amendment approval
      * 
      * @param string $budgetId Budget identifier
-     * @param \Nexus\Uom\ValueObjects\Money $currentAmount Current amount
-     * @param \Nexus\Uom\ValueObjects\Money $newAmount New amount
+     * @param \Nexus\Common\ValueObjects\Money $currentAmount Current amount
+     * @param \Nexus\Common\ValueObjects\Money $newAmount New amount
      * @param string $requestorId Requestor user identifier
      * @param string $reason Amendment reason
      * @return string Workflow instance identifier
      */
     public function requestAmendmentApproval(
         string $budgetId,
-        \Nexus\Uom\ValueObjects\Money $currentAmount,
-        \Nexus\Uom\ValueObjects\Money $newAmount,
+        \Nexus\Common\ValueObjects\Money $currentAmount,
+        \Nexus\Common\ValueObjects\Money $newAmount,
         string $requestorId,
         string $reason
     ): string;

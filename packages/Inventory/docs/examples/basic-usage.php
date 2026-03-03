@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 use Nexus\Inventory\Contracts\StockManagerInterface;
 use Nexus\Inventory\Enums\IssueReason;
-use Nexus\Currency\ValueObjects\Money;
+use Nexus\Common\ValueObjects\Money;
 
 // Assume dependency injection container provides these
 /** @var StockManagerInterface $stockManager */
