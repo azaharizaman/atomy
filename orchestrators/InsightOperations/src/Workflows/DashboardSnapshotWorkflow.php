@@ -24,7 +24,13 @@ final readonly class DashboardSnapshotWorkflow
         $snapshot = $this->snapshotPort->snapshot($dashboardId, $tenantId);
         $payload = json_encode($snapshot->toArray(), JSON_THROW_ON_ERROR);
 
-        $path = sprintf('snapshots/%s/%s/%s.json', $tenantId, $dashboardId, gmdate('YmdHis'));
+        $path = sprintf(
+            'snapshots/%s/%s/%s_%s.json',
+            $tenantId,
+            $dashboardId,
+            gmdate('YmdHis'),
+            substr(str_replace('.', '', (string) microtime(true)), -6)
+        );
         $this->storagePort->put($path, $payload);
 
         return new DashboardSnapshotResult(

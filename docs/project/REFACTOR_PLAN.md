@@ -9,4 +9,11 @@ This planning document has been executed and is now retained only as a completio
 - Stale/no-op restructuring instructions were corrected.
 - Historical review notes were reduced to a concise, actionable summary.
 
-For ongoing updates and history, see the IMPLEMENTATION_SUMMARY.md in the affected package(s), and update that file after each code change.
+For ongoing updates and history, update the package-local `IMPLEMENTATION_SUMMARY.md` that sits beside the package code.
+Common paths:
+- `orchestrators/DataExchangeOperations/IMPLEMENTATION_SUMMARY.md`
+- `orchestrators/InsightOperations/IMPLEMENTATION_SUMMARY.md`
+- `orchestrators/ConnectivityOperations/IMPLEMENTATION_SUMMARY.md`
+- `orchestrators/IntelligenceOperations/IMPLEMENTATION_SUMMARY.md`
+Suggested entry format to add in those files:
+- `Updated for PR #<id>: <short summary of change>.`

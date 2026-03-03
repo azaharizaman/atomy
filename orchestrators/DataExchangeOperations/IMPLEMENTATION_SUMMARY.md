@@ -22,7 +22,7 @@
 - Laravel adapters are implemented under `adapters/Laravel/DataExchangeOperations/src`, including adapters for import/export/storage/notification/task store and `DataExchangeOperationsAdapterServiceProvider`.
 
 ## Services Facades
-- Compatibility facades are in `src/Services`, including `Services/DataExchangeCoordinator.php`, delegating to orchestrator coordinators.
+- Compatibility facades are in `src/Services`, including `src/Services/DataExchangeCoordinator.php`, delegating to orchestrator coordinators.
 
 ## Integration Notes And Coverage
 - Unit and integration coverage for orchestrator behavior is under `tests/Unit` and `tests/Integration`, including `DataExchangeCoordinatorTest` and `DataExchangeWorkflowIntegrationTest` for workflow/task-state behavior.

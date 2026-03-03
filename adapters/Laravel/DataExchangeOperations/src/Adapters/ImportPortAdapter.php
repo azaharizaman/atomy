@@ -80,17 +80,47 @@ final readonly class ImportPortAdapter implements DataImportPortInterface
 
     private function resolveImportFormat(string $format): ImportFormat
     {
-        return ImportFormat::from(strtolower($format));
+        $normalized = strtolower($format);
+
+        try {
+            return ImportFormat::from($normalized);
+        } catch (\ValueError $e) {
+            $allowed = implode(', ', array_map(static fn (ImportFormat $case): string => $case->value, ImportFormat::cases()));
+            throw new \InvalidArgumentException(
+                sprintf('Invalid import format: %s. Allowed values: %s', $format, $allowed),
+                previous: $e
+            );
+        }
     }
 
     private function resolveImportMode(string $mode): ImportMode
     {
-        return ImportMode::from(strtolower($mode));
+        $normalized = strtolower($mode);
+
+        try {
+            return ImportMode::from($normalized);
+        } catch (\ValueError $e) {
+            $allowed = implode(', ', array_map(static fn (ImportMode $case): string => $case->value, ImportMode::cases()));
+            throw new \InvalidArgumentException(
+                sprintf('Invalid import mode: %s. Allowed values: %s', $mode, $allowed),
+                previous: $e
+            );
+        }
     }
 
     private function resolveImportStrategy(string $strategy): ImportStrategy
     {
-        return ImportStrategy::from(strtolower($strategy));
+        $normalized = strtolower($strategy);
+
+        try {
+            return ImportStrategy::from($normalized);
+        } catch (\ValueError $e) {
+            $allowed = implode(', ', array_map(static fn (ImportStrategy $case): string => $case->value, ImportStrategy::cases()));
+            throw new \InvalidArgumentException(
+                sprintf('Invalid import strategy: %s. Allowed values: %s', $strategy, $allowed),
+                previous: $e
+            );
+        }
     }
 
     /**

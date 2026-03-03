@@ -4,7 +4,7 @@
 - Orchestrator-owned contracts are in `src/Contracts`, including `ReportingPipelineCoordinatorInterface`, `ReportDataQueryPortInterface`, `ForecastPortInterface`, `ReportExportPortInterface`, `InsightStoragePortInterface`, `InsightNotificationPortInterface`, and `DashboardSnapshotPortInterface`.
 
 ## DTOs And Data Models
-- DTOs in `src/DTOs` include `ReportingPipelineRequest`, `ReportingPipelineResult`, and `DashboardSnapshotResult`.
+- DTOs in `src/DTOs` include `ReportingPipelineRequest`, `ReportingPipelineResult`, `DashboardSnapshotDto`, and `DashboardSnapshotResult`.
 
 ## Coordinators
 - `src/Coordinators/ReportingCoordinator.php` coordinates reporting pipeline execution and dashboard snapshot capture.

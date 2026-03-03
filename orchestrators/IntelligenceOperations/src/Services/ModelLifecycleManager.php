@@ -24,6 +24,9 @@ final readonly class ModelLifecycleManager implements ModelLifecycleCoordinatorI
         return $this->coordinator->triggerRetraining($modelId);
     }
 
+    /**
+     * @return array{accuracy: float, latency_ms: float, drift_score: float, status: string}
+     */
     public function getModelHealth(string $modelId): array
     {
         return $this->coordinator->getModelHealth($modelId);

@@ -106,23 +106,25 @@ final class ReportingCoordinatorTest extends TestCase
             new NullLogger()
         );
 
-        $path = $coordinator->runPipeline('sales-summary', [
-            'include_forecast' => true,
-            'forecast_model_id' => 'sales-model',
-        ], [
-            'format' => 'pdf',
-            'recipients' => ['ops@example.com'],
-        ]);
+        try {
+            $path = $coordinator->runPipeline('sales-summary', [
+                'include_forecast' => true,
+                'forecast_model_id' => 'sales-model',
+            ], [
+                'format' => 'pdf',
+                'recipients' => ['ops@example.com'],
+            ]);
 
-        self::assertStringContainsString('reports/', $path);
-        self::assertNotEmpty($tracker->storedPaths);
-        self::assertSame('sales-model', $tracker->forecastModelId);
-        self::assertArrayHasKey('forecast', $tracker->lastExportedPayload ?? []);
-        self::assertNotEmpty($tracker->lastExportedPayload['forecast'] ?? null);
-
-        foreach ($tracker->tempFiles as $file) {
-            if (is_file($file)) {
-                unlink($file);
+            self::assertStringContainsString('reports/', $path);
+            self::assertNotEmpty($tracker->storedPaths);
+            self::assertSame('sales-model', $tracker->forecastModelId);
+            self::assertArrayHasKey('forecast', $tracker->lastExportedPayload ?? []);
+            self::assertNotEmpty($tracker->lastExportedPayload['forecast'] ?? null);
+        } finally {
+            foreach ($tracker->tempFiles as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
             }
         }
     }
@@ -185,13 +187,15 @@ final class ReportingCoordinatorTest extends TestCase
             new NullLogger()
         );
 
-        $snapshotPath = $coordinator->captureSnapshot('dashboard-a', 'tenant-a');
+        try {
+            $snapshotPath = $coordinator->captureSnapshot('dashboard-a', 'tenant-a');
 
-        self::assertStringContainsString('snapshots/tenant-a/dashboard-a/', $snapshotPath);
-
-        foreach ($tracker->tempFiles as $file) {
-            if (is_file($file)) {
-                unlink($file);
+            self::assertStringContainsString('snapshots/tenant-a/dashboard-a/', $snapshotPath);
+        } finally {
+            foreach ($tracker->tempFiles as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
             }
         }
     }

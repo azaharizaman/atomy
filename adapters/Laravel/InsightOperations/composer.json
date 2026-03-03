@@ -7,10 +7,10 @@
         "php": "^8.3",
         "illuminate/support": "^11.0|^12.0",
         "nexus/insight-operations": "^1.0@dev",
-        "nexus/query-engine": "^1.0@dev",
-        "nexus/machine-learning": "^1.0@dev",
-        "nexus/export": "^1.0@dev",
-        "nexus/storage": "^1.0@dev",
+        "nexus/query-engine": "^1.0",
+        "nexus/machine-learning": "^1.0",
+        "nexus/export": "^1.0",
+        "nexus/storage": "^1.0",
         "psr/log": "^3.0"
     },
     "autoload": {

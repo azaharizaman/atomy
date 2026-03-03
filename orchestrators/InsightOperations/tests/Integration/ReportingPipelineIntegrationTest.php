@@ -80,15 +80,17 @@ final class ReportingPipelineIntegrationTest extends TestCase
             new NullLogger()
         );
 
-        $reportPath = $coordinator->runPipeline('ops-report', ['include_forecast' => true], ['format' => 'pdf']);
-        $snapshotPath = $coordinator->captureSnapshot('ops-dashboard', 'tenant-x');
+        try {
+            $reportPath = $coordinator->runPipeline('ops-report', ['include_forecast' => true], ['format' => 'pdf']);
+            $snapshotPath = $coordinator->captureSnapshot('ops-dashboard', 'tenant-x');
 
-        self::assertStringContainsString('reports/', $reportPath);
-        self::assertStringContainsString('snapshots/tenant-x/ops-dashboard/', $snapshotPath);
-
-        foreach ($tracker->tempFiles as $file) {
-            if (is_file($file)) {
-                unlink($file);
+            self::assertStringContainsString('reports/', $reportPath);
+            self::assertStringContainsString('snapshots/tenant-x/ops-dashboard/', $snapshotPath);
+        } finally {
+            foreach ($tracker->tempFiles as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
             }
         }
     }

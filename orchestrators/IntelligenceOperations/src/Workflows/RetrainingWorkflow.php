@@ -20,6 +20,7 @@ final readonly class RetrainingWorkflow
 
     public function run(string $modelId): string
     {
+        $modelId = trim($modelId);
         if ($modelId === '') {
             throw new \InvalidArgumentException('modelId is required for retraining.');
         }

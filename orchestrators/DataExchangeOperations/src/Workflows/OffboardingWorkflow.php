@@ -45,9 +45,27 @@ final readonly class OffboardingWorkflow
             ));
 
             $exported = $this->exportPort->export($request);
+            if (
+                !is_array($exported) ||
+                !isset($exported['source_path'], $exported['metadata']) ||
+                !is_string($exported['source_path']) ||
+                trim($exported['source_path']) === '' ||
+                !is_array($exported['metadata'])
+            ) {
+                throw new \DomainException('Invalid export payload: required keys are source_path(string) and metadata(array).');
+            }
 
             $destinationPath = rtrim($request->destination, '/') . '/' . basename($exported['source_path']);
             $stored = $this->storage->store($destinationPath, $exported['source_path']);
+            if (
+                !is_array($stored) ||
+                !isset($stored['uri'], $stored['size_bytes']) ||
+                !is_string($stored['uri']) ||
+                trim($stored['uri']) === '' ||
+                !is_int($stored['size_bytes'])
+            ) {
+                throw new \DomainException('Invalid storage payload: required keys are uri(string) and size_bytes(int).');
+            }
 
             $result = new DataOffboardingResult(
                 taskId: $request->taskId,

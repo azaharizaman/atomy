@@ -41,7 +41,9 @@ final readonly class CacheProviderHealthStoreAdapter implements ProviderHealthSt
                 return;
             }
 
-            usleep(self::LOCK_RETRY_MICROSECONDS);
+            if ($attempt < self::LOCK_RETRIES - 1) {
+                usleep(self::LOCK_RETRY_MICROSECONDS);
+            }
         }
 
         throw new \RuntimeException('Unable to acquire provider health cache lock.');

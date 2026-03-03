@@ -39,9 +39,10 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
         } catch (\Throwable $e) {
             $this->logger->error('Data onboarding failed.', [
                 'task_id' => $taskId,
-                'tenant_id' => $tenantId,
-                'source_path' => $sourcePath,
-                'error' => $e->getMessage(),
+                'tenant_hash' => hash('sha256', $tenantId),
+                'source_path_hash' => hash('sha256', $sourcePath),
+                'error_class' => $e::class,
+                'error_code' => $e->getCode(),
             ]);
             throw $e;
         }
@@ -78,9 +79,10 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
         } catch (\Throwable $e) {
             $this->logger->error('Data offboarding failed.', [
                 'task_id' => $taskId,
-                'destination' => $destination,
+                'destination_hash' => hash('sha256', $destination),
                 'format' => $format,
-                'error' => $e->getMessage(),
+                'error_class' => $e::class,
+                'error_code' => $e->getCode(),
             ]);
             throw $e;
         }

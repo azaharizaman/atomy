@@ -30,9 +30,13 @@ final readonly class ModelDeploymentWorkflow
             $thrown = $e;
         } finally {
             $tags = ['model_id' => $request->modelId, 'version' => $request->version];
-            $this->telemetryPort->increment('intelligence.model.deploy.total', 1.0, $tags);
-            $this->telemetryPort->increment('intelligence.model.deploy.' . ($success ? 'success' : 'failure'), 1.0, $tags);
-            $this->telemetryPort->timing('intelligence.model.deploy.duration_ms', (microtime(true) - $started) * 1000, $tags);
+            try {
+                $this->telemetryPort->increment('intelligence.model.deploy.total', 1.0, $tags);
+                $this->telemetryPort->increment('intelligence.model.deploy.' . ($success ? 'success' : 'failure'), 1.0, $tags);
+                $this->telemetryPort->timing('intelligence.model.deploy.duration_ms', (microtime(true) - $started) * 1000, $tags);
+            } catch (\Throwable) {
+                // Telemetry must not change deployment success/failure semantics.
+            }
         }
 
         if ($thrown !== null) {

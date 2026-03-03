@@ -49,14 +49,22 @@ final readonly class ProviderCallWorkflow
             } catch (\Throwable) {
                 // Health-store persistence is best-effort; do not break successful calls.
             }
-            $this->telemetryPort->increment('connectivity.provider.success', 1.0, ['provider' => $request->providerId]);
-            $this->telemetryPort->timing('connectivity.provider.latency_ms', $durationMs, ['provider' => $request->providerId]);
+            try {
+                $this->telemetryPort->increment('connectivity.provider.success', 1.0, ['provider' => $request->providerId]);
+                $this->telemetryPort->timing('connectivity.provider.latency_ms', $durationMs, ['provider' => $request->providerId]);
+            } catch (\Throwable) {
+                // Telemetry is best-effort and must not affect provider-call behavior.
+            }
 
             return $response;
         } catch (\Throwable $e) {
             $durationMs = (microtime(true) - $start) * 1000;
-            $this->telemetryPort->increment('connectivity.provider.failure', 1.0, ['provider' => $request->providerId]);
-            $this->telemetryPort->timing('connectivity.provider.latency_ms', $durationMs, ['provider' => $request->providerId]);
+            try {
+                $this->telemetryPort->increment('connectivity.provider.failure', 1.0, ['provider' => $request->providerId]);
+                $this->telemetryPort->timing('connectivity.provider.latency_ms', $durationMs, ['provider' => $request->providerId]);
+            } catch (\Throwable) {
+                // Keep original provider-call exception semantics.
+            }
             try {
                 $this->healthStore->record($request->providerId, [
                     'status' => 'degraded',

@@ -24,13 +24,13 @@ final readonly class IntegrationHealthWorkflow
     public function run(): array
     {
         foreach ($this->providerCatalog->providers() as $providerId) {
-            $config = $this->providerCatalog->getConfig($providerId);
-            $endpoint = is_string($config['health_endpoint'] ?? null) && trim((string) $config['health_endpoint']) !== ''
-                ? (string) $config['health_endpoint']
-                : '/health';
-            $timeout = max(1, (int) ($config['health_timeout'] ?? 5));
-
             try {
+                $config = $this->providerCatalog->getConfig($providerId);
+                $endpoint = is_string($config['health_endpoint'] ?? null) && trim((string) $config['health_endpoint']) !== ''
+                    ? (string) $config['health_endpoint']
+                    : '/health';
+                $timeout = max(1, (int) ($config['health_timeout'] ?? 5));
+
                 $this->providerCallPort->call($providerId, $endpoint, [], ['method' => 'GET', 'timeout' => $timeout]);
                 $this->healthStore->record($providerId, [
                     'status' => 'healthy',

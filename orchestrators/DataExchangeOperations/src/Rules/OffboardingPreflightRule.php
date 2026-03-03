@@ -12,7 +12,7 @@ final readonly class OffboardingPreflightRule
 
     public function assert(DataOffboardingRequest $request): void
     {
-        if ($request->destination === '') {
+        if (trim($request->destination) === '') {
             throw new \InvalidArgumentException('destination is required for offboarding.');
         }
 

@@ -77,9 +77,25 @@ final readonly class ReportingPipelineWorkflow
             }
         }
 
-        $recipients = $request->deliveryOptions['recipients'] ?? [];
-        if (is_array($recipients) && $recipients !== []) {
-            $this->notificationPort->notify($recipients, 'report_pipeline_ready', [
+        $rawRecipients = $request->deliveryOptions['recipients'] ?? [];
+        $recipients = [];
+        if (is_array($rawRecipients)) {
+            foreach ($rawRecipients as $recipient) {
+                if (!is_string($recipient)) {
+                    continue;
+                }
+
+                $recipient = trim($recipient);
+                if ($recipient === '') {
+                    continue;
+                }
+
+                $recipients[] = $recipient;
+            }
+        }
+
+        if ($recipients !== []) {
+            $this->notificationPort->notify(array_values($recipients), 'report_pipeline_ready', [
                 'pipeline_id' => $request->pipelineId,
                 'report_template_id' => $request->reportTemplateId,
                 'storage_path' => $storagePath,

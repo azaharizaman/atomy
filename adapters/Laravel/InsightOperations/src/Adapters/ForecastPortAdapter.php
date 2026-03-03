@@ -8,10 +8,14 @@ use Nexus\InsightOperations\Contracts\ForecastPortInterface;
 use Nexus\MachineLearning\Contracts\PredictionServiceInterface;
 use Nexus\MachineLearning\Exceptions\ModelNotFoundException;
 use Nexus\MachineLearning\Exceptions\QuotaExceededException;
+use Psr\Log\LoggerInterface;
 
 final readonly class ForecastPortAdapter implements ForecastPortInterface
 {
-    public function __construct(private PredictionServiceInterface $predictionService) {}
+    public function __construct(
+        private PredictionServiceInterface $predictionService,
+        private LoggerInterface $logger,
+    ) {}
 
     public function forecast(string $modelId, array $context, int $maxAttempts, int $pollIntervalMs): array
     {
@@ -77,12 +81,19 @@ final readonly class ForecastPortAdapter implements ForecastPortInterface
                 'error' => 'quota_exceeded',
             ];
         } catch (\Throwable $e) {
+            $this->logger->error('Forecast prediction failed.', [
+                'model_id' => $modelId,
+                'exception' => $e::class,
+                'code' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
+
             return [
                 'status' => 'failed',
                 'data' => null,
                 'confidence' => null,
                 'model_version' => null,
-                'error' => $e->getMessage() !== '' ? $e->getMessage() : 'prediction_unavailable',
+                'error' => 'prediction_unavailable',
             ];
         }
     }
