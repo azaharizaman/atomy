@@ -61,7 +61,12 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
             try {
                 $requisition = $this->procurementManager->getRequisition($rfqId);
                 // Assuming first line unit as base unit if not explicitly defined on requisition
-                $baseUnit = $requisition->getLines()[0]->getUnit() ?? 'UNIT';
+                if ($requisition !== null) {
+                    $lines = $requisition->getLines();
+                    if (!empty($lines) && isset($lines[0])) {
+                        $baseUnit = $lines[0]->getUnit() ?? 'UNIT';
+                    }
+                }
             } catch (\Throwable) {
                 // Fallback to default unit
             }

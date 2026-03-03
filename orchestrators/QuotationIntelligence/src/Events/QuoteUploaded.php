@@ -31,6 +31,24 @@ final readonly class QuoteUploaded implements EventInterface
         public string $rfqId,
         public string $vendorId
     ) {
+        $this->tenantId = trim($tenantId);
+        $this->documentId = trim($documentId);
+        $this->rfqId = trim($rfqId);
+        $this->vendorId = trim($vendorId);
+
+        if (empty($this->tenantId)) {
+            throw new \InvalidArgumentException('tenantId cannot be empty after trimming');
+        }
+        if (empty($this->documentId)) {
+            throw new \InvalidArgumentException('documentId cannot be empty after trimming');
+        }
+        if (empty($this->rfqId)) {
+            throw new \InvalidArgumentException('rfqId cannot be empty after trimming');
+        }
+        if (empty($this->vendorId)) {
+            throw new \InvalidArgumentException('vendorId cannot be empty after trimming');
+        }
+
         $this->eventId = bin2hex(random_bytes(16));
         $this->occurredAt = new \DateTimeImmutable();
     }
@@ -97,7 +115,7 @@ final readonly class QuoteUploaded implements EventInterface
 
     public function getStreamName(): ?string
     {
-        return 'rfq-' . $this->rfqId;
+        return 'tenant-' . $this->tenantId . '-rfq-' . $this->rfqId;
     }
 
     public function getTenantId(): string
