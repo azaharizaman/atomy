@@ -102,7 +102,8 @@ final class IntegrationGatewayTest extends TestCase
                 $providerCatalogPort,
                 $providerCallPort,
                 $healthStore,
-                new ProviderHealthDataProvider($healthStore)
+                new ProviderHealthDataProvider($healthStore),
+                new NullLogger()
             ),
             new NullLogger()
         );

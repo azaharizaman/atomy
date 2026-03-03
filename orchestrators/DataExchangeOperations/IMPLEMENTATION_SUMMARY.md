@@ -12,6 +12,7 @@
 ## Workflows And State Progression
 - `src/Workflows/OnboardingWorkflow.php` executes validation -> import -> optional cleanup -> completed/failed task persistence.
 - `src/Workflows/OffboardingWorkflow.php` executes validation -> export -> store -> notify -> completed/failed task persistence.
+- Offboarding is destination-aware and branches based on target destination to select export and storage behavior.
 - Task state transitions are persisted through `DataExchangeTaskStatus` (`validating`, `importing`/`exporting`, `completed`, `failed`).
 
 ## DataProviders And Rules

@@ -40,6 +40,7 @@ final readonly class OnboardingWorkflow
                 type: 'onboarding',
                 status: 'importing',
                 updatedAt: new DateTimeImmutable(),
+                payload: ['tenant_id' => $request->tenantId],
             ));
 
             $imported = $this->importPort->import($request);
@@ -75,7 +76,7 @@ final readonly class OnboardingWorkflow
                 type: 'onboarding',
                 status: 'completed',
                 updatedAt: new DateTimeImmutable(),
-                payload: $result->toArray(),
+                payload: array_merge($result->toArray(), ['tenant_id' => $request->tenantId]),
             ));
 
             return $result;
@@ -86,6 +87,7 @@ final readonly class OnboardingWorkflow
                 status: 'failed',
                 updatedAt: new DateTimeImmutable(),
                 payload: [
+                    'tenant_id' => $request->tenantId,
                     'error' => $e->getMessage(),
                     'exception' => $e::class,
                 ],

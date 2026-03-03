@@ -26,14 +26,20 @@ final readonly class RetrainingWorkflow
         }
 
         $driftScore = $this->driftPort->calculateDriftScore($modelId);
+        if (is_nan($driftScore) || is_infinite($driftScore) || $driftScore < 0.0) {
+            $driftScore = 0.0;
+        }
+
+        $modelIdBucket = 'b' . (string) (abs(crc32($modelId)) % 100);
+
         $jobId = $this->trainingPort->queueRetraining($modelId, [
             'trigger' => $driftScore >= self::DRIFT_THRESHOLD ? 'drift' : 'scheduled',
             'drift_score' => $driftScore,
             'queued_at' => gmdate(DATE_ATOM),
         ]);
 
-        $this->telemetryPort->increment('intelligence.model.retraining.total', 1.0, ['model_id' => $modelId]);
-        $this->telemetryPort->gauge('intelligence.model.drift_score', $driftScore, ['model_id' => $modelId]);
+        $this->telemetryPort->increment('intelligence.model.retraining.total', 1.0, ['model_id_bucket' => $modelIdBucket]);
+        $this->telemetryPort->gauge('intelligence.model.drift_score', $driftScore, ['model_id_bucket' => $modelIdBucket]);
 
         return $jobId;
     }

@@ -10,6 +10,7 @@ use Nexus\Import\Contracts\ImportHandlerInterface;
 use Nexus\Import\Contracts\TransactionManagerInterface;
 use Nexus\Import\Services\ImportManager;
 use Nexus\Import\ValueObjects\ImportFormat;
+use Nexus\Import\ValueObjects\ImportMetadata;
 use Nexus\Import\ValueObjects\ImportMode;
 use Nexus\Import\ValueObjects\ImportStrategy;
 use Psr\Log\LoggerInterface;
@@ -49,6 +50,15 @@ final readonly class ImportPortAdapter implements DataImportPortInterface
             'strategy' => $strategy->value,
         ]);
 
+        $metadata = new ImportMetadata(
+            originalFileName: basename($request->sourcePath),
+            fileSize: is_file($request->sourcePath) ? ((int) (filesize($request->sourcePath) ?: 0)) : 0,
+            mimeType: is_file($request->sourcePath) ? (mime_content_type($request->sourcePath) ?: 'application/octet-stream') : 'application/octet-stream',
+            uploadedAt: new \DateTimeImmutable(),
+            uploadedBy: null,
+            tenantId: $request->tenantId,
+        );
+
         $result = $this->importManager->import(
             filePath: $request->sourcePath,
             format: $format,
@@ -58,6 +68,7 @@ final readonly class ImportPortAdapter implements DataImportPortInterface
             strategy: $strategy,
             transactionManager: $this->transactionManager,
             validationRules: $validationRules,
+            metadata: $metadata,
         );
 
         $warnings = [];

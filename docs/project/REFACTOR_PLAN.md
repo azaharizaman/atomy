@@ -5,7 +5,7 @@ Status: `Completed and Closed` (Updated: March 3, 2026)
 This planning document has been executed and is now retained only as a completion marker.
 
 ## Outcome
-- Documentation for the data/intelligence orchestrator restructuring was consolidated and updated.
+- Documentation for orchestrator restructuring across DataExchange, Insight, Intelligence, and Connectivity was consolidated and updated.
 - Stale/no-op restructuring instructions were corrected.
 - Historical review notes were reduced to a concise, actionable summary.
 

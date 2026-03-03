@@ -60,9 +60,9 @@ final class DataExchangeWorkflowIntegrationTest extends TestCase
 
         $onboardingTask = $coordinator->onboard('/tmp/in.csv', 'tenant-x', ['task_id' => 'onboard-123']);
         $offboardingTask = $coordinator->offboard(['tenant_id' => 'tenant-x'], 'csv', 'exports/tenant-x', ['ops@example.com']);
-        $offboardingStatus = $coordinator->getTaskStatus($offboardingTask);
+        $offboardingStatus = $coordinator->getTaskStatus('tenant-x', $offboardingTask);
 
-        self::assertSame('completed', $coordinator->getTaskStatus($onboardingTask)['status']);
+        self::assertSame('completed', $coordinator->getTaskStatus('tenant-x', $onboardingTask)['status']);
         self::assertSame('completed', $offboardingStatus['status']);
         self::assertSame('exports/tenant-x/export-data.csv', $offboardingStatus['payload']['stored_uri'] ?? null);
     }

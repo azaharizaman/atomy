@@ -38,7 +38,7 @@ final readonly class ForecastPortAdapter implements ForecastPortInterface
                     'data' => null,
                     'confidence' => null,
                     'model_version' => null,
-                    'error' => $status === 'failed' ? 'Prediction job failed.' : 'Prediction timeout.',
+                    'error' => $status === 'failed' ? 'prediction_failed' : 'prediction_timeout',
                 ];
             }
 
@@ -49,7 +49,7 @@ final readonly class ForecastPortAdapter implements ForecastPortInterface
                     'data' => null,
                     'confidence' => null,
                     'model_version' => null,
-                    'error' => 'Prediction result missing despite completed status.',
+                    'error' => 'prediction_missing',
                 ];
             }
 

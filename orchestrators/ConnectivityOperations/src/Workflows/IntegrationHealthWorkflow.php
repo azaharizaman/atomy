@@ -8,6 +8,7 @@ use Nexus\ConnectivityOperations\Contracts\ProviderCallPortInterface;
 use Nexus\ConnectivityOperations\Contracts\ProviderCatalogPortInterface;
 use Nexus\ConnectivityOperations\Contracts\ProviderHealthStoreInterface;
 use Nexus\ConnectivityOperations\DataProviders\ProviderHealthDataProvider;
+use Psr\Log\LoggerInterface;
 
 final readonly class IntegrationHealthWorkflow
 {
@@ -16,6 +17,7 @@ final readonly class IntegrationHealthWorkflow
         private ProviderCallPortInterface $providerCallPort,
         private ProviderHealthStoreInterface $healthStore,
         private ProviderHealthDataProvider $healthDataProvider,
+        private LoggerInterface $logger,
     ) {}
 
     /**
@@ -32,16 +34,31 @@ final readonly class IntegrationHealthWorkflow
                 $timeout = max(1, (int) ($config['health_timeout'] ?? 5));
 
                 $this->providerCallPort->call($providerId, $endpoint, [], ['method' => 'GET', 'timeout' => $timeout]);
-                $this->healthStore->record($providerId, [
-                    'status' => 'healthy',
-                    'last_checked_at' => gmdate(DATE_ATOM),
-                ]);
+                try {
+                    $this->healthStore->record($providerId, [
+                        'status' => 'healthy',
+                        'last_checked_at' => gmdate(DATE_ATOM),
+                    ]);
+                } catch (\Throwable $storeError) {
+                    $this->logger->warning('Failed to persist healthy provider status.', [
+                        'provider_id' => $providerId,
+                        'error_class' => $storeError::class,
+                    ]);
+                }
             } catch (\Throwable $e) {
-                $this->healthStore->record($providerId, [
-                    'status' => 'degraded',
-                    'error' => $e->getMessage(),
-                    'last_checked_at' => gmdate(DATE_ATOM),
-                ]);
+                try {
+                    $this->healthStore->record($providerId, [
+                        'status' => 'degraded',
+                        'error' => $e->getMessage(),
+                        'last_checked_at' => gmdate(DATE_ATOM),
+                    ]);
+                } catch (\Throwable $storeError) {
+                    $this->logger->warning('Failed to persist degraded provider status.', [
+                        'provider_id' => $providerId,
+                        'provider_error_class' => $e::class,
+                        'storage_error_class' => $storeError::class,
+                    ]);
+                }
             }
         }
 

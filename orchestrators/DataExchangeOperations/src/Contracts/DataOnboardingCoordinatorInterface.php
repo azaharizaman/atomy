@@ -19,5 +19,5 @@ interface DataOnboardingCoordinatorInterface
     /**
      * @return array<string, mixed>
      */
-    public function getTaskStatus(string $taskId): array;
+    public function getTaskStatus(string $tenantId, string $taskId): array;
 }

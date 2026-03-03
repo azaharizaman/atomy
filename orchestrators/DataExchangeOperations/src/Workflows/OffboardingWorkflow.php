@@ -31,7 +31,7 @@ final readonly class OffboardingWorkflow
             type: 'offboarding',
             status: 'validating',
             updatedAt: new DateTimeImmutable(),
-            payload: ['destination' => $request->destination, 'format' => $request->format],
+            payload: ['tenant_id' => $request->tenantId, 'destination' => $request->destination, 'format' => $request->format],
         ));
 
         try {
@@ -42,6 +42,7 @@ final readonly class OffboardingWorkflow
                 type: 'offboarding',
                 status: 'exporting',
                 updatedAt: new DateTimeImmutable(),
+                payload: ['tenant_id' => $request->tenantId],
             ));
 
             $exported = $this->exportPort->export($request);
@@ -89,7 +90,7 @@ final readonly class OffboardingWorkflow
                 type: 'offboarding',
                 status: 'completed',
                 updatedAt: new DateTimeImmutable(),
-                payload: $result->toArray(),
+                payload: array_merge($result->toArray(), ['tenant_id' => $request->tenantId]),
             ));
 
             return $result;
@@ -100,6 +101,7 @@ final readonly class OffboardingWorkflow
                 status: 'failed',
                 updatedAt: new DateTimeImmutable(),
                 payload: [
+                    'tenant_id' => $request->tenantId,
                     'error' => $e->getMessage(),
                     'exception' => $e::class,
                 ],

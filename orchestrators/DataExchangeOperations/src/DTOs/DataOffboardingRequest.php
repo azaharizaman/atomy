@@ -12,6 +12,7 @@ final readonly class DataOffboardingRequest
      */
     public function __construct(
         public string $taskId,
+        public string $tenantId,
         public array $query,
         public string $format,
         public string $destination,

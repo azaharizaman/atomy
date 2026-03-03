@@ -20,9 +20,9 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
         return $this->coordinator->onboard($sourcePath, $tenantId, $options);
     }
 
-    public function getTaskStatus(string $taskId): array
+    public function getTaskStatus(string $tenantId, string $taskId): array
     {
-        return $this->coordinator->getTaskStatus($taskId);
+        return $this->coordinator->getTaskStatus($tenantId, $taskId);
     }
 
     public function offboard(array $query, string $format, string $destination, array $recipients = []): string

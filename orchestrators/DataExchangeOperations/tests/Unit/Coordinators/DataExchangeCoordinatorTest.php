@@ -61,7 +61,7 @@ final class DataExchangeCoordinatorTest extends TestCase
         $taskId = $coordinator->onboard('/tmp/source.csv', 'tenant_a', ['task_id' => 'task-1']);
 
         self::assertSame('task-1', $taskId);
-        self::assertSame('completed', $coordinator->getTaskStatus($taskId)['status']);
+        self::assertSame('completed', $coordinator->getTaskStatus('tenant_a', $taskId)['status']);
     }
 
     public function test_offboard_uses_destination_in_storage_path(): void

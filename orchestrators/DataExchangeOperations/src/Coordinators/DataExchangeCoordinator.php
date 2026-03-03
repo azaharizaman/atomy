@@ -50,12 +50,13 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
         return $taskId;
     }
 
-    public function getTaskStatus(string $taskId): array
+    public function getTaskStatus(string $tenantId, string $taskId): array
     {
-        $status = $this->taskStore->find($taskId);
+        $status = $this->taskStore->findForTenant($tenantId, $taskId);
 
         if ($status === null) {
             return [
+                'tenant_id' => $tenantId,
                 'task_id' => $taskId,
                 'status' => 'not_found',
             ];
@@ -66,11 +67,20 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
 
     public function offboard(array $query, string $format, string $destination, array $recipients = []): string
     {
+        $rawTenantId = $query['tenant_id'] ?? $query['tenantId'] ?? null;
+        if (!is_string($rawTenantId) || trim($rawTenantId) === '') {
+            throw new \InvalidArgumentException('tenant_id is required for offboarding.');
+        }
+
+        $tenantId = trim($rawTenantId);
+        $query['tenant_id'] = $tenantId;
+
         $taskId = self::generateTaskId('offboard');
 
         try {
             $this->offboardingWorkflow->run(new DataOffboardingRequest(
                 taskId: $taskId,
+                tenantId: $tenantId,
                 query: $query,
                 format: $format,
                 destination: $destination,

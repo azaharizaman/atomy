@@ -15,9 +15,13 @@ final class ProviderCatalogPortAdapter implements ProviderCatalogPortInterface
             return [];
         }
 
-        $filtered = array_filter($providers, static fn (mixed $provider): bool => is_string($provider) && trim($provider) !== '');
+        $normalized = array_map(
+            static fn (mixed $provider): string => is_string($provider) ? trim($provider) : '',
+            $providers
+        );
+        $filtered = array_filter($normalized, static fn (string $provider): bool => $provider !== '');
 
-        return array_values(array_map(static fn (string $provider): string => trim($provider), $filtered));
+        return array_values(array_unique($filtered));
     }
 
     public function getConfig(string $providerId): array

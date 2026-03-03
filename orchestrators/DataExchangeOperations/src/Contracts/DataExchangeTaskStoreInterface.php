@@ -11,4 +11,6 @@ interface DataExchangeTaskStoreInterface
     public function save(DataExchangeTaskStatus $status): void;
 
     public function find(string $taskId): ?DataExchangeTaskStatus;
+
+    public function findForTenant(string $tenantId, string $taskId): ?DataExchangeTaskStatus;
 }

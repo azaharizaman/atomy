@@ -65,7 +65,8 @@ final class IntegrationGatewayIntegrationTest extends TestCase
                     }
                 },
                 $healthStore,
-                new ProviderHealthDataProvider($healthStore)
+                new ProviderHealthDataProvider($healthStore),
+                new NullLogger()
             ),
             new NullLogger()
         );

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Laravel\ConnectivityOperations\Adapters;
 
+use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Nexus\ConnectivityOperations\Contracts\ProviderHealthStoreInterface;
 
@@ -14,15 +15,17 @@ final readonly class CacheProviderHealthStoreAdapter implements ProviderHealthSt
     private const LOCK_TTL_SECONDS = 5;
     private const LOCK_RETRY_MICROSECONDS = 100_000;
     private const LOCK_RETRIES = 3;
+    private const SNAPSHOT_TTL_SECONDS = 86400;
 
     public function __construct(private CacheRepository $cache) {}
 
     public function record(string $providerId, array $snapshot): void
     {
-        if (!method_exists($this->cache, 'lock')) {
+        $store = $this->cache->getStore();
+        if (!$store instanceof LockProvider) {
             $all = $this->all();
             $all[$providerId] = $snapshot;
-            $this->cache->put(self::KEY, $all, 86400);
+            $this->cache->put(self::KEY, $all, self::SNAPSHOT_TTL_SECONDS);
 
             return;
         }
@@ -33,7 +36,7 @@ final readonly class CacheProviderHealthStoreAdapter implements ProviderHealthSt
                 try {
                     $all = $this->all();
                     $all[$providerId] = $snapshot;
-                    $this->cache->put(self::KEY, $all, 86400);
+                    $this->cache->put(self::KEY, $all, self::SNAPSHOT_TTL_SECONDS);
                 } finally {
                     $lock->release();
                 }

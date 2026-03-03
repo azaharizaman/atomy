@@ -36,11 +36,13 @@ final readonly class ReportingPipelineWorkflow
 
         if (filter_var($request->parameters['include_forecast'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
             $modelId = (string) ($request->parameters['forecast_model_id'] ?? $request->reportTemplateId);
+            $maxAttempts = max(1, min(100, (int) ($request->parameters['forecast_max_attempts'] ?? 10)));
+            $pollIntervalMs = max(50, min(60000, (int) ($request->parameters['forecast_poll_interval_ms'] ?? 100)));
             $forecastResult = $this->forecastPort->forecast(
                 $modelId,
                 ['historical' => $historical, 'parameters' => $request->parameters],
-                (int) ($request->parameters['forecast_max_attempts'] ?? 10),
-                (int) ($request->parameters['forecast_poll_interval_ms'] ?? 100)
+                $maxAttempts,
+                $pollIntervalMs
             );
 
             $forecastData = $forecastResult['data'];
@@ -54,6 +56,15 @@ final readonly class ReportingPipelineWorkflow
 
         $reportData = $this->contextProvider->build($request, $historical, $forecastData);
         $exported = $this->exportPort->export($reportData, (string) ($request->deliveryOptions['format'] ?? 'pdf'));
+        if (
+            !is_array($exported) ||
+            !isset($exported['file_path'], $exported['metadata']) ||
+            !is_string($exported['file_path']) ||
+            trim($exported['file_path']) === '' ||
+            !is_array($exported['metadata'])
+        ) {
+            throw new \RuntimeException('Invalid export payload: expected file_path(string) and metadata(array).');
+        }
 
         $storagePath = sprintf(
             'reports/%s/%s/%s',

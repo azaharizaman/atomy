@@ -54,4 +54,19 @@ final readonly class CacheDataExchangeTaskStoreAdapter implements DataExchangeTa
             payload: $raw['payload'],
         );
     }
+
+    public function findForTenant(string $tenantId, string $taskId): ?DataExchangeTaskStatus
+    {
+        $status = $this->find($taskId);
+        if ($status === null) {
+            return null;
+        }
+
+        $statusTenant = $status->payload['tenant_id'] ?? null;
+        if (!is_string($statusTenant) || $statusTenant !== $tenantId) {
+            return null;
+        }
+
+        return $status;
+    }
 }

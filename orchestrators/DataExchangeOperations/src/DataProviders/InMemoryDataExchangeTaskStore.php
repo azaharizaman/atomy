@@ -21,4 +21,19 @@ final class InMemoryDataExchangeTaskStore implements DataExchangeTaskStoreInterf
     {
         return $this->items[$taskId] ?? null;
     }
+
+    public function findForTenant(string $tenantId, string $taskId): ?DataExchangeTaskStatus
+    {
+        $status = $this->find($taskId);
+        if ($status === null) {
+            return null;
+        }
+
+        $statusTenant = $status->payload['tenant_id'] ?? null;
+        if (!is_string($statusTenant) || $statusTenant !== $tenantId) {
+            return null;
+        }
+
+        return $status;
+    }
 }
