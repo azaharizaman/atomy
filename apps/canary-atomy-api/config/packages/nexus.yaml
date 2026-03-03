@@ -179,6 +179,13 @@ services:
     Nexus\TenantOperations\Rules\ImpersonationAllowedRule:
         autowire: true
 
+    # Nexus PaymentBank
+    Nexus\PaymentBank\Contracts\CredentialEncryptionInterface: '@Nexus\PaymentBank\Services\CredentialEncryptionService'
+    Nexus\PaymentBank\Services\CredentialEncryptionService:
+        autowire: true
+        arguments:
+            $key: '%env(PAYMENT_BANK_ENCRYPTION_KEY)%'
+
     # SettingsManagement Orchestrator
     Nexus\SettingsManagement\Contracts\SettingsProviderInterface: '@App\Service\Settings\Adapters\SettingsProvider'
     Nexus\SettingsManagement\Contracts\SettingsPersistProviderInterface: '@App\Service\Settings\Adapters\SettingsProvider'
