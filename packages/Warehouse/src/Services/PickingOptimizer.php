@@ -87,25 +87,33 @@ final readonly class PickingOptimizer implements PickingOptimizerInterface
         
         // Build optimized sequence
         $optimizedSequence = [];
+        $actualStopIds = [];
         foreach ($result->getStops() as $stop) {
             if (!isset($binMap[$stop->id])) {
                 $this->logger->error('Stop ID from optimizer not found in bin map', [
                     'stop_id' => $stop->id,
+                    'expected_ids' => array_keys($binMap),
                 ]);
                 return $this->createSequentialResult($pickItems, $startTime);
             }
 
+            $actualStopIds[] = $stop->id;
             $optimizedSequence[] = array_merge(
                 ['bin_id' => $stop->id],
                 $binMap[$stop->id]
             );
         }
 
-        // Final verification that all expected bins are in the sequence
-        if (count($optimizedSequence) !== count($binMap)) {
-             $this->logger->error('Incomplete pick route optimized', [
-                 'expected_count' => count($binMap),
-                 'actual_count' => count($optimizedSequence)
+        // Final verification that all expected bins are in the sequence exactly once
+        $expectedIds = array_keys($binMap);
+        sort($expectedIds);
+        $sortedActualIds = $actualStopIds;
+        sort($sortedActualIds);
+
+        if ($sortedActualIds !== $expectedIds) {
+             $this->logger->error('Incomplete or incorrect pick route optimized', [
+                 'expected_ids' => $expectedIds,
+                 'actual_ids' => $actualStopIds,
              ]);
              return $this->createSequentialResult($pickItems, $startTime);
         }
