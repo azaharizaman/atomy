@@ -22,8 +22,42 @@ interface BudgetTransactionRepositoryInterface
     public function create(array $data): BudgetTransactionInterface;
 
     /**
-     * Find transactions by budget
+     * Record budget commitment
      * 
+     * @param string $budgetId Budget identifier
+     * @param Money $amount Commitment amount
+     * @param string $accountId GL account identifier
+     * @param string $sourceType Source type
+     * @param string $sourceId Source identifier
+     * @param int $sourceLineNumber Source line number
+     * @param string|null $costCenterId Cost center identifier
+     * @param string|null $workflowApprovalId Workflow approval identifier
+     * @param \Nexus\Budget\Enums\TransactionType $transactionType Transaction type
+     * @return void
+     */
+    public function recordCommitment(
+        string $budgetId,
+        Money $amount,
+        string $accountId,
+        string $sourceType,
+        string $sourceId,
+        int $sourceLineNumber,
+        ?string $costCenterId = null,
+        ?string $workflowApprovalId = null,
+        ?\Nexus\Budget\Enums\TransactionType $transactionType = null
+    ): void;
+
+    /**
+     * Release committed amount
+     * 
+     * @param string $id Transaction identifier
+     * @return void
+     */
+    public function releaseCommitment(string $id): void;
+
+    /**
+     * Find transactions by budget
+    ...
      * @param string $budgetId Budget identifier
      * @return array<BudgetTransactionInterface>
      */

@@ -129,4 +129,13 @@ interface BudgetRepositoryInterface
      * @return void
      */
     public function delete(string $id): void;
+
+    /**
+     * Create a simulation from an existing budget
+     * 
+     * @param string $baseBudgetId Base budget identifier
+     * @param array<string, mixed> $modifications Optional modifications
+     * @return BudgetInterface
+     */
+    public function createSimulation(string $baseBudgetId, array $modifications = []): BudgetInterface;
 }

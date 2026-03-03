@@ -163,13 +163,13 @@ final readonly class TaxCalculator implements TaxCalculatorInterface
 
         // Partial adjustment - calculate proportional tax
         $adjustmentRatio = bcdiv(
-            (string) $adjustmentAmount->getAmount(6),
-            (string) $original->netAmount->getAmount(6),
+            $adjustmentAmount->format(['symbol' => false, 'decimals' => 6]),
+            $original->netAmount->format(['symbol' => false, 'decimals' => 6]),
             6
         );
 
         $adjustedTaxAmount = Money::of(
-            bcmul((string) $original->totalTaxAmount->getAmount(4), $adjustmentRatio, 4),
+            bcmul($original->totalTaxAmount->format(['symbol' => false, 'decimals' => 4]), $adjustmentRatio, 4),
             $original->totalTaxAmount->getCurrency()
         );
 
@@ -178,11 +178,11 @@ final readonly class TaxCalculator implements TaxCalculatorInterface
             fn(TaxLine $line) => new TaxLine(
                 rate: $line->rate,
                 taxableBase: Money::of(
-                    bcmul((string) $line->taxableBase->getAmount(4), $adjustmentRatio, 4),
+                    bcmul($line->taxableBase->format(['symbol' => false, 'decimals' => 4]), $adjustmentRatio, 4),
                     $line->taxableBase->getCurrency()
                 ),
                 amount: Money::of(
-                    bcmul((string) $line->amount->getAmount(4), $adjustmentRatio, 4),
+                    bcmul($line->amount->format(['symbol' => false, 'decimals' => 4]), $adjustmentRatio, 4),
                     $line->amount->getCurrency()
                 ),
                 description: "Adjustment: {$line->description}",

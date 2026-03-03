@@ -47,6 +47,10 @@ class AdvancedOrderService
             // 4. Add Item with Dynamic Pricing
             $price = $this->pricingStrategy->calculatePrice($item['sku'], $customerId, $item['qty']);
             
+            if (!$price instanceof Money) {
+                $price = Money::of($price, 'USD');
+            }
+            
             $this->salesOrderManager->addItem(
                 orderId: $order->getId(),
                 productId: $item['sku'],

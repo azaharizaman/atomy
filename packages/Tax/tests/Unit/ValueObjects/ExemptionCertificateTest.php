@@ -174,7 +174,7 @@ final class ExemptionCertificateTest extends TestCase
         );
 
         $amount = Money::of('100.00', 'USD');
-        $taxableAmountString = $certificate->applyToAmount((string) $amount->getAmount());
+        $taxableAmountString = $certificate->applyToAmount('100.00');
         $taxableAmount = Money::of($taxableAmountString, 'USD');
 
         $this->assertSame(5000, $taxableAmount->getAmountInMinorUnits()); // 50% of $100

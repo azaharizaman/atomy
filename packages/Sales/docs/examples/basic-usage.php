@@ -56,7 +56,7 @@ class ExampleController
         );
         
         // ============================================
-        // Step 4: Finalize
+        // Step 4: Display Result
         // ============================================
         
         echo "Order Created: " . $order->getNumber() . "\n";
