@@ -6,7 +6,6 @@ namespace Nexus\PaymentBank\Services;
 
 use Nexus\Common\Contracts\UlidInterface;
 use Nexus\PaymentBank\Contracts\CredentialEncryptionInterface;
-use Nexus\PaymentBank\ValueObjects\EncryptedSecret;
 use Nexus\PaymentBank\Contracts\BankConnectionManagerInterface;
 use Nexus\PaymentBank\Contracts\BankConnectionPersistInterface;
 use Nexus\PaymentBank\Contracts\BankConnectionQueryInterface;
@@ -55,7 +54,7 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
         $refreshToken = 'mock_refresh_token';
         $expiresIn = 3600;
         
-        // Encrypt tokens before storing - store as JSON-serialized EncryptedData
+        // Encrypt tokens before storing - store as JSON-serialized EncryptedSecret
         $encryptedAccessToken = $this->crypto->encrypt($accessToken)->toJson();
         $encryptedRefreshToken = $this->crypto->encrypt($refreshToken)->toJson();
 
@@ -91,13 +90,6 @@ final readonly class BankConnectionManager implements BankConnectionManagerInter
 
         $providerType = $connection->getProviderType();
         $provider = $this->providerRegistry->getProvider($providerType);
-        
-        // Decrypt tokens for refresh
-        $accessTokenJson = $connection->getAccessToken();
-        $accessToken = $this->crypto->decrypt(EncryptedSecret::fromJson($accessTokenJson));
-        
-        $refreshTokenJson = $connection->getRefreshToken();
-        $refreshToken = $refreshTokenJson ? $this->crypto->decrypt(EncryptedSecret::fromJson($refreshTokenJson)) : null;
         
         // PLACEHOLDER: Mock token refresh - replace with actual provider OAuth refresh token flow
         // when provider adapters are implemented

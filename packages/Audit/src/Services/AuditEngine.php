@@ -170,7 +170,7 @@ final readonly class AuditEngine implements AuditEngineInterface
         $dataToSign = json_encode($recordData, JSON_THROW_ON_ERROR);
 
         // Generate signature (requires private key - injected via signer)
-        $signedData = $signature = $this->signer->sign($dataToSign, $signedBy);
+        $signature = $this->signer->sign($dataToSign, $signedBy);
 
         return AuditSignature::ed25519($signature, $signedBy);
     }

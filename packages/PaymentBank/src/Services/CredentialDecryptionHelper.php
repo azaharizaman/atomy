@@ -8,10 +8,10 @@ use Nexus\PaymentBank\Contracts\CredentialEncryptionInterface;
 use Nexus\PaymentBank\ValueObjects\EncryptedSecret;
 
 /**
- * Helper for decrypting credentials stored as JSON-serialized EncryptedData.
+ * Helper for decrypting credentials stored as JSON-serialized EncryptedSecret.
  * 
  * This is a pure utility class for decrypting bank connection credentials.
- * Credentials are stored as JSON-serialized EncryptedData value objects and
+ * Credentials are stored as JSON-serialized EncryptedSecret value objects and
  * need to be deserialized and decrypted before use with provider APIs.
  */
 final readonly class CredentialDecryptionHelper
@@ -21,7 +21,7 @@ final readonly class CredentialDecryptionHelper
     ) {}
 
     /**
-     * Decrypt credentials array containing JSON-serialized EncryptedData values.
+     * Decrypt credentials array containing JSON-serialized EncryptedSecret values.
      *
      * @param array<string, mixed> $encryptedCredentials Credentials with encrypted access/refresh tokens
      * @return array<string, mixed> Credentials with decrypted tokens

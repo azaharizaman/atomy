@@ -86,7 +86,7 @@ final readonly class PickingOptimizer implements PickingOptimizerInterface
         
         // Build optimized sequence
         $optimizedSequence = [];
-        foreach ($result->optimizedRoute->stops as $stop) {
+        foreach ($result->getStops() as $stop) {
             $optimizedSequence[] = array_merge(
                 ['bin_id' => $stop->id],
                 $binMap[$stop->id]
@@ -95,7 +95,7 @@ final readonly class PickingOptimizer implements PickingOptimizerInterface
         
         // Calculate sequential distance for comparison
         $sequentialDistance = $this->calculateSequentialDistance($stops);
-        $optimizedDistance = $result->optimizedRoute->totalDistance->toMeters();
+        $optimizedDistance = $result->getTotalDistanceMeters();
         $improvement = $sequentialDistance > 0
             ? (($sequentialDistance - $optimizedDistance) / $sequentialDistance) * 100
             : 0.0;

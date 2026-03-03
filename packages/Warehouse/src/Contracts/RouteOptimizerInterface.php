@@ -12,5 +12,5 @@ interface RouteOptimizerInterface
     /**
      * @param array<RouteStop> $stops
      */
-    public function optimizeTsp(array $stops, Coordinates $depotCoordinates): object;
+    public function optimizeTsp(array $stops, Coordinates $depotCoordinates): RouteOptimizationResultInterface;
 }
