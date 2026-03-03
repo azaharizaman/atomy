@@ -54,8 +54,10 @@ final readonly class BudgetManager implements BudgetManagerInterface
         private LoggerInterface $logger
     ) {}
 
-    public function createBudget(BudgetAllocation $allocation): BudgetInterface
+    public function createBudget(array $data): BudgetInterface
     {
+        $allocation = BudgetAllocation::fromArray($data);
+        
         // Validate period
         $period = $this->periodManager->findById($allocation->periodId);
         if (!$period) {
@@ -94,7 +96,7 @@ final readonly class BudgetManager implements BudgetManagerInterface
         return $budget;
     }
 
-    public function allocateBudget(string $budgetId, BudgetAllocation $allocation): void
+    public function allocate(string $budgetId, Money $amount): void
     {
         $budget = $this->budgetRepository->findById($budgetId);
         if (!$budget) {
@@ -109,30 +111,40 @@ final readonly class BudgetManager implements BudgetManagerInterface
             );
         }
 
-        // Update allocation
+        // Update allocation - wrap money in BudgetAllocation if needed by repo
+        $allocation = new BudgetAllocation(
+            periodId: $budget->getPeriodId(),
+            allocatedAmount: $amount,
+            justification: 'Manual allocation'
+        );
+        
         $this->budgetRepository->updateAllocation($budgetId, $allocation);
 
         $this->eventDispatcher->dispatch(new BudgetAmendedEvent(
             budgetId: $budgetId,
             periodId: $budget->getPeriodId(),
             previousAmount: $budget->getAllocatedAmount(),
-            newAmount: $allocation->allocatedAmount,
+            newAmount: $amount,
             amendedBy: 'system', // Would come from auth context
-            reason: $allocation->justification ?? 'Budget reallocation'
+            reason: 'Budget allocation'
         ));
 
         $this->auditLogger->log(
             $budgetId,
             'budget_allocated',
-            "Budget allocation updated to {$allocation->allocatedAmount}"
+            "Budget allocation updated to {$amount}"
         );
     }
 
     public function commitAmount(
         string $budgetId,
         Money $amount,
-        string $sourceDocumentId,
-        TransactionType $transactionType
+        string $accountId,
+        string $sourceType,
+        string $sourceId,
+        int $sourceLineNumber,
+        ?string $costCenterId = null,
+        ?string $workflowApprovalId = null
     ): void {
         $budget = $this->budgetRepository->findById($budgetId);
         if (!$budget) {
@@ -155,7 +167,7 @@ final readonly class BudgetManager implements BudgetManagerInterface
         // Check availability
         $available = $budget->getAvailableAmount();
         if ($amount->getAmount() > $available->getAmount()) {
-            $this->handleBudgetExceedance($budget, $amount, $sourceDocumentId);
+            $this->handleBudgetExceedance($budget, $amount, $sourceId);
             return; // Workflow will handle completion
         }
 
@@ -163,8 +175,8 @@ final readonly class BudgetManager implements BudgetManagerInterface
         $this->transactionRepository->recordCommitment(
             $budgetId,
             $amount,
-            $sourceDocumentId,
-            $transactionType
+            $sourceId,
+            TransactionType::Commitment
         );
 
         // Calculate utilization
@@ -176,20 +188,25 @@ final readonly class BudgetManager implements BudgetManagerInterface
             periodId: $budget->getPeriodId(),
             committedAmount: $amount,
             currentUtilizationPercentage: $utilizationPct,
-            sourceDocumentId: $sourceDocumentId,
-            transactionType: $transactionType
+            sourceDocumentId: $sourceId,
+            transactionType: TransactionType::Commitment
         ));
 
         $this->auditLogger->log(
             $budgetId,
             'budget_committed',
-            "Committed {$amount} against budget (Document: {$sourceDocumentId})"
+            "Committed {$amount} against budget (Document: {$sourceId})"
         );
     }
 
-    public function releaseCommitment(string $sourceDocumentId): void
-    {
-        $transactions = $this->transactionRepository->findBySourceDocument($sourceDocumentId);
+    public function releaseCommitment(
+        string $budgetId,
+        Money $amount,
+        string $sourceType,
+        string $sourceId,
+        int $sourceLineNumber
+    ): void {
+        $transactions = $this->transactionRepository->findBySourceDocument($sourceId);
         
         foreach ($transactions as $transaction) {
             if ($transaction->getType() === TransactionType::Commitment) {
@@ -198,7 +215,7 @@ final readonly class BudgetManager implements BudgetManagerInterface
                 $this->auditLogger->log(
                     $transaction->getBudgetId(),
                     'commitment_released',
-                    "Released commitment {$transaction->getAmount()} (Document: {$sourceDocumentId})"
+                    "Released commitment {$transaction->getAmount()} (Document: {$sourceId})"
                 );
             }
         }
@@ -207,9 +224,10 @@ final readonly class BudgetManager implements BudgetManagerInterface
     public function recordActual(
         string $budgetId,
         Money $amount,
-        string $sourceDocumentId,
-        TransactionType $transactionType,
-        bool $releaseCommitment = true
+        string $accountId,
+        string $sourceType,
+        string $sourceId,
+        int $sourceLineNumber
     ): void {
         $budget = $this->budgetRepository->findById($budgetId);
         if (!$budget) {
@@ -225,30 +243,26 @@ final readonly class BudgetManager implements BudgetManagerInterface
         $this->transactionRepository->recordActual(
             $budgetId,
             $amount,
-            $sourceDocumentId,
-            $transactionType
+            $sourceId,
+            TransactionType::Actual
         );
 
-        // Release commitment if requested
-        $commitmentReleased = false;
-        if ($releaseCommitment) {
-            $this->releaseCommitment($sourceDocumentId);
-            $commitmentReleased = true;
-        }
+        // Release commitment automatically
+        $this->releaseCommitment($budgetId, $amount, $sourceType, $sourceId, $sourceLineNumber);
 
         $this->eventDispatcher->dispatch(new BudgetActualRecordedEvent(
             budgetId: $budgetId,
             periodId: $budget->getPeriodId(),
             actualAmount: $amount,
-            sourceDocumentId: $sourceDocumentId,
-            transactionType: $transactionType,
-            commitmentReleased: $commitmentReleased
+            sourceDocumentId: $sourceId,
+            transactionType: TransactionType::Actual,
+            commitmentReleased: true
         ));
 
         $this->auditLogger->log(
             $budgetId,
             'actual_recorded',
-            "Recorded actual {$amount} (Document: {$sourceDocumentId})"
+            "Recorded actual {$amount} (Document: {$sourceId})"
         );
     }
 
@@ -259,20 +273,13 @@ final readonly class BudgetManager implements BudgetManagerInterface
             throw new \InvalidArgumentException("Budget not found: {$budgetId}");
         }
 
-        $allocated = $budget->getAllocatedAmount();
-        $actual = $budget->getActualAmount();
-        $variance = $allocated->subtract($actual);
-        
-        $variancePct = $allocated->getAmount() != 0
-            ? (($variance->getAmount() / $allocated->getAmount()) * 100)
-            : 0.0;
-
         return new BudgetVariance(
-            budgetId: $budgetId,
-            allocatedAmount: $allocated,
-            actualAmount: $actual,
-            variance: $variance,
-            variancePercentage: $variancePct,
+            allocated: $budget->getAllocatedAmount(),
+            committed: $budget->getCommittedAmount(),
+            actual: $budget->getActualAmount(),
+            available: $budget->getAvailableAmount(),
+            variance: $budget->getVariance(),
+            variancePercentage: $budget->getVariancePercentage(),
             isRevenueBudget: $budget->isRevenueBudget()
         );
     }
@@ -287,20 +294,15 @@ final readonly class BudgetManager implements BudgetManagerInterface
         $available = $budget->getAvailableAmount();
         $isAvailable = $requestedAmount->getAmount() <= $available->getAmount();
         
-        $shortfall = $isAvailable 
-            ? null 
-            : $requestedAmount->subtract($available);
-
         return new BudgetAvailabilityResult(
-            budgetId: $budgetId,
+            isAvailable: $isAvailable,
             requestedAmount: $requestedAmount,
             availableAmount: $available,
-            isAvailable: $isAvailable,
-            shortfall: $shortfall
+            reason: $isAvailable ? 'Budget available' : 'Insufficient budget availability'
         );
     }
 
-    public function lockBudget(string $budgetId, string $reason): void
+    public function lockBudget(string $budgetId): void
     {
         $budget = $this->budgetRepository->findById($budgetId);
         if (!$budget) {
@@ -320,11 +322,11 @@ final readonly class BudgetManager implements BudgetManagerInterface
         $this->eventDispatcher->dispatch(new BudgetLockedEvent(
             budgetId: $budgetId,
             periodId: $budget->getPeriodId(),
-            reason: $reason,
+            reason: 'Budget locked',
             lockedBy: 'system' // Would come from auth context
         ));
 
-        $this->auditLogger->log($budgetId, 'budget_locked', "Budget locked: {$reason}");
+        $this->auditLogger->log($budgetId, 'budget_locked', "Budget locked");
     }
 
     public function transferAllocation(
@@ -413,7 +415,7 @@ final readonly class BudgetManager implements BudgetManagerInterface
         );
     }
 
-    public function createSimulation(string $baseBudgetId): BudgetInterface
+    public function createSimulation(string $baseBudgetId, array $modifications): BudgetInterface
     {
         $baseBudget = $this->budgetRepository->findById($baseBudgetId);
         if (!$baseBudget) {

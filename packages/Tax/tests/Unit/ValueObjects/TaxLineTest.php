@@ -36,8 +36,8 @@ final class TaxLineTest extends TestCase
         );
 
         $this->assertSame('US-CA-SALES', $taxLine->rate->taxCode);
-        $this->assertSame('100.00', $taxLine->taxableBase->getAmount());
-        $this->assertSame('7.25', $taxLine->amount->getAmount());
+        $this->assertSame(10000, $taxLine->taxableBase->getAmountInMinorUnits());
+        $this->assertSame(725, $taxLine->amount->getAmountInMinorUnits());
         $this->assertSame('California Sales Tax', $taxLine->description);
         $this->assertSame('2200', $taxLine->glAccountCode);
     }
@@ -150,7 +150,7 @@ final class TaxLineTest extends TestCase
 
         // Total = 5.00 + 7.35 = 12.35
         $total = $parent->getTotalWithChildren();
-        $this->assertSame('12.35', $total->getAmount());
+        $this->assertSame(1235, $total->getAmountInMinorUnits());
     }
 
     public function test_it_flattens_all_children(): void

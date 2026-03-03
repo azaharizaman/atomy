@@ -78,10 +78,7 @@ final readonly class TaxAdjustmentContext
      */
     public function getAbsoluteAmount(): Money
     {
-        return Money::of(
-            ltrim($this->adjustmentAmount->getAmount(), '-'),
-            $this->adjustmentAmount->getCurrency()
-        );
+        return $this->adjustmentAmount->abs();
     }
 
     /**

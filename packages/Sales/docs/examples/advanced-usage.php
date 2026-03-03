@@ -19,43 +19,43 @@ use Nexus\Common\ValueObjects\Money;
 class AdvancedOrderService
 {
     public function __construct(
-        private readonly SalesOrderManagerInterface ,
-        private readonly StockReservationInterface ,
-        private readonly PricingStrategyInterface 
+        private readonly SalesOrderManagerInterface $salesOrderManager,
+        private readonly StockReservationInterface $stockReservation,
+        private readonly PricingStrategyInterface $pricingStrategy
     ) {}
     
-    public function processB2BOrder(string , array ): void
+    public function processB2BOrder(string $customerId, array $items): void
     {
         // 1. Apply B2B Pricing Strategy
-        ->salesManager->setPricingStrategy(->pricing);
+        $this->salesOrderManager->setPricingStrategy($this->pricingStrategy);
         
         // 2. Create Order
-         = ->salesManager->createOrder(, 'USD');
+        $order = $this->salesOrderManager->createOrder($customerId, 'USD');
         
-        foreach ( as ) {
+        foreach ($items as $item) {
             // 3. Check & Reserve Stock
-            if (!->inventory->checkAvailability(['sku'], ['qty'])) {
-                throw new \RuntimeException("Insufficient stock for {['sku']}");
+            if (!$this->stockReservation->checkAvailability($item['sku'], $item['qty'])) {
+                throw new \RuntimeException("Insufficient stock for {$item['sku']}");
             }
             
-            ->inventory->reserve(
-                sku: ['sku'],
-                quantity: ['qty'],
-                reference: ->getNumber()
+            $this->stockReservation->reserve(
+                sku: $item['sku'],
+                quantity: $item['qty'],
+                reference: $order->getNumber()
             );
             
             // 4. Add Item with Dynamic Pricing
-             = ->pricing->calculatePrice(['sku'], , ['qty']);
+            $price = $this->pricingStrategy->calculatePrice($item['sku'], $customerId, $item['qty']);
             
-            ->salesManager->addItem(
-                orderId: ->getId(),
-                productId: ['sku'],
-                quantity: ['qty'],
-                unitPrice: 
+            $this->salesOrderManager->addItem(
+                orderId: $order->getId(),
+                productId: $item['sku'],
+                quantity: $item['qty'],
+                unitPrice: $price
             );
         }
         
         // 5. Confirm Order
-        ->salesManager->confirmOrder(->getId());
+        $this->salesOrderManager->confirmOrder($order->getId());
     }
 }

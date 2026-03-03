@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\Budget\Contracts;
 
+use Nexus\Common\ValueObjects\Money;
+
 /**
  * Budget Transaction Repository contract
  * 
@@ -55,7 +57,7 @@ interface BudgetTransactionRepositoryInterface
      * 
      * @param string $accountId Account identifier
      * @param string $periodId Period identifier
-     * @return \Nexus\Common\ValueObjects\Money
+     * @return Money
      */
-    public function sumCommitmentsByAccount(string $accountId, string $periodId): \Nexus\Common\ValueObjects\Money;
+    public function sumCommitmentsByAccount(string $accountId, string $periodId): Money;
 }

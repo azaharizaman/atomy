@@ -77,9 +77,9 @@ final class TaxCalculatorTest extends TestCase
         $amount = Money::of('100.00', 'USD');
         $breakdown = $this->calculator->calculate($context, $amount);
 
-        $this->assertSame('100.0000', $breakdown->netAmount->getAmount());
-        $this->assertSame('7.2500', $breakdown->totalTaxAmount->getAmount());
-        $this->assertSame('107.2500', $breakdown->grossAmount->getAmount());
+        $this->assertSame(100.0, $breakdown->netAmount->getAmount());
+        $this->assertSame(7.25, $breakdown->totalTaxAmount->getAmount());
+        $this->assertSame(107.25, $breakdown->grossAmount->getAmount());
         $this->assertCount(1, $breakdown->taxLines);
     }
 
@@ -134,7 +134,7 @@ final class TaxCalculatorTest extends TestCase
         $breakdown = $this->calculator->calculate($context, $amount);
 
         // 50% exempt, so tax on $50 at 10% = $5
-        $this->assertSame('5.0000', $breakdown->totalTaxAmount->getAmount());
+        $this->assertSame(5.0, $breakdown->totalTaxAmount->getAmount());
     }
 
     public function test_it_throws_exception_when_rate_not_found(): void
@@ -210,7 +210,7 @@ final class TaxCalculatorTest extends TestCase
         $amount = Money::of('100.00', 'EUR');
         $breakdown = $this->calculator->calculate($context, $amount);
 
-        $this->assertSame('0.0000', $breakdown->totalTaxAmount->getAmount());
+        $this->assertSame(0.0, $breakdown->totalTaxAmount->getAmount());
         $this->assertTrue($breakdown->isReverseCharge);
     }
 
@@ -260,8 +260,8 @@ final class TaxCalculatorTest extends TestCase
             Money::of('-100.00', 'USD')
         );
 
-        $this->assertSame('-100.0000', $reversal->netAmount->getAmount());
-        $this->assertSame('-7.2500', $reversal->totalTaxAmount->getAmount());
+        $this->assertSame(-100.0, $reversal->netAmount->getAmount());
+        $this->assertSame(-7.25, $reversal->totalTaxAmount->getAmount());
     }
 
     public function test_preview_without_exemption_shows_full_tax(): void
@@ -315,6 +315,6 @@ final class TaxCalculatorTest extends TestCase
         $preview = $this->calculator->previewWithoutExemption($context, $amount);
 
         // Without exemption, tax should be full 10% of $100 = $10
-        $this->assertSame('10.0000', $preview->totalTaxAmount->getAmount());
+        $this->assertSame(10.0, $preview->totalTaxAmount->getAmount());
     }
 }

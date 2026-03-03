@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Tax\Tests\Unit\ValueObjects;
 
 use Nexus\Common\ValueObjects\Money;
+use Nexus\Tax\Enums\TaxExemptionReason;
 use Nexus\Tax\ValueObjects\ExemptionCertificate;
 use PHPUnit\Framework\TestCase;
 
@@ -15,41 +16,41 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 100.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '100.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
             expirationDate: new \DateTimeImmutable('2025-01-01'),
         );
 
         $this->assertSame('CERT-001', $certificate->certificateId);
         $this->assertSame('CUST-001', $certificate->customerId);
-        $this->assertSame(100.0, $certificate->exemptionPercentage);
+        $this->assertSame('100.0000', $certificate->exemptionPercentage);
     }
 
     public function test_it_rejects_negative_percentage(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Exemption percentage must be between 0 and 100');
+        $this->expectException(\Nexus\Tax\Exceptions\InvalidExemptionPercentageException::class);
+        $this->expectExceptionMessage('Exemption percentage must be between 0.0000 and 100.0000');
 
         new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: -10.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '-10.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
     }
 
     public function test_it_rejects_percentage_over_100(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Exemption percentage must be between 0 and 100');
+        $this->expectException(\Nexus\Tax\Exceptions\InvalidExemptionPercentageException::class);
+        $this->expectExceptionMessage('Exemption percentage must be between 0.0000 and 100.0000');
 
         new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 150.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '150.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
     }
@@ -57,13 +58,13 @@ final class ExemptionCertificateTest extends TestCase
     public function test_it_rejects_expiration_before_issue(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expiration date must be after issue date');
+        $this->expectExceptionMessage('Expiration date (2024-01-01) must be after issue date (2024-06-01)');
 
         new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 100.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '100.0000',
             issueDate: new \DateTimeImmutable('2024-06-01'),
             expirationDate: new \DateTimeImmutable('2024-01-01'),
         );
@@ -74,8 +75,8 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 100.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '100.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
 
@@ -87,8 +88,8 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 100.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '100.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
             expirationDate: new \DateTimeImmutable('2025-01-01'),
         );
@@ -101,8 +102,8 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 100.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '100.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
 
@@ -114,8 +115,8 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 100.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '100.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
             expirationDate: new \DateTimeImmutable('2025-01-01'),
         );
@@ -128,8 +129,8 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 100.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '100.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
 
@@ -141,8 +142,8 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'agricultural',
-            exemptionPercentage: 50.0,
+            reason: TaxExemptionReason::Agricultural,
+            exemptionPercentage: '50.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
 
@@ -154,8 +155,8 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'agricultural',
-            exemptionPercentage: 40.0, // 40% exempt
+            reason: TaxExemptionReason::Agricultural,
+            exemptionPercentage: '40.0000', // 40% exempt
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
 
@@ -167,15 +168,16 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'agricultural',
-            exemptionPercentage: 50.0,
+            reason: TaxExemptionReason::Agricultural,
+            exemptionPercentage: '50.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
 
         $amount = Money::of('100.00', 'USD');
-        $taxableAmount = $certificate->applyToAmount($amount);
+        $taxableAmountString = $certificate->applyToAmount((string) $amount->getAmount());
+        $taxableAmount = Money::of($taxableAmountString, 'USD');
 
-        $this->assertSame('50.0000', $taxableAmount->getAmount()); // 50% of $100
+        $this->assertSame(5000, $taxableAmount->getAmountInMinorUnits()); // 50% of $100
         $this->assertSame('USD', $taxableAmount->getCurrency());
     }
 
@@ -184,8 +186,8 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 100.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '100.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
             expirationDate: new \DateTimeImmutable('2024-12-31'),
         );
@@ -201,8 +203,8 @@ final class ExemptionCertificateTest extends TestCase
         $certificate = new ExemptionCertificate(
             certificateId: 'CERT-001',
             customerId: 'CUST-001',
-            reason: 'resale',
-            exemptionPercentage: 100.0,
+            reason: TaxExemptionReason::Resale,
+            exemptionPercentage: '100.0000',
             issueDate: new \DateTimeImmutable('2024-01-01'),
         );
 

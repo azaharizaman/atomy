@@ -27,7 +27,7 @@ final class TaxAdjustmentContextTest extends TestCase
         $this->assertSame('ADJ-001', $context->adjustmentId);
         $this->assertSame('TXN-001', $context->originalTransactionId);
         $this->assertSame('Customer refund', $context->reason);
-        $this->assertSame('-100.00', $context->adjustmentAmount->getAmount());
+        $this->assertSame(-100.0, $context->adjustmentAmount->getAmount());
         $this->assertSame(TaxType::SalesTax, $context->taxType);
         $this->assertFalse($context->isFullReversal);
     }

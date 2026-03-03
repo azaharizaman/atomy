@@ -23,7 +23,7 @@ use Nexus\Common\ValueObjects\Money;
 class ExampleController
 {
     public function __construct(
-        private readonly SalesOrderManagerInterface 
+        private readonly SalesOrderManagerInterface $salesManager
     ) {}
     
     public function createOrder(): void
@@ -32,7 +32,7 @@ class ExampleController
         // Step 2: Create Order
         // ============================================
         
-         = ->salesManager->createOrder(
+        $order = $this->salesManager->createOrder(
             customerId: 'CUST-001',
             currency: 'USD'
         );
@@ -41,25 +41,25 @@ class ExampleController
         // Step 3: Add Items
         // ============================================
         
-        ->salesManager->addItem(
-            orderId: ->getId(),
+        $this->salesManager->addItem(
+            orderId: $order->getId(),
             productId: 'PROD-ABC',
             quantity: 2.0,
-            unitPrice: new Money(1000, 'USD') // 0.00
+            unitPrice: new Money(1000, 'USD') // $10.00
         );
         
-        ->salesManager->addItem(
-            orderId: ->getId(),
+        $this->salesManager->addItem(
+            orderId: $order->getId(),
             productId: 'PROD-XYZ',
             quantity: 1.0,
-            unitPrice: new Money(5000, 'USD') // 0.00
+            unitPrice: new Money(5000, 'USD') // $50.00
         );
         
         // ============================================
         // Step 4: Finalize
         // ============================================
         
-        echo "Order Created: " . ->getNumber() . "\n";
-        echo "Total Amount: " . ->getTotalAmount()->format() . "\n";
+        echo "Order Created: " . $order->getNumber() . "\n";
+        echo "Total Amount: " . $order->getTotalAmount()->format() . "\n";
     }
 }
