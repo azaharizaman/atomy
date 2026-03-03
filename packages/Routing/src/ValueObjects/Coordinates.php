@@ -10,6 +10,14 @@ final readonly class Coordinates
         public float $latitude,
         public float $longitude,
     ) {
+        if (!is_finite($latitude)) {
+            throw new \InvalidArgumentException('Latitude must be a finite number.');
+        }
+
+        if (!is_finite($longitude)) {
+            throw new \InvalidArgumentException('Longitude must be a finite number.');
+        }
+
         if ($latitude < -90.0 || $latitude > 90.0) {
             throw new \InvalidArgumentException('Latitude must be between -90 and 90 degrees.');
         }

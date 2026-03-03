@@ -30,16 +30,12 @@ final readonly class CredentialDecryptionHelper
     {
         $decrypted = $encryptedCredentials;
         
-        if (isset($encryptedCredentials['access_token']) && is_string($encryptedCredentials['access_token'])) {
-            $decrypted['access_token'] = $this->crypto->decrypt(
-                EncryptedSecret::fromJson($encryptedCredentials['access_token'])
-            );
-        }
-        
-        if (isset($encryptedCredentials['refresh_token']) && is_string($encryptedCredentials['refresh_token'])) {
-            $decrypted['refresh_token'] = $this->crypto->decrypt(
-                EncryptedSecret::fromJson($encryptedCredentials['refresh_token'])
-            );
+        foreach (['access_token', 'refresh_token'] as $key) {
+            if (isset($encryptedCredentials[$key]) && is_string($encryptedCredentials[$key])) {
+                $decrypted[$key] = $this->crypto->decrypt(
+                    EncryptedSecret::fromJson($encryptedCredentials[$key])
+                );
+            }
         }
         
         return $decrypted;

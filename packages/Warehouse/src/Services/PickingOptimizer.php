@@ -87,6 +87,13 @@ final readonly class PickingOptimizer implements PickingOptimizerInterface
         // Build optimized sequence
         $optimizedSequence = [];
         foreach ($result->getStops() as $stop) {
+            if (!isset($binMap[$stop->id])) {
+                $this->logger->warning('Stop ID not found in bin map during optimization', [
+                    'stop_id' => $stop->id,
+                ]);
+                continue;
+            }
+
             $optimizedSequence[] = array_merge(
                 ['bin_id' => $stop->id],
                 $binMap[$stop->id]

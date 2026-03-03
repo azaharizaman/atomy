@@ -9,6 +9,11 @@ use Nexus\PaymentGateway\Contracts\HttpResponseInterface;
 
 final class CurlHttpClient implements HttpClientInterface
 {
+    public function __construct(
+        private int $connectTimeout = 10,
+        private int $requestTimeout = 30,
+    ) {}
+
     public function request(string $method, string $url, array $payload = [], array $headers = []): HttpResponseInterface
     {
         $normalizedMethod = strtoupper($method);
@@ -33,6 +38,8 @@ final class CurlHttpClient implements HttpClientInterface
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => $normalizedMethod,
             CURLOPT_HTTPHEADER => $headerLines,
+            CURLOPT_CONNECTTIMEOUT => $this->connectTimeout,
+            CURLOPT_TIMEOUT => $this->requestTimeout,
         ];
 
         if ($normalizedMethod !== 'GET' && $payload !== []) {
