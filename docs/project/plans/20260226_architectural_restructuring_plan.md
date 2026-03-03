@@ -1,6 +1,6 @@
 # 20260226: Architectural Restructuring Plan - Data & Intelligence Ecosystem
 
-This plan outlines the systematic restructuring of the Nexus Data and Intelligence packages to align with the **Three-Layer Architecture**. It includes renaming foundational primitives (Layer 1) and establishing strategic orchestrators (Layer 2) to manage complex business workflows.
+This plan outlines the systematic restructuring of the Nexus Data and Intelligence packages to align with the **Three-Layer Architecture** (Mandatory to read and understand ARCHITECHTURE.md and docs/project/NEXUS_PACKAGES_REFERENCE.md). It includes renaming foundational primitives (Layer 1) and establishing strategic orchestrators (Layer 2) to manage complex business workflows.
 
 ---
 
