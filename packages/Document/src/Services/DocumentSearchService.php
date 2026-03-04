@@ -8,6 +8,8 @@ use Nexus\Document\Contracts\DocumentInterface;
 use Nexus\Document\Contracts\DocumentRepositoryInterface;
 use Nexus\Document\Contracts\DocumentSearchInterface;
 use Nexus\Document\Contracts\PermissionCheckerInterface;
+use Nexus\Document\Contracts\AuditLogManagerInterface;
+use Nexus\Document\ValueObjects\AuditLogPayload;
 use Nexus\Document\ValueObjects\DocumentType;
 
 /**
@@ -21,7 +23,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
     public function __construct(
         private DocumentRepositoryInterface $repository,
         private PermissionCheckerInterface $permissions,
-        private \Nexus\AuditLogger\Services\AuditLogManager $auditLogger
+        private AuditLogManagerInterface $auditLogger
     ) {
     }
 
@@ -33,7 +35,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
         $documents = $this->repository->findByTags($tags);
         $results = $this->filterByPermissions($documents, $userId);
 
-        $this->auditLogger->log(
+        $this->auditLogger->log(new AuditLogPayload(
             logName: 'document_search_tags',
             description: sprintf("Search by tags: %s", implode(', ', $tags)),
             subjectType: 'Search',
@@ -45,7 +47,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
                 'result_count' => count($results),
             ],
             level: 1
-        );
+        ));
 
         return $results;
     }
@@ -79,7 +81,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
 
         $results = $this->filterByPermissions($documents, $userId);
 
-        $this->auditLogger->log(
+        $this->auditLogger->log(new AuditLogPayload(
             logName: 'document_search_type',
             description: sprintf("Search by type: %s", $type->value),
             subjectType: 'Search',
@@ -92,7 +94,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
                 'result_count' => count($results),
             ],
             level: 1
-        );
+        ));
 
         return $results;
     }
@@ -127,7 +129,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
 
         $results = $this->filterByPermissions($filtered, $userId);
 
-        $this->auditLogger->log(
+        $this->auditLogger->log(new AuditLogPayload(
             logName: 'document_search_metadata',
             description: "Search by metadata criteria",
             subjectType: 'Search',
@@ -139,7 +141,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
                 'result_count' => count($results),
             ],
             level: 1
-        );
+        ));
 
         return $results;
     }
@@ -190,7 +192,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
         $documents = $this->repository->findByDateRange($from, $to);
         $results = $this->filterByPermissions($documents, $userId);
 
-        $this->auditLogger->log(
+        $this->auditLogger->log(new AuditLogPayload(
             logName: 'document_search_daterange',
             description: sprintf("Search by date range: %s to %s", $from->format('Y-m-d'), $to->format('Y-m-d')),
             subjectType: 'Search',
@@ -203,7 +205,7 @@ final readonly class DocumentSearchService implements DocumentSearchInterface
                 'result_count' => count($results),
             ],
             level: 1
-        );
+        ));
 
         return $results;
     }
