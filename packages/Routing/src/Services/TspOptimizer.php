@@ -13,10 +13,10 @@ use Nexus\Routing\ValueObjects\RouteOptimizationResult;
 use Nexus\Routing\ValueObjects\OptimizedRoute;
 use Nexus\Routing\ValueObjects\OptimizationMetrics;
 use Nexus\Routing\Exceptions\NoFeasibleSolutionException;
-use Nexus\Geo\Contracts\DistanceCalculatorInterface;
-use Nexus\Geo\Contracts\TravelTimeInterface;
-use Nexus\Geo\ValueObjects\Coordinates;
-use Nexus\Geo\ValueObjects\Distance;
+use Nexus\Routing\Contracts\DistanceCalculatorInterface;
+use Nexus\Routing\Contracts\TravelTimeInterface;
+use Nexus\Routing\ValueObjects\Coordinates;
+use Nexus\Routing\ValueObjects\Distance;
 use Psr\Log\LoggerInterface;
 
 /**

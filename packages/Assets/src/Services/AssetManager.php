@@ -17,7 +17,7 @@ use Nexus\Assets\Events\DepreciationRecordedEvent;
 use Nexus\Assets\Exceptions\DisposalNotAllowedException;
 use Nexus\Assets\Exceptions\InvalidAssetDataException;
 use Nexus\Assets\ValueObjects\AssetTag;
-use Nexus\Setting\Services\SettingsManager;
+use Nexus\Assets\Contracts\SettingsReaderInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
@@ -35,7 +35,7 @@ final readonly class AssetManager implements AssetManagerInterface
 {
     public function __construct(
         private AssetRepositoryInterface $repository,
-        private SettingsManager $settings,
+        private SettingsReaderInterface $settings,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger
     ) {}

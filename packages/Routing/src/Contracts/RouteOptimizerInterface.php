@@ -8,7 +8,7 @@ use Nexus\Routing\ValueObjects\RouteStop;
 use Nexus\Routing\ValueObjects\VehicleProfile;
 use Nexus\Routing\ValueObjects\RouteConstraints;
 use Nexus\Routing\ValueObjects\RouteOptimizationResult;
-use Nexus\Geo\ValueObjects\Coordinates;
+use Nexus\Routing\ValueObjects\Coordinates;
 
 /**
  * Framework-agnostic route optimizer interface

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Nexus\Product\ValueObjects;
 
 use JsonSerializable;
-use Nexus\Uom\ValueObjects\Quantity;
+use Nexus\Product\ValueObjects\Quantity;
 
 /**
  * Dimension Set Value Object
  *
- * Complete physical specifications for a product using Nexus\Uom\Quantity.
+ * Complete physical specifications for a product using product-local Quantity.
  * All dimensions are optional but must use valid UOM if provided.
  */
 final readonly class DimensionSet implements JsonSerializable

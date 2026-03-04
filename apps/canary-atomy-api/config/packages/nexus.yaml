@@ -17,6 +17,20 @@ services:
 
     App\Repository\SettingPersistRepositoryInterface: '@App\Repository\SettingPersistRepository'
 
+    # Nexus Budget
+    App\Service\Budget\Adapters\:
+        resource: '../../src/Service/Budget/Adapters/'
+
+    Nexus\Budget\Contracts\BudgetRepositoryInterface: '@App\Service\Budget\Adapters\InMemoryBudgetRepositoryAdapter'
+    Nexus\Budget\Contracts\BudgetTransactionRepositoryInterface: '@App\Service\Budget\Adapters\CanaryUnsupportedBudgetTransactionRepositoryAdapter'
+    Nexus\Budget\Contracts\BudgetTransactionPersistInterface: '@App\Service\Budget\Adapters\CanaryUnsupportedBudgetTransactionRepositoryAdapter'
+    Nexus\Budget\Contracts\BudgetTransactionQueryInterface: '@App\Service\Budget\Adapters\CanaryUnsupportedBudgetTransactionRepositoryAdapter'
+    Nexus\Budget\Contracts\BudgetApprovalWorkflowInterface: '@App\Service\Budget\Adapters\NullBudgetApprovalWorkflowAdapter'
+    Nexus\Budget\Contracts\PeriodGatewayInterface: '@App\Service\Budget\Adapters\NullPeriodGatewayAdapter'
+    Nexus\Budget\Contracts\CurrencyConverterInterface: '@App\Service\Budget\Adapters\PassthroughCurrencyConverterAdapter'
+    Nexus\Budget\Contracts\SettingsGatewayInterface: '@App\Service\Budget\Adapters\StaticSettingsGatewayAdapter'
+    Nexus\Budget\Contracts\AuditLoggerInterface: '@App\Service\Budget\Adapters\BudgetAuditLoggerAdapter'
+
     # Nexus FeatureFlags
     Nexus\FeatureFlags\Contracts\FlagRepositoryInterface: '@App\Repository\FeatureFlagRepository'
     Nexus\FeatureFlags\Contracts\FlagEvaluatorInterface:
@@ -178,6 +192,13 @@ services:
 
     Nexus\TenantOperations\Rules\ImpersonationAllowedRule:
         autowire: true
+
+    # Nexus PaymentBank
+    Nexus\PaymentBank\Contracts\CredentialEncryptionInterface: '@Nexus\PaymentBank\Services\CredentialEncryptionService'
+    Nexus\PaymentBank\Services\CredentialEncryptionService:
+        autowire: true
+        arguments:
+            $key: '%env(PAYMENT_BANK_ENCRYPTION_KEY)%'
 
     # SettingsManagement Orchestrator
     Nexus\SettingsManagement\Contracts\SettingsProviderInterface: '@App\Service\Settings\Adapters\SettingsProvider'

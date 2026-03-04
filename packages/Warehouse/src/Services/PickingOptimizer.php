@@ -9,9 +9,10 @@ use Nexus\Warehouse\Contracts\PickRouteResult;
 use Nexus\Warehouse\Contracts\BinLocationRepositoryInterface;
 use Nexus\Warehouse\Contracts\BinLocationInterface;
 use Nexus\Warehouse\Exceptions\BinLocationNotFoundException;
-use Nexus\Routing\Contracts\RouteOptimizerInterface;
-use Nexus\Routing\ValueObjects\RouteStop;
-use Nexus\Geo\ValueObjects\Coordinates;
+use Nexus\Warehouse\Contracts\RouteOptimizerInterface;
+use Nexus\Warehouse\ValueObjects\RouteStop;
+use Nexus\Warehouse\ValueObjects\Coordinates;
+use Nexus\Warehouse\ValueObjects\PickRouteResultValue;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -86,16 +87,40 @@ final readonly class PickingOptimizer implements PickingOptimizerInterface
         
         // Build optimized sequence
         $optimizedSequence = [];
-        foreach ($result->optimizedRoute->stops as $stop) {
+        $actualStopIds = [];
+        foreach ($result->getStops() as $stop) {
+            if (!isset($binMap[$stop->id])) {
+                $this->logger->error('Stop ID from optimizer not found in bin map', [
+                    'stop_id' => $stop->id,
+                    'expected_ids' => array_keys($binMap),
+                ]);
+                return $this->createSequentialResult($pickItems, $startTime);
+            }
+
+            $actualStopIds[] = $stop->id;
             $optimizedSequence[] = array_merge(
                 ['bin_id' => $stop->id],
                 $binMap[$stop->id]
             );
         }
+
+        // Final verification that all expected bins are in the sequence exactly once
+        $expectedIds = array_keys($binMap);
+        sort($expectedIds);
+        $sortedActualIds = $actualStopIds;
+        sort($sortedActualIds);
+
+        if ($sortedActualIds !== $expectedIds) {
+             $this->logger->error('Incomplete or incorrect pick route optimized', [
+                 'expected_ids' => $expectedIds,
+                 'actual_ids' => $actualStopIds,
+             ]);
+             return $this->createSequentialResult($pickItems, $startTime);
+        }
         
         // Calculate sequential distance for comparison
         $sequentialDistance = $this->calculateSequentialDistance($stops);
-        $optimizedDistance = $result->optimizedRoute->totalDistance->toMeters();
+        $optimizedDistance = $result->getTotalDistanceMeters();
         $improvement = $sequentialDistance > 0
             ? (($sequentialDistance - $optimizedDistance) / $sequentialDistance) * 100
             : 0.0;
@@ -135,39 +160,5 @@ final readonly class PickingOptimizer implements PickingOptimizerInterface
             0.0,
             (int) ((hrtime(true) - $startTime) / 1_000_000)
         );
-    }
-}
-
-/**
- * Pick route result value object
- */
-final readonly class PickRouteResultValue implements PickRouteResult
-{
-    public function __construct(
-        private array $optimizedSequence,
-        private float $totalDistance,
-        private float $distanceImprovement,
-        private int $executionTime
-    ) {
-    }
-    
-    public function getOptimizedSequence(): array
-    {
-        return $this->optimizedSequence;
-    }
-    
-    public function getTotalDistance(): float
-    {
-        return $this->totalDistance;
-    }
-    
-    public function getDistanceImprovement(): float
-    {
-        return $this->distanceImprovement;
-    }
-    
-    public function getExecutionTime(): int
-    {
-        return $this->executionTime;
     }
 }

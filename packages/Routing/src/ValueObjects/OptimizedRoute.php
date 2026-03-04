@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Routing\ValueObjects;
 
-use Nexus\Geo\ValueObjects\Distance;
+use Nexus\Routing\ValueObjects\Distance;
 
 /**
  * Immutable value object representing an optimized route

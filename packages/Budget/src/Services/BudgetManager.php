@@ -8,7 +8,12 @@ use Nexus\Budget\Contracts\BudgetInterface;
 use Nexus\Budget\Contracts\BudgetManagerInterface;
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
 use Nexus\Budget\Contracts\BudgetApprovalWorkflowInterface;
-use Nexus\Budget\Contracts\BudgetTransactionRepositoryInterface;
+use Nexus\Budget\Contracts\BudgetTransactionPersistInterface;
+use Nexus\Budget\Contracts\BudgetTransactionQueryInterface;
+use Nexus\Budget\Contracts\CurrencyConverterInterface;
+use Nexus\Budget\Contracts\PeriodGatewayInterface;
+use Nexus\Budget\Contracts\SettingsGatewayInterface;
+use Nexus\Budget\Contracts\AuditLoggerInterface;
 use Nexus\Budget\Enums\BudgetStatus;
 use Nexus\Budget\Enums\BudgetType;
 use Nexus\Budget\Enums\TransactionType;
@@ -28,12 +33,7 @@ use Nexus\Budget\Exceptions\InsufficientBudgetForTransferException;
 use Nexus\Budget\ValueObjects\BudgetAllocation;
 use Nexus\Budget\ValueObjects\BudgetVariance;
 use Nexus\Budget\ValueObjects\BudgetAvailabilityResult;
-use Nexus\Currency\Contracts\CurrencyConverterInterface;
 use Nexus\Common\ValueObjects\Money;
-use Nexus\Finance\Contracts\AccountInterface;
-use Nexus\Period\Contracts\PeriodManagerInterface;
-use Nexus\Setting\Contracts\SettingsManagerInterface;
-use Nexus\AuditLogger\Contracts\AuditLoggerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
@@ -47,9 +47,9 @@ final readonly class BudgetManager implements BudgetManagerInterface
         private BudgetTransactionPersistInterface $transactionPersist,
         private BudgetTransactionQueryInterface $transactionQuery,
         private BudgetApprovalWorkflowInterface $workflowService,
-        private PeriodManagerInterface $periodManager,
+        private PeriodGatewayInterface $periodManager,
         private CurrencyConverterInterface $currencyConverter,
-        private SettingsManagerInterface $settings,
+        private SettingsGatewayInterface $settings,
         private AuditLoggerInterface $auditLogger,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger

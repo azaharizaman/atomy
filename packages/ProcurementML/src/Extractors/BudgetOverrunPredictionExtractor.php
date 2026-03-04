@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementML\Extractors;
 
-use Nexus\MachineLearning\Contracts\FeatureExtractorInterface;
-use Nexus\MachineLearning\Contracts\FeatureSetInterface;
-use Nexus\MachineLearning\ValueObjects\FeatureSet;
+use Nexus\ProcurementML\Contracts\FeatureExtractorInterface;
+use Nexus\ProcurementML\Contracts\FeatureSetInterface;
+use Nexus\ProcurementML\ValueObjects\FeatureSet;
 use Nexus\ProcurementML\Contracts\BudgetAnalyticsRepositoryInterface;
 
 /**

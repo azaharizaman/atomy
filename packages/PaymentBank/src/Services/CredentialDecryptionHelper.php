@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace Nexus\PaymentBank\Services;
 
-use Nexus\Crypto\Contracts\CryptoManagerInterface;
-use Nexus\Crypto\ValueObjects\EncryptedData;
+use Nexus\PaymentBank\Contracts\CredentialEncryptionInterface;
+use Nexus\PaymentBank\ValueObjects\EncryptedSecret;
 
 /**
- * Helper for decrypting credentials stored as JSON-serialized EncryptedData.
+ * Helper for decrypting credentials stored as JSON-serialized EncryptedSecret.
  * 
  * This is a pure utility class for decrypting bank connection credentials.
- * Credentials are stored as JSON-serialized EncryptedData value objects and
+ * Credentials are stored as JSON-serialized EncryptedSecret value objects and
  * need to be deserialized and decrypted before use with provider APIs.
  */
 final readonly class CredentialDecryptionHelper
 {
     public function __construct(
-        private CryptoManagerInterface $crypto
+        private CredentialEncryptionInterface $crypto
     ) {}
 
     /**
-     * Decrypt credentials array containing JSON-serialized EncryptedData values.
+     * Decrypt credentials array containing JSON-serialized EncryptedSecret values.
      *
      * @param array<string, mixed> $encryptedCredentials Credentials with encrypted access/refresh tokens
      * @return array<string, mixed> Credentials with decrypted tokens
@@ -30,16 +30,12 @@ final readonly class CredentialDecryptionHelper
     {
         $decrypted = $encryptedCredentials;
         
-        if (isset($encryptedCredentials['access_token']) && is_string($encryptedCredentials['access_token'])) {
-            $decrypted['access_token'] = $this->crypto->decrypt(
-                EncryptedData::fromJson($encryptedCredentials['access_token'])
-            );
-        }
-        
-        if (isset($encryptedCredentials['refresh_token']) && is_string($encryptedCredentials['refresh_token'])) {
-            $decrypted['refresh_token'] = $this->crypto->decrypt(
-                EncryptedData::fromJson($encryptedCredentials['refresh_token'])
-            );
+        foreach (['access_token', 'refresh_token'] as $key) {
+            if (isset($encryptedCredentials[$key]) && is_string($encryptedCredentials[$key])) {
+                $decrypted[$key] = $this->crypto->decrypt(
+                    EncryptedSecret::fromJson($encryptedCredentials[$key])
+                );
+            }
         }
         
         return $decrypted;

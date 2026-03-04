@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\PayrollMysStatutory\ValueObjects;
 
-use Nexus\Payroll\Contracts\DeductionResultInterface;
+use Nexus\PayrollMysStatutory\Contracts\DeductionResultInterface;
 
 /**
  * Immutable result from Malaysia statutory calculations.
