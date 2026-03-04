@@ -161,26 +161,22 @@ final readonly class DocumentManager
         $this->repository->save($document);
 
         // Audit log
-        try {
-            $this->auditLogger->log(new AuditLogPayload(
-                logName: 'document_uploaded',
-                description: "Document '{$metadata['original_filename']}' uploaded",
-                subjectType: 'Document',
-                subjectId: $documentId,
-                causerType: 'User',
-                causerId: $ownerId,
-                properties: [
-                    'type' => $document->getType()->value,
-                    'file_size' => $document->getFileSize(),
-                    'mime_type' => $document->getMimeType(),
-                    'auto_analyzed' => $autoAnalyze,
-                    'analysis_confidence' => $analysis?->confidenceScore,
-                ],
-                level: 2
-            ));
-        } catch (\Throwable $e) {
-            $this->logger->error('Audit log failed', ['error' => $e->getMessage()]);
-        }
+        $this->logAuditSafely(new AuditLogPayload(
+            logName: 'document_uploaded',
+            description: "Document '{$metadata['original_filename']}' uploaded",
+            subjectType: 'Document',
+            subjectId: $documentId,
+            causerType: 'User',
+            causerId: $ownerId,
+            properties: [
+                'type' => $document->getType()->value,
+                'file_size' => $document->getFileSize(),
+                'mime_type' => $document->getMimeType(),
+                'auto_analyzed' => $autoAnalyze,
+                'analysis_confidence' => $analysis?->confidenceScore,
+            ],
+            level: 2
+        ));
 
         return $document;
     }
@@ -212,23 +208,19 @@ final readonly class DocumentManager
         }
 
         // Single audit log for batch
-        try {
-            $this->auditLogger->log(new AuditLogPayload(
-                logName: 'documents_batch_uploaded',
-                description: sprintf('%d documents uploaded in batch', count($documents)),
-                subjectType: 'Batch',
-                subjectId: (string) new Ulid(),
-                causerType: 'User',
-                causerId: $ownerId,
-                properties: [
-                    'count' => count($documents),
-                    'total_size' => $totalSize,
-                ],
-                level: 2
-            ));
-        } catch (\Throwable $e) {
-            $this->logger->error('Audit log failed', ['error' => $e->getMessage()]);
-        }
+        $this->logAuditSafely(new AuditLogPayload(
+            logName: 'documents_batch_uploaded',
+            description: sprintf('%d documents uploaded in batch', count($documents)),
+            subjectType: 'Batch',
+            subjectId: (string) new Ulid(),
+            causerType: 'User',
+            causerId: $ownerId,
+            properties: [
+                'count' => count($documents),
+                'total_size' => $totalSize,
+            ],
+            level: 2
+        ));
 
         return $documents;
     }
@@ -249,23 +241,19 @@ final readonly class DocumentManager
 
         $jobId = $this->asyncBatchProcessor->dispatchBatch($files, $ownerId);
 
-        try {
-            $this->auditLogger->log(new AuditLogPayload(
-                logName: 'documents_batch_async_dispatched',
-                description: sprintf('Batch upload dispatched: %d files', count($files)),
-                subjectType: 'Batch',
-                subjectId: $jobId,
-                causerType: 'User',
-                causerId: $ownerId,
-                properties: [
-                    'count' => count($files),
-                    'job_id' => $jobId,
-                ],
-                level: 2
-            ));
-        } catch (\Throwable $e) {
-            $this->logger->error('Audit log failed', ['error' => $e->getMessage()]);
-        }
+        $this->logAuditSafely(new AuditLogPayload(
+            logName: 'documents_batch_async_dispatched',
+            description: sprintf('Batch upload dispatched: %d files', count($files)),
+            subjectType: 'Batch',
+            subjectId: $jobId,
+            causerType: 'User',
+            causerId: $ownerId,
+            properties: [
+                'count' => count($files),
+                'job_id' => $jobId,
+            ],
+            level: 2
+        ));
 
         return $jobId;
     }
@@ -316,22 +304,18 @@ final readonly class DocumentManager
         rewind($stream);
 
         // Audit log
-        try {
-            $this->auditLogger->log(new AuditLogPayload(
-                logName: 'document_downloaded',
-                description: "Document '{$document->getOriginalFilename()}' downloaded",
-                subjectType: 'Document',
-                subjectId: $documentId,
-                causerType: 'User',
-                causerId: $userId,
-                properties: [
-                    'file_size' => $document->getFileSize(),
-                ],
-                level: 1
-            ));
-        } catch (\Throwable $e) {
-            $this->logger->error('Audit log failed', ['error' => $e->getMessage()]);
-        }
+        $this->logAuditSafely(new AuditLogPayload(
+            logName: 'document_downloaded',
+            description: "Document '{$document->getOriginalFilename()}' downloaded",
+            subjectType: 'Document',
+            subjectId: $documentId,
+            causerType: 'User',
+            causerId: $userId,
+            properties: [
+                'file_size' => $document->getFileSize(),
+            ],
+            level: 1
+        ));
 
         return $stream;
     }
@@ -385,22 +369,18 @@ final readonly class DocumentManager
         $url = $this->storage->getTemporaryUrl($document->getStoragePath(), $ttl);
 
         // Audit log
-        try {
-            $this->auditLogger->log(new AuditLogPayload(
-                logName: 'document_url_generated',
-                description: "Temporary URL generated for '{$document->getOriginalFilename()}'",
-                subjectType: 'Document',
-                subjectId: $documentId,
-                causerType: 'User',
-                causerId: $userId,
-                properties: [
-                    'ttl' => $ttl,
-                ],
-                level: 1
-            ));
-        } catch (\Throwable $e) {
-            $this->logger->error('Audit log failed', ['error' => $e->getMessage()]);
-        }
+        $this->logAuditSafely(new AuditLogPayload(
+            logName: 'document_url_generated',
+            description: "Temporary URL generated for '{$document->getOriginalFilename()}'",
+            subjectType: 'Document',
+            subjectId: $documentId,
+            causerType: 'User',
+            causerId: $userId,
+            properties: [
+                'ttl' => $ttl,
+            ],
+            level: 1
+        ));
 
         return $url;
     }
@@ -427,23 +407,19 @@ final readonly class DocumentManager
         $this->repository->delete($documentId);
 
         // Audit log
-        try {
-            $this->auditLogger->log(new AuditLogPayload(
-                logName: 'document_deleted',
-                description: "Document '{$document->getOriginalFilename()}' deleted",
-                subjectType: 'Document',
-                subjectId: $documentId,
-                causerType: 'User',
-                causerId: $userId,
-                properties: [
-                    'type' => $document->getType()->value,
-                    'file_size' => $document->getFileSize(),
-                ],
-                level: 3
-            ));
-        } catch (\Throwable $e) {
-            $this->logger->error('Audit log failed', ['error' => $e->getMessage()]);
-        }
+        $this->logAuditSafely(new AuditLogPayload(
+            logName: 'document_deleted',
+            description: "Document '{$document->getOriginalFilename()}' deleted",
+            subjectType: 'Document',
+            subjectId: $documentId,
+            causerType: 'User',
+            causerId: $userId,
+            properties: [
+                'type' => $document->getType()->value,
+                'file_size' => $document->getFileSize(),
+            ],
+            level: 3
+        ));
     }
 
     /**
@@ -484,24 +460,32 @@ final readonly class DocumentManager
         $this->repository->save($document);
 
         // Audit log
+        $this->logAuditSafely(new AuditLogPayload(
+            logName: 'document_state_changed',
+            description: sprintf(
+                "Document '{$document->getOriginalFilename()}' state changed from %s to %s",
+                $currentState->label(),
+                $newState->label()
+            ),
+            subjectType: 'Document',
+            subjectId: $documentId,
+            causerType: 'User',
+            causerId: $userId,
+            properties: [
+                'old_state' => $currentState->value,
+                'new_state' => $newState->value,
+            ],
+            level: 2
+        ));
+    }
+
+    /**
+     * Log audit payload safely, preventing failures from bubbling up.
+     */
+    private function logAuditSafely(AuditLogPayload $payload): void
+    {
         try {
-            $this->auditLogger->log(new AuditLogPayload(
-                logName: 'document_state_changed',
-                description: sprintf(
-                    "Document '{$document->getOriginalFilename()}' state changed from %s to %s",
-                    $currentState->label(),
-                    $newState->label()
-                ),
-                subjectType: 'Document',
-                subjectId: $documentId,
-                causerType: 'User',
-                causerId: $userId,
-                properties: [
-                    'old_state' => $currentState->value,
-                    'new_state' => $newState->value,
-                ],
-                level: 2
-            ));
+            $this->auditLogger->log($payload);
         } catch (\Throwable $e) {
             $this->logger->error('Audit log failed', ['error' => $e->getMessage()]);
         }

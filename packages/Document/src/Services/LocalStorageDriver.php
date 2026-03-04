@@ -54,6 +54,12 @@ final class LocalStorageDriver implements StorageDriverInterface
                 fclose($target);
             }
         }
+
+        // Apply visibility
+        $permissions = $visibility === Visibility::Public ? 0644 : 0600;
+        if (!chmod($fullPath, $permissions)) {
+            throw new \RuntimeException(sprintf('Failed to set permissions on file: "%s"', $fullPath));
+        }
     }
 
     /**
@@ -96,13 +102,26 @@ final class LocalStorageDriver implements StorageDriverInterface
      */
     public function getTemporaryUrl(string $path, int $ttlSeconds): string
     {
-        // Local files don't have temporary signed URLs in this implementation
-        // Just return a local file path or mock URL
-        return "file://{$this->getFullPath($path)}?expires=" . (time() + $ttlSeconds);
+        // Don't expose absolute filesystem paths
+        // In a real app, this would be a signed URL to a controller route
+        // For local dev, we return a virtual path
+        return "/storage/temp/" . ltrim($path, '/') . "?expires=" . (time() + $ttlSeconds);
     }
 
     private function getFullPath(string $path): string
     {
-        return $this->basePath . '/' . ltrim($path, '/');
+        if (empty($path)) {
+            throw new \InvalidArgumentException('Path cannot be empty');
+        }
+
+        // Normalize path: remove leading slashes, handle dots
+        $path = ltrim($path, '/');
+        
+        // Basic path traversal prevention
+        if (str_contains($path, '..')) {
+            throw new \InvalidArgumentException(sprintf('Path traversal detected: "%s"', $path));
+        }
+
+        return $this->basePath . DIRECTORY_SEPARATOR . $path;
     }
 }

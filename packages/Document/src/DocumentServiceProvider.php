@@ -12,6 +12,7 @@ use Nexus\Document\Contracts\HasherInterface;
 use Nexus\Document\Contracts\PermissionCheckerInterface;
 use Nexus\Document\Contracts\StorageDriverInterface;
 use Nexus\Document\Contracts\TenantContextInterface;
+use Nexus\Document\Contracts\DocumentRepositoryInterface;
 use Nexus\Document\Services\DocumentAuditLogAdapter;
 use Nexus\Document\Services\DocumentPermissionCheckerAdapter;
 use Nexus\Document\Services\DocumentTenantContextAdapter;
@@ -42,7 +43,7 @@ final class DocumentServiceProvider extends ServiceProvider
         $this->app->singleton(ContentProcessorInterface::class, NoOpContentProcessor::class);
 
         $this->app->singleton(StorageDriverInterface::class, function ($app) {
-            $basePath = config('document.storage_path') ?? env('DOCUMENT_STORAGE_PATH', '/tmp/atomy/storage');
+            $basePath = config('document.storage_path', '/tmp/atomy/storage');
             return new LocalStorageDriver($basePath);
         });
 
@@ -51,7 +52,8 @@ final class DocumentServiceProvider extends ServiceProvider
         $this->app->singleton(PermissionCheckerInterface::class, function ($app) {
             return new DocumentPermissionCheckerAdapter(
                 $app->make(IdentityPermissionChecker::class),
-                $app->make(UserRepositoryInterface::class)
+                $app->make(UserRepositoryInterface::class),
+                $app->make(DocumentRepositoryInterface::class)
             );
         });
 
