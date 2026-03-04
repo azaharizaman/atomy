@@ -34,7 +34,7 @@ final readonly class FinanceEventListener
     {
         try {
             // Process each line item in the JE
-            foreach ($event->getLineItems() as $line) {
+            foreach ($event->getLineItems() as $index => $line) {
                 $budgetId = $this->resolveBudgetIdFromAccount($line->getAccountId());
                 if (!$budgetId) {
                     continue; // Skip if no budget mapping
@@ -49,7 +49,7 @@ final readonly class FinanceEventListener
                     accountId: $line->getAccountId(),
                     sourceType: 'journal_entry_line',
                     sourceId: $event->getJournalEntryId(),
-                    sourceLineNumber: 0
+                    sourceLineNumber: is_int($index) ? ($index + 1) : 1
                 );
 
                 // Check variance after recording actual

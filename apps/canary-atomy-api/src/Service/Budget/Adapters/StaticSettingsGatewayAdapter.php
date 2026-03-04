@@ -10,6 +10,7 @@ final class StaticSettingsGatewayAdapter implements SettingsGatewayInterface
 {
     public function getFloat(string $key, float $default = 0.0): float
     {
+        // intentionally unused $key for static canary fallback
         return $default;
     }
 }

@@ -117,17 +117,41 @@ final readonly class ProcurementEventListener
      */
     private function resolveBudgetId(PurchaseOrderApprovedEventInterface $event): ?string
     {
-        // Intentionally touch event in placeholder logic until real PO mapping is implemented.
-        $placeholderPurchaseOrderId = $event->getPurchaseOrderId();
-        unset($placeholderPurchaseOrderId);
+        $purchaseOrder = method_exists($event, 'getPurchaseOrder') ? $event->getPurchaseOrder() : null;
+        $periodId = $this->readStringProperty($event, 'getPeriodId')
+            ?? (is_object($purchaseOrder) ? $this->readStringProperty($purchaseOrder, 'getPeriodId') : null);
 
-        // TODO: Query PO for department/cost_center and resolve active budget for current period.
-        // In real scenario, would:
-        // 1. Query PO to get department_id or cost_center_id
-        // 2. Query budgets table to find active budget for that department in current period
-        // 3. Return budget_id
-        
-        // For now, return null to indicate no mapping found
+        if ($periodId !== null) {
+            $departmentId = $this->readStringProperty($event, 'getDepartmentId')
+                ?? (is_object($purchaseOrder) ? $this->readStringProperty($purchaseOrder, 'getDepartmentId') : null);
+            if ($departmentId !== null) {
+                $budget = $this->budgetRepository->findByDepartment($departmentId, $periodId);
+                if ($budget !== null) {
+                    return $budget->getId();
+                }
+            }
+
+            try {
+                $accountId = $this->resolveAccountId($event);
+                $budget = $this->budgetRepository->findByAccountAndPeriod($accountId, $periodId);
+                if ($budget !== null) {
+                    return $budget->getId();
+                }
+            } catch (\Throwable) {
+                // Fall through to alternate lookup strategies.
+            }
+
+            $costCenterId = $this->readStringProperty($event, 'getCostCenterId')
+                ?? (is_object($purchaseOrder) ? $this->readStringProperty($purchaseOrder, 'getCostCenterId') : null);
+            if ($costCenterId !== null) {
+                foreach ($this->budgetRepository->findByPeriod($periodId) as $budget) {
+                    if ($budget->getCostCenterId() === $costCenterId) {
+                        return $budget->getId();
+                    }
+                }
+            }
+        }
+
         return null;
     }
 
@@ -160,6 +184,9 @@ final readonly class ProcurementEventListener
             if ($transaction->getTransactionType() !== TransactionType::Commitment) {
                 continue;
             }
+            if ($this->isReleasedTransaction($transaction)) {
+                continue;
+            }
 
             $this->budgetManager->releaseCommitment(
                 budgetId: $transaction->getBudgetId(),
@@ -178,5 +205,36 @@ final readonly class ProcurementEventListener
         ]);
 
         return $releaseCount;
+    }
+
+    private function readStringProperty(object $source, string $method): ?string
+    {
+        if (!method_exists($source, $method)) {
+            return null;
+        }
+
+        $value = $source->{$method}();
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+        return $value === '' ? null : $value;
+    }
+
+    private function isReleasedTransaction(object $transaction): bool
+    {
+        if (!method_exists($transaction, 'getMetadata')) {
+            return false;
+        }
+
+        $metadata = $transaction->getMetadata();
+        if (!is_array($metadata)) {
+            return false;
+        }
+
+        return ($metadata['released'] ?? false) === true ||
+            (is_string($metadata['released_at'] ?? null) && trim($metadata['released_at']) !== '') ||
+            (isset($metadata['release_transaction_id']) && (string) $metadata['release_transaction_id'] !== '');
     }
 }

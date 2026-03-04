@@ -15,7 +15,10 @@ final class PassthroughCurrencyConverterAdapter implements CurrencyConverterInte
             return $amount;
         }
 
-        // Canary fallback; replace with real FX provider integration.
-        return Money::of($amount->getAmount(), $toCurrency);
+        throw new \InvalidArgumentException(sprintf(
+            'Currency conversion is not configured for canary runtime (%s -> %s).',
+            $amount->getCurrency(),
+            $toCurrency
+        ));
     }
 }

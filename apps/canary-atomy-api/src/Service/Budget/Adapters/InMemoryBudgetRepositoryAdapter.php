@@ -59,6 +59,11 @@ final class InMemoryBudgetRepositoryAdapter implements BudgetRepositoryInterface
     {
     }
 
+    public function updateStatus(string $id, string|\BackedEnum $status): void
+    {
+        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
+    }
+
     public function updateAllocated(string $id, Money $amount): void
     {
     }

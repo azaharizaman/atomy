@@ -27,10 +27,22 @@ final class InMemoryBudgetTransactionRepositoryAdapter implements BudgetTransact
         ?string $workflowApprovalId = null,
         ?TransactionType $transactionType = null
     ): void {
+        throw new \RuntimeException(sprintf(
+            'recordCommitment is not implemented for canary runtime (budgetId=%s, source=%s:%s, line=%d, amount=%s).',
+            $budgetId,
+            $sourceType,
+            $sourceId,
+            $sourceLineNumber,
+            (string) $amount
+        ));
     }
 
     public function releaseCommitment(string $id): void
     {
+        throw new \RuntimeException(sprintf(
+            'releaseCommitment is not implemented for canary runtime (transactionId=%s).',
+            $id
+        ));
     }
 
     public function recordActual(
@@ -39,10 +51,22 @@ final class InMemoryBudgetTransactionRepositoryAdapter implements BudgetTransact
         string $sourceId,
         TransactionType $transactionType
     ): void {
+        throw new \RuntimeException(sprintf(
+            'recordActual is not implemented for canary runtime (budgetId=%s, sourceId=%s, type=%s, amount=%s).',
+            $budgetId,
+            $sourceId,
+            $transactionType->value,
+            (string) $amount
+        ));
     }
 
     public function reverseTransaction(string $transactionId, string $reason): void
     {
+        throw new \RuntimeException(sprintf(
+            'reverseTransaction is not implemented for canary runtime (transactionId=%s, reason=%s).',
+            $transactionId,
+            $reason
+        ));
     }
 
     public function findByBudget(string $budgetId): array
