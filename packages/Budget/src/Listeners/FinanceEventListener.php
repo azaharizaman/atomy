@@ -35,18 +35,18 @@ final readonly class FinanceEventListener
         try {
             // Process each line item in the JE
             foreach ($event->getLineItems() as $line) {
-                $budgetId = $this->resolveBudgetIdFromAccount($line['account_id']);
+                $budgetId = $this->resolveBudgetIdFromAccount($line->getAccountId());
                 if (!$budgetId) {
                     continue; // Skip if no budget mapping
                 }
 
                 // Record actual based on debit/credit nature
-                $amount = $line['amount'];
+                $amount = $line->getAmount();
                 
                 $this->budgetManager->recordActual(
                     budgetId: $budgetId,
                     amount: $amount,
-                    accountId: $line['account_id'],
+                    accountId: $line->getAccountId(),
                     sourceType: 'journal_entry_line',
                     sourceId: $event->getJournalEntryId(),
                     sourceLineNumber: 0

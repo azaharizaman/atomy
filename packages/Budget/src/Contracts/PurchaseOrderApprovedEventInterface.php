@@ -6,9 +6,9 @@ namespace Nexus\Budget\Contracts;
 
 use Nexus\Common\ValueObjects\Money;
 
-interface PurchaseOrderApprovedEventInterface
+interface PurchaseOrderApprovedEventInterface extends PurchaseOrderEventInterface
 {
-    public function getPurchaseOrderId(): string;
-
     public function getTotalAmount(): Money;
+
+    public function getAccountId(): ?string;
 }

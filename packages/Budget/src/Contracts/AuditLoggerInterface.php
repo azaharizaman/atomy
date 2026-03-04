@@ -6,5 +6,8 @@ namespace Nexus\Budget\Contracts;
 
 interface AuditLoggerInterface
 {
-    public function log(string $entityId, string $action, string $details): void;
+    /**
+     * @param array<string, mixed>|string $context
+     */
+    public function log(string $entityId, string $action, array|string $context = []): void;
 }

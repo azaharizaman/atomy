@@ -16,7 +16,6 @@ use Nexus\Budget\ValueObjects\FeatureSet;
  * Budget Variance Feature Extractor
  * 
  * Extracts features from budget entities for AI-powered overrun prediction.
- * Extracts features for budget variance prediction.
  */
 final readonly class BudgetVarianceFeatureExtractor implements FeatureExtractorInterface
 {

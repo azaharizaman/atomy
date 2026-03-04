@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\Budget\Contracts;
 
-interface PurchaseOrderClosedEventInterface
+interface PurchaseOrderClosedEventInterface extends PurchaseOrderEventInterface
 {
-    public function getPurchaseOrderId(): string;
 }

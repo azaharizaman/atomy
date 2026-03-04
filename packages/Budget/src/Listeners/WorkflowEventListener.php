@@ -72,6 +72,7 @@ final readonly class WorkflowEventListener
                 'budget_rollover' => $this->handleRolloverRejection($event),
                 'variance_investigation' => $this->handleVarianceInvestigationRejection($event),
                 'budget_creation' => $this->handleBudgetCreationRejection($event),
+                'budget_amendment' => $this->handleBudgetAmendmentRejection($event),
                 default => $this->logger->warning('Unknown workflow type for rejection', [
                     'workflow_type' => $event->getWorkflowType(),
                     'entity_id' => $event->getEntityId(),
@@ -238,6 +239,20 @@ final readonly class WorkflowEventListener
         $this->logger->info('Budget amendment approved', [
             'budget_id' => $budgetId,
             'approved_by' => $event->getApprovedBy(),
+        ]);
+    }
+
+    /**
+     * Handle budget amendment rejection
+     */
+    private function handleBudgetAmendmentRejection(ApprovalRejectedEventInterface $event): void
+    {
+        $budgetId = $event->getEntityId();
+
+        $this->logger->info('Budget amendment rejected', [
+            'budget_id' => $budgetId,
+            'rejected_by' => $event->getRejectedBy(),
+            'reason' => $event->getReason(),
         ]);
     }
 }
