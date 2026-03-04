@@ -5,10 +5,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/connector": "*@dev",
-        "nexus/crypto": "*@dev",
-        "nexus/telemetry": "*@dev",
-        "nexus/feature-flags": "*@dev",
         "psr/log": "^3.0"
     },
     "autoload": {
