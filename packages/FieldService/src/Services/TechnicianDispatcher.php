@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FieldService\Services;
 
-use Nexus\Backoffice\Contracts\StaffInterface;
-use Nexus\Backoffice\Contracts\StaffRepositoryInterface;
+use Nexus\FieldService\Contracts\StaffInterface;
+use Nexus\FieldService\Contracts\StaffRepositoryInterface;
 use Nexus\FieldService\Contracts\WorkOrderInterface;
 use Nexus\FieldService\Contracts\TechnicianAssignmentStrategyInterface;
 use Nexus\FieldService\Contracts\RouteOptimizerInterface;
@@ -39,38 +39,46 @@ final readonly class TechnicianDispatcher
         WorkOrderInterface $workOrder,
         ?array $technicianIds = null
     ): ?StaffInterface {
-        // Get available technicians
-        $availableTechnicians = $this->getAvailableTechnicians($technicianIds);
+        try {
+            // Get available technicians
+            $availableTechnicians = $this->getAvailableTechnicians($technicianIds);
 
-        if (empty($availableTechnicians)) {
-            $this->logger->warning('No available technicians found', [
+            if (empty($availableTechnicians)) {
+                $this->logger->warning('No available technicians found', [
+                    'work_order_id' => $workOrder->getId(),
+                ]);
+                return null;
+            }
+
+            // Use assignment strategy to find best match
+            $bestTechnician = $this->assignmentStrategy->findBestTechnician(
+                $workOrder,
+                $availableTechnicians
+            );
+
+            if ($bestTechnician === null) {
+                $this->logger->warning('No suitable technician found', [
+                    'work_order_id' => $workOrder->getId(),
+                    'available_count' => count($availableTechnicians),
+                ]);
+                throw new TechnicianNotAvailableException(
+                    'No suitable technician available for this work order'
+                );
+            }
+
+            $this->logger->info('Best technician found', [
                 'work_order_id' => $workOrder->getId(),
+                'technician_id' => $bestTechnician->getId(),
+            ]);
+
+            return $bestTechnician;
+        } catch (\Exception $e) {
+            $this->logger->error('Technician lookup failed, cannot proceed with assignment', [
+                'work_order_id' => $workOrder->getId(),
+                'error' => $e->getMessage(),
             ]);
             return null;
         }
-
-        // Use assignment strategy to find best match
-        $bestTechnician = $this->assignmentStrategy->findBestTechnician(
-            $workOrder,
-            $availableTechnicians
-        );
-
-        if ($bestTechnician === null) {
-            $this->logger->warning('No suitable technician found', [
-                'work_order_id' => $workOrder->getId(),
-                'available_count' => count($availableTechnicians),
-            ]);
-            throw new TechnicianNotAvailableException(
-                'No suitable technician available for this work order'
-            );
-        }
-
-        $this->logger->info('Best technician found', [
-            'work_order_id' => $workOrder->getId(),
-            'technician_id' => $bestTechnician->getId(),
-        ]);
-
-        return $bestTechnician;
     }
 
     /**
@@ -136,11 +144,18 @@ final readonly class TechnicianDispatcher
      *
      * @param array<string>|null $technicianIds
      * @return array<StaffInterface>
+     * @throws \Exception If fetch fails
      */
     private function getAvailableTechnicians(?array $technicianIds = null): array
     {
-        // TODO: Filter by active technicians only
-        // For now, return empty array - implementation in Atomy
-        return [];
+        try {
+            return $this->staffRepository->findAvailable($technicianIds);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to fetch available technicians', [
+                'technician_ids' => $technicianIds,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 }
