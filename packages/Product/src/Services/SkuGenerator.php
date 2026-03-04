@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Product\Services;
 
 use Nexus\Product\ValueObjects\Sku;
-use Nexus\Sequencing\Contracts\SequenceGeneratorInterface;
+use Nexus\Product\Contracts\SequenceGeneratorInterface;
 
 /**
  * SKU Generator Service

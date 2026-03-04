@@ -10,7 +10,7 @@ use Nexus\MachineLearning\Contracts\FeatureSetInterface;
 use Nexus\MachineLearning\ValueObjects\FeatureSet;
 use Nexus\Receivable\Contracts\PaymentHistoryRepositoryInterface;
 use Nexus\Receivable\Contracts\CustomerRepositoryInterface;
-use Nexus\Currency\Contracts\ExchangeRateServiceInterface;
+use Nexus\Receivable\Contracts\ExchangeRateServiceInterface;
 
 /**
  * Customer payment prediction extractor

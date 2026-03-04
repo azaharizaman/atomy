@@ -7,11 +7,11 @@ namespace Nexus\Budget\Services;
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
 use Nexus\Budget\Contracts\BudgetAnalyticsRepositoryInterface;
 use Nexus\Budget\Contracts\BudgetForecastInterface;
+use Nexus\Budget\Contracts\PredictionServiceInterface;
+use Nexus\Budget\Contracts\PeriodGatewayInterface;
+use Nexus\Budget\Contracts\SettingsGatewayInterface;
 use Nexus\Budget\Events\BudgetForecastGeneratedEvent;
 use Nexus\Budget\ValueObjects\BudgetForecast;
-use Nexus\Intelligence\Contracts\PredictionServiceInterface;
-use Nexus\Period\Contracts\PeriodManagerInterface;
-use Nexus\Setting\Contracts\SettingsManagerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
@@ -26,8 +26,8 @@ final readonly class BudgetForecastService implements BudgetForecastInterface
         private BudgetRepositoryInterface $budgetRepository,
         private BudgetAnalyticsRepositoryInterface $analyticsRepository,
         private PredictionServiceInterface $predictionService,
-        private PeriodManagerInterface $periodManager,
-        private SettingsManagerInterface $settings,
+        private PeriodGatewayInterface $periodManager,
+        private SettingsGatewayInterface $settings,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger
     ) {}

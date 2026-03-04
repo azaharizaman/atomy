@@ -12,7 +12,6 @@ use Nexus\Assets\Core\Engine\UnitsOfProductionDepreciation;
 use Nexus\Assets\Enums\AssetStatus;
 use Nexus\Assets\Enums\DepreciationMethod;
 use Nexus\Assets\Events\AssetDepreciatedEvent;
-use Nexus\Period\Services\PeriodManager;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
@@ -38,7 +37,6 @@ final readonly class DepreciationScheduler
     public function __construct(
         private AssetRepositoryInterface $repository,
         private AssetManager $assetManager,
-        private PeriodManager $periodManager,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger
     ) {}

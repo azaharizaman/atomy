@@ -7,8 +7,8 @@ namespace Nexus\Budget\Listeners;
 use Nexus\Budget\Services\BudgetRolloverHandler;
 use Nexus\Budget\Services\BudgetForecastService;
 use Nexus\Budget\Services\UtilizationAlertManager;
-use Nexus\Period\Events\PeriodClosedEvent;
-use Nexus\Period\Events\PeriodOpenedEvent;
+use Nexus\Budget\Contracts\PeriodClosedEventInterface;
+use Nexus\Budget\Contracts\PeriodOpenedEventInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -30,25 +30,25 @@ final readonly class PeriodEventListener
     /**
      * Handle period closed event - process budget rollovers
      */
-    public function onPeriodClosed(PeriodClosedEvent $event): void
+    public function onPeriodClosed(PeriodClosedEventInterface $event): void
     {
         try {
             $this->logger->info('Processing budget rollovers for closed period', [
-                'period_id' => $event->periodId,
+                'period_id' => $event->getPeriodId(),
             ]);
 
             // Process rollovers based on budget policies
-            $this->rolloverHandler->processRollover($event->periodId);
+            $this->rolloverHandler->processRollover($event->getPeriodId());
 
             // Perform final utilization check
-            $this->performFinalUtilizationCheck($event->periodId);
+            $this->performFinalUtilizationCheck($event->getPeriodId());
 
             $this->logger->info('Budget rollover processing completed', [
-                'period_id' => $event->periodId,
+                'period_id' => $event->getPeriodId(),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Failed to process budget rollovers', [
-                'period_id' => $event->periodId,
+                'period_id' => $event->getPeriodId(),
                 'error' => $e->getMessage(),
             ]);
         }
@@ -57,23 +57,23 @@ final readonly class PeriodEventListener
     /**
      * Handle period opened event - generate forecasts
      */
-    public function onPeriodOpened(PeriodOpenedEvent $event): void
+    public function onPeriodOpened(PeriodOpenedEventInterface $event): void
     {
         try {
             $this->logger->info('Generating forecasts for new period budgets', [
-                'period_id' => $event->periodId,
+                'period_id' => $event->getPeriodId(),
             ]);
 
             // Generate forecasts for all budgets in the new period
-            $forecasts = $this->forecastService->generatePeriodForecasts($event->periodId);
+            $forecasts = $this->forecastService->generatePeriodForecasts($event->getPeriodId());
 
             $this->logger->info('Budget forecasts generated for new period', [
-                'period_id' => $event->periodId,
+                'period_id' => $event->getPeriodId(),
                 'forecast_count' => count($forecasts),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Failed to generate period forecasts', [
-                'period_id' => $event->periodId,
+                'period_id' => $event->getPeriodId(),
                 'error' => $e->getMessage(),
             ]);
         }

@@ -9,7 +9,7 @@ use Nexus\PaymentGateway\Gateways\AdyenGateway;
 use Nexus\PaymentGateway\Gateways\PayPalGateway;
 use Nexus\PaymentGateway\Gateways\SquareGateway;
 use Nexus\PaymentGateway\Gateways\StripeGateway;
-use Nexus\Connector\Contracts\HttpClientInterface;
+use Nexus\PaymentGateway\Contracts\HttpClientInterface;
 use Nexus\PaymentGateway\Gateways\BraintreeGateway;
 use Nexus\PaymentGateway\Contracts\GatewayInterface;
 use Nexus\PaymentGateway\Gateways\AuthorizeNetGateway;

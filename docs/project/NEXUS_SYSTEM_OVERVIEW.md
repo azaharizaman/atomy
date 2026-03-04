@@ -1,7 +1,7 @@
 # Nexus ERP: Complete System Overview
 
 **Version:** 1.0  
-**Last Updated:** November 22, 2025  
+**Last Updated:** March 3, 2026  
 **Purpose:** Comprehensive reference document for AI assistants (ChatGPT, Claude, etc.)
 
 ---

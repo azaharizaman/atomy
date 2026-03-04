@@ -6,18 +6,16 @@ namespace Nexus\Budget\MachineLearning;
 
 use Nexus\Budget\Contracts\BudgetAnalyticsRepositoryInterface;
 use Nexus\Budget\Contracts\BudgetInterface;
-use Nexus\MachineLearning\Contracts\FeatureExtractorInterface;
-use Nexus\MachineLearning\Contracts\FeatureSetInterface;
-use Nexus\MachineLearning\ValueObjects\FeatureSet;
-use Nexus\Period\Contracts\PeriodManagerInterface;
-use Nexus\Period\Enums\PeriodType;
-use Nexus\Setting\Contracts\SettingsManagerInterface;
+use Nexus\Budget\Contracts\FeatureExtractorInterface;
+use Nexus\Budget\Contracts\FeatureSetInterface;
+use Nexus\Budget\Contracts\PeriodGatewayInterface;
+use Nexus\Budget\Contracts\SettingsGatewayInterface;
+use Nexus\Budget\ValueObjects\FeatureSet;
 
 /**
  * Budget Variance Feature Extractor
  * 
  * Extracts features from budget entities for AI-powered overrun prediction.
- * Implements the Intelligence package's FeatureExtractorInterface.
  */
 final readonly class BudgetVarianceFeatureExtractor implements FeatureExtractorInterface
 {
@@ -25,8 +23,8 @@ final readonly class BudgetVarianceFeatureExtractor implements FeatureExtractorI
 
     public function __construct(
         private BudgetAnalyticsRepositoryInterface $analyticsRepository,
-        private PeriodManagerInterface $periodManager,
-        private SettingsManagerInterface $settings
+        private PeriodGatewayInterface $periodManager,
+        private SettingsGatewayInterface $settings
     ) {}
 
     /**

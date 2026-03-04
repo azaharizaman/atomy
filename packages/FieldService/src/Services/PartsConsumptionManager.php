@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\FieldService\Services;
 
+use Nexus\FieldService\Contracts\PartsConsumptionInterface;
 use Nexus\FieldService\Contracts\PartsConsumptionRepositoryInterface;
+use Nexus\FieldService\Contracts\StockManagerInterface;
+use Nexus\FieldService\Contracts\LocationManagerInterface;
 use Nexus\FieldService\Events\PartsConsumedEvent;
-use Nexus\Inventory\Contracts\StockManagerInterface;
-use Nexus\Warehouse\Contracts\LocationManagerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -42,6 +43,14 @@ final readonly class PartsConsumptionManager
         float $quantity,
         string $technicianId
     ): void {
+        if ($quantity <= 0) {
+            $this->logger->warning('Attempted to record zero or negative parts consumption', [
+                'work_order_id' => $workOrderId,
+                'quantity' => $quantity,
+            ]);
+            return;
+        }
+
         $this->logger->info('Recording parts consumption', [
             'work_order_id' => $workOrderId,
             'product_variant_id' => $productVariantId,
@@ -50,17 +59,17 @@ final readonly class PartsConsumptionManager
         ]);
 
         // Get technician van warehouse ID
-        $vanWarehouseId = $this->getTechnicianVanWarehouseId($technicianId);
+        $vanWarehouseId = $this->warehouseManager->getTechnicianVanWarehouseId($technicianId);
 
         // Check van stock level
-        $vanStockLevel = $this->getStockLevel($vanWarehouseId, $productVariantId);
+        $vanStockLevel = $this->stockManager->getAvailableQuantity($vanWarehouseId, $productVariantId);
 
         $consumedFromVan = 0.0;
         $consumedFromWarehouse = 0.0;
 
         if ($vanStockLevel >= $quantity) {
             // Sufficient stock in van - deduct from van only
-            $this->deductStock($vanWarehouseId, $productVariantId, $quantity);
+            $this->stockManager->issueStock($vanWarehouseId, $productVariantId, $quantity);
             $consumedFromVan = $quantity;
             
             $this->logger->info('Parts deducted from technician van', [
@@ -70,7 +79,7 @@ final readonly class PartsConsumptionManager
         } else {
             // Partial or no stock in van - use waterfall
             if ($vanStockLevel > 0) {
-                $this->deductStock($vanWarehouseId, $productVariantId, $vanStockLevel);
+                $this->stockManager->issueStock($vanWarehouseId, $productVariantId, $vanStockLevel);
                 $consumedFromVan = $vanStockLevel;
                 
                 $this->logger->info('Partial stock deducted from technician van', [
@@ -80,16 +89,18 @@ final readonly class PartsConsumptionManager
             }
 
             // Deduct remainder from primary warehouse
-            $remainingQuantity = $quantity - $vanStockLevel;
-            $primaryWarehouseId = $this->getPrimaryWarehouseId();
-            
-            $this->deductStock($primaryWarehouseId, $productVariantId, $remainingQuantity);
-            $consumedFromWarehouse = $remainingQuantity;
-            
-            $this->logger->info('Remaining stock deducted from primary warehouse', [
-                'warehouse_id' => $primaryWarehouseId,
-                'quantity' => $remainingQuantity,
-            ]);
+            $remainingQuantity = $quantity - $consumedFromVan;
+            if ($remainingQuantity > 0) {
+                $primaryWarehouseId = $this->warehouseManager->getPrimaryWarehouseId();
+                
+                $this->stockManager->issueStock($primaryWarehouseId, $productVariantId, $remainingQuantity);
+                $consumedFromWarehouse = $remainingQuantity;
+                
+                $this->logger->info('Remaining stock deducted from primary warehouse', [
+                    'warehouse_id' => $primaryWarehouseId,
+                    'quantity' => $remainingQuantity,
+                ]);
+            }
         }
 
         // Dispatch event
@@ -98,14 +109,18 @@ final readonly class PartsConsumptionManager
             $productVariantId,
             $quantity,
             $technicianId,
-            new \DateTimeImmutable()
+            new \DateTimeImmutable(),
+            $consumedFromVan,
+            $consumedFromWarehouse
         );
         
         $this->eventDispatcher->dispatch($event);
     }
 
     /**
-     * Get total parts cost for a work order.
+     * Get parts consumed for a work order.
+     * 
+     * @return array<PartsConsumptionInterface>
      */
     public function getTotalPartsConsumed(string $workOrderId): array
     {
@@ -118,46 +133,5 @@ final readonly class PartsConsumptionManager
     public function getTotalPartsCost(string $workOrderId): float
     {
         return $this->consumptionRepository->getTotalCost($workOrderId);
-    }
-
-    /**
-     * Get technician van warehouse ID.
-     */
-    private function getTechnicianVanWarehouseId(string $technicianId): string
-    {
-        // TODO: Get van warehouse from Nexus\Warehouse
-        // For now, return placeholder
-        return "van-{$technicianId}";
-    }
-
-    /**
-     * Get primary warehouse ID.
-     */
-    private function getPrimaryWarehouseId(): string
-    {
-        // TODO: Get primary warehouse from settings
-        return 'primary-warehouse';
-    }
-
-    /**
-     * Get stock level for a product in a warehouse.
-     */
-    private function getStockLevel(string $warehouseId, string $productVariantId): float
-    {
-        // TODO: Call Nexus\Inventory\StockManager
-        // For now, return 0
-        return 0.0;
-    }
-
-    /**
-     * Deduct stock from a warehouse.
-     */
-    private function deductStock(
-        string $warehouseId,
-        string $productVariantId,
-        float $quantity
-    ): void {
-        // TODO: Call Nexus\Inventory\StockManager::issueStock()
-        // Implementation will be in application layer
     }
 }
