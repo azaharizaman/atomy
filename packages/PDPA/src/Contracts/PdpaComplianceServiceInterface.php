@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Nexus\PDPA\Contracts;
 
 use DateTimeImmutable;
-use Nexus\DataPrivacy\ValueObjects\DataSubjectRequest;
 use Nexus\PDPA\ValueObjects\PdpaDeadline;
+use Nexus\PDPA\ValueObjects\DataSubjectRequest;
 
 /**
  * PDPA compliance service interface.
