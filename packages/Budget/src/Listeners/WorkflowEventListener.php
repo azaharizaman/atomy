@@ -6,13 +6,13 @@ namespace Nexus\Budget\Listeners;
 
 use Nexus\Budget\Contracts\BudgetManagerInterface;
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
+use Nexus\Budget\Contracts\ApprovalCompletedEventInterface;
+use Nexus\Budget\Contracts\ApprovalRejectedEventInterface;
 use Nexus\Budget\Enums\BudgetStatus;
 use Nexus\Budget\Enums\VarianceInvestigationStatus;
 use Nexus\Budget\Services\BudgetVarianceInvestigator;
 use Nexus\Budget\Services\BudgetRolloverHandler;
 use Nexus\Budget\ValueObjects\BudgetAllocation;
-use Nexus\Workflow\Events\ApprovalCompletedEvent;
-use Nexus\Workflow\Events\ApprovalRejectedEvent;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -36,25 +36,25 @@ final readonly class WorkflowEventListener
     /**
      * Handle approval completed event
      */
-    public function onApprovalCompleted(ApprovalCompletedEvent $event): void
+    public function onApprovalCompleted(ApprovalCompletedEventInterface $event): void
     {
         try {
             // Route to appropriate handler based on workflow type
-            match ($event->workflowType) {
+            match ($event->getWorkflowType()) {
                 'budget_override' => $this->handleBudgetOverrideApproval($event),
                 'budget_rollover' => $this->handleRolloverApproval($event),
                 'variance_investigation' => $this->handleVarianceInvestigationApproval($event),
                 'budget_creation' => $this->handleBudgetCreationApproval($event),
                 'budget_amendment' => $this->handleBudgetAmendmentApproval($event),
                 default => $this->logger->warning('Unknown workflow type', [
-                    'workflow_type' => $event->workflowType,
-                    'entity_id' => $event->entityId,
+                    'workflow_type' => $event->getWorkflowType(),
+                    'entity_id' => $event->getEntityId(),
                 ]),
             };
         } catch (\Exception $e) {
             $this->logger->error('Failed to process workflow approval', [
-                'workflow_type' => $event->workflowType,
-                'entity_id' => $event->entityId,
+                'workflow_type' => $event->getWorkflowType(),
+                'entity_id' => $event->getEntityId(),
                 'error' => $e->getMessage(),
             ]);
         }
@@ -63,24 +63,25 @@ final readonly class WorkflowEventListener
     /**
      * Handle approval rejected event
      */
-    public function onApprovalRejected(ApprovalRejectedEvent $event): void
+    public function onApprovalRejected(ApprovalRejectedEventInterface $event): void
     {
         try {
             // Route to appropriate handler based on workflow type
-            match ($event->workflowType) {
+            match ($event->getWorkflowType()) {
                 'budget_override' => $this->handleBudgetOverrideRejection($event),
                 'budget_rollover' => $this->handleRolloverRejection($event),
                 'variance_investigation' => $this->handleVarianceInvestigationRejection($event),
                 'budget_creation' => $this->handleBudgetCreationRejection($event),
+                'budget_amendment' => $this->handleBudgetAmendmentRejection($event),
                 default => $this->logger->warning('Unknown workflow type for rejection', [
-                    'workflow_type' => $event->workflowType,
-                    'entity_id' => $event->entityId,
+                    'workflow_type' => $event->getWorkflowType(),
+                    'entity_id' => $event->getEntityId(),
                 ]),
             };
         } catch (\Exception $e) {
             $this->logger->error('Failed to process workflow rejection', [
-                'workflow_type' => $event->workflowType,
-                'entity_id' => $event->entityId,
+                'workflow_type' => $event->getWorkflowType(),
+                'entity_id' => $event->getEntityId(),
                 'error' => $e->getMessage(),
             ]);
         }
@@ -89,9 +90,9 @@ final readonly class WorkflowEventListener
     /**
      * Handle budget override approval - allow the over-budget commitment
      */
-    private function handleBudgetOverrideApproval(ApprovalCompletedEvent $event): void
+    private function handleBudgetOverrideApproval(ApprovalCompletedEventInterface $event): void
     {
-        $budgetId = $event->entityId;
+        $budgetId = $event->getEntityId();
         
         // In real implementation, would:
         // 1. Retrieve the pending commitment details from workflow context
@@ -100,30 +101,30 @@ final readonly class WorkflowEventListener
         
         $this->logger->info('Budget override approved', [
             'budget_id' => $budgetId,
-            'approved_by' => $event->approvedBy,
+            'approved_by' => $event->getApprovedBy(),
         ]);
     }
 
     /**
      * Handle budget override rejection
      */
-    private function handleBudgetOverrideRejection(ApprovalRejectedEvent $event): void
+    private function handleBudgetOverrideRejection(ApprovalRejectedEventInterface $event): void
     {
-        $budgetId = $event->entityId;
+        $budgetId = $event->getEntityId();
         
         $this->logger->info('Budget override rejected', [
             'budget_id' => $budgetId,
-            'rejected_by' => $event->rejectedBy,
-            'reason' => $event->reason,
+            'rejected_by' => $event->getRejectedBy(),
+            'reason' => $event->getReason(),
         ]);
     }
 
     /**
      * Handle rollover approval - create new budget
      */
-    private function handleRolloverApproval(ApprovalCompletedEvent $event): void
+    private function handleRolloverApproval(ApprovalCompletedEventInterface $event): void
     {
-        $budgetId = $event->entityId;
+        $budgetId = $event->getEntityId();
         
         // In real implementation, would:
         // 1. Retrieve rollover details from workflow context
@@ -131,105 +132,105 @@ final readonly class WorkflowEventListener
         
         $this->logger->info('Budget rollover approved', [
             'budget_id' => $budgetId,
-            'approved_by' => $event->approvedBy,
+            'approved_by' => $event->getApprovedBy(),
         ]);
     }
 
     /**
      * Handle rollover rejection
      */
-    private function handleRolloverRejection(ApprovalRejectedEvent $event): void
+    private function handleRolloverRejection(ApprovalRejectedEventInterface $event): void
     {
-        $budgetId = $event->entityId;
+        $budgetId = $event->getEntityId();
         
         // Mark original budget as closed (no rollover)
         $this->budgetRepository->updateStatus($budgetId, BudgetStatus::Closed);
         
         $this->logger->info('Budget rollover rejected - budget closed', [
             'budget_id' => $budgetId,
-            'rejected_by' => $event->rejectedBy,
+            'rejected_by' => $event->getRejectedBy(),
         ]);
     }
 
     /**
      * Handle variance investigation approval
      */
-    private function handleVarianceInvestigationApproval(ApprovalCompletedEvent $event): void
+    private function handleVarianceInvestigationApproval(ApprovalCompletedEventInterface $event): void
     {
-        $budgetId = $event->entityId;
+        $budgetId = $event->getEntityId();
         
         // Resolve investigation as approved
         $this->varianceInvestigator->resolveInvestigation(
             $budgetId,
             VarianceInvestigationStatus::Approved,
-            $event->notes ?? 'Variance approved by management'
+            $event->getNotes() ?? 'Variance approved by management'
         );
         
         $this->logger->info('Variance investigation approved', [
             'budget_id' => $budgetId,
-            'approved_by' => $event->approvedBy,
+            'approved_by' => $event->getApprovedBy(),
         ]);
     }
 
     /**
      * Handle variance investigation rejection
      */
-    private function handleVarianceInvestigationRejection(ApprovalRejectedEvent $event): void
+    private function handleVarianceInvestigationRejection(ApprovalRejectedEventInterface $event): void
     {
-        $budgetId = $event->entityId;
+        $budgetId = $event->getEntityId();
         
         // Resolve investigation as rejected (lock budget)
         $this->varianceInvestigator->resolveInvestigation(
             $budgetId,
             VarianceInvestigationStatus::Rejected,
-            $event->reason ?? 'Variance rejected - budget locked'
+            $event->getReason() ?? 'Variance rejected - budget locked'
         );
         
         $this->logger->info('Variance investigation rejected - budget locked', [
             'budget_id' => $budgetId,
-            'rejected_by' => $event->rejectedBy,
+            'rejected_by' => $event->getRejectedBy(),
         ]);
     }
 
     /**
      * Handle budget creation approval
      */
-    private function handleBudgetCreationApproval(ApprovalCompletedEvent $event): void
+    private function handleBudgetCreationApproval(ApprovalCompletedEventInterface $event): void
     {
-        $budgetId = $event->entityId;
+        $budgetId = $event->getEntityId();
         
         // Update status from Draft to Approved
         $this->budgetRepository->updateStatus($budgetId, BudgetStatus::Approved);
         
         $this->logger->info('Budget creation approved', [
             'budget_id' => $budgetId,
-            'approved_by' => $event->approvedBy,
+            'approved_by' => $event->getApprovedBy(),
         ]);
     }
 
     /**
      * Handle budget creation rejection
      */
-    private function handleBudgetCreationRejection(ApprovalRejectedEvent $event): void
+    private function handleBudgetCreationRejection(ApprovalRejectedEventInterface $event): void
     {
-        $budgetId = $event->entityId;
+        $budgetId = $event->getEntityId();
         
         // Could either delete or mark as rejected
         // For audit trail, we'll keep it as Draft with note
         
         $this->logger->info('Budget creation rejected', [
             'budget_id' => $budgetId,
-            'rejected_by' => $event->rejectedBy,
-            'reason' => $event->reason,
+            'rejected_by' => $event->getRejectedBy(),
+            'reason' => $event->getReason(),
         ]);
     }
 
     /**
      * Handle budget amendment approval
      */
-    private function handleBudgetAmendmentApproval(ApprovalCompletedEvent $event): void
+    private function handleBudgetAmendmentApproval(ApprovalCompletedEventInterface $event): void
     {
-        $budgetId = $event->entityId;
+        $budgetId = $event->getEntityId();
         
         // In real implementation, would:
         // 1. Retrieve amendment details from workflow context
@@ -237,7 +238,21 @@ final readonly class WorkflowEventListener
         
         $this->logger->info('Budget amendment approved', [
             'budget_id' => $budgetId,
-            'approved_by' => $event->approvedBy,
+            'approved_by' => $event->getApprovedBy(),
+        ]);
+    }
+
+    /**
+     * Handle budget amendment rejection
+     */
+    private function handleBudgetAmendmentRejection(ApprovalRejectedEventInterface $event): void
+    {
+        $budgetId = $event->getEntityId();
+
+        $this->logger->info('Budget amendment rejected', [
+            'budget_id' => $budgetId,
+            'rejected_by' => $event->getRejectedBy(),
+            'reason' => $event->getReason(),
         ]);
     }
 }

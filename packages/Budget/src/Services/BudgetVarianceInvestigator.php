@@ -7,12 +7,12 @@ namespace Nexus\Budget\Services;
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
 use Nexus\Budget\Contracts\BudgetAnalyticsRepositoryInterface;
 use Nexus\Budget\Contracts\BudgetApprovalWorkflowInterface;
+use Nexus\Budget\Contracts\SettingsGatewayInterface;
+use Nexus\Budget\Contracts\AuditLoggerInterface;
 use Nexus\Budget\Enums\BudgetStatus;
 use Nexus\Budget\Enums\VarianceInvestigationStatus;
 use Nexus\Budget\Events\BudgetVarianceThresholdExceededEvent;
 use Nexus\Budget\ValueObjects\BudgetVariance;
-use Nexus\Setting\Contracts\SettingsManagerInterface;
-use Nexus\AuditLogger\Contracts\AuditLoggerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
@@ -28,7 +28,7 @@ final readonly class BudgetVarianceInvestigator
         private BudgetRepositoryInterface $budgetRepository,
         private BudgetAnalyticsRepositoryInterface $analyticsRepository,
         private BudgetApprovalWorkflowInterface $workflowService,
-        private SettingsManagerInterface $settings,
+        private SettingsGatewayInterface $settings,
         private AuditLoggerInterface $auditLogger,
         private EventDispatcherInterface $eventDispatcher,
         private LoggerInterface $logger

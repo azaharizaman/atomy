@@ -6,12 +6,12 @@ namespace Nexus\Budget\Services;
 
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
 use Nexus\Budget\Contracts\BudgetApprovalWorkflowInterface;
+use Nexus\Budget\Contracts\PeriodGatewayInterface;
+use Nexus\Budget\Contracts\SettingsGatewayInterface;
+use Nexus\Budget\Contracts\AuditLoggerInterface;
 use Nexus\Budget\Enums\RolloverPolicy;
 use Nexus\Budget\Enums\BudgetStatus;
 use Nexus\Budget\ValueObjects\BudgetAllocation;
-use Nexus\Period\Contracts\PeriodManagerInterface;
-use Nexus\Setting\Contracts\SettingsManagerInterface;
-use Nexus\AuditLogger\Contracts\AuditLoggerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -24,8 +24,8 @@ final readonly class BudgetRolloverHandler
     public function __construct(
         private BudgetRepositoryInterface $budgetRepository,
         private BudgetApprovalWorkflowInterface $workflowService,
-        private PeriodManagerInterface $periodManager,
-        private SettingsManagerInterface $settings,
+        private PeriodGatewayInterface $periodManager,
+        private SettingsGatewayInterface $settings,
         private AuditLoggerInterface $auditLogger,
         private LoggerInterface $logger
     ) {}
