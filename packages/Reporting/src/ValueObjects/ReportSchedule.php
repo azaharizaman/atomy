@@ -38,6 +38,20 @@ final readonly class ReportSchedule
     }
 
     /**
+     * Validates that the schedule is valid for new creations.
+     *
+     * @param \DateTimeImmutable|null $now Reference time for validation (defaults to current time)
+     * @throws \InvalidArgumentException If endsAt is in the past
+     */
+    public function validateForCreation(?\DateTimeImmutable $now = null): void
+    {
+        $now ??= new \DateTimeImmutable();
+        if ($this->endsAt !== null && $this->endsAt <= $now) {
+            throw new \InvalidArgumentException('End date must be in the future');
+        }
+    }
+
+    /**
      * Create a one-time schedule.
      */
     public static function once(\DateTimeImmutable $runAt): self
