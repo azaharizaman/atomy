@@ -44,7 +44,8 @@ final class DocumentServiceProvider extends ServiceProvider
 
         $this->app->singleton(StorageDriverInterface::class, function ($app) {
             $basePath = config('document.storage_path', '/tmp/atomy/storage');
-            return new LocalStorageDriver($basePath);
+            $urlSecret = config('document.url_secret', 'dev-secret');
+            return new LocalStorageDriver($basePath, $urlSecret);
         });
 
         $this->app->singleton(HasherInterface::class, Sha256Hasher::class);

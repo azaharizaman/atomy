@@ -14,10 +14,14 @@ use Nexus\Document\ValueObjects\Visibility;
 final class LocalStorageDriver implements StorageDriverInterface
 {
     private string $basePath;
+    private string $urlSecret;
 
-    public function __construct(string $basePath = '/tmp/atomy/storage')
-    {
+    public function __construct(
+        string $basePath = '/tmp/atomy/storage',
+        string $urlSecret = 'dev-secret'
+    ) {
         $this->basePath = rtrim($basePath, '/');
+        $this->urlSecret = $urlSecret;
         
         if (!is_dir($this->basePath)) {
             if (!mkdir($this->basePath, 0755, true) && !is_dir($this->basePath)) {
@@ -109,27 +113,62 @@ final class LocalStorageDriver implements StorageDriverInterface
      */
     public function getTemporaryUrl(string $path, int $ttlSeconds): string
     {
-        // Don't expose absolute filesystem paths
-        // In a real app, this would be a signed URL to a controller route
-        // For local dev, we return a virtual path with URL-encoded segments
-        $encoded = implode('/', array_map('rawurlencode', explode('/', ltrim($path, '/'))));
-        return "/storage/temp/" . $encoded . "?expires=" . (time() + $ttlSeconds);
+        // 1. Normalize path (remove leading slashes, resolve . and ..)
+        $normalizedPath = $this->normalizePath($path);
+
+        // 2. Enforce safe maximum TTL (e.g., 7 days)
+        $maxTtl = 7 * 24 * 3600;
+        $actualTtl = min($ttlSeconds, $maxTtl);
+        $expires = time() + $actualTtl;
+
+        // 3. Compute HMAC signature over path and expiry
+        $signature = hash_hmac('sha256', "{$normalizedPath}|{$expires}", $this->urlSecret);
+
+        // 4. URL-encode segments and return signed virtual path
+        $encoded = implode('/', array_map('rawurlencode', explode('/', $normalizedPath)));
+        
+        return sprintf(
+            "/storage/temp/%s?expires=%d&signature=%s",
+            $encoded,
+            $expires,
+            $signature
+        );
     }
 
     private function getFullPath(string $path): string
+    {
+        $normalizedPath = $this->normalizePath($path);
+
+        return $this->basePath . DIRECTORY_SEPARATOR . $normalizedPath;
+    }
+
+    private function normalizePath(string $path): string
     {
         if (empty($path)) {
             throw new \InvalidArgumentException('Path cannot be empty');
         }
 
-        // Normalize path: remove leading slashes, handle dots
-        $path = ltrim($path, '/');
-        
-        // Basic path traversal prevention
-        if (str_contains($path, '..')) {
-            throw new \InvalidArgumentException(sprintf('Path traversal detected: "%s"', $path));
+        // Remove leading/trailing slashes
+        $path = trim($path, '/');
+
+        // Resolve dots
+        $segments = explode('/', $path);
+        $resolved = [];
+
+        foreach ($segments as $segment) {
+            if ($segment === '.' || $segment === '') {
+                continue;
+            }
+            if ($segment === '..') {
+                if (empty($resolved)) {
+                    throw new \InvalidArgumentException(sprintf('Path traversal detected: "%s"', $path));
+                }
+                array_pop($resolved);
+                continue;
+            }
+            $resolved[] = $segment;
         }
 
-        return $this->basePath . DIRECTORY_SEPARATOR . $path;
+        return implode(DIRECTORY_SEPARATOR, $resolved);
     }
 }

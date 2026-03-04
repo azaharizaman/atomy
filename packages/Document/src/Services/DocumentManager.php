@@ -12,6 +12,7 @@ use Nexus\Document\Contracts\DocumentRepositoryInterface;
 use Nexus\Document\Contracts\PermissionCheckerInterface;
 use Nexus\Document\Contracts\StorageDriverInterface;
 use Nexus\Document\Contracts\TenantContextInterface;
+use Nexus\Document\Contracts\AuditLogPayloadInterface;
 use Nexus\Document\Core\PathGenerator;
 use Nexus\Document\Exceptions\ChecksumMismatchException;
 use Nexus\Document\Exceptions\PermissionDeniedException;
@@ -482,12 +483,17 @@ final readonly class DocumentManager
     /**
      * Log audit payload safely, preventing failures from bubbling up.
      */
-    private function logAuditSafely(AuditLogPayload $payload): void
+    private function logAuditSafely(AuditLogPayloadInterface $payload): void
     {
         try {
             $this->auditLogger->log($payload);
         } catch (\Exception $e) {
-            $this->logger->error('Audit log failed', ['error' => $e->getMessage()]);
+            $this->logger->error('Audit log failed', [
+                'error' => $e->getMessage(),
+                'log_name' => $payload->getLogName(),
+                'subject_type' => $payload->getSubjectType(),
+                'subject_id' => $payload->getSubjectId(),
+            ]);
         }
     }
 }
