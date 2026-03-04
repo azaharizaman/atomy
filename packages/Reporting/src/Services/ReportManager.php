@@ -82,6 +82,10 @@ final readonly class ReportManager
             $data['schedule'] = ReportSchedule::fromArray($data['schedule']);
         }
 
+        if ($data['schedule'] instanceof ReportSchedule) {
+            $data['schedule']->validateForCreation();
+        }
+
         $reportId = $this->reportRepository->save([
             'id' => $this->generateUlid(),
             'name' => $data['name'],
@@ -259,6 +263,9 @@ final readonly class ReportManager
 
         // Tenant validation
         $this->validateTenantContext($definition->getTenantId());
+
+        // Validate schedule for creation
+        $schedule->validateForCreation();
 
         // Update report definition with schedule
         $this->reportRepository->update($reportId, [
