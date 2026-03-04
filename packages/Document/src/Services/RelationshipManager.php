@@ -11,6 +11,7 @@ use Nexus\Document\Contracts\DocumentRelationshipRepositoryInterface;
 use Nexus\Document\Contracts\DocumentRepositoryInterface;
 use Nexus\Document\Contracts\PermissionCheckerInterface;
 use Nexus\Document\Exceptions\PermissionDeniedException;
+use Nexus\Document\ValueObjects\AuditLogPayload;
 use Nexus\Document\ValueObjects\RelationshipType;
 use Psr\Log\LoggerInterface;
 
@@ -79,7 +80,7 @@ final readonly class RelationshipManager
         );
 
         // Audit log
-        $this->auditLogger->log(
+        $this->auditLogger->log(new AuditLogPayload(
             logName: 'document_relationship_created',
             description: sprintf(
                 "Relationship '%s' created: '%s' -> '%s'",
@@ -97,7 +98,7 @@ final readonly class RelationshipManager
                 'relationship_type' => $type->value,
             ],
             level: 2
-        );
+        ));
 
         return $relationship;
     }
@@ -175,7 +176,7 @@ final readonly class RelationshipManager
         $this->relationshipRepository->delete($relationshipId);
 
         // Audit log
-        $this->auditLogger->log(
+        $this->auditLogger->log(new AuditLogPayload(
             logName: 'document_relationship_deleted',
             description: "Relationship '{$relationship->getRelationshipType()->label()}' deleted",
             subjectType: 'DocumentRelationship',
@@ -188,6 +189,6 @@ final readonly class RelationshipManager
                 'relationship_type' => $relationship->getRelationshipType()->value,
             ],
             level: 2
-        );
+        ));
     }
 }

@@ -16,6 +16,7 @@ use Nexus\Document\Contracts\StorageDriverInterface;
 use Nexus\Document\Contracts\TenantContextInterface;
 use Nexus\Document\Exceptions\DocumentNotFoundException;
 use Nexus\Document\Exceptions\RetentionPolicyViolationException;
+use Nexus\Document\ValueObjects\AuditLogPayload;
 use Nexus\Document\ValueObjects\DocumentState;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Uid\Ulid;
@@ -100,7 +101,7 @@ final readonly class RetentionService
 
         // Audit log
         if ($purgedCount > 0) {
-            $this->auditLogger->log(
+            $this->auditLogger->log(new AuditLogPayload(
                 logName: 'documents_purged',
                 description: "Purged {$purgedCount} expired documents",
                 subjectType: 'System',
@@ -114,7 +115,7 @@ final readonly class RetentionService
                     'certification_ids' => $certificationIds,
                 ],
                 level: 3
-            );
+            ));
         }
 
         return [
@@ -201,7 +202,7 @@ final readonly class RetentionService
         $this->disposalCertificationRepository->save($certification);
 
         // Audit log
-        $this->auditLogger->log(
+        $this->auditLogger->log(new AuditLogPayload(
             logName: 'document_disposed',
             description: "Document '{$document->getOriginalFilename()}' disposed with certification",
             subjectType: 'Document',
@@ -214,7 +215,7 @@ final readonly class RetentionService
                 'regulatory_basis' => $this->retentionPolicy->getRegulatoryBasis($document->getType()->value),
             ],
             level: 3
-        );
+        ));
 
         return $certification;
     }
@@ -257,7 +258,7 @@ final readonly class RetentionService
         $this->legalHoldRepository->save($legalHold);
 
         // Audit log
-        $this->auditLogger->log(
+        $this->auditLogger->log(new AuditLogPayload(
             logName: 'legal_hold_applied',
             description: "Legal hold applied to document '{$document->getOriginalFilename()}'",
             subjectType: 'Document',
@@ -270,7 +271,7 @@ final readonly class RetentionService
                 'expires_at' => $expiresAt?->format(\DateTimeInterface::ATOM),
             ],
             level: 3
-        );
+        ));
 
         return $legalHold;
     }
@@ -314,7 +315,7 @@ final readonly class RetentionService
         $this->legalHoldRepository->save($updatedHold);
 
         // Audit log
-        $this->auditLogger->log(
+        $this->auditLogger->log(new AuditLogPayload(
             logName: 'legal_hold_released',
             description: "Legal hold released from document",
             subjectType: 'LegalHold',
@@ -326,7 +327,7 @@ final readonly class RetentionService
                 'release_reason' => $releaseReason,
             ],
             level: 3
-        );
+        ));
 
         return $updatedHold;
     }
@@ -390,7 +391,7 @@ final readonly class RetentionService
                 $document->setState(DocumentState::ARCHIVED);
                 $this->repository->save($document);
 
-                $this->auditLogger->log(
+                $this->auditLogger->log(new AuditLogPayload(
                     logName: 'document_auto_archived',
                     description: "Document auto-archived by retention policy",
                     subjectType: 'Document',
@@ -401,7 +402,7 @@ final readonly class RetentionService
                         'type' => $document->getType()->value,
                     ],
                     level: 2
-                );
+                ));
             }
         }
     }

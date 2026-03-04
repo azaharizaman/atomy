@@ -7,16 +7,9 @@ namespace Nexus\Document\Contracts;
 interface AuditLogManagerInterface
 {
     /**
-     * @param array<string, mixed> $properties
+     * Log an audit entry using a typed payload.
+     *
+     * @param AuditLogPayloadInterface $payload
      */
-    public function log(
-        string $logName,
-        string $description,
-        string $subjectType,
-        string $subjectId,
-        string $causerType,
-        string $causerId,
-        array $properties = [],
-        int $level = 1
-    ): void;
+    public function log(AuditLogPayloadInterface $payload): void;
 }
