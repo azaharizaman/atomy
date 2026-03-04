@@ -417,7 +417,9 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                     'id' => $this->inAppId,
                     'title' => 'Report Ready',
                     'body' => 'Your report has been generated successfully.',
-                    'action_url' => '/reports/' . $this->result->reportId,
+                    'metadata' => [
+                        'action_url' => '/reports/' . $this->result->reportId,
+                    ],
                 ];
             }
 

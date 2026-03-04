@@ -17,6 +17,7 @@ use Nexus\Reporting\Contracts\ReportDefinitionInterface;
 use Nexus\Reporting\Contracts\ReportGeneratorInterface;
 use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 use Nexus\Reporting\Contracts\ReportTemplateInterface;
+use Nexus\Reporting\Contracts\AuthContextInterface;
 use Nexus\Reporting\Exceptions\ReportGenerationException;
 use Nexus\Reporting\Exceptions\UnauthorizedReportException;
 use Nexus\Reporting\ValueObjects\ReportFormat;
@@ -42,6 +43,7 @@ final readonly class ReportGenerator implements ReportGeneratorInterface
         private ScheduleManagerInterface $scheduleManager,
         private AuditLogManagerInterface $auditLogger,
         private LoggerInterface $logger,
+        private AuthContextInterface $authContext,
         private ?ReportTemplateInterface $defaultTemplate = null,
     ) {}
 
@@ -310,7 +312,7 @@ final readonly class ReportGenerator implements ReportGeneratorInterface
         try {
             // Note: runQuery signature may vary based on actual Analytics implementation
             // Adjust this call based on your Analytics package API
-            return $this->analyticsManager->runQuery($queryId, '', '', $parameters);
+            return $this->analyticsManager->runQuery($queryId, null, null, $parameters);
         } catch (\Throwable $e) {
             throw ReportGenerationException::queryExecutionFailed($queryId, $e);
         }
@@ -384,12 +386,9 @@ final readonly class ReportGenerator implements ReportGeneratorInterface
 
     /**
      * Get current user ID from context.
-     *
-     * TODO: Inject proper AuthContextInterface
      */
     private function getCurrentUserId(): string
     {
-        // Placeholder - should be injected via AuthContextInterface
-        return 'system';
+        return $this->authContext->getUserId() ?? 'system';
     }
 }

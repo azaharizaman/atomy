@@ -8,7 +8,7 @@ use Nexus\Reporting\ValueObjects\DistributionResult;
 use Nexus\Reporting\ValueObjects\ReportResult;
 
 /**
- * Handles multi-channel distribution of generated reports via Nexus\Notifier.
+ * Handles multi-channel distribution of generated reports via Reporting Notifier.
  */
 interface ReportDistributorInterface
 {
@@ -38,7 +38,7 @@ interface ReportDistributorInterface
      * @param string $reportGeneratedId The generated report ID
      * @param \DateTimeImmutable $scheduledAt When to distribute
      * @param array<\Nexus\Reporting\Contracts\NotifiableInterface> $recipients
-     * @return string The scheduled job ID from Scheduler
+     * @return string The scheduled job ID from Reporting Scheduler
      */
     public function scheduleDistribution(
         string $reportGeneratedId,
