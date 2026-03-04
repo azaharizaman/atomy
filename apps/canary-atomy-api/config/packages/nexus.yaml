@@ -22,9 +22,9 @@ services:
         resource: '../../src/Service/Budget/Adapters/'
 
     Nexus\Budget\Contracts\BudgetRepositoryInterface: '@App\Service\Budget\Adapters\InMemoryBudgetRepositoryAdapter'
-    Nexus\Budget\Contracts\BudgetTransactionRepositoryInterface: '@App\Service\Budget\Adapters\InMemoryBudgetTransactionRepositoryAdapter'
-    Nexus\Budget\Contracts\BudgetTransactionPersistInterface: '@App\Service\Budget\Adapters\InMemoryBudgetTransactionRepositoryAdapter'
-    Nexus\Budget\Contracts\BudgetTransactionQueryInterface: '@App\Service\Budget\Adapters\InMemoryBudgetTransactionRepositoryAdapter'
+    Nexus\Budget\Contracts\BudgetTransactionRepositoryInterface: '@App\Service\Budget\Adapters\CanaryUnsupportedBudgetTransactionRepositoryAdapter'
+    Nexus\Budget\Contracts\BudgetTransactionPersistInterface: '@App\Service\Budget\Adapters\CanaryUnsupportedBudgetTransactionRepositoryAdapter'
+    Nexus\Budget\Contracts\BudgetTransactionQueryInterface: '@App\Service\Budget\Adapters\CanaryUnsupportedBudgetTransactionRepositoryAdapter'
     Nexus\Budget\Contracts\BudgetApprovalWorkflowInterface: '@App\Service\Budget\Adapters\NullBudgetApprovalWorkflowAdapter'
     Nexus\Budget\Contracts\PeriodGatewayInterface: '@App\Service\Budget\Adapters\NullPeriodGatewayAdapter'
     Nexus\Budget\Contracts\CurrencyConverterInterface: '@App\Service\Budget\Adapters\PassthroughCurrencyConverterAdapter'

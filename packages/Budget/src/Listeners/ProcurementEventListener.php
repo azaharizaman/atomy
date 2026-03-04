@@ -67,7 +67,7 @@ final readonly class ProcurementEventListener
                 'budget_id' => $budgetId,
                 'amount' => (string) $event->getTotalAmount(),
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Failed to commit budget for PO', [
                 'po_id' => $event->getPurchaseOrderId(),
                 'error' => $e->getMessage(),
@@ -87,7 +87,7 @@ final readonly class ProcurementEventListener
                 'po_id' => $event->getPurchaseOrderId(),
                 'released_count' => $releaseCount,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Failed to release commitment for cancelled PO', [
                 'po_id' => $event->getPurchaseOrderId(),
                 'error' => $e->getMessage(),
@@ -107,7 +107,7 @@ final readonly class ProcurementEventListener
                 'po_id' => $event->getPurchaseOrderId(),
                 'released_count' => $releaseCount,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Failed to release commitment for closed PO', [
                 'po_id' => $event->getPurchaseOrderId(),
                 'error' => $e->getMessage(),

@@ -29,6 +29,8 @@ use Nexus\Common\ValueObjects\Money;
  */
 final class InMemoryBudgetRepositoryAdapter implements BudgetRepositoryInterface, BudgetQueryInterface
 {
+    private const string NOT_IMPLEMENTED_MESSAGE = 'BudgetRepository adapter is not fully implemented for canary runtime.';
+
     public function findById(string $id): ?BudgetInterface
     {
         return null;
@@ -76,41 +78,41 @@ final class InMemoryBudgetRepositoryAdapter implements BudgetRepositoryInterface
 
     public function create(array $data): BudgetInterface
     {
-        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
+        throw new \RuntimeException(self::NOT_IMPLEMENTED_MESSAGE);
     }
 
     public function update(string $id, array $data): void
     {
-        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
+        throw new \RuntimeException(self::NOT_IMPLEMENTED_MESSAGE);
     }
 
     public function updateStatus(string $id, string|\BackedEnum $status): void
     {
-        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
+        throw new \RuntimeException(self::NOT_IMPLEMENTED_MESSAGE);
     }
 
     public function updateAllocated(string $id, Money $amount): void
     {
-        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
+        throw new \RuntimeException(self::NOT_IMPLEMENTED_MESSAGE);
     }
 
     public function updateCommitted(string $id, Money $amount): void
     {
-        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
+        throw new \RuntimeException(self::NOT_IMPLEMENTED_MESSAGE);
     }
 
     public function updateActual(string $id, Money $amount): void
     {
-        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
+        throw new \RuntimeException(self::NOT_IMPLEMENTED_MESSAGE);
     }
 
     public function delete(string $id): void
     {
-        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
+        throw new \RuntimeException(self::NOT_IMPLEMENTED_MESSAGE);
     }
 
     public function createSimulation(string $baseBudgetId, array $modifications = []): BudgetInterface
     {
-        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
+        throw new \RuntimeException(self::NOT_IMPLEMENTED_MESSAGE);
     }
 }
