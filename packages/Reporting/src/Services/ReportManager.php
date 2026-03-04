@@ -235,6 +235,9 @@ final readonly class ReportManager
             throw ReportNotFoundException::forGeneratedReport($reportGeneratedId);
         }
 
+        // Defense-in-depth: Tenant validation for generated report access.
+        $this->validateTenantContext($generatedReport['tenant_id'] ?? null);
+
         // Build ReportResult from stored data
         $result = new ReportResult(
             reportId: $generatedReport['id'],

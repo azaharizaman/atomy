@@ -26,26 +26,7 @@ class ScheduleRecurrenceHydrationException extends ReportingException
     private static function summarizePayload(array $data): string
     {
         $redactedKeys = ['password', 'secret', 'token', 'key', 'authorization', 'cookie'];
-        $sanitized = [];
-
-        foreach ($data as $key => $value) {
-            $keyString = (string) $key;
-            $lowerKey = strtolower($keyString);
-            $isSensitive = false;
-            foreach ($redactedKeys as $needle) {
-                if (str_contains($lowerKey, $needle)) {
-                    $isSensitive = true;
-                    break;
-                }
-            }
-
-            if ($isSensitive) {
-                $sanitized[$keyString] = '[REDACTED]';
-                continue;
-            }
-
-            $sanitized[$keyString] = $value;
-        }
+        $sanitized = self::sanitizeValue($data, null, $redactedKeys);
 
         $json = json_encode($sanitized, JSON_PARTIAL_OUTPUT_ON_ERROR);
         if ($json === false) {
@@ -58,5 +39,65 @@ class ScheduleRecurrenceHydrationException extends ReportingException
         }
 
         return substr($json, 0, $maxLength) . '...[truncated]';
+    }
+
+    /**
+     * @param mixed $value
+     * @param string|null $key
+     * @param array<int, string> $redactedKeys
+     * @return mixed
+     */
+    private static function sanitizeValue(mixed $value, ?string $key, array $redactedKeys): mixed
+    {
+        if ($key !== null && self::isSensitiveKey($key, $redactedKeys)) {
+            return '[REDACTED]';
+        }
+
+        if (is_scalar($value) || $value === null) {
+            return $value;
+        }
+
+        if (is_array($value)) {
+            $sanitized = [];
+            foreach ($value as $childKey => $childValue) {
+                $childKeyString = is_string($childKey) ? $childKey : (string) $childKey;
+                $sanitized[$childKey] = self::sanitizeValue($childValue, $childKeyString, $redactedKeys);
+            }
+            return $sanitized;
+        }
+
+        if ($value instanceof \JsonSerializable) {
+            return self::sanitizeValue($value->jsonSerialize(), $key, $redactedKeys);
+        }
+
+        if ($value instanceof \Traversable) {
+            $iterableData = iterator_to_array($value, true);
+            return self::sanitizeValue($iterableData, $key, $redactedKeys);
+        }
+
+        if (is_object($value)) {
+            return '<object:' . $value::class . '>';
+        }
+
+        if (is_resource($value)) {
+            return '<resource>';
+        }
+
+        return '<' . gettype($value) . '>';
+    }
+
+    /**
+     * @param array<int, string> $redactedKeys
+     */
+    private static function isSensitiveKey(string $key, array $redactedKeys): bool
+    {
+        $lowerKey = strtolower($key);
+        foreach ($redactedKeys as $needle) {
+            if (str_contains($lowerKey, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

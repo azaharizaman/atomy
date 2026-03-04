@@ -16,6 +16,7 @@ use Nexus\Reporting\Exceptions\ReportDistributionException;
 use Nexus\Reporting\Exceptions\ReportNotFoundException;
 use Nexus\Reporting\ValueObjects\DistributionResult;
 use Nexus\Reporting\ValueObjects\DistributionStatus;
+use Nexus\Reporting\ValueObjects\ReportFormat;
 use Nexus\Reporting\ValueObjects\ReportResult;
 use Nexus\Reporting\Contracts\ScheduleManagerInterface;
 use Nexus\Reporting\ValueObjects\JobType;
@@ -261,7 +262,7 @@ final readonly class ReportDistributor implements ReportDistributorInterface
         // Build ReportResult from stored data
         $result = new ReportResult(
             reportId: $generatedReport['id'],
-            format: \Nexus\Reporting\ValueObjects\ReportFormat::from($generatedReport['format']),
+            format: ReportFormat::from($generatedReport['format']),
             filePath: $generatedReport['file_path'],
             fileSize: $generatedReport['file_size_bytes'],
             generatedAt: new \DateTimeImmutable($generatedReport['generated_at']),
