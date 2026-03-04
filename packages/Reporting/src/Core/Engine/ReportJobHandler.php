@@ -42,27 +42,27 @@ final readonly class ReportJobHandler implements JobHandlerInterface
     public function handle(ScheduledJob $job): JobResult
     {
         $this->logger->info('Handling report generation job', [
-            'job_id' => $job->id,
-            'report_id' => $job->targetId,
+            'job_id' => $job->getId(),
+            'report_id' => $job->getTargetId(),
         ]);
 
         try {
             // Get report definition
-            $reportDefinition = $this->reportRepository->findById($job->targetId);
+            $reportDefinition = $this->reportRepository->findById($job->getTargetId());
             if (!$reportDefinition) {
                 return JobResult::failure(
-                    error: "Report definition not found: {$job->targetId}",
+                    error: "Report definition not found: {$job->getTargetId()}",
                     shouldRetry: false // Don't retry if definition doesn't exist
                 );
             }
 
             // Check if this is a batch job
-            $isBatch = $job->payload['is_batch'] ?? false;
+            $isBatch = $job->getPayload()['is_batch'] ?? false;
             $parameters = [];
 
             if ($isBatch) {
                 // Extract entity ID from batch payload
-                $entityId = $job->payload['entity_id'] ?? null;
+                $entityId = $job->getPayload()['entity_id'] ?? null;
                 if (!$entityId) {
                     return JobResult::failure(
                         error: 'Batch job missing entity_id in payload',
@@ -71,7 +71,7 @@ final readonly class ReportJobHandler implements JobHandlerInterface
                 }
 
                 $this->logger->info('Processing batch report', [
-                    'job_id' => $job->id,
+                    'job_id' => $job->getId(),
                     'entity_id' => $entityId,
                 ]);
 
@@ -105,7 +105,7 @@ final readonly class ReportJobHandler implements JobHandlerInterface
                     // Failed recipients can be retried manually
                     if ($distributionResult->hasAnySuccess()) {
                         $this->logger->info('Report distributed', [
-                            'job_id' => $job->id,
+                            'job_id' => $job->getId(),
                             'report_id' => $result->reportId,
                             'success_count' => $distributionResult->successCount,
                             'failure_count' => $distributionResult->failureCount,
@@ -116,7 +116,7 @@ final readonly class ReportJobHandler implements JobHandlerInterface
                     // REL-REP-0305: Distribution failure doesn't fail the job
                     // PDF is preserved for manual retry
                     $this->logger->error('Distribution failed but report preserved', [
-                        'job_id' => $job->id,
+                        'job_id' => $job->getId(),
                         'report_id' => $result->reportId,
                         'error' => $e->getMessage(),
                     ]);
@@ -136,7 +136,7 @@ final readonly class ReportJobHandler implements JobHandlerInterface
         } catch (\Nexus\Reporting\Exceptions\UnauthorizedReportException $e) {
             // Don't retry authorization failures
             $this->logger->error('Unauthorized report generation attempt', [
-                'job_id' => $job->id,
+                'job_id' => $job->getId(),
                 'error' => $e->getMessage(),
             ]);
 
@@ -148,7 +148,7 @@ final readonly class ReportJobHandler implements JobHandlerInterface
         } catch (\Throwable $e) {
             // Unknown error - retry with exponential backoff
             $this->logger->error('Unexpected error in report job', [
-                'job_id' => $job->id,
+                'job_id' => $job->getId(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);

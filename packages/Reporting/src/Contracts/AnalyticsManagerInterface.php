@@ -7,5 +7,5 @@ namespace Nexus\Reporting\Contracts;
 interface AnalyticsManagerInterface
 {
     /** @param array<string, mixed> $parameters */
-    public function runQuery(string $queryId, string $dataset = '', string $projection = '', array $parameters = []): QueryResultInterface;
+    public function runQuery(string $queryId, ?string $dataset = null, ?string $projection = null, array $parameters = []): QueryResultInterface;
 }

@@ -8,6 +8,6 @@ use Nexus\Reporting\ValueObjects\ChannelType;
 
 interface NotificationManagerInterface
 {
-    /** @param array<int, ChannelType> $channels */
+    /** @param non-empty-array<int, ChannelType> $channels */
     public function send(NotifiableInterface $recipient, NotificationInterface $notification, array $channels): string;
 }

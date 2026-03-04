@@ -408,9 +408,12 @@ final readonly class ReportDistributor implements ReportDistributorInterface
             public function toInApp(): array
             {
                 return [
+                    'id' => (string) new \Symfony\Component\Uid\Ulid(),
                     'title' => 'Report Ready',
                     'body' => 'Your report has been generated successfully.',
-                    'action_url' => '/reports/' . $this->result->reportId,
+                    'metadata' => [
+                        'action_url' => '/reports/' . $this->result->reportId,
+                    ],
                 ];
             }
 

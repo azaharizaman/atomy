@@ -430,7 +430,7 @@ final readonly class ReportManager
                 ScheduleType::MONTHLY => RecurrenceType::MONTHLY,
                 ScheduleType::YEARLY => RecurrenceType::YEARLY,
                 ScheduleType::CRON => RecurrenceType::CRON,
-                default => RecurrenceType::ONCE,
+                default => throw new \InvalidArgumentException("Unsupported schedule type: {$schedule->type->name}"),
             },
             interval: 1,
             cronExpression: $schedule->cronExpression,
