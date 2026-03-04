@@ -8,11 +8,18 @@ use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterf
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Nexus\QuotationIntelligence\Contracts\QuoteNormalizationServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\RiskAssessmentServiceInterface;
+use Nexus\QuotationIntelligence\Contracts\CommercialTermsExtractorInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorDocumentRepositoryInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorTenantRepositoryInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorProcurementManagerInterface;
+use Nexus\QuotationIntelligence\Exceptions\DocumentAccessDeniedException;
+use Nexus\QuotationIntelligence\Exceptions\InvalidNormalizationContextException;
+use Nexus\QuotationIntelligence\Exceptions\MissingRfqContextException;
+use Nexus\QuotationIntelligence\Exceptions\TenantContextNotFoundException;
+use Nexus\QuotationIntelligence\Exceptions\SemanticMappingException;
 use Nexus\QuotationIntelligence\DTOs\NormalizedQuoteLine;
+use Nexus\QuotationIntelligence\ValueObjects\NormalizationContext;
 use Nexus\QuotationIntelligence\ValueObjects\ExtractionEvidence;
 use Nexus\QuotationIntelligence\ValueObjects\QuoteSnippet;
 use Psr\Log\LoggerInterface;
@@ -29,6 +36,7 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
         private OrchestratorProcurementManagerInterface $procurementManager,
         private SemanticMapperInterface $semanticMapper,
         private QuoteNormalizationServiceInterface $normalizationService,
+        private CommercialTermsExtractorInterface $commercialTermsExtractor,
         private RiskAssessmentServiceInterface $riskAssessmentService,
         private LoggerInterface $logger
     ) {
@@ -46,36 +54,44 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
 
         // 1. Fetch document metadata and enforce tenant ownership
         $document = $this->documentRepository->findById($documentId);
-        if (!$document || $document->getTenantId() !== $tenantId) {
-            throw new \InvalidArgumentException("Document {$documentId} not found or access denied");
+        if ($document === null || $document->getTenantId() !== $tenantId) {
+            throw new DocumentAccessDeniedException("Document {$documentId} not found or access denied");
         }
 
         // 2. Fetch tenant settings for base currency
         $tenant = $this->tenantRepository->findById($tenantId);
-        $baseCurrency = $tenant?->getCurrency() ?: 'USD';
+        if ($tenant === null) {
+            throw new TenantContextNotFoundException(sprintf('Tenant context not found for "%s"', $tenantId));
+        }
+        $baseCurrency = $tenant->getCurrency();
 
         // 3. Fetch RFQ context for base unit
-        $rfqId = $document->getMetadata()['rfq_id'] ?? 'unknown';
-        $baseUnit = 'UNIT';
-        if ($rfqId !== 'unknown') {
-            try {
-                $requisition = $this->procurementManager->getRequisition($rfqId);
-                // Assuming first line unit as base unit if not explicitly defined on requisition
-                if ($requisition !== null) {
-                    $lines = $requisition->getLines();
-                    if (!empty($lines) && isset($lines[0])) {
-                        $baseUnit = $lines[0]->getUnit() ?? 'UNIT';
-                    }
-                }
-            } catch (\Throwable) {
-                // Fallback to default unit
-            }
+        $rfqId = (string)($document->getMetadata()['rfq_id'] ?? '');
+        if ($rfqId === '') {
+            throw new MissingRfqContextException("Missing required rfq_id metadata in document {$documentId}");
         }
+        $requisition = $this->procurementManager->getRequisition($rfqId);
+        if ($requisition === null) {
+            throw new MissingRfqContextException("Unable to resolve requisition context for rfq_id {$rfqId}");
+        }
+        $lines = $requisition->getLines();
+        if ($lines === [] || !isset($lines[0])) {
+            throw new MissingRfqContextException("Requisition {$rfqId} has no line context for base unit");
+        }
+        $baseUnit = (string)($lines[0]->getUnit() ?? '');
+        if ($baseUnit === '') {
+            throw new MissingRfqContextException("Requisition {$rfqId} base unit is empty");
+        }
+
+        $normalizationContext = new NormalizationContext(
+            baseUnit: $baseUnit,
+            baseCurrency: $baseCurrency,
+            fxLockDate: $this->resolveFxLockDate($document->getMetadata(), $documentId)
+        );
 
         // 4. Extract structured data using Nexus\Document ML capabilities
         $analysis = $this->documentProcessor->analyze($document->getStoragePath());
         $extractedLines = $analysis->getExtractedField('lines', []);
-
         $normalizedLines = [];
 
         // 5. Loop through extracted lines and apply intelligence
@@ -119,45 +135,38 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
                 continue;
             }
 
-            // A. Semantic Mapping (Taxonomy) with safe defaults
-            $mapping = ['code' => 'unknown', 'confidence' => 0.0];
-            try {
-                $mappingResult = $this->semanticMapper->mapToTaxonomy((string)$line['description'], $tenantId);
-                $mapping['code'] = $mappingResult['code'] ?? 'unknown';
-                $mapping['confidence'] = $mappingResult['confidence'] ?? 0.0;
-            } catch (\Throwable $e) {
-                $this->logger->error('Semantic mapping failed for line', [
-                    'rfq_line_id' => $line['rfq_line_id'] ?? null,
-                    'error' => $e->getMessage(),
-                    'description_hash' => hash('sha256', (string)$line['description'])
-                ]);
+            // A. Semantic Mapping (Taxonomy) with strict validation
+            $mapping = $this->semanticMapper->mapToTaxonomy((string)$line['description'], $tenantId);
+            if (
+                !isset($mapping['code'], $mapping['confidence'], $mapping['version'])
+                || !$this->semanticMapper->validateCode((string)$mapping['code'], (string)$mapping['version'])
+            ) {
+                throw new SemanticMappingException(
+                    sprintf('Invalid taxonomy mapping payload for RFQ line "%s"', (string)$line['rfq_line_id'])
+                );
             }
 
-            // B. Normalization (UoM) with error handling
-            $normQty = (float)$line['quantity'];
+            // B. Normalization (UoM)
             $quotedUnit = $line['unit'] ?? 'UNIT';
-            try {
-                $normQty = $this->normalizationService->normalizeQuantity(
-                    (float)$line['quantity'],
-                    (string)$quotedUnit,
-                    $baseUnit
-                );
-            } catch (\Throwable $e) {
-                $this->logger->warning('UoM normalization failed for line', ['from' => $quotedUnit, 'to' => $baseUnit, 'error' => $e->getMessage()]);
-            }
+            $normQty = $this->normalizationService->normalizeQuantity(
+                (float)$line['quantity'],
+                (string)$quotedUnit,
+                $baseUnit
+            );
 
-            // C. Normalization (Currency) with error handling
-            $normPrice = (float)$line['unit_price'];
+            // C. Normalization (Currency)
             $quotedCurrency = $line['currency'] ?? $baseCurrency;
-            try {
-                $normPrice = $this->normalizationService->normalizePrice(
-                    (float)$line['unit_price'],
-                    (string)$quotedCurrency,
-                    $baseCurrency
-                );
-            } catch (\Throwable $e) {
-                $this->logger->warning('Currency normalization failed for line', ['from' => $quotedCurrency, 'to' => $baseCurrency, 'error' => $e->getMessage()]);
-            }
+            $normPrice = $this->normalizationService->normalizePrice(
+                (float)$line['unit_price'],
+                (string)$quotedCurrency,
+                $baseCurrency,
+                $normalizationContext->fxLockDate
+            );
+
+            $commercialTermsText = trim(
+                sprintf('%s %s', (string)($line['terms'] ?? ''), (string)$line['description'])
+            );
+            $commercialTerms = $this->commercialTermsExtractor->extract($commercialTermsText);
 
             // D. Build evidence snippets
             $evidence = new ExtractionEvidence(
@@ -178,7 +187,13 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
                 quotedUnitPrice: (float)$line['unit_price'],
                 normalizedUnitPrice: (float)$normPrice,
                 aiConfidence: (float)$mapping['confidence'],
-                snippets: [$snippet]
+                snippets: [$snippet],
+                metadata: [
+                    'vendor_id' => (string)($document->getMetadata()['vendor_id'] ?? ''),
+                    'mapping_version' => (string)$mapping['version'],
+                    'normalization_context' => $normalizationContext->toArray(),
+                    'commercial_terms' => $commercialTerms,
+                ]
             );
         }
 
@@ -196,5 +211,28 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
             'lines' => array_map(fn(NormalizedQuoteLine $l) => $l->toArray(), $normalizedLines),
             'risks' => $risks,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $metadata
+     */
+    private function resolveFxLockDate(array $metadata, string $documentId): ?\DateTimeImmutable
+    {
+        $rawDate = (string)($metadata['fx_lock_date'] ?? '');
+        if ($rawDate === '') {
+            return null;
+        }
+
+        $date = \DateTimeImmutable::createFromFormat('Y-m-d', $rawDate);
+        $errors = \DateTimeImmutable::getLastErrors();
+        $hasErrors = $errors !== false && (($errors['warning_count'] ?? 0) > 0 || ($errors['error_count'] ?? 0) > 0);
+
+        if ($date === false || $hasErrors || $date->format('Y-m-d') !== $rawDate) {
+            throw new InvalidNormalizationContextException(
+                sprintf('Invalid fx_lock_date "%s" in document %s metadata', $rawDate, $documentId)
+            );
+        }
+
+        return $date;
     }
 }

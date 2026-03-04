@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\QuotationIntelligence\Services;
 
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
+use Nexus\QuotationIntelligence\Exceptions\SemanticMappingException;
 use Nexus\MachineLearning\Contracts\PredictionServiceInterface;
 use Psr\Log\LoggerInterface;
 
@@ -42,22 +43,26 @@ final readonly class AiSemanticMapper implements SemanticMapperInterface
         // 2. Call the prediction service (async)
         $jobId = $this->predictionService->predictAsync(self::MODEL_TAG, $input);
 
-        // 3. Polling for result (In a real L2 orchestrator, we'd wait or use a separate job)
-        // For this exploration, we'll try to get it immediately or return a "pending" state.
+        // 3. Polling for result (In a real L2 orchestrator, this should be event-driven)
         $prediction = $this->predictionService->getPrediction($jobId);
 
         if (!$prediction) {
-            return [
-                'code' => 'PENDING',
-                'confidence' => 0.0,
-                'version' => 'unknown',
-            ];
+            throw new SemanticMappingException('Prediction result is not available yet.');
+        }
+
+        $taxonomyCode = (string)($prediction->getMetadata()['taxonomy_code'] ?? '');
+        $modelVersion = $prediction->getModelVersion();
+
+        if (!$this->validateCode($taxonomyCode, $modelVersion)) {
+            throw new SemanticMappingException(
+                sprintf('Invalid taxonomy mapping output. code="%s", version="%s"', $taxonomyCode, $modelVersion)
+            );
         }
 
         $result = [
-            'code' => (string)($prediction->getMetadata()['taxonomy_code'] ?? '00000000'),
+            'code' => $taxonomyCode,
             'confidence' => $prediction->getConfidenceScore(),
-            'version' => $prediction->getModelVersion(),
+            'version' => $modelVersion,
         ];
 
         $this->logger->info('Taxonomy mapping complete', [

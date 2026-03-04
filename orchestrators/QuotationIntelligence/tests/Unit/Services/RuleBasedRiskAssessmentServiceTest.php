@@ -40,7 +40,24 @@ final class RuleBasedRiskAssessmentServiceTest extends TestCase
     {
         // 1. Arrange
         $line = new NormalizedQuoteLine(
-            'L1', 'Laptop (EXW Shipping)', '43211503', 1.0, 'UNIT', 1.0, 1000.0, 1000.0, 0.95
+            'L1',
+            'Laptop',
+            '43211503',
+            1.0,
+            'UNIT',
+            1.0,
+            1000.0,
+            1000.0,
+            0.95,
+            [],
+            [
+                'commercial_terms' => [
+                    'incoterm' => 'EXW',
+                    'payment_days' => 30,
+                    'lead_time_days' => 10,
+                    'warranty_months' => 24,
+                ],
+            ]
         );
 
         // 2. Act
@@ -50,6 +67,39 @@ final class RuleBasedRiskAssessmentServiceTest extends TestCase
         $this->assertCount(1, $risks);
         $this->assertSame('high', $risks[0]['level']);
         $this->assertStringContainsString('Detected EXW term', $risks[0]['message']);
+    }
+
+    public function test_flags_long_payment_term_risk(): void
+    {
+        // 1. Arrange
+        $line = new NormalizedQuoteLine(
+            'L1',
+            'Laptop',
+            '43211503',
+            1.0,
+            'UNIT',
+            1.0,
+            1000.0,
+            1000.0,
+            0.95,
+            [],
+            [
+                'commercial_terms' => [
+                    'incoterm' => 'DDP',
+                    'payment_days' => 60,
+                    'lead_time_days' => 10,
+                    'warranty_months' => 24,
+                ],
+            ]
+        );
+
+        // 2. Act
+        $risks = $this->service->assess('T1', 'R1', [$line]);
+
+        // 3. Assert
+        $this->assertCount(1, $risks);
+        $this->assertSame('medium', $risks[0]['level']);
+        $this->assertStringContainsString('Long payment term detected', $risks[0]['message']);
     }
 
     public function test_detects_pricing_anomaly_against_peers(): void
@@ -67,5 +117,74 @@ final class RuleBasedRiskAssessmentServiceTest extends TestCase
 
         // 3. Assert
         $this->assertTrue($isAnomaly);
+    }
+
+    public function test_detects_no_anomaly_when_peer_lines_empty(): void
+    {
+        $line = new NormalizedQuoteLine('L1', 'P1', 'C1', 1, 'U', 1, 10.0, 10.0, 1.0);
+        $this->assertFalse($this->service->isPricingAnomaly($line, []));
+    }
+
+    public function test_detects_no_anomaly_when_peer_average_is_zero(): void
+    {
+        $line = new NormalizedQuoteLine('L1', 'P1', 'C1', 1, 'U', 1, 10.0, 10.0, 1.0);
+        $peers = [
+            new NormalizedQuoteLine('L1', 'P1', 'C1', 1, 'U', 1, 0.0, 0.0, 1.0),
+            new NormalizedQuoteLine('L1', 'P1', 'C1', 1, 'U', 1, 0.0, 0.0, 1.0),
+        ];
+
+        $this->assertFalse($this->service->isPricingAnomaly($line, $peers));
+    }
+
+    public function test_flags_long_lead_time_and_short_warranty_risks(): void
+    {
+        $line = new NormalizedQuoteLine(
+            'L1',
+            'Laptop',
+            '43211503',
+            1.0,
+            'UNIT',
+            1.0,
+            1000.0,
+            1000.0,
+            0.95,
+            [],
+            [
+                'commercial_terms' => [
+                    'incoterm' => 'DDP',
+                    'payment_days' => 30,
+                    'lead_time_days' => 45,
+                    'warranty_months' => 6,
+                ],
+            ]
+        );
+
+        $risks = $this->service->assess('T1', 'R1', [$line]);
+
+        $this->assertCount(2, $risks);
+        $this->assertStringContainsString('Long lead time detected', $risks[0]['message'] . $risks[1]['message']);
+        $this->assertStringContainsString('Short warranty detected', $risks[0]['message'] . $risks[1]['message']);
+    }
+
+    public function test_handles_non_array_commercial_terms_without_risk(): void
+    {
+        $line = new NormalizedQuoteLine(
+            'L1',
+            'Laptop',
+            '43211503',
+            1.0,
+            'UNIT',
+            1.0,
+            1000.0,
+            1000.0,
+            0.95,
+            [],
+            [
+                'commercial_terms' => 'invalid',
+            ]
+        );
+
+        $risks = $this->service->assess('T1', 'R1', [$line]);
+        $this->assertCount(0, $risks);
     }
 }

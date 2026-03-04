@@ -48,6 +48,12 @@ final class QuoteNormalizationServiceTest extends TestCase
         $this->assertSame(120.0, $result);
     }
 
+    public function test_returns_quantity_unchanged_when_units_match(): void
+    {
+        $this->uomEngine->expects($this->never())->method('convert');
+        $this->assertSame(10.0, $this->service->normalizeQuantity(10.0, 'EA', 'EA'));
+    }
+
     public function test_normalization_throws_exception_on_engine_error(): void
     {
         // 1. Arrange
@@ -74,5 +80,11 @@ final class QuoteNormalizationServiceTest extends TestCase
 
         // 3. Assert
         $this->assertEqualsWithDelta(110.0, $result, 0.0001);
+    }
+
+    public function test_returns_price_unchanged_when_currency_matches(): void
+    {
+        $this->rateProvider->expects($this->never())->method('getRate');
+        $this->assertSame(100.0, $this->service->normalizePrice(100.0, 'USD', 'USD'));
     }
 }
