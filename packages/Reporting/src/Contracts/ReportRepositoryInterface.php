@@ -80,7 +80,7 @@ interface ReportRepositoryInterface
     /**
      * Store a distribution log entry.
      *
-     * @param array<string, mixed> $data Distribution log data
+     * @param array<string, mixed> $data Distribution log data (should include recipient_email snapshot when available)
      * @return string The log entry ID (ULID)
      */
     public function storeDistributionLog(array $data): string;

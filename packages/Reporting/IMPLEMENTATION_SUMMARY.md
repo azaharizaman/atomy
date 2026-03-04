@@ -283,6 +283,7 @@ CREATE TABLE reports_distribution_log (
     tenant_id VARCHAR(26) NOT NULL,
     report_generated_id VARCHAR(26) NOT NULL,
     recipient_id VARCHAR(26) NOT NULL,
+    recipient_email VARCHAR(320),
     notification_id VARCHAR(26),
     channel_type VARCHAR(50) NOT NULL,
     status VARCHAR(50) NOT NULL,

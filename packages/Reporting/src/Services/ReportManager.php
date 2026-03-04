@@ -73,8 +73,9 @@ final readonly class ReportManager
         // Validate user can execute the query
         $this->checkQueryPermission($data['query_id']);
 
-        // Defense-in-depth: Validate tenant context
-        $this->validateTenantContext($data['tenant_id'] ?? null);
+        // Resolve effective tenant and validate before saving.
+        $data['tenant_id'] = $data['tenant_id'] ?? $this->tenantContext->getTenantId();
+        $this->validateTenantContext($data['tenant_id']);
 
         // Normalize format
         if (is_string($data['format'])) {
@@ -99,7 +100,7 @@ final readonly class ReportManager
             'parameters' => $data['parameters'] ?? [],
             'template_config' => $data['template_config'] ?? null,
             'is_active' => $data['is_active'] ?? true,
-            'tenant_id' => $data['tenant_id'] ?? $this->tenantContext->getTenantId(),
+            'tenant_id' => $data['tenant_id'],
             'created_at' => new \DateTimeImmutable(),
         ]);
 
@@ -392,7 +393,10 @@ final readonly class ReportManager
             throw new UnauthorizedReportException("Unauthenticated requests cannot access reports");
         }
 
-        $userId = $this->authContext->getUserId() ?? 'system';
+        $userId = $this->authContext->getUserId();
+        if (!is_string($userId) || trim($userId) === '') {
+            throw new UnauthorizedReportException('Authenticated context missing valid user ID');
+        }
 
         if (!$this->analyticsAuthorizer->can($userId, 'execute', $queryId)) {
             throw UnauthorizedReportException::cannotExecuteQuery($userId, $queryId);
@@ -443,7 +447,7 @@ final readonly class ReportManager
                 $level,
                 $properties
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Reporting audit log failed', [
                 'error' => $e->getMessage(),
                 'log_name' => $logName,

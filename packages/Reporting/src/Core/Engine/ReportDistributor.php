@@ -80,6 +80,7 @@ final readonly class ReportDistributor implements ReportDistributorInterface
             try {
                 // Create notification with PDF attachment
                 $notification = $this->buildNotification($result, $options);
+                $recipientEmail = $recipient->getNotificationEmail();
 
                 // Send via Notifier
                 $notificationId = $this->notificationManager->send(
@@ -95,6 +96,7 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                     'id' => $this->generateLogId(),
                     'report_generated_id' => $result->reportId,
                     'recipient_id' => $this->getRecipientId($recipient),
+                    'recipient_email' => $recipientEmail,
                     'notification_id' => $notificationId,
                     'channel_type' => ChannelType::EMAIL->value,
                     'status' => DistributionStatus::SENT->value,
@@ -120,6 +122,7 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                     'id' => $this->generateLogId(),
                     'report_generated_id' => $result->reportId,
                     'recipient_id' => $this->getRecipientId($recipient),
+                    'recipient_email' => $recipient->getNotificationEmail(),
                     'notification_id' => null,
                     'channel_type' => ChannelType::EMAIL->value,
                     'status' => DistributionStatus::FAILED->value,
