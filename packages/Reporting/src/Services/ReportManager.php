@@ -8,6 +8,8 @@ use Nexus\Reporting\Contracts\AnalyticsAuthorizerInterface;
 use Nexus\Reporting\Contracts\AnalyticsManagerInterface;
 use Nexus\Reporting\Contracts\QueryResultInterface;
 use Nexus\Reporting\Contracts\AuditLogManagerInterface;
+use Nexus\Reporting\Contracts\AuthContextInterface;
+use Nexus\Reporting\Contracts\TenantContextInterface;
 use Nexus\Reporting\Contracts\ReportDefinitionInterface;
 use Nexus\Reporting\Contracts\ReportDistributorInterface;
 use Nexus\Reporting\Contracts\ReportGeneratorInterface;
@@ -43,8 +45,8 @@ final readonly class ReportManager
         private ScheduleManagerInterface $scheduleManager,
         private AuditLogManagerInterface $auditLogger,
         private LoggerInterface $logger,
-        private ?string $currentTenantId = null,
-        private ?string $currentUserId = null,
+        private TenantContextInterface $tenantContext,
+        private AuthContextInterface $authContext,
     ) {}
 
     /**
@@ -97,11 +99,11 @@ final readonly class ReportManager
             'parameters' => $data['parameters'] ?? [],
             'template_config' => $data['template_config'] ?? null,
             'is_active' => $data['is_active'] ?? true,
-            'tenant_id' => $data['tenant_id'] ?? $this->currentTenantId,
+            'tenant_id' => $data['tenant_id'] ?? $this->tenantContext->getTenantId(),
             'created_at' => new \DateTimeImmutable(),
         ]);
 
-        $this->auditLogger->log(
+        $this->logAuditSafely(
             logName: 'report_definition_created',
             description: "Report definition '{$data['name']}' created",
             subjectType: 'ReportDefinition',
@@ -200,7 +202,7 @@ final readonly class ReportManager
             ]);
         }
 
-        $this->auditLogger->log(
+        $this->logAuditSafely(
             logName: 'batch_report_scheduled',
             description: "Batch report generation scheduled for {$definition->getName()}",
             subjectType: 'ReportDefinition',
@@ -279,7 +281,7 @@ final readonly class ReportManager
             )
         );
 
-        $this->auditLogger->log(
+        $this->logAuditSafely(
             logName: 'report_scheduled',
             description: "Report '{$definition->getName()}' scheduled for recurring generation",
             subjectType: 'ReportDefinition',
@@ -317,7 +319,7 @@ final readonly class ReportManager
         $success = $this->reportRepository->update($reportId, $data);
 
         if ($success) {
-            $this->auditLogger->log(
+            $this->logAuditSafely(
                 logName: 'report_definition_updated',
                 description: "Report definition '{$definition->getName()}' updated",
                 subjectType: 'ReportDefinition',
@@ -349,7 +351,7 @@ final readonly class ReportManager
         $success = $this->reportRepository->archive($reportId);
 
         if ($success) {
-            $this->auditLogger->log(
+            $this->logAuditSafely(
                 logName: 'report_definition_archived',
                 description: "Report definition '{$definition->getName()}' archived",
                 subjectType: 'ReportDefinition',
@@ -385,7 +387,7 @@ final readonly class ReportManager
      */
     private function checkQueryPermission(string $queryId): void
     {
-        $userId = $this->currentUserId ?? 'system';
+        $userId = $this->authContext->getUserId() ?? 'system';
 
         if (!$this->analyticsAuthorizer->can($userId, 'execute', $queryId)) {
             throw UnauthorizedReportException::cannotExecuteQuery($userId, $queryId);
@@ -401,16 +403,47 @@ final readonly class ReportManager
      */
     private function validateTenantContext(?string $reportTenantId): void
     {
+        $currentTenantId = $this->tenantContext->getTenantId();
+
         // Skip validation if multi-tenancy is disabled
-        if ($this->currentTenantId === null && $reportTenantId === null) {
+        if ($currentTenantId === null && $reportTenantId === null) {
             return;
         }
 
-        if ($this->currentTenantId !== $reportTenantId) {
+        if ($currentTenantId !== $reportTenantId) {
             throw UnauthorizedReportException::tenantMismatch(
-                $this->currentTenantId ?? 'none',
+                $currentTenantId ?? 'none',
                 $reportTenantId ?? 'none'
             );
+        }
+    }
+
+    /**
+     * Log audit entry safely without failing main operation.
+     */
+    private function logAuditSafely(
+        string $logName,
+        string $description,
+        string $subjectType,
+        string $subjectId,
+        int $level = 1,
+        array $properties = []
+    ): void {
+        try {
+            $this->auditLogger->log(
+                $logName,
+                $description,
+                $subjectType,
+                $subjectId,
+                $level,
+                $properties
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Reporting audit log failed', [
+                'error' => $e->getMessage(),
+                'log_name' => $logName,
+                'subject_id' => $subjectId,
+            ]);
         }
     }
 
