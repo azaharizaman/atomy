@@ -486,7 +486,7 @@ final readonly class DocumentManager
     {
         try {
             $this->auditLogger->log($payload);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             $this->logger->error('Audit log failed', ['error' => $e->getMessage()]);
         }
     }

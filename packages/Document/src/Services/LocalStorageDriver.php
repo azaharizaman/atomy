@@ -93,7 +93,14 @@ final class LocalStorageDriver implements StorageDriverInterface
         $fullPath = $this->getFullPath($path);
         
         if (file_exists($fullPath)) {
-            unlink($fullPath);
+            if (!unlink($fullPath)) {
+                $error = error_get_last();
+                throw new \RuntimeException(sprintf(
+                    'Failed to delete file: "%s". %s',
+                    $fullPath,
+                    $error['message'] ?? ''
+                ));
+            }
         }
     }
 
@@ -104,8 +111,9 @@ final class LocalStorageDriver implements StorageDriverInterface
     {
         // Don't expose absolute filesystem paths
         // In a real app, this would be a signed URL to a controller route
-        // For local dev, we return a virtual path
-        return "/storage/temp/" . ltrim($path, '/') . "?expires=" . (time() + $ttlSeconds);
+        // For local dev, we return a virtual path with URL-encoded segments
+        $encoded = implode('/', array_map('rawurlencode', explode('/', ltrim($path, '/'))));
+        return "/storage/temp/" . $encoded . "?expires=" . (time() + $ttlSeconds);
     }
 
     private function getFullPath(string $path): string
