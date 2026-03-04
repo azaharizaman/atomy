@@ -58,7 +58,7 @@ final class DataExchangeCoordinatorTest extends TestCase
             new NullLogger()
         );
 
-        $taskId = $coordinator->onboard('/tmp/source.csv', 'tenant_a', ['task_id' => 'task-1']);
+        $taskId = $coordinator->onboard('/tmp/source.csv', 'tenant_a');
 
         self::assertStringStartsWith('onboard_', $taskId);
         self::assertSame('completed', $coordinator->getTaskStatus('tenant_a', $taskId)['status']);
@@ -116,5 +116,94 @@ final class DataExchangeCoordinatorTest extends TestCase
         $coordinator->offboard(['tenant_id' => 't1'], 'csv', 'exports/archive', []);
 
         self::assertSame('exports/archive/export-file.csv', $tracker->capturedPath);
+    }
+
+    public function test_offboard_throws_for_missing_tenant_id(): void
+    {
+        $taskStore = new InMemoryDataExchangeTaskStore();
+        $storage = new class implements StoragePortInterface {
+            public function store(string $destinationPath, string $sourcePath): array { return ['uri' => $destinationPath, 'size_bytes' => 128]; }
+            public function delete(string $path): void {}
+            public function exists(string $path): bool { return true; }
+        };
+
+        $coordinator = new DataExchangeCoordinator(
+            new OnboardingWorkflow(
+                new OnboardingPreflightRule($storage),
+                new class implements DataImportPortInterface {
+                    public function import(\Nexus\DataExchangeOperations\DTOs\DataOnboardingRequest $request): array
+                    {
+                        return ['records_processed' => 1, 'records_failed' => 0, 'warnings' => [], 'details' => []];
+                    }
+                },
+                $storage,
+                $taskStore
+            ),
+            new OffboardingWorkflow(
+                new OffboardingPreflightRule(),
+                new class implements DataExportPortInterface {
+                    public function export(\Nexus\DataExchangeOperations\DTOs\DataOffboardingRequest $request): array
+                    {
+                        return ['source_path' => '/tmp/export-file.csv', 'format' => 'csv', 'size_bytes' => 50, 'metadata' => []];
+                    }
+                },
+                $storage,
+                new class implements NotificationPortInterface {
+                    public function notify(array $recipients, string $template, array $context): void {}
+                },
+                $taskStore
+            ),
+            $taskStore,
+            new NullLogger()
+        );
+
+        $this->expectException(\InvalidArgumentException::class);
+        $coordinator->offboard([], 'csv', 'exports/archive', []);
+    }
+
+    public function test_offboard_throws_for_conflicting_tenant_keys(): void
+    {
+        $taskStore = new InMemoryDataExchangeTaskStore();
+        $storage = new class implements StoragePortInterface {
+            public function store(string $destinationPath, string $sourcePath): array { return ['uri' => $destinationPath, 'size_bytes' => 128]; }
+            public function delete(string $path): void {}
+            public function exists(string $path): bool { return true; }
+        };
+
+        $coordinator = new DataExchangeCoordinator(
+            new OnboardingWorkflow(
+                new OnboardingPreflightRule($storage),
+                new class implements DataImportPortInterface {
+                    public function import(\Nexus\DataExchangeOperations\DTOs\DataOnboardingRequest $request): array
+                    {
+                        return ['records_processed' => 1, 'records_failed' => 0, 'warnings' => [], 'details' => []];
+                    }
+                },
+                $storage,
+                $taskStore
+            ),
+            new OffboardingWorkflow(
+                new OffboardingPreflightRule(),
+                new class implements DataExportPortInterface {
+                    public function export(\Nexus\DataExchangeOperations\DTOs\DataOffboardingRequest $request): array
+                    {
+                        return ['source_path' => '/tmp/export-file.csv', 'format' => 'csv', 'size_bytes' => 50, 'metadata' => []];
+                    }
+                },
+                $storage,
+                new class implements NotificationPortInterface {
+                    public function notify(array $recipients, string $template, array $context): void {}
+                },
+                $taskStore
+            ),
+            $taskStore,
+            new NullLogger()
+        );
+
+        $this->expectException(\InvalidArgumentException::class);
+        $coordinator->offboard([
+            'tenant_id' => 'tenant-a',
+            'tenantId' => 'tenant-b',
+        ], 'csv', 'exports/archive', []);
     }
 }

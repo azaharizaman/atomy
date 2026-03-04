@@ -24,6 +24,11 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
 
     public function onboard(string $sourcePath, string $tenantId, array $options = []): string
     {
+        $tenantId = trim($tenantId);
+        if ($tenantId === '') {
+            throw new \InvalidArgumentException('tenantId is required for onboarding.');
+        }
+
         $taskId = self::generateTaskId('onboard');
 
         try {
@@ -49,6 +54,11 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
 
     public function getTaskStatus(string $tenantId, string $taskId): array
     {
+        $tenantId = trim($tenantId);
+        if ($tenantId === '') {
+            throw new \InvalidArgumentException('tenantId is required for task status lookups.');
+        }
+
         $status = $this->taskStore->findForTenant($tenantId, $taskId);
 
         if ($status === null) {

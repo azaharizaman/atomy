@@ -61,15 +61,12 @@ final class ReportingCoordinatorTest extends TestCase
 
             self::assertStringContainsString('reports/', $path);
             self::assertNotEmpty($tracker->storedPaths);
+            self::assertSame($path, $tracker->storedPaths[count($tracker->storedPaths) - 1] ?? null);
             self::assertSame('sales-model', $tracker->forecastModelId);
             self::assertArrayHasKey('forecast', $tracker->lastExportedPayload ?? []);
             self::assertNotEmpty($tracker->lastExportedPayload['forecast'] ?? null);
         } finally {
-            foreach ($tracker->tempFiles as $file) {
-                if (is_file($file)) {
-                    unlink($file);
-                }
-            }
+            $this->cleanupTempFiles($tracker);
         }
     }
 
@@ -83,11 +80,7 @@ final class ReportingCoordinatorTest extends TestCase
 
             self::assertStringContainsString('snapshots/tenant-a/dashboard-a/', $snapshotPath);
         } finally {
-            foreach ($tracker->tempFiles as $file) {
-                if (is_file($file)) {
-                    unlink($file);
-                }
-            }
+            $this->cleanupTempFiles($tracker);
         }
     }
 
@@ -102,6 +95,18 @@ final class ReportingCoordinatorTest extends TestCase
             /** @var array<int, string> */
             public array $tempFiles = [];
         };
+    }
+
+    private function cleanupTempFiles(object $tracker): void
+    {
+        /** @var array<int, string> $tempFiles */
+        $tempFiles = is_array($tracker->tempFiles ?? null) ? $tracker->tempFiles : [];
+
+        foreach ($tempFiles as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
     }
 
     private function buildCoordinatorFixture(
