@@ -60,7 +60,7 @@ final class DataExchangeCoordinatorTest extends TestCase
 
         $taskId = $coordinator->onboard('/tmp/source.csv', 'tenant_a', ['task_id' => 'task-1']);
 
-        self::assertSame('task-1', $taskId);
+        self::assertStringStartsWith('onboard_', $taskId);
         self::assertSame('completed', $coordinator->getTaskStatus('tenant_a', $taskId)['status']);
     }
 

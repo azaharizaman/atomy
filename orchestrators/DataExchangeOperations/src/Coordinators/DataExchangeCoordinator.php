@@ -24,10 +24,7 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
 
     public function onboard(string $sourcePath, string $tenantId, array $options = []): string
     {
-        $rawTaskId = $options['task_id'] ?? null;
-        $taskId = is_string($rawTaskId) && trim($rawTaskId) !== ''
-            ? $rawTaskId
-            : self::generateTaskId('onboard');
+        $taskId = self::generateTaskId('onboard');
 
         try {
             $this->onboardingWorkflow->run(new DataOnboardingRequest(
@@ -67,13 +64,31 @@ final readonly class DataExchangeCoordinator implements DataOnboardingCoordinato
 
     public function offboard(array $query, string $format, string $destination, array $recipients = []): string
     {
-        $rawTenantId = $query['tenant_id'] ?? $query['tenantId'] ?? null;
-        if (!is_string($rawTenantId) || trim($rawTenantId) === '') {
+        $rawSnakeTenantId = $query['tenant_id'] ?? null;
+        $rawCamelTenantId = $query['tenantId'] ?? null;
+
+        if ($rawSnakeTenantId !== null && !is_string($rawSnakeTenantId)) {
             throw new \InvalidArgumentException('tenant_id is required for offboarding.');
         }
 
-        $tenantId = trim($rawTenantId);
+        if ($rawCamelTenantId !== null && !is_string($rawCamelTenantId)) {
+            throw new \InvalidArgumentException('tenant_id is required for offboarding.');
+        }
+
+        $snakeTenantId = is_string($rawSnakeTenantId) ? trim($rawSnakeTenantId) : null;
+        $camelTenantId = is_string($rawCamelTenantId) ? trim($rawCamelTenantId) : null;
+
+        if ($snakeTenantId !== null && $camelTenantId !== null && $snakeTenantId !== $camelTenantId) {
+            throw new \InvalidArgumentException('Conflicting tenant identifiers provided: tenant_id and tenantId must match.');
+        }
+
+        $tenantId = $snakeTenantId ?? $camelTenantId;
+        if ($tenantId === null || $tenantId === '') {
+            throw new \InvalidArgumentException('tenant_id is required for offboarding.');
+        }
+
         $query['tenant_id'] = $tenantId;
+        unset($query['tenantId']);
 
         $taskId = self::generateTaskId('offboard');
 

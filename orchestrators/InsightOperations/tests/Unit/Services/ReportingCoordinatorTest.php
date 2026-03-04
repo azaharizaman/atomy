@@ -140,6 +140,10 @@ final class ReportingCoordinatorTest extends TestCase
                 public function export(array $reportData, string $format): array
                 {
                     $file = tempnam(sys_get_temp_dir(), 'insight_report_');
+                    if ($file === false) {
+                        throw new \RuntimeException('Failed to create temporary insight report file.');
+                    }
+
                     file_put_contents($file, json_encode($reportData));
                     $this->tracker->lastExportedPayload = $reportData;
                     $this->tracker->tempFiles[] = $file;
