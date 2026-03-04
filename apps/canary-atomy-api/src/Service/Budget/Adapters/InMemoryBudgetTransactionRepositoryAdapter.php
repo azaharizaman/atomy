@@ -86,6 +86,6 @@ final class InMemoryBudgetTransactionRepositoryAdapter implements BudgetTransact
 
     public function sumCommitmentsByAccount(string $accountId, string $periodId): Money
     {
-        return Money::zero('USD');
+        throw new \RuntimeException('BudgetTransaction repository adapter is not fully implemented for canary runtime.');
     }
 }

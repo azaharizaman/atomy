@@ -23,6 +23,10 @@ use Psr\Log\LoggerInterface;
  */
 final readonly class ProcurementEventListener
 {
+    private const string RELEASED_KEY = 'released';
+    private const string RELEASED_AT_KEY = 'released_at';
+    private const string RELEASE_TX_ID_KEY = 'release_transaction_id';
+
     public function __construct(
         private BudgetManagerInterface $budgetManager,
         private BudgetRepositoryInterface $budgetRepository,
@@ -137,17 +141,20 @@ final readonly class ProcurementEventListener
                 if ($budget !== null) {
                     return $budget->getId();
                 }
-            } catch (\Throwable) {
-                // Fall through to alternate lookup strategies.
+            } catch (\Throwable $e) {
+                $this->logger->debug('Account-based budget resolution failed before falling back to alternate lookup strategies.', [
+                    'event' => get_class($event),
+                    'period_id' => $periodId,
+                    'error' => $e->getMessage(),
+                ]);
             }
 
             $costCenterId = $this->readStringProperty($event, 'getCostCenterId')
                 ?? (is_object($purchaseOrder) ? $this->readStringProperty($purchaseOrder, 'getCostCenterId') : null);
             if ($costCenterId !== null) {
-                foreach ($this->budgetRepository->findByPeriod($periodId) as $budget) {
-                    if ($budget->getCostCenterId() === $costCenterId) {
-                        return $budget->getId();
-                    }
+                $budget = $this->budgetRepository->findByCostCenterAndPeriod($costCenterId, $periodId);
+                if ($budget !== null) {
+                    return $budget->getId();
                 }
             }
         }
@@ -222,6 +229,14 @@ final readonly class ProcurementEventListener
         return $value === '' ? null : $value;
     }
 
+    /**
+     * Check if a transaction has already been released
+     * 
+     * Relies on the following metadata keys:
+     * - 'released' (bool): Explicit release flag
+     * - 'released_at' (string): ISO 8601 timestamp of release
+     * - 'release_transaction_id' (string): ID of the transaction that performed the release
+     */
     private function isReleasedTransaction(object $transaction): bool
     {
         if (!method_exists($transaction, 'getMetadata')) {
@@ -233,8 +248,8 @@ final readonly class ProcurementEventListener
             return false;
         }
 
-        return ($metadata['released'] ?? false) === true ||
-            (is_string($metadata['released_at'] ?? null) && trim($metadata['released_at']) !== '') ||
-            (isset($metadata['release_transaction_id']) && (string) $metadata['release_transaction_id'] !== '');
+        return ($metadata[self::RELEASED_KEY] ?? false) === true ||
+            (is_string($metadata[self::RELEASED_AT_KEY] ?? null) && trim($metadata[self::RELEASED_AT_KEY]) !== '') ||
+            (isset($metadata[self::RELEASE_TX_ID_KEY]) && (string) $metadata[self::RELEASE_TX_ID_KEY] !== '');
     }
 }

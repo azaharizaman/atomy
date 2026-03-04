@@ -46,6 +46,15 @@ interface BudgetRepositoryInterface
     public function findByAccountAndPeriod(string $accountId, string $periodId): ?BudgetInterface;
 
     /**
+     * Find budget by cost center and period
+     * 
+     * @param string $costCenterId Cost center identifier
+     * @param string $periodId Period identifier
+     * @return BudgetInterface|null
+     */
+    public function findByCostCenterAndPeriod(string $costCenterId, string $periodId): ?BudgetInterface;
+
+    /**
      * Find budgets in department hierarchy
      * 
      * @param string $departmentId Department identifier

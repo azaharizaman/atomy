@@ -30,6 +30,11 @@ final class InMemoryBudgetRepositoryAdapter implements BudgetRepositoryInterface
         return null;
     }
 
+    public function findByCostCenterAndPeriod(string $costCenterId, string $periodId): ?BudgetInterface
+    {
+        return null;
+    }
+
     public function findByDepartmentHierarchy(string $departmentId, string $periodId): array
     {
         return [];
@@ -57,6 +62,7 @@ final class InMemoryBudgetRepositoryAdapter implements BudgetRepositoryInterface
 
     public function update(string $id, array $data): void
     {
+        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
     }
 
     public function updateStatus(string $id, string|\BackedEnum $status): void
@@ -66,18 +72,22 @@ final class InMemoryBudgetRepositoryAdapter implements BudgetRepositoryInterface
 
     public function updateAllocated(string $id, Money $amount): void
     {
+        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
     }
 
     public function updateCommitted(string $id, Money $amount): void
     {
+        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
     }
 
     public function updateActual(string $id, Money $amount): void
     {
+        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
     }
 
     public function delete(string $id): void
     {
+        throw new \RuntimeException('BudgetRepository adapter is not fully implemented for canary runtime.');
     }
 
     public function createSimulation(string $baseBudgetId, array $modifications = []): BudgetInterface
