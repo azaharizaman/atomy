@@ -20,6 +20,11 @@ use Nexus\Document\Services\NoOpAsyncBatchUpload;
 use Nexus\Document\Services\NoOpContentProcessor;
 use Nexus\Document\Services\Sha256Hasher;
 
+use Nexus\Identity\Contracts\PermissionCheckerInterface as IdentityPermissionChecker;
+use Nexus\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Tenant\Contracts\TenantContextInterface as GlobalTenantContext;
+use Nexus\AuditLogger\Services\AuditLogManager;
+
 /**
  * Service provider for the Document package.
  */
@@ -30,12 +35,30 @@ final class DocumentServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(AuditLogManagerInterface::class, DocumentAuditLogAdapter::class);
+        $this->app->singleton(AuditLogManagerInterface::class, function ($app) {
+            return new DocumentAuditLogAdapter($app->make(AuditLogManager::class));
+        });
+
         $this->app->singleton(ContentProcessorInterface::class, NoOpContentProcessor::class);
-        $this->app->singleton(StorageDriverInterface::class, LocalStorageDriver::class);
+
+        $this->app->singleton(StorageDriverInterface::class, function ($app) {
+            $basePath = config('document.storage_path') ?? env('DOCUMENT_STORAGE_PATH', '/tmp/atomy/storage');
+            return new LocalStorageDriver($basePath);
+        });
+
         $this->app->singleton(HasherInterface::class, Sha256Hasher::class);
-        $this->app->singleton(PermissionCheckerInterface::class, DocumentPermissionCheckerAdapter::class);
-        $this->app->singleton(TenantContextInterface::class, DocumentTenantContextAdapter::class);
+
+        $this->app->singleton(PermissionCheckerInterface::class, function ($app) {
+            return new DocumentPermissionCheckerAdapter(
+                $app->make(IdentityPermissionChecker::class),
+                $app->make(UserRepositoryInterface::class)
+            );
+        });
+
+        $this->app->singleton(TenantContextInterface::class, function ($app) {
+            return new DocumentTenantContextAdapter($app->make(GlobalTenantContext::class));
+        });
+
         $this->app->singleton(AsyncBatchUploadInterface::class, NoOpAsyncBatchUpload::class);
     }
 

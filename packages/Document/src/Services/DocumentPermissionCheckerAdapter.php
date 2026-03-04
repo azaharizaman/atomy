@@ -21,36 +21,35 @@ final readonly class DocumentPermissionCheckerAdapter implements PermissionCheck
 
     public function canView(string $userId, string $documentId): bool
     {
-        $user = $this->userRepository->findById($userId);
-        if (!$user) return false;
-        return $this->identityPermissions->hasPermission($user, 'document.view');
+        return $this->hasPermissionForUser($userId, 'document.view');
     }
 
     public function canEdit(string $userId, string $documentId): bool
     {
-        $user = $this->userRepository->findById($userId);
-        if (!$user) return false;
-        return $this->identityPermissions->hasPermission($user, 'document.edit');
+        return $this->hasPermissionForUser($userId, 'document.edit');
     }
 
     public function canDelete(string $userId, string $documentId): bool
     {
-        $user = $this->userRepository->findById($userId);
-        if (!$user) return false;
-        return $this->identityPermissions->hasPermission($user, 'document.delete');
+        return $this->hasPermissionForUser($userId, 'document.delete');
     }
 
     public function canShare(string $userId, string $documentId): bool
     {
-        $user = $this->userRepository->findById($userId);
-        if (!$user) return false;
-        return $this->identityPermissions->hasPermission($user, 'document.share');
+        return $this->hasPermissionForUser($userId, 'document.share');
     }
 
     public function canCreateVersion(string $userId, string $documentId): bool
     {
+        return $this->hasPermissionForUser($userId, 'document.version');
+    }
+
+    private function hasPermissionForUser(string $userId, string $permission): bool
+    {
         $user = $this->userRepository->findById($userId);
-        if (!$user) return false;
-        return $this->identityPermissions->hasPermission($user, 'document.version');
+        if (!$user) {
+            return false;
+        }
+        return $this->identityPermissions->hasPermission($user, $permission);
     }
 }

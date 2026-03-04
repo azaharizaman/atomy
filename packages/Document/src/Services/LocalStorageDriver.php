@@ -20,7 +20,9 @@ final class LocalStorageDriver implements StorageDriverInterface
         $this->basePath = rtrim($basePath, '/');
         
         if (!is_dir($this->basePath)) {
-            mkdir($this->basePath, 0755, true);
+            if (!mkdir($this->basePath, 0755, true) && !is_dir($this->basePath)) {
+                throw new \RuntimeException(sprintf('Failed to create base directory "%s"', $this->basePath));
+            }
         }
     }
 
@@ -33,12 +35,25 @@ final class LocalStorageDriver implements StorageDriverInterface
         $directory = dirname($fullPath);
 
         if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
+            if (!mkdir($directory, 0755, true) && !is_dir($directory)) {
+                throw new \RuntimeException(sprintf('Failed to create directory "%s"', $directory));
+            }
         }
 
         $target = fopen($fullPath, 'wb');
-        stream_copy_to_stream($stream, $target);
-        fclose($target);
+        if ($target === false) {
+            throw new \RuntimeException(sprintf('Failed to open file for writing: "%s"', $fullPath));
+        }
+
+        try {
+            if (stream_copy_to_stream($stream, $target) === false) {
+                throw new \RuntimeException(sprintf('Failed to write stream to file: "%s"', $fullPath));
+            }
+        } finally {
+            if (is_resource($target)) {
+                fclose($target);
+            }
+        }
     }
 
     /**
@@ -52,7 +67,16 @@ final class LocalStorageDriver implements StorageDriverInterface
             throw new \RuntimeException("File not found: {$path}");
         }
 
-        return fopen($fullPath, 'rb');
+        if (!is_readable($fullPath)) {
+            throw new \RuntimeException(sprintf('File is not readable: "%s"', $fullPath));
+        }
+
+        $stream = fopen($fullPath, 'rb');
+        if ($stream === false) {
+            throw new \RuntimeException(sprintf('Failed to open file for reading: "%s"', $fullPath));
+        }
+
+        return $stream;
     }
 
     /**
