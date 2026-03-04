@@ -5,10 +5,29 @@ declare(strict_types=1);
 namespace App\Service\Budget\Adapters;
 
 use Nexus\Budget\Contracts\BudgetInterface;
+use Nexus\Budget\Contracts\BudgetQueryInterface;
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
 use Nexus\Common\ValueObjects\Money;
 
-final class InMemoryBudgetRepositoryAdapter implements BudgetRepositoryInterface
+/**
+ * In-Memory Budget Repository Adapter
+ * 
+ * This adapter is intentionally non-persistent and primarily used for canary-only reads
+ * where it returns defaults for all operations. It provides a lightweight implementation 
+ * of BudgetRepositoryInterface and BudgetQueryInterface without a database backend.
+ * 
+ * Default Return Semantics:
+ * - findById: returns null
+ * - findByPeriod: returns []
+ * - findByDepartment: returns null
+ * - findByAccountAndPeriod: returns null
+ * - findByCostCenterAndPeriod: returns null
+ * - findByDepartmentHierarchy: returns []
+ * - findByParent: returns []
+ * - findDescendants: returns []
+ * - getHierarchyDepth: returns 0
+ */
+final class InMemoryBudgetRepositoryAdapter implements BudgetRepositoryInterface, BudgetQueryInterface
 {
     public function findById(string $id): ?BudgetInterface
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Budget\Listeners;
 
 use Nexus\Budget\Contracts\BudgetManagerInterface;
+use Nexus\Budget\Contracts\BudgetQueryInterface;
 use Nexus\Budget\Contracts\BudgetRepositoryInterface;
 use Nexus\Budget\Contracts\BudgetTransactionQueryInterface;
 use Nexus\Budget\Contracts\PurchaseOrderApprovedEventInterface;
@@ -30,6 +31,7 @@ final readonly class ProcurementEventListener
     public function __construct(
         private BudgetManagerInterface $budgetManager,
         private BudgetRepositoryInterface $budgetRepository,
+        private BudgetQueryInterface $budgetQuery,
         private BudgetTransactionQueryInterface $budgetTransactionQuery,
         private LoggerInterface $logger
     ) {}
@@ -152,7 +154,7 @@ final readonly class ProcurementEventListener
             $costCenterId = $this->readStringProperty($event, 'getCostCenterId')
                 ?? (is_object($purchaseOrder) ? $this->readStringProperty($purchaseOrder, 'getCostCenterId') : null);
             if ($costCenterId !== null) {
-                $budget = $this->budgetRepository->findByCostCenterAndPeriod($costCenterId, $periodId);
+                $budget = $this->budgetQuery->findByCostCenterAndPeriod($costCenterId, $periodId);
                 if ($budget !== null) {
                     return $budget->getId();
                 }

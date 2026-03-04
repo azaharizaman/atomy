@@ -71,17 +71,17 @@ final class InMemoryBudgetTransactionRepositoryAdapter implements BudgetTransact
 
     public function findByBudget(string $budgetId): array
     {
-        return [];
+        throw new \RuntimeException('findByBudget is not implemented for canary runtime in InMemoryBudgetTransactionRepositoryAdapter.');
     }
 
     public function findBySource(string $sourceType, string $sourceId): array
     {
-        return [];
+        throw new \RuntimeException('findBySource is not implemented for canary runtime in InMemoryBudgetTransactionRepositoryAdapter.');
     }
 
     public function findMatchingCommitment(string $sourceType, string $sourceId, int $sourceLineNumber): ?BudgetTransactionInterface
     {
-        return null;
+        throw new \RuntimeException('findMatchingCommitment is not implemented for canary runtime in InMemoryBudgetTransactionRepositoryAdapter.');
     }
 
     public function sumCommitmentsByAccount(string $accountId, string $periodId): Money
