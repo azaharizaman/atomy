@@ -423,7 +423,7 @@ final readonly class ReportManager
             return null;
         }
 
-        return new ScheduleRecurrence(
+        $recurrence = new ScheduleRecurrence(
             type: match ($schedule->type) {
                 ScheduleType::DAILY => RecurrenceType::DAILY,
                 ScheduleType::WEEKLY => RecurrenceType::WEEKLY,
@@ -437,6 +437,10 @@ final readonly class ReportManager
             endsAt: $schedule->endsAt,
             maxOccurrences: $schedule->maxOccurrences,
         );
+
+        $recurrence->validateForCreation();
+
+        return $recurrence;
     }
 
     /**

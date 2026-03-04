@@ -372,6 +372,8 @@ final readonly class ReportDistributor implements ReportDistributorInterface
     ): NotificationInterface {
         // This is a placeholder - actual implementation would use a concrete notification class
         return new class($result, $options) implements NotificationInterface {
+            private ?string $inAppId = null;
+
             public function __construct(
                 private readonly ReportResult $result,
                 private readonly array $options
@@ -407,7 +409,12 @@ final readonly class ReportDistributor implements ReportDistributorInterface
 
             public function toInApp(): array
             {
+                if ($this->inAppId === null) {
+                    $this->inAppId = (string) new \Symfony\Component\Uid\Ulid();
+                }
+
                 return [
+                    'id' => $this->inAppId,
                     'title' => 'Report Ready',
                     'body' => 'Your report has been generated successfully.',
                     'action_url' => '/reports/' . $this->result->reportId,
