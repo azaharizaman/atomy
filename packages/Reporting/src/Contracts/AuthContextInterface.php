@@ -15,4 +15,11 @@ interface AuthContextInterface
      * @return string|null
      */
     public function getUserId(): ?string;
+
+    /**
+     * Check if a user is currently authenticated.
+     * 
+     * @return bool
+     */
+    public function isAuthenticated(): bool;
 }

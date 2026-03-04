@@ -20,6 +20,7 @@ use Nexus\Reporting\ValueObjects\ReportResult;
 use Nexus\Reporting\Contracts\ScheduleManagerInterface;
 use Nexus\Reporting\ValueObjects\JobType;
 use Nexus\Reporting\ValueObjects\ScheduleDefinition;
+use Nexus\Reporting\ValueObjects\Category;
 use Nexus\Reporting\Contracts\StorageDriverInterface;
 use Psr\Log\LoggerInterface;
 
@@ -284,10 +285,13 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                 // TODO: This should be replaced with a proper RecipientResolverInterface
                 // that can hydrate full NotifiableInterface instances from recipient IDs.
                 // For now, we use a minimal stub to enable basic retry functionality.
-                $recipient = new class($log['recipient_id']) implements NotifiableInterface {
-                    public function __construct(private readonly string $id) {}
+                $recipient = new class($log['recipient_id'], $log['recipient_email'] ?? null) implements NotifiableInterface {
+                    public function __construct(
+                        private readonly string $id,
+                        private readonly ?string $email = null
+                    ) {}
                     public function getId(): string { return $this->id; }
-                    public function getNotificationEmail(): ?string { return null; }
+                    public function getNotificationEmail(): ?string { return $this->email; }
                     public function getNotificationPhone(): ?string { return null; }
                     public function getNotificationDeviceTokens(): array { return []; }
                     public function getNotificationLocale(): ?string { return null; }
@@ -295,9 +299,27 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                     public function getNotificationIdentifier(): string { return $this->id; }
                 };
 
+                $channel = $log['channel_type'] ?? ChannelType::EMAIL->value;
+
+                // Mark as failed and skip if email is required but missing
+                if ($channel === ChannelType::EMAIL->value && $recipient->getNotificationEmail() === null) {
+                    $this->logger->warning('Skipping retry: No email address for recipient', [
+                        'log_id' => $log['id'],
+                        'recipient_id' => $log['recipient_id'],
+                    ]);
+
+                    $this->reportRepository->updateDistributionLog($log['id'], [
+                        'status' => DistributionStatus::FAILED->value,
+                        'error' => 'Skipped retry: No email address available',
+                    ]);
+
+                    $failureCount++;
+                    continue;
+                }
+
                 // Build notification options from log (if available)
                 $options = [
-                    'channel' => $log['channel_type'] ?? ChannelType::EMAIL->value,
+                    'channel' => $channel,
                     'priority' => Priority::NORMAL->value,
                 ];
 
@@ -428,9 +450,9 @@ final readonly class ReportDistributor implements ReportDistributorInterface
                 return Priority::NORMAL;
             }
 
-            public function getCategory(): \Nexus\Reporting\ValueObjects\Category
+            public function getCategory(): Category
             {
-                return \Nexus\Reporting\ValueObjects\Category::TRANSACTIONAL;
+                return Category::TRANSACTIONAL;
             }
         };
     }

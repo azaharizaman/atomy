@@ -44,15 +44,21 @@ final readonly class ScheduleRecurrence
 
     /**
      * Hydration factory for existing records.
+     * 
+     * @throws \Nexus\Reporting\Exceptions\ScheduleRecurrenceHydrationException
      */
     public static function fromStoredData(array $data): self
     {
-        return new self(
-            type: RecurrenceType::from($data['type']),
-            interval: $data['interval'] ?? 1,
-            cronExpression: $data['cron_expression'] ?? null,
-            endsAt: isset($data['ends_at']) ? new \DateTimeImmutable($data['ends_at']) : null,
-            maxOccurrences: $data['max_occurrences'] ?? null
-        );
+        try {
+            return new self(
+                type: RecurrenceType::from($data['type']),
+                interval: $data['interval'] ?? 1,
+                cronExpression: $data['cron_expression'] ?? null,
+                endsAt: isset($data['ends_at']) ? new \DateTimeImmutable($data['ends_at']) : null,
+                maxOccurrences: $data['max_occurrences'] ?? null
+            );
+        } catch (\Throwable $e) {
+            throw \Nexus\Reporting\Exceptions\ScheduleRecurrenceHydrationException::forMalformedData($data, $e);
+        }
     }
 }

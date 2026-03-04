@@ -387,6 +387,11 @@ final readonly class ReportManager
      */
     private function checkQueryPermission(string $queryId): void
     {
+        if (!$this->authContext->isAuthenticated()) {
+            // Unauthenticated requests should never fallback to 'system' privileges
+            throw new UnauthorizedReportException("Unauthenticated requests cannot access reports");
+        }
+
         $userId = $this->authContext->getUserId() ?? 'system';
 
         if (!$this->analyticsAuthorizer->can($userId, 'execute', $queryId)) {

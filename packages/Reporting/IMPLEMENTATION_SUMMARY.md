@@ -2,8 +2,8 @@
 
 **Package:** `Nexus\Reporting`  
 **Status:** ✅ **PHASE 1 COMPLETE** (Foundation + Core Features) - 85% Complete  
-**Last Updated:** 2025-05-27  
-**Version:** 1.0.0
+**Last Updated:** 2026-03-04
+**Version:** 1.1.0
 
 ---
 
@@ -19,7 +19,10 @@ The **Nexus\Reporting** package has been successfully implemented as a **Present
 - ✅ **Security Inheritance:** Enforces Analytics RBAC permissions (SEC-REP-0401) with defense-in-depth tenant validation
 - ✅ **Performance Optimization:** Queue offloading for >5s jobs (PER-REP-0301), batch concurrency limiting (10/tenant)
 - ✅ **Resilience Patterns:** PDF preservation on distribution failure (REL-REP-0305), exponential backoff retry
-
+- ✅ **Boundary Remediation (2026-03-04):** 
+    - Enhanced `ReportDistributor` retry logic to validate recipient email before attempting distribution.
+    - Hardened `ReportManager` security by enforcing authentication checks before falling back to 'system' privileges.
+    - Improved `ScheduleRecurrence` hydration with robust error handling and domain-specific exceptions.
 ---
 
 ## Architecture Overview
