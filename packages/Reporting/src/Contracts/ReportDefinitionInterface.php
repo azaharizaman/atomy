@@ -56,7 +56,7 @@ interface ReportDefinitionInterface
     /**
      * Get the list of recipients who should receive this report.
      *
-     * @return array<\Nexus\Notifier\Contracts\NotifiableInterface>
+     * @return array<\Nexus\Reporting\Contracts\NotifiableInterface>
      */
     public function getRecipients(): array;
 

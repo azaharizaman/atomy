@@ -2,8 +2,8 @@
 
 **Package:** `Nexus\Reporting`  
 **Status:** ✅ **PHASE 1 COMPLETE** (Foundation + Core Features) - 85% Complete  
-**Last Updated:** 2025-05-27  
-**Version:** 1.0.0
+**Last Updated:** 2026-03-04
+**Version:** 1.1.0
 
 ---
 
@@ -19,7 +19,11 @@ The **Nexus\Reporting** package has been successfully implemented as a **Present
 - ✅ **Security Inheritance:** Enforces Analytics RBAC permissions (SEC-REP-0401) with defense-in-depth tenant validation
 - ✅ **Performance Optimization:** Queue offloading for >5s jobs (PER-REP-0301), batch concurrency limiting (10/tenant)
 - ✅ **Resilience Patterns:** PDF preservation on distribution failure (REL-REP-0305), exponential backoff retry
-
+- ✅ **Boundary Remediation (2026-03-04):** 
+    - **Primary architectural change:** Removed direct Layer 1 Reporting module dependencies and migrated integration points to local Reporting interop ports/contracts and Reporting value objects (including replacing direct orchestration calls with Reporting-local ports for distributor/manager flows).
+    - Enhanced `ReportDistributor` retry logic to validate recipient email before attempting distribution.
+    - Hardened `ReportManager` security by enforcing authentication checks and rejecting empty/null authenticated user IDs.
+    - Improved `ScheduleRecurrence` hydration with robust error handling and safer malformed-payload diagnostics.
 ---
 
 ## Architecture Overview
@@ -275,11 +279,13 @@ CREATE TABLE reports_generated (
 );
 
 -- Distribution Log
+-- Distribution Log (see "Privacy Controls: recipient_email" below)
 CREATE TABLE reports_distribution_log (
     id VARCHAR(26) PRIMARY KEY,
     tenant_id VARCHAR(26) NOT NULL,
     report_generated_id VARCHAR(26) NOT NULL,
     recipient_id VARCHAR(26) NOT NULL,
+    recipient_email VARCHAR(320),
     notification_id VARCHAR(26),
     channel_type VARCHAR(50) NOT NULL,
     status VARCHAR(50) NOT NULL,
@@ -287,6 +293,30 @@ CREATE TABLE reports_distribution_log (
     error TEXT
 );
 ```
+
+### Privacy Controls: `recipient_email`
+
+The `reports_distribution_log.recipient_email` field is operationally necessary for retry flows, but must be treated as sensitive contact data.
+
+1. Minimization
+   - Persist only normalized email (`trim`, lowercase domain/local as policy allows).
+   - Do not persist optional contact metadata (display names, headers, provider payloads, aliases) in this field.
+2. Storage protection
+   - Enforce encryption-at-rest for the underlying column/storage volume.
+   - For analytics/search use-cases, prefer storing a salted one-way hash alongside or instead of cleartext where raw value is not needed.
+3. Masking in UI/logs
+   - Never render full addresses in dashboards, support tools, or application logs.
+   - Display masked forms only (domain-only or first/last-character patterns).
+4. Retention and purge
+   - Retain raw `recipient_email` only for the minimum retry/audit window (recommended: 30 days unless stricter policy applies).
+   - Apply automated purge/anonymization after retention expiry in the distribution-log cleanup job.
+5. Access scope and auditability
+   - Raw values may be read only by Reporting distribution/retry services and explicitly authorized compliance/support roles.
+   - Every read/update of raw values must be audit logged with actor/service identity, reason, and timestamp.
+
+Reference standards:
+- Company retention baseline: [`docs/project/ENTERPRISE_BEST_PRACTICES.md`](../../docs/project/ENTERPRISE_BEST_PRACTICES.md)
+- Company security/encryption guidance: [`docs/project/NEXUS_SYSTEM_OVERVIEW.md`](../../docs/project/NEXUS_SYSTEM_OVERVIEW.md)
 
 ---
 

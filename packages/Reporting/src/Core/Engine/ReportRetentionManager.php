@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\Reporting\Core\Engine;
 
-use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
+use Nexus\Reporting\Contracts\AuditLogManagerInterface;
 use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 use Nexus\Reporting\Contracts\ReportRetentionInterface;
 use Nexus\Reporting\ValueObjects\RetentionTier;
-use Nexus\Storage\Contracts\StorageDriverInterface;
+use Nexus\Reporting\Contracts\StorageDriverInterface;
 use Psr\Log\LoggerInterface;
 
 /**

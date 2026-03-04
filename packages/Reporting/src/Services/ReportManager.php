@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Nexus\Reporting\Services;
 
-use Nexus\QueryEngine\Contracts\AnalyticsAuthorizerInterface;
-use Nexus\QueryEngine\Contracts\AnalyticsManagerInterface;
-use Nexus\QueryEngine\Contracts\QueryResultInterface;
-use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
+use Nexus\Reporting\Contracts\AnalyticsAuthorizerInterface;
+use Nexus\Reporting\Contracts\AnalyticsManagerInterface;
+use Nexus\Reporting\Contracts\QueryResultInterface;
+use Nexus\Reporting\Contracts\AuditLogManagerInterface;
+use Nexus\Reporting\Contracts\AuthContextInterface;
+use Nexus\Reporting\Contracts\TenantContextInterface;
 use Nexus\Reporting\Contracts\ReportDefinitionInterface;
 use Nexus\Reporting\Contracts\ReportDistributorInterface;
 use Nexus\Reporting\Contracts\ReportGeneratorInterface;
@@ -15,13 +17,15 @@ use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 use Nexus\Reporting\Exceptions\ReportNotFoundException;
 use Nexus\Reporting\Exceptions\UnauthorizedReportException;
 use Nexus\Reporting\ValueObjects\DistributionResult;
+use Nexus\Reporting\ValueObjects\RecurrenceType;
 use Nexus\Reporting\ValueObjects\ReportFormat;
 use Nexus\Reporting\ValueObjects\ReportResult;
 use Nexus\Reporting\ValueObjects\ReportSchedule;
 use Nexus\Reporting\ValueObjects\ScheduleType;
-use Nexus\Scheduler\Contracts\ScheduleManagerInterface;
-use Nexus\Scheduler\ValueObjects\JobType;
-use Nexus\Scheduler\ValueObjects\ScheduleDefinition;
+use Nexus\Reporting\ValueObjects\ScheduleRecurrence;
+use Nexus\Reporting\Contracts\ScheduleManagerInterface;
+use Nexus\Reporting\ValueObjects\JobType;
+use Nexus\Reporting\ValueObjects\ScheduleDefinition;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,8 +45,8 @@ final readonly class ReportManager
         private ScheduleManagerInterface $scheduleManager,
         private AuditLogManagerInterface $auditLogger,
         private LoggerInterface $logger,
-        private ?string $currentTenantId = null,
-        private ?string $currentUserId = null,
+        private TenantContextInterface $tenantContext,
+        private AuthContextInterface $authContext,
     ) {}
 
     /**
@@ -69,8 +73,9 @@ final readonly class ReportManager
         // Validate user can execute the query
         $this->checkQueryPermission($data['query_id']);
 
-        // Defense-in-depth: Validate tenant context
-        $this->validateTenantContext($data['tenant_id'] ?? null);
+        // Resolve effective tenant and validate before saving.
+        $data['tenant_id'] = $data['tenant_id'] ?? $this->tenantContext->getTenantId();
+        $this->validateTenantContext($data['tenant_id']);
 
         // Normalize format
         if (is_string($data['format'])) {
@@ -99,11 +104,11 @@ final readonly class ReportManager
             'parameters' => $data['parameters'] ?? [],
             'template_config' => $data['template_config'] ?? null,
             'is_active' => $data['is_active'] ?? true,
-            'tenant_id' => $data['tenant_id'] ?? $this->currentTenantId,
+            'tenant_id' => $data['tenant_id'],
             'created_at' => new \DateTimeImmutable(),
         ]);
 
-        $this->auditLogger->log(
+        $this->logAuditSafely(
             logName: 'report_definition_created',
             description: "Report definition '{$data['name']}' created",
             subjectType: 'ReportDefinition',
@@ -202,7 +207,7 @@ final readonly class ReportManager
             ]);
         }
 
-        $this->auditLogger->log(
+        $this->logAuditSafely(
             logName: 'batch_report_scheduled',
             description: "Batch report generation scheduled for {$definition->getName()}",
             subjectType: 'ReportDefinition',
@@ -220,7 +225,7 @@ final readonly class ReportManager
     /**
      * Distribute a generated report to recipients.
      *
-     * @param array<\Nexus\Notifier\Contracts\NotifiableInterface> $recipients
+     * @param array<\Nexus\Reporting\Contracts\NotifiableInterface> $recipients
      * @param array<string, mixed> $options
      * @throws ReportNotFoundException
      */
@@ -233,6 +238,9 @@ final readonly class ReportManager
         if (!$generatedReport) {
             throw ReportNotFoundException::forGeneratedReport($reportGeneratedId);
         }
+
+        // Defense-in-depth: Tenant validation for generated report access.
+        $this->validateTenantContext($generatedReport['tenant_id'] ?? null);
 
         // Build ReportResult from stored data
         $result = new ReportResult(
@@ -284,7 +292,7 @@ final readonly class ReportManager
             )
         );
 
-        $this->auditLogger->log(
+        $this->logAuditSafely(
             logName: 'report_scheduled',
             description: "Report '{$definition->getName()}' scheduled for recurring generation",
             subjectType: 'ReportDefinition',
@@ -322,7 +330,7 @@ final readonly class ReportManager
         $success = $this->reportRepository->update($reportId, $data);
 
         if ($success) {
-            $this->auditLogger->log(
+            $this->logAuditSafely(
                 logName: 'report_definition_updated',
                 description: "Report definition '{$definition->getName()}' updated",
                 subjectType: 'ReportDefinition',
@@ -354,7 +362,7 @@ final readonly class ReportManager
         $success = $this->reportRepository->archive($reportId);
 
         if ($success) {
-            $this->auditLogger->log(
+            $this->logAuditSafely(
                 logName: 'report_definition_archived',
                 description: "Report definition '{$definition->getName()}' archived",
                 subjectType: 'ReportDefinition',
@@ -390,7 +398,15 @@ final readonly class ReportManager
      */
     private function checkQueryPermission(string $queryId): void
     {
-        $userId = $this->currentUserId ?? 'system';
+        if (!$this->authContext->isAuthenticated()) {
+            // Unauthenticated requests should never fallback to 'system' privileges
+            throw new UnauthorizedReportException("Unauthenticated requests cannot access reports");
+        }
+
+        $userId = $this->authContext->getUserId();
+        if (!is_string($userId) || trim($userId) === '') {
+            throw new UnauthorizedReportException('Authenticated context missing valid user ID');
+        }
 
         if (!$this->analyticsAuthorizer->can($userId, 'execute', $queryId)) {
             throw UnauthorizedReportException::cannotExecuteQuery($userId, $queryId);
@@ -406,42 +422,77 @@ final readonly class ReportManager
      */
     private function validateTenantContext(?string $reportTenantId): void
     {
+        $currentTenantId = $this->tenantContext->getTenantId();
+
         // Skip validation if multi-tenancy is disabled
-        if ($this->currentTenantId === null && $reportTenantId === null) {
+        if ($currentTenantId === null && $reportTenantId === null) {
             return;
         }
 
-        if ($this->currentTenantId !== $reportTenantId) {
+        if ($currentTenantId !== $reportTenantId) {
             throw UnauthorizedReportException::tenantMismatch(
-                $this->currentTenantId ?? 'none',
+                $currentTenantId ?? 'none',
                 $reportTenantId ?? 'none'
             );
         }
     }
 
     /**
+     * Log audit entry safely without failing main operation.
+     */
+    private function logAuditSafely(
+        string $logName,
+        string $description,
+        string $subjectType,
+        string $subjectId,
+        int $level = 1,
+        array $properties = []
+    ): void {
+        try {
+            $this->auditLogger->log(
+                $logName,
+                $description,
+                $subjectType,
+                $subjectId,
+                $level,
+                $properties
+            );
+        } catch (\Throwable $e) {
+            $this->logger->error('Reporting audit log failed', [
+                'error' => $e->getMessage(),
+                'log_name' => $logName,
+                'subject_id' => $subjectId,
+            ]);
+        }
+    }
+
+    /**
      * Convert ReportSchedule to Scheduler's ScheduleRecurrence.
      */
-    private function convertToScheduleRecurrence(ReportSchedule $schedule): ?\Nexus\Scheduler\ValueObjects\ScheduleRecurrence
+    private function convertToScheduleRecurrence(ReportSchedule $schedule): ?ScheduleRecurrence
     {
         if (!$schedule->type->isRecurring()) {
             return null;
         }
 
-        return new \Nexus\Scheduler\ValueObjects\ScheduleRecurrence(
+        $recurrence = new ScheduleRecurrence(
             type: match ($schedule->type) {
-                ScheduleType::DAILY => \Nexus\Scheduler\ValueObjects\RecurrenceType::DAILY,
-                ScheduleType::WEEKLY => \Nexus\Scheduler\ValueObjects\RecurrenceType::WEEKLY,
-                ScheduleType::MONTHLY => \Nexus\Scheduler\ValueObjects\RecurrenceType::MONTHLY,
-                ScheduleType::YEARLY => \Nexus\Scheduler\ValueObjects\RecurrenceType::YEARLY,
-                ScheduleType::CRON => \Nexus\Scheduler\ValueObjects\RecurrenceType::CRON,
-                default => \Nexus\Scheduler\ValueObjects\RecurrenceType::ONCE,
+                ScheduleType::DAILY => RecurrenceType::DAILY,
+                ScheduleType::WEEKLY => RecurrenceType::WEEKLY,
+                ScheduleType::MONTHLY => RecurrenceType::MONTHLY,
+                ScheduleType::YEARLY => RecurrenceType::YEARLY,
+                ScheduleType::CRON => RecurrenceType::CRON,
+                default => throw new \InvalidArgumentException("Unsupported schedule type: {$schedule->type->name}"),
             },
             interval: 1,
             cronExpression: $schedule->cronExpression,
             endsAt: $schedule->endsAt,
             maxOccurrences: $schedule->maxOccurrences,
         );
+
+        $recurrence->validateForCreation();
+
+        return $recurrence;
     }
 
     /**

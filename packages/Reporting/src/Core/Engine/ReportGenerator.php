@@ -4,26 +4,28 @@ declare(strict_types=1);
 
 namespace Nexus\Reporting\Core\Engine;
 
-use Nexus\QueryEngine\Contracts\AnalyticsAuthorizerInterface;
-use Nexus\QueryEngine\Contracts\AnalyticsManagerInterface;
-use Nexus\QueryEngine\Contracts\QueryResultInterface;
-use Nexus\AuditLogger\Contracts\AuditLogManagerInterface;
-use Nexus\Export\Contracts\ExportDestination;
-use Nexus\Export\Contracts\ExportManagerInterface;
-use Nexus\Export\ValueObjects\ExportDefinition;
-use Nexus\Export\ValueObjects\ExportMetadata;
+use Nexus\Reporting\Contracts\AnalyticsAuthorizerInterface;
+use Nexus\Reporting\Contracts\AnalyticsManagerInterface;
+use Nexus\Reporting\Contracts\QueryResultInterface;
+use Nexus\Reporting\Contracts\AuditLogManagerInterface;
+use Nexus\Reporting\ValueObjects\ExportDestination;
+use Nexus\Reporting\Contracts\ExportManagerInterface;
+use Nexus\Reporting\ValueObjects\ExportDefinition;
+use Nexus\Reporting\ValueObjects\ExportFormat;
+use Nexus\Reporting\ValueObjects\ExportMetadata;
 use Nexus\Reporting\Contracts\ReportDefinitionInterface;
 use Nexus\Reporting\Contracts\ReportGeneratorInterface;
 use Nexus\Reporting\Contracts\ReportRepositoryInterface;
 use Nexus\Reporting\Contracts\ReportTemplateInterface;
+use Nexus\Reporting\Contracts\AuthContextInterface;
 use Nexus\Reporting\Exceptions\ReportGenerationException;
 use Nexus\Reporting\Exceptions\UnauthorizedReportException;
 use Nexus\Reporting\ValueObjects\ReportFormat;
 use Nexus\Reporting\ValueObjects\ReportResult;
 use Nexus\Reporting\ValueObjects\RetentionTier;
-use Nexus\Scheduler\Contracts\ScheduleManagerInterface;
-use Nexus\Scheduler\ValueObjects\JobType;
-use Nexus\Scheduler\ValueObjects\ScheduleDefinition;
+use Nexus\Reporting\Contracts\ScheduleManagerInterface;
+use Nexus\Reporting\ValueObjects\JobType;
+use Nexus\Reporting\ValueObjects\ScheduleDefinition;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,6 +43,7 @@ final readonly class ReportGenerator implements ReportGeneratorInterface
         private ScheduleManagerInterface $scheduleManager,
         private AuditLogManagerInterface $auditLogger,
         private LoggerInterface $logger,
+        private AuthContextInterface $authContext,
         private ?ReportTemplateInterface $defaultTemplate = null,
     ) {}
 
@@ -309,7 +312,7 @@ final readonly class ReportGenerator implements ReportGeneratorInterface
         try {
             // Note: runQuery signature may vary based on actual Analytics implementation
             // Adjust this call based on your Analytics package API
-            return $this->analyticsManager->runQuery($queryId, '', '', $parameters);
+            return $this->analyticsManager->runQuery($queryId, null, null, $parameters);
         } catch (\Throwable $e) {
             throw ReportGenerationException::queryExecutionFailed($queryId, $e);
         }
@@ -360,14 +363,14 @@ final readonly class ReportGenerator implements ReportGeneratorInterface
     /**
      * Map ReportFormat to Export package format enum.
      */
-    private function mapFormatToExportFormat(ReportFormat $format): \Nexus\Export\ValueObjects\ExportFormat
+    private function mapFormatToExportFormat(ReportFormat $format): ExportFormat
     {
         return match ($format) {
-            ReportFormat::PDF => \Nexus\Export\ValueObjects\ExportFormat::PDF,
-            ReportFormat::EXCEL => \Nexus\Export\ValueObjects\ExportFormat::EXCEL,
-            ReportFormat::CSV => \Nexus\Export\ValueObjects\ExportFormat::CSV,
-            ReportFormat::JSON => \Nexus\Export\ValueObjects\ExportFormat::JSON,
-            ReportFormat::HTML => \Nexus\Export\ValueObjects\ExportFormat::HTML,
+            ReportFormat::PDF => ExportFormat::PDF,
+            ReportFormat::EXCEL => ExportFormat::EXCEL,
+            ReportFormat::CSV => ExportFormat::CSV,
+            ReportFormat::JSON => ExportFormat::JSON,
+            ReportFormat::HTML => ExportFormat::HTML,
         };
     }
 
@@ -383,12 +386,9 @@ final readonly class ReportGenerator implements ReportGeneratorInterface
 
     /**
      * Get current user ID from context.
-     *
-     * TODO: Inject proper AuthContextInterface
      */
     private function getCurrentUserId(): string
     {
-        // Placeholder - should be injected via AuthContextInterface
-        return 'system';
+        return $this->authContext->getUserId() ?? 'system';
     }
 }

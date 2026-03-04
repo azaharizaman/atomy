@@ -8,7 +8,7 @@ use Nexus\Reporting\ValueObjects\DistributionResult;
 use Nexus\Reporting\ValueObjects\ReportResult;
 
 /**
- * Handles multi-channel distribution of generated reports via Nexus\Notifier.
+ * Handles multi-channel distribution of generated reports via Reporting Notifier.
  */
 interface ReportDistributorInterface
 {
@@ -21,7 +21,7 @@ interface ReportDistributorInterface
      * Implements REL-REP-0305: On failure, preserves PDF for manual retry.
      *
      * @param ReportResult $result The generated report
-     * @param array<\Nexus\Notifier\Contracts\NotifiableInterface> $recipients
+     * @param array<\Nexus\Reporting\Contracts\NotifiableInterface> $recipients
      * @param array<string, mixed> $options Additional options (e.g., email subject override)
      * @return DistributionResult
      * @throws \Nexus\Reporting\Exceptions\ReportDistributionException
@@ -37,8 +37,8 @@ interface ReportDistributorInterface
      *
      * @param string $reportGeneratedId The generated report ID
      * @param \DateTimeImmutable $scheduledAt When to distribute
-     * @param array<\Nexus\Notifier\Contracts\NotifiableInterface> $recipients
-     * @return string The scheduled job ID from Scheduler
+     * @param array<\Nexus\Reporting\Contracts\NotifiableInterface> $recipients
+     * @return string The scheduled job ID from Reporting Scheduler
      */
     public function scheduleDistribution(
         string $reportGeneratedId,
