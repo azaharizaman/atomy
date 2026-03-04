@@ -1,7 +1,0 @@
-package	dependencies_used_in_src
-Budget	nexus/audit-logger,nexus/currency,nexus/machine-learning,nexus/notifier,nexus/period,nexus/procurement,nexus/setting,nexus/workflow
-Document	nexus/audit-logger,nexus/crypto,nexus/storage,nexus/tenant
-FieldService	nexus/backoffice,nexus/document,nexus/geo,nexus/inventory,nexus/sequencing,nexus/warehouse
-GDPR	nexus/data-privacy
-PDPA	nexus/data-privacy
-Reporting	nexus/audit-logger,nexus/export,nexus/notifier,nexus/query-engine,nexus/scheduler,nexus/storage
