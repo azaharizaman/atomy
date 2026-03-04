@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nexus\PaymentGateway\Gateways;
 
 use Nexus\PaymentGateway\Contracts\GatewayInterface;
-use Nexus\Connector\Contracts\HttpClientInterface;
+use Nexus\PaymentGateway\Contracts\HttpClientInterface;
 use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
 use Nexus\PaymentGateway\DTOs\CaptureRequest;
 use Nexus\PaymentGateway\DTOs\EvidenceSubmissionRequest;

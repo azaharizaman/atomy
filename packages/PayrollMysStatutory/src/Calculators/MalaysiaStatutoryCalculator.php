@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\PayrollMysStatutory\Calculators;
 
-use Nexus\Payroll\Contracts\DeductionResultInterface;
-use Nexus\Payroll\Contracts\PayloadInterface;
-use Nexus\Payroll\Contracts\StatutoryCalculatorInterface;
-use Nexus\Payroll\Exceptions\PayloadValidationException;
+use Nexus\PayrollMysStatutory\Contracts\DeductionResultInterface;
+use Nexus\PayrollMysStatutory\Contracts\PayloadInterface;
+use Nexus\PayrollMysStatutory\Contracts\StatutoryCalculatorInterface;
+use Nexus\PayrollMysStatutory\Exceptions\PayloadValidationException;
 use Nexus\PayrollMysStatutory\Data\PcbTaxTable;
 use Nexus\PayrollMysStatutory\Data\SocsoRateTable;
 use Nexus\PayrollMysStatutory\ValueObjects\MalaysiaDeductionResult;

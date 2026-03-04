@@ -5,10 +5,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/import": "*@dev",
-        "nexus/export": "*@dev",
-        "nexus/storage": "*@dev",
-        "nexus/notifier": "*@dev",
         "psr/log": "^3.0"
     },
     "autoload": {

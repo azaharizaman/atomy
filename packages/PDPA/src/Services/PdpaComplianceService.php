@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Nexus\PDPA\Services;
 
 use DateTimeImmutable;
-use Nexus\DataPrivacy\Contracts\DataSubjectRequestManagerInterface;
-use Nexus\DataPrivacy\Enums\RequestStatus;
-use Nexus\DataPrivacy\ValueObjects\DataSubjectRequest;
+use Nexus\PDPA\Contracts\DataSubjectRequestManagerInterface;
 use Nexus\PDPA\Contracts\PdpaComplianceServiceInterface;
 use Nexus\PDPA\Enums\PdpaDataPrinciple;
+use Nexus\PDPA\Enums\RequestStatus;
 use Nexus\PDPA\Exceptions\PdpaException;
+use Nexus\PDPA\ValueObjects\DataSubjectRequest;
 use Nexus\PDPA\ValueObjects\PdpaDeadline;
 
 /**

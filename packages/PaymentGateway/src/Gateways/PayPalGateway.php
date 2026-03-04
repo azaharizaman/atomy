@@ -11,7 +11,7 @@ use Nexus\PaymentGateway\Enums\GatewayStatus;
 use Nexus\PaymentGateway\DTOs\AuthorizeRequest;
 use Nexus\PaymentGateway\Enums\GatewayProvider;
 use Nexus\PaymentGateway\ValueObjects\VoidResult;
-use Nexus\Connector\Contracts\HttpClientInterface;
+use Nexus\PaymentGateway\Contracts\HttpClientInterface;
 use Nexus\PaymentGateway\ValueObjects\RefundResult;
 use Nexus\PaymentGateway\Contracts\GatewayInterface;
 use Nexus\PaymentGateway\ValueObjects\CaptureResult;

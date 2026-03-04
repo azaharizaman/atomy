@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Nexus\PDPA\ValueObjects;
 
 use DateTimeImmutable;
-use Nexus\DataPrivacy\ValueObjects\DataSubjectRequest;
 use Nexus\PDPA\Exceptions\PdpaException;
+use Nexus\PDPA\ValueObjects\DataSubjectRequest;
 
 /**
  * PDPA-specific deadline calculations.

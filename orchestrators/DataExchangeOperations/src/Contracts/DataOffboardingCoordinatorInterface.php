@@ -4,21 +4,16 @@ declare(strict_types=1);
 
 namespace Nexus\DataExchangeOperations\Contracts;
 
-/**
- * Interface DataOffboardingCoordinatorInterface
- *
- * Coordinates multi-format data offboarding, storage, and notification.
- */
 interface DataOffboardingCoordinatorInterface
 {
     /**
-     * Executes a data offboarding/export task.
+     * Execute offboarding/export workflow and return task id.
      *
-     * @param array $query Criteria for data extraction.
-     * @param string $format Target format (e.g., 'csv', 'json', 'pdf').
-     * @param string $destination S3 bucket or storage path.
-     * @param array $recipients List of notification recipients.
-     * @return string The task identifier.
+     * @param array<string, mixed> $query
+     * @param string $format
+     * @param string $destination
+     * @param array<int, string> $recipients
+     * @return string
      */
     public function offboard(array $query, string $format, string $destination, array $recipients = []): string;
 }

@@ -4,144 +4,194 @@ declare(strict_types=1);
 
 namespace Nexus\InsightOperations\Tests\Unit\Services;
 
-use Nexus\Export\Contracts\ExportGeneratorInterface;
-use Nexus\Export\ValueObjects\ExportResult;
-use Nexus\InsightOperations\Services\ReportingCoordinator;
-use Nexus\MachineLearning\Contracts\PredictionResultInterface;
-use Nexus\MachineLearning\Contracts\PredictionServiceInterface;
-use Nexus\Notifier\Contracts\NotificationManagerInterface;
-use Nexus\QueryEngine\Contracts\AnalyticsRepositoryInterface;
-use Nexus\QueryEngine\Contracts\QueryResultInterface;
-use Nexus\Storage\Contracts\StorageDriverInterface;
-use PHPUnit\Framework\MockObject\MockObject;
+use Nexus\InsightOperations\Contracts\DashboardSnapshotPortInterface;
+use Nexus\InsightOperations\Contracts\ForecastPortInterface;
+use Nexus\InsightOperations\Contracts\InsightNotificationPortInterface;
+use Nexus\InsightOperations\Contracts\InsightStoragePortInterface;
+use Nexus\InsightOperations\Contracts\ReportDataQueryPortInterface;
+use Nexus\InsightOperations\Contracts\ReportExportPortInterface;
+use Nexus\InsightOperations\Coordinators\ReportingCoordinator;
+use Nexus\InsightOperations\DataProviders\PipelineContextDataProvider;
+use Nexus\InsightOperations\DTOs\DashboardSnapshotDto;
+use Nexus\InsightOperations\Rules\DashboardSnapshotRule;
+use Nexus\InsightOperations\Rules\ReportingPipelineRule;
+use Nexus\InsightOperations\Workflows\DashboardSnapshotWorkflow;
+use Nexus\InsightOperations\Workflows\ReportingPipelineWorkflow;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
-class ReportingCoordinatorTest extends TestCase
+final class ReportingCoordinatorTest extends TestCase
 {
-    private readonly AnalyticsRepositoryInterface&MockObject $queryEngine;
-    private readonly PredictionServiceInterface&MockObject $predictionService;
-    private readonly ExportGeneratorInterface&MockObject $exportGenerator;
-    private readonly StorageDriverInterface&MockObject $storageDriver;
-    private readonly NotificationManagerInterface&MockObject $notificationManager;
-    private readonly LoggerInterface&MockObject $logger;
-    private readonly ReportingCoordinator $coordinator;
-
-    protected function setUp(): void
+    public function test_run_pipeline_includes_forecast_and_stores_file(): void
     {
-        $this->queryEngine = $this->createMock(AnalyticsRepositoryInterface::class);
-        $this->predictionService = $this->createMock(PredictionServiceInterface::class);
-        $this->exportGenerator = $this->createMock(ExportGeneratorInterface::class);
-        $this->storageDriver = $this->createMock(StorageDriverInterface::class);
-        $this->notificationManager = $this->createMock(NotificationManagerInterface::class);
-        $this->logger = $this->createMock(LoggerInterface::class);
+        $tracker = $this->createTracker();
+        $coordinator = $this->buildCoordinatorFixture(
+            $tracker,
+            new class implements ReportDataQueryPortInterface {
+                public function query(string $reportTemplateId, array $parameters): array
+                {
+                    return ['revenue' => 1000.0, 'cost' => 400.0];
+                }
+            },
+            new class($tracker) implements ForecastPortInterface {
+                public function __construct(private object $tracker) {}
+                public function forecast(string $modelId, array $context, int $maxAttempts, int $pollIntervalMs): array
+                {
+                    $this->tracker->forecastModelId = $modelId;
 
-        $this->coordinator = new ReportingCoordinator(
-            $this->queryEngine,
-            $this->predictionService,
-            $this->exportGenerator,
-            $this->storageDriver,
-            $this->notificationManager,
-            $this->logger
+                    return [
+                        'status' => 'success',
+                        'data' => ['value' => 1200.0],
+                        'confidence' => 0.91,
+                        'model_version' => 'v2',
+                        'error' => null,
+                    ];
+                }
+            }
+        );
+
+        try {
+            $path = $coordinator->runPipeline('sales-summary', [
+                'include_forecast' => true,
+                'forecast_model_id' => 'sales-model',
+            ], [
+                'format' => 'pdf',
+                'recipients' => ['ops@example.com'],
+            ]);
+
+            self::assertStringContainsString('reports/', $path);
+            self::assertNotEmpty($tracker->storedPaths);
+            self::assertSame($path, $tracker->storedPaths[count($tracker->storedPaths) - 1] ?? null);
+            self::assertSame('sales-model', $tracker->forecastModelId);
+            self::assertArrayHasKey('forecast', $tracker->lastExportedPayload ?? []);
+            self::assertNotEmpty($tracker->lastExportedPayload['forecast'] ?? null);
+        } finally {
+            $this->cleanupTempFiles($tracker);
+        }
+    }
+
+    public function test_capture_snapshot_returns_snapshot_path(): void
+    {
+        $tracker = $this->createTracker();
+        $coordinator = $this->buildCoordinatorFixture($tracker);
+
+        try {
+            $snapshotPath = $coordinator->captureSnapshot('dashboard-a', 'tenant-a');
+
+            self::assertStringContainsString('snapshots/tenant-a/dashboard-a/', $snapshotPath);
+        } finally {
+            $this->cleanupTempFiles($tracker);
+        }
+    }
+
+    private function createTracker(): object
+    {
+        return new class {
+            /** @var array<int, string> */
+            public array $storedPaths = [];
+            /** @var array<string, mixed>|null */
+            public ?array $lastExportedPayload = null;
+            public ?string $forecastModelId = null;
+            /** @var array<int, string> */
+            public array $tempFiles = [];
+        };
+    }
+
+    private function cleanupTempFiles(object $tracker): void
+    {
+        /** @var array<int, string> $tempFiles */
+        $tempFiles = is_array($tracker->tempFiles ?? null) ? $tracker->tempFiles : [];
+
+        foreach ($tempFiles as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+    }
+
+    private function buildCoordinatorFixture(
+        object $tracker,
+        ?ReportDataQueryPortInterface $queryPort = null,
+        ?ForecastPortInterface $forecastPort = null,
+    ): ReportingCoordinator {
+        return new ReportingCoordinator(
+            $this->createReportingPipelineWorkflow($tracker, $queryPort, $forecastPort),
+            $this->createDashboardSnapshotWorkflow(),
+            new NullLogger()
         );
     }
 
-    public function test_it_merges_historical_and_forecasted_data(): void
-    {
-        $params = ['include_forecast' => true, 'forecast_model_id' => 'sales_model'];
-        
-        $historicalData = ['2023' => 1000, '2024' => 1200];
-        $forecastData = ['2025' => 1500];
+    private function createReportingPipelineWorkflow(
+        object $tracker,
+        ?ReportDataQueryPortInterface $queryPort = null,
+        ?ForecastPortInterface $forecastPort = null,
+    ): ReportingPipelineWorkflow {
+        $queryPort ??= new class implements ReportDataQueryPortInterface {
+            public function query(string $reportTemplateId, array $parameters): array { return []; }
+        };
+        $forecastPort ??= new class implements ForecastPortInterface {
+            public function forecast(string $modelId, array $context, int $maxAttempts, int $pollIntervalMs): array
+            {
+                return ['status' => 'success', 'data' => [], 'confidence' => 1.0, 'model_version' => 'v1', 'error' => null];
+            }
+        };
 
-        $queryResult = $this->createMock(QueryResultInterface::class);
-        $queryResult->method('getData')->willReturn($historicalData);
+        return new ReportingPipelineWorkflow(
+            new ReportingPipelineRule(),
+            $queryPort,
+            $forecastPort,
+            new class($tracker) implements ReportExportPortInterface {
+                public function __construct(private object $tracker) {}
+                public function export(array $reportData, string $format): array
+                {
+                    $file = tempnam(sys_get_temp_dir(), 'insight_report_');
+                    if ($file === false) {
+                        throw new \RuntimeException('Failed to create temporary insight report file.');
+                    }
 
-        $this->queryEngine->expects($this->once())
-            ->method('executeQuery')
-            ->willReturn($queryResult);
+                    file_put_contents($file, json_encode($reportData));
+                    $this->tracker->lastExportedPayload = $reportData;
+                    $this->tracker->tempFiles[] = $file;
 
-        $this->predictionService->expects($this->once())
-            ->method('predictAsync')
-            ->willReturn('job_123');
-
-        $this->predictionService->expects($this->exactly(2))
-            ->method('getStatus')
-            ->with('job_123')
-            ->willReturnOnConsecutiveCalls('processing', 'completed');
-
-        $predictionResult = $this->createMock(PredictionResultInterface::class);
-        $predictionResult->method('getData')->willReturn($forecastData);
-        $predictionResult->method('getConfidence')->willReturn(0.92);
-        $predictionResult->method('getModelVersion')->willReturn('v1.0');
-
-        $this->predictionService->expects($this->once())
-            ->method('getPrediction')
-            ->with('job_123')
-            ->willReturn($predictionResult);
-
-        $expectedMergedData = [
-            'historical' => $historicalData,
-            'forecast' => $forecastData,
-            'metadata' => [
-                'confidence' => 0.92,
-                'model_version' => 'v1.0',
-                'forecast_status' => 'success',
-            ]
-        ];
-
-        $exportResult = $this->createMock(ExportResult::class);
-        $exportResult->method('getFilePathOrFail')->willReturn('/tmp/report.pdf');
-
-        $this->exportGenerator->expects($this->once())
-            ->method('generate')
-            ->with($expectedMergedData, 'pdf')
-            ->willReturn($exportResult);
-
-        $this->storageDriver->expects($this->once())
-            ->method('put');
-
-        $result = $this->coordinator->runPipeline('test_report', $params);
-        
-        $this->assertStringContainsString('report.pdf', $result);
+                    return [
+                        'file_path' => $file,
+                        'size_bytes' => filesize($file) ?: 0,
+                        'metadata' => ['format' => $format],
+                    ];
+                }
+            },
+            new class($tracker) implements InsightStoragePortInterface {
+                public function __construct(private object $tracker) {}
+                public function put(string $path, mixed $content): void
+                {
+                    $this->tracker->storedPaths[] = $path;
+                }
+            },
+            new class implements InsightNotificationPortInterface {
+                public function notify(array $recipients, string $template, array $payload): void {}
+            },
+            new PipelineContextDataProvider()
+        );
     }
 
-    public function test_it_handles_forecast_failure(): void
+    private function createDashboardSnapshotWorkflow(): DashboardSnapshotWorkflow
     {
-        $params = ['include_forecast' => true, 'forecast_model_id' => 'sales_model'];
-        $historicalData = ['2023' => 1000];
-
-        $queryResult = $this->createMock(QueryResultInterface::class);
-        $queryResult->method('getData')->willReturn($historicalData);
-
-        $this->queryEngine->method('executeQuery')->willReturn($queryResult);
-
-        $this->predictionService->method('predictAsync')->willReturn('job_failed');
-        $this->predictionService->method('getStatus')->willReturn('failed');
-
-        $this->logger->expects($this->once())
-            ->method('error')
-            ->with($this->stringContains('Forecast failed or timed out'));
-
-        $expectedDataWithFailure = [
-            'historical' => $historicalData,
-            'forecast' => null,
-            'metadata' => [
-                'forecast_unavailable' => true,
-                'forecast_error' => 'Prediction job failed',
-                'forecast_status' => 'failed',
-                'confidence' => null,
-                'model_version' => null,
-            ]
-        ];
-
-        $exportResult = $this->createMock(ExportResult::class);
-        $exportResult->method('getFilePathOrFail')->willReturn('/tmp/report.pdf');
-
-        $this->exportGenerator->expects($this->once())
-            ->method('generate')
-            ->with($expectedDataWithFailure, 'pdf')
-            ->willReturn($exportResult);
-
-        $this->coordinator->runPipeline('test_report', $params);
+        return new DashboardSnapshotWorkflow(
+            new DashboardSnapshotRule(),
+            new class implements DashboardSnapshotPortInterface {
+                public function snapshot(string $dashboardId, string $tenantId): DashboardSnapshotDto
+                {
+                    return new DashboardSnapshotDto(
+                        tenantId: $tenantId,
+                        dashboardId: $dashboardId,
+                        capturedAt: gmdate(DATE_ATOM),
+                        queryHistory: [['widgets' => []]],
+                    );
+                }
+            },
+            new class implements InsightStoragePortInterface {
+                public function put(string $path, mixed $content): void {}
+            }
+        );
     }
 }
