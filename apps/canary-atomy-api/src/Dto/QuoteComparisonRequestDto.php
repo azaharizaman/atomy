@@ -1,0 +1,68 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Dto;
+
+final readonly class QuoteComparisonRequestDto
+{
+    /**
+     * @param array<int, array<string, mixed>> $vendors
+     */
+    public function __construct(
+        public string $rfqId,
+        public array $vendors,
+        public ?string $idempotencyKey = null
+    ) {
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    public static function fromPayload(array $payload, ?string $idempotencyKey): self
+    {
+        $rfqId = trim((string)($payload['rfq_id'] ?? ''));
+        if ($rfqId === '') {
+            throw new \InvalidArgumentException('rfq_id is required.');
+        }
+
+        $vendors = $payload['vendors'] ?? null;
+        if (!is_array($vendors) || $vendors === []) {
+            throw new \InvalidArgumentException('vendors payload is required.');
+        }
+
+        foreach ($vendors as $index => $vendor) {
+            if (!is_array($vendor)) {
+                throw new \InvalidArgumentException(sprintf('vendors[%d] must be an object.', $index));
+            }
+            $vendorId = trim((string)($vendor['vendor_id'] ?? ''));
+            if ($vendorId === '') {
+                throw new \InvalidArgumentException(sprintf('vendors[%d].vendor_id is required.', $index));
+            }
+            $lines = $vendor['lines'] ?? null;
+            if (!is_array($lines)) {
+                throw new \InvalidArgumentException(sprintf('vendors[%d].lines must be an array.', $index));
+            }
+        }
+
+        $key = $idempotencyKey !== null ? trim($idempotencyKey) : null;
+        if ($key === '') {
+            $key = null;
+        }
+
+        return new self($rfqId, $vendors, $key);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toPayload(): array
+    {
+        return [
+            'rfq_id' => $this->rfqId,
+            'vendors' => $this->vendors,
+            'idempotency_key' => $this->idempotencyKey,
+        ];
+    }
+}
+
