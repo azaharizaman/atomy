@@ -13,7 +13,7 @@ interface OrchestratorDocumentRepositoryInterface
      * Find document by ID.
      *
      * @param string $id
-     * @return object|null
+     * @return QuotationDocumentInterface|null
      */
-    public function findById(string $id): ?object;
+    public function findById(string $id): ?QuotationDocumentInterface;
 }

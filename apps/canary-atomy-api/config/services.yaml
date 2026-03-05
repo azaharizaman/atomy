@@ -19,5 +19,25 @@ services:
     App\:
         resource: '../src/'
 
+    Nexus\QuotationIntelligence\Services\QuoteComparisonMatrixService:
+        autowire: true
+        autoconfigure: false
+
+    Nexus\QuotationIntelligence\Services\RuleBasedRiskAssessmentService:
+        autowire: true
+        autoconfigure: false
+
+    Nexus\QuotationIntelligence\Services\WeightedVendorScoringService:
+        autowire: true
+        autoconfigure: false
+
+    Nexus\QuotationIntelligence\Services\HighRiskApprovalGateService:
+        autowire: true
+        autoconfigure: false
+
+    Nexus\QuotationIntelligence\Services\HashChainedDecisionTrailWriter:
+        autowire: true
+        autoconfigure: false
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

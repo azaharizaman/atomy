@@ -13,7 +13,7 @@ interface OrchestratorTenantRepositoryInterface
      * Find tenant by ID.
      *
      * @param string $id
-     * @return object|null
+     * @return OrchestratorTenantInterface|null
      */
-    public function findById(string $id): ?object;
+    public function findById(string $id): ?OrchestratorTenantInterface;
 }

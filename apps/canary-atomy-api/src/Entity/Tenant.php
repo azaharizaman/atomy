@@ -46,7 +46,7 @@ class Tenant implements TenantInterface
     #[ORM\Column(type: UlidType::NAME, unique: true)]
     #[ApiProperty(identifier: true)]
     #[Groups(['tenant:read'])]
-    private string $id;
+    private Ulid $id;
 
     #[ORM\Column(type: 'string', length: 50, unique: true)]
     #[Assert\NotBlank]
@@ -101,7 +101,7 @@ class Tenant implements TenantInterface
 
     #[ORM\Column(type: UlidType::NAME, nullable: true)]
     #[Groups(['tenant:read', 'tenant:write'])]
-    private ?string $parentId = null;
+    private ?Ulid $parentId = null;
 
     #[ORM\Column(type: Types::JSON)]
     #[Groups(['tenant:read', 'tenant:write'])]
@@ -153,14 +153,14 @@ class Tenant implements TenantInterface
 
     public function __construct(string $code, string $name, string $email)
     {
-        $this->id = (new Ulid())->toBase32();
+        $this->id = new Ulid();
         $this->code = $code;
         $this->name = $name;
         $this->email = $email;
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): string { return $this->id; }
+    public function getId(): string { return $this->id->toBase32(); }
     public function getCode(): string { return $this->code; }
     public function getName(): string { return $this->name; }
     public function getEmail(): string { return $this->email; }
@@ -173,7 +173,7 @@ class Tenant implements TenantInterface
     public function getCurrency(): string { return $this->currency; }
     public function getDateFormat(): string { return $this->dateFormat; }
     public function getTimeFormat(): string { return $this->timeFormat; }
-    public function getParentId(): ?string { return $this->parentId; }
+    public function getParentId(): ?string { return $this->parentId?->toBase32(); }
     public function getMetadata(): array { return $this->metadata; }
     public function getMetadataValue(string $key, mixed $default = null): mixed { return $this->metadata[$key] ?? $default; }
     public function isActive(): bool { return $this->status->isActive(); }

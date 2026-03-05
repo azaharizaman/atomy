@@ -63,6 +63,7 @@ final readonly class QuoteIngestionService implements QuoteIngestionServiceInter
             'mime_type' => $mimeType,
             'metadata' => [
                 'rfq_id' => $rfqId,
+                'vendor_id' => $vendorId,
                 'status' => 'processing',
             ],
         ]);

@@ -47,12 +47,12 @@ final readonly class RuleBasedRiskAssessmentService implements RiskAssessmentSer
                 ];
             }
 
-            // 2. Term deviation check (e.g., searching vendor description for Incoterms)
-            $termsRisk = $this->checkTermsDeviation($line->vendorDescription);
-            if ($termsRisk !== null) {
+            // 2. Commercial terms deviation checks
+            $termRisks = $this->checkTermsDeviation($line->metadata['commercial_terms'] ?? []);
+            foreach ($termRisks as $termRisk) {
                 $risks[] = [
-                    'level' => 'high',
-                    'message' => $termsRisk,
+                    'level' => $termRisk['level'],
+                    'message' => $termRisk['message'],
                     'line_index' => $index,
                 ];
             }
@@ -86,19 +86,50 @@ final readonly class RuleBasedRiskAssessmentService implements RiskAssessmentSer
     /**
      * Internal check for common commercial terms in product strings.
      */
-    private function checkTermsDeviation(string $text): ?string
+    /**
+     * @param mixed $commercialTerms
+     * @return array<int, array{level: string, message: string}>
+     */
+    private function checkTermsDeviation(mixed $commercialTerms): array
     {
-        $text = strtoupper($text);
-        
-        // Example: Flagging EXW (Ex Works) which usually shifts shipping risk to buyer
-        if (str_contains($text, 'EXW') || str_contains($text, 'EX-WORKS')) {
-            return 'Detected EXW term: shipping risk/cost may be excluded.';
+        if (!is_array($commercialTerms)) {
+            return [];
         }
 
-        if (str_contains($text, 'NET-30') || str_contains($text, 'NET 30')) {
-            return 'Payment terms NET-30 detected in line item.';
+        $risks = [];
+        $incoterm = strtoupper((string)($commercialTerms['incoterm'] ?? ''));
+        $paymentDays = $commercialTerms['payment_days'] ?? null;
+        $leadTimeDays = $commercialTerms['lead_time_days'] ?? null;
+        $warrantyMonths = $commercialTerms['warranty_months'] ?? null;
+
+        if ($incoterm === 'EXW') {
+            $risks[] = [
+                'level' => 'high',
+                'message' => 'Detected EXW term: shipping risk/cost may be excluded.',
+            ];
         }
 
-        return null;
+        if (is_int($paymentDays) && $paymentDays > 45) {
+            $risks[] = [
+                'level' => 'medium',
+                'message' => sprintf('Long payment term detected (NET-%d).', $paymentDays),
+            ];
+        }
+
+        if (is_int($leadTimeDays) && $leadTimeDays > 30) {
+            $risks[] = [
+                'level' => 'medium',
+                'message' => sprintf('Long lead time detected (%d days).', $leadTimeDays),
+            ];
+        }
+
+        if (is_int($warrantyMonths) && $warrantyMonths < 12) {
+            $risks[] = [
+                'level' => 'medium',
+                'message' => sprintf('Short warranty detected (%d months).', $warrantyMonths),
+            ];
+        }
+
+        return $risks;
     }
 }

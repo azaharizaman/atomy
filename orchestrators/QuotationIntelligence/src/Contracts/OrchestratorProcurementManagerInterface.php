@@ -13,7 +13,7 @@ interface OrchestratorProcurementManagerInterface
      * Get requisition by RFQ ID.
      *
      * @param string $rfqId
-     * @return object|null
+     * @return OrchestratorRequisitionInterface|null
      */
-    public function getRequisition(string $rfqId): ?object;
+    public function getRequisition(string $rfqId): ?OrchestratorRequisitionInterface;
 }
