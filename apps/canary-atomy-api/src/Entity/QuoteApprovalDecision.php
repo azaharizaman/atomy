@@ -12,6 +12,7 @@ use Symfony\Component\Uid\Ulid;
 
 #[ORM\Entity(repositoryClass: QuoteApprovalDecisionRepository::class)]
 #[ORM\Table(name: 'quote_approval_decisions')]
+#[ORM\Index(name: 'IDX_QAD_TENANT_RFQ', columns: ['tenant_id', 'rfq_id'])]
 class QuoteApprovalDecision
 {
     #[ORM\Id]
@@ -76,5 +77,10 @@ class QuoteApprovalDecision
     public function getDecidedBy(): ?string
     {
         return $this->decidedBy;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
     }
 }

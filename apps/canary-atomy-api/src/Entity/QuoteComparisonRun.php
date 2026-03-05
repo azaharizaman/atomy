@@ -15,6 +15,10 @@ use Symfony\Component\Uid\Ulid;
 #[ORM\UniqueConstraint(name: 'UNIQ_QCR_TENANT_RFQ_IDEMPOTENCY', columns: ['tenant_id', 'rfq_id', 'idempotency_key'])]
 class QuoteComparisonRun
 {
+    public const STATUS_PENDING_APPROVAL = 'pending_approval';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+
     #[ORM\Id]
     #[ORM\Column(type: UlidType::NAME, unique: true)]
     private Ulid $id;

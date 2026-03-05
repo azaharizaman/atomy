@@ -35,14 +35,14 @@ final class QuoteApprovalController extends AbstractController
             return $this->json(['error' => 'Authentication required'], 401);
         }
 
-        // Verify tenant exists
-        if ($this->tenantRepository->findById($tenantId) === null) {
-            return $this->json(['error' => 'Tenant not found'], 404);
-        }
-
         // Verify user belongs to the tenant
         if ((string)$user->getTenantId() !== $tenantId) {
             return $this->json(['error' => 'Forbidden: Cross-tenant access is not allowed'], 403);
+        }
+
+        // Verify tenant exists
+        if ($this->tenantRepository->findById($tenantId) === null) {
+            return $this->json(['error' => 'Tenant not found'], 404);
         }
 
         $payload = json_decode($request->getContent(), true);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\QuoteApprovalDecision;
+use App\Entity\QuoteComparisonRun;
 use App\Entity\QuoteDecisionTrailEntry;
 use App\Exception\ComparisonRunNotFoundException;
 use App\Exception\ComparisonRunNotPendingApprovalException;
@@ -45,11 +46,11 @@ final readonly class QuoteApprovalApplicationService
             if (trim($reason) === '') {
                 throw new \InvalidArgumentException('reason is required.');
             }
-            if ($run->getStatus() !== 'pending_approval') {
+            if ($run->getStatus() !== QuoteComparisonRun::STATUS_PENDING_APPROVAL) {
                 throw ComparisonRunNotPendingApprovalException::forId($runId);
             }
 
-            $status = $normalizedDecision === 'approve' ? 'approved' : 'rejected';
+            $status = $normalizedDecision === 'approve' ? QuoteComparisonRun::STATUS_APPROVED : QuoteComparisonRun::STATUS_REJECTED;
             $approvalPayload = $run->getApprovalPayload();
             $approvalPayload['status'] = $status;
             $approvalPayload['override'] = [
@@ -86,7 +87,7 @@ final readonly class QuoteApprovalApplicationService
                 rfqId: $run->getRfqId(),
                 entries: [
                     [
-                        'event_type' => 'approval_override',
+                        'event_type' => QuoteDecisionTrailEntry::EVENT_TYPE_APPROVAL_OVERRIDE,
                         'payload' => $payload,
                     ]
                 ],
@@ -101,7 +102,7 @@ final readonly class QuoteApprovalApplicationService
                 tenantId: $tenantId,
                 rfqId: $run->getRfqId(),
                 sequence: (int)$trailEntryData['sequence'],
-                eventType: 'approval_override',
+                eventType: QuoteDecisionTrailEntry::EVENT_TYPE_APPROVAL_OVERRIDE,
                 payloadHash: (string)$trailEntryData['payload_hash'],
                 previousHash: (string)$trailEntryData['previous_hash'],
                 entryHash: (string)$trailEntryData['entry_hash'],

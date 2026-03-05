@@ -160,7 +160,7 @@ class Tenant implements TenantInterface
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): Ulid { return $this->id; }
+    public function getId(): string { return $this->id->toBase32(); }
     public function getCode(): string { return $this->code; }
     public function getName(): string { return $this->name; }
     public function getEmail(): string { return $this->email; }
@@ -173,7 +173,7 @@ class Tenant implements TenantInterface
     public function getCurrency(): string { return $this->currency; }
     public function getDateFormat(): string { return $this->dateFormat; }
     public function getTimeFormat(): string { return $this->timeFormat; }
-    public function getParentId(): ?Ulid { return $this->parentId; }
+    public function getParentId(): ?string { return $this->parentId?->toBase32(); }
     public function getMetadata(): array { return $this->metadata; }
     public function getMetadataValue(string $key, mixed $default = null): mixed { return $this->metadata[$key] ?? $default; }
     public function isActive(): bool { return $this->status->isActive(); }

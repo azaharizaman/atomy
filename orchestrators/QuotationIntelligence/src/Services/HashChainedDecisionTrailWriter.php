@@ -27,6 +27,7 @@ final readonly class HashChainedDecisionTrailWriter implements DecisionTrailWrit
         $trail = [];
         $currentPreviousHash = $previousHash === '' ? str_repeat('0', 64) : $previousHash;
 
+        $entries = array_values($entries);
         foreach ($entries as $index => $entry) {
             $sequence = $startingSequence + $index;
             

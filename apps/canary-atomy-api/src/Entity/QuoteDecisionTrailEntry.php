@@ -17,6 +17,11 @@ use Symfony\Component\Uid\Ulid;
 #[ORM\Index(name: 'IDX_QDTE_TENANT_RFQ', columns: ['tenant_id', 'rfq_id'])]
 class QuoteDecisionTrailEntry
 {
+    public const EVENT_TYPE_MATRIX_BUILT = 'matrix_built';
+    public const EVENT_TYPE_SCORING_COMPUTED = 'scoring_computed';
+    public const EVENT_TYPE_APPROVAL_EVALUATED = 'approval_evaluated';
+    public const EVENT_TYPE_APPROVAL_OVERRIDE = 'approval_override';
+
     #[ORM\Id]
     #[ORM\Column(type: UlidType::NAME, unique: true)]
     private Ulid $id;
@@ -90,5 +95,20 @@ class QuoteDecisionTrailEntry
     public function getEntryHash(): string
     {
         return $this->entryHash;
+    }
+
+    public function getPayloadHash(): string
+    {
+        return $this->payloadHash;
+    }
+
+    public function getPreviousHash(): string
+    {
+        return $this->previousHash;
+    }
+
+    public function getOccurredAt(): \DateTimeImmutable
+    {
+        return $this->occurredAt;
     }
 }
