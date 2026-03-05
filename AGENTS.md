@@ -6,8 +6,8 @@ This document serves as the absolute source of truth for Coding CLI agents worki
 
 All development MUST strictly adhere to the project's **Three-Layer Architecture** and **Coding Standards**.
 
-- **Source of Truth**: Refer to [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architectural rules, coding standards (PHP 8.3), and security guidelines.
-- **Package Reference**: Consult [NEXUS_PACKAGES_REFERENCE.md](NEXUS_PACKAGES_REFERENCE.md) before implementing any feature to prevent duplication.
+- **Source of Truth**: Refer to [ARCHITECTURE.md](docs/project/ARCHITECTURE.md) for detailed architectural rules, coding standards (PHP 8.3), and security guidelines.
+- **Package Reference**: Consult [NEXUS_PACKAGES_REFERENCE.md](docs/project/NEXUS_PACKAGES_REFERENCE.md) before implementing any feature to prevent duplication.
 
 ### Quick Mandates:
 - **Strict Typing**: `declare(strict_types=1);` is mandatory in every file.
