@@ -14,13 +14,13 @@ final readonly class HashChainedDecisionTrailWriter implements DecisionTrailWrit
     /**
      * @inheritDoc
      */
-    public function write(string $tenantId, string $rfqId, array $entries): array
+    public function write(string $tenantId, string $rfqId, array $entries, int $startingSequence = 1, string $previousHash = ''): array
     {
         $trail = [];
-        $previousHash = str_repeat('0', 64);
+        $currentPreviousHash = $previousHash === '' ? str_repeat('0', 64) : $previousHash;
 
         foreach ($entries as $index => $entry) {
-            $sequence = $index + 1;
+            $sequence = $startingSequence + $index;
             $eventType = (string)($entry['event_type'] ?? 'unknown');
             $payload = is_array($entry['payload'] ?? null) ? $entry['payload'] : [];
             $occurredAt = (new \DateTimeImmutable())->format(DATE_ATOM);
@@ -34,7 +34,7 @@ final readonly class HashChainedDecisionTrailWriter implements DecisionTrailWrit
                 'sequence' => $sequence,
                 'event_type' => $eventType,
                 'payload_hash' => $payloadHash,
-                'previous_hash' => $previousHash,
+                'previous_hash' => $currentPreviousHash,
                 'occurred_at' => $occurredAt,
             ], JSON_THROW_ON_ERROR));
 
@@ -42,12 +42,12 @@ final readonly class HashChainedDecisionTrailWriter implements DecisionTrailWrit
                 'sequence' => $sequence,
                 'event_type' => $eventType,
                 'payload_hash' => $payloadHash,
-                'previous_hash' => $previousHash,
+                'previous_hash' => $currentPreviousHash,
                 'entry_hash' => $entryHash,
                 'occurred_at' => $occurredAt,
             ];
 
-            $previousHash = $entryHash;
+            $currentPreviousHash = $entryHash;
         }
 
         return $trail;

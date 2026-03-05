@@ -12,13 +12,15 @@ use App\Repository\QuoteComparisonRunRepository;
 use App\Repository\QuoteDecisionTrailEntryRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Nexus\QuotationIntelligence\Services\HashChainedDecisionTrailWriter;
 
 final readonly class QuoteApprovalApplicationService
 {
     public function __construct(
         private QuoteComparisonRunRepository $runRepository,
         private QuoteDecisionTrailEntryRepository $trailRepository,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private HashChainedDecisionTrailWriter $decisionTrailWriter
     ) {
     }
 
@@ -70,36 +72,40 @@ final readonly class QuoteApprovalApplicationService
             $this->entityManager->persist($decisionRecord);
 
             $lastEntry = $this->trailRepository->findLastForRun($run);
-            $sequence = $lastEntry ? $lastEntry->getSequence() + 1 : 1;
             $previousHash = $lastEntry ? $lastEntry->getEntryHash() : str_repeat('0', 64);
-            $occurredAt = new \DateTimeImmutable();
+            $nextSequence = $lastEntry ? $lastEntry->getSequence() + 1 : 1;
+
             $payload = [
                 'decision' => $normalizedDecision,
                 'reason' => $reason,
                 'decided_by' => $decidedBy,
             ];
-            $payloadJson = json_encode($payload, JSON_THROW_ON_ERROR);
-            $payloadHash = hash('sha256', $payloadJson);
-            $entryHash = hash('sha256', json_encode([
-                'tenant_id' => $tenantId,
-                'rfq_id' => $run->getRfqId(),
-                'sequence' => $sequence,
-                'event_type' => 'approval_override',
-                'payload_hash' => $payloadHash,
-                'previous_hash' => $previousHash,
-                'occurred_at' => $occurredAt->format(DATE_ATOM),
-            ], JSON_THROW_ON_ERROR));
+
+            $trailData = $this->decisionTrailWriter->write(
+                tenantId: $tenantId,
+                rfqId: $run->getRfqId(),
+                entries: [
+                    [
+                        'event_type' => 'approval_override',
+                        'payload' => $payload,
+                    ]
+                ],
+                startingSequence: $nextSequence,
+                previousHash: $previousHash
+            );
+
+            $trailEntryData = $trailData[0];
 
             $trailEntry = new QuoteDecisionTrailEntry(
                 comparisonRun: $run,
                 tenantId: $tenantId,
                 rfqId: $run->getRfqId(),
-                sequence: $sequence,
+                sequence: (int)$trailEntryData['sequence'],
                 eventType: 'approval_override',
-                payloadHash: $payloadHash,
-                previousHash: $previousHash,
-                entryHash: $entryHash,
-                occurredAt: $occurredAt
+                payloadHash: (string)$trailEntryData['payload_hash'],
+                previousHash: (string)$trailEntryData['previous_hash'],
+                entryHash: (string)$trailEntryData['entry_hash'],
+                occurredAt: new \DateTimeImmutable((string)$trailEntryData['occurred_at'])
             );
             $this->entityManager->persist($trailEntry);
 
@@ -113,14 +119,7 @@ final readonly class QuoteApprovalApplicationService
                 'run_id' => $run->getId(),
                 'status' => $run->getStatus(),
                 'approval' => $run->getApprovalPayload(),
-                'decision_trail_entry' => [
-                    'sequence' => $sequence,
-                    'event_type' => 'approval_override',
-                    'payload_hash' => $payloadHash,
-                    'previous_hash' => $previousHash,
-                    'entry_hash' => $entryHash,
-                    'occurred_at' => $occurredAt->format(DATE_ATOM),
-                ],
+                'decision_trail_entry' => $trailEntryData,
             ];
         });
     }

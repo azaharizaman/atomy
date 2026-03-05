@@ -14,6 +14,7 @@ use App\Service\QuoteApprovalApplicationService;
 use App\Service\QuoteComparisonApplicationService;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -143,7 +144,8 @@ final class QuoteWorkflowIntegrationTest extends TestCase
         $this->approvalService = new QuoteApprovalApplicationService(
             runRepository: $this->runRepository,
             trailRepository: $trailRepository,
-            entityManager: $this->entityManager
+            entityManager: $this->entityManager,
+            decisionTrailWriter: new HashChainedDecisionTrailWriter()
         );
     }
 

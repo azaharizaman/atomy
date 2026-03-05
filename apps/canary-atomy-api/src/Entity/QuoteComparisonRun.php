@@ -170,7 +170,7 @@ class QuoteComparisonRun
      */
     public function markResponsePayload(array $responsePayload): void
     {
-        $this->responsePayload = $responsePayload;
+        $this->responsePayload = array_merge($this->responsePayload, $responsePayload);
         $this->updatedAt = new \DateTimeImmutable();
     }
 }

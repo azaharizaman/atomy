@@ -26,6 +26,12 @@ interface DecisionTrailWriterInterface
      *   occurred_at: string
      * }>
      */
-    public function write(string $tenantId, string $rfqId, array $entries): array;
+    public function write(
+        string $tenantId,
+        string $rfqId,
+        array $entries,
+        int $startingSequence = 1,
+        string $previousHash = ''
+    ): array;
 }
 
