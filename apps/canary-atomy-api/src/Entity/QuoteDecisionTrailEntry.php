@@ -19,7 +19,7 @@ class QuoteDecisionTrailEntry
 {
     #[ORM\Id]
     #[ORM\Column(type: UlidType::NAME, unique: true)]
-    private string $id;
+    private Ulid $id;
 
     #[ORM\ManyToOne(targetEntity: QuoteComparisonRun::class)]
     #[ORM\JoinColumn(name: 'comparison_run_id', nullable: false, onDelete: 'CASCADE')]
@@ -60,7 +60,7 @@ class QuoteDecisionTrailEntry
         string $entryHash,
         \DateTimeImmutable $occurredAt
     ) {
-        $this->id = (new Ulid())->toBase32();
+        $this->id = new Ulid();
         $this->comparisonRun = $comparisonRun;
         $this->tenantId = $tenantId;
         $this->rfqId = $rfqId;
@@ -70,6 +70,11 @@ class QuoteDecisionTrailEntry
         $this->previousHash = $previousHash;
         $this->entryHash = $entryHash;
         $this->occurredAt = $occurredAt;
+    }
+
+    public function getId(): Ulid
+    {
+        return $this->id;
     }
 
     public function getSequence(): int

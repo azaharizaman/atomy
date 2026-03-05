@@ -16,7 +16,7 @@ class QuoteApprovalDecision
 {
     #[ORM\Id]
     #[ORM\Column(type: UlidType::NAME, unique: true)]
-    private string $id;
+    private Ulid $id;
 
     #[ORM\ManyToOne(targetEntity: QuoteComparisonRun::class)]
     #[ORM\JoinColumn(name: 'comparison_run_id', nullable: false, onDelete: 'CASCADE')]
@@ -48,7 +48,7 @@ class QuoteApprovalDecision
         string $reason,
         ?string $decidedBy
     ) {
-        $this->id = (new Ulid())->toBase32();
+        $this->id = new Ulid();
         $this->comparisonRun = $comparisonRun;
         $this->tenantId = $tenantId;
         $this->rfqId = $rfqId;
@@ -56,6 +56,11 @@ class QuoteApprovalDecision
         $this->reason = $reason;
         $this->decidedBy = $decidedBy;
         $this->createdAt = new \DateTimeImmutable();
+    }
+
+    public function getId(): Ulid
+    {
+        return $this->id;
     }
 
     public function getDecision(): string

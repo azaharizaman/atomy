@@ -16,6 +16,8 @@ interface DecisionTrailWriterInterface
      *   event_type: string,
      *   payload: array<string, mixed>
      * }> $entries
+     * @param int $startingSequence Starting sequence number (must be >= 1)
+     * @param string $previousHash Previous entry hash (64-char hex) or empty for first entry
      *
      * @return array<int, array{
      *   sequence: int,

@@ -39,7 +39,7 @@ final class QuoteComparisonController extends AbstractController
         }
 
         // Verify user belongs to the tenant
-        if ($user->getTenantId() !== $tenantId) {
+        if ((string)$user->getTenantId() !== $tenantId) {
             return $this->json(['error' => 'Forbidden: Cross-tenant access is not allowed'], 403);
         }
 

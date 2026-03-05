@@ -17,7 +17,7 @@ class QuoteComparisonRun
 {
     #[ORM\Id]
     #[ORM\Column(type: UlidType::NAME, unique: true)]
-    private string $id;
+    private Ulid $id;
 
     #[ORM\Column(name: 'tenant_id', type: 'string', length: 36)]
     private string $tenantId;
@@ -75,7 +75,7 @@ class QuoteComparisonRun
         array $responsePayload,
         string $status
     ) {
-        $this->id = (new Ulid())->toBase32();
+        $this->id = new Ulid();
         $this->tenantId = $tenantId;
         $this->rfqId = $rfqId;
         $this->idempotencyKey = $idempotencyKey;
@@ -88,7 +88,7 @@ class QuoteComparisonRun
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): string
+    public function getId(): Ulid
     {
         return $this->id;
     }

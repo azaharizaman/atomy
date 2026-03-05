@@ -47,7 +47,7 @@ class User implements SymfonyUserInterface, PasswordAuthenticatedUserInterface, 
     #[ORM\Column(type: UlidType::NAME, unique: true)]
     #[ApiProperty(identifier: true)]
     #[Groups(['user:read'])]
-    private string $id;
+    private Ulid $id;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     #[Assert\NotBlank]
@@ -75,7 +75,7 @@ class User implements SymfonyUserInterface, PasswordAuthenticatedUserInterface, 
 
     #[ORM\Column(type: 'string', length: 26, nullable: true)]
     #[Groups(['user:read', 'user:write'])]
-    private ?string $tenantId = null;
+    private ?Ulid $tenantId = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Groups(['user:read'])]
@@ -103,7 +103,7 @@ class User implements SymfonyUserInterface, PasswordAuthenticatedUserInterface, 
 
     public function __construct(string $email)
     {
-        $this->id = (new Ulid())->toBase32();
+        $this->id = new Ulid();
         $this->email = $email;
         $this->createdAt = new \DateTimeImmutable();
     }
@@ -153,7 +153,7 @@ class User implements SymfonyUserInterface, PasswordAuthenticatedUserInterface, 
     public function setPassword(string $password): self { $this->password = $password; return $this; }
 
     // Nexus UserInterface
-    public function getId(): string { return $this->id; }
+    public function getId(): Ulid { return $this->id; }
     public function getEmail(): string { return $this->email; }
     public function getPasswordHash(): string { return $this->password; }
     public function getStatus(): string { return $this->status->value; }
@@ -164,13 +164,13 @@ class User implements SymfonyUserInterface, PasswordAuthenticatedUserInterface, 
     public function isActive(): bool { return $this->status === UserStatus::ACTIVE; }
     public function isLocked(): bool { return $this->status === UserStatus::LOCKED; }
     public function isEmailVerified(): bool { return $this->emailVerifiedAt !== null; }
-    public function getTenantId(): ?string { return $this->tenantId; }
+    public function getTenantId(): ?Ulid { return $this->tenantId; }
     public function getPasswordChangedAt(): ?\DateTimeInterface { return $this->passwordChangedAt; }
     public function hasMfaEnabled(): bool { return $this->mfaEnabled; }
     public function getMetadata(): ?array { return $this->metadata; }
 
     public function setName(?string $name): self { $this->name = $name; return $this; }
     public function setStatus(UserStatus $status): self { $this->status = $status; return $this; }
-    public function setTenantId(?string $tenantId): self { $this->tenantId = $tenantId; return $this; }
+    public function setTenantId(?Ulid $tenantId): self { $this->tenantId = $tenantId; return $this; }
     public function setEmailVerifiedAt(?\DateTimeImmutable $date): self { $this->emailVerifiedAt = $date; return $this; }
 }
