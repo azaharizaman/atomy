@@ -66,6 +66,10 @@ final class Version20260304220000 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_QDTE_TENANT_RFQ ON quote_decision_trail_entries (tenant_id, rfq_id)');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_QDTE_RUN_SEQ ON quote_decision_trail_entries (comparison_run_id, sequence)');
         $this->addSql('ALTER TABLE quote_decision_trail_entries ADD CONSTRAINT FK_QDTE_RUN FOREIGN KEY (comparison_run_id) REFERENCES quote_comparison_runs (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE');
+
+        // Add CHECK constraints
+        $this->addSql("ALTER TABLE quote_approval_decisions ADD CONSTRAINT CHK_QAD_DECISION CHECK (decision IN ('approve', 'reject'))");
+        $this->addSql("ALTER TABLE quote_decision_trail_entries ADD CONSTRAINT CHK_QDTE_SEQUENCE CHECK (sequence > 0)");
     }
 
     public function down(Schema $schema): void

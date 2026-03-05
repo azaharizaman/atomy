@@ -6,7 +6,7 @@ namespace App\Dto;
 
 final readonly class QuoteApprovalRequestDto
 {
-    public function __construct(
+    private function __construct(
         public string $decision,
         public string $reason
     ) {
@@ -17,8 +17,15 @@ final readonly class QuoteApprovalRequestDto
      */
     public static function fromPayload(array $payload): self
     {
-        $decision = strtolower(trim((string)($payload['decision'] ?? '')));
-        $reason = trim((string)($payload['reason'] ?? ''));
+        if (!isset($payload['decision']) || !is_string($payload['decision'])) {
+            throw new \InvalidArgumentException('decision must be a string.');
+        }
+        if (!isset($payload['reason']) || !is_string($payload['reason'])) {
+            throw new \InvalidArgumentException('reason must be a string.');
+        }
+
+        $decision = strtolower(trim($payload['decision']));
+        $reason = trim($payload['reason']);
 
         if (!in_array($decision, ['approve', 'reject'], true)) {
             throw new \InvalidArgumentException('decision must be approve or reject.');

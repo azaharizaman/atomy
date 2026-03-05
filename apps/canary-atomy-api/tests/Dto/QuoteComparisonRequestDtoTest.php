@@ -31,4 +31,34 @@ final class QuoteComparisonRequestDtoTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         QuoteComparisonRequestDto::fromPayload(['vendors' => []], null);
     }
+
+    public function testFromPayloadRejectsNonStringRfqId(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('rfq_id must be a string.');
+        QuoteComparisonRequestDto::fromPayload([
+            'rfq_id' => 123,
+            'vendors' => [['vendor_id' => 'v1', 'lines' => []]],
+        ], null);
+    }
+
+    public function testFromPayloadRejectsNonStringVendorId(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('vendors[0].vendor_id must be a string.');
+        QuoteComparisonRequestDto::fromPayload([
+            'rfq_id' => 'RFQ-1',
+            'vendors' => [['vendor_id' => 123, 'lines' => []]],
+        ], null);
+    }
+
+    public function testFromPayloadRejectsNonArrayLines(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('vendors[0].lines must be an array.');
+        QuoteComparisonRequestDto::fromPayload([
+            'rfq_id' => 'RFQ-1',
+            'vendors' => [['vendor_id' => 'v1', 'lines' => 'not-an-array']],
+        ], null);
+    }
 }

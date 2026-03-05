@@ -12,6 +12,9 @@ use Symfony\Component\Uid\Ulid;
 
 #[ORM\Entity(repositoryClass: QuoteDecisionTrailEntryRepository::class)]
 #[ORM\Table(name: 'quote_decision_trail_entries')]
+#[ORM\UniqueConstraint(name: 'UNIQ_QDTE_RUN_SEQ', columns: ['comparison_run_id', 'sequence'])]
+#[ORM\Index(name: 'IDX_QDTE_RUN', columns: ['comparison_run_id'])]
+#[ORM\Index(name: 'IDX_QDTE_TENANT_RFQ', columns: ['tenant_id', 'rfq_id'])]
 class QuoteDecisionTrailEntry
 {
     #[ORM\Id]
@@ -19,31 +22,31 @@ class QuoteDecisionTrailEntry
     private string $id;
 
     #[ORM\ManyToOne(targetEntity: QuoteComparisonRun::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'comparison_run_id', nullable: false, onDelete: 'CASCADE')]
     private QuoteComparisonRun $comparisonRun;
 
-    #[ORM\Column(type: 'string', length: 36)]
+    #[ORM\Column(name: 'tenant_id', type: 'string', length: 36)]
     private string $tenantId;
 
-    #[ORM\Column(type: 'string', length: 64)]
+    #[ORM\Column(name: 'rfq_id', type: 'string', length: 64)]
     private string $rfqId;
 
-    #[ORM\Column(type: Types::INTEGER)]
+    #[ORM\Column(name: 'sequence', type: Types::INTEGER)]
     private int $sequence;
 
-    #[ORM\Column(type: 'string', length: 64)]
+    #[ORM\Column(name: 'event_type', type: 'string', length: 64)]
     private string $eventType;
 
-    #[ORM\Column(type: 'string', length: 64)]
+    #[ORM\Column(name: 'payload_hash', type: 'string', length: 64)]
     private string $payloadHash;
 
-    #[ORM\Column(type: 'string', length: 64)]
+    #[ORM\Column(name: 'previous_hash', type: 'string', length: 64)]
     private string $previousHash;
 
-    #[ORM\Column(type: 'string', length: 64)]
+    #[ORM\Column(name: 'entry_hash', type: 'string', length: 64)]
     private string $entryHash;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(name: 'occurred_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $occurredAt;
 
     public function __construct(

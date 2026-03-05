@@ -8,6 +8,7 @@ use App\Dto\QuoteComparisonRequestDto;
 use App\Entity\User;
 use App\Repository\TenantRepository;
 use App\Service\QuoteComparisonApplicationService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +20,8 @@ final class QuoteComparisonController extends AbstractController
 {
     public function __construct(
         private readonly TenantRepository $tenantRepository,
-        private readonly QuoteComparisonApplicationService $comparisonService
+        private readonly QuoteComparisonApplicationService $comparisonService,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -31,8 +33,20 @@ final class QuoteComparisonController extends AbstractController
             return $this->json(['error' => 'Authentication required'], 401);
         }
 
+        // Verify tenant exists
         if ($this->tenantRepository->findById($tenantId) === null) {
             return $this->json(['error' => 'Tenant not found'], 404);
+        }
+
+        // Verify user belongs to the tenant
+        if ($user->getTenantId() !== $tenantId) {
+            return $this->json(['error' => 'Forbidden: Cross-tenant access is not allowed'], 403);
+        }
+
+        // Validate Idempotency-Key length
+        $idempotencyKey = $request->headers->get('Idempotency-Key');
+        if ($idempotencyKey !== null && strlen($idempotencyKey) > 128) {
+            return $this->json(['error' => 'Idempotency-Key header too long (max 128 chars)'], 400);
         }
 
         $payload = json_decode($request->getContent(), true);
@@ -43,13 +57,17 @@ final class QuoteComparisonController extends AbstractController
         try {
             $requestDto = QuoteComparisonRequestDto::fromPayload(
                 $payload,
-                $request->headers->get('Idempotency-Key')
+                $idempotencyKey
             );
             $result = $this->comparisonService->compare($tenantId, $requestDto);
         } catch (\InvalidArgumentException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
         } catch (\Throwable $e) {
-            return $this->json(['error' => 'Comparison failed', 'details' => $e->getMessage()], 500);
+            if ($e->getCode() === 409) {
+                return $this->json(['error' => 'Conflict creating comparison run: duplicate idempotency key'], 409);
+            }
+            $this->logger->error('Quote comparison failed: ' . $e->getMessage(), ['exception' => $e, 'rfq_id' => $payload['rfq_id'] ?? 'unknown']);
+            return $this->json(['error' => 'Comparison failed'], 500);
         }
 
         $status = ($result['idempotent_replay'] ?? false) ? 200 : 201;

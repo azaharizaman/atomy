@@ -21,13 +21,7 @@ final class QuoteDecisionTrailEntryRepository extends ServiceEntityRepository
 
     public function findLastForRun(QuoteComparisonRun $run): ?QuoteDecisionTrailEntry
     {
-        return $this->createQueryBuilder('e')
-            ->andWhere('e.comparisonRun = :run')
-            ->setParameter('run', $run)
-            ->orderBy('e.sequence', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
+        return $this->findOneBy(['comparisonRun' => $run], ['sequence' => 'DESC']);
     }
 }
 

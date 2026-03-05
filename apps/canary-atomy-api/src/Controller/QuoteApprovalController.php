@@ -6,8 +6,11 @@ namespace App\Controller;
 
 use App\Dto\QuoteApprovalRequestDto;
 use App\Entity\User;
+use App\Exception\ComparisonRunNotFoundException;
+use App\Exception\ComparisonRunNotPendingApprovalException;
 use App\Repository\TenantRepository;
 use App\Service\QuoteApprovalApplicationService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +22,8 @@ final class QuoteApprovalController extends AbstractController
 {
     public function __construct(
         private readonly TenantRepository $tenantRepository,
-        private readonly QuoteApprovalApplicationService $approvalService
+        private readonly QuoteApprovalApplicationService $approvalService,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -31,8 +35,14 @@ final class QuoteApprovalController extends AbstractController
             return $this->json(['error' => 'Authentication required'], 401);
         }
 
+        // Verify tenant exists
         if ($this->tenantRepository->findById($tenantId) === null) {
             return $this->json(['error' => 'Tenant not found'], 404);
+        }
+
+        // Verify user belongs to the tenant
+        if ($user->getTenantId() !== $tenantId) {
+            return $this->json(['error' => 'Forbidden: Cross-tenant access is not allowed'], 403);
         }
 
         $payload = json_decode($request->getContent(), true);
@@ -51,14 +61,19 @@ final class QuoteApprovalController extends AbstractController
             );
         } catch (\InvalidArgumentException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
+        } catch (ComparisonRunNotFoundException $e) {
+            return $this->json(['error' => 'Quote comparison run not found'], 404);
+        } catch (ComparisonRunNotPendingApprovalException $e) {
+            return $this->json(['error' => 'Quote comparison run is not pending approval'], 409);
         } catch (\RuntimeException $e) {
-            if (str_contains(strtolower($e->getMessage()), 'not found')) {
-                return $this->json(['error' => $e->getMessage()], 404);
+            if ($e->getCode() === 409) {
+                return $this->json(['error' => 'Approval conflict: this run was already decided'], 409);
             }
-
-            return $this->json(['error' => $e->getMessage()], 409);
+            $this->logger->error('Quote approval failed: ' . $e->getMessage(), ['exception' => $e, 'runId' => $runId]);
+            return $this->json(['error' => 'Approval failed'], 500);
         } catch (\Throwable $e) {
-            return $this->json(['error' => 'Approval failed', 'details' => $e->getMessage()], 500);
+            $this->logger->error('Unexpected error during quote approval: ' . $e->getMessage(), ['exception' => $e, 'runId' => $runId]);
+            return $this->json(['error' => 'Approval failed'], 500);
         }
 
         return $this->json($result, 200);

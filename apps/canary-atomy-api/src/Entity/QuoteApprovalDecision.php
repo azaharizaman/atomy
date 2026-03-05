@@ -19,25 +19,25 @@ class QuoteApprovalDecision
     private string $id;
 
     #[ORM\ManyToOne(targetEntity: QuoteComparisonRun::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'comparison_run_id', nullable: false, onDelete: 'CASCADE')]
     private QuoteComparisonRun $comparisonRun;
 
-    #[ORM\Column(type: 'string', length: 36)]
+    #[ORM\Column(name: 'tenant_id', type: 'string', length: 36)]
     private string $tenantId;
 
-    #[ORM\Column(type: 'string', length: 64)]
+    #[ORM\Column(name: 'rfq_id', type: 'string', length: 64)]
     private string $rfqId;
 
-    #[ORM\Column(type: 'string', length: 16)]
+    #[ORM\Column(name: 'decision', type: 'string', length: 16)]
     private string $decision;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(name: 'reason', type: Types::TEXT)]
     private string $reason;
 
-    #[ORM\Column(type: 'string', length: 128, nullable: true)]
+    #[ORM\Column(name: 'decided_by', type: 'string', length: 128, nullable: true)]
     private ?string $decidedBy;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
     public function __construct(

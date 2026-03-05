@@ -12,19 +12,20 @@ use Symfony\Component\Uid\Ulid;
 
 #[ORM\Entity(repositoryClass: QuoteComparisonRunRepository::class)]
 #[ORM\Table(name: 'quote_comparison_runs')]
+#[ORM\UniqueConstraint(name: 'UNIQ_QCR_TENANT_RFQ_IDEMPOTENCY', columns: ['tenant_id', 'rfq_id', 'idempotency_key'])]
 class QuoteComparisonRun
 {
     #[ORM\Id]
     #[ORM\Column(type: UlidType::NAME, unique: true)]
     private string $id;
 
-    #[ORM\Column(type: 'string', length: 36)]
+    #[ORM\Column(name: 'tenant_id', type: 'string', length: 36)]
     private string $tenantId;
 
-    #[ORM\Column(type: 'string', length: 64)]
+    #[ORM\Column(name: 'rfq_id', type: 'string', length: 64)]
     private string $rfqId;
 
-    #[ORM\Column(type: 'string', length: 128, nullable: true)]
+    #[ORM\Column(name: 'idempotency_key', type: 'string', length: 128, nullable: true)]
     private ?string $idempotencyKey = null;
 
     /** @var array<string, mixed> */

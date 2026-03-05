@@ -9,7 +9,7 @@ final readonly class QuoteComparisonRequestDto
     /**
      * @param array<int, array<string, mixed>> $vendors
      */
-    public function __construct(
+    private function __construct(
         public string $rfqId,
         public array $vendors,
         public ?string $idempotencyKey = null
@@ -21,7 +21,10 @@ final readonly class QuoteComparisonRequestDto
      */
     public static function fromPayload(array $payload, ?string $idempotencyKey): self
     {
-        $rfqId = trim((string)($payload['rfq_id'] ?? ''));
+        if (!isset($payload['rfq_id']) || !is_string($payload['rfq_id'])) {
+            throw new \InvalidArgumentException('rfq_id must be a string.');
+        }
+        $rfqId = trim($payload['rfq_id']);
         if ($rfqId === '') {
             throw new \InvalidArgumentException('rfq_id is required.');
         }
@@ -35,7 +38,10 @@ final readonly class QuoteComparisonRequestDto
             if (!is_array($vendor)) {
                 throw new \InvalidArgumentException(sprintf('vendors[%d] must be an object.', $index));
             }
-            $vendorId = trim((string)($vendor['vendor_id'] ?? ''));
+            if (!isset($vendor['vendor_id']) || !is_string($vendor['vendor_id'])) {
+                throw new \InvalidArgumentException(sprintf('vendors[%d].vendor_id must be a string.', $index));
+            }
+            $vendorId = trim($vendor['vendor_id']);
             if ($vendorId === '') {
                 throw new \InvalidArgumentException(sprintf('vendors[%d].vendor_id is required.', $index));
             }
