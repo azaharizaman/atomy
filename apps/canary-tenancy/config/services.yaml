@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
+
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+# See also https://symfony.com/doc/current/service_container/import.html
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+
+    # Orchestrator Services
+    Nexus\TenantOperations\:
+        resource: '%kernel.project_dir%/../../orchestrators/TenantOperations/src/'
+
+    Nexus\TenantOperations\Contracts\TenantOnboardingCoordinatorInterface:
+        alias: Nexus\TenantOperations\Coordinators\TenantOnboardingCoordinator
+
+    Nexus\TenantOperations\Services\TenantOnboardingService:
+        autowire: true
+
+    Nexus\TenantOperations\Coordinators\TenantOnboardingCoordinator:
+        arguments:
+            $logger: '@logger'
+
+    Nexus\TenantOperations\Services\TenantReadinessChecker:
+        arguments:
+            $requiredAdapters:
+                'Nexus\TenantOperations\Contracts\TenantCreatorAdapterInterface': '@Nexus\TenantOperations\Contracts\TenantCreatorAdapterInterface'
+                'Nexus\TenantOperations\Contracts\AdminCreatorAdapterInterface': '@Nexus\TenantOperations\Contracts\AdminCreatorAdapterInterface'
+                'Nexus\TenantOperations\Contracts\CompanyCreatorAdapterInterface': '@Nexus\TenantOperations\Contracts\CompanyCreatorAdapterInterface'
+                'Nexus\TenantOperations\Contracts\AuditLoggerAdapterInterface': '@Nexus\TenantOperations\Contracts\AuditLoggerAdapterInterface'
+                'Nexus\TenantOperations\Contracts\SettingsInitializerAdapterInterface': '@Nexus\TenantOperations\Contracts\SettingsInitializerAdapterInterface'
+                'Nexus\TenantOperations\Contracts\FeatureConfiguratorAdapterInterface': '@Nexus\TenantOperations\Contracts\FeatureConfiguratorAdapterInterface'
+            $logger: '@logger'
+
+    # Adapter Mappings
+    Nexus\TenantOperations\Contracts\TenantCreatorAdapterInterface:
+        alias: App\Adapters\LoggingTenantCreatorAdapter
+
+    Nexus\TenantOperations\Contracts\AdminCreatorAdapterInterface:
+        alias: App\Adapters\LoggingAdminCreatorAdapter
+
+    Nexus\TenantOperations\Contracts\CompanyCreatorAdapterInterface:
+        alias: App\Adapters\LoggingCompanyCreatorAdapter
+
+    Nexus\TenantOperations\Contracts\AuditLoggerAdapterInterface:
+        alias: App\Adapters\LoggingAuditLoggerAdapter
+
+    Nexus\TenantOperations\Contracts\SettingsInitializerAdapterInterface:
+        alias: App\Adapters\LoggingSettingsInitializerAdapter
+
+    Nexus\TenantOperations\Contracts\FeatureConfiguratorAdapterInterface:
+        alias: App\Adapters\LoggingFeatureConfiguratorAdapter
+
+    # Rule/DataProvider Interfaces
+    Nexus\TenantOperations\DataProviders\TenantQueryInterface:
+        alias: App\Adapters\LoggingTenantQueryAdapter
+
+    Nexus\TenantOperations\Rules\TenantCodeCheckerInterface:
+        alias: App\Adapters\LoggingTenantQueryAdapter
+
+    Nexus\TenantOperations\Rules\TenantDomainCheckerInterface:
+        alias: App\Adapters\LoggingTenantQueryAdapter
+
+    Nexus\TenantOperations\DataProviders\SettingsQueryInterface:
+        alias: App\Adapters\LoggingSettingsQueryAdapter
+
+    Nexus\TenantOperations\DataProviders\FeatureQueryInterface:
+        alias: App\Adapters\LoggingFeatureQueryAdapter
+
+    Nexus\TenantOperations\DataProviders\FeatureToggleInterface:
+        alias: App\Adapters\LoggingFeatureToggleAdapter
+
+    Nexus\TenantOperations\DataProviders\TenantStatusQueryInterface:
+        alias: App\Adapters\LoggingTenantStatusAdapter
+
+    Nexus\TenantOperations\DataProviders\ConfigurationQueryInterface:
+        alias: App\Adapters\LoggingTenantStatusAdapter
