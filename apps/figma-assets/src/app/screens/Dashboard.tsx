@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import {
-  TrendingUp, TrendingDown, FileText, CheckCircle2, DollarSign, Clock,
+  TrendingUp, FileText, CheckCircle2, DollarSign, Clock,
   AlertTriangle, AlertCircle, Info, ChevronRight, Plus, ArrowUpRight,
   GitCompareArrows, Zap, BarChart3
 } from "lucide-react";
@@ -87,23 +87,18 @@ export function Dashboard() {
               className="rounded-xl p-4 border"
               style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)" }}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="rounded-lg p-2" style={{ background: kpi.bg }}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div style={{ fontSize: 26, fontWeight: 700, color: "var(--app-text-strong)", letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 4 }}>
+                    {kpi.value}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--app-text-muted)", marginBottom: 2 }}>{kpi.label}</div>
+                  <div style={{ fontSize: 11, color: kpi.trend === "warn" ? "var(--app-warning)" : "var(--app-success)" }}>{kpi.delta}</div>
+                </div>
+                <div className="rounded-lg p-2 flex-shrink-0" style={{ background: kpi.bg }}>
                   <Icon size={16} style={{ color: kpi.accent }} />
                 </div>
-                {kpi.trend === "up" ? (
-                  <TrendingUp size={13} style={{ color: "var(--app-success)" }} />
-                ) : kpi.trend === "warn" ? (
-                  <AlertTriangle size={13} style={{ color: "var(--app-warning)" }} />
-                ) : (
-                  <TrendingDown size={13} style={{ color: "var(--app-danger)" }} />
-                )}
               </div>
-              <div style={{ fontSize: 26, fontWeight: 700, color: "var(--app-text-strong)", letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 4 }}>
-                {kpi.value}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--app-text-muted)", marginBottom: 2 }}>{kpi.label}</div>
-              <div style={{ fontSize: 11, color: kpi.trend === "warn" ? "var(--app-warning)" : "var(--app-success)" }}>{kpi.delta}</div>
             </div>
           );
         })}
