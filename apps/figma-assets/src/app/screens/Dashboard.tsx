@@ -61,7 +61,7 @@ export function Dashboard() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ padding: "24px", minHeight: "100%", maxWidth: 1600 }}>
+    <div style={{ padding: "24px", minHeight: "100%" }}>
       {/* Page title */}
       <div className="flex items-center justify-between mb-6">
         <div>
