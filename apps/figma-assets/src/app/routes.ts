@@ -7,6 +7,7 @@ import { CreateRFQ } from "./screens/CreateRFQ";
 import { RFQDetail } from "./screens/RFQDetail";
 import { VendorInvitation } from "./screens/VendorInvitation";
 import { QuoteIntake } from "./screens/QuoteIntake";
+import { QuoteComparison } from "./screens/QuoteComparison";
 
 export const router = createBrowserRouter([
   {
@@ -23,7 +24,7 @@ export const router = createBrowserRouter([
       { path: "/rfqs/:id/vendors", Component: VendorInvitation },
       { path: "/quote-intake", Component: QuoteIntake },
       // Placeholder routes for nav items
-      { path: "/comparison", Component: Dashboard },
+      { path: "/comparison/:id?", Component: QuoteComparison },
       { path: "/approvals", Component: Dashboard },
       { path: "/reports", Component: Dashboard },
       { path: "/notifications", Component: Dashboard },

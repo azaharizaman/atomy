@@ -96,25 +96,27 @@ export function AppShell() {
         className="flex-shrink-0 flex flex-col border-r transition-all duration-200"
         style={{
           width: sidebarCollapsed ? 56 : 220,
-          background: "var(--app-bg-surface)",
-          borderColor: "var(--app-border-strong)",
+          background: "var(--app-nav-bg)",
+          borderColor: "var(--app-nav-border)",
         }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-3 h-14 border-b flex-shrink-0" style={{ borderColor: "var(--app-border-strong)" }}>
+        <div className="flex items-center gap-2.5 px-3 h-14 border-b flex-shrink-0" style={{ borderColor: "var(--app-nav-border)" }}>
           <div className="flex items-center justify-center rounded-lg flex-shrink-0" style={{ width: 30, height: 30, background: "linear-gradient(135deg, var(--app-brand-500), var(--app-brand-700))" }}>
             <Zap size={15} color="white" />
           </div>
           {!sidebarCollapsed && (
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--app-text-strong)", letterSpacing: "-0.01em", lineHeight: 1 }}>Atomy-Q</div>
-              <div style={{ fontSize: 9, color: "var(--app-text-subtle)", letterSpacing: "0.08em", fontWeight: 500, textTransform: "uppercase", lineHeight: 1.4 }}>Procurement Intelligence</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--app-nav-text-strong)", letterSpacing: "-0.01em", lineHeight: 1 }}>Atomy-Q</div>
+              <div style={{ fontSize: 9, color: "var(--app-nav-text-muted)", letterSpacing: "0.08em", fontWeight: 500, textTransform: "uppercase", lineHeight: 1.4 }}>Procurement Intelligence</div>
             </div>
           )}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="ml-auto rounded flex items-center justify-center hover:bg-slate-700 transition-colors"
-            style={{ width: 22, height: 22, color: "var(--app-text-muted)" }}
+            className="ml-auto rounded flex items-center justify-center transition-colors"
+            style={{ width: 22, height: 22, color: "var(--app-nav-text-muted)" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--app-nav-hover)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--app-nav-text-strong)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "var(--app-nav-text-muted)"; }}
           >
             {sidebarCollapsed ? <ChevronRight size={13} /> : <Menu size={13} />}
           </button>
@@ -125,7 +127,7 @@ export function AppShell() {
           {navSections.map((section) => (
             <div key={section.label} className="mb-4">
               {!sidebarCollapsed && (
-                <div className="px-3 mb-1" style={{ fontSize: 9, fontWeight: 600, color: "var(--app-text-faint)", letterSpacing: "0.1em" }}>
+                <div className="px-3 mb-1" style={{ fontSize: 9, fontWeight: 600, color: "var(--app-nav-text-muted)", letterSpacing: "0.1em" }}>
                   {section.label}
                 </div>
               )}
@@ -140,12 +142,12 @@ export function AppShell() {
                     style={{
                       padding: sidebarCollapsed ? "7px 14px" : "7px 10px",
                       width: sidebarCollapsed ? "calc(100% - 8px)" : "calc(100% - 8px)",
-                      background: active ? "var(--app-brand-tint-12)" : "transparent",
-                      color: active ? "var(--app-brand-400)" : "var(--app-text-subtle)",
+                      background: active ? "var(--app-nav-active-bg)" : "transparent",
+                      color: active ? "var(--app-brand-400)" : "var(--app-nav-text-main)",
                       borderLeft: active ? "2px solid var(--app-brand-500)" : "2px solid transparent",
                     }}
                     onMouseEnter={(e) => {
-                      if (!active) (e.currentTarget as HTMLButtonElement).style.background = "var(--app-hover-soft)";
+                      if (!active) (e.currentTarget as HTMLButtonElement).style.background = "var(--app-nav-hover)";
                     }}
                     onMouseLeave={(e) => {
                       if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
@@ -170,7 +172,7 @@ export function AppShell() {
         </div>
 
         {/* Account */}
-        <div className="border-t py-2 flex-shrink-0" style={{ borderColor: "var(--app-border-strong)" }}>
+        <div className="border-t py-2 flex-shrink-0" style={{ borderColor: "var(--app-nav-border)" }}>
           {accountItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -181,10 +183,10 @@ export function AppShell() {
                 style={{
                   padding: sidebarCollapsed ? "6px 14px" : "6px 10px",
                   width: "calc(100% - 8px)",
-                  color: "var(--app-text-muted)",
+                  color: "var(--app-nav-text-main)",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--app-text-subtle)"; (e.currentTarget as HTMLButtonElement).style.background = "var(--app-hover-soft)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--app-text-muted)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--app-nav-text-strong)"; (e.currentTarget as HTMLButtonElement).style.background = "var(--app-nav-hover)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--app-nav-text-main)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
               >
                 <Icon size={14} style={{ flexShrink: 0 }} />
                 {!sidebarCollapsed && <span style={{ fontSize: 13 }}>{item.label}</span>}
@@ -197,15 +199,15 @@ export function AppShell() {
       {/* Main */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header */}
-        <header className="flex-shrink-0 flex items-center gap-3 px-4 border-b" style={{ height: 56, background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)" }}>
+        <header className="flex-shrink-0 flex items-center gap-3 px-4 border-b" style={{ height: 56, background: "var(--app-header-bg)", borderColor: "var(--app-header-border)" }}>
           {/* Breadcrumb */}
           <div className="flex items-center gap-1 flex-shrink-0" style={{ fontSize: 13 }}>
             {breadcrumbs.map((crumb, i) => (
               <span key={crumb.path} className="flex items-center gap-1">
-                {i > 0 && <ChevronRight size={12} style={{ color: "var(--app-text-faint)" }} />}
+                {i > 0 && <ChevronRight size={12} style={{ color: "var(--app-header-text-faint)" }} />}
                 <button
                   onClick={() => navigate(crumb.path)}
-                  style={{ color: i === breadcrumbs.length - 1 ? "var(--app-text-main)" : "var(--app-text-subtle)", fontWeight: i === breadcrumbs.length - 1 ? 500 : 400 }}
+                  style={{ color: i === breadcrumbs.length - 1 ? "var(--app-header-text-main)" : "var(--app-header-text-muted)", fontWeight: i === breadcrumbs.length - 1 ? 500 : 400 }}
                   className="hover:opacity-80 transition-opacity"
                 >
                   {crumb.label}
@@ -217,16 +219,16 @@ export function AppShell() {
           {/* Search */}
           <div
             className="flex items-center gap-2 rounded-lg px-3 flex-1 max-w-xs transition-all duration-150 ml-4"
-            style={{ background: searchFocused ? "var(--app-border-strong)" : "var(--app-bg-elevated)", border: `1px solid ${searchFocused ? "var(--app-brand-500)" : "var(--app-border-strong)"}`, height: 34 }}
+            style={{ background: searchFocused ? "var(--app-bg-surface)" : "var(--app-header-input-bg)", border: `1px solid ${searchFocused ? "var(--app-brand-500)" : "var(--app-header-input-border)"}`, height: 34 }}
           >
-            <Search size={13} style={{ color: "var(--app-text-subtle)", flexShrink: 0 }} />
+            <Search size={13} style={{ color: "var(--app-header-text-muted)", flexShrink: 0 }} />
             <input
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
               placeholder="Search RFQs, vendors, quotes…"
-              style={{ background: "transparent", border: "none", outline: "none", fontSize: 13, color: "var(--app-text-subtle)", width: "100%" }}
+              style={{ background: "transparent", border: "none", outline: "none", fontSize: 13, color: "var(--app-header-text-main)", width: "100%" }}
             />
-            <kbd style={{ fontSize: 10, color: "var(--app-text-faint)", background: "var(--app-border-strong)", border: "1px solid var(--app-text-faint)", borderRadius: 4, padding: "1px 5px", fontFamily: "monospace" }}>/</kbd>
+            <kbd style={{ fontSize: 10, color: "var(--app-header-text-muted)", background: "var(--app-bg-surface)", border: "1px solid var(--app-header-border)", borderRadius: 4, padding: "1px 5px", fontFamily: "monospace" }}>/</kbd>
           </div>
 
           <div className="flex-1" />
@@ -242,18 +244,18 @@ export function AppShell() {
           </button>
           <button
             className="flex items-center gap-1.5 rounded-lg px-3 transition-colors flex-shrink-0"
-            style={{ height: 32, background: "var(--app-bg-elevated)", border: "1px solid var(--app-border-strong)", color: "var(--app-text-subtle)", fontSize: 13 }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-text-faint)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-border-strong)"; }}
+            style={{ height: 32, background: "var(--app-bg-surface)", border: "1px solid var(--app-header-border)", color: "var(--app-header-text-muted)", fontSize: 13 }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-header-text-faint)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-header-border)"; }}
           >
             <Play size={12} />
             Run Comparison
           </button>
           <button
             className="flex items-center gap-1.5 rounded-lg px-3 transition-colors flex-shrink-0"
-            style={{ height: 32, background: "var(--app-bg-elevated)", border: "1px solid var(--app-border-strong)", color: "var(--app-text-subtle)", fontSize: 13 }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-text-faint)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-border-strong)"; }}
+            style={{ height: 32, background: "var(--app-bg-surface)", border: "1px solid var(--app-header-border)", color: "var(--app-header-text-muted)", fontSize: 13 }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-header-text-faint)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-header-border)"; }}
           >
             <SendHorizonal size={12} />
             Request Approval
@@ -271,7 +273,7 @@ export function AppShell() {
           </button>
 
           {/* Notification Bell */}
-          <button className="relative flex items-center justify-center rounded-lg transition-colors flex-shrink-0" style={{ width: 34, height: 34, background: "var(--app-bg-elevated)", border: "1px solid var(--app-border-strong)", color: "var(--app-text-subtle)" }}>
+          <button className="relative flex items-center justify-center rounded-lg transition-colors flex-shrink-0" style={{ width: 34, height: 34, background: "var(--app-bg-surface)", border: "1px solid var(--app-header-border)", color: "var(--app-header-text-muted)" }}>
             <Bell size={14} />
             <span className="absolute top-1 right-1 rounded-full" style={{ width: 8, height: 8, background: "var(--app-danger)", fontSize: 8, lineHeight: 1 }} />
           </button>
@@ -281,34 +283,34 @@ export function AppShell() {
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
               className="flex items-center gap-2 rounded-lg px-2 transition-colors"
-              style={{ height: 34, background: userMenuOpen ? "var(--app-border-strong)" : "transparent", border: "1px solid transparent" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--app-border-strong)"; }}
+              style={{ height: 34, background: userMenuOpen ? "var(--app-bg-elevated)" : "transparent", border: "1px solid transparent" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--app-bg-elevated)"; }}
               onMouseLeave={(e) => { if (!userMenuOpen) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
             >
               <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 26, height: 26, background: "linear-gradient(135deg, var(--app-brand-500), var(--app-accent-purple))", fontSize: 11, fontWeight: 700, color: "white" }}>
                 SC
               </div>
               <div className="text-left">
-                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--app-text-main)", lineHeight: 1.2 }}>Sarah Chen</div>
-                <div style={{ fontSize: 10, color: "var(--app-text-subtle)", lineHeight: 1.2 }}>Buyer</div>
+                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--app-header-text-main)", lineHeight: 1.2 }}>Sarah Chen</div>
+                <div style={{ fontSize: 10, color: "var(--app-header-text-muted)", lineHeight: 1.2 }}>Buyer</div>
               </div>
-              <ChevronDown size={12} style={{ color: "var(--app-text-subtle)" }} />
+              <ChevronDown size={12} style={{ color: "var(--app-header-text-muted)" }} />
             </button>
             {userMenuOpen && (
-              <div className="absolute right-0 top-full mt-1 rounded-lg border shadow-xl z-50 py-1" style={{ background: "var(--app-bg-elevated)", border: "1px solid var(--app-border-strong)", minWidth: 180 }}>
+              <div className="absolute right-0 top-full mt-1 rounded-lg border shadow-xl z-50 py-1" style={{ background: "var(--app-bg-surface)", border: "1px solid var(--app-header-border)", minWidth: 180 }}>
                 {[
                   { label: "Profile", icon: User },
                   { label: "Preferences", icon: Settings },
                   { label: "Help & Docs", icon: HelpCircle },
                 ].map((item) => (
-                  <button key={item.label} className="w-full flex items-center gap-2.5 px-3 py-2 transition-colors text-left" style={{ fontSize: 13, color: "var(--app-text-subtle)" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--app-hover-strong)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--app-text-main)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "var(--app-text-subtle)"; }}>
+                  <button key={item.label} className="w-full flex items-center gap-2.5 px-3 py-2 transition-colors text-left" style={{ fontSize: 13, color: "var(--app-header-text-main)" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--app-bg-elevated)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--app-header-text-main)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "var(--app-header-text-main)"; }}>
                     <item.icon size={13} />
                     {item.label}
                   </button>
                 ))}
-                <div className="my-1" style={{ borderTop: "1px solid var(--app-border-strong)" }} />
+                <div className="my-1" style={{ borderTop: "1px solid var(--app-header-border)" }} />
                 <button
                   onClick={() => navigate("/")}
                   className="w-full flex items-center gap-2.5 px-3 py-2 transition-colors text-left"
@@ -330,15 +332,15 @@ export function AppShell() {
         </main>
 
         {/* Footer */}
-        <footer className="flex-shrink-0 flex items-center justify-between px-4 border-t" style={{ height: 32, background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)" }}>
-          <div className="flex items-center gap-3" style={{ fontSize: 11, color: "var(--app-text-faint)" }}>
+        <footer className="flex-shrink-0 flex items-center justify-between px-4 border-t" style={{ height: 32, background: "var(--app-header-bg)", borderColor: "var(--app-header-border)" }}>
+          <div className="flex items-center gap-3" style={{ fontSize: 11, color: "var(--app-header-text-faint)" }}>
             <span>v2.4.1-prod</span>
             <span className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: "var(--app-success-tint-10)", color: "var(--app-success)", border: "1px solid var(--app-success-tint-20)", fontSize: 10 }}>PRODUCTION</span>
-            <a href="#" style={{ color: "var(--app-text-subtle)" }} className="hover:text-slate-300 transition-colors">System Status ↗</a>
+            <a href="#" style={{ color: "var(--app-header-text-muted)" }} className="hover:text-slate-300 transition-colors">System Status ↗</a>
           </div>
-          <div className="flex items-center gap-3" style={{ fontSize: 11, color: "var(--app-text-faint)" }}>
+          <div className="flex items-center gap-3" style={{ fontSize: 11, color: "var(--app-header-text-faint)" }}>
             {["API", "Docs", "Privacy", "Terms", "Security"].map((link) => (
-              <a key={link} href="#" className="hover:text-slate-400 transition-colors" style={{ color: "var(--app-text-faint)" }}>{link}</a>
+              <a key={link} href="#" className="hover:text-slate-400 transition-colors" style={{ color: "var(--app-header-text-faint)" }}>{link}</a>
             ))}
           </div>
         </footer>

@@ -5,6 +5,9 @@ import {
   AlertCircle, CheckCheck, Layers, Shield
 } from "lucide-react";
 import { quoteSubmissions } from "../data/mockData";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter
+} from "../components/ui/sheet";
 
 const statusConfig: Record<string, { bg: string; color: string; icon: any; border: string }> = {
   Accepted:              { bg: "var(--app-success-tint-8)",  color: "var(--app-success)", icon: CheckCircle2, border: "var(--app-success-tint-15)" },
@@ -28,24 +31,25 @@ const confidenceBg = (score: number | null) => {
 };
 
 const mockLineItems = [
-  { id: 1, description: "Industrial Centrifugal Pump — 6\" Outlet", qty: 4, uom: "Units", unitPrice: 18200, total: 72800, confidence: 98, mapped: true },
-  { id: 2, description: "Installation & Commissioning Service", qty: 8, uom: "Days", unitPrice: 4500, total: 36000, confidence: 72, mapped: true },
-  { id: 3, description: "Spare Parts Kit (2-Year Supply)", qty: 1, uom: "Set", unitPrice: 24800, total: 24800, confidence: 91, mapped: true },
-  { id: 4, description: "Annual Maintenance Contract", qty: 2, uom: "Years", unitPrice: 12600, total: 25200, confidence: 45, mapped: false },
-  { id: 5, description: "Training Program — 2 Engineers", qty: 1, uom: "Program", unitPrice: 6800, total: 6800, confidence: 88, mapped: true },
+  { id: 1, description: "Industrial Centrifugal Pump — 6\" Outlet", qty: 4, uom: "Units", unitPrice: 18200, total: 72800, confidence: 98, mapped: true, unSpscCode: "40151503", pricingAnomaly: false },
+  { id: 2, description: "Installation & Commissioning Service", qty: 8, uom: "Days", unitPrice: 4500, total: 36000, confidence: 72, mapped: true, unSpscCode: "72151500", pricingAnomaly: false },
+  { id: 3, description: "Spare Parts Kit (2-Year Supply)", qty: 1, uom: "Set", unitPrice: 24800, total: 24800, confidence: 91, mapped: true, unSpscCode: "40151505", pricingAnomaly: true },
+  { id: 4, description: "Annual Maintenance Contract", qty: 2, uom: "Years", unitPrice: 12600, total: 25200, confidence: 45, mapped: false, unSpscCode: null, pricingAnomaly: false },
+  { id: 5, description: "Training Program — 2 Engineers", qty: 1, uom: "Program", unitPrice: 6800, total: 6800, confidence: 88, mapped: true, unSpscCode: "86101700", pricingAnomaly: false },
 ];
 
 const mockWarnings = [
   { id: 1, field: "Warranty Terms", message: "Warranty duration not specified. Policy requires minimum 12 months.", severity: "High" },
   { id: 2, field: "Currency", message: "Quote uses EUR but RFQ requires USD. Auto-conversion applied at 1.08 rate.", severity: "Medium" },
-  { id: 3, field: "Line Item 4", message: "Maintenance contract line item confidence below 50%. Manual review recommended.", severity: "High" },
-  { id: 4, field: "Payment Terms", message: "Net 45 differs from RFQ requirement of Net 30. Flagged for negotiation.", severity: "Low" },
+  { id: 3, field: "Incoterms", message: "Incoterm 'EXW' detected. Project policy prefers 'DDP' or 'CIF'.", severity: "Medium" },
+  { id: 4, field: "Lead Time", message: "Extracted lead time (45 days) exceeds RFQ requirement of 30 days.", severity: "High" },
+  { id: 5, field: "Payment Days", message: "Payment terms 'Net 60' extracted. Standard policy is 'Net 30'.", severity: "Low" },
 ];
 
 export function QuoteIntake() {
   const [selectedSubmission, setSelectedSubmission] = useState(quoteSubmissions[1]);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showLowConfModal, setShowLowConfModal] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set(["QS-001", "QS-005"]));
@@ -217,7 +221,7 @@ export function QuoteIntake() {
           <div className="grid grid-cols-3 gap-4">
             {/* Confidence Score */}
             <div className="rounded-xl border p-4" style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)" }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--app-text-subtle)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Parse Confidence</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--app-text-subtle)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Average AI Confidence</div>
               {selectedSubmission.confidence !== null ? (
                 <>
                   <div style={{ fontSize: 38, fontWeight: 800, color: confidenceColor(selectedSubmission.confidence), letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 6 }}>
@@ -244,8 +248,8 @@ export function QuoteIntake() {
               <div className="space-y-2">
                 {[
                   { label: "Line Items", value: selectedSubmission.lineItems ?? "—", icon: Layers, color: "var(--app-brand-400)" },
-                  { label: "Warnings", value: selectedSubmission.warnings ?? "—", icon: AlertTriangle, color: selectedSubmission.warnings ? "var(--app-warning)" : "var(--app-text-subtle)" },
-                  { label: "Errors", value: selectedSubmission.errors ?? "—", icon: XCircle, color: selectedSubmission.errors ? "var(--app-danger-soft)" : "var(--app-text-subtle)" },
+                  { label: "Commercial Terms", value: "4 extracted", icon: FileText, color: "var(--app-success)" },
+                  { label: "Risk Assessment", value: selectedSubmission.warnings ? `${selectedSubmission.warnings} risks detected` : "—", icon: AlertTriangle, color: selectedSubmission.warnings ? "var(--app-warning)" : "var(--app-text-subtle)" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between">
                     <div className="flex items-center gap-2" style={{ fontSize: 12, color: "var(--app-text-muted)" }}>
@@ -269,17 +273,17 @@ export function QuoteIntake() {
                   selectedSubmission.confidence >= 85
                     ? "All line items successfully mapped. No critical issues detected. Ready for comparison."
                     : selectedSubmission.confidence >= 65
-                    ? "3 line items require attention. Currency conversion applied. Warranty terms missing."
+                    ? "3 line items require attention. Currency conversion applied. Commercial terms extracted with warnings."
                     : "Multiple extraction failures detected. Manual data entry may be required for accurate comparison."
                 ) : "Parsing in progress. AI extraction engine processing document…"}
               </div>
-              {selectedSubmission.confidence !== null && selectedSubmission.confidence < 85 && (
+              {selectedSubmission.confidence !== null && (
                 <button
-                  onClick={() => setShowLowConfModal(true)}
+                  onClick={() => setShowInsights(true)}
                   style={{ fontSize: 12, color: "var(--app-accent-purple)", marginTop: 8 }}
                   className="flex items-center gap-1 hover:opacity-80 transition-opacity"
                 >
-                  Review extraction <ChevronRight size={11} />
+                  Review AI extraction <ChevronRight size={11} />
                 </button>
               )}
             </div>
@@ -305,7 +309,13 @@ export function QuoteIntake() {
                       </div>
                       <div style={{ fontSize: 12, color: "var(--app-text-muted)", marginTop: 2, lineHeight: 1.5 }}>{w.message}</div>
                     </div>
-                    <button style={{ fontSize: 11, color: "var(--app-brand-500)", flexShrink: 0 }} className="hover:opacity-80 transition-opacity">Resolve</button>
+                    <button 
+                      onClick={() => setShowInsights(true)}
+                      style={{ fontSize: 11, color: "var(--app-brand-500)", flexShrink: 0 }} 
+                      className="hover:opacity-80 transition-opacity"
+                    >
+                      Resolve
+                    </button>
                   </div>
                 ))}
               </div>
@@ -330,7 +340,7 @@ export function QuoteIntake() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--app-border-strong)" }}>
-                    {["#", "Description", "Qty", "UOM", "Unit Price", "Total", "Confidence", "Mapping"].map((h) => (
+                    {["#", "Description", "UNSPSC Code", "Qty", "UOM", "Unit Price", "Total", "Confidence", "Mapping"].map((h) => (
                       <th key={h} style={{ fontSize: 10, fontWeight: 600, color: "var(--app-text-subtle)", letterSpacing: "0.06em", textTransform: "uppercase", padding: "8px 14px", textAlign: "left", background: "var(--app-bg-elevated)" }}>{h}</th>
                     ))}
                   </tr>
@@ -340,7 +350,17 @@ export function QuoteIntake() {
                     <tr key={item.id} style={{ borderBottom: i < mockLineItems.length - 1 ? "1px solid var(--app-bg-elevated)" : "none" }}>
                       <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--app-text-faint)" }}>{item.id}</td>
                       <td style={{ padding: "10px 14px", fontSize: 13, color: "var(--app-text-main)", maxWidth: 280 }}>
-                        <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.description}</div>
+                        <div className="flex items-center gap-2">
+                          <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.description}</div>
+                          {item.pricingAnomaly && (
+                            <span className="flex-shrink-0" title="Pricing Anomaly Detected">
+                              <AlertTriangle size={12} style={{ color: "var(--app-danger)" }} />
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: "10px 14px", fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: "var(--app-text-muted)" }}>
+                        {item.unSpscCode ?? <span style={{ color: "var(--app-text-faint)" }}>—</span>}
                       </td>
                       <td style={{ padding: "10px 14px", fontSize: 13, color: "var(--app-text-subtle)", textAlign: "right" }}>{item.qty}</td>
                       <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--app-text-muted)" }}>{item.uom}</td>
@@ -440,31 +460,122 @@ export function QuoteIntake() {
         </div>
       )}
 
-      {/* Low Confidence Modal */}
-      {showLowConfModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "var(--app-overlay-strong)" }}>
-          <div className="rounded-xl border shadow-2xl p-6" style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)", width: 500 }}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 style={{ fontSize: 16, fontWeight: 600, color: "var(--app-text-strong)" }}>Low Confidence Extraction</h3>
-              <button onClick={() => setShowLowConfModal(false)} style={{ color: "var(--app-text-subtle)" }} className="hover:text-slate-300 transition-colors"><X size={16} /></button>
+      {/* AI Extraction Insights Drawer */}
+      <Sheet open={showInsights} onOpenChange={setShowInsights}>
+        <SheetContent className="sm:max-w-xl overflow-y-auto p-6">
+          <SheetHeader className="p-0 mb-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Zap size={16} className="text-purple-500" />
+              <SheetTitle>AI Extraction Insights</SheetTitle>
             </div>
-            <div className="flex items-center gap-2 rounded-lg px-3 py-2.5 mb-4" style={{ background: "var(--app-warning-tint-8)", border: "1px solid var(--app-warning-tint-20)" }}>
-              <AlertTriangle size={14} style={{ color: "var(--app-warning)" }} />
-              <span style={{ fontSize: 13, color: "var(--app-warning-soft)" }}>1 line item extracted with &lt;50% confidence. Manual review recommended.</span>
-            </div>
-            <div className="rounded-lg p-4 mb-4" style={{ background: "var(--app-bg-elevated)", border: "1px solid var(--app-border-strong)" }}>
-              <div style={{ fontSize: 12, color: "var(--app-text-subtle)", marginBottom: 6 }}>LINE ITEM 4 · CONFIDENCE: 45%</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--app-text-main)", marginBottom: 4 }}>Annual Maintenance Contract</div>
-              <div style={{ fontSize: 13, color: "var(--app-text-subtle)" }}>Extracted: 2 Years × $12,600 = $25,200</div>
-              <div style={{ fontSize: 12, color: "var(--app-text-muted)", marginTop: 6 }}>AI note: Contract duration and pricing structure ambiguous in source document. Please verify.</div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowLowConfModal(false)} style={{ fontSize: 13, background: "var(--app-bg-elevated)", border: "1px solid var(--app-border-strong)", borderRadius: 8, padding: "8px 16px", color: "var(--app-text-subtle)" }}>Dismiss</button>
-              <button onClick={() => setShowLowConfModal(false)} style={{ fontSize: 13, fontWeight: 500, background: "var(--app-warning)", borderRadius: 8, padding: "8px 16px", color: "var(--app-bg-canvas)" }}>Review & Correct</button>
-            </div>
+            <SheetDescription>
+              Detailed breakdown of the intelligence pipeline results for {selectedSubmission.id}.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-8">
+            {/* Confidence Breakdown */}
+            <section>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Confidence Breakdown</h4>
+              <div className="space-y-4">
+                {[
+                  { label: "Entity Extraction", score: 94, desc: "Vendors, Dates, Addresses" },
+                  { label: "Line Item Parsing", score: 82, desc: "Descriptions, Quantities, Prices" },
+                  { label: "Commercial Terms", score: 71, desc: "Incoterms, Payment, Warranty" },
+                  { label: "Semantic Mapping", score: 65, desc: "UNSPSC Taxonomy Alignment" },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <div className="flex justify-between items-end mb-1.5">
+                      <div>
+                        <div className="text-sm font-medium">{item.label}</div>
+                        <div className="text-[11px] text-muted-foreground">{item.desc}</div>
+                      </div>
+                      <div className="text-sm font-bold" style={{ color: confidenceColor(item.score) }}>{item.score}%</div>
+                    </div>
+                    <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${item.score}%`, background: confidenceColor(item.score) }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Extracted Commercial Terms */}
+            <section className="rounded-lg border bg-muted/30 p-5">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+                <FileText size={12} /> Extracted Commercial Terms
+              </h4>
+              <div className="grid grid-cols-2 gap-y-5 gap-x-8">
+                {[
+                  { label: "Incoterm", value: "EXW (Ex Works)", confidence: 88 },
+                  { label: "Payment Days", value: "60 Days", confidence: 92 },
+                  { label: "Lead Time", value: "45 Days", confidence: 64 },
+                  { label: "Warranty", value: "Not Found", confidence: 0 },
+                ].map((term) => (
+                  <div key={term.label}>
+                    <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight mb-0.5">{term.label}</div>
+                    <div className={`text-sm font-medium ${term.value === "Not Found" ? 'text-destructive' : ''}`}>{term.value}</div>
+                    {term.confidence > 0 && (
+                      <div className="text-[10px] mt-1" style={{ color: confidenceColor(term.confidence) }}>
+                        {term.confidence}% confidence
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Semantic Mapping Context */}
+            <section>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Semantic Mapping Context</h4>
+              <div className="space-y-3">
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  The AI engine maps extracted descriptions to standard UNSPSC taxonomy codes to enable normalized cross-vendor comparison.
+                </div>
+                <div className="p-4 rounded-md border border-dashed bg-elevated text-xs space-y-2.5">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Taxonomy Version:</span>
+                    <span className="font-mono font-medium text-main">v25.0901</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Mapping Strategy:</span>
+                    <span className="font-medium text-main">Neural Semantic Search</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Normalization Logs */}
+            <section>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Normalization Actions</h4>
+              <div className="space-y-2.5">
+                {[
+                  "Currency conversion: EUR → USD applied (Rate: 1.0852)",
+                  "UoM normalization: 'Boxes' → 'Units' (Factor: 12)",
+                  "Date normalization: 'DD/MM/YYYY' detected",
+                ].map((log, i) => (
+                  <div key={i} className="flex gap-2.5 text-xs text-muted-foreground">
+                    <div className="w-1 h-1 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                    {log}
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
-        </div>
-      )}
+
+          <SheetFooter className="border-t pt-6 mt-8 p-0">
+            <button
+              onClick={() => setShowInsights(false)}
+              className="w-full h-10 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              Done Reviewing
+            </button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -150,6 +150,7 @@ export function Dashboard() {
                 <div key={cmp.id} className="rounded-lg p-3 border cursor-pointer transition-colors" style={{ borderColor: "var(--app-border-strong)", background: "var(--app-bg-elevated)" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--app-text-faint)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--app-border-strong)"; }}
+                  onClick={() => navigate(`/comparison/${cmp.rfq}`)}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>

@@ -117,6 +117,22 @@
   --app-orange-tint-20: rgba(249, 115, 22, 0.2);
   --app-surface-glass: rgba(15, 23, 42, 0.8);
   --app-border-soft: rgba(255, 255, 255, 0.08);
+
+  --app-nav-bg: #0f172a;
+  --app-nav-text-strong: #f8fafc;
+  --app-nav-text-main: #cbd5e1;
+  --app-nav-text-muted: #94a3b8;
+  --app-nav-border: #1e293b;
+  --app-nav-hover: rgba(255, 255, 255, 0.06);
+  --app-nav-active-bg: rgba(59, 130, 246, 0.15);
+
+  --app-header-bg: #f1f5f9;
+  --app-header-border: #e2e8f0;
+  --app-header-text-main: #1e293b;
+  --app-header-text-muted: #475569;
+  --app-header-text-faint: #94a3b8;
+  --app-header-input-bg: rgba(15, 23, 42, 0.05);
+  --app-header-input-border: #cbd5e1;
 }
 
 .dark {
@@ -232,6 +248,22 @@
   --app-orange-tint-20: rgba(249, 115, 22, 0.2);
   --app-surface-glass: rgba(15, 23, 42, 0.8);
   --app-border-soft: rgba(255, 255, 255, 0.08);
+
+  --app-nav-bg: #020617;
+  --app-nav-text-strong: #f8fafc;
+  --app-nav-text-main: #94a3b8;
+  --app-nav-text-muted: #64748b;
+  --app-nav-border: #0f172a;
+  --app-nav-hover: rgba(255, 255, 255, 0.04);
+  --app-nav-active-bg: rgba(59, 130, 246, 0.2);
+
+  --app-header-bg: #010409;
+  --app-header-border: #161b22;
+  --app-header-text-main: #f0f6fc;
+  --app-header-text-muted: #8b949e;
+  --app-header-text-faint: #484f58;
+  --app-header-input-bg: rgba(255, 255, 255, 0.05);
+  --app-header-input-border: #30363d;
 }
 
 @theme inline {

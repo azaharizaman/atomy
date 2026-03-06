@@ -56,10 +56,10 @@ export function SignIn() {
       {/* Left panel */}
       <div
         className="hidden lg:flex flex-col justify-between p-10 relative overflow-hidden"
-        style={{ width: 480, flexShrink: 0, background: "linear-gradient(160deg, var(--app-bg-surface) 0%, var(--app-bg-elevated) 50%, var(--app-bg-canvas) 100%)" }}
+        style={{ width: 480, flexShrink: 0, background: "var(--app-nav-bg)" }}
       >
         {/* Grid overlay */}
-        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "linear-gradient(var(--app-brand-tint-3) 1px, transparent 1px), linear-gradient(90deg, var(--app-brand-tint-3) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
         {/* Glow */}
         <div className="absolute rounded-full pointer-events-none" style={{ width: 400, height: 400, background: "radial-gradient(circle, var(--app-brand-tint-6) 0%, transparent 70%)", top: -100, left: -100 }} />
 
@@ -70,17 +70,17 @@ export function SignIn() {
               <Zap size={20} color="white" />
             </div>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--app-text-strong)", letterSpacing: "-0.02em" }}>Atomy-Q</div>
-              <div style={{ fontSize: 10, color: "var(--app-brand-500)", letterSpacing: "0.12em", fontWeight: 600, textTransform: "uppercase" }}>Procurement Intelligence</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--app-nav-text-strong)", letterSpacing: "-0.02em" }}>Atomy-Q</div>
+              <div style={{ fontSize: 10, color: "var(--app-brand-400)", letterSpacing: "0.12em", fontWeight: 600, textTransform: "uppercase" }}>Procurement Intelligence</div>
             </div>
           </div>
 
           <div className="mb-10">
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: "var(--app-text-strong)", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 12 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: "var(--app-nav-text-strong)", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 12 }}>
               Quote comparison,<br />
-              <span style={{ color: "var(--app-brand-500)" }}>governed end-to-end.</span>
+              <span style={{ color: "var(--app-brand-400)" }}>governed end-to-end.</span>
             </h1>
-            <p style={{ fontSize: 15, color: "var(--app-text-muted)", lineHeight: 1.6 }}>
+            <p style={{ fontSize: 15, color: "var(--app-nav-text-main)", lineHeight: 1.6 }}>
               From vendor invite to award decision — every action traced, every outcome defensible.
             </p>
           </div>
@@ -88,12 +88,12 @@ export function SignIn() {
           <div className="space-y-4">
             {features.map((f) => (
               <div key={f.title} className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5 rounded" style={{ width: 18, height: 18, background: "var(--app-brand-tint-15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="flex-shrink-0 mt-0.5 rounded" style={{ width: 18, height: 18, background: "var(--app-nav-hover)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <ChevronRight size={11} style={{ color: "var(--app-brand-400)" }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--app-text-main)", marginBottom: 1 }}>{f.title}</div>
-                  <div style={{ fontSize: 12, color: "var(--app-text-subtle)", lineHeight: 1.5 }}>{f.desc}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--app-nav-text-strong)", marginBottom: 1 }}>{f.title}</div>
+                  <div style={{ fontSize: 12, color: "var(--app-nav-text-main)", lineHeight: 1.5 }}>{f.desc}</div>
                 </div>
               </div>
             ))}
@@ -110,11 +110,11 @@ export function SignIn() {
             ].map((stat) => (
               <div key={stat.label}>
                 <div style={{ fontSize: 18, fontWeight: 700, color: "var(--app-brand-400)", letterSpacing: "-0.02em" }}>{stat.value}</div>
-                <div style={{ fontSize: 11, color: "var(--app-text-faint)", marginTop: 1 }}>{stat.label}</div>
+                <div style={{ fontSize: 11, color: "var(--app-nav-text-muted)", marginTop: 1 }}>{stat.label}</div>
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 11, color: "var(--app-text-faint)", marginTop: 12 }}>
+          <div style={{ fontSize: 11, color: "var(--app-nav-text-muted)", marginTop: 12 }}>
             Enterprise-grade security · SOC 2 Type II · ISO 27001
           </div>
         </div>
