@@ -2,15 +2,15 @@
 
 ## Product Overview
 
-**The Pitch:** A procurement intelligence workspace that ingests vendor quotes, normalizes line-items, compares vendors side-by-side, applies policy-aware scoring, and routes high-risk outcomes through governed approvals with full decision traceability.
+**The Pitch:** A procurement intelligence workspace that ingests vendor quotes, biddings, tender submissions, normalizes line-items and multi segments tender submissions, compares vendors side-by-side, applies policy-aware scoring, and routes high-risk outcomes through governed approvals with full decision traceability.
 
 **For:** Requesters, Buyers, Approvers, Procurement Managers, Admins, Auditors, and Executives in medium-to-large organizations.
 
-**Device:** Desktop-first (optimized for 1366px+), responsive down to tablet.
+**Device:** Desktop-first (optimized for 1440px+), responsive down to large size tablet.
 
-**Design Direction:** "Operational Intelligence Console." Dense, high-signal interface with clear hierarchy, fast keyboard workflows, and explicit compliance indicators.
+**Design Direction:** "Operational Intelligence Console." Moderate to high density (especially on data rich pages), high-signal interface with clear hierarchy, fast keyboard workflows, and explicit compliance indicators. Prioritize familiar user experience like positioning of save button are same throughout, workflows or multi-step processes are shown as summary timeline so the user aware which steps they are on. As for colors, use homogenous color scheme except for buttons/links/clickable trigger where user attention is demanded, contracting color can be use, but still mentain a good and pleasent color scheme. NO DARK MODE. For Modal design, all modal are slide-over from right and overlay the current screen fropm the right side with smart filling of % to cover the current screen based on Modal contents (min 25%-30% to retain design effectiveness)
 
-**Inspired by:** Bloomberg Terminal (modernize), Linear (density), Stripe Dashboard (table precision)
+**Inspired by:** Bloomberg Terminal (modernize), Linear (density), Stripe Dashboard (table precision), Keeyns (use of whitespace and data hierarchical structuring with tabs within tab)
 
 **Tenant Context:** Each user is tied to one tenant. No tenant switching UI is provided.
 
@@ -72,11 +72,11 @@
 
 **Purpose:** Provide role-aware overview of workload, risk, and priority actions.
 
-**Layout:** Three-zone layout with KPI strip, task/feed area, and right rail for alerts.
+**Layout:** Smart multi-layout of Dashboard elements prioritising Scorecards/KPI/Aggregated summaries clickable visuals, task/feed area, and right rail for alerts.
 
 **Key Elements:**
-- KPI cards (active RFQs, pending approvals, savings trend).
-- My Tasks list.
+- KPI cards (active RFQs, pending approvals, savings trend, alerts).
+- My Tasks list or List of recently open records.
 - Risk/SLA alert panel.
 - Recent comparison runs.
 
@@ -119,6 +119,7 @@
 **Interactions:**
 - Click row opens RFQ Detail.
 - Click Create RFQ routes to Create RFQ.
+- Hover on row shows rich-tooltip showing scorecards/summaries based information for quick glance
 
 ### 4. Create RFQ
 
