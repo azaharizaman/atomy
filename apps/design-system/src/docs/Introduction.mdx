@@ -1,0 +1,66 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Design System/Introduction" />
+
+# AtomyQ Design System
+
+**The definitive guide for building consistent, accessible, and high-performance modules across the AtomyQ ERP SaaS platform.**
+
+---
+
+## What is AtomyQ?
+
+AtomyQ is a modern procurement intelligence workspace — a SaaS ERP platform that enables organisations to manage RFQs, vendor quotes, AI-powered comparisons, approvals, and procurement workflows. The platform is built with a **React frontend** and a **PHP API backend**, using **Supabase** for the persistence layer.
+
+## Who is this for?
+
+| Audience | What you'll find |
+|---|---|
+| **Product Designers** | Design tokens, layout patterns, interaction rules, accessibility standards |
+| **Frontend Developers** | React components, props API, code examples, state management patterns |
+| **Backend Developers** | API response schemas, error structures, permission keys, naming conventions |
+| **QA Engineers** | Workflow patterns, expected states, accessibility checklists, test scenarios |
+
+## Design System Structure
+
+1. **Design Principles** — Core philosophy, target users, and design goals
+2. **Tokens** — Colors, typography, spacing, elevation, and icons
+3. **Components** — 25+ production-ready React components across 5 categories
+4. **Patterns** — Interaction patterns, data display standards, workflows, and permissions
+5. **Examples** — Reference screens: Dashboard, Quote Comparison, Quote Intake, Settings
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend Framework | React 18 + TypeScript |
+| Styling | Tailwind CSS 4 + CSS Variables (design tokens) |
+| Component Primitives | Radix UI |
+| Variant Management | class-variance-authority (CVA) |
+| Icons | Lucide React |
+| Charts | Recharts |
+| Backend | PHP 8.3 (Laravel/Symfony) |
+| Persistence | Supabase |
+
+## Naming Convention
+
+All components in this design system are prefixed with `AtomyQ` to avoid collisions with third-party libraries:
+
+- `AtomyQButton`, `AtomyQTable`, `AtomyQModal`, `AtomyQSidebar`
+
+Permission keys follow a `resource.action` pattern:
+
+- `rfq.create`, `comparison.read`, `quotation.approve`
+
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start Storybook
+npm run dev
+
+# Build static Storybook
+npm run build
+```

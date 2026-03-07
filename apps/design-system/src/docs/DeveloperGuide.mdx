@@ -1,0 +1,183 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Design System/Developer Guide" />
+
+# Developer Implementation Guide
+
+Practical guidance for frontend developers building AtomyQ modules with React.
+
+---
+
+## Component Usage Pattern
+
+```tsx
+import { AtomyQButton } from '@atomyq/design-system/components/basic/AtomyQButton';
+import { AtomyQTable } from '@atomyq/design-system/components/data/AtomyQTable';
+import { AtomyQInput } from '@atomyq/design-system/components/form/AtomyQInput';
+```
+
+## State Management
+
+### Local State (useState)
+Use for UI-only state: open/close toggles, form field values, local filters.
+
+### URL State (useSearchParams)
+Use for filterable/shareable state: table sort, pagination, active filters.
+
+```tsx
+function RFQList() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Number(searchParams.get('page') ?? 1);
+  const sort = searchParams.get('sort') ?? 'created_at';
+
+  const handlePageChange = (newPage: number) => {
+    setSearchParams((prev) => {
+      prev.set('page', String(newPage));
+      return prev;
+    });
+  };
+}
+```
+
+### Server State (React Query / TanStack Query)
+Use for all API data: RFQs, vendors, comparisons, user data.
+
+### Global State (Zustand / Redux Toolkit)
+Use sparingly for cross-cutting concerns: auth state, feature flags, notification queue.
+
+## Form Patterns
+
+### Controlled Form with Validation
+
+```tsx
+function CreateRFQForm() {
+  const [title, setTitle] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!title.trim()) newErrors.title = 'Title is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validate()) {
+      // Submit...
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <AtomyQInput
+        label="RFQ Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        error={errors.title}
+        required
+      />
+      <AtomyQButton type="submit">Create RFQ</AtomyQButton>
+    </form>
+  );
+}
+```
+
+### Validation Timing
+
+| Trigger | Behaviour |
+|---|---|
+| On blur | Validate individual field when user leaves |
+| On change (after blur) | Re-validate field as user types (after first blur) |
+| On submit | Validate all fields, focus first error |
+
+## Permission-Guarded Components
+
+```tsx
+interface PermissionGateProps {
+  permission: string;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}
+
+function PermissionGate({ permission, children, fallback = null }: PermissionGateProps) {
+  const { hasPermission } = useAuth();
+  return hasPermission(permission) ? <>{children}</> : <>{fallback}</>;
+}
+
+// Usage
+<PermissionGate permission="rfq.create">
+  <AtomyQButton>Create RFQ</AtomyQButton>
+</PermissionGate>
+```
+
+## CSS Utility Usage
+
+### Tailwind + Design Tokens
+
+```tsx
+// Use design tokens via CSS variables
+<div className="bg-[var(--aq-bg-canvas)] text-[var(--aq-text-primary)]">
+  <h2 className="text-lg font-semibold">Section Title</h2>
+  <p className="text-sm text-[var(--aq-text-muted)]">Description</p>
+</div>
+```
+
+### cn() Utility
+
+```tsx
+import { cn } from '@/lib/utils';
+
+// Merge conditional classes
+<button className={cn(
+  'px-4 py-2 rounded-md',
+  isActive && 'bg-[var(--aq-brand-600)] text-white',
+  isDisabled && 'opacity-50 pointer-events-none'
+)}>
+```
+
+## Error Boundary Pattern
+
+```tsx
+class ErrorBoundary extends React.Component<
+  { fallback: React.ReactNode; children: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
+}
+
+// Usage
+<ErrorBoundary fallback={<AtomyQAlert variant="error">Something went wrong</AtomyQAlert>}>
+  <ComparisonMatrix />
+</ErrorBoundary>
+```
+
+## File Structure Convention
+
+```
+src/
+├── features/
+│   └── rfq/
+│       ├── components/        # Feature-specific components
+│       ├── hooks/             # Feature-specific hooks
+│       ├── api.ts             # API functions
+│       ├── types.ts           # TypeScript types
+│       └── utils.ts           # Feature utilities
+├── components/
+│   └── ui/                    # Shared UI components (design system)
+├── lib/
+│   ├── utils.ts               # Global utilities
+│   ├── api.ts                 # API client setup
+│   └── auth.tsx               # Auth context
+└── styles/
+    └── globals.css            # Global styles + tokens
+```
