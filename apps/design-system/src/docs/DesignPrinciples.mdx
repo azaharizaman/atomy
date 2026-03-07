@@ -1,0 +1,70 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Design System/Design Principles" />
+
+# Design Principles & Product Philosophy
+
+These principles guide every design and implementation decision in AtomyQ. Understanding **why** things are designed a certain way helps everyone build consistently.
+
+---
+
+## Product Vision
+
+AtomyQ is a **procurement intelligence workspace** that helps organisations make faster, more informed purchasing decisions. AI-powered quote comparison is at its core — the platform should feel like a trusted analytical assistant, not a bureaucratic ERP.
+
+## Core Design Goals
+
+### 1. Efficiency First
+ERP users perform repetitive tasks hundreds of times per day. Every interaction should be optimised for speed. Reduce clicks, support keyboard shortcuts, and pre-fill intelligent defaults.
+
+### 2. Data Density Allowed
+Unlike consumer apps, ERP dashboards can (and should) show more data. Users are trained professionals who need simultaneous visibility across metrics, tables, and workflows. Don't hide critical information behind navigation.
+
+### 3. Clarity Over Decoration
+Every pixel should serve a purpose. Prefer clear typography hierarchies and semantic colours over decorative elements. Data should be instantly scannable.
+
+### 4. Keyboard Friendly
+Power users rarely touch the mouse. Support `Tab` navigation, keyboard shortcuts (`/` for search, `Ctrl+Enter` to submit), and visible focus indicators everywhere.
+
+### 5. Predictable Layout
+Users navigate between 15+ modules daily. Consistent layout structure (sidebar → header → content → footer) means zero learning curve when entering a new module.
+
+### 6. Progressive Disclosure
+Show essential information first; reveal advanced options on demand. Use slide-over modals (from the right) for contextual detail without losing page context.
+
+---
+
+## Target Users
+
+| Role | Primary Tasks | UI Needs |
+|---|---|---|
+| **Procurement Manager** | Create RFQs, run comparisons, manage vendors | Dense dashboards, quick actions, approval workflows |
+| **Buyer** | Draft RFQs, upload specs, track quotes | Forms, file upload, status tracking |
+| **Approver** | Review comparisons, approve/reject awards | Comparison matrices, one-click approval, audit trail |
+| **Finance Controller** | Budget oversight, savings tracking | KPI cards, charts, export capabilities |
+| **Warehouse Operator** | Receive POs, track inventory | Simplified views, read-only tables, status badges |
+| **System Admin** | User management, role configuration | Settings forms, permission matrices, integration setup |
+| **Vendor (External)** | Submit quotes, respond to RFQs | Portal forms, file upload, status visibility |
+
+---
+
+## Accessibility Standards (WCAG 2.1 AA)
+
+AtomyQ targets **WCAG 2.1 Level AA** compliance:
+
+- **Colour Contrast**: Minimum 4.5:1 for normal text, 3:1 for large text
+- **Focus Indicators**: Visible 2px ring on all interactive elements
+- **Keyboard Navigation**: All functionality accessible via keyboard
+- **Screen Readers**: Semantic HTML, ARIA labels, landmark regions
+- **Motion**: Respect `prefers-reduced-motion`
+- **Error Identification**: Errors identified by colour AND text/icon
+
+---
+
+## Consistency Rules
+
+1. **One pattern per problem**: If data tables exist, don't invent card grids for the same data type
+2. **Semantic colours only**: Never use raw hex values in components — always reference design tokens
+3. **Spacing from the scale**: Use the 4px-base spacing scale — no arbitrary pixel values
+4. **Same action, same position**: Primary actions always on the right; destructive actions require confirmation
+5. **Status vocabulary**: Use the standard status set (Draft → Open → Closed → Awarded → Cancelled)

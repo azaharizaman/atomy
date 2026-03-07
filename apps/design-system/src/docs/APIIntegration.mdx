@@ -1,0 +1,174 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Design System/API Integration" />
+
+# API / Frontend Integration Rules
+
+Standardised API patterns ensure consistent data handling across all AtomyQ modules.
+
+---
+
+## Standard Response Schema
+
+### Success Response
+
+```json
+{
+  "data": [
+    { "id": "RFQ-2026-001", "title": "Industrial Pumping Equipment", "status": "Open" }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 25,
+    "total": 200,
+    "totalPages": 8
+  },
+  "meta": {
+    "requestId": "req_abc123",
+    "timestamp": "2026-03-07T10:30:00Z",
+    "version": "v1"
+  }
+}
+```
+
+### Single Resource Response
+
+```json
+{
+  "data": {
+    "id": "RFQ-2026-001",
+    "title": "Industrial Pumping Equipment",
+    "status": "Open",
+    "createdAt": "2026-03-01T11:05:00Z",
+    "updatedAt": "2026-03-07T14:30:00Z"
+  },
+  "meta": {
+    "requestId": "req_def456",
+    "timestamp": "2026-03-07T10:31:00Z"
+  }
+}
+```
+
+## Error Response Schema
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "The given data was invalid.",
+    "details": [
+      { "field": "budget", "message": "Budget must be a positive number." },
+      { "field": "deadline", "message": "Deadline must be a future date." }
+    ]
+  },
+  "meta": {
+    "requestId": "req_xyz789",
+    "timestamp": "2026-03-07T10:31:00Z"
+  }
+}
+```
+
+### Error Codes
+
+| Code | HTTP Status | UI Treatment |
+|---|---|---|
+| `VALIDATION_ERROR` | 422 | Inline field errors + banner |
+| `NOT_FOUND` | 404 | Empty state with back navigation |
+| `UNAUTHORIZED` | 401 | Redirect to login |
+| `FORBIDDEN` | 403 | Permission denied message |
+| `CONFLICT` | 409 | Conflict resolution dialog |
+| `RATE_LIMITED` | 429 | Retry message with countdown |
+| `SERVER_ERROR` | 500 | Generic error page with retry |
+
+## Pagination Format
+
+### Request Parameters
+
+```
+GET /api/v1/rfqs?page=1&limit=25&sort=created_at&order=desc&status=Open
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `page` | integer | 1 | Current page number |
+| `limit` | integer | 25 | Items per page (max: 100) |
+| `sort` | string | `created_at` | Sort field |
+| `order` | `asc` \| `desc` | `desc` | Sort direction |
+| `search` | string | — | Full-text search query |
+| `filter[status]` | string | — | Filter by field value |
+
+## Loading State Handling
+
+### State Machine
+
+Every data-fetching operation follows this state machine:
+
+```
+idle → loading → success | error
+                    ↓
+                 refetching → success | error
+```
+
+### UI Treatment
+
+| State | UI |
+|---|---|
+| `idle` | Initial empty state or cached data |
+| `loading` | Skeleton loader (first load) or spinner (subsequent) |
+| `success` | Render data |
+| `error` | Error alert with retry button |
+| `refetching` | Show stale data with subtle loading indicator |
+
+```tsx
+// Standard data-fetching pattern
+function RFQList() {
+  const { data, isLoading, isError, error, refetch } = useRFQs(filters);
+
+  if (isLoading) return <AtomyQSpinner label="Loading RFQs..." />;
+  if (isError) return <AtomyQAlert variant="error" action={{ label: 'Retry', onClick: refetch }}>{error.message}</AtomyQAlert>;
+
+  return <AtomyQTable data={data} />;
+}
+```
+
+## TypeScript API Types
+
+```tsx
+// Standard API response wrapper
+interface ApiResponse<T> {
+  data: T;
+  meta: {
+    requestId: string;
+    timestamp: string;
+    version: string;
+  };
+}
+
+interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+interface ApiError {
+  error: {
+    code: string;
+    message: string;
+    details?: Array<{ field: string; message: string }>;
+  };
+  meta: {
+    requestId: string;
+    timestamp: string;
+  };
+}
+```
+
+## Date/Time Handling
+
+- **Storage**: Always ISO 8601 (`2026-03-07T10:30:00Z`)
+- **Display**: User's locale preference
+- **Timezone**: Server stores UTC; frontend converts to local
+- **Relative time**: Use for events < 24 hours old ("2h ago", "Just now")
