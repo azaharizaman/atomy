@@ -164,12 +164,16 @@ final readonly class EarlyPaymentDiscountService implements DiscountCalculationS
         }
 
         $discountAmount = $applicableTier->calculateDiscount($purchaseAmount);
+        $purchaseAmountValue = $purchaseAmount->getAmount();
+        $effectivePercentage = $purchaseAmountValue > 0
+            ? ($discountAmount->getAmount() / $purchaseAmountValue) * 100
+            : 0.0;
 
         $this->logger->info('Volume discount calculated', [
             'tier_name' => $applicableTier->tierName,
-            'purchase_amount' => $purchaseAmount->getAmount(),
+            'purchase_amount' => $purchaseAmountValue,
             'discount_amount' => $discountAmount->getAmount(),
-            'effective_percentage' => ($discountAmount->getAmount() / $purchaseAmount->getAmount()) * 100,
+            'effective_percentage' => $effectivePercentage,
         ]);
 
         return VolumeDiscountResult::withSingleTier(

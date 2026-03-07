@@ -47,4 +47,18 @@ final readonly class QuoteComparisonResult
             message: $message
         );
     }
+
+    /**
+     * Create a failed comparison result.
+     */
+    public static function failure(string $rfqId, ?string $message = null): self
+    {
+        return new self(
+            success: false,
+            rfqId: $rfqId,
+            rankings: [],
+            recommendedVendorId: null,
+            message: $message
+        );
+    }
 }

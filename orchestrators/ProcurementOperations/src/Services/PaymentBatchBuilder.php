@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementOperations\Services;
 
+use Nexus\ProcurementOperations\Contracts\PaymentBatchBuilderInterface;
 use Nexus\ProcurementOperations\DTOs\PaymentBatchContext;
 use Nexus\ProcurementOperations\DTOs\ProcessPaymentRequest;
 use Nexus\ProcurementOperations\DataProviders\PaymentDataProvider;
@@ -21,7 +22,7 @@ use Psr\Log\NullLogger;
  * - Service handles complex calculation logic
  * - Coordinator delegates batch building to this service
  */
-final class PaymentBatchBuilder
+final class PaymentBatchBuilder implements PaymentBatchBuilderInterface
 {
     private LoggerInterface $logger;
 

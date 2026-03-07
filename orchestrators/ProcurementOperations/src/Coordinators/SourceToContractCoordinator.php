@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementOperations\Coordinators;
 
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\Contracts\SourceToContractCoordinatorInterface;
 use Nexus\ProcurementOperations\DTOs\RFQRequest;
 use Nexus\ProcurementOperations\DTOs\RFQResult;
@@ -20,7 +21,8 @@ final readonly class SourceToContractCoordinator implements SourceToContractCoor
 {
     public function __construct(
         private QuoteComparisonService $comparisonService,
-        private LoggerInterface $logger = new NullLogger()
+        private LoggerInterface $logger = new NullLogger(),
+        private ?SecureIdGeneratorInterface $secureIdGenerator = null,
     ) {}
 
     /**
@@ -28,12 +30,26 @@ final readonly class SourceToContractCoordinator implements SourceToContractCoor
      */
     public function publishRFQ(RFQRequest $request): RFQResult
     {
-        $this->logger->info('Publishing RFQ', ['title' => $request->title]);
+        if ($this->isBlank($request->tenantId)) {
+            return RFQResult::failure('Tenant ID is required to publish an RFQ.');
+        }
 
-        // Logic to persist RFQ in atomic package would go here
-        $rfqId = 'rfq-' . uniqid();
-        
-        return RFQResult::success($rfqId, 'RFQ-' . date('Ymd'), 'published');
+        if ($this->isBlank($request->title)) {
+            return RFQResult::failure('RFQ title is required.');
+        }
+
+        $this->logger->info('Publishing RFQ', [
+            'tenant_id' => $request->tenantId,
+            'title' => $request->title,
+        ]);
+
+        $rfqSuffix = strtoupper(substr($this->generateRandomHex(4), 0, 8));
+
+        return RFQResult::success(
+            rfqId: 'rfq-' . strtolower($rfqSuffix),
+            rfqNumber: 'RFQ-' . (new \DateTimeImmutable())->format('Ymd') . '-' . $rfqSuffix,
+            status: 'published',
+        );
     }
 
     /**
@@ -41,8 +57,16 @@ final readonly class SourceToContractCoordinator implements SourceToContractCoor
      */
     public function submitQuote(string $tenantId, string $rfqId, QuoteSubmission $submission): RFQResult
     {
-        $this->logger->info('Quote submitted', ['rfq_id' => $rfqId, 'vendor_id' => $submission->vendorId]);
-        
+        if ($this->isBlank($tenantId) || $this->isBlank($rfqId) || $this->isBlank($submission->vendorId)) {
+            return RFQResult::failure('Tenant ID, RFQ ID, and vendor ID are required for quote submission.');
+        }
+
+        $this->logger->info('Quote submitted', [
+            'tenant_id' => $tenantId,
+            'rfq_id' => $rfqId,
+            'vendor_id' => $submission->vendorId,
+        ]);
+
         return RFQResult::success($rfqId, 'RFQ-' . $rfqId, 'bid_received');
     }
 
@@ -51,12 +75,26 @@ final readonly class SourceToContractCoordinator implements SourceToContractCoor
      */
     public function compareAndAward(string $tenantId, string $rfqId, array $rankingWeights): QuoteComparisonResult
     {
+        if ($this->isBlank($tenantId) || $this->isBlank($rfqId)) {
+            return QuoteComparisonResult::failure(
+                rfqId: $rfqId,
+                message: 'Tenant ID and RFQ ID are required to compare and award quotes.',
+            );
+        }
+
         // 1. Fetch all quotes for RFQ (mocking for now)
         $submissions = []; // Fetch from DB/Provider
 
         // 2. Run comparison
         $rankings = $this->comparisonService->compare($submissions, $rankingWeights);
         $recommended = $rankings[0]['vendorId'] ?? null;
+
+        if ($rankings === []) {
+            return QuoteComparisonResult::failure(
+                rfqId: $rfqId,
+                message: 'No quote submissions available for comparison.',
+            );
+        }
 
         return QuoteComparisonResult::success(
             rfqId: $rfqId,
@@ -71,11 +109,30 @@ final readonly class SourceToContractCoordinator implements SourceToContractCoor
      */
     public function convertToContract(string $tenantId, string $rfqId, string $awardedVendorId): RFQResult
     {
+        if ($this->isBlank($tenantId) || $this->isBlank($rfqId) || $this->isBlank($awardedVendorId)) {
+            return RFQResult::failure('Tenant ID, RFQ ID, and awarded vendor ID are required.');
+        }
+
         $this->logger->info('Awarding RFQ and converting to contract', [
+            'tenant_id' => $tenantId,
             'rfq_id' => $rfqId,
             'vendor_id' => $awardedVendorId
         ]);
 
         return RFQResult::success($rfqId, 'RFQ-' . $rfqId, 'awarded', 'Contract generated successfully.');
+    }
+
+    private function generateRandomHex(int $length): string
+    {
+        try {
+            return $this->secureIdGenerator?->randomHex($length) ?? bin2hex(random_bytes($length));
+        } catch (\Throwable $exception) {
+            throw new \RuntimeException('Unable to generate RFQ identifier.', 0, $exception);
+        }
+    }
+
+    private function isBlank(string $value): bool
+    {
+        return trim($value) === '';
     }
 }
