@@ -69,3 +69,37 @@ Nexus is a large system. Agents should follow these coordination patterns:
 - [ ] Array indices are normalized with modulo
 - [ ] Tenant filtering is applied in multi-tenant contexts
 - [ ] Failures throw domain exceptions, not return synthetic values
+
+## Cursor Cloud specific instructions
+
+### Services overview
+
+| Service | Port | Start command | Working directory |
+|---------|------|---------------|-------------------|
+| Symfony API (canary-atomy-api) | 8000 | `php -S localhost:8000 -t public/` | `apps/canary-atomy-api` |
+| Next.js frontend (canary-atomy-nextjs) | 3000 | `pnpm dev --port 3000` | `apps/canary-atomy-nextjs` |
+| PostgreSQL 16 | 5432 | `sudo pg_ctlcluster 16 main start` | — |
+
+### Running services
+
+- **PostgreSQL** must be started before the API: `sudo pg_ctlcluster 16 main start`
+- The API connects to PostgreSQL at `postgresql://postgres:postgres@localhost:5432/atomy_dev` (configured in `apps/canary-atomy-api/.env`).
+- After a fresh database, run migrations and fixtures from `apps/canary-atomy-api`:
+  ```
+  php bin/console doctrine:migrations:migrate -n
+  php bin/console doctrine:fixtures:load -n
+  ```
+- Fixture credentials: `system@nexus.example.com` / `password123` (ROLE_SUPER_ADMIN), `tony@stark.example.com` / `password123` (ROLE_TENANT_ADMIN, STARK tenant).
+
+### Testing
+
+- **API app tests**: `cd apps/canary-atomy-api && /workspace/vendor/bin/phpunit -c phpunit.xml --testdox`
+- **Per-package tests**: Each package under `packages/` has its own `phpunit.xml` with `bootstrap="vendor/autoload.php"`. Run `composer install` inside the package first, then `vendor/bin/phpunit --testdox`. Alternatively, if the root autoloader covers the package (check `composer.json` autoload map), use `/workspace/vendor/bin/phpunit -c packages/<Name>/phpunit.xml`.
+- **Frontend lint**: `cd apps/canary-atomy-nextjs && pnpm lint` (pre-existing lint errors exist in the codebase).
+- **PHPStan**: Only configured in `packages/Payment/phpstan.neon` and `orchestrators/SupplyChainOperations/phpstan.neon`.
+
+### Known gotchas
+
+- `packages/Blockchain/composer.json` had invalid JSON (unescaped backslashes in PSR-4 namespace). This blocks all `composer install` commands since both root and API app scan `packages/*` as path repositories.
+- The PHP built-in server (`php -S`) does not reliably handle `PATCH` HTTP methods; use `curl` for `GET`/`POST`/`DELETE` testing. For full HTTP method support, use Symfony CLI (`symfony server:start`) if available.
+- Individual packages do **not** share the root `vendor/` directory for test bootstrap. The CI runs `composer install` per-package. For development, some packages (like EventStream, which is autoloaded from root) can run tests using the root phpunit binary with `-c` flag.
