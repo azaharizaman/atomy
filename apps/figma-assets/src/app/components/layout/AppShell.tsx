@@ -17,7 +17,6 @@ const navSections = [
       { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
       { label: "RFQs", path: "/rfqs", icon: FileText },
       { label: "Quote Intake", path: "/quote-intake", icon: Inbox },
-      { label: "Comparison Matrix", path: "/comparison", icon: GitCompareArrows },
       { label: "Quote Comparison", path: "/quote-comparison", icon: GitBranch },
       { label: "Approvals", path: "/approvals", icon: CheckCircle2 },
       { label: "Reports", path: "/reports", icon: BarChart2 },
@@ -71,15 +70,32 @@ function getBreadcrumbs(pathname: string) {
       if (parts[2] === "vendors") crumbs.push({ label: "Vendor Invitations", path: `/rfqs/${parts[1]}/vendors` });
     }
   } else if (parts[0] === "quote-intake") crumbs.push({ label: "Quote Intake", path: "/quote-intake" });
-  else if (parts[0] === "comparison") crumbs.push({ label: "Comparison Matrix", path: "/comparison" });
+  else if (parts[0] === "normalization") crumbs.push({ label: "Normalization", path: "/normalization" });
   else if (parts[0] === "quote-comparison") crumbs.push({ label: "Quote Comparison", path: "/quote-comparison" });
+  else if (parts[0] === "scenarios") crumbs.push({ label: "Scenario Simulator", path: "/scenarios" });
+  else if (parts[0] === "recommendation") crumbs.push({ label: "Recommendation", path: "/recommendation" });
   else if (parts[0] === "approvals") crumbs.push({ label: "Approvals", path: "/approvals" });
+  else if (parts[0] === "negotiation") crumbs.push({ label: "Negotiation", path: "/negotiation" });
+  else if (parts[0] === "award") crumbs.push({ label: "Award Decision", path: "/award" });
+  else if (parts[0] === "handoff") crumbs.push({ label: "PO / Contract Handoff", path: "/handoff" });
+  else if (parts[0] === "vendors") crumbs.push({ label: "Vendor Profile", path: "/vendors" });
   else if (parts[0] === "reports") crumbs.push({ label: "Reports", path: "/reports" });
   else if (parts[0] === "risk") crumbs.push({ label: "Risk & Compliance", path: "/risk" });
   else if (parts[0] === "decision-trail") crumbs.push({ label: "Decision Trail", path: "/decision-trail" });
+  else if (parts[0] === "notifications") crumbs.push({ label: "Notifications", path: "/notifications" });
+  else if (parts[0] === "tasks") crumbs.push({ label: "Tasks", path: "/tasks" });
+  else if (parts[0] === "mentions") crumbs.push({ label: "Mentions", path: "/mentions" });
   else if (parts[0] === "evidence") crumbs.push({ label: "Evidence Vault", path: "/evidence" });
+  else if (parts[0] === "users") crumbs.push({ label: "Users & Access", path: "/users" });
   else if (parts[0] === "scoring") crumbs.push({ label: "Scoring Policies", path: "/scoring" });
+  else if (parts[0] === "settings") crumbs.push({ label: "Admin Settings", path: "/settings" });
+  else if (parts[0] === "templates") crumbs.push({ label: "Templates", path: "/templates" });
+  else if (parts[0] === "integrations") crumbs.push({ label: "Integrations", path: "/integrations" });
+  else if (parts[0] === "flags") crumbs.push({ label: "Feature Flags", path: "/flags" });
   else if (parts[0] === "design-system") crumbs.push({ label: "Design System", path: "/design-system" });
+  else if (parts[0] === "profile") crumbs.push({ label: "Profile", path: "/profile" });
+  else if (parts[0] === "preferences") crumbs.push({ label: "Preferences", path: "/preferences" });
+  else if (parts[0] === "help") crumbs.push({ label: "Help & Docs", path: "/help" });
   return crumbs;
 }
 
@@ -251,6 +267,7 @@ export function AppShell() {
             New RFQ
           </button>
           <button
+            onClick={() => navigate("/quote-comparison")}
             className="flex items-center gap-1.5 rounded-lg px-3 transition-colors flex-shrink-0"
             style={{ height: 32, background: "var(--app-bg-surface)", border: "1px solid var(--app-header-border)", color: "var(--app-header-text-muted)", fontSize: 13 }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-header-text-faint)"; }}

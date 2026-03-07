@@ -57,16 +57,31 @@ This document tracks the parity between the Figma designs, the actual React impl
 - [ ] **TODO**: Implement the "Map Now" semantic search modal for unmapped items.
 
 ### 8. Quote Normalization Workspace
-**Status**: `PENDING`
-- **Purpose**: Side-by-side mapping of raw vendor lines to RFQ requirements.
-- **Key Elements**: Split-pane view, UoM conversion calculator, Currency FX lock.
-- **Process**: Involved in `QuoteNormalizationServiceInterface` resolution.
+**Status**: `COMPLETED (UI ONLY)`
+- [x] Split-pane source vs target mapping workspace.
+- [x] Conflict queue + right slide-over resolution panel.
+- [x] UOM/currency conversion control visualization.
 
 ### 9. Quote Comparison Matrix
-**Status**: `PENDING (Placeholder exists)`
-- **Purpose**: The core "Money Screen" for final decision making.
-- **Key Elements**: Sticky headers/first-column, variance highlighting, "Best Price" tags.
-- **Interaction**: Click cell to see `RiskAssessment` notes.
+**Status**: `COMPLETED (UI ONLY)`
+- [x] Full quote comparison matrix and summary sections in `QuoteComparison.tsx`.
+- [x] Recommendation highlights, score and variance views.
+- [x] Human oversight side panel and decision-support context.
+
+### 10-26. Blueprint Coverage Expansion
+**Status**: `COMPLETED (UI ONLY)`
+- [x] Scenario Simulator
+- [x] Recommendation & Explainability
+- [x] Explicit Approval Detail screen
+- [x] Negotiation Workspace
+- [x] Award Decision
+- [x] PO/Contract Handoff
+- [x] Vendor Profile & Performance
+- [x] Integration & API Monitor
+- [x] User & Access Management
+- [x] Admin Settings
+- [x] Notification Center
+- [x] Replaced all Dashboard placeholder routes for nav-linked screens
 
 ---
 

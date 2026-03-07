@@ -139,13 +139,13 @@ export function Dashboard() {
 
           {/* Recent Comparisons */}
           <div className="rounded-xl border p-4" style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)" }}>
-            <SectionHeader title="Recent Comparison Runs" action="All Comparisons" onAction={() => navigate("/comparison")} />
+            <SectionHeader title="Recent Comparison Runs" action="All Comparisons" onAction={() => navigate("/quote-comparison")} />
             <div className="space-y-2">
               {recentComparisons.map((cmp) => (
                 <div key={cmp.id} className="rounded-lg p-3 border cursor-pointer transition-colors" style={{ borderColor: "var(--app-border-strong)", background: "var(--app-bg-elevated)" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--app-text-faint)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--app-border-strong)"; }}
-                  onClick={() => navigate(`/comparison/${cmp.rfq}`)}
+                  onClick={() => navigate(`/quote-comparison/${cmp.rfq}`)}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>

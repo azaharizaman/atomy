@@ -219,7 +219,7 @@ export function DesignSystem() {
         </Section>
 
         {/* 4. CORE PATTERNS (KPIs, Grids, Layouts) */}
-        <Section title="Core Patterns" description="Complex compositions extracted from benchmark screens like Quote Intake and Comparison Matrix.">
+        <Section title="Core Patterns" description="Complex compositions extracted from benchmark screens like Quote Intake and Quote Comparison.">
           
           <ComponentExample name="KPI Scorecard (High Fidelity)" code={`<div className="rounded-xl border p-5 bg-surface">
   <label className="text-[11px] font-black text-muted uppercase">Confidence</label>

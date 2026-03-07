@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   ArrowLeft, Check, ChevronDown, Download, ExternalLink,
@@ -11,108 +11,10 @@ import {
   Lock, MessageSquare, History, UserCheck, ShieldAlert
 } from "lucide-react";
 import { rfqs, vendors } from "../data/mockData";
+import { largeComparisonData } from "../data/largeMockData";
 
 // Enhanced mock data for comparison
-const comparisonData = {
-  rfqId: "RFQ-2024-001",
-  attributes: [
-    { id: "total_price", label: "Total Quote Value", type: "currency", weight: 0.4 },
-    { id: "lead_time", label: "Lead Time (Weeks)", type: "number", weight: 0.2, inverse: true },
-    { id: "quality_score", label: "Quality Rating", type: "score", weight: 0.2 },
-    { id: "compliance", label: "Policy Compliance", type: "boolean", weight: 0.1 },
-    { id: "risk_score", label: "Risk Index", type: "score", weight: 0.1, inverse: true },
-  ],
-  vendorResults: [
-    {
-      vendorId: "V001",
-      name: "Apex Industrial Solutions",
-      totalPrice: 398200,
-      leadTime: 4,
-      qualityScore: 92,
-      compliance: true,
-      riskScore: 15,
-      overallScore: 94,
-      recommended: true,
-      insights: ["Lowest TCO", "Superior SLA history", "Local support available"],
-      metrics: {
-        priceIndex: "0.94",
-        qualityRank: "#1",
-        riskLevel: "Low"
-      },
-      lineItems: [
-        { id: "L1", name: "High-Pressure Pump Unit", price: 245000, qty: 1 },
-        { id: "L2", name: "Installation Kit", price: 12500, qty: 1 },
-        { id: "L3", name: "3-Year Maintenance", price: 140700, qty: 1 },
-      ]
-    },
-    {
-      vendorId: "V003",
-      name: "GlobalPump Corp",
-      totalPrice: 412000,
-      leadTime: 6,
-      qualityScore: 88,
-      compliance: false,
-      riskScore: 42,
-      overallScore: 71,
-      recommended: false,
-      insights: ["Premium pricing", "Compliance warning (Sanctions)", "Extended lead time"],
-      metrics: {
-        priceIndex: "1.02",
-        qualityRank: "#3",
-        riskLevel: "High"
-      },
-      lineItems: [
-        { id: "L1", name: "High-Pressure Pump Unit", price: 260000, qty: 1 },
-        { id: "L2", name: "Installation Kit", price: 15000, qty: 1 },
-        { id: "L3", name: "3-Year Maintenance", price: 137000, qty: 1 },
-      ]
-    },
-    {
-      vendorId: "V007",
-      name: "Summit Flow Systems",
-      totalPrice: 425500,
-      leadTime: 3,
-      qualityScore: 95,
-      compliance: true,
-      riskScore: 8,
-      overallScore: 89,
-      recommended: false,
-      insights: ["Fastest delivery", "Highest quality rating", "Above budget"],
-      metrics: {
-        priceIndex: "1.08",
-        qualityRank: "#2",
-        riskLevel: "Minimal"
-      },
-      lineItems: [
-        { id: "L1", name: "High-Pressure Pump Unit", price: 255000, qty: 1 },
-        { id: "L2", name: "Installation Kit", price: 18000, qty: 1 },
-        { id: "L3", name: "3-Year Maintenance", price: 152500, qty: 1 },
-      ]
-    },
-    {
-      vendorId: "V009",
-      name: "Meridian Equipment",
-      totalPrice: 405000,
-      leadTime: 5,
-      qualityScore: 85,
-      compliance: true,
-      riskScore: 22,
-      overallScore: 82,
-      recommended: false,
-      insights: ["Mid-range pricing", "Standard terms", "No local support"],
-      metrics: {
-        priceIndex: "0.98",
-        qualityRank: "#4",
-        riskLevel: "Medium"
-      },
-      lineItems: [
-        { id: "L1", name: "High-Pressure Pump Unit", price: 250000, qty: 1 },
-        { id: "L2", name: "Installation Kit", price: 14000, qty: 1 },
-        { id: "L3", name: "3-Year Maintenance", price: 141000, qty: 1 },
-      ]
-    }
-  ]
-};
+const comparisonData = largeComparisonData;
 
 const MetricBadge = ({ value, type, inverse = false, isBest = false }: any) => {
   let displayValue = value;
@@ -408,16 +310,16 @@ export function QuoteComparison() {
           </div>
 
           {/* Main Comparison Section */}
-          <div className="rounded-xl border overflow-hidden" style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)" }}>
-            <div className="overflow-x-auto">
+          <div className="rounded-xl border" style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)", overflow: "hidden" }}>
+            <div className="overflow-auto" style={{ maxHeight: "600px" }}>
               <table className="w-full border-collapse">
                 <thead>
                   <tr style={{ background: "var(--app-bg-elevated)", borderBottom: "1px solid var(--app-border-strong)" }}>
-                    <th className="sticky left-0 z-20 p-4 text-left border-r" style={{ background: "var(--app-bg-elevated)", borderColor: "var(--app-border-strong)", width: 280 }}>
+                    <th className="sticky top-0 left-0 z-50 p-4 text-left border-r" style={{ background: "var(--app-bg-elevated)", borderColor: "var(--app-border-strong)", width: 280 }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Comparison Attribute</div>
                     </th>
                     {filteredVendorResults.map(v => (
-                      <th key={v.vendorId} className="p-4 text-left min-w-[300px]" style={{ borderRight: "1px solid var(--app-border-strong)" }}>
+                      <th key={v.vendorId} className="sticky top-0 z-30 p-4 text-left min-w-[300px]" style={{ background: "var(--app-bg-elevated)", borderRight: "1px solid var(--app-border-strong)" }}>
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
@@ -511,20 +413,21 @@ export function QuoteComparison() {
                 </div>
              </div>
 
-             <div className="rounded-xl border overflow-hidden" style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)" }}>
-                <table className="w-full border-collapse">
-                   <thead>
-                      <tr style={{ borderBottom: "1px solid var(--app-border-strong)", background: "var(--app-bg-elevated)" }}>
-                         <th className="p-3 text-left" style={{ fontSize: 10, fontWeight: 600, color: "var(--app-text-subtle)", textTransform: "uppercase" }}>Description</th>
-                         <th className="p-3 text-center" style={{ fontSize: 10, fontWeight: 600, color: "var(--app-text-subtle)", textTransform: "uppercase" }}>Qty</th>
-                         {filteredVendorResults.map(v => (
-                           <th key={v.vendorId} className="p-3 text-right" style={{ fontSize: 10, fontWeight: 600, color: "var(--app-text-subtle)", textTransform: "uppercase" }}>{v.name.split(' ')[0]}</th>
-                         ))}
-                      </tr>
-                   </thead>
+             <div className="rounded-xl border" style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)", overflow: "hidden" }}>
+                <div className="overflow-auto" style={{ maxHeight: "600px" }}>
+                  <table className="w-full border-collapse">
+                    <thead>
+                        <tr style={{ borderBottom: "1px solid var(--app-border-strong)", background: "var(--app-bg-elevated)" }}>
+                          <th className="sticky top-0 z-30 p-3 text-left" style={{ background: "var(--app-bg-elevated)", fontSize: 10, fontWeight: 600, color: "var(--app-text-subtle)", textTransform: "uppercase" }}>Description</th>
+                          <th className="sticky top-0 z-30 p-3 text-center" style={{ background: "var(--app-bg-elevated)", fontSize: 10, fontWeight: 600, color: "var(--app-text-subtle)", textTransform: "uppercase" }}>Qty</th>
+                          {filteredVendorResults.map(v => (
+                            <th key={v.vendorId} className="sticky top-0 z-30 p-3 text-right" style={{ background: "var(--app-bg-elevated)", fontSize: 10, fontWeight: 600, color: "var(--app-text-subtle)", textTransform: "uppercase" }}>{v.name.split(' ')[0]}</th>
+                          ))}
+                        </tr>
+                    </thead>
                    <tbody>
                       {comparisonData.vendorResults[0].lineItems.map((item, idx) => (
-                        <tr key={item.id} style={{ borderBottom: idx === 2 ? "none" : "1px solid var(--app-bg-canvas)" }}>
+                        <tr key={item.id} style={{ borderBottom: idx === comparisonData.vendorResults[0].lineItems.length - 1 ? "none" : "1px solid var(--app-bg-canvas)" }}>
                           <td className="p-3">
                              <div style={{ fontSize: 13, color: "var(--app-text-main)", fontWeight: 500 }}>{item.name}</div>
                              <div style={{ fontSize: 10, color: "var(--app-text-faint)" }}>SKU: PUMP-00{idx+1}</div>
@@ -563,104 +466,105 @@ export function QuoteComparison() {
              </div>
           </div>
         </div>
-
-        {/* 2. HUMAN OVERSIGHT SIDEBAR (Enhanced Visual Presence) */}
-        {oversightSidebarOpen && (
-          <div className="w-[380px] border-l flex flex-col shadow-2xl" style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)" }}>
-             <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: "var(--app-border-strong)", background: "var(--app-bg-elevated)" }}>
-                <div className="flex items-center gap-2">
-                   <UserCheck size={16} className="text-indigo-400" />
-                   <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--app-text-strong)" }}>OVERSIGHT CONSOLE</h2>
-                </div>
-                <button onClick={() => setOversightSidebarOpen(false)} className="text-muted hover:text-white"><X size={16} /></button>
-             </div>
-
-             <div className="flex-1 overflow-auto p-4 space-y-6">
-                {/* Section: Decision Verdict */}
-                <div className="space-y-3">
-                   <div className="flex items-center justify-between">
-                      <label style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Human Verdict</label>
-                      <span className="flex items-center gap-1 text-[10px] text-emerald-500 font-bold"><Lock size={10}/> DRAFT</span>
-                   </div>
-                   <div className="rounded-lg border p-3" style={{ background: "var(--app-bg-elevated)", borderColor: "var(--app-border-strong)" }}>
-                      <p style={{ fontSize: 12, color: "var(--app-text-subtle)", lineHeight: 1.6, marginBottom: 12 }}>
-                         "Apex Industrial remains the strongest candidate. I've manually verified their local support capacity which AI scored as 'likely'. Summit is a viable fallback if lead times become the priority over cost."
-                      </p>
-                      <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: "var(--app-border-strong)" }}>
-                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-slate-700" />
-                            <span style={{ fontSize: 11, color: "var(--app-text-main)", fontWeight: 600 }}>Sarah Chen</span>
-                         </div>
-                         <button className="p-1 rounded hover:bg-slate-800"><History size={14} /></button>
-                      </div>
-                   </div>
-                   <button className="w-full py-2 rounded-lg border border-dashed border-slate-700 text-[11px] font-bold text-slate-500 hover:text-indigo-400 hover:border-indigo-500/50 transition-all flex items-center justify-center gap-2">
-                      <Plus size={12} /> Edit Decision Narrative
-                   </button>
-                </div>
-
-                {/* Section: Verification Checklist */}
-                <div className="space-y-3">
-                   <label style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Oversight Checklist</label>
-                   <div className="space-y-2">
-                      {[
-                        { label: "AI Data Extraction Verified", checked: true },
-                        { label: "Vendor Sanctions Check Clear", checked: true },
-                        { label: "Technical Specs Alignment", checked: false },
-                        { label: "Budget Multi-year Impact Review", checked: false },
-                      ].map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg border" style={{ background: item.checked ? 'var(--app-bg-elevated)' : 'transparent', borderColor: item.checked ? 'var(--app-border-strong)' : 'var(--app-border-strong)' }}>
-                           <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${item.checked ? 'bg-indigo-500 border-indigo-500' : 'border-slate-600'}`}>
-                              {item.checked && <Check size={10} className="text-white" />}
-                           </div>
-                           <span style={{ fontSize: 12, color: item.checked ? 'var(--app-text-main)' : 'var(--app-text-muted)' }}>{item.label}</span>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-
-                {/* Section: Stakeholder Sentiment */}
-                <div className="space-y-3">
-                   <label style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Stakeholder Feedback</label>
-                   <div className="space-y-3">
-                      {[
-                         { name: "Engineering", status: "Approved", feedback: "Apex technical specs meet all requirements.", icon: CheckCircle2, color: "var(--app-success)" },
-                         { name: "Compliance", status: "Flagged", feedback: "GlobalPump requires L3 review.", icon: AlertCircle, color: "var(--app-danger)" },
-                         { name: "Finance", status: "Approved", feedback: "Within budget tolerance.", icon: CheckCircle2, color: "var(--app-success)" }
-                      ].map(s => (
-                        <div key={s.name} className="p-3 rounded-lg border" style={{ background: "var(--app-bg-elevated)", borderColor: "var(--app-border-strong)" }}>
-                           <div className="flex items-center justify-between mb-1.5">
-                              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--app-text-strong)" }}>{s.name}</span>
-                              <s.icon size={12} style={{ color: s.color }} />
-                           </div>
-                           <p style={{ fontSize: 11, color: "var(--app-text-muted)", lineHeight: 1.4 }}>{s.feedback}</p>
-                        </div>
-                      ))}
-                   </div>
-                   <button className="w-full py-2 rounded-lg bg-indigo-600 text-white text-[11px] font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
-                      <MessageSquare size={12} /> Request Feedback
-                   </button>
-                </div>
-             </div>
-
-             <div className="p-4 border-t" style={{ borderColor: "var(--app-border-strong)", background: "var(--app-bg-elevated)" }}>
-                <div className="flex items-center justify-between mb-4">
-                   <div style={{ fontSize: 11, color: "var(--app-text-muted)" }}>Oversight Alignment</div>
-                   <div style={{ fontSize: 11, fontWeight: 800, color: "var(--app-success)" }}>HIGH (92%)</div>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-800 mb-6">
-                   <div className="h-full rounded-full bg-emerald-500" style={{ width: "92%" }} />
-                </div>
-                <button className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all flex items-center justify-center gap-2">
-                   <UserCheck size={14} /> Finalize Human Review
-                </button>
-             </div>
-          </div>
-        )}
       </div>
 
-      {/* Click outside to close smart select */}
-      {smartSelectOpen && <div className="fixed inset-0 z-40" onClick={() => setSmartSelectOpen(false)} />}
+      {/* 2. HUMAN OVERSIGHT SIDEBAR (Enhanced Visual Presence) */}
+      {oversightSidebarOpen && (
+        <div className="w-[380px] border-l flex flex-col shadow-2xl" style={{ background: "var(--app-bg-surface)", borderColor: "var(--app-border-strong)" }}>
+           <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: "var(--app-border-strong)", background: "var(--app-bg-elevated)" }}>
+              <div className="flex items-center gap-2">
+                 <UserCheck size={16} className="text-indigo-400" />
+                 <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--app-text-strong)" }}>OVERSIGHT CONSOLE</h2>
+              </div>
+              <button onClick={() => setOversightSidebarOpen(false)} className="text-muted hover:text-white"><X size={16} /></button>
+           </div>
+
+           <div className="flex-1 overflow-auto p-4 space-y-6">
+              {/* Section: Decision Verdict */}
+              <div className="space-y-3">
+                 <div className="flex items-center justify-between">
+                    <label style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Human Verdict</label>
+                    <span className="flex items-center gap-1 text-[10px] text-emerald-500 font-bold"><Lock size={10}/> DRAFT</span>
+                 </div>
+                 <div className="rounded-lg border p-3" style={{ background: "var(--app-bg-elevated)", borderColor: "var(--app-border-strong)" }}>
+                    <p style={{ fontSize: 12, color: "var(--app-text-subtle)", lineHeight: 1.6, marginBottom: 12 }}>
+                       "Apex Industrial remains the strongest candidate. I've manually verified their local support capacity which AI scored as 'likely'. Summit is a viable fallback if lead times become the priority over cost."
+                    </p>
+                    <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: "var(--app-border-strong)" }}>
+                       <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-slate-700" />
+                          <span style={{ fontSize: 11, color: "var(--app-text-main)", fontWeight: 600 }}>Sarah Chen</span>
+                       </div>
+                       <button className="p-1 rounded hover:bg-slate-800"><History size={14} /></button>
+                    </div>
+                 </div>
+                 <button className="w-full py-2 rounded-lg border border-dashed border-slate-700 text-[11px] font-bold text-slate-500 hover:text-indigo-400 hover:border-indigo-500/50 transition-all flex items-center justify-center gap-2">
+                    <Plus size={12} /> Edit Decision Narrative
+                 </button>
+              </div>
+
+              {/* Section: Verification Checklist */}
+              <div className="space-y-3">
+                 <label style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Oversight Checklist</label>
+                 <div className="space-y-2">
+                    {[
+                      { label: "AI Data Extraction Verified", checked: true },
+                      { label: "Vendor Sanctions Check Clear", checked: true },
+                      { label: "Technical Specs Alignment", checked: false },
+                      { label: "Budget Multi-year Impact Review", checked: false },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg border" style={{ background: item.checked ? 'var(--app-bg-elevated)' : 'transparent', borderColor: item.checked ? 'var(--app-border-strong)' : 'var(--app-border-strong)' }}>
+                         <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${item.checked ? 'bg-indigo-500 border-indigo-500' : 'border-slate-600'}`}>
+                            {item.checked && <Check size={10} className="text-white" />}
+                         </div>
+                         <span style={{ fontSize: 12, color: item.checked ? 'var(--app-text-main)' : 'var(--app-text-muted)' }}>{item.label}</span>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+
+              {/* Section: Stakeholder Sentiment */}
+              <div className="space-y-3">
+                 <label style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Stakeholder Feedback</label>
+                 <div className="space-y-3">
+                    {[
+                       { name: "Engineering", status: "Approved", feedback: "Apex technical specs meet all requirements.", icon: CheckCircle2, color: "var(--app-success)" },
+                       { name: "Compliance", status: "Flagged", feedback: "GlobalPump requires L3 review.", icon: AlertCircle, color: "var(--app-danger)" },
+                       { name: "Finance", status: "Approved", feedback: "Within budget tolerance.", icon: CheckCircle2, color: "var(--app-success)" }
+                    ].map(s => (
+                      <div key={s.name} className="p-3 rounded-lg border" style={{ background: "var(--app-bg-elevated)", borderColor: "var(--app-border-strong)" }}>
+                         <div className="flex items-center justify-between mb-1.5">
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--app-text-strong)" }}>{s.name}</span>
+                            <s.icon size={12} style={{ color: s.color }} />
+                         </div>
+                         <p style={{ fontSize: 11, color: "var(--app-text-muted)", lineHeight: 1.4 }}>{s.feedback}</p>
+                      </div>
+                    ))}
+                 </div>
+                 <button className="w-full py-2 rounded-lg bg-indigo-600 text-white text-[11px] font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
+                    <MessageSquare size={12} /> Request Feedback
+                 </button>
+              </div>
+           </div>
+
+           <div className="p-4 border-t" style={{ borderColor: "var(--app-border-strong)", background: "var(--app-bg-elevated)" }}>
+              <div className="flex items-center justify-between mb-4">
+                 <div style={{ fontSize: 11, color: "var(--app-text-muted)" }}>Oversight Alignment</div>
+                 <div style={{ fontSize: 11, fontWeight: 800, color: "var(--app-success)" }}>HIGH (92%)</div>
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-slate-800 mb-6">
+                 <div className="h-full rounded-full bg-emerald-500" style={{ width: "92%" }} />
+              </div>
+              <button className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all flex items-center justify-center gap-2">
+                 <UserCheck size={14} /> Finalize Human Review
+              </button>
+           </div>
+        </div>
+      )}
     </div>
+
+    {/* Click outside to close smart select */}
+    {smartSelectOpen && <div className="fixed inset-0 z-40" onClick={() => setSmartSelectOpen(false)} />}
+  </div>
   );
 }

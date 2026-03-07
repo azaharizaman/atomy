@@ -13,7 +13,7 @@ interface DecisionEvent {
   actor: string;
   actorRole: string;
   action: string;
-  category: "RFQ" | "Approval" | "Comparison" | "Award" | "Risk" | "System";
+  category: "RFQ" | "Approval" | "Quote Comparison" | "Award" | "Risk" | "System";
   rfqId: string;
   rfqTitle: string;
   details: string;
@@ -41,7 +41,7 @@ const mockTrail: DecisionEvent[] = [
     actor: "AI Comparison Engine",
     actorRole: "System",
     action: "Completed Quote Comparison",
-    category: "Comparison",
+    category: "Quote Comparison",
     rfqId: "RFQ-2024-001",
     rfqTitle: "Industrial Pumping Equipment — Q1 2024",
     details: "Automated comparison of 3 vendor quotes completed. Apex Industrial Solutions scored 94/100, ranked #1 based on weighted criteria.",
@@ -103,7 +103,7 @@ const mockTrail: DecisionEvent[] = [
     actor: "David Martinez",
     actorRole: "Procurement Manager",
     action: "Rejected Vendor Quote",
-    category: "Comparison",
+    category: "Quote Comparison",
     rfqId: "RFQ-2024-009",
     rfqTitle: "Security Systems Upgrade",
     details: "Quote from SecureGuard Systems rejected due to non-compliance with technical specifications. Vendor notified.",
@@ -127,7 +127,7 @@ const mockTrail: DecisionEvent[] = [
 const categoryConfig: Record<string, { color: string; bg: string; icon: any }> = {
   RFQ: { color: "var(--app-brand-500)", bg: "var(--app-brand-tint-10)", icon: FileText },
   Approval: { color: "var(--app-success)", bg: "var(--app-success-tint-10)", icon: CheckCircle2 },
-  Comparison: { color: "var(--app-accent-purple)", bg: "var(--app-purple-tint-10)", icon: GitCompareArrows },
+  "Quote Comparison": { color: "var(--app-accent-purple)", bg: "var(--app-purple-tint-10)", icon: GitCompareArrows },
   Award: { color: "var(--app-warning)", bg: "var(--app-warning-tint-10)", icon: Award },
   Risk: { color: "var(--app-danger)", bg: "var(--app-danger-tint-10)", icon: Shield },
   System: { color: "var(--app-text-muted)", bg: "var(--app-slate-tint-10)", icon: Info },
@@ -139,7 +139,7 @@ export function DecisionTrail() {
   const [search, setSearch] = useState("");
   const [selectedEvent, setSelectedEvent] = useState<DecisionEvent | null>(null);
 
-  const categories = ["All", "RFQ", "Approval", "Comparison", "Award", "Risk", "System"];
+  const categories = ["All", "RFQ", "Approval", "Quote Comparison", "Award", "Risk", "System"];
   
   const filtered = mockTrail.filter((event) => {
     const matchCategory = categoryFilter === "All" || event.category === categoryFilter;
