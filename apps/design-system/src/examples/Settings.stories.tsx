@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AtomyQInput } from '../components/form/AtomyQInput';
 import { AtomyQSelect } from '../components/form/AtomyQSelect';
 import { AtomyQSwitch } from '../components/form/AtomyQSwitch';

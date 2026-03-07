@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AtomyQButton } from './AtomyQButton';
 import { Plus, Download, Trash2, Check, Sparkles } from 'lucide-react';
 

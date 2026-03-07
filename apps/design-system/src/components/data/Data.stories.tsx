@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { AtomyQTable, type AtomyQColumnDef, type SortDirection } from './AtomyQTable';
 import { AtomyQPagination } from './AtomyQPagination';

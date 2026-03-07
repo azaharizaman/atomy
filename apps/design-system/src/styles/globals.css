@@ -78,6 +78,65 @@
   --aq-purple-500: #8b5cf6;
   --aq-indigo-500: #6366f1;
 
+  /* Tint tokens (semi-transparent for backgrounds) */
+  --aq-brand-tint-2: rgba(59, 130, 246, 0.02);
+  --aq-brand-tint-4: rgba(59, 130, 246, 0.04);
+  --aq-brand-tint-6: rgba(59, 130, 246, 0.06);
+  --aq-brand-tint-8: rgba(59, 130, 246, 0.08);
+  --aq-brand-tint-10: rgba(59, 130, 246, 0.1);
+  --aq-brand-tint-12: rgba(59, 130, 246, 0.12);
+  --aq-brand-tint-15: rgba(59, 130, 246, 0.15);
+  --aq-brand-tint-20: rgba(59, 130, 246, 0.2);
+  --aq-brand-tint-25: rgba(59, 130, 246, 0.25);
+
+  --aq-success-tint-6: rgba(34, 197, 94, 0.06);
+  --aq-success-tint-8: rgba(34, 197, 94, 0.08);
+  --aq-success-tint-10: rgba(34, 197, 94, 0.1);
+  --aq-success-tint-15: rgba(34, 197, 94, 0.15);
+  --aq-success-tint-20: rgba(34, 197, 94, 0.2);
+
+  --aq-warning-tint-6: rgba(245, 158, 11, 0.06);
+  --aq-warning-tint-8: rgba(245, 158, 11, 0.08);
+  --aq-warning-tint-10: rgba(245, 158, 11, 0.1);
+  --aq-warning-tint-15: rgba(245, 158, 11, 0.15);
+  --aq-warning-tint-20: rgba(245, 158, 11, 0.2);
+
+  --aq-danger-tint-6: rgba(239, 68, 68, 0.06);
+  --aq-danger-tint-8: rgba(239, 68, 68, 0.08);
+  --aq-danger-tint-10: rgba(239, 68, 68, 0.1);
+  --aq-danger-tint-15: rgba(239, 68, 68, 0.15);
+  --aq-danger-tint-20: rgba(239, 68, 68, 0.2);
+
+  --aq-purple-tint-6: rgba(139, 92, 246, 0.06);
+  --aq-purple-tint-8: rgba(139, 92, 246, 0.08);
+  --aq-purple-tint-10: rgba(139, 92, 246, 0.1);
+  --aq-purple-tint-12: rgba(139, 92, 246, 0.12);
+  --aq-purple-tint-15: rgba(139, 92, 246, 0.15);
+  --aq-purple-tint-20: rgba(139, 92, 246, 0.2);
+
+  --aq-slate-tint-6: rgba(100, 116, 139, 0.06);
+  --aq-slate-tint-8: rgba(100, 116, 139, 0.08);
+  --aq-slate-tint-10: rgba(100, 116, 139, 0.1);
+
+  /* Hover tokens */
+  --aq-hover-soft: rgba(0, 0, 0, 0.03);
+  --aq-hover-subtle: rgba(0, 0, 0, 0.02);
+
+  /* Surface tokens */
+  --aq-surface-glass: rgba(255, 255, 255, 0.05);
+  --aq-overlay-strong: rgba(2, 6, 23, 0.75);
+
+  /* Header extended */
+  --aq-header-text-main: #334155;
+  --aq-header-text-muted: #64748b;
+  --aq-header-text-faint: #94a3b8;
+  --aq-header-input-bg: #ffffff;
+  --aq-header-input-border: #e2e8f0;
+
+  /* Nav extended */
+  --aq-nav-text-muted: rgba(203, 213, 225, 0.5);
+  --aq-nav-active-bg: rgba(59, 130, 246, 0.15);
+
   /* Nav */
   --aq-nav-bg: #0f172a;
   --aq-nav-text: #cbd5e1;
