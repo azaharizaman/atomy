@@ -76,7 +76,7 @@ const mockEvidence: EvidenceFile[] = [
   },
   {
     id: "EV-9025",
-    name: "Comparison_Matrix_Final_Export.xlsx",
+    name: "Quote_Comparison_Matrix_Final_Export.xlsx",
     type: "XLSX",
     category: "Review",
     rfqId: "RFQ-2024-001",

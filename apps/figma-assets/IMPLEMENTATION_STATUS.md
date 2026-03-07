@@ -64,7 +64,7 @@ This document tracks the parity between the Figma designs, the actual React impl
 
 ### 9. Quote Comparison Matrix
 **Status**: `COMPLETED (UI ONLY)`
-- [x] Full comparison matrix and summary sections in `Comparison.tsx` and `QuoteComparison.tsx`.
+- [x] Full quote comparison matrix and summary sections in `QuoteComparison.tsx`.
 - [x] Recommendation highlights, score and variance views.
 - [x] Human oversight side panel and decision-support context.
 

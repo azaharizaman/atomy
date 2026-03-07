@@ -36,8 +36,8 @@ const vendorPerformance = [
 const cycleTimeData = [
   { stage: "Draft to Open", avgDays: 2.3, target: 2 },
   { stage: "Open to Quotes", avgDays: 12.5, target: 14 },
-  { stage: "Quotes to Comparison", avgDays: 3.8, target: 3 },
-  { stage: "Comparison to Approval", avgDays: 5.2, target: 5 },
+  { stage: "Quotes to Quote Comparison", avgDays: 3.8, target: 3 },
+  { stage: "Quote Comparison to Approval", avgDays: 5.2, target: 5 },
   { stage: "Approval to Award", avgDays: 1.5, target: 2 },
 ];
 

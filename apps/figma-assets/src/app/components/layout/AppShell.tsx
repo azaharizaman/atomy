@@ -17,7 +17,6 @@ const navSections = [
       { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
       { label: "RFQs", path: "/rfqs", icon: FileText },
       { label: "Quote Intake", path: "/quote-intake", icon: Inbox },
-      { label: "Comparison Matrix", path: "/comparison", icon: GitCompareArrows },
       { label: "Quote Comparison", path: "/quote-comparison", icon: GitBranch },
       { label: "Approvals", path: "/approvals", icon: CheckCircle2 },
       { label: "Reports", path: "/reports", icon: BarChart2 },
@@ -72,7 +71,6 @@ function getBreadcrumbs(pathname: string) {
     }
   } else if (parts[0] === "quote-intake") crumbs.push({ label: "Quote Intake", path: "/quote-intake" });
   else if (parts[0] === "normalization") crumbs.push({ label: "Normalization", path: "/normalization" });
-  else if (parts[0] === "comparison") crumbs.push({ label: "Comparison Matrix", path: "/comparison" });
   else if (parts[0] === "quote-comparison") crumbs.push({ label: "Quote Comparison", path: "/quote-comparison" });
   else if (parts[0] === "scenarios") crumbs.push({ label: "Scenario Simulator", path: "/scenarios" });
   else if (parts[0] === "recommendation") crumbs.push({ label: "Recommendation", path: "/recommendation" });
@@ -269,6 +267,7 @@ export function AppShell() {
             New RFQ
           </button>
           <button
+            onClick={() => navigate("/quote-comparison")}
             className="flex items-center gap-1.5 rounded-lg px-3 transition-colors flex-shrink-0"
             style={{ height: 32, background: "var(--app-bg-surface)", border: "1px solid var(--app-header-border)", color: "var(--app-header-text-muted)", fontSize: 13 }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-header-text-faint)"; }}

@@ -8,7 +8,6 @@ import { RFQDetail } from "./screens/RFQDetail";
 import { VendorInvitation } from "./screens/VendorInvitation";
 import { QuoteIntake } from "./screens/QuoteIntake";
 import { QuoteComparison } from "./screens/QuoteComparison";
-import { Comparison } from "./screens/Comparison";
 import { Approvals } from "./screens/Approvals";
 import { Reports } from "./screens/Reports";
 import { Risk } from "./screens/Risk";
@@ -48,7 +47,6 @@ export const router = createBrowserRouter([
       { path: "/quote-intake", Component: QuoteIntake },
       { path: "/normalization/:id?", Component: QuoteNormalization },
       { path: "/quote-comparison/:id?", Component: QuoteComparison },
-      { path: "/comparison/:id?", Component: Comparison },
       { path: "/scenarios/:id?", Component: ScenarioSimulator },
       { path: "/recommendation/:id?", Component: RecommendationExplainability },
       { path: "/approvals", Component: Approvals },

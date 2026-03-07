@@ -120,7 +120,7 @@ export function RFQDetail() {
               <Mail size={13} /> Invite Vendors
             </button>
             <button
-              onClick={() => navigate(`/comparison/${rfq.id}`)}
+              onClick={() => navigate(`/quote-comparison/${rfq.id}`)}
               className="flex items-center gap-2 rounded-lg px-3 py-2 transition-opacity hover:opacity-90"
               style={{ fontSize: 13, fontWeight: 500, background: "var(--app-accent-purple)", color: "white" }}
             >

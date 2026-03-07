@@ -144,7 +144,7 @@ export function ScoringPolicies() {
             <div className="flex items-center justify-between p-6 rounded-2xl border bg-slate-900/30" style={{ borderColor: "var(--app-border-strong)" }}>
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: "white" }}>{activePolicy}</h2>
-                <p style={{ fontSize: 13, color: "var(--app-text-muted)", marginTop: 4 }}>Applied to 14 active RFQs. Changes here will trigger a recalculation of all associated Comparison Matrices.</p>
+                <p style={{ fontSize: 13, color: "var(--app-text-muted)", marginTop: 4 }}>Applied to 14 active RFQs. Changes here will trigger a recalculation of all associated Quote Comparison Matrices.</p>
               </div>
               <div className="text-right">
                 <div style={{ fontSize: 32, fontWeight: 900, color: totalWeight === 100 ? "var(--app-success)" : "var(--app-danger)", fontFamily: "monospace" }}>{totalWeight}%</div>
