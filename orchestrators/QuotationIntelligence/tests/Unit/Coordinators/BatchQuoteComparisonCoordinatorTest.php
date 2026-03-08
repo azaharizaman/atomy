@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\QuotationIntelligence\Tests\Unit\Coordinators;
 
 use Nexus\QuotationIntelligence\Coordinators\BatchQuoteComparisonCoordinator;
+use Nexus\QuotationIntelligence\Contracts\ComparisonReadinessValidatorInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\QuoteComparisonMatrixServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\RiskAssessmentServiceInterface;
@@ -12,11 +13,19 @@ use Nexus\QuotationIntelligence\Contracts\VendorScoringServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\ApprovalGateServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Nexus\QuotationIntelligence\Exceptions\MissingVendorContextException;
+use Nexus\QuotationIntelligence\ValueObjects\ComparisonReadinessResult;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 final class BatchQuoteComparisonCoordinatorTest extends TestCase
 {
+    private function createPassingReadinessValidator(): ComparisonReadinessValidatorInterface
+    {
+        $validator = $this->createMock(ComparisonReadinessValidatorInterface::class);
+        $validator->method('validate')->willReturn(ComparisonReadinessResult::pass());
+        return $validator;
+    }
+
     public function test_compare_quotes_adds_peer_anomaly_risk(): void
     {
         $quoteCoordinator = $this->createMock(QuotationIntelligenceCoordinatorInterface::class);
@@ -118,6 +127,7 @@ final class BatchQuoteComparisonCoordinatorTest extends TestCase
             $scoringService,
             $approvalGateService,
             $decisionTrailWriter,
+            $this->createPassingReadinessValidator(),
             $logger
         );
 
@@ -166,6 +176,7 @@ final class BatchQuoteComparisonCoordinatorTest extends TestCase
             $scoringService,
             $approvalGateService,
             $decisionTrailWriter,
+            $this->createPassingReadinessValidator(),
             $logger
         );
 
@@ -264,6 +275,7 @@ final class BatchQuoteComparisonCoordinatorTest extends TestCase
             $scoringService,
             $approvalGateService,
             $decisionTrailWriter,
+            $this->createPassingReadinessValidator(),
             $logger
         );
 
@@ -352,6 +364,7 @@ final class BatchQuoteComparisonCoordinatorTest extends TestCase
             $scoringService,
             $approvalGateService,
             $decisionTrailWriter,
+            $this->createPassingReadinessValidator(),
             $logger
         );
 

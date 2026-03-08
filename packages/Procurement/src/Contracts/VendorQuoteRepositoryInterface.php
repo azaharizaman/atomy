@@ -32,4 +32,31 @@ interface VendorQuoteRepositoryInterface
      * @return void
      */
     public function save(VendorQuoteInterface $quote): void;
+
+    /**
+     * Acquire a lock on the quote for a comparison run.
+     *
+     * @param string $quoteId Quote ULID
+     * @param string $comparisonRunId The run that holds the lock
+     * @param string $lockedBy User ULID who initiated the lock
+     * @return VendorQuoteInterface The updated quote
+     */
+    public function lock(string $quoteId, string $comparisonRunId, string $lockedBy): VendorQuoteInterface;
+
+    /**
+     * Release a lock on the quote.
+     *
+     * @param string $quoteId Quote ULID
+     * @param string $comparisonRunId The run that held the lock (must match)
+     * @return VendorQuoteInterface The updated quote
+     */
+    public function unlock(string $quoteId, string $comparisonRunId): VendorQuoteInterface;
+
+    /**
+     * Find all quotes locked by a specific comparison run.
+     *
+     * @param string $comparisonRunId
+     * @return array<VendorQuoteInterface>
+     */
+    public function findLockedByRun(string $comparisonRunId): array;
 }

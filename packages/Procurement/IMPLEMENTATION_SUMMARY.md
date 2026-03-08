@@ -76,7 +76,7 @@ packages/Procurement/
 │   │   ├── MatchingEngine.php             # 3-way matching (PER-PRO-0327)
 │   │   └── VendorQuoteManager.php         # RFQ + quote comparison
 │   │
-│   └── Exceptions/          # 10 exception classes
+│   └── Exceptions/          # 12 exception classes
 │       ├── ProcurementException.php (base)
 │       ├── RequisitionNotFoundException.php
 │       ├── PurchaseOrderNotFoundException.php
@@ -86,7 +86,9 @@ packages/Procurement/
 │       ├── UnauthorizedApprovalException.php
 │       ├── InvalidRequisitionDataException.php
 │       ├── InvalidPurchaseOrderDataException.php
-│       └── InvalidGoodsReceiptDataException.php
+│       ├── InvalidGoodsReceiptDataException.php
+│       ├── QuoteLockedException.php
+│       └── RfqNotClosedException.php
 ```
 
 ### Laravel Implementation (consuming application)
@@ -135,13 +137,13 @@ All interfaces are framework-agnostic and define the **contract** between the pa
 | Interface | Purpose | Key Methods |
 |-----------|---------|-------------|
 | `ProcurementManagerInterface` | Main orchestrator API | `createRequisition()`, `convertRequisitionToPo()`, `performThreeWayMatch()` |
-| `RequisitionInterface` | Requisition entity | `getStatus()`, `getLines()`, `isConverted()` |
+| `RequisitionInterface` | Requisition entity | `getStatus()`, `getLines()`, `isConverted()`, `getClosingDate()`, `isClosedForQuotes()` |
 | `RequisitionRepositoryInterface` | Requisition persistence | `create()`, `approve()`, `reject()`, `markAsConverted()` |
 | `PurchaseOrderInterface` | PO entity | `getLines()`, `getTotalCommittedValue()`, `getPoType()` |
 | `PurchaseOrderRepositoryInterface` | PO persistence | `create()`, `createBlanket()`, `createRelease()`, `findLineByReference()` |
 | `GoodsReceiptNoteInterface` | GRN entity | `getLines()`, `getPaymentAuthorizerId()` |
 | `GoodsReceiptRepositoryInterface` | GRN persistence | `create()`, `authorizePayment()`, `findLineByReference()` |
-| `VendorQuoteInterface` | Vendor quote entity | `getLines()`, `getQuotedDate()`, `getValidUntil()` |
+| `VendorQuoteInterface` | Vendor quote entity | `getLines()`, `getQuotedDate()`, `getValidUntil()`, `isLocked()`, `getLockedByRunId()` |
 
 ### 2. Services (6 Classes)
 
@@ -215,9 +217,12 @@ performBatchMatch(array $matchSet): array // Bulk processing with performance tr
 **Methods:**
 ```php
 createQuote(string $tenantId, string $requisitionId, array $data): VendorQuoteInterface
-acceptQuote(string $quoteId, string $acceptorId): VendorQuoteInterface
-rejectQuote(string $quoteId, string $reason): VendorQuoteInterface
+acceptQuote(string $quoteId, string $acceptorId): VendorQuoteInterface  // Guards against locked quotes
+rejectQuote(string $quoteId, string $reason): VendorQuoteInterface      // Guards against locked quotes
 compareQuotes(string $requisitionId): array // Returns comparison matrix with recommendation
+lockQuote(string $quoteId, string $comparisonRunId, string $lockedBy): VendorQuoteInterface
+unlockQuote(string $quoteId, string $comparisonRunId): VendorQuoteInterface
+unlockAllForRun(string $comparisonRunId): int
 ```
 
 #### **ProcurementManager** (Orchestrator)
@@ -790,6 +795,7 @@ public function three_way_matching_meets_performance_target(): void
 2. **Notification Integration**: Use `Nexus\Notifier` to alert approvers
 3. **Multi-Currency**: Add `currency_code` column and integrate `Nexus\Currency`
 4. **Auto-Numbering**: Integrate `Nexus\Sequencing` for document numbers
+5. **Comparison Run Lifecycle**: Quote locking, RFQ closing date enforcement, and run invalidation (added March 2026)
 
 ### Long-Term Features
 

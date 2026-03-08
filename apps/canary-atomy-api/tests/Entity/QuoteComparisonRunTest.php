@@ -14,12 +14,17 @@ final class QuoteComparisonRunTest extends TestCase
         $run = new QuoteComparisonRun(
             tenantId: 'tenant-1',
             rfqId: 'RFQ-1',
+            name: 'Test Run',
+            description: null,
             idempotencyKey: 'idem-1',
+            isPreview: false,
+            createdBy: 'user-1',
             requestPayload: ['rfq_id' => 'RFQ-1'],
             matrixPayload: ['clusters' => []],
             scoringPayload: ['ranking' => []],
             approvalPayload: ['status' => 'pending_approval'],
             responsePayload: ['status' => 'pending_approval'],
+            readinessPayload: [],
             status: 'pending_approval'
         );
 

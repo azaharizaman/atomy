@@ -15,12 +15,17 @@ final class QuoteApprovalDecisionTest extends TestCase
         $run = new QuoteComparisonRun(
             tenantId: 'tenant-1',
             rfqId: 'RFQ-1',
+            name: 'Test Run',
+            description: null,
             idempotencyKey: null,
+            isPreview: false,
+            createdBy: 'user-1',
             requestPayload: [],
             matrixPayload: [],
             scoringPayload: [],
             approvalPayload: ['status' => 'pending_approval'],
             responsePayload: [],
+            readinessPayload: [],
             status: 'pending_approval'
         );
 

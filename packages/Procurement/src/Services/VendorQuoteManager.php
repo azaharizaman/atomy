@@ -6,6 +6,7 @@ namespace Nexus\Procurement\Services;
 
 use Nexus\Procurement\Contracts\VendorQuoteInterface;
 use Nexus\Procurement\Contracts\VendorQuoteRepositoryInterface;
+use Nexus\Procurement\Exceptions\QuoteLockedException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -66,6 +67,7 @@ final readonly class VendorQuoteManager
      * @param string $quoteId
      * @param string $acceptorId
      * @return VendorQuoteInterface
+     * @throws QuoteLockedException
      */
     public function acceptQuote(string $quoteId, string $acceptorId): VendorQuoteInterface
     {
@@ -74,6 +76,8 @@ final readonly class VendorQuoteManager
         if ($quote === null) {
             throw new \InvalidArgumentException("Vendor quote with ID '{$quoteId}' not found.");
         }
+
+        $this->guardAgainstLock($quote);
 
         $this->logger->info('Accepting vendor quote', [
             'quote_id' => $quoteId,
@@ -98,6 +102,7 @@ final readonly class VendorQuoteManager
      * @param string $quoteId
      * @param string $reason
      * @return VendorQuoteInterface
+     * @throws QuoteLockedException
      */
     public function rejectQuote(string $quoteId, string $reason): VendorQuoteInterface
     {
@@ -106,6 +111,8 @@ final readonly class VendorQuoteManager
         if ($quote === null) {
             throw new \InvalidArgumentException("Vendor quote with ID '{$quoteId}' not found.");
         }
+
+        $this->guardAgainstLock($quote);
 
         $this->logger->info('Rejecting vendor quote', [
             'quote_id' => $quoteId,
@@ -116,6 +123,82 @@ final readonly class VendorQuoteManager
         $rejectedQuote = $this->repository->reject($quoteId, $reason);
 
         return $rejectedQuote;
+    }
+
+    /**
+     * Lock a quote for an active comparison run, preventing mutations.
+     *
+     * @throws QuoteLockedException If already locked by a different run.
+     */
+    public function lockQuote(string $quoteId, string $comparisonRunId, string $lockedBy): VendorQuoteInterface
+    {
+        $quote = $this->repository->findById($quoteId);
+
+        if ($quote === null) {
+            throw new \InvalidArgumentException("Vendor quote with ID '{$quoteId}' not found.");
+        }
+
+        if ($quote->isLocked() && $quote->getLockedByRunId() !== $comparisonRunId) {
+            throw QuoteLockedException::alreadyLocked($quoteId, (string) $quote->getLockedByRunId());
+        }
+
+        $this->logger->info('Locking vendor quote for comparison run', [
+            'quote_id' => $quoteId,
+            'comparison_run_id' => $comparisonRunId,
+            'locked_by' => $lockedBy,
+        ]);
+
+        return $this->repository->lock($quoteId, $comparisonRunId, $lockedBy);
+    }
+
+    /**
+     * Unlock a quote when a comparison run completes or is discarded.
+     *
+     * @throws QuoteLockedException If the run ID does not match the current lock holder.
+     */
+    public function unlockQuote(string $quoteId, string $comparisonRunId): VendorQuoteInterface
+    {
+        $quote = $this->repository->findById($quoteId);
+
+        if ($quote === null) {
+            throw new \InvalidArgumentException("Vendor quote with ID '{$quoteId}' not found.");
+        }
+
+        if ($quote->isLocked() && $quote->getLockedByRunId() !== $comparisonRunId) {
+            throw QuoteLockedException::lockMismatch($quoteId, $comparisonRunId, $quote->getLockedByRunId());
+        }
+
+        $this->logger->info('Unlocking vendor quote from comparison run', [
+            'quote_id' => $quoteId,
+            'comparison_run_id' => $comparisonRunId,
+        ]);
+
+        return $this->repository->unlock($quoteId, $comparisonRunId);
+    }
+
+    /**
+     * Release all locks held by a specific comparison run (batch unlock).
+     *
+     * @return int Number of quotes unlocked.
+     */
+    public function unlockAllForRun(string $comparisonRunId): int
+    {
+        $lockedQuotes = $this->repository->findLockedByRun($comparisonRunId);
+        $count = 0;
+
+        foreach ($lockedQuotes as $quote) {
+            $this->repository->unlock($quote->getId(), $comparisonRunId);
+            $count++;
+        }
+
+        if ($count > 0) {
+            $this->logger->info('Batch-unlocked quotes for comparison run', [
+                'comparison_run_id' => $comparisonRunId,
+                'unlocked_count' => $count,
+            ]);
+        }
+
+        return $count;
     }
 
     /**
@@ -150,6 +233,16 @@ final readonly class VendorQuoteManager
     public function getQuotesByVendor(string $tenantId, string $vendorId): array
     {
         return $this->repository->findByVendorId($tenantId, $vendorId);
+    }
+
+    /**
+     * @throws QuoteLockedException
+     */
+    private function guardAgainstLock(VendorQuoteInterface $quote): void
+    {
+        if ($quote->isLocked()) {
+            throw QuoteLockedException::cannotModify($quote->getId(), (string) $quote->getLockedByRunId());
+        }
     }
 
     /**

@@ -255,6 +255,45 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     }
 
     /**
+     * Lock a vendor quote for an active comparison run.
+     */
+    public function lockVendorQuote(string $quoteId, string $comparisonRunId, string $lockedBy): VendorQuoteInterface
+    {
+        $this->logger->info('ProcurementManager: Locking vendor quote', [
+            'quote_id' => $quoteId,
+            'comparison_run_id' => $comparisonRunId,
+            'locked_by' => $lockedBy,
+        ]);
+
+        return $this->vendorQuoteManager->lockQuote($quoteId, $comparisonRunId, $lockedBy);
+    }
+
+    /**
+     * Unlock a vendor quote when a comparison run completes or is discarded.
+     */
+    public function unlockVendorQuote(string $quoteId, string $comparisonRunId): VendorQuoteInterface
+    {
+        $this->logger->info('ProcurementManager: Unlocking vendor quote', [
+            'quote_id' => $quoteId,
+            'comparison_run_id' => $comparisonRunId,
+        ]);
+
+        return $this->vendorQuoteManager->unlockQuote($quoteId, $comparisonRunId);
+    }
+
+    /**
+     * Release all locks held by a specific comparison run.
+     */
+    public function unlockAllVendorQuotesForRun(string $comparisonRunId): int
+    {
+        $this->logger->info('ProcurementManager: Batch unlocking vendor quotes for run', [
+            'comparison_run_id' => $comparisonRunId,
+        ]);
+
+        return $this->vendorQuoteManager->unlockAllForRun($comparisonRunId);
+    }
+
+    /**
      * Authorize payment for goods receipt.
      *
      * @param string $grnId

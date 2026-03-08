@@ -71,4 +71,16 @@ interface RequisitionInterface
      * @return \DateTimeImmutable
      */
     public function getCreatedAt(): \DateTimeImmutable;
+
+    /**
+     * Get RFQ closing date after which no new quotes are accepted.
+     *
+     * Null means the requisition has no closing date constraint.
+     */
+    public function getClosingDate(): ?\DateTimeImmutable;
+
+    /**
+     * Check whether the RFQ closing date has passed.
+     */
+    public function isClosedForQuotes(): bool;
 }

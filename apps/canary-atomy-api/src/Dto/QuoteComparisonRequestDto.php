@@ -12,7 +12,8 @@ final readonly class QuoteComparisonRequestDto
     private function __construct(
         public string $rfqId,
         public array $vendors,
-        public ?string $idempotencyKey = null
+        public ?string $idempotencyKey = null,
+        public bool $isPreview = false,
     ) {
     }
 
@@ -56,7 +57,9 @@ final readonly class QuoteComparisonRequestDto
             $key = null;
         }
 
-        return new self($rfqId, $vendors, $key);
+        $isPreview = (bool)($payload['is_preview'] ?? false);
+
+        return new self($rfqId, $vendors, $key, $isPreview);
     }
 
     /**
@@ -68,6 +71,7 @@ final readonly class QuoteComparisonRequestDto
             'rfq_id' => $this->rfqId,
             'vendors' => $this->vendors,
             'idempotency_key' => $this->idempotencyKey,
+            'is_preview' => $this->isPreview,
         ];
     }
 }
