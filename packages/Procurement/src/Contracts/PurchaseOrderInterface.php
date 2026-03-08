@@ -41,6 +41,13 @@ interface PurchaseOrderInterface
     public function getRequisitionId(): ?string;
 
     /**
+     * Get creator user ID.
+     *
+     * @return string User ULID
+     */
+    public function getCreatorId(): string;
+
+    /**
      * Get PO status.
      *
      * @return string draft|released|partially_received|fully_received|closed
@@ -81,4 +88,18 @@ interface PurchaseOrderInterface
      * @return \DateTimeImmutable|null
      */
     public function getReleasedAt(): ?\DateTimeImmutable;
+
+    /**
+     * Get total committed value (blanket POs only).
+     *
+     * @return float|null
+     */
+    public function getTotalCommittedValue(): ?float;
+
+    /**
+     * Get total released value (blanket POs only).
+     *
+     * @return float|null
+     */
+    public function getTotalReleasedValue(): ?float;
 }

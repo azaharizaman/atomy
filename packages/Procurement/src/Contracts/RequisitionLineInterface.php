@@ -17,6 +17,13 @@ interface RequisitionLineInterface
     public function getLineNumber(): int;
 
     /**
+     * Get item/product code.
+     *
+     * @return string
+     */
+    public function getItemCode(): string;
+
+    /**
      * Get item description.
      *
      * @return string

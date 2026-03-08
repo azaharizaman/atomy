@@ -152,7 +152,7 @@ interface ProcurementManagerInterface
     ): array;
 
     /**
-     * Create vendor quote for requisition.
+     * Create vendor quote for requisition (RFQ process).
      *
      * @param string $tenantId
      * @param string $requisitionId

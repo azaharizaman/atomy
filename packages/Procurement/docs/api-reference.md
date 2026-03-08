@@ -4,7 +4,7 @@ Complete API documentation for all interfaces, services, and exceptions.
 
 ---
 
-## Interfaces (12 total)
+## Interfaces (15 total)
 
 ### Core Entity Interfaces
 
@@ -19,18 +19,21 @@ Complete API documentation for all interfaces, services, and exceptions.
 | Method | Parameters | Returns | Throws |
 |--------|------------|---------|--------|
 | `createRequisition` | `string $tenantId, string $requesterId, array $data` | `RequisitionInterface` | `InvalidRequisitionDataException` |
-| `submitRequisitionForApproval` | `string $requisitionId` | `RequisitionInterface` | `RequisitionNotFoundException`, `InvalidRequisitionStateException` |
-| `approveRequisition` | `string $requisitionId, string $approverId` | `RequisitionInterface` | `RequisitionNotFoundException`, `UnauthorizedApprovalException` |
-| `rejectRequisition` | `string $requisitionId, string $rejectorId, string $reason` | `RequisitionInterface` | `RequisitionNotFoundException` |
+| `submitRequisitionForApproval` | `string $tenantId, string $requisitionId` | `RequisitionInterface` | `RequisitionNotFoundException`, `InvalidRequisitionStateException` |
+| `approveRequisition` | `string $tenantId, string $requisitionId, string $approverId` | `RequisitionInterface` | `RequisitionNotFoundException`, `UnauthorizedApprovalException` |
+| `rejectRequisition` | `string $tenantId, string $requisitionId, string $rejectorId, string $reason` | `RequisitionInterface` | `RequisitionNotFoundException` |
 | `convertRequisitionToPO` | `string $tenantId, string $requisitionId, string $creatorId, array $poData` | `PurchaseOrderInterface` | `RequisitionNotFoundException`, `InvalidRequisitionStateException`, `BudgetExceededException` |
 | `createDirectPO` | `string $tenantId, string $creatorId, array $data` | `PurchaseOrderInterface` | `InvalidPurchaseOrderDataException` |
-| `releasePO` | `string $poId, string $releasedBy` | `PurchaseOrderInterface` | `PurchaseOrderNotFoundException` |
+| `releasePO` | `string $tenantId, string $poId, string $releasedBy` | `PurchaseOrderInterface` | `PurchaseOrderNotFoundException` |
 | `recordGoodsReceipt` | `string $tenantId, string $poId, string $receiverId, array $receiptData` | `GoodsReceiptNoteInterface` | `PurchaseOrderNotFoundException`, `InvalidGoodsReceiptDataException` |
-| `getRequisition` | `string $id` | `RequisitionInterface` | `RequisitionNotFoundException` |
-| `getPurchaseOrder` | `string $id` | `PurchaseOrderInterface` | `PurchaseOrderNotFoundException` |
-| `getGoodsReceipt` | `string $id` | `GoodsReceiptNoteInterface` | `GoodsReceiptNotFoundException` |
+| `getRequisition` | `string $tenantId, string $id` | `RequisitionInterface` | `RequisitionNotFoundException` |
+| `getPurchaseOrder` | `string $tenantId, string $id` | `PurchaseOrderInterface` | `PurchaseOrderNotFoundException` |
+| `getGoodsReceipt` | `string $tenantId, string $id` | `GoodsReceiptNoteInterface` | `GoodsReceiptNotFoundException` |
 | `performThreeWayMatch` | `PurchaseOrderLineInterface $poLine, GoodsReceiptLineInterface $grnLine, array $invoiceLineData` | `array` | - |
-| `authorizeGrnPayment` | `string $grnId, string $authorizerId` | `GoodsReceiptNoteInterface` | `UnauthorizedApprovalException` |
+| `createVendorQuote` | `string $tenantId, string $requisitionId, array $quoteData` | `VendorQuoteInterface` | - |
+| `compareVendorQuotes` | `string $tenantId, string $requisitionId` | `array` | - |
+| `acceptVendorQuote` | `string $tenantId, string $quoteId, string $acceptorId` | `VendorQuoteInterface` | - |
+| `authorizeGrnPayment` | `string $tenantId, string $grnId, string $authorizerId` | `GoodsReceiptNoteInterface` | `UnauthorizedApprovalException` |
 
 **Example:**
 ```php
@@ -227,6 +230,44 @@ echo $requisition->getStatus(); // "approved"
 
 ---
 
+#### PurchaseOrderQueryInterface
+
+**Location:** `src/Contracts/PurchaseOrderQueryInterface.php`
+
+**Purpose:** Read-only operations for purchase orders following CQRS.
+
+**Methods:**
+
+| Method | Parameters | Returns |
+|--------|------------|---------|
+| `findById` | `string $tenantId, string $id` | `?PurchaseOrderInterface` |
+| `findByNumber` | `string $tenantId, string $poNumber` | `?PurchaseOrderInterface` |
+| `findLineByReference` | `string $tenantId, string $lineReference` | `?PurchaseOrderLineInterface` |
+| `findByTenantId` | `string $tenantId, array $filters` | `array<PurchaseOrderInterface>` |
+| `findByVendorId` | `string $tenantId, string $vendorId` | `array<PurchaseOrderInterface>` |
+
+---
+
+#### PurchaseOrderPersistInterface
+
+**Location:** `src/Contracts/PurchaseOrderPersistInterface.php`
+
+**Purpose:** Write operations for purchase orders following CQRS.
+
+**Methods:**
+
+| Method | Parameters | Returns |
+|--------|------------|---------|
+| `save` | `PurchaseOrderInterface $purchaseOrder` | `void` |
+| `generateNextNumber` | `string $tenantId` | `string` |
+| `create` | `string $tenantId, string $requisitionId, string $creatorId, array $data` | `PurchaseOrderInterface` |
+| `createBlanket` | `string $tenantId, string $creatorId, array $data` | `PurchaseOrderInterface` |
+| `createRelease` | `string $tenantId, string $blanketPoId, string $creatorId, array $data` | `PurchaseOrderInterface` |
+| `approve` | `string $poId, string $approverId, string $tenantId` | `PurchaseOrderInterface` |
+| `updateStatus` | `string $poId, string $status, string $tenantId` | `PurchaseOrderInterface` |
+
+---
+
 #### PurchaseOrderRepositoryInterface
 
 **Location:** `src/Contracts/PurchaseOrderRepositoryInterface.php`
@@ -237,12 +278,12 @@ echo $requisition->getStatus(); // "approved"
 
 | Method | Parameters | Returns |
 |--------|------------|---------|
-| `findById` | `string $id` | `PurchaseOrderInterface` |
+| `findById` | `string $tenantId, string $id` | `PurchaseOrderInterface` |
 | `findByTenant` | `string $tenantId` | `array<PurchaseOrderInterface>` |
-| `findByVendor` | `string $vendorId` | `array<PurchaseOrderInterface>` |
-| `findLineByReference` | `string $lineReference` | `?PurchaseOrderLineInterface` |
-| `create` | `array $data` | `PurchaseOrderInterface` |
-| `updateStatus` | `string $id, string $status` | `PurchaseOrderInterface` |
+| `findByVendor` | `string $tenantId, string $vendorId` | `array<PurchaseOrderInterface>` |
+| `findLineByReference` | `string $tenantId, string $lineReference` | `?PurchaseOrderLineInterface` |
+| `create` | `string $tenantId, string $requisitionId, string $creatorId, array $data` | `PurchaseOrderInterface` |
+| `updateStatus` | `string $poId, string $status, string $tenantId` | `PurchaseOrderInterface` |
 
 ---
 
@@ -256,11 +297,12 @@ echo $requisition->getStatus(); // "approved"
 
 | Method | Parameters | Returns |
 |--------|------------|---------|
-| `findById` | `string $id` | `GoodsReceiptNoteInterface` |
-| `findByPurchaseOrder` | `string $poId` | `array<GoodsReceiptNoteInterface>` |
-| `findLineByReference` | `string $poLineReference` | `?GoodsReceiptLineInterface` |
-| `create` | `array $data` | `GoodsReceiptNoteInterface` |
-| `authorizePayment` | `string $id, string $authorizerId` | `GoodsReceiptNoteInterface` |
+| `findByTenantAndId` | `string $tenantId, string $id` | `?GoodsReceiptNoteInterface` |
+| `findByNumber` | `string $tenantId, string $grnNumber` | `?GoodsReceiptNoteInterface` |
+| `findByPurchaseOrder` | `string $poId, string $tenantId` | `array<GoodsReceiptNoteInterface>` |
+| `findLineByReference` | `string $tenantId, string $lineReference` | `?GoodsReceiptLineInterface` |
+| `create` | `string $tenantId, string $purchaseOrderId, string $receiverId, array $data` | `GoodsReceiptNoteInterface` |
+| `authorizePayment` | `string $tenantId, string $id, string $authorizerId` | `GoodsReceiptNoteInterface` |
 
 ---
 
@@ -275,8 +317,8 @@ echo $requisition->getStatus(); // "approved"
 | Method | Parameters | Returns |
 |--------|------------|---------|
 | `findById` | `string $id` | `VendorQuoteInterface` |
-| `findByRequisition` | `string $requisitionId` | `array<VendorQuoteInterface>` |
-| `create` | `array $data` | `VendorQuoteInterface` |
+| `findByRequisitionId` | `string $tenantId, string $requisitionId` | `array<VendorQuoteInterface>` |
+| `create` | `string $tenantId, string $requisitionId, array $data` | `VendorQuoteInterface` |
 | `updateStatus` | `string $id, string $status` | `VendorQuoteInterface` |
 
 ---
@@ -348,7 +390,7 @@ echo $requisition->getStatus(); // "approved"
 
 **Key Methods:**
 - `createGoodsReceipt(string $tenantId, string $poId, string $receiverId, array $data): GoodsReceiptNoteInterface`
-- `authorizePayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface`
+- `authorizePayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface`
 
 **Business Rules Enforced:**
 - BUS-PRO-0076: GRN quantity ≤ PO quantity
@@ -581,22 +623,22 @@ use Nexus\Procurement\Contracts\ProcurementManagerInterface;
 $req = $manager->createRequisition($tenantId, $requesterId, $reqData);
 
 // Step 2: Submit for approval
-$req = $manager->submitRequisitionForApproval($req->getId());
+$req = $manager->submitRequisitionForApproval($tenantId, $req->getId());
 
 // Step 3: Approve (by different user)
-$req = $manager->approveRequisition($req->getId(), $approverId);
+$req = $manager->approveRequisition($tenantId, $req->getId(), $approverId);
 
 // Step 4: Convert to PO
 $po = $manager->convertRequisitionToPO($tenantId, $req->getId(), $buyerId, $poData);
 
 // Step 5: Release PO
-$po = $manager->releasePO($po->getId(), $buyerId);
+$po = $manager->releasePO($tenantId, $po->getId(), $buyerId);
 
 // Step 6: Record goods receipt (by different user)
 $grn = $manager->recordGoodsReceipt($tenantId, $po->getId(), $receiverId, $grnData);
 
 // Step 7: Authorize payment (by different user)
-$grn = $manager->authorizeGrnPayment($grn->getId(), $authorizerId);
+$grn = $manager->authorizeGrnPayment($tenantId, $grn->getId(), $authorizerId);
 ```
 
 ### Pattern 2: 3-Way Matching Integration

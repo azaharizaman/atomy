@@ -2,7 +2,7 @@
 
 **Package:** `nexus/procurement`  
 **Status:** ✅ Complete  
-**Implementation Date:** November 20, 2025  
+**Implementation Date:** November 20, 2025 (Updated March 8, 2026)  
 **Laravel Version:** 12.x  
 **PHP Version:** 8.3+
 
@@ -54,19 +54,22 @@
 ```
 packages/Procurement/
 ├── src/
-│   ├── Contracts/           # 12 interfaces (100% framework-agnostic)
+│   ├── Contracts/           # 15 interfaces (100% framework-agnostic)
 │   │   ├── ProcurementManagerInterface.php
 │   │   ├── RequisitionInterface.php
 │   │   ├── RequisitionLineInterface.php
 │   │   ├── RequisitionRepositoryInterface.php
 │   │   ├── PurchaseOrderInterface.php
 │   │   ├── PurchaseOrderLineInterface.php
-│   │   ├── PurchaseOrderRepositoryInterface.php
+│   │   ├── PurchaseOrderQueryInterface.php     # New: Query/Persist Split
+│   │   ├── PurchaseOrderPersistInterface.php   # New: Query/Persist Split
+│   │   ├── PurchaseOrderRepositoryInterface.php # Legacy/Composite
 │   │   ├── GoodsReceiptNoteInterface.php
 │   │   ├── GoodsReceiptLineInterface.php
 │   │   ├── GoodsReceiptRepositoryInterface.php
 │   │   ├── VendorQuoteInterface.php
-│   │   └── VendorQuoteRepositoryInterface.php
+│   │   ├── VendorQuoteRepositoryInterface.php
+│   │   └── ProductVendorRepositoryInterface.php
 │   │
 │   ├── Services/            # 6 service classes (Pure business logic)
 │   │   ├── ProcurementManager.php         # Main orchestrator
@@ -132,7 +135,7 @@ consuming application (e.g., Laravel app)
 
 ## Package Structure
 
-### 1. Contracts (12 Interfaces)
+### 1. Contracts (15 Interfaces)
 
 All interfaces are framework-agnostic and define the **contract** between the package and the consuming application.
 
@@ -142,10 +145,12 @@ All interfaces are framework-agnostic and define the **contract** between the pa
 | `RequisitionInterface` | Requisition entity | `getStatus()`, `getLines()`, `isConverted()`, `getClosingDate()`, `isClosedForQuotes()` |
 | `RequisitionRepositoryInterface` | Requisition persistence | `create()`, `approve()`, `reject()`, `markAsConverted()` |
 | `PurchaseOrderInterface` | PO entity | `getLines()`, `getTotalCommittedValue()`, `getPoType()` |
-| `PurchaseOrderRepositoryInterface` | PO persistence | `create()`, `createBlanket()`, `createRelease()`, `findLineByReference()` |
+| `PurchaseOrderQueryInterface` | PO reading (CQRS) | `findById(tenantId, id)`, `findByNumber(tenantId, poNumber)` |
+| `PurchaseOrderPersistInterface` | PO writing (CQRS) | `save()`, `approve(poId, approverId, tenantId)`, `updateStatus(poId, status, tenantId)` |
+| `PurchaseOrderRepositoryInterface` | PO persistence (Legacy) | Composite of Query and Persist interfaces |
 | `GoodsReceiptNoteInterface` | GRN entity | `getLines()`, `getPaymentAuthorizerId()` |
-| `GoodsReceiptRepositoryInterface` | GRN persistence | `create()`, `authorizePayment()`, `findLineByReference()` |
-| `VendorQuoteInterface` | Vendor quote entity | `getLines()`, `getQuotedDate()`, `getValidUntil()`, `isLocked()`, `getLockedByRunId()` |
+| `GoodsReceiptRepositoryInterface` | GRN persistence | `create()`, `authorizePayment()`, `findLineByReference()`, `findByPurchaseOrder(poId, tenantId)` |
+| `VendorQuoteInterface` | Vendor quote entity | `getLines()`, `getQuotedDate()`, `getValidUntil()` |
 
 ### 2. Services (6 Classes)
 
@@ -159,10 +164,10 @@ All interfaces are framework-agnostic and define the **contract** between the pa
 **Methods:**
 ```php
 createRequisition(string $tenantId, string $requesterId, array $data): RequisitionInterface
-submitForApproval(string $requisitionId): RequisitionInterface
-approveRequisition(string $requisitionId, string $approverId): RequisitionInterface
-rejectRequisition(string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
-markAsConverted(string $requisitionId, PurchaseOrderInterface $po): RequisitionInterface
+submitForApproval(string $tenantId, string $requisitionId): RequisitionInterface
+approveRequisition(string $tenantId, string $requisitionId, string $approverId): RequisitionInterface
+rejectRequisition(string $tenantId, string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
+markAsConverted(string $tenantId, string $requisitionId, PurchaseOrderInterface $po): RequisitionInterface
 ```
 
 #### **PurchaseOrderManager**
@@ -175,8 +180,8 @@ markAsConverted(string $requisitionId, PurchaseOrderInterface $po): RequisitionI
 ```php
 createFromRequisition(string $tenantId, string $requisitionId, string $creatorId, array $data): PurchaseOrderInterface
 createBlanketPo(string $tenantId, string $creatorId, array $data): PurchaseOrderInterface
-createBlanketRelease(string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface
-approvePo(string $poId, string $approverId): PurchaseOrderInterface
+createBlanketRelease(string $tenantId, string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface
+approvePo(string $tenantId, string $poId, string $approverId): PurchaseOrderInterface
 ```
 
 #### **GoodsReceiptManager**
@@ -189,7 +194,7 @@ approvePo(string $poId, string $approverId): PurchaseOrderInterface
 **Methods:**
 ```php
 createGoodsReceipt(string $tenantId, string $poId, string $receiverId, array $data): GoodsReceiptNoteInterface
-authorizePayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface
+authorizePayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface
 ```
 
 #### **MatchingEngine**
@@ -623,6 +628,7 @@ $requisition = $procurement->createRequisition(
 ```php
 try {
     $approvedRequisition = $procurement->approveRequisition(
+        tenantId: 'tenant-001',
         requisitionId: $requisition->getId(),
         approverId: 'manager-456' // Must NOT be 'user-123' (requester)
     );
@@ -863,7 +869,7 @@ echo "Elapsed: {$result['elapsed_ms']}ms\n";
 - ✅ Database schema optimized for performance
 
 **Package Quality Metrics:**
-- 12 interfaces
+- 15 interfaces
 - 6 service classes
 - 12 exception classes
 - 7 database tables
@@ -876,6 +882,8 @@ echo "Elapsed: {$result['elapsed_ms']}ms\n";
 
 ---
 
-**Documentation Last Updated:** November 20, 2025  
-**Author:** GitHub Copilot (Claude Sonnet 4.5)  
-**Status:** ✅ Implementation Complete
+**CRITICAL:** This `IMPLEMENTATION_SUMMARY.md` must be updated after every code change to avoid drift.
+
+**Documentation Last Updated:** March 8, 2026,  
+**Author:** Gemini CLI  
+**Status:** ✅ Implementation Refined & Hardened

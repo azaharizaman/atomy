@@ -13,12 +13,13 @@ namespace Nexus\Procurement\Contracts;
 interface GoodsReceiptRepositoryInterface
 {
     /**
-     * Find GRN by ID.
+     * Find GRN by ID and tenant.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id GRN ULID
      * @return GoodsReceiptNoteInterface|null
      */
-    public function findById(string $id): ?GoodsReceiptNoteInterface;
+    public function findByTenantAndId(string $tenantId, string $id): ?GoodsReceiptNoteInterface;
 
     /**
      * Find GRN by number.
@@ -34,18 +35,50 @@ interface GoodsReceiptRepositoryInterface
      *
      * Required by Nexus\Payable for 3-way matching.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $lineReference GRN line reference (e.g., "GRN-2024-001-L1")
      * @return GoodsReceiptLineInterface|null
      */
-    public function findLineByReference(string $lineReference): ?GoodsReceiptLineInterface;
+    public function findLineByReference(string $tenantId, string $lineReference): ?GoodsReceiptLineInterface;
 
     /**
      * Find all GRNs for a purchase order.
      *
      * @param string $purchaseOrderId PO ULID
+     * @param string $tenantId Tenant ULID
      * @return array<GoodsReceiptNoteInterface>
      */
-    public function findByPurchaseOrder(string $purchaseOrderId): array;
+    public function findByPurchaseOrder(string $purchaseOrderId, string $tenantId): array;
+
+    /**
+     * Find all GRNs for tenant.
+     *
+     * @param string $tenantId Tenant ULID
+     * @param array<string, mixed> $filters
+     * @return array<GoodsReceiptNoteInterface>
+     */
+    public function findByTenantId(string $tenantId, array $filters): array;
+
+    /**
+     * Create GRN.
+     *
+     * @param string $tenantId
+     * @param string $purchaseOrderId
+     * @param string $receiverId
+     * @param array<string, mixed> $data
+     * @return GoodsReceiptNoteInterface
+     */
+    public function create(string $tenantId, string $purchaseOrderId, string $receiverId, array $data): GoodsReceiptNoteInterface;
+
+    /**
+     * Authorize payment for goods receipt.
+     *
+     * @param string $tenantId
+     * @param string $grnId
+     * @param string $authorizerId
+     * @return GoodsReceiptNoteInterface
+     */
+    public function authorizePayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface;
 
     /**
      * Save GRN.

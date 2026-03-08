@@ -75,7 +75,7 @@ final readonly class VendorQuoteManager
         $quote = $this->repository->findById($tenantId, $quoteId);
 
         if ($quote === null) {
-            throw new \InvalidArgumentException("Vendor quote with ID '{$quoteId}' not found.");
+            throw VendorQuoteNotFoundException::forId($tenantId, $quoteId);
         }
 
         $this->guardAgainstLock($quote);
@@ -113,7 +113,7 @@ final readonly class VendorQuoteManager
         $quote = $this->repository->findById($tenantId, $quoteId);
 
         if ($quote === null) {
-            throw new \InvalidArgumentException("Vendor quote with ID '{$quoteId}' not found.");
+            throw VendorQuoteNotFoundException::forId($tenantId, $quoteId);
         }
 
         $this->guardAgainstLock($quote);

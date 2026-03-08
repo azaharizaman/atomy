@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Nexus\Procurement\Services;
 
 use Nexus\Procurement\Contracts\PurchaseOrderInterface;
-use Nexus\Procurement\Contracts\PurchaseOrderRepositoryInterface;
+use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
+use Nexus\Procurement\Contracts\PurchaseOrderPersistInterface;
+use Nexus\Procurement\Contracts\DatabaseTransactionInterface;
 use Nexus\Procurement\Contracts\RequisitionInterface;
 use Nexus\Procurement\Contracts\RequisitionRepositoryInterface;
 use Nexus\Procurement\Exceptions\PurchaseOrderNotFoundException;
 use Nexus\Procurement\Exceptions\InvalidPurchaseOrderDataException;
 use Nexus\Procurement\Exceptions\BudgetExceededException;
+use Nexus\Procurement\Exceptions\InvalidPurchaseOrderStatusException;
 use Nexus\Procurement\Exceptions\InvalidRequisitionStateException;
 use Psr\Log\LoggerInterface;
 
@@ -26,9 +29,11 @@ final readonly class PurchaseOrderManager
     private const DEFAULT_TOLERANCE_PERCENT = 10.0;
 
     public function __construct(
-        private PurchaseOrderRepositoryInterface $repository,
+        private PurchaseOrderQueryInterface $query,
+        private PurchaseOrderPersistInterface $persist,
         private RequisitionRepositoryInterface $requisitionRepository,
         private RequisitionManager $requisitionManager,
+        private DatabaseTransactionInterface $transaction,
         private LoggerInterface $logger,
         private float $poTolerancePercent = self::DEFAULT_TOLERANCE_PERCENT
     ) {
@@ -61,7 +66,7 @@ final readonly class PurchaseOrderManager
         array $data
     ): PurchaseOrderInterface {
         // Verify requisition is approved
-        $requisition = $this->requisitionManager->getRequisition($requisitionId);
+        $requisition = $this->requisitionManager->getRequisition($tenantId, $requisitionId);
 
         if ($requisition->getStatus() !== 'approved') {
             throw InvalidRequisitionStateException::cannotConvertStatus(
@@ -99,26 +104,28 @@ final readonly class PurchaseOrderManager
         $this->logger->info('Creating purchase order from requisition', [
             'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
-            'requisition_number' => $requisition->getNumber(),
+            'requisition_number' => $requisition->getRequisitionNumber(),
             'po_number' => $data['number'],
             'creator_id' => $creatorId,
             'vendor_id' => $data['vendor_id'],
             'total' => $poTotal,
         ]);
 
-        $purchaseOrder = $this->repository->create($tenantId, $requisitionId, $creatorId, $data);
+        return $this->transaction->transactional(function () use ($tenantId, $requisitionId, $creatorId, $data) {
+            $purchaseOrder = $this->persist->create($tenantId, $requisitionId, $creatorId, $data);
 
-        // Mark requisition as converted
-        $this->requisitionManager->markAsConverted($requisitionId, $purchaseOrder);
+            // Mark requisition as converted
+            $this->requisitionManager->markAsConverted($tenantId, $requisitionId, $purchaseOrder);
 
-        $this->logger->info('Purchase order created', [
-            'tenant_id' => $tenantId,
-            'po_id' => $purchaseOrder->getId(),
-            'po_number' => $purchaseOrder->getNumber(),
-            'status' => $purchaseOrder->getStatus(),
-        ]);
+            $this->logger->info('Purchase order created', [
+                'tenant_id' => $tenantId,
+                'po_id' => $purchaseOrder->getId(),
+                'po_number' => $purchaseOrder->getPoNumber(),
+                'status' => $purchaseOrder->getStatus(),
+            ]);
 
-        return $purchaseOrder;
+            return $purchaseOrder;
+        });
     }
 
     /**
@@ -152,12 +159,12 @@ final readonly class PurchaseOrderManager
             'total_committed_value' => $data['total_committed_value'],
         ]);
 
-        $blanketPo = $this->repository->createBlanket($tenantId, $creatorId, $data);
+        $blanketPo = $this->persist->createBlanket($tenantId, $creatorId, $data);
 
         $this->logger->info('Blanket PO created', [
             'tenant_id' => $tenantId,
             'po_id' => $blanketPo->getId(),
-            'po_number' => $blanketPo->getNumber(),
+            'po_number' => $blanketPo->getPoNumber(),
         ]);
 
         return $blanketPo;
@@ -178,9 +185,11 @@ final readonly class PurchaseOrderManager
      * @throws PurchaseOrderNotFoundException
      * @throws BudgetExceededException
      */
-    public function createBlanketRelease(string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface
+    public function createBlanketRelease(string $tenantId, string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface
     {
-        $blanketPo = $this->repository->findById($blanketPoId);
+        $this->validateReleaseData($data);
+
+        $blanketPo = $this->query->findById($tenantId, $blanketPoId);
 
         if ($blanketPo === null) {
             throw PurchaseOrderNotFoundException::forId($blanketPoId);
@@ -195,20 +204,65 @@ final readonly class PurchaseOrderManager
             throw BudgetExceededException::blanketPoReleaseExceedsTotal(
                 $blanketPoId,
                 $releaseTotal,
-                $totalCommitted
+                $remainingValue
             );
         }
 
         $this->logger->info('Creating blanket PO release', [
+            'tenant_id' => $tenantId,
             'blanket_po_id' => $blanketPoId,
-            'blanket_po_number' => $blanketPo->getNumber(),
+            'blanket_po_number' => $blanketPo->getPoNumber(),
             'release_number' => $data['release_number'],
             'release_total' => $releaseTotal,
         ]);
 
-        $release = $this->repository->createRelease($blanketPoId, $creatorId, $data);
+        $release = $this->persist->createRelease($tenantId, $blanketPoId, $creatorId, $data);
 
         return $release;
+    }
+
+    /**
+     * Release purchase order to vendor.
+     *
+     * @param string $tenantId
+     * @param string $poId
+     * @param string $releasedBy
+     * @return PurchaseOrderInterface
+     * @throws PurchaseOrderNotFoundException
+     * @throws InvalidPurchaseOrderStatusException
+     */
+    public function releasePo(string $tenantId, string $poId, string $releasedBy): PurchaseOrderInterface
+    {
+        $po = $this->query->findById($tenantId, $poId);
+
+        if ($po === null) {
+            throw PurchaseOrderNotFoundException::forId($poId);
+        }
+
+        $currentStatus = $po->getStatus();
+        $allowedStatuses = ['draft', 'approved'];
+
+        if (!in_array($currentStatus, $allowedStatuses, true)) {
+            $this->logger->warning('Invalid release attempt for purchase order', [
+                'tenant_id' => $tenantId,
+                'po_id' => $poId,
+                'current_status' => $currentStatus,
+                'user_id' => $releasedBy,
+            ]);
+
+            throw InvalidPurchaseOrderStatusException::forRelease($poId, $currentStatus);
+        }
+
+        $this->logger->info('Releasing purchase order', [
+            'tenant_id' => $tenantId,
+            'po_id' => $poId,
+            'po_number' => $po->getPoNumber(),
+            'released_by' => $releasedBy,
+        ]);
+
+        $releasedPo = $this->persist->updateStatus($poId, 'released', $tenantId);
+
+        return $releasedPo;
     }
 
     /**
@@ -219,25 +273,27 @@ final readonly class PurchaseOrderManager
      * @return PurchaseOrderInterface
      * @throws PurchaseOrderNotFoundException
      */
-    public function approvePo(string $poId, string $approverId): PurchaseOrderInterface
+    public function approvePo(string $tenantId, string $poId, string $approverId): PurchaseOrderInterface
     {
-        $po = $this->repository->findById($poId);
+        $po = $this->query->findById($tenantId, $poId);
 
         if ($po === null) {
             throw PurchaseOrderNotFoundException::forId($poId);
         }
 
         $this->logger->info('Approving purchase order', [
+            'tenant_id' => $tenantId,
             'po_id' => $poId,
-            'po_number' => $po->getNumber(),
+            'po_number' => $po->getPoNumber(),
             'approver_id' => $approverId,
         ]);
 
-        $approvedPo = $this->repository->approve($poId, $approverId);
+        $approvedPo = $this->persist->approve($poId, $approverId, $tenantId);
 
         $this->logger->info('Purchase order approved', [
+            'tenant_id' => $tenantId,
             'po_id' => $poId,
-            'po_number' => $approvedPo->getNumber(),
+            'po_number' => $approvedPo->getPoNumber(),
             'status' => $approvedPo->getStatus(),
         ]);
 
@@ -247,24 +303,26 @@ final readonly class PurchaseOrderManager
     /**
      * Close purchase order.
      *
+     * @param string $tenantId
      * @param string $poId
      * @return PurchaseOrderInterface
      * @throws PurchaseOrderNotFoundException
      */
-    public function closePo(string $poId): PurchaseOrderInterface
+    public function closePo(string $tenantId, string $poId): PurchaseOrderInterface
     {
-        $po = $this->repository->findById($poId);
+        $po = $this->query->findById($tenantId, $poId);
 
         if ($po === null) {
             throw PurchaseOrderNotFoundException::forId($poId);
         }
 
         $this->logger->info('Closing purchase order', [
+            'tenant_id' => $tenantId,
             'po_id' => $poId,
-            'po_number' => $po->getNumber(),
+            'po_number' => $po->getPoNumber(),
         ]);
 
-        $closedPo = $this->repository->updateStatus($poId, 'closed');
+        $closedPo = $this->persist->updateStatus($poId, 'closed', $tenantId);
 
         return $closedPo;
     }
@@ -276,9 +334,9 @@ final readonly class PurchaseOrderManager
      * @return PurchaseOrderInterface
      * @throws PurchaseOrderNotFoundException
      */
-    public function getPurchaseOrder(string $poId): PurchaseOrderInterface
+    public function getPurchaseOrder(string $tenantId, string $poId): PurchaseOrderInterface
     {
-        $po = $this->repository->findById($poId);
+        $po = $this->query->findById($tenantId, $poId);
 
         if ($po === null) {
             throw PurchaseOrderNotFoundException::forId($poId);
@@ -296,7 +354,7 @@ final readonly class PurchaseOrderManager
      */
     public function getPurchaseOrdersForTenant(string $tenantId, array $filters = []): array
     {
-        return $this->repository->findByTenantId($tenantId, $filters);
+        return $this->query->findByTenantId($tenantId, $filters);
     }
 
     /**
@@ -308,7 +366,7 @@ final readonly class PurchaseOrderManager
      */
     public function getPurchaseOrdersByVendor(string $tenantId, string $vendorId): array
     {
-        return $this->repository->findByVendorId($tenantId, $vendorId);
+        return $this->query->findByVendorId($tenantId, $vendorId);
     }
 
     /**
@@ -399,6 +457,23 @@ final readonly class PurchaseOrderManager
 
         if (!isset($data['valid_from']) || !isset($data['valid_until'])) {
             throw InvalidPurchaseOrderDataException::missingRequiredField('valid_from/valid_until');
+        }
+    }
+
+    /**
+     * Validate release data.
+     *
+     * @param array $data
+     * @throws InvalidPurchaseOrderDataException
+     */
+    private function validateReleaseData(array $data): void
+    {
+        if (!isset($data['lines']) || !is_array($data['lines']) || count($data['lines']) === 0) {
+            throw InvalidPurchaseOrderDataException::noLines();
+        }
+
+        if (!isset($data['release_number'])) {
+            throw InvalidPurchaseOrderDataException::missingRequiredField('release_number');
         }
     }
 }

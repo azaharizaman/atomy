@@ -19,7 +19,7 @@ interface VendorQuoteRepositoryInterface
     public function findById(string $tenantId, string $id): ?VendorQuoteInterface;
 
     /**
-     * Find all quotes for an RFQ.
+     * Find all quotes for an RFQ and tenant.
      *
      * @param string $tenantId Tenant ULID
      * @param string $rfqNumber RFQ number
