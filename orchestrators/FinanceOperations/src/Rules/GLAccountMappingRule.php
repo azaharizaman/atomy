@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Rules;
 
+use Nexus\FinanceOperations\Contracts\GLAccountQueryInterface;
+use Nexus\FinanceOperations\Contracts\GLMappingRepositoryInterface;
 use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
@@ -23,13 +25,9 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
  */
 final readonly class GLAccountMappingRule implements RuleInterface
 {
-    /**
-     * @param object $chartOfAccountQuery AccountQueryInterface for account validation
-     * @param object $mappingRepository GLMappingRepositoryInterface for mapping lookup
-     */
     public function __construct(
-        private object $chartOfAccountQuery,
-        private object $mappingRepository,
+        private GLAccountQueryInterface $chartOfAccountQuery,
+        private GLMappingRepositoryInterface $mappingRepository,
     ) {}
 
     /**

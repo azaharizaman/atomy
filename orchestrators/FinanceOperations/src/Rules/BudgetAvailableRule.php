@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Rules;
 
+use Nexus\FinanceOperations\Contracts\BudgetAvailabilityQueryInterface;
 use Nexus\FinanceOperations\Contracts\BudgetAvailableRuleInterface;
-use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -24,12 +24,8 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
  */
 final readonly class BudgetAvailableRule implements BudgetAvailableRuleInterface
 {
-    /**
-     * @param object $budgetQuery BudgetQueryInterface for budget operations
-     * @param bool $strictMode If true, fails when budget exceeded; if false, passes with warning
-     */
     public function __construct(
-        private object $budgetQuery,
+        private BudgetAvailabilityQueryInterface $budgetQuery,
         private bool $strictMode = true,
     ) {}
 

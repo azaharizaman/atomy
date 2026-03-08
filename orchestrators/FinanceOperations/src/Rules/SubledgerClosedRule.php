@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\FinanceOperations\Rules;
 
 use Nexus\FinanceOperations\Contracts\RuleInterface;
+use Nexus\FinanceOperations\Contracts\SubledgerClosureQueryInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -23,11 +24,8 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
  */
 final readonly class SubledgerClosedRule implements RuleInterface
 {
-    /**
-     * @param object $periodManager PeriodManagerInterface for period operations
-     */
     public function __construct(
-        private object $periodManager,
+        private SubledgerClosureQueryInterface $periodManager,
     ) {}
 
     /**

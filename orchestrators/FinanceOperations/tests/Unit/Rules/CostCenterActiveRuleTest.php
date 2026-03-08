@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Tests\Unit\Rules;
 
+use Nexus\FinanceOperations\Contracts\CostCenterQueryInterface;
 use PHPUnit\Framework\TestCase;
 use Nexus\FinanceOperations\Rules\CostCenterActiveRule;
 use Nexus\FinanceOperations\DTOs\RuleResult;
@@ -33,7 +34,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testAllCostCentersActivePassesValidation(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return new class {
                     public function isActive(): bool {
@@ -65,7 +66,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testEmptyCostCenterListPassesValidation(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return null;
             }
@@ -90,7 +91,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testCostCenterNotFoundFailsValidation(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return null;
             }
@@ -118,7 +119,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testInactiveCostCenterFailsValidation(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return new class {
                     public function isActive(): bool {
@@ -152,7 +153,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testInactiveCostCenterUsingIsActiveProperty(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return new class {
                     public bool $is_active = false;
@@ -181,7 +182,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testCannotReceiveAllocationsFailsValidation(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return new class {
                     public function isActive(): bool {
@@ -219,7 +220,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testMultipleCostCentersWithViolations(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             private int $callCount = 0;
             public function find(string $tenantId, string $costCenterId): ?object {
                 $this->callCount++;
@@ -262,7 +263,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testContextWithUnderscoreFormatProperties(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return new class {
                     public function isActive(): bool {
@@ -293,7 +294,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testContextWithGetterMethods(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return new class {
                     public function isActive(): bool {
@@ -328,7 +329,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testContextWithSingleCostCenterId(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return new class {
                     public function isActive(): bool {
@@ -359,7 +360,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testContextWithSingleCostCenterIdUnderscore(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return new class {
                     public function isActive(): bool {
@@ -394,7 +395,7 @@ final class CostCenterActiveRuleTest extends TestCase
      */
     public function testGetNameReturnsCostCenterActive(): void
     {
-        $rule = new CostCenterActiveRule(new class {
+        $rule = new CostCenterActiveRule(new class implements CostCenterQueryInterface {
             public function find(string $tenantId, string $costCenterId): ?object {
                 return null;
             }

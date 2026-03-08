@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Tests\Unit\Rules;
 
+use Nexus\FinanceOperations\Contracts\SubledgerClosureQueryInterface;
 use PHPUnit\Framework\TestCase;
 use Nexus\FinanceOperations\Rules\SubledgerClosedRule;
 use Nexus\FinanceOperations\DTOs\RuleResult;
@@ -31,7 +32,7 @@ final class SubledgerClosedRuleTest extends TestCase
      */
     public function testSubledgerClosedPassesValidation(): void
     {
-        $rule = new SubledgerClosedRule(new class {
+        $rule = new SubledgerClosedRule(new class implements SubledgerClosureQueryInterface {
             public function isSubledgerClosed(string $tenantId, string $periodId, string $subledgerType): bool {
                 return true;
             }
@@ -58,7 +59,7 @@ final class SubledgerClosedRuleTest extends TestCase
      */
     public function testSubledgerNotClosedFailsValidation(): void
     {
-        $rule = new SubledgerClosedRule(new class {
+        $rule = new SubledgerClosedRule(new class implements SubledgerClosureQueryInterface {
             public function isSubledgerClosed(string $tenantId, string $periodId, string $subledgerType): bool {
                 return false;
             }
@@ -85,7 +86,7 @@ final class SubledgerClosedRuleTest extends TestCase
      */
     public function testMissingPeriodIdFailsValidation(): void
     {
-        $rule = new SubledgerClosedRule(new class {
+        $rule = new SubledgerClosedRule(new class implements SubledgerClosureQueryInterface {
             public function isSubledgerClosed(string $tenantId, string $periodId, string $subledgerType): bool {
                 return true;
             }
@@ -108,7 +109,7 @@ final class SubledgerClosedRuleTest extends TestCase
      */
     public function testMissingSubledgerTypeFailsValidation(): void
     {
-        $rule = new SubledgerClosedRule(new class {
+        $rule = new SubledgerClosedRule(new class implements SubledgerClosureQueryInterface {
             public function isSubledgerClosed(string $tenantId, string $periodId, string $subledgerType): bool {
                 return true;
             }
@@ -135,7 +136,7 @@ final class SubledgerClosedRuleTest extends TestCase
      */
     public function testContextWithUnderscoreFormatProperties(): void
     {
-        $rule = new SubledgerClosedRule(new class {
+        $rule = new SubledgerClosedRule(new class implements SubledgerClosureQueryInterface {
             public function isSubledgerClosed(string $tenantId, string $periodId, string $subledgerType): bool {
                 return true;
             }
@@ -157,7 +158,7 @@ final class SubledgerClosedRuleTest extends TestCase
      */
     public function testContextWithGetterMethods(): void
     {
-        $rule = new SubledgerClosedRule(new class {
+        $rule = new SubledgerClosedRule(new class implements SubledgerClosureQueryInterface {
             public function isSubledgerClosed(string $tenantId, string $periodId, string $subledgerType): bool {
                 return true;
             }
@@ -189,7 +190,7 @@ final class SubledgerClosedRuleTest extends TestCase
      */
     public function testGetNameReturnsSubledgerClosed(): void
     {
-        $rule = new SubledgerClosedRule(new class {
+        $rule = new SubledgerClosedRule(new class implements SubledgerClosureQueryInterface {
             public function isSubledgerClosed(string $tenantId, string $periodId, string $subledgerType): bool {
                 return true;
             }

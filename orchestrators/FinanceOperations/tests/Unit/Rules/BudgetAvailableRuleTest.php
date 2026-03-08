@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Tests\Unit\Rules;
 
+use Nexus\FinanceOperations\Contracts\BudgetAvailabilityQueryInterface;
 use PHPUnit\Framework\TestCase;
 use Nexus\FinanceOperations\Rules\BudgetAvailableRule;
 use Nexus\FinanceOperations\DTOs\RuleResult;
@@ -33,7 +34,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testBudgetAvailablePassesValidation(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -63,7 +64,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testExactAmountMatchesAvailableBudget(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -96,7 +97,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testInsufficientBudgetFailsInStrictMode(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -126,7 +127,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testInsufficientBudgetShowsShortfall(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -160,7 +161,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testInsufficientBudgetPassesWithWarningInNonStrictMode(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -194,9 +195,12 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testBudgetNotFoundFailsValidation(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): ?object {
                 return null;
+            }
+            public function getAvailableAmount(string $tenantId, string $budgetId, ?string $costCenterId = null): string {
+                return '0';
             }
         });
 
@@ -221,7 +225,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testInactiveBudgetFailsValidation(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -251,7 +255,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testInactiveBudgetUsingIsActiveProperty(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public bool $is_active = false;
@@ -278,7 +282,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testInactiveBudgetUsingGetIsActiveMethod(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function getIsActive(): bool {
@@ -311,9 +315,12 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testMissingBudgetIdFailsValidation(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): ?object {
                 return null;
+            }
+            public function getAvailableAmount(string $tenantId, string $budgetId, ?string $costCenterId = null): string {
+                return '0';
             }
         });
 
@@ -338,7 +345,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testContextWithUnderscoreFormatProperties(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -367,7 +374,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testContextWithGetterMethods(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -402,7 +409,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testContextWithRequestedAmountProperty(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -431,7 +438,7 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testContextWithCostCenterId(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): object {
                 return new class {
                     public function isActive(): bool {
@@ -466,9 +473,12 @@ final class BudgetAvailableRuleTest extends TestCase
      */
     public function testGetNameReturnsBudgetAvailable(): void
     {
-        $rule = new BudgetAvailableRule(new class {
+        $rule = new BudgetAvailableRule(new class implements BudgetAvailabilityQueryInterface {
             public function getBudget(string $tenantId, string $budgetId): ?object {
                 return null;
+            }
+            public function getAvailableAmount(string $tenantId, string $budgetId, ?string $costCenterId = null): string {
+                return '0';
             }
         });
 

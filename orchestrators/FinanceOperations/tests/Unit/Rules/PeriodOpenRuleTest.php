@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Tests\Unit\Rules;
 
+use Nexus\FinanceOperations\Contracts\PeriodLookupInterface;
 use PHPUnit\Framework\TestCase;
 use Nexus\FinanceOperations\Rules\PeriodOpenRule;
 use Nexus\FinanceOperations\DTOs\RuleResult;
@@ -30,7 +31,7 @@ final class PeriodOpenRuleTest extends TestCase
         parent::setUp();
 
         // Create a simple period manager mock using anonymous class
-        $this->rule = new PeriodOpenRule(new class {
+        $this->rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): ?object {
                 return null; // Default to null for tests
             }
@@ -47,7 +48,7 @@ final class PeriodOpenRuleTest extends TestCase
     public function testPeriodIsOpenUsingIsOpenMethod(): void
     {
         // Create rule with mock that returns open period
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public function isOpen(): bool {
@@ -73,7 +74,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testPeriodIsOpenUsingGetIsOpenMethod(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public function getIsOpen(): bool {
@@ -98,7 +99,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testPeriodIsOpenUsingIsOpenProperty(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public bool $isOpen = true;
@@ -121,7 +122,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testPeriodIsOpenUsingIsOpenPropertyUnderscore(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public bool $is_open = true;
@@ -144,7 +145,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testPeriodIsOpenUsingStatusPropertyOpen(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public string $status = 'open';
@@ -167,7 +168,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testPeriodIsOpenUsingStatusPropertyUppercase(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public string $status = 'OPEN';
@@ -194,7 +195,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testPeriodIsClosedFailsValidation(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public function isOpen(): bool {
@@ -223,7 +224,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testPeriodStatusClosedFailsValidation(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public string $status = 'Closed';
@@ -250,7 +251,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testPeriodNotFoundFailsValidation(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): ?object {
                 return null;
             }
@@ -311,7 +312,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testContextWithTenantIdUnderscoreFormat(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public function isOpen(): bool {
@@ -336,7 +337,7 @@ final class PeriodOpenRuleTest extends TestCase
      */
     public function testContextWithGetterMethods(): void
     {
-        $rule = new PeriodOpenRule(new class {
+        $rule = new PeriodOpenRule(new class implements PeriodLookupInterface {
             public function getPeriod(string $tenantId, string $periodId): object {
                 return new class {
                     public function isOpen(): bool {

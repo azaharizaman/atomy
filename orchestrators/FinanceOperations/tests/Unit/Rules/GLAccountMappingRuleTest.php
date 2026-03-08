@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Tests\Unit\Rules;
 
+use Nexus\FinanceOperations\Contracts\GLAccountQueryInterface;
+use Nexus\FinanceOperations\Contracts\GLMappingRepositoryInterface;
 use PHPUnit\Framework\TestCase;
 use Nexus\FinanceOperations\Rules\GLAccountMappingRule;
 use Nexus\FinanceOperations\DTOs\RuleResult;
@@ -34,7 +36,7 @@ final class GLAccountMappingRuleTest extends TestCase
     public function testAllMappingsValidPassesValidation(): void
     {
         $rule = new GLAccountMappingRule(
-            new class {
+            new class implements GLAccountQueryInterface {
                 public function find(string $tenantId, string $accountCode): ?object {
                     return new class {
                         public function isActive(): bool {
@@ -43,7 +45,7 @@ final class GLAccountMappingRuleTest extends TestCase
                     };
                 }
             },
-            new class {
+            new class implements GLMappingRepositoryInterface {
                 public function getMappingsForSubledger(string $tenantId, string $subledgerType): array {
                     return [
                         new class {
@@ -81,12 +83,12 @@ final class GLAccountMappingRuleTest extends TestCase
     public function testMissingSubledgerTypeFailsValidation(): void
     {
         $rule = new GLAccountMappingRule(
-            new class {
+            new class implements GLAccountQueryInterface {
                 public function find(string $tenantId, string $accountCode): ?object {
                     return null;
                 }
             },
-            new class {
+            new class implements GLMappingRepositoryInterface {
                 public function getMappingsForSubledger(string $tenantId, string $subledgerType): array {
                     return [];
                 }
@@ -111,12 +113,12 @@ final class GLAccountMappingRuleTest extends TestCase
     public function testMissingTransactionTypesFailsValidation(): void
     {
         $rule = new GLAccountMappingRule(
-            new class {
+            new class implements GLAccountQueryInterface {
                 public function find(string $tenantId, string $accountCode): ?object {
                     return null;
                 }
             },
-            new class {
+            new class implements GLMappingRepositoryInterface {
                 public function getMappingsForSubledger(string $tenantId, string $subledgerType): array {
                     return [];
                 }
@@ -145,12 +147,12 @@ final class GLAccountMappingRuleTest extends TestCase
     public function testMissingMappingFailsValidation(): void
     {
         $rule = new GLAccountMappingRule(
-            new class {
+            new class implements GLAccountQueryInterface {
                 public function find(string $tenantId, string $accountCode): ?object {
                     return null;
                 }
             },
-            new class {
+            new class implements GLMappingRepositoryInterface {
                 public function getMappingsForSubledger(string $tenantId, string $subledgerType): array {
                     // Return empty mappings
                     return [];
@@ -181,13 +183,13 @@ final class GLAccountMappingRuleTest extends TestCase
     public function testInvalidGLAccountFailsValidation(): void
     {
         $rule = new GLAccountMappingRule(
-            new class {
+            new class implements GLAccountQueryInterface {
                 public function find(string $tenantId, string $accountCode): ?object {
                     // Return null - account doesn't exist
                     return null;
                 }
             },
-            new class {
+            new class implements GLMappingRepositoryInterface {
                 public function getMappingsForSubledger(string $tenantId, string $subledgerType): array {
                     return [
                         new class {
@@ -226,7 +228,7 @@ final class GLAccountMappingRuleTest extends TestCase
     public function testInactiveGLAccountFailsValidation(): void
     {
         $rule = new GLAccountMappingRule(
-            new class {
+            new class implements GLAccountQueryInterface {
                 public function find(string $tenantId, string $accountCode): ?object {
                     return new class {
                         public function isActive(): bool {
@@ -235,7 +237,7 @@ final class GLAccountMappingRuleTest extends TestCase
                     };
                 }
             },
-            new class {
+            new class implements GLMappingRepositoryInterface {
                 public function getMappingsForSubledger(string $tenantId, string $subledgerType): array {
                     return [
                         new class {
@@ -274,7 +276,7 @@ final class GLAccountMappingRuleTest extends TestCase
     public function testContextWithUnderscoreFormatProperties(): void
     {
         $rule = new GLAccountMappingRule(
-            new class {
+            new class implements GLAccountQueryInterface {
                 public function find(string $tenantId, string $accountCode): ?object {
                     return new class {
                         public function isActive(): bool {
@@ -283,7 +285,7 @@ final class GLAccountMappingRuleTest extends TestCase
                     };
                 }
             },
-            new class {
+            new class implements GLMappingRepositoryInterface {
                 public function getMappingsForSubledger(string $tenantId, string $subledgerType): array {
                     return [
                         new class {
@@ -312,7 +314,7 @@ final class GLAccountMappingRuleTest extends TestCase
     public function testContextWithGetterMethods(): void
     {
         $rule = new GLAccountMappingRule(
-            new class {
+            new class implements GLAccountQueryInterface {
                 public function find(string $tenantId, string $accountCode): ?object {
                     return new class {
                         public function isActive(): bool {
@@ -321,7 +323,7 @@ final class GLAccountMappingRuleTest extends TestCase
                     };
                 }
             },
-            new class {
+            new class implements GLMappingRepositoryInterface {
                 public function getMappingsForSubledger(string $tenantId, string $subledgerType): array {
                     return [
                         new class {
@@ -364,12 +366,12 @@ final class GLAccountMappingRuleTest extends TestCase
     public function testGetNameReturnsGLAccountMapping(): void
     {
         $rule = new GLAccountMappingRule(
-            new class {
+            new class implements GLAccountQueryInterface {
                 public function find(string $tenantId, string $accountCode): ?object {
                     return null;
                 }
             },
-            new class {
+            new class implements GLMappingRepositoryInterface {
                 public function getMappingsForSubledger(string $tenantId, string $subledgerType): array {
                     return [];
                 }

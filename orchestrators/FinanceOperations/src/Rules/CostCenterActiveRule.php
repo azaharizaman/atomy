@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Rules;
 
+use Nexus\FinanceOperations\Contracts\CostCenterQueryInterface;
 use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
@@ -23,11 +24,8 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
  */
 final readonly class CostCenterActiveRule implements RuleInterface
 {
-    /**
-     * @param object $costCenterQuery CostCenterQueryInterface for cost center lookup
-     */
     public function __construct(
-        private object $costCenterQuery,
+        private CostCenterQueryInterface $costCenterQuery,
     ) {}
 
     /**
