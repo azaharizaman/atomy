@@ -51,46 +51,49 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function submitRequisitionForApproval(string $requisitionId): RequisitionInterface
+    public function submitRequisitionForApproval(string $tenantId, string $requisitionId): RequisitionInterface
     {
         $this->logger->info('ProcurementManager: Submitting requisition for approval', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
         ]);
 
-        return $this->requisitionManager->submitForApproval($requisitionId);
+        return $this->requisitionManager->submitForApproval($tenantId, $requisitionId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function approveRequisition(string $requisitionId, string $approverId): RequisitionInterface
+    public function approveRequisition(string $tenantId, string $requisitionId, string $approverId): RequisitionInterface
     {
         $this->logger->info('ProcurementManager: Approving requisition', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'approver_id' => $approverId,
         ]);
 
-        return $this->requisitionManager->approveRequisition($requisitionId, $approverId);
+        return $this->requisitionManager->approveRequisition($tenantId, $requisitionId, $approverId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function rejectRequisition(string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
+    public function rejectRequisition(string $tenantId, string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
     {
         $this->logger->info('ProcurementManager: Rejecting requisition', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'rejector_id' => $rejectorId,
             'reason' => $reason,
         ]);
 
-        return $this->requisitionManager->rejectRequisition($requisitionId, $rejectorId, $reason);
+        return $this->requisitionManager->rejectRequisition($tenantId, $requisitionId, $rejectorId, $reason);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function convertRequisitionToPo(
+    public function convertRequisitionToPO(
         string $tenantId,
         string $requisitionId,
         string $creatorId,
@@ -121,23 +124,21 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
             'po_number' => $data['number'] ?? 'N/A',
         ]);
 
-        // For direct PO creation without requisition, we create a blanket PO
         return $this->purchaseOrderManager->createBlanketPo($tenantId, $creatorId, $data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function releasePO(string $poId, string $releasedBy): PurchaseOrderInterface
+    public function releasePO(string $tenantId, string $poId, string $releasedBy): PurchaseOrderInterface
     {
         $this->logger->info('ProcurementManager: Releasing purchase order', [
+            'tenant_id' => $tenantId,
             'po_id' => $poId,
             'released_by' => $releasedBy,
         ]);
 
-        // Implementation would update PO status to 'released'
-        // For now, return the PO (assuming status update happens in repository)
-        return $this->purchaseOrderManager->getPurchaseOrder($poId);
+        return $this->purchaseOrderManager->releasePo($tenantId, $poId, $releasedBy);
     }
 
     /**
@@ -182,29 +183,29 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function getRequisition(string $requisitionId): RequisitionInterface
+    public function getRequisition(string $tenantId, string $requisitionId): RequisitionInterface
     {
-        return $this->requisitionManager->getRequisition($requisitionId);
+        return $this->requisitionManager->getRequisition($tenantId, $requisitionId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getPurchaseOrder(string $poId): PurchaseOrderInterface
+    public function getPurchaseOrder(string $tenantId, string $poId): PurchaseOrderInterface
     {
-        return $this->purchaseOrderManager->getPurchaseOrder($poId);
+        return $this->purchaseOrderManager->getPurchaseOrder($tenantId, $poId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getGoodsReceipt(string $grnId): GoodsReceiptNoteInterface
+    public function getGoodsReceipt(string $tenantId, string $grnId): GoodsReceiptNoteInterface
     {
-        return $this->goodsReceiptManager->getGoodsReceipt($grnId);
+        return $this->goodsReceiptManager->getGoodsReceipt($tenantId, $grnId);
     }
 
     /**
-     * Create vendor quote for requisition (RFQ process).
+     * Create vendor quote for requisition.
      *
      * @param string $tenantId
      * @param string $requisitionId
@@ -225,50 +226,98 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * Compare vendor quotes for requisition.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @return array Quote comparison matrix
      */
-    public function compareVendorQuotes(string $requisitionId): array
+    public function compareVendorQuotes(string $tenantId, string $requisitionId): array
     {
         $this->logger->info('ProcurementManager: Comparing vendor quotes', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
         ]);
 
-        return $this->vendorQuoteManager->compareQuotes($requisitionId);
+        return $this->vendorQuoteManager->compareQuotes($tenantId, $requisitionId);
     }
 
     /**
      * Accept vendor quote.
      *
+     * @param string $tenantId
      * @param string $quoteId
      * @param string $acceptorId
      * @return VendorQuoteInterface
      */
-    public function acceptVendorQuote(string $quoteId, string $acceptorId): VendorQuoteInterface
+    public function acceptVendorQuote(string $tenantId, string $quoteId, string $acceptorId): VendorQuoteInterface
     {
         $this->logger->info('ProcurementManager: Accepting vendor quote', [
+            'tenant_id' => $tenantId,
             'quote_id' => $quoteId,
             'acceptor_id' => $acceptorId,
         ]);
 
-        return $this->vendorQuoteManager->acceptQuote($quoteId, $acceptorId);
+        return $this->vendorQuoteManager->acceptQuote($tenantId, $quoteId, $acceptorId);
+    }
+
+    /**
+     * Lock a vendor quote for an active comparison run.
+     */
+    public function lockVendorQuote(string $tenantId, string $quoteId, string $comparisonRunId, string $lockedBy): VendorQuoteInterface
+    {
+        $this->logger->info('ProcurementManager: Locking vendor quote', [
+            'tenant_id' => $tenantId,
+            'quote_id' => $quoteId,
+            'comparison_run_id' => $comparisonRunId,
+            'locked_by' => $lockedBy,
+        ]);
+
+        return $this->vendorQuoteManager->lockQuote($tenantId, $quoteId, $comparisonRunId, $lockedBy);
+    }
+
+    /**
+     * Unlock a vendor quote when a comparison run completes or is discarded.
+     */
+    public function unlockVendorQuote(string $tenantId, string $quoteId, string $comparisonRunId): VendorQuoteInterface
+    {
+        $this->logger->info('ProcurementManager: Unlocking vendor quote', [
+            'tenant_id' => $tenantId,
+            'quote_id' => $quoteId,
+            'comparison_run_id' => $comparisonRunId,
+        ]);
+
+        return $this->vendorQuoteManager->unlockQuote($tenantId, $quoteId, $comparisonRunId);
+    }
+
+    /**
+     * Release all locks held by a specific comparison run.
+     */
+    public function unlockAllVendorQuotesForRun(string $tenantId, string $comparisonRunId): int
+    {
+        $this->logger->info('ProcurementManager: Batch unlocking vendor quotes for run', [
+            'tenant_id' => $tenantId,
+            'comparison_run_id' => $comparisonRunId,
+        ]);
+
+        return $this->vendorQuoteManager->unlockAllForRun($tenantId, $comparisonRunId);
     }
 
     /**
      * Authorize payment for goods receipt.
      *
+     * @param string $tenantId
      * @param string $grnId
      * @param string $authorizerId
      * @return GoodsReceiptNoteInterface
      */
-    public function authorizeGrnPayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface
+    public function authorizeGrnPayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface
     {
         $this->logger->info('ProcurementManager: Authorizing GRN payment', [
+            'tenant_id' => $tenantId,
             'grn_id' => $grnId,
             'authorizer_id' => $authorizerId,
         ]);
 
-        return $this->goodsReceiptManager->authorizePayment($grnId, $authorizerId);
+        return $this->goodsReceiptManager->authorizePayment($tenantId, $grnId, $authorizerId);
     }
 
     /**

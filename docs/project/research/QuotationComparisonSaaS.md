@@ -118,6 +118,40 @@ If any mockup cannot represent these fields, it is a design shortfall to be corr
 - Continue with `QuotationIntelligence` orchestrator for normalization, scoring orchestration, and evidence traceability.
 - Keep evidence-first design: every adjustment and recommendation must link to source quote text/doc page.
 - Preserve strict audit posture via immutable decision events and role-based approval authorities.
+- **Backend Architecture**: Enforce strict tenant-aware scoping across all repositories and services to prevent cross-tenant data leakage.
+- **CQRS Pattern**: Maintain clean separation between read and write operations via `Query` and `Persist` interface segregation.
+- **Transactional Integrity**: Utilize atomic database transactions for multi-step procurement operations (e.g., PO creation and requisition conversion).
+- **Hardened Contracts**: Standardize on ULID-based identifiers and interface-first service definitions.
+- **Advanced Orchestration**: Continue with `QuotationIntelligence` orchestrator for normalization, scoring orchestration, and evidence traceability.
+- **Traceability**: Keep evidence-first design: every adjustment and recommendation must link to source quote text/doc page.
+- **Governance**: Preserve strict audit posture via immutable decision events, specialized exception classes, and robust unit test coverage (>95%).
+
+## Appendix: Screen Reference Quick List
+The following screens are referenced by number throughout this document. For complete technical and UI specifications, see [QUOTE_COMPARISON_FRONTEND_SCREEN_BLUEPRINT.md](../QUOTE_COMPARISON_FRONTEND_SCREEN_BLUEPRINT.md).
+
+- **3 RFQ List**: Overview of all active and historical Request for Quotations.
+- **4 Create RFQ**: Guided workflow for defining new procurement requirements.
+- **5 RFQ Detail**: Comprehensive view of RFQ status, lots, and timelines.
+- **6 Vendor Invitation**: Management of supplier participation and contact status.
+- **7 Quote Intake**: Centralized inbox for receiving and extracting bid data.
+- **8 Normalization**: Workspace for mapping units, currencies, and taxonomy.
+- **9 Quote Matrix**: Side-by-side commercial and technical comparison view.
+- **10 Scoring Model**: Builder for weighted evaluation criteria and formulas.
+- **11 Scenario Simulator**: What-if tool for testing different award logic impacts.
+- **12 Recommendation**: Auto-generated rationale and explainability narrative.
+- **13 Risk Review**: Compliance dashboard for sanctions, fraud signals, and exceptions.
+- **14 Approval Queue**: Triage view for authorized governance reviewers.
+- **15 Approval Detail**: Deep-dive view for specific award decision sign-offs.
+- **16 Negotiation**: Controlled workspace for counter-offers and concessions.
+- **17 Award Decision**: Final selection capture and formal award notification.
+- **18 PO/Contract Handoff**: Integration bridge to ERP execution modules.
+- **19 Decision Trail**: Immutable audit ledger of all governance actions.
+- **20 Vendor Performance**: Historical profile and reliability metrics.
+- **21 Evidence Vault**: Central repository for original bid docs and proof.
+- **22 Reports**: Exportable analytics and debriefing documentation.
+- **23 Integration Monitor**: Status dashboard for cross-system data flows.
+- **24 Access Management**: Role-based permissions and user authority settings.
+- **25 Admin Settings**: Global policy flags, workflow gating, and opening locks.
 
 ## Source References (Research Basis)
 - ISO 20400 sustainable procurement principles and life cycle costing guidance.

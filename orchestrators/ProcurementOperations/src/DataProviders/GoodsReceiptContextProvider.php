@@ -49,7 +49,7 @@ final readonly class GoodsReceiptContextProvider
         }
 
         // Fetch associated purchase order
-        $purchaseOrder = $this->purchaseOrderQuery->findById($goodsReceipt->getPurchaseOrderId());
+        $purchaseOrder = $this->purchaseOrderQuery->findById($tenantId, $goodsReceipt->getPurchaseOrderId());
 
         if ($purchaseOrder === null) {
             throw PurchaseOrderException::notFound($goodsReceipt->getPurchaseOrderId());
@@ -62,7 +62,7 @@ final readonly class GoodsReceiptContextProvider
         $vendorInfo = $this->fetchVendorInfo($purchaseOrder->getVendorId());
 
         // Build PO summary info
-        $purchaseOrderInfo = $this->buildPurchaseOrderInfo($purchaseOrder);
+        $purchaseOrderInfo = $this->buildPurchaseOrderInfo($tenantId, $purchaseOrder);
 
         // Fetch warehouse info if Warehouse package available
         $warehouseInfo = $this->fetchWarehouseInfo($goodsReceipt->getWarehouseId());
@@ -110,7 +110,7 @@ final readonly class GoodsReceiptContextProvider
         string $warehouseId,
         array $lineItems
     ): GoodsReceiptContext {
-        $purchaseOrder = $this->purchaseOrderQuery->findById($purchaseOrderId);
+        $purchaseOrder = $this->purchaseOrderQuery->findById($tenantId, $purchaseOrderId);
 
         if ($purchaseOrder === null) {
             throw PurchaseOrderException::notFound($purchaseOrderId);
@@ -144,7 +144,7 @@ final readonly class GoodsReceiptContextProvider
         // Fetch vendor and warehouse info
         $vendorInfo = $this->fetchVendorInfo($purchaseOrder->getVendorId());
         $warehouseInfo = $this->fetchWarehouseInfo($warehouseId);
-        $purchaseOrderInfo = $this->buildPurchaseOrderInfo($purchaseOrder);
+        $purchaseOrderInfo = $this->buildPurchaseOrderInfo($tenantId, $purchaseOrder);
 
         return new GoodsReceiptContext(
             tenantId: $tenantId,
@@ -181,20 +181,20 @@ final readonly class GoodsReceiptContextProvider
      */
     public function getOutstandingQuantities(string $tenantId, string $purchaseOrderId): array
     {
-        $purchaseOrder = $this->purchaseOrderQuery->findById($purchaseOrderId);
+        $purchaseOrder = $this->purchaseOrderQuery->findById($tenantId, $purchaseOrderId);
 
         if ($purchaseOrder === null) {
             throw PurchaseOrderException::notFound($purchaseOrderId);
         }
 
         // Get all receipts for this PO
-        $receipts = $this->goodsReceiptQuery->findByPurchaseOrderId($purchaseOrderId);
+        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrderId, $tenantId);
 
         // Aggregate received quantities by PO line
         $receivedByLine = [];
         foreach ($receipts as $receipt) {
             foreach ($receipt->getLineItems() as $grLine) {
-                $poLineId = $grLine->getPoLineId();
+                $poLineId = $grLine->getPurchaseOrderLineId();
                 $receivedByLine[$poLineId] = ($receivedByLine[$poLineId] ?? 0.0) + $grLine->getQuantityReceived();
             }
         }
@@ -228,11 +228,11 @@ final readonly class GoodsReceiptContextProvider
         $lineItems = [];
 
         foreach ($goodsReceipt->getLineItems() as $index => $grLine) {
-            $poLine = $poLines[$grLine->getPoLineId()] ?? null;
+            $poLine = $poLines[$grLine->getPurchaseOrderLineId()] ?? null;
 
             $lineItems[$index] = [
                 'lineId' => $grLine->getId(),
-                'poLineId' => $grLine->getPoLineId(),
+                'poLineId' => $grLine->getPurchaseOrderLineId(),
                 'productId' => $grLine->getProductId(),
                 'quantityReceived' => $grLine->getQuantityReceived(),
                 'unitPriceCents' => $poLine ? $poLine['unitPriceCents'] : 0,
@@ -289,7 +289,7 @@ final readonly class GoodsReceiptContextProvider
      *     totalReceivedQuantity: float
      * }
      */
-    private function buildPurchaseOrderInfo(object $purchaseOrder): array
+    private function buildPurchaseOrderInfo(string $tenantId, object $purchaseOrder): array
     {
         $totalOrdered = 0.0;
         foreach ($purchaseOrder->getLineItems() as $line) {
@@ -307,7 +307,7 @@ final readonly class GoodsReceiptContextProvider
 
         // Calculate total received from all GRs
         $totalReceived = 0.0;
-        $receipts = $this->goodsReceiptQuery->findByPurchaseOrderId($purchaseOrder->getId());
+        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrder->getId(), $tenantId);
         foreach ($receipts as $receipt) {
             foreach ($receipt->getLineItems() as $line) {
                 $totalReceived += $line->getQuantityReceived();

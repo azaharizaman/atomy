@@ -57,4 +57,11 @@ interface GoodsReceiptNoteInterface
      * @return \DateTimeImmutable
      */
     public function getCreatedAt(): \DateTimeImmutable;
+
+    /**
+     * Get GRN status.
+     *
+     * @return string draft|authorized|payment_authorized
+     */
+    public function getStatus(): string;
 }

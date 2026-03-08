@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\QuotationIntelligence\Coordinators;
 
 use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
+use Nexus\QuotationIntelligence\Contracts\ComparisonReadinessValidatorInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\QuoteComparisonMatrixServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\RiskAssessmentServiceInterface;
@@ -12,6 +13,7 @@ use Nexus\QuotationIntelligence\Contracts\VendorScoringServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\ApprovalGateServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Nexus\QuotationIntelligence\DTOs\NormalizedQuoteLine;
+use Nexus\QuotationIntelligence\Exceptions\ComparisonNotReadyException;
 use Nexus\QuotationIntelligence\Exceptions\MissingVendorContextException;
 use Psr\Log\LoggerInterface;
 
@@ -27,6 +29,7 @@ final readonly class BatchQuoteComparisonCoordinator implements BatchQuoteCompar
         private VendorScoringServiceInterface $vendorScoringService,
         private ApprovalGateServiceInterface $approvalGateService,
         private DecisionTrailWriterInterface $decisionTrailWriter,
+        private ComparisonReadinessValidatorInterface $readinessValidator,
         private LoggerInterface $logger
     ) {
     }
@@ -35,6 +38,24 @@ final readonly class BatchQuoteComparisonCoordinator implements BatchQuoteCompar
      * @inheritDoc
      */
     public function compareQuotes(string $tenantId, string $rfqId, array $documentIds): array
+    {
+        return $this->executeComparison($tenantId, $rfqId, $documentIds, isPreview: false);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function previewQuotes(string $tenantId, string $rfqId, array $documentIds): array
+    {
+        return $this->executeComparison($tenantId, $rfqId, $documentIds, isPreview: true);
+    }
+
+    /**
+     * @param array<int, string> $documentIds
+     * @return array<string, mixed>
+     * @throws ComparisonNotReadyException
+     */
+    private function executeComparison(string $tenantId, string $rfqId, array $documentIds, bool $isPreview): array
     {
         $vendorLineSets = [];
 
@@ -53,6 +74,17 @@ final readonly class BatchQuoteComparisonCoordinator implements BatchQuoteCompar
         }
 
         $vendorLineSets = array_values($vendorLineSets);
+
+        $readiness = $this->readinessValidator->validate($tenantId, $rfqId, $vendorLineSets, $isPreview);
+        
+        if (!$readiness->isReady()) {
+            throw ComparisonNotReadyException::fromResult($readiness);
+        }
+
+        if (!$isPreview && $readiness->isPreviewOnly()) {
+            throw ComparisonNotReadyException::fromResult($readiness);
+        }
+
         $matrix = $this->matrixService->buildMatrix($tenantId, $rfqId, $vendorLineSets);
 
         $peerRisksByVendor = $this->buildPeerRisks($matrix, $vendorLineSets);
@@ -81,6 +113,35 @@ final readonly class BatchQuoteComparisonCoordinator implements BatchQuoteCompar
 
         $scoring = $this->vendorScoringService->score($tenantId, $rfqId, $vendorEvaluations);
         $approval = $this->approvalGateService->evaluate($vendors, $scoring);
+
+        $readinessPayload = [
+            'is_ready' => $readiness->isReady(),
+            'is_preview_only' => $readiness->isPreviewOnly(),
+            'blockers' => $readiness->getBlockers(),
+            'warnings' => $readiness->getWarnings(),
+        ];
+
+        if ($isPreview) {
+            $this->logger->info('Preview quote comparison completed', [
+                'tenant_id' => $tenantId,
+                'rfq_id' => $rfqId,
+                'document_count' => count($documentIds),
+                'vendor_count' => count($vendors),
+            ]);
+
+            return [
+                'tenant_id' => $tenantId,
+                'rfq_id' => $rfqId,
+                'documents_processed' => count($documentIds),
+                'matrix' => $matrix,
+                'scoring' => $scoring,
+                'approval' => $approval,
+                'vendors' => $vendors,
+                'is_preview' => true,
+                'readiness' => $readinessPayload,
+            ];
+        }
+
         $decisionTrail = $this->decisionTrailWriter->write($tenantId, $rfqId, [
             [
                 'event_type' => 'matrix_built',
@@ -117,6 +178,8 @@ final readonly class BatchQuoteComparisonCoordinator implements BatchQuoteCompar
             'approval' => $approval,
             'decision_trail' => $decisionTrail,
             'vendors' => $vendors,
+            'is_preview' => false,
+            'readiness' => $readinessPayload,
         ];
     }
 

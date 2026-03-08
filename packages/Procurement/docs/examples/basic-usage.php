@@ -216,6 +216,7 @@ if ($matchResult['matched']) {
 
 // IMPORTANT: Authorizer must be different from GRN creator (BUS-PRO-0105)
 $goodsReceipt = $procurement->authorizeGrnPayment(
+    tenantId: 'tenant-001',
     grnId: $goodsReceipt->getId(),
     authorizerId: 'user-ap-clerk-002' // Must NOT be 'user-warehouse-001'
 );

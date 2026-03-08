@@ -8,6 +8,11 @@
             "Nexus\\Procurement\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Procurement\\Tests\\": "tests/"
+        }
+    },
     "require": {
         "php": "^8.2",
         "psr/log": "^3.0"
