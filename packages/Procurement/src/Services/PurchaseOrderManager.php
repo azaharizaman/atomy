@@ -13,6 +13,7 @@ use Nexus\Procurement\Contracts\RequisitionRepositoryInterface;
 use Nexus\Procurement\Exceptions\PurchaseOrderNotFoundException;
 use Nexus\Procurement\Exceptions\InvalidPurchaseOrderDataException;
 use Nexus\Procurement\Exceptions\BudgetExceededException;
+use Nexus\Procurement\Exceptions\InvalidPurchaseOrderStatusException;
 use Nexus\Procurement\Exceptions\InvalidRequisitionStateException;
 use Psr\Log\LoggerInterface;
 
@@ -228,6 +229,7 @@ final readonly class PurchaseOrderManager
      * @param string $releasedBy
      * @return PurchaseOrderInterface
      * @throws PurchaseOrderNotFoundException
+     * @throws InvalidPurchaseOrderStatusException
      */
     public function releasePo(string $tenantId, string $poId, string $releasedBy): PurchaseOrderInterface
     {
@@ -235,6 +237,20 @@ final readonly class PurchaseOrderManager
 
         if ($po === null) {
             throw PurchaseOrderNotFoundException::forId($poId);
+        }
+
+        $currentStatus = $po->getStatus();
+        $allowedStatuses = ['draft', 'approved'];
+
+        if (!in_array($currentStatus, $allowedStatuses, true)) {
+            $this->logger->warning('Invalid release attempt for purchase order', [
+                'tenant_id' => $tenantId,
+                'po_id' => $poId,
+                'current_status' => $currentStatus,
+                'user_id' => $releasedBy,
+            ]);
+
+            throw InvalidPurchaseOrderStatusException::forRelease($poId, $currentStatus);
         }
 
         $this->logger->info('Releasing purchase order', [

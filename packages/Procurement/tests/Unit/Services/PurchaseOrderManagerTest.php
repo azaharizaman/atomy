@@ -194,6 +194,17 @@ final class PurchaseOrderManagerTest extends TestCase
         self::assertSame($released, $result);
     }
 
+    public function test_release_po_throws_when_status_invalid(): void
+    {
+        $po = $this->createMockPoWithStatus('po-1', 'PO-001', 'closed');
+
+        $this->poQuery->method('findById')->with('tenant-1', 'po-1')->willReturn($po);
+
+        $this->expectException(\Nexus\Procurement\Exceptions\InvalidPurchaseOrderStatusException::class);
+
+        $this->manager->releasePo('tenant-1', 'po-1', 'user-1');
+    }
+
     public function test_create_from_requisition_throws_when_requisition_not_approved(): void
     {
         $req = $this->createMockRequisitionWithLines('req-1', 'REQ-001', 'draft');
@@ -273,6 +284,17 @@ final class PurchaseOrderManagerTest extends TestCase
         $po->method('getPoNumber')->willReturn($number);
         $po->method('getCreatorId')->willReturn('creator-1');
         $po->method('getStatus')->willReturn('draft');
+
+        return $po;
+    }
+
+    private function createMockPoWithStatus(string $id, string $number, string $status): PurchaseOrderInterface
+    {
+        $po = $this->createMock(PurchaseOrderInterface::class);
+        $po->method('getId')->willReturn($id);
+        $po->method('getPoNumber')->willReturn($number);
+        $po->method('getCreatorId')->willReturn('creator-1');
+        $po->method('getStatus')->willReturn($status);
 
         return $po;
     }

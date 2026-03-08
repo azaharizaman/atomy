@@ -11,7 +11,6 @@ use Nexus\Procurement\Contracts\PurchaseOrderInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderLineInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderPersistInterface;
-use Nexus\Procurement\Contracts\PurchaseOrderRepositoryInterface;
 use Nexus\Procurement\Contracts\DatabaseTransactionInterface;
 use Nexus\Procurement\Contracts\RequisitionInterface;
 use Nexus\Procurement\Contracts\RequisitionRepositoryInterface;
@@ -194,6 +193,7 @@ final class ProcurementManagerTest extends TestCase
         $po = $this->createMock(PurchaseOrderInterface::class);
         $po->method('getId')->willReturn('po-1');
         $po->method('getPoNumber')->willReturn('PO-001');
+        $po->method('getStatus')->willReturn('approved');
         
         $this->poQuery->method('findById')->with('tenant-1', 'po-1')->willReturn($po);
 

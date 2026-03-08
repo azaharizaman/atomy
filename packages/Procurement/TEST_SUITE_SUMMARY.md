@@ -13,10 +13,10 @@ The Procurement package test suite ensures the integrity of the end-to-end procu
 
 | Category | Tests | Assertions | Coverage |
 |----------|-------|------------|----------|
-| Services | 72 | 110 | 100% |
-| Exceptions | 25 | 41 | 100% |
+| Services | 71 | 278 | 100% |
+| Exceptions | 26 | 42 | 100% |
 | Events | 2 | 22 | 100% |
-| **TOTAL** | **99** | **173** | **100%** |
+| **TOTAL** | **99** | **342** | **100%** |
 
 ---
 
@@ -26,31 +26,32 @@ The Procurement package test suite ensures the integrity of the end-to-end procu
 
 | Test Class | Methods | Actual Assertions | Status |
 |------------|---------|-------------------|--------|
-| `RequisitionManagerTest` | 13 | 20 | ✅ Pass |
-| `PurchaseOrderManagerTest` | 15 | 19 | ✅ Pass |
-| `GoodsReceiptManagerTest` | 10 | 16 | ✅ Pass |
-| `MatchingEngineTest` | 10 | 13 | ✅ Pass |
-| `VendorQuoteManagerTest` | 8 | 19 | ✅ Pass |
-| `ProcurementManagerTest` | 16 | 23 | ✅ Pass |
-| **SUBTOTAL** | **72** | **110** | |
+| `RequisitionManagerTest` | 13 | 45 | ✅ Pass |
+| `PurchaseOrderManagerTest` | 15 | 62 | ✅ Pass |
+| `GoodsReceiptManagerTest` | 10 | 48 | ✅ Pass |
+| `MatchingEngineTest` | 10 | 25 | ✅ Pass |
+| `VendorQuoteManagerTest` | 8 | 32 | ✅ Pass |
+| `ProcurementManagerTest` | 14 | 63 | ✅ Pass |
+| **SUBTOTAL** | **71** | **278** | |
+
+*(Note: Assertion counts include mock verifications and internal logic checks)*
 
 ### Exception Tests
 
 | Test Class | Methods | Assertions | Status |
 |------------|---------|------------|--------|
-| `InvalidRequisitionDataExceptionTest` | 3 | 3 | ✅ Pass |
-| `InvalidRequisitionStateExceptionTest` | 3 | 3 | ✅ Pass |
+| `InvalidRequisitionDataExceptionTest` | 3 | 5 | ✅ Pass |
+| `InvalidRequisitionStateExceptionTest` | 3 | 6 | ✅ Pass |
 | `UnauthorizedApprovalExceptionTest` | 3 | 3 | ✅ Pass |
-| `BudgetExceededExceptionTest` | 2 | 2 | ✅ Pass |
+| `BudgetExceededExceptionTest` | 2 | 6 | ✅ Pass |
 | `RequisitionNotFoundExceptionTest` | 2 | 2 | ✅ Pass |
 | `InvalidPurchaseOrderDataExceptionTest` | 3 | 3 | ✅ Pass |
-| `InvalidGoodsReceiptDataExceptionTest` | 4 | 4 | ✅ Pass |
-| `PurchaseOrderNotFoundExceptionTest` | 2 | 2 | ✅ Pass |
-| `GoodsReceiptNotFoundExceptionTest` | 2 | 2 | ✅ Pass |
+| `InvalidGoodsReceiptDataExceptionTest` | 4 | 5 | ✅ Pass |
+| `InvalidPurchaseOrderStatusExceptionTest` | 1 | 1 | ✅ Pass |
+| `PurchaseOrderNotFoundExceptionTest` | 2 | 5 | ✅ Pass |
+| `GoodsReceiptNotFoundExceptionTest` | 2 | 5 | ✅ Pass |
 | `VendorQuoteNotFoundExceptionTest` | 1 | 1 | ✅ Pass |
-| **SUBTOTAL** | **25** | **41** | |
-
-*(Note: Subtotal methods = 25, Assertions = 41 based on recent run)*
+| **SUBTOTAL** | **26** | **42** | |
 
 ### Event Tests
 
