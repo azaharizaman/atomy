@@ -48,6 +48,35 @@ interface GoodsReceiptRepositoryInterface
     public function findByPurchaseOrder(string $purchaseOrderId): array;
 
     /**
+     * Find all GRNs for tenant.
+     *
+     * @param string $tenantId Tenant ULID
+     * @param array<string, mixed> $filters
+     * @return array<GoodsReceiptNoteInterface>
+     */
+    public function findByTenantId(string $tenantId, array $filters): array;
+
+    /**
+     * Create GRN.
+     *
+     * @param string $tenantId
+     * @param string $purchaseOrderId
+     * @param string $receiverId
+     * @param array<string, mixed> $data
+     * @return GoodsReceiptNoteInterface
+     */
+    public function create(string $tenantId, string $purchaseOrderId, string $receiverId, array $data): GoodsReceiptNoteInterface;
+
+    /**
+     * Authorize payment for GRN.
+     *
+     * @param string $grnId
+     * @param string $authorizerId
+     * @return GoodsReceiptNoteInterface
+     */
+    public function authorizePayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface;
+
+    /**
      * Save GRN.
      *
      * @param GoodsReceiptNoteInterface $grn

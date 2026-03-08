@@ -99,7 +99,7 @@ final readonly class PurchaseOrderManager
         $this->logger->info('Creating purchase order from requisition', [
             'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
-            'requisition_number' => $requisition->getNumber(),
+            'requisition_number' => $requisition->getRequisitionNumber(),
             'po_number' => $data['number'],
             'creator_id' => $creatorId,
             'vendor_id' => $data['vendor_id'],
@@ -114,7 +114,7 @@ final readonly class PurchaseOrderManager
         $this->logger->info('Purchase order created', [
             'tenant_id' => $tenantId,
             'po_id' => $purchaseOrder->getId(),
-            'po_number' => $purchaseOrder->getNumber(),
+            'po_number' => $purchaseOrder->getPoNumber(),
             'status' => $purchaseOrder->getStatus(),
         ]);
 
@@ -157,7 +157,7 @@ final readonly class PurchaseOrderManager
         $this->logger->info('Blanket PO created', [
             'tenant_id' => $tenantId,
             'po_id' => $blanketPo->getId(),
-            'po_number' => $blanketPo->getNumber(),
+            'po_number' => $blanketPo->getPoNumber(),
         ]);
 
         return $blanketPo;
@@ -201,7 +201,7 @@ final readonly class PurchaseOrderManager
 
         $this->logger->info('Creating blanket PO release', [
             'blanket_po_id' => $blanketPoId,
-            'blanket_po_number' => $blanketPo->getNumber(),
+            'blanket_po_number' => $blanketPo->getPoNumber(),
             'release_number' => $data['release_number'],
             'release_total' => $releaseTotal,
         ]);
@@ -229,7 +229,7 @@ final readonly class PurchaseOrderManager
 
         $this->logger->info('Approving purchase order', [
             'po_id' => $poId,
-            'po_number' => $po->getNumber(),
+            'po_number' => $po->getPoNumber(),
             'approver_id' => $approverId,
         ]);
 
@@ -237,7 +237,7 @@ final readonly class PurchaseOrderManager
 
         $this->logger->info('Purchase order approved', [
             'po_id' => $poId,
-            'po_number' => $approvedPo->getNumber(),
+            'po_number' => $approvedPo->getPoNumber(),
             'status' => $approvedPo->getStatus(),
         ]);
 
@@ -261,7 +261,7 @@ final readonly class PurchaseOrderManager
 
         $this->logger->info('Closing purchase order', [
             'po_id' => $poId,
-            'po_number' => $po->getNumber(),
+            'po_number' => $po->getPoNumber(),
         ]);
 
         $closedPo = $this->repository->updateStatus($poId, 'closed');

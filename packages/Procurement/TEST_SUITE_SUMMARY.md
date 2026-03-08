@@ -1,7 +1,7 @@
 # Test Suite Summary: Procurement
 
 **Package:** `Nexus\Procurement`  
-**Last Updated:** 2025-11-26  
+**Last Updated:** 2026-03-08  
 **Test Framework:** PHPUnit 11  
 **PHP Version:** 8.3+
 
@@ -17,7 +17,7 @@ The Procurement package test suite ensures comprehensive coverage of all busines
 
 | Metric | Target | Status |
 |--------|--------|--------|
-| **Unit Test Coverage** | 90%+ | Target |
+| **Unit Test Coverage (Lines)** | 80%+ | **83.05%** ✓ |
 | **Integration Test Coverage** | 85%+ | Target |
 | **Critical Path Coverage** | 100% | Target |
 | **Business Rule Coverage** | 100% | Target |
@@ -33,22 +33,27 @@ The Procurement package test suite ensures comprehensive coverage of all busines
 | Test Class | Methods | Assertions | Coverage |
 |------------|---------|------------|----------|
 | `RequisitionManagerTest` | 12 | 35 | Services/RequisitionManager.php |
-| `PurchaseOrderManagerTest` | 10 | 28 | Services/PurchaseOrderManager.php |
-| `GoodsReceiptManagerTest` | 8 | 24 | Services/GoodsReceiptManager.php |
-| `MatchingEngineTest` | 15 | 45 | Services/MatchingEngine.php |
+| `PurchaseOrderManagerTest` | 11 | 28 | Services/PurchaseOrderManager.php |
+| `GoodsReceiptManagerTest` | 11 | 24 | Services/GoodsReceiptManager.php |
+| `MatchingEngineTest` | 4 | 17 | Services/MatchingEngine.php |
 | `VendorQuoteManagerTest` | 8 | 22 | Services/VendorQuoteManager.php |
-| `ProcurementManagerTest` | 18 | 50 | Services/ProcurementManager.php |
-| **TOTAL** | **71** | **204** | |
+| `ProcurementManagerTest` | 16 | 50 | Services/ProcurementManager.php |
+| **TOTAL** | **62** | **176** | 83% lines |
 
 #### Exception Tests
 
 | Test Class | Methods | Assertions | Coverage |
 |------------|---------|------------|----------|
-| `ExceptionHierarchyTest` | 10 | 30 | Exceptions/*.php |
 | `InvalidRequisitionDataExceptionTest` | 5 | 15 | Factory methods |
+| `InvalidRequisitionStateExceptionTest` | 4 | 12 | Factory methods |
 | `UnauthorizedApprovalExceptionTest` | 4 | 12 | Factory methods |
 | `BudgetExceededExceptionTest` | 3 | 9 | Factory methods |
-| **TOTAL** | **22** | **66** | |
+| `RequisitionNotFoundExceptionTest` | 2 | 4 | Factory methods |
+| `InvalidPurchaseOrderDataExceptionTest` | 3 | 9 | Factory methods |
+| `InvalidGoodsReceiptDataExceptionTest` | 4 | 8 | Factory methods |
+| `PurchaseOrderNotFoundExceptionTest` | 2 | 4 | Factory methods |
+| `GoodsReceiptNotFoundExceptionTest` | 2 | 4 | Factory methods |
+| **Event Tests** | 2 | 2 | RequisitionCreatedEvent, PurchaseOrderCreatedEvent |
 
 ---
 

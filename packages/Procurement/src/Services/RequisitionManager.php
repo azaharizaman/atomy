@@ -64,7 +64,7 @@ final readonly class RequisitionManager
         $this->logger->info('Requisition created', [
             'tenant_id' => $tenantId,
             'requisition_id' => $requisition->getId(),
-            'number' => $requisition->getNumber(),
+            'number' => $requisition->getRequisitionNumber(),
             'status' => $requisition->getStatus(),
         ]);
 
@@ -96,7 +96,7 @@ final readonly class RequisitionManager
 
         $this->logger->info('Submitting requisition for approval', [
             'requisition_id' => $requisitionId,
-            'number' => $requisition->getNumber(),
+            'number' => $requisition->getRequisitionNumber(),
         ]);
 
         $updatedRequisition = $this->repository->updateStatus($requisitionId, 'pending_approval');
@@ -138,7 +138,7 @@ final readonly class RequisitionManager
 
         $this->logger->info('Approving requisition', [
             'requisition_id' => $requisitionId,
-            'number' => $requisition->getNumber(),
+            'number' => $requisition->getRequisitionNumber(),
             'approver_id' => $approverId,
         ]);
 
@@ -146,7 +146,7 @@ final readonly class RequisitionManager
 
         $this->logger->info('Requisition approved', [
             'requisition_id' => $requisitionId,
-            'number' => $updatedRequisition->getNumber(),
+            'number' => $updatedRequisition->getRequisitionNumber(),
             'status' => $updatedRequisition->getStatus(),
         ]);
 
@@ -180,7 +180,7 @@ final readonly class RequisitionManager
 
         $this->logger->info('Rejecting requisition', [
             'requisition_id' => $requisitionId,
-            'number' => $requisition->getNumber(),
+            'number' => $requisition->getRequisitionNumber(),
             'rejector_id' => $rejectorId,
             'reason' => $reason,
         ]);
@@ -220,9 +220,9 @@ final readonly class RequisitionManager
 
         $this->logger->info('Marking requisition as converted', [
             'requisition_id' => $requisitionId,
-            'number' => $requisition->getNumber(),
+            'number' => $requisition->getRequisitionNumber(),
             'po_id' => $purchaseOrder->getId(),
-            'po_number' => $purchaseOrder->getNumber(),
+            'po_number' => $purchaseOrder->getPoNumber(),
         ]);
 
         $updatedRequisition = $this->repository->markAsConverted($requisitionId, $purchaseOrder->getId());

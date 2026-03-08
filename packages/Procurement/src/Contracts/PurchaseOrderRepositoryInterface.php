@@ -54,4 +54,71 @@ interface PurchaseOrderRepositoryInterface
      * @return string Next PO number
      */
     public function generateNextNumber(string $tenantId): string;
+
+    /**
+     * Create purchase order from requisition.
+     *
+     * @param string $tenantId
+     * @param string $requisitionId
+     * @param string $creatorId
+     * @param array<string, mixed> $data
+     * @return PurchaseOrderInterface
+     */
+    public function create(string $tenantId, string $requisitionId, string $creatorId, array $data): PurchaseOrderInterface;
+
+    /**
+     * Create blanket PO.
+     *
+     * @param string $tenantId
+     * @param string $creatorId
+     * @param array<string, mixed> $data
+     * @return PurchaseOrderInterface
+     */
+    public function createBlanket(string $tenantId, string $creatorId, array $data): PurchaseOrderInterface;
+
+    /**
+     * Create release against blanket PO.
+     *
+     * @param string $blanketPoId
+     * @param string $creatorId
+     * @param array<string, mixed> $data
+     * @return PurchaseOrderInterface
+     */
+    public function createRelease(string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface;
+
+    /**
+     * Approve purchase order.
+     *
+     * @param string $poId
+     * @param string $approverId
+     * @return PurchaseOrderInterface
+     */
+    public function approve(string $poId, string $approverId): PurchaseOrderInterface;
+
+    /**
+     * Update PO status.
+     *
+     * @param string $poId
+     * @param string $status
+     * @return PurchaseOrderInterface
+     */
+    public function updateStatus(string $poId, string $status): PurchaseOrderInterface;
+
+    /**
+     * Find POs by tenant.
+     *
+     * @param string $tenantId
+     * @param array<string, mixed> $filters
+     * @return array<PurchaseOrderInterface>
+     */
+    public function findByTenantId(string $tenantId, array $filters): array;
+
+    /**
+     * Find POs by vendor.
+     *
+     * @param string $tenantId
+     * @param string $vendorId
+     * @return array<PurchaseOrderInterface>
+     */
+    public function findByVendorId(string $tenantId, string $vendorId): array;
 }

@@ -64,4 +64,18 @@ interface VendorQuoteInterface
      * @return bool
      */
     public function isValid(): bool;
+
+    /**
+     * Get quote line items.
+     *
+     * @return array<array{quantity: float, unit_price: float, lead_time_days?: int}>
+     */
+    public function getLines(): array;
+
+    /**
+     * Get payment terms.
+     *
+     * @return string|null
+     */
+    public function getPaymentTerms(): ?string;
 }

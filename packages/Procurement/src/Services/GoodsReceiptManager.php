@@ -75,7 +75,7 @@ final readonly class GoodsReceiptManager
         $this->logger->info('Creating goods receipt note', [
             'tenant_id' => $tenantId,
             'po_id' => $purchaseOrderId,
-            'po_number' => $purchaseOrder->getNumber(),
+            'po_number' => $purchaseOrder->getPoNumber(),
             'grn_number' => $data['number'],
             'receiver_id' => $receiverId,
             'received_date' => $data['received_date'],
@@ -86,7 +86,7 @@ final readonly class GoodsReceiptManager
         $this->logger->info('Goods receipt note created', [
             'tenant_id' => $tenantId,
             'grn_id' => $grn->getId(),
-            'grn_number' => $grn->getNumber(),
+            'grn_number' => $grn->getGrnNumber(),
             'status' => $grn->getStatus(),
         ]);
 
@@ -113,13 +113,13 @@ final readonly class GoodsReceiptManager
         }
 
         // Segregation of duties: GRN receiver cannot authorize payment
-        if ($grn->getReceiverId() === $authorizerId) {
+        if ($grn->getReceivedBy() === $authorizerId) {
             throw UnauthorizedApprovalException::cannotAuthorizePaymentForOwnGrn($grnId, $authorizerId);
         }
 
         $this->logger->info('Authorizing payment for GRN', [
             'grn_id' => $grnId,
-            'grn_number' => $grn->getNumber(),
+            'grn_number' => $grn->getGrnNumber(),
             'authorizer_id' => $authorizerId,
         ]);
 
@@ -127,7 +127,7 @@ final readonly class GoodsReceiptManager
 
         $this->logger->info('GRN payment authorized', [
             'grn_id' => $grnId,
-            'grn_number' => $authorizedGrn->getNumber(),
+            'grn_number' => $authorizedGrn->getGrnNumber(),
             'status' => $authorizedGrn->getStatus(),
         ]);
 
@@ -172,7 +172,7 @@ final readonly class GoodsReceiptManager
      */
     public function getGoodsReceiptsByPo(string $purchaseOrderId): array
     {
-        return $this->repository->findByPurchaseOrderId($purchaseOrderId);
+        return $this->repository->findByPurchaseOrder($purchaseOrderId);
     }
 
     /**

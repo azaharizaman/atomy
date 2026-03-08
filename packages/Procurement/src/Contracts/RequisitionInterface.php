@@ -24,6 +24,11 @@ interface RequisitionInterface
     public function getRequisitionNumber(): string;
 
     /**
+     * Whether requisition has been converted to a PO.
+     */
+    public function isConverted(): bool;
+
+    /**
      * Get requester user ID.
      *
      * @return string User ULID

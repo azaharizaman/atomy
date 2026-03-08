@@ -130,6 +130,7 @@
             "Nexus\\FixedAssetDepreciation\\Tests\\": "packages/FixedAssetDepreciation/tests/",
             "Nexus\\GeneralLedger\\Tests\\": "packages/GeneralLedger/tests/",
             "Nexus\\Loyalty\\Tests\\": "packages/Loyalty/tests/",
+            "Nexus\\Procurement\\Tests\\": "packages/Procurement/tests/",
             "Nexus\\QuotationIntelligence\\Tests\\": "orchestrators/QuotationIntelligence/tests/",
             "Nexus\\Finance\\": "orchestrators/QuotationIntelligence/tests/Stubs/Nexus/Finance/",
             "Nexus\\ESG\\Tests\\": "packages/ESG/tests/",
