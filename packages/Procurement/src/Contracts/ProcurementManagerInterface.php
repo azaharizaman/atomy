@@ -26,34 +26,37 @@ interface ProcurementManagerInterface
     /**
      * Submit requisition for approval.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $requisitionId Requisition ULID
      * @return RequisitionInterface
      * @throws \Nexus\Procurement\Exceptions\RequisitionNotFoundException
      * @throws \Nexus\Procurement\Exceptions\InvalidRequisitionStateException
      */
-    public function submitRequisitionForApproval(string $requisitionId): RequisitionInterface;
+    public function submitRequisitionForApproval(string $tenantId, string $requisitionId): RequisitionInterface;
 
     /**
      * Approve a requisition.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $requisitionId Requisition ULID
      * @param string $approverId User ULID
      * @return RequisitionInterface
      * @throws \Nexus\Procurement\Exceptions\RequisitionNotFoundException
      * @throws \Nexus\Procurement\Exceptions\UnauthorizedApprovalException
      */
-    public function approveRequisition(string $requisitionId, string $approverId): RequisitionInterface;
+    public function approveRequisition(string $tenantId, string $requisitionId, string $approverId): RequisitionInterface;
 
     /**
      * Reject a requisition.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $requisitionId Requisition ULID
      * @param string $rejectorId User ULID
      * @param string $reason Rejection reason
      * @return RequisitionInterface
      * @throws \Nexus\Procurement\Exceptions\RequisitionNotFoundException
      */
-    public function rejectRequisition(string $requisitionId, string $rejectorId, string $reason): RequisitionInterface;
+    public function rejectRequisition(string $tenantId, string $requisitionId, string $rejectorId, string $reason): RequisitionInterface;
 
     /**
      * Convert approved requisition to purchase order.
@@ -83,12 +86,13 @@ interface ProcurementManagerInterface
     /**
      * Release purchase order to vendor.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $poId PO ULID
      * @param string $releasedBy User ULID releasing the PO
      * @return PurchaseOrderInterface
      * @throws \Nexus\Procurement\Exceptions\PurchaseOrderNotFoundException
      */
-    public function releasePO(string $poId, string $releasedBy): PurchaseOrderInterface;
+    public function releasePO(string $tenantId, string $poId, string $releasedBy): PurchaseOrderInterface;
 
     /**
      * Record goods receipt against purchase order.
@@ -106,29 +110,32 @@ interface ProcurementManagerInterface
     /**
      * Find requisition by ID.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id Requisition ULID
      * @return RequisitionInterface
      * @throws \Nexus\Procurement\Exceptions\RequisitionNotFoundException
      */
-    public function getRequisition(string $id): RequisitionInterface;
+    public function getRequisition(string $tenantId, string $id): RequisitionInterface;
 
     /**
      * Find purchase order by ID.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id PO ULID
      * @return PurchaseOrderInterface
      * @throws \Nexus\Procurement\Exceptions\PurchaseOrderNotFoundException
      */
-    public function getPurchaseOrder(string $id): PurchaseOrderInterface;
+    public function getPurchaseOrder(string $tenantId, string $id): PurchaseOrderInterface;
 
     /**
      * Find goods receipt note by ID.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id GRN ULID
      * @return GoodsReceiptNoteInterface
      * @throws \Nexus\Procurement\Exceptions\GoodsReceiptNotFoundException
      */
-    public function getGoodsReceipt(string $id): GoodsReceiptNoteInterface;
+    public function getGoodsReceipt(string $tenantId, string $id): GoodsReceiptNoteInterface;
 
     /**
      * Perform three-way match between PO, GRN, and invoice.
@@ -145,12 +152,42 @@ interface ProcurementManagerInterface
     ): array;
 
     /**
+     * Create vendor quote for requisition (RFQ process).
+     *
+     * @param string $tenantId
+     * @param string $requisitionId
+     * @param array $quoteData
+     * @return VendorQuoteInterface
+     */
+    public function createVendorQuote(string $tenantId, string $requisitionId, array $quoteData): VendorQuoteInterface;
+
+    /**
+     * Compare vendor quotes for requisition.
+     *
+     * @param string $tenantId
+     * @param string $requisitionId
+     * @return array Quote comparison matrix
+     */
+    public function compareVendorQuotes(string $tenantId, string $requisitionId): array;
+
+    /**
+     * Accept vendor quote.
+     *
+     * @param string $tenantId
+     * @param string $quoteId
+     * @param string $acceptorId
+     * @return VendorQuoteInterface
+     */
+    public function acceptVendorQuote(string $tenantId, string $quoteId, string $acceptorId): VendorQuoteInterface;
+
+    /**
      * Authorize payment for goods receipt (requires 3-way match or manual override).
      *
+     * @param string $tenantId Tenant ULID
      * @param string $grnId GRN ULID
      * @param string $authorizerId User ULID authorizing payment
      * @return GoodsReceiptNoteInterface
      * @throws \Nexus\Procurement\Exceptions\UnauthorizedApprovalException
      */
-    public function authorizeGrnPayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface;
+    public function authorizeGrnPayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface;
 }
