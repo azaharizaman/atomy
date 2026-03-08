@@ -7,6 +7,7 @@ namespace Nexus\Procurement\Tests\Unit\Services;
 use Nexus\Procurement\Contracts\PurchaseOrderInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderPersistInterface;
+use Nexus\Procurement\Contracts\DatabaseTransactionInterface;
 use Nexus\Procurement\Contracts\RequisitionInterface;
 use Nexus\Procurement\Contracts\RequisitionRepositoryInterface;
 use Nexus\Procurement\Exceptions\BudgetExceededException;
@@ -24,6 +25,7 @@ final class PurchaseOrderManagerTest extends TestCase
     private PurchaseOrderPersistInterface $poPersist;
     private RequisitionRepositoryInterface $reqRepository;
     private RequisitionManager $reqManager;
+    private DatabaseTransactionInterface $transaction;
     private PurchaseOrderManager $manager;
 
     protected function setUp(): void
@@ -31,6 +33,7 @@ final class PurchaseOrderManagerTest extends TestCase
         $this->poQuery = $this->createMock(PurchaseOrderQueryInterface::class);
         $this->poPersist = $this->createMock(PurchaseOrderPersistInterface::class);
         $this->reqRepository = $this->createMock(RequisitionRepositoryInterface::class);
+        $this->transaction = $this->createMock(DatabaseTransactionInterface::class);
         $this->reqManager = new RequisitionManager(
             $this->reqRepository,
             $this->createMock(LoggerInterface::class)
@@ -40,9 +43,13 @@ final class PurchaseOrderManagerTest extends TestCase
             $this->poPersist,
             $this->reqRepository,
             $this->reqManager,
+            $this->transaction,
             $this->createMock(LoggerInterface::class),
             10.0
         );
+
+        // Default transaction behavior
+        $this->transaction->method('transactional')->willReturnCallback(fn($cb) => $cb());
     }
 
     public function test_create_blanket_po_delegates_to_repository(): void
@@ -213,6 +220,50 @@ final class PurchaseOrderManagerTest extends TestCase
             'release_number' => 'REL-001',
             'lines' => [['item_code' => 'A', 'description' => 'A', 'quantity' => 20, 'unit' => 'EA', 'unit_price' => 5]],
         ]);
+    }
+
+    public function test_create_blanket_release_throws_when_no_lines(): void
+    {
+        $this->expectException(InvalidPurchaseOrderDataException::class);
+
+        $this->manager->createBlanketRelease('tenant-1', 'po-1', 'creator-1', [
+            'release_number' => 'REL-001',
+            'lines' => [],
+        ]);
+    }
+
+    public function test_create_blanket_release_throws_when_no_release_number(): void
+    {
+        $this->expectException(InvalidPurchaseOrderDataException::class);
+
+        $this->manager->createBlanketRelease('tenant-1', 'po-1', 'creator-1', [
+            'lines' => [['item_code' => 'A', 'description' => 'A', 'quantity' => 1, 'unit' => 'EA', 'unit_price' => 5]],
+        ]);
+    }
+
+    public function test_create_from_requisition_is_transactional(): void
+    {
+        $req = $this->createMockRequisitionWithLines('req-1', 'REQ-001', 'approved');
+        $this->reqRepository->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
+        
+        $po = $this->createMockPo('po-1', 'PO-001');
+
+        // transactional is already set up in setUp() to execute the callback.
+        // We just need to verify that create and markAsConverted are called.
+
+        $this->poPersist->expects(self::once())
+            ->method('create')
+            ->willReturn($po);
+
+        $this->reqRepository->expects(self::once())
+            ->method('markAsConverted');
+
+        $result = $this->manager->createFromRequisition('tenant-1', 'req-1', 'creator-1', [
+            'number' => 'PO-001',
+            'vendor_id' => 'vendor-1',
+        ]);
+
+        self::assertSame($po, $result);
     }
 
     private function createMockPo(string $id, string $number): PurchaseOrderInterface

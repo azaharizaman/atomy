@@ -79,17 +79,18 @@ packages/Procurement/
 │   │   ├── MatchingEngine.php             # 3-way matching (PER-PRO-0327)
 │   │   └── VendorQuoteManager.php         # RFQ + quote comparison
 │   │
-│   └── Exceptions/          # 10 exception classes
-│       ├── ProcurementException.php (base)
-│       ├── RequisitionNotFoundException.php
-│       ├── PurchaseOrderNotFoundException.php
-│       ├── GoodsReceiptNotFoundException.php
-│       ├── InvalidRequisitionStateException.php
-│       ├── BudgetExceededException.php
-│       ├── UnauthorizedApprovalException.php
-│       ├── InvalidRequisitionDataException.php
-│       ├── InvalidPurchaseOrderDataException.php
-│       └── InvalidGoodsReceiptDataException.php
+└── Exceptions/          # 11 exception classes
+    ├── ProcurementException.php (base)
+    ├── RequisitionNotFoundException.php
+    ├── PurchaseOrderNotFoundException.php
+    ├── GoodsReceiptNotFoundException.php
+    ├── VendorQuoteNotFoundException.php
+    ├── InvalidRequisitionStateException.php
+    ├── BudgetExceededException.php
+    ├── UnauthorizedApprovalException.php
+    ├── InvalidRequisitionDataException.php
+    ├── InvalidPurchaseOrderDataException.php
+    └── InvalidGoodsReceiptDataException.php
 ```
 
 ### Laravel Implementation (consuming application)
@@ -160,10 +161,10 @@ All interfaces are framework-agnostic and define the **contract** between the pa
 **Methods:**
 ```php
 createRequisition(string $tenantId, string $requesterId, array $data): RequisitionInterface
-submitForApproval(string $requisitionId): RequisitionInterface
-approveRequisition(string $requisitionId, string $approverId): RequisitionInterface
-rejectRequisition(string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
-markAsConverted(string $requisitionId, PurchaseOrderInterface $po): RequisitionInterface
+submitForApproval(string $tenantId, string $requisitionId): RequisitionInterface
+approveRequisition(string $tenantId, string $requisitionId, string $approverId): RequisitionInterface
+rejectRequisition(string $tenantId, string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
+markAsConverted(string $tenantId, string $requisitionId, PurchaseOrderInterface $po): RequisitionInterface
 ```
 
 #### **PurchaseOrderManager**
@@ -176,8 +177,8 @@ markAsConverted(string $requisitionId, PurchaseOrderInterface $po): RequisitionI
 ```php
 createFromRequisition(string $tenantId, string $requisitionId, string $creatorId, array $data): PurchaseOrderInterface
 createBlanketPo(string $tenantId, string $creatorId, array $data): PurchaseOrderInterface
-createBlanketRelease(string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface
-approvePo(string $poId, string $approverId): PurchaseOrderInterface
+createBlanketRelease(string $tenantId, string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface
+approvePo(string $tenantId, string $poId, string $approverId): PurchaseOrderInterface
 ```
 
 #### **GoodsReceiptManager**
@@ -190,7 +191,7 @@ approvePo(string $poId, string $approverId): PurchaseOrderInterface
 **Methods:**
 ```php
 createGoodsReceipt(string $tenantId, string $poId, string $receiverId, array $data): GoodsReceiptNoteInterface
-authorizePayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface
+authorizePayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface
 ```
 
 #### **MatchingEngine**
@@ -220,9 +221,9 @@ performBatchMatch(array $matchSet): array // Bulk processing with performance tr
 **Methods:**
 ```php
 createQuote(string $tenantId, string $requisitionId, array $data): VendorQuoteInterface
-acceptQuote(string $quoteId, string $acceptorId): VendorQuoteInterface
+acceptQuote(string $tenantId, string $quoteId, string $acceptorId): VendorQuoteInterface
 rejectQuote(string $quoteId, string $reason): VendorQuoteInterface
-compareQuotes(string $requisitionId): array // Returns comparison matrix with recommendation
+compareQuotes(string $tenantId, string $requisitionId): array // Returns comparison matrix with recommendation
 ```
 
 #### **ProcurementManager** (Orchestrator)

@@ -13,14 +13,6 @@ namespace Nexus\Procurement\Contracts;
 interface GoodsReceiptRepositoryInterface
 {
     /**
-     * Find GRN by ID.
-     *
-     * @param string $id GRN ULID
-     * @return GoodsReceiptNoteInterface|null
-     */
-    public function findById(string $id): ?GoodsReceiptNoteInterface;
-
-    /**
      * Find GRN by ID and tenant.
      *
      * @param string $tenantId Tenant ULID
@@ -43,10 +35,11 @@ interface GoodsReceiptRepositoryInterface
      *
      * Required by Nexus\Payable for 3-way matching.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $lineReference GRN line reference (e.g., "GRN-2024-001-L1")
      * @return GoodsReceiptLineInterface|null
      */
-    public function findLineByReference(string $lineReference): ?GoodsReceiptLineInterface;
+    public function findLineByReference(string $tenantId, string $lineReference): ?GoodsReceiptLineInterface;
 
     /**
      * Find all GRNs for a purchase order.

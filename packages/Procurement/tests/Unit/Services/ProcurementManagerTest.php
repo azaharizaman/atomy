@@ -11,6 +11,8 @@ use Nexus\Procurement\Contracts\PurchaseOrderInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderLineInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderPersistInterface;
+use Nexus\Procurement\Contracts\PurchaseOrderRepositoryInterface;
+use Nexus\Procurement\Contracts\DatabaseTransactionInterface;
 use Nexus\Procurement\Contracts\RequisitionInterface;
 use Nexus\Procurement\Contracts\RequisitionRepositoryInterface;
 use Nexus\Procurement\Contracts\VendorQuoteInterface;
@@ -31,6 +33,7 @@ final class ProcurementManagerTest extends TestCase
     private PurchaseOrderPersistInterface $poPersist;
     private GoodsReceiptRepositoryInterface $grnRepo;
     private VendorQuoteRepositoryInterface $quoteRepo;
+    private DatabaseTransactionInterface $transaction;
     private LoggerInterface $logger;
     private RequisitionManager $requisitionManager;
     private PurchaseOrderManager $purchaseOrderManager;
@@ -46,6 +49,7 @@ final class ProcurementManagerTest extends TestCase
         $this->poPersist = $this->createMock(PurchaseOrderPersistInterface::class);
         $this->grnRepo = $this->createMock(GoodsReceiptRepositoryInterface::class);
         $this->quoteRepo = $this->createMock(VendorQuoteRepositoryInterface::class);
+        $this->transaction = $this->createMock(DatabaseTransactionInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->reqRepo->method('generateNextNumber')->willReturn('REQ-001');
@@ -63,12 +67,16 @@ final class ProcurementManagerTest extends TestCase
         $this->poQuery->method('findByTenantId')->willReturn([]);
         $this->grnRepo->method('findByTenantId')->willReturn([]);
 
+        // Default transaction behavior
+        $this->transaction->method('transactional')->willReturnCallback(fn($cb) => $cb());
+
         $this->requisitionManager = new RequisitionManager($this->reqRepo, $this->logger);
         $this->purchaseOrderManager = new PurchaseOrderManager(
             $this->poQuery,
             $this->poPersist,
             $this->reqRepo,
             $this->requisitionManager,
+            $this->transaction,
             $this->logger,
             10.0
         );

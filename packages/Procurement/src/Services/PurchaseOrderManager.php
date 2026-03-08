@@ -7,6 +7,7 @@ namespace Nexus\Procurement\Services;
 use Nexus\Procurement\Contracts\PurchaseOrderInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderPersistInterface;
+use Nexus\Procurement\Contracts\DatabaseTransactionInterface;
 use Nexus\Procurement\Contracts\RequisitionInterface;
 use Nexus\Procurement\Contracts\RequisitionRepositoryInterface;
 use Nexus\Procurement\Exceptions\PurchaseOrderNotFoundException;
@@ -31,6 +32,7 @@ final readonly class PurchaseOrderManager
         private PurchaseOrderPersistInterface $persist,
         private RequisitionRepositoryInterface $requisitionRepository,
         private RequisitionManager $requisitionManager,
+        private DatabaseTransactionInterface $transaction,
         private LoggerInterface $logger,
         private float $poTolerancePercent = self::DEFAULT_TOLERANCE_PERCENT
     ) {
@@ -108,19 +110,21 @@ final readonly class PurchaseOrderManager
             'total' => $poTotal,
         ]);
 
-        $purchaseOrder = $this->persist->create($tenantId, $requisitionId, $creatorId, $data);
+        return $this->transaction->transactional(function () use ($tenantId, $requisitionId, $creatorId, $data) {
+            $purchaseOrder = $this->persist->create($tenantId, $requisitionId, $creatorId, $data);
 
-        // Mark requisition as converted
-        $this->requisitionManager->markAsConverted($tenantId, $requisitionId, $purchaseOrder);
+            // Mark requisition as converted
+            $this->requisitionManager->markAsConverted($tenantId, $requisitionId, $purchaseOrder);
 
-        $this->logger->info('Purchase order created', [
-            'tenant_id' => $tenantId,
-            'po_id' => $purchaseOrder->getId(),
-            'po_number' => $purchaseOrder->getPoNumber(),
-            'status' => $purchaseOrder->getStatus(),
-        ]);
+            $this->logger->info('Purchase order created', [
+                'tenant_id' => $tenantId,
+                'po_id' => $purchaseOrder->getId(),
+                'po_number' => $purchaseOrder->getPoNumber(),
+                'status' => $purchaseOrder->getStatus(),
+            ]);
 
-        return $purchaseOrder;
+            return $purchaseOrder;
+        });
     }
 
     /**
@@ -182,6 +186,8 @@ final readonly class PurchaseOrderManager
      */
     public function createBlanketRelease(string $tenantId, string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface
     {
+        $this->validateReleaseData($data);
+
         $blanketPo = $this->query->findById($tenantId, $blanketPoId);
 
         if ($blanketPo === null) {
@@ -197,7 +203,7 @@ final readonly class PurchaseOrderManager
             throw BudgetExceededException::blanketPoReleaseExceedsTotal(
                 $blanketPoId,
                 $releaseTotal,
-                $totalCommitted
+                $remainingValue
             );
         }
 
@@ -435,6 +441,23 @@ final readonly class PurchaseOrderManager
 
         if (!isset($data['valid_from']) || !isset($data['valid_until'])) {
             throw InvalidPurchaseOrderDataException::missingRequiredField('valid_from/valid_until');
+        }
+    }
+
+    /**
+     * Validate release data.
+     *
+     * @param array $data
+     * @throws InvalidPurchaseOrderDataException
+     */
+    private function validateReleaseData(array $data): void
+    {
+        if (!isset($data['lines']) || !is_array($data['lines']) || count($data['lines']) === 0) {
+            throw InvalidPurchaseOrderDataException::noLines();
+        }
+
+        if (!isset($data['release_number'])) {
+            throw InvalidPurchaseOrderDataException::missingRequiredField('release_number');
         }
     }
 }

@@ -194,7 +194,7 @@ final readonly class GoodsReceiptContextProvider
         $receivedByLine = [];
         foreach ($receipts as $receipt) {
             foreach ($receipt->getLineItems() as $grLine) {
-                $poLineId = $grLine->getPoLineId();
+                $poLineId = $grLine->getPurchaseOrderLineId();
                 $receivedByLine[$poLineId] = ($receivedByLine[$poLineId] ?? 0.0) + $grLine->getQuantityReceived();
             }
         }
@@ -228,11 +228,11 @@ final readonly class GoodsReceiptContextProvider
         $lineItems = [];
 
         foreach ($goodsReceipt->getLineItems() as $index => $grLine) {
-            $poLine = $poLines[$grLine->getPoLineId()] ?? null;
+            $poLine = $poLines[$grLine->getPurchaseOrderLineId()] ?? null;
 
             $lineItems[$index] = [
                 'lineId' => $grLine->getId(),
-                'poLineId' => $grLine->getPoLineId(),
+                'poLineId' => $grLine->getPurchaseOrderLineId(),
                 'productId' => $grLine->getProductId(),
                 'quantityReceived' => $grLine->getQuantityReceived(),
                 'unitPriceCents' => $poLine ? $poLine['unitPriceCents'] : 0,

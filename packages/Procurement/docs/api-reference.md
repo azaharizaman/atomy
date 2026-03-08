@@ -19,9 +19,9 @@ Complete API documentation for all interfaces, services, and exceptions.
 | Method | Parameters | Returns | Throws |
 |--------|------------|---------|--------|
 | `createRequisition` | `string $tenantId, string $requesterId, array $data` | `RequisitionInterface` | `InvalidRequisitionDataException` |
-| `submitRequisitionForApproval` | `string $requisitionId` | `RequisitionInterface` | `RequisitionNotFoundException`, `InvalidRequisitionStateException` |
-| `approveRequisition` | `string $requisitionId, string $approverId` | `RequisitionInterface` | `RequisitionNotFoundException`, `UnauthorizedApprovalException` |
-| `rejectRequisition` | `string $requisitionId, string $rejectorId, string $reason` | `RequisitionInterface` | `RequisitionNotFoundException` |
+| `submitRequisitionForApproval` | `string $tenantId, string $requisitionId` | `RequisitionInterface` | `RequisitionNotFoundException`, `InvalidRequisitionStateException` |
+| `approveRequisition` | `string $tenantId, string $requisitionId, string $approverId` | `RequisitionInterface` | `RequisitionNotFoundException`, `UnauthorizedApprovalException` |
+| `rejectRequisition` | `string $tenantId, string $requisitionId, string $rejectorId, string $reason` | `RequisitionInterface` | `RequisitionNotFoundException` |
 | `convertRequisitionToPO` | `string $tenantId, string $requisitionId, string $creatorId, array $poData` | `PurchaseOrderInterface` | `RequisitionNotFoundException`, `InvalidRequisitionStateException`, `BudgetExceededException` |
 | `createDirectPO` | `string $tenantId, string $creatorId, array $data` | `PurchaseOrderInterface` | `InvalidPurchaseOrderDataException` |
 | `releasePO` | `string $tenantId, string $poId, string $releasedBy` | `PurchaseOrderInterface` | `PurchaseOrderNotFoundException` |
@@ -297,9 +297,10 @@ echo $requisition->getStatus(); // "approved"
 
 | Method | Parameters | Returns |
 |--------|------------|---------|
-| `findById` | `string $id` | `GoodsReceiptNoteInterface` |
+| `findByTenantAndId` | `string $tenantId, string $id` | `?GoodsReceiptNoteInterface` |
+| `findByNumber` | `string $tenantId, string $grnNumber` | `?GoodsReceiptNoteInterface` |
 | `findByPurchaseOrder` | `string $poId, string $tenantId` | `array<GoodsReceiptNoteInterface>` |
-| `findLineByReference` | `string $poLineReference` | `?GoodsReceiptLineInterface` |
+| `findLineByReference` | `string $tenantId, string $lineReference` | `?GoodsReceiptLineInterface` |
 | `create` | `string $tenantId, string $purchaseOrderId, string $receiverId, array $data` | `GoodsReceiptNoteInterface` |
 | `authorizePayment` | `string $tenantId, string $id, string $authorizerId` | `GoodsReceiptNoteInterface` |
 
