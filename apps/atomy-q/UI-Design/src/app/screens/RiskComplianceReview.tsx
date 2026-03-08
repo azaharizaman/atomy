@@ -31,6 +31,15 @@ const escalations = [
   { id: 'e1', riskId: 'r3', title: 'COI Declaration — TechCorp', escalatedTo: 'Chief Compliance Officer', date: '2d ago', status: 'Pending' },
 ];
 
+const controlSnapshot = {
+  due_diligence_status: 'conditional_pass',
+  fraud_signal_count: 3,
+  fraud_signal_severity: 'high',
+  exception_id: 'EXC-2026-019',
+  expiry_date: '2026-04-30',
+  approver_role: 'Chief Procurement Officer',
+};
+
 const levelConfig: Record<RiskLevel, { bg: string; border: string; text: string; badgeBg: string; badgeText: string; icon: typeof AlertOctagon }> = {
   critical: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badgeBg: 'bg-red-600', badgeText: 'text-white', icon: AlertOctagon },
   high: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badgeBg: 'bg-orange-500', badgeText: 'text-white', icon: AlertTriangle },
@@ -97,6 +106,33 @@ export function RiskComplianceReview() {
           <div className="ml-auto flex items-center gap-1 text-xs text-slate-500">
             <Users size={12} />
             <span>{escalations.length} escalation{escalations.length !== 1 ? 's' : ''} active</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-6 gap-2 mt-3 text-xs">
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <div className="text-slate-400">due_diligence_status</div>
+            <div className="text-slate-700" style={{ fontWeight: 600 }}>{controlSnapshot.due_diligence_status}</div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <div className="text-slate-400">fraud_signal_count</div>
+            <div className="text-slate-700" style={{ fontWeight: 600 }}>{controlSnapshot.fraud_signal_count}</div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <div className="text-slate-400">fraud_signal_severity</div>
+            <div className="text-slate-700" style={{ fontWeight: 600 }}>{controlSnapshot.fraud_signal_severity}</div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <div className="text-slate-400">exception_id</div>
+            <div className="text-slate-700" style={{ fontWeight: 600 }}>{controlSnapshot.exception_id}</div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <div className="text-slate-400">expiry_date</div>
+            <div className="text-slate-700" style={{ fontWeight: 600 }}>{controlSnapshot.expiry_date}</div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <div className="text-slate-400">approver_role</div>
+            <div className="text-slate-700" style={{ fontWeight: 600 }}>{controlSnapshot.approver_role}</div>
           </div>
         </div>
       </div>

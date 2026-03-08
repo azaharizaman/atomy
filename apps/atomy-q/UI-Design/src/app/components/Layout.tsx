@@ -3,8 +3,9 @@ import { Outlet, NavLink, useLocation } from 'react-router';
 import {
   LayoutDashboard, FileText, Inbox, ArrowLeftRight, BarChart3,
   Star, TrendingUp, MessageSquare, PieChart, Users, ShieldAlert,
-  ChevronDown, ChevronRight, Settings, Bell, Search, HelpCircle,
-  LogOut, Zap, Menu, X
+  ChevronDown, Settings, Bell, Search, HelpCircle,
+  Zap, Menu, ListChecks, UserRoundSearch, Scale, Gavel,
+  Award, FileClock, ScrollText, FolderArchive, Workflow, SlidersHorizontal
 } from 'lucide-react';
 
 const navGroups = [
@@ -12,12 +13,15 @@ const navGroups = [
     label: 'Overview',
     items: [
       { path: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+      { path: '/rfq/list', label: 'RFQ List', icon: ListChecks },
     ],
   },
   {
     label: 'Sourcing',
     items: [
       { path: '/rfq/create', label: 'Create RFQ', icon: FileText },
+      { path: '/rfq/detail', label: 'RFQ Detail', icon: FileText },
+      { path: '/vendors/invitations', label: 'Vendor Invitations', icon: UserRoundSearch },
       { path: '/quote-intake', label: 'Quote Intake Inbox', icon: Inbox },
       { path: '/normalization', label: 'Quote Normalization', icon: ArrowLeftRight },
       { path: '/comparison', label: 'Quote Comparison', icon: BarChart3 },
@@ -28,20 +32,30 @@ const navGroups = [
     items: [
       { path: '/scoring', label: 'Scoring Models', icon: Star },
       { path: '/scenarios', label: 'Scenario Simulator', icon: TrendingUp },
+      { path: '/recommendation', label: 'Recommendation', icon: Scale },
       { path: '/negotiations', label: 'Negotiations', icon: MessageSquare },
+      { path: '/award', label: 'Award Decision', icon: Award },
+      { path: '/handoff', label: 'PO/Contract Handoff', icon: FileClock },
     ],
   },
   {
     label: 'Governance',
     items: [
       { path: '/risk', label: 'Risk & Compliance', icon: ShieldAlert },
+      { path: '/approvals/queue', label: 'Approval Queue', icon: Gavel },
+      { path: '/approvals/detail', label: 'Approval Detail', icon: Gavel },
+      { path: '/decision-trail', label: 'Decision Trail', icon: ScrollText },
+      { path: '/evidence-vault', label: 'Evidence Vault', icon: FolderArchive },
       { path: '/reports', label: 'Reports & Analytics', icon: PieChart },
+      { path: '/integration-monitor', label: 'Integration Monitor', icon: Workflow },
     ],
   },
   {
     label: 'Administration',
     items: [
+      { path: '/vendors/performance', label: 'Vendor Performance', icon: BarChart3 },
       { path: '/users', label: 'User & Access', icon: Users },
+      { path: '/admin/settings', label: 'Admin Settings', icon: SlidersHorizontal },
     ],
   },
 ];

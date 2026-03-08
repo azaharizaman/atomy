@@ -60,6 +60,9 @@ export function ScoringModelBuilder() {
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [showViolation, setShowViolation] = useState(false);
+  const [evaluationMethod, setEvaluationMethod] = useState<'lowest_cost' | 'weighted_score' | 'best_value'>('best_value');
+  const [committeeMode, setCommitteeMode] = useState<'single_approver' | 'sequential' | 'parallel' | 'quorum'>('quorum');
+  const [technicalGate, setTechnicalGate] = useState<'enabled' | 'disabled'>('enabled');
 
   const totalWeight = criteria.filter(c => c.enabled).reduce((s, c) => s + c.weight, 0);
   const isViolation = totalWeight !== 100;
@@ -116,6 +119,33 @@ export function ScoringModelBuilder() {
           )}
           <div className="ml-auto w-48 h-2 bg-white rounded-full overflow-hidden border border-slate-200">
             <div className={`h-full rounded-full transition-all ${isViolation ? (totalWeight > 100 ? 'bg-red-500' : 'bg-amber-500') : 'bg-emerald-500'}`} style={{ width: `${Math.min(totalWeight, 100)}%` }} />
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
+            <label className="text-slate-500 text-xs block mb-1" style={{ fontWeight: 600 }}>evaluation_method</label>
+            <select value={evaluationMethod} onChange={(e) => setEvaluationMethod(e.target.value as typeof evaluationMethod)} className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs bg-white text-slate-700">
+              <option value="lowest_cost">lowest_cost</option>
+              <option value="weighted_score">weighted_score</option>
+              <option value="best_value">best_value</option>
+            </select>
+          </div>
+          <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
+            <label className="text-slate-500 text-xs block mb-1" style={{ fontWeight: 600 }}>committee_mode</label>
+            <select value={committeeMode} onChange={(e) => setCommitteeMode(e.target.value as typeof committeeMode)} className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs bg-white text-slate-700">
+              <option value="single_approver">single_approver</option>
+              <option value="sequential">sequential</option>
+              <option value="parallel">parallel</option>
+              <option value="quorum">quorum</option>
+            </select>
+          </div>
+          <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
+            <label className="text-slate-500 text-xs block mb-1" style={{ fontWeight: 600 }}>technical_gate</label>
+            <select value={technicalGate} onChange={(e) => setTechnicalGate(e.target.value as typeof technicalGate)} className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs bg-white text-slate-700">
+              <option value="enabled">enabled</option>
+              <option value="disabled">disabled</option>
+            </select>
           </div>
         </div>
       </div>
