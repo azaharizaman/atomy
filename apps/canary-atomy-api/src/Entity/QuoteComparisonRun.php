@@ -15,9 +15,12 @@ use Symfony\Component\Uid\Ulid;
 #[ORM\UniqueConstraint(name: 'UNIQ_QCR_TENANT_RFQ_IDEMPOTENCY', columns: ['tenant_id', 'rfq_id', 'idempotency_key'])]
 class QuoteComparisonRun
 {
+    public const STATUS_DRAFT = 'draft';
     public const STATUS_PENDING_APPROVAL = 'pending_approval';
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REJECTED = 'rejected';
+    public const STATUS_STALE = 'stale';
+    public const STATUS_DISCARDED = 'discarded';
 
     #[ORM\Id]
     #[ORM\Column(type: UlidType::NAME, unique: true)]
@@ -29,8 +32,20 @@ class QuoteComparisonRun
     #[ORM\Column(name: 'rfq_id', type: 'string', length: 64)]
     private string $rfqId;
 
+    #[ORM\Column(name: 'name', type: 'string', length: 255)]
+    private string $name;
+
+    #[ORM\Column(name: 'description', type: Types::TEXT, nullable: true)]
+    private ?string $description = null;
+
     #[ORM\Column(name: 'idempotency_key', type: 'string', length: 128, nullable: true)]
     private ?string $idempotencyKey = null;
+
+    #[ORM\Column(name: 'is_preview', type: Types::BOOLEAN)]
+    private bool $isPreview;
+
+    #[ORM\Column(name: 'created_by', type: 'string', length: 128, nullable: true)]
+    private ?string $createdBy;
 
     /** @var array<string, mixed> */
     #[ORM\Column(type: Types::JSON)]
@@ -52,8 +67,16 @@ class QuoteComparisonRun
     #[ORM\Column(type: Types::JSON)]
     private array $responsePayload;
 
+    /** @var array<string, mixed> */
+    #[ORM\Column(name: 'readiness_payload', type: Types::JSON)]
+    private array $readinessPayload;
+
     #[ORM\Column(type: 'string', length: 32)]
     private string $status;
+
+    #[ORM\Version]
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $version;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
@@ -61,34 +84,56 @@ class QuoteComparisonRun
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    #[ORM\Column(name: 'expires_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $expiresAt = null;
+
+    #[ORM\Column(name: 'discarded_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $discardedAt = null;
+
+    #[ORM\Column(name: 'discarded_by', type: 'string', length: 128, nullable: true)]
+    private ?string $discardedBy = null;
+
     /**
      * @param array<string, mixed> $requestPayload
      * @param array<string, mixed> $matrixPayload
      * @param array<string, mixed> $scoringPayload
      * @param array<string, mixed> $approvalPayload
      * @param array<string, mixed> $responsePayload
+     * @param array<string, mixed> $readinessPayload
      */
     public function __construct(
         string $tenantId,
         string $rfqId,
+        string $name,
+        ?string $description,
         ?string $idempotencyKey,
+        bool $isPreview,
+        ?string $createdBy,
         array $requestPayload,
         array $matrixPayload,
         array $scoringPayload,
         array $approvalPayload,
         array $responsePayload,
-        string $status
+        array $readinessPayload,
+        string $status,
+        ?\DateTimeImmutable $expiresAt = null,
     ) {
         $this->id = new Ulid();
         $this->tenantId = $tenantId;
         $this->rfqId = $rfqId;
+        $this->name = $name;
+        $this->description = $description;
         $this->idempotencyKey = $idempotencyKey;
+        $this->isPreview = $isPreview;
+        $this->createdBy = $createdBy;
         $this->requestPayload = $requestPayload;
         $this->matrixPayload = $matrixPayload;
         $this->scoringPayload = $scoringPayload;
         $this->approvalPayload = $approvalPayload;
         $this->responsePayload = $responsePayload;
+        $this->readinessPayload = $readinessPayload;
         $this->status = $status;
+        $this->expiresAt = $expiresAt;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -107,9 +152,29 @@ class QuoteComparisonRun
         return $this->rfqId;
     }
 
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
     public function getIdempotencyKey(): ?string
     {
         return $this->idempotencyKey;
+    }
+
+    public function isPreview(): bool
+    {
+        return $this->isPreview;
+    }
+
+    public function getCreatedBy(): ?string
+    {
+        return $this->createdBy;
     }
 
     /** @return array<string, mixed> */
@@ -140,6 +205,27 @@ class QuoteComparisonRun
     public function getResponsePayload(): array
     {
         return $this->responsePayload;
+    }
+
+    /** @return array<string, mixed> */
+    public function getReadinessPayload(): array
+    {
+        return $this->readinessPayload;
+    }
+
+    public function getExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->expiresAt;
+    }
+
+    public function getDiscardedAt(): ?\DateTimeImmutable
+    {
+        return $this->discardedAt;
+    }
+
+    public function getDiscardedBy(): ?string
+    {
+        return $this->discardedBy;
     }
 
     public function getStatus(): string
@@ -176,5 +262,93 @@ class QuoteComparisonRun
     {
         $this->responsePayload = array_merge($this->responsePayload, $responsePayload);
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * Promote a draft/preview run to a saved (active) run.
+     */
+    public function save(string $name, ?string $description, ?string $status, ?\DateTimeImmutable $expiresAt): void
+    {
+        if ($this->status === self::STATUS_DISCARDED) {
+            throw new \DomainException('Cannot save a discarded comparison run.');
+        }
+
+        if ($this->isTerminal()) {
+            throw new \DomainException(sprintf('Cannot save a comparison run in terminal status "%s".', $this->status));
+        }
+
+        $this->name = $name;
+        $this->description = $description;
+        $this->isPreview = false;
+
+        if ($status !== null) {
+            $this->status = $status;
+        }
+
+        $this->expiresAt = $expiresAt;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * Mark the run as discarded (soft-delete with audit trail).
+     */
+    public function discard(string $discardedBy): void
+    {
+        if ($this->status === self::STATUS_DISCARDED) {
+            throw new \DomainException('Comparison run is already discarded.');
+        }
+
+        if ($this->isTerminal()) {
+            throw new \DomainException(sprintf('Cannot discard a comparison run in terminal status "%s".', $this->status));
+        }
+
+        $this->status = self::STATUS_DISCARDED;
+        $this->discardedAt = new \DateTimeImmutable();
+        $this->discardedBy = $discardedBy;
+        $this->updatedAt = $this->discardedAt;
+    }
+
+    /**
+     * Mark the run as stale (invalidated by external change or expiry).
+     */
+    public function markStale(): void
+    {
+        if ($this->status === self::STATUS_DISCARDED) {
+            throw new \DomainException('Cannot mark a discarded comparison run as stale.');
+        }
+
+        if ($this->isTerminal()) {
+            // If already stale, no-op or just skip if we want strictness.
+            // But instruction says: "prevent marking runs that are discarded/finalized and throw"
+            throw new \DomainException(sprintf('Cannot mark a comparison run in terminal status "%s" as stale.', $this->status));
+        }
+
+        $this->status = self::STATUS_STALE;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * Check if the run has expired based on its expiry date.
+     */
+    public function isExpired(): bool
+    {
+        if ($this->expiresAt === null) {
+            return false;
+        }
+
+        return new \DateTimeImmutable() > $this->expiresAt;
+    }
+
+    /**
+     * Whether the run is in a terminal state and can no longer be acted upon.
+     */
+    public function isTerminal(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_APPROVED,
+            self::STATUS_REJECTED,
+            self::STATUS_STALE,
+            self::STATUS_DISCARDED,
+        ], true);
     }
 }

@@ -178,6 +178,29 @@
 - **SOX 404 / GAAP**: Full audit traceability from every normalized cell back to the source PDF snippet.
 - **EU AI Act**: Implementation of human-oversight fields (`verified_value`) and model versioning in extraction logs.
 
+## Sprint 3b Update - March 2026 (Comparison Run Lifecycle)
+
+### Delivered - Comparison Run Lifecycle (Layers 1-2)
+- Added `ComparisonReadinessValidatorInterface` and `ComparisonReadinessValidator` service:
+  - Enforces RFQ closing date check before final runs.
+  - Validates minimum vendor count (2 for final, 1 for preview).
+  - Checks normalization completeness per vendor.
+  - Checks AI confidence thresholds per line item.
+- Added `ComparisonReadinessResultInterface` and `ComparisonReadinessResult` value object.
+- Added `ComparisonNotReadyException` for blocked runs.
+- Updated `BatchQuoteComparisonCoordinator`:
+  - Injected `ComparisonReadinessValidatorInterface`.
+  - Added `previewQuotes()` method for draft/preview runs (relaxed validation).
+  - Refactored `compareQuotes()` to run full validation and include readiness payload.
+- Updated `OrchestratorRequisitionInterface` with `getClosingDate()` and `isClosedForQuotes()`.
+
+### Layer 1 (Procurement) Updates
+- `RequisitionInterface`: Added `getClosingDate()` and `isClosedForQuotes()`.
+- `VendorQuoteInterface`: Added `isLocked()`, `getLockedByRunId()`, `getLockedBy()`, `getLockedAt()`, `getLines()`, `getPaymentTerms()`.
+- `VendorQuoteRepositoryInterface`: Added `lock()`, `unlock()`, `findLockedByRun()`.
+- `VendorQuoteManager`: Added `lockQuote()`, `unlockQuote()`, `unlockAllForRun()` with lock guards on `acceptQuote()`/`rejectQuote()`.
+- Added `QuoteLockedException` and `RfqNotClosedException`.
+
 ## Testing
 - Unit tests for all core services (`QuoteIngestionServiceTest`, `AiSemanticMapperTest`, etc.).
 - Feature test for end-to-end pipeline orchestration (`EndToEndQuoteProcessingTest`).

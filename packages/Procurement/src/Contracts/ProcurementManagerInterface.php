@@ -181,6 +181,36 @@ interface ProcurementManagerInterface
     public function acceptVendorQuote(string $tenantId, string $quoteId, string $acceptorId): VendorQuoteInterface;
 
     /**
+     * Lock vendor quote for a comparison run.
+     *
+     * @param string $tenantId
+     * @param string $quoteId
+     * @param string $comparisonRunId
+     * @param string $lockedBy
+     * @return VendorQuoteInterface
+     */
+    public function lockVendorQuote(string $tenantId, string $quoteId, string $comparisonRunId, string $lockedBy): VendorQuoteInterface;
+
+    /**
+     * Unlock vendor quote.
+     *
+     * @param string $tenantId
+     * @param string $quoteId
+     * @param string $comparisonRunId
+     * @return VendorQuoteInterface
+     */
+    public function unlockVendorQuote(string $tenantId, string $quoteId, string $comparisonRunId): VendorQuoteInterface;
+
+    /**
+     * Unlock all quotes for a comparison run.
+     *
+     * @param string $tenantId
+     * @param string $comparisonRunId
+     * @return int Number of quotes unlocked
+     */
+    public function unlockAllVendorQuotesForRun(string $tenantId, string $comparisonRunId): int;
+
+    /**
      * Authorize payment for goods receipt (requires 3-way match or manual override).
      *
      * @param string $tenantId Tenant ULID

@@ -93,7 +93,7 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function convertRequisitionToPo(
+    public function convertRequisitionToPO(
         string $tenantId,
         string $requisitionId,
         string $creatorId,
@@ -124,7 +124,6 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
             'po_number' => $data['number'] ?? 'N/A',
         ]);
 
-        // For direct PO creation without requisition, we create a blanket PO
         return $this->purchaseOrderManager->createBlanketPo($tenantId, $creatorId, $data);
     }
 
@@ -206,7 +205,7 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     }
 
     /**
-     * Create vendor quote for requisition (RFQ process).
+     * Create vendor quote for requisition.
      *
      * @param string $tenantId
      * @param string $requisitionId
@@ -258,6 +257,48 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
         ]);
 
         return $this->vendorQuoteManager->acceptQuote($tenantId, $quoteId, $acceptorId);
+    }
+
+    /**
+     * Lock a vendor quote for an active comparison run.
+     */
+    public function lockVendorQuote(string $tenantId, string $quoteId, string $comparisonRunId, string $lockedBy): VendorQuoteInterface
+    {
+        $this->logger->info('ProcurementManager: Locking vendor quote', [
+            'tenant_id' => $tenantId,
+            'quote_id' => $quoteId,
+            'comparison_run_id' => $comparisonRunId,
+            'locked_by' => $lockedBy,
+        ]);
+
+        return $this->vendorQuoteManager->lockQuote($tenantId, $quoteId, $comparisonRunId, $lockedBy);
+    }
+
+    /**
+     * Unlock a vendor quote when a comparison run completes or is discarded.
+     */
+    public function unlockVendorQuote(string $tenantId, string $quoteId, string $comparisonRunId): VendorQuoteInterface
+    {
+        $this->logger->info('ProcurementManager: Unlocking vendor quote', [
+            'tenant_id' => $tenantId,
+            'quote_id' => $quoteId,
+            'comparison_run_id' => $comparisonRunId,
+        ]);
+
+        return $this->vendorQuoteManager->unlockQuote($tenantId, $quoteId, $comparisonRunId);
+    }
+
+    /**
+     * Release all locks held by a specific comparison run.
+     */
+    public function unlockAllVendorQuotesForRun(string $tenantId, string $comparisonRunId): int
+    {
+        $this->logger->info('ProcurementManager: Batch unlocking vendor quotes for run', [
+            'tenant_id' => $tenantId,
+            'comparison_run_id' => $comparisonRunId,
+        ]);
+
+        return $this->vendorQuoteManager->unlockAllForRun($tenantId, $comparisonRunId);
     }
 
     /**

@@ -21,6 +21,8 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorProcurementManagerInterface;
+use Nexus\QuotationIntelligence\Services\ComparisonReadinessValidator;
 use Nexus\QuotationIntelligence\Services\HashChainedDecisionTrailWriter;
 use Nexus\QuotationIntelligence\Services\HighRiskApprovalGateService;
 use Nexus\QuotationIntelligence\Services\QuoteComparisonMatrixService;
@@ -131,6 +133,11 @@ final class QuoteWorkflowIntegrationTest extends TestCase
         $this->runRepository = new QuoteComparisonRunRepository($registry);
         $trailRepository = new QuoteDecisionTrailEntryRepository($registry);
 
+        $procurementManager = $this->createMock(OrchestratorProcurementManagerInterface::class);
+        $requisition = $this->createMock(\Nexus\QuotationIntelligence\Contracts\OrchestratorRequisitionInterface::class);
+        $requisition->method('getLines')->willReturn([$this->createMock(\Nexus\QuotationIntelligence\Contracts\OrchestratorRequisitionLineInterface::class)]);
+        $procurementManager->method('getRequisition')->willReturn($requisition);
+
         $this->comparisonService = new QuoteComparisonApplicationService(
             runRepository: $this->runRepository,
             entityManager: $this->entityManager,
@@ -138,7 +145,8 @@ final class QuoteWorkflowIntegrationTest extends TestCase
             riskService: new RuleBasedRiskAssessmentService(new NullLogger()),
             scoringService: new WeightedVendorScoringService(),
             approvalGateService: new HighRiskApprovalGateService(),
-            decisionTrailWriter: new HashChainedDecisionTrailWriter()
+            decisionTrailWriter: new HashChainedDecisionTrailWriter(),
+            readinessValidator: new ComparisonReadinessValidator($procurementManager)
         );
 
         $this->approvalService = new QuoteApprovalApplicationService(

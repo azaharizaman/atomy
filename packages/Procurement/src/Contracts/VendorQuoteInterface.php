@@ -66,16 +66,34 @@ interface VendorQuoteInterface
     public function isValid(): bool;
 
     /**
-     * Get quote line items.
+     * Whether this quote is currently locked by an active comparison run.
+     */
+    public function isLocked(): bool;
+
+    /**
+     * Get the comparison run ID that holds the lock, if any.
+     */
+    public function getLockedByRunId(): ?string;
+
+    /**
+     * Get the user who initiated the lock, if any.
+     */
+    public function getLockedBy(): ?string;
+
+    /**
+     * Get the timestamp when the lock was acquired.
+     */
+    public function getLockedAt(): ?\DateTimeImmutable;
+
+    /**
+     * Get quote lines.
      *
-     * @return array<array{quantity: float, unit_price: float, lead_time_days?: int}>
+     * @return array<array{item_code: string, description: string, quantity: float, unit: string, unit_price: float, lead_time_days?: int}>
      */
     public function getLines(): array;
 
     /**
      * Get payment terms.
-     *
-     * @return string|null
      */
     public function getPaymentTerms(): ?string;
 }
