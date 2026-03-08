@@ -90,7 +90,7 @@ The previous research over-emphasized normalization and under-specified governan
 - Blueprint fit: surface alerts in 13 Risk Review, route to 14/15 approvals, preserve proof in 19 and 21.
 
 3) Tender governance patterns (shortfall)
-- Needed: support two-envelope-style evaluation (technical pass/fail before commercial opening), opening-time locks, and committee log.
+- Needed: support two-envelope style evaluation (technical pass/fail before commercial opening), opening-time locks, and committee log.
 - Blueprint fit: represent via policy flags and workflow gating in 25 Admin Settings, 10 Scoring Model constraints, and 14-15 decision flow.
 
 4) Exception and waiver governance (shortfall)
@@ -115,6 +115,9 @@ To keep active mockups aligned with real operations, validate that screen design
 If any mockup cannot represent these fields, it is a design shortfall to be corrected in the screen blueprint backlog.
 
 ## Technical Strategy for Atomy (Nexus) - Confirmed
+- Continue with `QuotationIntelligence` orchestrator for normalization, scoring orchestration, and evidence traceability.
+- Keep evidence-first design: every adjustment and recommendation must link to source quote text/doc page.
+- Preserve strict audit posture via immutable decision events and role-based approval authorities.
 - **Backend Architecture**: Enforce strict tenant-aware scoping across all repositories and services to prevent cross-tenant data leakage.
 - **CQRS Pattern**: Maintain clean separation between read and write operations via `Query` and `Persist` interface segregation.
 - **Transactional Integrity**: Utilize atomic database transactions for multi-step procurement operations (e.g., PO creation and requisition conversion).
