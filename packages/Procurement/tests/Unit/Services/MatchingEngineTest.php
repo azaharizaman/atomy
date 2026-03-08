@@ -16,7 +16,11 @@ final class MatchingEngineTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->engine = new MatchingEngine($this->createMock(LoggerInterface::class));
+        $this->engine = new MatchingEngine(
+            $this->createMock(LoggerInterface::class),
+            5.0,
+            5.0
+        );
     }
 
     public function test_exact_match_returns_matched(): void

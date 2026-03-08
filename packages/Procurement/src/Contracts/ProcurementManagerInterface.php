@@ -145,12 +145,41 @@ interface ProcurementManagerInterface
     ): array;
 
     /**
+     * Create vendor quote for requisition (RFQ process).
+     *
+     * @param string $tenantId
+     * @param string $requisitionId
+     * @param array $quoteData
+     * @return VendorQuoteInterface
+     */
+    public function createVendorQuote(string $tenantId, string $requisitionId, array $quoteData): VendorQuoteInterface;
+
+    /**
+     * Compare vendor quotes for requisition.
+     *
+     * @param string $tenantId
+     * @param string $requisitionId
+     * @return array Quote comparison matrix
+     */
+    public function compareVendorQuotes(string $tenantId, string $requisitionId): array;
+
+    /**
+     * Accept vendor quote.
+     *
+     * @param string $quoteId
+     * @param string $acceptorId
+     * @return VendorQuoteInterface
+     */
+    public function acceptVendorQuote(string $quoteId, string $acceptorId): VendorQuoteInterface;
+
+    /**
      * Authorize payment for goods receipt (requires 3-way match or manual override).
      *
+     * @param string $tenantId Tenant ULID
      * @param string $grnId GRN ULID
      * @param string $authorizerId User ULID authorizing payment
      * @return GoodsReceiptNoteInterface
      * @throws \Nexus\Procurement\Exceptions\UnauthorizedApprovalException
      */
-    public function authorizeGrnPayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface;
+    public function authorizeGrnPayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface;
 }

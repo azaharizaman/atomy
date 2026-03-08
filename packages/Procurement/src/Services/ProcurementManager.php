@@ -225,16 +225,18 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * Compare vendor quotes for requisition.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @return array Quote comparison matrix
      */
-    public function compareVendorQuotes(string $requisitionId): array
+    public function compareVendorQuotes(string $tenantId, string $requisitionId): array
     {
         $this->logger->info('ProcurementManager: Comparing vendor quotes', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
         ]);
 
-        return $this->vendorQuoteManager->compareQuotes($requisitionId);
+        return $this->vendorQuoteManager->compareQuotes($tenantId, $requisitionId);
     }
 
     /**
@@ -257,18 +259,20 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * Authorize payment for goods receipt.
      *
+     * @param string $tenantId
      * @param string $grnId
      * @param string $authorizerId
      * @return GoodsReceiptNoteInterface
      */
-    public function authorizeGrnPayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface
+    public function authorizeGrnPayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface
     {
         $this->logger->info('ProcurementManager: Authorizing GRN payment', [
+            'tenant_id' => $tenantId,
             'grn_id' => $grnId,
             'authorizer_id' => $authorizerId,
         ]);
 
-        return $this->goodsReceiptManager->authorizePayment($grnId, $authorizerId);
+        return $this->goodsReceiptManager->authorizePayment($tenantId, $grnId, $authorizerId);
     }
 
     /**

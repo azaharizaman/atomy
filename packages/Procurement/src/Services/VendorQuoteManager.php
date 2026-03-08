@@ -132,12 +132,13 @@ final readonly class VendorQuoteManager
     /**
      * Get all quotes for requisition.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @return array<VendorQuoteInterface>
      */
-    public function getQuotesForRequisition(string $requisitionId): array
+    public function getQuotesForRequisition(string $tenantId, string $requisitionId): array
     {
-        return $this->repository->findByRequisitionId($requisitionId);
+        return $this->repository->findByRequisitionId($tenantId, $requisitionId);
     }
 
     /**
@@ -157,6 +158,7 @@ final readonly class VendorQuoteManager
      *
      * Returns comparison matrix for vendor selection.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @return array{
      *   requisition_id: string,
@@ -172,9 +174,9 @@ final readonly class VendorQuoteManager
      *   recommendation: array{quote_id: string, reason: string}|null
      * }
      */
-    public function compareQuotes(string $requisitionId): array
+    public function compareQuotes(string $tenantId, string $requisitionId): array
     {
-        $quotes = $this->repository->findByRequisitionId($requisitionId);
+        $quotes = $this->repository->findByRequisitionId($tenantId, $requisitionId);
 
         $comparison = [
             'requisition_id' => $requisitionId,
@@ -222,6 +224,7 @@ final readonly class VendorQuoteManager
         }
 
         $this->logger->info('Quote comparison generated', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'quote_count' => count($quotes),
             'recommended_quote_id' => $lowestQuoteId,

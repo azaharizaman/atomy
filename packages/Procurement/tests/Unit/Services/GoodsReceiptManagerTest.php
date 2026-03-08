@@ -8,7 +8,7 @@ use Nexus\Procurement\Contracts\GoodsReceiptNoteInterface;
 use Nexus\Procurement\Contracts\GoodsReceiptRepositoryInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderLineInterface;
-use Nexus\Procurement\Contracts\PurchaseOrderRepositoryInterface;
+use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\Procurement\Exceptions\GoodsReceiptNotFoundException;
 use Nexus\Procurement\Exceptions\InvalidGoodsReceiptDataException;
 use Nexus\Procurement\Exceptions\PurchaseOrderNotFoundException;
@@ -20,13 +20,13 @@ use Psr\Log\LoggerInterface;
 final class GoodsReceiptManagerTest extends TestCase
 {
     private GoodsReceiptRepositoryInterface $repository;
-    private PurchaseOrderRepositoryInterface $poRepository;
+    private PurchaseOrderQueryInterface $poRepository;
     private GoodsReceiptManager $manager;
 
     protected function setUp(): void
     {
         $this->repository = $this->createMock(GoodsReceiptRepositoryInterface::class);
-        $this->poRepository = $this->createMock(PurchaseOrderRepositoryInterface::class);
+        $this->poRepository = $this->createMock(PurchaseOrderQueryInterface::class);
         $this->manager = new GoodsReceiptManager(
             $this->repository,
             $this->poRepository,
@@ -101,10 +101,10 @@ final class GoodsReceiptManagerTest extends TestCase
         $this->repository->method('findById')->with('grn-1')->willReturn($grn);
         $this->repository->expects(self::once())
             ->method('authorizePayment')
-            ->with('grn-1', 'authorizer-2')
+            ->with('tenant-1', 'grn-1', 'authorizer-2')
             ->willReturn($authorized);
 
-        $result = $this->manager->authorizePayment('grn-1', 'authorizer-2');
+        $result = $this->manager->authorizePayment('tenant-1', 'grn-1', 'authorizer-2');
 
         self::assertSame($authorized, $result);
     }
@@ -117,7 +117,7 @@ final class GoodsReceiptManagerTest extends TestCase
 
         $this->expectException(UnauthorizedApprovalException::class);
 
-        $this->manager->authorizePayment('grn-1', 'receiver-1');
+        $this->manager->authorizePayment('tenant-1', 'grn-1', 'receiver-1');
     }
 
     public function test_authorize_payment_throws_when_not_found(): void
@@ -126,7 +126,7 @@ final class GoodsReceiptManagerTest extends TestCase
 
         $this->expectException(GoodsReceiptNotFoundException::class);
 
-        $this->manager->authorizePayment('grn-x', 'authorizer-1');
+        $this->manager->authorizePayment('tenant-1', 'grn-x', 'authorizer-1');
     }
 
     public function test_get_goods_receipt_delegates(): void

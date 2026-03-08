@@ -26,12 +26,13 @@ interface VendorQuoteRepositoryInterface
     public function findByRfqNumber(string $rfqNumber): array;
 
     /**
-     * Find all quotes for a requisition.
+     * Find quotes for a requisition.
      *
-     * @param string $requisitionId Requisition ULID
+     * @param string $tenantId
+     * @param string $requisitionId
      * @return array<VendorQuoteInterface>
      */
-    public function findByRequisitionId(string $requisitionId): array;
+    public function findByRequisitionId(string $tenantId, string $requisitionId): array;
 
     /**
      * Find quotes by vendor.

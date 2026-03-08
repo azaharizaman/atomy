@@ -7,7 +7,7 @@ namespace Nexus\Procurement\Services;
 use Nexus\Procurement\Contracts\GoodsReceiptNoteInterface;
 use Nexus\Procurement\Contracts\GoodsReceiptRepositoryInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderInterface;
-use Nexus\Procurement\Contracts\PurchaseOrderRepositoryInterface;
+use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\Procurement\Exceptions\GoodsReceiptNotFoundException;
 use Nexus\Procurement\Exceptions\PurchaseOrderNotFoundException;
 use Nexus\Procurement\Exceptions\InvalidGoodsReceiptDataException;
@@ -25,7 +25,7 @@ final readonly class GoodsReceiptManager
 {
     public function __construct(
         private GoodsReceiptRepositoryInterface $repository,
-        private PurchaseOrderRepositoryInterface $poRepository,
+        private PurchaseOrderQueryInterface $poRepository,
         private LoggerInterface $logger
     ) {
     }
@@ -98,13 +98,14 @@ final readonly class GoodsReceiptManager
      *
      * Enforces segregation of duties: GRN creator cannot authorize payment.
      *
+     * @param string $tenantId
      * @param string $grnId
      * @param string $authorizerId
      * @return GoodsReceiptNoteInterface
      * @throws GoodsReceiptNotFoundException
      * @throws UnauthorizedApprovalException
      */
-    public function authorizePayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface
+    public function authorizePayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface
     {
         $grn = $this->repository->findById($grnId);
 
@@ -118,12 +119,13 @@ final readonly class GoodsReceiptManager
         }
 
         $this->logger->info('Authorizing payment for GRN', [
+            'tenant_id' => $tenantId,
             'grn_id' => $grnId,
             'grn_number' => $grn->getGrnNumber(),
             'authorizer_id' => $authorizerId,
         ]);
 
-        $authorizedGrn = $this->repository->authorizePayment($grnId, $authorizerId);
+        $authorizedGrn = $this->repository->authorizePayment($tenantId, $grnId, $authorizerId);
 
         $this->logger->info('GRN payment authorized', [
             'grn_id' => $grnId,

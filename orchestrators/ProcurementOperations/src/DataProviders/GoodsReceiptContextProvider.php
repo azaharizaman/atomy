@@ -188,7 +188,7 @@ final readonly class GoodsReceiptContextProvider
         }
 
         // Get all receipts for this PO
-        $receipts = $this->goodsReceiptQuery->findByPurchaseOrderId($purchaseOrderId);
+        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrderId);
 
         // Aggregate received quantities by PO line
         $receivedByLine = [];
@@ -307,7 +307,7 @@ final readonly class GoodsReceiptContextProvider
 
         // Calculate total received from all GRs
         $totalReceived = 0.0;
-        $receipts = $this->goodsReceiptQuery->findByPurchaseOrderId($purchaseOrder->getId());
+        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrder->getId());
         foreach ($receipts as $receipt) {
             foreach ($receipt->getLineItems() as $line) {
                 $totalReceived += $line->getQuantityReceived();

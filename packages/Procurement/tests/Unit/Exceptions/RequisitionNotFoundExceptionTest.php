@@ -11,16 +11,18 @@ final class RequisitionNotFoundExceptionTest extends TestCase
 {
     public function test_for_id_returns_correct_message(): void
     {
-        $e = RequisitionNotFoundException::forId('req-123');
-
-        self::assertStringContainsString('req-123', $e->getMessage());
+        $id = 'req-123';
+        $e = RequisitionNotFoundException::forId($id);
+        
+        self::assertSame("Requisition with ID '{$id}' not found.", $e->getMessage());
     }
 
     public function test_for_number_returns_correct_message(): void
     {
-        $e = RequisitionNotFoundException::forNumber('tenant-1', 'REQ-001');
-
-        self::assertStringContainsString('tenant-1', $e->getMessage());
-        self::assertStringContainsString('REQ-001', $e->getMessage());
+        $tenantId = 'tenant-1';
+        $number = 'REQ-001';
+        $e = RequisitionNotFoundException::forNumber($tenantId, $number);
+        
+        self::assertSame("Requisition '{$number}' not found for tenant '{$tenantId}'.", $e->getMessage());
     }
 }

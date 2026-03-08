@@ -30,7 +30,10 @@ Complete API documentation for all interfaces, services, and exceptions.
 | `getPurchaseOrder` | `string $id` | `PurchaseOrderInterface` | `PurchaseOrderNotFoundException` |
 | `getGoodsReceipt` | `string $id` | `GoodsReceiptNoteInterface` | `GoodsReceiptNotFoundException` |
 | `performThreeWayMatch` | `PurchaseOrderLineInterface $poLine, GoodsReceiptLineInterface $grnLine, array $invoiceLineData` | `array` | - |
-| `authorizeGrnPayment` | `string $grnId, string $authorizerId` | `GoodsReceiptNoteInterface` | `UnauthorizedApprovalException` |
+| `createVendorQuote` | `string $tenantId, string $requisitionId, array $quoteData` | `VendorQuoteInterface` | - |
+| `compareVendorQuotes` | `string $tenantId, string $requisitionId` | `array` | - |
+| `acceptVendorQuote` | `string $quoteId, string $acceptorId` | `VendorQuoteInterface` | - |
+| `authorizeGrnPayment` | `string $tenantId, string $grnId, string $authorizerId` | `GoodsReceiptNoteInterface` | `UnauthorizedApprovalException` |
 
 **Example:**
 ```php
@@ -259,8 +262,8 @@ echo $requisition->getStatus(); // "approved"
 | `findById` | `string $id` | `GoodsReceiptNoteInterface` |
 | `findByPurchaseOrder` | `string $poId` | `array<GoodsReceiptNoteInterface>` |
 | `findLineByReference` | `string $poLineReference` | `?GoodsReceiptLineInterface` |
-| `create` | `array $data` | `GoodsReceiptNoteInterface` |
-| `authorizePayment` | `string $id, string $authorizerId` | `GoodsReceiptNoteInterface` |
+| `create` | `string $tenantId, string $purchaseOrderId, string $receiverId, array $data` | `GoodsReceiptNoteInterface` |
+| `authorizePayment` | `string $tenantId, string $id, string $authorizerId` | `GoodsReceiptNoteInterface` |
 
 ---
 
@@ -275,8 +278,8 @@ echo $requisition->getStatus(); // "approved"
 | Method | Parameters | Returns |
 |--------|------------|---------|
 | `findById` | `string $id` | `VendorQuoteInterface` |
-| `findByRequisition` | `string $requisitionId` | `array<VendorQuoteInterface>` |
-| `create` | `array $data` | `VendorQuoteInterface` |
+| `findByRequisitionId` | `string $tenantId, string $requisitionId` | `array<VendorQuoteInterface>` |
+| `create` | `string $tenantId, string $requisitionId, array $data` | `VendorQuoteInterface` |
 | `updateStatus` | `string $id, string $status` | `VendorQuoteInterface` |
 
 ---
@@ -596,7 +599,7 @@ $po = $manager->releasePO($po->getId(), $buyerId);
 $grn = $manager->recordGoodsReceipt($tenantId, $po->getId(), $receiverId, $grnData);
 
 // Step 7: Authorize payment (by different user)
-$grn = $manager->authorizeGrnPayment($grn->getId(), $authorizerId);
+$grn = $manager->authorizeGrnPayment($tenantId, $grn->getId(), $authorizerId);
 ```
 
 ### Pattern 2: 3-Way Matching Integration

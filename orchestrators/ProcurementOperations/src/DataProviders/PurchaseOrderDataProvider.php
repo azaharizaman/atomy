@@ -177,7 +177,7 @@ final readonly class PurchaseOrderDataProvider
             return [];
         }
 
-        $receipts = $this->goodsReceiptQuery->findByPurchaseOrderId($purchaseOrderId);
+        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrderId);
         $receivedByLine = [];
 
         foreach ($receipts as $receipt) {
@@ -201,7 +201,7 @@ final readonly class PurchaseOrderDataProvider
             return [];
         }
 
-        $receipts = $this->goodsReceiptQuery->findByPurchaseOrderId($purchaseOrderId);
+        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrderId);
 
         return array_map(fn($receipt) => $receipt->getId(), $receipts);
     }

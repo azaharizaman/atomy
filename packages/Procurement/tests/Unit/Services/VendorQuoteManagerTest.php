@@ -105,10 +105,10 @@ final class VendorQuoteManagerTest extends TestCase
 
         $this->repository->expects(self::once())
             ->method('findByRequisitionId')
-            ->with('req-1')
+            ->with('tenant-1', 'req-1')
             ->willReturn([$quote]);
 
-        $result = $this->manager->getQuotesForRequisition('req-1');
+        $result = $this->manager->getQuotesForRequisition('tenant-1', 'req-1');
 
         self::assertSame([$quote], $result);
     }
@@ -129,16 +129,29 @@ final class VendorQuoteManagerTest extends TestCase
 
     public function test_compare_quotes_returns_matrix_with_recommendation(): void
     {
-        $quote = $this->createMockQuoteWithLines('quote-1', 'vendor-1', 100, [['qty' => 10, 'price' => 10]]);
+        // Quote 1: Total 1000
+        $quote1 = $this->createMockQuoteWithLines('quote-1', 'vendor-1', 1000.0, [
+            ['qty' => 10, 'price' => 100]
+        ]);
+        
+        // Quote 2: Total 800 (The winner)
+        $quote2 = $this->createMockQuoteWithLines('quote-2', 'vendor-2', 800.0, [
+            ['qty' => 10, 'price' => 80]
+        ]);
 
-        $this->repository->method('findByRequisitionId')->with('req-1')->willReturn([$quote]);
+        $this->repository->method('findByRequisitionId')
+            ->with('tenant-1', 'req-1')
+            ->willReturn([$quote1, $quote2]);
 
-        $result = $this->manager->compareQuotes('req-1');
+        $result = $this->manager->compareQuotes('tenant-1', 'req-1');
 
         self::assertSame('req-1', $result['requisition_id']);
-        self::assertSame(1, $result['quote_count']);
-        self::assertNotEmpty($result['quotes']);
+        self::assertSame(2, $result['quote_count']);
+        self::assertCount(2, $result['quotes']);
+        
         self::assertArrayHasKey('recommendation', $result);
+        self::assertSame('quote-2', $result['recommendation']['quote_id']);
+        self::assertStringContainsString('Lowest total quoted price', $result['recommendation']['reason']);
     }
 
     private function createMockQuote(string $id, string $rfqNumber, string $vendorId, string $status): VendorQuoteInterface
@@ -155,10 +168,23 @@ final class VendorQuoteManagerTest extends TestCase
     private function createMockQuoteWithLines(string $id, string $vendorId, float $total, array $lines): VendorQuoteInterface
     {
         $lineData = [];
-        foreach ($lines as $l) {
-            $qty = $l['qty'] ?? 1;
-            $price = $l['price'] ?? 10;
-            $lineData[] = ['quantity' => $qty, 'unit_price' => $price, 'lead_time_days' => 7];
+        // If $total is provided but lines don't sum up, we adjust the first line to match $total for testing
+        $currentSum = 0.0;
+        foreach ($lines as $index => $l) {
+            $qty = $l['qty'] ?? 1.0;
+            $price = $l['price'] ?? 10.0;
+            
+            if ($index === 0 && count($lines) === 1) {
+                // Single line matches total
+                $price = $total / $qty;
+            }
+            
+            $lineData[] = [
+                'quantity' => (float)$qty,
+                'unit_price' => (float)$price,
+                'lead_time_days' => 7
+            ];
+            $currentSum += ($qty * $price);
         }
 
         $q = $this->createMock(VendorQuoteInterface::class);

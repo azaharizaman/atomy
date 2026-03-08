@@ -68,13 +68,14 @@ interface GoodsReceiptRepositoryInterface
     public function create(string $tenantId, string $purchaseOrderId, string $receiverId, array $data): GoodsReceiptNoteInterface;
 
     /**
-     * Authorize payment for GRN.
+     * Authorize payment for goods receipt.
      *
+     * @param string $tenantId
      * @param string $grnId
      * @param string $authorizerId
      * @return GoodsReceiptNoteInterface
      */
-    public function authorizePayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface;
+    public function authorizePayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface;
 
     /**
      * Save GRN.
