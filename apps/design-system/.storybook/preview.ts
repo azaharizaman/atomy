@@ -1,22 +1,26 @@
-import type { Preview } from '@storybook/react';
+import type { Preview } from '@storybook/react-vite';
 import '../src/styles/globals.css';
 
 const preview: Preview = {
   parameters: {
     layout: 'centered',
     controls: {
+      expanded: true,
       matchers: {
         color: /(background|color)$/i,
         date: /Date$/i,
       },
+      sort: 'requiredFirst',
+    },
+    actions: {
+      argTypesRegex: '^on[A-Z].*',
     },
     backgrounds: {
-      default: 'canvas',
-      values: [
-        { name: 'canvas', value: '#f8fafc' },
-        { name: 'surface', value: '#ffffff' },
-        { name: 'dark', value: '#0f172a' },
-      ],
+      options: {
+        canvas: { name: 'Canvas', value: '#f8fafc' },
+        surface: { name: 'Surface', value: '#ffffff' },
+        dark: { name: 'Dark', value: '#0f172a' },
+      },
     },
     options: {
       storySort: {
@@ -27,6 +31,8 @@ const preview: Preview = {
           ['Colors', 'Typography', 'Spacing', 'Elevation', 'Icons'],
           'Components',
           ['Basic', 'Form', 'Data', 'Navigation', 'Feedback'],
+          'Layouts',
+          ['Page Layouts', 'Modal Layouts'],
           'Patterns',
           ['Interaction Patterns', 'Data Display', 'Permission & Roles', 'Workflow Patterns'],
           'Examples',
@@ -35,6 +41,12 @@ const preview: Preview = {
       },
     },
   },
+  initialGlobals: {
+    backgrounds: {
+      value: 'canvas',
+    },
+  },
+  tags: ['autodocs'],
 };
 
 export default preview;

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AtomyQTooltip } from './AtomyQTooltip';
 import { AtomyQButton } from './AtomyQButton';
 import { AtomyQIconButton } from './AtomyQIconButton';

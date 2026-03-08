@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AtomyQTable, type AtomyQColumnDef } from '../components/data/AtomyQTable';
 import { AtomyQBadge } from '../components/basic/AtomyQBadge';
 import { AtomyQButton } from '../components/basic/AtomyQButton';
