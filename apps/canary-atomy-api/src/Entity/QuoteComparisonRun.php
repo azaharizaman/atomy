@@ -74,6 +74,10 @@ class QuoteComparisonRun
     #[ORM\Column(type: 'string', length: 32)]
     private string $status;
 
+    #[ORM\Version]
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $version;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
@@ -265,6 +269,14 @@ class QuoteComparisonRun
      */
     public function save(string $name, ?string $description, ?string $status, ?\DateTimeImmutable $expiresAt): void
     {
+        if ($this->status === self::STATUS_DISCARDED) {
+            throw new \DomainException('Cannot save a discarded comparison run.');
+        }
+
+        if ($this->isTerminal()) {
+            throw new \DomainException(sprintf('Cannot save a comparison run in terminal status "%s".', $this->status));
+        }
+
         $this->name = $name;
         $this->description = $description;
         $this->isPreview = false;
@@ -282,6 +294,14 @@ class QuoteComparisonRun
      */
     public function discard(string $discardedBy): void
     {
+        if ($this->status === self::STATUS_DISCARDED) {
+            throw new \DomainException('Comparison run is already discarded.');
+        }
+
+        if ($this->isTerminal()) {
+            throw new \DomainException(sprintf('Cannot discard a comparison run in terminal status "%s".', $this->status));
+        }
+
         $this->status = self::STATUS_DISCARDED;
         $this->discardedAt = new \DateTimeImmutable();
         $this->discardedBy = $discardedBy;
@@ -293,6 +313,16 @@ class QuoteComparisonRun
      */
     public function markStale(): void
     {
+        if ($this->status === self::STATUS_DISCARDED) {
+            throw new \DomainException('Cannot mark a discarded comparison run as stale.');
+        }
+
+        if ($this->isTerminal()) {
+            // If already stale, no-op or just skip if we want strictness.
+            // But instruction says: "prevent marking runs that are discarded/finalized and throw"
+            throw new \DomainException(sprintf('Cannot mark a comparison run in terminal status "%s" as stale.', $this->status));
+        }
+
         $this->status = self::STATUS_STALE;
         $this->updatedAt = new \DateTimeImmutable();
     }

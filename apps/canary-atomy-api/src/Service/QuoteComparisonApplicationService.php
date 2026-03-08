@@ -16,7 +16,7 @@ use Nexus\QuotationIntelligence\Services\RuleBasedRiskAssessmentService;
 use Nexus\QuotationIntelligence\Services\WeightedVendorScoringService;
 use Nexus\QuotationIntelligence\Services\HighRiskApprovalGateService;
 use Nexus\QuotationIntelligence\Services\HashChainedDecisionTrailWriter;
-use Nexus\QuotationIntelligence\Services\ComparisonReadinessValidator;
+use Nexus\QuotationIntelligence\Contracts\ComparisonReadinessValidatorInterface;
 
 final readonly class QuoteComparisonApplicationService
 {
@@ -28,7 +28,7 @@ final readonly class QuoteComparisonApplicationService
         private WeightedVendorScoringService $scoringService,
         private HighRiskApprovalGateService $approvalGateService,
         private HashChainedDecisionTrailWriter $decisionTrailWriter,
-        private ComparisonReadinessValidator $readinessValidator,
+        private ComparisonReadinessValidatorInterface $readinessValidator,
     ) {
     }
 

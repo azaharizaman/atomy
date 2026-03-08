@@ -6,20 +6,28 @@ namespace Nexus\QuotationIntelligence\Exceptions;
 
 use Nexus\QuotationIntelligence\Contracts\ComparisonReadinessResultInterface;
 
-final class ComparisonNotReadyException extends QuotationIntelligenceException
+/**
+ * Exception thrown when a comparison run is attempted but requirements are not met.
+ */
+class ComparisonNotReadyException extends \RuntimeException
 {
     private ComparisonReadinessResultInterface $result;
 
+    private function __construct(string $message)
+    {
+        parent::__construct($message);
+    }
+
     public static function fromResult(ComparisonReadinessResultInterface $result): self
     {
-        $messages = array_map(
-            static fn(array $b): string => $b['message'],
-            $result->getBlockers()
-        );
+        $errors = $result->getBlockers();
+        if ($errors === [] && $result->isPreviewOnly()) {
+            $errors = $result->getWarnings();
+        }
 
-        $exception = new self(
-            sprintf('Comparison run blocked: %s', implode('; ', $messages))
-        );
+        $blockerMessages = array_map(static fn(array $b) => $b['message'] ?? 'Unknown error', $errors);
+        $message = "Comparison is not ready: " . implode(', ', $blockerMessages);
+        $exception = new self($message);
         $exception->result = $result;
 
         return $exception;

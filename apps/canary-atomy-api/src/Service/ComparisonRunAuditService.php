@@ -25,6 +25,9 @@ final readonly class ComparisonRunAuditService
     private const RECORD_TYPE_REJECTED = 'comparison_run.rejected';
     private const RECORD_TYPE_STALE = 'comparison_run.stale';
 
+    private const SYSTEM_CAUSER_TYPE = 'System';
+    private const SYSTEM_CAUSER_ID = 'cleanup-worker';
+
     public function __construct(
         private AuditEngineInterface $auditEngine,
     ) {
@@ -134,6 +137,8 @@ final readonly class ComparisonRunAuditService
             description: sprintf('Comparison run "%s" marked stale: %s', $run->getName(), $reason),
             subjectType: self::SUBJECT_TYPE,
             subjectId: (string) $run->getId(),
+            causerType: self::SYSTEM_CAUSER_TYPE,
+            causerId: self::SYSTEM_CAUSER_ID,
             properties: [
                 'rfq_id' => $run->getRfqId(),
                 'reason' => $reason,

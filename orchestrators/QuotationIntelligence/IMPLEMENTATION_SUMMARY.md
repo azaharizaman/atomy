@@ -178,7 +178,7 @@
 - **SOX 404 / GAAP**: Full audit traceability from every normalized cell back to the source PDF snippet.
 - **EU AI Act**: Implementation of human-oversight fields (`verified_value`) and model versioning in extraction logs.
 
-## Sprint 3 Update - March 2026
+## Sprint 3b Update - March 2026 (Comparison Run Lifecycle)
 
 ### Delivered - Comparison Run Lifecycle (Layers 1-2)
 - Added `ComparisonReadinessValidatorInterface` and `ComparisonReadinessValidator` service:

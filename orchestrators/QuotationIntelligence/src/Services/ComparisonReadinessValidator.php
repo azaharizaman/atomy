@@ -41,6 +41,11 @@ final readonly class ComparisonReadinessValidator implements ComparisonReadiness
             return ComparisonReadinessResult::blocked($blockers, $warnings);
         }
 
+        /**
+         * Dual-flag pattern: ready=true with previewOnly=true means no blocking errors,
+         * but warnings suggest restricting execution to preview-only mode.
+         * Callers like BatchQuoteComparisonCoordinator check isReady() to proceed.
+         */
         if ($warnings !== [] && !$isPreview) {
             return ComparisonReadinessResult::previewAllowed($warnings);
         }
@@ -79,7 +84,7 @@ final readonly class ComparisonReadinessValidator implements ComparisonReadiness
             return;
         }
 
-        $closingDate = $this->extractClosingDate($requisition);
+        $closingDate = $requisition->getClosingDate();
         if ($closingDate === null) {
             $warnings[] = [
                 'code' => 'RFQ_NO_CLOSING_DATE',
@@ -214,11 +219,5 @@ final readonly class ComparisonReadinessValidator implements ComparisonReadiness
                 }
             }
         }
-    }
-
-    private function extractClosingDate(
-        \Nexus\QuotationIntelligence\Contracts\OrchestratorRequisitionInterface $requisition
-    ): ?\DateTimeImmutable {
-        return $requisition->getClosingDate();
     }
 }

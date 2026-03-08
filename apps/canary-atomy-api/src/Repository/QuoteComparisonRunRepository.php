@@ -44,9 +44,10 @@ final class QuoteComparisonRunRepository extends ServiceEntityRepository
             ->setParameter('tenantId', $tenantId)
             ->setParameter('rfqId', $rfqId)
             ->setParameter('terminal', [
+                QuoteComparisonRun::STATUS_APPROVED,
+                QuoteComparisonRun::STATUS_REJECTED,
                 QuoteComparisonRun::STATUS_STALE,
                 QuoteComparisonRun::STATUS_DISCARDED,
-                QuoteComparisonRun::STATUS_REJECTED,
             ])
             ->orderBy('r.createdAt', 'DESC')
             ->getQuery()
@@ -58,12 +59,14 @@ final class QuoteComparisonRunRepository extends ServiceEntityRepository
      *
      * @return array<QuoteComparisonRun>
      */
-    public function findStaleDraftsBefore(\DateTimeImmutable $cutoff): array
+    public function findStaleDraftsBefore(string $tenantId, \DateTimeImmutable $cutoff): array
     {
         return $this->createQueryBuilder('r')
-            ->where('r.status = :draft')
+            ->where('r.tenantId = :tenantId')
+            ->andWhere('r.status = :draft')
             ->andWhere('r.isPreview = :notPreview')
-            ->andWhere('r.createdAt < :cutoff')
+            ->andWhere('COALESCE(r.updatedAt, r.createdAt) < :cutoff')
+            ->setParameter('tenantId', $tenantId)
             ->setParameter('draft', QuoteComparisonRun::STATUS_DRAFT)
             ->setParameter('notPreview', false)
             ->setParameter('cutoff', $cutoff)
@@ -76,12 +79,14 @@ final class QuoteComparisonRunRepository extends ServiceEntityRepository
      *
      * @return array<QuoteComparisonRun>
      */
-    public function findExpiredRuns(): array
+    public function findExpiredRuns(string $tenantId): array
     {
         return $this->createQueryBuilder('r')
-            ->where('r.expiresAt IS NOT NULL')
+            ->where('r.tenantId = :tenantId')
+            ->andWhere('r.expiresAt IS NOT NULL')
             ->andWhere('r.expiresAt < :now')
             ->andWhere('r.status NOT IN (:terminal)')
+            ->setParameter('tenantId', $tenantId)
             ->setParameter('now', new \DateTimeImmutable())
             ->setParameter('terminal', [
                 QuoteComparisonRun::STATUS_APPROVED,

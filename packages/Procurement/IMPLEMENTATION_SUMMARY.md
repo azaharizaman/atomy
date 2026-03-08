@@ -75,18 +75,20 @@ packages/Procurement/
 │   │   ├── GoodsReceiptManager.php        # GRN creation + payment auth
 │   │   ├── MatchingEngine.php             # 3-way matching (PER-PRO-0327)
 │   │   └── VendorQuoteManager.php         # RFQ + quote comparison
-│   │
-│   └── Exceptions/          # 12 exception classes
-│       ├── ProcurementException.php (base)
-│       ├── RequisitionNotFoundException.php
-│       ├── PurchaseOrderNotFoundException.php
-│       ├── GoodsReceiptNotFoundException.php
-│       ├── InvalidRequisitionStateException.php
-│       ├── BudgetExceededException.php
-│       ├── UnauthorizedApprovalException.php
-│       ├── InvalidRequisitionDataException.php
-│       ├── InvalidPurchaseOrderDataException.php
-│       ├── InvalidGoodsReceiptDataException.php
+└── Exceptions/          # 12 exception classes
+    ├── ProcurementException.php (base)
+    ├── RequisitionNotFoundException.php
+    ├── PurchaseOrderNotFoundException.php
+    ├── GoodsReceiptNotFoundException.php
+    ├── VendorQuoteNotFoundException.php
+    ├── InvalidRequisitionStateException.php
+    ├── BudgetExceededException.php
+    ├── UnauthorizedApprovalException.php
+    ├── InvalidRequisitionDataException.php
+    ├── InvalidPurchaseOrderDataException.php
+    ├── InvalidGoodsReceiptDataException.php
+    ├── QuoteLockedException.php
+    └── RfqNotClosedException.php
 │       ├── QuoteLockedException.php
 │       └── RfqNotClosedException.php
 ```
@@ -863,7 +865,7 @@ echo "Elapsed: {$result['elapsed_ms']}ms\n";
 **Package Quality Metrics:**
 - 12 interfaces
 - 6 service classes
-- 10 exception classes
+- 12 exception classes
 - 7 database tables
 - 7 Eloquent models
 - 4 repository implementations

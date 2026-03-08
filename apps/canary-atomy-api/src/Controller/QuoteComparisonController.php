@@ -59,7 +59,12 @@ final class QuoteComparisonController extends AbstractController
                 $payload,
                 $idempotencyKey
             );
-            $result = $this->comparisonService->compare($tenantId, $requestDto);
+            $result = $this->comparisonService->compare(
+                $tenantId,
+                $requestDto,
+                $requestDto->isPreview,
+                (string)$user->getId()
+            );
         } catch (\InvalidArgumentException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
         } catch (\Throwable $e) {

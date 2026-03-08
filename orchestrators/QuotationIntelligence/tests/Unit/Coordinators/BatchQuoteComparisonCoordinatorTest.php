@@ -14,6 +14,7 @@ use Nexus\QuotationIntelligence\Contracts\ApprovalGateServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Nexus\QuotationIntelligence\Exceptions\MissingVendorContextException;
 use Nexus\QuotationIntelligence\ValueObjects\ComparisonReadinessResult;
+use Nexus\QuotationIntelligence\Exceptions\ComparisonNotReadyException;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -24,6 +25,78 @@ final class BatchQuoteComparisonCoordinatorTest extends TestCase
         $validator = $this->createMock(ComparisonReadinessValidatorInterface::class);
         $validator->method('validate')->willReturn(ComparisonReadinessResult::pass());
         return $validator;
+    }
+
+    private function createFailingReadinessValidator(string $reason): ComparisonReadinessValidatorInterface
+    {
+        $validator = $this->createMock(ComparisonReadinessValidatorInterface::class);
+        $validator->method('validate')->willReturn(ComparisonReadinessResult::blocked([
+            ['code' => 'ERROR', 'message' => $reason]
+        ], []));
+        return $validator;
+    }
+
+    private function createPreviewOnlyReadinessValidator(): ComparisonReadinessValidatorInterface
+    {
+        $validator = $this->createMock(ComparisonReadinessValidatorInterface::class);
+        $validator->method('validate')->willReturn(ComparisonReadinessResult::previewAllowed([
+            ['code' => 'WARN', 'message' => 'Preview only']
+        ]));
+        return $validator;
+    }
+
+    public function test_compare_quotes_throws_when_not_ready(): void
+    {
+        $quoteCoordinator = $this->createMock(QuotationIntelligenceCoordinatorInterface::class);
+        $matrixService = $this->createMock(QuoteComparisonMatrixServiceInterface::class);
+        $riskService = $this->createMock(RiskAssessmentServiceInterface::class);
+        $scoringService = $this->createMock(VendorScoringServiceInterface::class);
+        $approvalGateService = $this->createMock(ApprovalGateServiceInterface::class);
+        $decisionTrailWriter = $this->createMock(DecisionTrailWriterInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+
+        $coordinator = new BatchQuoteComparisonCoordinator(
+            $quoteCoordinator,
+            $matrixService,
+            $riskService,
+            $scoringService,
+            $approvalGateService,
+            $decisionTrailWriter,
+            $this->createFailingReadinessValidator('Some blocker'),
+            $logger
+        );
+
+        $this->expectException(ComparisonNotReadyException::class);
+        $this->expectExceptionMessage('Comparison is not ready: Some blocker');
+
+        $coordinator->compareQuotes('tenant-1', 'rfq-1', ['doc-a']);
+    }
+
+    public function test_compare_quotes_throws_when_preview_only_and_final_run_attempted(): void
+    {
+        $quoteCoordinator = $this->createMock(QuotationIntelligenceCoordinatorInterface::class);
+        $matrixService = $this->createMock(QuoteComparisonMatrixServiceInterface::class);
+        $riskService = $this->createMock(RiskAssessmentServiceInterface::class);
+        $scoringService = $this->createMock(VendorScoringServiceInterface::class);
+        $approvalGateService = $this->createMock(ApprovalGateServiceInterface::class);
+        $decisionTrailWriter = $this->createMock(DecisionTrailWriterInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+
+        $coordinator = new BatchQuoteComparisonCoordinator(
+            $quoteCoordinator,
+            $matrixService,
+            $riskService,
+            $scoringService,
+            $approvalGateService,
+            $decisionTrailWriter,
+            $this->createPreviewOnlyReadinessValidator(),
+            $logger
+        );
+
+        // When isReady() is false (which previewAllowed() sets to false for final runs)
+        $this->expectException(ComparisonNotReadyException::class);
+
+        $coordinator->compareQuotes('tenant-1', 'rfq-1', ['doc-a']);
     }
 
     public function test_compare_quotes_adds_peer_anomaly_risk(): void

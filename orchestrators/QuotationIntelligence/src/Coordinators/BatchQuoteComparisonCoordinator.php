@@ -76,7 +76,12 @@ final readonly class BatchQuoteComparisonCoordinator implements BatchQuoteCompar
         $vendorLineSets = array_values($vendorLineSets);
 
         $readiness = $this->readinessValidator->validate($tenantId, $rfqId, $vendorLineSets, $isPreview);
+        
         if (!$readiness->isReady()) {
+            throw ComparisonNotReadyException::fromResult($readiness);
+        }
+
+        if (!$isPreview && $readiness->isPreviewOnly()) {
             throw ComparisonNotReadyException::fromResult($readiness);
         }
 
