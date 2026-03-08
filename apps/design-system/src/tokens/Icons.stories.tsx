@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   LayoutDashboard, FileText, Inbox, GitCompare, Building2, CheckCircle,
   MessageSquare, History, Settings2, Shield, AlertTriangle, BarChart3,

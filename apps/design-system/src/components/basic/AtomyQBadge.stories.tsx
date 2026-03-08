@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AtomyQBadge } from './AtomyQBadge';
 
 const meta: Meta<typeof AtomyQBadge> = {

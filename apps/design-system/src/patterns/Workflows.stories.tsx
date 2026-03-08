@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AtomyQStepper, type StepItem } from '../components/navigation/AtomyQStepper';
 import { AtomyQBadge } from '../components/basic/AtomyQBadge';
 
