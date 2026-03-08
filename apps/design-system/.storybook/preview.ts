@@ -4,22 +4,24 @@ import '../src/styles/globals.css';
 const preview: Preview = {
   parameters: {
     layout: 'centered',
-
     controls: {
+      expanded: true,
       matchers: {
         color: /(background|color)$/i,
         date: /Date$/i,
       },
+      sort: 'requiredFirst',
     },
-
+    actions: {
+      argTypesRegex: '^on[A-Z].*',
+    },
     backgrounds: {
       options: {
-        canvas: { name: 'canvas', value: '#f8fafc' },
-        surface: { name: 'surface', value: '#ffffff' },
-        dark: { name: 'dark', value: '#0f172a' }
-      }
+        canvas: { name: 'Canvas', value: '#f8fafc' },
+        surface: { name: 'Surface', value: '#ffffff' },
+        dark: { name: 'Dark', value: '#0f172a' },
+      },
     },
-
     options: {
       storySort: {
         order: [
@@ -29,6 +31,8 @@ const preview: Preview = {
           ['Colors', 'Typography', 'Spacing', 'Elevation', 'Icons'],
           'Components',
           ['Basic', 'Form', 'Data', 'Navigation', 'Feedback'],
+          'Layouts',
+          ['Page Layouts', 'Modal Layouts'],
           'Patterns',
           ['Interaction Patterns', 'Data Display', 'Permission & Roles', 'Workflow Patterns'],
           'Examples',
@@ -36,20 +40,13 @@ const preview: Preview = {
         ],
       },
     },
-
-    a11y: {
-      // 'todo' - show a11y violations in the test UI only
-      // 'error' - fail CI on a11y violations
-      // 'off' - skip a11y checks entirely
-      test: 'todo'
-    }
   },
-
   initialGlobals: {
     backgrounds: {
-      value: 'canvas'
-    }
-  }
+      value: 'canvas',
+    },
+  },
+  tags: ['autodocs'],
 };
 
 export default preview;
