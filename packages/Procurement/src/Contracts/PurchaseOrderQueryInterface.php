@@ -12,10 +12,11 @@ interface PurchaseOrderQueryInterface
     /**
      * Find purchase order by ID.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id PO ULID
      * @return PurchaseOrderInterface|null
      */
-    public function findById(string $id): ?PurchaseOrderInterface;
+    public function findById(string $tenantId, string $id): ?PurchaseOrderInterface;
 
     /**
      * Find purchase order by PO number.
@@ -29,10 +30,11 @@ interface PurchaseOrderQueryInterface
     /**
      * Find purchase order line by reference.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $lineReference PO line reference
      * @return PurchaseOrderLineInterface|null
      */
-    public function findLineByReference(string $lineReference): ?PurchaseOrderLineInterface;
+    public function findLineByReference(string $tenantId, string $lineReference): ?PurchaseOrderLineInterface;
 
     /**
      * Find POs by tenant.

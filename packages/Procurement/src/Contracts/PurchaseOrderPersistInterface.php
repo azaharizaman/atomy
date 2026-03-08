@@ -61,16 +61,18 @@ interface PurchaseOrderPersistInterface
      *
      * @param string $poId
      * @param string $approverId
+     * @param string $tenantId
      * @return PurchaseOrderInterface
      */
-    public function approve(string $poId, string $approverId): PurchaseOrderInterface;
+    public function approve(string $poId, string $approverId, string $tenantId): PurchaseOrderInterface;
 
     /**
      * Update PO status.
      *
      * @param string $poId
      * @param string $status
+     * @param string $tenantId
      * @return PurchaseOrderInterface
      */
-    public function updateStatus(string $poId, string $status): PurchaseOrderInterface;
+    public function updateStatus(string $poId, string $status, string $tenantId): PurchaseOrderInterface;
 }

@@ -169,7 +169,6 @@ final class VendorQuoteManagerTest extends TestCase
     {
         $lineData = [];
         // If $total is provided but lines don't sum up, we adjust the first line to match $total for testing
-        $currentSum = 0.0;
         foreach ($lines as $index => $l) {
             $qty = $l['qty'] ?? 1.0;
             $price = $l['price'] ?? 10.0;
@@ -184,7 +183,6 @@ final class VendorQuoteManagerTest extends TestCase
                 'unit_price' => (float)$price,
                 'lead_time_days' => 7
             ];
-            $currentSum += ($qty * $price);
         }
 
         $q = $this->createMock(VendorQuoteInterface::class);

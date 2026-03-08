@@ -39,7 +39,7 @@ final class GoodsReceiptManagerTest extends TestCase
         $po = $this->createMockPoWithLines('po-1', 'PO-001', 'creator-1', [['ref' => 'PO-001-L1', 'qty' => 10]]);
         $grn = $this->createMockGrn('grn-1', 'GRN-001');
 
-        $this->poRepository->method('findById')->with('po-1')->willReturn($po);
+        $this->poRepository->method('findById')->with('tenant-1', 'po-1')->willReturn($po);
         $this->repository->expects(self::once())
             ->method('create')
             ->with('tenant-1', 'po-1', 'receiver-1', self::callback(static fn(array $d) => isset($d['number'], $d['received_date'], $d['lines'])))
@@ -56,7 +56,7 @@ final class GoodsReceiptManagerTest extends TestCase
 
     public function test_create_goods_receipt_throws_when_po_not_found(): void
     {
-        $this->poRepository->method('findById')->with('po-x')->willReturn(null);
+        $this->poRepository->method('findById')->with('tenant-1', 'po-x')->willReturn(null);
 
         $this->expectException(PurchaseOrderNotFoundException::class);
 
@@ -71,7 +71,7 @@ final class GoodsReceiptManagerTest extends TestCase
     {
         $po = $this->createMockPoWithLines('po-1', 'PO-001', 'creator-1', [['ref' => 'PO-001-L1', 'qty' => 10]]);
 
-        $this->poRepository->method('findById')->with('po-1')->willReturn($po);
+        $this->poRepository->method('findById')->with('tenant-1', 'po-1')->willReturn($po);
 
         $this->expectException(UnauthorizedApprovalException::class);
 
@@ -138,7 +138,7 @@ final class GoodsReceiptManagerTest extends TestCase
             ->with('grn-1')
             ->willReturn($grn);
 
-        $result = $this->manager->getGoodsReceipt('grn-1');
+        $result = $this->manager->getGoodsReceipt('tenant-1', 'grn-1');
 
         self::assertSame($grn, $result);
     }
@@ -149,7 +149,7 @@ final class GoodsReceiptManagerTest extends TestCase
 
         $this->expectException(GoodsReceiptNotFoundException::class);
 
-        $this->manager->getGoodsReceipt('grn-x');
+        $this->manager->getGoodsReceipt('tenant-1', 'grn-x');
     }
 
     public function test_get_goods_receipts_for_tenant_delegates(): void
@@ -172,10 +172,10 @@ final class GoodsReceiptManagerTest extends TestCase
 
         $this->repository->expects(self::once())
             ->method('findByPurchaseOrder')
-            ->with('po-1')
+            ->with('po-1', 'tenant-1')
             ->willReturn($grns);
 
-        $result = $this->manager->getGoodsReceiptsByPo('po-1');
+        $result = $this->manager->getGoodsReceiptsByPo('po-1', 'tenant-1');
 
         self::assertSame($grns, $result);
     }

@@ -33,14 +33,14 @@ final readonly class PurchaseOrderDataProvider
      */
     public function getContext(string $tenantId, string $purchaseOrderId): PurchaseOrderContext
     {
-        $purchaseOrder = $this->purchaseOrderQuery->findById($purchaseOrderId);
+        $purchaseOrder = $this->purchaseOrderQuery->findById($tenantId, $purchaseOrderId);
 
         if ($purchaseOrder === null) {
             throw PurchaseOrderException::notFound($purchaseOrderId);
         }
 
         // Calculate received quantities per line
-        $receivedByLine = $this->calculateReceivedQuantities($purchaseOrderId);
+        $receivedByLine = $this->calculateReceivedQuantities($tenantId, $purchaseOrderId);
 
         // Build line items array with receipt status
         $lineItems = [];
@@ -95,7 +95,7 @@ final readonly class PurchaseOrderDataProvider
         }
 
         // Fetch goods receipt IDs
-        $goodsReceiptIds = $this->getGoodsReceiptIds($purchaseOrderId);
+        $goodsReceiptIds = $this->getGoodsReceiptIds($tenantId, $purchaseOrderId);
 
         return new PurchaseOrderContext(
             tenantId: $tenantId,
@@ -141,15 +141,15 @@ final readonly class PurchaseOrderDataProvider
      *     outstandingQuantity: float
      * }>
      */
-    public function getOutstandingQuantities(string $purchaseOrderId): array
+    public function getOutstandingQuantities(string $tenantId, string $purchaseOrderId): array
     {
-        $purchaseOrder = $this->purchaseOrderQuery->findById($purchaseOrderId);
+        $purchaseOrder = $this->purchaseOrderQuery->findById($tenantId, $purchaseOrderId);
 
         if ($purchaseOrder === null) {
             return [];
         }
 
-        $receivedByLine = $this->calculateReceivedQuantities($purchaseOrderId);
+        $receivedByLine = $this->calculateReceivedQuantities($tenantId, $purchaseOrderId);
         $result = [];
 
         foreach ($purchaseOrder->getLineItems() as $line) {
@@ -171,13 +171,13 @@ final readonly class PurchaseOrderDataProvider
      *
      * @return array<string, float>
      */
-    private function calculateReceivedQuantities(string $purchaseOrderId): array
+    private function calculateReceivedQuantities(string $tenantId, string $purchaseOrderId): array
     {
         if ($this->goodsReceiptQuery === null) {
             return [];
         }
 
-        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrderId);
+        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrderId, $tenantId);
         $receivedByLine = [];
 
         foreach ($receipts as $receipt) {
@@ -195,13 +195,13 @@ final readonly class PurchaseOrderDataProvider
      *
      * @return array<string>
      */
-    private function getGoodsReceiptIds(string $purchaseOrderId): array
+    private function getGoodsReceiptIds(string $tenantId, string $purchaseOrderId): array
     {
         if ($this->goodsReceiptQuery === null) {
             return [];
         }
 
-        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrderId);
+        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrderId, $tenantId);
 
         return array_map(fn($receipt) => $receipt->getId(), $receipts);
     }

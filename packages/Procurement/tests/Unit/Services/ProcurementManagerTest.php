@@ -11,7 +11,6 @@ use Nexus\Procurement\Contracts\PurchaseOrderInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderLineInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderPersistInterface;
-use Nexus\Procurement\Contracts\PurchaseOrderRepositoryInterface;
 use Nexus\Procurement\Contracts\RequisitionInterface;
 use Nexus\Procurement\Contracts\RequisitionRepositoryInterface;
 use Nexus\Procurement\Contracts\VendorQuoteInterface;
@@ -28,7 +27,8 @@ use Psr\Log\LoggerInterface;
 final class ProcurementManagerTest extends TestCase
 {
     private RequisitionRepositoryInterface $reqRepo;
-    private PurchaseOrderRepositoryInterface $poRepo;
+    private PurchaseOrderQueryInterface $poQuery;
+    private PurchaseOrderPersistInterface $poPersist;
     private GoodsReceiptRepositoryInterface $grnRepo;
     private VendorQuoteRepositoryInterface $quoteRepo;
     private LoggerInterface $logger;
@@ -42,7 +42,8 @@ final class ProcurementManagerTest extends TestCase
     protected function setUp(): void
     {
         $this->reqRepo = $this->createMock(RequisitionRepositoryInterface::class);
-        $this->poRepo = $this->createMock(PurchaseOrderRepositoryInterface::class);
+        $this->poQuery = $this->createMock(PurchaseOrderQueryInterface::class);
+        $this->poPersist = $this->createMock(PurchaseOrderPersistInterface::class);
         $this->grnRepo = $this->createMock(GoodsReceiptRepositoryInterface::class);
         $this->quoteRepo = $this->createMock(VendorQuoteRepositoryInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
@@ -59,19 +60,19 @@ final class ProcurementManagerTest extends TestCase
         $this->quoteRepo->method('create')->willReturn($quote);
         $this->quoteRepo->method('findByRequisitionId')->willReturn([]);
 
-        $this->poRepo->method('findByTenantId')->willReturn([]);
+        $this->poQuery->method('findByTenantId')->willReturn([]);
         $this->grnRepo->method('findByTenantId')->willReturn([]);
 
         $this->requisitionManager = new RequisitionManager($this->reqRepo, $this->logger);
         $this->purchaseOrderManager = new PurchaseOrderManager(
-            $this->poRepo,
-            $this->poRepo,
+            $this->poQuery,
+            $this->poPersist,
             $this->reqRepo,
             $this->requisitionManager,
             $this->logger,
             10.0
         );
-        $this->goodsReceiptManager = new GoodsReceiptManager($this->grnRepo, $this->poRepo, $this->logger);
+        $this->goodsReceiptManager = new GoodsReceiptManager($this->grnRepo, $this->poQuery, $this->logger);
         $this->vendorQuoteManager = new VendorQuoteManager($this->quoteRepo, $this->logger);
         $this->matchingEngine = new MatchingEngine($this->logger);
 
@@ -186,9 +187,9 @@ final class ProcurementManagerTest extends TestCase
         $po->method('getId')->willReturn('po-1');
         $po->method('getPoNumber')->willReturn('PO-001');
         
-        $this->poRepo->method('findById')->with('po-1')->willReturn($po);
+        $this->poQuery->method('findById')->with('tenant-1', 'po-1')->willReturn($po);
 
-        $result = $this->manager->releasePO('po-1', 'user-1');
+        $result = $this->manager->releasePO('tenant-1', 'po-1', 'user-1');
 
         self::assertInstanceOf(PurchaseOrderInterface::class, $result);
     }
@@ -199,7 +200,7 @@ final class ProcurementManagerTest extends TestCase
         $po->method('getId')->willReturn('po-1');
         $po->method('getPoNumber')->willReturn('PO-DIRECT-001');
         
-        $this->poRepo->method('createBlanket')->willReturn($po);
+        $this->poPersist->method('createBlanket')->willReturn($po);
 
         $result = $this->manager->createDirectPO('tenant-1', 'creator-1', [
             'number' => 'PO-DIRECT-001',
@@ -218,7 +219,7 @@ final class ProcurementManagerTest extends TestCase
         $req = $this->createMock(RequisitionInterface::class);
         $this->reqRepo->method('findById')->with('req-1')->willReturn($req);
 
-        $result = $this->manager->getRequisition('req-1');
+        $result = $this->manager->getRequisition('tenant-1', 'req-1');
 
         self::assertInstanceOf(RequisitionInterface::class, $result);
     }
@@ -226,9 +227,9 @@ final class ProcurementManagerTest extends TestCase
     public function test_get_purchase_order_delegates(): void
     {
         $po = $this->createMock(PurchaseOrderInterface::class);
-        $this->poRepo->method('findById')->with('po-1')->willReturn($po);
+        $this->poQuery->method('findById')->with('tenant-1', 'po-1')->willReturn($po);
 
-        $result = $this->manager->getPurchaseOrder('po-1');
+        $result = $this->manager->getPurchaseOrder('tenant-1', 'po-1');
 
         self::assertInstanceOf(PurchaseOrderInterface::class, $result);
     }
@@ -238,7 +239,7 @@ final class ProcurementManagerTest extends TestCase
         $grn = $this->createMock(GoodsReceiptNoteInterface::class);
         $this->grnRepo->method('findById')->with('grn-1')->willReturn($grn);
 
-        $result = $this->manager->getGoodsReceipt('grn-1');
+        $result = $this->manager->getGoodsReceipt('tenant-1', 'grn-1');
 
         self::assertInstanceOf(GoodsReceiptNoteInterface::class, $result);
     }
@@ -306,7 +307,7 @@ final class ProcurementManagerTest extends TestCase
         $grn->method('getGrnNumber')->willReturn('GRN-001');
         $grn->method('getStatus')->willReturn('draft');
         
-        $this->poRepo->method('findById')->with('po-1')->willReturn($po);
+        $this->poQuery->method('findById')->willReturn($po);
         $this->grnRepo->method('create')->willReturn($grn);
 
         $result = $this->manager->recordGoodsReceipt('tenant-1', 'po-1', 'receiver-1', [

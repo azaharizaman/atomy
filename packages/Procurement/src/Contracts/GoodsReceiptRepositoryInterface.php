@@ -43,9 +43,10 @@ interface GoodsReceiptRepositoryInterface
      * Find all GRNs for a purchase order.
      *
      * @param string $purchaseOrderId PO ULID
+     * @param string $tenantId Tenant ULID
      * @return array<GoodsReceiptNoteInterface>
      */
-    public function findByPurchaseOrder(string $purchaseOrderId): array;
+    public function findByPurchaseOrder(string $purchaseOrderId, string $tenantId): array;
 
     /**
      * Find all GRNs for tenant.

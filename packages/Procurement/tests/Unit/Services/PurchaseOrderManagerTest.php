@@ -84,24 +84,24 @@ final class PurchaseOrderManagerTest extends TestCase
         $po = $this->createMockPo('po-1', 'PO-001');
         $approved = $this->createMockPo('po-1', 'PO-001');
 
-        $this->poQuery->method('findById')->with('po-1')->willReturn($po);
+        $this->poQuery->method('findById')->with('tenant-1', 'po-1')->willReturn($po);
         $this->poPersist->expects(self::once())
             ->method('approve')
-            ->with('po-1', 'approver-1')
+            ->with('po-1', 'approver-1', 'tenant-1')
             ->willReturn($approved);
 
-        $result = $this->manager->approvePo('po-1', 'approver-1');
+        $result = $this->manager->approvePo('tenant-1', 'po-1', 'approver-1');
 
         self::assertSame($approved, $result);
     }
 
     public function test_approve_po_throws_when_not_found(): void
     {
-        $this->poQuery->method('findById')->with('po-x')->willReturn(null);
+        $this->poQuery->method('findById')->with('tenant-1', 'po-x')->willReturn(null);
 
         $this->expectException(PurchaseOrderNotFoundException::class);
 
-        $this->manager->approvePo('po-x', 'approver-1');
+        $this->manager->approvePo('tenant-1', 'po-x', 'approver-1');
     }
 
     public function test_close_po_delegates_to_repository(): void
@@ -109,13 +109,13 @@ final class PurchaseOrderManagerTest extends TestCase
         $po = $this->createMockPo('po-1', 'PO-001');
         $closed = $this->createMockPo('po-1', 'PO-001');
 
-        $this->poQuery->method('findById')->with('po-1')->willReturn($po);
+        $this->poQuery->method('findById')->with('tenant-1', 'po-1')->willReturn($po);
         $this->poPersist->expects(self::once())
             ->method('updateStatus')
-            ->with('po-1', 'closed')
+            ->with('po-1', 'closed', 'tenant-1')
             ->willReturn($closed);
 
-        $result = $this->manager->closePo('po-1');
+        $result = $this->manager->closePo('tenant-1', 'po-1');
 
         self::assertSame($closed, $result);
     }
@@ -126,21 +126,21 @@ final class PurchaseOrderManagerTest extends TestCase
 
         $this->poQuery->expects(self::once())
             ->method('findById')
-            ->with('po-1')
+            ->with('tenant-1', 'po-1')
             ->willReturn($po);
 
-        $result = $this->manager->getPurchaseOrder('po-1');
+        $result = $this->manager->getPurchaseOrder('tenant-1', 'po-1');
 
         self::assertSame($po, $result);
     }
 
     public function test_get_purchase_order_throws_when_not_found(): void
     {
-        $this->poQuery->method('findById')->with('po-x')->willReturn(null);
+        $this->poQuery->method('findById')->with('tenant-1', 'po-x')->willReturn(null);
 
         $this->expectException(PurchaseOrderNotFoundException::class);
 
-        $this->manager->getPurchaseOrder('po-x');
+        $this->manager->getPurchaseOrder('tenant-1', 'po-x');
     }
 
     public function test_get_purchase_orders_for_tenant_delegates(): void
@@ -189,11 +189,11 @@ final class PurchaseOrderManagerTest extends TestCase
     {
         $blanket = $this->createMockPoWithTotals('po-1', 'PO-BLANKET', 100.0, 90.0);
 
-        $this->poQuery->method('findById')->with('po-1')->willReturn($blanket);
+        $this->poQuery->method('findById')->with('tenant-1', 'po-1')->willReturn($blanket);
 
         $this->expectException(BudgetExceededException::class);
 
-        $this->manager->createBlanketRelease('po-1', 'creator-1', [
+        $this->manager->createBlanketRelease('tenant-1', 'po-1', 'creator-1', [
             'release_number' => 'REL-001',
             'lines' => [['item_code' => 'A', 'description' => 'A', 'quantity' => 20, 'unit' => 'EA', 'unit_price' => 5]],
         ]);

@@ -32,23 +32,23 @@ The Procurement package test suite ensures comprehensive coverage of all busines
 
 | Test Class | Methods | Assertions | Coverage |
 |------------|---------|------------|----------|
-| `RequisitionManagerTest` | 12 | 35 | Services/RequisitionManager.php |
+| `RequisitionManagerTest` | 13 | 38 | Services/RequisitionManager.php |
 | `PurchaseOrderManagerTest` | 11 | 28 | Services/PurchaseOrderManager.php |
 | `GoodsReceiptManagerTest` | 11 | 24 | Services/GoodsReceiptManager.php |
-| `MatchingEngineTest` | 4 | 17 | Services/MatchingEngine.php |
+| `MatchingEngineTest` | 5 | 17 | Services/MatchingEngine.php |
 | `VendorQuoteManagerTest` | 8 | 22 | Services/VendorQuoteManager.php |
-| `ProcurementManagerTest` | 16 | 50 | Services/ProcurementManager.php |
-| **TOTAL** | **62** | **176** | 83% lines |
+| `ProcurementManagerTest` | 18 | 50 | Services/ProcurementManager.php |
+| **TOTAL** | **66** | **179** | 83% lines |
 
 #### Exception Tests
 
 | Test Class | Methods | Assertions | Coverage |
 |------------|---------|------------|----------|
-| `InvalidRequisitionDataExceptionTest` | 5 | 15 | Factory methods |
-| `InvalidRequisitionStateExceptionTest` | 4 | 12 | Factory methods |
-| `UnauthorizedApprovalExceptionTest` | 4 | 12 | Factory methods |
-| `BudgetExceededExceptionTest` | 3 | 9 | Factory methods |
-| `RequisitionNotFoundExceptionTest` | 2 | 4 | Factory methods |
+| `InvalidRequisitionDataExceptionTest` | 3 | 9 | Factory methods |
+| `InvalidRequisitionStateExceptionTest` | 3 | 9 | Factory methods |
+| `UnauthorizedApprovalExceptionTest` | 3 | 3 | Factory methods |
+| `BudgetExceededExceptionTest` | 2 | 6 | Factory methods |
+| `RequisitionNotFoundExceptionTest` | 2 | 2 | Factory methods |
 | `InvalidPurchaseOrderDataExceptionTest` | 3 | 9 | Factory methods |
 | `InvalidGoodsReceiptDataExceptionTest` | 4 | 8 | Factory methods |
 | `PurchaseOrderNotFoundExceptionTest` | 2 | 4 | Factory methods |
@@ -495,11 +495,11 @@ jobs:
 
 | Category | Tests | Assertions | Pass Rate |
 |----------|-------|------------|-----------|
-| Services | 71 | 204 | 100% |
-| Exceptions | 22 | 66 | 100% |
-| ML Extractors | 41 | 127 | 100% |
-| Integration | 15 | 60 | 100% |
-| **TOTAL** | **149** | **457** | **100%** |
+| Services | 66 | 179 | 100% |
+| Exceptions | 24 | 92 | 100% |
+| ML Extractors | 0 | 0 | 100% |
+| Integration | 2 | 2 | 100% |
+| **TOTAL** | **92** | **273** | **100%** |
 
 ---
 

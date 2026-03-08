@@ -54,19 +54,22 @@
 ```
 packages/Procurement/
 ├── src/
-│   ├── Contracts/           # 12 interfaces (100% framework-agnostic)
+│   ├── Contracts/           # 15 interfaces (100% framework-agnostic)
 │   │   ├── ProcurementManagerInterface.php
 │   │   ├── RequisitionInterface.php
 │   │   ├── RequisitionLineInterface.php
 │   │   ├── RequisitionRepositoryInterface.php
 │   │   ├── PurchaseOrderInterface.php
 │   │   ├── PurchaseOrderLineInterface.php
-│   │   ├── PurchaseOrderRepositoryInterface.php
+│   │   ├── PurchaseOrderQueryInterface.php     # New: Query/Persist Split
+│   │   ├── PurchaseOrderPersistInterface.php   # New: Query/Persist Split
+│   │   ├── PurchaseOrderRepositoryInterface.php # Legacy/Composite
 │   │   ├── GoodsReceiptNoteInterface.php
 │   │   ├── GoodsReceiptLineInterface.php
 │   │   ├── GoodsReceiptRepositoryInterface.php
 │   │   ├── VendorQuoteInterface.php
-│   │   └── VendorQuoteRepositoryInterface.php
+│   │   ├── VendorQuoteRepositoryInterface.php
+│   │   └── ProductVendorRepositoryInterface.php
 │   │
 │   ├── Services/            # 6 service classes (Pure business logic)
 │   │   ├── ProcurementManager.php         # Main orchestrator
@@ -128,7 +131,7 @@ consuming application (e.g., Laravel app)
 
 ## Package Structure
 
-### 1. Contracts (12 Interfaces)
+### 1. Contracts (15 Interfaces)
 
 All interfaces are framework-agnostic and define the **contract** between the package and the consuming application.
 
@@ -138,9 +141,11 @@ All interfaces are framework-agnostic and define the **contract** between the pa
 | `RequisitionInterface` | Requisition entity | `getStatus()`, `getLines()`, `isConverted()` |
 | `RequisitionRepositoryInterface` | Requisition persistence | `create()`, `approve()`, `reject()`, `markAsConverted()` |
 | `PurchaseOrderInterface` | PO entity | `getLines()`, `getTotalCommittedValue()`, `getPoType()` |
-| `PurchaseOrderRepositoryInterface` | PO persistence | `create()`, `createBlanket()`, `createRelease()`, `findLineByReference()` |
+| `PurchaseOrderQueryInterface` | PO reading (CQRS) | `findById(tenantId, id)`, `findByNumber(tenantId, poNumber)` |
+| `PurchaseOrderPersistInterface` | PO writing (CQRS) | `save()`, `approve(poId, approverId, tenantId)`, `updateStatus(poId, status, tenantId)` |
+| `PurchaseOrderRepositoryInterface` | PO persistence (Legacy) | Composite of Query and Persist interfaces |
 | `GoodsReceiptNoteInterface` | GRN entity | `getLines()`, `getPaymentAuthorizerId()` |
-| `GoodsReceiptRepositoryInterface` | GRN persistence | `create()`, `authorizePayment()`, `findLineByReference()` |
+| `GoodsReceiptRepositoryInterface` | GRN persistence | `create()`, `authorizePayment()`, `findLineByReference()`, `findByPurchaseOrder(poId, tenantId)` |
 | `VendorQuoteInterface` | Vendor quote entity | `getLines()`, `getQuotedDate()`, `getValidUntil()` |
 
 ### 2. Services (6 Classes)
@@ -867,6 +872,8 @@ echo "Elapsed: {$result['elapsed_ms']}ms\n";
 **Total Lines of Code:** ~3,500 (package + application)
 
 ---
+
+**CRITICAL:** This `IMPLEMENTATION_SUMMARY.md` must be updated after every code change to avoid drift.
 
 **Documentation Last Updated:** March 8, 2026  
 **Author:** Gemini CLI  

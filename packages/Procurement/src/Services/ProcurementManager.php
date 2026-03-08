@@ -128,16 +128,17 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function releasePO(string $poId, string $releasedBy): PurchaseOrderInterface
+    public function releasePO(string $tenantId, string $poId, string $releasedBy): PurchaseOrderInterface
     {
         $this->logger->info('ProcurementManager: Releasing purchase order', [
+            'tenant_id' => $tenantId,
             'po_id' => $poId,
             'released_by' => $releasedBy,
         ]);
 
         // Implementation would update PO status to 'released'
         // For now, return the PO (assuming status update happens in repository)
-        return $this->purchaseOrderManager->getPurchaseOrder($poId);
+        return $this->purchaseOrderManager->getPurchaseOrder($tenantId, $poId);
     }
 
     /**
@@ -182,7 +183,7 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function getRequisition(string $requisitionId): RequisitionInterface
+    public function getRequisition(string $tenantId, string $requisitionId): RequisitionInterface
     {
         return $this->requisitionManager->getRequisition($requisitionId);
     }
@@ -190,17 +191,17 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function getPurchaseOrder(string $poId): PurchaseOrderInterface
+    public function getPurchaseOrder(string $tenantId, string $poId): PurchaseOrderInterface
     {
-        return $this->purchaseOrderManager->getPurchaseOrder($poId);
+        return $this->purchaseOrderManager->getPurchaseOrder($tenantId, $poId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getGoodsReceipt(string $grnId): GoodsReceiptNoteInterface
+    public function getGoodsReceipt(string $tenantId, string $grnId): GoodsReceiptNoteInterface
     {
-        return $this->goodsReceiptManager->getGoodsReceipt($grnId);
+        return $this->goodsReceiptManager->getGoodsReceipt($tenantId, $grnId);
     }
 
     /**

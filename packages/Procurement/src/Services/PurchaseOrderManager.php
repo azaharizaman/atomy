@@ -180,9 +180,9 @@ final readonly class PurchaseOrderManager
      * @throws PurchaseOrderNotFoundException
      * @throws BudgetExceededException
      */
-    public function createBlanketRelease(string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface
+    public function createBlanketRelease(string $tenantId, string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface
     {
-        $blanketPo = $this->query->findById($blanketPoId);
+        $blanketPo = $this->query->findById($tenantId, $blanketPoId);
 
         if ($blanketPo === null) {
             throw PurchaseOrderNotFoundException::forId($blanketPoId);
@@ -221,23 +221,25 @@ final readonly class PurchaseOrderManager
      * @return PurchaseOrderInterface
      * @throws PurchaseOrderNotFoundException
      */
-    public function approvePo(string $poId, string $approverId): PurchaseOrderInterface
+    public function approvePo(string $tenantId, string $poId, string $approverId): PurchaseOrderInterface
     {
-        $po = $this->query->findById($poId);
+        $po = $this->query->findById($tenantId, $poId);
 
         if ($po === null) {
             throw PurchaseOrderNotFoundException::forId($poId);
         }
 
         $this->logger->info('Approving purchase order', [
+            'tenant_id' => $tenantId,
             'po_id' => $poId,
             'po_number' => $po->getPoNumber(),
             'approver_id' => $approverId,
         ]);
 
-        $approvedPo = $this->persist->approve($poId, $approverId);
+        $approvedPo = $this->persist->approve($poId, $approverId, $tenantId);
 
         $this->logger->info('Purchase order approved', [
+            'tenant_id' => $tenantId,
             'po_id' => $poId,
             'po_number' => $approvedPo->getPoNumber(),
             'status' => $approvedPo->getStatus(),
@@ -249,24 +251,26 @@ final readonly class PurchaseOrderManager
     /**
      * Close purchase order.
      *
+     * @param string $tenantId
      * @param string $poId
      * @return PurchaseOrderInterface
      * @throws PurchaseOrderNotFoundException
      */
-    public function closePo(string $poId): PurchaseOrderInterface
+    public function closePo(string $tenantId, string $poId): PurchaseOrderInterface
     {
-        $po = $this->query->findById($poId);
+        $po = $this->query->findById($tenantId, $poId);
 
         if ($po === null) {
             throw PurchaseOrderNotFoundException::forId($poId);
         }
 
         $this->logger->info('Closing purchase order', [
+            'tenant_id' => $tenantId,
             'po_id' => $poId,
             'po_number' => $po->getPoNumber(),
         ]);
 
-        $closedPo = $this->persist->updateStatus($poId, 'closed');
+        $closedPo = $this->persist->updateStatus($poId, 'closed', $tenantId);
 
         return $closedPo;
     }
@@ -278,9 +282,9 @@ final readonly class PurchaseOrderManager
      * @return PurchaseOrderInterface
      * @throws PurchaseOrderNotFoundException
      */
-    public function getPurchaseOrder(string $poId): PurchaseOrderInterface
+    public function getPurchaseOrder(string $tenantId, string $poId): PurchaseOrderInterface
     {
-        $po = $this->query->findById($poId);
+        $po = $this->query->findById($tenantId, $poId);
 
         if ($po === null) {
             throw PurchaseOrderNotFoundException::forId($poId);

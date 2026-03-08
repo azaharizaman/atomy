@@ -83,12 +83,13 @@ interface ProcurementManagerInterface
     /**
      * Release purchase order to vendor.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $poId PO ULID
      * @param string $releasedBy User ULID releasing the PO
      * @return PurchaseOrderInterface
      * @throws \Nexus\Procurement\Exceptions\PurchaseOrderNotFoundException
      */
-    public function releasePO(string $poId, string $releasedBy): PurchaseOrderInterface;
+    public function releasePO(string $tenantId, string $poId, string $releasedBy): PurchaseOrderInterface;
 
     /**
      * Record goods receipt against purchase order.
@@ -106,29 +107,32 @@ interface ProcurementManagerInterface
     /**
      * Find requisition by ID.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id Requisition ULID
      * @return RequisitionInterface
      * @throws \Nexus\Procurement\Exceptions\RequisitionNotFoundException
      */
-    public function getRequisition(string $id): RequisitionInterface;
+    public function getRequisition(string $tenantId, string $id): RequisitionInterface;
 
     /**
      * Find purchase order by ID.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id PO ULID
      * @return PurchaseOrderInterface
      * @throws \Nexus\Procurement\Exceptions\PurchaseOrderNotFoundException
      */
-    public function getPurchaseOrder(string $id): PurchaseOrderInterface;
+    public function getPurchaseOrder(string $tenantId, string $id): PurchaseOrderInterface;
 
     /**
      * Find goods receipt note by ID.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id GRN ULID
      * @return GoodsReceiptNoteInterface
      * @throws \Nexus\Procurement\Exceptions\GoodsReceiptNotFoundException
      */
-    public function getGoodsReceipt(string $id): GoodsReceiptNoteInterface;
+    public function getGoodsReceipt(string $tenantId, string $id): GoodsReceiptNoteInterface;
 
     /**
      * Perform three-way match between PO, GRN, and invoice.

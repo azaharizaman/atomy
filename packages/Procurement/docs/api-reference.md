@@ -4,7 +4,7 @@ Complete API documentation for all interfaces, services, and exceptions.
 
 ---
 
-## Interfaces (12 total)
+## Interfaces (15 total)
 
 ### Core Entity Interfaces
 
@@ -240,12 +240,12 @@ echo $requisition->getStatus(); // "approved"
 
 | Method | Parameters | Returns |
 |--------|------------|---------|
-| `findById` | `string $id` | `PurchaseOrderInterface` |
+| `findById` | `string $tenantId, string $id` | `PurchaseOrderInterface` |
 | `findByTenant` | `string $tenantId` | `array<PurchaseOrderInterface>` |
-| `findByVendor` | `string $vendorId` | `array<PurchaseOrderInterface>` |
-| `findLineByReference` | `string $lineReference` | `?PurchaseOrderLineInterface` |
-| `create` | `array $data` | `PurchaseOrderInterface` |
-| `updateStatus` | `string $id, string $status` | `PurchaseOrderInterface` |
+| `findByVendor` | `string $tenantId, string $vendorId` | `array<PurchaseOrderInterface>` |
+| `findLineByReference` | `string $tenantId, string $lineReference` | `?PurchaseOrderLineInterface` |
+| `create` | `string $tenantId, string $requisitionId, string $creatorId, array $data` | `PurchaseOrderInterface` |
+| `updateStatus` | `string $poId, string $status, string $tenantId` | `PurchaseOrderInterface` |
 
 ---
 
@@ -260,7 +260,7 @@ echo $requisition->getStatus(); // "approved"
 | Method | Parameters | Returns |
 |--------|------------|---------|
 | `findById` | `string $id` | `GoodsReceiptNoteInterface` |
-| `findByPurchaseOrder` | `string $poId` | `array<GoodsReceiptNoteInterface>` |
+| `findByPurchaseOrder` | `string $poId, string $tenantId` | `array<GoodsReceiptNoteInterface>` |
 | `findLineByReference` | `string $poLineReference` | `?GoodsReceiptLineInterface` |
 | `create` | `string $tenantId, string $purchaseOrderId, string $receiverId, array $data` | `GoodsReceiptNoteInterface` |
 | `authorizePayment` | `string $tenantId, string $id, string $authorizerId` | `GoodsReceiptNoteInterface` |
@@ -351,7 +351,7 @@ echo $requisition->getStatus(); // "approved"
 
 **Key Methods:**
 - `createGoodsReceipt(string $tenantId, string $poId, string $receiverId, array $data): GoodsReceiptNoteInterface`
-- `authorizePayment(string $grnId, string $authorizerId): GoodsReceiptNoteInterface`
+- `authorizePayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface`
 
 **Business Rules Enforced:**
 - BUS-PRO-0076: GRN quantity ≤ PO quantity

@@ -58,7 +58,7 @@ final readonly class GoodsReceiptManager
         $this->validateGoodsReceiptData($data);
 
         // Get PO and verify it exists
-        $purchaseOrder = $this->poRepository->findById($purchaseOrderId);
+        $purchaseOrder = $this->poRepository->findById($tenantId, $purchaseOrderId);
 
         if ($purchaseOrder === null) {
             throw PurchaseOrderNotFoundException::forId($purchaseOrderId);
@@ -139,11 +139,12 @@ final readonly class GoodsReceiptManager
     /**
      * Get goods receipt note by ID.
      *
+     * @param string $tenantId
      * @param string $grnId
      * @return GoodsReceiptNoteInterface
      * @throws GoodsReceiptNotFoundException
      */
-    public function getGoodsReceipt(string $grnId): GoodsReceiptNoteInterface
+    public function getGoodsReceipt(string $tenantId, string $grnId): GoodsReceiptNoteInterface
     {
         $grn = $this->repository->findById($grnId);
 
@@ -170,11 +171,12 @@ final readonly class GoodsReceiptManager
      * Get goods receipts by purchase order.
      *
      * @param string $purchaseOrderId
+     * @param string $tenantId
      * @return array<GoodsReceiptNoteInterface>
      */
-    public function getGoodsReceiptsByPo(string $purchaseOrderId): array
+    public function getGoodsReceiptsByPo(string $purchaseOrderId, string $tenantId): array
     {
-        return $this->repository->findByPurchaseOrder($purchaseOrderId);
+        return $this->repository->findByPurchaseOrder($purchaseOrderId, $tenantId);
     }
 
     /**
