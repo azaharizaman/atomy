@@ -98,7 +98,7 @@ final class GoodsReceiptManagerTest extends TestCase
         $grn = $this->createMockGrnWithReceiver('grn-1', 'GRN-001', 'receiver-1');
         $authorized = $this->createMockGrn('grn-1', 'GRN-001');
 
-        $this->repository->method('findById')->with('grn-1')->willReturn($grn);
+        $this->repository->method('findByTenantAndId')->with('tenant-1', 'grn-1')->willReturn($grn);
         $this->repository->expects(self::once())
             ->method('authorizePayment')
             ->with('tenant-1', 'grn-1', 'authorizer-2')
@@ -113,7 +113,7 @@ final class GoodsReceiptManagerTest extends TestCase
     {
         $grn = $this->createMockGrnWithReceiver('grn-1', 'GRN-001', 'receiver-1');
 
-        $this->repository->method('findById')->with('grn-1')->willReturn($grn);
+        $this->repository->method('findByTenantAndId')->with('tenant-1', 'grn-1')->willReturn($grn);
 
         $this->expectException(UnauthorizedApprovalException::class);
 
@@ -122,7 +122,7 @@ final class GoodsReceiptManagerTest extends TestCase
 
     public function test_authorize_payment_throws_when_not_found(): void
     {
-        $this->repository->method('findById')->with('grn-x')->willReturn(null);
+        $this->repository->method('findByTenantAndId')->with('tenant-1', 'grn-x')->willReturn(null);
 
         $this->expectException(GoodsReceiptNotFoundException::class);
 
@@ -134,8 +134,8 @@ final class GoodsReceiptManagerTest extends TestCase
         $grn = $this->createMockGrn('grn-1', 'GRN-001');
 
         $this->repository->expects(self::once())
-            ->method('findById')
-            ->with('grn-1')
+            ->method('findByTenantAndId')
+            ->with('tenant-1', 'grn-1')
             ->willReturn($grn);
 
         $result = $this->manager->getGoodsReceipt('tenant-1', 'grn-1');
@@ -145,7 +145,7 @@ final class GoodsReceiptManagerTest extends TestCase
 
     public function test_get_goods_receipt_throws_when_not_found(): void
     {
-        $this->repository->method('findById')->with('grn-x')->willReturn(null);
+        $this->repository->method('findByTenantAndId')->with('tenant-1', 'grn-x')->willReturn(null);
 
         $this->expectException(GoodsReceiptNotFoundException::class);
 

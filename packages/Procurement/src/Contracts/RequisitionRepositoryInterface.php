@@ -12,10 +12,11 @@ interface RequisitionRepositoryInterface
     /**
      * Find requisition by ID.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id Requisition ULID
      * @return RequisitionInterface|null
      */
-    public function findById(string $id): ?RequisitionInterface;
+    public function findById(string $tenantId, string $id): ?RequisitionInterface;
 
     /**
      * Find requisition by number.
@@ -55,39 +56,43 @@ interface RequisitionRepositoryInterface
     /**
      * Update requisition status.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @param string $status
      * @return RequisitionInterface
      */
-    public function updateStatus(string $requisitionId, string $status): RequisitionInterface;
+    public function updateStatus(string $tenantId, string $requisitionId, string $status): RequisitionInterface;
 
     /**
      * Approve requisition.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @param string $approverId
      * @return RequisitionInterface
      */
-    public function approve(string $requisitionId, string $approverId): RequisitionInterface;
+    public function approve(string $tenantId, string $requisitionId, string $approverId): RequisitionInterface;
 
     /**
      * Reject requisition.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @param string $rejectorId
      * @param string $reason
      * @return RequisitionInterface
      */
-    public function reject(string $requisitionId, string $rejectorId, string $reason): RequisitionInterface;
+    public function reject(string $tenantId, string $requisitionId, string $rejectorId, string $reason): RequisitionInterface;
 
     /**
      * Mark requisition as converted to PO.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @param string $poId
      * @return RequisitionInterface
      */
-    public function markAsConverted(string $requisitionId, string $poId): RequisitionInterface;
+    public function markAsConverted(string $tenantId, string $requisitionId, string $poId): RequisitionInterface;
 
     /**
      * Find requisitions by tenant.

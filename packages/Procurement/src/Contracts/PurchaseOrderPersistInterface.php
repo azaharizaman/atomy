@@ -49,12 +49,13 @@ interface PurchaseOrderPersistInterface
     /**
      * Create release against blanket PO.
      *
+     * @param string $tenantId
      * @param string $blanketPoId
      * @param string $creatorId
      * @param array<string, mixed> $data
      * @return PurchaseOrderInterface
      */
-    public function createRelease(string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface;
+    public function createRelease(string $tenantId, string $blanketPoId, string $creatorId, array $data): PurchaseOrderInterface;
 
     /**
      * Approve purchase order.

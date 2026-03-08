@@ -74,14 +74,15 @@ final readonly class RequisitionManager
     /**
      * Submit requisition for approval.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @return RequisitionInterface
      * @throws RequisitionNotFoundException
      * @throws InvalidRequisitionStateException
      */
-    public function submitForApproval(string $requisitionId): RequisitionInterface
+    public function submitForApproval(string $tenantId, string $requisitionId): RequisitionInterface
     {
-        $requisition = $this->repository->findById($requisitionId);
+        $requisition = $this->repository->findById($tenantId, $requisitionId);
 
         if ($requisition === null) {
             throw RequisitionNotFoundException::forId($requisitionId);
@@ -95,11 +96,12 @@ final readonly class RequisitionManager
         }
 
         $this->logger->info('Submitting requisition for approval', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'number' => $requisition->getRequisitionNumber(),
         ]);
 
-        $updatedRequisition = $this->repository->updateStatus($requisitionId, 'pending_approval');
+        $updatedRequisition = $this->repository->updateStatus($tenantId, $requisitionId, 'pending_approval');
 
         return $updatedRequisition;
     }
@@ -109,6 +111,7 @@ final readonly class RequisitionManager
      *
      * Enforces business rule: Requester cannot approve their own requisition (BUS-PRO-0095).
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @param string $approverId User approving the requisition
      * @return RequisitionInterface
@@ -116,9 +119,9 @@ final readonly class RequisitionManager
      * @throws InvalidRequisitionStateException
      * @throws UnauthorizedApprovalException
      */
-    public function approveRequisition(string $requisitionId, string $approverId): RequisitionInterface
+    public function approveRequisition(string $tenantId, string $requisitionId, string $approverId): RequisitionInterface
     {
-        $requisition = $this->repository->findById($requisitionId);
+        $requisition = $this->repository->findById($tenantId, $requisitionId);
 
         if ($requisition === null) {
             throw RequisitionNotFoundException::forId($requisitionId);
@@ -137,14 +140,16 @@ final readonly class RequisitionManager
         }
 
         $this->logger->info('Approving requisition', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'number' => $requisition->getRequisitionNumber(),
             'approver_id' => $approverId,
         ]);
 
-        $updatedRequisition = $this->repository->approve($requisitionId, $approverId);
+        $updatedRequisition = $this->repository->approve($tenantId, $requisitionId, $approverId);
 
         $this->logger->info('Requisition approved', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'number' => $updatedRequisition->getRequisitionNumber(),
             'status' => $updatedRequisition->getStatus(),
@@ -156,6 +161,7 @@ final readonly class RequisitionManager
     /**
      * Reject a requisition.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @param string $rejectorId User rejecting the requisition
      * @param string $reason Rejection reason
@@ -163,9 +169,9 @@ final readonly class RequisitionManager
      * @throws RequisitionNotFoundException
      * @throws InvalidRequisitionStateException
      */
-    public function rejectRequisition(string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
+    public function rejectRequisition(string $tenantId, string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
     {
-        $requisition = $this->repository->findById($requisitionId);
+        $requisition = $this->repository->findById($tenantId, $requisitionId);
 
         if ($requisition === null) {
             throw RequisitionNotFoundException::forId($requisitionId);
@@ -179,13 +185,14 @@ final readonly class RequisitionManager
         }
 
         $this->logger->info('Rejecting requisition', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'number' => $requisition->getRequisitionNumber(),
             'rejector_id' => $rejectorId,
             'reason' => $reason,
         ]);
 
-        $updatedRequisition = $this->repository->reject($requisitionId, $rejectorId, $reason);
+        $updatedRequisition = $this->repository->reject($tenantId, $requisitionId, $rejectorId, $reason);
 
         return $updatedRequisition;
     }
@@ -193,15 +200,16 @@ final readonly class RequisitionManager
     /**
      * Mark requisition as converted to PO.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @param PurchaseOrderInterface $purchaseOrder
      * @return RequisitionInterface
      * @throws RequisitionNotFoundException
      * @throws InvalidRequisitionStateException
      */
-    public function markAsConverted(string $requisitionId, PurchaseOrderInterface $purchaseOrder): RequisitionInterface
+    public function markAsConverted(string $tenantId, string $requisitionId, PurchaseOrderInterface $purchaseOrder): RequisitionInterface
     {
-        $requisition = $this->repository->findById($requisitionId);
+        $requisition = $this->repository->findById($tenantId, $requisitionId);
 
         if ($requisition === null) {
             throw RequisitionNotFoundException::forId($requisitionId);
@@ -219,13 +227,14 @@ final readonly class RequisitionManager
         }
 
         $this->logger->info('Marking requisition as converted', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'number' => $requisition->getRequisitionNumber(),
             'po_id' => $purchaseOrder->getId(),
             'po_number' => $purchaseOrder->getPoNumber(),
         ]);
 
-        $updatedRequisition = $this->repository->markAsConverted($requisitionId, $purchaseOrder->getId());
+        $updatedRequisition = $this->repository->markAsConverted($tenantId, $requisitionId, $purchaseOrder->getId());
 
         return $updatedRequisition;
     }
@@ -233,13 +242,14 @@ final readonly class RequisitionManager
     /**
      * Get requisition by ID.
      *
+     * @param string $tenantId
      * @param string $requisitionId
      * @return RequisitionInterface
      * @throws RequisitionNotFoundException
      */
-    public function getRequisition(string $requisitionId): RequisitionInterface
+    public function getRequisition(string $tenantId, string $requisitionId): RequisitionInterface
     {
-        $requisition = $this->repository->findById($requisitionId);
+        $requisition = $this->repository->findById($tenantId, $requisitionId);
 
         if ($requisition === null) {
             throw RequisitionNotFoundException::forId($requisitionId);

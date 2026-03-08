@@ -146,7 +146,7 @@ final readonly class PurchaseOrderDataProvider
         $purchaseOrder = $this->purchaseOrderQuery->findById($tenantId, $purchaseOrderId);
 
         if ($purchaseOrder === null) {
-            return [];
+            throw PurchaseOrderException::notFound($purchaseOrderId);
         }
 
         $receivedByLine = $this->calculateReceivedQuantities($tenantId, $purchaseOrderId);

@@ -173,10 +173,10 @@ final class ProcurementManagerTest extends TestCase
         $updated = $this->createMock(RequisitionInterface::class);
         $updated->method('getStatus')->willReturn('pending_approval');
         
-        $this->reqRepo->method('findById')->with('req-1')->willReturn($req);
-        $this->reqRepo->method('updateStatus')->with('req-1', 'pending_approval')->willReturn($updated);
+        $this->reqRepo->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
+        $this->reqRepo->method('updateStatus')->with('tenant-1', 'req-1', 'pending_approval')->willReturn($updated);
 
-        $result = $this->manager->submitRequisitionForApproval('req-1');
+        $result = $this->manager->submitRequisitionForApproval('tenant-1', 'req-1');
 
         self::assertInstanceOf(RequisitionInterface::class, $result);
     }
@@ -217,7 +217,7 @@ final class ProcurementManagerTest extends TestCase
     public function test_get_requisition_delegates(): void
     {
         $req = $this->createMock(RequisitionInterface::class);
-        $this->reqRepo->method('findById')->with('req-1')->willReturn($req);
+        $this->reqRepo->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
 
         $result = $this->manager->getRequisition('tenant-1', 'req-1');
 
@@ -237,7 +237,7 @@ final class ProcurementManagerTest extends TestCase
     public function test_get_goods_receipt_delegates(): void
     {
         $grn = $this->createMock(GoodsReceiptNoteInterface::class);
-        $this->grnRepo->method('findById')->with('grn-1')->willReturn($grn);
+        $this->grnRepo->method('findByTenantAndId')->with('tenant-1', 'grn-1')->willReturn($grn);
 
         $result = $this->manager->getGoodsReceipt('tenant-1', 'grn-1');
 
@@ -251,10 +251,10 @@ final class ProcurementManagerTest extends TestCase
         $quote->method('getRfqNumber')->willReturn('RFQ-001');
         $quote->method('getStatus')->willReturn('accepted');
         
-        $this->quoteRepo->method('findById')->with('quote-1')->willReturn($quote);
-        $this->quoteRepo->method('accept')->with('quote-1', 'user-1')->willReturn($quote);
+        $this->quoteRepo->method('findById')->with('tenant-1', 'quote-1')->willReturn($quote);
+        $this->quoteRepo->method('accept')->with('tenant-1', 'quote-1', 'user-1')->willReturn($quote);
 
-        $result = $this->manager->acceptVendorQuote('quote-1', 'user-1');
+        $result = $this->manager->acceptVendorQuote('tenant-1', 'quote-1', 'user-1');
 
         self::assertInstanceOf(VendorQuoteInterface::class, $result);
     }
@@ -269,10 +269,10 @@ final class ProcurementManagerTest extends TestCase
         $approved = $this->createMock(RequisitionInterface::class);
         $approved->method('getStatus')->willReturn('approved');
         
-        $this->reqRepo->method('findById')->with('req-1')->willReturn($req);
-        $this->reqRepo->method('approve')->with('req-1', 'approver-2')->willReturn($approved);
+        $this->reqRepo->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
+        $this->reqRepo->method('approve')->with('tenant-1', 'req-1', 'approver-2')->willReturn($approved);
 
-        $result = $this->manager->approveRequisition('req-1', 'approver-2');
+        $result = $this->manager->approveRequisition('tenant-1', 'req-1', 'approver-2');
 
         self::assertInstanceOf(RequisitionInterface::class, $result);
     }
@@ -284,10 +284,10 @@ final class ProcurementManagerTest extends TestCase
         $req->method('getStatus')->willReturn('pending_approval');
         $rejected = $this->createMock(RequisitionInterface::class);
         
-        $this->reqRepo->method('findById')->with('req-1')->willReturn($req);
-        $this->reqRepo->method('reject')->with('req-1', 'rejector-1', 'Out of budget')->willReturn($rejected);
+        $this->reqRepo->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
+        $this->reqRepo->method('reject')->with('tenant-1', 'req-1', 'rejector-1', 'Out of budget')->willReturn($rejected);
 
-        $result = $this->manager->rejectRequisition('req-1', 'rejector-1', 'Out of budget');
+        $result = $this->manager->rejectRequisition('tenant-1', 'req-1', 'rejector-1', 'Out of budget');
 
         self::assertInstanceOf(RequisitionInterface::class, $result);
     }
@@ -327,7 +327,7 @@ final class ProcurementManagerTest extends TestCase
         $grn->method('getReceivedBy')->willReturn('receiver-1');
         $grn->method('getStatus')->willReturn('authorized');
         
-        $this->grnRepo->method('findById')->with('grn-1')->willReturn($grn);
+        $this->grnRepo->method('findByTenantAndId')->with('tenant-1', 'grn-1')->willReturn($grn);
         $this->grnRepo->method('authorizePayment')->with('tenant-1', 'grn-1', 'authorizer-1')->willReturn($grn);
 
         $result = $this->manager->authorizeGrnPayment('tenant-1', 'grn-1', 'authorizer-1');

@@ -26,34 +26,37 @@ interface ProcurementManagerInterface
     /**
      * Submit requisition for approval.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $requisitionId Requisition ULID
      * @return RequisitionInterface
      * @throws \Nexus\Procurement\Exceptions\RequisitionNotFoundException
      * @throws \Nexus\Procurement\Exceptions\InvalidRequisitionStateException
      */
-    public function submitRequisitionForApproval(string $requisitionId): RequisitionInterface;
+    public function submitRequisitionForApproval(string $tenantId, string $requisitionId): RequisitionInterface;
 
     /**
      * Approve a requisition.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $requisitionId Requisition ULID
      * @param string $approverId User ULID
      * @return RequisitionInterface
      * @throws \Nexus\Procurement\Exceptions\RequisitionNotFoundException
      * @throws \Nexus\Procurement\Exceptions\UnauthorizedApprovalException
      */
-    public function approveRequisition(string $requisitionId, string $approverId): RequisitionInterface;
+    public function approveRequisition(string $tenantId, string $requisitionId, string $approverId): RequisitionInterface;
 
     /**
      * Reject a requisition.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $requisitionId Requisition ULID
      * @param string $rejectorId User ULID
      * @param string $reason Rejection reason
      * @return RequisitionInterface
      * @throws \Nexus\Procurement\Exceptions\RequisitionNotFoundException
      */
-    public function rejectRequisition(string $requisitionId, string $rejectorId, string $reason): RequisitionInterface;
+    public function rejectRequisition(string $tenantId, string $requisitionId, string $rejectorId, string $reason): RequisitionInterface;
 
     /**
      * Convert approved requisition to purchase order.
@@ -170,11 +173,12 @@ interface ProcurementManagerInterface
     /**
      * Accept vendor quote.
      *
+     * @param string $tenantId
      * @param string $quoteId
      * @param string $acceptorId
      * @return VendorQuoteInterface
      */
-    public function acceptVendorQuote(string $quoteId, string $acceptorId): VendorQuoteInterface;
+    public function acceptVendorQuote(string $tenantId, string $quoteId, string $acceptorId): VendorQuoteInterface;
 
     /**
      * Authorize payment for goods receipt (requires 3-way match or manual override).

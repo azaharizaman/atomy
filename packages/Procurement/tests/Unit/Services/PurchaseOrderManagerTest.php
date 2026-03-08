@@ -171,10 +171,26 @@ final class PurchaseOrderManagerTest extends TestCase
         self::assertSame($pos, $result);
     }
 
+    public function test_release_po_delegates_to_repository(): void
+    {
+        $po = $this->createMockPo('po-1', 'PO-001');
+        $released = $this->createMockPo('po-1', 'PO-001');
+
+        $this->poQuery->method('findById')->with('tenant-1', 'po-1')->willReturn($po);
+        $this->poPersist->expects(self::once())
+            ->method('updateStatus')
+            ->with('po-1', 'released', 'tenant-1')
+            ->willReturn($released);
+
+        $result = $this->manager->releasePo('tenant-1', 'po-1', 'user-1');
+
+        self::assertSame($released, $result);
+    }
+
     public function test_create_from_requisition_throws_when_requisition_not_approved(): void
     {
         $req = $this->createMockRequisitionWithLines('req-1', 'REQ-001', 'draft');
-        $this->reqRepository->method('findById')->with('req-1')->willReturn($req);
+        $this->reqRepository->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
 
         $this->expectException(InvalidRequisitionStateException::class);
 

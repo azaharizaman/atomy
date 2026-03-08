@@ -38,21 +38,22 @@ The Procurement package test suite ensures comprehensive coverage of all busines
 | `MatchingEngineTest` | 5 | 17 | Services/MatchingEngine.php |
 | `VendorQuoteManagerTest` | 8 | 22 | Services/VendorQuoteManager.php |
 | `ProcurementManagerTest` | 18 | 50 | Services/ProcurementManager.php |
-| **TOTAL** | **66** | **179** | 83% lines |
+| **TOTAL** | **67** | **272** | 83% lines |
 
 #### Exception Tests
 
 | Test Class | Methods | Assertions | Coverage |
 |------------|---------|------------|----------|
-| `InvalidRequisitionDataExceptionTest` | 3 | 9 | Factory methods |
-| `InvalidRequisitionStateExceptionTest` | 3 | 9 | Factory methods |
+| `InvalidRequisitionDataExceptionTest` | 3 | 5 | Factory methods |
+| `InvalidRequisitionStateExceptionTest` | 3 | 3 | Factory methods |
 | `UnauthorizedApprovalExceptionTest` | 3 | 3 | Factory methods |
-| `BudgetExceededExceptionTest` | 2 | 6 | Factory methods |
+| `BudgetExceededExceptionTest` | 2 | 2 | Factory methods |
 | `RequisitionNotFoundExceptionTest` | 2 | 2 | Factory methods |
-| `InvalidPurchaseOrderDataExceptionTest` | 3 | 9 | Factory methods |
-| `InvalidGoodsReceiptDataExceptionTest` | 4 | 8 | Factory methods |
-| `PurchaseOrderNotFoundExceptionTest` | 2 | 4 | Factory methods |
-| `GoodsReceiptNotFoundExceptionTest` | 2 | 4 | Factory methods |
+| `InvalidPurchaseOrderDataExceptionTest` | 3 | 3 | Factory methods |
+| `InvalidGoodsReceiptDataExceptionTest` | 4 | 5 | Factory methods |
+| `PurchaseOrderNotFoundExceptionTest` | 2 | 5 | Factory methods |
+| `GoodsReceiptNotFoundExceptionTest` | 2 | 5 | Factory methods |
+| `VendorQuoteNotFoundExceptionTest` | 1 | 1 | Factory methods |
 | **Event Tests** | 2 | 2 | RequisitionCreatedEvent, PurchaseOrderCreatedEvent |
 
 ---
@@ -495,11 +496,11 @@ jobs:
 
 | Category | Tests | Assertions | Pass Rate |
 |----------|-------|------------|-----------|
-| Services | 66 | 179 | 100% |
-| Exceptions | 24 | 92 | 100% |
+| Services | 67 | 272 | 100% |
+| Exceptions | 25 | 55 | 100% |
 | ML Extractors | 0 | 0 | 100% |
 | Integration | 2 | 2 | 100% |
-| **TOTAL** | **92** | **273** | **100%** |
+| **TOTAL** | **94** | **329** | **100%** |
 
 ---
 

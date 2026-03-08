@@ -6,6 +6,7 @@ namespace Nexus\Procurement\Tests\Unit\Services;
 
 use Nexus\Procurement\Contracts\VendorQuoteInterface;
 use Nexus\Procurement\Contracts\VendorQuoteRepositoryInterface;
+use Nexus\Procurement\Exceptions\VendorQuoteNotFoundException;
 use Nexus\Procurement\Services\VendorQuoteManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -49,24 +50,24 @@ final class VendorQuoteManagerTest extends TestCase
         $quote = $this->createMockQuote('quote-1', 'RFQ-001', 'vendor-1', 'pending');
         $accepted = $this->createMockQuote('quote-1', 'RFQ-001', 'vendor-1', 'accepted');
 
-        $this->repository->method('findById')->with('quote-1')->willReturn($quote);
+        $this->repository->method('findById')->with('tenant-1', 'quote-1')->willReturn($quote);
         $this->repository->expects(self::once())
             ->method('accept')
-            ->with('quote-1', 'user-1')
+            ->with('tenant-1', 'quote-1', 'user-1')
             ->willReturn($accepted);
 
-        $result = $this->manager->acceptQuote('quote-1', 'user-1');
+        $result = $this->manager->acceptQuote('tenant-1', 'quote-1', 'user-1');
 
         self::assertSame($accepted, $result);
     }
 
     public function test_accept_quote_throws_when_not_found(): void
     {
-        $this->repository->method('findById')->with('quote-x')->willReturn(null);
+        $this->repository->method('findById')->with('tenant-1', 'quote-x')->willReturn(null);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(VendorQuoteNotFoundException::class);
 
-        $this->manager->acceptQuote('quote-x', 'user-1');
+        $this->manager->acceptQuote('tenant-1', 'quote-x', 'user-1');
     }
 
     public function test_reject_quote_delegates_to_repository(): void
@@ -74,13 +75,13 @@ final class VendorQuoteManagerTest extends TestCase
         $quote = $this->createMockQuote('quote-1', 'RFQ-001', 'vendor-1', 'pending');
         $rejected = $this->createMockQuote('quote-1', 'RFQ-001', 'vendor-1', 'rejected');
 
-        $this->repository->method('findById')->with('quote-1')->willReturn($quote);
+        $this->repository->method('findById')->with('tenant-1', 'quote-1')->willReturn($quote);
         $this->repository->expects(self::once())
             ->method('reject')
-            ->with('quote-1', 'Price too high')
+            ->with('tenant-1', 'quote-1', 'Price too high')
             ->willReturn($rejected);
 
-        $result = $this->manager->rejectQuote('quote-1', 'Price too high');
+        $result = $this->manager->rejectQuote('tenant-1', 'quote-1', 'Price too high');
 
         self::assertSame($rejected, $result);
     }
@@ -91,10 +92,10 @@ final class VendorQuoteManagerTest extends TestCase
 
         $this->repository->expects(self::once())
             ->method('findById')
-            ->with('quote-1')
+            ->with('tenant-1', 'quote-1')
             ->willReturn($quote);
 
-        $result = $this->manager->getQuote('quote-1');
+        $result = $this->manager->getQuote('tenant-1', 'quote-1');
 
         self::assertSame($quote, $result);
     }
@@ -175,7 +176,7 @@ final class VendorQuoteManagerTest extends TestCase
             
             if ($index === 0 && count($lines) === 1) {
                 // Single line matches total
-                $price = $total / $qty;
+                $price = $qty > 0 ? $total / $qty : 0.0;
             }
             
             $lineData[] = [

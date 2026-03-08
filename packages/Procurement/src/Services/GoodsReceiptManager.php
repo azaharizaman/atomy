@@ -107,7 +107,7 @@ final readonly class GoodsReceiptManager
      */
     public function authorizePayment(string $tenantId, string $grnId, string $authorizerId): GoodsReceiptNoteInterface
     {
-        $grn = $this->repository->findById($grnId);
+        $grn = $this->repository->findByTenantAndId($tenantId, $grnId);
 
         if ($grn === null) {
             throw GoodsReceiptNotFoundException::forId($grnId);
@@ -146,7 +146,7 @@ final readonly class GoodsReceiptManager
      */
     public function getGoodsReceipt(string $tenantId, string $grnId): GoodsReceiptNoteInterface
     {
-        $grn = $this->repository->findById($grnId);
+        $grn = $this->repository->findByTenantAndId($tenantId, $grnId);
 
         if ($grn === null) {
             throw GoodsReceiptNotFoundException::forId($grnId);

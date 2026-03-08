@@ -621,6 +621,7 @@ $requisition = $procurement->createRequisition(
 ```php
 try {
     $approvedRequisition = $procurement->approveRequisition(
+        tenantId: 'tenant-001',
         requisitionId: $requisition->getId(),
         approverId: 'manager-456' // Must NOT be 'user-123' (requester)
     );
@@ -860,9 +861,9 @@ echo "Elapsed: {$result['elapsed_ms']}ms\n";
 - ✅ Database schema optimized for performance
 
 **Package Quality Metrics:**
-- 12 interfaces
+- 15 interfaces
 - 6 service classes
-- 10 exception classes
+- 11 exception classes
 - 7 database tables
 - 7 Eloquent models
 - 4 repository implementations

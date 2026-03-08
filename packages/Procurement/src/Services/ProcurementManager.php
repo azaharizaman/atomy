@@ -51,40 +51,43 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function submitRequisitionForApproval(string $requisitionId): RequisitionInterface
+    public function submitRequisitionForApproval(string $tenantId, string $requisitionId): RequisitionInterface
     {
         $this->logger->info('ProcurementManager: Submitting requisition for approval', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
         ]);
 
-        return $this->requisitionManager->submitForApproval($requisitionId);
+        return $this->requisitionManager->submitForApproval($tenantId, $requisitionId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function approveRequisition(string $requisitionId, string $approverId): RequisitionInterface
+    public function approveRequisition(string $tenantId, string $requisitionId, string $approverId): RequisitionInterface
     {
         $this->logger->info('ProcurementManager: Approving requisition', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'approver_id' => $approverId,
         ]);
 
-        return $this->requisitionManager->approveRequisition($requisitionId, $approverId);
+        return $this->requisitionManager->approveRequisition($tenantId, $requisitionId, $approverId);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function rejectRequisition(string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
+    public function rejectRequisition(string $tenantId, string $requisitionId, string $rejectorId, string $reason): RequisitionInterface
     {
         $this->logger->info('ProcurementManager: Rejecting requisition', [
+            'tenant_id' => $tenantId,
             'requisition_id' => $requisitionId,
             'rejector_id' => $rejectorId,
             'reason' => $reason,
         ]);
 
-        return $this->requisitionManager->rejectRequisition($requisitionId, $rejectorId, $reason);
+        return $this->requisitionManager->rejectRequisition($tenantId, $requisitionId, $rejectorId, $reason);
     }
 
     /**
@@ -136,9 +139,7 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
             'released_by' => $releasedBy,
         ]);
 
-        // Implementation would update PO status to 'released'
-        // For now, return the PO (assuming status update happens in repository)
-        return $this->purchaseOrderManager->getPurchaseOrder($tenantId, $poId);
+        return $this->purchaseOrderManager->releasePo($tenantId, $poId, $releasedBy);
     }
 
     /**
@@ -185,7 +186,7 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
      */
     public function getRequisition(string $tenantId, string $requisitionId): RequisitionInterface
     {
-        return $this->requisitionManager->getRequisition($requisitionId);
+        return $this->requisitionManager->getRequisition($tenantId, $requisitionId);
     }
 
     /**
@@ -243,18 +244,20 @@ final readonly class ProcurementManager implements ProcurementManagerInterface
     /**
      * Accept vendor quote.
      *
+     * @param string $tenantId
      * @param string $quoteId
      * @param string $acceptorId
      * @return VendorQuoteInterface
      */
-    public function acceptVendorQuote(string $quoteId, string $acceptorId): VendorQuoteInterface
+    public function acceptVendorQuote(string $tenantId, string $quoteId, string $acceptorId): VendorQuoteInterface
     {
         $this->logger->info('ProcurementManager: Accepting vendor quote', [
+            'tenant_id' => $tenantId,
             'quote_id' => $quoteId,
             'acceptor_id' => $acceptorId,
         ]);
 
-        return $this->vendorQuoteManager->acceptQuote($quoteId, $acceptorId);
+        return $this->vendorQuoteManager->acceptQuote($tenantId, $quoteId, $acceptorId);
     }
 
     /**

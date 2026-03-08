@@ -81,33 +81,33 @@ final class RequisitionManagerTest extends TestCase
 
     public function test_submit_for_approval_throws_when_not_found(): void
     {
-        $this->repository->method('findById')->with('req-1')->willReturn(null);
+        $this->repository->method('findById')->with('tenant-1', 'req-1')->willReturn(null);
 
         $this->expectException(RequisitionNotFoundException::class);
 
-        $this->manager->submitForApproval('req-1');
+        $this->manager->submitForApproval('tenant-1', 'req-1');
     }
 
     public function test_submit_for_approval_throws_when_status_not_draft(): void
     {
         $req = $this->createMockRequisition('req-1', 'REQ-001', 'user-1', 'approved');
 
-        $this->repository->method('findById')->with('req-1')->willReturn($req);
+        $this->repository->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
 
         $this->expectException(InvalidRequisitionStateException::class);
 
-        $this->manager->submitForApproval('req-1');
+        $this->manager->submitForApproval('tenant-1', 'req-1');
     }
 
     public function test_approve_requisition_throws_when_requester_approves_own(): void
     {
         $req = $this->createMockRequisition('req-1', 'REQ-001', 'user-1', 'pending_approval');
 
-        $this->repository->method('findById')->with('req-1')->willReturn($req);
+        $this->repository->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
 
         $this->expectException(UnauthorizedApprovalException::class);
 
-        $this->manager->approveRequisition('req-1', 'user-1');
+        $this->manager->approveRequisition('tenant-1', 'req-1', 'user-1');
     }
 
     public function test_approve_requisition_delegates_when_authorized(): void
@@ -115,24 +115,24 @@ final class RequisitionManagerTest extends TestCase
         $req = $this->createMockRequisition('req-1', 'REQ-001', 'user-1', 'pending_approval');
         $approved = $this->createMockRequisition('req-1', 'REQ-001', 'user-1', 'approved');
 
-        $this->repository->method('findById')->with('req-1')->willReturn($req);
+        $this->repository->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
         $this->repository->expects(self::once())
             ->method('approve')
-            ->with('req-1', 'approver-2')
+            ->with('tenant-1', 'req-1', 'approver-2')
             ->willReturn($approved);
 
-        $result = $this->manager->approveRequisition('req-1', 'approver-2');
+        $result = $this->manager->approveRequisition('tenant-1', 'req-1', 'approver-2');
 
         self::assertSame($approved, $result);
     }
 
     public function test_get_requisition_throws_when_not_found(): void
     {
-        $this->repository->method('findById')->with('req-1')->willReturn(null);
+        $this->repository->method('findById')->with('tenant-1', 'req-1')->willReturn(null);
 
         $this->expectException(RequisitionNotFoundException::class);
 
-        $this->manager->getRequisition('req-1');
+        $this->manager->getRequisition('tenant-1', 'req-1');
     }
 
     public function test_submit_for_approval_delegates_when_draft(): void
@@ -140,13 +140,13 @@ final class RequisitionManagerTest extends TestCase
         $req = $this->createMockRequisition('req-1', 'REQ-001', 'user-1', 'draft');
         $updated = $this->createMockRequisition('req-1', 'REQ-001', 'user-1', 'pending_approval');
 
-        $this->repository->method('findById')->with('req-1')->willReturn($req);
+        $this->repository->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
         $this->repository->expects(self::once())
             ->method('updateStatus')
-            ->with('req-1', 'pending_approval')
+            ->with('tenant-1', 'req-1', 'pending_approval')
             ->willReturn($updated);
 
-        $result = $this->manager->submitForApproval('req-1');
+        $result = $this->manager->submitForApproval('tenant-1', 'req-1');
 
         self::assertSame($updated, $result);
     }
@@ -156,13 +156,13 @@ final class RequisitionManagerTest extends TestCase
         $req = $this->createMockRequisition('req-1', 'REQ-001', 'user-1', 'pending_approval');
         $rejected = $this->createMockRequisition('req-1', 'REQ-001', 'user-1', 'rejected');
 
-        $this->repository->method('findById')->with('req-1')->willReturn($req);
+        $this->repository->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
         $this->repository->expects(self::once())
             ->method('reject')
-            ->with('req-1', 'approver-2', 'Not needed')
+            ->with('tenant-1', 'req-1', 'approver-2', 'Not needed')
             ->willReturn($rejected);
 
-        $result = $this->manager->rejectRequisition('req-1', 'approver-2', 'Not needed');
+        $result = $this->manager->rejectRequisition('tenant-1', 'req-1', 'approver-2', 'Not needed');
 
         self::assertSame($rejected, $result);
     }
@@ -175,13 +175,13 @@ final class RequisitionManagerTest extends TestCase
         $po->method('getId')->willReturn('po-1');
         $po->method('getPoNumber')->willReturn('PO-001');
 
-        $this->repository->method('findById')->with('req-1')->willReturn($req);
+        $this->repository->method('findById')->with('tenant-1', 'req-1')->willReturn($req);
         $this->repository->expects(self::once())
             ->method('markAsConverted')
-            ->with('req-1', 'po-1')
+            ->with('tenant-1', 'req-1', 'po-1')
             ->willReturn($converted);
 
-        $result = $this->manager->markAsConverted('req-1', $po);
+        $result = $this->manager->markAsConverted('tenant-1', 'req-1', $po);
 
         self::assertSame($converted, $result);
     }

@@ -10,20 +10,22 @@ namespace Nexus\Procurement\Contracts;
 interface VendorQuoteRepositoryInterface
 {
     /**
-     * Find quote by ID.
+     * Find quote by ID and tenant.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $id Quote ULID
      * @return VendorQuoteInterface|null
      */
-    public function findById(string $id): ?VendorQuoteInterface;
+    public function findById(string $tenantId, string $id): ?VendorQuoteInterface;
 
     /**
-     * Find all quotes for an RFQ.
+     * Find all quotes for an RFQ and tenant.
      *
+     * @param string $tenantId Tenant ULID
      * @param string $rfqNumber RFQ number
      * @return array<VendorQuoteInterface>
      */
-    public function findByRfqNumber(string $rfqNumber): array;
+    public function findByRfqNumber(string $tenantId, string $rfqNumber): array;
 
     /**
      * Find quotes for a requisition.
@@ -56,20 +58,22 @@ interface VendorQuoteRepositoryInterface
     /**
      * Accept a quote.
      *
+     * @param string $tenantId
      * @param string $quoteId
      * @param string $acceptorId
      * @return VendorQuoteInterface
      */
-    public function accept(string $quoteId, string $acceptorId): VendorQuoteInterface;
+    public function accept(string $tenantId, string $quoteId, string $acceptorId): VendorQuoteInterface;
 
     /**
      * Reject a quote.
      *
+     * @param string $tenantId
      * @param string $quoteId
      * @param string $reason
      * @return VendorQuoteInterface
      */
-    public function reject(string $quoteId, string $reason): VendorQuoteInterface;
+    public function reject(string $tenantId, string $quoteId, string $reason): VendorQuoteInterface;
 
     /**
      * Save quote.

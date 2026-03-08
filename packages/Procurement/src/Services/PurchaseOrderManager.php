@@ -63,7 +63,7 @@ final readonly class PurchaseOrderManager
         array $data
     ): PurchaseOrderInterface {
         // Verify requisition is approved
-        $requisition = $this->requisitionManager->getRequisition($requisitionId);
+        $requisition = $this->requisitionManager->getRequisition($tenantId, $requisitionId);
 
         if ($requisition->getStatus() !== 'approved') {
             throw InvalidRequisitionStateException::cannotConvertStatus(
@@ -111,7 +111,7 @@ final readonly class PurchaseOrderManager
         $purchaseOrder = $this->persist->create($tenantId, $requisitionId, $creatorId, $data);
 
         // Mark requisition as converted
-        $this->requisitionManager->markAsConverted($requisitionId, $purchaseOrder);
+        $this->requisitionManager->markAsConverted($tenantId, $requisitionId, $purchaseOrder);
 
         $this->logger->info('Purchase order created', [
             'tenant_id' => $tenantId,
@@ -202,15 +202,45 @@ final readonly class PurchaseOrderManager
         }
 
         $this->logger->info('Creating blanket PO release', [
+            'tenant_id' => $tenantId,
             'blanket_po_id' => $blanketPoId,
             'blanket_po_number' => $blanketPo->getPoNumber(),
             'release_number' => $data['release_number'],
             'release_total' => $releaseTotal,
         ]);
 
-        $release = $this->persist->createRelease($blanketPoId, $creatorId, $data);
+        $release = $this->persist->createRelease($tenantId, $blanketPoId, $creatorId, $data);
 
         return $release;
+    }
+
+    /**
+     * Release purchase order to vendor.
+     *
+     * @param string $tenantId
+     * @param string $poId
+     * @param string $releasedBy
+     * @return PurchaseOrderInterface
+     * @throws PurchaseOrderNotFoundException
+     */
+    public function releasePo(string $tenantId, string $poId, string $releasedBy): PurchaseOrderInterface
+    {
+        $po = $this->query->findById($tenantId, $poId);
+
+        if ($po === null) {
+            throw PurchaseOrderNotFoundException::forId($poId);
+        }
+
+        $this->logger->info('Releasing purchase order', [
+            'tenant_id' => $tenantId,
+            'po_id' => $poId,
+            'po_number' => $po->getPoNumber(),
+            'released_by' => $releasedBy,
+        ]);
+
+        $releasedPo = $this->persist->updateStatus($poId, 'released', $tenantId);
+
+        return $releasedPo;
     }
 
     /**

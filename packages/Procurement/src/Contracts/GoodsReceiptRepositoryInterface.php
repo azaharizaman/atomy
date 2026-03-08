@@ -21,6 +21,15 @@ interface GoodsReceiptRepositoryInterface
     public function findById(string $id): ?GoodsReceiptNoteInterface;
 
     /**
+     * Find GRN by ID and tenant.
+     *
+     * @param string $tenantId Tenant ULID
+     * @param string $id GRN ULID
+     * @return GoodsReceiptNoteInterface|null
+     */
+    public function findByTenantAndId(string $tenantId, string $id): ?GoodsReceiptNoteInterface;
+
+    /**
      * Find GRN by number.
      *
      * @param string $tenantId Tenant ULID

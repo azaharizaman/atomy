@@ -6,6 +6,7 @@ namespace Nexus\Procurement\Services;
 
 use Nexus\Procurement\Contracts\VendorQuoteInterface;
 use Nexus\Procurement\Contracts\VendorQuoteRepositoryInterface;
+use Nexus\Procurement\Exceptions\VendorQuoteNotFoundException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -63,27 +64,30 @@ final readonly class VendorQuoteManager
     /**
      * Accept vendor quote.
      *
+     * @param string $tenantId
      * @param string $quoteId
      * @param string $acceptorId
      * @return VendorQuoteInterface
      */
-    public function acceptQuote(string $quoteId, string $acceptorId): VendorQuoteInterface
+    public function acceptQuote(string $tenantId, string $quoteId, string $acceptorId): VendorQuoteInterface
     {
-        $quote = $this->repository->findById($quoteId);
+        $quote = $this->repository->findById($tenantId, $quoteId);
 
         if ($quote === null) {
-            throw new \InvalidArgumentException("Vendor quote with ID '{$quoteId}' not found.");
+            throw VendorQuoteNotFoundException::forId($tenantId, $quoteId);
         }
 
         $this->logger->info('Accepting vendor quote', [
+            'tenant_id' => $tenantId,
             'quote_id' => $quoteId,
             'rfq_number' => $quote->getRfqNumber(),
             'acceptor_id' => $acceptorId,
         ]);
 
-        $acceptedQuote = $this->repository->accept($quoteId, $acceptorId);
+        $acceptedQuote = $this->repository->accept($tenantId, $quoteId, $acceptorId);
 
         $this->logger->info('Vendor quote accepted', [
+            'tenant_id' => $tenantId,
             'quote_id' => $quoteId,
             'rfq_number' => $acceptedQuote->getRfqNumber(),
             'status' => $acceptedQuote->getStatus(),
@@ -95,25 +99,27 @@ final readonly class VendorQuoteManager
     /**
      * Reject vendor quote.
      *
+     * @param string $tenantId
      * @param string $quoteId
      * @param string $reason
      * @return VendorQuoteInterface
      */
-    public function rejectQuote(string $quoteId, string $reason): VendorQuoteInterface
+    public function rejectQuote(string $tenantId, string $quoteId, string $reason): VendorQuoteInterface
     {
-        $quote = $this->repository->findById($quoteId);
+        $quote = $this->repository->findById($tenantId, $quoteId);
 
         if ($quote === null) {
-            throw new \InvalidArgumentException("Vendor quote with ID '{$quoteId}' not found.");
+            throw VendorQuoteNotFoundException::forId($tenantId, $quoteId);
         }
 
         $this->logger->info('Rejecting vendor quote', [
+            'tenant_id' => $tenantId,
             'quote_id' => $quoteId,
             'rfq_number' => $quote->getRfqNumber(),
             'reason' => $reason,
         ]);
 
-        $rejectedQuote = $this->repository->reject($quoteId, $reason);
+        $rejectedQuote = $this->repository->reject($tenantId, $quoteId, $reason);
 
         return $rejectedQuote;
     }
@@ -121,12 +127,13 @@ final readonly class VendorQuoteManager
     /**
      * Get vendor quote by ID.
      *
+     * @param string $tenantId
      * @param string $quoteId
      * @return VendorQuoteInterface|null
      */
-    public function getQuote(string $quoteId): ?VendorQuoteInterface
+    public function getQuote(string $tenantId, string $quoteId): ?VendorQuoteInterface
     {
-        return $this->repository->findById($quoteId);
+        return $this->repository->findById($tenantId, $quoteId);
     }
 
     /**
