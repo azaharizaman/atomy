@@ -11,6 +11,7 @@ import { NegotiationWorkspace } from './screens/NegotiationWorkspace';
 import { ReportsAnalytics } from './screens/ReportsAnalytics';
 import { UserAccessManagement } from './screens/UserAccessManagement';
 import { RiskComplianceReview } from './screens/RiskComplianceReview';
+import { ApprovalDetail } from './screens/ApprovalDetail';
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: 'reports', Component: ReportsAnalytics },
       { path: 'users', Component: UserAccessManagement },
       { path: 'risk', Component: RiskComplianceReview },
+      { path: 'approvals', Component: ApprovalDetail },
     ],
   },
 ]);

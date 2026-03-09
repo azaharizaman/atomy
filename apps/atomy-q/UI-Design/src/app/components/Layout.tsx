@@ -4,7 +4,7 @@ import {
   LayoutDashboard, FileText, Inbox, ArrowLeftRight, BarChart3,
   Star, TrendingUp, MessageSquare, PieChart, Users, ShieldAlert,
   ChevronDown, ChevronRight, Settings, Bell, Search, HelpCircle,
-  LogOut, Zap, Menu, X
+  LogOut, Zap, Menu, X, ClipboardCheck
 } from 'lucide-react';
 
 const navGroups = [
@@ -35,6 +35,7 @@ const navGroups = [
     label: 'Governance',
     items: [
       { path: '/risk', label: 'Risk & Compliance', icon: ShieldAlert },
+      { path: '/approvals', label: 'Approvals', icon: ClipboardCheck },
       { path: '/reports', label: 'Reports & Analytics', icon: PieChart },
     ],
   },
