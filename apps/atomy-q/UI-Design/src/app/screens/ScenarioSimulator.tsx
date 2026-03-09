@@ -1,80 +1,72 @@
 import { useState } from 'react';
-import { Plus, Save, GitCompare, TrendingDown, X, AlertTriangle, Sliders, Check } from 'lucide-react';
+import { Plus, Save, GitCompare, Sliders, X } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { scenarios as mockScenarios, vendors, formatCurrency, getVendorById } from '../data/mockData';
+import { SlideOver } from '../components/SlideOver';
 
-interface Scenario {
+type LocalScenario = {
   id: string;
   name: string;
-  description: string;
   isBaseline: boolean;
   unsaved?: boolean;
   assumptions: {
-    volumeDiscount: number;
-    paymentTermDiscount: number;
-    bulkOrderQtyMultiplier: number;
-    freightWaived: boolean;
+    volumeMultiplier: number;
+    paymentTermsDays: number;
+    freightCostPct: number;
+    fxRateAdjust: number;
   };
-  vendors: {
-    name: string;
-    baseTotal: number;
-  }[];
+  vendorRankings: { vendorId: string; total: number; score: number }[];
+};
+
+function applyAssumptions(rankings: LocalScenario['vendorRankings'], assumptions: LocalScenario['assumptions']): LocalScenario['vendorRankings'] {
+  return rankings.map(r => {
+    let t = r.total;
+    t = t * assumptions.volumeMultiplier;
+    if (assumptions.paymentTermsDays < 30) {
+      t = t * (1 - 0.02);
+    } else if (assumptions.paymentTermsDays > 30) {
+      t = t * (1 + 0.01);
+    }
+    t = t * (1 + assumptions.freightCostPct / 100);
+    t = t * (1 + assumptions.fxRateAdjust / 100);
+    return { ...r, total: Math.round(t) };
+  });
 }
-
-const baseVendors = [
-  { name: 'PrimeSource Co.', baseTotal: 189200 },
-  { name: 'TechCorp Solutions', baseTotal: 198400 },
-  { name: 'FastParts Ltd.', baseTotal: 202600 },
-  { name: 'GlobalSupply Inc.', baseTotal: 195800 },
-];
-
-function computeTotal(vendor: { baseTotal: number }, assumptions: Scenario['assumptions']) {
-  let t = vendor.baseTotal;
-  t = t * (1 - assumptions.volumeDiscount / 100);
-  t = t * (1 - assumptions.paymentTermDiscount / 100);
-  t = t * assumptions.bulkOrderQtyMultiplier;
-  if (assumptions.freightWaived) t = t - 2800;
-  return Math.round(t);
-}
-
-const initialScenarios: Scenario[] = [
-  {
-    id: 's1', name: 'Baseline', description: 'No modifications — as quoted', isBaseline: true,
-    assumptions: { volumeDiscount: 0, paymentTermDiscount: 0, bulkOrderQtyMultiplier: 1, freightWaived: false },
-    vendors: baseVendors,
-  },
-  {
-    id: 's2', name: '10% Volume Discount', description: 'Apply 10% discount for volume commitment', isBaseline: false,
-    assumptions: { volumeDiscount: 10, paymentTermDiscount: 0, bulkOrderQtyMultiplier: 1, freightWaived: false },
-    vendors: baseVendors,
-  },
-  {
-    id: 's3', name: 'Early Payment + Freight Waived', description: 'Net 15 terms + freight waived', isBaseline: false,
-    assumptions: { volumeDiscount: 0, paymentTermDiscount: 3, bulkOrderQtyMultiplier: 1, freightWaived: true },
-    vendors: baseVendors,
-  },
-];
 
 export function ScenarioSimulator() {
-  const [scenarios, setScenarios] = useState<Scenario[]>(initialScenarios);
-  const [selectedIds, setSelectedIds] = useState<string[]>(['s1', 's2']);
-  const [activeScenario, setActiveScenario] = useState<string>('s2');
+  const [scenarioList, setScenarioList] = useState<LocalScenario[]>(
+    mockScenarios.map(s => ({
+      id: s.id,
+      name: s.name,
+      isBaseline: s.isBaseline,
+      assumptions: { ...s.assumptions },
+      vendorRankings: s.vendorRankings.map(r => ({ ...r })),
+    }))
+  );
+  const [selectedIds, setSelectedIds] = useState<string[]>([mockScenarios[0].id, mockScenarios[1].id]);
+  const [activeScenario, setActiveScenario] = useState<string>(mockScenarios[1].id);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [showDiffModal, setShowDiffModal] = useState(false);
   const [newScenarioName, setNewScenarioName] = useState('');
 
-  const selected = scenarios.filter(s => selectedIds.includes(s.id));
-  const active = scenarios.find(s => s.id === activeScenario);
+  const selected = scenarioList.filter(s => selectedIds.includes(s.id));
+  const active = scenarioList.find(s => s.id === activeScenario);
+  const baseline = scenarioList.find(s => s.isBaseline)!;
 
-  const chartData = baseVendors.map(v => {
+  const participatingVendorIds = baseline.vendorRankings.map(r => r.vendorId);
+  const participatingVendors = participatingVendorIds.map(id => getVendorById(id)!);
+
+  const chartData = participatingVendors.map(v => {
     const row: Record<string, string | number> = { vendor: v.name.split(' ')[0] };
     selected.forEach(s => {
-      row[s.name] = computeTotal(v, s.assumptions);
+      const ranking = s.vendorRankings.find(r => r.vendorId === v.id);
+      row[s.name] = ranking?.total ?? 0;
     });
     return row;
   });
 
-  const updateAssumption = (key: keyof Scenario['assumptions'], val: number | boolean) => {
-    setScenarios(prev => prev.map(s =>
+  const updateAssumption = (key: keyof LocalScenario['assumptions'], val: number) => {
+    setScenarioList(prev => prev.map(s =>
       s.id === activeScenario ? {
         ...s,
         assumptions: { ...s.assumptions, [key]: val },
@@ -85,22 +77,23 @@ export function ScenarioSimulator() {
 
   const colors = ['#6366F1', '#10B981', '#F59E0B', '#EF4444'];
 
+  const diffScenarios = selected.length >= 2 ? [selected[0], selected[1]] : [];
+
   return (
     <div className="flex h-full bg-slate-50">
       {/* Left: Scenario List */}
       <div className="w-72 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
         <div className="px-4 py-4 border-b border-slate-100">
           <h2 className="text-slate-900 text-sm" style={{ fontWeight: 600 }}>Scenarios</h2>
-          <p className="text-slate-500 text-xs mt-0.5">RFQ-2401 · What-if modeling</p>
+          <p className="text-slate-500 text-xs mt-0.5">{mockScenarios[0]?.rfqId ?? 'RFQ'} · What-if modeling</p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {scenarios.map((s) => {
+          {scenarioList.map(s => {
             const isActive = s.id === activeScenario;
             const isSelected = selectedIds.includes(s.id);
-            const bestTotal = Math.min(...baseVendors.map(v => computeTotal(v, s.assumptions)));
-            const baseline = scenarios[0];
-            const baseBest = Math.min(...baseVendors.map(v => computeTotal(v, baseline.assumptions)));
+            const bestTotal = Math.min(...s.vendorRankings.map(r => r.total));
+            const baseBest = Math.min(...baseline.vendorRankings.map(r => r.total));
             const savings = baseBest - bestTotal;
 
             return (
@@ -126,15 +119,17 @@ export function ScenarioSimulator() {
                       {s.isBaseline && <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded" style={{ fontWeight: 500 }}>Baseline</span>}
                       {s.unsaved && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded" style={{ fontWeight: 500 }}>Unsaved</span>}
                     </div>
-                    <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">{s.description}</p>
+                    <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">
+                      Vol: {s.assumptions.volumeMultiplier}× · Terms: {s.assumptions.paymentTermsDays}d · FX: {s.assumptions.fxRateAdjust > 0 ? '+' : ''}{s.assumptions.fxRateAdjust}%
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-600 text-xs">Best: <b>${bestTotal.toLocaleString()}</b></span>
+                  <span className="text-slate-600 text-xs">Best: <b>{formatCurrency(bestTotal)}</b></span>
                   {savings > 0 ? (
-                    <span className="text-emerald-600 text-xs" style={{ fontWeight: 600 }}>-${savings.toLocaleString()}</span>
+                    <span className="text-emerald-600 text-xs" style={{ fontWeight: 600 }}>-{formatCurrency(savings)}</span>
                   ) : savings < 0 ? (
-                    <span className="text-red-500 text-xs" style={{ fontWeight: 600 }}>+${Math.abs(savings).toLocaleString()}</span>
+                    <span className="text-red-500 text-xs" style={{ fontWeight: 600 }}>+{formatCurrency(Math.abs(savings))}</span>
                   ) : <span className="text-slate-400 text-xs">—</span>}
                 </div>
               </div>
@@ -145,12 +140,12 @@ export function ScenarioSimulator() {
         <div className="p-3 border-t border-slate-100 space-y-2">
           <button
             onClick={() => {
-              const newS: Scenario = {
-                id: `s${Date.now()}`, name: 'New Scenario', description: 'Custom assumptions', isBaseline: false, unsaved: true,
-                assumptions: { volumeDiscount: 5, paymentTermDiscount: 2, bulkOrderQtyMultiplier: 1, freightWaived: false },
-                vendors: baseVendors,
+              const newS: LocalScenario = {
+                id: `sc-${Date.now()}`, name: 'New Scenario', isBaseline: false, unsaved: true,
+                assumptions: { volumeMultiplier: 1.0, paymentTermsDays: 30, freightCostPct: 0, fxRateAdjust: 0 },
+                vendorRankings: baseline.vendorRankings.map(r => ({ ...r })),
               };
-              setScenarios(p => [...p, newS]);
+              setScenarioList(p => [...p, newS]);
               setActiveScenario(newS.id);
             }}
             className="w-full flex items-center gap-2 border border-dashed border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-500 hover:border-indigo-400 hover:text-indigo-600 justify-center"
@@ -158,7 +153,12 @@ export function ScenarioSimulator() {
             <Plus size={14} />
             New Scenario
           </button>
-          <button onClick={() => setShowCompareModal(true)} className="w-full flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-3 py-2.5 text-sm justify-center" style={{ fontWeight: 500 }}>
+          <button
+            onClick={() => setShowDiffModal(true)}
+            disabled={selected.length < 2}
+            className={`w-full flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm justify-center ${selected.length < 2 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
+            style={{ fontWeight: 500 }}
+          >
             <GitCompare size={14} />
             Compare Selected
           </button>
@@ -195,49 +195,47 @@ export function ScenarioSimulator() {
               <div className="grid grid-cols-2 gap-5">
                 <div>
                   <div className="flex justify-between mb-2">
-                    <label className="text-slate-600 text-xs" style={{ fontWeight: 500 }}>Volume Discount</label>
-                    <span className="text-indigo-600 text-xs" style={{ fontWeight: 600 }}>{active.assumptions.volumeDiscount}%</span>
+                    <label className="text-slate-600 text-xs" style={{ fontWeight: 500 }}>Volume Multiplier</label>
+                    <span className="text-indigo-600 text-xs" style={{ fontWeight: 600 }}>{active.assumptions.volumeMultiplier}×</span>
                   </div>
-                  <input type="range" min={0} max={25} step={0.5} value={active.assumptions.volumeDiscount}
+                  <input type="range" min={0.5} max={3} step={0.1} value={active.assumptions.volumeMultiplier}
                     disabled={active.isBaseline}
-                    onChange={e => updateAssumption('volumeDiscount', parseFloat(e.target.value))}
-                    className="w-full accent-indigo-600" />
-                  <div className="flex justify-between text-xs text-slate-400 mt-1"><span>0%</span><span>25%</span></div>
-                </div>
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <label className="text-slate-600 text-xs" style={{ fontWeight: 500 }}>Early Payment Discount</label>
-                    <span className="text-indigo-600 text-xs" style={{ fontWeight: 600 }}>{active.assumptions.paymentTermDiscount}%</span>
-                  </div>
-                  <input type="range" min={0} max={10} step={0.5} value={active.assumptions.paymentTermDiscount}
-                    disabled={active.isBaseline}
-                    onChange={e => updateAssumption('paymentTermDiscount', parseFloat(e.target.value))}
-                    className="w-full accent-indigo-600" />
-                  <div className="flex justify-between text-xs text-slate-400 mt-1"><span>0%</span><span>10%</span></div>
-                </div>
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <label className="text-slate-600 text-xs" style={{ fontWeight: 500 }}>Quantity Multiplier</label>
-                    <span className="text-indigo-600 text-xs" style={{ fontWeight: 600 }}>{active.assumptions.bulkOrderQtyMultiplier}×</span>
-                  </div>
-                  <input type="range" min={0.5} max={3} step={0.1} value={active.assumptions.bulkOrderQtyMultiplier}
-                    disabled={active.isBaseline}
-                    onChange={e => updateAssumption('bulkOrderQtyMultiplier', parseFloat(e.target.value))}
+                    onChange={e => updateAssumption('volumeMultiplier', parseFloat(e.target.value))}
                     className="w-full accent-indigo-600" />
                   <div className="flex justify-between text-xs text-slate-400 mt-1"><span>0.5×</span><span>3×</span></div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    disabled={active.isBaseline}
-                    onClick={() => updateAssumption('freightWaived', !active.assumptions.freightWaived)}
-                    className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 relative ${active.assumptions.freightWaived ? 'bg-indigo-600' : 'bg-slate-200'} ${active.isBaseline ? 'opacity-40 cursor-not-allowed' : ''}`}
-                  >
-                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${active.assumptions.freightWaived ? 'left-5.5' : 'left-0.5'}`} />
-                  </button>
-                  <div>
-                    <div className="text-slate-700 text-xs" style={{ fontWeight: 500 }}>Freight Waived</div>
-                    <div className="text-slate-400 text-xs">-$2,800 per vendor</div>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <label className="text-slate-600 text-xs" style={{ fontWeight: 500 }}>Payment Terms (days)</label>
+                    <span className="text-indigo-600 text-xs" style={{ fontWeight: 600 }}>Net {active.assumptions.paymentTermsDays}</span>
                   </div>
+                  <input type="range" min={7} max={90} step={1} value={active.assumptions.paymentTermsDays}
+                    disabled={active.isBaseline}
+                    onChange={e => updateAssumption('paymentTermsDays', parseInt(e.target.value))}
+                    className="w-full accent-indigo-600" />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1"><span>Net 7</span><span>Net 90</span></div>
+                </div>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <label className="text-slate-600 text-xs" style={{ fontWeight: 500 }}>Freight Cost Adjustment</label>
+                    <span className="text-indigo-600 text-xs" style={{ fontWeight: 600 }}>{active.assumptions.freightCostPct > 0 ? '+' : ''}{active.assumptions.freightCostPct}%</span>
+                  </div>
+                  <input type="range" min={-10} max={20} step={0.5} value={active.assumptions.freightCostPct}
+                    disabled={active.isBaseline}
+                    onChange={e => updateAssumption('freightCostPct', parseFloat(e.target.value))}
+                    className="w-full accent-indigo-600" />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1"><span>-10%</span><span>+20%</span></div>
+                </div>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <label className="text-slate-600 text-xs" style={{ fontWeight: 500 }}>FX Rate Adjustment</label>
+                    <span className="text-indigo-600 text-xs" style={{ fontWeight: 600 }}>{active.assumptions.fxRateAdjust > 0 ? '+' : ''}{active.assumptions.fxRateAdjust}%</span>
+                  </div>
+                  <input type="range" min={-10} max={15} step={0.5} value={active.assumptions.fxRateAdjust}
+                    disabled={active.isBaseline}
+                    onChange={e => updateAssumption('fxRateAdjust', parseFloat(e.target.value))}
+                    className="w-full accent-indigo-600" />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1"><span>-10%</span><span>+15%</span></div>
                 </div>
               </div>
             </div>
@@ -278,19 +276,21 @@ export function ScenarioSimulator() {
                 </tr>
               </thead>
               <tbody>
-                {baseVendors.map((v) => (
-                  <tr key={v.name} className="border-b border-slate-50 hover:bg-slate-50">
+                {participatingVendors.map(v => (
+                  <tr key={v.id} className="border-b border-slate-50 hover:bg-slate-50">
                     <td className="px-5 py-3 text-slate-700 text-sm">{v.name}</td>
                     {selected.map(s => {
-                      const total = computeTotal(v, s.assumptions);
-                      const base = computeTotal(v, scenarios[0].assumptions);
-                      const delta = total - base;
+                      const ranking = s.vendorRankings.find(r => r.vendorId === v.id);
+                      const total = ranking?.total ?? 0;
+                      const baseRanking = baseline.vendorRankings.find(r => r.vendorId === v.id);
+                      const baseTotal = baseRanking?.total ?? 0;
+                      const delta = total - baseTotal;
                       return (
                         <td key={s.id} className="px-4 py-3 text-center">
-                          <div className="text-slate-800 text-sm" style={{ fontWeight: 500 }}>${total.toLocaleString()}</div>
+                          <div className="text-slate-800 text-sm" style={{ fontWeight: 500 }}>{formatCurrency(total)}</div>
                           {!s.isBaseline && (
                             <div className={`text-xs ${delta < 0 ? 'text-emerald-600' : delta > 0 ? 'text-red-500' : 'text-slate-400'}`} style={{ fontWeight: 500 }}>
-                              {delta < 0 ? `−$${Math.abs(delta).toLocaleString()}` : delta > 0 ? `+$${delta.toLocaleString()}` : '—'}
+                              {delta < 0 ? `−${formatCurrency(Math.abs(delta))}` : delta > 0 ? `+${formatCurrency(delta)}` : '—'}
                             </div>
                           )}
                         </td>
@@ -304,69 +304,189 @@ export function ScenarioSimulator() {
         </div>
       </div>
 
-      {/* Save Modal */}
-      {showSaveModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-slate-900 text-sm">Save Scenario</h2>
-              <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-slate-600 text-xs block mb-1.5" style={{ fontWeight: 500 }}>Scenario Name</label>
-                <input value={newScenarioName || active?.name || ''} onChange={e => setNewScenarioName(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:border-indigo-400 outline-none" />
-              </div>
-              <div>
-                <label className="text-slate-600 text-xs block mb-1.5" style={{ fontWeight: 500 }}>Notes (optional)</label>
-                <textarea rows={3} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 resize-none focus:border-indigo-400 outline-none" placeholder="Describe this scenario..." />
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100">
-              <button onClick={() => setShowSaveModal(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
-              <button onClick={() => { setScenarios(p => p.map(s => s.id === activeScenario ? { ...s, unsaved: false } : s)); setShowSaveModal(false); }} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm" style={{ fontWeight: 500 }}>Save</button>
-            </div>
+      {/* SlideOver: Save Scenario */}
+      <SlideOver
+        open={showSaveModal}
+        onOpenChange={setShowSaveModal}
+        title="Save Scenario"
+        description="Save the current assumptions as a named scenario."
+        width="sm"
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button onClick={() => setShowSaveModal(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
+            <button onClick={() => {
+              setScenarioList(p => p.map(s =>
+                s.id === activeScenario ? { ...s, name: newScenarioName || s.name, unsaved: false } : s
+              ));
+              setShowSaveModal(false);
+              setNewScenarioName('');
+            }} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm" style={{ fontWeight: 500 }}>
+              <span className="flex items-center gap-2"><Save size={14} /> Save</span>
+            </button>
           </div>
-        </div>
-      )}
-
-      {/* Compare Modal */}
-      {showCompareModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-slate-900 text-sm">Comparison Report</h2>
-              <button onClick={() => setShowCompareModal(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-slate-600 text-xs block mb-1.5" style={{ fontWeight: 500 }}>Scenario Name</label>
+            <input
+              value={newScenarioName || active?.name || ''}
+              onChange={e => setNewScenarioName(e.target.value)}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:border-indigo-400 outline-none"
+              placeholder="e.g. Volume +20% with freight waiver"
+            />
+          </div>
+          <div>
+            <label className="text-slate-600 text-xs block mb-1.5" style={{ fontWeight: 500 }}>Notes (optional)</label>
+            <textarea rows={3} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 resize-none focus:border-indigo-400 outline-none" placeholder="Describe assumptions rationale..." />
+          </div>
+          {active && (
+            <div className="bg-slate-50 rounded-xl border border-slate-200 p-3 space-y-1.5">
+              <span className="text-xs text-slate-500" style={{ fontWeight: 600 }}>Assumptions Summary</span>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Volume Multiplier</span>
+                <span className="text-slate-700" style={{ fontWeight: 500 }}>{active.assumptions.volumeMultiplier}×</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Payment Terms</span>
+                <span className="text-slate-700" style={{ fontWeight: 500 }}>Net {active.assumptions.paymentTermsDays}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Freight Cost</span>
+                <span className="text-slate-700" style={{ fontWeight: 500 }}>{active.assumptions.freightCostPct > 0 ? '+' : ''}{active.assumptions.freightCostPct}%</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">FX Adjustment</span>
+                <span className="text-slate-700" style={{ fontWeight: 500 }}>{active.assumptions.fxRateAdjust > 0 ? '+' : ''}{active.assumptions.fxRateAdjust}%</span>
+              </div>
             </div>
-            <div className="p-6">
-              <p className="text-slate-600 text-sm mb-4">Comparing {selected.length} scenarios across {baseVendors.length} vendors.</p>
-              <div className="space-y-2">
-                {selected.map((s, i) => {
-                  const best = Math.min(...baseVendors.map(v => computeTotal(v, s.assumptions)));
-                  const baseBest = Math.min(...baseVendors.map(v => computeTotal(v, scenarios[0].assumptions)));
-                  const savings = baseBest - best;
-                  return (
-                    <div key={s.id} className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl border border-slate-200">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ background: colors[i % colors.length] }} />
-                        <span className="text-slate-700 text-sm" style={{ fontWeight: 500 }}>{s.name}</span>
+          )}
+        </div>
+      </SlideOver>
+
+      {/* SlideOver: Scenario Diff */}
+      <SlideOver
+        open={showDiffModal}
+        onOpenChange={setShowDiffModal}
+        title="Scenario Comparison"
+        description={diffScenarios.length >= 2 ? `${diffScenarios[0].name} vs ${diffScenarios[1].name}` : 'Select at least 2 scenarios'}
+        width="lg"
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button onClick={() => setShowDiffModal(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Close</button>
+            <button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm" style={{ fontWeight: 500 }}>Export Report</button>
+          </div>
+        }
+      >
+        {diffScenarios.length >= 2 && (
+          <div className="space-y-5">
+            {/* Assumptions Diff */}
+            <div className="space-y-3">
+              <h4 className="text-slate-900 text-sm" style={{ fontWeight: 600 }}>Assumptions</h4>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left px-3 py-2 text-xs text-slate-500" style={{ fontWeight: 600 }}>Parameter</th>
+                    <th className="text-center px-3 py-2 text-xs" style={{ fontWeight: 600 }}>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ background: colors[0] }} />
+                        <span className="text-slate-700">{diffScenarios[0].name}</span>
                       </div>
-                      <div className="text-right">
-                        <div className="text-slate-800 text-sm" style={{ fontWeight: 600 }}>${best.toLocaleString()}</div>
-                        {savings > 0 && <div className="text-emerald-600 text-xs">Save ${savings.toLocaleString()}</div>}
+                    </th>
+                    <th className="text-center px-3 py-2 text-xs" style={{ fontWeight: 600 }}>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ background: colors[1] }} />
+                        <span className="text-slate-700">{diffScenarios[1].name}</span>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {([
+                    { label: 'Volume Multiplier', key: 'volumeMultiplier' as const, fmt: (v: number) => `${v}×` },
+                    { label: 'Payment Terms', key: 'paymentTermsDays' as const, fmt: (v: number) => `Net ${v}` },
+                    { label: 'Freight Cost', key: 'freightCostPct' as const, fmt: (v: number) => `${v > 0 ? '+' : ''}${v}%` },
+                    { label: 'FX Adjustment', key: 'fxRateAdjust' as const, fmt: (v: number) => `${v > 0 ? '+' : ''}${v}%` },
+                  ]).map(row => {
+                    const v1 = diffScenarios[0].assumptions[row.key];
+                    const v2 = diffScenarios[1].assumptions[row.key];
+                    const diff = v1 !== v2;
+                    return (
+                      <tr key={row.label} className={`border-b border-slate-100 ${diff ? 'bg-amber-50/50' : ''}`}>
+                        <td className="px-3 py-2.5 text-slate-600 text-xs" style={{ fontWeight: 500 }}>{row.label}</td>
+                        <td className="px-3 py-2.5 text-center text-slate-700 text-xs">{row.fmt(v1)}</td>
+                        <td className={`px-3 py-2.5 text-center text-xs ${diff ? 'text-indigo-600' : 'text-slate-700'}`} style={{ fontWeight: diff ? 600 : 400 }}>{row.fmt(v2)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Vendor Results Diff */}
+            <div className="space-y-3">
+              <h4 className="text-slate-900 text-sm" style={{ fontWeight: 600 }}>Vendor Totals</h4>
+              <div className="space-y-2">
+                {participatingVendors.map(v => {
+                  const r1 = diffScenarios[0].vendorRankings.find(r => r.vendorId === v.id);
+                  const r2 = diffScenarios[1].vendorRankings.find(r => r.vendorId === v.id);
+                  const t1 = r1?.total ?? 0;
+                  const t2 = r2?.total ?? 0;
+                  const delta = t2 - t1;
+                  return (
+                    <div key={v.id} className="bg-slate-50 rounded-xl border border-slate-200 p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-slate-700 text-sm" style={{ fontWeight: 500 }}>{v.name}</span>
+                        <span className={`text-xs ${delta < 0 ? 'text-emerald-600' : delta > 0 ? 'text-red-500' : 'text-slate-400'}`} style={{ fontWeight: 600 }}>
+                          {delta < 0 ? `−${formatCurrency(Math.abs(delta))}` : delta > 0 ? `+${formatCurrency(delta)}` : 'No change'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <div className="text-xs text-slate-400 mb-0.5">{diffScenarios[0].name}</div>
+                          <div className="text-slate-800 text-sm" style={{ fontWeight: 600 }}>{formatCurrency(t1)}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-slate-400 mb-0.5">{diffScenarios[1].name}</div>
+                          <div className="text-slate-800 text-sm" style={{ fontWeight: 600 }}>{formatCurrency(t2)}</div>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100">
-              <button onClick={() => setShowCompareModal(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Close</button>
-              <button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm" style={{ fontWeight: 500 }}>Export Report</button>
+
+            {/* Summary */}
+            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+              <h4 className="text-indigo-900 text-sm mb-2" style={{ fontWeight: 600 }}>Comparison Summary</h4>
+              {(() => {
+                const best1 = Math.min(...diffScenarios[0].vendorRankings.map(r => r.total));
+                const best2 = Math.min(...diffScenarios[1].vendorRankings.map(r => r.total));
+                const delta = best2 - best1;
+                return (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-indigo-700">{diffScenarios[0].name} best total</span>
+                      <span className="text-indigo-800" style={{ fontWeight: 600 }}>{formatCurrency(best1)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-indigo-700">{diffScenarios[1].name} best total</span>
+                      <span className="text-indigo-800" style={{ fontWeight: 600 }}>{formatCurrency(best2)}</span>
+                    </div>
+                    <div className="border-t border-indigo-200 pt-1.5 flex justify-between text-xs">
+                      <span className="text-indigo-700" style={{ fontWeight: 600 }}>Delta</span>
+                      <span className={`${delta <= 0 ? 'text-emerald-700' : 'text-red-600'}`} style={{ fontWeight: 700 }}>
+                        {delta <= 0 ? `−${formatCurrency(Math.abs(delta))}` : `+${formatCurrency(delta)}`}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </SlideOver>
     </div>
   );
 }

@@ -1,76 +1,77 @@
 import { useState } from 'react';
-import { Plus, Trash2, AlertTriangle, CheckCircle, ChevronDown, Save, History, X, GripVertical, Info } from 'lucide-react';
+import {
+  Plus, Trash2, AlertTriangle, CheckCircle, ChevronDown, Save,
+  History, GripVertical, Send, Layers, BookOpen,
+} from 'lucide-react';
+import {
+  scoringModels, vendorScores, scoringPolicies,
+  statusColors, formatDate, rfqs,
+} from '../data/mockData';
+import { SlideOver } from '../components/SlideOver';
 
-interface Criterion {
-  id: string;
-  name: string;
-  category: string;
+type Criterion = {
+  dimension: string;
   weight: number;
-  description: string;
-  enabled: boolean;
-}
-
-const initialCriteria: Criterion[] = [
-  { id: 'c1', name: 'Price Competitiveness', category: 'Commercial', weight: 35, description: 'Total landed cost vs. market benchmark', enabled: true },
-  { id: 'c2', name: 'Delivery Performance', category: 'Operational', weight: 20, description: 'Lead time and on-time delivery history', enabled: true },
-  { id: 'c3', name: 'Quality & Compliance', category: 'Quality', weight: 20, description: 'Certifications, defect rates, audit scores', enabled: true },
-  { id: 'c4', name: 'Vendor Financial Health', category: 'Risk', weight: 10, description: 'Credit score, revenue stability, insurance', enabled: true },
-  { id: 'c5', name: 'Sustainability Score', category: 'ESG', weight: 10, description: 'Carbon footprint, ethical sourcing rating', enabled: true },
-  { id: 'c6', name: 'Innovation Capability', category: 'Strategic', weight: 5, description: 'R&D investment, product roadmap alignment', enabled: true },
-];
-
-interface Rule {
-  id: string;
-  type: 'constraint' | 'policy';
-  label: string;
-  condition: string;
-  action: string;
-  active: boolean;
-}
-
-const rules: Rule[] = [
-  { id: 'r1', type: 'constraint', label: 'Max Unit Price', condition: 'Unit Price > $10,000', action: 'Disqualify vendor', active: true },
-  { id: 'r2', type: 'policy', label: 'Preferred Vendor Bonus', condition: 'Vendor in Preferred List', action: '+5 score bonus', active: true },
-  { id: 'r3', type: 'constraint', label: 'Min Sustainability', condition: 'ESG Score < 40', action: 'Flag for review', active: true },
-  { id: 'r4', type: 'policy', label: 'Local Vendor Priority', condition: 'Vendor country = AU', action: '+3 score bonus', active: false },
-];
-
-const versions = [
-  { id: 'v3', label: 'v3.0 (Current)', date: 'Mar 6, 2026', author: 'Alex Kumar', active: true },
-  { id: 'v2', label: 'v2.1', date: 'Feb 12, 2026', author: 'Sam Chen', active: false },
-  { id: 'v1', label: 'v1.0', date: 'Jan 5, 2026', author: 'Alex Kumar', active: false },
-];
-
-const previewVendors = [
-  { name: 'PrimeSource Co.', scores: { c1: 92, c2: 88, c3: 95, c4: 87, c5: 78, c6: 72 } },
-  { name: 'TechCorp Solutions', scores: { c1: 84, c2: 91, c3: 88, c4: 79, c5: 82, c6: 88 } },
-  { name: 'FastParts Ltd.', scores: { c1: 88, c2: 76, c3: 74, c4: 81, c5: 65, c6: 60 } },
-];
-
-function getWeightedScore(vendor: typeof previewVendors[0], criteria: Criterion[]) {
-  return criteria.reduce((total, c) => {
-    if (!c.enabled) return total;
-    const raw = vendor.scores[c.id as keyof typeof vendor.scores] || 0;
-    return total + (raw * c.weight / 100);
-  }, 0);
-}
+  mandatory: boolean;
+};
 
 export function ScoringModelBuilder() {
-  const [criteria, setCriteria] = useState<Criterion[]>(initialCriteria);
-  const [showWeightModal, setShowWeightModal] = useState(false);
-  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState(scoringModels[0].id);
+  const selectedModel = scoringModels.find(m => m.id === selectedModelId)!;
+  const [criteria, setCriteria] = useState<Criterion[]>(selectedModel.criteria.map(c => ({ ...c })));
+  const [showWeightSlider, setShowWeightSlider] = useState(false);
   const [showViolation, setShowViolation] = useState(false);
+  const [showPublish, setShowPublish] = useState(false);
+  const [showAssignment, setShowAssignment] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
 
-  const totalWeight = criteria.filter(c => c.enabled).reduce((s, c) => s + c.weight, 0);
+  const totalWeight = criteria.reduce((s, c) => s + c.weight, 0);
   const isViolation = totalWeight !== 100;
 
-  const updateWeight = (id: string, val: number) => {
-    setCriteria(prev => prev.map(c => c.id === id ? { ...c, weight: val } : c));
+  const activePolicy = scoringPolicies.find(p =>
+    p.assignedCategories.some(cat => selectedModel.assignedCategories.includes(cat))
+  );
+
+  const policyBreaches = activePolicy
+    ? activePolicy.dimensions.filter(pd => {
+        const c = criteria.find(cr => cr.dimension === pd.name);
+        return c && (c.weight < pd.weightMin || c.weight > pd.weightMax);
+      })
+    : [];
+
+  const updateWeight = (dim: string, val: number) => {
+    setCriteria(prev => prev.map(c => c.dimension === dim ? { ...c, weight: val } : c));
   };
 
-  const toggleCriterion = (id: string) => {
-    setCriteria(prev => prev.map(c => c.id === id ? { ...c, enabled: !c.enabled } : c));
+  const selectModel = (id: string) => {
+    setSelectedModelId(id);
+    const m = scoringModels.find(mdl => mdl.id === id)!;
+    setCriteria(m.criteria.map(c => ({ ...c })));
   };
+
+  const getWeightedScore = (vendorId: string) => {
+    const vs = vendorScores.find(v => v.vendorId === vendorId);
+    if (!vs) return 0;
+    const dimMap: Record<string, number> = {
+      'Price/LCC': vs.price,
+      'Delivery': vs.delivery,
+      'Quality': vs.quality,
+      'Risk': vs.risk,
+      'Sustainability': vs.sustainability,
+    };
+    return criteria.reduce((total, c) => total + ((dimMap[c.dimension] ?? 0) * c.weight / 100), 0);
+  };
+
+  const rankedVendors = [...vendorScores]
+    .map(v => ({ ...v, weighted: getWeightedScore(v.vendorId) }))
+    .sort((a, b) => b.weighted - a.weighted);
+
+  const affectedRfqs = rfqs.filter(r =>
+    selectedModel.assignedCategories.includes(r.category)
+  );
+
+  const allCategories = ['IT Hardware', 'Network Equipment', 'General Supplies', 'Software', 'Professional Services', 'Furniture', 'Facilities', 'IT Infrastructure'];
+  const [assignedCats, setAssignedCats] = useState<string[]>(selectedModel.assignedCategories);
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
@@ -82,25 +83,41 @@ export function ScoringModelBuilder() {
             <p className="text-slate-500 text-xs mt-0.5">Configure evaluation criteria, weights and governance rules</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowVersionModal(true)} className="flex items-center gap-2 border border-slate-200 bg-white rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
+            <select
+              value={selectedModelId}
+              onChange={e => selectModel(e.target.value)}
+              className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 bg-white"
+            >
+              {scoringModels.map(m => (
+                <option key={m.id} value={m.id}>{m.name} (v{m.version})</option>
+              ))}
+            </select>
+            <button onClick={() => setShowVersionHistory(true)} className="flex items-center gap-2 border border-slate-200 bg-white rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
               <History size={14} />
-              v3.0 (Current)
-              <ChevronDown size={12} />
+              v{selectedModel.version}
             </button>
-            {isViolation && (
+            <button onClick={() => setShowAssignment(true)} className="flex items-center gap-2 border border-slate-200 bg-white rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
+              <Layers size={14} />
+              Categories
+            </button>
+            {(isViolation || policyBreaches.length > 0) && (
               <button onClick={() => setShowViolation(true)} className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm hover:bg-red-100">
                 <AlertTriangle size={14} />
-                Policy Violation
+                {policyBreaches.length > 0 ? 'Policy Breach' : 'Weight Error'}
               </button>
             )}
-            <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 py-2 text-sm" style={{ fontWeight: 500 }}>
-              <Save size={14} />
-              Save Model
+            <button
+              onClick={() => setShowPublish(true)}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 py-2 text-sm"
+              style={{ fontWeight: 500 }}
+            >
+              <Send size={14} />
+              Publish
             </button>
           </div>
         </div>
 
-        {/* Weight Total */}
+        {/* Weight Total Bar */}
         <div className={`mt-4 flex items-center gap-3 px-4 py-2.5 rounded-xl border ${isViolation ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'}`}>
           {isViolation ? <AlertTriangle size={15} className="text-red-500" /> : <CheckCircle size={15} className="text-emerald-500" />}
           <span className={`text-sm ${isViolation ? 'text-red-700' : 'text-emerald-700'}`} style={{ fontWeight: 600 }}>
@@ -110,8 +127,8 @@ export function ScoringModelBuilder() {
             {isViolation ? `(must equal 100% — ${totalWeight > 100 ? `${totalWeight - 100}% over` : `${100 - totalWeight}% under`})` : 'Weights are balanced'}
           </span>
           {isViolation && (
-            <button onClick={() => setShowWeightModal(true)} className="ml-auto text-xs bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700" style={{ fontWeight: 500 }}>
-              Auto-Balance Weights
+            <button onClick={() => setShowWeightSlider(true)} className="ml-auto text-xs bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700" style={{ fontWeight: 500 }}>
+              Auto-Balance
             </button>
           )}
           <div className="ml-auto w-48 h-2 bg-white rounded-full overflow-hidden border border-slate-200">
@@ -121,7 +138,7 @@ export function ScoringModelBuilder() {
       </div>
 
       <div className="flex-1 overflow-hidden flex">
-        {/* Left: Criteria + Rules */}
+        {/* Left: Criteria + Policy */}
         <div className="flex-1 overflow-auto p-5 space-y-4">
           {/* Criteria Editor */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -133,78 +150,91 @@ export function ScoringModelBuilder() {
               </button>
             </div>
             <div>
-              {criteria.map((c) => (
-                <div key={c.id} className={`flex items-center gap-3 px-5 py-3.5 border-b border-slate-100 last:border-0 transition-colors ${!c.enabled ? 'opacity-50 bg-slate-50' : 'hover:bg-slate-50/50'}`}>
-                  <GripVertical size={14} className="text-slate-300 cursor-grab flex-shrink-0" />
-
-                  {/* Toggle */}
-                  <button
-                    onClick={() => toggleCriterion(c.id)}
-                    className={`w-8 h-4 rounded-full transition-colors flex-shrink-0 relative ${c.enabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
-                  >
-                    <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${c.enabled ? 'left-4.5' : 'left-0.5'}`} />
-                  </button>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-800 text-sm" style={{ fontWeight: 500 }}>{c.name}</span>
-                      <span className="text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded" style={{ fontWeight: 500 }}>{c.category}</span>
+              {criteria.map(c => {
+                const policyDim = activePolicy?.dimensions.find(d => d.name === c.dimension);
+                const breached = policyDim && (c.weight < policyDim.weightMin || c.weight > policyDim.weightMax);
+                return (
+                  <div key={c.dimension} className={`flex items-center gap-3 px-5 py-3.5 border-b border-slate-100 last:border-0 transition-colors hover:bg-slate-50/50`}>
+                    <GripVertical size={14} className="text-slate-300 cursor-grab flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-800 text-sm" style={{ fontWeight: 500 }}>{c.dimension}</span>
+                        {c.mandatory && <span className="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-200" style={{ fontWeight: 500 }}>Required</span>}
+                        {breached && <span className="text-xs bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200" style={{ fontWeight: 500 }}>Out of policy</span>}
+                      </div>
+                      {policyDim && (
+                        <span className="text-slate-400 text-xs">Policy range: {policyDim.weightMin}% – {policyDim.weightMax}%</span>
+                      )}
                     </div>
-                    <span className="text-slate-400 text-xs">{c.description}</span>
-                  </div>
-
-                  {/* Slider */}
-                  <div className="flex items-center gap-3 w-64">
-                    <input
-                      type="range"
-                      min={0} max={50} step={1}
-                      value={c.weight}
-                      disabled={!c.enabled}
-                      onChange={e => updateWeight(c.id, parseInt(e.target.value))}
-                      className="flex-1 accent-indigo-600"
-                    />
-                    <div className="w-14 text-center">
-                      <span className="text-slate-800 text-sm" style={{ fontWeight: 600 }}>{c.weight}%</span>
+                    <div className="flex items-center gap-3 w-64">
+                      <input
+                        type="range" min={0} max={50} step={1}
+                        value={c.weight}
+                        onChange={e => updateWeight(c.dimension, parseInt(e.target.value))}
+                        className="flex-1 accent-indigo-600"
+                      />
+                      <div className="w-14 text-center">
+                        <span className={`text-sm ${breached ? 'text-red-600' : 'text-slate-800'}`} style={{ fontWeight: 600 }}>{c.weight}%</span>
+                      </div>
                     </div>
+                    <button className="text-slate-300 hover:text-red-400 flex-shrink-0">
+                      <Trash2 size={14} />
+                    </button>
                   </div>
-
-                  <button className="text-slate-300 hover:text-red-400 flex-shrink-0">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Constraint & Policy Rules */}
+          {/* Version Notes */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
             <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-              <h3 className="text-slate-900">Constraint & Policy Rules</h3>
-              <button className="flex items-center gap-1.5 text-indigo-600 text-xs hover:text-indigo-700" style={{ fontWeight: 500 }}>
-                <Plus size={13} />
-                Add Rule
+              <h3 className="text-slate-900">Version Notes</h3>
+              <span className="text-xs text-slate-400">v{selectedModel.version} · Updated {formatDate(selectedModel.updatedAt)}</span>
+            </div>
+            <div className="p-5">
+              <textarea
+                rows={3}
+                placeholder="Describe what changed in this version..."
+                className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 resize-none focus:border-indigo-400 outline-none"
+                defaultValue={`v${selectedModel.version} — standard weighting for ${selectedModel.assignedCategories.join(', ')}`}
+              />
+            </div>
+          </div>
+
+          {/* RFQ/Category Assignment */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+              <h3 className="text-slate-900">Category Assignments</h3>
+              <button onClick={() => setShowAssignment(true)} className="flex items-center gap-1.5 text-indigo-600 text-xs hover:text-indigo-700" style={{ fontWeight: 500 }}>
+                <Layers size={13} />
+                Manage
               </button>
             </div>
-            <div className="divide-y divide-slate-100">
-              {rules.map((rule) => (
-                <div key={rule.id} className={`flex items-center gap-3 px-5 py-3 ${!rule.active ? 'opacity-50' : ''}`}>
-                  <span className={`text-xs px-2 py-0.5 rounded-full border flex-shrink-0 ${rule.type === 'constraint' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'}`} style={{ fontWeight: 600 }}>
-                    {rule.type === 'constraint' ? 'CONSTRAINT' : 'POLICY'}
-                  </span>
-                  <div className="flex-1">
-                    <span className="text-slate-800 text-sm" style={{ fontWeight: 500 }}>{rule.label}</span>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-slate-400 text-xs">IF {rule.condition}</span>
-                      <span className="text-slate-400 text-xs">→</span>
-                      <span className="text-slate-600 text-xs" style={{ fontWeight: 500 }}>{rule.action}</span>
-                    </div>
-                  </div>
-                  <button className={`w-8 h-4 rounded-full transition-colors flex-shrink-0 relative ${rule.active ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                    <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow ${rule.active ? 'left-4.5' : 'left-0.5'}`} />
-                  </button>
+            <div className="p-5">
+              {selectedModel.assignedCategories.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedModel.assignedCategories.map(cat => (
+                    <span key={cat} className="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200" style={{ fontWeight: 500 }}>{cat}</span>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <p className="text-slate-400 text-sm">No categories assigned yet.</p>
+              )}
+              {affectedRfqs.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <span className="text-xs text-slate-500" style={{ fontWeight: 500 }}>Affects {affectedRfqs.length} RFQ(s):</span>
+                  <div className="mt-1 space-y-1">
+                    {affectedRfqs.slice(0, 3).map(r => (
+                      <div key={r.id} className="flex items-center gap-2 text-xs text-slate-600">
+                        <span className={`px-1.5 py-0.5 rounded ${statusColors[r.status]}`} style={{ fontWeight: 500 }}>{r.status}</span>
+                        <span>{r.id} — {r.title}</span>
+                      </div>
+                    ))}
+                    {affectedRfqs.length > 3 && <span className="text-xs text-slate-400">+{affectedRfqs.length - 3} more</span>}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -216,29 +246,37 @@ export function ScoringModelBuilder() {
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
               <span className="text-slate-700 text-sm" style={{ fontWeight: 600 }}>Live Score Preview</span>
             </div>
-            <p className="text-slate-400 text-xs mt-0.5">RFQ-2401 · 4 vendors</p>
+            <p className="text-slate-400 text-xs mt-0.5">{selectedModel.name} · {rankedVendors.length} vendors</p>
           </div>
-
           <div className="p-4 space-y-3">
-            {previewVendors.map((vendor, i) => {
-              const score = getWeightedScore(vendor, criteria);
+            {rankedVendors.map((vendor, i) => {
               const isWinner = i === 0;
+              const dimMap: Record<string, number> = {
+                'Price/LCC': vendor.price,
+                'Delivery': vendor.delivery,
+                'Quality': vendor.quality,
+                'Risk': vendor.risk,
+                'Sustainability': vendor.sustainability,
+              };
               return (
-                <div key={vendor.name} className={`rounded-xl border p-4 ${isWinner ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200'}`}>
+                <div key={vendor.vendorId} className={`rounded-xl border p-4 ${isWinner ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200'}`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-700 text-sm" style={{ fontWeight: 600 }}>{vendor.name}</span>
-                    <span className={`text-lg ${isWinner ? 'text-emerald-700' : 'text-slate-800'}`} style={{ fontWeight: 800 }}>{score.toFixed(1)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 text-xs" style={{ fontWeight: 600 }}>#{i + 1}</span>
+                      <span className="text-slate-700 text-sm" style={{ fontWeight: 600 }}>{vendor.name}</span>
+                    </div>
+                    <span className={`text-lg ${isWinner ? 'text-emerald-700' : 'text-slate-800'}`} style={{ fontWeight: 800 }}>{vendor.weighted.toFixed(1)}</span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-3">
-                    <div className={`h-full rounded-full ${isWinner ? 'bg-emerald-500' : 'bg-indigo-400'}`} style={{ width: `${score}%` }} />
+                    <div className={`h-full rounded-full ${isWinner ? 'bg-emerald-500' : 'bg-indigo-400'}`} style={{ width: `${vendor.weighted}%` }} />
                   </div>
                   <div className="space-y-1.5">
-                    {criteria.filter(c => c.enabled).map(c => {
-                      const raw = vendor.scores[c.id as keyof typeof vendor.scores] || 0;
+                    {criteria.map(c => {
+                      const raw = dimMap[c.dimension] ?? 0;
                       const contribution = (raw * c.weight / 100).toFixed(1);
                       return (
-                        <div key={c.id} className="flex items-center justify-between">
-                          <span className="text-slate-500 text-xs">{c.name}</span>
+                        <div key={c.dimension} className="flex items-center justify-between">
+                          <span className="text-slate-500 text-xs">{c.dimension}</span>
                           <div className="flex items-center gap-2">
                             <span className="text-slate-400 text-xs">{raw}/100</span>
                             <span className="text-slate-700 text-xs" style={{ fontWeight: 500 }}>+{contribution}</span>
@@ -254,108 +292,272 @@ export function ScoringModelBuilder() {
         </div>
       </div>
 
-      {/* Policy Violation Modal */}
-      {showViolation && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center gap-3 px-6 py-5 bg-red-50 rounded-t-2xl border-b border-red-200">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                <AlertTriangle size={20} className="text-red-600" />
-              </div>
-              <div>
-                <h2 className="text-red-900">Policy Violation</h2>
-                <p className="text-red-600 text-xs">Scoring model cannot be saved with invalid weights</p>
-              </div>
-            </div>
-            <div className="p-6">
-              <p className="text-slate-600 text-sm">Total criteria weights sum to <strong>{totalWeight}%</strong> but must equal exactly <strong>100%</strong>.</p>
-              <div className="mt-4 bg-slate-50 rounded-xl p-4 space-y-2">
-                {criteria.filter(c => c.enabled).map(c => (
-                  <div key={c.id} className="flex justify-between items-center text-xs">
-                    <span className="text-slate-600">{c.name}</span>
-                    <span className="text-slate-800" style={{ fontWeight: 600 }}>{c.weight}%</span>
+      {/* SlideOver: Adjust Scoring Weights */}
+      <SlideOver
+        open={showWeightSlider}
+        onOpenChange={setShowWeightSlider}
+        title="Adjust Scoring Weights"
+        description="Auto-balance weights to total 100% while preserving relative proportions."
+        width="md"
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button onClick={() => setShowWeightSlider(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
+            <button onClick={() => {
+              const total = criteria.reduce((s, c) => s + c.weight, 0);
+              if (total > 0) setCriteria(prev => prev.map(c => ({ ...c, weight: Math.round(c.weight / total * 100) })));
+              setShowWeightSlider(false);
+            }} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm" style={{ fontWeight: 500 }}>Apply</button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-slate-600 text-sm">Automatically distribute weights to sum to 100% while preserving relative proportions.</p>
+          <div className="space-y-3">
+            {criteria.map(c => {
+              const normalized = totalWeight > 0 ? Math.round(c.weight / totalWeight * 100) : 0;
+              return (
+                <div key={c.dimension} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-700 text-sm" style={{ fontWeight: 500 }}>{c.dimension}</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-slate-400">{c.weight}%</span>
+                      <span className="text-slate-400">→</span>
+                      <span className="text-indigo-600" style={{ fontWeight: 600 }}>{normalized}%</span>
+                    </div>
                   </div>
-                ))}
-                <div className="border-t border-slate-200 pt-2 flex justify-between items-center">
-                  <span className="text-slate-700 text-xs" style={{ fontWeight: 600 }}>Total</span>
-                  <span className="text-red-600 text-sm" style={{ fontWeight: 700 }}>{totalWeight}%</span>
+                  <input
+                    type="range" min={0} max={50} step={1}
+                    value={c.weight}
+                    onChange={e => updateWeight(c.dimension, parseInt(e.target.value))}
+                    className="w-full accent-indigo-600"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </SlideOver>
+
+      {/* SlideOver: Policy Violation Warning */}
+      <SlideOver
+        open={showViolation}
+        onOpenChange={setShowViolation}
+        title="Policy Violation Warning"
+        description="Current weights breach governance policy rules."
+        width="md"
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button onClick={() => setShowViolation(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Dismiss</button>
+            <button onClick={() => { setShowViolation(false); setShowWeightSlider(true); }} className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm" style={{ fontWeight: 500 }}>Auto-Balance</button>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+          {isViolation && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-800 text-sm" style={{ fontWeight: 600 }}>Weight Total: {totalWeight}%</p>
+                  <p className="text-red-600 text-xs mt-1">Total criteria weights must equal exactly 100%.</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100">
-              <button onClick={() => setShowViolation(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Dismiss</button>
-              <button onClick={() => { setShowViolation(false); setShowWeightModal(true); }} className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm" style={{ fontWeight: 500 }}>Auto-Balance</button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Weight Adjustment Modal */}
-      {showWeightModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-slate-900 text-sm">Auto-Balance Weights</h2>
-              <button onClick={() => setShowWeightModal(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
-            </div>
-            <div className="p-6">
-              <p className="text-slate-600 text-sm mb-4">Automatically distribute weights to sum to 100% while preserving relative proportions.</p>
+          {policyBreaches.length > 0 && activePolicy && (
+            <div className="space-y-3">
+              <h4 className="text-slate-900 text-sm" style={{ fontWeight: 600 }}>Policy: {activePolicy.name}</h4>
               <div className="space-y-2">
-                {criteria.filter(c => c.enabled).map(c => {
-                  const normalized = Math.round(c.weight / totalWeight * 100);
+                {policyBreaches.map(pd => {
+                  const c = criteria.find(cr => cr.dimension === pd.name);
                   return (
-                    <div key={c.id} className="flex justify-between items-center">
-                      <span className="text-slate-600 text-xs">{c.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-400 text-xs">{c.weight}%</span>
-                        <span className="text-slate-400 text-xs">→</span>
-                        <span className="text-indigo-600 text-xs" style={{ fontWeight: 600 }}>{normalized}%</span>
+                    <div key={pd.name} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-amber-800 text-sm" style={{ fontWeight: 500 }}>{pd.name}</span>
+                        <span className="text-red-600 text-xs" style={{ fontWeight: 600 }}>{c?.weight}%</span>
                       </div>
+                      <p className="text-amber-700 text-xs mt-1">Allowed range: {pd.weightMin}% – {pd.weightMax}%</p>
                     </div>
                   );
                 })}
               </div>
+              <div className="bg-slate-50 rounded-xl border border-slate-200 p-3 space-y-1">
+                <span className="text-slate-700 text-xs" style={{ fontWeight: 600 }}>Policy Rules:</span>
+                {activePolicy.rules.map((rule, i) => (
+                  <p key={i} className="text-slate-500 text-xs">• {rule}</p>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100">
-              <button onClick={() => setShowWeightModal(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
-              <button onClick={() => {
-                const total = criteria.filter(c => c.enabled).reduce((s, c) => s + c.weight, 0);
-                setCriteria(prev => prev.map(c => c.enabled ? { ...c, weight: Math.round(c.weight / total * 100) } : c));
-                setShowWeightModal(false);
-              }} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm" style={{ fontWeight: 500 }}>Apply</button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Version History Modal */}
-      {showVersionModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-slate-900 text-sm">Version History</h2>
-              <button onClick={() => setShowVersionModal(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {versions.map((v) => (
-                <div key={v.id} className={`flex items-center justify-between px-6 py-4 ${v.active ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-800 text-sm" style={{ fontWeight: 500 }}>{v.label}</span>
-                      {v.active && <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded" style={{ fontWeight: 500 }}>Active</span>}
-                    </div>
-                    <span className="text-slate-500 text-xs">{v.date} · {v.author}</span>
-                  </div>
-                  {!v.active && <button className="text-indigo-600 text-xs hover:underline" style={{ fontWeight: 500 }}>Restore</button>}
-                </div>
-              ))}
-            </div>
-            <div className="px-6 py-4 border-t border-slate-100 flex justify-end">
-              <button onClick={() => setShowVersionModal(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Close</button>
+          <div className="space-y-2">
+            <h4 className="text-slate-900 text-sm" style={{ fontWeight: 600 }}>Current Weights</h4>
+            {criteria.map(c => (
+              <div key={c.dimension} className="flex justify-between items-center text-xs px-3 py-2 bg-slate-50 rounded-lg">
+                <span className="text-slate-600">{c.dimension}</span>
+                <span className="text-slate-800" style={{ fontWeight: 600 }}>{c.weight}%</span>
+              </div>
+            ))}
+            <div className="border-t border-slate-200 pt-2 flex justify-between items-center px-3">
+              <span className="text-slate-700 text-xs" style={{ fontWeight: 600 }}>Total</span>
+              <span className={`text-sm ${isViolation ? 'text-red-600' : 'text-emerald-600'}`} style={{ fontWeight: 700 }}>{totalWeight}%</span>
             </div>
           </div>
         </div>
-      )}
+      </SlideOver>
+
+      {/* SlideOver: Confirm Publish */}
+      <SlideOver
+        open={showPublish}
+        onOpenChange={setShowPublish}
+        title="Confirm Publish"
+        description={`Publish ${selectedModel.name} v${selectedModel.version + 1} to production.`}
+        width="md"
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button onClick={() => setShowPublish(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
+            <button
+              onClick={() => setShowPublish(false)}
+              disabled={isViolation || policyBreaches.length > 0}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm ${isViolation || policyBreaches.length > 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
+              style={{ fontWeight: 500 }}
+            >
+              <Send size={14} />
+              Publish
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+          <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-500" style={{ fontWeight: 500 }}>Model</span>
+              <span className="text-slate-800" style={{ fontWeight: 600 }}>{selectedModel.name}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-500" style={{ fontWeight: 500 }}>New Version</span>
+              <span className="text-slate-800" style={{ fontWeight: 600 }}>v{selectedModel.version + 1}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-500" style={{ fontWeight: 500 }}>Weight Total</span>
+              <span className={`${isViolation ? 'text-red-600' : 'text-emerald-600'}`} style={{ fontWeight: 600 }}>{totalWeight}%</span>
+            </div>
+          </div>
+
+          {affectedRfqs.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-slate-900 text-sm" style={{ fontWeight: 600 }}>Affected RFQs ({affectedRfqs.length})</h4>
+              <div className="space-y-2">
+                {affectedRfqs.map(r => (
+                  <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div>
+                      <span className="text-slate-700 text-sm" style={{ fontWeight: 500 }}>{r.id}</span>
+                      <p className="text-slate-500 text-xs">{r.title}</p>
+                    </div>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${statusColors[r.status]}`} style={{ fontWeight: 500 }}>{r.status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(isViolation || policyBreaches.length > 0) && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-800 text-sm" style={{ fontWeight: 600 }}>Cannot publish</p>
+                  <p className="text-red-600 text-xs mt-1">Resolve weight total and policy violations before publishing.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </SlideOver>
+
+      {/* SlideOver: Model Assignment */}
+      <SlideOver
+        open={showAssignment}
+        onOpenChange={setShowAssignment}
+        title="Model Assignment"
+        description="Assign this scoring model to procurement categories."
+        width="md"
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button onClick={() => setShowAssignment(false)} className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
+            <button onClick={() => setShowAssignment(false)} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm" style={{ fontWeight: 500 }}>Save Assignment</button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-slate-600 text-sm">Select which procurement categories should use <strong>{selectedModel.name}</strong> for scoring.</p>
+          <div className="space-y-2">
+            {allCategories.map(cat => {
+              const checked = assignedCats.includes(cat);
+              const otherModel = scoringModels.find(m => m.id !== selectedModelId && m.assignedCategories.includes(cat));
+              return (
+                <label key={cat} className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${checked ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={e => setAssignedCats(prev => e.target.checked ? [...prev, cat] : prev.filter(c => c !== cat))}
+                      className="accent-indigo-600"
+                    />
+                    <span className="text-slate-700 text-sm" style={{ fontWeight: 500 }}>{cat}</span>
+                  </div>
+                  {otherModel && (
+                    <span className="text-xs text-slate-400">Currently: {otherModel.name}</span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      </SlideOver>
+
+      {/* SlideOver: View Version History */}
+      <SlideOver
+        open={showVersionHistory}
+        onOpenChange={setShowVersionHistory}
+        title="Version History"
+        description={`${selectedModel.name} — all published versions.`}
+        width="md"
+      >
+        <div className="space-y-3">
+          {Array.from({ length: selectedModel.version }, (_, i) => selectedModel.version - i).map(ver => {
+            const isCurrent = ver === selectedModel.version;
+            return (
+              <div key={ver} className={`rounded-xl border p-4 ${isCurrent ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-800 text-sm" style={{ fontWeight: 600 }}>v{ver}.0</span>
+                    {isCurrent && <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded" style={{ fontWeight: 500 }}>Current</span>}
+                  </div>
+                  {!isCurrent && <button className="text-indigo-600 text-xs hover:underline" style={{ fontWeight: 500 }}>Restore</button>}
+                </div>
+                <p className="text-slate-500 text-xs">
+                  {isCurrent ? `Updated ${formatDate(selectedModel.updatedAt)}` : `Created ${formatDate(selectedModel.createdAt)}`}
+                </p>
+                {isCurrent && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {criteria.map(c => (
+                      <span key={c.dimension} className="text-xs bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded">{c.dimension}: {c.weight}%</span>
+                    ))}
+                  </div>
+                )}
+                {!isCurrent && (
+                  <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-2 text-xs text-amber-700">
+                    <BookOpen size={11} className="inline mr-1" />
+                    Diff: Weight adjustments applied vs previous version
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </SlideOver>
     </div>
   );
 }

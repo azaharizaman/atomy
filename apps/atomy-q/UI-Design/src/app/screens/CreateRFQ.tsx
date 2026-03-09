@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { Plus, Trash2, Upload, X, FileText, ChevronRight, Check, AlertTriangle, Paperclip, Calendar, Clock } from 'lucide-react';
+import { Link } from 'react-router';
+import { Plus, Trash2, Upload, X, FileText, ChevronRight, Check, AlertTriangle, Paperclip, Calendar, Clock, Layers, Save } from 'lucide-react';
+import { SlideOver } from '../components/SlideOver';
+import { rfqTemplates, rfqLineItems as mockLineItems, vendors, formatCurrency } from '../data/mockData';
 
 const steps = [
   { id: 1, label: 'Basic Info', desc: 'RFQ details & metadata' },
@@ -18,17 +21,17 @@ interface LineItem {
   required: boolean;
 }
 
-const defaultItems: LineItem[] = [
-  { id: 'li1', description: 'Dell PowerEdge R750 Server', qty: '10', uom: 'EA', budget: '90000', required: true },
-  { id: 'li2', description: 'HPE ProLiant DL380 Gen10', qty: '5', uom: 'EA', budget: '50000', required: true },
-];
+const defaultItems: LineItem[] = mockLineItems.slice(0, 2).map(li => ({
+  id: li.id,
+  description: li.description,
+  qty: String(li.quantity),
+  uom: li.uom === 'each' ? 'EA' : li.uom,
+  budget: String(li.estimatedUnitPrice),
+  required: true,
+}));
 
-const templates = [
-  { id: 't1', name: 'Server Hardware RFQ', category: 'IT Infrastructure', items: 12, lastUsed: '2 weeks ago' },
-  { id: 't2', name: 'Software Licensing RFQ', category: 'IT Software', items: 6, lastUsed: '1 month ago' },
-  { id: 't3', name: 'Office Supplies RFQ', category: 'Facilities', items: 24, lastUsed: '3 weeks ago' },
-  { id: 't4', name: 'Professional Services RFQ', category: 'Services', items: 8, lastUsed: 'Never' },
-];
+const invitedVendorIds = ['vnd-001', 'vnd-002', 'vnd-003', 'vnd-004'];
+const invitedVendors = vendors.filter(v => invitedVendorIds.includes(v.id));
 
 export function CreateRFQ() {
   const [step, setStep] = useState(1);
@@ -36,16 +39,37 @@ export function CreateRFQ() {
   const [showTemplate, setShowTemplate] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
   const [attachments, setAttachments] = useState<string[]>(['Technical_Specs_v2.pdf', 'Vendor_Requirements.docx']);
+  const [isDirty, setIsDirty] = useState(false);
 
   const addItem = () => {
+    setIsDirty(true);
     setLineItems(prev => [...prev, { id: `li${Date.now()}`, description: '', qty: '1', uom: 'EA', budget: '', required: false }]);
   };
 
-  const removeItem = (id: string) => setLineItems(prev => prev.filter(i => i.id !== id));
+  const removeItem = (id: string) => {
+    setIsDirty(true);
+    setLineItems(prev => prev.filter(i => i.id !== id));
+  };
 
   const updateItem = (id: string, field: keyof LineItem, value: string | boolean) => {
+    setIsDirty(true);
     setLineItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i));
   };
+
+  const applyTemplate = (templateId: string) => {
+    const tpl = rfqTemplates.find(t => t.id === templateId);
+    if (!tpl) return;
+    setIsDirty(true);
+    setShowTemplate(false);
+  };
+
+  const handleNavigateAway = () => {
+    if (isDirty) {
+      setShowDiscard(true);
+    }
+  };
+
+  const publishedTemplates = rfqTemplates.filter(t => t.status === 'published');
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
@@ -53,15 +77,18 @@ export function CreateRFQ() {
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-slate-900">Create RFQ</h1>
-            <p className="text-slate-500 text-xs mt-0.5">Draft · RFQ-2402 will be assigned on publish</p>
+            <div className="flex items-center gap-3">
+              <h1 className="text-slate-900">Create RFQ</h1>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-500" style={{ fontWeight: 500 }}>Draft</span>
+            </div>
+            <p className="text-slate-500 text-xs mt-0.5">RFQ-2402 will be assigned on publish</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowTemplate(true)} className="flex items-center gap-2 border border-slate-200 bg-white rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
-              <FileText size={14} />
-              Use Template
+            <button onClick={() => setShowTemplate(true)} className="flex items-center gap-2 border border-indigo-200 bg-indigo-50 rounded-lg px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-100 transition-colors">
+              <Layers size={14} />
+              Create from Template
             </button>
-            <button onClick={() => setShowDiscard(true)} className="flex items-center gap-2 border border-red-200 bg-red-50 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-100">
+            <button onClick={handleNavigateAway} className="flex items-center gap-2 border border-red-200 bg-red-50 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-100">
               <X size={14} />
               Discard
             </button>
@@ -104,7 +131,7 @@ export function CreateRFQ() {
                 <div className="grid grid-cols-2 gap-5">
                   <div className="col-span-2">
                     <label className="text-slate-600 text-xs block mb-1.5" style={{ fontWeight: 500 }}>RFQ Title *</label>
-                    <input defaultValue="Server Infrastructure Components — FY2026 Q2" className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none" />
+                    <input defaultValue="Server Infrastructure Components — FY2026 Q2" onChange={() => setIsDirty(true)} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none" />
                   </div>
                   <div>
                     <label className="text-slate-600 text-xs block mb-1.5" style={{ fontWeight: 500 }}>Category</label>
@@ -147,9 +174,15 @@ export function CreateRFQ() {
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <h3 className="text-slate-900 mb-5">Invited Vendors</h3>
                 <div className="space-y-2 mb-3">
-                  {['TechCorp Solutions', 'GlobalSupply Inc.', 'FastParts Ltd.', 'PrimeSource Co.'].map((v) => (
-                    <div key={v} className="flex items-center justify-between px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
-                      <span className="text-slate-700 text-sm">{v}</span>
+                  {invitedVendors.map((v) => (
+                    <div key={v.id} className="flex items-center justify-between px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-700 text-sm">{v.name}</span>
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs ${v.riskLevel === 'low' ? 'bg-emerald-100 text-emerald-700' : v.riskLevel === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`} style={{ fontWeight: 500, fontSize: 10 }}>
+                          {v.riskLevel} risk
+                        </span>
+                        <span className="text-slate-400 text-xs">Score: {v.overallScore}</span>
+                      </div>
                       <button className="text-slate-400 hover:text-red-400"><X size={14} /></button>
                     </div>
                   ))}
@@ -166,7 +199,10 @@ export function CreateRFQ() {
           {step === 2 && (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                <h3 className="text-slate-900">Line Items</h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-slate-900">Line Items</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700" style={{ fontWeight: 600 }}>{lineItems.length}</span>
+                </div>
                 <button onClick={addItem} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3 py-2 text-xs" style={{ fontWeight: 500 }}>
                   <Plus size={13} />
                   Add Item
@@ -182,7 +218,7 @@ export function CreateRFQ() {
                 <span />
               </div>
 
-              {lineItems.map((item, idx) => (
+              {lineItems.map((item) => (
                 <div key={item.id} className="grid px-5 py-3 border-b border-slate-50 hover:bg-slate-50/50 items-center gap-2" style={{ gridTemplateColumns: '3fr 80px 100px 120px 40px' }}>
                   <input
                     value={item.description}
@@ -212,11 +248,14 @@ export function CreateRFQ() {
                 </div>
               ))}
 
-              <div className="px-5 py-3">
+              <div className="px-5 py-3 flex items-center justify-between">
                 <button onClick={addItem} className="flex items-center gap-2 text-indigo-600 text-sm hover:text-indigo-700" style={{ fontWeight: 500 }}>
                   <Plus size={14} />
                   Add line item
                 </button>
+                <span className="text-xs text-slate-500">
+                  Total est. budget: <span className="text-slate-800" style={{ fontWeight: 600 }}>{formatCurrency(lineItems.reduce((s, i) => s + (parseFloat(i.budget || '0') * parseFloat(i.qty || '1')), 0))}</span>
+                </span>
               </div>
             </div>
           )}
@@ -281,15 +320,16 @@ export function CreateRFQ() {
               </div>
 
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-                <div className="px-5 py-3 border-b border-slate-100">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
                   <h3 className="text-slate-900">Attached Files</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600" style={{ fontWeight: 600 }}>{attachments.length}</span>
                 </div>
                 <div className="divide-y divide-slate-100">
                   {attachments.map((file) => (
                     <div key={file} className="flex items-center gap-3 px-5 py-3">
                       <Paperclip size={14} className="text-indigo-500" />
                       <span className="flex-1 text-slate-700 text-sm">{file}</span>
-                      <span className="text-slate-400 text-xs">Uploaded</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-emerald-100 text-emerald-700" style={{ fontWeight: 500, fontSize: 10 }}>Uploaded</span>
                       <button onClick={() => setAttachments(p => p.filter(f => f !== file))} className="text-slate-300 hover:text-red-400">
                         <X size={14} />
                       </button>
@@ -312,15 +352,16 @@ export function CreateRFQ() {
               </div>
 
               {[
-                { title: 'Basic Info', items: [['Title', 'Server Infrastructure Components — FY2026 Q2'], ['Category', 'IT Infrastructure'], ['Budget', '$250,000'], ['Priority', 'High']] },
-                { title: 'Line Items', items: [['Items', `${lineItems.length} items`], ['Total Budget', `$${lineItems.reduce((s, i) => s + (parseFloat(i.budget || '0')), 0).toLocaleString()}`]] },
-                { title: 'Terms', items: [['Submission Deadline', 'March 28, 2026'], ['Payment Terms', 'Net 30'], ['Warranty', '3 years minimum']] },
-                { title: 'Attachments', items: [['Files', `${attachments.length} files attached`]] },
+                { title: 'Basic Info', stepNum: 1, items: [['Title', 'Server Infrastructure Components — FY2026 Q2'], ['Category', 'IT Infrastructure'], ['Budget', '$250,000'], ['Priority', 'High']] },
+                { title: 'Line Items', stepNum: 2, items: [['Items', `${lineItems.length} items`], ['Total Budget', formatCurrency(lineItems.reduce((s, i) => s + (parseFloat(i.budget || '0') * parseFloat(i.qty || '1')), 0))]] },
+                { title: 'Terms', stepNum: 3, items: [['Submission Deadline', 'March 28, 2026'], ['Payment Terms', 'Net 30'], ['Warranty', '3 years minimum']] },
+                { title: 'Attachments', stepNum: 4, items: [['Files', `${attachments.length} files attached`]] },
+                { title: 'Vendors', stepNum: 1, items: [['Invited', `${invitedVendors.length} vendors`], ['Coverage', invitedVendors.map(v => v.name).join(', ')]] },
               ].map(section => (
                 <div key={section.title} className="bg-white rounded-xl border border-slate-200 shadow-sm">
                   <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
                     <h3 className="text-slate-900">{section.title}</h3>
-                    <button className="text-indigo-600 text-xs hover:underline" style={{ fontWeight: 500 }}>Edit</button>
+                    <button onClick={() => setStep(section.stepNum)} className="text-indigo-600 text-xs hover:underline" style={{ fontWeight: 500 }}>Edit</button>
                   </div>
                   <div className="px-5 py-3 grid grid-cols-2 gap-3">
                     {section.items.map(([k, v]) => (
@@ -341,9 +382,11 @@ export function CreateRFQ() {
       <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-slate-200 px-6 py-4 flex items-center justify-between z-20">
         <div className="text-slate-500 text-xs">
           Step {step} of {steps.length} · <span style={{ fontWeight: 500 }} className="text-slate-700">{steps[step - 1].label}</span>
+          {isDirty && <span className="ml-2 text-amber-500" style={{ fontWeight: 500 }}>· Unsaved changes</span>}
         </div>
         <div className="flex items-center gap-3">
-          <button className="border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+          <button className="flex items-center gap-2 border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+            <Save size={14} />
             Save Draft
           </button>
           {step > 1 && (
@@ -365,48 +408,93 @@ export function CreateRFQ() {
         </div>
       </div>
 
-      {/* Template Modal */}
-      {showTemplate && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-slate-900 text-sm">Choose a Template</h2>
-              <button onClick={() => setShowTemplate(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
-            </div>
-            <div className="p-4 space-y-2">
-              {templates.map(t => (
-                <button key={t.id} onClick={() => setShowTemplate(false)} className="w-full flex items-center gap-4 px-4 py-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 text-left transition-colors">
-                  <FileText size={20} className="text-indigo-500 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="text-slate-800 text-sm" style={{ fontWeight: 500 }}>{t.name}</div>
-                    <div className="text-slate-500 text-xs mt-0.5">{t.category} · {t.items} items · Last used {t.lastUsed}</div>
+      {/* Template Picker SlideOver */}
+      <SlideOver
+        open={showTemplate}
+        onOpenChange={setShowTemplate}
+        title="RFQ Template Picker"
+        description="Select a template to pre-fill your RFQ with standard fields and line items."
+        width="md"
+      >
+        <div className="space-y-3">
+          {publishedTemplates.map(t => (
+            <button
+              key={t.id}
+              onClick={() => applyTemplate(t.id)}
+              className="w-full flex items-start gap-4 px-4 py-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 text-left transition-colors group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                <FileText size={18} className="text-indigo-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-800 text-sm" style={{ fontWeight: 500 }}>{t.name}</span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-slate-100 text-slate-500" style={{ fontWeight: 500, fontSize: 10 }}>{t.category}</span>
+                </div>
+                <p className="text-slate-500 text-xs mt-1 line-clamp-2">{t.description}</p>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-slate-400 text-xs">Used {t.usageCount} times</span>
+                  {t.lastUsedAt && <span className="text-slate-400 text-xs">· Last: {t.lastUsedAt}</span>}
+                  <span className="text-slate-400 text-xs">· {t.defaultDeadlineDays}d deadline</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0 self-center">
+                <span className="text-xs text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontWeight: 500 }}>Apply</span>
+                <ChevronRight size={14} className="text-slate-400 group-hover:text-indigo-500" />
+              </div>
+            </button>
+          ))}
+
+          {rfqTemplates.filter(t => t.status === 'draft').length > 0 && (
+            <div className="pt-2 border-t border-slate-100">
+              <p className="text-xs text-slate-400 mb-2" style={{ fontWeight: 500 }}>Draft Templates</p>
+              {rfqTemplates.filter(t => t.status === 'draft').map(t => (
+                <div key={t.id} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-50 opacity-60">
+                  <FileText size={16} className="text-slate-400" />
+                  <div>
+                    <span className="text-slate-600 text-sm">{t.name}</span>
+                    <span className="inline-flex items-center ml-2 px-1.5 py-0.5 rounded text-xs bg-amber-100 text-amber-700" style={{ fontWeight: 500, fontSize: 10 }}>Draft</span>
                   </div>
-                  <ChevronRight size={14} className="text-slate-400" />
-                </button>
+                </div>
               ))}
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </SlideOver>
 
-      {/* Discard Modal */}
-      {showDiscard && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
-            <div className="p-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle size={22} className="text-red-600" />
-              </div>
-              <h2 className="text-slate-900 mb-2">Discard RFQ Draft?</h2>
-              <p className="text-slate-500 text-sm">All changes to this draft will be permanently lost. This cannot be undone.</p>
-            </div>
-            <div className="flex gap-3 px-6 pb-6">
-              <button onClick={() => setShowDiscard(false)} className="flex-1 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50">Keep Editing</button>
-              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2.5 text-sm" style={{ fontWeight: 500 }}>Discard</button>
-            </div>
+      {/* Discard Confirmation SlideOver */}
+      <SlideOver
+        open={showDiscard}
+        onOpenChange={setShowDiscard}
+        title="Discard Changes?"
+        description="You have unsaved changes that will be permanently lost."
+        width="sm"
+        footer={
+          <div className="flex gap-3">
+            <button onClick={() => setShowDiscard(false)} className="flex-1 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100">
+              Keep Editing
+            </button>
+            <Link to="/rfqs" className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2.5 text-sm text-center" style={{ fontWeight: 500 }}>
+              Discard Draft
+            </Link>
           </div>
+        }
+      >
+        <div className="flex flex-col items-center text-center py-6">
+          <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">
+            <AlertTriangle size={24} className="text-red-600" />
+          </div>
+          <h3 className="text-slate-900 text-base mb-2" style={{ fontWeight: 600 }}>Discard this RFQ draft?</h3>
+          <p className="text-slate-500 text-sm max-w-xs">
+            All changes including line items, vendor selections, and attached files will be permanently deleted. This action cannot be undone.
+          </p>
+          {isDirty && (
+            <div className="mt-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-amber-700 text-xs" style={{ fontWeight: 500 }}>You have unsaved changes in this draft.</p>
+            </div>
+          )}
         </div>
-      )}
+      </SlideOver>
     </div>
   );
 }
