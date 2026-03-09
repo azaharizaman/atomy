@@ -57,6 +57,99 @@ final class LeadScoringEngineTest extends TestCase
     }
 
     #[Test]
+    public function it_returns_zero_when_total_weight_is_zero(): void
+    {
+        $this->leadMock->method('getSource')->willReturn(LeadSource::Website);
+        $this->leadMock->method('getId')->willReturn('lead-123');
+        $this->leadMock->method('getEstimatedValue')->willReturn(50_000);
+
+        $engine = new LeadScoringEngine([
+            'source_quality' => 0,
+            'engagement' => 0,
+            'fit' => 0,
+            'timing' => 0,
+            'budget' => 0,
+        ]);
+
+        $score = $engine->calculateScore($this->leadMock);
+        $this->assertSame(0, $score->getValue());
+    }
+
+    #[Test]
+    public function it_sanitizes_negative_inputs_and_weights(): void
+    {
+        $this->leadMock->method('getSource')->willReturn(LeadSource::Website);
+        $this->leadMock->method('getId')->willReturn('lead-123');
+        $this->leadMock->method('getEstimatedValue')->willReturn(1_000);
+
+        $engine = new LeadScoringEngine([
+            'source_quality' => -100,
+            'engagement' => 10,
+            'fit' => -5,
+            'timing' => 0,
+            'budget' => 0,
+        ]);
+
+        $score = $engine->calculateScore($this->leadMock, [
+            'engagement' => [
+                'email_opens' => -3,
+                'email_clicks' => -1,
+            ],
+        ]);
+
+        $this->assertSame(0, $score->getValue());
+    }
+
+    #[Test]
+    public function it_ignores_unknown_weight_keys_in_weighted_average(): void
+    {
+        $this->leadMock->method('getSource')->willReturn(LeadSource::Website);
+        $this->leadMock->method('getId')->willReturn('lead-123');
+        $this->leadMock->method('getEstimatedValue')->willReturn(null);
+
+        $engine = new LeadScoringEngine([
+            'source_quality' => 10,
+            'engagement' => 0,
+            'fit' => 0,
+            'timing' => 0,
+            'budget' => 0,
+            'unknown_factor' => 100,
+        ]);
+
+        $score = $engine->calculateScore($this->leadMock);
+        $this->assertSame(70, $score->getValue());
+    }
+
+    #[Test]
+    public function it_interprets_boolean_flags_safely_from_context_payloads(): void
+    {
+        $this->leadMock->method('getSource')->willReturn(LeadSource::Website);
+        $this->leadMock->method('getId')->willReturn('lead-123');
+        $this->leadMock->method('getEstimatedValue')->willReturn(null);
+
+        $engine = new LeadScoringEngine([
+            'source_quality' => 0,
+            'engagement' => 0,
+            'fit' => 100,
+            'timing' => 0,
+            'budget' => 0,
+        ]);
+
+        $score = $engine->calculateScore($this->leadMock, [
+            'fit' => [
+                'industry_match' => 'false',
+                'company_size_match' => '0',
+                'location_match' => false,
+                'role_match' => 'true',
+                'has_decision_maker' => true,
+            ],
+        ]);
+
+        $this->assertSame(35, $score->getFactor('fit'));
+        $this->assertSame(35, $score->getValue());
+    }
+
+    #[Test]
     public function it_calculates_score_for_lead(): void
     {
         $this->leadMock->method('getSource')->willReturn(LeadSource::Website);

@@ -96,13 +96,13 @@ final readonly class LeadScoringEngine
         $engagement = $context['engagement'] ?? [];
 
         $score = 0;
-        $score += ($engagement['email_opens'] ?? 0) * 5;
-        $score += ($engagement['email_clicks'] ?? 0) * 10;
-        $score += ($engagement['website_visits'] ?? 0) * 3;
-        $score += ($engagement['content_downloads'] ?? 0) * 15;
-        $score += ($engagement['form_submissions'] ?? 0) * 20;
+        $score += $this->nonNegativeInt($engagement['email_opens'] ?? 0) * 5;
+        $score += $this->nonNegativeInt($engagement['email_clicks'] ?? 0) * 10;
+        $score += $this->nonNegativeInt($engagement['website_visits'] ?? 0) * 3;
+        $score += $this->nonNegativeInt($engagement['content_downloads'] ?? 0) * 15;
+        $score += $this->nonNegativeInt($engagement['form_submissions'] ?? 0) * 20;
 
-        return min(100, $score);
+        return $this->clampScore($score);
     }
 
     /**
@@ -113,11 +113,11 @@ final readonly class LeadScoringEngine
         $fit = $context['fit'] ?? [];
 
         $score = 0;
-        $score += ($fit['industry_match'] ?? false) ? 25 : 0;
-        $score += ($fit['company_size_match'] ?? false) ? 25 : 0;
-        $score += ($fit['location_match'] ?? false) ? 15 : 0;
-        $score += ($fit['role_match'] ?? false) ? 20 : 0;
-        $score += ($fit['has_decision_maker'] ?? false) ? 15 : 0;
+        $score += $this->asBooleanFlag($fit['industry_match'] ?? false) ? 25 : 0;
+        $score += $this->asBooleanFlag($fit['company_size_match'] ?? false) ? 25 : 0;
+        $score += $this->asBooleanFlag($fit['location_match'] ?? false) ? 15 : 0;
+        $score += $this->asBooleanFlag($fit['role_match'] ?? false) ? 20 : 0;
+        $score += $this->asBooleanFlag($fit['has_decision_maker'] ?? false) ? 15 : 0;
 
         return min(100, $score);
     }
@@ -131,15 +131,15 @@ final readonly class LeadScoringEngine
 
         $score = 50; // Base score
 
-        if ($timing['has_deadline'] ?? false) {
+        if ($this->asBooleanFlag($timing['has_deadline'] ?? false)) {
             $score += 30;
         }
 
-        if ($timing['is_urgent'] ?? false) {
+        if ($this->asBooleanFlag($timing['is_urgent'] ?? false)) {
             $score += 20;
         }
 
-        if ($timing['has_budget_this_quarter'] ?? false) {
+        if ($this->asBooleanFlag($timing['has_budget_this_quarter'] ?? false)) {
             $score += 15;
         }
 
@@ -167,11 +167,11 @@ final readonly class LeadScoringEngine
         }
 
         // Check budget indicators from context
-        if ($budget['has_budget'] ?? false) {
+        if ($this->asBooleanFlag($budget['has_budget'] ?? false)) {
             $score += 30;
         }
 
-        if ($budget['budget_approved'] ?? false) {
+        if ($this->asBooleanFlag($budget['budget_approved'] ?? false)) {
             $score += 30;
         }
 
@@ -183,15 +183,44 @@ final readonly class LeadScoringEngine
      */
     private function applyWeights(array $factors): int
     {
-        $totalWeight = array_sum($this->weights);
+        $safeWeights = array_map(
+            static fn(mixed $weight): int => max(0, (int) $weight),
+            $this->weights
+        );
+        $totalWeight = 0;
+        foreach (array_keys($factors) as $factor) {
+            $totalWeight += $safeWeights[$factor] ?? 0;
+        }
+        if ($totalWeight <= 0) {
+            $this->logger?->warning('Lead scoring weights sum to zero; returning neutral score.', [
+                'weights' => $this->weights,
+            ]);
+            return 0;
+        }
+
         $weightedSum = 0;
 
         foreach ($factors as $factor => $score) {
-            $weight = $this->weights[$factor] ?? 0;
-            $weightedSum += ($score * $weight);
+            $weight = $safeWeights[$factor] ?? 0;
+            $weightedSum += ($this->clampScore((int) $score) * $weight);
         }
 
-        return (int) round($weightedSum / $totalWeight);
+        return $this->clampScore((int) round($weightedSum / $totalWeight));
+    }
+
+    private function nonNegativeInt(mixed $value): int
+    {
+        return max(0, (int) $value);
+    }
+
+    private function clampScore(int $score): int
+    {
+        return max(0, min(100, $score));
+    }
+
+    private function asBooleanFlag(mixed $value): bool
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN) === true;
     }
 
     /**
