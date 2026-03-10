@@ -16,12 +16,41 @@
 
 ## Global Layout Shell
 
-### Sidebar
-- Primary navigation links: Dashboard, RFQs, Quote Intake, Comparison Matrix, Approvals, Reports.
-- Collaboration links: Notifications, Tasks, Mentions.
-- Governance links: Risk & Compliance, Decision Trail, Evidence Vault.
-- Administration links: Users & Access, Scoring Policies, Templates, Integrations, Feature Flags.
-- Account links: Profile, Preferences, Help/Docs.
+### Sidebar (main navigation only)
+
+The main navigation exposes only **landing surfaces**. Screens that are record-linked or part of a flow (e.g. Comparison Matrix, Normalization, Risk & Compliance) are **not** in the sidebar; they are reached from parent screens (see Navigation hierarchy below).
+
+- **Primary:** Dashboard, RFQs (list), Quote Intake, Approvals (queue), Reports.
+- **Collaboration:** Notifications, Tasks, Mentions.
+- **Governance:** Decision Trail, Evidence Vault. *(Risk & Compliance is reached from RFQ Detail, not from main nav.)*
+- **Administration:** Users & Access, Scoring Policies, Templates, Integrations, Feature Flags.
+- **Account:** Profile, Preferences, Help/Docs.
+
+### Navigation hierarchy (main nav vs contextual)
+
+**Main nav (sidebar):** Dashboard, RFQs, Quote Intake, Approvals, Reports, plus Collaboration, Governance, Administration, Account as above.
+
+**Contextual / record-linked (no sidebar entry):**
+
+| Screen | Reached from |
+|--------|----------------|
+| **RFQ Detail** | RFQ List: click row. |
+| **Create RFQ** | Dashboard or RFQ List: "New RFQ" / "Create RFQ". |
+| **Vendor Invitation Management** | RFQ Detail: Vendors tab. |
+| **RFQ Comparison Runs** | RFQ Detail: "Comparison runs" tab (list of runs for this RFQ). |
+| **Comparison Matrix** | RFQ Detail → Comparison runs tab → click a run. |
+| **Scenario Simulator** | Comparison Matrix: toolbar or "Scenarios" entry. |
+| **Recommendation & Explainability** | Comparison Matrix (after a run) or from a run row: "View recommendation". |
+| **Risk & Compliance Review** | RFQ Detail: "Risk & Compliance" tab or link. |
+| **Quote Normalization Workspace** | Quote Intake: "Accept & Normalize"; or from a Quote view: "View Normalization". |
+| **Approval Detail** | Approval Queue: click item. |
+| **Negotiation Workspace** | Approval Detail: after Approve when workflow routes to negotiate. |
+| **Award Decision** | Approval Detail or Negotiation: next step in workflow. |
+| **PO/Contract Handoff** | Award Decision: after finalize. |
+| **Scoring Model Builder** | Administration; or from Comparison Matrix "Select scoring model". |
+| **Vendor Profile & Performance** | Any vendor link (RFQ, Comparison, Risk, etc.). |
+
+Breadcrumbs on contextual screens must reflect the hierarchy (e.g. RFQs > [RFQ name] > Comparison runs > [Run] > Matrix). Full design: `docs/project/plans/2025-03-09-atomy-q-navigation-hierarchy-design.md`.
 
 ### Header
 - Global search input with `/` shortcut.
@@ -103,12 +132,13 @@
 
 **Purpose:** Manage and search the RFQ pipeline.
 
-**Layout:** Filter rail on top, data table/list below.
+**Layout:** Filter rail on top, compact data table below with expandable rows.
 
 **Key Elements:**
 - Search bar.
-- Status/owner/date filters.
-- RFQ table with sortable columns.
+- Status/owner/category filters.
+- Compact RFQ data table with sortable columns: Checkbox, Expand chevron, ID, RFQ (title with owner avatar and name as subtitle), Status, Deadline, Est. Value, Actions (overflow menu). No separate Owner column — owner is displayed as a subtitle under the RFQ title.
+- Expandable rows: clicking the expand chevron reveals a detail area with Category, Deadline, Vendors count, Quotes count, Est. Value, and Savings. This replaces the former hover tooltip.
 - Bulk action toolbar (appears when one or more rows are selected via checkbox).
 
 **States:**
@@ -116,18 +146,21 @@
 - Filtered no results.
 - High-volume paginated list.
 - Bulk selection active (one or more rows checked).
+- Row expanded (one row at a time shows additional detail fields).
 
 **Components:**
 - Filter chips.
 - Sortable table headers.
 - Pagination controls.
 - Row selection checkboxes (header checkbox for select-all on current page).
+- Expand/collapse chevron per row.
+- Expandable row content (grid of Category, Deadline, Vendors, Quotes, Est. Value, Savings with icons).
 - Bulk action toolbar: Close Selected, Archive Selected, Assign Owner, Export Selected.
 
 **Interactions:**
 - Click row opens RFQ Detail.
+- Click expand chevron toggles the expandable detail area for that row (one at a time).
 - Click Create RFQ routes to Create RFQ.
-- Hover on row shows rich-tooltip showing scorecards/summaries based information for quick glance.
 - Select rows via checkbox, then click bulk action: each bulk action opens a `Confirm Bulk Action` modal showing count and action summary; confirm executes; cancel returns to list with selection preserved.
 - Right-click row (or overflow menu "...") shows context menu: Open, Duplicate, Archive, Export PDF. "Duplicate" opens `Duplicate RFQ` modal (pre-fills Create RFQ with copied data, user edits and saves as new draft). "Archive" opens `Confirm Archive` modal.
 
@@ -169,6 +202,7 @@
 **Key Elements:**
 - RFQ summary header with status badge and lifecycle action buttons.
 - Vendor participation tab.
+- **Comparison runs tab** — list of comparison runs for this RFQ (run ID, date, status, who ran it); "New run" action; click a run row opens Comparison Matrix for that run. *(Comparison Matrix is not in main nav; it is reached only from here.)*
 - Documents tab.
 - Activity timeline.
 - Action dropdown (top-right): Edit, Duplicate, Close for Submissions, Reopen, Archive.
@@ -194,6 +228,8 @@
 - Click Archive opens `Confirm Archive` modal; on confirm the RFQ is soft-deleted from active lists and moved to the archive filter in RFQ List.
 - Click Duplicate opens Create RFQ pre-filled with this RFQ's data (see Screen 4).
 - Documents tab links to Quote Intake filtered by this RFQ, or to Evidence Vault filtered by this RFQ's document tags.
+- Comparison runs tab: click a run row navigates to Comparison Matrix for that run. Click "New run" starts a new comparison run and navigates to Comparison Matrix in create/preview mode.
+- Risk & Compliance tab or link (contextual to this RFQ) navigates to Risk & Compliance Review for this RFQ; that screen is not in the main sidebar.
 
 ### 6. Vendor Invitation Management
 
@@ -224,27 +260,33 @@
 
 **Purpose:** Ingest quote submissions and triage parsing/validation issues.
 
-**Layout:** Queue list on left, selected submission detail on right.
+**Layout:** Full-width data table list with filters. Clicking a row navigates to a separate Quote Detail screen (not a split panel). The detail screen has two tabs: Overview and Parsed Line Items.
 
 **Key Elements:**
-- Intake queue (filterable by status, RFQ, vendor).
+- Submission data table (columns: File name, Vendor, RFQ, Status, Parse confidence, Uploaded at) with status/RFQ/vendor filters and search bar. Clicking a row navigates to the Quote Detail screen (`/quote-intake/:id`).
 - Upload zone (drag-and-drop or click-to-browse; supports multiple files in a single upload session).
-- Parse confidence panel.
-- Validation errors list.
+- **Tab 1 — Overview:** Quotation document preview (left pane), vendor details + parse confidence bar + validation result (right pane). Validation result shows quote-level errors/warnings as well as overall check items.
+- **Tab 2 — Parsed Line Items:** Data table of parsed line items (description, qty, uom, unit price, confidence, status/mapping) with expandable rows. Expanded row shows: currency, line total, mapped-to RFQ line description, RFQ line ID. When the submission is accepted (normalization state), the expanded row shows a "Map to RFQ line" picker dropdown (populated from `rfqLineItems` filtered by the submission's RFQ). Manual override button (per line) opens a modal; overridden lines are marked with an info chip ("Override"). Revert button is shown only for overridden lines.
 - Vendor/RFQ assignment controls (when document is not auto-linked).
 
 **States:**
-- Processing.
+- Processing (document being parsed).
 - Parsed with warnings.
 - Accepted.
 - Rejected.
+- Error (ingestion/processing failed — displays error banner with failure details).
 - Pending assignment (document uploaded but not yet linked to an RFQ/vendor).
 
 **Components:**
-- Confidence badge.
-- Validation error callout.
+- Status badge (processing, parsed, accepted, rejected, error, pending assignment).
+- Confidence bar/badge.
+- Validation error callout (quote-level and line-level).
 - Upload progress indicator.
 - Assignment dropdown (RFQ selector + Vendor selector) for unlinked documents.
+- Expandable table rows (Tab 2) with chevron toggle.
+- Manual override modal (pick RFQ line, optional reason field).
+- Info chip ("Override") on overridden lines.
+- Revert button (only visible on overridden lines; clears override and restores AI-suggested mapping).
 
 **Interactions:**
 - Upload action opens `Upload & Parse Quote` modal; the modal allows selecting one or more files, optionally pre-selecting the target RFQ and vendor. Multiple files from the same vendor are grouped under a single submission entry with individual parse results per file.
@@ -253,6 +295,9 @@
 - Click Re-Parse (on an existing submission) triggers a fresh extraction run on the same file, useful after AI model updates or taxonomy changes. A `Confirm Re-Parse` modal warns that existing accepted extraction data will be overwritten.
 - Click Assign (on unlinked documents) opens `Assign Document` modal with RFQ and Vendor selectors; on confirm the document enters the standard parse pipeline for that RFQ context.
 - Accept action moves the submission to Accepted status and optionally navigates to Normalization Workspace for that quote (via "Accept & Normalize" button variant).
+- **Manual override** (per line, Tab 2): opens override modal. User picks an RFQ line item and optionally enters a reason. On confirm, the line is marked overridden and shows an info chip. The override is persisted via PUT `/normalization/source-lines/:id/override`.
+- **Revert** (per overridden line, Tab 2): clears the manual override and restores the AI-suggested mapping. Calls DELETE `/normalization/source-lines/:id/override`.
+- **Expand row** (Tab 2): toggle chevron to see line details (currency, total, mapped RFQ line) and, for accepted submissions, the RFQ line mapping picker dropdown.
 
 ### 8. Quote Normalization Workspace
 

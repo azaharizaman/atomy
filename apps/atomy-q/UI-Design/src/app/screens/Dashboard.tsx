@@ -1,41 +1,51 @@
 import { Link } from 'react-router';
 import {
   FileText, Inbox, BarChart3, TrendingUp, ShieldAlert, ArrowUpRight,
-  Clock, CheckCircle, AlertTriangle, DollarSign, Package, Users, Zap
+  Clock, CheckCircle, AlertTriangle, DollarSign, Users, Zap, ClipboardCheck
 } from 'lucide-react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { RichTooltip, TooltipBadge, StatusDot } from '../components/RichTooltip';
+import {
+  kpiData, rfqs, vendors, approvalItems, notifications, riskItems,
+  formatCurrency, getTimeAgo, statusColors,
+} from '../data/mockData';
+
+const statusIconMap: Record<string, { icon: typeof FileText; color: string }> = {
+  draft: { icon: FileText, color: 'text-slate-500 bg-slate-50' },
+  open: { icon: Inbox, color: 'text-blue-600 bg-blue-50' },
+  closed: { icon: CheckCircle, color: 'text-emerald-600 bg-emerald-50' },
+  archived: { icon: Clock, color: 'text-slate-400 bg-slate-50' },
+  reopened: { icon: ShieldAlert, color: 'text-purple-600 bg-purple-50' },
+};
+
+const pendingApprovals = approvalItems.filter(a => a.status === 'pending');
 
 const kpis = [
-  { label: 'Active RFQs', value: '24', delta: '+3 this week', icon: FileText, color: 'bg-indigo-50 text-indigo-600', trend: 'up' },
-  { label: 'Quotes Received', value: '187', delta: '+12 today', icon: Inbox, color: 'bg-emerald-50 text-emerald-600', trend: 'up' },
-  { label: 'Avg. Response Time', value: '2.4d', delta: '-0.3d vs last mo.', icon: Clock, color: 'bg-amber-50 text-amber-600', trend: 'down' },
-  { label: 'Total Savings', value: '$1.2M', delta: '+8.4% vs target', icon: DollarSign, color: 'bg-purple-50 text-purple-600', trend: 'up' },
+  { label: 'Active RFQs', value: String(kpiData.activeRfqs), delta: `${rfqs.filter(r => r.status === 'open').length} open`, icon: FileText, color: 'bg-indigo-50 text-indigo-600', trend: 'up' as const },
+  { label: 'Pending Approvals', value: String(pendingApprovals.length), delta: `${pendingApprovals.filter(a => a.priority === 'urgent').length} urgent`, icon: ClipboardCheck, color: 'bg-amber-50 text-amber-600', trend: 'up' as const },
+  { label: 'Total Savings', value: formatCurrency(kpiData.totalSavings), delta: `+${kpiData.savingsTarget}% vs target`, icon: DollarSign, color: 'bg-purple-50 text-purple-600', trend: 'up' as const },
+  { label: 'Avg. Cycle Time', value: `${kpiData.avgCycleTimeDays}d`, delta: `${kpiData.complianceRate}% compliance`, icon: Clock, color: 'bg-emerald-50 text-emerald-600', trend: 'down' as const },
 ];
 
-const spendData = [
-  { month: 'Sep', value: 420 }, { month: 'Oct', value: 380 }, { month: 'Nov', value: 510 },
-  { month: 'Dec', value: 340 }, { month: 'Jan', value: 490 }, { month: 'Feb', value: 620 },
-  { month: 'Mar', value: 580 },
-];
+const spendData = kpiData.spendTrend.map(s => ({ month: s.month, value: Math.round(s.value / 1000) }));
 
-const vendorPerf = [
-  { name: 'TechCorp', score: 92 }, { name: 'GlobalSup.', score: 84 }, { name: 'FastParts', score: 78 },
-  { name: 'PrimeSrc.', score: 88 }, { name: 'NovaTech', score: 71 },
-];
+const vendorPerf = vendors.map(v => ({ name: v.name.length > 12 ? v.name.slice(0, 11) + '.' : v.name, fullName: v.name, score: v.overallScore, id: v.id }));
 
-const recentActivity = [
-  { id: 'RFQ-2401', title: 'Server Infrastructure Components', status: 'In Comparison', time: '2h ago', icon: BarChart3, color: 'text-indigo-600 bg-indigo-50' },
-  { id: 'RFQ-2398', title: 'Office Supplies Q2 2026', status: 'Quotes Received', time: '4h ago', icon: Inbox, color: 'text-emerald-600 bg-emerald-50' },
-  { id: 'RFQ-2395', title: 'Network Equipment Refresh', status: 'Risk Review', time: '6h ago', icon: ShieldAlert, color: 'text-amber-600 bg-amber-50' },
-  { id: 'RFQ-2391', title: 'Facility Maintenance Services', status: 'Negotiating', time: '1d ago', icon: TrendingUp, color: 'text-purple-600 bg-purple-50' },
-  { id: 'RFQ-2387', title: 'Cloud Software Licenses', status: 'Awarded', time: '2d ago', icon: CheckCircle, color: 'text-emerald-600 bg-emerald-50' },
-];
+const recentActivity = rfqs.slice(0, 5).map(r => {
+  const mapped = statusIconMap[r.status] ?? statusIconMap.open;
+  return { id: r.id, title: r.title, status: r.status, time: getTimeAgo(r.createdAt), icon: mapped.icon, color: mapped.color, category: r.category, estimatedValue: r.estimatedValue, vendorCount: r.vendorCount, quoteCount: r.quoteCount };
+});
 
+const riskCounts = {
+  critical: riskItems.filter(r => r.level === 'critical').length,
+  high: riskItems.filter(r => r.level === 'high').length,
+  medium: riskItems.filter(r => r.level === 'medium').length,
+};
 const riskAlerts = [
-  { label: 'Low Confidence Parse', count: 3, level: 'high', path: '/quote-intake' },
-  { label: 'Policy Violations', count: 1, level: 'critical', path: '/risk' },
-  { label: 'Missing Compliance Docs', count: 5, level: 'medium', path: '/risk' },
-  { label: 'Overdue RFQ Deadlines', count: 2, level: 'high', path: '/rfq/create' },
+  { label: 'Critical Risks', count: riskCounts.critical, level: 'critical' as const, path: '/risk' },
+  { label: 'High Risks', count: riskCounts.high, level: 'high' as const, path: '/risk' },
+  { label: 'Medium Risks', count: riskCounts.medium, level: 'medium' as const, path: '/risk' },
+  { label: 'Unread Notifications', count: notifications.filter(n => !n.read).length, level: 'high' as const, path: '/notifications' },
 ];
 
 const quickActions = [
@@ -43,6 +53,7 @@ const quickActions = [
   { label: 'Review Intake Queue', path: '/quote-intake', icon: Inbox, color: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' },
   { label: 'Compare Quotes', path: '/comparison', icon: BarChart3, color: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' },
   { label: 'View Reports', path: '/reports', icon: TrendingUp, color: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' },
+  { label: 'Pending Approvals', path: '/approvals', icon: ClipboardCheck, color: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200' },
 ];
 
 export function Dashboard() {
@@ -114,13 +125,13 @@ export function Dashboard() {
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <div className="mb-4">
             <h3 className="text-slate-900">Vendor Scores</h3>
-            <p className="text-slate-500 text-xs mt-0.5">Average scoring this quarter</p>
+            <p className="text-slate-500 text-xs mt-0.5">Overall scoring this quarter</p>
           </div>
           <div className="space-y-3">
             {vendorPerf.map((v) => (
-              <div key={v.name}>
+              <Link key={v.id} to={`/vendor/${v.id}`} className="block group">
                 <div className="flex justify-between mb-1">
-                  <span className="text-slate-700 text-xs" style={{ fontWeight: 500 }}>{v.name}</span>
+                  <span className="text-slate-700 text-xs group-hover:text-indigo-600 transition-colors" style={{ fontWeight: 500 }}>{v.name}</span>
                   <span className={`text-xs ${v.score >= 88 ? 'text-emerald-600' : v.score >= 78 ? 'text-amber-600' : 'text-red-500'}`} style={{ fontWeight: 600 }}>{v.score}</span>
                 </div>
                 <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -129,7 +140,7 @@ export function Dashboard() {
                     style={{ width: `${v.score}%` }}
                   />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -141,26 +152,47 @@ export function Dashboard() {
         <div className="col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <h3 className="text-slate-900">Recent Activity</h3>
-            <Link to="/rfq/create" className="text-indigo-600 text-xs hover:underline" style={{ fontWeight: 500 }}>View all</Link>
+            <Link to="/rfqs" className="text-indigo-600 text-xs hover:underline" style={{ fontWeight: 500 }}>View all</Link>
           </div>
           <div className="divide-y divide-slate-50">
             {recentActivity.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.id} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 cursor-pointer">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${item.color}`}>
-                    <Icon size={14} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500 text-xs" style={{ fontWeight: 500 }}>{item.id}</span>
-                      <span className="text-slate-400 text-xs">·</span>
-                      <span className="text-slate-700 text-sm truncate">{item.title}</span>
+                <RichTooltip
+                  key={item.id}
+                  side="left"
+                  align="center"
+                  trigger={
+                    <Link to={`/rfq/${item.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 cursor-pointer">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${item.color}`}>
+                        <Icon size={14} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 text-xs" style={{ fontWeight: 500 }}>{item.id}</span>
+                          <span className="text-slate-400 text-xs">·</span>
+                          <span className="text-slate-700 text-sm truncate">{item.title}</span>
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs capitalize ${statusColors[item.status] ?? 'bg-slate-100 text-slate-600'}`} style={{ fontWeight: 500, fontSize: 10 }}>
+                            {item.status}
+                          </span>
+                        </div>
+                        <div className="text-slate-400 text-xs mt-0.5">{item.category}</div>
+                      </div>
+                      <span className="text-slate-400 text-xs flex-shrink-0">{item.time}</span>
+                    </Link>
+                  }
+                >
+                  <div className="space-y-2">
+                    <div className="text-sm text-slate-900" style={{ fontWeight: 600 }}>{item.title}</div>
+                    <StatusDot status={item.status === 'closed' ? 'good' : item.status === 'open' ? 'warning' : 'neutral'} label={item.status} />
+                    <div className="border-t border-slate-100 pt-2 space-y-0.5">
+                      <TooltipBadge label="Category" value={item.category} />
+                      <TooltipBadge label="Est. Value" value={formatCurrency(item.estimatedValue)} color="text-indigo-600" />
+                      <TooltipBadge label="Vendors" value={item.vendorCount} />
+                      <TooltipBadge label="Quotes" value={item.quoteCount} />
                     </div>
-                    <div className="text-slate-400 text-xs mt-0.5">{item.status}</div>
                   </div>
-                  <span className="text-slate-400 text-xs flex-shrink-0">{item.time}</span>
-                </div>
+                </RichTooltip>
               );
             })}
           </div>
@@ -175,7 +207,7 @@ export function Dashboard() {
               <AlertTriangle size={14} className="text-amber-500" />
             </div>
             <div className="p-3 space-y-2">
-              {riskAlerts.map((alert) => (
+              {riskAlerts.filter(a => a.count > 0).map((alert) => (
                 <Link
                   key={alert.label}
                   to={alert.path}
