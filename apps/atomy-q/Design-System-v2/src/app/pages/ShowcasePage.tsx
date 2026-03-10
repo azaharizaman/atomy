@@ -24,6 +24,7 @@ import { ProgressBar, CircularProgress, MiniProgress } from '../components/ds/Pr
 import { KPIScorecard, MetricChip, MetricRow } from '../components/ds/KPIScorecard';
 import { DataTable } from '../components/ds/DataTable';
 import type { ColumnDef } from '../components/ds/DataTable';
+import { TablePersonHoverCard } from '../components/ds/TablePersonHoverCard';
 import { TableFooter, Pagination } from '../components/ds/Pagination';
 import { SlideOver, SlideOverSection } from '../components/ds/SlideOver';
 import { Timeline, ActivityFeed } from '../components/ds/Timeline';
@@ -131,6 +132,15 @@ const RFQ_ROWS: RFQRow[] = [
   { id: '8', rfqId: 'RFQ-2408', title: 'IT Support Annual',             owner: 'Marcus Webb',   status: 'pending', deadline: '2026-03-31', estValue: '$220,000',   category: 'IT Services',  vendors: 2, quotes: 1, savings: '—'   },
 ];
 
+// Sample contact details for Owner hover card (use in table owner/vendor name cells only)
+const OWNER_DETAILS: Record<string, { email: string; reportsTo: string; mobile: string; location: string }> = {
+  'Alex Kumar':     { email: 'alexk@ensemble.com',   reportsTo: 'Jordan Lee',      mobile: '+1 83773 48841', location: 'United States' },
+  'Sarah Chen':     { email: 'sarahc@ensemble.com',  reportsTo: 'Jordan Lee',      mobile: '+1 83773 48842', location: 'United States' },
+  'Marcus Webb':    { email: 'marcusw@ensemble.com', reportsTo: 'Melomia Zeuski', mobile: '+1 83773 48843', location: 'United Kingdom' },
+  'Priya Nair':     { email: 'priyan@ensemble.com',   reportsTo: 'Melomia Zeuski', mobile: '+1 83773 48844', location: 'India' },
+  'James Okonkwo':  { email: 'jameso@ensemble.com',  reportsTo: 'Melomia Zeuski', mobile: '+1 83773 48845', location: 'Nigeria' },
+};
+
 const RFQ_COLUMNS: ColumnDef<RFQRow>[] = [
   {
     key: 'rfqId', label: 'ID', width: '90px', sortable: true,
@@ -138,15 +148,25 @@ const RFQ_COLUMNS: ColumnDef<RFQRow>[] = [
   },
   {
     key: 'title', label: 'RFQ Title', sortable: true,
-    render: row => (
-      <div>
-        <div className="text-sm font-medium text-slate-800 leading-tight">{row.title}</div>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <Avatar name={row.owner} size="xs" />
-          <span className="text-[11px] text-slate-400">{row.owner}</span>
-        </div>
-      </div>
-    ),
+    render: row => <span className="text-sm font-medium text-slate-800 leading-tight">{row.title}</span>,
+  },
+  {
+    key: 'owner', label: 'Owner', width: '140px', sortable: true,
+    render: row => {
+      const details = OWNER_DETAILS[row.owner];
+      return (
+        <TablePersonHoverCard
+          roleLabel="Product Owner"
+          name={row.owner}
+          email={details?.email}
+          reportsTo={details?.reportsTo}
+          mobile={details?.mobile}
+          location={details?.location}
+          onLeave={() => {}}
+          onChange={() => {}}
+        />
+      );
+    },
   },
   {
     key: 'status', label: 'Status', width: '100px', sortable: true,
@@ -510,6 +530,46 @@ export function ShowcasePage() {
                     <span className="text-[10px] font-mono text-slate-500">{s.label}</span>
                   </div>
                 ))}
+              </div>
+            </SubSection>
+
+            <SubSection title="Grid System">
+              <p className="text-sm text-slate-600 mb-4 max-w-2xl">
+                Layouts use Tailwind CSS Grid. There is no single base column count (e.g. 12-column); column counts are chosen per use case. Below are the conventions and where they are applied in the design system.
+              </p>
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">2–4 columns — General layout & info blocks</h4>
+                  <p className="text-xs text-slate-500 mb-2">Cards, metrics, two-column sections, InfoGrid (cols 2–4), RecordHeader metadata.</p>
+                  <div className="grid grid-cols-2 gap-3 rounded-lg border border-slate-200 p-3 bg-slate-50">
+                    <div className="rounded bg-white border border-slate-200 p-2 text-center text-xs text-slate-500">2-col</div>
+                    <div className="rounded bg-white border border-slate-200 p-2 text-center text-xs text-slate-500">2-col</div>
+                  </div>
+                  <div className="mt-2 grid grid-cols-4 gap-2 rounded-lg border border-slate-200 p-3 bg-slate-50">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="rounded bg-white border border-slate-200 p-2 text-center text-xs text-slate-500">{i}</div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">6 columns — Expanded row / inline detail panels</h4>
+                  <p className="text-xs text-slate-500 mb-2">DataTable expanded row, InlineDetailPanel (e.g. Category, Deadline, Vendors, Quotes, Est. Value, Savings %).</p>
+                  <div className="grid grid-cols-6 gap-4 rounded-lg border border-slate-200 px-4 py-3 bg-slate-50">
+                    {['Cat', 'Deadline', 'Vendors', 'Quotes', 'Est.', 'Savings'].map((l, i) => (
+                      <div key={i} className="rounded bg-white border border-slate-200 p-2 text-center text-[10px] text-slate-600">{l}</div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">12 columns — Form / editor rows with flexible spanning</h4>
+                  <p className="text-xs text-slate-500 mb-2">SplitAllocationEditor, line item editors, mapping rows; use col-span-* for field widths.</p>
+                  <div className="grid grid-cols-12 gap-2 rounded-lg border border-slate-200 p-3 bg-slate-50">
+                    <div className="col-span-5 rounded bg-white border border-slate-200 p-2 text-[10px] text-slate-600">Label (col-span-5)</div>
+                    <div className="col-span-4 rounded bg-white border border-slate-200 p-2 text-[10px] text-slate-600">Input (col-span-4)</div>
+                    <div className="col-span-2 rounded bg-white border border-slate-200 p-2 text-[10px] text-slate-600">%</div>
+                    <div className="col-span-1 rounded bg-white border border-slate-200 p-2 text-[10px] text-slate-600">—</div>
+                  </div>
+                </div>
               </div>
             </SubSection>
           </Section>
