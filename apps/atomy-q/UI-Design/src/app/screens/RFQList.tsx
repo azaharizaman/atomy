@@ -1,20 +1,19 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { Link, useNavigate } from 'react-router';
 import {
-  Search, Plus, Filter, ChevronDown, ChevronLeft, ChevronRight,
+  Search, Plus, ChevronDown, ChevronLeft, ChevronRight,
   MoreHorizontal, Archive, Copy, FileDown, X, CheckSquare,
   Users, FileText, DollarSign, TrendingDown, Tag, Calendar,
-  ArrowUpDown, ArrowUp, ArrowDown, UserCircle,
+  ArrowUpDown, ArrowUp, ArrowDown,
 } from 'lucide-react';
 import { SlideOver } from '../components/SlideOver';
-import { RichTooltip, TooltipBadge, StatusDot } from '../components/RichTooltip';
 import {
-  rfqs, vendors, statusColors, formatCurrency, formatDate,
-  getVendorById, getUserById,
+  rfqs, statusColors, formatCurrency, formatDate,
+  getUserById,
 } from '../data/mockData';
 
 type StatusFilter = 'all' | 'draft' | 'open' | 'closed' | 'archived';
-type SortField = 'id' | 'title' | 'status' | 'category' | 'deadline' | 'estimatedValue' | 'savings';
+type SortField = 'id' | 'title' | 'status' | 'deadline' | 'estimatedValue';
 type SortDir = 'asc' | 'desc';
 
 const PAGE_SIZE = 10;
@@ -45,6 +44,7 @@ export function RFQList() {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState(1);
   const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     let list = [...rfqs];
@@ -108,6 +108,11 @@ export function RFQList() {
     setContextMenuId(null);
   };
 
+  const toggleExpand = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedRowId(prev => prev === id ? null : id);
+  };
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -135,12 +140,11 @@ export function RFQList() {
               type="text"
               value={searchQuery}
               onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
-              placeholder="Search by ID, title, or category…"
+              placeholder="Search by ID, title, or category..."
               className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
             />
           </div>
 
-          {/* Status chips */}
           <div className="flex items-center gap-1 border border-slate-200 rounded-lg p-0.5">
             {statusFilters.map(sf => (
               <button
@@ -158,7 +162,6 @@ export function RFQList() {
             ))}
           </div>
 
-          {/* Category filter */}
           <div className="relative">
             <select
               value={categoryFilter}
@@ -171,7 +174,6 @@ export function RFQList() {
             <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
 
-          {/* Owner filter */}
           <div className="relative">
             <select
               value={ownerFilter}
@@ -228,6 +230,7 @@ export function RFQList() {
                     className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   />
                 </th>
+                <th className="w-8 px-1 py-3" />
                 <th className="px-3 py-3 text-left">
                   <button onClick={() => toggleSort('id')} className="flex items-center gap-1 text-xs text-slate-500 uppercase tracking-wider" style={{ fontWeight: 600 }}>
                     ID <SortIcon field="id" />
@@ -235,7 +238,7 @@ export function RFQList() {
                 </th>
                 <th className="px-3 py-3 text-left">
                   <button onClick={() => toggleSort('title')} className="flex items-center gap-1 text-xs text-slate-500 uppercase tracking-wider" style={{ fontWeight: 600 }}>
-                    Title <SortIcon field="title" />
+                    RFQ <SortIcon field="title" />
                   </button>
                 </th>
                 <th className="px-3 py-3 text-left">
@@ -244,26 +247,13 @@ export function RFQList() {
                   </button>
                 </th>
                 <th className="px-3 py-3 text-left">
-                  <button onClick={() => toggleSort('category')} className="flex items-center gap-1 text-xs text-slate-500 uppercase tracking-wider" style={{ fontWeight: 600 }}>
-                    Category <SortIcon field="category" />
-                  </button>
-                </th>
-                <th className="px-3 py-3 text-left text-xs text-slate-500 uppercase tracking-wider" style={{ fontWeight: 600 }}>Owner</th>
-                <th className="px-3 py-3 text-left">
                   <button onClick={() => toggleSort('deadline')} className="flex items-center gap-1 text-xs text-slate-500 uppercase tracking-wider" style={{ fontWeight: 600 }}>
                     Deadline <SortIcon field="deadline" />
                   </button>
                 </th>
-                <th className="px-3 py-3 text-center text-xs text-slate-500 uppercase tracking-wider" style={{ fontWeight: 600 }}>Vendors</th>
-                <th className="px-3 py-3 text-center text-xs text-slate-500 uppercase tracking-wider" style={{ fontWeight: 600 }}>Quotes</th>
                 <th className="px-3 py-3 text-right">
                   <button onClick={() => toggleSort('estimatedValue')} className="flex items-center gap-1 text-xs text-slate-500 uppercase tracking-wider ml-auto" style={{ fontWeight: 600 }}>
                     Est. Value <SortIcon field="estimatedValue" />
-                  </button>
-                </th>
-                <th className="px-3 py-3 text-right">
-                  <button onClick={() => toggleSort('savings')} className="flex items-center gap-1 text-xs text-slate-500 uppercase tracking-wider ml-auto" style={{ fontWeight: 600 }}>
-                    Savings <SortIcon field="savings" />
                   </button>
                 </th>
                 <th className="w-10 px-3 py-3" />
@@ -273,130 +263,152 @@ export function RFQList() {
               {paginated.map(rfq => {
                 const owner = getUserById(rfq.owner);
                 const isSelected = selectedIds.includes(rfq.id);
+                const isExpanded = expandedRowId === rfq.id;
                 const deadlineDate = new Date(rfq.deadline);
                 const isOverdue = rfq.status === 'open' && deadlineDate < new Date();
                 const isDueSoon = rfq.status === 'open' && !isOverdue && (deadlineDate.getTime() - Date.now()) < 7 * 86400000;
-                const statusDot: 'good' | 'warning' | 'danger' | 'neutral' =
-                  rfq.status === 'closed' ? 'good' : rfq.status === 'open' ? (isOverdue ? 'danger' : isDueSoon ? 'warning' : 'good') : 'neutral';
 
                 return (
-                  <RichTooltip
-                    key={rfq.id}
-                    side="right"
-                    trigger={
-                      <tr
-                        className={`group hover:bg-slate-50/80 transition-colors cursor-pointer ${isSelected ? 'bg-indigo-50/40' : ''}`}
-                        onClick={() => navigate(`/rfq/${rfq.id}`)}
-                      >
-                        <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelect(rfq.id)}
-                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                          />
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className="text-indigo-600" style={{ fontWeight: 600 }}>{rfq.id}</span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className="text-slate-900" style={{ fontWeight: 500 }}>{rfq.title}</span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${statusColors[rfq.status]}`} style={{ fontWeight: 500 }}>
-                            {rfq.status}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className="inline-flex items-center gap-1 text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                            <Tag size={11} />
-                            {rfq.category}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="flex items-center gap-1.5">
-                            {owner && (
-                              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] flex items-center justify-center" style={{ fontWeight: 600 }}>
+                  <Fragment key={rfq.id}>
+                    <tr
+                      className={`group hover:bg-slate-50/80 transition-colors cursor-pointer ${isSelected ? 'bg-indigo-50/40' : ''}`}
+                      onClick={() => navigate(`/rfq/${rfq.id}`)}
+                    >
+                      <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelect(rfq.id)}
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                      </td>
+                      <td className="px-1 py-3">
+                        <button
+                          onClick={e => toggleExpand(rfq.id, e)}
+                          className={`p-0.5 rounded hover:bg-slate-200 text-slate-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                        >
+                          <ChevronRight size={14} />
+                        </button>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className="text-indigo-600" style={{ fontWeight: 600 }}>{rfq.id}</span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div>
+                          <span className="text-slate-900 block" style={{ fontWeight: 500 }}>{rfq.title}</span>
+                          {owner && (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="flex-shrink-0 w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 text-[9px] flex items-center justify-center" style={{ fontWeight: 600 }}>
                                 {owner.initials}
                               </span>
-                            )}
-                            <span className="text-xs text-slate-600">{owner?.name ?? rfq.owner}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className={`text-xs ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-amber-600' : 'text-slate-600'}`} style={{ fontWeight: isOverdue || isDueSoon ? 500 : 400 }}>
-                            {formatDate(rfq.deadline)}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-center text-xs text-slate-600">{rfq.vendorCount}</td>
-                        <td className="px-3 py-3 text-center text-xs text-slate-600">{rfq.quoteCount}</td>
-                        <td className="px-3 py-3 text-right text-xs text-slate-900" style={{ fontWeight: 500 }}>{formatCurrency(rfq.estimatedValue)}</td>
-                        <td className="px-3 py-3 text-right">
-                          {rfq.savings > 0 ? (
-                            <span className="text-xs text-emerald-600" style={{ fontWeight: 500 }}>{formatCurrency(rfq.savings)}</span>
-                          ) : (
-                            <span className="text-xs text-slate-400">—</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-center relative" onClick={e => e.stopPropagation()}>
-                          <button
-                            onClick={() => setContextMenuId(contextMenuId === rfq.id ? null : rfq.id)}
-                            className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                          >
-                            <MoreHorizontal size={16} />
-                          </button>
-                          {contextMenuId === rfq.id && (
-                            <div className="absolute right-3 top-full mt-1 z-30 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1">
-                              <Link to={`/rfq/${rfq.id}`} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                                <FileText size={13} /> Open
-                              </Link>
-                              <button className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                                <Copy size={13} /> Duplicate
-                              </button>
-                              <button
-                                onClick={() => handleArchive(rfq.id)}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
-                              >
-                                <Archive size={13} /> Archive
-                              </button>
-                              <button className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">
-                                <FileDown size={13} /> Export PDF
-                              </button>
+                              <span className="text-xs text-slate-500">{owner.name}</span>
                             </div>
                           )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${statusColors[rfq.status]}`} style={{ fontWeight: 500 }}>
+                          {rfq.status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className={`text-xs ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-amber-600' : 'text-slate-600'}`} style={{ fontWeight: isOverdue || isDueSoon ? 500 : 400 }}>
+                          {formatDate(rfq.deadline)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-right text-xs text-slate-900" style={{ fontWeight: 500 }}>{formatCurrency(rfq.estimatedValue)}</td>
+                      <td className="px-3 py-3 text-center relative" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => setContextMenuId(contextMenuId === rfq.id ? null : rfq.id)}
+                          className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          <MoreHorizontal size={16} />
+                        </button>
+                        {contextMenuId === rfq.id && (
+                          <div className="absolute right-3 top-full mt-1 z-30 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1">
+                            <Link to={`/rfq/${rfq.id}`} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                              <FileText size={13} /> Open
+                            </Link>
+                            <button className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                              <Copy size={13} /> Duplicate
+                            </button>
+                            <button
+                              onClick={() => handleArchive(rfq.id)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
+                            >
+                              <Archive size={13} /> Archive
+                            </button>
+                            <button className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">
+                              <FileDown size={13} /> Export PDF
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+
+                    {/* Expanded Row */}
+                    {isExpanded && (
+                      <tr className="bg-slate-50/60">
+                        <td colSpan={8} className="px-6 py-4">
+                          <div className="grid grid-cols-6 gap-4">
+                            <div className="flex items-start gap-2">
+                              <Tag size={13} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider block" style={{ fontWeight: 600 }}>Category</span>
+                                <span className="text-xs text-slate-700" style={{ fontWeight: 500 }}>{rfq.category}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <Calendar size={13} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider block" style={{ fontWeight: 600 }}>Deadline</span>
+                                <span className={`text-xs ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-amber-600' : 'text-slate-700'}`} style={{ fontWeight: 500 }}>
+                                  {formatDate(rfq.deadline)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <Users size={13} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider block" style={{ fontWeight: 600 }}>Vendors</span>
+                                <span className="text-xs text-slate-700" style={{ fontWeight: 500 }}>{rfq.vendorCount}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <FileText size={13} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider block" style={{ fontWeight: 600 }}>Quotes</span>
+                                <span className="text-xs text-slate-700" style={{ fontWeight: 500 }}>{rfq.quoteCount}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <DollarSign size={13} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider block" style={{ fontWeight: 600 }}>Est. Value</span>
+                                <span className="text-xs text-slate-700" style={{ fontWeight: 500 }}>{formatCurrency(rfq.estimatedValue)}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <TrendingDown size={13} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wider block" style={{ fontWeight: 600 }}>Savings</span>
+                                {rfq.savings > 0 ? (
+                                  <span className="text-xs text-emerald-600" style={{ fontWeight: 500 }}>{formatCurrency(rfq.savings)}</span>
+                                ) : (
+                                  <span className="text-xs text-slate-400">—</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </td>
                       </tr>
-                    }
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <StatusDot status={statusDot} />
-                        <span className="text-sm text-slate-900" style={{ fontWeight: 600 }}>{rfq.id}</span>
-                        <span className={`ml-auto text-xs px-1.5 py-0.5 rounded ${statusColors[rfq.status]}`}>{rfq.status}</span>
-                      </div>
-                      <p className="text-xs text-slate-600 leading-relaxed">{rfq.title}</p>
-                      <div className="border-t border-slate-100 pt-2 space-y-0.5">
-                        <TooltipBadge label="Vendors" value={rfq.vendorCount} />
-                        <TooltipBadge label="Quotes" value={rfq.quoteCount} />
-                        <TooltipBadge label="Est. Value" value={formatCurrency(rfq.estimatedValue)} color="text-slate-900" />
-                        {rfq.savings > 0 && (
-                          <TooltipBadge label="Savings" value={formatCurrency(rfq.savings)} color="text-emerald-600" />
-                        )}
-                        <TooltipBadge label="Deadline" value={formatDate(rfq.deadline)} color={isOverdue ? 'text-red-600' : 'text-slate-600'} />
-                      </div>
-                      {owner && (
-                        <div className="border-t border-slate-100 pt-2 flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] flex items-center justify-center" style={{ fontWeight: 600 }}>{owner.initials}</span>
-                          <span className="text-xs text-slate-600">{owner.name}</span>
-                        </div>
-                      )}
-                    </div>
-                  </RichTooltip>
+                    )}
+                  </Fragment>
                 );
               })}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={12} className="px-6 py-12 text-center text-sm text-slate-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-sm text-slate-400">
                     No RFQs match your filters.
                   </td>
                 </tr>

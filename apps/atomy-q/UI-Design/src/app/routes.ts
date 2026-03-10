@@ -6,6 +6,7 @@ import { RFQList } from './screens/RFQList';
 import { CreateRFQ } from './screens/CreateRFQ';
 import { RFQDetail } from './screens/RFQDetail';
 import { QuoteIntakeInbox } from './screens/QuoteIntakeInbox';
+import { QuoteIntakeDetail } from './screens/QuoteIntakeDetail';
 import { QuoteNormalizationWorkspace } from './screens/QuoteNormalizationWorkspace';
 import { QuoteComparisonMatrix } from './screens/QuoteComparisonMatrix';
 import { ScoringModelBuilder } from './screens/ScoringModelBuilder';
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
       { path: 'rfq/create', Component: CreateRFQ },
       { path: 'rfq/:id', Component: RFQDetail },
       { path: 'quote-intake', Component: QuoteIntakeInbox },
+      { path: 'quote-intake/:id', Component: QuoteIntakeDetail },
       { path: 'normalization', Component: QuoteNormalizationWorkspace },
       { path: 'comparison', Component: QuoteComparisonMatrix },
       { path: 'scoring', Component: ScoringModelBuilder },

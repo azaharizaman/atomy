@@ -6,6 +6,8 @@ This document maps every required API endpoint to the UI screens, elements, and 
 **Authentication:** Bearer token (JWT) in `Authorization` header. All endpoints except `/auth/*` require authentication.
 **Tenant Context:** Tenant ID derived from the authenticated user's token. All data is tenant-scoped.
 
+**Navigation Note:** Normalization is **not** in the main sidebar; it is reached contextually from Quote Intake ("Accept & Normalize") or from RFQ Detail. Quote Normalization endpoints (Section 8) serve the Normalization Workspace when accessed via those flows.
+
 ---
 
 ## 1. Authentication & Session
@@ -34,7 +36,7 @@ This document maps every required API endpoint to the UI screens, elements, and 
 
 | Method | Endpoint | Screen | Element/Interaction | Description |
 |--------|----------|--------|---------------------|-------------|
-| GET | `/rfqs` | RFQ List | Table data | List RFQs with filters (status, owner, category, search, pagination) |
+| GET | `/rfqs` | RFQ List | Compact data table with expandable rows | List RFQs with filters (status, owner, category, search, pagination). Compact table: RFQ title with owner avatar and name as subtitle in one column; expandable rows show category, deadline, vendors, quotes, est. value, savings. No hover tooltip. |
 | POST | `/rfqs` | Create RFQ | Submit/Publish button | Create a new RFQ |
 | GET | `/rfqs/:id` | RFQ Detail | Page load | Get single RFQ with full details |
 | PUT | `/rfqs/:id` | RFQ Detail | Edit action | Update RFQ metadata |
@@ -81,9 +83,9 @@ This document maps every required API endpoint to the UI screens, elements, and 
 
 | Method | Endpoint | Screen | Element/Interaction | Description |
 |--------|----------|--------|---------------------|-------------|
-| GET | `/quote-submissions` | Quote Intake Inbox | Queue list | List submissions with filters (status, RFQ, vendor) |
+| GET | `/quote-submissions` | Quote Intake Inbox | Data table list | List submissions as data table with filters (status, RFQ, vendor). Columns: File name, Vendor, RFQ, Status (processing/parsed/accepted/rejected/error/pending_assignment), Parse confidence, Uploaded at. |
 | POST | `/quote-submissions/upload` | Quote Intake Inbox | Upload & Parse slide-over | Upload and parse quote file(s) |
-| GET | `/quote-submissions/:id` | Quote Intake Inbox | Selected submission detail | Get full submission details with parse results |
+| GET | `/quote-submissions/:id` | Quote Intake Detail (separate screen at `/quote-intake/:id`) | Two-tab detail view | Get full submission detail. Tab 1 (Overview): document/preview reference, vendor details, parse confidence, validation result (quote-level errors/warnings). Tab 2 (Parsed line items): array of lines with id, description, quantity, uom, unitPrice, currency, confidence, rfqLineId, overridden, mappedToRfqLineId, validationWarning — supports expandable rows with manual override/revert. Line-level override/revert may call PUT/DELETE `/normalization/source-lines/:id/override` (Section 8) when the submission is accepted and in normalization state. Clicking a row in the Quote Intake list navigates to this detail screen. |
 | PATCH | `/quote-submissions/:id/status` | Quote Intake Inbox | Accept/Reject buttons | Accept or reject a submission |
 | POST | `/quote-submissions/:id/replace` | Quote Intake Inbox | Replace & Re-Parse slide-over | Replace document and re-parse |
 | POST | `/quote-submissions/:id/reparse` | Quote Intake Inbox | Re-Parse button | Re-run extraction on existing file |

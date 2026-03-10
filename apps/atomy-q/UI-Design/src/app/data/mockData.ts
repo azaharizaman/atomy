@@ -3,7 +3,7 @@
 
 // ─── Types ──────────────────────────────────────────────────────────
 export type RfqStatus = 'draft' | 'open' | 'closed' | 'archived' | 'reopened';
-export type QuoteStatus = 'processing' | 'parsed' | 'accepted' | 'rejected' | 'pending_assignment';
+export type QuoteStatus = 'processing' | 'parsed' | 'accepted' | 'rejected' | 'pending_assignment' | 'error';
 export type NormalizationStatus = 'unmapped' | 'partial' | 'complete' | 'locked' | 'stale';
 export type ComparisonRunMode = 'preview' | 'final';
 export type ComparisonRunStatus = 'not_generated' | 'preview' | 'final' | 'stale' | 'locked';
@@ -21,6 +21,21 @@ export type PolicyStatus = 'draft' | 'published' | 'archived';
 export type TemplateStatus = 'draft' | 'published' | 'archived';
 export type NotificationType = 'approval' | 'mention' | 'assignment' | 'deadline' | 'alert' | 'system';
 export type NotificationPriority = 'urgent' | 'high' | 'normal' | 'low';
+
+export interface ParsedLineItem {
+  id: string;
+  submissionId: string;
+  description: string;
+  quantity: number;
+  uom: string;
+  unitPrice: number;
+  currency: string;
+  confidence: number;
+  rfqLineId?: string;
+  overridden?: boolean;
+  mappedToRfqLineId?: string;
+  validationWarning?: string;
+}
 
 // ─── Users & Auth ───────────────────────────────────────────────────
 export const currentUser = {
@@ -104,6 +119,14 @@ export const rfqLineItems = [
   { id: 'li-006', rfqId: 'RFQ-2401', description: 'Server Installation & Config', quantity: 4, uom: 'each', estimatedUnitPrice: 2200, category: 'Services' },
   { id: 'li-007', rfqId: 'RFQ-2401', description: 'Power Distribution Unit 30A', quantity: 2, uom: 'each', estimatedUnitPrice: 1100, category: 'Power' },
   { id: 'li-008', rfqId: 'RFQ-2401', description: 'UPS Battery Backup 3kVA', quantity: 2, uom: 'each', estimatedUnitPrice: 3400, category: 'Power' },
+  { id: 'li-101', rfqId: 'RFQ-2398', description: 'A4 Copy Paper 80gsm', quantity: 500, uom: 'ream', estimatedUnitPrice: 6.50, category: 'Paper' },
+  { id: 'li-102', rfqId: 'RFQ-2398', description: 'Ballpoint Pens Blue', quantity: 200, uom: 'box', estimatedUnitPrice: 3.80, category: 'Writing' },
+  { id: 'li-103', rfqId: 'RFQ-2398', description: 'Sticky Notes Assorted', quantity: 100, uom: 'pack', estimatedUnitPrice: 4.20, category: 'Stationery' },
+  { id: 'li-104', rfqId: 'RFQ-2398', description: 'Whiteboard Markers', quantity: 50, uom: 'pack', estimatedUnitPrice: 12.50, category: 'Writing' },
+  { id: 'li-105', rfqId: 'RFQ-2398', description: 'Desk Organizer', quantity: 30, uom: 'each', estimatedUnitPrice: 25.00, category: 'Office' },
+  { id: 'li-106', rfqId: 'RFQ-2398', description: 'Filing Folders A4', quantity: 200, uom: 'pack', estimatedUnitPrice: 8.90, category: 'Filing' },
+  { id: 'li-107', rfqId: 'RFQ-2398', description: 'Printer Toner Black', quantity: 20, uom: 'cartridge', estimatedUnitPrice: 65.00, category: 'Printing' },
+  { id: 'li-108', rfqId: 'RFQ-2398', description: 'USB Flash Drive 32GB', quantity: 50, uom: 'each', estimatedUnitPrice: 12.00, category: 'Accessories' },
 ];
 
 // ─── Vendor Invitations ─────────────────────────────────────────────
@@ -123,9 +146,11 @@ export const quoteSubmissions = [
   { id: 'qs-002', rfqId: 'RFQ-2401', vendorId: 'vnd-002', fileName: 'GlobalSupply_Bid_2401.xlsx', status: 'accepted' as QuoteStatus, confidence: 88, uploadedAt: '2026-02-22T14:15:00Z', parsedAt: '2026-02-22T14:18:00Z', lineCount: 8, totalAmount: 201400, warnings: 2, errors: 0 },
   { id: 'qs-003', rfqId: 'RFQ-2401', vendorId: 'vnd-003', fileName: 'FastParts_Quotation.pdf', status: 'accepted' as QuoteStatus, confidence: 72, uploadedAt: '2026-02-20T09:00:00Z', parsedAt: '2026-02-20T09:04:00Z', lineCount: 7, totalAmount: 186400, warnings: 3, errors: 1 },
   { id: 'qs-004', rfqId: 'RFQ-2401', vendorId: 'vnd-004', fileName: 'PrimeSource_Proposal_2401.pdf', status: 'accepted' as QuoteStatus, confidence: 94, uploadedAt: '2026-02-19T11:45:00Z', parsedAt: '2026-02-19T11:47:00Z', lineCount: 8, totalAmount: 192800, warnings: 1, errors: 0 },
-  { id: 'qs-005', rfqId: 'RFQ-2398', vendorId: 'vnd-002', fileName: 'GlobalSupply_OfficeSup_Q2.xlsx', status: 'parsed' as QuoteStatus, confidence: 91, uploadedAt: '2026-03-05T16:20:00Z', parsedAt: '2026-03-05T16:22:00Z', lineCount: 28, totalAmount: 38700, warnings: 1, errors: 0 },
+  { id: 'qs-005', rfqId: 'RFQ-2398', vendorId: 'vnd-002', fileName: 'GlobalSupply_OfficeSup_Q2.xlsx', status: 'parsed' as QuoteStatus, confidence: 91, uploadedAt: '2026-03-05T16:20:00Z', parsedAt: '2026-03-05T16:22:00Z', lineCount: 8, totalAmount: 38700, warnings: 1, errors: 0 },
   { id: 'qs-006', rfqId: 'RFQ-2398', vendorId: 'vnd-006', fileName: 'Meridian_Supplies_Bid.pdf', status: 'processing' as QuoteStatus, confidence: 0, uploadedAt: '2026-03-09T08:00:00Z', parsedAt: '', lineCount: 0, totalAmount: 0, warnings: 0, errors: 0 },
   { id: 'qs-007', rfqId: '', vendorId: '', fileName: 'Unknown_Vendor_Quote.pdf', status: 'pending_assignment' as QuoteStatus, confidence: 0, uploadedAt: '2026-03-08T15:30:00Z', parsedAt: '', lineCount: 0, totalAmount: 0, warnings: 0, errors: 0 },
+  { id: 'qs-008', rfqId: 'RFQ-2398', vendorId: 'vnd-005', fileName: 'NovaTech_OfficeSupplies.pdf', status: 'error' as QuoteStatus, confidence: 0, uploadedAt: '2026-03-07T12:00:00Z', parsedAt: '', lineCount: 0, totalAmount: 0, warnings: 0, errors: 0, parseError: 'Document extraction failed: corrupted PDF structure on pages 3-5' },
+  { id: 'qs-009', rfqId: 'RFQ-2391', vendorId: 'vnd-004', fileName: 'PrimeSource_Facilities_Q1.xlsx', status: 'parsed' as QuoteStatus, confidence: 54, uploadedAt: '2026-03-06T09:10:00Z', parsedAt: '2026-03-06T09:14:00Z', lineCount: 5, totalAmount: 62400, warnings: 2, errors: 1, validationErrors: ['Missing RFQ context: no fx_lock_date found', 'Vendor identity uncertain — name mismatch with RFQ invitation'] },
 ];
 
 // ─── Source Lines & Normalization ───────────────────────────────────
@@ -146,6 +171,65 @@ export const normalizedItems = [
 export const conflicts = [
   { id: 'cf-001', sourceLineId: 'sl-004', type: 'uom_mismatch' as const, description: 'Source UoM "PCS" vs expected "EA"', suggestedResolution: 'Map PCS to EA (1:1)', rfqId: 'RFQ-2401' },
   { id: 'cf-002', sourceLineId: 'sl-005', type: 'no_match' as const, description: 'Cannot map "Dual 10G NIC Card" to any RFQ line item', suggestedResolution: 'Map to "10GbE Network Card Dual Port"', rfqId: 'RFQ-2401' },
+];
+
+// ─── Parsed Line Items (per submission) ─────────────────────────────
+export const parsedLineItems: ParsedLineItem[] = [
+  // qs-001 — TechCorp, RFQ-2401, accepted, 96% confidence, no issues
+  { id: 'pl-001-01', submissionId: 'qs-001', description: 'Dell PE R760 Server Unit', quantity: 4, uom: 'EA', unitPrice: 18200, currency: 'AUD', confidence: 98, rfqLineId: 'li-001' },
+  { id: 'pl-001-02', submissionId: 'qs-001', description: '64GB DDR5 ECC Memory', quantity: 32, uom: 'EA', unitPrice: 410, currency: 'AUD', confidence: 96, rfqLineId: 'li-002' },
+  { id: 'pl-001-03', submissionId: 'qs-001', description: '2TB NVMe Enterprise SSD', quantity: 16, uom: 'EA', unitPrice: 650, currency: 'AUD', confidence: 92, rfqLineId: 'li-003' },
+  { id: 'pl-001-04', submissionId: 'qs-001', description: 'Rack Mount Kit 2U', quantity: 4, uom: 'EA', unitPrice: 150, currency: 'AUD', confidence: 95, rfqLineId: 'li-004' },
+  { id: 'pl-001-05', submissionId: 'qs-001', description: '10GbE NIC Dual Port', quantity: 8, uom: 'EA', unitPrice: 380, currency: 'AUD', confidence: 94, rfqLineId: 'li-005' },
+  { id: 'pl-001-06', submissionId: 'qs-001', description: 'Server Installation & Config', quantity: 4, uom: 'EA', unitPrice: 2200, currency: 'AUD', confidence: 97, rfqLineId: 'li-006' },
+  { id: 'pl-001-07', submissionId: 'qs-001', description: 'Power Distribution Unit 30A', quantity: 2, uom: 'EA', unitPrice: 1100, currency: 'AUD', confidence: 96, rfqLineId: 'li-007' },
+  { id: 'pl-001-08', submissionId: 'qs-001', description: 'UPS Battery Backup 3kVA', quantity: 2, uom: 'EA', unitPrice: 3400, currency: 'AUD', confidence: 93, rfqLineId: 'li-008' },
+
+  // qs-002 — GlobalSupply, RFQ-2401, accepted, 88%, 2 warnings (UoM mismatches)
+  { id: 'pl-002-01', submissionId: 'qs-002', description: 'Dell PowerEdge R760 Server', quantity: 4, uom: 'EA', unitPrice: 19100, currency: 'AUD', confidence: 90, rfqLineId: 'li-001' },
+  { id: 'pl-002-02', submissionId: 'qs-002', description: 'DDR5 RAM Module 64GB', quantity: 32, uom: 'EA', unitPrice: 440, currency: 'AUD', confidence: 87, rfqLineId: 'li-002' },
+  { id: 'pl-002-03', submissionId: 'qs-002', description: 'NVMe SSD 2TB Enterprise', quantity: 16, uom: 'EA', unitPrice: 700, currency: 'AUD', confidence: 85, rfqLineId: 'li-003' },
+  { id: 'pl-002-04', submissionId: 'qs-002', description: 'Rack Mount Kit', quantity: 4, uom: 'PCS', unitPrice: 160, currency: 'AUD', confidence: 78, rfqLineId: 'li-004', validationWarning: 'UoM mismatch: PCS vs each' },
+  { id: 'pl-002-05', submissionId: 'qs-002', description: '10GbE Network Card', quantity: 8, uom: 'EA', unitPrice: 350, currency: 'AUD', confidence: 91, rfqLineId: 'li-005' },
+  { id: 'pl-002-06', submissionId: 'qs-002', description: 'Installation Service', quantity: 4, uom: 'HRS', unitPrice: 2800, currency: 'AUD', confidence: 76, rfqLineId: 'li-006', validationWarning: 'UoM mismatch: HRS vs each' },
+  { id: 'pl-002-07', submissionId: 'qs-002', description: 'PDU Rack Mount 30A', quantity: 2, uom: 'EA', unitPrice: 1200, currency: 'AUD', confidence: 89, rfqLineId: 'li-007' },
+  { id: 'pl-002-08', submissionId: 'qs-002', description: 'UPS 3kVA Backup', quantity: 2, uom: 'EA', unitPrice: 3600, currency: 'AUD', confidence: 88, rfqLineId: 'li-008' },
+
+  // qs-003 — FastParts, RFQ-2401, accepted, 72%, 3 warnings, 1 error, some overridden
+  { id: 'pl-003-01', submissionId: 'qs-003', description: 'Server Rack Unit 2U', quantity: 4, uom: 'PCS', unitPrice: 14200, currency: 'GBP', confidence: 72, rfqLineId: 'li-001', validationWarning: 'Currency conversion applied (GBP → AUD)' },
+  { id: 'pl-003-02', submissionId: 'qs-003', description: 'DDR5 Memory Kit', quantity: 32, uom: 'PCS', unitPrice: 330, currency: 'GBP', confidence: 68, rfqLineId: 'li-002' },
+  { id: 'pl-003-03', submissionId: 'qs-003', description: 'SSD NVMe 2TB', quantity: 16, uom: 'PCS', unitPrice: 520, currency: 'GBP', confidence: 70, rfqLineId: 'li-003', validationWarning: 'UoM mismatch: PCS vs each' },
+  { id: 'pl-003-04', submissionId: 'qs-003', description: 'Rack Kit 2U Form Factor', quantity: 4, uom: 'PCS', unitPrice: 112, currency: 'GBP', confidence: 65, rfqLineId: 'li-004', overridden: true, mappedToRfqLineId: 'li-004', validationWarning: 'Low confidence mapping — manually confirmed' },
+  { id: 'pl-003-05', submissionId: 'qs-003', description: 'Dual 10G NIC Card', quantity: 8, uom: 'PCS', unitPrice: 285, currency: 'GBP', confidence: 58, validationWarning: 'Cannot auto-map to any RFQ line item' },
+  { id: 'pl-003-06', submissionId: 'qs-003', description: 'Server Setup Service', quantity: 4, uom: 'PCS', unitPrice: 1800, currency: 'GBP', confidence: 60, rfqLineId: 'li-006', validationWarning: 'Price significantly below market estimate' },
+  { id: 'pl-003-07', submissionId: 'qs-003', description: 'Power Distribution Unit', quantity: 2, uom: 'PCS', unitPrice: 890, currency: 'GBP', confidence: 66, rfqLineId: 'li-007' },
+
+  // qs-004 — PrimeSource, RFQ-2401, accepted, 94%, 1 warning, one overridden
+  { id: 'pl-004-01', submissionId: 'qs-004', description: 'Dell R760 Server', quantity: 4, uom: 'EA', unitPrice: 18400, currency: 'AUD', confidence: 96, rfqLineId: 'li-001' },
+  { id: 'pl-004-02', submissionId: 'qs-004', description: 'DDR5 ECC 64GB Module', quantity: 32, uom: 'EA', unitPrice: 420, currency: 'AUD', confidence: 95, rfqLineId: 'li-002' },
+  { id: 'pl-004-03', submissionId: 'qs-004', description: 'NVMe SSD Enterprise 2TB', quantity: 16, uom: 'EA', unitPrice: 660, currency: 'AUD', confidence: 93, rfqLineId: 'li-003' },
+  { id: 'pl-004-04', submissionId: 'qs-004', description: '2U Rack Mount Kit', quantity: 4, uom: 'EA', unitPrice: 155, currency: 'AUD', confidence: 94, rfqLineId: 'li-004' },
+  { id: 'pl-004-05', submissionId: 'qs-004', description: 'Dual Port 10GbE NIC', quantity: 8, uom: 'EA', unitPrice: 390, currency: 'AUD', confidence: 92, rfqLineId: 'li-005', overridden: true, mappedToRfqLineId: 'li-005' },
+  { id: 'pl-004-06', submissionId: 'qs-004', description: 'Server Installation', quantity: 4, uom: 'EA', unitPrice: 2300, currency: 'AUD', confidence: 95, rfqLineId: 'li-006' },
+  { id: 'pl-004-07', submissionId: 'qs-004', description: '30A Power Distribution Unit', quantity: 2, uom: 'EA', unitPrice: 1150, currency: 'AUD', confidence: 91, rfqLineId: 'li-007', validationWarning: 'Estimated unit price variance > 5%' },
+  { id: 'pl-004-08', submissionId: 'qs-004', description: '3kVA UPS Battery', quantity: 2, uom: 'EA', unitPrice: 3500, currency: 'AUD', confidence: 90, rfqLineId: 'li-008' },
+
+  // qs-005 — GlobalSupply, RFQ-2398 office supplies, parsed, 91%, 1 warning
+  { id: 'pl-005-01', submissionId: 'qs-005', description: 'A4 Copy Paper 80gsm', quantity: 500, uom: 'RM', unitPrice: 6.80, currency: 'AUD', confidence: 95, rfqLineId: 'li-101' },
+  { id: 'pl-005-02', submissionId: 'qs-005', description: 'Blue Ballpoint Pens', quantity: 200, uom: 'BX', unitPrice: 3.50, currency: 'AUD', confidence: 93, rfqLineId: 'li-102' },
+  { id: 'pl-005-03', submissionId: 'qs-005', description: 'Sticky Notes Assorted Pack', quantity: 100, uom: 'PK', unitPrice: 4.40, currency: 'AUD', confidence: 91, rfqLineId: 'li-103' },
+  { id: 'pl-005-04', submissionId: 'qs-005', description: 'Whiteboard Marker Set', quantity: 50, uom: 'PK', unitPrice: 11.80, currency: 'AUD', confidence: 89, rfqLineId: 'li-104' },
+  { id: 'pl-005-05', submissionId: 'qs-005', description: 'Desktop Organizer Tray', quantity: 30, uom: 'EA', unitPrice: 22.50, currency: 'AUD', confidence: 87, rfqLineId: 'li-105', validationWarning: 'Description partial match — verify item' },
+  { id: 'pl-005-06', submissionId: 'qs-005', description: 'A4 Filing Folders', quantity: 200, uom: 'PK', unitPrice: 9.20, currency: 'AUD', confidence: 94, rfqLineId: 'li-106' },
+  { id: 'pl-005-07', submissionId: 'qs-005', description: 'HP Toner Cartridge Black', quantity: 20, uom: 'EA', unitPrice: 62.00, currency: 'AUD', confidence: 92, rfqLineId: 'li-107' },
+  { id: 'pl-005-08', submissionId: 'qs-005', description: 'USB Flash Drive 32GB', quantity: 50, uom: 'EA', unitPrice: 11.50, currency: 'AUD', confidence: 90, rfqLineId: 'li-108' },
+
+  // qs-009 — PrimeSource, RFQ-2391 facilities, parsed, 54%, quote-level issues
+  { id: 'pl-009-01', submissionId: 'qs-009', description: 'HVAC Maintenance Annual', quantity: 1, uom: 'LOT', unitPrice: 28000, currency: 'AUD', confidence: 62, rfqLineId: undefined, validationWarning: 'Cannot auto-map — no matching RFQ line' },
+  { id: 'pl-009-02', submissionId: 'qs-009', description: 'Electrical Inspection', quantity: 2, uom: 'EA', unitPrice: 4500, currency: 'AUD', confidence: 55 },
+  { id: 'pl-009-03', submissionId: 'qs-009', description: 'Fire Safety Audit', quantity: 1, uom: 'EA', unitPrice: 8200, currency: 'AUD', confidence: 48, validationWarning: 'Low confidence extraction — verify manually' },
+  { id: 'pl-009-04', submissionId: 'qs-009', description: 'Plumbing Repairs Package', quantity: 1, uom: 'LOT', unitPrice: 12500, currency: 'AUD', confidence: 51, validationWarning: 'Ambiguous line item description' },
+  { id: 'pl-009-05', submissionId: 'qs-009', description: 'Pest Control Quarterly', quantity: 4, uom: 'EA', unitPrice: 2300, currency: 'AUD', confidence: 58 },
 ];
 
 // ─── Comparison & Scoring ───────────────────────────────────────────
@@ -500,6 +584,8 @@ export const rfqTemplates = [
 export function getVendorById(id: string) { return vendors.find(v => v.id === id); }
 export function getUserById(id: string) { return users.find(u => u.id === id); }
 export function getRfqById(id: string) { return rfqs.find(r => r.id === id); }
+export function getParsedLineItemsBySubmissionId(submissionId: string) { return parsedLineItems.filter(pl => pl.submissionId === submissionId); }
+export function getRfqLineItemsByRfqId(rfqId: string) { return rfqLineItems.filter(li => li.rfqId === rfqId); }
 
 export function formatCurrency(amount: number, currency = 'AUD'): string {
   return new Intl.NumberFormat('en-AU', { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
@@ -542,6 +628,7 @@ export const statusColors: Record<string, string> = {
   parsed: 'bg-indigo-100 text-indigo-700',
   accepted: 'bg-emerald-100 text-emerald-700',
   rejected: 'bg-red-100 text-red-700',
+  error: 'bg-red-100 text-red-700',
   pending_assignment: 'bg-amber-100 text-amber-700',
   pending: 'bg-amber-100 text-amber-700',
   approved: 'bg-emerald-100 text-emerald-700',

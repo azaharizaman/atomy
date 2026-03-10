@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useLocation, Link, useNavigate } from 'react-router';
 import {
-  LayoutDashboard, FileText, Inbox, ArrowLeftRight, BarChart3,
+  LayoutDashboard, FileText, Inbox, BarChart3,
   Star, TrendingUp, MessageSquare, ShieldAlert,
   ChevronDown, Settings, Bell, Search, HelpCircle,
   Menu, ClipboardCheck, List, Award, Send, ScrollText,
@@ -24,7 +24,6 @@ const navGroups = [
       { path: '/rfqs', label: 'RFQ List', icon: List },
       { path: '/rfq/create', label: 'Create RFQ', icon: FileText },
       { path: '/quote-intake', label: 'Quote Intake', icon: Inbox },
-      { path: '/normalization', label: 'Normalization', icon: ArrowLeftRight },
       { path: '/comparison', label: 'Comparison Matrix', icon: BarChart3 },
     ],
   },
@@ -118,7 +117,9 @@ export function Layout() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [searchOpen]);
 
-  const currentBreadcrumb = breadcrumbMap[location.pathname] || location.pathname.split('/').pop()?.replace(/-/g, ' ') || '';
+  const currentBreadcrumb = breadcrumbMap[location.pathname]
+    || (location.pathname.startsWith('/quote-intake/') && location.pathname !== '/quote-intake' ? 'Quote Detail' : null)
+    || location.pathname.split('/').pop()?.replace(/-/g, ' ') || '';
 
   return (
     <div className="flex h-screen bg-slate-100 font-[Inter,sans-serif] overflow-hidden">
