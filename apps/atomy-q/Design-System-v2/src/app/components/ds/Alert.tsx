@@ -144,9 +144,9 @@ export function ChecklistItem({ label, status, detail }: ChecklistItemProps) {
 
   return (
     <div className="flex items-start gap-2 py-1.5">
-      <span className={['mt-0.5 shrink-0', color].join(' ')}>{icon}</span>
-      <div>
-        <span className="text-sm text-slate-700">{label}</span>
+      <span className={['shrink-0 pt-0.5 leading-none', color].join(' ')}>{icon}</span>
+      <div className="min-w-0">
+        <span className="text-sm text-slate-700 leading-tight block">{label}</span>
         {detail && <p className={['text-xs mt-0.5', color].join(' ')}>{detail}</p>}
       </div>
     </div>

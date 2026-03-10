@@ -127,3 +127,26 @@ To preinstall this app's npm dependencies for cloud/devcontainer startup:
 - Added `.devcontainer/post-create.sh` to install `apps/atomy-q/Design-System-v2` dependencies.
 - Updated `.devcontainer/devcontainer.json` with:
   - `"postCreateCommand": "bash .devcontainer/post-create.sh"`
+
+## Update - Table/Grid & Line-Item UX Refinements
+
+Implemented additional UI/UX refinements requested after P1:
+
+- Expanded row indentation alignment in `DataTable` via `expandedIndentColumns` so expanded content follows parent text hierarchy.
+- Bulk actions in `DataTable` toolbar now use a safer dropdown (`Bulk Actions`) instead of exposed action buttons.
+- Added `DataTable` variants support:
+  - row grouping (`groupBy`, `renderGroupHeader`)
+  - group summaries (`renderGroupSummary`, `showGroupSummary`)
+  - table summary row (`renderTableSummary`, `showTableSummary`)
+- Enhanced Data Display showcase:
+  - title-aligned search and filter controls (dropdown/toggle/checkbox/date+numeric ranges)
+  - table/grid view mode switch
+  - configuration popup (cog) for columns visibility, records per page, group/table summaries
+  - card-based Grid View rendering for table records
+- Fixed checklist icon/text vertical alignment in `Alert` checklist items.
+- Upgraded Create RFQ line items editor:
+  - labeled table-like headers
+  - locale-aware currency input group (prefix/suffix)
+  - non-prominent remove control (ghost without hover emphasis)
+  - sortable row handle with drag/drop reordering
+  - heading/subheading grouping rows for line item sections

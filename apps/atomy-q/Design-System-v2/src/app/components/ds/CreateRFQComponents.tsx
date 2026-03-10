@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, UploadCloud } from 'lucide-react';
+import { Plus, UploadCloud, GripVertical, Rows3 } from 'lucide-react';
 import { Card, UploadZone } from './Card';
 import { TextInput, SelectInput } from './Input';
 import { Button } from './Button';
@@ -83,6 +83,9 @@ export function StickyActionBar({
 
 export interface LineItem {
   id: string;
+  entryType?: 'line' | 'heading';
+  heading?: string;
+  subheading?: string;
   description: string;
   qty: number;
   unit: string;
@@ -92,10 +95,37 @@ export interface LineItem {
 interface LineItemEditorProps {
   items: LineItem[];
   onChange: (items: LineItem[]) => void;
+  currency?: string;
+  locale?: string;
+  currencyPosition?: 'auto' | 'prefix' | 'suffix';
   className?: string;
 }
 
-export function LineItemEditor({ items, onChange, className = '' }: LineItemEditorProps) {
+function detectCurrencyPosition(locale: string, currency: string): 'prefix' | 'suffix' {
+  const formatted = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).formatToParts(1);
+  const currencyIndex = formatted.findIndex(part => part.type === 'currency');
+  const numberIndex = formatted.findIndex(part => part.type === 'integer');
+  return currencyIndex <= numberIndex ? 'prefix' : 'suffix';
+}
+
+export function LineItemEditor({
+  items,
+  onChange,
+  currency = 'USD',
+  locale = 'en-US',
+  currencyPosition = 'auto',
+  className = '',
+}: LineItemEditorProps) {
+  const [draggingId, setDraggingId] = React.useState<string | null>(null);
+  const activeCurrencyPosition = currencyPosition === 'auto'
+    ? detectCurrencyPosition(locale, currency)
+    : currencyPosition;
+
   function update(id: string, patch: Partial<LineItem>) {
     onChange(items.map(item => (item.id === id ? { ...item, ...patch } : item)));
   }
@@ -109,6 +139,7 @@ export function LineItemEditor({ items, onChange, className = '' }: LineItemEdit
       ...items,
       {
         id: `new-${Date.now()}`,
+        entryType: 'line',
         description: '',
         qty: 1,
         unit: 'EA',
@@ -117,56 +148,161 @@ export function LineItemEditor({ items, onChange, className = '' }: LineItemEdit
     ]);
   }
 
+  function addGrouping() {
+    onChange([
+      ...items,
+      {
+        id: `heading-${Date.now()}`,
+        entryType: 'heading',
+        heading: '',
+        subheading: '',
+        description: '',
+        qty: 0,
+        unit: 'EA',
+        targetPrice: 0,
+      },
+    ]);
+  }
+
+  function moveItem(dragId: string, targetId: string) {
+    if (dragId === targetId) return;
+    const sourceIndex = items.findIndex(item => item.id === dragId);
+    const targetIndex = items.findIndex(item => item.id === targetId);
+    if (sourceIndex < 0 || targetIndex < 0) return;
+    const next = [...items];
+    const [moved] = next.splice(sourceIndex, 1);
+    next.splice(targetIndex, 0, moved);
+    onChange(next);
+  }
+
   return (
     <Card padding="none" className={className}>
       <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
         <p className="text-sm font-semibold text-slate-800">Line Items</p>
-        <Button size="sm" variant="outline" icon={<Plus size={13} />} onClick={add}>
-          Add Line
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" icon={<Rows3 size={13} />} onClick={addGrouping}>
+            Add Heading
+          </Button>
+          <Button size="sm" variant="outline" icon={<Plus size={13} />} onClick={add}>
+            Add Line
+          </Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200">
+        <span className="col-span-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Sort</span>
+        <span className="col-span-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Description / Heading</span>
+        <span className="col-span-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Qty</span>
+        <span className="col-span-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Unit</span>
+        <span className="col-span-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Target Price</span>
+        <span className="col-span-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-right">Action</span>
       </div>
       <div className="divide-y divide-slate-100">
         {items.map(item => (
-          <div key={item.id} className="grid grid-cols-12 gap-2 p-3">
-            <div className="col-span-5">
-              <TextInput
-                placeholder="Description"
-                value={item.description}
-                onChange={e => update(item.id, { description: e.target.value })}
-              />
+          <div
+            key={item.id}
+            className={['grid grid-cols-12 gap-2 p-3', draggingId === item.id ? 'bg-indigo-50/50' : ''].join(' ')}
+            draggable
+            onDragStart={() => setDraggingId(item.id)}
+            onDragEnd={() => setDraggingId(null)}
+            onDragOver={e => e.preventDefault()}
+            onDrop={() => {
+              if (draggingId) moveItem(draggingId, item.id);
+            }}
+          >
+            <div className="col-span-1 flex items-center">
+              <span className="inline-flex w-6 h-6 items-center justify-center rounded text-slate-400">
+                <GripVertical size={14} />
+              </span>
             </div>
-            <div className="col-span-2">
-              <TextInput
-                type="number"
-                placeholder="Qty"
-                value={String(item.qty)}
-                onChange={e => update(item.id, { qty: Number(e.target.value || 0) })}
-              />
-            </div>
-            <div className="col-span-2">
-              <SelectInput
-                options={[
-                  { value: 'EA', label: 'EA' },
-                  { value: 'BOX', label: 'BOX' },
-                  { value: 'LOT', label: 'LOT' },
-                ]}
-                value={item.unit}
-                onChange={e => update(item.id, { unit: e.target.value })}
-              />
-            </div>
-            <div className="col-span-2">
-              <TextInput
-                type="number"
-                placeholder="Target $"
-                value={String(item.targetPrice)}
-                onChange={e => update(item.id, { targetPrice: Number(e.target.value || 0) })}
-              />
-            </div>
-            <div className="col-span-1 flex justify-end">
-              <Button variant="ghost" size="sm" onClick={() => remove(item.id)} icon={<Trash2 size={13} />}>
-                Remove
-              </Button>
-            </div>
+
+            {item.entryType === 'heading' ? (
+              <>
+                <div className="col-span-4">
+                  <TextInput
+                    placeholder="Heading"
+                    value={item.heading ?? ''}
+                    onChange={e => update(item.id, { heading: e.target.value })}
+                  />
+                  <div className="mt-1">
+                    <TextInput
+                      placeholder="Subheading (optional)"
+                      value={item.subheading ?? ''}
+                      onChange={e => update(item.id, { subheading: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="col-span-6 flex items-center">
+                  <span className="text-xs text-slate-500">Section heading to group related RFQ lines.</span>
+                </div>
+                <div className="col-span-1 flex justify-end items-start">
+                  <button
+                    className="h-7 px-2 text-xs text-slate-500"
+                    onClick={() => remove(item.id)}
+                    aria-label="Remove heading"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="col-span-4">
+                  <TextInput
+                    placeholder="Description"
+                    value={item.description}
+                    onChange={e => update(item.id, { description: e.target.value })}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <TextInput
+                    type="number"
+                    placeholder="Qty"
+                    value={String(item.qty)}
+                    onChange={e => update(item.id, { qty: Number(e.target.value || 0) })}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <SelectInput
+                    options={[
+                      { value: 'EA', label: 'EA' },
+                      { value: 'BOX', label: 'BOX' },
+                      { value: 'LOT', label: 'LOT' },
+                    ]}
+                    value={item.unit}
+                    onChange={e => update(item.id, { unit: e.target.value })}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <div className="relative">
+                    {activeCurrencyPosition === 'prefix' && (
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500">{currency}</span>
+                    )}
+                    <input
+                      type="number"
+                      className={[
+                        'w-full h-8 rounded-md border border-slate-200 bg-white text-slate-900 text-sm',
+                        'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400',
+                        activeCurrencyPosition === 'prefix' ? 'pl-11 pr-3' : 'pl-3 pr-11',
+                      ].join(' ')}
+                      value={item.targetPrice}
+                      onChange={e => update(item.id, { targetPrice: Number(e.target.value || 0) })}
+                    />
+                    {activeCurrencyPosition === 'suffix' && (
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500">{currency}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="col-span-1 flex justify-end">
+                  <button
+                    className="h-7 px-2 text-xs text-slate-500"
+                    onClick={() => remove(item.id)}
+                    aria-label="Remove line item"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>

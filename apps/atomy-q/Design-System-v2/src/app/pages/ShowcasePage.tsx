@@ -171,6 +171,28 @@ export function ShowcasePage() {
   const [selectedIds, setSelectedIds] = React.useState<(string | number)[]>(['1', '2']);
   const [expandedId, setExpandedId] = React.useState<string | number | null>('1');
   const [page, setPage] = React.useState(1);
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table');
+  const [tableSearch, setTableSearch] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState('all');
+  const [categoryFilter, setCategoryFilter] = React.useState('all');
+  const [recentlyHiredOnly, setRecentlyHiredOnly] = React.useState(false);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = React.useState(false);
+  const [withSavingsOnly, setWithSavingsOnly] = React.useState(false);
+  const [minValueFilter, setMinValueFilter] = React.useState('');
+  const [maxValueFilter, setMaxValueFilter] = React.useState('');
+  const [fromDateFilter, setFromDateFilter] = React.useState('');
+  const [toDateFilter, setToDateFilter] = React.useState('');
+  const [configOpen, setConfigOpen] = React.useState(false);
+  const [recordsPerPage, setRecordsPerPage] = React.useState(8);
+  const [showGroupSummaryRow, setShowGroupSummaryRow] = React.useState(true);
+  const [showTableSummaryRow, setShowTableSummaryRow] = React.useState(true);
+  const [showColumns, setShowColumns] = React.useState<Record<string, boolean>>({
+    rfqId: true,
+    title: true,
+    status: true,
+    deadline: true,
+    estValue: true,
+  });
   const [slideOverOpen, setSlideOverOpen] = React.useState(false);
   const [slideOverWidth, setSlideOverWidth] = React.useState<'sm' | 'md' | 'lg' | 'xl'>('md');
   const [toggleA, setToggleA] = React.useState(false);
@@ -178,7 +200,9 @@ export function ShowcasePage() {
   const [searchVal, setSearchVal] = React.useState('');
   const [stackPanels, setStackPanels] = React.useState<SlideOverStackItem[]>([]);
   const [lineItems, setLineItems] = React.useState<LineItem[]>([
+    { id: 'li-h-1', entryType: 'heading', heading: 'Compute Nodes', subheading: 'Primary server fleet', description: '', qty: 0, unit: 'EA', targetPrice: 0 },
     { id: 'li-1', description: 'Rack Server 2U', qty: 12, unit: 'EA', targetPrice: 8400 },
+    { id: 'li-h-2', entryType: 'heading', heading: 'Storage', subheading: '', description: '', qty: 0, unit: 'EA', targetPrice: 0 },
     { id: 'li-2', description: 'Enterprise SSD 3.84TB', qty: 48, unit: 'EA', targetPrice: 620 },
   ]);
   const [uploadItems] = React.useState<UploadItemProgress[]>([
@@ -226,6 +250,63 @@ export function ShowcasePage() {
     { id: 'cmp-2', lineItem: 'Storage SSD', values: ['$599', '$612', '$640'], bestVendorIndex: 0 },
     { id: 'cmp-3', lineItem: 'Support Services', values: ['$930', '$910', null], bestVendorIndex: 1 },
   ];
+
+  function parseCurrencyValue(value: string): number {
+    const normalized = value.replace(/[^0-9.-]/g, '');
+    return Number(normalized || 0);
+  }
+
+  const filteredRfqRows = React.useMemo(() => {
+    return RFQ_ROWS.filter(row => {
+      const search = tableSearch.trim().toLowerCase();
+      const matchSearch = search.length === 0
+        || row.rfqId.toLowerCase().includes(search)
+        || row.title.toLowerCase().includes(search)
+        || row.owner.toLowerCase().includes(search);
+      const matchStatus = statusFilter === 'all' || row.status === statusFilter;
+      const matchCategory = categoryFilter === 'all' || row.category === categoryFilter;
+      const matchRecentlyHired = !recentlyHiredOnly || row.vendors >= 4;
+      const rowValue = parseCurrencyValue(row.estValue);
+      const matchMin = minValueFilter === '' || rowValue >= Number(minValueFilter);
+      const matchMax = maxValueFilter === '' || rowValue <= Number(maxValueFilter);
+      const rowDate = row.deadline;
+      const matchFrom = fromDateFilter === '' || rowDate >= fromDateFilter;
+      const matchTo = toDateFilter === '' || rowDate <= toDateFilter;
+      const matchSavings = !withSavingsOnly || row.savings !== '—';
+
+      return matchSearch && matchStatus && matchCategory && matchRecentlyHired && matchMin && matchMax && matchFrom && matchTo && matchSavings;
+    });
+  }, [tableSearch, statusFilter, categoryFilter, recentlyHiredOnly, minValueFilter, maxValueFilter, fromDateFilter, toDateFilter, withSavingsOnly]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRfqRows.length / recordsPerPage));
+  const safePage = Math.min(page, totalPages);
+  const pagedRows = filteredRfqRows.slice((safePage - 1) * recordsPerPage, safePage * recordsPerPage);
+
+  const configuredColumns = RFQ_COLUMNS.filter(col => showColumns[col.key] !== false);
+  const groupedRowsSource = filteredRfqRows.slice(0, 8);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [tableSearch, statusFilter, categoryFilter, recentlyHiredOnly, minValueFilter, maxValueFilter, fromDateFilter, toDateFilter, withSavingsOnly, recordsPerPage]);
+
+  function renderSummaryRow(rows: RFQRow[], label = 'Summary'): React.ReactNode {
+    const totalValue = rows.reduce((sum, row) => sum + parseCurrencyValue(row.estValue), 0);
+    const totalVendors = rows.reduce((sum, row) => sum + row.vendors, 0);
+    const maxQuotes = rows.reduce((max, row) => Math.max(max, row.quotes), 0);
+    const minQuotes = rows.reduce((min, row) => Math.min(min, row.quotes), Number.POSITIVE_INFINITY);
+
+    return (
+      <div className="flex items-center justify-between text-xs text-slate-700">
+        <span className="font-semibold">{label}</span>
+        <div className="flex items-center gap-4">
+          <span>Total Value: <strong>${totalValue.toLocaleString('en-US')}</strong></span>
+          <span>Vendors: <strong>{totalVendors}</strong></span>
+          <span>Max Quotes: <strong>{maxQuotes}</strong></span>
+          <span>Min Quotes: <strong>{minQuotes === Number.POSITIVE_INFINITY ? 0 : minQuotes}</strong></span>
+        </div>
+      </div>
+    );
+  }
 
   const MAIN_NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={15} /> },
@@ -1005,42 +1086,254 @@ export function ShowcasePage() {
             </SubSection>
 
             <SubSection title="Data Table">
-              <div>
-                <DataTable
-                  columns={RFQ_COLUMNS}
-                  rows={RFQ_ROWS}
-                  selectable
-                  selectedIds={selectedIds}
-                  onSelectChange={setSelectedIds}
-                  expandable
-                  expandedId={expandedId}
-                  onExpandChange={setExpandedId}
-                  renderExpanded={row => (
-                    <div className="grid grid-cols-6 gap-4 px-5 py-3 bg-slate-50 border-b border-slate-200">
-                      {[
-                        { label: 'Category',  value: row.category },
-                        { label: 'Deadline',  value: row.deadline },
-                        { label: 'Vendors',   value: row.vendors },
-                        { label: 'Quotes',    value: row.quotes },
-                        { label: 'Est. Value',value: row.estValue },
-                        { label: 'Savings %', value: row.savings },
-                      ].map(item => (
-                        <div key={item.label}>
-                          <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">{item.label}</span>
-                          <span className="block text-xs font-medium text-slate-700">{item.value}</span>
+              <div className="space-y-4">
+                <Card padding="md" className="relative">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-800">Requisitions</h4>
+                      <p className="text-xs text-slate-500">{filteredRfqRows.length} records</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      <SearchInput
+                        value={tableSearch}
+                        onChange={e => setTableSearch(e.target.value)}
+                        placeholder="Search RFQ, title, owner..."
+                        containerClassName="w-56"
+                        compact
+                      />
+                      <SelectInput
+                        compact
+                        value={statusFilter}
+                        onChange={e => setStatusFilter(e.target.value)}
+                        options={[
+                          { value: 'all', label: 'All Status' },
+                          { value: 'active', label: 'Active' },
+                          { value: 'pending', label: 'Pending' },
+                          { value: 'awarded', label: 'Awarded' },
+                          { value: 'draft', label: 'Draft' },
+                          { value: 'closed', label: 'Closed' },
+                        ]}
+                      />
+                      <SelectInput
+                        compact
+                        value={categoryFilter}
+                        onChange={e => setCategoryFilter(e.target.value)}
+                        options={[
+                          { value: 'all', label: 'All Categories' },
+                          { value: 'IT Hardware', label: 'IT Hardware' },
+                          { value: 'Facilities', label: 'Facilities' },
+                          { value: 'Software', label: 'Software' },
+                          { value: 'Security', label: 'Security' },
+                          { value: 'Marketing', label: 'Marketing' },
+                          { value: 'Transport', label: 'Transport' },
+                          { value: 'IT Services', label: 'IT Services' },
+                        ]}
+                      />
+                      <ToggleSwitch checked={recentlyHiredOnly} onChange={setRecentlyHiredOnly} label="Recently Hired" size="sm" />
+
+                      <button
+                        className="inline-flex items-center justify-center w-7 h-7 rounded border border-slate-200 text-slate-500 hover:bg-slate-50"
+                        onClick={() => setAdvancedFiltersOpen(v => !v)}
+                        title="Filters"
+                      >
+                        <SlidersHorizontal size={13} />
+                      </button>
+                      <button
+                        className="inline-flex items-center justify-center w-7 h-7 rounded border border-slate-200 text-slate-500 hover:bg-slate-50"
+                        onClick={() => setConfigOpen(v => !v)}
+                        title="Configure"
+                      >
+                        <Settings size={13} />
+                      </button>
+                      <div className="inline-flex rounded border border-slate-200 overflow-hidden">
+                        <button
+                          className={['px-2 h-7 text-xs', viewMode === 'table' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-slate-600'].join(' ')}
+                          onClick={() => setViewMode('table')}
+                        >
+                          Table
+                        </button>
+                        <button
+                          className={['px-2 h-7 text-xs border-l border-slate-200', viewMode === 'grid' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-slate-600'].join(' ')}
+                          onClick={() => setViewMode('grid')}
+                        >
+                          Grid
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {advancedFiltersOpen && (
+                    <div className="mb-3 grid grid-cols-5 gap-2 items-center">
+                      <TextInput type="date" value={fromDateFilter} onChange={e => setFromDateFilter(e.target.value)} placeholder="From date" />
+                      <TextInput type="date" value={toDateFilter} onChange={e => setToDateFilter(e.target.value)} placeholder="To date" />
+                      <TextInput type="number" value={minValueFilter} onChange={e => setMinValueFilter(e.target.value)} placeholder="Min value" />
+                      <TextInput type="number" value={maxValueFilter} onChange={e => setMaxValueFilter(e.target.value)} placeholder="Max value" />
+                      <Checkbox
+                        label="Only with savings"
+                        checked={withSavingsOnly}
+                        onChange={e => setWithSavingsOnly(e.currentTarget.checked)}
+                      />
+                    </div>
+                  )}
+
+                  {configOpen && (
+                    <div className="absolute right-4 top-20 z-20 w-72 bg-white border border-slate-200 rounded-md shadow-lg p-3">
+                      <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">View Configuration</p>
+                      <div className="space-y-2">
+                        <p className="text-[11px] text-slate-500 font-medium">Show / Hide Columns</p>
+                        {Object.keys(showColumns).map(key => (
+                          <Checkbox
+                            key={key}
+                            label={key}
+                            checked={showColumns[key]}
+                            onChange={e => setShowColumns(prev => ({ ...prev, [key]: e.currentTarget.checked }))}
+                          />
+                        ))}
+                        <div className="pt-2">
+                          <SelectInput
+                            label="Records per page"
+                            compact
+                            value={String(recordsPerPage)}
+                            onChange={e => setRecordsPerPage(Number(e.target.value))}
+                            options={[
+                              { value: '4', label: '4' },
+                              { value: '8', label: '8' },
+                              { value: '12', label: '12' },
+                            ]}
+                          />
                         </div>
+                        {viewMode === 'table' && (
+                          <div className="pt-2 space-y-2">
+                            <ToggleSwitch checked={showGroupSummaryRow} onChange={setShowGroupSummaryRow} label="Show group summary" size="sm" />
+                            <ToggleSwitch checked={showTableSummaryRow} onChange={setShowTableSummaryRow} label="Show table summary row" size="sm" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {viewMode === 'table' ? (
+                    <>
+                      <DataTable
+                        columns={configuredColumns}
+                        rows={pagedRows}
+                        selectable
+                        selectedIds={selectedIds}
+                        onSelectChange={setSelectedIds}
+                        expandable
+                        expandedId={expandedId}
+                        onExpandChange={setExpandedId}
+                        expandedIndentColumns={1}
+                        renderExpanded={row => (
+                          <div className="grid grid-cols-6 gap-4 px-4 py-3 bg-slate-50 border-b border-slate-200">
+                            {[
+                              { label: 'Category', value: row.category },
+                              { label: 'Deadline', value: row.deadline },
+                              { label: 'Vendors', value: row.vendors },
+                              { label: 'Quotes', value: row.quotes },
+                              { label: 'Est. Value', value: row.estValue },
+                              { label: 'Savings %', value: row.savings },
+                            ].map(item => (
+                              <div key={item.label}>
+                                <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">{item.label}</span>
+                                <span className="block text-xs font-medium text-slate-700">{item.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        bulkActions={[
+                          { label: 'Close Selected', onClick: () => {} },
+                          { label: 'Archive Selected', onClick: () => {} },
+                          { label: 'Assign Owner', onClick: () => {} },
+                          { label: 'Export Selected', onClick: () => {} },
+                        ]}
+                        showActions
+                        showTableSummary={showTableSummaryRow}
+                        renderTableSummary={rows => renderSummaryRow(rows, 'Current page summary')}
+                      />
+                      <TableFooter
+                        page={safePage}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        totalItems={filteredRfqRows.length}
+                        pageSize={recordsPerPage}
+                      />
+                    </>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-3">
+                      {pagedRows.map(row => (
+                        <Card key={row.id} padding="md" className="border border-slate-200">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-800 leading-tight">{row.title}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">{row.rfqId} · {row.owner}</p>
+                            </div>
+                            <StatusBadge status={row.status} size="xs" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 mt-3">
+                            <div className="rounded border border-slate-200 px-2 py-1">
+                              <p className="text-[10px] uppercase text-slate-400">Category</p>
+                              <p className="text-xs text-slate-700">{row.category}</p>
+                            </div>
+                            <div className="rounded border border-slate-200 px-2 py-1">
+                              <p className="text-[10px] uppercase text-slate-400">Deadline</p>
+                              <p className="text-xs text-slate-700">{row.deadline}</p>
+                            </div>
+                            <div className="rounded border border-slate-200 px-2 py-1">
+                              <p className="text-[10px] uppercase text-slate-400">Vendors</p>
+                              <p className="text-xs text-slate-700">{row.vendors}</p>
+                            </div>
+                            <div className="rounded border border-slate-200 px-2 py-1">
+                              <p className="text-[10px] uppercase text-slate-400">Est. Value</p>
+                              <p className="text-xs text-slate-700">{row.estValue}</p>
+                            </div>
+                          </div>
+                        </Card>
                       ))}
                     </div>
                   )}
-                  bulkActions={[
-                    { label: 'Close Selected', onClick: () => {} },
-                    { label: 'Archive Selected', onClick: () => {} },
-                    { label: 'Assign Owner', onClick: () => {} },
-                    { label: 'Export Selected', onClick: () => {} },
-                  ]}
-                  showActions
-                />
-                <TableFooter page={page} totalPages={3} onPageChange={setPage} totalItems={24} pageSize={8} />
+                </Card>
+
+                <Card padding="md">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Variant: Grouped Rows</p>
+                  <DataTable
+                    columns={RFQ_COLUMNS}
+                    rows={groupedRowsSource}
+                    groupBy={row => row.category}
+                    renderGroupHeader={(group, rows) => (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-700">{group}</span>
+                        <span className="text-slate-500">{rows.length} records</span>
+                      </div>
+                    )}
+                    showActions
+                  />
+                </Card>
+
+                <Card padding="md">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Variant: Footer Summaries</p>
+                  <DataTable
+                    columns={RFQ_COLUMNS}
+                    rows={groupedRowsSource}
+                    showTableSummary
+                    renderTableSummary={rows => renderSummaryRow(rows, 'Table totals')}
+                    showActions
+                  />
+                </Card>
+
+                <Card padding="md">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Variant: Grouping + Group Summaries + Table Summary</p>
+                  <DataTable
+                    columns={RFQ_COLUMNS}
+                    rows={groupedRowsSource}
+                    groupBy={row => row.category}
+                    showGroupSummary={showGroupSummaryRow}
+                    showTableSummary={showTableSummaryRow}
+                    renderGroupSummary={(group, rows) => renderSummaryRow(rows, `${group} subtotal`)}
+                    renderTableSummary={rows => renderSummaryRow(rows, 'Grand total')}
+                    showActions
+                  />
+                </Card>
               </div>
             </SubSection>
           </Section>
@@ -1365,7 +1658,7 @@ export function ShowcasePage() {
                     activeStepId="line-items"
                   />
                 </Card>
-                <LineItemEditor items={lineItems} onChange={setLineItems} />
+                <LineItemEditor items={lineItems} onChange={setLineItems} currency="USD" locale="en-US" />
                 <UploadDropzoneWithProgress uploads={uploadItems} />
                 <div className="rounded-md border border-slate-200 overflow-hidden bg-white">
                   <div className="h-16 px-4 py-3 text-xs text-slate-500">Form content area (demo)</div>
