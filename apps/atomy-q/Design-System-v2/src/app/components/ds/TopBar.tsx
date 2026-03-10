@@ -1,105 +1,152 @@
 import React from 'react';
 import { Bell, ChevronDown, Search, Sparkles, Plus } from 'lucide-react';
 import { CountBadge } from './Badge';
-import { Avatar } from './Avatar';
 import { SearchInput } from './Input';
 import { Button } from './Button';
+import { UserMenuDropdown } from './UserMenuDropdown';
+import { NotificationCenter, type NotificationItem } from './NotificationCenter';
 
 // ─── Top Bar ──────────────────────────────────────────────────────────────────
 
 interface TopBarProps {
   user?: { name: string; role?: string; avatarSrc?: string };
   notificationCount?: number;
+  notifications?: NotificationItem[];
   onNewRFQ?: () => void;
   onAIInsights?: () => void;
   onSearch?: (q: string) => void;
+  onNotificationClick?: (id: string) => void;
+  onMarkAllNotificationsRead?: () => void;
+  onUserSettings?: () => void;
+  onOpenNotifications?: () => void;
+  onLogout?: () => void;
   searchValue?: string;
   className?: string;
 }
 
+const DEFAULT_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: 'n-1',
+    title: 'Approval APR-00412 requires your review',
+    description: 'SLA 1d 18h remaining.',
+    timestamp: '2m ago',
+    unread: true,
+  },
+  {
+    id: 'n-2',
+    title: 'Comparison Run #005 auto-approved',
+    description: 'Proceed to Award tab.',
+    timestamp: '1h ago',
+    unread: true,
+  },
+  {
+    id: 'n-3',
+    title: 'Vendor uploaded updated quote',
+    description: 'Dell Technologies · RFQ-2401',
+    timestamp: '3h ago',
+    unread: false,
+  },
+];
+
 export function TopBar({
   user = { name: 'Alex Kumar', role: 'Procurement Manager' },
   notificationCount = 3,
+  notifications = DEFAULT_NOTIFICATIONS,
   onNewRFQ,
   onAIInsights,
   onSearch,
+  onNotificationClick,
+  onMarkAllNotificationsRead,
+  onUserSettings,
+  onOpenNotifications,
+  onLogout,
   searchValue = '',
   className = '',
 }: TopBarProps) {
+  const [notificationOpen, setNotificationOpen] = React.useState(false);
+
   return (
-    <header
-      className={[
-        'h-14 flex items-center justify-between px-5 gap-4',
-        'bg-white border-b border-slate-200',
-        'shadow-[0_1px_3px_0_rgba(0,0,0,0.04)]',
-        className,
-      ].join(' ')}
-    >
-      {/* Left: Search */}
-      <div className="flex-1 max-w-sm">
-        <SearchInput
-          placeholder="Search RFQs, vendors, documents…"
-          shortcut="/"
-          value={searchValue}
-          onChange={e => onSearch?.(e.target.value)}
-        />
-      </div>
-
-      {/* Right: Actions */}
-      <div className="flex items-center gap-2">
-        {/* AI Insights ghost button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={<Sparkles size={13} />}
-          onClick={onAIInsights}
-        >
-          AI Insights
-        </Button>
-
-        {/* New RFQ primary button */}
-        <Button
-          variant="primary"
-          size="sm"
-          icon={<Plus size={13} />}
-          onClick={onNewRFQ}
-        >
-          New RFQ
-        </Button>
-
-        {/* Divider */}
-        <div className="w-px h-5 bg-slate-200" />
-
-        {/* Notification bell */}
-        <div className="relative">
-          <button
-            className="relative p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            aria-label={`Notifications (${notificationCount} unread)`}
-          >
-            <Bell size={16} />
-          </button>
-          {notificationCount > 0 && (
-            <CountBadge
-              count={notificationCount > 9 ? '9+' : notificationCount}
-              variant="red"
-              className="absolute -top-0.5 -right-0.5"
-            />
-          )}
+    <>
+      <header
+        className={[
+          'h-14 flex items-center justify-between px-5 gap-4',
+          'bg-white border-b border-slate-200',
+          'shadow-[0_1px_3px_0_rgba(0,0,0,0.04)]',
+          className,
+        ].join(' ')}
+      >
+        {/* Left: Search */}
+        <div className="flex-1 max-w-sm">
+          <SearchInput
+            placeholder="Search RFQs, vendors, documents…"
+            shortcut="/"
+            value={searchValue}
+            onChange={e => onSearch?.(e.target.value)}
+          />
         </div>
 
-        {/* User avatar + dropdown */}
-        <button
-          className="flex items-center gap-2 pl-1 pr-0.5 py-0.5 rounded-md hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          aria-label="User menu"
-        >
-          <Avatar name={user.name} src={user.avatarSrc} size="sm" />
-          <span className="text-xs font-medium text-slate-700 max-w-24 truncate hidden sm:block">
-            {user.name.split(' ')[0]}
-          </span>
-          <ChevronDown size={12} className="text-slate-400" />
-        </button>
-      </div>
-    </header>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Sparkles size={13} />}
+            onClick={onAIInsights}
+          >
+            AI Insights
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<Plus size={13} />}
+            onClick={onNewRFQ}
+          >
+            New RFQ
+          </Button>
+
+          <div className="w-px h-5 bg-slate-200" />
+
+          <div className="relative">
+            <button
+              className="relative p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              aria-label={`Notifications (${notificationCount} unread)`}
+              onClick={() => {
+                setNotificationOpen(true);
+                onOpenNotifications?.();
+              }}
+            >
+              <Bell size={16} />
+            </button>
+            {notificationCount > 0 && (
+              <CountBadge
+                count={notificationCount > 9 ? '9+' : notificationCount}
+                variant="red"
+                className="absolute -top-0.5 -right-0.5"
+              />
+            )}
+          </div>
+
+          <UserMenuDropdown
+            user={user}
+            onUserSettings={onUserSettings}
+            onNotifications={() => {
+              setNotificationOpen(true);
+              onOpenNotifications?.();
+            }}
+            onLogout={onLogout}
+          />
+        </div>
+      </header>
+
+      <NotificationCenter
+        open={notificationOpen}
+        onClose={() => setNotificationOpen(false)}
+        items={notifications}
+        onItemClick={onNotificationClick}
+        onMarkAllRead={onMarkAllNotificationsRead}
+      />
+    </>
   );
 }
 

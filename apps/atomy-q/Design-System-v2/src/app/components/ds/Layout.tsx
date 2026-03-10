@@ -1,10 +1,11 @@
 import React from 'react';
 import {
   LayoutGrid, FileText, FolderArchive, BarChart2,
-  Settings, HelpCircle, LogOut, User,
+  Settings, HelpCircle, User,
 } from 'lucide-react';
-import { NavItem, NavGroup, NavLabel, SubNavItem } from './Sidebar';
+import { NavItem } from './Sidebar';
 import { TopBar } from './TopBar';
+import { MainNav } from './MainNav';
 
 // ─── Default Layout ───────────────────────────────────────────────────────────
 // Sidebar (200px) + TopBar + Content + Footer
@@ -23,8 +24,36 @@ export function DefaultLayout({ children, activeNav = 'dashboard', onNavChange }
     onNavChange?.(id);
   }
 
-  const rfqChildren = ['rfq-active', 'rfq-closed', 'rfq-awarded', 'rfq-archived', 'rfq-draft'];
-  const settingsChildren = ['settings-users', 'settings-scoring', 'settings-templates', 'settings-integrations', 'settings-flags'];
+  const mainNavItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={15} /> },
+    {
+      id: 'rfqs',
+      label: 'Requisition',
+      icon: <FileText size={15} />,
+      badge: 22,
+      children: [
+        { id: 'rfq-active', label: 'Active', badge: 12 },
+        { id: 'rfq-closed', label: 'Closed', badge: 5 },
+        { id: 'rfq-awarded', label: 'Awarded', badge: 3 },
+        { id: 'rfq-archived', label: 'Archived' },
+        { id: 'rfq-draft', label: 'Draft', badge: 2 },
+      ],
+    },
+    { id: 'documents', label: 'Documents', icon: <FolderArchive size={15} /> },
+    { id: 'reporting', label: 'Reporting', icon: <BarChart2 size={15} /> },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <Settings size={15} />,
+      children: [
+        { id: 'settings-users', label: 'Users & Roles' },
+        { id: 'settings-scoring', label: 'Scoring Policies' },
+        { id: 'settings-templates', label: 'Templates' },
+        { id: 'settings-integrations', label: 'Integrations' },
+        { id: 'settings-flags', label: 'Feature Flags' },
+      ],
+    },
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 font-sans">
@@ -40,56 +69,11 @@ export function DefaultLayout({ children, activeNav = 'dashboard', onNavChange }
 
         {/* Navigation */}
         <nav className="flex-1 flex flex-col py-3 px-2 gap-0.5">
-          <NavLabel label="Main" />
-
-          <NavItem
-            label="Dashboard"
-            icon={<LayoutGrid size={15} />}
-            active={active === 'dashboard'}
-            onClick={() => navigate('dashboard')}
+          <MainNav
+            items={mainNavItems}
+            activeItem={active}
+            onNavigate={navigate}
           />
-
-          <NavGroup
-            label="Requisition"
-            icon={<FileText size={15} />}
-            active={rfqChildren.includes(active)}
-            defaultOpen={rfqChildren.includes(active)}
-            badge={22}
-          >
-            <SubNavItem label="Active" active={active === 'rfq-active'} onClick={() => navigate('rfq-active')} badge={12} />
-            <SubNavItem label="Closed" active={active === 'rfq-closed'} onClick={() => navigate('rfq-closed')} badge={5} />
-            <SubNavItem label="Awarded" active={active === 'rfq-awarded'} onClick={() => navigate('rfq-awarded')} badge={3} />
-            <SubNavItem label="Archived" active={active === 'rfq-archived'} onClick={() => navigate('rfq-archived')} />
-            <SubNavItem label="Draft" active={active === 'rfq-draft'} onClick={() => navigate('rfq-draft')} badge={2} />
-          </NavGroup>
-
-          <NavItem
-            label="Documents"
-            icon={<FolderArchive size={15} />}
-            active={active === 'documents'}
-            onClick={() => navigate('documents')}
-          />
-
-          <NavItem
-            label="Reporting"
-            icon={<BarChart2 size={15} />}
-            active={active === 'reporting'}
-            onClick={() => navigate('reporting')}
-          />
-
-          <NavLabel label="System" />
-
-          <NavGroup
-            label="Settings"
-            icon={<Settings size={15} />}
-            active={settingsChildren.includes(active)}
-          >
-            <SubNavItem label="Users & Roles" active={active === 'settings-users'} onClick={() => navigate('settings-users')} />
-            <SubNavItem label="Scoring Policies" active={active === 'settings-scoring'} onClick={() => navigate('settings-scoring')} />
-            <SubNavItem label="Templates" active={active === 'settings-templates'} onClick={() => navigate('settings-templates')} />
-            <SubNavItem label="Integrations" active={active === 'settings-integrations'} onClick={() => navigate('settings-integrations')} />
-            <SubNavItem label="Feature Flags" active={active === 'settings-flags'} onClick={() => navigate('settings-flags')} />
-          </NavGroup>
         </nav>
 
         {/* Bottom items */}
@@ -132,7 +116,36 @@ export function WorkspaceLayout({ children, activeRecordMenu, activeNav = 'rfq-a
     onNavChange?.(id);
   }
 
-  const rfqChildren = ['rfq-active', 'rfq-closed', 'rfq-awarded', 'rfq-archived', 'rfq-draft'];
+  const mainNavItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={15} /> },
+    {
+      id: 'rfqs',
+      label: 'Requisition',
+      icon: <FileText size={15} />,
+      badge: 22,
+      children: [
+        { id: 'rfq-active', label: 'Active', badge: 12 },
+        { id: 'rfq-closed', label: 'Closed', badge: 5 },
+        { id: 'rfq-awarded', label: 'Awarded', badge: 3 },
+        { id: 'rfq-archived', label: 'Archived' },
+        { id: 'rfq-draft', label: 'Draft', badge: 2 },
+      ],
+    },
+    { id: 'documents', label: 'Documents', icon: <FolderArchive size={15} /> },
+    { id: 'reporting', label: 'Reporting', icon: <BarChart2 size={15} /> },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <Settings size={15} />,
+      children: [
+        { id: 'settings-users', label: 'Users & Roles' },
+        { id: 'settings-scoring', label: 'Scoring Policies' },
+        { id: 'settings-templates', label: 'Templates' },
+        { id: 'settings-integrations', label: 'Integrations' },
+        { id: 'settings-flags', label: 'Feature Flags' },
+      ],
+    },
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 font-sans">
@@ -165,29 +178,12 @@ export function WorkspaceLayout({ children, activeRecordMenu, activeNav = 'rfq-a
 
           {/* Navigation (collapsed = icon only) */}
           <nav className="flex-1 flex flex-col py-3 px-1.5 gap-0.5 overflow-hidden">
-            <NavItem
-              label="Dashboard"
-              icon={<LayoutGrid size={15} />}
-              active={active === 'dashboard'}
-              onClick={() => navigate('dashboard')}
+            <MainNav
+              items={mainNavItems}
+              activeItem={active}
+              onNavigate={navigate}
               collapsed={!railExpanded}
             />
-            <NavGroup
-              label="Requisition"
-              icon={<FileText size={15} />}
-              active={rfqChildren.includes(active)}
-              defaultOpen={rfqChildren.includes(active)}
-              collapsed={!railExpanded}
-              badge={22}
-            >
-              <SubNavItem label="Active" active={active === 'rfq-active'} onClick={() => navigate('rfq-active')} badge={12} />
-              <SubNavItem label="Closed" active={active === 'rfq-closed'} onClick={() => navigate('rfq-closed')} badge={5} />
-              <SubNavItem label="Awarded" active={active === 'rfq-awarded'} onClick={() => navigate('rfq-awarded')} badge={3} />
-              <SubNavItem label="Archived" active={active === 'rfq-archived'} onClick={() => navigate('rfq-archived')} />
-              <SubNavItem label="Draft" active={active === 'rfq-draft'} onClick={() => navigate('rfq-draft')} badge={2} />
-            </NavGroup>
-            <NavItem label="Documents" icon={<FolderArchive size={15} />} active={active === 'documents'} onClick={() => navigate('documents')} collapsed={!railExpanded} />
-            <NavItem label="Reporting" icon={<BarChart2 size={15} />} active={active === 'reporting'} onClick={() => navigate('reporting')} collapsed={!railExpanded} />
           </nav>
         </div>
       </div>

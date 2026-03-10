@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, List, Users, Award, Eye, BarChart2, ShieldCheck, GitBranch, FileCheck, AlertTriangle } from 'lucide-react';
+import { FileText, List, Users, Award, Eye, BarChart2, ShieldCheck, GitBranch, FileCheck, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { StatusBadge } from './Badge';
 import { MetricChip } from './KPIScorecard';
 import { NavigationLink } from './Sidebar';
@@ -20,40 +20,67 @@ interface ActiveRecordSnippetProps {
   };
   primaryAction?: string;
   onPrimaryAction?: () => void;
+  collapsible?: boolean;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
   className?: string;
 }
 
 export function ActiveRecordSnippet({
-  rfqId, rfqTitle, status, metrics, primaryAction = 'Close for Submissions', onPrimaryAction, className = '',
+  rfqId,
+  rfqTitle,
+  status,
+  metrics,
+  primaryAction = 'Close for Submissions',
+  onPrimaryAction,
+  collapsible = false,
+  collapsed = false,
+  onToggleCollapsed,
+  className = '',
 }: ActiveRecordSnippetProps) {
   return (
     <div className={['px-4 py-4 border-b border-slate-200', className].join(' ')}>
       {/* ID + Title */}
       <div className="mb-2">
-        <span className="text-[11px] font-mono font-medium text-slate-400">{rfqId}</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] font-mono font-medium text-slate-400">{rfqId}</span>
+          {collapsible && (
+            <button
+              onClick={onToggleCollapsed}
+              className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              aria-label={collapsed ? 'Expand record snippet' : 'Collapse record snippet'}
+            >
+              {collapsed ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
+            </button>
+          )}
+        </div>
         <div className="flex items-start gap-2 mt-1">
           <h2 className="text-sm font-semibold text-slate-900 leading-tight flex-1">{rfqTitle}</h2>
           <StatusBadge status={status} size="xs" />
         </div>
       </div>
 
-      {/* Metric chips */}
-      <div className="grid grid-cols-4 gap-1.5 mb-3">
-        <MetricChip label="Vendors" value={metrics.vendors} />
-        <MetricChip label="Quotes" value={metrics.quotes} />
-        <MetricChip label="Est. Val" value={metrics.estValue} />
-        <MetricChip label="Savings" value={metrics.savings} />
-      </div>
+      {!collapsed && (
+        <>
+          {/* Metric chips */}
+          <div className="grid grid-cols-4 gap-1.5 mb-3">
+            <MetricChip label="Vendors" value={metrics.vendors} />
+            <MetricChip label="Quotes" value={metrics.quotes} />
+            <MetricChip label="Est. Val" value={metrics.estValue} />
+            <MetricChip label="Savings" value={metrics.savings} />
+          </div>
 
-      {/* Primary lifecycle action */}
-      <Button
-        variant="primary"
-        size="sm"
-        fullWidth
-        onClick={onPrimaryAction}
-      >
-        {primaryAction}
-      </Button>
+          {/* Primary lifecycle action */}
+          <Button
+            variant="primary"
+            size="sm"
+            fullWidth
+            onClick={onPrimaryAction}
+          >
+            {primaryAction}
+          </Button>
+        </>
+      )}
     </div>
   );
 }
@@ -135,8 +162,14 @@ interface ActiveRecordMenuProps {
   };
   primaryAction?: string;
   onPrimaryAction?: () => void;
+  primaryTabs?: ActiveNavLink[];
+  childRecordLinks?: ActiveNavLink[];
   activeNavId?: string;
   onNavChange?: (id: string) => void;
+  snippetCollapsible?: boolean;
+  snippetCollapsed?: boolean;
+  defaultSnippetCollapsed?: boolean;
+  onSnippetCollapsedChange?: (collapsed: boolean) => void;
   className?: string;
 }
 
@@ -165,15 +198,33 @@ export function ActiveRecordMenu({
   metrics = { vendors: 5, quotes: 8, estValue: '$1.2M', savings: '12%' },
   primaryAction = 'Close for Submissions',
   onPrimaryAction,
+  primaryTabs = DEFAULT_RFQ_LINKS,
+  childRecordLinks = DEFAULT_CHILD_LINKS,
   activeNavId = 'overview',
   onNavChange,
+  snippetCollapsible = true,
+  snippetCollapsed,
+  defaultSnippetCollapsed = false,
+  onSnippetCollapsedChange,
   className = '',
 }: ActiveRecordMenuProps) {
   const [activeId, setActiveId] = React.useState(activeNavId);
+  const [internalSnippetCollapsed, setInternalSnippetCollapsed] = React.useState(defaultSnippetCollapsed);
+  const isSnippetCollapsed = snippetCollapsed ?? internalSnippetCollapsed;
+
+  React.useEffect(() => {
+    setActiveId(activeNavId);
+  }, [activeNavId]);
 
   function handleChange(id: string) {
     setActiveId(id);
     onNavChange?.(id);
+  }
+
+  function handleSnippetToggle() {
+    const next = !isSnippetCollapsed;
+    if (snippetCollapsed === undefined) setInternalSnippetCollapsed(next);
+    onSnippetCollapsedChange?.(next);
   }
 
   return (
@@ -191,10 +242,13 @@ export function ActiveRecordMenu({
         metrics={metrics}
         primaryAction={primaryAction}
         onPrimaryAction={onPrimaryAction}
+        collapsible={snippetCollapsible}
+        collapsed={isSnippetCollapsed}
+        onToggleCollapsed={handleSnippetToggle}
       />
       <ActiveRecordNav
-        rfqLinks={DEFAULT_RFQ_LINKS}
-        childLinks={DEFAULT_CHILD_LINKS}
+        rfqLinks={primaryTabs}
+        childLinks={childRecordLinks}
         activeId={activeId}
         onChange={handleChange}
       />

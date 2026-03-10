@@ -31,6 +31,11 @@ import { Alert, Banner, Checklist } from '../components/ds/Alert';
 import { NavItem, NavGroup, SubNavItem, NavigationLink, NavLabel } from '../components/ds/Sidebar';
 import { FilterBar, PageHeader, SectionHeader } from '../components/ds/FilterBar';
 import { ActiveRecordSnippet, ActiveRecordMenu } from '../components/ds/ActiveRecordMenu';
+import { MainNav } from '../components/ds/MainNav';
+import { WorkspaceBreadcrumbs } from '../components/ds/WorkspaceBreadcrumbs';
+import { RecordHeader } from '../components/ds/RecordHeader';
+import { SlideOverStackManager, type SlideOverStackItem } from '../components/ds/SlideOverStackManager';
+import { TopBar } from '../components/ds/TopBar';
 import type { StatusVariant } from '../components/ds/tokens';
 
 // ─── Showcase Navigation Sections ─────────────────────────────────────────────
@@ -160,6 +165,7 @@ export function ShowcasePage() {
   const [toggleA, setToggleA] = React.useState(false);
   const [toggleB, setToggleB] = React.useState(true);
   const [searchVal, setSearchVal] = React.useState('');
+  const [stackPanels, setStackPanels] = React.useState<SlideOverStackItem[]>([]);
 
   function scrollToSection(id: string) {
     setActiveSection(id);
@@ -173,6 +179,34 @@ export function ShowcasePage() {
     { id: '4', timestamp: 'Yesterday',   actor: 'Alex Kumar', action: 'ran comparison preview — Run #004', iconColor: 'indigo' as const, icon: <BarChart2 size={10} /> },
     { id: '5', timestamp: 'Yesterday',   actor: 'System', action: 'RFQ published and vendors notified', iconColor: 'green' as const, icon: <CheckCircle2 size={10} /> },
     { id: '6', timestamp: '3 days ago',  actor: 'Marcus Webb', action: 'created RFQ-2401', iconColor: 'slate' as const },
+  ];
+
+  const MAIN_NAV_ITEMS = [
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={15} /> },
+    {
+      id: 'rfqs',
+      label: 'Requisition',
+      icon: <FileText size={15} />,
+      badge: 22,
+      children: [
+        { id: 'rfq-active', label: 'Active', badge: 12 },
+        { id: 'rfq-closed', label: 'Closed', badge: 5 },
+        { id: 'rfq-awarded', label: 'Awarded', badge: 3 },
+        { id: 'rfq-archived', label: 'Archived' },
+        { id: 'rfq-draft', label: 'Draft', badge: 2 },
+      ],
+    },
+    { id: 'documents', label: 'Documents', icon: <FolderArchive size={15} /> },
+    { id: 'reporting', label: 'Reporting', icon: <BarChart2 size={15} /> },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <Settings size={15} />,
+      children: [
+        { id: 'settings-users', label: 'Users & Roles' },
+        { id: 'settings-scoring', label: 'Scoring Policies' },
+      ],
+    },
   ];
 
   return (
@@ -837,6 +871,45 @@ export function ShowcasePage() {
                 </Card>
               </div>
             </SubSection>
+
+            <SubSection title="P0 Contract Components">
+              <div className="grid grid-cols-2 gap-4">
+                <Card padding="sm">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">MainNav (single-group accordion)</p>
+                  <MainNav
+                    items={MAIN_NAV_ITEMS}
+                    activeItem="rfq-active"
+                    onNavigate={() => {}}
+                  />
+                </Card>
+
+                <div className="flex flex-col gap-3">
+                  <Card padding="md">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">WorkspaceBreadcrumbs</p>
+                    <WorkspaceBreadcrumbs
+                      segments={[
+                        { label: 'RFQs', path: '/rfqs' },
+                        { label: 'Server Infrastructure Refresh', path: '/rfqs/RFQ-2401' },
+                        { label: 'Approvals', path: '/rfqs/RFQ-2401/approvals' },
+                        { label: 'APR-00412', path: '/rfqs/RFQ-2401/approvals/APR-00412' },
+                      ]}
+                    />
+                  </Card>
+                  <RecordHeader
+                    title="APR-00412"
+                    status="pending"
+                    leading={<span className="text-xs text-slate-500">Comparison Approval</span>}
+                    metadata={[
+                      { label: 'SLA', value: <SLATimerBadge variant="safe" value="1d 18h" /> },
+                      { label: 'Assignee', value: 'Marcus Webb' },
+                      { label: 'RFQ', value: 'RFQ-2401' },
+                      { label: 'Run', value: 'RUN-005' },
+                    ]}
+                    actions={<Button size="sm" variant="primary">Open Detail</Button>}
+                  />
+                </div>
+              </div>
+            </SubSection>
           </Section>
 
           {/* ═══════════════════════════════════════════════════════════
@@ -1100,6 +1173,77 @@ export function ShowcasePage() {
               </div>
             </Card>
 
+            <Card padding="lg" className="mt-4">
+              <p className="text-sm text-slate-600 mb-3">
+                Stack manager supports nested slide-overs up to depth 2 (parent + child).
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setStackPanels([
+                      {
+                        id: 'stack-1',
+                        title: 'Upload & Parse Quote',
+                        subtitle: 'Primary panel (depth 1)',
+                        width: 'md',
+                        content: (
+                          <div className="p-5 space-y-3">
+                            <p className="text-sm text-slate-600">
+                              Select files and vendor, then confirm parse settings.
+                            </p>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setStackPanels(prev => {
+                                  if (prev.length >= 2) return prev;
+                                  return [
+                                    ...prev,
+                                    {
+                                      id: 'stack-2',
+                                      title: 'Confirm Parse',
+                                      subtitle: 'Nested panel (depth 2)',
+                                      width: 'sm',
+                                      content: (
+                                        <div className="p-5 text-sm text-slate-600">
+                                          Confirm parsing for 3 documents from Dell Technologies?
+                                        </div>
+                                      ),
+                                      footer: (
+                                        <>
+                                          <Button variant="ghost" onClick={() => setStackPanels(p => p.filter(x => x.id !== 'stack-2'))}>Cancel</Button>
+                                          <Button variant="primary">Confirm</Button>
+                                        </>
+                                      ),
+                                    },
+                                  ];
+                                });
+                              }}
+                            >
+                              Open nested confirmation
+                            </Button>
+                          </div>
+                        ),
+                        footer: (
+                          <>
+                            <Button variant="ghost" onClick={() => setStackPanels([])}>Close</Button>
+                            <Button variant="primary">Continue</Button>
+                          </>
+                        ),
+                      },
+                    ]);
+                  }}
+                >
+                  Open stacked slide-over
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setStackPanels([])}>
+                  Reset stack
+                </Button>
+              </div>
+            </Card>
+
             <SlideOver
               open={slideOverOpen}
               onClose={() => setSlideOverOpen(false)}
@@ -1144,12 +1288,23 @@ export function ShowcasePage() {
                 </div>
               </SlideOverSection>
             </SlideOver>
+
+            <SlideOverStackManager
+              stack={stackPanels}
+              onClose={id => setStackPanels(prev => prev.filter(panel => panel.id !== id))}
+            />
           </Section>
 
           {/* ═══════════════════════════════════════════════════════════
               LAYOUTS
           ════════════════════════════════════════════════════════════ */}
           <Section id="layouts" title="Layouts" subtitle="Scaled previews of the two application layout variants.">
+            <SubSection title="TopBar + User Menu + Notification Center (interactive)">
+              <Card padding="none">
+                <TopBar />
+              </Card>
+            </SubSection>
+
             <SubSection title="Layout 1 — Default Layout (200px sidebar + TopBar + Content + Footer)">
               <p className="text-sm text-slate-500 mb-4">
                 Used for list views, reports, approval queues, and settings. The sidebar expands navigation groups in accordion fashion.

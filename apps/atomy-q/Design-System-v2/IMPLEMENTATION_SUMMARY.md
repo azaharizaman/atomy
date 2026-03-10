@@ -80,3 +80,26 @@ Primary risk is not visual styling; it is contract coverage and behavior orchest
 - Every top-13 screen in blueprint can be assembled without introducing new base components.
 - Slide-over stack depth, navigation accordion behavior, and workspace breadcrumb semantics match blueprint rules.
 - Showcase page is extended with representative examples for each newly introduced contract component.
+
+## Update - P0 Delivery (Implemented)
+
+Implemented in this iteration:
+
+- `MainNav` composite component with single-group accordion behavior.
+- `UserMenuDropdown` with required user actions.
+- `NotificationCenter` right-edge slide-over.
+- `WorkspaceBreadcrumbs` contract wrapper.
+- `RecordHeader` contract component.
+- `SlideOverStackManager` with max depth support and top-panel interaction isolation.
+- `ActiveRecordMenu` API expansion for prop-driven tabs/child links and snippet collapse support.
+
+Integration updates:
+
+- `Layout.tsx` now uses `MainNav` in Default and Workspace shells.
+- `TopBar.tsx` now wires `UserMenuDropdown` and `NotificationCenter`.
+- `ShowcasePage.tsx` includes P0 contract demos and interactive verification surfaces.
+
+Remaining work:
+
+- P1 screen-critical blocks (auth/create/intake/normalization/matrix/approval/award).
+- P2 retained modules (negotiation, risk/compliance, decision trail, vault, vendor profile, scoring builder).
