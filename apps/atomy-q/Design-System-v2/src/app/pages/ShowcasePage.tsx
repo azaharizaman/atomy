@@ -36,6 +36,16 @@ import { WorkspaceBreadcrumbs } from '../components/ds/WorkspaceBreadcrumbs';
 import { RecordHeader } from '../components/ds/RecordHeader';
 import { SlideOverStackManager, type SlideOverStackItem } from '../components/ds/SlideOverStackManager';
 import { TopBar } from '../components/ds/TopBar';
+import { SignInCard, MfaPromptPanel } from '../components/ds/AuthComponents';
+import { Stepper, StickyActionBar, LineItemEditor, UploadDropzoneWithProgress } from '../components/ds/CreateRFQComponents';
+import type { LineItem, UploadItemProgress } from '../components/ds/CreateRFQComponents';
+import { QuoteDetailActionBar, ValidationCallout, OverrideChip, RevertControl } from '../components/ds/QuoteIntakeComponents';
+import { ConversionBadge, ConflictIndicator, NormalizationLockBar, MappingGrid } from '../components/ds/NormalizationComponents';
+import type { MappingGridRow } from '../components/ds/NormalizationComponents';
+import { ComparisonMatrixGrid, RecommendationCard, ApprovalGateBanner, ReadinessBanner, DeltaBadge } from '../components/ds/ComparisonComponents';
+import type { ComparisonMatrixRow } from '../components/ds/ComparisonComponents';
+import { PriorityMarker, AssignmentControl, SnoozeControl, EvidenceTabsPanel, DecisionPanel } from '../components/ds/ApprovalComponents';
+import { AwardDecisionSummary, SplitAllocationEditor, SignOffChecklist, DebriefStatusList, HandoffStatusTimeline, PayloadPreviewPanel, ProtestTimerBadge } from '../components/ds/AwardComponents';
 import type { StatusVariant } from '../components/ds/tokens';
 
 // ─── Showcase Navigation Sections ─────────────────────────────────────────────
@@ -55,6 +65,7 @@ const SECTIONS = [
   { id: 'timeline',      label: 'Timeline',          icon: <Clock size={14} /> },
   { id: 'alerts',        label: 'Alerts & Banners',  icon: <Bell size={14} /> },
   { id: 'slideover',     label: 'Slide-Over',        icon: <SlidersHorizontal size={14} /> },
+  { id: 'p1-workflows',  label: 'P1 Workflow Blocks', icon: <GitBranch size={14} /> },
   { id: 'layouts',       label: 'Layouts',           icon: <BookOpen size={14} /> },
 ];
 
@@ -166,6 +177,28 @@ export function ShowcasePage() {
   const [toggleB, setToggleB] = React.useState(true);
   const [searchVal, setSearchVal] = React.useState('');
   const [stackPanels, setStackPanels] = React.useState<SlideOverStackItem[]>([]);
+  const [lineItems, setLineItems] = React.useState<LineItem[]>([
+    { id: 'li-1', description: 'Rack Server 2U', qty: 12, unit: 'EA', targetPrice: 8400 },
+    { id: 'li-2', description: 'Enterprise SSD 3.84TB', qty: 48, unit: 'EA', targetPrice: 620 },
+  ]);
+  const [uploadItems] = React.useState<UploadItemProgress[]>([
+    { id: 'up-1', fileName: 'rfq_specs.pdf', progress: 100 },
+    { id: 'up-2', fileName: 'compliance_matrix.xlsx', progress: 72 },
+  ]);
+  const [selectedMapIds, setSelectedMapIds] = React.useState<string[]>(['map-2', 'map-4']);
+  const [approvalAssignee, setApprovalAssignee] = React.useState('marcus');
+  const [evidenceTab, setEvidenceTab] = React.useState('documents');
+  const [decisionReason, setDecisionReason] = React.useState('');
+  const [splitAlloc, setSplitAlloc] = React.useState([
+    { id: 'dell', name: 'Dell Technologies', value: 70 },
+    { id: 'hp', name: 'HP Enterprise', value: 20 },
+    { id: 'lenovo', name: 'Lenovo', value: 10 },
+  ]);
+  const [signoffs, setSignoffs] = React.useState([
+    { id: 'fin', label: 'Financial review complete', checked: true },
+    { id: 'legal', label: 'Legal review complete', checked: false },
+    { id: 'lead', label: 'Procurement lead sign-off', checked: false },
+  ]);
 
   function scrollToSection(id: string) {
     setActiveSection(id);
@@ -179,6 +212,19 @@ export function ShowcasePage() {
     { id: '4', timestamp: 'Yesterday',   actor: 'Alex Kumar', action: 'ran comparison preview — Run #004', iconColor: 'indigo' as const, icon: <BarChart2 size={10} /> },
     { id: '5', timestamp: 'Yesterday',   actor: 'System', action: 'RFQ published and vendors notified', iconColor: 'green' as const, icon: <CheckCircle2 size={10} /> },
     { id: '6', timestamp: '3 days ago',  actor: 'Marcus Webb', action: 'created RFQ-2401', iconColor: 'slate' as const },
+  ];
+
+  const MAPPING_ROWS: MappingGridRow[] = [
+    { id: 'map-1', lineNumber: 1, vendorDescription: '2U Compute Node - Intel Xeon', confidence: 'high', mappedLine: 'CPU Node', taxonomyCode: '43211503', normalizedQty: '12', normalizedUnit: 'EA', normalizedPrice: '$8,230', currency: 'USD' },
+    { id: 'map-2', lineNumber: 2, vendorDescription: 'NVMe SSD 3.84TB', confidence: 'medium', mappedLine: 'Storage SSD', taxonomyCode: '43201803', normalizedQty: '48', normalizedUnit: 'EA', normalizedPrice: '$599', currency: 'USD', conflict: true },
+    { id: 'map-3', lineNumber: 3, vendorDescription: 'Rack Rail Kit', confidence: 'high', mappedLine: 'Accessories', taxonomyCode: '43201600', normalizedQty: '12', normalizedUnit: 'SET', normalizedPrice: '$120', currency: 'USD' },
+    { id: 'map-4', lineNumber: 4, vendorDescription: '5Y NBD Support', confidence: 'low', mappedLine: 'Support Services', taxonomyCode: '81112300', normalizedQty: '12', normalizedUnit: 'EA', normalizedPrice: '$930', currency: 'USD', conflict: true, overridden: true },
+  ];
+
+  const COMPARISON_ROWS: ComparisonMatrixRow[] = [
+    { id: 'cmp-1', lineItem: 'CPU Node', values: ['$8,230', '$8,420', '$8,510'], bestVendorIndex: 0 },
+    { id: 'cmp-2', lineItem: 'Storage SSD', values: ['$599', '$612', '$640'], bestVendorIndex: 0 },
+    { id: 'cmp-3', lineItem: 'Support Services', values: ['$930', '$910', null], bestVendorIndex: 1 },
   ];
 
   const MAIN_NAV_ITEMS = [
@@ -1293,6 +1339,185 @@ export function ShowcasePage() {
               stack={stackPanels}
               onClose={id => setStackPanels(prev => prev.filter(panel => panel.id !== id))}
             />
+          </Section>
+
+          {/* ═══════════════════════════════════════════════════════════
+              P1 WORKFLOW BLOCKS
+          ════════════════════════════════════════════════════════════ */}
+          <Section id="p1-workflows" title="P1 Workflow Blocks" subtitle="Screen-critical reusable components for Auth, Create RFQ, Intake Detail, Normalization, Comparison, Approval, and Award.">
+            <SubSection title="Authentication">
+              <div className="grid grid-cols-2 gap-4">
+                <SignInCard error="Invalid credentials. Please try again." sessionExpired />
+                <MfaPromptPanel />
+              </div>
+            </SubSection>
+
+            <SubSection title="Create RFQ">
+              <div className="space-y-3">
+                <Card padding="md">
+                  <Stepper
+                    steps={[
+                      { id: 'meta', label: 'Metadata' },
+                      { id: 'line-items', label: 'Line Items' },
+                      { id: 'terms', label: 'Terms' },
+                      { id: 'attachments', label: 'Attachments' },
+                    ]}
+                    activeStepId="line-items"
+                  />
+                </Card>
+                <LineItemEditor items={lineItems} onChange={setLineItems} />
+                <UploadDropzoneWithProgress uploads={uploadItems} />
+                <div className="rounded-md border border-slate-200 overflow-hidden bg-white">
+                  <div className="h-16 px-4 py-3 text-xs text-slate-500">Form content area (demo)</div>
+                  <StickyActionBar />
+                </div>
+              </div>
+            </SubSection>
+
+            <SubSection title="Quote Intake Detail">
+              <div className="space-y-3">
+                <ValidationCallout
+                  issues={[
+                    'Lead time not detected in document.',
+                    'Two lines require manual mapping.',
+                  ]}
+                />
+                <Card padding="md">
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    Overridden line indicator:
+                    <OverrideChip />
+                    <RevertControl />
+                  </div>
+                </Card>
+                <div className="rounded-md border border-slate-200 overflow-hidden">
+                  <div className="h-12 px-4 py-3 text-xs text-slate-500 bg-white">Quote detail content area (demo)</div>
+                  <QuoteDetailActionBar />
+                </div>
+              </div>
+            </SubSection>
+
+            <SubSection title="Normalization Workspace">
+              <div className="space-y-3">
+                <NormalizationLockBar />
+                <Card padding="md">
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    <ConversionBadge from="EUR 1,240" to="USD 1,330" />
+                    <ConflictIndicator message="2 mapping conflicts" />
+                  </div>
+                </Card>
+                <MappingGrid
+                  rows={MAPPING_ROWS}
+                  selectedIds={selectedMapIds}
+                  onSelectedIdsChange={setSelectedMapIds}
+                />
+              </div>
+            </SubSection>
+
+            <SubSection title="Comparison Matrix">
+              <div className="space-y-3">
+                <ApprovalGateBanner mode="pending" />
+                <ReadinessBanner issues={['3 lines have unresolved taxonomy mappings']} />
+                <Card padding="md">
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    Delta example: <DeltaBadge value="+8.3%" />
+                  </div>
+                </Card>
+                <ComparisonMatrixGrid
+                  vendors={[
+                    { name: 'Dell Technologies', total: '$1,043,250', rank: 1 },
+                    { name: 'HP Enterprise', total: '$1,118,334', rank: 2 },
+                    { name: 'Lenovo', total: '$1,146,110', rank: 3 },
+                  ]}
+                  rows={COMPARISON_ROWS}
+                />
+                <RecommendationCard
+                  vendor="Dell Technologies"
+                  confidence={82}
+                  factors={[
+                    'Best total normalized cost',
+                    'Strong lead time compliance',
+                    'Policy risk score below threshold',
+                  ]}
+                />
+              </div>
+            </SubSection>
+
+            <SubSection title="Approvals">
+              <div className="grid grid-cols-2 gap-4">
+                <Card padding="md">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      Priority: <PriorityMarker priority="high" />
+                    </div>
+                    <AssignmentControl
+                      value={approvalAssignee}
+                      onChange={setApprovalAssignee}
+                      options={[
+                        { value: 'marcus', label: 'Marcus Webb' },
+                        { value: 'priya', label: 'Priya Nair' },
+                      ]}
+                    />
+                    <SnoozeControl />
+                  </div>
+                </Card>
+                <DecisionPanel
+                  reason={decisionReason}
+                  onReasonChange={setDecisionReason}
+                />
+              </div>
+              <div className="mt-3">
+                <EvidenceTabsPanel
+                  tabs={[
+                    { id: 'documents', label: 'Documents', count: 3 },
+                    { id: 'screening', label: 'Screening Results', count: 1 },
+                    { id: 'audit', label: 'Audit Trail', count: 5 },
+                  ]}
+                  activeTab={evidenceTab}
+                  onChange={setEvidenceTab}
+                >
+                  <p className="text-xs text-slate-600">
+                    Evidence content for: <span className="font-medium text-slate-800">{evidenceTab}</span>
+                  </p>
+                </EvidenceTabsPanel>
+              </div>
+            </SubSection>
+
+            <SubSection title="Award Decision">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <AwardDecisionSummary winner="Dell Technologies" total="$1,043,250" savings="$156,487 (13.1%)" confidence={82} />
+                  <SplitAllocationEditor vendors={splitAlloc} onChange={setSplitAlloc} />
+                  <SignOffChecklist
+                    items={signoffs}
+                    onToggle={(id, checked) => setSignoffs(prev => prev.map(item => item.id === id ? { ...item, checked } : item))}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <DebriefStatusList
+                    vendors={[
+                      { id: 'hp', name: 'HP Enterprise', status: 'not-sent' },
+                      { id: 'lenovo', name: 'Lenovo', status: 'sent' },
+                      { id: 'cisco', name: 'Cisco Systems', status: 'not-sent' },
+                      { id: 'ibm', name: 'IBM', status: 'na' },
+                    ]}
+                  />
+                  <PayloadPreviewPanel />
+                  <HandoffStatusTimeline
+                    items={[
+                      { id: 'h1', label: 'Payload generated', timestamp: '09:12', state: 'done' },
+                      { id: 'h2', label: 'Schema validated', timestamp: '09:14', state: 'done' },
+                      { id: 'h3', label: 'ERP handoff', timestamp: 'Pending', state: 'pending' },
+                    ]}
+                  />
+                  <Card padding="md">
+                    <div className="flex items-center justify-between">
+                      <ProtestTimerBadge />
+                      <Button variant="ghost" size="sm">Record Protest</Button>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            </SubSection>
           </Section>
 
           {/* ═══════════════════════════════════════════════════════════

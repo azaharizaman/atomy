@@ -103,3 +103,27 @@ Remaining work:
 
 - P1 screen-critical blocks (auth/create/intake/normalization/matrix/approval/award).
 - P2 retained modules (negotiation, risk/compliance, decision trail, vault, vendor profile, scoring builder).
+
+## Update - P1 Delivery (Implemented)
+
+Implemented reusable P1 component modules:
+
+- `AuthComponents.tsx`: `SignInCard`, `InlineAuthError`, `SessionExpiryBanner`, `MfaPromptPanel`.
+- `CreateRFQComponents.tsx`: `Stepper`, `StickyActionBar`, `LineItemEditor`, `UploadDropzoneWithProgress`.
+- `QuoteIntakeComponents.tsx`: `QuoteDetailActionBar`, `ValidationCallout`, `OverrideChip`, `RevertControl`.
+- `NormalizationComponents.tsx`: `MappingGrid`, `ConversionBadge`, `ConflictIndicator`, `NormalizationLockBar`.
+- `ComparisonComponents.tsx`: `ComparisonMatrixGrid`, `VendorSummaryHeader`, `DeltaBadge`, `RecommendationCard`, `ApprovalGateBanner`, `ReadinessBanner`.
+- `ApprovalComponents.tsx`: `PriorityMarker`, `AssignmentControl`, `SnoozeControl`, `EvidenceTabsPanel`, `DecisionPanel`.
+- `AwardComponents.tsx`: `AwardDecisionSummary`, `SplitAllocationEditor`, `SignOffChecklist`, `DebriefStatusList`, `HandoffStatusTimeline`, `PayloadPreviewPanel`, `ProtestTimerBadge`.
+
+Showcase integration:
+
+- Added `P1 Workflow Blocks` section to `ShowcasePage.tsx` with interactive samples across all P1 modules.
+
+## Cloud Environment Configuration Update
+
+To preinstall this app's npm dependencies for cloud/devcontainer startup:
+
+- Added `.devcontainer/post-create.sh` to install `apps/atomy-q/Design-System-v2` dependencies.
+- Updated `.devcontainer/devcontainer.json` with:
+  - `"postCreateCommand": "bash .devcontainer/post-create.sh"`
