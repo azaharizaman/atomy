@@ -116,7 +116,7 @@ final readonly class ReverseAccrualOnInvoiceMatched
 
             throw AccrualException::postingFailed(
                 entityId: $event->vendorBillId,
-                message: 'Unexpected error: ' . $e->getMessage(),
+                reason: 'Unexpected error: ' . $e->getMessage(),
             );
         }
     }

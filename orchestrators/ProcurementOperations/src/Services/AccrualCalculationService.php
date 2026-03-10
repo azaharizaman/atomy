@@ -78,12 +78,12 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
             throw AccrualException::zeroAmount($goodsReceiptId);
         }
 
-        // If no journal entry manager, return a placeholder
+        // Fail fast when accounting infrastructure is unavailable.
         if ($this->journalEntryManager === null) {
-            $this->getLogger()->warning('JournalEntryManager not available, skipping GL posting', [
+            $this->getLogger()->error('JournalEntryManager not available, cannot post GR-IR accrual', [
                 'goods_receipt_id' => $goodsReceiptId,
             ]);
-            return 'PENDING-' . $goodsReceiptId;
+            throw AccrualException::postingFailed($goodsReceiptId, 'JournalEntryManager is not configured');
         }
 
         // Build journal entry lines
@@ -133,21 +133,27 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
             'goods_receipt_ids' => $goodsReceiptIds,
         ]);
 
-        if ($this->journalEntryManager === null) {
-            $this->getLogger()->warning('JournalEntryManager not available, skipping accrual reversal', [
-                'vendor_bill_id' => $vendorBillId,
-            ]);
-            return 'PENDING-REVERSAL-' . $vendorBillId;
+        if ($goodsReceiptIds === []) {
+            throw AccrualException::postingFailed($vendorBillId, 'At least one goods receipt ID is required');
         }
 
-        // Calculation of reversal journal lines requires matched GRs, which are not available here.
-        // Return pending placeholder to avoid posting invalid journal entries.
-        $this->getLogger()->info('Accrual reversal requires matched GR data - returning pending placeholder', [
+        if ($this->journalEntryManager === null) {
+            $this->getLogger()->error('JournalEntryManager not available, cannot reverse accrual', [
+                'vendor_bill_id' => $vendorBillId,
+            ]);
+            throw AccrualException::postingFailed($vendorBillId, 'JournalEntryManager is not configured');
+        }
+
+        // Reversal requires source journal entry references per matched GR, which are unavailable here.
+        $this->getLogger()->error('Accrual reversal requires matched GR journal references', [
             'vendor_bill_id' => $vendorBillId,
             'goods_receipt_ids' => $goodsReceiptIds,
         ]);
-        
-        return 'PENDING-REVERSAL-' . $vendorBillId;
+
+        throw AccrualException::postingFailed(
+            $vendorBillId,
+            'Accrual reversal is not implemented without matched GR journal entry references'
+        );
     }
 
     /**
@@ -171,11 +177,15 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
             'currency' => $currency,
         ]);
 
+        if ($amountCents <= 0) {
+            throw AccrualException::zeroAmount($vendorBillId);
+        }
+
         if ($this->journalEntryManager === null) {
-            $this->getLogger()->warning('JournalEntryManager not available, skipping AP posting', [
+            $this->getLogger()->error('JournalEntryManager not available, cannot post AP liability', [
                 'vendor_bill_id' => $vendorBillId,
             ]);
-            return 'PENDING-AP-' . $vendorBillId;
+            throw AccrualException::postingFailed($vendorBillId, 'JournalEntryManager is not configured');
         }
 
         $journalLines = [
@@ -228,9 +238,10 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
         string $tenantId,
         string $paymentId,
         string $vendorId,
-        string $bankAccountId,
         int $amountCents,
+        int $discountCents,
         string $currency,
+        string $bankAccountId,
         string $postedBy
     ): string {
         $this->getLogger()->info('Posting payment entry', [
@@ -239,15 +250,30 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
             'vendor_id' => $vendorId,
             'bank_account_id' => $bankAccountId,
             'amount_cents' => $amountCents,
+            'discount_cents' => $discountCents,
             'currency' => $currency,
         ]);
 
+        if ($amountCents <= 0) {
+            throw AccrualException::zeroAmount($paymentId);
+        }
+
+        if ($discountCents < 0) {
+            throw AccrualException::postingFailed($paymentId, 'Discount cannot be negative');
+        }
+
+        if ($discountCents > $amountCents) {
+            throw AccrualException::postingFailed($paymentId, 'Discount cannot exceed payment amount');
+        }
+
         if ($this->journalEntryManager === null) {
-            $this->getLogger()->warning('JournalEntryManager not available, skipping payment posting', [
+            $this->getLogger()->error('JournalEntryManager not available, cannot post payment entry', [
                 'payment_id' => $paymentId,
             ]);
-            return 'PENDING-PAYMENT-' . $paymentId;
+            throw AccrualException::postingFailed($paymentId, 'JournalEntryManager is not configured');
         }
+
+        $cashCreditCents = $amountCents - $discountCents;
 
         $journalLines = [
             [
@@ -259,10 +285,19 @@ final readonly class AccrualCalculationService implements AccrualServiceInterfac
             [
                 'accountCode' => $bankAccountId,
                 'debit' => 0,
-                'credit' => $amountCents,
+                'credit' => $cashCreditCents,
                 'description' => sprintf('Payment from bank account %s', $bankAccountId),
             ],
         ];
+
+        if ($discountCents > 0) {
+            $journalLines[] = [
+                'accountCode' => 'EARLY-PAYMENT-DISCOUNT',
+                'debit' => 0,
+                'credit' => $discountCents,
+                'description' => sprintf('Early payment discount for vendor %s', $vendorId),
+            ];
+        }
 
         try {
             $journalEntryId = $this->journalEntryManager->post(
