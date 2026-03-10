@@ -31,6 +31,21 @@ import { Alert, Banner, Checklist } from '../components/ds/Alert';
 import { NavItem, NavGroup, SubNavItem, NavigationLink, NavLabel } from '../components/ds/Sidebar';
 import { FilterBar, PageHeader, SectionHeader } from '../components/ds/FilterBar';
 import { ActiveRecordSnippet, ActiveRecordMenu } from '../components/ds/ActiveRecordMenu';
+import { MainNav } from '../components/ds/MainNav';
+import { WorkspaceBreadcrumbs } from '../components/ds/WorkspaceBreadcrumbs';
+import { RecordHeader } from '../components/ds/RecordHeader';
+import { SlideOverStackManager, type SlideOverStackItem } from '../components/ds/SlideOverStackManager';
+import { TopBar } from '../components/ds/TopBar';
+import { SignInCard, MfaPromptPanel } from '../components/ds/AuthComponents';
+import { Stepper, StickyActionBar, LineItemEditor, UploadDropzoneWithProgress } from '../components/ds/CreateRFQComponents';
+import type { LineItem, UploadItemProgress } from '../components/ds/CreateRFQComponents';
+import { QuoteDetailActionBar, ValidationCallout, OverrideChip, RevertControl } from '../components/ds/QuoteIntakeComponents';
+import { ConversionBadge, ConflictIndicator, NormalizationLockBar, MappingGrid } from '../components/ds/NormalizationComponents';
+import type { MappingGridRow } from '../components/ds/NormalizationComponents';
+import { ComparisonMatrixGrid, RecommendationCard, ApprovalGateBanner, ReadinessBanner, DeltaBadge } from '../components/ds/ComparisonComponents';
+import type { ComparisonMatrixRow } from '../components/ds/ComparisonComponents';
+import { PriorityMarker, AssignmentControl, SnoozeControl, EvidenceTabsPanel, DecisionPanel } from '../components/ds/ApprovalComponents';
+import { AwardDecisionSummary, SplitAllocationEditor, SignOffChecklist, DebriefStatusList, HandoffStatusTimeline, PayloadPreviewPanel, ProtestTimerBadge } from '../components/ds/AwardComponents';
 import type { StatusVariant } from '../components/ds/tokens';
 
 // ─── Showcase Navigation Sections ─────────────────────────────────────────────
@@ -50,6 +65,7 @@ const SECTIONS = [
   { id: 'timeline',      label: 'Timeline',          icon: <Clock size={14} /> },
   { id: 'alerts',        label: 'Alerts & Banners',  icon: <Bell size={14} /> },
   { id: 'slideover',     label: 'Slide-Over',        icon: <SlidersHorizontal size={14} /> },
+  { id: 'p1-workflows',  label: 'P1 Workflow Blocks', icon: <GitBranch size={14} /> },
   { id: 'layouts',       label: 'Layouts',           icon: <BookOpen size={14} /> },
 ];
 
@@ -155,11 +171,58 @@ export function ShowcasePage() {
   const [selectedIds, setSelectedIds] = React.useState<(string | number)[]>(['1', '2']);
   const [expandedId, setExpandedId] = React.useState<string | number | null>('1');
   const [page, setPage] = React.useState(1);
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table');
+  const [tableSearch, setTableSearch] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState('all');
+  const [categoryFilter, setCategoryFilter] = React.useState('all');
+  const [recentlyHiredOnly, setRecentlyHiredOnly] = React.useState(false);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = React.useState(false);
+  const [withSavingsOnly, setWithSavingsOnly] = React.useState(false);
+  const [minValueFilter, setMinValueFilter] = React.useState('');
+  const [maxValueFilter, setMaxValueFilter] = React.useState('');
+  const [fromDateFilter, setFromDateFilter] = React.useState('');
+  const [toDateFilter, setToDateFilter] = React.useState('');
+  const [configOpen, setConfigOpen] = React.useState(false);
+  const [recordsPerPage, setRecordsPerPage] = React.useState(8);
+  const [showGroupSummaryRow, setShowGroupSummaryRow] = React.useState(true);
+  const [showTableSummaryRow, setShowTableSummaryRow] = React.useState(true);
+  const [showColumns, setShowColumns] = React.useState<Record<string, boolean>>({
+    rfqId: true,
+    title: true,
+    status: true,
+    deadline: true,
+    estValue: true,
+  });
   const [slideOverOpen, setSlideOverOpen] = React.useState(false);
   const [slideOverWidth, setSlideOverWidth] = React.useState<'sm' | 'md' | 'lg' | 'xl'>('md');
   const [toggleA, setToggleA] = React.useState(false);
   const [toggleB, setToggleB] = React.useState(true);
   const [searchVal, setSearchVal] = React.useState('');
+  const [stackPanels, setStackPanels] = React.useState<SlideOverStackItem[]>([]);
+  const [lineItems, setLineItems] = React.useState<LineItem[]>([
+    { id: 'li-h-1', entryType: 'heading', heading: 'Compute Nodes', subheading: 'Primary server fleet', description: '', qty: 0, unit: 'EA', targetPrice: 0 },
+    { id: 'li-1', description: 'Rack Server 2U', qty: 12, unit: 'EA', targetPrice: 8400 },
+    { id: 'li-h-2', entryType: 'heading', heading: 'Storage', subheading: '', description: '', qty: 0, unit: 'EA', targetPrice: 0 },
+    { id: 'li-2', description: 'Enterprise SSD 3.84TB', qty: 48, unit: 'EA', targetPrice: 620 },
+  ]);
+  const [uploadItems] = React.useState<UploadItemProgress[]>([
+    { id: 'up-1', fileName: 'rfq_specs.pdf', progress: 100 },
+    { id: 'up-2', fileName: 'compliance_matrix.xlsx', progress: 72 },
+  ]);
+  const [selectedMapIds, setSelectedMapIds] = React.useState<string[]>(['map-2', 'map-4']);
+  const [approvalAssignee, setApprovalAssignee] = React.useState('marcus');
+  const [evidenceTab, setEvidenceTab] = React.useState('documents');
+  const [decisionReason, setDecisionReason] = React.useState('');
+  const [splitAlloc, setSplitAlloc] = React.useState([
+    { id: 'dell', name: 'Dell Technologies', value: 70 },
+    { id: 'hp', name: 'HP Enterprise', value: 20 },
+    { id: 'lenovo', name: 'Lenovo', value: 10 },
+  ]);
+  const [signoffs, setSignoffs] = React.useState([
+    { id: 'fin', label: 'Financial review complete', checked: true },
+    { id: 'legal', label: 'Legal review complete', checked: false },
+    { id: 'lead', label: 'Procurement lead sign-off', checked: false },
+  ]);
 
   function scrollToSection(id: string) {
     setActiveSection(id);
@@ -173,6 +236,104 @@ export function ShowcasePage() {
     { id: '4', timestamp: 'Yesterday',   actor: 'Alex Kumar', action: 'ran comparison preview — Run #004', iconColor: 'indigo' as const, icon: <BarChart2 size={10} /> },
     { id: '5', timestamp: 'Yesterday',   actor: 'System', action: 'RFQ published and vendors notified', iconColor: 'green' as const, icon: <CheckCircle2 size={10} /> },
     { id: '6', timestamp: '3 days ago',  actor: 'Marcus Webb', action: 'created RFQ-2401', iconColor: 'slate' as const },
+  ];
+
+  const MAPPING_ROWS: MappingGridRow[] = [
+    { id: 'map-1', lineNumber: 1, vendorDescription: '2U Compute Node - Intel Xeon', confidence: 'high', mappedLine: 'CPU Node', taxonomyCode: '43211503', normalizedQty: '12', normalizedUnit: 'EA', normalizedPrice: '$8,230', currency: 'USD' },
+    { id: 'map-2', lineNumber: 2, vendorDescription: 'NVMe SSD 3.84TB', confidence: 'medium', mappedLine: 'Storage SSD', taxonomyCode: '43201803', normalizedQty: '48', normalizedUnit: 'EA', normalizedPrice: '$599', currency: 'USD', conflict: true },
+    { id: 'map-3', lineNumber: 3, vendorDescription: 'Rack Rail Kit', confidence: 'high', mappedLine: 'Accessories', taxonomyCode: '43201600', normalizedQty: '12', normalizedUnit: 'SET', normalizedPrice: '$120', currency: 'USD' },
+    { id: 'map-4', lineNumber: 4, vendorDescription: '5Y NBD Support', confidence: 'low', mappedLine: 'Support Services', taxonomyCode: '81112300', normalizedQty: '12', normalizedUnit: 'EA', normalizedPrice: '$930', currency: 'USD', conflict: true, overridden: true },
+  ];
+
+  const COMPARISON_ROWS: ComparisonMatrixRow[] = [
+    { id: 'cmp-1', lineItem: 'CPU Node', values: ['$8,230', '$8,420', '$8,510'], bestVendorIndex: 0 },
+    { id: 'cmp-2', lineItem: 'Storage SSD', values: ['$599', '$612', '$640'], bestVendorIndex: 0 },
+    { id: 'cmp-3', lineItem: 'Support Services', values: ['$930', '$910', null], bestVendorIndex: 1 },
+  ];
+
+  function parseCurrencyValue(value: string): number {
+    const normalized = value.replace(/[^0-9.-]/g, '');
+    return Number(normalized || 0);
+  }
+
+  const filteredRfqRows = React.useMemo(() => {
+    return RFQ_ROWS.filter(row => {
+      const search = tableSearch.trim().toLowerCase();
+      const matchSearch = search.length === 0
+        || row.rfqId.toLowerCase().includes(search)
+        || row.title.toLowerCase().includes(search)
+        || row.owner.toLowerCase().includes(search);
+      const matchStatus = statusFilter === 'all' || row.status === statusFilter;
+      const matchCategory = categoryFilter === 'all' || row.category === categoryFilter;
+      const matchRecentlyHired = !recentlyHiredOnly || row.vendors >= 4;
+      const rowValue = parseCurrencyValue(row.estValue);
+      const matchMin = minValueFilter === '' || rowValue >= Number(minValueFilter);
+      const matchMax = maxValueFilter === '' || rowValue <= Number(maxValueFilter);
+      const rowDate = row.deadline;
+      const matchFrom = fromDateFilter === '' || rowDate >= fromDateFilter;
+      const matchTo = toDateFilter === '' || rowDate <= toDateFilter;
+      const matchSavings = !withSavingsOnly || row.savings !== '—';
+
+      return matchSearch && matchStatus && matchCategory && matchRecentlyHired && matchMin && matchMax && matchFrom && matchTo && matchSavings;
+    });
+  }, [tableSearch, statusFilter, categoryFilter, recentlyHiredOnly, minValueFilter, maxValueFilter, fromDateFilter, toDateFilter, withSavingsOnly]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRfqRows.length / recordsPerPage));
+  const safePage = Math.min(page, totalPages);
+  const pagedRows = filteredRfqRows.slice((safePage - 1) * recordsPerPage, safePage * recordsPerPage);
+
+  const configuredColumns = RFQ_COLUMNS.filter(col => showColumns[col.key] !== false);
+  const groupedRowsSource = filteredRfqRows.slice(0, 8);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [tableSearch, statusFilter, categoryFilter, recentlyHiredOnly, minValueFilter, maxValueFilter, fromDateFilter, toDateFilter, withSavingsOnly, recordsPerPage]);
+
+  function renderSummaryRow(rows: RFQRow[], label = 'Summary'): React.ReactNode {
+    const totalValue = rows.reduce((sum, row) => sum + parseCurrencyValue(row.estValue), 0);
+    const totalVendors = rows.reduce((sum, row) => sum + row.vendors, 0);
+    const maxQuotes = rows.reduce((max, row) => Math.max(max, row.quotes), 0);
+    const minQuotes = rows.reduce((min, row) => Math.min(min, row.quotes), Number.POSITIVE_INFINITY);
+
+    return (
+      <div className="flex items-center justify-between text-xs text-slate-700">
+        <span className="font-semibold">{label}</span>
+        <div className="flex items-center gap-4">
+          <span>Total Value: <strong>${totalValue.toLocaleString('en-US')}</strong></span>
+          <span>Vendors: <strong>{totalVendors}</strong></span>
+          <span>Max Quotes: <strong>{maxQuotes}</strong></span>
+          <span>Min Quotes: <strong>{minQuotes === Number.POSITIVE_INFINITY ? 0 : minQuotes}</strong></span>
+        </div>
+      </div>
+    );
+  }
+
+  const MAIN_NAV_ITEMS = [
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={15} /> },
+    {
+      id: 'rfqs',
+      label: 'Requisition',
+      icon: <FileText size={15} />,
+      badge: 22,
+      children: [
+        { id: 'rfq-active', label: 'Active', badge: 12 },
+        { id: 'rfq-closed', label: 'Closed', badge: 5 },
+        { id: 'rfq-awarded', label: 'Awarded', badge: 3 },
+        { id: 'rfq-archived', label: 'Archived' },
+        { id: 'rfq-draft', label: 'Draft', badge: 2 },
+      ],
+    },
+    { id: 'documents', label: 'Documents', icon: <FolderArchive size={15} /> },
+    { id: 'reporting', label: 'Reporting', icon: <BarChart2 size={15} /> },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <Settings size={15} />,
+      children: [
+        { id: 'settings-users', label: 'Users & Roles' },
+        { id: 'settings-scoring', label: 'Scoring Policies' },
+      ],
+    },
   ];
 
   return (
@@ -837,6 +998,45 @@ export function ShowcasePage() {
                 </Card>
               </div>
             </SubSection>
+
+            <SubSection title="P0 Contract Components">
+              <div className="grid grid-cols-2 gap-4">
+                <Card padding="sm">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">MainNav (single-group accordion)</p>
+                  <MainNav
+                    items={MAIN_NAV_ITEMS}
+                    activeItem="rfq-active"
+                    onNavigate={() => {}}
+                  />
+                </Card>
+
+                <div className="flex flex-col gap-3">
+                  <Card padding="md">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">WorkspaceBreadcrumbs</p>
+                    <WorkspaceBreadcrumbs
+                      segments={[
+                        { label: 'RFQs', path: '/rfqs' },
+                        { label: 'Server Infrastructure Refresh', path: '/rfqs/RFQ-2401' },
+                        { label: 'Approvals', path: '/rfqs/RFQ-2401/approvals' },
+                        { label: 'APR-00412', path: '/rfqs/RFQ-2401/approvals/APR-00412' },
+                      ]}
+                    />
+                  </Card>
+                  <RecordHeader
+                    title="APR-00412"
+                    status="pending"
+                    leading={<span className="text-xs text-slate-500">Comparison Approval</span>}
+                    metadata={[
+                      { label: 'SLA', value: <SLATimerBadge variant="safe" value="1d 18h" /> },
+                      { label: 'Assignee', value: 'Marcus Webb' },
+                      { label: 'RFQ', value: 'RFQ-2401' },
+                      { label: 'Run', value: 'RUN-005' },
+                    ]}
+                    actions={<Button size="sm" variant="primary">Open Detail</Button>}
+                  />
+                </div>
+              </div>
+            </SubSection>
           </Section>
 
           {/* ═══════════════════════════════════════════════════════════
@@ -886,42 +1086,254 @@ export function ShowcasePage() {
             </SubSection>
 
             <SubSection title="Data Table">
-              <div>
-                <DataTable
-                  columns={RFQ_COLUMNS}
-                  rows={RFQ_ROWS}
-                  selectable
-                  selectedIds={selectedIds}
-                  onSelectChange={setSelectedIds}
-                  expandable
-                  expandedId={expandedId}
-                  onExpandChange={setExpandedId}
-                  renderExpanded={row => (
-                    <div className="grid grid-cols-6 gap-4 px-5 py-3 bg-slate-50 border-b border-slate-200">
-                      {[
-                        { label: 'Category',  value: row.category },
-                        { label: 'Deadline',  value: row.deadline },
-                        { label: 'Vendors',   value: row.vendors },
-                        { label: 'Quotes',    value: row.quotes },
-                        { label: 'Est. Value',value: row.estValue },
-                        { label: 'Savings %', value: row.savings },
-                      ].map(item => (
-                        <div key={item.label}>
-                          <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">{item.label}</span>
-                          <span className="block text-xs font-medium text-slate-700">{item.value}</span>
+              <div className="space-y-4">
+                <Card padding="md" className="relative">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-800">Requisitions</h4>
+                      <p className="text-xs text-slate-500">{filteredRfqRows.length} records</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      <SearchInput
+                        value={tableSearch}
+                        onChange={e => setTableSearch(e.target.value)}
+                        placeholder="Search RFQ, title, owner..."
+                        containerClassName="w-56"
+                        compact
+                      />
+                      <SelectInput
+                        compact
+                        value={statusFilter}
+                        onChange={e => setStatusFilter(e.target.value)}
+                        options={[
+                          { value: 'all', label: 'All Status' },
+                          { value: 'active', label: 'Active' },
+                          { value: 'pending', label: 'Pending' },
+                          { value: 'awarded', label: 'Awarded' },
+                          { value: 'draft', label: 'Draft' },
+                          { value: 'closed', label: 'Closed' },
+                        ]}
+                      />
+                      <SelectInput
+                        compact
+                        value={categoryFilter}
+                        onChange={e => setCategoryFilter(e.target.value)}
+                        options={[
+                          { value: 'all', label: 'All Categories' },
+                          { value: 'IT Hardware', label: 'IT Hardware' },
+                          { value: 'Facilities', label: 'Facilities' },
+                          { value: 'Software', label: 'Software' },
+                          { value: 'Security', label: 'Security' },
+                          { value: 'Marketing', label: 'Marketing' },
+                          { value: 'Transport', label: 'Transport' },
+                          { value: 'IT Services', label: 'IT Services' },
+                        ]}
+                      />
+                      <ToggleSwitch checked={recentlyHiredOnly} onChange={setRecentlyHiredOnly} label="Recently Hired" size="sm" />
+
+                      <button
+                        className="inline-flex items-center justify-center w-7 h-7 rounded border border-slate-200 text-slate-500 hover:bg-slate-50"
+                        onClick={() => setAdvancedFiltersOpen(v => !v)}
+                        title="Filters"
+                      >
+                        <SlidersHorizontal size={13} />
+                      </button>
+                      <button
+                        className="inline-flex items-center justify-center w-7 h-7 rounded border border-slate-200 text-slate-500 hover:bg-slate-50"
+                        onClick={() => setConfigOpen(v => !v)}
+                        title="Configure"
+                      >
+                        <Settings size={13} />
+                      </button>
+                      <div className="inline-flex rounded border border-slate-200 overflow-hidden">
+                        <button
+                          className={['px-2 h-7 text-xs', viewMode === 'table' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-slate-600'].join(' ')}
+                          onClick={() => setViewMode('table')}
+                        >
+                          Table
+                        </button>
+                        <button
+                          className={['px-2 h-7 text-xs border-l border-slate-200', viewMode === 'grid' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-slate-600'].join(' ')}
+                          onClick={() => setViewMode('grid')}
+                        >
+                          Grid
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {advancedFiltersOpen && (
+                    <div className="mb-3 grid grid-cols-5 gap-2 items-center">
+                      <TextInput type="date" value={fromDateFilter} onChange={e => setFromDateFilter(e.target.value)} placeholder="From date" />
+                      <TextInput type="date" value={toDateFilter} onChange={e => setToDateFilter(e.target.value)} placeholder="To date" />
+                      <TextInput type="number" value={minValueFilter} onChange={e => setMinValueFilter(e.target.value)} placeholder="Min value" />
+                      <TextInput type="number" value={maxValueFilter} onChange={e => setMaxValueFilter(e.target.value)} placeholder="Max value" />
+                      <Checkbox
+                        label="Only with savings"
+                        checked={withSavingsOnly}
+                        onChange={e => setWithSavingsOnly(e.currentTarget.checked)}
+                      />
+                    </div>
+                  )}
+
+                  {configOpen && (
+                    <div className="absolute right-4 top-20 z-20 w-72 bg-white border border-slate-200 rounded-md shadow-lg p-3">
+                      <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">View Configuration</p>
+                      <div className="space-y-2">
+                        <p className="text-[11px] text-slate-500 font-medium">Show / Hide Columns</p>
+                        {Object.keys(showColumns).map(key => (
+                          <Checkbox
+                            key={key}
+                            label={key}
+                            checked={showColumns[key]}
+                            onChange={e => setShowColumns(prev => ({ ...prev, [key]: e.currentTarget.checked }))}
+                          />
+                        ))}
+                        <div className="pt-2">
+                          <SelectInput
+                            label="Records per page"
+                            compact
+                            value={String(recordsPerPage)}
+                            onChange={e => setRecordsPerPage(Number(e.target.value))}
+                            options={[
+                              { value: '4', label: '4' },
+                              { value: '8', label: '8' },
+                              { value: '12', label: '12' },
+                            ]}
+                          />
                         </div>
+                        {viewMode === 'table' && (
+                          <div className="pt-2 space-y-2">
+                            <ToggleSwitch checked={showGroupSummaryRow} onChange={setShowGroupSummaryRow} label="Show group summary" size="sm" />
+                            <ToggleSwitch checked={showTableSummaryRow} onChange={setShowTableSummaryRow} label="Show table summary row" size="sm" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {viewMode === 'table' ? (
+                    <>
+                      <DataTable
+                        columns={configuredColumns}
+                        rows={pagedRows}
+                        selectable
+                        selectedIds={selectedIds}
+                        onSelectChange={setSelectedIds}
+                        expandable
+                        expandedId={expandedId}
+                        onExpandChange={setExpandedId}
+                        expandedIndentColumns={1}
+                        renderExpanded={row => (
+                          <div className="grid grid-cols-6 gap-4 px-4 py-3 bg-slate-50 border-b border-slate-200">
+                            {[
+                              { label: 'Category', value: row.category },
+                              { label: 'Deadline', value: row.deadline },
+                              { label: 'Vendors', value: row.vendors },
+                              { label: 'Quotes', value: row.quotes },
+                              { label: 'Est. Value', value: row.estValue },
+                              { label: 'Savings %', value: row.savings },
+                            ].map(item => (
+                              <div key={item.label}>
+                                <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-0.5">{item.label}</span>
+                                <span className="block text-xs font-medium text-slate-700">{item.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        bulkActions={[
+                          { label: 'Close Selected', onClick: () => {} },
+                          { label: 'Archive Selected', onClick: () => {} },
+                          { label: 'Assign Owner', onClick: () => {} },
+                          { label: 'Export Selected', onClick: () => {} },
+                        ]}
+                        showActions
+                        showTableSummary={showTableSummaryRow}
+                        renderTableSummary={rows => renderSummaryRow(rows, 'Current page summary')}
+                      />
+                      <TableFooter
+                        page={safePage}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        totalItems={filteredRfqRows.length}
+                        pageSize={recordsPerPage}
+                      />
+                    </>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-3">
+                      {pagedRows.map(row => (
+                        <Card key={row.id} padding="md" className="border border-slate-200">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-800 leading-tight">{row.title}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">{row.rfqId} · {row.owner}</p>
+                            </div>
+                            <StatusBadge status={row.status} size="xs" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 mt-3">
+                            <div className="rounded border border-slate-200 px-2 py-1">
+                              <p className="text-[10px] uppercase text-slate-400">Category</p>
+                              <p className="text-xs text-slate-700">{row.category}</p>
+                            </div>
+                            <div className="rounded border border-slate-200 px-2 py-1">
+                              <p className="text-[10px] uppercase text-slate-400">Deadline</p>
+                              <p className="text-xs text-slate-700">{row.deadline}</p>
+                            </div>
+                            <div className="rounded border border-slate-200 px-2 py-1">
+                              <p className="text-[10px] uppercase text-slate-400">Vendors</p>
+                              <p className="text-xs text-slate-700">{row.vendors}</p>
+                            </div>
+                            <div className="rounded border border-slate-200 px-2 py-1">
+                              <p className="text-[10px] uppercase text-slate-400">Est. Value</p>
+                              <p className="text-xs text-slate-700">{row.estValue}</p>
+                            </div>
+                          </div>
+                        </Card>
                       ))}
                     </div>
                   )}
-                  bulkActions={[
-                    { label: 'Close Selected', onClick: () => {} },
-                    { label: 'Archive Selected', onClick: () => {} },
-                    { label: 'Assign Owner', onClick: () => {} },
-                    { label: 'Export Selected', onClick: () => {} },
-                  ]}
-                  showActions
-                />
-                <TableFooter page={page} totalPages={3} onPageChange={setPage} totalItems={24} pageSize={8} />
+                </Card>
+
+                <Card padding="md">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Variant: Grouped Rows</p>
+                  <DataTable
+                    columns={RFQ_COLUMNS}
+                    rows={groupedRowsSource}
+                    groupBy={row => row.category}
+                    renderGroupHeader={(group, rows) => (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-700">{group}</span>
+                        <span className="text-slate-500">{rows.length} records</span>
+                      </div>
+                    )}
+                    showActions
+                  />
+                </Card>
+
+                <Card padding="md">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Variant: Footer Summaries</p>
+                  <DataTable
+                    columns={RFQ_COLUMNS}
+                    rows={groupedRowsSource}
+                    showTableSummary
+                    renderTableSummary={rows => renderSummaryRow(rows, 'Table totals')}
+                    showActions
+                  />
+                </Card>
+
+                <Card padding="md">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Variant: Grouping + Group Summaries + Table Summary</p>
+                  <DataTable
+                    columns={RFQ_COLUMNS}
+                    rows={groupedRowsSource}
+                    groupBy={row => row.category}
+                    showGroupSummary={showGroupSummaryRow}
+                    showTableSummary={showTableSummaryRow}
+                    renderGroupSummary={(group, rows) => renderSummaryRow(rows, `${group} subtotal`)}
+                    renderTableSummary={rows => renderSummaryRow(rows, 'Grand total')}
+                    showActions
+                  />
+                </Card>
               </div>
             </SubSection>
           </Section>
@@ -1100,6 +1512,77 @@ export function ShowcasePage() {
               </div>
             </Card>
 
+            <Card padding="lg" className="mt-4">
+              <p className="text-sm text-slate-600 mb-3">
+                Stack manager supports nested slide-overs up to depth 2 (parent + child).
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setStackPanels([
+                      {
+                        id: 'stack-1',
+                        title: 'Upload & Parse Quote',
+                        subtitle: 'Primary panel (depth 1)',
+                        width: 'md',
+                        content: (
+                          <div className="p-5 space-y-3">
+                            <p className="text-sm text-slate-600">
+                              Select files and vendor, then confirm parse settings.
+                            </p>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setStackPanels(prev => {
+                                  if (prev.length >= 2) return prev;
+                                  return [
+                                    ...prev,
+                                    {
+                                      id: 'stack-2',
+                                      title: 'Confirm Parse',
+                                      subtitle: 'Nested panel (depth 2)',
+                                      width: 'sm',
+                                      content: (
+                                        <div className="p-5 text-sm text-slate-600">
+                                          Confirm parsing for 3 documents from Dell Technologies?
+                                        </div>
+                                      ),
+                                      footer: (
+                                        <>
+                                          <Button variant="ghost" onClick={() => setStackPanels(p => p.filter(x => x.id !== 'stack-2'))}>Cancel</Button>
+                                          <Button variant="primary">Confirm</Button>
+                                        </>
+                                      ),
+                                    },
+                                  ];
+                                });
+                              }}
+                            >
+                              Open nested confirmation
+                            </Button>
+                          </div>
+                        ),
+                        footer: (
+                          <>
+                            <Button variant="ghost" onClick={() => setStackPanels([])}>Close</Button>
+                            <Button variant="primary">Continue</Button>
+                          </>
+                        ),
+                      },
+                    ]);
+                  }}
+                >
+                  Open stacked slide-over
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setStackPanels([])}>
+                  Reset stack
+                </Button>
+              </div>
+            </Card>
+
             <SlideOver
               open={slideOverOpen}
               onClose={() => setSlideOverOpen(false)}
@@ -1144,12 +1627,202 @@ export function ShowcasePage() {
                 </div>
               </SlideOverSection>
             </SlideOver>
+
+            <SlideOverStackManager
+              stack={stackPanels}
+              onClose={id => setStackPanels(prev => prev.filter(panel => panel.id !== id))}
+            />
+          </Section>
+
+          {/* ═══════════════════════════════════════════════════════════
+              P1 WORKFLOW BLOCKS
+          ════════════════════════════════════════════════════════════ */}
+          <Section id="p1-workflows" title="P1 Workflow Blocks" subtitle="Screen-critical reusable components for Auth, Create RFQ, Intake Detail, Normalization, Comparison, Approval, and Award.">
+            <SubSection title="Authentication">
+              <div className="grid grid-cols-2 gap-4">
+                <SignInCard error="Invalid credentials. Please try again." sessionExpired />
+                <MfaPromptPanel />
+              </div>
+            </SubSection>
+
+            <SubSection title="Create RFQ">
+              <div className="space-y-3">
+                <Card padding="md">
+                  <Stepper
+                    steps={[
+                      { id: 'meta', label: 'Metadata' },
+                      { id: 'line-items', label: 'Line Items' },
+                      { id: 'terms', label: 'Terms' },
+                      { id: 'attachments', label: 'Attachments' },
+                    ]}
+                    activeStepId="line-items"
+                  />
+                </Card>
+                <LineItemEditor items={lineItems} onChange={setLineItems} currency="USD" locale="en-US" />
+                <UploadDropzoneWithProgress uploads={uploadItems} />
+                <div className="rounded-md border border-slate-200 overflow-hidden bg-white">
+                  <div className="h-16 px-4 py-3 text-xs text-slate-500">Form content area (demo)</div>
+                  <StickyActionBar />
+                </div>
+              </div>
+            </SubSection>
+
+            <SubSection title="Quote Intake Detail">
+              <div className="space-y-3">
+                <ValidationCallout
+                  issues={[
+                    'Lead time not detected in document.',
+                    'Two lines require manual mapping.',
+                  ]}
+                />
+                <Card padding="md">
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    Overridden line indicator:
+                    <OverrideChip />
+                    <RevertControl />
+                  </div>
+                </Card>
+                <div className="rounded-md border border-slate-200 overflow-hidden">
+                  <div className="h-12 px-4 py-3 text-xs text-slate-500 bg-white">Quote detail content area (demo)</div>
+                  <QuoteDetailActionBar />
+                </div>
+              </div>
+            </SubSection>
+
+            <SubSection title="Normalization Workspace">
+              <div className="space-y-3">
+                <NormalizationLockBar />
+                <Card padding="md">
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    <ConversionBadge from="EUR 1,240" to="USD 1,330" />
+                    <ConflictIndicator message="2 mapping conflicts" />
+                  </div>
+                </Card>
+                <MappingGrid
+                  rows={MAPPING_ROWS}
+                  selectedIds={selectedMapIds}
+                  onSelectedIdsChange={setSelectedMapIds}
+                />
+              </div>
+            </SubSection>
+
+            <SubSection title="Comparison Matrix">
+              <div className="space-y-3">
+                <ApprovalGateBanner mode="pending" />
+                <ReadinessBanner issues={['3 lines have unresolved taxonomy mappings']} />
+                <Card padding="md">
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    Delta example: <DeltaBadge value="+8.3%" />
+                  </div>
+                </Card>
+                <ComparisonMatrixGrid
+                  vendors={[
+                    { name: 'Dell Technologies', total: '$1,043,250', rank: 1 },
+                    { name: 'HP Enterprise', total: '$1,118,334', rank: 2 },
+                    { name: 'Lenovo', total: '$1,146,110', rank: 3 },
+                  ]}
+                  rows={COMPARISON_ROWS}
+                />
+                <RecommendationCard
+                  vendor="Dell Technologies"
+                  confidence={82}
+                  factors={[
+                    'Best total normalized cost',
+                    'Strong lead time compliance',
+                    'Policy risk score below threshold',
+                  ]}
+                />
+              </div>
+            </SubSection>
+
+            <SubSection title="Approvals">
+              <div className="grid grid-cols-2 gap-4">
+                <Card padding="md">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      Priority: <PriorityMarker priority="high" />
+                    </div>
+                    <AssignmentControl
+                      value={approvalAssignee}
+                      onChange={setApprovalAssignee}
+                      options={[
+                        { value: 'marcus', label: 'Marcus Webb' },
+                        { value: 'priya', label: 'Priya Nair' },
+                      ]}
+                    />
+                    <SnoozeControl />
+                  </div>
+                </Card>
+                <DecisionPanel
+                  reason={decisionReason}
+                  onReasonChange={setDecisionReason}
+                />
+              </div>
+              <div className="mt-3">
+                <EvidenceTabsPanel
+                  tabs={[
+                    { id: 'documents', label: 'Documents', count: 3 },
+                    { id: 'screening', label: 'Screening Results', count: 1 },
+                    { id: 'audit', label: 'Audit Trail', count: 5 },
+                  ]}
+                  activeTab={evidenceTab}
+                  onChange={setEvidenceTab}
+                >
+                  <p className="text-xs text-slate-600">
+                    Evidence content for: <span className="font-medium text-slate-800">{evidenceTab}</span>
+                  </p>
+                </EvidenceTabsPanel>
+              </div>
+            </SubSection>
+
+            <SubSection title="Award Decision">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <AwardDecisionSummary winner="Dell Technologies" total="$1,043,250" savings="$156,487 (13.1%)" confidence={82} />
+                  <SplitAllocationEditor vendors={splitAlloc} onChange={setSplitAlloc} />
+                  <SignOffChecklist
+                    items={signoffs}
+                    onToggle={(id, checked) => setSignoffs(prev => prev.map(item => item.id === id ? { ...item, checked } : item))}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <DebriefStatusList
+                    vendors={[
+                      { id: 'hp', name: 'HP Enterprise', status: 'not-sent' },
+                      { id: 'lenovo', name: 'Lenovo', status: 'sent' },
+                      { id: 'cisco', name: 'Cisco Systems', status: 'not-sent' },
+                      { id: 'ibm', name: 'IBM', status: 'na' },
+                    ]}
+                  />
+                  <PayloadPreviewPanel />
+                  <HandoffStatusTimeline
+                    items={[
+                      { id: 'h1', label: 'Payload generated', timestamp: '09:12', state: 'done' },
+                      { id: 'h2', label: 'Schema validated', timestamp: '09:14', state: 'done' },
+                      { id: 'h3', label: 'ERP handoff', timestamp: 'Pending', state: 'pending' },
+                    ]}
+                  />
+                  <Card padding="md">
+                    <div className="flex items-center justify-between">
+                      <ProtestTimerBadge />
+                      <Button variant="ghost" size="sm">Record Protest</Button>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            </SubSection>
           </Section>
 
           {/* ═══════════════════════════════════════════════════════════
               LAYOUTS
           ════════════════════════════════════════════════════════════ */}
           <Section id="layouts" title="Layouts" subtitle="Scaled previews of the two application layout variants.">
+            <SubSection title="TopBar + User Menu + Notification Center (interactive)">
+              <Card padding="none">
+                <TopBar />
+              </Card>
+            </SubSection>
+
             <SubSection title="Layout 1 — Default Layout (200px sidebar + TopBar + Content + Footer)">
               <p className="text-sm text-slate-500 mb-4">
                 Used for list views, reports, approval queues, and settings. The sidebar expands navigation groups in accordion fashion.
