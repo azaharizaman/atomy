@@ -5,12 +5,12 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Nexus\Blockchain": "src/"
+            "Nexus\\Blockchain\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\Blockchain\Tests": "tests/"
+            "Nexus\\Blockchain\\Tests\\": "tests/"
         }
     },
     "require": {
