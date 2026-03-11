@@ -3,13 +3,32 @@
 **Package:** `nexus/payment-gateway`  
 **Version:** 0.1.0  
 **Status:** � Core Complete  
-**Last Updated:** December 19, 2025
+**Last Updated:** March 11, 2026
 
 ---
 
 ## Overview
 
 The PaymentGateway package provides a unified, provider-agnostic interface for payment gateway integrations. It extends the core Nexus\Payment package with multi-gateway support, tokenization, and webhook processing.
+
+---
+
+## March 2026 Hardening Update
+
+- Hardened webhook verification flow by extending `WebhookHandlerInterface::verifySignature(...)` to accept request headers and passing headers from `WebhookProcessor`.
+- Replaced Stripe verification placeholder with real signature validation:
+  - Parses `Stripe-Signature` (`t=...`, `v1=...`)
+  - Validates timestamp replay window
+  - Verifies HMAC in constant time
+- Implemented Adyen HMAC verification using canonical `NotificationRequestItem` signing string and constant-time compare.
+- Removed synthetic/random event ID behavior in hardened handlers:
+  - Stripe now requires a provider event ID
+  - Adyen now generates deterministic event IDs for stable deduplication
+- Corrected webhook event-type enum mappings to valid `WebhookEventType` cases.
+- Added targeted unit test coverage:
+  - `tests/Unit/Webhooks/StripeWebhookHandlerTest.php`
+  - `tests/Unit/Webhooks/AdyenWebhookHandlerTest.php`
+  - Updated `tests/Unit/Services/WebhookProcessorTest.php` for header forwarding verification
 
 ---
 

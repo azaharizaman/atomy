@@ -81,7 +81,7 @@ final class WebhookProcessor implements WebhookProcessorInterface
         $signature = $this->extractSignature($headers, $provider);
         $secret = $this->secrets[$provider->value] ?? '';
 
-        if (!$handler->verifySignature($payload, $signature, $secret)) {
+        if (!$handler->verifySignature($payload, $signature, $secret, $headers)) {
             $this->logger->warning('Webhook signature verification failed', [
                 'provider' => $providerName,
             ]);

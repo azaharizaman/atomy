@@ -214,9 +214,9 @@ final class PayPalWebhookHandler implements WebhookHandlerInterface
     private function mapEventType(string $paypalEventType): WebhookEventType
     {
         return match ($paypalEventType) {
-            'PAYMENT.CAPTURE.COMPLETED' => WebhookEventType::PAYMENT_SUCCEEDED,
+            'PAYMENT.CAPTURE.COMPLETED' => WebhookEventType::PAYMENT_CAPTURED,
             'PAYMENT.CAPTURE.DENIED' => WebhookEventType::PAYMENT_FAILED,
-            'PAYMENT.CAPTURE.REFUNDED' => WebhookEventType::PAYMENT_REFUNDED,
+            'PAYMENT.CAPTURE.REFUNDED' => WebhookEventType::REFUND_COMPLETED,
             'CUSTOMER.DISPUTE.CREATED' => WebhookEventType::DISPUTE_CREATED,
             'CUSTOMER.DISPUTE.RESOLVED' => WebhookEventType::DISPUTE_WON, // Or lost, depends on outcome
             default => WebhookEventType::UNKNOWN,

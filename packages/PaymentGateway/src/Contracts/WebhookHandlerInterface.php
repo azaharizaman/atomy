@@ -30,6 +30,7 @@ interface WebhookHandlerInterface
         string $payload,
         string $signature,
         string $secret,
+        array $headers = [],
     ): bool;
 
     /**

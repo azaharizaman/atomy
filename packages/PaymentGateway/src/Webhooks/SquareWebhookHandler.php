@@ -134,10 +134,10 @@ final class SquareWebhookHandler implements WebhookHandlerInterface
     private function mapEventType(string $squareEventType): WebhookEventType
     {
         return match ($squareEventType) {
-            'payment.updated' => WebhookEventType::PAYMENT_SUCCEEDED, // Need to check status inside
-            'refund.updated' => WebhookEventType::PAYMENT_REFUNDED,
+            'payment.updated' => WebhookEventType::PAYMENT_CAPTURED, // Need to check status inside
+            'refund.updated' => WebhookEventType::REFUND_COMPLETED,
             'dispute.created' => WebhookEventType::DISPUTE_CREATED,
-            'dispute.state.updated' => WebhookEventType::DISPUTE_UPDATED,
+            'dispute.state.updated' => WebhookEventType::DISPUTE_CLOSED,
             default => WebhookEventType::UNKNOWN,
         };
     }

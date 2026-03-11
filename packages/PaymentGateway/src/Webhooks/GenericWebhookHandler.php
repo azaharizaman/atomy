@@ -50,6 +50,7 @@ final class GenericWebhookHandler implements WebhookHandlerInterface
         string $payload,
         string $signature,
         string $secret,
+        array $headers = [],
     ): bool {
         if (empty($secret)) {
             // Allow empty secret in test mode

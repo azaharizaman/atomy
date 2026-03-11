@@ -8,7 +8,6 @@ use Nexus\PaymentGateway\Contracts\WebhookHandlerInterface;
 use Nexus\PaymentGateway\Enums\GatewayProvider;
 use Nexus\PaymentGateway\Enums\WebhookEventType;
 use Nexus\PaymentGateway\Exceptions\WebhookParsingException;
-use Nexus\PaymentGateway\Exceptions\WebhookProcessingException;
 use Nexus\PaymentGateway\ValueObjects\WebhookPayload;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -29,48 +28,58 @@ final class AdyenWebhookHandler implements WebhookHandlerInterface
         return GatewayProvider::ADYEN;
     }
 
-    /**
-     * Verify Adyen webhook signature.
-     *
-     * SECURITY: This is a placeholder implementation that FAILS CLOSED for security.
-     * In production, this method MUST be replaced with full Adyen HMAC verification:
-     * 1. Extract the HMAC signature from x-adyen-hmac-signature header
-     * 2. Construct the signing string from the notification payload according to Adyen's spec
-     * 3. Compute HMAC-SHA256 using the HMAC key from credentials
-     * 4. Base64 encode the result
-     * 5. Compare with the received signature (constant-time comparison)
-     * 6. Return true only if verification succeeds
-     *
-     * @see https://docs.adyen.com/development-resources/webhooks/verify-hmac-signatures
-     *
-     * WARNING: This placeholder returns FALSE to prevent unauthorized webhook processing.
-     * Implement proper verification before enabling Adyen webhooks in production.
-     */
     public function verifySignature(
         string $payload,
         string $signature,
         string $secret,
+        array $headers = []
     ): bool {
-        // TODO: Implement full Adyen HMAC-SHA256 webhook verification
-        // Until implemented, fail closed to prevent webhook spoofing attacks
-        
-        // Reject if signature or secret is missing
-        if (empty($signature) || empty($secret)) {
+        if (empty($secret)) {
+            $this->logger->warning('Adyen webhook verification failed: missing secret');
             return false;
         }
-        
-        // SECURITY: This placeholder fails closed (returns false) to prevent
-        // unauthorized webhooks from being processed. Adyen requires specific
-        // payload fields to be concatenated in a specific order for signature verification.
-        
-        // In production, implement proper HMAC verification:
-        // 1. Parse the notification items from the payload
-        // 2. Extract and concatenate required fields in the correct order
-        // 3. Compute HMAC-SHA256 and base64 encode
-        // 4. Use hash_equals for constant-time comparison
-        
-        // Return false until proper verification is implemented
-        return false;
+
+        try {
+            $data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+            if (!is_array($data)) {
+                $this->logger->warning('Adyen webhook verification failed: invalid payload');
+                return false;
+            }
+
+            $item = $this->extractNotificationRequestItem($data);
+            if ($item === null) {
+                $this->logger->warning('Adyen webhook verification failed: invalid notification structure');
+                return false;
+            }
+
+            $embeddedSignature = $item['additionalData']['hmacSignature'] ?? '';
+            $receivedSignature = $signature !== '' ? $signature : (string) $embeddedSignature;
+            if ($receivedSignature === '') {
+                $this->logger->warning('Adyen webhook verification failed: missing signature');
+                return false;
+            }
+
+            $expectedSignature = $this->computeExpectedSignature($item, $secret);
+            if ($expectedSignature === null) {
+                $this->logger->warning('Adyen webhook verification failed: missing required signing fields');
+                return false;
+            }
+
+            $result = hash_equals($expectedSignature, $receivedSignature);
+            if (!$result) {
+                $this->logger->warning('Adyen webhook signature mismatch');
+            }
+
+            return $result;
+        } catch (\JsonException $e) {
+            $this->logger->warning('Adyen webhook verification failed: invalid JSON payload');
+            return false;
+        } catch (\Throwable $e) {
+            $this->logger->error('Adyen webhook verification error', [
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
     }
 
     public function parsePayload(string $payload, array $headers = []): WebhookPayload
@@ -81,17 +90,25 @@ final class AdyenWebhookHandler implements WebhookHandlerInterface
             throw new WebhookParsingException("Invalid JSON payload: {$e->getMessage()}", 0, $e);
         }
 
-        // Adyen webhooks are wrapped in notificationItems
-        if (!isset($data['notificationItems'][0]['NotificationRequestItem'])) {
+        $item = $this->extractNotificationRequestItem($data);
+        if ($item === null) {
             throw new WebhookParsingException("Invalid Adyen webhook structure");
         }
 
-        $item = $data['notificationItems'][0]['NotificationRequestItem'];
-        $eventCode = $item['eventCode'] ?? '';
+        $eventCode = (string) ($item['eventCode'] ?? '');
         
-        $eventType = $this->mapEventType($eventCode, $item['success'] ?? 'false');
-        $eventId = uniqid('evt_'); // Adyen doesn't send a unique event ID in the same way
+        $normalizedSuccess = $this->normalizeSuccessValue($item['success'] ?? 'false');
+        $eventType = $this->mapEventType($eventCode, $normalizedSuccess);
+        $eventId = $this->buildEventId($item);
         $resourceId = $item['pspReference'] ?? null;
+        $receivedAt = new \DateTimeImmutable();
+        if (isset($item['eventDate']) && is_string($item['eventDate'])) {
+            try {
+                $receivedAt = new \DateTimeImmutable($item['eventDate']);
+            } catch (\Exception) {
+                // Keep fallback to current timestamp when provider sends invalid date.
+            }
+        }
 
         return new WebhookPayload(
             eventId: $eventId,
@@ -99,7 +116,7 @@ final class AdyenWebhookHandler implements WebhookHandlerInterface
             provider: GatewayProvider::ADYEN,
             resourceId: $resourceId,
             data: $data,
-            receivedAt: isset($item['eventDate']) ? new \DateTimeImmutable($item['eventDate']) : new \DateTimeImmutable(),
+            receivedAt: $receivedAt,
         );
     }
 
@@ -113,17 +130,92 @@ final class AdyenWebhookHandler implements WebhookHandlerInterface
 
     private function mapEventType(string $eventCode, string $success): WebhookEventType
     {
-        if ($success !== 'true') {
+        if (strtolower($success) !== 'true') {
             return WebhookEventType::PAYMENT_FAILED;
         }
 
         return match ($eventCode) {
-            'AUTHORISATION' => WebhookEventType::PAYMENT_SUCCEEDED,
-            'CAPTURE' => WebhookEventType::PAYMENT_SUCCEEDED,
-            'REFUND' => WebhookEventType::PAYMENT_REFUNDED,
+            'AUTHORISATION' => WebhookEventType::PAYMENT_AUTHORIZED,
+            'CAPTURE' => WebhookEventType::PAYMENT_CAPTURED,
+            'REFUND' => WebhookEventType::REFUND_COMPLETED,
             'CHARGEBACK' => WebhookEventType::DISPUTE_CREATED,
             'CHARGEBACK_REVERSED' => WebhookEventType::DISPUTE_WON,
             default => WebhookEventType::UNKNOWN,
         };
+    }
+
+    /**
+     * @param array<mixed> $payload
+     * @return array<string, mixed>|null
+     */
+    private function extractNotificationRequestItem(array $payload): ?array
+    {
+        $item = $payload['notificationItems'][0]['NotificationRequestItem'] ?? null;
+        if (!is_array($item)) {
+            return null;
+        }
+
+        return $item;
+    }
+
+    /**
+     * @param array<string, mixed> $item
+     */
+    private function buildEventId(array $item): string
+    {
+        $pspReference = (string) ($item['pspReference'] ?? '');
+        $eventCode = (string) ($item['eventCode'] ?? 'unknown');
+        $success = $this->normalizeSuccessValue($item['success'] ?? 'false');
+
+        if ($pspReference === '') {
+            throw new WebhookParsingException("Missing 'pspReference' in Adyen webhook payload");
+        }
+
+        return 'ady_' . hash('sha256', $pspReference . '|' . $eventCode . '|' . $success);
+    }
+
+    /**
+     * @param array<string, mixed> $item
+     */
+    private function computeExpectedSignature(array $item, string $secret): ?string
+    {
+        $amount = $item['amount'] ?? null;
+        if (!is_array($amount)) {
+            return null;
+        }
+
+        $value = [
+            (string) ($item['pspReference'] ?? ''),
+            (string) ($item['originalReference'] ?? ''),
+            (string) ($item['merchantAccountCode'] ?? ''),
+            (string) ($item['merchantReference'] ?? ''),
+            (string) ($amount['value'] ?? ''),
+            (string) ($amount['currency'] ?? ''),
+            (string) ($item['eventCode'] ?? ''),
+            $this->normalizeSuccessValue($item['success'] ?? ''),
+        ];
+
+        if ($value[0] === '' || $value[2] === '' || $value[4] === '' || $value[5] === '' || $value[6] === '' || $value[7] === '') {
+            return null;
+        }
+
+        $escaped = array_map(static fn (string $part): string => str_replace(['\\', ':'], ['\\\\', '\\:'], $part), $value);
+        $signingData = implode(':', $escaped);
+
+        $decodedSecret = base64_decode($secret, true);
+        $hmacKey = $decodedSecret === false ? $secret : $decodedSecret;
+
+        return base64_encode(hash_hmac('sha256', $signingData, $hmacKey, true));
+    }
+
+    private function normalizeSuccessValue(mixed $success): string
+    {
+        if (is_bool($success)) {
+            return $success ? 'true' : 'false';
+        }
+
+        $normalized = strtolower(trim((string) $success));
+
+        return in_array($normalized, ['true', '1', 'yes'], true) ? 'true' : 'false';
     }
 }

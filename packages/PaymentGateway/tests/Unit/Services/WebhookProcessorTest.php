@@ -104,7 +104,7 @@ final class WebhookProcessorTest extends TestCase
 
         $handler->expects($this->once())
             ->method('verifySignature')
-            ->with('{"id": "evt_123"}', 'test_signature', 'whsec_secret')
+            ->with('{"id": "evt_123"}', 'test_signature', 'whsec_secret', ['stripe-signature' => 'test_signature'])
             ->willReturn(true);
 
         $handler->expects($this->once())
@@ -199,7 +199,7 @@ final class WebhookProcessorTest extends TestCase
         // Verify that the correct signature is extracted
         $handler->expects($this->once())
             ->method('verifySignature')
-            ->with('{}', 'sig=test123', 'whsec_secret')
+            ->with('{}', 'sig=test123', 'whsec_secret', ['stripe-signature' => 'sig=test123'])
             ->willReturn(true);
 
         $handler->method('parsePayload')->willReturn($webhookPayload);
@@ -233,7 +233,7 @@ final class WebhookProcessorTest extends TestCase
         // Verify that the PayPal signature header is extracted
         $handler->expects($this->once())
             ->method('verifySignature')
-            ->with('{}', 'paypal_sig', 'paypal_secret')
+            ->with('{}', 'paypal_sig', 'paypal_secret', ['paypal-transmission-sig' => 'paypal_sig'])
             ->willReturn(true);
 
         $handler->method('parsePayload')->willReturn($webhookPayload);
@@ -266,7 +266,7 @@ final class WebhookProcessorTest extends TestCase
         // Verify that the Square signature header is extracted
         $handler->expects($this->once())
             ->method('verifySignature')
-            ->with('{}', 'square_sig', 'square_secret')
+            ->with('{}', 'square_sig', 'square_secret', ['x-square-signature' => 'square_sig'])
             ->willReturn(true);
 
         $handler->method('parsePayload')->willReturn($webhookPayload);
@@ -299,7 +299,7 @@ final class WebhookProcessorTest extends TestCase
         // Verify that the Adyen signature header is extracted
         $handler->expects($this->once())
             ->method('verifySignature')
-            ->with('{}', 'adyen_sig', 'adyen_secret')
+            ->with('{}', 'adyen_sig', 'adyen_secret', ['x-adyen-hmac-signature' => 'adyen_sig'])
             ->willReturn(true);
 
         $handler->method('parsePayload')->willReturn($webhookPayload);
@@ -332,7 +332,7 @@ final class WebhookProcessorTest extends TestCase
         // Header with uppercase should still work
         $handler->expects($this->once())
             ->method('verifySignature')
-            ->with('{}', 'test_sig', 'secret')
+            ->with('{}', 'test_sig', 'secret', ['Stripe-Signature' => 'test_sig'])
             ->willReturn(true);
 
         $handler->method('parsePayload')->willReturn($webhookPayload);

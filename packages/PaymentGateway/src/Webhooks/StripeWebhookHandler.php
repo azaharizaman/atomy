@@ -9,7 +9,6 @@ use Nexus\PaymentGateway\Enums\GatewayProvider;
 use Nexus\PaymentGateway\Enums\TransactionStatus;
 use Nexus\PaymentGateway\Enums\WebhookEventType;
 use Nexus\PaymentGateway\Exceptions\WebhookParsingException;
-use Nexus\PaymentGateway\Exceptions\WebhookVerificationFailedException;
 use Nexus\PaymentGateway\ValueObjects\WebhookEvent;
 use Nexus\PaymentGateway\ValueObjects\WebhookPayload;
 use Psr\Log\LoggerInterface;
@@ -24,6 +23,8 @@ use Psr\Log\NullLogger;
  */
 final class StripeWebhookHandler implements WebhookHandlerInterface
 {
+    private const SIGNATURE_TOLERANCE_SECONDS = 300;
+
     public function __construct(
         private readonly LoggerInterface $logger = new NullLogger(),
     ) {}
@@ -33,46 +34,47 @@ final class StripeWebhookHandler implements WebhookHandlerInterface
         return GatewayProvider::STRIPE;
     }
 
-    /**
-     * Verify Stripe webhook signature.
-     *
-     * SECURITY: This implements fail-closed verification for Stripe webhooks.
-     * Stripe uses ECDSA with SHA-256 for signature verification.
-     * 
-     * Current implementation throws an exception to prevent insecure fallback.
-     * TODO: Implement proper Stripe ECDSA signature verification using:
-     * - OpenSSL with ECDSA (secp256k1 curve)
-     * - Or stripe-php library's signature verification
-     *
-     * @see https://stripe.com/docs/webhooks/signatures
-     * 
-     * @param string $payload Raw request body
-     * @param string $signature Stripe-Signature header value
-     * @param string $secret Webhook secret from Stripe dashboard
-     * @param array $headers Request headers (including timestamp)
-     * @return bool True if signature is valid
-     * @throws \RuntimeException When signature verification is not properly implemented
-     */
     public function verifySignature(
         string $payload,
         string $signature,
         string $secret,
         array $headers = []
     ): bool {
-        // Reject if signature or secret is missing
         if (empty($signature) || empty($secret)) {
             $this->logger->warning('Stripe webhook verification failed: missing signature or secret');
             return false;
         }
 
-        // CRITICAL: Throw exception to enforce fail-closed behavior
-        // DO NOT silently fall back to HMAC - this is insecure!
-        throw new \RuntimeException(
-            'Stripe webhook signature verification not properly implemented. ' .
-            'Current implementation uses HMAC-SHA256 which is insecure. ' .
-            'Must implement ECDSA verification using OpenSSL or stripe-php library. ' .
-            'See: https://stripe.com/docs/webhooks/signatures'
-        );
+        try {
+            $parsedHeader = $this->parseSignatureHeader($signature);
+            if ($parsedHeader === null) {
+                $this->logger->warning('Stripe webhook verification failed: malformed signature header');
+                return false;
+            }
+
+            if (!$this->isTimestampFresh($parsedHeader['timestamp'])) {
+                $this->logger->warning('Stripe webhook verification failed: stale timestamp');
+                return false;
+            }
+
+            $signedPayload = $parsedHeader['timestamp'] . '.' . $payload;
+            $expectedSignature = hash_hmac('sha256', $signedPayload, $secret);
+
+            foreach ($parsedHeader['signatures'] as $candidateSignature) {
+                if (hash_equals($expectedSignature, $candidateSignature)) {
+                    return true;
+                }
+            }
+
+            $this->logger->warning('Stripe webhook signature mismatch');
+            return false;
+        } catch (\Throwable $e) {
+            $this->logger->error('Stripe webhook verification error', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     public function handle(array $payload, array $headers = []): WebhookEvent
@@ -110,8 +112,19 @@ final class StripeWebhookHandler implements WebhookHandlerInterface
         }
 
         $eventType = $this->mapEventType($data['type']);
-        $eventId = $data['id'] ?? uniqid('evt_');
+        $eventId = $data['id'] ?? null;
+        if (!is_string($eventId) || $eventId === '') {
+            throw new WebhookParsingException("Missing 'id' in Stripe webhook payload");
+        }
+
         $resourceId = $data['data']['object']['id'] ?? null;
+        $receivedAt = new \DateTimeImmutable();
+        if (isset($data['created'])) {
+            $createdAt = \DateTimeImmutable::createFromFormat('U', (string) $data['created']);
+            if ($createdAt instanceof \DateTimeImmutable) {
+                $receivedAt = $createdAt;
+            }
+        }
 
         return new WebhookPayload(
             eventId: $eventId,
@@ -119,9 +132,7 @@ final class StripeWebhookHandler implements WebhookHandlerInterface
             provider: GatewayProvider::STRIPE,
             resourceId: $resourceId,
             data: $data,
-            receivedAt: isset($data['created']) 
-                ? \DateTimeImmutable::createFromFormat('U', (string)$data['created']) 
-                : new \DateTimeImmutable(),
+            receivedAt: $receivedAt,
         );
     }
 
@@ -141,17 +152,57 @@ final class StripeWebhookHandler implements WebhookHandlerInterface
     private function mapEventType(string $stripeEventType): WebhookEventType
     {
         return match ($stripeEventType) {
-            'payment_intent.succeeded' => WebhookEventType::PAYMENT_SUCCEEDED,
+            'payment_intent.succeeded' => WebhookEventType::PAYMENT_CAPTURED,
             'payment_intent.payment_failed' => WebhookEventType::PAYMENT_FAILED,
-            'payment_intent.canceled' => WebhookEventType::PAYMENT_CANCELLED,
-            'charge.refunded' => WebhookEventType::PAYMENT_REFUNDED,
+            'payment_intent.canceled' => WebhookEventType::PAYMENT_CANCELED,
+            'charge.refunded' => WebhookEventType::REFUND_COMPLETED,
             'charge.dispute.created' => WebhookEventType::DISPUTE_CREATED,
             'charge.dispute.closed' => WebhookEventType::DISPUTE_CLOSED,
-            'customer.subscription.created' => WebhookEventType::SUBSCRIPTION_CREATED,
-            'customer.subscription.deleted' => WebhookEventType::SUBSCRIPTION_CANCELLED,
-            'invoice.paid' => WebhookEventType::INVOICE_PAID,
+            'customer.subscription.created' => WebhookEventType::UNKNOWN,
+            'customer.subscription.deleted' => WebhookEventType::UNKNOWN,
+            'invoice.paid' => WebhookEventType::UNKNOWN,
             'invoice.payment_failed' => WebhookEventType::PAYMENT_FAILED,
             default => WebhookEventType::UNKNOWN,
         };
+    }
+
+    /**
+     * @return array{timestamp:int, signatures:list<string>}|null
+     */
+    private function parseSignatureHeader(string $signatureHeader): ?array
+    {
+        $timestamp = null;
+        $signatures = [];
+
+        foreach (explode(',', $signatureHeader) as $part) {
+            $part = trim($part);
+            if ($part === '') {
+                continue;
+            }
+
+            [$key, $value] = array_pad(explode('=', $part, 2), 2, '');
+            if ($key === 't' && ctype_digit($value)) {
+                $timestamp = (int) $value;
+                continue;
+            }
+
+            if ($key === 'v1' && $value !== '') {
+                $signatures[] = $value;
+            }
+        }
+
+        if ($timestamp === null || $signatures === []) {
+            return null;
+        }
+
+        return [
+            'timestamp' => $timestamp,
+            'signatures' => $signatures,
+        ];
+    }
+
+    private function isTimestampFresh(int $timestamp): bool
+    {
+        return abs(time() - $timestamp) <= self::SIGNATURE_TOLERANCE_SECONDS;
     }
 }
