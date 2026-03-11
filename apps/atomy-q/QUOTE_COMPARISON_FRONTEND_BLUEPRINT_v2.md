@@ -62,7 +62,7 @@ Main Navigation
 
 Located in the top bar, the user avatar opens a dropdown with:
 
-- User Settings (profile, preferences)
+- **User Settings** (profile, preferences) — navigates to `/account` (current user self-service; distinct from tenant Settings > Users & Roles).
 - Notifications (links to notification feed/panel)
 - Logout
 
@@ -106,6 +106,11 @@ Present in both layouts. Contains:
 /approvals                      Approval Queue (Default Layout, cross-RFQ aggregation)
 /documents                      Global Document/Evidence Vault
 /reporting                      Reports & Analytics
+/account                        User Settings (Default Layout, current user self-service)
+/account/profile                User Settings > Profile tab
+/account/subscription           User Settings > Subscriptions tab
+/account/payment                User Settings > Payment tab
+/account/notifications          User Settings > Notification settings tab
 /settings/users                 Users & Roles
 /settings/scoring-policies      Scoring Policies
 /settings/templates             RFQ Templates
@@ -850,6 +855,38 @@ The following screens retain their v1 specifications but are updated to specify 
 - **Layout:** Slide-over from the notification bell in the Top Bar, or a dedicated view accessible from User Menu > Notifications.
 - Retains v1 elements.
 
+### User Settings (current user self-service)
+
+**Purpose:** Let the signed-in user manage their own profile, preferences, subscription, payment methods, and notification settings.
+
+**Layout:** Default Layout (same shell as Dashboard, RFQ List, Settings).
+
+**Route:** `/account` (defaults to `/account/profile` or first tab). Optional sub-routes: `/account/profile`, `/account/subscription`, `/account/payment`, `/account/notifications`.
+
+**How to get here:** Top Bar > User avatar > "User Settings". Not under sidebar Settings (which is tenant admin).
+
+**Access:** Authenticated user only; user can only access their own data (no tenant admin scope).
+
+**Content structure (tabbed or vertical sub-nav within content area):**
+
+- **Profile** — Display name, email (with verification state), optional avatar, timezone, locale. Edit inline or form; "Change password" and "Email verification" actions. No role/permission editing (that stays in Settings > Users & Roles).
+- **Subscriptions** — Current plan (name, period, renewal date), usage/limits if applicable, "Change plan" / "Upgrade" / "Cancel" actions. Read-only if no billing; links to billing portal if present.
+- **Payment** — Saved payment methods (masked), default method, add/remove card (or link to billing portal). Optional billing address. If billing is external-only, show "Manage in billing portal" CTA.
+- **Notification settings** — Per-category toggles (e.g. Approvals, RFQ updates, System, Marketing) and per-channel (Email, In-app, Push if applicable). "Save preferences" action. Optional digest frequency (immediate / daily / weekly).
+
+**Key elements:**
+- Sub-navigation: Profile | Subscriptions | Payment | Notifications (or equivalent labels).
+- Forms with clear Save/Cancel; sensitive actions (password change, remove card) via slide-over or dedicated step.
+- No dark mode (per blueprint); slide-overs from the right when needed.
+
+**States:** Data loading; saved success; validation error; external redirect (e.g. billing portal).
+
+**Interactions:**
+- Save profile / preferences / notification settings persists via API and shows success feedback.
+- Change password opens `Change Password` slide-over (current password + new password).
+- Change plan / Add payment method may open slide-over or redirect to billing portal.
+- Remove payment method opens confirmation slide-over.
+
 ---
 
 ## Screen Progression and Decision Points
@@ -946,7 +983,7 @@ The following screens retain their v1 specifications but are updated to specify 
 3. Build RFQ primary tabs: Overview, Details, Line Items, Vendors, Award.
 4. Build child record lists: Quote Intake List, Comparison Runs List, Approvals List, Negotiations List.
 5. Build child record details: Quote Intake Detail, Normalization Workspace, Comparison Matrix, Approval Detail.
-6. Build global screens: Dashboard, Document/Evidence Vault, Reporting, Settings.
+6. Build global screens: Dashboard, Document/Evidence Vault, Reporting, Settings, User Settings (Account) with sub-nav and forms.
 7. Add complete slide-over coverage and keyboard accessibility.
 
 **Engineering Notes:**

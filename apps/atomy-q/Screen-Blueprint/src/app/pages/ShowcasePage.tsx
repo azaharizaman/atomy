@@ -24,7 +24,6 @@ import { ProgressBar, CircularProgress, MiniProgress } from '../components/ds/Pr
 import { KPIScorecard, MetricChip, MetricRow } from '../components/ds/KPIScorecard';
 import { DataTable } from '../components/ds/DataTable';
 import type { ColumnDef } from '../components/ds/DataTable';
-import { TablePersonHoverCard } from '../components/ds/TablePersonHoverCard';
 import { TableFooter, Pagination } from '../components/ds/Pagination';
 import { SlideOver, SlideOverSection } from '../components/ds/SlideOver';
 import { Timeline, ActivityFeed } from '../components/ds/Timeline';
@@ -47,28 +46,7 @@ import { ComparisonMatrixGrid, RecommendationCard, ApprovalGateBanner, Readiness
 import type { ComparisonMatrixRow } from '../components/ds/ComparisonComponents';
 import { PriorityMarker, AssignmentControl, SnoozeControl, EvidenceTabsPanel, DecisionPanel } from '../components/ds/ApprovalComponents';
 import { AwardDecisionSummary, SplitAllocationEditor, SignOffChecklist, DebriefStatusList, HandoffStatusTimeline, PayloadPreviewPanel, ProtestTimerBadge } from '../components/ds/AwardComponents';
-import {
-  PipelineStatCard,
-  SavingsHighlightCard,
-  SLAAlertCard,
-  ActivitySummaryCard,
-  PendingApprovalsCard,
-  CategoryBreakdownCard,
-  QuickActionCard,
-} from '../components/ds/DashboardCards';
-import { SpotlightSearch, type SpotlightResult } from '../components/ds/SpotlightSearch';
 import type { StatusVariant } from '../components/ds/tokens';
-import {
-  RFQ_ROWS,
-  RFQRow,
-  OWNER_DETAILS,
-  ACTIVITY_EVENTS as MOCK_ACTIVITY_EVENTS,
-  DASHBOARD_PIPELINE,
-  DASHBOARD_SAVINGS,
-  DASHBOARD_SLA_ALERTS,
-  DASHBOARD_CATEGORY_BREAKDOWN,
-  DASHBOARD_PENDING_APPROVALS,
-} from '../data/mockData';
 
 // ─── Showcase Navigation Sections ─────────────────────────────────────────────
 
@@ -116,45 +94,6 @@ function SubSection({ title, children }: { title: string; children: React.ReactN
   );
 }
 
-const SPOTLIGHT_MOCK_RESULTS: SpotlightResult[] = [
-  { id: 'rfq-1', type: 'rfq', label: 'Server Infrastructure Refresh', path: '/rfqs/RFQ-2401', description: 'Refresh core compute and storage for regional production cluster.', metrics: [{ label: 'Status', value: 'Active' }, { label: 'Est. Value', value: '$1.24M' }, { label: 'Savings', value: '12.4%' }] },
-  { id: 'rfq-2', type: 'rfq', label: 'Office Furniture Q2', path: '/rfqs/RFQ-2402', metrics: [{ label: 'Status', value: 'Pending' }, { label: 'Est. Value', value: '$84.5K' }] },
-  { id: 'vendor-1', type: 'vendor', label: 'Dell Technologies', path: '/vendor/dell', description: 'Strategic supplier for infrastructure.', metrics: [{ label: 'Total Spend', value: '$4.2M' }, { label: 'On-time', value: '97%' }] },
-  { id: 'person-1', type: 'person', label: 'Alex Kumar', path: '/users/alex', metrics: [{ label: 'Role', value: 'Procurement Manager' }, { label: 'Email', value: 'alex@atomyq.com' }] },
-  { id: 'doc-1', type: 'document', label: 'rfq_specs.pdf', path: '/documents/doc-1', metrics: [{ label: 'Size', value: '2.4 MB' }, { label: 'Updated', value: '2 days ago' }] },
-];
-
-function SpotlightSearchDemo() {
-  const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState('');
-  const [selectedIndex, setSelectedIndex] = React.useState(0);
-  const filtered = React.useMemo(() => {
-    const q = value.trim().toLowerCase();
-    if (!q) return SPOTLIGHT_MOCK_RESULTS;
-    return SPOTLIGHT_MOCK_RESULTS.filter(r => r.label.toLowerCase().includes(q));
-  }, [value]);
-  React.useEffect(() => {
-    setSelectedIndex(0);
-  }, [value]);
-  return (
-    <>
-      <Button variant="outline" size="sm" onClick={() => { setOpen(true); setValue(''); setSelectedIndex(0); }}>
-        Open Spotlight Search
-      </Button>
-      <SpotlightSearch
-        open={open}
-        onClose={() => setOpen(false)}
-        value={value}
-        onChange={setValue}
-        results={filtered}
-        selectedIndex={selectedIndex}
-        onSelectedIndexChange={setSelectedIndex}
-        onSelect={() => setOpen(false)}
-      />
-    </>
-  );
-}
-
 function TokenRow({ name, value, swatch }: { name: string; value: string; swatch?: string }) {
   return (
     <div className="flex items-center gap-3 py-1.5 border-b border-slate-100 last:border-0">
@@ -165,7 +104,32 @@ function TokenRow({ name, value, swatch }: { name: string; value: string; swatch
   );
 }
 
-// ─── Column definitions for RFQ DataTable ─────────────────────────────────────
+// ─── Sample Data for DataTable ────────────────────────────────────────────────
+
+interface RFQRow {
+  id: string;
+  rfqId: string;
+  title: string;
+  owner: string;
+  status: StatusVariant;
+  deadline: string;
+  estValue: string;
+  category: string;
+  vendors: number;
+  quotes: number;
+  savings: string;
+}
+
+const RFQ_ROWS: RFQRow[] = [
+  { id: '1', rfqId: 'RFQ-2401', title: 'Server Infrastructure Refresh', owner: 'Alex Kumar',    status: 'active',  deadline: '2026-04-15', estValue: '$1,200,000', category: 'IT Hardware',  vendors: 5, quotes: 8, savings: '12%' },
+  { id: '2', rfqId: 'RFQ-2402', title: 'Office Furniture Q2',           owner: 'Sarah Chen',    status: 'pending', deadline: '2026-03-28', estValue: '$84,500',    category: 'Facilities',   vendors: 3, quotes: 3, savings: '—'   },
+  { id: '3', rfqId: 'RFQ-2403', title: 'Cloud Software Licenses',       owner: 'Marcus Webb',   status: 'active',  deadline: '2026-04-02', estValue: '$340,000',   category: 'Software',     vendors: 4, quotes: 6, savings: '8%'  },
+  { id: '4', rfqId: 'RFQ-2404', title: 'Network Security Audit',        owner: 'Priya Nair',    status: 'awarded', deadline: '2026-03-10', estValue: '$95,000',    category: 'Security',     vendors: 2, quotes: 2, savings: '5%'  },
+  { id: '5', rfqId: 'RFQ-2405', title: 'Marketing Print Materials',     owner: 'James Okonkwo', status: 'draft',   deadline: '2026-05-01', estValue: '$12,000',    category: 'Marketing',    vendors: 0, quotes: 0, savings: '—'   },
+  { id: '6', rfqId: 'RFQ-2406', title: 'Fleet Vehicle Leasing',         owner: 'Sarah Chen',    status: 'closed',  deadline: '2026-02-28', estValue: '$480,000',   category: 'Transport',    vendors: 6, quotes: 6, savings: '3%'  },
+  { id: '7', rfqId: 'RFQ-2407', title: 'Catering Services Contract',    owner: 'Alex Kumar',    status: 'active',  deadline: '2026-04-20', estValue: '$72,000',    category: 'Facilities',   vendors: 4, quotes: 5, savings: '14%' },
+  { id: '8', rfqId: 'RFQ-2408', title: 'IT Support Annual',             owner: 'Marcus Webb',   status: 'pending', deadline: '2026-03-31', estValue: '$220,000',   category: 'IT Services',  vendors: 2, quotes: 1, savings: '—'   },
+];
 
 const RFQ_COLUMNS: ColumnDef<RFQRow>[] = [
   {
@@ -174,25 +138,15 @@ const RFQ_COLUMNS: ColumnDef<RFQRow>[] = [
   },
   {
     key: 'title', label: 'RFQ Title', sortable: true,
-    render: row => <span className="text-sm font-medium text-slate-800 leading-tight">{row.title}</span>,
-  },
-  {
-    key: 'owner', label: 'Owner', width: '140px', sortable: true,
-    render: row => {
-      const details = OWNER_DETAILS[row.owner];
-      return (
-        <TablePersonHoverCard
-          roleLabel="Product Owner"
-          name={row.owner}
-          email={details?.email}
-          reportsTo={details?.reportsTo}
-          mobile={details?.mobile}
-          location={details?.location}
-          onLeave={() => {}}
-          onChange={() => {}}
-        />
-      );
-    },
+    render: row => (
+      <div>
+        <div className="text-sm font-medium text-slate-800 leading-tight">{row.title}</div>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <Avatar name={row.owner} size="xs" />
+          <span className="text-[11px] text-slate-400">{row.owner}</span>
+        </div>
+      </div>
+    ),
   },
   {
     key: 'status', label: 'Status', width: '100px', sortable: true,
@@ -275,16 +229,14 @@ export function ShowcasePage() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  const ACTIVITY_EVENTS = React.useMemo(() =>
-    MOCK_ACTIVITY_EVENTS.map(ev => ({
-      ...ev,
-      meta: ev.rfqId,
-      icon: ev.iconColor === 'indigo' && ev.action.includes('uploaded') ? <Upload size={10} /> :
-        ev.iconColor === 'green' ? <CheckCircle2 size={10} /> :
-        ev.iconColor === 'indigo' && ev.action.includes('comparison') ? <BarChart2 size={10} /> : undefined,
-    })),
-    []
-  );
+  const ACTIVITY_EVENTS = [
+    { id: '1', timestamp: '2 hours ago', actor: 'Alex Kumar', action: 'uploaded quote from Dell Technologies', iconColor: 'indigo' as const, icon: <Upload size={10} /> },
+    { id: '2', timestamp: '4 hours ago', actor: 'Priya Nair', action: 'sent invitation to HP Enterprise', iconColor: 'slate' as const },
+    { id: '3', timestamp: '6 hours ago', actor: 'System', action: 'normalization completed for Lenovo quote (18/24 lines)', iconColor: 'green' as const, icon: <CheckCircle2 size={10} /> },
+    { id: '4', timestamp: 'Yesterday',   actor: 'Alex Kumar', action: 'ran comparison preview — Run #004', iconColor: 'indigo' as const, icon: <BarChart2 size={10} /> },
+    { id: '5', timestamp: 'Yesterday',   actor: 'System', action: 'RFQ published and vendors notified', iconColor: 'green' as const, icon: <CheckCircle2 size={10} /> },
+    { id: '6', timestamp: '3 days ago',  actor: 'Marcus Webb', action: 'created RFQ-2401', iconColor: 'slate' as const },
+  ];
 
   const MAPPING_ROWS: MappingGridRow[] = [
     { id: 'map-1', lineNumber: 1, vendorDescription: '2U Compute Node - Intel Xeon', confidence: 'high', mappedLine: 'CPU Node', taxonomyCode: '43211503', normalizedQty: '12', normalizedUnit: 'EA', normalizedPrice: '$8,230', currency: 'USD' },
@@ -560,46 +512,6 @@ export function ShowcasePage() {
                 ))}
               </div>
             </SubSection>
-
-            <SubSection title="Grid System">
-              <p className="text-sm text-slate-600 mb-4 max-w-2xl">
-                Layouts use Tailwind CSS Grid. There is no single base column count (e.g. 12-column); column counts are chosen per use case. Below are the conventions and where they are applied in the design system.
-              </p>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">2–4 columns — General layout & info blocks</h4>
-                  <p className="text-xs text-slate-500 mb-2">Cards, metrics, two-column sections, InfoGrid (cols 2–4), RecordHeader metadata.</p>
-                  <div className="grid grid-cols-2 gap-3 rounded-lg border border-slate-200 p-3 bg-slate-50">
-                    <div className="rounded bg-white border border-slate-200 p-2 text-center text-xs text-slate-500">2-col</div>
-                    <div className="rounded bg-white border border-slate-200 p-2 text-center text-xs text-slate-500">2-col</div>
-                  </div>
-                  <div className="mt-2 grid grid-cols-4 gap-2 rounded-lg border border-slate-200 p-3 bg-slate-50">
-                    {[1, 2, 3, 4].map(i => (
-                      <div key={i} className="rounded bg-white border border-slate-200 p-2 text-center text-xs text-slate-500">{i}</div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">6 columns — Expanded row / inline detail panels</h4>
-                  <p className="text-xs text-slate-500 mb-2">DataTable expanded row, InlineDetailPanel (e.g. Category, Deadline, Vendors, Quotes, Est. Value, Savings %).</p>
-                  <div className="grid grid-cols-6 gap-4 rounded-lg border border-slate-200 px-4 py-3 bg-slate-50">
-                    {['Cat', 'Deadline', 'Vendors', 'Quotes', 'Est.', 'Savings'].map((l, i) => (
-                      <div key={i} className="rounded bg-white border border-slate-200 p-2 text-center text-[10px] text-slate-600">{l}</div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">12 columns — Form / editor rows with flexible spanning</h4>
-                  <p className="text-xs text-slate-500 mb-2">SplitAllocationEditor, line item editors, mapping rows; use col-span-* for field widths.</p>
-                  <div className="grid grid-cols-12 gap-2 rounded-lg border border-slate-200 p-3 bg-slate-50">
-                    <div className="col-span-5 rounded bg-white border border-slate-200 p-2 text-[10px] text-slate-600">Label (col-span-5)</div>
-                    <div className="col-span-4 rounded bg-white border border-slate-200 p-2 text-[10px] text-slate-600">Input (col-span-4)</div>
-                    <div className="col-span-2 rounded bg-white border border-slate-200 p-2 text-[10px] text-slate-600">%</div>
-                    <div className="col-span-1 rounded bg-white border border-slate-200 p-2 text-[10px] text-slate-600">—</div>
-                  </div>
-                </div>
-              </div>
-            </SubSection>
           </Section>
 
           {/* ═══════════════════════════════════════════════════════════
@@ -871,11 +783,6 @@ export function ShowcasePage() {
                     <Checkbox label="Indeterminate" indeterminate />
                   </div>
                 </div>
-              </Card>
-              <Card padding="lg" className="col-span-2">
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Spotlight Search</h4>
-                <p className="text-xs text-slate-500 mb-3">Press <kbd className="px-1 py-0.5 rounded border border-slate-200 bg-slate-50 font-mono">/</kbd> when not in an input to open. Type-ahead search with two-pane layout.</p>
-                <SpotlightSearchDemo />
               </Card>
               <Card padding="lg" className="col-span-2">
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Filter Bar</h4>
@@ -1176,95 +1083,6 @@ export function ShowcasePage() {
                   ]}
                 />
               </Card>
-            </SubSection>
-
-            <SubSection title="Dashboard Cards">
-              <p className="text-sm text-slate-600 mb-4">
-                Reusable dashboard cards for pipeline stats, savings, SLA alerts, activity summaries, pending approvals, and category breakdown.
-              </p>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Pipeline Stats</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <PipelineStatCard label="Active" count={DASHBOARD_PIPELINE.active} icon={<FileText size={18} />} onClick={() => {}} />
-                    <PipelineStatCard label="Pending" count={DASHBOARD_PIPELINE.pending} icon={<Clock size={18} />} onClick={() => {}} />
-                    <PipelineStatCard label="Awarded" count={DASHBOARD_PIPELINE.awarded} icon={<Award size={18} />} onClick={() => {}} />
-                    <PipelineStatCard label="Draft" count={DASHBOARD_PIPELINE.draft} onClick={() => {}} />
-                    <PipelineStatCard label="Closed" count={DASHBOARD_PIPELINE.closed} onClick={() => {}} />
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Savings & Value</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <SavingsHighlightCard
-                      title="Total Realized Savings"
-                      value={DASHBOARD_SAVINGS.totalRealized}
-                      trend={{ value: DASHBOARD_SAVINGS.yoyTrend, label: `+${DASHBOARD_SAVINGS.yoyTrend}% YoY` }}
-                    />
-                    <SavingsHighlightCard
-                      title="Pipeline Value"
-                      value={DASHBOARD_SAVINGS.totalPipeline}
-                      subtitle="In active RFQs"
-                    />
-                    <SavingsHighlightCard
-                      title="Avg. Savings"
-                      value={DASHBOARD_SAVINGS.avgSavingsPct}
-                      subtitle="Across awarded RFQs"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">SLA Alerts</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {DASHBOARD_SLA_ALERTS.map(alert => (
-                      <SLAAlertCard
-                        key={alert.id}
-                        title={alert.title}
-                        rfqId={alert.rfqId}
-                        timeRemaining={alert.timeRemaining}
-                        urgency={alert.urgency}
-                        assignee={alert.assignee}
-                        onClick={() => {}}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <ActivitySummaryCard
-                    items={MOCK_ACTIVITY_EVENTS}
-                    title="Recent Activity"
-                    maxItems={5}
-                    onViewAll={() => {}}
-                  />
-                  <PendingApprovalsCard
-                    items={DASHBOARD_PENDING_APPROVALS}
-                    onItemClick={() => {}}
-                    onViewAll={() => {}}
-                  />
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <CategoryBreakdownCard
-                    items={DASHBOARD_CATEGORY_BREAKDOWN}
-                    title="Spend by Category"
-                    maxItems={6}
-                    onViewAll={() => {}}
-                  />
-                  <QuickActionCard
-                    icon={<Plus size={20} />}
-                    title="Create RFQ"
-                    description="Start a new requisition"
-                    actionLabel="New RFQ"
-                    onAction={() => {}}
-                  />
-                  <QuickActionCard
-                    icon={<BarChart2 size={20} />}
-                    title="View Reports"
-                    description="Savings, compliance, and audit"
-                    actionLabel="Open Reports"
-                    onAction={() => {}}
-                  />
-                </div>
-              </div>
             </SubSection>
 
             <SubSection title="Data Table">

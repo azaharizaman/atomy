@@ -19,23 +19,6 @@ For example:
 
 --------------
 
-# Grid system
-
-The Atomy-Q design system uses **Tailwind CSS Grid** (no custom 12- or 24-column base). Column counts are chosen per use case:
-
-| Columns | Use case | Where applied |
-|--------|----------|----------------|
-| **2** | General two-column layout, side-by-side blocks | Showcase sections, InfoGrid default, RecordHeader base |
-| **3** | Three-column token or option groups | InfoGrid (cols=3), some showcase blocks |
-| **4** | Metric chips, token groups, responsive metadata | ActiveRecordMenu metrics, RecordHeader (md:grid-cols-4), InfoGrid (cols=4) |
-| **6** | **Expanded row / inline detail panels** | DataTable expanded row, InlineDetailPanel (Category, Deadline, Vendors, Quotes, Est. Value, Savings %) |
-| **12** | **Form / editor rows with flexible spanning** | SplitAllocationEditor, CreateRFQ line items, Normalization mapping rows; use `col-span-*` for field widths |
-
-* Use `grid` + `grid-cols-*` and `gap-*` (e.g. `gap-3`, `gap-4`). For 12-column layouts use `col-span-*` to allocate width.
-* Reusable grid components: **InfoGrid** (2, 3, or 4 cols), **InlineDetailPanel** (fixed 6 cols).
-
---------------
-
 # Design system guidelines
 Rules for how the AI should make generations look like your company's design system
 
