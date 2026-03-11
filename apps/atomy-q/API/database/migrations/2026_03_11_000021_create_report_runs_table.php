@@ -23,6 +23,11 @@ return new class extends Migration
 
             $table->index('report_schedule_id');
             $table->index(['tenant_id', 'status']);
+
+            $table->foreign('report_schedule_id')
+                ->references('id')
+                ->on('report_schedules')
+                ->nullOnDelete();
         });
     }
 

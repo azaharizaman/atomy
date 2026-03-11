@@ -116,3 +116,11 @@ Custom config files: `config/jwt.php`, `config/atomy.php`
 6. Add rate limiting middleware
 7. Add OpenAPI/Swagger documentation
 8. Write feature tests for critical flows
+
+## Post-Review Remediation (PR #285)
+
+- Removed hard-coded login backdoor from `AuthController` and now validate credentials against `users` table.
+- Added fail-fast JWT secret validation and moved JWT settings into DI wiring via `AppServiceProvider`.
+- Replaced synthetic success payloads in award/negotiation/setting mutation stubs with explicit `501 Not Implemented` responses.
+- Aligned schema/model definitions (`Scenario` fields, `comparison_runs.discarded_by` type) and strengthened several migration indexes.
+- Added missing `declare(strict_types=1);` headers in scaffolded PHP files flagged during review.

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('destination_id')->nullable();
             $table->string('status')->default('pending');
             $table->timestamp('sent_at')->nullable();
-            $table->integer('retry_count')->default(0);
+            $table->unsignedInteger('retry_count')->default(0);
             $table->text('error_message')->nullable();
             $table->timestamps();
 

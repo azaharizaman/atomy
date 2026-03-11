@@ -20,7 +20,6 @@ return new class extends Migration
             $table->json('payload')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->index('approval_id');
             $table->index(['tenant_id', 'approval_id']);
         });
     }

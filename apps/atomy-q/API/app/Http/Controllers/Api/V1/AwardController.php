@@ -20,8 +20,8 @@ final class AwardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [],
+        return $this->notImplemented('Listing awards', [
+            'tenant_id' => $this->tenantId($request),
         ]);
     }
 
@@ -32,14 +32,9 @@ final class AwardController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'id' => 'stub-award-id',
-                'rfq_id' => 'stub-rfq-id',
-                'status' => 'draft',
-                'created_at' => null,
-            ],
-        ], 201);
+        return $this->notImplemented('Creating awards', [
+            'tenant_id' => $this->tenantId($request),
+        ]);
     }
 
     /**
@@ -47,12 +42,9 @@ final class AwardController extends Controller
      */
     public function updateSplit(Request $request, string $id): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'id' => $id,
-                'splits' => [],
-                'updated_at' => null,
-            ],
+        return $this->notImplemented('Updating award split', [
+            'tenant_id' => $this->tenantId($request),
+            'award_id' => $id,
         ]);
     }
 
@@ -61,12 +53,10 @@ final class AwardController extends Controller
      */
     public function debrief(Request $request, string $id, string $vendorId): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'award_id' => $id,
-                'vendor_id' => $vendorId,
-                'debriefed_at' => null,
-            ],
+        return $this->notImplemented('Debriefing award vendor', [
+            'tenant_id' => $this->tenantId($request),
+            'award_id' => $id,
+            'vendor_id' => $vendorId,
         ]);
     }
 
@@ -75,13 +65,10 @@ final class AwardController extends Controller
      */
     public function protest(Request $request, string $id): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'award_id' => $id,
-                'protest_id' => 'stub-protest-id',
-                'created_at' => null,
-            ],
-        ], 201);
+        return $this->notImplemented('Creating award protest', [
+            'tenant_id' => $this->tenantId($request),
+            'award_id' => $id,
+        ]);
     }
 
     /**
@@ -89,13 +76,10 @@ final class AwardController extends Controller
      */
     public function resolveProtest(Request $request, string $id, string $protestId): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'award_id' => $id,
-                'protest_id' => $protestId,
-                'status' => 'resolved',
-                'resolved_at' => null,
-            ],
+        return $this->notImplemented('Resolving award protest', [
+            'tenant_id' => $this->tenantId($request),
+            'award_id' => $id,
+            'protest_id' => $protestId,
         ]);
     }
 
@@ -105,11 +89,24 @@ final class AwardController extends Controller
     public function signoff(Request $request, string $id): JsonResponse
     {
         return response()->json([
-            'data' => [
-                'id' => $id,
-                'status' => 'signed_off',
-                'signed_off_at' => null,
+            'error' => 'Not implemented',
+            'message' => 'Signing off awards is not implemented yet.',
+            'context' => [
+                'tenant_id' => $this->tenantId($request),
+                'award_id' => $id,
             ],
-        ]);
+        ], 501);
+    }
+
+    /**
+     * @param array<string, string> $context
+     */
+    private function notImplemented(string $operation, array $context = []): JsonResponse
+    {
+        return response()->json([
+            'error' => 'Not implemented',
+            'message' => $operation.' is not implemented yet.',
+            'context' => $context,
+        ], 501);
     }
 }

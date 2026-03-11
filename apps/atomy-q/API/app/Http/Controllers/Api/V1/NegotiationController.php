@@ -20,8 +20,8 @@ final class NegotiationController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [],
+        return $this->notImplemented('Listing negotiations', [
+            'tenant_id' => $this->tenantId($request),
         ]);
     }
 
@@ -32,15 +32,9 @@ final class NegotiationController extends Controller
      */
     public function startRound(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'id' => 'stub-round-id',
-                'rfq_id' => 'stub-rfq-id',
-                'round_number' => 1,
-                'status' => 'open',
-                'created_at' => null,
-            ],
-        ], 201);
+        return $this->notImplemented('Starting negotiation round', [
+            'tenant_id' => $this->tenantId($request),
+        ]);
     }
 
     /**
@@ -48,11 +42,9 @@ final class NegotiationController extends Controller
      */
     public function counterOffer(Request $request, string $roundId): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'round_id' => $roundId,
-                'counter_offer_submitted_at' => null,
-            ],
+        return $this->notImplemented('Submitting counter offer', [
+            'tenant_id' => $this->tenantId($request),
+            'round_id' => $roundId,
         ]);
     }
 
@@ -63,11 +55,9 @@ final class NegotiationController extends Controller
      */
     public function bafo(Request $request, string $rfqId): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'rfq_id' => $rfqId,
-                'bafo_requested_at' => null,
-            ],
+        return $this->notImplemented('Requesting BAFO', [
+            'tenant_id' => $this->tenantId($request),
+            'rfq_id' => $rfqId,
         ]);
     }
 
@@ -76,12 +66,21 @@ final class NegotiationController extends Controller
      */
     public function close(Request $request, string $rfqId): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'rfq_id' => $rfqId,
-                'status' => 'closed',
-                'closed_at' => null,
-            ],
+        return $this->notImplemented('Closing negotiations', [
+            'tenant_id' => $this->tenantId($request),
+            'rfq_id' => $rfqId,
         ]);
+    }
+
+    /**
+     * @param array<string, string> $context
+     */
+    private function notImplemented(string $operation, array $context = []): JsonResponse
+    {
+        return response()->json([
+            'error' => 'Not implemented',
+            'message' => $operation.' is not implemented yet.',
+            'context' => $context,
+        ], 501);
     }
 }

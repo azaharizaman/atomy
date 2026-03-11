@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use App\Services\JwtService;
+use App\Contracts\JwtServiceInterface;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 final readonly class JwtAuthenticate
 {
     public function __construct(
-        private JwtService $jwt,
+        private JwtServiceInterface $jwt,
     ) {}
 
     public function handle(Request $request, Closure $next): Response

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\JwtServiceInterface;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use InvalidArgumentException;
 
-final readonly class JwtService
+final readonly class JwtService implements JwtServiceInterface
 {
     private string $secret;
     private int $ttl;
@@ -15,13 +17,23 @@ final readonly class JwtService
     private string $algo;
     private string $issuer;
 
-    public function __construct()
+    public function __construct(
+        string $secret,
+        int $ttl,
+        int $refreshTtl,
+        string $algo,
+        string $issuer,
+    )
     {
-        $this->secret = (string) config('jwt.secret');
-        $this->ttl = (int) config('jwt.ttl');
-        $this->refreshTtl = (int) config('jwt.refresh_ttl');
-        $this->algo = (string) config('jwt.algo');
-        $this->issuer = (string) config('jwt.issuer');
+        if (trim($secret) === '') {
+            throw new InvalidArgumentException('JWT secret must not be empty.');
+        }
+
+        $this->secret = $secret;
+        $this->ttl = $ttl;
+        $this->refreshTtl = $refreshTtl;
+        $this->algo = $algo;
+        $this->issuer = $issuer;
     }
 
     /**

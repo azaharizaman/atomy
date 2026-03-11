@@ -29,7 +29,7 @@ return new class extends Migration
             $table->unsignedInteger('version')->default(1);
             $table->timestamp('expires_at')->nullable();
             $table->timestamp('discarded_at')->nullable();
-            $table->string('discarded_by', 128)->nullable();
+            $table->ulid('discarded_by')->nullable();
             $table->timestamps();
 
             $table->index(['tenant_id', 'rfq_id']);
