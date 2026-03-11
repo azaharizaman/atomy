@@ -19,10 +19,13 @@ import {
   Bell,
   Bot,
   Calendar,
+  Check,
   CheckCircle2,
   ChevronRight,
   CircleAlert,
   Clock3,
+  CreditCard,
+  Download,
   FileText,
   Filter,
   FolderArchive,
@@ -52,7 +55,7 @@ import { KPIScorecard } from './components/ds/KPIScorecard';
 import { StatusBadge, ConfidenceBadge, CountBadge, SLATimerBadge, VersionChip } from './components/ds/Badge';
 import { Button } from './components/ds/Button';
 import { Checkbox, SearchInput, SelectInput, TextInput, Textarea, ToggleSwitch } from './components/ds/Input';
-import { SecondaryTabs, VerticalTabs } from './components/ds/Tabs';
+import { PrimaryTabs, SecondaryTabs, VerticalTabs } from './components/ds/Tabs';
 import { RecordHeader } from './components/ds/RecordHeader';
 import { Alert, Banner, Checklist } from './components/ds/Alert';
 import { Stepper, StickyActionBar, LineItemEditor, UploadDropzoneWithProgress } from './components/ds/CreateRFQComponents';
@@ -877,7 +880,7 @@ function useTopBarProps() {
       navigate(notification.targetPath);
     },
     onMarkAllNotificationsRead: markAllNotificationsRead,
-    onUserSettings: () => navigate('/settings/users'),
+    onUserSettings: () => navigate('/account'),
     onLogout: () => navigate('/signin'),
     spotlight,
   };
@@ -916,6 +919,7 @@ function mapNavIdToPath(id: string): string {
 
 function getDefaultActiveNav(pathname: string, searchParams: URLSearchParams): string {
   if (pathname.startsWith('/dashboard')) return 'dashboard';
+  if (pathname.startsWith('/account')) return '';
   if (pathname.startsWith('/approvals') || pathname.startsWith('/notifications')) return '';
   if (pathname.startsWith('/documents')) return 'documents';
   if (pathname.startsWith('/reporting')) return 'reporting';
@@ -3160,6 +3164,289 @@ function SettingsPage({ section }: { section: 'users' | 'scoring-policies' | 'te
   );
 }
 
+// ─── Account / User Settings mock (aligned with API_ENDPOINTS §27) ─────────────
+
+const ACCOUNT_TABS = [
+  { id: 'profile', label: 'Profile' },
+  { id: 'subscription', label: 'Subscriptions' },
+  { id: 'payment', label: 'Payment' },
+  { id: 'notifications', label: 'Notifications' },
+] as const;
+
+const SUBSCRIPTION_PLANS = [
+  { id: 'free', name: 'Free plan', price: '$0/mth', features: ['2 GB storage', '1 user'], current: false, cta: 'Downgrade', disabled: true },
+  { id: 'basic', name: 'Basic plan', price: '$10/mth', features: ['10 GB storage', 'Up to 5 users'], current: true, cta: 'Current plan', disabled: true },
+  { id: 'pro', name: 'Pro plan', price: '$20/mth', features: ['50 GB storage', 'Up to 15 users'], current: false, cta: 'Try for free for 30 days', disabled: false },
+];
+
+const BILLING_HISTORY = [
+  { id: 'inv-0012', number: 'Invoice 0012', date: '12 Apr 2025', plan: 'Basic plan', amount: 'USD $10.00' },
+  { id: 'inv-0011', number: 'Invoice 0011', date: '12 Mar 2025', plan: 'Basic plan', amount: 'USD $10.00' },
+  { id: 'inv-0010', number: 'Invoice 0010', date: '12 Feb 2025', plan: 'Basic plan', amount: 'USD $10.00' },
+];
+
+const PAYMENT_METHODS = [
+  { id: 'pm-1', brand: 'Visa', last4: '4242', expiry: '12/26', isDefault: true },
+  { id: 'pm-2', brand: 'Mastercard', last4: '5555', expiry: '08/27', isDefault: false },
+];
+
+const NOTIFICATION_CATEGORIES = [
+  { id: 'approvals', label: 'Approvals & gates', hint: 'When an approval requires your action' },
+  { id: 'rfq', label: 'RFQ updates', hint: 'Quote intake, comparison runs, awards' },
+  { id: 'system', label: 'System', hint: 'Handoff failures, integrations' },
+  { id: 'marketing', label: 'Marketing', hint: 'Product updates and tips' },
+];
+
+function AccountPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { data } = useAppStore();
+  const user = data.currentUser;
+
+  const rawSection = location.pathname.replace(/^\/account\/?/, '') || 'profile';
+  const section = (ACCOUNT_TABS.some(t => t.id === rawSection) ? rawSection : 'profile') as (typeof ACCOUNT_TABS)[number]['id'];
+  const setSection = (id: string) => navigate(id === 'profile' ? '/account' : `/account/${id}`);
+
+  const [showChangePassword, setShowChangePassword] = React.useState(false);
+  const [notificationPrefs, setNotificationPrefs] = React.useState<Record<string, boolean>>({
+    approvals: true, rfq: true, system: true, marketing: false,
+  });
+  const [channelEmail, setChannelEmail] = React.useState(true);
+  const [channelInApp, setChannelInApp] = React.useState(true);
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title={user.name}
+        subtitle="Manage your details and personal preferences here."
+      />
+      <PrimaryTabs tabs={ACCOUNT_TABS} activeTab={section} onChange={setSection} />
+
+      {section === 'profile' && (
+        <div className="space-y-5">
+          <SectionCard
+            title="Profile"
+            subtitle="Display name, email, and locale."
+            actions={
+              <Button variant="secondary" size="sm" onClick={() => setShowChangePassword(true)}>
+                <Lock size={14} className="mr-1.5" />
+                Change password
+              </Button>
+            }
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              <Avatar name={user.name} size="lg" className="shrink-0" />
+              <div className="grid flex-1 gap-4 sm:grid-cols-2">
+                <TextInput label="Display name" value={user.name} readOnly />
+                <TextInput label="Email" value={user.email} readOnly />
+                <TextInput label="Timezone" defaultValue="UTC+8" />
+                <SelectInput
+                  label="Language"
+                  value="en"
+                  onChange={() => {}}
+                  options={[{ value: 'en', label: 'English' }, { value: 'ms', label: 'Bahasa Melayu' }]}
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="secondary">Cancel</Button>
+              <Button variant="primary">Save changes</Button>
+            </div>
+          </SectionCard>
+        </div>
+      )}
+
+      {section === 'subscription' && (
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            {SUBSCRIPTION_PLANS.map(plan => (
+              <Card
+                key={plan.id}
+                padding="lg"
+                className={plan.current ? 'ring-2 ring-indigo-500' : ''}
+              >
+                <div className="relative">
+                  {plan.current && (
+                    <span className="absolute right-0 top-0 flex items-center gap-1 text-xs font-medium text-indigo-600">
+                      <Check size={14} /> Current plan
+                    </span>
+                  )}
+                  <p className="text-sm font-semibold text-slate-800">{plan.name}</p>
+                  <p className="mt-1 text-lg font-medium text-slate-900">{plan.price}</p>
+                  <ul className="mt-3 space-y-1.5">
+                    {plan.features.map(f => (
+                      <li key={f} className="flex items-center gap-2 text-sm text-slate-600">
+                        <CheckCircle2 size={14} className="text-indigo-600 shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4">
+                    <Button
+                      variant={plan.current ? 'secondary' : 'primary'}
+                      size="sm"
+                      disabled={plan.disabled}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+          <SectionCard title="Billing history" subtitle="Past invoices and receipts.">
+            <div className="space-y-2">
+              {BILLING_HISTORY.map(inv => (
+                <div
+                  key={inv.id}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText size={18} className="text-slate-400" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">{inv.number}</p>
+                      <p className="text-xs text-slate-500">{inv.date} · {inv.plan}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-slate-700">{inv.amount}</span>
+                    <Button variant="ghost" size="sm">
+                      <Download size={14} />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+      )}
+
+      {section === 'payment' && (
+        <div className="space-y-5">
+          <SectionCard
+            title="Payment methods"
+            subtitle="Saved cards for subscription billing."
+            actions={
+              <Button variant="primary" size="sm">
+                <Plus size={14} className="mr-1.5" />
+                Add payment method
+              </Button>
+            }
+          >
+            <div className="space-y-3">
+              {PAYMENT_METHODS.map(pm => (
+                <div
+                  key={pm.id}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <CreditCard size={18} className="text-slate-400" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">
+                        {pm.brand} ········ {pm.last4}
+                      </p>
+                      <p className="text-xs text-slate-500">Expires {pm.expiry}</p>
+                    </div>
+                    {pm.isDefault && (
+                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!pm.isDefault && (
+                      <Button variant="ghost" size="sm">Set default</Button>
+                    )}
+                    <Button variant="ghost" size="sm" className="text-slate-500">Remove</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-slate-500">
+              Manage billing and payment methods securely via our billing portal when available.
+            </p>
+          </SectionCard>
+        </div>
+      )}
+
+      {section === 'notifications' && (
+        <div className="space-y-5">
+          <SectionCard
+            title="Notification preferences"
+            subtitle="Choose which categories you receive and through which channels."
+          >
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-medium text-slate-600 mb-2">Channels</p>
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={channelEmail} onChange={e => setChannelEmail(e.target.checked)} />
+                    <span className="text-sm text-slate-700">Email</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={channelInApp} onChange={e => setChannelInApp(e.target.checked)} />
+                    <span className="text-sm text-slate-700">In-app</span>
+                  </label>
+                </div>
+              </div>
+              <div className="border-t border-slate-100 pt-4">
+                <p className="text-xs font-medium text-slate-600 mb-3">By category</p>
+                <div className="space-y-3">
+                  {NOTIFICATION_CATEGORIES.map(cat => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{cat.label}</p>
+                        <p className="text-xs text-slate-500">{cat.hint}</p>
+                      </div>
+                      <ToggleSwitch
+                        checked={notificationPrefs[cat.id] ?? false}
+                        onChange={checked => setNotificationPrefs(prev => ({ ...prev, [cat.id]: checked }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="secondary">Cancel</Button>
+              <Button variant="primary">Save preferences</Button>
+            </div>
+          </SectionCard>
+        </div>
+      )}
+
+      {showChangePassword && (
+        <SlideOver
+          open={showChangePassword}
+          onClose={() => setShowChangePassword(false)}
+          title="Change password"
+          description="Enter your current password and choose a new one."
+          width="sm"
+          footer={
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setShowChangePassword(false)}>Cancel</Button>
+              <Button variant="primary">Update password</Button>
+            </div>
+          }
+        >
+          <SlideOverSection title="Current password">
+            <TextInput type="password" placeholder="Current password" />
+          </SlideOverSection>
+          <SlideOverSection title="New password">
+            <TextInput type="password" placeholder="New password" />
+          </SlideOverSection>
+          <SlideOverSection title="Confirm new password">
+            <TextInput type="password" placeholder="Confirm" />
+          </SlideOverSection>
+        </SlideOver>
+      )}
+    </div>
+  );
+}
+
 function NotificationsPage() {
   const { data, markNotificationRead } = useAppStore();
   const navigate = useNavigate();
@@ -3309,6 +3596,8 @@ const router = createBrowserRouter(
         <Route path="/settings/templates" element={<SettingsPage section="templates" />} />
         <Route path="/settings/integrations" element={<SettingsPage section="integrations" />} />
         <Route path="/settings/feature-flags" element={<SettingsPage section="feature-flags" />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/account/:section" element={<AccountPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
       </Route>
       <Route path="/rfqs/:rfqId" element={<WorkspaceRouteLayout />}>

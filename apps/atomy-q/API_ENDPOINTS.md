@@ -325,6 +325,27 @@ This document maps every required API endpoint to the UI screens, elements, and 
 |--------|----------|--------|---------------------|-------------|
 | GET | `/search?q=:query` | Layout Header | Global search input | Full-text search across RFQs, vendors, quotes, approvals |
 
+## 27. User Settings (Account)
+
+Current-user self-service only. All mutation endpoints operate on the authenticated user; no `userId` in path for profile, preferences, or notifications. Subscription and payment may be tenant-scoped depending on product model. Base URL and auth: `/api/v1`, Bearer JWT.
+
+| Method | Endpoint | Screen | Element/Interaction | Description |
+|--------|----------|--------|---------------------|-------------|
+| GET | `/me` or `/account/profile` | User Settings | Profile tab load | Get current user profile (name, email, tenantId, emailVerified, metadata, timezone, locale) |
+| PUT | `/me` or `/account/profile` | User Settings | Profile Save | Update current user profile (name, timezone, locale, avatar ref); email change may require verification flow |
+| POST | `/account/change-password` | User Settings | Change password slide-over | Change password for current user (current password + new password) |
+| GET | `/account/preferences` | User Settings | Preferences load | Get user-scoped preferences (e.g. locale, timezone, UI preferences) |
+| PUT | `/account/preferences` | User Settings | Preferences Save | Update user-scoped preferences |
+| GET | `/account/notifications` | User Settings | Notification settings tab | Get notification preferences (channels, categories, opt-in/out) |
+| PUT | `/account/notifications` | User Settings | Notification settings Save | Update notification preferences |
+| GET | `/account/subscription` | User Settings | Subscriptions tab | Get current subscription (plan, status, renewal date, usage if any) |
+| GET | `/account/subscription/plans` | User Settings | Change plan dropdown | List available plans for upgrade/downgrade |
+| POST | `/account/subscription/change` | User Settings | Change plan action | Request plan change (may redirect to billing portal) |
+| GET | `/account/payment-methods` | User Settings | Payment tab | List saved payment methods (masked) for current user/tenant |
+| POST | `/account/payment-methods` | User Settings | Add payment method | Add payment method (or redirect to billing portal) |
+| DELETE | `/account/payment-methods/:id` | User Settings | Remove payment method | Remove a saved payment method |
+| PATCH | `/account/payment-methods/:id/default` | User Settings | Set default method | Set default payment method |
+
 ---
 
 ## Endpoint Summary
@@ -357,4 +378,5 @@ This document maps every required API endpoint to the UI screens, elements, and 
 | Admin Settings | 6 |
 | Notifications | 5 |
 | Search | 1 |
-| **Total** | **189** |
+| User Settings (Account) | 14 |
+| **Total** | **203** |
