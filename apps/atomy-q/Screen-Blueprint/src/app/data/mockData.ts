@@ -244,6 +244,30 @@ export interface DashboardAlertRecord {
   severity: 'high' | 'medium' | 'low';
 }
 
+export interface DashboardSLAAlert {
+  id: string;
+  title: string;
+  rfqId: string;
+  timeRemaining: string;
+  urgency: 'high' | 'medium' | 'low';
+  assignee?: string;
+  targetPath: string;
+}
+
+export interface DashboardSavingsMetrics {
+  totalRealized: string;
+  totalPipeline: string;
+  avgSavingsPct: string;
+  yoyTrend: number;
+}
+
+export interface DashboardCategoryMetric {
+  category: string;
+  count: number;
+  estValue: string;
+  pct: number;
+}
+
 export interface ReportRecord {
   id: string;
   title: string;
@@ -268,6 +292,9 @@ export interface AppSeed {
   dashboard: {
     tasks: DashboardTaskRecord[];
     alerts: DashboardAlertRecord[];
+    slaAlerts: DashboardSLAAlert[];
+    savingsMetrics: DashboardSavingsMetrics;
+    categoryBreakdown: DashboardCategoryMetric[];
   };
   rfqs: RfqRecord[];
   vendors: VendorRecord[];
@@ -449,6 +476,24 @@ export const mockData: AppSeed = {
         targetPath: '/settings/integrations',
         severity: 'low',
       },
+    ],
+    slaAlerts: [
+      { id: 'sla-1', title: 'Comparison approval required', rfqId: 'RFQ-2401', timeRemaining: '4h 32m', urgency: 'high', assignee: 'Jordan Lee', targetPath: '/rfqs/RFQ-2401/approvals/APR-00412' },
+      { id: 'sla-2', title: 'Normalization incomplete', rfqId: 'RFQ-2401', timeRemaining: '2d 14h', urgency: 'medium', assignee: 'Maya Tan', targetPath: '/rfqs/RFQ-2401/intake/QT-1003/normalize' },
+      { id: 'sla-3', title: 'Approval queue at risk', rfqId: '—', timeRemaining: '6h', urgency: 'high', targetPath: '/approvals' },
+    ],
+    savingsMetrics: {
+      totalRealized: '$2.4M',
+      totalPipeline: '$847K',
+      avgSavingsPct: '9.6%',
+      yoyTrend: 12,
+    },
+    categoryBreakdown: [
+      { category: 'IT Infrastructure', count: 3, estValue: '$2.1M', pct: 42 },
+      { category: 'Industrial Equipment', count: 2, estValue: '$1.2M', pct: 24 },
+      { category: 'Managed Services', count: 1, estValue: '$980K', pct: 20 },
+      { category: 'Facilities', count: 2, estValue: '$420K', pct: 8 },
+      { category: 'Security', count: 1, estValue: '$310K', pct: 6 },
     ],
   },
   rfqs: [

@@ -15,6 +15,7 @@ import {
 import {
   AlertCircle,
   ArrowRight,
+  BarChart2,
   Bell,
   Bot,
   Calendar,
@@ -28,6 +29,7 @@ import {
   GitCompareArrows,
   HandCoins,
   History,
+  Inbox,
   LayoutPanelTop,
   Lock,
   Mail,
@@ -59,6 +61,18 @@ import { MappingGrid, NormalizationLockBar } from './components/ds/Normalization
 import { ApprovalGateBanner, DeltaBadge, MissingValuePlaceholder, ReadinessBanner, RecommendationCard, VendorSummaryHeader } from './components/ds/ComparisonComponents';
 import { AssignmentControl, DecisionPanel, EvidenceTabsPanel, PriorityMarker, SnoozeControl } from './components/ds/ApprovalComponents';
 import { AwardDecisionSummary, DebriefStatusList, HandoffStatusTimeline, PayloadPreviewPanel, ProtestTimerBadge, SignOffChecklist, SplitAllocationEditor } from './components/ds/AwardComponents';
+import {
+  PipelineStatCard,
+  SavingsHighlightCard,
+  SLAAlertCard,
+  ActivitySummaryCard,
+  PendingApprovalsCard,
+  CategoryBreakdownCard,
+  QuickActionCard,
+  type ActivitySummaryItem,
+  type PendingApprovalItem,
+} from './components/ds/DashboardCards';
+import { SpotlightSearch, type SpotlightResult } from './components/ds/SpotlightSearch';
 import { SlideOver, SlideOverSection } from './components/ds/SlideOver';
 import { SignInCard, MfaPromptPanel } from './components/ds/AuthComponents';
 import { Avatar, AvatarLabel, AvatarStack } from './components/ds/Avatar';
@@ -704,30 +718,168 @@ function useEntityLookups() {
   return { getRfq, getVendor, getUser, getQuote, getRun, getApproval, getNegotiation };
 }
 
+function useSpotlightSearch() {
+  const navigate = useNavigate();
+  const { data } = useAppStore();
+  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState('');
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+
+  const results = React.useMemo((): SpotlightResult[] => {
+    const q = value.trim().toLowerCase();
+    if (!q) {
+      return [
+        ...data.rfqs.slice(0, 5).map(r => ({
+          id: r.id,
+          type: 'rfq' as const,
+          label: r.title,
+          path: `/rfqs/${r.id}`,
+          description: r.description,
+          metrics: [
+            { label: 'Status', value: r.status },
+            { label: 'Est. Value', value: r.estValue },
+            { label: 'Savings', value: r.savings },
+          ],
+        })),
+        ...data.vendors.slice(0, 4).map(v => ({
+          id: v.id,
+          type: 'vendor' as const,
+          label: v.name,
+          path: `/rfqs/RFQ-2401/vendors`, // simplified
+          description: v.notes,
+          metrics: [
+            { label: 'Total Spend', value: v.totalSpend },
+            { label: 'On-time', value: v.onTimeRate },
+          ],
+        })),
+        ...data.users.slice(0, 3).map(u => ({
+          id: u.id,
+          type: 'person' as const,
+          label: u.name,
+          path: '/settings/users',
+          metrics: [
+            { label: 'Role', value: u.role },
+            { label: 'Email', value: u.email },
+          ],
+        })),
+        ...data.documents.slice(0, 3).map(d => ({
+          id: d.id,
+          type: 'document' as const,
+          label: d.title,
+          path: d.rfqId ? `/rfqs/${d.rfqId}/documents` : '/documents',
+          metrics: [
+            { label: 'Size', value: d.size },
+            { label: 'Updated', value: d.updatedAt },
+          ],
+        })),
+      ];
+    }
+    const out: SpotlightResult[] = [];
+    data.rfqs.forEach(r => {
+      if (`${r.id} ${r.title} ${r.category}`.toLowerCase().includes(q)) {
+        out.push({
+          id: r.id,
+          type: 'rfq',
+          label: r.title,
+          path: `/rfqs/${r.id}`,
+          description: r.description,
+          metrics: [{ label: 'Status', value: r.status }, { label: 'Est. Value', value: r.estValue }],
+        });
+      }
+    });
+    data.vendors.forEach(v => {
+      if (`${v.name} ${v.contact} ${v.diversity}`.toLowerCase().includes(q)) {
+        out.push({
+          id: v.id,
+          type: 'vendor',
+          label: v.name,
+          path: `/rfqs/RFQ-2401/vendors`,
+          metrics: [{ label: 'Total Spend', value: v.totalSpend }],
+        });
+      }
+    });
+    data.users.forEach(u => {
+      if (`${u.name} ${u.role} ${u.email}`.toLowerCase().includes(q)) {
+        out.push({
+          id: u.id,
+          type: 'person',
+          label: u.name,
+          path: '/settings/users',
+          metrics: [{ label: 'Role', value: u.role }],
+        });
+      }
+    });
+    data.documents.forEach(d => {
+      if (`${d.title} ${d.tag}`.toLowerCase().includes(q)) {
+        out.push({
+          id: d.id,
+          type: 'document',
+          label: d.title,
+          path: d.rfqId ? `/rfqs/${d.rfqId}/documents` : '/documents',
+          metrics: [{ label: 'Size', value: d.size }],
+        });
+      }
+    });
+    return out;
+  }, [value, data.rfqs, data.vendors, data.users, data.documents]);
+
+  React.useEffect(() => {
+    setSelectedIndex(0);
+  }, [value]);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName ?? '')) {
+        e.preventDefault();
+        setOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return {
+    open,
+    setOpen,
+    value,
+    setValue,
+    selectedIndex,
+    setSelectedIndex,
+    results,
+    onSelect: (r: SpotlightResult) => {
+      navigate(r.path);
+      setOpen(false);
+    },
+  };
+}
+
 function useTopBarProps() {
   const navigate = useNavigate();
   const { data, markNotificationRead, markAllNotificationsRead, openAiInsights } = useAppStore();
-  const [searchValue, setSearchValue] = React.useState('');
+  const spotlight = useSpotlightSearch();
 
   return {
     user: { name: data.currentUser.name, role: data.currentUser.role },
     notificationCount: data.notifications.filter(notification => notification.unread).length,
     notifications: data.notifications,
-    searchValue,
-    onSearch: setSearchValue,
+    searchValue: spotlight.value,
+    onSearch: (v: string) => {
+      spotlight.setValue(v);
+      spotlight.setOpen(true);
+    },
+    onSearchFocus: () => spotlight.setOpen(true),
     onNewRFQ: () => navigate('/rfqs/create'),
     onAIInsights: openAiInsights,
     onNotificationClick: (notificationId: string) => {
       const notification = data.notifications.find(item => item.id === notificationId);
-      if (!notification) {
-        return;
-      }
+      if (!notification) return;
       markNotificationRead(notificationId);
       navigate(notification.targetPath);
     },
     onMarkAllNotificationsRead: markAllNotificationsRead,
     onUserSettings: () => navigate('/settings/users'),
     onLogout: () => navigate('/signin'),
+    spotlight,
   };
 }
 
@@ -817,15 +969,33 @@ function DefaultRouteLayout() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const topBarProps = useTopBarProps();
+  const { spotlight } = topBarProps;
 
   return (
-    <DefaultLayout
-      activeNav={getDefaultActiveNav(location.pathname, searchParams)}
-      onNavChange={id => navigate(mapNavIdToPath(id))}
-      topBarProps={topBarProps}
-    >
-      <Outlet />
-    </DefaultLayout>
+    <>
+      <DefaultLayout
+        activeNav={getDefaultActiveNav(location.pathname, searchParams)}
+        onNavChange={id => navigate(mapNavIdToPath(id))}
+        topBarProps={{
+          ...topBarProps,
+          onSearchFocus: spotlight ? () => spotlight.setOpen(true) : undefined,
+        }}
+      >
+        <Outlet />
+      </DefaultLayout>
+      {spotlight && (
+        <SpotlightSearch
+          open={spotlight.open}
+          onClose={() => spotlight.setOpen(false)}
+          value={spotlight.value}
+          onChange={spotlight.setValue}
+          results={spotlight.results}
+          selectedIndex={spotlight.selectedIndex}
+          onSelectedIndexChange={spotlight.setSelectedIndex}
+          onSelect={spotlight.onSelect}
+        />
+      )}
+    </>
   );
 }
 
@@ -875,12 +1045,17 @@ function WorkspaceRouteLayout() {
     { id: 'decision-trail', label: 'Decision Trail' },
   ];
 
+  const { spotlight } = topBarProps;
+
   return (
     <>
       <WorkspaceLayout
         activeNav={`rfq-${rfq.status}`}
         onNavChange={id => navigate(mapNavIdToPath(id))}
-        topBarProps={topBarProps}
+        topBarProps={{
+          ...topBarProps,
+          onSearchFocus: spotlight ? () => spotlight.setOpen(true) : undefined,
+        }}
         activeRecordMenu={(
           <ActiveRecordMenu
             rfqId={rfq.id}
@@ -919,6 +1094,18 @@ function WorkspaceRouteLayout() {
       >
         <Outlet />
       </WorkspaceLayout>
+      {spotlight && (
+        <SpotlightSearch
+          open={spotlight.open}
+          onClose={() => spotlight.setOpen(false)}
+          value={spotlight.value}
+          onChange={spotlight.setValue}
+          results={spotlight.results}
+          selectedIndex={spotlight.selectedIndex}
+          onSelectedIndexChange={spotlight.setSelectedIndex}
+          onSelect={spotlight.onSelect}
+        />
+      )}
       <SlideOver
         open={lifecycleOpen}
         onClose={() => setLifecycleOpen(false)}
@@ -967,70 +1154,199 @@ function WorkspaceRouteLayout() {
 function DashboardPage() {
   const navigate = useNavigate();
   const { data } = useAppStore();
-  const pendingApprovals = data.approvals.filter(item => item.status === 'pending');
-  const activeRfqs = data.rfqs.filter(item => item.status === 'active');
+
+  const pipeline = React.useMemo(() => ({
+    active: data.rfqs.filter(r => r.status === 'active').length,
+    pending: data.rfqs.filter(r => r.status === 'closed' && !r.award?.finalized).length,
+    awarded: data.rfqs.filter(r => r.status === 'awarded' || r.award?.finalized).length,
+    draft: data.rfqs.filter(r => r.status === 'draft').length,
+    closed: data.rfqs.filter(r => r.status === 'closed').length,
+  }), [data.rfqs]);
+
+  const pendingApprovalsList: PendingApprovalItem[] = React.useMemo(() =>
+    data.approvals
+      .filter(a => a.status === 'pending')
+      .map(a => {
+        const rfq = data.rfqs.find(r => r.id === a.rfqId);
+        return {
+          id: a.id,
+          rfqId: a.rfqId,
+          rfqTitle: rfq?.title ?? a.rfqId,
+          type: a.type.replace(/\b\w/g, c => c.toUpperCase()),
+          assignee: a.assignee,
+          submittedAt: a.createdAt,
+        };
+      }),
+    [data.approvals, data.rfqs]
+  );
+
+  const activityItems: ActivitySummaryItem[] = React.useMemo(() => {
+    const items: ActivitySummaryItem[] = [];
+    data.rfqs.slice(0, 4).forEach(rfq => {
+      rfq.activity?.slice(0, 2).forEach((act, i) => {
+        items.push({
+          id: `${rfq.id}-act-${i}`,
+          timestamp: act.timestamp,
+          actor: act.actor,
+          action: `${act.type}: ${act.detail}`,
+          rfqId: rfq.id,
+        });
+      });
+    });
+    return items.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 6);
+  }, [data.rfqs]);
+
   const recentRuns = data.comparisonRuns.slice(0, 3);
+  const { savingsMetrics, slaAlerts, categoryBreakdown } = data.dashboard;
 
   return (
-    <div className="space-y-5">
+    <div className="max-w-[1280px] space-y-6">
+      {/* ─ Header ─ */}
       <PageHeader
         title="Operational dashboard"
         subtitle="Role-aware overview of sourcing workload, approvals, and risk"
         actions={<Button icon={<Plus size={14} />} onClick={() => navigate('/rfqs/create')}>Create RFQ</Button>}
       />
 
-      <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
-        <KPIScorecard title="Active RFQs" value={activeRfqs.length} subtitle="Currently open sourcing events" highlight onClick={() => navigate('/rfqs?status=active')} />
-        <KPIScorecard title="Pending approvals" value={pendingApprovals.length} subtitle="Gated decisions awaiting action" onClick={() => navigate('/approvals')} badge={<CountBadge count={pendingApprovals.length} variant="red" />} />
-        <KPIScorecard title="Forecast savings" value="9.6%" subtitle="Across open and closed events" trend={{ direction: 'up', label: '1.8 pts' }} />
-        <KPIScorecard title="Risk alerts" value={data.dashboard.alerts.length} subtitle="Items requiring review today" trend={{ direction: 'neutral', label: 'Watchlist' }} />
+      {/* ─ Row 1: Pipeline stats (5 cols) ─ */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <PipelineStatCard label="Active" count={pipeline.active} icon={<FileText size={18} />} onClick={() => navigate('/rfqs?status=active')} />
+        <PipelineStatCard label="Pending" count={pipeline.pending} icon={<Clock3 size={18} />} onClick={() => navigate('/rfqs?status=closed')} />
+        <PipelineStatCard label="Awarded" count={pipeline.awarded} icon={<CheckCircle2 size={18} />} onClick={() => navigate('/rfqs?status=awarded')} />
+        <PipelineStatCard label="Draft" count={pipeline.draft} icon={<FileText size={18} />} onClick={() => navigate('/rfqs?status=draft')} />
+        <PipelineStatCard label="Closed" count={pipeline.closed} onClick={() => navigate('/rfqs?status=closed')} />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.15fr,0.85fr]">
-        <SectionCard title="My tasks" subtitle="Deep links into active work">
-          <div className="space-y-3">
-            {data.dashboard.tasks.map(task => (
-              <button
-                key={task.id}
-                onClick={() => navigate(task.targetPath)}
-                className="flex w-full items-center justify-between rounded-lg border border-slate-200 px-4 py-3 text-left hover:border-indigo-300 hover:bg-indigo-50/40"
-              >
-                <div>
-                  <p className="text-sm font-medium text-slate-800">{task.title}</p>
-                  <p className="text-xs text-slate-500">{task.subtitle}</p>
-                </div>
-                <PriorityMarker priority={task.priority} />
-              </button>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="SLA and risk alerts" subtitle="Items that can impact award readiness">
-          <div className="space-y-3">
-            {data.dashboard.alerts.map(alertItem => (
-              <Alert
-                key={alertItem.id}
-                variant={alertItem.severity === 'high' ? 'error' : alertItem.severity === 'medium' ? 'warning' : 'info'}
-                title={alertItem.title}
-                actions={<Button size="sm" variant="ghost" onClick={() => navigate(alertItem.targetPath)}>Open</Button>}
-              >
-                {alertItem.detail}
-              </Alert>
-            ))}
-          </div>
-        </SectionCard>
+      {/* ─ Row 2: Savings metrics (3 cols) ─ */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <SavingsHighlightCard
+          title="Total realized savings"
+          value={savingsMetrics.totalRealized}
+          trend={{ value: savingsMetrics.yoyTrend, label: `+${savingsMetrics.yoyTrend}% YoY` }}
+          onClick={() => navigate('/reporting')}
+        />
+        <SavingsHighlightCard
+          title="Pipeline value"
+          value={savingsMetrics.totalPipeline}
+          subtitle="In active RFQs"
+          onClick={() => navigate('/rfqs?status=active')}
+        />
+        <SavingsHighlightCard
+          title="Avg. savings"
+          value={savingsMetrics.avgSavingsPct}
+          subtitle="Across awarded events"
+        />
       </div>
 
+      {/* ─ Row 3: Main content (12-col grid) ─ */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        {/* My tasks — 5 cols */}
+        <div className="lg:col-span-5">
+          <SectionCard title="My tasks" subtitle="Deep links into active work">
+            <div className="space-y-2">
+              {data.dashboard.tasks.map(task => (
+                <button
+                  key={task.id}
+                  onClick={() => navigate(task.targetPath)}
+                  className="flex w-full items-center justify-between rounded-lg border border-slate-200 px-4 py-2.5 text-left transition-colors hover:border-indigo-300 hover:bg-indigo-50/40"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-800 truncate">{task.title}</p>
+                    <p className="text-xs text-slate-500 truncate">{task.subtitle}</p>
+                  </div>
+                  <span className="shrink-0 ml-2"><PriorityMarker priority={task.priority} /></span>
+                </button>
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* SLA alerts — 4 cols */}
+        <div className="lg:col-span-4">
+          <SectionCard title="SLA alerts" subtitle="Time-sensitive items">
+            <div className="space-y-2">
+              {slaAlerts.map(sla => (
+                <SLAAlertCard
+                  key={sla.id}
+                  title={sla.title}
+                  rfqId={sla.rfqId}
+                  timeRemaining={sla.timeRemaining}
+                  urgency={sla.urgency}
+                  assignee={sla.assignee}
+                  onClick={() => navigate(sla.targetPath)}
+                />
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* Pending approvals — 3 cols */}
+        <div className="lg:col-span-3">
+          <PendingApprovalsCard
+            items={pendingApprovalsList}
+            onItemClick={id => {
+              const a = data.approvals.find(x => x.id === id);
+              if (a) navigate(`/rfqs/${a.rfqId}/approvals/${a.id}`);
+            }}
+            onViewAll={() => navigate('/approvals')}
+          />
+        </div>
+      </div>
+
+      {/* ─ Row 4: Activity + Category + Quick actions (12-col) ─ */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <div className="lg:col-span-6">
+          <ActivitySummaryCard
+            items={activityItems}
+            title="Recent activity"
+            maxItems={5}
+            onViewAll={() => navigate('/rfqs')}
+          />
+        </div>
+        <div className="lg:col-span-4">
+          <CategoryBreakdownCard
+            items={categoryBreakdown}
+            title="Spend by category"
+            maxItems={5}
+            onViewAll={() => navigate('/rfqs')}
+          />
+        </div>
+        <div className="lg:col-span-2 space-y-3">
+          <QuickActionCard
+            icon={<Plus size={18} />}
+            title="Create RFQ"
+            description="Start new requisition"
+            actionLabel="New RFQ"
+            onAction={() => navigate('/rfqs/create')}
+          />
+          <QuickActionCard
+            icon={<Inbox size={18} />}
+            title="Intake queue"
+            description="Review submissions"
+            actionLabel="Open"
+            onAction={() => navigate('/rfqs')}
+          />
+          <QuickActionCard
+            icon={<BarChart2 size={18} />}
+            title="Reports"
+            description="Analytics & exports"
+            actionLabel="View"
+            onAction={() => navigate('/reporting')}
+          />
+        </div>
+      </div>
+
+      {/* ─ Row 5: Recent comparison runs ─ */}
       <SectionCard title="Recent comparison runs" subtitle="Latest generated and locked evaluations">
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {recentRuns.map(run => (
             <Card key={run.id} hover onClick={() => navigate(`/rfqs/${run.rfqId}/runs/${run.id}`)}>
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">{run.id}</p>
-                  <p className="text-xs text-slate-500">{run.rfqId} · {run.scoringModel}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 truncate">{run.id}</p>
+                  <p className="text-xs text-slate-500 truncate">{run.rfqId} · {run.scoringModel}</p>
                 </div>
-                <StatusBadge status={run.status === 'locked' ? 'locked' : run.status === 'stale' ? 'stale' : run.type === 'preview' ? 'preview' : 'generated'} label={run.type === 'preview' ? 'Preview' : run.status === 'locked' ? 'Locked' : 'Generated'} />
+                <StatusBadge status={run.status === 'locked' ? 'locked' : run.status === 'stale' ? 'stale' : run.type === 'preview' ? 'preview' : 'generated'} label={run.type === 'preview' ? 'Preview' : run.status === 'locked' ? 'Locked' : 'Generated'} className="shrink-0" />
               </div>
               <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
                 <span>{run.createdBy}</span>

@@ -15,6 +15,7 @@ interface TopBarProps {
   onNewRFQ?: () => void;
   onAIInsights?: () => void;
   onSearch?: (q: string) => void;
+  onSearchFocus?: () => void;
   onNotificationClick?: (id: string) => void;
   onMarkAllNotificationsRead?: () => void;
   onUserSettings?: () => void;
@@ -55,6 +56,7 @@ export function TopBar({
   onNewRFQ,
   onAIInsights,
   onSearch,
+  onSearchFocus,
   onNotificationClick,
   onMarkAllNotificationsRead,
   onUserSettings,
@@ -75,13 +77,14 @@ export function TopBar({
           className,
         ].join(' ')}
       >
-        {/* Left: Search */}
+        {/* Left: Search (opens spotlight on focus) */}
         <div className="flex-1 max-w-sm">
           <SearchInput
             placeholder="Search RFQs, vendors, documents…"
             shortcut="/"
             value={searchValue}
             onChange={e => onSearch?.(e.target.value)}
+            onFocus={onSearchFocus}
           />
         </div>
 

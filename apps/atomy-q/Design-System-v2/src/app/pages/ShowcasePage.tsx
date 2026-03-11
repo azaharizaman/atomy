@@ -47,7 +47,28 @@ import { ComparisonMatrixGrid, RecommendationCard, ApprovalGateBanner, Readiness
 import type { ComparisonMatrixRow } from '../components/ds/ComparisonComponents';
 import { PriorityMarker, AssignmentControl, SnoozeControl, EvidenceTabsPanel, DecisionPanel } from '../components/ds/ApprovalComponents';
 import { AwardDecisionSummary, SplitAllocationEditor, SignOffChecklist, DebriefStatusList, HandoffStatusTimeline, PayloadPreviewPanel, ProtestTimerBadge } from '../components/ds/AwardComponents';
+import {
+  PipelineStatCard,
+  SavingsHighlightCard,
+  SLAAlertCard,
+  ActivitySummaryCard,
+  PendingApprovalsCard,
+  CategoryBreakdownCard,
+  QuickActionCard,
+} from '../components/ds/DashboardCards';
+import { SpotlightSearch, type SpotlightResult } from '../components/ds/SpotlightSearch';
 import type { StatusVariant } from '../components/ds/tokens';
+import {
+  RFQ_ROWS,
+  RFQRow,
+  OWNER_DETAILS,
+  ACTIVITY_EVENTS as MOCK_ACTIVITY_EVENTS,
+  DASHBOARD_PIPELINE,
+  DASHBOARD_SAVINGS,
+  DASHBOARD_SLA_ALERTS,
+  DASHBOARD_CATEGORY_BREAKDOWN,
+  DASHBOARD_PENDING_APPROVALS,
+} from '../data/mockData';
 
 // ─── Showcase Navigation Sections ─────────────────────────────────────────────
 
@@ -95,6 +116,45 @@ function SubSection({ title, children }: { title: string; children: React.ReactN
   );
 }
 
+const SPOTLIGHT_MOCK_RESULTS: SpotlightResult[] = [
+  { id: 'rfq-1', type: 'rfq', label: 'Server Infrastructure Refresh', path: '/rfqs/RFQ-2401', description: 'Refresh core compute and storage for regional production cluster.', metrics: [{ label: 'Status', value: 'Active' }, { label: 'Est. Value', value: '$1.24M' }, { label: 'Savings', value: '12.4%' }] },
+  { id: 'rfq-2', type: 'rfq', label: 'Office Furniture Q2', path: '/rfqs/RFQ-2402', metrics: [{ label: 'Status', value: 'Pending' }, { label: 'Est. Value', value: '$84.5K' }] },
+  { id: 'vendor-1', type: 'vendor', label: 'Dell Technologies', path: '/vendor/dell', description: 'Strategic supplier for infrastructure.', metrics: [{ label: 'Total Spend', value: '$4.2M' }, { label: 'On-time', value: '97%' }] },
+  { id: 'person-1', type: 'person', label: 'Alex Kumar', path: '/users/alex', metrics: [{ label: 'Role', value: 'Procurement Manager' }, { label: 'Email', value: 'alex@atomyq.com' }] },
+  { id: 'doc-1', type: 'document', label: 'rfq_specs.pdf', path: '/documents/doc-1', metrics: [{ label: 'Size', value: '2.4 MB' }, { label: 'Updated', value: '2 days ago' }] },
+];
+
+function SpotlightSearchDemo() {
+  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState('');
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const filtered = React.useMemo(() => {
+    const q = value.trim().toLowerCase();
+    if (!q) return SPOTLIGHT_MOCK_RESULTS;
+    return SPOTLIGHT_MOCK_RESULTS.filter(r => r.label.toLowerCase().includes(q));
+  }, [value]);
+  React.useEffect(() => {
+    setSelectedIndex(0);
+  }, [value]);
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => { setOpen(true); setValue(''); setSelectedIndex(0); }}>
+        Open Spotlight Search
+      </Button>
+      <SpotlightSearch
+        open={open}
+        onClose={() => setOpen(false)}
+        value={value}
+        onChange={setValue}
+        results={filtered}
+        selectedIndex={selectedIndex}
+        onSelectedIndexChange={setSelectedIndex}
+        onSelect={() => setOpen(false)}
+      />
+    </>
+  );
+}
+
 function TokenRow({ name, value, swatch }: { name: string; value: string; swatch?: string }) {
   return (
     <div className="flex items-center gap-3 py-1.5 border-b border-slate-100 last:border-0">
@@ -105,41 +165,7 @@ function TokenRow({ name, value, swatch }: { name: string; value: string; swatch
   );
 }
 
-// ─── Sample Data for DataTable ────────────────────────────────────────────────
-
-interface RFQRow {
-  id: string;
-  rfqId: string;
-  title: string;
-  owner: string;
-  status: StatusVariant;
-  deadline: string;
-  estValue: string;
-  category: string;
-  vendors: number;
-  quotes: number;
-  savings: string;
-}
-
-const RFQ_ROWS: RFQRow[] = [
-  { id: '1', rfqId: 'RFQ-2401', title: 'Server Infrastructure Refresh', owner: 'Alex Kumar',    status: 'active',  deadline: '2026-04-15', estValue: '$1,200,000', category: 'IT Hardware',  vendors: 5, quotes: 8, savings: '12%' },
-  { id: '2', rfqId: 'RFQ-2402', title: 'Office Furniture Q2',           owner: 'Sarah Chen',    status: 'pending', deadline: '2026-03-28', estValue: '$84,500',    category: 'Facilities',   vendors: 3, quotes: 3, savings: '—'   },
-  { id: '3', rfqId: 'RFQ-2403', title: 'Cloud Software Licenses',       owner: 'Marcus Webb',   status: 'active',  deadline: '2026-04-02', estValue: '$340,000',   category: 'Software',     vendors: 4, quotes: 6, savings: '8%'  },
-  { id: '4', rfqId: 'RFQ-2404', title: 'Network Security Audit',        owner: 'Priya Nair',    status: 'awarded', deadline: '2026-03-10', estValue: '$95,000',    category: 'Security',     vendors: 2, quotes: 2, savings: '5%'  },
-  { id: '5', rfqId: 'RFQ-2405', title: 'Marketing Print Materials',     owner: 'James Okonkwo', status: 'draft',   deadline: '2026-05-01', estValue: '$12,000',    category: 'Marketing',    vendors: 0, quotes: 0, savings: '—'   },
-  { id: '6', rfqId: 'RFQ-2406', title: 'Fleet Vehicle Leasing',         owner: 'Sarah Chen',    status: 'closed',  deadline: '2026-02-28', estValue: '$480,000',   category: 'Transport',    vendors: 6, quotes: 6, savings: '3%'  },
-  { id: '7', rfqId: 'RFQ-2407', title: 'Catering Services Contract',    owner: 'Alex Kumar',    status: 'active',  deadline: '2026-04-20', estValue: '$72,000',    category: 'Facilities',   vendors: 4, quotes: 5, savings: '14%' },
-  { id: '8', rfqId: 'RFQ-2408', title: 'IT Support Annual',             owner: 'Marcus Webb',   status: 'pending', deadline: '2026-03-31', estValue: '$220,000',   category: 'IT Services',  vendors: 2, quotes: 1, savings: '—'   },
-];
-
-// Sample contact details for Owner hover card (use in table owner/vendor name cells only)
-const OWNER_DETAILS: Record<string, { email: string; reportsTo: string; mobile: string; location: string }> = {
-  'Alex Kumar':     { email: 'alexk@ensemble.com',   reportsTo: 'Jordan Lee',      mobile: '+1 83773 48841', location: 'United States' },
-  'Sarah Chen':     { email: 'sarahc@ensemble.com',  reportsTo: 'Jordan Lee',      mobile: '+1 83773 48842', location: 'United States' },
-  'Marcus Webb':    { email: 'marcusw@ensemble.com', reportsTo: 'Melomia Zeuski', mobile: '+1 83773 48843', location: 'United Kingdom' },
-  'Priya Nair':     { email: 'priyan@ensemble.com',   reportsTo: 'Melomia Zeuski', mobile: '+1 83773 48844', location: 'India' },
-  'James Okonkwo':  { email: 'jameso@ensemble.com',  reportsTo: 'Melomia Zeuski', mobile: '+1 83773 48845', location: 'Nigeria' },
-};
+// ─── Column definitions for RFQ DataTable ─────────────────────────────────────
 
 const RFQ_COLUMNS: ColumnDef<RFQRow>[] = [
   {
@@ -249,14 +275,16 @@ export function ShowcasePage() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  const ACTIVITY_EVENTS = [
-    { id: '1', timestamp: '2 hours ago', actor: 'Alex Kumar', action: 'uploaded quote from Dell Technologies', iconColor: 'indigo' as const, icon: <Upload size={10} /> },
-    { id: '2', timestamp: '4 hours ago', actor: 'Priya Nair', action: 'sent invitation to HP Enterprise', iconColor: 'slate' as const },
-    { id: '3', timestamp: '6 hours ago', actor: 'System', action: 'normalization completed for Lenovo quote (18/24 lines)', iconColor: 'green' as const, icon: <CheckCircle2 size={10} /> },
-    { id: '4', timestamp: 'Yesterday',   actor: 'Alex Kumar', action: 'ran comparison preview — Run #004', iconColor: 'indigo' as const, icon: <BarChart2 size={10} /> },
-    { id: '5', timestamp: 'Yesterday',   actor: 'System', action: 'RFQ published and vendors notified', iconColor: 'green' as const, icon: <CheckCircle2 size={10} /> },
-    { id: '6', timestamp: '3 days ago',  actor: 'Marcus Webb', action: 'created RFQ-2401', iconColor: 'slate' as const },
-  ];
+  const ACTIVITY_EVENTS = React.useMemo(() =>
+    MOCK_ACTIVITY_EVENTS.map(ev => ({
+      ...ev,
+      meta: ev.rfqId,
+      icon: ev.iconColor === 'indigo' && ev.action.includes('uploaded') ? <Upload size={10} /> :
+        ev.iconColor === 'green' ? <CheckCircle2 size={10} /> :
+        ev.iconColor === 'indigo' && ev.action.includes('comparison') ? <BarChart2 size={10} /> : undefined,
+    })),
+    []
+  );
 
   const MAPPING_ROWS: MappingGridRow[] = [
     { id: 'map-1', lineNumber: 1, vendorDescription: '2U Compute Node - Intel Xeon', confidence: 'high', mappedLine: 'CPU Node', taxonomyCode: '43211503', normalizedQty: '12', normalizedUnit: 'EA', normalizedPrice: '$8,230', currency: 'USD' },
@@ -845,6 +873,11 @@ export function ShowcasePage() {
                 </div>
               </Card>
               <Card padding="lg" className="col-span-2">
+                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Spotlight Search</h4>
+                <p className="text-xs text-slate-500 mb-3">Press <kbd className="px-1 py-0.5 rounded border border-slate-200 bg-slate-50 font-mono">/</kbd> when not in an input to open. Type-ahead search with two-pane layout.</p>
+                <SpotlightSearchDemo />
+              </Card>
+              <Card padding="lg" className="col-span-2">
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Filter Bar</h4>
                 <FilterBar
                   searchValue={searchVal}
@@ -1143,6 +1176,95 @@ export function ShowcasePage() {
                   ]}
                 />
               </Card>
+            </SubSection>
+
+            <SubSection title="Dashboard Cards">
+              <p className="text-sm text-slate-600 mb-4">
+                Reusable dashboard cards for pipeline stats, savings, SLA alerts, activity summaries, pending approvals, and category breakdown.
+              </p>
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Pipeline Stats</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <PipelineStatCard label="Active" count={DASHBOARD_PIPELINE.active} icon={<FileText size={18} />} onClick={() => {}} />
+                    <PipelineStatCard label="Pending" count={DASHBOARD_PIPELINE.pending} icon={<Clock size={18} />} onClick={() => {}} />
+                    <PipelineStatCard label="Awarded" count={DASHBOARD_PIPELINE.awarded} icon={<Award size={18} />} onClick={() => {}} />
+                    <PipelineStatCard label="Draft" count={DASHBOARD_PIPELINE.draft} onClick={() => {}} />
+                    <PipelineStatCard label="Closed" count={DASHBOARD_PIPELINE.closed} onClick={() => {}} />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Savings & Value</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <SavingsHighlightCard
+                      title="Total Realized Savings"
+                      value={DASHBOARD_SAVINGS.totalRealized}
+                      trend={{ value: DASHBOARD_SAVINGS.yoyTrend, label: `+${DASHBOARD_SAVINGS.yoyTrend}% YoY` }}
+                    />
+                    <SavingsHighlightCard
+                      title="Pipeline Value"
+                      value={DASHBOARD_SAVINGS.totalPipeline}
+                      subtitle="In active RFQs"
+                    />
+                    <SavingsHighlightCard
+                      title="Avg. Savings"
+                      value={DASHBOARD_SAVINGS.avgSavingsPct}
+                      subtitle="Across awarded RFQs"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">SLA Alerts</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {DASHBOARD_SLA_ALERTS.map(alert => (
+                      <SLAAlertCard
+                        key={alert.id}
+                        title={alert.title}
+                        rfqId={alert.rfqId}
+                        timeRemaining={alert.timeRemaining}
+                        urgency={alert.urgency}
+                        assignee={alert.assignee}
+                        onClick={() => {}}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ActivitySummaryCard
+                    items={MOCK_ACTIVITY_EVENTS}
+                    title="Recent Activity"
+                    maxItems={5}
+                    onViewAll={() => {}}
+                  />
+                  <PendingApprovalsCard
+                    items={DASHBOARD_PENDING_APPROVALS}
+                    onItemClick={() => {}}
+                    onViewAll={() => {}}
+                  />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <CategoryBreakdownCard
+                    items={DASHBOARD_CATEGORY_BREAKDOWN}
+                    title="Spend by Category"
+                    maxItems={6}
+                    onViewAll={() => {}}
+                  />
+                  <QuickActionCard
+                    icon={<Plus size={20} />}
+                    title="Create RFQ"
+                    description="Start a new requisition"
+                    actionLabel="New RFQ"
+                    onAction={() => {}}
+                  />
+                  <QuickActionCard
+                    icon={<BarChart2 size={20} />}
+                    title="View Reports"
+                    description="Savings, compliance, and audit"
+                    actionLabel="Open Reports"
+                    onAction={() => {}}
+                  />
+                </div>
+              </div>
             </SubSection>
 
             <SubSection title="Data Table">
