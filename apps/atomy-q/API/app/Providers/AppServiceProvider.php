@@ -16,8 +16,14 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(JwtServiceInterface::class, function (): JwtServiceInterface {
+            $secret = (string) config('jwt.secret');
+
+            if ($secret === '') {
+                throw new \InvalidArgumentException('JWT_SECRET is not set or empty in environment configuration.');
+            }
+
             return new JwtService(
-                (string) config('jwt.secret'),
+                $secret,
                 (int) config('jwt.ttl'),
                 (int) config('jwt.refresh_ttl'),
                 (string) config('jwt.algo'),

@@ -17,4 +17,15 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    /**
+     * Test a basic API route.
+     */
+    public function test_api_login_returns_method_not_allowed_for_get(): void
+    {
+        // Simple smoke test to check API routing/middleware
+        $response = $this->getJson('/api/v1/auth/login');
+
+        $response->assertStatus(405);
+    }
 }

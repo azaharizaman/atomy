@@ -113,7 +113,7 @@ Custom config files: `config/jwt.php`, `config/atomy.php`
 3. Create API Resource transformers for consistent response formatting
 4. Implement real authentication flow with database-backed users
 5. Create `adapters/Laravel/QuotationIntelligence` adapter for orchestrator ports
-6. Add rate limiting middleware
+6. Add rate-limiting middleware
 7. Add OpenAPI/Swagger documentation
 8. Write feature tests for critical flows
 

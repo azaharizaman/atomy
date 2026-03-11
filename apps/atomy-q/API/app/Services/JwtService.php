@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\JwtServiceInterface;
+use App\Dtos\JwtPayloadDto;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use InvalidArgumentException;
@@ -69,12 +70,11 @@ final readonly class JwtService implements JwtServiceInterface
         return JWT::encode($payload, $this->secret, $this->algo);
     }
 
-    /**
-     * @return object{sub: string, tenant_id: string, type: string, exp: int, iat: int, iss: string}
-     */
-    public function decode(string $token): object
+    public function decode(string $token): JwtPayloadDto
     {
-        return JWT::decode($token, new Key($this->secret, $this->algo));
+        $payload = JWT::decode($token, new Key($this->secret, $this->algo));
+
+        return JwtPayloadDto::fromObject($payload);
     }
 
     public function getTtlMinutes(): int
