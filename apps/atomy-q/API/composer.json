@@ -1,0 +1,122 @@
+{
+    "name": "atomy/atomy-q-api",
+    "type": "project",
+    "description": "Atomy-Q Quote Comparison SaaS - Backend API",
+    "license": "proprietary",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../../packages/*",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../../orchestrators/*",
+            "options": { "symlink": true }
+        },
+        {
+            "type": "path",
+            "url": "../../../adapters/Laravel/*",
+            "options": { "symlink": true }
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1",
+        "firebase/php-jwt": "^6.10",
+        "predis/predis": "^2.2",
+
+        "nexus/common": "*@dev",
+        "nexus/identity": "*@dev",
+        "nexus/identity-operations": "*@dev",
+        "nexus/sso": "*@dev",
+        "nexus/crypto": "*@dev",
+        "nexus/tenant": "*@dev",
+        "nexus/tenant-operations": "*@dev",
+        "nexus/setting": "*@dev",
+        "nexus/settings-management": "*@dev",
+        "nexus/feature-flags": "*@dev",
+        "nexus/procurement": "*@dev",
+        "nexus/party": "*@dev",
+        "nexus/document": "*@dev",
+        "nexus/storage": "*@dev",
+        "nexus/notifier": "*@dev",
+        "nexus/audit-logger": "*@dev",
+        "nexus/event-stream": "*@dev",
+        "nexus/sequencing": "*@dev",
+        "nexus/currency": "*@dev",
+        "nexus/uom": "*@dev",
+        "nexus/sanctions": "*@dev",
+        "nexus/aml-compliance": "*@dev",
+        "nexus/compliance": "*@dev",
+        "nexus/reporting": "*@dev",
+        "nexus/query-engine": "*@dev",
+        "nexus/export": "*@dev",
+        "nexus/connector": "*@dev",
+        "nexus/scheduler": "*@dev",
+        "nexus/machine-learning": "*@dev",
+        "nexus/workflow": "*@dev",
+        "nexus/messaging": "*@dev",
+
+        "nexus/quotation-intelligence": "*@dev",
+        "nexus/procurement-operations": "*@dev",
+        "nexus/compliance-operations": "*@dev",
+        "nexus/connectivity-operations": "*@dev",
+        "nexus/data-exchange-operations": "*@dev",
+        "nexus/insight-operations": "*@dev",
+
+        "nexus/laravel-identity-adapter": "*@dev",
+        "nexus/laravel-tenant-adapter": "*@dev",
+        "nexus/laravel-setting-adapter": "*@dev"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pail": "^1.2",
+        "laravel/pint": "^1.24",
+        "laravel/sail": "^1.53",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
