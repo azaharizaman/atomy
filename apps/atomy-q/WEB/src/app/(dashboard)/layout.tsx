@@ -3,8 +3,11 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, FileText, ShoppingCart, Inbox, CheckSquare,
-  BarChart2, Settings, Users, Scale, AlertTriangle
+  LayoutPanelTop,
+  FileText,
+  FolderArchive,
+  BarChart2,
+  Settings,
 } from 'lucide-react';
 import { NavGroup, NavItem, NavLabel, SubNavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
@@ -28,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 z-20">
+      <aside className="w-[200px] bg-white border-r border-slate-200 flex flex-col shrink-0 z-20">
         <div className="h-14 flex items-center px-4 border-b border-slate-100">
           <div className="font-bold text-lg text-indigo-600 tracking-tight flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-indigo-600" />
@@ -39,105 +42,60 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5 custom-scrollbar">
           <NavItem
             label="Dashboard"
-            icon={<LayoutDashboard size={18} />}
+            icon={<LayoutPanelTop size={18} />}
             active={pathname === '/'}
             href="/"
           />
 
-          <NavLabel label="Procurement" />
-
           <NavGroup
-            label="RFQ Management"
+            label="Requisition"
             icon={<FileText size={18} />}
             active={pathname.startsWith('/rfqs')}
             defaultOpen={pathname.startsWith('/rfqs')}
           >
             <SubNavItem
-              label="All RFQs"
-              active={pathname === '/rfqs'}
+              label="Active"
+              active={pathname === '/rfqs/active' || pathname === '/rfqs'}
               href="/rfqs"
+              badge={12}
             />
             <SubNavItem
-              label="Templates"
-              active={pathname === '/rfqs/templates'}
-              href="/rfqs/templates"
+              label="Closed"
+              active={pathname === '/rfqs/closed'}
+              href="/rfqs/closed"
+              badge={5}
             />
+            <SubNavItem label="Awarded" active={pathname === '/rfqs/awarded'} href="/rfqs/awarded" badge={3} />
+            <SubNavItem label="Archived" active={pathname === '/rfqs/archived'} href="/rfqs/archived" />
+            <SubNavItem label="Draft" active={pathname === '/rfqs/draft'} href="/rfqs/draft" badge={2} />
           </NavGroup>
+
+          <NavItem
+            label="Documents"
+            icon={<FolderArchive size={18} />}
+            active={pathname.startsWith('/documents')}
+            href="/documents"
+          />
+
+          <NavItem
+            label="Reporting"
+            icon={<BarChart2 size={18} />}
+            active={pathname.startsWith('/reporting')}
+            href="/reporting"
+          />
 
           <NavGroup
-            label="Quote Intake"
-            icon={<Inbox size={18} />}
-            active={pathname.startsWith('/quote-intake')}
-            badge={3}
-          >
-            <SubNavItem
-              label="Submissions"
-              active={pathname === '/quote-intake'}
-              href="/quote-intake"
-              badge={3}
-            />
-            <SubNavItem
-              label="Normalization"
-              active={pathname === '/quote-intake/normalization'}
-              href="/quote-intake/normalization"
-            />
-          </NavGroup>
-
-          <NavItem
-            label="Comparison Matrix"
-            icon={<Scale size={18} />}
-            active={pathname.startsWith('/comparison')}
-            href="/comparison"
-          />
-
-          <NavLabel label="Network" />
-
-          <NavItem
-            label="Vendors"
-            icon={<ShoppingCart size={18} />}
-            active={pathname.startsWith('/vendors')}
-            href="/vendors"
-          />
-
-          <NavLabel label="Governance" />
-
-          <NavItem
-            label="Approvals"
-            icon={<CheckSquare size={18} />}
-            active={pathname.startsWith('/approvals')}
-            badge={5}
-            href="/approvals"
-          />
-
-          <NavItem
-            label="Risk & Compliance"
-            icon={<AlertTriangle size={18} />}
-            active={pathname.startsWith('/risk')}
-            href="/risk"
-          />
-
-          <NavItem
-            label="Reports"
-            icon={<BarChart2 size={18} />}
-            active={pathname.startsWith('/reports')}
-            href="/reports"
-          />
-
-          <NavLabel label="System" />
-
-          <NavItem
             label="Settings"
             icon={<Settings size={18} />}
             active={pathname.startsWith('/settings')}
-            href="/settings"
-          />
-
-          <NavItem
-            label="Users & Access"
-            icon={<Users size={18} />}
-            active={pathname.startsWith('/users')}
-            href="/users"
-          />
+            defaultOpen={pathname.startsWith('/settings')}
+          >
+            <SubNavItem label="Users & Roles" active={pathname === '/settings/users'} href="/settings/users" />
+            <SubNavItem label="Scoring Policies" active={pathname === '/settings/scoring-policies'} href="/settings/scoring-policies" />
+            <SubNavItem label="Templates" active={pathname === '/settings/templates'} href="/settings/templates" />
+            <SubNavItem label="Integrations" active={pathname === '/settings/integrations'} href="/settings/integrations" />
+            <SubNavItem label="Feature Flags" active={pathname === '/settings/feature-flags'} href="/settings/feature-flags" />
+          </NavGroup>
         </nav>
 
         {user && (

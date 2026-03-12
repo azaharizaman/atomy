@@ -1,31 +1,85 @@
 import React from 'react';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Bot, Plus } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/use-auth-store';
+import { Button } from '@/components/ds/Button';
+import { CountBadge } from '@/components/ds/Badge';
+import { SearchInput } from '@/components/ds/Input';
 
 export function Header() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+
+  const displayName = user?.name || user?.email || 'User';
+  const initials = displayName
+    .split(' ')
+    .filter(Boolean)
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  const breadcrumb = pathname === '/' ? 'Dashboard' : pathname;
+
   return (
     <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-4 sticky top-0 z-10">
-      <div className="flex items-center gap-4">
-        {/* Breadcrumbs Placeholder */}
-        <span className="text-sm text-slate-500 font-medium">Atomy-Q / Dashboard</span>
+      <div className="flex items-center gap-4 min-w-0">
+        <span className="text-sm text-slate-500 font-medium truncate">Atomy-Q / {breadcrumb}</span>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true" />
-          <input
-            type="text"
-            aria-label="Search"
-            placeholder="Search..."
-            className="h-9 w-64 pl-9 pr-4 rounded-md border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-          />
-        </div>
+      <div className="flex items-center gap-3">
+        <SearchInput placeholder="Search…" shortcut="/" containerClassName="w-72" />
 
-        <button className="relative text-slate-500 hover:text-slate-700" aria-label="Notifications">
-          <Bell size={20} />
-          <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white" />
+        <Button
+          size="sm"
+          variant="primary"
+          icon={<Plus size={14} />}
+          onClick={() => router.push('/rfqs/new')}
+        >
+          New RFQ
+        </Button>
+        <Button size="sm" variant="ghost" icon={<Bot size={14} />}>
+          AI Insights
+        </Button>
+
+        <button className="relative text-slate-500 hover:text-slate-700" aria-label="Notifications" type="button">
+          <Bell size={18} />
+          <CountBadge count={1} variant="red" className="absolute -top-1 -right-1" />
         </button>
 
-        <div className="w-8 h-8 rounded-full bg-slate-200" />
+        <details className="relative">
+          <summary className="list-none cursor-pointer">
+            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-medium text-xs">
+              {initials}
+            </div>
+          </summary>
+          <div className="absolute right-0 top-[110%] w-56 bg-white border border-slate-200 rounded-md shadow-lg p-2 z-20">
+            <div className="px-2 py-1.5">
+              <div className="text-sm font-medium text-slate-900 truncate">{displayName}</div>
+              {user?.tenantId && <div className="text-xs text-slate-500 truncate">{user.tenantId}</div>}
+            </div>
+            <div className="h-px bg-slate-100 my-1" />
+            <button
+              type="button"
+              className="w-full text-left px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 rounded"
+              onClick={() => router.push('/settings/account')}
+            >
+              Account settings
+            </button>
+            <button
+              type="button"
+              className="w-full text-left px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 rounded"
+              onClick={() => {
+                logout();
+                router.push('/login');
+              }}
+            >
+              Sign out
+            </button>
+          </div>
+        </details>
       </div>
     </header>
   );
