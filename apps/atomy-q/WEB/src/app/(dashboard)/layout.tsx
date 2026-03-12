@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { NavGroup, NavItem, SubNavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { AppFooter } from '@/components/layout/app-footer';
 import { useAuthStore } from '@/store/use-auth-store';
 import { RFQ_STATUSES } from '@/hooks/use-rfqs';
 
@@ -139,6 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {children}
           </div>
         </main>
+        <AppFooter />
       </div>
     </div>
   );

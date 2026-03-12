@@ -18,77 +18,99 @@ final class DatabaseSeeder extends Seeder
     {
         $now = now();
         $seedTenant = env('ATOMY_SEED_TENANT_ID');
-        $tenantId = $seedTenant !== null && $seedTenant !== '' ? (string) $seedTenant : (string) Str::ulid();
+        $tenantA = $seedTenant !== null && $seedTenant !== '' ? (string) $seedTenant : '01KKH77M4R0V8QZ1M8NB3XWWWQ';
+        $tenantB = (string) Str::ulid();
+        $tenantIds = [$tenantA, $tenantB];
 
-        $userIds = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $userId = (string) Str::ulid();
-            $userIds[] = $userId;
+        /** @var array<string, list<string>> $usersByTenant */
+        $usersByTenant = [];
+        foreach ($tenantIds as $tIndex => $tid) {
+            $usersByTenant[$tid] = [];
+            $count = $tid === $tenantA ? 5 : 3;
+            for ($i = 1; $i <= $count; $i++) {
+                $userId = (string) Str::ulid();
+                $usersByTenant[$tid][] = $userId;
 
-            DB::table('users')->insert([
-                'id' => $userId,
-                'tenant_id' => $tenantId,
-                'email' => "user{$i}@example.com",
-                'name' => "User {$i}",
-                'password_hash' => Hash::make('secret'),
-                'role' => $i === 1 ? 'admin' : 'user',
-                'status' => 'active',
-                'timezone' => 'UTC',
-                'locale' => 'en',
-                'email_verified_at' => $now,
-                'last_login_at' => $now,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-        }
-
-        $rfqIds = [];
-        $lineItemsByRfq = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $rfqId = (string) Str::ulid();
-            $rfqIds[] = $rfqId;
-
-            DB::table('rfqs')->insert([
-                'id' => $rfqId,
-                'tenant_id' => $tenantId,
-                'rfq_number' => sprintf('RFQ-2026-%04d', $i),
-                'title' => "RFQ {$i}",
-                'description' => "Seeded RFQ {$i} for coverage tests.",
-                'category' => 'IT',
-                'department' => 'Procurement',
-                'status' => 'draft',
-                'owner_id' => $userIds[0],
-                'estimated_value' => 10000 * $i,
-                'savings_percentage' => 5.25,
-                'submission_deadline' => $now->copy()->addDays(7),
-                'closing_date' => $now->copy()->addDays(14),
-                'payment_terms' => 'Net 30',
-                'evaluation_method' => 'weighted',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-
-            $lineItemsByRfq[$rfqId] = [];
-            for ($j = 1; $j <= 2; $j++) {
-                $lineItemId = (string) Str::ulid();
-                $lineItemsByRfq[$rfqId][] = $lineItemId;
-
-                DB::table('rfq_line_items')->insert([
-                    'id' => $lineItemId,
-                    'tenant_id' => $tenantId,
-                    'rfq_id' => $rfqId,
-                    'description' => "Line item {$j} for RFQ {$i}",
-                    'quantity' => 10 * $j,
-                    'uom' => 'ea',
-                    'unit_price' => 125.50 * $j,
-                    'currency' => 'USD',
-                    'specifications' => "Spec {$j} for RFQ {$i}",
-                    'sort_order' => $j,
+                DB::table('users')->insert([
+                    'id' => $userId,
+                    'tenant_id' => $tid,
+                    'email' => $tid === $tenantA ? "user{$i}@example.com" : "user{$i}-b@example.com",
+                    'name' => $tid === $tenantA ? "User {$i}" : "User B{$i}",
+                    'password_hash' => Hash::make('secret'),
+                    'role' => $i === 1 ? 'admin' : 'user',
+                    'status' => 'active',
+                    'timezone' => 'UTC',
+                    'locale' => 'en',
+                    'email_verified_at' => $now,
+                    'last_login_at' => $now,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
             }
         }
+        $userIds = $usersByTenant[$tenantA];
+
+        $rfqIds = [];
+        $lineItemsByRfq = [];
+        $categories = ['IT', 'Facilities', 'Marketing', 'HR', 'Operations'];
+        $departments = ['Procurement', 'Finance', 'Operations', 'IT'];
+        $statuses = ['draft', 'published', 'closed', 'cancelled'];
+
+        $rfqIndex = 0;
+        foreach ([$tenantA => 50, $tenantB => 50] as $tenantId => $perTenantCount) {
+            for ($seq = 1; $seq <= $perTenantCount; $seq++) {
+                $rfqIndex++;
+                $rfqId = (string) Str::ulid();
+                $rfqIds[] = $rfqId;
+
+                $ownerIds = $usersByTenant[$tenantId];
+                $ownerId = $ownerIds[array_key_first($ownerIds)];
+
+                DB::table('rfqs')->insert([
+                    'id' => $rfqId,
+                    'tenant_id' => $tenantId,
+                    'rfq_number' => sprintf('RFQ-2026-%04d', $seq),
+                    'title' => "RFQ {$rfqIndex} – " . $categories[$rfqIndex % count($categories)],
+                    'description' => "Seeded RFQ {$rfqIndex} for coverage tests.",
+                    'category' => $categories[$rfqIndex % count($categories)],
+                    'department' => $departments[$rfqIndex % count($departments)],
+                    'status' => $statuses[$rfqIndex % count($statuses)],
+                    'owner_id' => $ownerId,
+                    'estimated_value' => 5000 + ($rfqIndex * 250),
+                    'savings_percentage' => (float) (3 + ($rfqIndex % 10) / 2),
+                    'submission_deadline' => $now->copy()->addDays(7 + ($rfqIndex % 30)),
+                    'closing_date' => $now->copy()->addDays(14 + ($rfqIndex % 30)),
+                    'payment_terms' => 'Net 30',
+                    'evaluation_method' => 'weighted',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+                $lineCount = random_int(5, 20);
+                $lineItemsByRfq[$rfqId] = [];
+                for ($j = 1; $j <= $lineCount; $j++) {
+                    $lineItemId = (string) Str::ulid();
+                    $lineItemsByRfq[$rfqId][] = $lineItemId;
+
+                    DB::table('rfq_line_items')->insert([
+                        'id' => $lineItemId,
+                        'tenant_id' => $tenantId,
+                        'rfq_id' => $rfqId,
+                        'description' => "Line item {$j} for RFQ {$rfqIndex}",
+                        'quantity' => (float) random_int(1, 100) * ($j % 3 + 1),
+                        'uom' => ['ea', 'kg', 'm', 'box'][$j % 4],
+                        'unit_price' => (float) (50 + random_int(0, 500) + $j * 2.5),
+                        'currency' => 'USD',
+                        'specifications' => "Spec {$j} for RFQ {$rfqIndex}",
+                        'sort_order' => $j,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+            }
+        }
+
+        $demoRfqIds = array_slice($rfqIds, 0, 3);
 
         $templateIds = [];
         for ($i = 1; $i <= 2; $i++) {
@@ -97,7 +119,7 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('rfq_templates')->insert([
                 'id' => $templateId,
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'name' => "Standard Template {$i}",
                 'description' => 'Template for recurring sourcing events.',
                 'category' => 'IT',
@@ -115,7 +137,7 @@ final class DatabaseSeeder extends Seeder
 
         $vendorIds = [];
         $invitationIds = [];
-        foreach ($rfqIds as $rfqIndex => $rfqId) {
+        foreach ($demoRfqIds as $rfqIndex => $rfqId) {
             for ($v = 1; $v <= 2; $v++) {
                 $vendorId = (string) Str::ulid();
                 $vendorIds[] = $vendorId;
@@ -124,7 +146,7 @@ final class DatabaseSeeder extends Seeder
 
                 DB::table('vendor_invitations')->insert([
                     'id' => $invitationId,
-                    'tenant_id' => $tenantId,
+                    'tenant_id' => $tenantA,
                     'rfq_id' => $rfqId,
                     'vendor_id' => $vendorId,
                     'vendor_email' => "vendor{$rfqIndex}{$v}@example.com",
@@ -146,8 +168,8 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('quote_submissions')->insert([
                 'id' => $quoteSubmissionId,
-                'tenant_id' => $tenantId,
-                'rfq_id' => $rfqIds[0],
+                'tenant_id' => $tenantA,
+                'rfq_id' => $demoRfqIds[0],
                 'vendor_id' => $vendorId,
                 'vendor_name' => "Vendor {$index}",
                 'status' => 'processed',
@@ -155,7 +177,7 @@ final class DatabaseSeeder extends Seeder
                 'file_type' => 'application/pdf',
                 'submitted_at' => $now->copy()->subDays(1),
                 'confidence' => 95.5,
-                'line_items_count' => 2,
+                'line_items_count' => count($lineItemsByRfq[$demoRfqIds[0]]),
                 'warnings_count' => 0,
                 'errors_count' => 0,
                 'created_at' => $now,
@@ -165,13 +187,13 @@ final class DatabaseSeeder extends Seeder
 
         $normalizationSourceLineIds = [];
         foreach ($quoteSubmissionIds as $index => $quoteSubmissionId) {
-            foreach ($lineItemsByRfq[$rfqIds[0]] as $lineIndex => $lineItemId) {
+            foreach ($lineItemsByRfq[$demoRfqIds[0]] as $lineIndex => $lineItemId) {
                 $sourceLineId = (string) Str::ulid();
                 $normalizationSourceLineIds[] = $sourceLineId;
 
                 DB::table('normalization_source_lines')->insert([
                     'id' => $sourceLineId,
-                    'tenant_id' => $tenantId,
+                    'tenant_id' => $tenantA,
                     'quote_submission_id' => $quoteSubmissionId,
                     'rfq_line_item_id' => $lineItemId,
                     'source_vendor' => "Vendor {$index}",
@@ -190,7 +212,7 @@ final class DatabaseSeeder extends Seeder
         $conflictId = (string) Str::ulid();
         DB::table('normalization_conflicts')->insert([
             'id' => $conflictId,
-            'tenant_id' => $tenantId,
+            'tenant_id' => $tenantA,
             'normalization_source_line_id' => $normalizationSourceLineIds[0],
             'conflict_type' => 'uom_mismatch',
             'resolution' => null,
@@ -207,7 +229,7 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('scoring_models')->insert([
                 'id' => $scoringModelId,
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'name' => "Weighted Model {$i}",
                 'description' => 'Seeded scoring model.',
                 'type' => 'weighted',
@@ -225,7 +247,7 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('scoring_policies')->insert([
                 'id' => $policyId,
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'scoring_model_id' => $scoringModelIds[0],
                 'name' => "Policy {$i}",
                 'description' => 'Seeded scoring policy.',
@@ -237,13 +259,13 @@ final class DatabaseSeeder extends Seeder
         }
 
         $comparisonRunIds = [];
-        foreach ($rfqIds as $index => $rfqId) {
+        foreach ($demoRfqIds as $index => $rfqId) {
             $comparisonRunId = (string) Str::ulid();
             $comparisonRunIds[] = $comparisonRunId;
 
             DB::table('comparison_runs')->insert([
                 'id' => $comparisonRunId,
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'rfq_id' => $rfqId,
                 'name' => "Comparison Run {$index}",
                 'description' => 'Seeded run for coverage.',
@@ -267,13 +289,13 @@ final class DatabaseSeeder extends Seeder
         }
 
         $scenarioIds = [];
-        foreach ($rfqIds as $index => $rfqId) {
+        foreach ($demoRfqIds as $index => $rfqId) {
             $scenarioId = (string) Str::ulid();
             $scenarioIds[] = $scenarioId;
 
             DB::table('scenarios')->insert([
                 'id' => $scenarioId,
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'rfq_id' => $rfqId,
                 'comparison_run_id' => $comparisonRunIds[$index] ?? null,
                 'name' => "Scenario {$index}",
@@ -286,13 +308,13 @@ final class DatabaseSeeder extends Seeder
         }
 
         $approvalIds = [];
-        foreach ($rfqIds as $index => $rfqId) {
+        foreach ($demoRfqIds as $index => $rfqId) {
             $approvalId = (string) Str::ulid();
             $approvalIds[] = $approvalId;
 
             DB::table('approvals')->insert([
                 'id' => $approvalId,
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'rfq_id' => $rfqId,
                 'comparison_run_id' => $comparisonRunIds[$index] ?? null,
                 'type' => 'quote_approval',
@@ -312,7 +334,7 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('approval_history')->insert([
                 'id' => (string) Str::ulid(),
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'approval_id' => $approvalId,
                 'action' => 'requested',
                 'actor_id' => $userIds[0],
@@ -322,10 +344,10 @@ final class DatabaseSeeder extends Seeder
             ]);
         }
 
-        foreach ($rfqIds as $index => $rfqId) {
+        foreach ($demoRfqIds as $index => $rfqId) {
             DB::table('negotiation_rounds')->insert([
                 'id' => (string) Str::ulid(),
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'rfq_id' => $rfqId,
                 'round_number' => $index + 1,
                 'status' => 'open',
@@ -337,13 +359,13 @@ final class DatabaseSeeder extends Seeder
         }
 
         $awardIds = [];
-        foreach ($rfqIds as $index => $rfqId) {
+        foreach ($demoRfqIds as $index => $rfqId) {
             $awardId = (string) Str::ulid();
             $awardIds[] = $awardId;
 
             DB::table('awards')->insert([
                 'id' => $awardId,
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'rfq_id' => $rfqId,
                 'comparison_run_id' => $comparisonRunIds[$index] ?? null,
                 'vendor_id' => $vendorIds[$index] ?? (string) Str::ulid(),
@@ -360,7 +382,7 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('handoffs')->insert([
                 'id' => (string) Str::ulid(),
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'award_id' => $awardId,
                 'destination_type' => 'erp',
                 'destination_id' => "ERP-{$index}",
@@ -378,9 +400,9 @@ final class DatabaseSeeder extends Seeder
         foreach ([1, 2] as $sequence) {
             DB::table('decision_trail_entries')->insert([
                 'id' => (string) Str::ulid(),
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'comparison_run_id' => $comparisonRunIds[0],
-                'rfq_id' => $rfqIds[0],
+                'rfq_id' => $demoRfqIds[0],
                 'sequence' => $sequence,
                 'event_type' => 'comparison_run',
                 'payload_hash' => $payloadHash,
@@ -394,7 +416,7 @@ final class DatabaseSeeder extends Seeder
 
         DB::table('evidence_bundles')->insert([
             'id' => (string) Str::ulid(),
-            'tenant_id' => $tenantId,
+            'tenant_id' => $tenantA,
             'approval_id' => $approvalIds[0],
             'type' => 'quote_evidence',
             'storage_path' => '/evidence/bundle-1.zip',
@@ -411,7 +433,7 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('report_schedules')->insert([
                 'id' => $scheduleId,
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'report_type' => 'spend_summary',
                 'frequency' => $i === 1 ? 'daily' : 'weekly',
                 'config' => json_encode(['filters' => []], JSON_THROW_ON_ERROR),
@@ -424,7 +446,7 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('report_runs')->insert([
                 'id' => (string) Str::ulid(),
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'schedule_id' => $scheduleId,
                 'report_type' => 'spend_summary',
                 'status' => 'completed',
@@ -445,7 +467,7 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('integrations')->insert([
                 'id' => $integrationId,
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'type' => 'erp',
                 'name' => "ERP Integration {$i}",
                 'config' => json_encode(['endpoint' => 'https://example.com'], JSON_THROW_ON_ERROR),
@@ -457,7 +479,7 @@ final class DatabaseSeeder extends Seeder
 
             DB::table('integration_jobs')->insert([
                 'id' => (string) Str::ulid(),
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'integration_id' => $integrationId,
                 'type' => 'sync',
                 'status' => 'pending',
@@ -474,7 +496,7 @@ final class DatabaseSeeder extends Seeder
         foreach ($userIds as $index => $userId) {
             DB::table('notifications')->insert([
                 'id' => (string) Str::ulid(),
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'user_id' => $userId,
                 'title' => "Notification {$index}",
                 'message' => 'Seeded notification.',
@@ -486,10 +508,10 @@ final class DatabaseSeeder extends Seeder
             ]);
         }
 
-        foreach ($rfqIds as $index => $rfqId) {
+        foreach ($demoRfqIds as $index => $rfqId) {
             DB::table('risk_items')->insert([
                 'id' => (string) Str::ulid(),
-                'tenant_id' => $tenantId,
+                'tenant_id' => $tenantA,
                 'rfq_id' => $rfqId,
                 'severity' => $index === 0 ? 'high' : 'medium',
                 'title' => "Risk Item {$index}",
