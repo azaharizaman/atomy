@@ -24,13 +24,22 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="DB_CONNECTION" value="pgsql"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="5433"/>
+        <env name="DB_DATABASE" value="atomy_dev"/>
+        <env name="DB_USERNAME" value="postgres"/>
+        <env name="DB_PASSWORD" value="secret"/>
         <env name="DB_URL" value=""/>
+        <env name="JWT_SECRET" value="base64:test-secret-for-phpunit-compliance-1234567890="/>
+        <env name="JWT_TTL" value="60"/>
+        <env name="JWT_REFRESH_TTL" value="120"/>
+        <env name="JWT_ALGO" value="HS256"/>
+        <env name="JWT_ISSUER" value="atomy-q-test"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="REDIS_URL" value="redis://localhost:6379/0"/>
         <env name="SESSION_DRIVER" value="array"/>
-        <env name="JWT_SECRET" value="base64:test-secret-for-phpunit-compliance-1234567890="/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
