@@ -1,17 +1,29 @@
 'use client';
 
 import React from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, FileText, ShoppingCart, Inbox, CheckSquare,
   BarChart2, Settings, Users, Scale, AlertTriangle
 } from 'lucide-react';
 import { NavGroup, NavItem, NavLabel, SubNavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { useAuthStore } from '@/store/use-auth-store';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
+  const user = useAuthStore((state) => state.user);
+
+  const displayName = user?.name || user?.email;
+  const initials = displayName
+    ? displayName
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : '';
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
@@ -29,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             label="Dashboard"
             icon={<LayoutDashboard size={18} />}
             active={pathname === '/'}
-            onClick={() => router.push('/')}
+            href="/"
           />
 
           <NavLabel label="Procurement" />
@@ -43,12 +55,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <SubNavItem
               label="All RFQs"
               active={pathname === '/rfqs'}
-              onClick={() => router.push('/rfqs')}
+              href="/rfqs"
             />
             <SubNavItem
               label="Templates"
               active={pathname === '/rfqs/templates'}
-              onClick={() => router.push('/rfqs/templates')}
+              href="/rfqs/templates"
             />
           </NavGroup>
 
@@ -61,13 +73,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <SubNavItem
               label="Submissions"
               active={pathname === '/quote-intake'}
-              onClick={() => router.push('/quote-intake')}
+              href="/quote-intake"
               badge={3}
             />
             <SubNavItem
               label="Normalization"
               active={pathname === '/quote-intake/normalization'}
-              onClick={() => router.push('/quote-intake/normalization')}
+              href="/quote-intake/normalization"
             />
           </NavGroup>
 
@@ -75,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             label="Comparison Matrix"
             icon={<Scale size={18} />}
             active={pathname.startsWith('/comparison')}
-            onClick={() => router.push('/comparison')}
+            href="/comparison"
           />
 
           <NavLabel label="Network" />
@@ -84,7 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             label="Vendors"
             icon={<ShoppingCart size={18} />}
             active={pathname.startsWith('/vendors')}
-            onClick={() => router.push('/vendors')}
+            href="/vendors"
           />
 
           <NavLabel label="Governance" />
@@ -94,21 +106,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             icon={<CheckSquare size={18} />}
             active={pathname.startsWith('/approvals')}
             badge={5}
-            onClick={() => router.push('/approvals')}
+            href="/approvals"
           />
 
           <NavItem
             label="Risk & Compliance"
             icon={<AlertTriangle size={18} />}
             active={pathname.startsWith('/risk')}
-            onClick={() => router.push('/risk')}
+            href="/risk"
           />
 
           <NavItem
             label="Reports"
             icon={<BarChart2 size={18} />}
             active={pathname.startsWith('/reports')}
-            onClick={() => router.push('/reports')}
+            href="/reports"
           />
 
           <NavLabel label="System" />
@@ -117,28 +129,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             label="Settings"
             icon={<Settings size={18} />}
             active={pathname.startsWith('/settings')}
-            onClick={() => router.push('/settings')}
+            href="/settings"
           />
 
           <NavItem
             label="Users & Access"
             icon={<Users size={18} />}
             active={pathname.startsWith('/users')}
-            onClick={() => router.push('/users')}
+            href="/users"
           />
         </nav>
 
-        <div className="p-4 border-t border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-medium text-xs">
-              JD
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">John Doe</p>
-              <p className="text-xs text-slate-500 truncate">Acme Corp</p>
+        {user && (
+          <div className="p-4 border-t border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-medium text-xs">
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-900 truncate">{displayName}</p>
+                <p className="text-xs text-slate-500 truncate">{user.tenantId}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </aside>
 
       {/* Main Content */}

@@ -12,9 +12,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       if (isAuthenticated && !token) {
         try {
           const { data } = await api.post('/auth/refresh');
-          // Fetch user profile as well to be sure
-          const me = await api.get('/me');
-          login(data.access_token, me.data);
+          const accessToken = data.access_token as string;
+          const me = await api.get('/me', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          login(accessToken, me.data);
         } catch {
           logout();
         }

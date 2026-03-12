@@ -28,7 +28,9 @@ export default function LoginPage() {
       const { access_token, user } = response.data;
       // If API returns user separately or inside token
       // Assuming user object is returned. If not, fetch /me
-      const userData = user || (await api.get('/me')).data;
+      const userData = user || (await api.get('/me', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      })).data;
 
       login(access_token, userData);
       toast.success('Signed in successfully');

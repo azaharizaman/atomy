@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { CountBadge, StatusDot } from '../ui/status-badge';
 
@@ -9,25 +10,17 @@ interface NavItemProps {
   icon?: React.ReactNode;
   active?: boolean;
   onClick?: () => void;
+  href?: string;
+  target?: string;
+  rel?: string;
   badge?: number | string;
   collapsed?: boolean;     // icon-only rail mode
   className?: string;
 }
 
-export function NavItem({ label, icon, active, onClick, badge, collapsed, className = '' }: NavItemProps) {
-  return (
-    <button
-      onClick={onClick}
-      title={collapsed ? label : undefined}
-      className={[
-        'flex items-center gap-2.5 rounded-md transition-colors duration-100 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/50 w-full',
-        collapsed ? 'justify-center px-0 py-2' : 'px-2.5 py-1.5',
-        active
-          ? 'bg-indigo-50 text-indigo-700 font-medium border-l-2 border-indigo-500 pl-[9px]'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-        className,
-      ].join(' ')}
-    >
+export function NavItem({ label, icon, active, onClick, href, target, rel, badge, collapsed, className = '' }: NavItemProps) {
+  const content = (
+    <>
       {icon && (
         <span className={['shrink-0', active ? 'text-indigo-600' : 'text-slate-400'].join(' ')}>
           {icon}
@@ -44,6 +37,41 @@ export function NavItem({ label, icon, active, onClick, badge, collapsed, classN
       {collapsed && badge !== undefined && (
         <CountBadge count={badge} variant={active ? 'indigo' : 'default'} className="absolute top-0 right-0 translate-x-1 -translate-y-1" />
       )}
+    </>
+  );
+
+  const classNames = [
+    'relative flex items-center gap-2.5 rounded-md transition-colors duration-100 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/50 w-full',
+    collapsed ? 'justify-center px-0 py-2' : 'px-2.5 py-1.5',
+    active
+      ? 'bg-indigo-50 text-indigo-700 font-medium border-l-2 border-indigo-500 pl-[9px]'
+      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+    className,
+  ].join(' ');
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        onClick={onClick}
+        target={target}
+        rel={rel}
+        title={collapsed ? label : undefined}
+        className={classNames}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={collapsed ? label : undefined}
+      className={classNames}
+    >
+      {content}
     </button>
   );
 }
@@ -123,22 +151,38 @@ interface SubNavItemProps {
   label: string;
   active?: boolean;
   onClick?: () => void;
+  href?: string;
+  target?: string;
+  rel?: string;
   badge?: number | string;
 }
 
-export function SubNavItem({ label, active, onClick, badge }: SubNavItemProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={[
-        'flex items-center justify-between gap-2 px-2 py-1 rounded text-sm w-full text-left transition-colors',
-        active
-          ? 'text-indigo-700 font-medium bg-indigo-50'
-          : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50',
-      ].join(' ')}
-    >
+export function SubNavItem({ label, active, onClick, href, target, rel, badge }: SubNavItemProps) {
+  const classNames = [
+    'flex items-center justify-between gap-2 px-2 py-1 rounded text-sm w-full text-left transition-colors',
+    active
+      ? 'text-indigo-700 font-medium bg-indigo-50'
+      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50',
+  ].join(' ');
+
+  const content = (
+    <>
       <span className="truncate">{label}</span>
       {badge !== undefined && <CountBadge count={badge} variant={active ? 'indigo' : 'default'} />}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} onClick={onClick} target={target} rel={rel} className={classNames}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} className={classNames}>
+      {content}
     </button>
   );
 }
@@ -161,24 +205,26 @@ interface NavigationLinkProps {
   icon?: React.ReactNode;
   active?: boolean;
   onClick?: () => void;
+  href?: string;
+  target?: string;
+  rel?: string;
   badge?: number | string;
   statusDot?: 'green' | 'amber' | 'red' | 'slate';
   className?: string;
 }
 
-export function NavigationLink({ label, icon, active, onClick, badge, statusDot, className = '' }: NavigationLinkProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={[
-        'flex items-center gap-2.5 w-full text-left px-3 py-1.5 rounded-md transition-colors duration-100',
-        'focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
-        active
-          ? 'bg-indigo-50 text-indigo-700 font-medium border-l-2 border-indigo-500 pl-[10px]'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-        className,
-      ].join(' ')}
-    >
+export function NavigationLink({ label, icon, active, onClick, href, target, rel, badge, statusDot, className = '' }: NavigationLinkProps) {
+  const classNames = [
+    'flex items-center gap-2.5 w-full text-left px-3 py-1.5 rounded-md transition-colors duration-100',
+    'focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
+    active
+      ? 'bg-indigo-50 text-indigo-700 font-medium border-l-2 border-indigo-500 pl-[10px]'
+      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+    className,
+  ].join(' ');
+
+  const content = (
+    <>
       {icon && (
         <span className={['shrink-0', active ? 'text-indigo-500' : 'text-slate-400'].join(' ')}>
           {icon}
@@ -189,6 +235,20 @@ export function NavigationLink({ label, icon, active, onClick, badge, statusDot,
       {badge !== undefined && (
         <CountBadge count={badge} variant={active ? 'indigo' : 'default'} />
       )}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} onClick={onClick} target={target} rel={rel} className={classNames}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} className={classNames}>
+      {content}
     </button>
   );
 }

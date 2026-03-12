@@ -47,9 +47,12 @@ interface StatusBadgeProps {
 export function StatusBadge({ status, label, size = 'sm', className = '' }: StatusBadgeProps) {
   const config = STATUS_MAP[status];
   const sizeClass = size === 'xs' ? 'text-[10px] px-1.5 py-0 gap-1 h-4' : 'text-xs px-2 py-0.5 gap-1 h-5';
+  const accessibleLabel = label ?? config.label;
 
   return (
     <span
+      role="status"
+      aria-label={accessibleLabel}
       className={[
         'inline-flex items-center rounded-full font-medium',
         sizeClass,
@@ -58,10 +61,14 @@ export function StatusBadge({ status, label, size = 'sm', className = '' }: Stat
       ].join(' ')}
     >
       {config.dot && (
-        <span className={`w-1.5 h-1.5 rounded-full ${getDotColor(status)}`} />
+        <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${getDotColor(status)}`} />
       )}
-      {config.icon && !config.dot && config.icon}
-      {label ?? config.label}
+      {config.icon && !config.dot && (
+        <span aria-hidden="true">
+          {config.icon}
+        </span>
+      )}
+      {accessibleLabel}
     </span>
   );
 }
@@ -123,14 +130,15 @@ const CONFIDENCE_STYLES: Record<ConfidenceVariant, { badge: string; bar: string;
 
 export function ConfidenceBadge({ variant, showBar, percentage, className = '' }: ConfidenceBadgeProps) {
   const config = CONFIDENCE_STYLES[variant];
+  const clampedPercentage = percentage === undefined ? undefined : Math.max(0, Math.min(100, percentage));
 
-  if (showBar && percentage !== undefined) {
+  if (showBar && clampedPercentage !== undefined) {
     return (
       <div className={['flex items-center gap-2', className].join(' ')}>
         <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
           <div
             className={['h-full rounded-full', config.bar].join(' ')}
-            style={{ width: `${percentage}%` }}
+            style={{ width: `${clampedPercentage}%` }}
           />
         </div>
         <span className={['inline-flex items-center rounded-full text-xs font-medium px-2 py-0.5 h-5', config.badge].join(' ')}>

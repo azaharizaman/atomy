@@ -3,6 +3,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface KPICardProps {
   title: string;
@@ -38,29 +39,37 @@ interface ActivityItem {
 }
 
 export default function DashboardPage() {
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
   const { data: kpis, isLoading: isLoadingKPIs } = useQuery({
     queryKey: ['dashboard', 'kpis'],
     queryFn: async () => {
-      // return (await api.get('/dashboard/kpis')).data;
-      // Mock data for now as API might not be running
-      return {
-        activeRfqs: 12,
-        pendingApprovals: 5,
-        totalSavings: '$1.2M',
-        cycleTime: '14 days'
-      };
+      if (useMocks) {
+        return {
+          active_rfqs: 12,
+          pending_approvals: 5,
+          total_savings: '$1.2M',
+          avg_cycle_time_days: '14 days',
+        };
+      }
+
+      return (await api.get('/dashboard/kpis')).data;
     }
   });
 
   const { data: activity, isLoading: isLoadingActivity } = useQuery({
     queryKey: ['dashboard', 'activity'],
     queryFn: async () => {
-      // return (await api.get('/dashboard/recent-activity')).data;
-      return [
-        { id: 1, type: 'rfq_created', title: 'IT Hardware Refresh 2026', user: 'John Doe', time: '2h ago' },
-        { id: 2, type: 'approval_request', title: 'Office Supplies Q2', user: 'Jane Smith', time: '4h ago' },
-        { id: 3, type: 'quote_received', title: 'Server Maintenance', vendor: 'TechCorp', time: '5h ago' },
-      ] as ActivityItem[];
+      if (useMocks) {
+        return [
+          { id: 1, type: 'rfq_created', title: 'IT Hardware Refresh 2026', user: 'John Doe', time: '2h ago' },
+          { id: 2, type: 'approval_request', title: 'Office Supplies Q2', user: 'Jane Smith', time: '4h ago' },
+          { id: 3, type: 'quote_received', title: 'Server Maintenance', vendor: 'TechCorp', time: '5h ago' },
+        ] as ActivityItem[];
+      }
+
+      const { data } = await api.get('/dashboard/recent-activity');
+      return Array.isArray(data) ? data : (data?.data ?? []);
     }
   });
 
@@ -74,25 +83,25 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Active RFQs"
-          value={isLoadingKPIs ? '...' : kpis?.activeRfqs}
+          value={isLoadingKPIs ? '...' : kpis?.active_rfqs}
           subtext="+2 from last week"
           icon={TrendingUp}
         />
         <KPICard
           title="Pending Approvals"
-          value={isLoadingKPIs ? '...' : kpis?.pendingApprovals}
+          value={isLoadingKPIs ? '...' : kpis?.pending_approvals}
           subtext="Requires attention"
           icon={AlertCircle}
         />
         <KPICard
           title="YTD Savings"
-          value={isLoadingKPIs ? '...' : kpis?.totalSavings}
+          value={isLoadingKPIs ? '...' : kpis?.total_savings}
           subtext="12% above target"
           icon={CheckCircle2}
         />
         <KPICard
           title="Avg Cycle Time"
-          value={isLoadingKPIs ? '...' : kpis?.cycleTime}
+          value={isLoadingKPIs ? '...' : kpis?.avg_cycle_time_days}
           subtext="-2 days improvement"
           icon={Clock}
         />
