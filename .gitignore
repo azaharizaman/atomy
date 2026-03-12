@@ -1,5 +1,7 @@
 # Package vendors
 /packages/*/vendor/
+/orchestrators/*/vendor/
+/adapters/*/vendor/
 
 # IDEs
 /.idea
