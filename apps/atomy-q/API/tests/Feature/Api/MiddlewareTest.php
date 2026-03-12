@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
-use App\Services\JwtService;
+use App\Contracts\JwtServiceInterface;
 use Tests\TestCase;
 
 final class MiddlewareTest extends TestCase
@@ -29,7 +29,7 @@ final class MiddlewareTest extends TestCase
 
     public function test_rejects_missing_tenant_context(): void
     {
-        $jwt = app(JwtService::class);
+        $jwt = app(JwtServiceInterface::class);
         $token = $jwt->issueAccessToken('user-1', '');
 
         $response = $this->getJson('/api/v1/dashboard/kpis', [

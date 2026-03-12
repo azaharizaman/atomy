@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
-use App\Services\JwtService;
+use App\Contracts\JwtServiceInterface;
 use Tests\TestCase;
 
 abstract class ApiTestCase extends TestCase
@@ -17,7 +17,7 @@ abstract class ApiTestCase extends TestCase
      */
     protected function authHeaders(?string $tenantId = null, ?string $userId = null): array
     {
-        $jwt = app(JwtService::class);
+        $jwt = app(JwtServiceInterface::class);
         $token = $jwt->issueAccessToken($userId ?? $this->userId, $tenantId ?? $this->tenantId);
 
         return [

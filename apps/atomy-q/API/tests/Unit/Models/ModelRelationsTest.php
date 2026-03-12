@@ -84,7 +84,6 @@ final class ModelRelationsTest extends TestCase
             [new ScoringModel(), 'comparisonRuns', HasMany::class],
             [new ScoringPolicy(), 'creator', BelongsTo::class],
             [new Scenario(), 'rfq', BelongsTo::class],
-            [new Scenario(), 'creator', BelongsTo::class],
             [new Approval(), 'rfq', BelongsTo::class],
             [new Approval(), 'comparisonRun', BelongsTo::class],
             [new Approval(), 'assignee', BelongsTo::class],
