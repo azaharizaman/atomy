@@ -31,7 +31,9 @@ export default function LoginPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      tenant_id: process.env.NEXT_PUBLIC_TENANT_ID || '',
+      tenant_id: process.env.NEXT_PUBLIC_TENANT_ID || '01KKGX0YT42CRG3XFB1E24SH1A',
+      email: '',
+      password: '',
       remember_device: true,
     },
   });
@@ -42,21 +44,30 @@ export default function LoginPage() {
     setAuthError(null);
     try {
       const response = await api.post('/auth/login', {
-        tenant_id: payload.tenant_id,
-        email: payload.email,
+        tenant_id: payload.tenant_id.trim(),
+        email: payload.email.trim().toLowerCase(),
         password: payload.password,
       });
       const { access_token, user } = response.data ?? {};
-      const meResponse = user
-        ? null
-        : await api.get('/me', { headers: { Authorization: `Bearer ${access_token}` } });
-
-      const userData = user ?? (meResponse?.data?.data ?? meResponse?.data);
+      let userData = user;
+      if (!userData && access_token) {
+        const meResponse = await api.get('/me', { headers: { Authorization: `Bearer ${access_token}` } });
+        userData = meResponse?.data?.data ?? meResponse?.data;
+      }
+      if (!userData || !access_token) {
+        setAuthError('Login succeeded but user data was missing. Please try again.');
+        toast.error('Login response incomplete');
+        return;
+      }
       login(access_token, userData);
       toast.success('Signed in successfully');
       router.push('/');
     } catch (error: any) {
-      const message = error?.response?.data?.message ?? 'Invalid credentials';
+      const data = error?.response?.data;
+      const message =
+        data?.message ??
+        data?.error ??
+        (error?.response?.status === 422 ? 'Please check Tenant ID, email, and password.' : 'Invalid credentials');
       setAuthError(message);
       toast.error(message);
     }
