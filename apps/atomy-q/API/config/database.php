@@ -1,7 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Str;
-use Pdo\Mysql;
+
+$mysqlAttrSslCa = extension_loaded('pdo_mysql')
+    ? (PHP_VERSION_ID >= 80400 && class_exists(\Pdo\Mysql::class, false)
+        ? \Pdo\Mysql::ATTR_SSL_CA
+        : \PDO::MYSQL_ATTR_SSL_CA)
+    : null;
 
 return [
 
@@ -59,8 +66,8 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+            'options' => $mysqlAttrSslCa !== null ? array_filter([
+                $mysqlAttrSslCa => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
@@ -79,8 +86,8 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+            'options' => $mysqlAttrSslCa !== null ? array_filter([
+                $mysqlAttrSslCa => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 

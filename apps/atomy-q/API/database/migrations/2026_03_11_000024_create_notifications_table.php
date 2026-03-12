@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['tenant_id', 'user_id']);
-            $table->index(['user_id', 'read_at']);
+            $table->index(['tenant_id', 'user_id', 'read_at']);
         });
     }
 

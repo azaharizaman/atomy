@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Middleware\JwtAuthenticate;
 use App\Http\Middleware\TenantContext;
 use Illuminate\Foundation\Application;
@@ -25,7 +27,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->renderable(function (\Throwable $e) {
+        $exceptions->renderable(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            if (!$request->is('api/*') && !$request->wantsJson()) {
+                return null;
+            }
+
             if ($e instanceof \Illuminate\Validation\ValidationException) {
                 return response()->json([
                     'error' => 'Validation failed',

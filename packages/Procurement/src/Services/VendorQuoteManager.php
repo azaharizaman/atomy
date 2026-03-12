@@ -7,6 +7,7 @@ namespace Nexus\Procurement\Services;
 use Nexus\Procurement\Contracts\VendorQuoteInterface;
 use Nexus\Procurement\Contracts\VendorQuoteRepositoryInterface;
 use Nexus\Procurement\Exceptions\QuoteLockedException;
+use Nexus\Procurement\Exceptions\VendorQuoteNotFoundException;
 use Psr\Log\LoggerInterface;
 
 /**

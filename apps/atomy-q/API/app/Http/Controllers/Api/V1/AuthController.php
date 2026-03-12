@@ -4,24 +4,21 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Contracts\JwtServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
-use App\Services\JwtService;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 final class AuthController extends Controller
 {
     use ExtractsAuthContext;
 
-    private const TEST_USER_EMAIL = 'admin@atomy.test';
-    private const TEST_USER_PASSWORD = 'password';
-    private const TEST_USER_ID = '1';
-    private const TEST_TENANT_ID = 'default';
-
     public function __construct(
-        private readonly JwtService $jwt
+        private readonly JwtServiceInterface $jwt
     ) {
     }
 
@@ -33,6 +30,7 @@ final class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
+            'tenant_id' => ['required', 'string', 'max:64'],
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ]);
@@ -41,15 +39,22 @@ final class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $tenantId = (string) $request->input('tenant_id');
         $email = $request->input('email');
         $password = $request->input('password');
 
-        if ($email !== self::TEST_USER_EMAIL || $password !== self::TEST_USER_PASSWORD) {
+        /** @var User|null $user */
+        $user = User::query()
+            ->where('tenant_id', $tenantId)
+            ->where('email', $email)
+            ->first();
+
+        if ($user === null || !Hash::check($password, (string) $user->password_hash)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $accessToken = $this->jwt->issueAccessToken(self::TEST_USER_ID, self::TEST_TENANT_ID);
-        $refreshToken = $this->jwt->issueRefreshToken(self::TEST_USER_ID, self::TEST_TENANT_ID);
+        $accessToken = $this->jwt->issueAccessToken((string) $user->id, $tenantId);
+        $refreshToken = $this->jwt->issueRefreshToken((string) $user->id, $tenantId);
 
         return response()->json([
             'access_token' => $accessToken,
@@ -67,8 +72,8 @@ final class AuthController extends Controller
     public function sso(Request $request): JsonResponse
     {
         return response()->json([
-            'redirect_url' => url('/auth/sso/callback'),
-        ]);
+            'message' => 'SSO authentication flow is not implemented yet.',
+        ], 501);
     }
 
     /**
@@ -78,10 +83,19 @@ final class AuthController extends Controller
      */
     public function mfaVerify(Request $request): JsonResponse
     {
-        return response()->json([
-            'message' => 'MFA verified successfully',
-            'verified' => true,
+        $validator = Validator::make($request->all(), [
+            'challenge_id' => ['required', 'string'],
+            'otp' => ['required', 'string'],
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        return response()->json([
+            'message' => 'MFA verification flow is not implemented yet.',
+            'verified' => false,
+        ], 501);
     }
 
     /**
@@ -92,8 +106,8 @@ final class AuthController extends Controller
     public function forgotPassword(Request $request): JsonResponse
     {
         return response()->json([
-            'message' => 'If an account exists with that email, a password reset link has been sent.',
-        ]);
+            'message' => 'Password reset flow is not implemented yet.',
+        ], 501);
     }
 
     /**
@@ -119,13 +133,12 @@ final class AuthController extends Controller
             return response()->json(['message' => 'Invalid or expired refresh token'], 401);
         }
 
-        $type = $payload->type ?? null;
-        if ($type !== 'refresh') {
+        if ($payload->type !== 'refresh') {
             return response()->json(['message' => 'Invalid refresh token'], 401);
         }
 
-        $userId = (string) ($payload->sub ?? '');
-        $tenantId = (string) ($payload->tenant_id ?? '');
+        $userId = $payload->sub;
+        $tenantId = $payload->tenant_id;
 
         if ($userId === '' || $tenantId === '') {
             return response()->json(['message' => 'Invalid refresh token'], 401);
@@ -150,8 +163,8 @@ final class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         return response()->json([
-            'message' => 'Successfully logged out',
-        ]);
+            'message' => 'Logout flow is not implemented yet.',
+        ], 501);
     }
 
     /**
@@ -162,7 +175,7 @@ final class AuthController extends Controller
     public function deviceTrust(Request $request): JsonResponse
     {
         return response()->json([
-            'message' => 'Device trusted successfully',
-        ]);
+            'message' => 'Device trust flow is not implemented yet.',
+        ], 501);
     }
 }

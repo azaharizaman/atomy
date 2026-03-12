@@ -25,12 +25,8 @@ final class SettingController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'general' => [],
-                'workflow' => [],
-                'compliance' => [],
-            ],
+        return $this->notImplemented('Listing tenant settings', [
+            'tenant_id' => $this->tenantId($request),
         ]);
     }
 
@@ -41,10 +37,8 @@ final class SettingController extends Controller
      */
     public function updateGeneral(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'general' => [],
-            ],
+        return $this->notImplemented('Updating general settings', [
+            'tenant_id' => $this->tenantId($request),
         ]);
     }
 
@@ -55,10 +49,8 @@ final class SettingController extends Controller
      */
     public function updateWorkflow(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'workflow' => [],
-            ],
+        return $this->notImplemented('Updating workflow settings', [
+            'tenant_id' => $this->tenantId($request),
         ]);
     }
 
@@ -69,10 +61,8 @@ final class SettingController extends Controller
      */
     public function updateCompliance(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'compliance' => [],
-            ],
+        return $this->notImplemented('Updating compliance settings', [
+            'tenant_id' => $this->tenantId($request),
         ]);
     }
 
@@ -83,8 +73,8 @@ final class SettingController extends Controller
      */
     public function featureFlags(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [],
+        return $this->notImplemented('Listing feature flags', [
+            'tenant_id' => $this->tenantId($request),
         ]);
     }
 
@@ -95,11 +85,21 @@ final class SettingController extends Controller
      */
     public function updateFeatureFlag(Request $request, string $id): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'id' => $id,
-                'enabled' => true,
-            ],
+        return $this->notImplemented('Updating feature flag', [
+            'tenant_id' => $this->tenantId($request),
+            'feature_flag_id' => $id,
         ]);
+    }
+
+    /**
+     * @param array<string, string> $context
+     */
+    private function notImplemented(string $operation, array $context = []): JsonResponse
+    {
+        return response()->json([
+            'error' => 'Not implemented',
+            'message' => $operation.' is not implemented yet.',
+            'context' => $context,
+        ], 501);
     }
 }

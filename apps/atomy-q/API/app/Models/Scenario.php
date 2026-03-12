@@ -21,15 +21,15 @@ class Scenario extends Model
     protected $fillable = [
         'tenant_id',
         'rfq_id',
+        'comparison_run_id',
         'name',
-        'assumptions',
-        'results',
-        'created_by',
+        'description',
+        'config',
+        'status',
     ];
 
     protected $casts = [
-        'assumptions' => 'array',
-        'results' => 'array',
+        'config' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -43,10 +43,10 @@ class Scenario extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<ComparisonRun, $this>
      */
-    public function creator(): BelongsTo
+    public function comparisonRun(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(ComparisonRun::class, 'comparison_run_id');
     }
 }
