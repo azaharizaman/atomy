@@ -64,7 +64,7 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
         </div>
 
         <div className="mt-3">
-          <Button fullWidth size="sm" variant="primary">
+          <Button fullWidth size="sm" variant="primary" disabled>
             {record.primaryActionLabel}
           </Button>
         </div>

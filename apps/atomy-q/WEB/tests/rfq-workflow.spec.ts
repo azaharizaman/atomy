@@ -48,6 +48,46 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
   });
 
+  await page.route('**/api/v1/rfqs*', async (route) => {
+    const corsHeaders = buildCorsHeaders(origin);
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: corsHeaders });
+      return;
+    }
+
+    if (route.request().url().includes('/RFQ-2401')) {
+      await route.fulfill({
+        status: 200,
+        headers: corsHeaders,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: 'RFQ-2401',
+            title: 'Server Infrastructure Refresh',
+            status: 'active',
+            vendorsCount: 5,
+            quotesCount: 8,
+            estValue: '$1,200,000',
+            savings: '12%',
+          },
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      headers: corsHeaders,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          { id: 'RFQ-2401', title: 'Server Infrastructure Refresh', owner: { name: 'Alex Kumar' }, status: 'active', deadline: '2026-04-15', estValue: '$1,200,000', category: 'IT Hardware', vendorsCount: 5, quotesCount: 8, savings: '12%' },
+        ],
+        meta: { total: 1, totalPages: 1 },
+      }),
+    });
+  });
+
   await page.goto('/login');
   origin = new URL(page.url()).origin;
   await page.getByLabel('Email address').fill(user.email);

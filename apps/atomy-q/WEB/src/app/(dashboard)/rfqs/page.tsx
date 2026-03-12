@@ -35,10 +35,15 @@ export default function RfqsPage() {
   const [owner, setOwner] = React.useState('');
   const [category, setCategory] = React.useState('');
 
-  const [selectedIds, setSelectedIds] = React.useState<(string | number)[]>(['RFQ-2401', 'RFQ-2402']);
-  const [expandedId, setExpandedId] = React.useState<string | number | null>('RFQ-2401');
+  const [selectedIds, setSelectedIds] = React.useState<(string | number)[]>([]);
+  const [expandedId, setExpandedId] = React.useState<string | number | null>(null);
 
-  const { data: rows = [], isLoading } = useRfqs({ q, status, owner, category, page: 1 });
+  const [page, setPage] = React.useState(1);
+
+  const { data: rows = [], isLoading } = useRfqs({ q, status, owner, category, page });
+
+  const totalPages = (rows as any).meta?.totalPages ?? 1;
+  const totalItems = (rows as any).meta?.total ?? rows.length;
 
   const activeFilters = [
     status ? { key: 'status', label: 'Status', value: status } : null,
@@ -93,7 +98,7 @@ export default function RfqsPage() {
     <div className="space-y-4">
       <PageHeader
         title="Requisitions"
-        subtitle={`${rows.length} active requisitions`}
+        subtitle={`${totalItems} total requisitions`}
         actions={
           <Button size="sm" variant="primary" onClick={() => router.push('/rfqs/new')}>
             Create RFQ
@@ -187,18 +192,18 @@ export default function RfqsPage() {
           { label: 'Assign Owner', onClick: () => {} },
           { label: 'Export Selected', onClick: () => {} },
         ]}
-        showActions
+        showActions={false}
         onRowAction={() => {}}
         onRowClick={(row) => router.push(`/rfqs/${encodeURIComponent(String(row.id))}/overview`)}
       />
 
       <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>Page 1 of 3</span>
+        <span>Page {page} of {totalPages} ({totalItems} total)</span>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
             Previous
           </Button>
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" onClick={() => setPage(page + 1)} disabled={page >= totalPages}>
             Next
           </Button>
         </div>

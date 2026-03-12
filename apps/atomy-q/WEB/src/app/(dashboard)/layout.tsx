@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   LayoutPanelTop,
   FileText,
@@ -15,6 +15,8 @@ import { useAuthStore } from '@/store/use-auth-store';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentStatus = searchParams.get('status');
   const user = useAuthStore((state) => state.user);
 
   const displayName = user?.name || user?.email;
@@ -55,19 +57,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             <SubNavItem
               label="Active"
-              active={pathname === '/rfqs/active' || pathname === '/rfqs'}
+              active={pathname === '/rfqs' && (!currentStatus || currentStatus === 'active')}
               href="/rfqs"
               badge={12}
             />
             <SubNavItem
               label="Closed"
-              active={pathname === '/rfqs/closed'}
-              href="/rfqs/closed"
+              active={pathname === '/rfqs' && currentStatus === 'closed'}
+              href="/rfqs?status=closed"
               badge={5}
             />
-            <SubNavItem label="Awarded" active={pathname === '/rfqs/awarded'} href="/rfqs/awarded" badge={3} />
-            <SubNavItem label="Archived" active={pathname === '/rfqs/archived'} href="/rfqs/archived" />
-            <SubNavItem label="Draft" active={pathname === '/rfqs/draft'} href="/rfqs/draft" badge={2} />
+            <SubNavItem
+              label="Awarded"
+              active={pathname === '/rfqs' && currentStatus === 'awarded'}
+              href="/rfqs?status=awarded"
+              badge={3}
+            />
+            <SubNavItem
+              label="Archived"
+              active={pathname === '/rfqs' && currentStatus === 'archived'}
+              href="/rfqs?status=archived"
+            />
+            <SubNavItem
+              label="Draft"
+              active={pathname === '/rfqs' && currentStatus === 'draft'}
+              href="/rfqs?status=draft"
+              badge={2}
+            />
           </NavGroup>
 
           <NavItem

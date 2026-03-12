@@ -51,6 +51,7 @@ export function Button({
 
   return (
     <button
+      type="button"
       className={[base, variantStyles[variant], sizeStyles[size], fullWidth ? 'w-full' : '', className].join(' ')}
       disabled={disabled || loading}
       {...props}
@@ -86,6 +87,7 @@ export function IconButton({ variant = 'ghost', size = 'md', label, children, cl
 
   return (
     <button
+      type="button"
       aria-label={label}
       title={label}
       className={[base, variantStyles[variant], sizeMap[size], className].join(' ')}

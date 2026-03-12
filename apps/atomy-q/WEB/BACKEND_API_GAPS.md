@@ -5,6 +5,7 @@ This file records **missing or ambiguous backend support** discovered while impl
 ## RFQ List (`GET /api/v1/rfqs`)
 
 ### Query parameters (needed for Screen Blueprint parity)
+
 - **Search**
   - Suggested: `q` (string)
 - **Filtering**
@@ -17,11 +18,13 @@ This file records **missing or ambiguous backend support** discovered while impl
   - Suggested: `sort` (string) + `direction` (`asc|desc`) or a single `sortBy` value
 
 ### Response fields (needed for table + expanded row)
+
 Each RFQ list item should include, at minimum:
+
 - **Identity**: `id` (string, e.g. `RFQ-2401`)
 - **Core**: `title` (string), `status` (string)
 - **Owner**: `owner: { id, name }` (or `ownerName` if flat)
-- **Dates**: `deadline` (ISO date or formatted date)
+- **Dates**: `deadline` (ISO 8601 UTC string, e.g. `2026-04-15T12:00:00Z`). Servers MUST validate and reject non-ISO values. Include a server-side validation rule that returns a clear 400 error when `deadline` is not a valid ISO 8601 string. Clients should handle presentation/formatting locally.
 - **Metrics**:
   - `estValue` (string or numeric + currency)
   - `savings` (percentage string or numeric)
@@ -35,6 +38,7 @@ If the canonical backend field names differ, please confirm the mapping so the g
 ## RFQ Workspace Overview (`GET /api/v1/rfqs/:id`)
 
 ### Response fields (needed for Active Record Menu snippet + KPI scorecards)
+
 - `id`, `title`, `status`
 - `vendorsCount`, `quotesCount`, `estValue`, `savings`
 - Suggested additionally (Blueprint KPI wants these):
@@ -44,11 +48,14 @@ If the canonical backend field names differ, please confirm the mapping so the g
   - `approvalStatus` summary
 
 ### Activity timeline
+
 Screen Blueprint shows a 6-entry activity feed on Overview.
-- **Suggestion A**: include `activity: ActivityEvent[]` inside `GET /rfqs/:id`
-- **Suggestion B (preferred for payload size)**: add `GET /rfqs/:id/activity?limit=20`
+
+- **Suggestion A**: include `activity: ActivityEvent[]` inside `GET /api/v1/rfqs/:id`
+- **Suggestion B (preferred for payload size)**: add `GET /api/v1/rfqs/:id/activity?limit=20`
 
 Proposed `ActivityEvent` shape:
+
 - `id` (string)
 - `timestamp` (ISO string) + optional `relativeLabel`
 - `actor: { id, name }` (or `actorName`)

@@ -17,11 +17,21 @@ interface CardProps {
 const PAD_MAP = { none: '', sm: 'p-3', md: 'p-4', lg: 'p-5' };
 
 export function Card({ children, className = '', padding = 'md', hover = false, bordered = true, onClick }: CardProps) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <div
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
       className={[
-        'bg-white rounded-lg',
+        'bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500',
         bordered ? 'border border-slate-200' : '',
         'shadow-[0_1px_3px_0_rgba(0,0,0,0.06)]',
         PAD_MAP[padding],

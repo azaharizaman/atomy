@@ -57,20 +57,25 @@ interface BulkActionToolbarProps {
 }
 
 export function BulkActionToolbar({ selectedCount, actions, onClear }: BulkActionToolbarProps) {
+  const detailsRef = React.useRef<HTMLDetailsElement>(null);
+
   return (
     <div className="flex items-center gap-3 px-4 py-2 bg-indigo-50 border-b border-indigo-200">
       <span className="text-xs font-semibold text-indigo-700 shrink-0">{selectedCount} selected</span>
       <div className="w-px h-4 bg-indigo-200" />
-      <details className="relative">
+      <details className="relative" ref={detailsRef}>
         <summary className="list-none cursor-pointer text-xs font-medium px-2.5 py-1 rounded border text-indigo-700 border-indigo-300 bg-white hover:bg-indigo-100">
           Bulk Actions
         </summary>
         <div className="absolute top-[110%] left-0 min-w-44 bg-white border border-slate-200 rounded-md shadow-lg py-1 z-20">
-          {actions.map((a, i) => (
+          {actions.map((a) => (
             <button
               type="button"
-              key={i}
-              onClick={a.onClick}
+              key={a.label}
+              onClick={() => {
+                a.onClick();
+                if (detailsRef.current) detailsRef.current.open = false;
+              }}
               className={['w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50', a.variant === 'destructive' ? 'text-red-600' : 'text-slate-700'].join(' ')}
             >
               {a.label}

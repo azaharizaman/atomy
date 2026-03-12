@@ -33,18 +33,19 @@ function Scorecard({
   );
 }
 
-const ACTIVITY = [
+const generateActivity = (rfqId: string) => [
   { id: '1', time: '2 hours ago', actor: 'Alex Kumar', action: 'uploaded quote from Dell Technologies', icon: <Upload size={12} /> },
   { id: '2', time: '4 hours ago', actor: 'Priya Nair', action: 'sent invitation to HP Enterprise', icon: <Send size={12} /> },
   { id: '3', time: 'Yesterday', actor: 'System', action: 'normalization completed (18/24 lines)', icon: <CheckCircle2 size={12} /> },
   { id: '4', time: 'Yesterday', actor: 'Alex Kumar', action: 'ran comparison preview — Run #004', icon: <BarChart2 size={12} /> },
   { id: '5', time: '3 days ago', actor: 'System', action: 'RFQ published and vendors notified', icon: <CheckCircle2 size={12} /> },
-  { id: '6', time: '6 days ago', actor: 'Marcus Webb', action: 'created RFQ-2401', icon: <CheckCircle2 size={12} /> },
+  { id: '6', time: '6 days ago', actor: 'Marcus Webb', action: `created ${rfqId}`, icon: <CheckCircle2 size={12} /> },
 ];
 
 export default function RfqOverviewPage({ params }: { params: { rfqId: string } }) {
-  const rfqId = decodeURIComponent(params.rfqId);
+  const rfqId = params.rfqId;
   const { data: rfq } = useRfq(rfqId);
+  const activity = generateActivity(rfqId);
 
   return (
     <div className="space-y-4">
@@ -81,7 +82,7 @@ export default function RfqOverviewPage({ params }: { params: { rfqId: string } 
         </div>
         <div className="px-4 py-3">
           <div className="space-y-3">
-            {ACTIVITY.map((e) => (
+            {activity.map((e) => (
               <div key={e.id} className="flex gap-3">
                 <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
                   {e.icon}

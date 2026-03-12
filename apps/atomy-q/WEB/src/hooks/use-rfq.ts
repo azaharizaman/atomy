@@ -14,7 +14,10 @@ export interface RfqDetail {
 }
 
 function normalizeRfq(payload: any): RfqDetail {
-  const raw = payload?.data ?? payload;
+  let raw = payload;
+  while (raw?.data) {
+    raw = raw.data;
+  }
   return {
     id: String(raw?.id ?? raw?.rfqId ?? ''),
     title: String(raw?.title ?? raw?.name ?? 'Requisition'),

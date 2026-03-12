@@ -26,21 +26,23 @@ export interface UseRfqsParams {
   page?: number;
 }
 
-function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
-  const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
+function normalizeRfqsPayload(payload: any): RfqListItem[] {
+  const asArray = (value: unknown): unknown[] | null => (Array.isArray(value) ? value : null);
+  const isValidRfqStatus = (s: any): s is RfqStatus => ['active', 'closed', 'awarded', 'archived', 'draft', 'pending'].includes(s);
 
   // common shapes: [] or { data: [] } or { data: { data: [] } }
   const list =
-    asArray(payload) ||
-    asArray((payload as any)?.data) ||
-    asArray((payload as any)?.data?.data);
+    asArray(payload) ??
+    asArray(payload?.data) ??
+    asArray(payload?.data?.data) ??
+    [];
 
-  if (!Array.isArray(list) || list.length === 0) return [];
+  if (list.length === 0) return [];
 
   return list.map((raw: any) => ({
     id: String(raw.id ?? raw.rfqId ?? raw.code ?? ''),
     title: String(raw.title ?? raw.name ?? 'Untitled'),
-    status: (raw.status as RfqStatus) ?? 'active',
+    status: isValidRfqStatus(raw.status) ? raw.status : 'active',
     owner: raw.owner
       ? { name: raw.owner.name, email: raw.owner.email }
       : raw.owner_name || raw.owner_email

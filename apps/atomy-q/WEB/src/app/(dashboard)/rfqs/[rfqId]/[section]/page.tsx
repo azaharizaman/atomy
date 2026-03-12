@@ -20,8 +20,8 @@ const SECTION_TITLES: Record<string, string> = {
 };
 
 export default function RfqSectionStubPage({ params }: { params: { rfqId: string; section: string } }) {
-  const rfqId = decodeURIComponent(params.rfqId);
-  const section = decodeURIComponent(params.section);
+  const rfqId = params.rfqId;
+  const section = params.section;
   const title = SECTION_TITLES[section] ?? section;
 
   return (

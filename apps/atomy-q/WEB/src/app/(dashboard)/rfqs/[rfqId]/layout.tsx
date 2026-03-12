@@ -6,24 +6,28 @@ import { LayoutPanelTop, FileText, FolderArchive, BarChart2, Settings } from 'lu
 
 import { NavGroup, NavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
-import { ActiveRecordMenu, type ActiveRfqRecord } from '@/components/workspace/active-record-menu';
+import { ActiveRecordMenu } from '@/components/workspace/active-record-menu';
+import { useRfq } from '@/hooks/use-rfq';
 
 export default function RfqWorkspaceLayout({ children, params }: { children: React.ReactNode; params: { rfqId: string } }) {
   const pathname = usePathname();
   const [railExpanded, setRailExpanded] = React.useState(false);
 
-  const rfqId = decodeURIComponent(params.rfqId);
+  const rfqId = params.rfqId;
+  const { data: rfq, isLoading } = useRfq(rfqId);
 
-  const record: ActiveRfqRecord = {
-    id: rfqId,
-    title: rfqId === 'RFQ-2401' ? 'Server Infrastructure Refresh' : 'Requisition Workspace',
-    status: 'active',
-    vendorsCount: 5,
-    quotesCount: 8,
-    estValue: '$1.2M',
-    savings: '12%',
-    primaryActionLabel: 'Close for Submissions',
-  };
+  const record = rfq
+    ? {
+        id: rfq.id,
+        title: rfq.title,
+        status: rfq.status as any,
+        vendorsCount: rfq.vendorsCount ?? 0,
+        quotesCount: rfq.quotesCount ?? 0,
+        estValue: rfq.estValue ?? '—',
+        savings: rfq.savings ?? '—',
+        primaryActionLabel: 'Close for Submissions',
+      }
+    : null;
 
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden font-sans">
@@ -61,7 +65,7 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <div className="flex flex-1 min-h-0">
-          <ActiveRecordMenu record={record} />
+          {!isLoading && record && <ActiveRecordMenu record={record as any} />}
           <div className="flex-1 min-w-0 overflow-y-auto">
             <div className="p-6">
               <div className="max-w-7xl mx-auto space-y-6">{children}</div>
