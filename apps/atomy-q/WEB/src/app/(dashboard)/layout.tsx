@@ -9,9 +9,10 @@ import {
   BarChart2,
   Settings,
 } from 'lucide-react';
-import { NavGroup, NavItem, NavLabel, SubNavItem } from '@/components/layout/sidebar';
+import { NavGroup, NavItem, SubNavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { useAuthStore } from '@/store/use-auth-store';
+import { RFQ_STATUSES } from '@/hooks/use-rfqs';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -57,32 +58,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             <SubNavItem
               label="Active"
-              active={pathname === '/rfqs' && (!currentStatus || currentStatus === 'active')}
+              active={pathname === '/rfqs' && (!currentStatus || currentStatus === RFQ_STATUSES.ACTIVE)}
               href="/rfqs"
-              badge={12}
+            />
+            <SubNavItem
+              label="Pending"
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.PENDING}
+              href="/rfqs?status=pending"
             />
             <SubNavItem
               label="Closed"
-              active={pathname === '/rfqs' && currentStatus === 'closed'}
-              href="/rfqs?status=closed"
-              badge={5}
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.CLOSED}
+              href={`/rfqs?status=${RFQ_STATUSES.CLOSED}`}
             />
             <SubNavItem
               label="Awarded"
-              active={pathname === '/rfqs' && currentStatus === 'awarded'}
-              href="/rfqs?status=awarded"
-              badge={3}
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.AWARDED}
+              href={`/rfqs?status=${RFQ_STATUSES.AWARDED}`}
             />
             <SubNavItem
               label="Archived"
-              active={pathname === '/rfqs' && currentStatus === 'archived'}
-              href="/rfqs?status=archived"
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.ARCHIVED}
+              href={`/rfqs?status=${RFQ_STATUSES.ARCHIVED}`}
             />
             <SubNavItem
               label="Draft"
-              active={pathname === '/rfqs' && currentStatus === 'draft'}
-              href="/rfqs?status=draft"
-              badge={2}
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.DRAFT}
+              href={`/rfqs?status=${RFQ_STATUSES.DRAFT}`}
             />
           </NavGroup>
 

@@ -2,46 +2,55 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
+import {
+  BarChart2,
+  CheckCircle2,
+  FileText,
+  GitCompareArrows,
+  HandCoins,
+  Inbox,
+  LayoutGrid,
+  Sparkles,
+  Users,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import {
+  ActivitySummaryCard,
+  type ActivitySummaryItem,
+  CategoryBreakdownCard,
+  type CategoryMetricItem,
+  PendingApprovalsCard,
+  type PendingApprovalItem,
+  PipelineStatCard,
+  QuickActionCard,
+  SavingsHighlightCard,
+  SLAAlertCard,
+} from '@/components/dashboard/DashboardCards';
 
-interface KPICardProps {
-  title: string;
-  value: string | number | undefined;
-  subtext?: string;
-  icon: React.ElementType;
-}
+type DashboardKpis = {
+  active_rfqs?: number;
+  pending_approvals?: number;
+  total_savings?: string | number;
+  avg_cycle_time_days?: string | number;
+};
 
-function KPICard({ title, value, subtext, icon: Icon }: KPICardProps) {
-  return (
-    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between h-32">
-      <div className="flex justify-between items-start">
-        <span className="text-slate-500 text-sm font-medium">{title}</span>
-        <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
-          <Icon size={18} />
-        </div>
-      </div>
-      <div>
-        <div className="text-2xl font-bold text-slate-900">{value}</div>
-        {subtext && <div className="text-xs text-slate-500 mt-1">{subtext}</div>}
-      </div>
-    </div>
-  );
-}
-
-interface ActivityItem {
-  id: number;
-  type: string;
-  title: string;
+type DashboardActivityRaw = {
+  id?: string | number;
+  timestamp?: string;
+  time?: string;
+  actor?: string;
   user?: string;
-  vendor?: string;
-  time: string;
-}
+  action?: string;
+  title?: string;
+  rfqId?: string;
+};
 
 export default function DashboardPage() {
+  const router = useRouter();
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
-  const { data: kpis, isLoading: isLoadingKPIs } = useQuery({
+  const { data: kpis, isLoading: isLoadingKpis } = useQuery({
     queryKey: ['dashboard', 'kpis'],
     queryFn: async () => {
       if (useMocks) {
@@ -50,11 +59,10 @@ export default function DashboardPage() {
           pending_approvals: 5,
           total_savings: '$1.2M',
           avg_cycle_time_days: '14 days',
-        };
+        } satisfies DashboardKpis;
       }
-
-      return (await api.get('/dashboard/kpis')).data;
-    }
+      return (await api.get('/dashboard/kpis')).data as DashboardKpis;
+    },
   });
 
   const { data: activity, isLoading: isLoadingActivity } = useQuery({
@@ -62,82 +70,204 @@ export default function DashboardPage() {
     queryFn: async () => {
       if (useMocks) {
         return [
-          { id: 1, type: 'rfq_created', title: 'IT Hardware Refresh 2026', user: 'John Doe', time: '2h ago' },
-          { id: 2, type: 'approval_request', title: 'Office Supplies Q2', user: 'Jane Smith', time: '4h ago' },
-          { id: 3, type: 'quote_received', title: 'Server Maintenance', vendor: 'TechCorp', time: '5h ago' },
-        ] as ActivityItem[];
+          { id: 'act-1', timestamp: '2 hours ago', actor: 'Alex Kumar', action: 'published RFQ', rfqId: 'RFQ-2407' },
+          { id: 'act-2', timestamp: '4 hours ago', actor: 'Priya Nair', action: 'requested approval', rfqId: 'RFQ-2404' },
+          { id: 'act-3', timestamp: 'Yesterday', actor: 'System', action: 'normalized quotes (18/24)', rfqId: 'RFQ-2401' },
+          { id: 'act-4', timestamp: 'Yesterday', actor: 'Marcus Webb', action: 'invited vendors', rfqId: 'RFQ-2408' },
+        ] as ActivitySummaryItem[];
       }
 
       const { data } = await api.get('/dashboard/recent-activity');
-      return Array.isArray(data) ? data : (data?.data ?? []);
-    }
+      const items = Array.isArray(data) ? data : (data?.data ?? []);
+      return items.map((item: DashboardActivityRaw, index: number) => ({
+        id: String(item.id ?? index),
+        timestamp: String(item.timestamp ?? item.time ?? 'Just now'),
+        actor: String(item.actor ?? item.user ?? 'System'),
+        action: String(item.action ?? item.title ?? 'updated an RFQ'),
+        rfqId: item.rfqId ? String(item.rfqId) : undefined,
+      })) as ActivitySummaryItem[];
+    },
   });
+
+  const pipeline = {
+    active: Number(kpis?.active_rfqs ?? 0),
+    pending: Number(kpis?.pending_approvals ?? 0),
+    intake: useMocks ? 8 : 0,
+    awards: useMocks ? 2 : 0,
+  };
+
+  const savingsValue = useMocks
+    ? '$1.2M'
+    : typeof kpis?.total_savings === 'number'
+      ? `$${kpis.total_savings.toLocaleString('en-US')}`
+      : kpis?.total_savings ?? '$0';
+
+  const approvals: PendingApprovalItem[] = useMocks
+    ? [
+        { id: 'apr-1', rfqId: 'RFQ-2404', rfqTitle: 'Network Security Audit', type: 'Quote approval', assignee: 'James Okonkwo', submittedAt: '2h ago' },
+        { id: 'apr-2', rfqId: 'RFQ-2401', rfqTitle: 'Server Infrastructure Refresh', type: 'Comparison approval', assignee: 'Sarah Chen', submittedAt: 'Yesterday' },
+        { id: 'apr-3', rfqId: 'RFQ-2408', rfqTitle: 'IT Support Annual', type: 'Award approval', assignee: 'Alex Kumar', submittedAt: '2 days ago' },
+      ]
+    : [];
+
+  const categories: CategoryMetricItem[] = useMocks
+    ? [
+        { category: 'IT Hardware', count: 6, estValue: '$2.4M', pct: 72 },
+        { category: 'Software', count: 4, estValue: '$980K', pct: 52 },
+        { category: 'Facilities', count: 3, estValue: '$420K', pct: 34 },
+        { category: 'Security', count: 2, estValue: '$180K', pct: 18 },
+      ]
+    : [];
+
+  const alerts = useMocks
+    ? [
+        { id: 'sla-1', title: 'Approval SLA expiring', rfqId: 'RFQ-2404', timeRemaining: '6h remaining', urgency: 'high', assignee: 'Marcus Webb' },
+        { id: 'sla-2', title: 'Vendor response overdue', rfqId: 'RFQ-2402', timeRemaining: '18h remaining', urgency: 'medium', assignee: 'Sarah Chen' },
+      ]
+    : [];
+
+  const quickActions = [
+    { id: 'qa-1', icon: <FileText size={16} />, title: 'Create RFQ', description: 'Launch a new requisition with guided intake.', actionLabel: 'Start', onAction: () => router.push('/rfqs/new') },
+    { id: 'qa-2', icon: <Inbox size={16} />, title: 'Quote Intake', description: 'Review new vendor uploads and extraction status.', actionLabel: 'View intake', onAction: () => router.push('/rfqs') },
+    { id: 'qa-3', icon: <GitCompareArrows size={16} />, title: 'Comparison Runs', description: 'Generate or review latest scoring outputs.', actionLabel: 'Open runs', onAction: () => router.push('/rfqs') },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <div className="text-sm text-slate-500">Last updated: Just now</div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Active RFQs"
-          value={isLoadingKPIs ? '...' : kpis?.active_rfqs}
-          subtext="+2 from last week"
-          icon={TrendingUp}
-        />
-        <KPICard
-          title="Pending Approvals"
-          value={isLoadingKPIs ? '...' : kpis?.pending_approvals}
-          subtext="Requires attention"
-          icon={AlertCircle}
-        />
-        <KPICard
-          title="YTD Savings"
-          value={isLoadingKPIs ? '...' : kpis?.total_savings}
-          subtext="12% above target"
-          icon={CheckCircle2}
-        />
-        <KPICard
-          title="Avg Cycle Time"
-          value={isLoadingKPIs ? '...' : kpis?.avg_cycle_time_days}
-          subtext="-2 days improvement"
-          icon={Clock}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Spend Trend</h2>
-          <div className="h-64 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-            Chart Placeholder (Recharts)
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+            <LayoutGrid size={12} className="text-slate-400" />
+            Overview
           </div>
+          <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
+          <p className="text-sm text-slate-500">Snapshot of requisitions, approvals, and savings performance.</p>
         </div>
-
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Recent Activity</h2>
-          <div className="space-y-4">
-            {isLoadingActivity ? (
-              <div className="text-center py-4 text-slate-500">Loading...</div>
-            ) : (
-              activity?.map((item: ActivityItem) => (
-                <div key={item.id} className="flex gap-3 items-start pb-4 border-b border-slate-100 last:border-0 last:pb-0">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-slate-600">
-                      {(item.user || item.vendor || 'S').charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{item.title}</p>
-                    <p className="text-xs text-slate-500">{item.type.replace('_', ' ')} • {item.time}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+          <Sparkles size={12} />
+          AI insights ready
         </div>
       </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: 'Active RFQs', count: pipeline.active, icon: <FileText size={16} /> },
+          { label: 'Pending Approvals', count: pipeline.pending, icon: <CheckCircle2 size={16} /> },
+          { label: 'Quotes In Intake', count: pipeline.intake, icon: <Inbox size={16} /> },
+          { label: 'Awards In Flight', count: pipeline.awards, icon: <HandCoins size={16} /> },
+        ].map((item, index) => (
+          <div
+            key={item.label}
+            className="animate-fade-up"
+            style={{ animationDelay: `${index * 80}ms` }}
+          >
+            <PipelineStatCard
+              label={item.label}
+              count={item.count}
+              icon={item.icon}
+              onClick={() => router.push('/rfqs')}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.3fr,1fr]">
+        <div className="animate-fade-up" style={{ animationDelay: '120ms' }}>
+          <SavingsHighlightCard
+            title="YTD Savings"
+            value={isLoadingKpis ? '...' : String(savingsValue)}
+            subtitle={useMocks ? '12% above target' : 'Savings impact across all RFQs'}
+            trend={useMocks ? { value: 12, label: '+12% vs last quarter' } : undefined}
+          />
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.06)] animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-800">Spend Trend</h3>
+            <div className="text-xs text-slate-400">Last 6 months</div>
+          </div>
+          <div className="mt-4 h-36 rounded-lg bg-gradient-to-b from-indigo-50 to-white border border-slate-100 flex items-end justify-between px-4 pb-4">
+            {[38, 52, 46, 68, 58, 72].map((value, index) => (
+              <div key={index} className="flex flex-col items-center gap-1">
+                <div className="w-6 rounded-md bg-indigo-500/70" style={{ height: `${value}px` }} />
+                <span className="text-[10px] text-slate-400">{['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'][index]}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+            <BarChart2 size={12} className="text-indigo-500" />
+            Trending upward with improved cycle times.
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.1fr,1fr,1fr]">
+        <div className="animate-fade-up" style={{ animationDelay: '260ms' }}>
+          <PendingApprovalsCard
+            items={approvals}
+            onItemClick={(id) => router.push(`/rfqs?approval=${encodeURIComponent(id)}`)}
+            onViewAll={() => router.push('/rfqs')}
+          />
+        </div>
+        <div className="animate-fade-up" style={{ animationDelay: '320ms' }}>
+          <ActivitySummaryCard
+            items={activity ?? []}
+            onViewAll={() => router.push('/rfqs')}
+            className={isLoadingActivity ? 'opacity-60' : ''}
+          />
+        </div>
+        <div className="animate-fade-up" style={{ animationDelay: '380ms' }}>
+          <CategoryBreakdownCard items={categories} />
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.1fr,1.3fr]">
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-slate-800">SLA Alerts</h3>
+          {alerts.length === 0 && !useMocks ? (
+            <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">
+              No SLA alerts for the current period.
+            </div>
+          ) : (
+            alerts.map(alert => (
+              <SLAAlertCard
+                key={alert.id}
+                title={alert.title}
+                rfqId={alert.rfqId}
+                timeRemaining={alert.timeRemaining}
+                urgency={alert.urgency as 'high' | 'medium' | 'low'}
+                assignee={alert.assignee}
+                onClick={() => router.push(`/rfqs/${encodeURIComponent(alert.rfqId)}/overview`)}
+              />
+            ))
+          )}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {quickActions.map(action => (
+            <QuickActionCard
+              key={action.id}
+              icon={action.icon}
+              title={action.title}
+              description={action.description}
+              actionLabel={action.actionLabel}
+              onAction={action.onAction}
+            />
+          ))}
+          <QuickActionCard
+            icon={<Users size={16} />}
+            title="Vendor Scores"
+            description="Review performance and compliance signals."
+            actionLabel="Open vendors"
+            onAction={() => router.push('/rfqs')}
+          />
+        </div>
+      </div>
+
+      {!useMocks && !isLoadingKpis && (!activity || activity.length === 0) && (
+        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-500">
+          Dashboard data is still syncing. Once activity is available, you will see KPI snapshots and SLA alerts here.
+        </div>
+      )}
     </div>
   );
 }

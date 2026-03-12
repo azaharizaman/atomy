@@ -8,12 +8,13 @@ import { FileText, Inbox, GitCompareArrows, CheckSquare, HandCoins, FolderArchiv
 import { Button } from '@/components/ds/Button';
 import { CountBadge, StatusBadge, StatusDot } from '@/components/ds/Badge';
 import { NavigationLink } from '@/components/layout/sidebar';
+import { type RfqStatus } from '@/hooks/use-rfqs';
 import { MetricChip } from './metric-chip';
 
 export interface ActiveRfqRecord {
   id: string;
   title: string;
-  status: 'active' | 'closed' | 'awarded' | 'draft' | 'pending' | 'archived';
+  status: RfqStatus;
   vendorsCount: number;
   quotesCount: number;
   estValue: string;
@@ -53,7 +54,7 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
             <div className="text-xs font-mono text-slate-400">{record.id}</div>
             <div className="text-sm font-semibold text-slate-900 truncate">{record.title}</div>
           </div>
-          <StatusBadge status={record.status as any} />
+          <StatusBadge status={record.status} />
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">

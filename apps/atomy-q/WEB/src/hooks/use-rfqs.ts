@@ -3,7 +3,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
-export type RfqStatus = 'active' | 'closed' | 'awarded' | 'archived' | 'draft' | 'pending';
+export const RFQ_STATUSES = {
+  ACTIVE: 'active',
+  CLOSED: 'closed',
+  AWARDED: 'awarded',
+  ARCHIVED: 'archived',
+  DRAFT: 'draft',
+  PENDING: 'pending',
+} as const;
+
+export type RfqStatus = (typeof RFQ_STATUSES)[keyof typeof RFQ_STATUSES];
+
+export const isValidRfqStatus = (status: unknown): status is RfqStatus =>
+  Object.values(RFQ_STATUSES).includes(status as RfqStatus);
 
 export interface RfqListItem {
   id: string;
@@ -28,7 +40,6 @@ export interface UseRfqsParams {
 
 function normalizeRfqsPayload(payload: any): RfqListItem[] {
   const asArray = (value: unknown): unknown[] | null => (Array.isArray(value) ? value : null);
-  const isValidRfqStatus = (s: any): s is RfqStatus => ['active', 'closed', 'awarded', 'archived', 'draft', 'pending'].includes(s);
 
   // common shapes: [] or { data: [] } or { data: { data: [] } }
   const list =
@@ -42,7 +53,7 @@ function normalizeRfqsPayload(payload: any): RfqListItem[] {
   return list.map((raw: any) => ({
     id: String(raw.id ?? raw.rfqId ?? raw.code ?? ''),
     title: String(raw.title ?? raw.name ?? 'Untitled'),
-    status: isValidRfqStatus(raw.status) ? raw.status : 'active',
+    status: isValidRfqStatus(raw.status) ? raw.status : RFQ_STATUSES.ACTIVE,
     owner: raw.owner
       ? { name: raw.owner.name, email: raw.owner.email }
       : raw.owner_name || raw.owner_email

@@ -42,8 +42,8 @@ export default function RfqsPage() {
 
   const { data: rows = [], isLoading } = useRfqs({ q, status, owner, category, page });
 
-  const totalPages = (rows as any).meta?.totalPages ?? 1;
-  const totalItems = (rows as any).meta?.total ?? rows.length;
+  const totalPages = 1;
+  const totalItems = rows.length;
 
   const activeFilters = [
     status ? { key: 'status', label: 'Status', value: status } : null,
@@ -75,7 +75,7 @@ export default function RfqsPage() {
       label: 'Status',
       width: '110px',
       sortable: true,
-      render: (row) => <StatusBadge status={(row.status as any) ?? 'active'} />,
+      render: (row) => <StatusBadge status={row.status} />,
     },
     {
       key: 'deadline',
@@ -187,10 +187,10 @@ export default function RfqsPage() {
           />
         )}
         bulkActions={[
-          { label: 'Close Selected', onClick: () => {} },
-          { label: 'Archive Selected', onClick: () => {} },
-          { label: 'Assign Owner', onClick: () => {} },
-          { label: 'Export Selected', onClick: () => {} },
+          { label: 'Close Selected', onClick: (_ids) => { /* TODO: handleCloseSelected */ } },
+          { label: 'Archive Selected', onClick: (_ids) => { /* TODO: handleArchiveSelected */ } },
+          { label: 'Assign Owner', onClick: (_ids) => { /* TODO: handleAssignOwner */ } },
+          { label: 'Export Selected', onClick: (_ids) => { /* TODO: handleExportSelected */ } },
         ]}
         showActions={false}
         onRowAction={() => {}}

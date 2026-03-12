@@ -5,9 +5,9 @@
 | Feature | Status | Notes |
 | :--- | :--- | :--- |
 | **Project Setup** | ✅ | Next.js 16, Tailwind, TypeScript initialized. |
-| **Authentication** | ✅ | JWT Auth with refresh token flow, Zustand store, Login page. |
+| **Authentication** | ✅ | JWT Auth with refresh token flow, Zustand store, redesigned login, plus forgot/reset password flows. |
 | **API Client** | ⚠️ | Manual Axios client set up. OpenAPI generation pending backend support. |
-| **Dashboard** | ✅ | Layout with Sidebar, Header, and basic KPI cards/Activity feed. |
+| **Dashboard** | ✅ | Implemented Screen-Blueprint style dashboard (pipeline stats, savings, activity, approvals, category breakdown, SLA alerts, quick actions). |
 | **UI Components** | ✅ | Ported Design-System-v2 primitives into `src/components/ds/*` (Badge, Button, Input, FilterBar/PageHeader, DataTable, Card). |
 | **Default Layout (Blueprint)** | ✅ | Sidebar structure + TopBar actions aligned to Screen Blueprint (Requisition accordion, Settings accordion, New RFQ + AI Insights, search with “/”, notifications count). |
 | **RFQ List (Blueprint Screen 1)** | ✅ | `/rfqs` implemented with filters, bulk selection toolbar, expandable row details, pagination footer (UI), and navigation into workspace. |

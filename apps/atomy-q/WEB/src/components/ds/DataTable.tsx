@@ -59,6 +59,18 @@ interface BulkActionToolbarProps {
 export function BulkActionToolbar({ selectedCount, actions, onClear }: BulkActionToolbarProps) {
   const detailsRef = React.useRef<HTMLDetailsElement>(null);
 
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const el = detailsRef.current;
+      const target = event.target as Node;
+      if (el && !el.contains(target)) {
+        el.open = false;
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="flex items-center gap-3 px-4 py-2 bg-indigo-50 border-b border-indigo-200">
       <span className="text-xs font-semibold text-indigo-700 shrink-0">{selectedCount} selected</span>

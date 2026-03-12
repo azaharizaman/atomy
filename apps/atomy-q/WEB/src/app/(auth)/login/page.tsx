@@ -1,88 +1,153 @@
 'use client';
 
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Mail, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/use-auth-store';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { Button } from '@/components/ds/Button';
+import { Checkbox, PasswordInput, TextInput } from '@/components/ds/Input';
 
 const schema = z.object({
-  email: z.string().email(),
+  tenant_id: z.string().min(1, 'Tenant ID is required'),
+  email: z.string().email('Enter a valid email'),
   password: z.string().min(1, 'Password is required'),
+  remember_device: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
-  const { login } = useAuthStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionExpired = searchParams.get('session_expired') === '1';
+  const [authError, setAuthError] = React.useState<string | null>(null);
+  const { login } = useAuthStore();
 
-  const onSubmit = async (data: FormData) => {
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      tenant_id: process.env.NEXT_PUBLIC_TENANT_ID || '',
+      remember_device: true,
+    },
+  });
+
+  const rememberDevice = watch('remember_device') ?? true;
+
+  const onSubmit = async (payload: FormData) => {
+    setAuthError(null);
     try {
-      const response = await api.post('/auth/login', data);
-      const { access_token, user } = response.data;
-      // If API returns user separately or inside token
-      // Assuming user object is returned. If not, fetch /me
-      const userData = user || (await api.get('/me', {
-        headers: { Authorization: `Bearer ${access_token}` },
-      })).data;
+      const response = await api.post('/auth/login', {
+        tenant_id: payload.tenant_id,
+        email: payload.email,
+        password: payload.password,
+      });
+      const { access_token, user } = response.data ?? {};
+      const meResponse = user
+        ? null
+        : await api.get('/me', { headers: { Authorization: `Bearer ${access_token}` } });
 
+      const userData = user ?? (meResponse?.data?.data ?? meResponse?.data);
       login(access_token, userData);
       toast.success('Signed in successfully');
       router.push('/');
-    } catch {
-      toast.error('Invalid credentials');
+    } catch (error: any) {
+      const message = error?.response?.data?.message ?? 'Invalid credentials';
+      setAuthError(message);
+      toast.error(message);
     }
   };
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-          Email address
-        </label>
-        <div className="mt-1">
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            {...register('email')}
-            className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-          {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
-        </div>
+    <div className="space-y-6">
+      <div className="space-y-1 text-center sm:text-left">
+        <h1 className="text-xl font-bold text-slate-900">Log in to your account</h1>
+        <p className="text-sm text-slate-500">
+          Welcome back! Sign in with your workspace credentials.
+        </p>
       </div>
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-          Password
-        </label>
-        <div className="mt-1">
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            {...register('password')}
-            className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-          {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>}
+      {sessionExpired && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          Your session expired. Please sign in again.
         </div>
-      </div>
+      )}
 
-      <div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        <TextInput
+          label="Tenant ID"
+          {...register('tenant_id')}
+          placeholder="01HZX... or your tenant slug"
+          error={errors.tenant_id?.message}
+        />
+        <TextInput
+          label="Email"
+          type="email"
+          autoComplete="email"
+          {...register('email')}
+          placeholder="Email"
+          error={errors.email?.message}
+          prefixIcon={<Mail size={16} className="shrink-0" />}
+        />
+        <PasswordInput
+          label="Password"
+          autoComplete="current-password"
+          {...register('password')}
+          placeholder="Password"
+          error={errors.password?.message}
+          prefixIcon={<Lock size={16} className="shrink-0" />}
+        />
+
+        <div className="flex items-center justify-between gap-3">
+          <Checkbox
+            label="Remember this device"
+            checked={rememberDevice}
+            onChange={(e) => setValue('remember_device', e.currentTarget.checked)}
+          />
+          <button
+            type="button"
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 whitespace-nowrap"
+            onClick={() => router.push('/forgot-password')}
+          >
+            Forgot password?
+          </button>
+        </div>
+
+        {authError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {authError}
+          </div>
+        )}
+
+        <Button type="submit" fullWidth size="lg" loading={isSubmitting}>
+          Log in
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          fullWidth
+          size="md"
+          onClick={async () => {
+            try {
+              await api.post('/auth/sso');
+              toast.success('SSO flow started');
+            } catch {
+              toast.error('SSO is not enabled yet');
+            }
+          }}
         >
-          {isSubmitting ? 'Signing in...' : 'Sign in'}
-        </button>
-      </div>
-    </form>
+          Continue with SSO
+        </Button>
+      </form>
+
+      <p className="text-xs text-slate-500 text-center sm:text-left">
+        Need access? Contact your workspace administrator to provision a user or reset your tenant credentials.
+      </p>
+    </div>
   );
 }

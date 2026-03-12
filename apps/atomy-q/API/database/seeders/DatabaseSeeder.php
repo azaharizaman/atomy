@@ -17,7 +17,8 @@ final class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $now = now();
-        $tenantId = (string) Str::ulid();
+        $seedTenant = env('ATOMY_SEED_TENANT_ID');
+        $tenantId = $seedTenant !== null && $seedTenant !== '' ? (string) $seedTenant : (string) Str::ulid();
 
         $userIds = [];
         for ($i = 1; $i <= 5; $i++) {
@@ -316,7 +317,7 @@ final class DatabaseSeeder extends Seeder
                 'action' => 'requested',
                 'actor_id' => $userIds[0],
                 'reason' => null,
-                'payload' => json_encode(['note' => 'Seeded history'], JSON_THROW_ON_ERROR),
+                'metadata' => json_encode(['note' => 'Seeded history'], JSON_THROW_ON_ERROR),
                 'created_at' => $now,
             ]);
         }
@@ -424,11 +425,13 @@ final class DatabaseSeeder extends Seeder
             DB::table('report_runs')->insert([
                 'id' => (string) Str::ulid(),
                 'tenant_id' => $tenantId,
-                'report_schedule_id' => $scheduleId,
+                'schedule_id' => $scheduleId,
+                'report_type' => 'spend_summary',
                 'status' => 'completed',
                 'started_at' => $now->copy()->subHours(2),
                 'completed_at' => $now->copy()->subHours(1),
-                'output_path' => "/reports/run-{$i}.csv",
+                'file_path' => "/reports/run-{$i}.csv",
+                'parameters' => json_encode(['filters' => []], JSON_THROW_ON_ERROR),
                 'error_message' => null,
                 'created_at' => $now,
                 'updated_at' => $now,

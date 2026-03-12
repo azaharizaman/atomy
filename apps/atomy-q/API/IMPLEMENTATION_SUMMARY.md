@@ -98,6 +98,12 @@ Custom config files: `config/jwt.php`, `config/atomy.php`
 - Auth feature tests now validate token semantics and refresh tokens via the login flow using an in-memory SQLite database; protected endpoint auth checks run per-route with unique IDs and assert non-401/403 responses, JWT issuance in API tests resolves via `JwtServiceInterface`, and example tests create users directly without model factories.
 - Added unit tests for `JwtService`, `ExtractsAuthContext`, and core model relationships.
 - `DatabaseSeeder` now generates ample mock data across all 25 tables for realistic API seed state.
+- Seeder aligned with `approval_history.metadata` column (replacing legacy `payload` field).
+- Seeder aligned with `report_runs` columns (`schedule_id`, `report_type`, `file_path`, `parameters`).
+- RFQ index endpoint now reads from `rfqs` table with tenant scoping and basic filters.
+- RFQ list/show endpoints now return real RFQ data (owner, counts, ISO deadlines, pagination meta) with sorting and search support.
+- Account profile endpoints now return real user data (including tenant/role) for seeded logins.
+- Seeder can use `ATOMY_SEED_TENANT_ID` for a predictable tenant in local environments.
 - PHPUnit is configured to use PostgreSQL (port `5433`) with JWT + Redis env defaults for tests.
 
 ## Middleware

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Models\Rfq;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,17 +16,89 @@ final class RfqController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        // TODO: tenant scoping via $this->tenantId($request)
-        // Accept: status, owner, category, search, page, per_page
-
+        $tenantId = $this->tenantId($request);
         $params = $this->paginationParams($request);
 
+        $query = Rfq::query()
+            ->with('owner:id,name,email')
+            ->withCount([
+                'vendorInvitations as vendors_count',
+                'quoteSubmissions as quotes_count',
+            ])
+            ->where('tenant_id', $tenantId);
+
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($ownerId = $request->query('ownerId')) {
+            $query->where('owner_id', $ownerId);
+        } elseif ($owner = $request->query('owner')) {
+            $query->whereHas('owner', function ($builder) use ($owner): void {
+                $builder
+                    ->where('name', 'ilike', "%{$owner}%")
+                    ->orWhere('email', 'ilike', "%{$owner}%");
+            });
+        }
+
+        if ($category = $request->query('category')) {
+            $query->where('category', $category);
+        }
+
+        if ($search = $request->query('q')) {
+            $query->where(function ($builder) use ($search): void {
+                $builder
+                    ->where('rfq_number', 'ilike', "%{$search}%")
+                    ->orWhere('title', 'ilike', "%{$search}%");
+            });
+        }
+
+        $sortField = (string) ($request->query('sortBy') ?? $request->query('sort') ?? 'created_at');
+        $direction = strtolower((string) ($request->query('direction') ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sortable = [
+            'created_at' => 'created_at',
+            'deadline' => 'submission_deadline',
+            'submission_deadline' => 'submission_deadline',
+            'estimated_value' => 'estimated_value',
+            'title' => 'title',
+            'status' => 'status',
+        ];
+        $orderBy = $sortable[$sortField] ?? 'created_at';
+
+        $paginator = $query->orderBy($orderBy, $direction)
+            ->paginate($params['per_page'], ['*'], 'page', $params['page']);
+
+        $rows = $paginator->getCollection()->map(static function (Rfq $rfq): array {
+            $savings = $rfq->savings_percentage !== null ? rtrim(rtrim((string) $rfq->savings_percentage, '0'), '.') . '%' : null;
+
+            return [
+                'id' => $rfq->id,
+                'rfq_number' => $rfq->rfq_number,
+                'title' => $rfq->title,
+                'status' => $rfq->status,
+                'owner' => $rfq->owner ? [
+                    'id' => $rfq->owner->id,
+                    'name' => $rfq->owner->name,
+                    'email' => $rfq->owner->email,
+                ] : null,
+                'deadline' => optional($rfq->submission_deadline)->toAtomString(),
+                'category' => $rfq->category,
+                'estimated_value' => $rfq->estimated_value,
+                'estValue' => $rfq->estimated_value,
+                'savings_percentage' => $rfq->savings_percentage,
+                'savings' => $savings,
+                'vendors_count' => $rfq->vendors_count,
+                'quotes_count' => $rfq->quotes_count,
+            ];
+        })->values();
+
         return response()->json([
-            'data' => [],
+            'data' => $rows,
             'meta' => [
                 'current_page' => $params['page'],
                 'per_page' => $params['per_page'],
-                'total' => 0,
+                'total' => $paginator->total(),
+                'total_pages' => $paginator->lastPage(),
             ],
         ]);
     }
@@ -44,12 +117,48 @@ final class RfqController extends Controller
 
     public function show(Request $request, string $id): JsonResponse
     {
-        // TODO: tenant scoping via $this->tenantId($request)
+        $tenantId = $this->tenantId($request);
+
+        /** @var Rfq|null $rfq */
+        $rfq = Rfq::query()
+            ->with('owner:id,name,email')
+            ->withCount([
+                'vendorInvitations as vendors_count',
+                'quoteSubmissions as quotes_count',
+            ])
+            ->where('tenant_id', $tenantId)
+            ->where(function ($builder) use ($id): void {
+                $builder
+                    ->where('id', $id)
+                    ->orWhere('rfq_number', $id);
+            })
+            ->first();
+
+        if ($rfq === null) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        $savings = $rfq->savings_percentage !== null ? rtrim(rtrim((string) $rfq->savings_percentage, '0'), '.') . '%' : null;
 
         return response()->json([
             'data' => [
-                'id' => $id,
-                'status' => 'draft',
+                'id' => $rfq->id,
+                'rfq_number' => $rfq->rfq_number,
+                'title' => $rfq->title,
+                'status' => $rfq->status,
+                'owner' => $rfq->owner ? [
+                    'id' => $rfq->owner->id,
+                    'name' => $rfq->owner->name,
+                    'email' => $rfq->owner->email,
+                ] : null,
+                'deadline' => optional($rfq->submission_deadline)->toAtomString(),
+                'category' => $rfq->category,
+                'estimated_value' => $rfq->estimated_value,
+                'estValue' => $rfq->estimated_value,
+                'savings_percentage' => $rfq->savings_percentage,
+                'savings' => $savings,
+                'vendors_count' => $rfq->vendors_count,
+                'quotes_count' => $rfq->quotes_count,
             ],
         ]);
     }

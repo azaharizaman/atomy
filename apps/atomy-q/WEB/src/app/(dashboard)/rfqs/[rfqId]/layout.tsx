@@ -8,6 +8,23 @@ import { NavGroup, NavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { ActiveRecordMenu } from '@/components/workspace/active-record-menu';
 import { useRfq } from '@/hooks/use-rfq';
+import { type RfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
+
+function getPrimaryActionLabel(status: RfqStatus): string {
+  switch (status) {
+    case RFQ_STATUSES.ACTIVE:
+      return 'Close for Submissions';
+    case RFQ_STATUSES.CLOSED:
+      return 'Award RFQ';
+    case RFQ_STATUSES.AWARDED:
+      return 'Archive';
+    case RFQ_STATUSES.PENDING:
+    case RFQ_STATUSES.DRAFT:
+    case RFQ_STATUSES.ARCHIVED:
+    default:
+      return 'View Details';
+  }
+}
 
 export default function RfqWorkspaceLayout({ children, params }: { children: React.ReactNode; params: { rfqId: string } }) {
   const pathname = usePathname();
@@ -20,12 +37,12 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
     ? {
         id: rfq.id,
         title: rfq.title,
-        status: rfq.status as any,
+        status: rfq.status,
         vendorsCount: rfq.vendorsCount ?? 0,
         quotesCount: rfq.quotesCount ?? 0,
         estValue: rfq.estValue ?? '—',
         savings: rfq.savings ?? '—',
-        primaryActionLabel: 'Close for Submissions',
+        primaryActionLabel: getPrimaryActionLabel(rfq.status),
       }
     : null;
 
@@ -49,13 +66,13 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
             <NavItem label="Dashboard" icon={<LayoutPanelTop size={18} />} active={pathname === '/'} href="/" collapsed={!railExpanded} />
 
             <NavGroup label="Requisition" icon={<FileText size={18} />} active={pathname.startsWith('/rfqs')} defaultOpen={pathname.startsWith('/rfqs')} collapsed={!railExpanded}>
-              {/* keep minimal children for now; workspace nav is in ActiveRecordMenu */}
+              <></>
             </NavGroup>
 
             <NavItem label="Documents" icon={<FolderArchive size={18} />} active={pathname.startsWith('/documents')} href="/documents" collapsed={!railExpanded} />
             <NavItem label="Reporting" icon={<BarChart2 size={18} />} active={pathname.startsWith('/reporting')} href="/reporting" collapsed={!railExpanded} />
             <NavGroup label="Settings" icon={<Settings size={18} />} active={pathname.startsWith('/settings')} defaultOpen={pathname.startsWith('/settings')} collapsed={!railExpanded}>
-              {/* stubs */}
+              <></>
             </NavGroup>
           </nav>
         </div>
@@ -65,7 +82,7 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <div className="flex flex-1 min-h-0">
-          {!isLoading && record && <ActiveRecordMenu record={record as any} />}
+          {!isLoading && record && <ActiveRecordMenu record={record} />}
           <div className="flex-1 min-w-0 overflow-y-auto">
             <div className="p-6">
               <div className="max-w-7xl mx-auto space-y-6">{children}</div>

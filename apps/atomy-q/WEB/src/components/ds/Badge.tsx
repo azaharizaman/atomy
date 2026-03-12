@@ -41,6 +41,7 @@ const STATUS_MAP: Record<StatusVariant, StatusConfig> = {
   error: { label: 'Error', className: 'bg-red-50 text-red-700 border border-red-200', icon: <AlertCircle size={11} /> },
   overdue: { label: 'Overdue', className: 'bg-red-50 text-red-700 border border-red-200', icon: <AlertCircle size={11} /> },
   closed: { label: 'Closed', className: 'bg-slate-100 text-slate-600 border border-slate-200', dot: true },
+  archived: { label: 'Archived', className: 'bg-slate-100 text-slate-500 border border-slate-200', dot: true },
   locked: { label: 'Locked', className: 'bg-slate-100 text-slate-600 border border-slate-200', icon: <Lock size={11} /> },
   unpaid: { label: 'Unpaid', className: 'bg-slate-100 text-slate-600 border border-slate-200', icon: <Minus size={11} /> },
   draft: { label: 'Draft', className: 'bg-slate-100 text-slate-500 border border-slate-200', dot: true },
@@ -78,6 +79,7 @@ function getDotColor(status: StatusVariant): string {
     awarded: 'bg-indigo-500',
     generated: 'bg-blue-500',
     closed: 'bg-slate-400',
+    archived: 'bg-slate-400',
     draft: 'bg-slate-300',
   };
   return map[status] ?? 'bg-slate-400';
