@@ -9,6 +9,8 @@
 | **API Client** | ⚠️ | Manual Axios client set up. OpenAPI generation pending backend support. |
 | **Dashboard** | ✅ | Layout with Sidebar, Header, and basic KPI cards/Activity feed. |
 | **UI Components** | 🚧 | Basic Badge and Sidebar components ported from Design System. Shadcn/ui pending. |
+| **E2E Testing** | ✅ | Playwright configured with login + dashboard flow and CI-ready scripts. |
+| **Routing** | ✅ | Added not-found page for undefined routes with design-system styling. |
 | **RFQ Management** | ❌ | Pending implementation. |
 | **Vendor Management** | ❌ | Pending implementation. |
 | **Quote Intake** | ❌ | Pending implementation. |
@@ -19,3 +21,4 @@
 2.  Integrate real API endpoints when backend is ready.
 3.  Add Shadcn/ui components (Button, Input, Table, etc.).
 4.  Implement Role-Based Access Control (RBAC) in Sidebar.
+5.  Expand Playwright coverage for key workflows.

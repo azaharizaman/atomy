@@ -28,6 +28,67 @@ This is the Next.js frontend for the Atomy-Q Quote Comparison & Procurement plat
     npm run dev
     ```
 
+## Environment Variables
+
+Required:
+- `NEXT_PUBLIC_API_URL`: Base API URL (default used by the app: `http://localhost:8000/api/v1`).
+
+Optional:
+- `NEXT_PUBLIC_USE_MOCKS=true`: Use mocked dashboard data for KPI/activity widgets.
+- `PLAYWRIGHT_BASE_URL`: Override Playwright base URL (default: `http://localhost:3000`).
+- `PLAYWRIGHT_WEB_SERVER_COMMAND`: Override the Playwright web server command.
+
+## Running The App
+
+Development (hot reload):
+```bash
+npm run dev
+```
+
+Production build + start:
+```bash
+npm run build
+npm run start
+```
+
+## Running Tests
+
+E2E (Playwright):
+```bash
+# one-time browser install
+npm run test:e2e:install
+
+# run tests (starts Next dev server automatically)
+npm run test:e2e
+```
+
+CI-friendly run:
+```bash
+PLAYWRIGHT_WEB_SERVER_COMMAND="npm run build && npm run start -- --port 3000" npm run test:e2e:ci
+```
+
+## Test Data And Mocks
+
+Playwright tests:
+- Stub `/api/v1/auth/login` and `/api/v1/me` with Playwright route handlers.
+- The dashboard uses `NEXT_PUBLIC_USE_MOCKS=true` (set in `playwright.config.ts`) to avoid API calls for KPIs/activity.
+
+Local manual testing:
+- If the backend is running at `NEXT_PUBLIC_API_URL`, the login page will call `/auth/login` and `/me` against the API.
+- If you want to run the UI without a backend, set `NEXT_PUBLIC_USE_MOCKS=true` for the dashboard, and use Playwright to stub auth during E2E runs.
+
+## Local Backend Setup
+
+This WEB app expects the backend to expose:
+- `POST /api/v1/auth/login` → `{ access_token, user }`
+- `GET /api/v1/me` → user payload
+- Optional: `GET /api/v1/dashboard/kpis`, `GET /api/v1/dashboard/recent-activity`
+
+To run against a local API:
+1.  Start the backend service (API app).
+2.  Set `NEXT_PUBLIC_API_URL` in `.env.local`.
+3.  Start the WEB app with `npm run dev`.
+
 ## Project Structure
 - `src/app`: Next.js App Router pages and layouts.
 - `src/components`: UI components (layout, design system, shadcn).
@@ -42,3 +103,11 @@ On app load, `AuthProvider` attempts to refresh the session.
 
 ## API Integration
 The API client is located at `src/lib/api.ts`. It includes interceptors for attaching the Bearer token and handling 401 token refreshes automatically.
+
+## Contributing
+
+1.  Create a branch for your work.
+2.  Keep changes scoped to the WEB app in `apps/atomy-q/WEB`.
+3.  Update or add tests for new behavior. Run `npm run test:e2e` when applicable.
+4.  Update `apps/atomy-q/WEB/IMPLEMENTATION_SUMMARY.md` after functional changes.
+5.  Open a PR with a clear summary and screenshots for UI changes.
