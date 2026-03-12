@@ -92,6 +92,13 @@ All configurable via environment variables (`.env`):
 
 Custom config files: `config/jwt.php`, `config/atomy.php`
 
+## Testing & Seed Data
+
+- Added feature test coverage for auth flows, middleware enforcement, and all protected API endpoints.
+- Added unit tests for `JwtService`, `ExtractsAuthContext`, and core model relationships.
+- `DatabaseSeeder` now generates ample mock data across all 25 tables for realistic API seed state.
+- PHPUnit is configured to use PostgreSQL (port `5433`) with JWT + Redis env defaults for tests.
+
 ## Middleware
 
 - `JwtAuthenticate` — Validates Bearer JWT, extracts `auth_user_id` and `auth_tenant_id`
