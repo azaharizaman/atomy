@@ -9,13 +9,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Vendor API controller.
+ *
+ * SECURITY: When implementing real data, all queries MUST be scoped by
+ * $this->tenantId($request) to prevent cross-tenant data leakage.
+ * Do not use tenant_id from request body or query.
+ */
 final class VendorController extends Controller
 {
     use ExtractsAuthContext;
 
     public function index(Request $request): JsonResponse
     {
-        // TODO: tenant scoping via $this->tenantId($request)
+        // TODO: tenant scoping via $this->tenantId($request) before any DB query
 
         return response()->json([
             'data' => [],

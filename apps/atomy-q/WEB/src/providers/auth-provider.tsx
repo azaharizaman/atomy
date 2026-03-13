@@ -5,19 +5,26 @@ import { useAuthStore } from '../store/use-auth-store';
 import { api } from '../lib/api';
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, token, login, logout, setLoading } = useAuthStore();
+  const { isAuthenticated, token, refreshToken, login, logout, setLoading, setTokens } = useAuthStore();
 
   useEffect(() => {
     const initAuth = async () => {
       if (isAuthenticated && !token) {
+        if (!refreshToken) {
+          setLoading(false);
+          logout();
+          return;
+        }
         try {
-          const { data } = await api.post('/auth/refresh');
+          const { data } = await api.post('/auth/refresh', { refresh_token: refreshToken });
           const accessToken = data.access_token as string;
+          const newRefreshToken = (data.refresh_token as string) ?? refreshToken;
+          setTokens(accessToken, newRefreshToken);
           const me = await api.get('/me', {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
-          const payload = (me.data?.data ?? me.data) as any;
-          login(accessToken, payload);
+          const payload = (me.data?.data ?? me.data) as Parameters<typeof login>[2];
+          login(accessToken, newRefreshToken, payload);
         } catch {
           logout();
         }
@@ -26,7 +33,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     };
 
     initAuth();
-  }, [isAuthenticated, token, login, logout, setLoading]);
+  }, [isAuthenticated, token, refreshToken, login, logout, setLoading, setTokens]);
 
   return <>{children}</>;
 }

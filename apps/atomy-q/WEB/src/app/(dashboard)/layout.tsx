@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import {
   LayoutPanelTop,
   FileText,
@@ -27,8 +27,28 @@ function isRfqWorkspacePath(pathname: string): boolean {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const currentStatus = searchParams.get('status');
   const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
+  // Deny access when not authenticated (after auth init). Redirect to login.
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) {
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [isLoading, isAuthenticated, router, pathname]);
+
+  // While auth is loading or user is not authenticated, show minimal loading then redirect (handled in useEffect).
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-sm text-slate-500">{isLoading ? 'Loading…' : 'Redirecting to login…'}</div>
+      </div>
+    );
+  }
 
   // RFQ workspace (e.g. /rfqs/01KK.../overview) uses Workspace layout only: Rail + Header + Active Record Menu + content.
   // Do not wrap with Default layout (sidebar + main) so the rfqs/[rfqId] layout owns the full view.

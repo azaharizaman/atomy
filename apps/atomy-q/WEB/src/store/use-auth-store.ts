@@ -13,11 +13,13 @@ export interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, user: User) => void;
+  login: (token: string, refreshToken: string | null, user: User) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
+  setTokens: (token: string, refreshToken: string | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,18 +27,30 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
       isLoading: true,
-      login: (token, user) => set({ token, user, isAuthenticated: true, isLoading: false }),
-      logout: () => set({ token: null, user: null, isAuthenticated: false, isLoading: false }),
+      login: (token, refreshToken, user) =>
+        set({ token, refreshToken, user, isAuthenticated: true, isLoading: false }),
+      logout: () =>
+        set({
+          token: null,
+          refreshToken: null,
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        }),
       setLoading: (loading) => set({ isLoading: loading }),
+      setTokens: (token, refreshToken) => set({ token, refreshToken }),
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }), // Don't persist token if we want it in memory only, but for dev ease we might persist it. PLAN says memory only for access token. I'll stick to PLAN.
-      // Wait, PLAN says "Access token: keep in memory only". So I should NOT persist token.
-      // However, if I reload, I lose the token. The PLAN says "On load: call GET /api/v1/me (or equivalent); on 401, attempt refresh".
-      // So I need a way to restore session on load.
+      // Persist user + isAuthenticated for UI; persist refreshToken for session restore. Access token not persisted (short-lived, restored via refresh).
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+        refreshToken: state.refreshToken,
+      }),
     }
   )
 );

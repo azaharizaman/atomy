@@ -49,7 +49,7 @@ export default function LoginPage() {
         email: payload.email.trim().toLowerCase(),
         password: payload.password,
       });
-      const { access_token, user } = response.data ?? {};
+      const { access_token, refresh_token, user } = response.data ?? {};
       let userData = user;
       if (!userData && access_token) {
         const meResponse = await api.get('/me', { headers: { Authorization: `Bearer ${access_token}` } });
@@ -60,9 +60,10 @@ export default function LoginPage() {
         toast.error('Login response incomplete');
         return;
       }
-      login(access_token, userData);
+      login(access_token, refresh_token ?? null, userData);
       toast.success('Signed in successfully');
-      router.push('/');
+      const redirect = searchParams.get('redirect');
+      router.push(redirect && redirect.startsWith('/') ? redirect : '/');
     } catch (error: any) {
       const data = error?.response?.data;
       const message =
@@ -147,7 +148,7 @@ export default function LoginPage() {
             size="md"
             onClick={() => {
               const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || '01KKGX0YT42CRG3XFB1E24SH1A';
-              login('mock-access-token', {
+              login('mock-access-token', null, {
                 id: 'mock-user-1',
                 name: 'Alex Kumar',
                 email: 'user1@example.com',

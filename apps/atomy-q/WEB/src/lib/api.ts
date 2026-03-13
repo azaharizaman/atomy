@@ -36,38 +36,52 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       originalRequest._retry = true;
+      const refreshToken = useAuthStore.getState().refreshToken;
+      if (!refreshToken) {
+        useAuthStore.getState().logout();
+        return Promise.reject(error);
+      }
       try {
         if (!refreshPromise) {
           refreshPromise = axios
-            .post(`${API_URL}/auth/refresh`, {}, { withCredentials: true })
+            .post(
+              `${API_URL}/auth/refresh`,
+              { refresh_token: refreshToken },
+              { withCredentials: true }
+            )
             .then(async ({ data }) => {
               const newToken = data.access_token as string;
+              const newRefreshToken = (data.refresh_token as string) ?? refreshToken;
+              useAuthStore.getState().setTokens(newToken, newRefreshToken);
               const currentUser = useAuthStore.getState().user;
 
               if (currentUser) {
-                return { accessToken: newToken, user: currentUser };
+                return { accessToken: newToken, refreshToken: newRefreshToken, user: currentUser };
               }
 
               const meResponse = await axios.get(`${API_URL}/me`, {
                 withCredentials: true,
                 headers: { Authorization: `Bearer ${newToken}` },
               });
-
-              return { accessToken: newToken, user: meResponse.data as User };
+              const userData = (meResponse.data?.data ?? meResponse.data) as User;
+              return { accessToken: newToken, refreshToken: newRefreshToken, user: userData };
             })
             .finally(() => {
               refreshPromise = null;
             });
         }
 
-        const { accessToken, user } = await refreshPromise;
-        useAuthStore.getState().login(accessToken, user);
+        const { accessToken, refreshToken: newRefreshToken, user } = await refreshPromise;
+        if (user) {
+          useAuthStore.getState().login(accessToken, newRefreshToken, user);
+        } else {
+          useAuthStore.getState().setTokens(accessToken, newRefreshToken);
+        }
         originalRequest.headers = originalRequest.headers ?? {};
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         useAuthStore.getState().logout();
-        // Redirect to login handled by protected routes or layout
         return Promise.reject(refreshError);
       }
     }
