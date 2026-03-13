@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Upload, BarChart2, Send, FileText, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Upload, BarChart2, Send, FileText, ShieldCheck, Calendar } from 'lucide-react';
 
 import { KPIScorecard } from '@/components/ds/KPIScorecard';
 import { StatusBadge } from '@/components/ds/Badge';
@@ -111,6 +111,44 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
         comparisonIsPreview={comparison?.is_preview ?? false}
         submissionDeadline={rfq?.submission_deadline ?? undefined}
       />
+
+      {/* Deadlines */}
+      {(rfq?.submission_deadline ?? rfq?.closing_date) && (
+        <SectionCard title="Deadlines" subtitle="Key dates for this RFQ">
+          <div className="grid gap-4 sm:grid-cols-2 p-4 pt-0">
+            {rfq?.submission_deadline && (
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Calendar className="text-slate-600" size={14} />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Submission deadline</p>
+                  <p className="text-sm text-slate-800 mt-0.5">
+                    {new Date(rfq.submission_deadline).toLocaleDateString(undefined, {
+                      dateStyle: 'medium',
+                    })}
+                  </p>
+                </div>
+              </div>
+            )}
+            {rfq?.closing_date && (
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Calendar className="text-slate-600" size={14} />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Closing date</p>
+                  <p className="text-sm text-slate-800 mt-0.5">
+                    {new Date(rfq.closing_date).toLocaleDateString(undefined, {
+                      dateStyle: 'medium',
+                    })}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </SectionCard>
+      )}
 
       {/* 4 KPI scorecards */}
       <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
