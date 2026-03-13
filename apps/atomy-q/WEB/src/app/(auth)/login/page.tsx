@@ -27,6 +27,7 @@ export default function LoginPage() {
   const sessionExpired = searchParams.get('session_expired') === '1';
   const [authError, setAuthError] = React.useState<string | null>(null);
   const { login } = useAuthStore();
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -138,22 +139,47 @@ export default function LoginPage() {
           Log in
         </Button>
 
-        <Button
-          type="button"
-          variant="outline"
-          fullWidth
-          size="md"
-          onClick={async () => {
-            try {
-              await api.post('/auth/sso');
-              toast.success('SSO flow started');
-            } catch {
-              toast.error('SSO is not enabled yet');
-            }
-          }}
-        >
-          Continue with SSO
-        </Button>
+        {useMocks && (
+          <Button
+            type="button"
+            variant="outline"
+            fullWidth
+            size="md"
+            onClick={() => {
+              const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || '01KKGX0YT42CRG3XFB1E24SH1A';
+              login('mock-access-token', {
+                id: 'mock-user-1',
+                name: 'Alex Kumar',
+                email: 'user1@example.com',
+                role: 'admin',
+                tenantId,
+              });
+              toast.success('Signed in with mock account');
+              router.push('/');
+            }}
+          >
+            Use mock account
+          </Button>
+        )}
+
+        {!useMocks && (
+          <Button
+            type="button"
+            variant="outline"
+            fullWidth
+            size="md"
+            onClick={async () => {
+              try {
+                await api.post('/auth/sso');
+                toast.success('SSO flow started');
+              } catch {
+                toast.error('SSO is not enabled yet');
+              }
+            }}
+          >
+            Continue with SSO
+          </Button>
+        )}
       </form>
 
       <p className="text-xs text-slate-500 text-center sm:text-left">

@@ -74,14 +74,23 @@ export function useRfqs(params: UseRfqsParams) {
   return useQuery({
     queryKey: ['rfqs', params],
     queryFn: async (): Promise<RfqListItem[]> => {
-      if (useMocks) {
-        const { getSeedRfqListItems } = await import('@/data/seed');
-        const { items } = getSeedRfqListItems(params);
-        return items;
+      // Prefer live API when mocks are disabled and API is reachable,
+      // but always fall back to local seed data on failures or when mocks are enabled.
+      if (!useMocks) {
+        try {
+          const { data } = await api.get('/rfqs', { params });
+          const items = normalizeRfqsPayload(data).filter((x) => x.id);
+          if (items.length > 0) {
+            return items;
+          }
+        } catch {
+          // ignore and fall through to seed data
+        }
       }
 
-      const { data } = await api.get('/rfqs', { params });
-      return normalizeRfqsPayload(data).filter((x) => x.id);
+      const { getSeedRfqListItems } = await import('@/data/seed');
+      const { items } = getSeedRfqListItems(params);
+      return items;
     },
   });
 }
