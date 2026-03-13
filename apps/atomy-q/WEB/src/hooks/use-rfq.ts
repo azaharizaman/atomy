@@ -39,15 +39,10 @@ export function useRfq(rfqId: string) {
     queryKey: ['rfqs', rfqId],
     queryFn: async () => {
       if (useMocks) {
-        return normalizeRfq({
-          id: rfqId,
-          title: rfqId === 'RFQ-2401' ? 'Server Infrastructure Refresh' : 'Requisition Workspace',
-          status: 'active',
-          vendorsCount: 5,
-          quotesCount: 8,
-          estValue: '$1.2M',
-          savings: '12%',
-        });
+        const { getSeedRfqDetail } = await import('@/data/seed');
+        const detail = getSeedRfqDetail(rfqId);
+        if (!detail) throw new Error('RFQ not found');
+        return normalizeRfq(detail);
       }
 
       const { data } = await api.get(`/rfqs/${encodeURIComponent(rfqId)}`);

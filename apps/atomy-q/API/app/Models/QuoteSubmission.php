@@ -23,19 +23,20 @@ class QuoteSubmission extends Model
         'tenant_id',
         'rfq_id',
         'vendor_id',
-        'file_name',
+        'vendor_name',
         'file_path',
+        'file_type',
         'status',
-        'parse_confidence',
-        'validation_result',
-        'parsed_data',
-        'uploaded_by',
+        'submitted_at',
+        'confidence',
+        'line_items_count',
+        'warnings_count',
+        'errors_count',
     ];
 
     protected $casts = [
-        'parse_confidence' => 'decimal:2',
-        'validation_result' => 'array',
-        'parsed_data' => 'array',
+        'confidence' => 'decimal:2',
+        'submitted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -48,13 +49,6 @@ class QuoteSubmission extends Model
         return $this->belongsTo(Rfq::class, 'rfq_id');
     }
 
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function uploader(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'uploaded_by');
-    }
 
     /**
      * @return HasMany<NormalizationSourceLine>

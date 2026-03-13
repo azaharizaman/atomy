@@ -19,6 +19,7 @@
 | **Vendor Management** | ❌ | Pending implementation. |
 | **Quote Intake** | ❌ | Pending implementation. |
 | **Approvals** | ❌ | Pending implementation. |
+| **Turbopack Root Config** | ✅ | Resolve `tailwindcss` from WEB config dir to avoid parent-root module resolution. |
 
 ## Next Steps
 1.  Replace mocked RFQ list/detail data with real payload mapping (see `BACKEND_API_GAPS.md` for required fields/params).

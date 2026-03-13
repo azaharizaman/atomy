@@ -6,6 +6,7 @@ import { LayoutPanelTop, FileText, FolderArchive, BarChart2, Settings } from 'lu
 
 import { NavGroup, NavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { AppFooter } from '@/components/layout/app-footer';
 import { ActiveRecordMenu } from '@/components/workspace/active-record-menu';
 import { useRfq } from '@/hooks/use-rfq';
 import { type RfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
@@ -26,11 +27,11 @@ function getPrimaryActionLabel(status: RfqStatus): string {
   }
 }
 
-export default function RfqWorkspaceLayout({ children, params }: { children: React.ReactNode; params: { rfqId: string } }) {
+export default function RfqWorkspaceLayout({ children, params }: { children: React.ReactNode; params: Promise<{ rfqId: string }> }) {
   const pathname = usePathname();
   const [railExpanded, setRailExpanded] = React.useState(false);
 
-  const rfqId = params.rfqId;
+  const { rfqId } = React.use(params);
   const { data: rfq, isLoading } = useRfq(rfqId);
 
   const record = rfq
@@ -78,17 +79,18 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
         </div>
       </div>
 
-      {/* Main column */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Right side: TopBar + (Active Record Menu + Work surface) + Footer — per Screen-Blueprint Workspace layout */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <Header />
         <div className="flex flex-1 min-h-0">
           {!isLoading && record && <ActiveRecordMenu record={record} />}
-          <div className="flex-1 min-w-0 overflow-y-auto">
-            <div className="p-6">
+          <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
+            <div className="p-6 flex-1">
               <div className="max-w-7xl mx-auto space-y-6">{children}</div>
             </div>
           </div>
         </div>
+        <AppFooter />
       </div>
     </div>
   );

@@ -70,6 +70,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
 
         Route::prefix('{rfqId}')->group(function (): void {
             Route::get('/', [RfqController::class, 'show']);
+            Route::get('overview', [RfqController::class, 'overview']);
             Route::put('/', [RfqController::class, 'update']);
             Route::patch('status', [RfqController::class, 'updateStatus']);
             Route::post('duplicate', [RfqController::class, 'duplicate']);

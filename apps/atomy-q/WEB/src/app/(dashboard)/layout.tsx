@@ -7,6 +7,7 @@ import {
   FileText,
   FolderArchive,
   BarChart2,
+  ShieldCheck,
   Settings,
 } from 'lucide-react';
 import { NavGroup, NavItem, SubNavItem } from '@/components/layout/sidebar';
@@ -15,11 +16,25 @@ import { AppFooter } from '@/components/layout/app-footer';
 import { useAuthStore } from '@/store/use-auth-store';
 import { RFQ_STATUSES } from '@/hooks/use-rfqs';
 
+/** True when on an RFQ workspace route (e.g. /rfqs/[rfqId]/overview). Use Workspace layout only (Rail + Active Record Menu + Work surface). */
+function isRfqWorkspacePath(pathname: string): boolean {
+  if (!pathname.startsWith('/rfqs/') || pathname === '/rfqs' || pathname === '/rfqs/') return false;
+  if (pathname.startsWith('/rfqs/new')) return false;
+  const segments = pathname.split('/').filter(Boolean);
+  return segments.length >= 2 && segments[0] === 'rfqs';
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentStatus = searchParams.get('status');
   const user = useAuthStore((state) => state.user);
+
+  // RFQ workspace (e.g. /rfqs/01KK.../overview) uses Workspace layout only: Rail + Header + Active Record Menu + content.
+  // Do not wrap with Default layout (sidebar + main) so the rfqs/[rfqId] layout owns the full view.
+  if (isRfqWorkspacePath(pathname)) {
+    return <>{children}</>;
+  }
 
   const displayName = user?.name || user?.email;
   const initials = displayName
@@ -101,6 +116,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             icon={<BarChart2 size={18} />}
             active={pathname.startsWith('/reporting')}
             href="/reporting"
+          />
+
+          <NavItem
+            label="Approval Queue"
+            icon={<ShieldCheck size={18} />}
+            active={pathname.startsWith('/approvals')}
+            href="/approvals"
           />
 
           <NavGroup

@@ -92,6 +92,16 @@ All configurable via environment variables (`.env`):
 
 Custom config files: `config/jwt.php`, `config/atomy.php`
 
+## RFQ Flow Seed Script (`atomy:seed-rfq-flow`)
+
+- **Artisan command**: `php artisan atomy:seed-rfq-flow` — seeds real-world RFQ data by **replaying the full API flow** over HTTP (create RFQ → line items → publish → invite vendors → submit quotes → intake → normalization → comparison → close/award).
+- **Purpose**: (1) Generate seed data via real API calls; (2) Smoke-test that the API flow executes correctly.
+- **Options**: `--count=1`, `--status=draft|published|closed|awarded`, `--base-url=`, `--tenant=`, `--email=`, `--password=`. Uses `APP_URL` and env `ATOMY_SEED_TENANT_ID`, `ATOMY_SEED_EMAIL`, `ATOMY_SEED_PASSWORD` when not passed.
+- **Prerequisite**: API server running (e.g. `php artisan serve`); database migrated and seeded (so login user exists). Run from API app: `php artisan atomy:seed-rfq-flow --count=1 --status=published --base-url=http://127.0.0.1:8000 -n`.
+- **Design**: `docs/plans/2026-03-13-rfq-flow-seed-script-design.md`.
+
+Persistence added for flow-driven endpoints: **RfqController** (store, storeLineItem, updateStatus, lineItems, updateLineItem, destroyLineItem), **VendorInvitationController** (store), **QuoteSubmissionController** (upload, updateStatus). QuoteSubmission model fillable/casts aligned with `quote_submissions` migration.
+
 ## Testing & Seed Data
 
 - Added feature test coverage for auth flows, middleware enforcement, and all protected API endpoints.

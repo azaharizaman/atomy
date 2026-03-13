@@ -69,7 +69,7 @@ test('login with mocked API redirects to dashboard', async ({ page }) => {
 const useRealApi = process.env.E2E_USE_REAL_API === '1';
 
 /**
- * Login against the real API (requires API running on localhost:8000 and seeded DB).
+ * Login against the real API (requires API running, e.g. localhost:8001, and seeded DB).
  * Run with: E2E_USE_REAL_API=1 npm run test:e2e -- tests/auth.spec.ts -g "real API"
  */
 test('login with real API redirects to dashboard', async ({ page }, testInfo) => {

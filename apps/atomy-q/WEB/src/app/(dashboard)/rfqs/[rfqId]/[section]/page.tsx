@@ -19,9 +19,8 @@ const SECTION_TITLES: Record<string, string> = {
   'decision-trail': 'Decision Trail',
 };
 
-export default function RfqSectionStubPage({ params }: { params: { rfqId: string; section: string } }) {
-  const rfqId = params.rfqId;
-  const section = params.section;
+export default function RfqSectionStubPage({ params }: { params: Promise<{ rfqId: string; section: string }> }) {
+  const { rfqId, section } = React.use(params);
   const title = SECTION_TITLES[section] ?? section;
 
   return (
