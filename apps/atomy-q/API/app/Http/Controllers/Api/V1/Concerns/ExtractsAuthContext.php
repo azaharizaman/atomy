@@ -20,8 +20,9 @@ trait ExtractsAuthContext
 
     protected function paginationParams(Request $request): array
     {
+        $requestedPerPage = $request->query('per_page', $request->query('perPage', (string) config('atomy.pagination.default_per_page')));
         $perPage = min(
-            (int) $request->query('per_page', (string) config('atomy.pagination.default_per_page')),
+            (int) $requestedPerPage,
             (int) config('atomy.pagination.max_per_page'),
         );
 

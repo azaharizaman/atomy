@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -25,11 +26,27 @@ final class AccountController extends Controller
      */
     public function profile(Request $request): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+        $userId = $this->userId($request);
+
+        /** @var User|null $user */
+        $user = User::query()
+            ->where('id', $userId)
+            ->where('tenant_id', $tenantId)
+            ->first();
+
+        if ($user === null) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
         return response()->json([
             'data' => [
-                'id' => $this->userId($request),
-                'email' => 'user@example.com',
-                'name' => 'Stub User',
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'role' => $user->role,
+                'tenantId' => $user->tenant_id,
+                'tenant_id' => $user->tenant_id,
             ],
         ]);
     }
@@ -41,11 +58,27 @@ final class AccountController extends Controller
      */
     public function updateProfile(Request $request): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+        $userId = $this->userId($request);
+
+        /** @var User|null $user */
+        $user = User::query()
+            ->where('id', $userId)
+            ->where('tenant_id', $tenantId)
+            ->first();
+
+        if ($user === null) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
         return response()->json([
             'data' => [
-                'id' => $this->userId($request),
-                'email' => 'user@example.com',
-                'name' => 'Stub User',
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'role' => $user->role,
+                'tenantId' => $user->tenant_id,
+                'tenant_id' => $user->tenant_id,
             ],
         ]);
     }

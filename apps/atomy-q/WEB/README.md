@@ -62,6 +62,15 @@ npm run test:e2e:install
 npm run test:e2e
 ```
 
+By default, the auth test uses a **mocked** API. To run the **login test against the real API** (catches "Invalid credentials" and redirect):
+
+1. **API** must be running with **`JWT_SECRET`** set in `.env` (see `apps/atomy-q/API/.env.example`). Without it, login returns 500.
+2. Start the API: `cd apps/atomy-q/API && php artisan serve --port=8000`
+3. Start the WEB: `npm run dev` (or use existing server).
+4. Run: `E2E_USE_REAL_API=1 PLAYWRIGHT_USE_EXISTING_SERVER=1 npm run test:e2e -- tests/auth.spec.ts -g "real API"`
+
+If login still fails in the browser, ensure the API `config/cors.php` allows your WEB origin (e.g. `http://localhost:3000`) and `supports_credentials` is `true` when the WEB sends `withCredentials: true`.
+
 CI-friendly run:
 ```bash
 PLAYWRIGHT_WEB_SERVER_COMMAND="npm run build && npm run start -- --port 3000" npm run test:e2e:ci

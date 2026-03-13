@@ -96,7 +96,7 @@ export const DS_TOKENS = {
 } as const;
 
 export type StatusVariant =
-  | 'active' | 'closed' | 'awarded' | 'draft' | 'pending'
+  | 'active' | 'closed' | 'awarded' | 'archived' | 'draft' | 'pending'
   | 'approved' | 'rejected' | 'processing' | 'locked' | 'stale'
   | 'error' | 'paid' | 'due' | 'overdue' | 'unpaid' | 'preview'
   | 'final' | 'generated' | 'publishing' | 'new';

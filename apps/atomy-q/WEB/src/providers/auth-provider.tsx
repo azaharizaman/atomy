@@ -16,7 +16,8 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           const me = await api.get('/me', {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
-          login(accessToken, me.data);
+          const payload = (me.data?.data ?? me.data) as any;
+          login(accessToken, payload);
         } catch {
           logout();
         }

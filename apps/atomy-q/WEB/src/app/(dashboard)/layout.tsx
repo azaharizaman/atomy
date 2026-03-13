@@ -1,18 +1,40 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
-  LayoutDashboard, FileText, ShoppingCart, Inbox, CheckSquare,
-  BarChart2, Settings, Users, Scale, AlertTriangle
+  LayoutPanelTop,
+  FileText,
+  FolderArchive,
+  BarChart2,
+  ShieldCheck,
+  Settings,
 } from 'lucide-react';
-import { NavGroup, NavItem, NavLabel, SubNavItem } from '@/components/layout/sidebar';
+import { NavGroup, NavItem, SubNavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { AppFooter } from '@/components/layout/app-footer';
 import { useAuthStore } from '@/store/use-auth-store';
+import { RFQ_STATUSES } from '@/hooks/use-rfqs';
+
+/** True when on an RFQ workspace route (e.g. /rfqs/[rfqId]/overview). Use Workspace layout only (Rail + Active Record Menu + Work surface). */
+function isRfqWorkspacePath(pathname: string): boolean {
+  if (!pathname.startsWith('/rfqs/') || pathname === '/rfqs' || pathname === '/rfqs/') return false;
+  if (pathname.startsWith('/rfqs/new')) return false;
+  const segments = pathname.split('/').filter(Boolean);
+  return segments.length >= 2 && segments[0] === 'rfqs';
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentStatus = searchParams.get('status');
   const user = useAuthStore((state) => state.user);
+
+  // RFQ workspace (e.g. /rfqs/01KK.../overview) uses Workspace layout only: Rail + Header + Active Record Menu + content.
+  // Do not wrap with Default layout (sidebar + main) so the rfqs/[rfqId] layout owns the full view.
+  if (isRfqWorkspacePath(pathname)) {
+    return <>{children}</>;
+  }
 
   const displayName = user?.name || user?.email;
   const initials = displayName
@@ -28,7 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 z-20">
+      <aside className="w-[200px] bg-white border-r border-slate-200 flex flex-col shrink-0 z-20">
         <div className="h-14 flex items-center px-4 border-b border-slate-100">
           <div className="font-bold text-lg text-indigo-600 tracking-tight flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-indigo-600" />
@@ -39,105 +61,82 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5 custom-scrollbar">
           <NavItem
             label="Dashboard"
-            icon={<LayoutDashboard size={18} />}
+            icon={<LayoutPanelTop size={18} />}
             active={pathname === '/'}
             href="/"
           />
 
-          <NavLabel label="Procurement" />
-
           <NavGroup
-            label="RFQ Management"
+            label="Requisition"
             icon={<FileText size={18} />}
             active={pathname.startsWith('/rfqs')}
             defaultOpen={pathname.startsWith('/rfqs')}
           >
             <SubNavItem
-              label="All RFQs"
-              active={pathname === '/rfqs'}
+              label="Active"
+              active={pathname === '/rfqs' && (!currentStatus || currentStatus === RFQ_STATUSES.ACTIVE)}
               href="/rfqs"
             />
             <SubNavItem
-              label="Templates"
-              active={pathname === '/rfqs/templates'}
-              href="/rfqs/templates"
+              label="Pending"
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.PENDING}
+              href="/rfqs?status=pending"
+            />
+            <SubNavItem
+              label="Closed"
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.CLOSED}
+              href={`/rfqs?status=${RFQ_STATUSES.CLOSED}`}
+            />
+            <SubNavItem
+              label="Awarded"
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.AWARDED}
+              href={`/rfqs?status=${RFQ_STATUSES.AWARDED}`}
+            />
+            <SubNavItem
+              label="Archived"
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.ARCHIVED}
+              href={`/rfqs?status=${RFQ_STATUSES.ARCHIVED}`}
+            />
+            <SubNavItem
+              label="Draft"
+              active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.DRAFT}
+              href={`/rfqs?status=${RFQ_STATUSES.DRAFT}`}
             />
           </NavGroup>
 
-          <NavGroup
-            label="Quote Intake"
-            icon={<Inbox size={18} />}
-            active={pathname.startsWith('/quote-intake')}
-            badge={3}
-          >
-            <SubNavItem
-              label="Submissions"
-              active={pathname === '/quote-intake'}
-              href="/quote-intake"
-              badge={3}
-            />
-            <SubNavItem
-              label="Normalization"
-              active={pathname === '/quote-intake/normalization'}
-              href="/quote-intake/normalization"
-            />
-          </NavGroup>
-
           <NavItem
-            label="Comparison Matrix"
-            icon={<Scale size={18} />}
-            active={pathname.startsWith('/comparison')}
-            href="/comparison"
+            label="Documents"
+            icon={<FolderArchive size={18} />}
+            active={pathname.startsWith('/documents')}
+            href="/documents"
           />
 
-          <NavLabel label="Network" />
-
           <NavItem
-            label="Vendors"
-            icon={<ShoppingCart size={18} />}
-            active={pathname.startsWith('/vendors')}
-            href="/vendors"
+            label="Reporting"
+            icon={<BarChart2 size={18} />}
+            active={pathname.startsWith('/reporting')}
+            href="/reporting"
           />
 
-          <NavLabel label="Governance" />
-
           <NavItem
-            label="Approvals"
-            icon={<CheckSquare size={18} />}
+            label="Approval Queue"
+            icon={<ShieldCheck size={18} />}
             active={pathname.startsWith('/approvals')}
-            badge={5}
             href="/approvals"
           />
 
-          <NavItem
-            label="Risk & Compliance"
-            icon={<AlertTriangle size={18} />}
-            active={pathname.startsWith('/risk')}
-            href="/risk"
-          />
-
-          <NavItem
-            label="Reports"
-            icon={<BarChart2 size={18} />}
-            active={pathname.startsWith('/reports')}
-            href="/reports"
-          />
-
-          <NavLabel label="System" />
-
-          <NavItem
+          <NavGroup
             label="Settings"
             icon={<Settings size={18} />}
             active={pathname.startsWith('/settings')}
-            href="/settings"
-          />
-
-          <NavItem
-            label="Users & Access"
-            icon={<Users size={18} />}
-            active={pathname.startsWith('/users')}
-            href="/users"
-          />
+            defaultOpen={pathname.startsWith('/settings')}
+          >
+            <SubNavItem label="Users & Roles" active={pathname === '/settings/users'} href="/settings/users" />
+            <SubNavItem label="Scoring Policies" active={pathname === '/settings/scoring-policies'} href="/settings/scoring-policies" />
+            <SubNavItem label="Templates" active={pathname === '/settings/templates'} href="/settings/templates" />
+            <SubNavItem label="Integrations" active={pathname === '/settings/integrations'} href="/settings/integrations" />
+            <SubNavItem label="Feature Flags" active={pathname === '/settings/feature-flags'} href="/settings/feature-flags" />
+          </NavGroup>
         </nav>
 
         {user && (
@@ -156,13 +155,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-6 scroll-smooth">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 scroll-smooth">
+          <div className="max-w-7xl mx-auto space-y-6 min-w-0">
             {children}
           </div>
         </main>
+        <AppFooter />
       </div>
     </div>
   );

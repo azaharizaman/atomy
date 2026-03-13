@@ -61,6 +61,13 @@ final class AuthController extends Controller
             'refresh_token' => $refreshToken,
             'token_type' => 'Bearer',
             'expires_in' => $this->jwt->getTtlMinutes() * 60,
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'role' => $user->role,
+                'tenantId' => $user->tenant_id,
+            ],
         ]);
     }
 

@@ -92,12 +92,28 @@ All configurable via environment variables (`.env`):
 
 Custom config files: `config/jwt.php`, `config/atomy.php`
 
+## RFQ Flow Seed Script (`atomy:seed-rfq-flow`)
+
+- **Artisan command**: `php artisan atomy:seed-rfq-flow` — seeds real-world RFQ data by **replaying the full API flow** over HTTP (create RFQ → line items → publish → invite vendors → submit quotes → intake → normalization → comparison → close/award).
+- **Purpose**: (1) Generate seed data via real API calls; (2) Smoke-test that the API flow executes correctly.
+- **Options**: `--count=1`, `--status=draft|published|closed|awarded`, `--base-url=`, `--tenant=`, `--email=`, `--password=`. Uses `APP_URL` and env `ATOMY_SEED_TENANT_ID`, `ATOMY_SEED_EMAIL`, `ATOMY_SEED_PASSWORD` when not passed.
+- **Prerequisite**: API server running (e.g. `php artisan serve`); database migrated and seeded (so login user exists). Run from API app: `php artisan atomy:seed-rfq-flow --count=1 --status=published --base-url=http://127.0.0.1:8000 -n`.
+- **Design**: `docs/plans/2026-03-13-rfq-flow-seed-script-design.md`.
+
+Persistence added for flow-driven endpoints: **RfqController** (store, storeLineItem, updateStatus, lineItems, updateLineItem, destroyLineItem), **VendorInvitationController** (store), **QuoteSubmissionController** (upload, updateStatus). QuoteSubmission model fillable/casts aligned with `quote_submissions` migration.
+
 ## Testing & Seed Data
 
 - Added feature test coverage for auth flows, middleware enforcement, and all protected API endpoints.
 - Auth feature tests now validate token semantics and refresh tokens via the login flow using an in-memory SQLite database; protected endpoint auth checks run per-route with unique IDs and assert non-401/403 responses, JWT issuance in API tests resolves via `JwtServiceInterface`, and example tests create users directly without model factories.
 - Added unit tests for `JwtService`, `ExtractsAuthContext`, and core model relationships.
 - `DatabaseSeeder` now generates ample mock data across all 25 tables for realistic API seed state.
+- Seeder aligned with `approval_history.metadata` column (replacing legacy `payload` field).
+- Seeder aligned with `report_runs` columns (`schedule_id`, `report_type`, `file_path`, `parameters`).
+- RFQ index endpoint now reads from `rfqs` table with tenant scoping and basic filters.
+- RFQ list/show endpoints now return real RFQ data (owner, counts, ISO deadlines, pagination meta) with sorting and search support.
+- Account profile endpoints now return real user data (including tenant/role) for seeded logins.
+- Seeder can use `ATOMY_SEED_TENANT_ID` for a predictable tenant in local environments.
 - PHPUnit is configured to use PostgreSQL (port `5433`) with JWT + Redis env defaults for tests.
 
 ## Middleware
