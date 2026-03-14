@@ -1,6 +1,6 @@
 # Nexus Atomic Packages
 
-This directory contains **54 atomic, framework-agnostic PHP packages** (53 atomic + Common) that form the core business logic of the Nexus ERP system. Each package is:
+This directory contains **59 atomic, framework-agnostic PHP packages** (58 atomic + Common) that form the core business logic of the Nexus ERP system. Each package is:
 
 - **Pure PHP 8.3+** - No framework dependencies
 - **Stateless** - No long-term state stored in memory
@@ -10,7 +10,7 @@ This directory contains **54 atomic, framework-agnostic PHP packages** (53 atomi
 
 ---
 
-## 📋 Package Inventory (54 Packages: 53 Atomic + Common)
+## 📋 Package Inventory (59 Packages: 58 Atomic + Common)
 
 ### Foundation Layer (9 packages)
 Core infrastructure and multi-tenancy support:
@@ -56,6 +56,13 @@ Core infrastructure and multi-tenancy support:
 ### Customer & Partner (2 packages)
 - **Party** - Customers, vendors, employees
 - **FieldService** - Work orders and service
+
+### Project & Delivery (5 packages)
+- **Project** - Core project entity, PM, status, completion rules
+- **Task** - Task entity, dependencies, Gantt (reusable)
+- **TimeTracking** - Timesheet entry, approval, immutability (reusable)
+- **ResourceAllocation** - Allocation %, overallocation checks (reusable)
+- **Milestone** - Milestone, approvals, deliverables, billing vs budget
 
 ### Integration & Automation (9 packages)
 - **Connector** - Integration hub

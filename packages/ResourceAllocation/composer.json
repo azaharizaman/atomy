@@ -1,0 +1,32 @@
+{
+    "name": "nexus/resource-allocation",
+    "description": "Allocation of capacity (% or hours per user per period), overallocation checks and double-booking prevention. Reusable for projects, HR capacity, shared resources.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\ResourceAllocation\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\ResourceAllocation\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Common"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

@@ -1,0 +1,32 @@
+{
+    "name": "nexus/task",
+    "description": "Task entity, assignment, dependencies and schedule calculation (Gantt-support). Reusable across projects, support, campaigns.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Task\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Task\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Common"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

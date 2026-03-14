@@ -1,0 +1,32 @@
+{
+    "name": "nexus/milestone",
+    "description": "Milestone entity, approvals, deliverables, and billing/revenue rules. Budget remaining and revenue update expressed via interfaces.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Milestone\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Milestone\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Common"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

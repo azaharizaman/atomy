@@ -108,7 +108,12 @@
             "Nexus\\ESG\\": "packages/ESG/src/",
             "Nexus\\SustainabilityData\\": "packages/SustainabilityData/src/",
             "Nexus\\ESGRegulatory\\": "packages/ESGRegulatory/src/",
-            "Nexus\\ESGOperations\\": "orchestrators/ESGOperations/src/"
+            "Nexus\\ESGOperations\\": "orchestrators/ESGOperations/src/",
+            "Nexus\\Task\\": "packages/Task/src/",
+            "Nexus\\TimeTracking\\": "packages/TimeTracking/src/",
+            "Nexus\\Project\\": "packages/Project/src/",
+            "Nexus\\ResourceAllocation\\": "packages/ResourceAllocation/src/",
+            "Nexus\\Milestone\\": "packages/Milestone/src/"
         }
     },
     "autoload-dev": {
@@ -136,7 +141,12 @@
             "Nexus\\ESG\\Tests\\": "packages/ESG/tests/",
             "Nexus\\SustainabilityData\\Tests\\": "packages/SustainabilityData/tests/",
             "Nexus\\ESGRegulatory\\Tests\\": "packages/ESGRegulatory/tests/",
-            "Nexus\\ESGOperations\\Tests\\": "orchestrators/ESGOperations/tests/"
+            "Nexus\\ESGOperations\\Tests\\": "orchestrators/ESGOperations/tests/",
+            "Nexus\\Task\\Tests\\": "packages/Task/tests/",
+            "Nexus\\TimeTracking\\Tests\\": "packages/TimeTracking/tests/",
+            "Nexus\\Project\\Tests\\": "packages/Project/tests/",
+            "Nexus\\ResourceAllocation\\Tests\\": "packages/ResourceAllocation/tests/",
+            "Nexus\\Milestone\\Tests\\": "packages/Milestone/tests/"
         }
     }
 }

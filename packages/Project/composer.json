@@ -1,0 +1,32 @@
+{
+    "name": "nexus/project",
+    "description": "Core project entity and lifecycle rules: metadata, PM assignment, status and completion rules, client visibility.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Project\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Project\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Common"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
