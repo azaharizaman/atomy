@@ -1,9 +1,18 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.6  
-**Last Updated:** March 1, 2026  
+**Version:** 1.7  
+**Last Updated:** March 15, 2026  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
+
+**Recent Updates (March 15, 2026):**
+- **NEW:** Added Project & Delivery Layer 1 packages: `Nexus\Task`, `Nexus\TimeTracking`, `Nexus\Project`, `Nexus\ResourceAllocation`, `Nexus\Milestone` (production-ready, tests and 70%+ coverage target).
+- **Task** - Task entity, dependencies, acyclicity (BUS-PRO-0090), Gantt schedule calculation; reusable outside projects.
+- **TimeTracking** - Timesheet entry, hours validation (24h/day), approval workflow, immutability (BUS-PRO-0063); reusable.
+- **Project** - Project entity, PM assignment (BUS-PRO-0042), completion rules (BUS-PRO-0096), client visibility.
+- **ResourceAllocation** - Allocation %, 100% cap per user per day (BUS-PRO-0084), overallocation check (REL-PRO-0402); reusable.
+- **Milestone** - Milestone entity, approvals, billing vs budget (BUS-PRO-0077) via BudgetReservationInterface.
+- **IMPROVED:** ProjectManagementOperations orchestrator backs contracts with these L1 packages; see orchestrator README.
 
 **Recent Updates (March 1, 2026):**
 - **NEW:** Added `Nexus\FieldService` - Work order lifecycle, technician dispatch, and mobile sync (~85% implemented).
@@ -53,6 +62,11 @@
 | **Building custom payment processor** | **Use `Nexus\Payment\Contracts\PaymentManagerInterface`** |
 | **Managing loyalty points/tiers** | **Use `Nexus\Loyalty\Contracts\LoyaltyManagerInterface`** |
 | **Field service work orders** | **Use `Nexus\FieldService\Contracts\WorkOrderManagerInterface`** |
+| **Task / dependency / Gantt** | **Use `Nexus\Task\Contracts\TaskManagerInterface`, `DependencyGraphInterface`, `ScheduleCalculatorInterface`** |
+| **Timesheet / time entry** | **Use `Nexus\TimeTracking\Contracts\TimesheetManagerInterface`, `TimesheetApprovalInterface`** |
+| **Resource allocation / overallocation** | **Use `Nexus\ResourceAllocation\Contracts\AllocationManagerInterface`, `OverallocationCheckerInterface`** |
+| **Project lifecycle** | **Use `Nexus\Project\Contracts\ProjectManagerInterface`** |
+| **Milestone / billing vs budget** | **Use `Nexus\Milestone\Contracts\MilestoneManagerInterface`, `BudgetReservationInterface`** |
 
 ---
 
@@ -159,6 +173,44 @@
 
 ---
 
+### 📋 **6. Project & Delivery**
+
+#### **Nexus\Task**
+**Capabilities:**
+- Task entity, assignees, priority, due dates (FUN-PRO-0565)
+- Dependency graph and cycle detection (BUS-PRO-0090)
+- Early/late schedule calculation for Gantt (FUN-PRO-0570)
+- Reusable outside projects (support, campaigns, HR goals)
+
+#### **Nexus\TimeTracking**
+**Capabilities:**
+- Timesheet entry and validation (FUN-PRO-0566)
+- Hours rules: 0–24 per user per day (BUS-PRO-0056)
+- Approval workflow; approved timesheets immutable (BUS-PRO-0063, FUN-PRO-0575)
+- Reusable for any time-logging context
+
+#### **Nexus\Project**
+**Capabilities:**
+- Project entity, name, client, start/end, budget (FUN-PRO-0564)
+- Project manager required (BUS-PRO-0042)
+- Completion rule: status completed only when no incomplete tasks (BUS-PRO-0096)
+- Client visibility (BUS-PRO-0106); lessons learned after completed/cancelled (BUS-PRO-0121)
+
+#### **Nexus\ResourceAllocation**
+**Capabilities:**
+- Allocation percentage per user per day (FUN-PRO-0571)
+- 100% cap per user per day (BUS-PRO-0084)
+- Overallocation detection and double-booking prevention (REL-PRO-0402)
+- Reusable for capacity planning
+
+#### **Nexus\Milestone**
+**Capabilities:**
+- Milestone entity, approvals, deliverables (FUN-PRO-0569)
+- Billing amount vs remaining budget (BUS-PRO-0077) via BudgetReservationInterface
+- Revenue recognition (BUS-PRO-0111); resumable approval (REL-PRO-0408)
+
+---
+
 ## 🔀 Orchestrators (Layer 2)
 
 Orchestrators coordinate multiple Layer 1 packages to fulfill complex business workflows.
@@ -170,7 +222,7 @@ Orchestrators coordinate multiple Layer 1 packages to fulfill complex business w
 | **HumanResourceOperations** | HRM, Attendance, Leave, Payroll, Identity |
 | **QuotationIntelligence** | Procurement, MachineLearning, Currency, Document |
 | **SupplyChainOperations** | Inventory, Manufacturing, Warehouse, Procurement |
-| **ProjectManagementOperations** | Projects, HRM, Budget, Telemetry |
+| **ProjectManagementOperations** | Project, Task, TimeTracking, ResourceAllocation, Milestone, Budget, Receivable, Notifier |
 | **InsightOperations** | QueryEngine, Notifier, Reporting |
 
 ---
@@ -185,6 +237,6 @@ Orchestrators coordinate multiple Layer 1 packages to fulfill complex business w
 
 ---
 
-**Package Count:** 94 Atomic Packages  
+**Package Count:** 99 Atomic Packages (94 + 5 Project & Delivery)  
 **Orchestrator Count:** 19 Orchestrators  
 **Architecture Version:** 3.0 (Nexus Three-Layer)

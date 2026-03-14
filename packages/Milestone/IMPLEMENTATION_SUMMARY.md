@@ -1,18 +1,18 @@
 # Milestone Package – Implementation Summary
 
-**Status:** Pending Implementation
+**Status:** Implemented (production-ready)
 
 ## Scope
 
-- Milestone CRUD, approval state, deliverables
-- Rule: milestone billing amount cannot exceed remaining project budget (via BudgetReservationInterface)
-- Revenue recognition rule; resumable approval workflow
-- All persistence via `Contracts/`; budget/revenue via interfaces for orchestrator to wire
+- Milestone CRUD (MilestoneSummary VO, MilestoneStatus enum)
+- Billing amount vs remaining budget via BudgetReservationInterface (BUS-PRO-0077)
+- MilestoneManager create/update with optional budget check; BudgetExceededException
+- All persistence via `Contracts/`; budget check implemented by adapter/orchestrator
 
 ## Checklist
 
-- [ ] Implement `MilestoneManagerInterface` and default service
-- [ ] Implement `MilestoneQueryInterface` / `MilestonePersistInterface`
-- [ ] Define `BudgetReservationInterface` for remaining budget check
-- [ ] Unit tests for billing vs budget and approval workflow
-- [ ] REQUIREMENTS.md with Milestone-specific requirements
+- [x] Implement `MilestoneManagerInterface` (MilestoneManager) and default service
+- [x] Implement `MilestoneQueryInterface` / `MilestonePersistInterface`
+- [x] BudgetReservationInterface for remaining budget check
+- [x] Unit tests (7 tests); run: `vendor/bin/phpunit packages/Milestone/tests` from root
+- [x] REQUIREMENTS.md with Milestone-specific requirements
