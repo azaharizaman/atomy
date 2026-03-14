@@ -16,6 +16,12 @@ export interface ColumnDef<T = Record<string, unknown>> {
   sortable?: boolean;
   render?: (row: T) => React.ReactNode;
   className?: string;
+  /** When true, footer summary row shows sum of this column (numerical totals only). */
+  numeric?: boolean;
+  /** Optional: extract numeric value for summary (e.g. parse currency). If omitted and numeric is true, uses row[key] coerced to number. */
+  getSummaryValue?: (row: T) => number;
+  /** Optional: format the summary value for display (e.g. currency). */
+  formatSummary?: (total: number) => string;
 }
 
 export interface TableSort {
@@ -131,6 +137,8 @@ interface DataTableProps<T extends { id: string | number }> {
   renderTableSummary?: (rows: T[]) => React.ReactNode;
   showGroupSummary?: boolean;
   showTableSummary?: boolean;
+  /** When 'columnTotals', footer shows one cell per column with sums for numeric columns. When 'custom', renderTableSummary is used. */
+  footerSummaryMode?: 'custom' | 'columnTotals';
   /** Actions column */
   showActions?: boolean;
   onRowAction?: (row: T) => void;
@@ -138,6 +146,8 @@ interface DataTableProps<T extends { id: string | number }> {
   loading?: boolean;
   emptyState?: React.ReactNode;
   stickyHeader?: boolean;
+  /** Sticky first column (left) and sticky actions column (right) with horizontal scroll; scrollbar is hidden. */
+  stickyColumns?: boolean;
   className?: string;
   rowClassName?: (row: T) => string;
   onRowClick?: (row: T) => void;
@@ -149,14 +159,42 @@ export function DataTable<T extends { id: string | number }>({
   selectable, selectedIds = [], onSelectChange,
   expandable, expandedId, onExpandChange, renderExpanded, expandedIndentColumns = 0,
   bulkActions, showActions, onRowAction,
-  groupBy, renderGroupHeader, renderGroupSummary, renderTableSummary, showGroupSummary, showTableSummary,
-  loading, emptyState, stickyHeader,
+  groupBy, renderGroupHeader, renderGroupSummary, renderTableSummary, showGroupSummary, showTableSummary, footerSummaryMode = 'custom',
+  loading, emptyState, stickyHeader, stickyColumns = false,
   className = '', rowClassName, onRowClick,
 }: DataTableProps<T>) {
 
   // ─ Internal sort (uncontrolled fallback)
   const [internalSort, setInternalSort] = React.useState<TableSort | null>(null);
   const activeSort = sort !== undefined ? sort : internalSort;
+
+  // ─ Sticky column shadows (show when scrolled; subtle cue for more content)
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const [stickyFirstColShadow, setStickyFirstColShadow] = React.useState(false);
+  const [stickyLastColShadow, setStickyLastColShadow] = React.useState(false);
+
+  const updateStickyShadows = React.useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const scrolledRight = el.scrollLeft > 0;
+    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
+    setStickyFirstColShadow(scrolledRight);
+    setStickyLastColShadow(!atEnd);
+  }, []);
+
+  React.useLayoutEffect(() => {
+    if (!stickyColumns) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    updateStickyShadows();
+    el.addEventListener('scroll', updateStickyShadows);
+    const ro = new ResizeObserver(updateStickyShadows);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', updateStickyShadows);
+      ro.disconnect();
+    };
+  }, [stickyColumns, updateStickyShadows]);
 
   function handleSort(key: string) {
     const newDir: SortDirection =
@@ -207,6 +245,69 @@ export function DataTable<T extends { id: string | number }>({
     return offset;
   }
 
+  function getColumnTotal(col: ColumnDef<T>, dataRows: T[]): number | null {
+    if (!col.numeric) return null;
+    const getVal = col.getSummaryValue ?? ((row: T) => {
+      const raw = (row as Record<string, unknown>)[col.key];
+      if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+      if (typeof raw === 'string') {
+        const parsed = Number(raw.replace(/[^0-9.-]/g, ''));
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+      return 0;
+    });
+    return dataRows.reduce((sum, row) => sum + getVal(row), 0);
+  }
+
+  function renderColumnTotalsRow(dataRows: T[]): React.ReactNode {
+    return (
+      <tr className="bg-slate-100 border-t border-slate-300">
+        {selectable && <td className="w-10 py-0" />}
+        {expandable && <td className="w-8 py-0" />}
+        {columns.map((col, idx) => {
+          const total = getColumnTotal(col, dataRows);
+          const isFirst = idx === 0;
+          const label = isFirst ? 'Total' : '';
+          const align = col.align ?? 'left';
+          return (
+            <td
+              key={col.key}
+              className={[
+                'px-3 py-2 text-xs font-medium text-slate-700',
+                align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
+                col.className ?? '',
+                stickyColumns && idx === 0 ? 'sticky left-0 z-[2] bg-slate-100 relative' : '',
+              ].filter(Boolean).join(' ')}
+            >
+              {stickyColumns && idx === 0 && stickyFirstColShadow && (
+                <div className="absolute right-0 top-0 bottom-0 w-3 pointer-events-none bg-gradient-to-r from-black/[0.08] to-transparent" aria-hidden />
+              )}
+              {total !== null ? (
+                col.formatSummary
+                  ? col.formatSummary(total)
+                  : (typeof total === 'number' && total % 1 !== 0
+                    ? total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : total.toLocaleString('en-US'))
+              ) : label}
+            </td>
+          );
+        })}
+        {showActions && (
+          <td
+            className={[
+              'w-10 py-0',
+              stickyColumns ? 'sticky right-0 z-[2] bg-slate-100 relative pl-3' : '',
+            ].filter(Boolean).join(' ')}
+          >
+            {stickyColumns && stickyLastColShadow && (
+              <div className="absolute left-0 top-0 bottom-0 w-3 pointer-events-none bg-gradient-to-l from-black/[0.08] to-transparent" aria-hidden />
+            )}
+          </td>
+        )}
+      </tr>
+    );
+  }
+
   const groupedRows = React.useMemo(() => {
     if (!groupBy) return null;
     const order: string[] = [];
@@ -233,9 +334,10 @@ export function DataTable<T extends { id: string | number }>({
           className={[
             'border-b border-slate-100 transition-colors duration-100',
             isSelected ? 'bg-indigo-50/60' : 'hover:bg-slate-50',
+            stickyColumns && !isSelected ? 'bg-white' : '',
             onRowClick ? 'cursor-pointer' : '',
             rowClassName ? rowClassName(row) : '',
-          ].join(' ')}
+          ].filter(Boolean).join(' ')}
         >
           {selectable && (
             <td className="w-10 pl-4 pr-0 py-0" onClick={e => e.stopPropagation()}>
@@ -258,15 +360,19 @@ export function DataTable<T extends { id: string | number }>({
               </button>
             </td>
           )}
-          {columns.map(col => (
+          {columns.map((col, colIdx) => (
             <td
               key={col.key}
               className={[
                 'px-3 py-0 h-11',
                 alignClass[col.align ?? 'left'],
                 col.className ?? '',
-              ].join(' ')}
+                stickyColumns && colIdx === 0 ? 'sticky left-0 z-[2] bg-inherit relative' : '',
+              ].filter(Boolean).join(' ')}
             >
+              {stickyColumns && colIdx === 0 && stickyFirstColShadow && (
+                <div className="absolute right-0 top-0 bottom-0 w-3 pointer-events-none bg-gradient-to-r from-black/[0.08] to-transparent transition-opacity duration-200" aria-hidden />
+              )}
               {col.render
                 ? col.render(row)
                 : <span className="text-sm text-slate-700">{String((row as Record<string, unknown>)[col.key] ?? '')}</span>
@@ -274,7 +380,16 @@ export function DataTable<T extends { id: string | number }>({
             </td>
           ))}
           {showActions && (
-            <td className="w-10 py-0 pr-2" onClick={e => e.stopPropagation()}>
+            <td
+              className={[
+                'w-10 py-0 pr-2',
+                stickyColumns ? 'sticky right-0 z-[2] bg-inherit relative pl-3' : '',
+              ].filter(Boolean).join(' ')}
+              onClick={e => e.stopPropagation()}
+            >
+              {stickyColumns && stickyLastColShadow && (
+                <div className="absolute left-0 top-0 bottom-0 w-3 pointer-events-none bg-gradient-to-l from-black/[0.08] to-transparent transition-opacity duration-200" aria-hidden />
+              )}
               <OverflowMenuTrigger onClick={() => onRowAction?.(row)} />
             </td>
           )}
@@ -305,8 +420,14 @@ export function DataTable<T extends { id: string | number }>({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+      <div
+        ref={stickyColumns ? scrollContainerRef : undefined}
+        className={[
+          'overflow-x-auto',
+          stickyColumns ? 'scrollbar-hide' : '',
+        ].join(' ')}
+      >
+        <table className="w-full border-collapse" style={stickyColumns ? { minWidth: 'max-content' } : undefined}>
           {/* Head */}
           <thead className={stickyHeader ? 'sticky top-0 z-10' : ''}>
             <tr className="bg-slate-50 border-b border-slate-200">
@@ -320,7 +441,7 @@ export function DataTable<T extends { id: string | number }>({
                 </th>
               )}
               {expandable && <th className="w-8 py-2.5" />}
-              {columns.map(col => (
+              {columns.map((col, colIdx) => (
                 <th
                   key={col.key}
                   style={{ width: col.width, minWidth: col.minWidth }}
@@ -328,8 +449,12 @@ export function DataTable<T extends { id: string | number }>({
                     'px-3 py-2.5',
                     alignClass[col.align ?? 'left'],
                     col.className ?? '',
-                  ].join(' ')}
+                    stickyColumns && colIdx === 0 ? 'sticky left-0 z-[2] bg-slate-50 relative' : '',
+                  ].filter(Boolean).join(' ')}
                 >
+                  {stickyColumns && colIdx === 0 && stickyFirstColShadow && (
+                    <div className="absolute right-0 top-0 bottom-0 w-3 pointer-events-none bg-gradient-to-r from-black/[0.08] to-transparent transition-opacity duration-200" aria-hidden />
+                  )}
                   {col.sortable ? (
                     <SortHeader
                       label={col.label}
@@ -343,7 +468,18 @@ export function DataTable<T extends { id: string | number }>({
                   )}
                 </th>
               ))}
-              {showActions && <th className="w-10 py-2.5" />}
+              {showActions && (
+                <th
+                  className={[
+                    'w-10 py-2.5',
+                    stickyColumns ? 'sticky right-0 z-[2] bg-slate-50 relative pl-3' : '',
+                  ].filter(Boolean).join(' ')}
+                >
+                  {stickyColumns && stickyLastColShadow && (
+                    <div className="absolute left-0 top-0 bottom-0 w-3 pointer-events-none bg-gradient-to-l from-black/[0.08] to-transparent transition-opacity duration-200" aria-hidden />
+                  )}
+                </th>
+              )}
             </tr>
           </thead>
 
@@ -392,25 +528,25 @@ export function DataTable<T extends { id: string | number }>({
                         )}
                       </React.Fragment>
                     ))}
-                    {showTableSummary && renderTableSummary && (
+                    {showTableSummary && (footerSummaryMode === 'columnTotals' ? renderColumnTotalsRow(rows) : renderTableSummary && (
                       <tr className="bg-slate-100 border-t border-slate-300">
                         <td colSpan={colSpanCount} className="px-3 py-2">
                           {renderTableSummary(rows)}
                         </td>
                       </tr>
-                    )}
+                    ))}
                   </>
                 )
                 : (
                   <>
                     {rows.map(row => renderDataRow(row))}
-                    {showTableSummary && renderTableSummary && (
+                    {showTableSummary && (footerSummaryMode === 'columnTotals' ? renderColumnTotalsRow(rows) : renderTableSummary && (
                       <tr className="bg-slate-100 border-t border-slate-300">
                         <td colSpan={colSpanCount} className="px-3 py-2">
                           {renderTableSummary(rows)}
                         </td>
                       </tr>
-                    )}
+                    ))}
                   </>
                 )
             )}

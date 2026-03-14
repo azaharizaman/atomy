@@ -18,6 +18,7 @@ import {
   TextInput, SearchInput, SelectInput, Textarea, Checkbox, ToggleSwitch, FilterChip
 } from '../components/ds/Input';
 import { Card, SectionCard, InfoGrid, EmptyState, UploadZone, DocPreview } from '../components/ds/Card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../components/ui/collapsible';
 import { PrimaryTabs, SecondaryTabs, VerticalTabs, TabPanel } from '../components/ds/Tabs';
 import { BreadcrumbBar } from '../components/ds/BreadcrumbBar';
 import { ProgressBar, CircularProgress, MiniProgress } from '../components/ds/Progress';
@@ -165,6 +166,13 @@ function TokenRow({ name, value, swatch }: { name: string; value: string; swatch
   );
 }
 
+// ─── Helpers used by column definitions (must be at module scope) ─────────────
+
+function parseCurrencyValue(value: string): number {
+  const normalized = value.replace(/[^0-9.-]/g, '');
+  return Number(normalized || 0);
+}
+
 // ─── Column definitions for RFQ DataTable ─────────────────────────────────────
 
 const RFQ_COLUMNS: ColumnDef<RFQRow>[] = [
@@ -204,7 +212,68 @@ const RFQ_COLUMNS: ColumnDef<RFQRow>[] = [
   },
   {
     key: 'estValue', label: 'Est. Value', width: '110px', align: 'right', sortable: true,
+    numeric: true,
+    getSummaryValue: row => parseCurrencyValue(row.estValue),
+    formatSummary: n => `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
     render: row => <span className="text-sm font-medium text-slate-800 tabular-nums">{row.estValue}</span>,
+  },
+];
+
+/** Wide column set for sticky + horizontal-scroll variant (many columns so table overflows). */
+const RFQ_COLUMNS_WIDE: ColumnDef<RFQRow>[] = [
+  {
+    key: 'rfqId', label: 'ID', width: '90px', minWidth: '90px', sortable: true,
+    render: row => <span className="font-mono text-xs font-medium text-slate-600">{row.rfqId}</span>,
+  },
+  {
+    key: 'title', label: 'RFQ Title', width: '200px', minWidth: '200px', sortable: true,
+    render: row => <span className="text-sm font-medium text-slate-800 leading-tight">{row.title}</span>,
+  },
+  {
+    key: 'owner', label: 'Owner', width: '140px', minWidth: '140px', sortable: true,
+    render: row => {
+      const details = OWNER_DETAILS[row.owner];
+      return (
+        <TablePersonHoverCard
+          roleLabel="Product Owner"
+          name={row.owner}
+          email={details?.email}
+          reportsTo={details?.reportsTo}
+          mobile={details?.mobile}
+          location={details?.location}
+          onLeave={() => {}}
+          onChange={() => {}}
+        />
+      );
+    },
+  },
+  {
+    key: 'status', label: 'Status', width: '100px', minWidth: '100px', sortable: true,
+    render: row => <StatusBadge status={row.status} />,
+  },
+  {
+    key: 'deadline', label: 'Deadline', width: '110px', minWidth: '110px', sortable: true,
+    render: row => <span className="text-xs text-slate-600 tabular-nums">{row.deadline}</span>,
+  },
+  {
+    key: 'category', label: 'Category', width: '120px', minWidth: '120px', sortable: true,
+    render: row => <span className="text-xs text-slate-700">{row.category}</span>,
+  },
+  {
+    key: 'vendors', label: 'Vendors', width: '88px', minWidth: '88px', align: 'right', sortable: true,
+    render: row => <span className="text-sm tabular-nums text-slate-700">{row.vendors}</span>,
+  },
+  {
+    key: 'quotes', label: 'Quotes', width: '88px', minWidth: '88px', align: 'right', sortable: true,
+    render: row => <span className="text-sm tabular-nums text-slate-700">{row.quotes}</span>,
+  },
+  {
+    key: 'estValue', label: 'Est. Value', width: '120px', minWidth: '120px', align: 'right', sortable: true,
+    render: row => <span className="text-sm font-medium text-slate-800 tabular-nums">{row.estValue}</span>,
+  },
+  {
+    key: 'savings', label: 'Savings', width: '90px', minWidth: '90px', align: 'right', sortable: true,
+    render: row => <span className="text-xs tabular-nums text-slate-600">{row.savings}</span>,
   },
 ];
 
@@ -298,11 +367,6 @@ export function ShowcasePage() {
     { id: 'cmp-2', lineItem: 'Storage SSD', values: ['$599', '$612', '$640'], bestVendorIndex: 0 },
     { id: 'cmp-3', lineItem: 'Support Services', values: ['$930', '$910', null], bestVendorIndex: 1 },
   ];
-
-  function parseCurrencyValue(value: string): number {
-    const normalized = value.replace(/[^0-9.-]/g, '');
-    return Number(normalized || 0);
-  }
 
   const filteredRfqRows = React.useMemo(() => {
     return RFQ_ROWS.filter(row => {
@@ -1493,14 +1557,22 @@ export function ShowcasePage() {
                 </Card>
 
                 <Card padding="md">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Variant: Footer Summaries</p>
-                  <DataTable
-                    columns={RFQ_COLUMNS}
-                    rows={groupedRowsSource}
-                    showTableSummary
-                    renderTableSummary={rows => renderSummaryRow(rows, 'Table totals')}
-                    showActions
-                  />
+                  <Collapsible defaultOpen className="group">
+                    <CollapsibleTrigger className="flex w-full items-center justify-between text-left outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Variant: Footer Summaries</p>
+                      <ChevronRight size={14} className="text-slate-400 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <p className="text-xs text-slate-500 mb-2 mt-1">Footer shows numerical totals for numeric/currency columns.</p>
+                      <DataTable
+                        columns={RFQ_COLUMNS}
+                        rows={groupedRowsSource}
+                        showTableSummary
+                        footerSummaryMode="columnTotals"
+                        showActions
+                      />
+                    </CollapsibleContent>
+                  </Collapsible>
                 </Card>
 
                 <Card padding="md">
@@ -1515,6 +1587,19 @@ export function ShowcasePage() {
                     renderTableSummary={rows => renderSummaryRow(rows, 'Grand total')}
                     showActions
                   />
+                </Card>
+
+                <Card padding="md">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Variant: Sticky columns + horizontal scroll</p>
+                  <p className="text-xs text-slate-500 mb-3">Wide table with many columns. First column (ID) and actions column (⋯) stay fixed while the middle columns scroll. Scrollbar is hidden; use trackpad or drag to scroll horizontally.</p>
+                  <div className="w-full">
+                    <DataTable
+                      columns={RFQ_COLUMNS_WIDE}
+                      rows={groupedRowsSource}
+                      stickyColumns
+                      showActions
+                    />
+                  </div>
                 </Card>
               </div>
             </SubSection>
