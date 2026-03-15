@@ -215,7 +215,19 @@ Customer relationship management.
 |---------|-----------|---------|----------------|
 | **CRM** | `Nexus\CRM` | Lead, opportunity, pipeline | `LeadManagerInterface`, `OpportunityManagerInterface`, `PipelineManagerInterface` |
 
-### 2.12 Payment (Multiple packages)
+### 2.12 Project & Delivery (5 packages)
+
+Project and delivery lifecycle: project entity, tasks, time tracking, resource allocation, milestones. Orchestrated by **ProjectManagementOperations** (Layer 2). Task, TimeTracking, and ResourceAllocation are reusable outside project context.
+
+| Package | Namespace | Purpose | Key Interfaces |
+|---------|-----------|---------|----------------|
+| **Project** | `Nexus\Project` | Core project entity, PM, status, completion rules | `ProjectManagerInterface`, `ProjectQueryInterface`, `ProjectPersistInterface` |
+| **Task** | `Nexus\Task` | Task entity, dependencies, Gantt schedule calc | `TaskManagerInterface`, `TaskQueryInterface`, `DependencyGraphInterface`, `ScheduleCalculatorInterface` |
+| **TimeTracking** | `Nexus\TimeTracking` | Timesheet entry, approval, immutability | `TimesheetManagerInterface`, `TimesheetQueryInterface`, `TimesheetApprovalInterface` |
+| **ResourceAllocation** | `Nexus\ResourceAllocation` | Allocation %, overallocation, double-booking prevention | `AllocationManagerInterface`, `AllocationQueryInterface`, `OverallocationCheckerInterface` |
+| **Milestone** | `Nexus\Milestone` | Milestone, approvals, deliverables, billing vs budget | `MilestoneManagerInterface`, `MilestoneQueryInterface`, `BudgetReservationInterface` |
+
+### 2.13 Payment (Multiple packages)
 
 Payment processing and management.
 
@@ -228,7 +240,7 @@ Payment processing and management.
 | **PaymentRecurring** | `Nexus\PaymentRecurring` | Recurring payments | `RecurringPaymentInterface`, `SubscriptionManagerInterface` |
 | **PaymentWallet** | `Nexus\PaymentWallet` | Digital wallet | `WalletManagerInterface`, `WalletBalanceInterface` |
 
-### 2.13 Compliance & Risk (Multiple packages)
+### 2.14 Compliance & Risk (Multiple packages)
 
 Compliance, risk management, and verification.
 
@@ -243,7 +255,7 @@ Compliance, risk management, and verification.
 | **QualityControl** | `Nexus\QualityControl` | QC management | `QcManagerInterface`, `InspectionInterface`, `DefectTrackerInterface` |
 | **PerformanceReview** | `Nexus\PerformanceReview` | Performance reviews | `ReviewManagerInterface`, `RatingInterface`, `GoalTrackerInterface` |
 
-### 2.14 Shared (1 package)
+### 2.15 Shared (1 package)
 
 Common utilities used across all packages.
 
@@ -347,6 +359,7 @@ orchestrators/AccountingOperations/
 | **ProcurementOperations** | Procurement, Payable, Inventory | Purchase-to-pay, supplier management |
 | **ComplianceOperations** | Compliance, Audit, AML, GDPR, PDPA | Compliance monitoring, audit trails |
 | **CRMOperations** | CRM, Party, Sales, Notifications | Lead management, pipeline, activities |
+| **ProjectManagementOperations** | Project, Task, TimeTracking, ResourceAllocation, Milestone, Budget, Receivable, Notifier | Project health, timeline drift, milestone billing, dashboard |
 
 ---
 
@@ -437,6 +450,11 @@ Before adding new functionality, consult this matrix to determine which package 
 | Leave Management | HRM | - |
 | Payroll Processing | Payroll | HRM, Tax |
 | Document Storage | Document | Storage |
+| Project lifecycle | Project | Task, Party |
+| Task management | Task | - (reusable: projects, support, campaigns) |
+| Time tracking / Timesheets | TimeTracking | - (reusable) |
+| Resource allocation | ResourceAllocation | - (reusable) |
+| Milestone & deliverables | Milestone | Project, Budget (via interface) |
 
 ### 8.2 Cross-Cutting Concerns
 
@@ -452,6 +470,8 @@ When a requirement spans multiple packages, it belongs in an **Orchestrator**:
 | Process payroll run | HumanResourceOperations |
 | Process sales order | SalesOperations |
 | Screen against sanctions | ComplianceOperations |
+| Project health monitoring | ProjectManagementOperations |
+| Milestone billing & revenue recognition | ProjectManagementOperations |
 
 ### 8.3 Duplicate Functionality Prevention
 
@@ -1551,4 +1571,4 @@ final class FakePaymentGateway implements PaymentGatewayInterface
 **Last Updated:** 2026-02-19  
 **Maintained By:** Nexus Architecture Team  
 **Total Packages:** 54 (53 atomic + Common)  
-**Total Orchestrators:** 8
+**Total Orchestrators:** 9

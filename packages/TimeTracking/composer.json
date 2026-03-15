@@ -1,0 +1,32 @@
+{
+    "name": "nexus/time-tracking",
+    "description": "Time entry and timesheet rules: hours validation, approval workflow, immutability. Reusable for projects, support, internal work.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/common": "*@dev",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\TimeTracking\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\TimeTracking\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Common"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

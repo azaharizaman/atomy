@@ -10,7 +10,24 @@ The `ProjectManagementOperations` orchestrator manages the professional services
 
 ## Architecture
 
-This orchestrator follows the Nexus Three-Layer Architecture (Layer 2). It is pure PHP 8.3+ and depends exclusively on interfaces defined in its `src/Contracts/` directory.
+This orchestrator follows the Nexus Three-Layer Architecture (Layer 2). It is pure PHP 8.3+ and depends exclusively on interfaces defined in its `src/Contracts/` directory. **Layer 3 (Adapters)** implement these contracts by delegating to the Layer 1 atomic packages below.
+
+### Layer 1 Packages Backing This Orchestrator
+
+| Orchestrator Contract | Implemented By Adapter Using (L1) |
+|----------------------|-----------------------------------|
+| `ProjectQueryInterface` | **Nexus\Project** |
+| Task / dependency data | **Nexus\Task** |
+| Timesheet / approval data | **Nexus\TimeTracking** |
+| Allocation / overallocation | **Nexus\ResourceAllocation** |
+| Milestone / billing rules | **Nexus\Milestone** + Budget + Receivable |
+| `BudgetQueryInterface` / `BudgetPersistInterface` | **Nexus\Budget** (existing) |
+| `ReceivablePersistInterface` | **Nexus\Receivable** (existing) |
+| `MessagingServiceInterface` | **Nexus\Notifier** (existing) |
+| `AttendanceQueryInterface` | **Nexus\TimeTracking** or HRM/Attendance (existing) |
+| `SchedulerQueryInterface` | **Nexus\Scheduler** or Task schedule (existing) |
+
+Cross-cutting rules (e.g. "task must belong to project", "approved timesheets drive task actual hours") are enforced in this orchestrator's **Rules** or **Services**, which call into L1 packages via the above contracts.
 
 ### Internal Services
 
