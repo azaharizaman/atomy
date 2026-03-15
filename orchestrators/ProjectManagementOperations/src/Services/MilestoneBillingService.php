@@ -51,7 +51,7 @@ final readonly class MilestoneBillingService implements MilestoneBillingServiceI
             ['milestone_name' => $milestone->name]
         );
 
-        $this->budgetPersist->updateEarnedRevenue($milestone->projectId, $amount);
+        $this->budgetPersist->updateEarnedRevenue($tenantId, $milestone->projectId, $amount);
 
         return $invoiceId;
     }

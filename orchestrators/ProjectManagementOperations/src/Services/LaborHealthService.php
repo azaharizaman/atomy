@@ -19,17 +19,18 @@ final readonly class LaborHealthService implements LaborHealthServiceInterface
     ) {
     }
 
-    public function calculate(string $projectId): LaborHealthDTO
+    public function calculate(string $tenantId, string $projectId): LaborHealthDTO
     {
         $project = $this->projectQuery->findById($projectId);
         if ($project === null) {
             throw new \InvalidArgumentException("Project with ID {$projectId} not found");
         }
 
-        $budgetedLaborCost = $this->budgetQuery->getLaborBudget($projectId);
-        $actualLaborCost = $this->budgetQuery->getActualLaborCost($projectId);
+        $budgetedLaborCost = $this->budgetQuery->getLaborBudget($tenantId, $projectId);
+        $actualLaborCost = $this->budgetQuery->getActualLaborCost($tenantId, $projectId);
         
         $actualHours = $this->attendanceQuery->getTotalHoursByProject(
+            $tenantId,
             $projectId,
             $project->startDate,
             $project->endDate

@@ -8,5 +8,5 @@ use Nexus\ProjectManagementOperations\DTOs\ExpenseHealthDTO;
 
 interface ExpenseHealthServiceInterface
 {
-    public function calculate(string $projectId): ExpenseHealthDTO;
+    public function calculate(string $tenantId, string $projectId): ExpenseHealthDTO;
 }

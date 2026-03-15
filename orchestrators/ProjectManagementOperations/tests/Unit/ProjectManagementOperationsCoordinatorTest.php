@@ -19,6 +19,7 @@ final class ProjectManagementOperationsCoordinatorTest extends TestCase
 {
     public function test_it_executes_full_health_check_correctly(): void
     {
+        $tenantId = 'tenant-1';
         $projectId = 'proj-123';
 
         $laborService = $this->createMock(LaborHealthServiceInterface::class);
@@ -45,7 +46,7 @@ final class ProjectManagementOperationsCoordinatorTest extends TestCase
             $billingService
         );
 
-        $health = $coordinator->getFullHealth($projectId);
+        $health = $coordinator->getFullHealth($tenantId, $projectId);
 
         $this->assertEquals(50.0, $health->overallScore);
         $this->assertEquals(50.0, $health->laborHealth->healthPercentage);
@@ -55,15 +56,16 @@ final class ProjectManagementOperationsCoordinatorTest extends TestCase
 
     public function test_it_correctly_delegates_to_all_services(): void
     {
+        $tenantId = 'tenant-1';
         $projectId = 'p1';
 
         $labor = $this->createMock(LaborHealthServiceInterface::class);
-        $labor->expects($this->once())->method('calculate')->with($projectId)->willReturn(
+        $labor->expects($this->once())->method('calculate')->with($tenantId, $projectId)->willReturn(
             new LaborHealthDTO($projectId, 0, Money::zero('MYR'), Money::zero('MYR'), 0)
         );
 
         $expense = $this->createMock(ExpenseHealthServiceInterface::class);
-        $expense->expects($this->once())->method('calculate')->with($projectId)->willReturn(
+        $expense->expects($this->once())->method('calculate')->with($tenantId, $projectId)->willReturn(
             new ExpenseHealthDTO($projectId, Money::zero('MYR'), Money::zero('MYR'), 0)
         );
 
@@ -76,6 +78,6 @@ final class ProjectManagementOperationsCoordinatorTest extends TestCase
             $labor, $expense, $timeline, $this->createMock(MilestoneBillingServiceInterface::class)
         );
 
-        $coordinator->getFullHealth($projectId);
+        $coordinator->getFullHealth($tenantId, $projectId);
     }
 }

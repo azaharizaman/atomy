@@ -7,9 +7,10 @@ namespace Nexus\ProjectManagementOperations\Contracts;
 interface AttendanceQueryInterface
 {
     /**
-     * Get total actual hours for a project within a period
+     * Get total approved hours for a project within a period (tenant-scoped).
      */
     public function getTotalHoursByProject(
+        string $tenantId,
         string $projectId,
         \DateTimeImmutable $start,
         \DateTimeImmutable $end

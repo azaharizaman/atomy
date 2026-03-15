@@ -10,7 +10,7 @@ final readonly class MilestoneDTO
         public string $id,
         public string $projectId,
         public string $name,
-        public \DateTimeImmutable $dueDate,
+        public ?\DateTimeImmutable $dueDate,
         public ?\DateTimeImmutable $completedAt,
         public bool $isBillable
     ) {

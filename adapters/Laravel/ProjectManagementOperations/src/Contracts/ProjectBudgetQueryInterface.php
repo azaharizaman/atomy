@@ -2,29 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Nexus\ProjectManagementOperations\Contracts;
+namespace Nexus\Laravel\ProjectManagementOperations\Contracts;
 
 use Nexus\Common\ValueObjects\Money;
 
-interface BudgetQueryInterface
+/**
+ * Project-scoped budget data for health calculations.
+ * Implemented by the application or a Budget adapter.
+ * All methods are tenant-scoped to prevent cross-tenant reads.
+ */
+interface ProjectBudgetQueryInterface
 {
-    /**
-     * Get labor budget for a project (tenant-scoped).
-     */
     public function getLaborBudget(string $tenantId, string $projectId): Money;
 
-    /**
-     * Get total actual labor cost for a project (tenant-scoped).
-     */
     public function getActualLaborCost(string $tenantId, string $projectId): Money;
 
-    /**
-     * Get expense budget for a project (tenant-scoped).
-     */
     public function getExpenseBudget(string $tenantId, string $projectId): Money;
 
-    /**
-     * Get total actual expense cost for a project (tenant-scoped).
-     */
     public function getActualExpenseCost(string $tenantId, string $projectId): Money;
 }
