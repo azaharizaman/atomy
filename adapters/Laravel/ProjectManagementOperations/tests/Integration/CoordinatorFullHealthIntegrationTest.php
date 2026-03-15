@@ -41,6 +41,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class CoordinatorFullHealthIntegrationTest extends TestCase
 {
+    private const TENANT_ID = 'tenant-e2e-1';
     private const PROJECT_ID = 'proj-e2e-1';
 
     public function test_get_full_health_returns_aggregated_health_from_adapters(): void
@@ -81,6 +82,15 @@ final class CoordinatorFullHealthIntegrationTest extends TestCase
             hours: 8.0,
             description: 'Work',
             status: TimesheetStatus::Approved
+        ));
+        $l1TimesheetQuery->add(new TimesheetSummary(
+            id: 'ts2',
+            userId: 'user-1',
+            workItemId: $taskId,
+            date: new \DateTimeImmutable('2024-06-16'),
+            hours: 4.0,
+            description: 'Draft entry',
+            status: TimesheetStatus::Draft
         ));
 
         // App in-memory
@@ -131,7 +141,7 @@ final class CoordinatorFullHealthIntegrationTest extends TestCase
             $billingService
         );
 
-        $health = $coordinator->getFullHealth(self::PROJECT_ID);
+        $health = $coordinator->getFullHealth(self::TENANT_ID, self::PROJECT_ID);
 
         self::assertSame(self::PROJECT_ID, $health->laborHealth->projectId);
         self::assertSame(8.0, $health->laborHealth->actualHours);

@@ -20,16 +20,17 @@ final readonly class AttendanceQueryAdapter implements AttendanceQueryInterface
     }
 
     public function getTotalHoursByProject(
+        string $tenantId,
         string $projectId,
         \DateTimeImmutable $start,
         \DateTimeImmutable $end
     ): float {
-        $taskIds = $this->taskIdsQuery->getTaskIdsForProject($projectId);
+        $taskIds = $this->taskIdsQuery->getTaskIdsForProject($tenantId, $projectId);
         $total = 0.0;
         foreach ($taskIds as $workItemId) {
             $entries = $this->timesheetQuery->getByWorkItem($workItemId);
             foreach ($entries as $entry) {
-                if ($entry->date >= $start && $entry->date <= $end) {
+                if ($entry->date >= $start && $entry->date <= $end && $entry->status->isImmutable()) {
                     $total += $entry->hours;
                 }
             }

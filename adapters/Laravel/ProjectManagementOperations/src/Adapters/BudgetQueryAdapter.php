@@ -18,23 +18,23 @@ final readonly class BudgetQueryAdapter implements BudgetQueryInterface
     ) {
     }
 
-    public function getLaborBudget(string $projectId): Money
+    public function getLaborBudget(string $tenantId, string $projectId): Money
     {
-        return $this->projectBudgetQuery->getLaborBudget($projectId);
+        return $this->projectBudgetQuery->getLaborBudget($tenantId, $projectId);
     }
 
-    public function getActualLaborCost(string $projectId): Money
+    public function getActualLaborCost(string $tenantId, string $projectId): Money
     {
-        return $this->projectBudgetQuery->getActualLaborCost($projectId);
+        return $this->projectBudgetQuery->getActualLaborCost($tenantId, $projectId);
     }
 
-    public function getExpenseBudget(string $projectId): Money
+    public function getExpenseBudget(string $tenantId, string $projectId): Money
     {
-        return $this->projectBudgetQuery->getExpenseBudget($projectId);
+        return $this->projectBudgetQuery->getExpenseBudget($tenantId, $projectId);
     }
 
-    public function getActualExpenseCost(string $projectId): Money
+    public function getActualExpenseCost(string $tenantId, string $projectId): Money
     {
-        return $this->projectBudgetQuery->getActualExpenseCost($projectId);
+        return $this->projectBudgetQuery->getActualExpenseCost($tenantId, $projectId);
     }
 }

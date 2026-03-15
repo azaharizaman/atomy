@@ -8,5 +8,5 @@ use Nexus\ProjectManagementOperations\DTOs\LaborHealthDTO;
 
 interface LaborHealthServiceInterface
 {
-    public function calculate(string $projectId): LaborHealthDTO;
+    public function calculate(string $tenantId, string $projectId): LaborHealthDTO;
 }

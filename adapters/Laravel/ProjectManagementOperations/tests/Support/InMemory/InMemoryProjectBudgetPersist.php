@@ -8,12 +8,32 @@ use Nexus\Common\ValueObjects\Money;
 use Nexus\Laravel\ProjectManagementOperations\Contracts\ProjectBudgetPersistInterface;
 
 /**
- * No-op in-memory ProjectBudgetPersistInterface for integration tests.
+ * In-memory ProjectBudgetPersistInterface for integration tests; records calls for assertion.
  */
 final class InMemoryProjectBudgetPersist implements ProjectBudgetPersistInterface
 {
-    public function updateEarnedRevenue(string $projectId, Money $amount): void
+    /** @var list<array{tenantId: string, projectId: string, amount: Money}> */
+    private array $updateEarnedRevenueCalls = [];
+
+    public function updateEarnedRevenue(string $tenantId, string $projectId, Money $amount): void
     {
-        // No-op for tests
+        $this->updateEarnedRevenueCalls[] = [
+            'tenantId' => $tenantId,
+            'projectId' => $projectId,
+            'amount' => $amount,
+        ];
+    }
+
+    /**
+     * @return list<array{tenantId: string, projectId: string, amount: Money}>
+     */
+    public function getUpdateEarnedRevenueCalls(): array
+    {
+        return $this->updateEarnedRevenueCalls;
+    }
+
+    public function resetUpdateEarnedRevenueCalls(): void
+    {
+        $this->updateEarnedRevenueCalls = [];
     }
 }

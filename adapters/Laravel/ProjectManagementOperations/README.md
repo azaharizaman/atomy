@@ -81,9 +81,9 @@ public function __construct(
     private ProjectManagementOperationsCoordinator $coordinator
 ) {}
 
-public function projectHealth(string $projectId): array
+public function projectHealth(string $tenantId, string $projectId): array
 {
-    $health = $this->coordinator->getFullHealth($projectId);
+    $health = $this->coordinator->getFullHealth($tenantId, $projectId);
     return [
         'overall_score'      => $health->overallScore,
         'labor_utilization'  => $health->laborHealth->healthPercentage,
@@ -96,6 +96,6 @@ public function projectHealth(string $projectId): array
 
 ## References
 
-- Orchestrator: [orchestrators/ProjectManagementOperations/](../../orchestrators/ProjectManagementOperations/)
+- Orchestrator: [orchestrators/ProjectManagementOperations/](../../../orchestrators/ProjectManagementOperations/)
 - L1 packages: Task, TimeTracking, Project, ResourceAllocation, Milestone under `packages/`
-- Project & Delivery docs: [docs/project/NEXUS_PACKAGES_REFERENCE.md](../../docs/project/NEXUS_PACKAGES_REFERENCE.md) (when present)
+- Project & Delivery docs: [docs/project/NEXUS_PACKAGES_REFERENCE.md](../../../docs/project/NEXUS_PACKAGES_REFERENCE.md) (when present)

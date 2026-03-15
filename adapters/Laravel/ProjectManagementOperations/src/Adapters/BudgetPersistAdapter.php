@@ -18,8 +18,8 @@ final readonly class BudgetPersistAdapter implements BudgetPersistInterface
     ) {
     }
 
-    public function updateEarnedRevenue(string $projectId, Money $amount): void
+    public function updateEarnedRevenue(string $tenantId, string $projectId, Money $amount): void
     {
-        $this->projectBudgetPersist->updateEarnedRevenue($projectId, $amount);
+        $this->projectBudgetPersist->updateEarnedRevenue($tenantId, $projectId, $amount);
     }
 }

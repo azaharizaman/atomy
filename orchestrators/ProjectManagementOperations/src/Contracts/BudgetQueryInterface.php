@@ -9,22 +9,22 @@ use Nexus\Common\ValueObjects\Money;
 interface BudgetQueryInterface
 {
     /**
-     * Get labor budget for a project
+     * Get labor budget for a project (tenant-scoped).
      */
-    public function getLaborBudget(string $projectId): Money;
+    public function getLaborBudget(string $tenantId, string $projectId): Money;
 
     /**
-     * Get total actual labor cost for a project
+     * Get total actual labor cost for a project (tenant-scoped).
      */
-    public function getActualLaborCost(string $projectId): Money;
+    public function getActualLaborCost(string $tenantId, string $projectId): Money;
 
     /**
-     * Get expense budget for a project
+     * Get expense budget for a project (tenant-scoped).
      */
-    public function getExpenseBudget(string $projectId): Money;
+    public function getExpenseBudget(string $tenantId, string $projectId): Money;
 
     /**
-     * Get total actual expense cost for a project
+     * Get total actual expense cost for a project (tenant-scoped).
      */
-    public function getActualExpenseCost(string $projectId): Money;
+    public function getActualExpenseCost(string $tenantId, string $projectId): Money;
 }

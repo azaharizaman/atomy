@@ -29,10 +29,15 @@ final readonly class ReceivablePersistAdapter implements ReceivablePersistInterf
         ];
         foreach ($lines as $line) {
             $amount = $line['amount'] ?? null;
+            if (!$amount instanceof Money) {
+                throw new \InvalidArgumentException(
+                    'Each invoice line must have an "amount" key with a Nexus\Common\ValueObjects\Money instance.'
+                );
+            }
             $invoiceData['lines'][] = [
                 'description' => $line['description'] ?? '',
-                'amount' => $amount instanceof Money ? $amount->getAmountInMinorUnits() : 0,
-                'currency' => $amount instanceof Money ? $amount->getCurrency() : '',
+                'amount' => $amount->getAmountInMinorUnits(),
+                'currency' => $amount->getCurrency(),
             ];
         }
         $invoice = $this->receivableManager->createInvoice($tenantId, $invoiceData);

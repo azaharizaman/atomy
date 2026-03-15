@@ -8,8 +8,9 @@ use Nexus\Common\ValueObjects\Money;
 
 /**
  * Update earned revenue for a project. Implemented by the app or Budget adapter.
+ * Tenant resolution must be enforced before any data operations (filter by tenantId in implementations).
  */
 interface ProjectBudgetPersistInterface
 {
-    public function updateEarnedRevenue(string $projectId, Money $amount): void;
+    public function updateEarnedRevenue(string $tenantId, string $projectId, Money $amount): void;
 }

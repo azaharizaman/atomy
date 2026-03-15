@@ -48,7 +48,7 @@ final readonly class ProjectQueryAdapter implements ProjectQueryInterface
                 id: $m->id,
                 projectId: $m->contextId,
                 name: $m->title,
-                dueDate: $m->dueDate ?? new \DateTimeImmutable(),
+                dueDate: $m->dueDate,
                 completedAt: null,
                 isBillable: $m->status->isBillable()
             );

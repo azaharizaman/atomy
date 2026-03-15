@@ -20,7 +20,7 @@ final class InMemoryProjectTaskIdsQuery implements ProjectTaskIdsQueryInterface
     }
 
     /** @return list<string> */
-    public function getTaskIdsForProject(string $projectId): array
+    public function getTaskIdsForProject(string $tenantId, string $projectId): array
     {
         return $this->projectTaskIds[$projectId] ?? [];
     }
