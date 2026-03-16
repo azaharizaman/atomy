@@ -37,8 +37,7 @@
         "nexus/esg": "*@dev",
         "nexus/sustainability-data": "*@dev",
         "nexus/esg-regulatory": "*@dev",
-        "nexus/esg-operations": "*@dev",
-        "nexus/laravel-project-management-operations": "*@dev"
+        "nexus/esg-operations": "*@dev"
     },
     "repositories": [
         {
@@ -58,13 +57,6 @@
         {
             "type": "path",
             "url": "./adapters/*",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "./adapters/Laravel/ProjectManagementOperations",
             "options": {
                 "symlink": true
             }
@@ -121,8 +113,7 @@
             "Nexus\\TimeTracking\\": "packages/TimeTracking/src/",
             "Nexus\\Project\\": "packages/Project/src/",
             "Nexus\\ResourceAllocation\\": "packages/ResourceAllocation/src/",
-            "Nexus\\Milestone\\": "packages/Milestone/src/",
-            "Nexus\\Laravel\\ProjectManagementOperations\\": "adapters/Laravel/ProjectManagementOperations/src/"
+            "Nexus\\Milestone\\": "packages/Milestone/src/"
         }
     },
     "autoload-dev": {
@@ -155,8 +146,7 @@
             "Nexus\\TimeTracking\\Tests\\": "packages/TimeTracking/tests/",
             "Nexus\\Project\\Tests\\": "packages/Project/tests/",
             "Nexus\\ResourceAllocation\\Tests\\": "packages/ResourceAllocation/tests/",
-            "Nexus\\Milestone\\Tests\\": "packages/Milestone/tests/",
-            "Nexus\\Laravel\\ProjectManagementOperations\\Tests\\": "adapters/Laravel/ProjectManagementOperations/tests/"
+            "Nexus\\Milestone\\Tests\\": "packages/Milestone/tests/"
         }
     }
 }

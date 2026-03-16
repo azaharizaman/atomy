@@ -9,7 +9,7 @@ use Nexus\Common\ValueObjects\Money;
 interface BudgetPersistInterface
 {
     /**
-     * Update earned revenue for a project (tenant-scoped; filter by tenantId in implementations).
+     * Update earned revenue for a project
      */
-    public function updateEarnedRevenue(string $tenantId, string $projectId, Money $amount): void;
+    public function updateEarnedRevenue(string $projectId, Money $amount): void;
 }

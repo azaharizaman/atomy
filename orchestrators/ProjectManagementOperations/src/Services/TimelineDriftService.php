@@ -41,6 +41,7 @@ final readonly class TimelineDriftService implements TimelineDriftServiceInterfa
                     ];
                 }
             } elseif ($now > $milestone->dueDate) {
+                // Also count pending milestones that are past their due date
                 $delayed++;
                 $driftDetails[] = [
                     'id' => $milestone->id,

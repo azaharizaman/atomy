@@ -38,7 +38,7 @@ final class ExpenseHealthServiceTest extends TestCase
             $budgetQuery
         );
 
-        $health = $service->calculate('tenant-1', $projectId);
+        $health = $service->calculate($projectId);
 
         $this->assertEquals($projectId, $health->projectId);
         $this->assertTrue($health->budgetedExpenseCost->equals(Money::of(5000.00, 'MYR')));
@@ -59,7 +59,7 @@ final class ExpenseHealthServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Project with ID unknown not found');
 
-        $service->calculate('tenant-1', 'unknown');
+        $service->calculate('unknown');
     }
 
     public function test_it_handles_zero_budget_correctly(): void
@@ -76,7 +76,7 @@ final class ExpenseHealthServiceTest extends TestCase
         $budgetQuery->method('getActualExpenseCost')->with('tenant-1', $projectId)->willReturn(Money::zero('MYR'));
 
         $service = new ExpenseHealthService($projectQuery, $budgetQuery);
-        $health = $service->calculate('tenant-1', $projectId);
+        $health = $service->calculate($projectId);
 
         $this->assertEquals(0.0, $health->healthPercentage);
     }

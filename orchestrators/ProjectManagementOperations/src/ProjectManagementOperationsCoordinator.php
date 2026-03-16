@@ -20,7 +20,7 @@ final readonly class ProjectManagementOperationsCoordinator
     ) {
     }
 
-    public function getFullHealth(string $tenantId, string $projectId): FullProjectHealthDTO
+    public function getFullHealth(string $projectId): FullProjectHealthDTO
     {
         $laborHealth = $this->laborService->calculate($tenantId, $projectId);
         $expenseHealth = $this->expenseService->calculate($tenantId, $projectId);

@@ -43,7 +43,7 @@ final class LaborHealthServiceTest extends TestCase
             $attendanceQuery
         );
 
-        $health = $service->calculate('tenant-1', $projectId);
+        $health = $service->calculate($projectId);
 
         $this->assertEquals($projectId, $health->projectId);
         $this->assertEquals(25.5, $health->actualHours);
@@ -66,7 +66,7 @@ final class LaborHealthServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Project with ID unknown not found');
 
-        $service->calculate('tenant-1', 'unknown');
+        $service->calculate('unknown');
     }
 
     public function test_it_handles_zero_budget_correctly(): void
@@ -86,7 +86,7 @@ final class LaborHealthServiceTest extends TestCase
         $attendanceQuery->method('getTotalHoursByProject')->with('tenant-1', $projectId, $startDate, $endDate)->willReturn(0.0);
 
         $service = new LaborHealthService($projectQuery, $budgetQuery, $attendanceQuery);
-        $health = $service->calculate('tenant-1', $projectId);
+        $health = $service->calculate($projectId);
 
         $this->assertEquals(0.0, $health->healthPercentage);
     }
