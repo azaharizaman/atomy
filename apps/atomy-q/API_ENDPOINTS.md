@@ -380,3 +380,37 @@ Current-user self-service only. All mutation endpoints operate on the authentica
 | Search | 1 |
 | User Settings (Account) | 14 |
 | **Total** | **203** |
+
+## 28. Projects (planned)
+
+These endpoints are **planned** to support portfolio-style projects that group RFQs, track budget/health via `Nexus\Project` and `Nexus\ProjectManagementOperations`, and enforce project-scoped governance.
+
+| Method | Endpoint | Screen | Element/Interaction | Description |
+|--------|----------|--------|---------------------|-------------|
+| GET | `/projects` | Projects List | Projects table | **Planned.** List projects with filters (status, owner/PM, client, date range, search, pagination). Used by the Projects root page and project selector controls elsewhere. |
+| POST | `/projects` | Create/Edit Project | Create Project modal | **Planned.** Create a new project with name, client, start/end dates, budget metadata, and project manager assignment (backed by `Nexus\Project`). |
+| GET | `/projects/:id` | Project Detail | Page load | **Planned.** Get full project details including summary fields, key metrics, and links to RFQs, tasks, and health. |
+| PUT | `/projects/:id` | Project Detail | Edit Project button | **Planned.** Update project metadata (name, description, dates, budget fields, PM) while enforcing `Nexus\Project` lifecycle rules. |
+| PATCH | `/projects/:id/status` | Project Detail | Status dropdown | **Planned.** Transition project status (draft/active/on_hold/completed/cancelled) with completion rule enforced via incomplete tasks. |
+| GET | `/projects/:id/health` | Project Detail | Health cards & charts | **Planned.** Get aggregated project health from `ProjectManagementOperationsCoordinator` (labor, expense, timeline, overall score). Powers health cards and charts on the Project Detail screen. |
+| GET | `/projects/:id/rfqs` | Project Detail | RFQs tab | **Planned.** List RFQs associated to the project. Used by the Project Detail "RFQs" tab and project context picker. |
+| GET | `/projects/:id/tasks` | Project Detail | Tasks tab | **Planned.** List tasks associated to the project (via `Nexus\Task`), including status, assignee, and due dates. |
+| GET | `/projects/:id/budget` | Project Detail | Budget panel | **Planned.** Get budget vs. actuals summary for the project (labor and expense) using the ProjectManagementOperations Laravel adapter and app-specific budget implementations. |
+| GET | `/projects/:id/acl` | Project Settings | Project Access tab load | **Planned.** Get project-level ACL, mapping users/groups to project roles (Owner, Manager, Contributor, Viewer, ClientStakeholder). Drives project-scoped governance UI. |
+| PUT | `/projects/:id/acl` | Project Settings | Project Access Save | **Planned.** Update project ACL (add/remove members, change roles). When a project is present, this ACL can supersede general RFQ/task permissions. |
+
+## 29. Tasks (planned)
+
+These endpoints are **planned** to introduce user tasks backed by `Nexus\Task`, covering both project-centric work and RFQ-centric workflow items (approvals, follow-ups, etc.).
+
+| Method | Endpoint | Screen | Element/Interaction | Description |
+|--------|----------|--------|---------------------|-------------|
+| GET | `/tasks` | Task Inbox | Task list | **Planned.** List tasks filtered by assignee (default current user), status, priority, due date, project, and RFQ. Powers the global Task Inbox and small task widgets on dashboard. |
+| POST | `/tasks` | Multiple (RFQ Detail, Project Detail, Task Inbox) | Create Task modal | **Planned.** Create a new task with title, description, assignee(s), priority, due date, optional `projectId`, optional `rfqId`, and metadata. |
+| GET | `/tasks/:id` | Task Detail | Task drawer/modal | **Planned.** Get full task details including status history, assignees, links to parent project/RFQ, and dependency information. |
+| PUT | `/tasks/:id` | Task Detail | Edit Task button | **Planned.** Update task metadata (title, description, assignee, due date, priority, parent associations) while preserving dependency rules from `Nexus\Task`. |
+| PATCH | `/tasks/:id/status` | Task Detail, Task Inbox | Status toggle / quick actions | **Planned.** Update task status (e.g. todo/in_progress/blocked/done/cancelled) and emit any required decision trail/audit events. |
+| GET | `/tasks/:id/dependencies` | Task Detail | Dependencies panel | **Planned.** Get dependency graph for a task (predecessors/successors) from `Nexus\Task` to render dependency chains. |
+| PUT | `/tasks/:id/dependencies` | Task Detail | Edit Dependencies action | **Planned.** Update a task's predecessor/dependency list, enforcing acyclicity checks via `DependencyGraphInterface`. |
+| POST | `/tasks/schedule/preview` | Project Detail, Gantt View | "Preview Schedule" button | **Planned.** Run `ScheduleCalculatorInterface` for a set of tasks (typically within a project) to compute early/late dates and slack for Gantt-style schedule visualization. |
+
