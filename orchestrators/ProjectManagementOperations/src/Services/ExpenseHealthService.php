@@ -17,15 +17,15 @@ final readonly class ExpenseHealthService implements ExpenseHealthServiceInterfa
     ) {
     }
 
-    public function calculate(string $tenantId, string $projectId): ExpenseHealthDTO
+    public function calculate(string $projectId): ExpenseHealthDTO
     {
         $project = $this->projectQuery->findById($projectId);
         if ($project === null) {
             throw new \InvalidArgumentException("Project with ID {$projectId} not found");
         }
 
-        $budgetedExpenseCost = $this->budgetQuery->getExpenseBudget($tenantId, $projectId);
-        $actualExpenseCost = $this->budgetQuery->getActualExpenseCost($tenantId, $projectId);
+        $budgetedExpenseCost = $this->budgetQuery->getExpenseBudget($projectId);
+        $actualExpenseCost = $this->budgetQuery->getActualExpenseCost($projectId);
         
         $healthPercentage = 0.0;
         if ($budgetedExpenseCost->getAmountInMinorUnits() > 0) {

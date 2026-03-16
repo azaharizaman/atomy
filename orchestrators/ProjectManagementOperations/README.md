@@ -47,10 +47,10 @@ public function __construct(
     private ProjectManagementOperationsCoordinator $coordinator
 ) {}
 
-public function showDashboard(string $tenantId, string $projectId)
+public function showDashboard(string $projectId)
 {
-    // Get comprehensive health report (tenant-scoped)
-    $health = $this->coordinator->getFullHealth($tenantId, $projectId);
+    // Get comprehensive health report
+    $health = $this->coordinator->getFullHealth($projectId);
     
     return [
         'overall_score' => $health->overallScore,
