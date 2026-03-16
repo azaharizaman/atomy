@@ -9,9 +9,9 @@ use Nexus\ProjectManagementOperations\DTOs\ProjectDTO;
 interface ProjectQueryInterface
 {
     /**
-     * Find project by ID
+     * Find project by ID (tenant-scoped; implementations must filter by tenantId).
      */
-    public function findById(string $id): ?ProjectDTO;
+    public function findById(string $tenantId, string $id): ?ProjectDTO;
 
     /**
      * Get project's milestones

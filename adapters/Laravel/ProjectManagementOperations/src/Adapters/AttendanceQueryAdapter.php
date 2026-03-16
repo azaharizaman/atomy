@@ -10,6 +10,9 @@ use Nexus\Laravel\ProjectManagementOperations\Contracts\ProjectTaskIdsQueryInter
 
 /**
  * Implements orchestrator AttendanceQueryInterface using TimeTracking and project task resolution.
+ * Task IDs are tenant-scoped via ProjectTaskIdsQueryInterface::getTaskIdsForProject($tenantId, $projectId).
+ * The app must ensure the implementation of TimesheetQueryInterface is tenant-scoped (e.g. all reads
+ * filtered by tenant) so getByWorkItem($workItemId) does not return timesheets from other tenants.
  */
 final readonly class AttendanceQueryAdapter implements AttendanceQueryInterface
 {

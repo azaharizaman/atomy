@@ -27,16 +27,19 @@ The adapter expects the **application** (or another package) to bind these inter
 
 ## L1 query/persist implementations
 
-The adapters call **L1** interfaces such as:
+This adapter **actually uses** (and the service provider binds) these L1 interfaces:
 
-- `Nexus\Project\Contracts\ProjectQueryInterface`, `ProjectPersistInterface`
-- `Nexus\Task\Contracts\TaskQueryInterface`, `TaskPersistInterface` (and related)
-- `Nexus\TimeTracking\Contracts\TimesheetQueryInterface`, `TimesheetPersistInterface`
-- `Nexus\ResourceAllocation\Contracts\AllocationQueryInterface`, `OverallocationCheckerInterface`
-- `Nexus\Milestone\Contracts\MilestoneQueryInterface`, `MilestonePersistInterface`
-- `Nexus\Receivable\Contracts\ReceivableManagerInterface` (used by `ReceivablePersistAdapter`)
+- **Required:** `Nexus\Project\Contracts\ProjectQueryInterface` (and optionally `ProjectPersistInterface` if you extend the adapter)
+- **Required:** `Nexus\Milestone\Contracts\MilestoneQueryInterface` (and optionally `MilestonePersistInterface`)
+- **Required:** `Nexus\TimeTracking\Contracts\TimesheetQueryInterface` (and optionally `TimesheetPersistInterface`)
+- **Required:** `Nexus\Receivable\Contracts\ReceivableManagerInterface` (used by `ReceivablePersistAdapter`)
 
-You must **bind concrete implementations** of these in your Laravel app (e.g. Eloquent repositories). The adapter package does not ship with default implementations; it only wires the orchestrator to L1 and to the four app contracts above.
+The following are **not** wired by this adapter; list them only if your app uses them elsewhere or you add custom adapters:
+
+- **Optional:** `Nexus\Task\Contracts\TaskQueryInterface`, `TaskPersistInterface` (this adapter uses app `ProjectTaskIdsQueryInterface` for task IDs by project, not L1 Task directly)
+- **Optional:** `Nexus\ResourceAllocation\Contracts\AllocationQueryInterface`, `OverallocationCheckerInterface` (not used by the current orchestrator contracts bound here)
+
+You must **bind concrete implementations** of the required L1 interfaces above and the four app contracts (ProjectTaskIdsQueryInterface, ProjectBudgetQueryInterface, ProjectBudgetPersistInterface, ProjectMessagingSenderInterface) in your Laravel app.
 
 For **testing**, you can use in-memory or fake implementations of the L1 and app contracts (see integration tests in the orchestrator or adapter test suite).
 

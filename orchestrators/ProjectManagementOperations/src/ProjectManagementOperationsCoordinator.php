@@ -24,7 +24,7 @@ final readonly class ProjectManagementOperationsCoordinator
     {
         $laborHealth = $this->laborService->calculate($tenantId, $projectId);
         $expenseHealth = $this->expenseService->calculate($tenantId, $projectId);
-        $timelineHealth = $this->timelineService->calculate($projectId);
+        $timelineHealth = $this->timelineService->calculate($tenantId, $projectId);
 
         // Simple overall score calculation (average of health percentages)
         $overallScore = ($laborHealth->healthPercentage + $expenseHealth->healthPercentage + $timelineHealth->completionPercentage) / 3;

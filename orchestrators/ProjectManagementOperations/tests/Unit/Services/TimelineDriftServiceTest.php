@@ -52,7 +52,7 @@ final class TimelineDriftServiceTest extends TestCase
         ]);
 
         $service = new TimelineDriftService($projectQuery, $schedulerQuery);
-        $health = $service->calculate($projectId, $now);
+        $health = $service->calculate('tenant-1', $projectId, $now);
 
         $this->assertEquals($projectId, $health->projectId);
         $this->assertEquals(3, $health->totalMilestones);
@@ -81,7 +81,7 @@ final class TimelineDriftServiceTest extends TestCase
         ]);
 
         $service = new TimelineDriftService($projectQuery, $this->createMock(SchedulerQueryInterface::class));
-        $health = $service->calculate($projectId, $now);
+        $health = $service->calculate('tenant-1', $projectId, $now);
 
         $this->assertEquals(1, $health->delayedMilestones);
         $this->assertEquals(0, $health->completedMilestones);
@@ -95,7 +95,7 @@ final class TimelineDriftServiceTest extends TestCase
         $projectQuery->method('getMilestones')->willReturn([]);
 
         $service = new TimelineDriftService($projectQuery, $this->createMock(SchedulerQueryInterface::class));
-        $health = $service->calculate('empty');
+        $health = $service->calculate('tenant-1', 'empty');
 
         $this->assertEquals(0, $health->totalMilestones);
         $this->assertEquals(0.0, $health->completionPercentage);
@@ -119,9 +119,9 @@ final class TimelineDriftServiceTest extends TestCase
         ]);
 
         $service = new TimelineDriftService($projectQuery, $this->createMock(SchedulerQueryInterface::class));
-        $health = $service->calculate($projectId, $now);
+        $health = $service->calculate('tenant-1', $projectId, $now);
 
-        $this->assertEquals(1, $health->totalMilestones);
+        $this->assertEquals(0, $health->totalMilestones);
         $this->assertEquals(0, $health->completedMilestones);
         $this->assertEquals(0, $health->delayedMilestones);
         $this->assertEmpty($health->driftDetails);

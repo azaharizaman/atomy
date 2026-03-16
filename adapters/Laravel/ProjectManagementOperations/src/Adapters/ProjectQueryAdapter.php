@@ -21,7 +21,7 @@ final readonly class ProjectQueryAdapter implements ProjectQueryInterface
     ) {
     }
 
-    public function findById(string $id): ?ProjectDTO
+    public function findById(string $tenantId, string $id): ?ProjectDTO
     {
         $project = $this->projectQuery->getById($id);
         if ($project === null) {

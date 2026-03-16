@@ -9,67 +9,71 @@ use Nexus\Laravel\ProjectManagementOperations\Contracts\ProjectBudgetQueryInterf
 
 /**
  * In-memory app ProjectBudgetQueryInterface for integration tests.
- * Currency is stored per project to support different currencies per project.
+ * Storage is keyed by tenantId then projectId to avoid cross-tenant leakage.
  */
 final class InMemoryProjectBudgetQuery implements ProjectBudgetQueryInterface
 {
-    /** @var array<string, int> projectId -> minor units */
+    /** @var array<string, array<string, int>> tenantId -> projectId -> minor units */
     private array $laborBudget = [];
-    /** @var array<string, int> */
+    /** @var array<string, array<string, int>> */
     private array $actualLaborCost = [];
-    /** @var array<string, int> */
+    /** @var array<string, array<string, int>> */
     private array $expenseBudget = [];
-    /** @var array<string, int> */
+    /** @var array<string, array<string, int>> */
     private array $actualExpenseCost = [];
-    /** @var array<string, string> projectId -> currency code */
-    private array $currencyByProject = [];
+    /** @var array<string, array<string, string>> tenantId -> projectId -> currency code */
+    private array $currencyByTenantAndProject = [];
 
-    public function setLaborBudget(string $projectId, Money $amount): void
+    public function setLaborBudget(string $tenantId, string $projectId, Money $amount): void
     {
-        $this->laborBudget[$projectId] = $amount->getAmountInMinorUnits();
-        $this->currencyByProject[$projectId] = $amount->getCurrency();
+        $this->laborBudget[$tenantId][$projectId] = $amount->getAmountInMinorUnits();
+        $this->currencyByTenantAndProject[$tenantId][$projectId] = $amount->getCurrency();
     }
 
-    public function setActualLaborCost(string $projectId, Money $amount): void
+    public function setActualLaborCost(string $tenantId, string $projectId, Money $amount): void
     {
-        $this->actualLaborCost[$projectId] = $amount->getAmountInMinorUnits();
-        $this->currencyByProject[$projectId] = $this->currencyByProject[$projectId] ?? $amount->getCurrency();
+        $this->actualLaborCost[$tenantId][$projectId] = $amount->getAmountInMinorUnits();
+        $this->currencyByTenantAndProject[$tenantId][$projectId] = $this->currencyByTenantAndProject[$tenantId][$projectId] ?? $amount->getCurrency();
     }
 
-    public function setExpenseBudget(string $projectId, Money $amount): void
+    public function setExpenseBudget(string $tenantId, string $projectId, Money $amount): void
     {
-        $this->expenseBudget[$projectId] = $amount->getAmountInMinorUnits();
-        $this->currencyByProject[$projectId] = $this->currencyByProject[$projectId] ?? $amount->getCurrency();
+        $this->expenseBudget[$tenantId][$projectId] = $amount->getAmountInMinorUnits();
+        $this->currencyByTenantAndProject[$tenantId][$projectId] = $this->currencyByTenantAndProject[$tenantId][$projectId] ?? $amount->getCurrency();
     }
 
-    public function setActualExpenseCost(string $projectId, Money $amount): void
+    public function setActualExpenseCost(string $tenantId, string $projectId, Money $amount): void
     {
-        $this->actualExpenseCost[$projectId] = $amount->getAmountInMinorUnits();
-        $this->currencyByProject[$projectId] = $this->currencyByProject[$projectId] ?? $amount->getCurrency();
+        $this->actualExpenseCost[$tenantId][$projectId] = $amount->getAmountInMinorUnits();
+        $this->currencyByTenantAndProject[$tenantId][$projectId] = $this->currencyByTenantAndProject[$tenantId][$projectId] ?? $amount->getCurrency();
     }
 
-    private function currencyFor(string $projectId): string
+    private function currencyFor(string $tenantId, string $projectId): string
     {
-        return $this->currencyByProject[$projectId] ?? 'MYR';
+        return ($this->currencyByTenantAndProject[$tenantId] ?? [])[$projectId] ?? 'MYR';
     }
 
     public function getLaborBudget(string $tenantId, string $projectId): Money
     {
-        return new Money($this->laborBudget[$projectId] ?? 0, $this->currencyFor($projectId));
+        $amount = ($this->laborBudget[$tenantId] ?? [])[$projectId] ?? 0;
+        return new Money($amount, $this->currencyFor($tenantId, $projectId));
     }
 
     public function getActualLaborCost(string $tenantId, string $projectId): Money
     {
-        return new Money($this->actualLaborCost[$projectId] ?? 0, $this->currencyFor($projectId));
+        $amount = ($this->actualLaborCost[$tenantId] ?? [])[$projectId] ?? 0;
+        return new Money($amount, $this->currencyFor($tenantId, $projectId));
     }
 
     public function getExpenseBudget(string $tenantId, string $projectId): Money
     {
-        return new Money($this->expenseBudget[$projectId] ?? 0, $this->currencyFor($projectId));
+        $amount = ($this->expenseBudget[$tenantId] ?? [])[$projectId] ?? 0;
+        return new Money($amount, $this->currencyFor($tenantId, $projectId));
     }
 
     public function getActualExpenseCost(string $tenantId, string $projectId): Money
     {
-        return new Money($this->actualExpenseCost[$projectId] ?? 0, $this->currencyFor($projectId));
+        $amount = ($this->actualExpenseCost[$tenantId] ?? [])[$projectId] ?? 0;
+        return new Money($amount, $this->currencyFor($tenantId, $projectId));
     }
 }

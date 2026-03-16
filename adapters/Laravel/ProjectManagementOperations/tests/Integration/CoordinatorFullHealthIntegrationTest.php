@@ -93,16 +93,16 @@ final class CoordinatorFullHealthIntegrationTest extends TestCase
             status: TimesheetStatus::Draft
         ));
 
-        // App in-memory
+        // App in-memory (tenant-scoped)
         $taskIdsQuery = new InMemoryProjectTaskIdsQuery();
-        $taskIdsQuery->setTaskIdsForProject(self::PROJECT_ID, [$taskId]);
+        $taskIdsQuery->setTaskIdsForProject(self::TENANT_ID, self::PROJECT_ID, [$taskId]);
 
         $budgetQuery = new InMemoryProjectBudgetQuery();
         // Use minor units (e.g. cents): 10000 = 100.00 MYR
-        $budgetQuery->setLaborBudget(self::PROJECT_ID, new Money(10000, 'MYR'));
-        $budgetQuery->setActualLaborCost(self::PROJECT_ID, new Money(2500, 'MYR'));
-        $budgetQuery->setExpenseBudget(self::PROJECT_ID, new Money(2000, 'MYR'));
-        $budgetQuery->setActualExpenseCost(self::PROJECT_ID, new Money(500, 'MYR'));
+        $budgetQuery->setLaborBudget(self::TENANT_ID, self::PROJECT_ID, new Money(10000, 'MYR'));
+        $budgetQuery->setActualLaborCost(self::TENANT_ID, self::PROJECT_ID, new Money(2500, 'MYR'));
+        $budgetQuery->setExpenseBudget(self::TENANT_ID, self::PROJECT_ID, new Money(2000, 'MYR'));
+        $budgetQuery->setActualExpenseCost(self::TENANT_ID, self::PROJECT_ID, new Money(500, 'MYR'));
 
         $budgetPersist = new InMemoryProjectBudgetPersist();
         $messagingSender = new InMemoryProjectMessagingSender();
