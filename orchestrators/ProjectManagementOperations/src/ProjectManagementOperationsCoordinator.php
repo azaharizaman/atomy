@@ -20,10 +20,10 @@ final readonly class ProjectManagementOperationsCoordinator
     ) {
     }
 
-    public function getFullHealth(string $tenantId, string $projectId): FullProjectHealthDTO
+    public function getFullHealth(string $projectId): FullProjectHealthDTO
     {
-        $laborHealth = $this->laborService->calculate($tenantId, $projectId);
-        $expenseHealth = $this->expenseService->calculate($tenantId, $projectId);
+        $laborHealth = $this->laborService->calculate($projectId);
+        $expenseHealth = $this->expenseService->calculate($projectId);
         $timelineHealth = $this->timelineService->calculate($projectId);
 
         // Simple overall score calculation (average of health percentages)

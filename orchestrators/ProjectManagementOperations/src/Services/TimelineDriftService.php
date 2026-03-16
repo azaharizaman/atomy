@@ -28,9 +28,6 @@ final readonly class TimelineDriftService implements TimelineDriftServiceInterfa
         $driftDetails = [];
 
         foreach ($milestones as $milestone) {
-            if ($milestone->dueDate === null) {
-                continue;
-            }
             if ($milestone->completedAt !== null) {
                 $completed++;
                 if ($milestone->completedAt > $milestone->dueDate) {
@@ -44,6 +41,7 @@ final readonly class TimelineDriftService implements TimelineDriftServiceInterfa
                     ];
                 }
             } elseif ($now > $milestone->dueDate) {
+                // Also count pending milestones that are past their due date
                 $delayed++;
                 $driftDetails[] = [
                     'id' => $milestone->id,

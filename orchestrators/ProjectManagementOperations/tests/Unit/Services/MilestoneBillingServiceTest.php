@@ -51,7 +51,7 @@ final class MilestoneBillingServiceTest extends TestCase
         $budgetPersist = $this->createMock(BudgetPersistInterface::class);
         $budgetPersist->expects($this->once())
             ->method('updateEarnedRevenue')
-            ->with($tenantId, $projectId, Money::of(1000.00, 'MYR'));
+            ->with($projectId, Money::of(1000.00, 'MYR'));
 
         $service = new MilestoneBillingService(
             $projectQuery,

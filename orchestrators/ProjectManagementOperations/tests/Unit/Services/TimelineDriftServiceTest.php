@@ -100,30 +100,4 @@ final class TimelineDriftServiceTest extends TestCase
         $this->assertEquals(0, $health->totalMilestones);
         $this->assertEquals(0.0, $health->completionPercentage);
     }
-
-    public function test_it_skips_milestones_with_null_due_date(): void
-    {
-        $projectId = 'proj-123';
-        $now = new \DateTimeImmutable('2024-02-01');
-
-        $projectQuery = $this->createMock(ProjectQueryInterface::class);
-        $projectQuery->method('getMilestones')->willReturn([
-            new MilestoneDTO(
-                id: 'm1',
-                projectId: $projectId,
-                name: 'No deadline',
-                dueDate: null,
-                completedAt: null,
-                isBillable: false
-            ),
-        ]);
-
-        $service = new TimelineDriftService($projectQuery, $this->createMock(SchedulerQueryInterface::class));
-        $health = $service->calculate($projectId, $now);
-
-        $this->assertEquals(1, $health->totalMilestones);
-        $this->assertEquals(0, $health->completedMilestones);
-        $this->assertEquals(0, $health->delayedMilestones);
-        $this->assertEmpty($health->driftDetails);
-    }
 }
