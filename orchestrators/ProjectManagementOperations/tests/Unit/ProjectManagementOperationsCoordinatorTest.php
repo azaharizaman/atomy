@@ -68,7 +68,7 @@ final class ProjectManagementOperationsCoordinatorTest extends TestCase
         );
 
         $timeline = $this->createMock(TimelineDriftServiceInterface::class);
-        $timeline->expects($this->once())->method('calculate')->with($projectId)->willReturn(
+        $timeline->expects($this->once())->method('calculate')->with($tenantId, $projectId)->willReturn(
             new TimelineHealthDTO($projectId, 0, 0, 0, 0, [])
         );
 

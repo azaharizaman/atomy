@@ -15,12 +15,13 @@ final class ExpenseHealthServiceTest extends TestCase
 {
     public function test_it_calculates_expense_health_correctly(): void
     {
+        $tenantId = 'tenant-1';
         $projectId = 'proj-123';
         $startDate = new \DateTimeImmutable('2024-01-01');
         $endDate = new \DateTimeImmutable('2024-01-31');
 
         $projectQuery = $this->createMock(ProjectQueryInterface::class);
-        $projectQuery->method('findById')->willReturn(new ProjectDTO(
+        $projectQuery->method('findById')->with($tenantId, $projectId)->willReturn(new ProjectDTO(
             id: $projectId,
             name: 'Test Project',
             startDate: $startDate,
@@ -29,8 +30,8 @@ final class ExpenseHealthServiceTest extends TestCase
         ));
 
         $budgetQuery = $this->createMock(BudgetQueryInterface::class);
-        $budgetQuery->method('getExpenseBudget')->willReturn(Money::of(5000.00, 'MYR'));
-        $budgetQuery->method('getActualExpenseCost')->willReturn(Money::of(1000.00, 'MYR'));
+        $budgetQuery->method('getExpenseBudget')->with($tenantId, $projectId)->willReturn(Money::of(5000.00, 'MYR'));
+        $budgetQuery->method('getActualExpenseCost')->with($tenantId, $projectId)->willReturn(Money::of(1000.00, 'MYR'));
 
         $service = new ExpenseHealthService(
             $projectQuery,
@@ -68,11 +69,11 @@ final class ExpenseHealthServiceTest extends TestCase
         $endDate = new \DateTimeImmutable('2024-01-31');
 
         $projectQuery = $this->createMock(ProjectQueryInterface::class);
-        $projectQuery->method('findById')->willReturn(new ProjectDTO($projectId, 'Test', $startDate, $endDate, 'active'));
+        $projectQuery->method('findById')->with('tenant-1', $projectId)->willReturn(new ProjectDTO($projectId, 'Test', $startDate, $endDate, 'active'));
 
         $budgetQuery = $this->createMock(BudgetQueryInterface::class);
-        $budgetQuery->method('getExpenseBudget')->willReturn(Money::zero('MYR'));
-        $budgetQuery->method('getActualExpenseCost')->willReturn(Money::zero('MYR'));
+        $budgetQuery->method('getExpenseBudget')->with('tenant-1', $projectId)->willReturn(Money::zero('MYR'));
+        $budgetQuery->method('getActualExpenseCost')->with('tenant-1', $projectId)->willReturn(Money::zero('MYR'));
 
         $service = new ExpenseHealthService($projectQuery, $budgetQuery);
         $health = $service->calculate($projectId);

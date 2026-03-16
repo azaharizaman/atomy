@@ -17,17 +17,17 @@ final readonly class TimelineDriftService implements TimelineDriftServiceInterfa
     ) {
     }
 
-    public function calculate(string $projectId, ?\DateTimeImmutable $now = null): TimelineHealthDTO
+    public function calculate(string $tenantId, string $projectId, ?\DateTimeImmutable $now = null): TimelineHealthDTO
     {
         $now ??= new \DateTimeImmutable();
         $milestones = $this->projectQuery->getMilestones($projectId);
-        
-        $total = count($milestones);
+        $trackableMilestones = array_values(array_filter($milestones, fn($m) => $m->dueDate !== null));
+        $total = count($trackableMilestones);
         $completed = 0;
         $delayed = 0;
         $driftDetails = [];
 
-        foreach ($milestones as $milestone) {
+        foreach ($trackableMilestones as $milestone) {
             if ($milestone->completedAt !== null) {
                 $completed++;
                 if ($milestone->completedAt > $milestone->dueDate) {

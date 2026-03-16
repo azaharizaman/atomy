@@ -21,7 +21,7 @@ final readonly class LaborHealthService implements LaborHealthServiceInterface
 
     public function calculate(string $projectId): LaborHealthDTO
     {
-        $project = $this->projectQuery->findById($projectId);
+        $project = $this->projectQuery->findById($tenantId, $projectId);
         if ($project === null) {
             throw new \InvalidArgumentException("Project with ID {$projectId} not found");
         }

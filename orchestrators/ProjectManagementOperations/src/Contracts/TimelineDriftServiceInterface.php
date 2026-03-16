@@ -8,5 +8,5 @@ use Nexus\ProjectManagementOperations\DTOs\TimelineHealthDTO;
 
 interface TimelineDriftServiceInterface
 {
-    public function calculate(string $projectId, ?\DateTimeImmutable $now = null): TimelineHealthDTO;
+    public function calculate(string $tenantId, string $projectId, ?\DateTimeImmutable $now = null): TimelineHealthDTO;
 }

@@ -19,7 +19,7 @@ final readonly class ExpenseHealthService implements ExpenseHealthServiceInterfa
 
     public function calculate(string $projectId): ExpenseHealthDTO
     {
-        $project = $this->projectQuery->findById($projectId);
+        $project = $this->projectQuery->findById($tenantId, $projectId);
         if ($project === null) {
             throw new \InvalidArgumentException("Project with ID {$projectId} not found");
         }
