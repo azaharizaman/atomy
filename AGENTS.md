@@ -71,4 +71,23 @@ Nexus is a large system. Agents should follow these coordination patterns:
 - [ ] Failures throw domain exceptions, not return synthetic values
 
 ## Agent Loopback
-For every PR review comments resolved, the agent must reflect back upon its own errors/anti-pattern and update this document with what was learnt from those PR Review comments.
+For every PR review comment resolved, the agent must reflect on its own errors and anti-patterns and update this document with what was learned from PR review comments.
+
+### Learnings
+After each resolved PR review comment, append a new entry below using this template and link back to the PR/issue.
+
+**Template:**
+- **Date:** YYYY-MM-DD
+- **PR/Issue ID:** (link or number)
+- **Summary of mistake:** Brief description of what was wrong.
+- **Root cause:** Why it happened (e.g. missed rule, wrong assumption).
+- **Action taken:** What was changed (code/doc).
+- **Follow-up tasks:** Any remaining work or checks.
+
+**Example:**
+- **Date:** 2026-03-18
+- **PR/Issue ID:** #123
+- **Summary of mistake:** RFQ controller accepted unvalidated `estimated_value` and `savings_percentage`, allowing requests to bypass validation.
+- **Root cause:** Validation rules array omitted those fields; controller used `$request->input()` instead of `$validated`.
+- **Action taken:** Added `nullable|numeric|min:0` and `nullable|numeric|min:0|max:100` to `rfqValidationRules` and switched store/update to use `$validated` for those fields.
+- **Follow-up tasks:** None.

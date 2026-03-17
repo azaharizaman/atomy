@@ -27,13 +27,15 @@ final class RfqController extends Controller
      */
     private function rfqValidationRules(string $tenantId, bool $forUpdate = false): array
     {
-        $titleRule = $forUpdate ? ['sometimes', 'string', 'max:255'] : ['required', 'string', 'max:255'];
+        $titleRule = $forUpdate ? ['sometimes', 'filled', 'string', 'max:255'] : ['required', 'string', 'max:255'];
         return [
             'title' => $titleRule,
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:64'],
             'department' => ['nullable', 'string', 'max:64'],
             'project_id' => ['nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
+            'estimated_value' => ['nullable', 'numeric', 'min:0'],
+            'savings_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'submission_deadline' => ['nullable', 'date'],
             'closing_date' => ['nullable', 'date'],
             'payment_terms' => ['nullable', 'string', 'max:64'],
@@ -154,8 +156,8 @@ final class RfqController extends Controller
         $rfq->department = $validated['department'] ?? null;
         $rfq->project_id = $validated['project_id'] ?? null;
         $rfq->status = 'draft';
-        $rfq->estimated_value = (float) $request->input('estimated_value', 0);
-        $rfq->savings_percentage = (float) $request->input('savings_percentage', 0);
+        $rfq->estimated_value = isset($validated['estimated_value']) ? (float) $validated['estimated_value'] : 0.0;
+        $rfq->savings_percentage = isset($validated['savings_percentage']) ? (float) $validated['savings_percentage'] : 0.0;
         $rfq->submission_deadline = ! empty($validated['submission_deadline']) ? Carbon::parse($validated['submission_deadline']) : null;
         $rfq->closing_date = ! empty($validated['closing_date']) ? Carbon::parse($validated['closing_date']) : null;
         $rfq->payment_terms = $validated['payment_terms'] ?? null;
@@ -396,6 +398,8 @@ final class RfqController extends Controller
         if (array_key_exists('category', $data)) $rfq->category = $data['category'];
         if (array_key_exists('department', $data)) $rfq->department = $data['department'];
         if (array_key_exists('project_id', $data)) $rfq->project_id = $data['project_id'] ?? null;
+        if (array_key_exists('estimated_value', $data)) $rfq->estimated_value = $data['estimated_value'] !== null ? (float) $data['estimated_value'] : null;
+        if (array_key_exists('savings_percentage', $data)) $rfq->savings_percentage = $data['savings_percentage'] !== null ? (float) $data['savings_percentage'] : null;
         if (array_key_exists('submission_deadline', $data)) $rfq->submission_deadline = $data['submission_deadline'] ? Carbon::parse($data['submission_deadline']) : null;
         if (array_key_exists('closing_date', $data)) $rfq->closing_date = $data['closing_date'] ? Carbon::parse($data['closing_date']) : null;
         if (array_key_exists('payment_terms', $data)) $rfq->payment_terms = $data['payment_terms'];

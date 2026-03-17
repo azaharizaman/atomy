@@ -12,7 +12,9 @@ use App\Services\Task\Exceptions\TaskNotFoundException;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Nexus\Task\Exceptions\CircularDependencyException;
 use DomainException;
 use Nexus\Task\Enums\TaskPriority;
@@ -93,20 +95,24 @@ final class TaskController extends Controller
             assigneeIds: $validated['assignee_ids'] ?? [],
             predecessorIds: [],
         );
-        $this->tasks->create($task, []);
-
-        $created = $this->tasks->findById($id);
-        if ($created === null) {
-            abort(500, 'Task creation failed');
-        }
-
         $projectId = $validated['project_id'] ?? null;
+
         try {
-            $this->taskTenantLink->setTaskProjectId($tenantId, $id, $projectId);
+            $created = DB::transaction(function () use ($task, $tenantId, $id, $projectId) {
+                $this->tasks->create($task, []);
+                $created = $this->tasks->findById($id);
+                if ($created === null) {
+                    throw new \RuntimeException('Task creation failed');
+                }
+                $this->taskTenantLink->setTaskProjectId($tenantId, $id, $projectId);
+                return $created;
+            });
         } catch (TaskNotFoundException) {
             abort(404);
         } catch (DomainException $e) {
             return response()->json(['errors' => ['project_id' => [$e->getMessage()]]], 422);
+        } catch (\RuntimeException $e) {
+            abort(500, $e->getMessage());
         }
 
         return response()->json([
@@ -171,6 +177,10 @@ final class TaskController extends Controller
             'assignee_ids' => 'sometimes|array',
             'assignee_ids.*' => 'string',
         ]);
+
+        if (array_key_exists('title', $validated) && trim((string) $validated['title']) === '') {
+            throw ValidationException::withMessages(['title' => 'The title must not be empty.']);
+        }
 
         $dueDate = array_key_exists('due_date', $validated)
             ? ($validated['due_date'] !== null && $validated['due_date'] !== '' ? new \DateTimeImmutable($validated['due_date']) : null)

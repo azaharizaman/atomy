@@ -18,12 +18,26 @@ export default function ProjectDetailPage() {
 
   const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId);
   const { data: health, isLoading: healthLoading, isError: healthIsError, error: healthError } = useProjectHealth(projectId);
-  const { data: rfqs = [] } = useProjectRfqs(projectId);
-  const { data: tasks = [] } = useProjectTasks(projectId);
+  const { data: rfqs = [], isLoading: rfqsLoading, isError: rfqsError } = useProjectRfqs(projectId);
+  const { data: tasks = [], isLoading: tasksLoading, isError: tasksError } = useProjectTasks(projectId);
 
   const isAxios404 = axios.isAxiosError(projectError) && projectError.response?.status === 404;
   const featureDisabledSignal =
     axios.isAxiosError(projectError) && (projectError.response?.data as any)?.code === 'projects_not_enabled';
+
+  if (projectError && !featureDisabledSignal && !isAxios404) {
+    return (
+      <Card padding="md">
+        <h1 className="text-lg font-semibold text-slate-900">Unable to load project</h1>
+        <p className="text-sm text-slate-500 mt-1">Something went wrong while loading this project. Please try again.</p>
+        <div className="mt-3">
+          <Button size="sm" variant="secondary" onClick={() => router.push('/projects')}>
+            Back to projects
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   if (featureDisabledSignal) {
     return (
@@ -135,7 +149,11 @@ export default function ProjectDetailPage() {
             </div>
           </div>
           <div className="mt-3 space-y-2">
-            {rfqs.length === 0 ? (
+            {rfqsLoading ? (
+              <div className="text-sm text-slate-500 animate-pulse">Loading RFQs…</div>
+            ) : rfqsError ? (
+              <div className="text-sm text-red-600">Failed to load RFQs.</div>
+            ) : rfqs.length === 0 ? (
               <div className="text-sm text-slate-500">No RFQs linked yet.</div>
             ) : (
               <>
@@ -172,7 +190,11 @@ export default function ProjectDetailPage() {
             </div>
           </div>
           <div className="mt-3 space-y-2">
-            {tasks.length === 0 ? (
+            {tasksLoading ? (
+              <div className="text-sm text-slate-500 animate-pulse">Loading tasks…</div>
+            ) : tasksError ? (
+              <div className="text-sm text-red-600">Failed to load tasks.</div>
+            ) : tasks.length === 0 ? (
               <div className="text-sm text-slate-500">No tasks linked yet.</div>
             ) : (
               <>
@@ -188,7 +210,7 @@ export default function ProjectDetailPage() {
                   <button
                     type="button"
                     className="text-xs text-slate-600 hover:text-slate-800 underline"
-                    onClick={() => router.push('/projects')}
+                    onClick={() => router.push(`/projects/${projectId}/tasks`)}
                   >
                     View all ({tasks.length})
                   </button>
