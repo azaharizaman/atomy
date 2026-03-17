@@ -34,7 +34,9 @@ export default function ProjectsPage() {
       render: (row) => (
         <div>
           <div className="text-sm font-medium text-slate-800 leading-tight">{row.name}</div>
-          <div className="text-[11px] text-slate-400 mt-0.5">{row.clientId ? `Client: ${row.clientId}` : '—'}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">
+            {row.clientName ? `Client: ${row.clientName}` : row.clientId ? `Client: ${row.clientId}` : '—'}
+          </div>
         </div>
       ),
     },

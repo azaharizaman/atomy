@@ -39,6 +39,20 @@ final class ProjectController extends Controller
         return $id;
     }
 
+    private function assertProjectOwnedByTenant(Request $request, string $projectId): void
+    {
+        $tenantId = $this->tenantId($request);
+
+        $exists = ProjectModel::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $projectId)
+            ->exists();
+
+        if (! $exists) {
+            abort(404);
+        }
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->assertFeatureEnabled();
@@ -63,7 +77,7 @@ final class ProjectController extends Controller
     public function store(Request $request): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $tenantId = $this->tenantId($request);
+        $this->tenantId($request);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -102,9 +116,10 @@ final class ProjectController extends Controller
         ], 201);
     }
 
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $this->tenantId($request);
 
         $project = $this->projects->findById($id);
 
@@ -129,6 +144,7 @@ final class ProjectController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $this->tenantId($request);
         $project = $this->projects->findById($id);
         if ($project === null) {
             abort(404);
@@ -173,6 +189,7 @@ final class ProjectController extends Controller
     public function updateStatus(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $this->tenantId($request);
         $project = $this->projects->findById($id);
         if ($project === null) {
             abort(404);
@@ -208,6 +225,8 @@ final class ProjectController extends Controller
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
 
+        $this->assertProjectOwnedByTenant($request, $id);
+
         $health = $this->healthCoordinator->getFullHealth($tenantId, $id);
 
         return response()->json([
@@ -233,7 +252,10 @@ final class ProjectController extends Controller
     public function rfqs(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
+        $this->assertProjectOwnedByTenant($request, $id);
         $items = Rfq::query()
+            ->where('tenant_id', $tenantId)
             ->where('project_id', $id)
             ->orderBy('created_at', 'desc')
             ->get()
@@ -250,7 +272,10 @@ final class ProjectController extends Controller
     public function tasks(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
+        $this->assertProjectOwnedByTenant($request, $id);
         $items = TaskModel::query()
+            ->where('tenant_id', $tenantId)
             ->where('project_id', $id)
             ->orderBy('created_at', 'desc')
             ->get()
@@ -280,6 +305,7 @@ final class ProjectController extends Controller
     public function getAcl(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $this->assertProjectOwnedByTenant($request, $id);
         if ($this->projects->findById($id) === null) {
             abort(404);
         }
@@ -289,6 +315,7 @@ final class ProjectController extends Controller
     public function updateAcl(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $this->assertProjectOwnedByTenant($request, $id);
         if ($this->projects->findById($id) === null) {
             abort(404);
         }

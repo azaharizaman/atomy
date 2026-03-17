@@ -39,11 +39,13 @@ class Project extends Model
 
     public function tasks(): HasMany
     {
-        return $this->hasMany(Task::class, 'project_id');
+        return $this->hasMany(Task::class, 'project_id')
+            ->where('tenant_id', $this->tenant_id);
     }
 
     public function rfqs(): HasMany
     {
-        return $this->hasMany(Rfq::class, 'project_id');
+        return $this->hasMany(Rfq::class, 'project_id')
+            ->where('tenant_id', $this->tenant_id);
     }
 }

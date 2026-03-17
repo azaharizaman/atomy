@@ -7,7 +7,7 @@ namespace App\Services\ProjectManagementOperations;
 use Nexus\ProjectManagementOperations\Contracts\TimelineDriftServiceInterface;
 use Nexus\ProjectManagementOperations\DTOs\TimelineHealthDTO;
 
-final class AtomyTimelineDriftService implements TimelineDriftServiceInterface
+final readonly class AtomyTimelineDriftService implements TimelineDriftServiceInterface
 {
     public function calculate(string $tenantId, string $projectId, ?\DateTimeImmutable $now = null): TimelineHealthDTO
     {

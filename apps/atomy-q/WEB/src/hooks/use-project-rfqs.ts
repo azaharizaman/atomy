@@ -14,6 +14,7 @@ function normalize(payload: any): ProjectRfqListItem[] {
   const list = (Array.isArray(payload) ? payload : payload?.data) ?? [];
   if (!Array.isArray(list)) return [];
   return list
+    .filter((r: any) => r && typeof r === 'object')
     .map((r: any) => ({
       id: String(r.id ?? ''),
       rfqNumber: r.rfq_number ?? r.rfqNumber,

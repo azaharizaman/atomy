@@ -6,17 +6,21 @@ namespace App\Services\Task;
 
 use App\Models\Task as TaskModel;
 use Nexus\Task\Contracts\TaskPersistInterface;
-use Nexus\Task\Enums\TaskPriority;
-use Nexus\Task\Enums\TaskStatus;
 use Nexus\Task\ValueObjects\TaskSummary;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 
-final class AtomyTaskPersist implements TaskPersistInterface
+final readonly class AtomyTaskPersist implements TaskPersistInterface
 {
+    public function __construct(private TenantContextInterface $tenantContext)
+    {
+    }
+
     public function persist(TaskSummary $task): void
     {
-        $tenantId = request()?->attributes->get('auth_tenant_id');
+        $tenantId = $this->tenantContext->requireTenant();
 
         $attrs = [
+            'tenant_id' => $tenantId,
             'title' => $task->title,
             'description' => $task->description,
             'status' => $task->status->value,
@@ -26,18 +30,16 @@ final class AtomyTaskPersist implements TaskPersistInterface
             'assignee_ids' => $task->assigneeIds,
             'predecessor_ids' => $task->predecessorIds,
         ];
-        if ($tenantId !== null && $tenantId !== '') {
-            $attrs['tenant_id'] = $tenantId;
-        }
 
         TaskModel::query()->updateOrCreate(
-            ['id' => $task->id],
+            ['id' => $task->id, 'tenant_id' => $tenantId],
             $attrs
         );
     }
 
     public function delete(string $taskId): void
     {
-        TaskModel::query()->where('id', $taskId)->delete();
+        $tenantId = $this->tenantContext->requireTenant();
+        TaskModel::query()->where('tenant_id', $tenantId)->where('id', $taskId)->delete();
     }
 }

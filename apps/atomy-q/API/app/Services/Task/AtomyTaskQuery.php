@@ -9,12 +9,21 @@ use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Task\Enums\TaskPriority;
 use Nexus\Task\Enums\TaskStatus;
 use Nexus\Task\ValueObjects\TaskSummary;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 
-final class AtomyTaskQuery implements TaskQueryInterface
+final readonly class AtomyTaskQuery implements TaskQueryInterface
 {
+    public function __construct(private TenantContextInterface $tenantContext)
+    {
+    }
+
     public function getById(string $taskId): ?TaskSummary
     {
-        $row = TaskModel::query()->find($taskId);
+        $tenantId = $this->tenantContext->requireTenant();
+        $row = TaskModel::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $taskId)
+            ->first();
 
         if ($row === null) {
             return null;
@@ -35,14 +44,20 @@ final class AtomyTaskQuery implements TaskQueryInterface
 
     public function getPredecessorIds(string $taskId): array
     {
-        $row = TaskModel::query()->find($taskId);
+        $tenantId = $this->tenantContext->requireTenant();
+        $row = TaskModel::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $taskId)
+            ->first();
 
         return $row === null ? [] : ($row->predecessor_ids ?? []);
     }
 
     public function getByAssignee(string $assigneeId): array
     {
+        $tenantId = $this->tenantContext->requireTenant();
         return TaskModel::query()
+            ->where('tenant_id', $tenantId)
             ->whereJsonContains('assignee_ids', $assigneeId)
             ->get()
             ->map(fn (TaskModel $row) => new TaskSummary(

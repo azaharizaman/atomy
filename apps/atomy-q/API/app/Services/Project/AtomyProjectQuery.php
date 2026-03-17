@@ -8,12 +8,21 @@ use App\Models\Project as ProjectModel;
 use Nexus\Project\Contracts\ProjectQueryInterface;
 use Nexus\Project\Enums\ProjectStatus;
 use Nexus\Project\ValueObjects\ProjectSummary;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 
-final class AtomyProjectQuery implements ProjectQueryInterface
+final readonly class AtomyProjectQuery implements ProjectQueryInterface
 {
+    public function __construct(private TenantContextInterface $tenantContext)
+    {
+    }
+
     public function getById(string $projectId): ?ProjectSummary
     {
-        $row = ProjectModel::query()->find($projectId);
+        $tenantId = $this->tenantContext->requireTenant();
+        $row = ProjectModel::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $projectId)
+            ->first();
 
         if ($row === null) {
             return null;
@@ -23,8 +32,8 @@ final class AtomyProjectQuery implements ProjectQueryInterface
             id: $row->id,
             name: $row->name,
             clientId: $row->client_id,
-            startDate: \DateTimeImmutable::createFromInterface($row->start_date->toDateTimeImmutable()),
-            endDate: \DateTimeImmutable::createFromInterface($row->end_date->toDateTimeImmutable()),
+            startDate: $row->start_date->toDateTimeImmutable(),
+            endDate: $row->end_date->toDateTimeImmutable(),
             projectManagerId: $row->project_manager_id,
             status: ProjectStatus::from($row->status),
             budgetType: $row->budget_type,
@@ -34,15 +43,17 @@ final class AtomyProjectQuery implements ProjectQueryInterface
 
     public function getByClient(string $clientId): array
     {
+        $tenantId = $this->tenantContext->requireTenant();
         return ProjectModel::query()
+            ->where('tenant_id', $tenantId)
             ->where('client_id', $clientId)
             ->get()
             ->map(fn (ProjectModel $row) => new ProjectSummary(
                 id: $row->id,
                 name: $row->name,
                 clientId: $row->client_id,
-                startDate: \DateTimeImmutable::createFromInterface($row->start_date->toDateTimeImmutable()),
-                endDate: \DateTimeImmutable::createFromInterface($row->end_date->toDateTimeImmutable()),
+                startDate: $row->start_date->toDateTimeImmutable(),
+                endDate: $row->end_date->toDateTimeImmutable(),
                 projectManagerId: $row->project_manager_id,
                 status: ProjectStatus::from($row->status),
                 budgetType: $row->budget_type,

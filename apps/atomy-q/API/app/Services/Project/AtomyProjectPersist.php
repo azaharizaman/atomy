@@ -6,15 +6,20 @@ namespace App\Services\Project;
 
 use App\Models\Project as ProjectModel;
 use Nexus\Project\Contracts\ProjectPersistInterface;
-use Nexus\Project\Enums\ProjectStatus;
 use Nexus\Project\ValueObjects\ProjectSummary;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 
-final class AtomyProjectPersist implements ProjectPersistInterface
+final readonly class AtomyProjectPersist implements ProjectPersistInterface
 {
+    public function __construct(private TenantContextInterface $tenantContext)
+    {
+    }
+
     public function persist(ProjectSummary $project): void
     {
-        $tenantId = request()?->attributes->get('auth_tenant_id');
+        $tenantId = $this->tenantContext->requireTenant();
         $attrs = [
+            'tenant_id' => $tenantId,
             'name' => $project->name,
             'client_id' => $project->clientId,
             'start_date' => $project->startDate->format('Y-m-d'),
@@ -24,11 +29,8 @@ final class AtomyProjectPersist implements ProjectPersistInterface
             'budget_type' => $project->budgetType,
             'completion_percentage' => $project->completionPercentage,
         ];
-        if ($tenantId !== null && $tenantId !== '') {
-            $attrs['tenant_id'] = $tenantId;
-        }
         ProjectModel::query()->updateOrCreate(
-            ['id' => $project->id],
+            ['id' => $project->id, 'tenant_id' => $tenantId],
             $attrs
         );
     }

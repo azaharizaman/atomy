@@ -15,12 +15,25 @@ function normalizeHealth(payload: any): ProjectHealth {
   let raw = payload as Record<string, unknown> | null | undefined;
   while (raw?.data) raw = raw.data as Record<string, unknown>;
 
+  const laborRaw = (raw?.labor ?? {}) as any;
+  const expenseRaw = (raw?.expense ?? {}) as any;
+  const timelineRaw = (raw?.timeline ?? {}) as any;
+
   return {
     projectId: String(raw?.project_id ?? raw?.projectId ?? ''),
-    overallScore: raw?.overall_score as number | undefined,
-    labor: raw?.labor as any,
-    expense: raw?.expense as any,
-    timeline: raw?.timeline as any,
+    overallScore: (raw?.overall_score ?? (raw as any)?.overallScore) as number | undefined,
+    labor: {
+      actualHours: laborRaw.actual_hours ?? laborRaw.actualHours,
+      healthPercentage: laborRaw.health_percentage ?? laborRaw.healthPercentage,
+    },
+    expense: {
+      healthPercentage: expenseRaw.health_percentage ?? expenseRaw.healthPercentage,
+    },
+    timeline: {
+      completionPercentage: timelineRaw.completion_percentage ?? timelineRaw.completionPercentage,
+      totalMilestones: timelineRaw.total_milestones ?? timelineRaw.totalMilestones,
+      completedMilestones: timelineRaw.completed_milestones ?? timelineRaw.completedMilestones,
+    },
   };
 }
 

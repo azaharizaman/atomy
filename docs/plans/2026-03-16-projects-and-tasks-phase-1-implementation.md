@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Add optional `project_id` to RFQ domain & persistence
+## Task 1: Add optional `project_id` to RFQ domain & persistence
 
 **Files:**
 - Modify: `apps/atomy-q/API/app/Models/Rfq.php`
@@ -80,7 +80,7 @@ git commit -m "feat: add optional project_id to RFQs"
 
 ---
 
-### Task 2: Introduce Laravel bindings for `Nexus\Project` contracts
+## Task 2: Introduce Laravel bindings for `Nexus\Project` contracts
 
 **Files:**
 - Create: `apps/atomy-q/API/app/Services/Project/NexusProjectManager.php`
@@ -155,7 +155,7 @@ git commit -m "feat: bind Nexus Project contracts in Laravel container"
 
 ---
 
-### Task 3: Introduce Laravel bindings for `Nexus\Task` contracts
+## Task 3: Introduce Laravel bindings for `Nexus\Task` contracts
 
 **Files:**
 - Create: `apps/atomy-q/API/app/Services/Task/NexusTaskManager.php`
@@ -230,7 +230,7 @@ git commit -m "feat: bind Nexus Task contracts in Laravel container"
 
 ---
 
-### Task 4: Wire `Nexus\ProjectManagementOperations` Laravel adapter & app contracts
+## Task 4: Wire `Nexus\ProjectManagementOperations` Laravel adapter & app contracts
 
 **Files:**
 - Modify: `orchestrators/ProjectManagementOperations/src/ProjectManagementOperationsCoordinator.php`
@@ -280,7 +280,7 @@ git commit -m "feat: wire ProjectManagementOperations Laravel adapter and app co
 
 ---
 
-### Task 5: Implement internal project and task services with feature-flagged API endpoints
+## Task 5: Implement internal project and task services with feature-flagged API endpoints
 
 **Files:**
 - Create: `apps/atomy-q/API/app/Http/Controllers/Api/V1/ProjectController.php`
@@ -336,7 +336,7 @@ git commit -m "feat: add feature-flagged project and task API endpoints"
 
 ---
 
-### Task 6: Update `API_ENDPOINTS.md` with Sections 28 & 29 for projects and tasks
+## Task 6: Update `API_ENDPOINTS.md` with Sections 28 & 29 for projects and tasks
 
 **Files:**
 - Modify: `apps/atomy-q/API_ENDPOINTS.md`
@@ -378,7 +378,7 @@ git commit -m "docs: document planned projects and tasks API endpoints"
 
 ---
 
-### Task 7: Verify Phase 1 integration & non-regression for existing RFQ flows
+## Task 7: Verify Phase 1 integration & non-regression for existing RFQ flows
 
 **Files:**
 - Modify/Create: `apps/atomy-q/API/tests/Feature/RfqRegressionForProjectsTest.php`

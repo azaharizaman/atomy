@@ -16,7 +16,13 @@ export interface ProjectDetail {
 
 function normalizeProject(payload: any): ProjectDetail {
   let raw = payload as Record<string, unknown> | null | undefined;
-  while (raw?.data) raw = raw.data as Record<string, unknown>;
+  let depth = 0;
+  while (raw?.data && depth < 5) {
+    const next = raw.data as any;
+    if (next === raw) break;
+    raw = next as Record<string, unknown>;
+    depth++;
+  }
 
   return {
     id: String(raw?.id ?? ''),

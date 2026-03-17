@@ -8,7 +8,7 @@ use Nexus\Common\ValueObjects\Money;
 use Nexus\ProjectManagementOperations\Contracts\ExpenseHealthServiceInterface;
 use Nexus\ProjectManagementOperations\DTOs\ExpenseHealthDTO;
 
-final class AtomyExpenseHealthService implements ExpenseHealthServiceInterface
+final readonly class AtomyExpenseHealthService implements ExpenseHealthServiceInterface
 {
     public function calculate(string $projectId): ExpenseHealthDTO
     {

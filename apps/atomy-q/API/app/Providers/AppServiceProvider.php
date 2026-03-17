@@ -9,8 +9,13 @@ use App\Services\JwtService;
 use App\Services\Project\AtomyIncompleteTaskCount;
 use App\Services\Project\AtomyProjectPersist;
 use App\Services\Project\AtomyProjectQuery;
+use App\Services\ProjectManagementOperations\AtomyExpenseHealthService;
+use App\Services\ProjectManagementOperations\AtomyLaborHealthService;
+use App\Services\ProjectManagementOperations\AtomyMilestoneBillingService;
+use App\Services\ProjectManagementOperations\AtomyTimelineDriftService;
 use App\Services\Task\AtomyTaskPersist;
 use App\Services\Task\AtomyTaskQuery;
+use App\Services\Tenant\RequestTenantContext;
 use Illuminate\Support\ServiceProvider;
 use Nexus\Project\Contracts\IncompleteTaskCountInterface;
 use Nexus\Project\Contracts\ProjectManagerInterface;
@@ -28,6 +33,7 @@ use Nexus\ProjectManagementOperations\ProjectManagementOperationsCoordinator;
 use Nexus\Task\Contracts\TaskManagerInterface;
 use Nexus\Task\Contracts\TaskPersistInterface;
 use Nexus\Task\Contracts\TaskQueryInterface;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -64,11 +70,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(DependencyGraphInterface::class, DependencyGraphService::class);
         $this->app->bind(TaskManagerInterface::class, TaskManager::class);
 
+        // Tenant context for tenant-scoped persistence/query services.
+        $this->app->bind(TenantContextInterface::class, RequestTenantContext::class);
+
         // ProjectManagementOperations orchestrator and health services.
-        $this->app->bind(LaborHealthServiceInterface::class, \App\Services\ProjectManagementOperations\AtomyLaborHealthService::class);
-        $this->app->bind(ExpenseHealthServiceInterface::class, \App\Services\ProjectManagementOperations\AtomyExpenseHealthService::class);
-        $this->app->bind(TimelineDriftServiceInterface::class, \App\Services\ProjectManagementOperations\AtomyTimelineDriftService::class);
-        $this->app->bind(MilestoneBillingServiceInterface::class, \App\Services\ProjectManagementOperations\AtomyMilestoneBillingService::class);
+        $this->app->bind(LaborHealthServiceInterface::class, AtomyLaborHealthService::class);
+        $this->app->bind(ExpenseHealthServiceInterface::class, AtomyExpenseHealthService::class);
+        $this->app->bind(TimelineDriftServiceInterface::class, AtomyTimelineDriftService::class);
+        $this->app->bind(MilestoneBillingServiceInterface::class, AtomyMilestoneBillingService::class);
         $this->app->singleton(ProjectManagementOperationsCoordinator::class);
     }
 

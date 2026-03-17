@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import axios from 'axios';
 import { Button } from '@/components/ds/Button';
 import { Card, InlineDetailPanel } from '@/components/ds/Card';
 import { PageHeader } from '@/components/ds/FilterBar';
@@ -16,11 +17,11 @@ export default function ProjectDetailPage() {
   const projectId = params.projectId;
 
   const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId);
-  const { data: health } = useProjectHealth(projectId);
+  const { data: health, isLoading: healthLoading, isError: healthIsError, error: healthError } = useProjectHealth(projectId);
   const { data: rfqs = [] } = useProjectRfqs(projectId);
   const { data: tasks = [] } = useProjectTasks(projectId);
 
-  const notEnabled = String((projectError as any)?.response?.status ?? '') === '404';
+  const notEnabled = axios.isAxiosError(projectError) && projectError.response?.status === 404;
 
   if (notEnabled) {
     return (
@@ -52,13 +53,13 @@ export default function ProjectDetailPage() {
         <Card padding="md">
           <div className="text-xs text-slate-500">Overall score</div>
           <div className="text-2xl font-semibold text-slate-900 tabular-nums mt-1">
-            {health?.overallScore != null ? `${Math.round(health.overallScore)}%` : '—'}
+            {healthLoading ? 'Loading…' : health?.overallScore != null ? `${Math.round(health.overallScore)}%` : '—'}
           </div>
         </Card>
         <Card padding="md">
           <div className="text-xs text-slate-500">Labor health</div>
           <div className="text-2xl font-semibold text-slate-900 tabular-nums mt-1">
-            {health?.labor?.healthPercentage != null ? `${Math.round(health.labor.healthPercentage)}%` : '—'}
+            {healthLoading ? 'Loading…' : health?.labor?.healthPercentage != null ? `${Math.round(health.labor.healthPercentage)}%` : '—'}
           </div>
           <div className="text-xs text-slate-500 mt-1">
             {health?.labor?.actualHours != null ? `${health.labor.actualHours} hours` : ''}
@@ -67,7 +68,7 @@ export default function ProjectDetailPage() {
         <Card padding="md">
           <div className="text-xs text-slate-500">Timeline</div>
           <div className="text-2xl font-semibold text-slate-900 tabular-nums mt-1">
-            {health?.timeline?.completionPercentage != null ? `${Math.round(health.timeline.completionPercentage)}%` : '—'}
+            {healthLoading ? 'Loading…' : health?.timeline?.completionPercentage != null ? `${Math.round(health.timeline.completionPercentage)}%` : '—'}
           </div>
           <div className="text-xs text-slate-500 mt-1">
             {health?.timeline?.completedMilestones != null && health?.timeline?.totalMilestones != null
@@ -76,6 +77,15 @@ export default function ProjectDetailPage() {
           </div>
         </Card>
       </div>
+
+      {healthIsError && (
+        <Card padding="md">
+          <div className="text-sm text-red-700">
+            Failed to load health.{' '}
+            <span className="text-xs text-red-600">{String((healthError as any)?.message ?? '')}</span>
+          </div>
+        </Card>
+      )}
 
       <Card padding="md">
         <InlineDetailPanel

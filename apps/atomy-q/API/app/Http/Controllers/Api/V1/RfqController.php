@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 final class RfqController extends Controller
 {
@@ -121,7 +122,7 @@ final class RfqController extends Controller
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:64'],
             'department' => ['nullable', 'string', 'max:64'],
-            'project_id' => ['nullable', 'string'],
+            'project_id' => ['nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
             'submission_deadline' => ['nullable', 'date'],
             'closing_date' => ['nullable', 'date'],
             'payment_terms' => ['nullable', 'string', 'max:64'],
@@ -146,7 +147,7 @@ final class RfqController extends Controller
         $rfq->description = $request->input('description');
         $rfq->category = $request->input('category');
         $rfq->department = $request->input('department');
-        $rfq->project_id = $request->input('project_id');
+        $rfq->project_id = $validator->validated()['project_id'] ?? null;
         $rfq->status = 'draft';
         $rfq->estimated_value = (float) $request->input('estimated_value', 0);
         $rfq->savings_percentage = (float) $request->input('savings_percentage', 0);
@@ -392,7 +393,7 @@ final class RfqController extends Controller
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:64'],
             'department' => ['nullable', 'string', 'max:64'],
-            'project_id' => ['nullable', 'string'],
+            'project_id' => ['nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
             'submission_deadline' => ['nullable', 'date'],
             'closing_date' => ['nullable', 'date'],
             'payment_terms' => ['nullable', 'string', 'max:64'],
@@ -407,7 +408,7 @@ final class RfqController extends Controller
         if ($request->has('description')) $rfq->description = $request->input('description');
         if ($request->has('category')) $rfq->category = $request->input('category');
         if ($request->has('department')) $rfq->department = $request->input('department');
-        if ($request->has('project_id')) $rfq->project_id = $request->input('project_id');
+        if ($request->has('project_id')) $rfq->project_id = $validator->validated()['project_id'] ?? null;
         if ($request->has('submission_deadline')) $rfq->submission_deadline = $request->input('submission_deadline') ? Carbon::parse($request->input('submission_deadline')) : null;
         if ($request->has('closing_date')) $rfq->closing_date = $request->input('closing_date') ? Carbon::parse($request->input('closing_date')) : null;
         if ($request->has('payment_terms')) $rfq->payment_terms = $request->input('payment_terms');

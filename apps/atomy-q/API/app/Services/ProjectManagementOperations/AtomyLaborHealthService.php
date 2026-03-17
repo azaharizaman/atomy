@@ -8,7 +8,7 @@ use Nexus\Common\ValueObjects\Money;
 use Nexus\ProjectManagementOperations\Contracts\LaborHealthServiceInterface;
 use Nexus\ProjectManagementOperations\DTOs\LaborHealthDTO;
 
-final class AtomyLaborHealthService implements LaborHealthServiceInterface
+final readonly class AtomyLaborHealthService implements LaborHealthServiceInterface
 {
     public function calculate(string $projectId): LaborHealthDTO
     {

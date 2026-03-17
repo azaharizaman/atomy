@@ -7,9 +7,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Task as TaskModel;
 use App\Services\Task\TaskService;
+use App\Services\Task\TaskTenantLinkService;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Nexus\Task\Enums\TaskPriority;
 use Nexus\Task\Enums\TaskStatus;
 use Nexus\Task\ValueObjects\TaskSummary;
@@ -19,6 +21,7 @@ final class TaskController extends Controller
     public function __construct(
         private readonly TaskService $tasks,
         private readonly TaskQueryInterface $taskQuery,
+        private readonly TaskTenantLinkService $taskTenantLink,
     ) {
     }
 
@@ -64,12 +67,12 @@ final class TaskController extends Controller
     public function store(Request $request): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $this->tenantId($request);
+        $tenantId = $this->tenantId($request);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'sometimes|string',
-            'project_id' => 'sometimes|nullable|string',
+            'project_id' => ['sometimes', 'nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
             'assignee_ids' => 'sometimes|array',
             'assignee_ids.*' => 'string',
             'priority' => 'sometimes|string|in:low,medium,high,critical',
@@ -95,9 +98,7 @@ final class TaskController extends Controller
         }
 
         $projectId = $validated['project_id'] ?? null;
-        if ($projectId !== null) {
-            TaskModel::query()->where('id', $id)->update(['project_id' => $projectId]);
-        }
+        $this->taskTenantLink->setTaskProjectId($tenantId, $id, $projectId);
 
         return response()->json([
             'data' => [
@@ -113,13 +114,17 @@ final class TaskController extends Controller
     public function show(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
 
         $task = $this->tasks->findById($id);
         if ($task === null) {
             abort(404);
         }
 
-        $model = TaskModel::query()->find($id);
+        $model = TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->first();
+        if ($model === null) {
+            abort(404);
+        }
 
         return response()->json([
             'data' => [
@@ -132,7 +137,7 @@ final class TaskController extends Controller
                 'predecessor_ids' => $task->predecessorIds,
                 'due_date' => $task->dueDate?->format(DATE_ATOM),
                 'completed_at' => $task->completedAt?->format(DATE_ATOM),
-                'project_id' => $model?->project_id,
+                'project_id' => $model->project_id,
             ],
         ]);
     }
@@ -140,8 +145,12 @@ final class TaskController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
         $task = $this->tasks->findById($id);
         if ($task === null) {
+            abort(404);
+        }
+        if (! TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->exists()) {
             abort(404);
         }
 
@@ -180,15 +189,19 @@ final class TaskController extends Controller
     public function updateStatus(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
         $task = $this->tasks->findById($id);
         if ($task === null) {
+            abort(404);
+        }
+        if (! TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->exists()) {
             abort(404);
         }
 
         $validated = $request->validate(['status' => 'required|string|in:pending,in_progress,completed,cancelled']);
         $status = TaskStatus::from($validated['status']);
 
-        $completedAt = $status === TaskStatus::Completed ? new \DateTimeImmutable('now') : $task->completedAt;
+        $completedAt = $status === TaskStatus::Completed ? new \DateTimeImmutable('now') : null;
 
         $updated = new TaskSummary(
             id: $id,
@@ -215,8 +228,12 @@ final class TaskController extends Controller
     public function getDependencies(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
         $task = $this->tasks->findById($id);
         if ($task === null) {
+            abort(404);
+        }
+        if (! TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->exists()) {
             abort(404);
         }
         $predecessors = $this->taskQuery->getPredecessorIds($id);
@@ -251,7 +268,7 @@ final class TaskController extends Controller
         $graph[$id] = $predecessorIds;
         $this->tasks->validateDependencies($graph);
 
-        TaskModel::query()->where('id', $id)->update(['predecessor_ids' => $predecessorIds]);
+        TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->update(['predecessor_ids' => $predecessorIds]);
 
         return response()->json([
             'data' => [

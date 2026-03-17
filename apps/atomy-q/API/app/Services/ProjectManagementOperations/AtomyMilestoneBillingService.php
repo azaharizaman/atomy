@@ -8,7 +8,7 @@ use Nexus\Common\ValueObjects\Money;
 use Nexus\ProjectManagementOperations\Contracts\MilestoneBillingServiceInterface;
 use Nexus\ProjectManagementOperations\DTOs\MilestoneDTO;
 
-final class AtomyMilestoneBillingService implements MilestoneBillingServiceInterface
+final readonly class AtomyMilestoneBillingService implements MilestoneBillingServiceInterface
 {
     public function processMilestoneCompletion(string $tenantId, MilestoneDTO $milestone, Money $amount): string
     {
