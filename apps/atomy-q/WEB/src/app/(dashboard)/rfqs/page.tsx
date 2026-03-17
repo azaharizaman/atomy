@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/ds/Badge';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { InlineDetailPanel } from '@/components/ds/Card';
 import { useRfqs, type RfqListItem } from '@/hooks/use-rfqs';
+import { useProjects } from '@/hooks/use-projects';
 
 function OwnerCell({ name }: { name: string }) {
   const initials = name
@@ -34,6 +35,7 @@ export default function RfqsPage() {
   const [status, setStatus] = React.useState('');
   const [owner, setOwner] = React.useState('');
   const [category, setCategory] = React.useState('');
+  const [projectId, setProjectId] = React.useState('');
 
   const [selectedIds, setSelectedIds] = React.useState<(string | number)[]>([]);
   const [expandedId, setExpandedId] = React.useState<string | number | null>(null);
@@ -41,14 +43,21 @@ export default function RfqsPage() {
   const [page, setPage] = React.useState(1);
 
   const { data: rows = [], isLoading } = useRfqs({ q, status, owner, category, page });
+  const { data: projects = [] } = useProjects();
+
+  const visibleRows = React.useMemo(() => {
+    if (!projectId) return rows;
+    return rows.filter((r) => String(r.projectId ?? '') === projectId);
+  }, [rows, projectId]);
 
   const totalPages = 1;
-  const totalItems = rows.length;
+  const totalItems = visibleRows.length;
 
   const activeFilters = [
     status ? { key: 'status', label: 'Status', value: status } : null,
     owner ? { key: 'owner', label: 'Owner', value: owner } : null,
     category ? { key: 'category', label: 'Category', value: category } : null,
+    projectId ? { key: 'projectId', label: 'Project', value: projectId } : null,
   ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
 
   const columns: ColumnDef<RfqListItem>[] = [
@@ -149,23 +158,32 @@ export default function RfqsPage() {
               { value: 'security', label: 'Security' },
             ],
           },
+          {
+            key: 'projectId',
+            label: 'Project',
+            value: projectId,
+            onChange: setProjectId,
+            options: projects.map((p) => ({ value: p.id, label: p.name })),
+          },
         ]}
         activeFilters={activeFilters}
         onRemoveFilter={(key) => {
           if (key === 'status') setStatus('');
           if (key === 'owner') setOwner('');
           if (key === 'category') setCategory('');
+          if (key === 'projectId') setProjectId('');
         }}
         onClearAll={() => {
           setStatus('');
           setOwner('');
           setCategory('');
+          setProjectId('');
         }}
       />
 
       <DataTable
         columns={columns}
-        rows={rows}
+        rows={visibleRows}
         loading={isLoading}
         selectable
         selectedIds={selectedIds}

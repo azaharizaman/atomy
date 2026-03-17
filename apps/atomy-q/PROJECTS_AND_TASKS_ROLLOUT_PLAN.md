@@ -32,7 +32,6 @@
   - Introduce `Nexus\Project` and `Nexus\Task` into Atomy-Q API as first-class concepts.
   - Wire `Nexus\ProjectManagementOperations` via the Laravel adapter for project health and budget, callable from the API.
   - Define and document the planned API surface for projects and tasks without breaking existing clients.
-
 - **Scope**
   - Add optional `project_id` to the RFQ domain model and persistence, without making it required.
   - Implement L1 bindings for `ProjectManagerInterface`, `ProjectQueryInterface`, `ProjectPersistInterface`, and `TaskManagerInterface`, `TaskQueryInterface`, `TaskPersistInterface`.
@@ -45,7 +44,6 @@
   - Update `apps/atomy-q/API_ENDPOINTS.md` with:
     - **Section 28 – Projects (planned)**.
     - **Section 29 – Tasks (planned)**.
-
 - **Not in scope**
   - No user-facing WEB routes for projects/tasks yet.
   - Project ACL enforcement on existing endpoints remains disabled or permissive until Phase 2.
@@ -55,7 +53,6 @@
 - **Goals**
   - Surface projects and tasks in the Atomy-Q WEB app.
   - Introduce project-scoped permissions that can override general RFQ/task permissions when `project_id` is present.
-
 - **Scope**
   - Add **Projects** section in the main navigation:
     - Projects list at `/projects` using `GET /projects`.
@@ -73,7 +70,6 @@
     - Global inbox page that consumes `GET /tasks`.
     - Task detail drawer backed by `GET /tasks/:id`, `PUT /tasks/:id`, `PATCH /tasks/:id/status`.
     - Entry points from dashboard widgets and RFQ/Project screens.
-
 - **Not in scope**
   - Task dependency editing UI or Gantt/schedule visualization beyond simple lists and statuses.
 
@@ -81,7 +77,6 @@
 
 - **Goals**
   - Leverage full `Nexus\Task` capabilities (dependencies, schedule calculation) and ProjectManagementOperations health to provide richer project portfolio management.
-
 - **Scope**
   - Enable dependency management:
     - UI for viewing and editing task dependencies using `GET /tasks/:id/dependencies` and `PUT /tasks/:id/dependencies`.
@@ -95,7 +90,6 @@
   - Tighten governance:
     - Project ACLs drive visibility in global search, dashboards, and notifications.
     - Approval and risk workflows optionally generate or depend on tasks in `Nexus\Task`.
-
 - **Not in scope**
   - Cross-tenant or cross-application project sharing; all data remains tenant-scoped.
 
@@ -115,7 +109,6 @@ The following planned endpoints have been added to `apps/atomy-q/API_ENDPOINTS.m
   - `GET /projects/:id/budget` – budget vs. actuals summary.
   - `GET /projects/:id/acl` – get project ACL.
   - `PUT /projects/:id/acl` – update project ACL.
-
 - **Tasks (planned)**
   - `GET /tasks` – user task inbox with filters.
   - `POST /tasks` – create task.

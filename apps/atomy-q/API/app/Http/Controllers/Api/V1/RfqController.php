@@ -83,6 +83,7 @@ final class RfqController extends Controller
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
                 'status' => $rfq->status,
+                'project_id' => $rfq->project_id,
                 'owner' => $rfq->owner ? [
                     'id' => $rfq->owner->id,
                     'name' => $rfq->owner->name,
@@ -120,6 +121,7 @@ final class RfqController extends Controller
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:64'],
             'department' => ['nullable', 'string', 'max:64'],
+            'project_id' => ['nullable', 'string'],
             'submission_deadline' => ['nullable', 'date'],
             'closing_date' => ['nullable', 'date'],
             'payment_terms' => ['nullable', 'string', 'max:64'],
@@ -144,6 +146,7 @@ final class RfqController extends Controller
         $rfq->description = $request->input('description');
         $rfq->category = $request->input('category');
         $rfq->department = $request->input('department');
+        $rfq->project_id = $request->input('project_id');
         $rfq->status = 'draft';
         $rfq->estimated_value = (float) $request->input('estimated_value', 0);
         $rfq->savings_percentage = (float) $request->input('savings_percentage', 0);
@@ -159,6 +162,7 @@ final class RfqController extends Controller
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
                 'status' => $rfq->status,
+                'project_id' => $rfq->project_id,
             ],
         ], 201);
     }
@@ -194,6 +198,7 @@ final class RfqController extends Controller
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
                 'status' => $rfq->status,
+                'project_id' => $rfq->project_id,
                 'owner' => $rfq->owner ? [
                     'id' => $rfq->owner->id,
                     'name' => $rfq->owner->name,
@@ -369,12 +374,53 @@ final class RfqController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
-        // TODO: tenant scoping via $this->tenantId($request)
+        $tenantId = $this->tenantId($request);
+
+        $rfq = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where(function ($builder) use ($id): void {
+                $builder->where('id', $id)->orWhere('rfq_number', $id);
+            })
+            ->first();
+
+        if ($rfq === null) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'title' => ['sometimes', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'category' => ['nullable', 'string', 'max:64'],
+            'department' => ['nullable', 'string', 'max:64'],
+            'project_id' => ['nullable', 'string'],
+            'submission_deadline' => ['nullable', 'date'],
+            'closing_date' => ['nullable', 'date'],
+            'payment_terms' => ['nullable', 'string', 'max:64'],
+            'evaluation_method' => ['nullable', 'string', 'max:64'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if ($request->has('title')) $rfq->title = (string) $request->input('title');
+        if ($request->has('description')) $rfq->description = $request->input('description');
+        if ($request->has('category')) $rfq->category = $request->input('category');
+        if ($request->has('department')) $rfq->department = $request->input('department');
+        if ($request->has('project_id')) $rfq->project_id = $request->input('project_id');
+        if ($request->has('submission_deadline')) $rfq->submission_deadline = $request->input('submission_deadline') ? Carbon::parse($request->input('submission_deadline')) : null;
+        if ($request->has('closing_date')) $rfq->closing_date = $request->input('closing_date') ? Carbon::parse($request->input('closing_date')) : null;
+        if ($request->has('payment_terms')) $rfq->payment_terms = $request->input('payment_terms');
+        if ($request->has('evaluation_method')) $rfq->evaluation_method = $request->input('evaluation_method');
+        $rfq->save();
 
         return response()->json([
             'data' => [
-                'id' => $id,
-                'status' => 'draft',
+                'id' => $rfq->id,
+                'rfq_number' => $rfq->rfq_number,
+                'title' => $rfq->title,
+                'status' => $rfq->status,
+                'project_id' => $rfq->project_id,
             ],
         ]);
     }
