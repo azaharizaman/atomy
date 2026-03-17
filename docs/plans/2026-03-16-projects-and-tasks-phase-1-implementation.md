@@ -239,11 +239,12 @@ git commit -m "feat: bind Nexus Task contracts in Laravel container"
 **Files:**
 - Modify: `orchestrators/ProjectManagementOperations/src/ProjectManagementOperationsCoordinator.php`
 - Create/Modify: `Nexus\Laravel\ProjectManagementOperations` adapter classes under `orchestrators/ProjectManagementOperationsLaravel/src/*` (or existing path)
-- Create: App contracts implementations under `apps/atomy-q/API/app/Services/ProjectManagementOperations/*` for:
-  - `ProjectTaskIdsQueryInterface`
-  - `ProjectBudgetQueryInterface`
-  - `ProjectBudgetPersistInterface`
-  - `ProjectMessagingSenderInterface`
+- Create: `src/Contracts/` (or equivalent) with explicit interface definitions before implementing:
+  - **ProjectTaskIdsQueryInterface**: e.g. `getTaskIdsForProject(string $projectId, string $tenantId): array`
+  - **ProjectBudgetQueryInterface**: e.g. `getBudget(string $projectId, string $tenantId): BudgetDto`
+  - **ProjectBudgetPersistInterface**: e.g. `saveBudget(string $projectId, string $tenantId, BudgetDto $dto): void`
+  - **ProjectMessagingSenderInterface**: e.g. `sendMessage(string $topic, array $payload): void`
+- Create: App contract implementations under `apps/atomy-q/API/app/Services/ProjectManagementOperations/*` conforming to the above
 - Modify: relevant service providers to register these app contracts
 - Test: `orchestrators/ProjectManagementOperations/tests/Unit/LaravelAdapterWiringTest.php`
 
@@ -265,6 +266,7 @@ Expected: FAIL due to missing adapter wiring or app contract implementations.
 
 - Implement the Laravel adapter that wires `ProjectManagementOperationsCoordinator` to the app contracts.
 - Implement the four app contracts against existing RFQ and financial data models.
+- **Tenant scoping:** Ensure every query and operation (e.g. `ProjectTaskIdsQueryInterface::getTaskIdsForProject`, `ProjectBudgetQueryInterface::getBudget`) is filtered by the authenticated user's `tenantId`; obtain `tenantId` from the current auth context (or pass it from `ProjectManagementOperationsCoordinator`) so all repository/ORM queries include a `tenant_id` predicate and multi-tenant isolation is enforced.
 
 **Step 4: Run test to verify it passes**
 

@@ -104,18 +104,26 @@ export default function ProjectDetailPage() {
       )}
 
       <Card padding="md">
-        <InlineDetailPanel
-          items={[
-            { label: 'Client', value: project?.clientId ?? '—' },
-            { label: 'Start', value: project?.startDate ?? '—' },
-            { label: 'End', value: project?.endDate ?? '—' },
-            { label: 'Budget type', value: project?.budgetType ?? '—' },
-            {
-              label: 'Completion %',
-              value: project?.completionPercentage != null ? String(project.completionPercentage) : '—',
-            },
-          ]}
-        />
+        {projectLoading ? (
+          <div className="space-y-2" aria-busy="true">
+            <div className="h-4 w-32 rounded bg-slate-200 animate-pulse" />
+            <div className="h-4 w-24 rounded bg-slate-200 animate-pulse" />
+            <div className="h-4 w-28 rounded bg-slate-200 animate-pulse" />
+          </div>
+        ) : (
+          <InlineDetailPanel
+            items={[
+              { label: 'Client', value: (project?.clientName ?? project?.clientId) ?? '—' },
+              { label: 'Start', value: project?.startDate ?? '—' },
+              { label: 'End', value: project?.endDate ?? '—' },
+              { label: 'Budget type', value: project?.budgetType ?? '—' },
+              {
+                label: 'Completion %',
+                value: project?.completionPercentage != null ? String(project.completionPercentage) : '—',
+              },
+            ]}
+          />
+        )}
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -130,17 +138,28 @@ export default function ProjectDetailPage() {
             {rfqs.length === 0 ? (
               <div className="text-sm text-slate-500">No RFQs linked yet.</div>
             ) : (
-              rfqs.slice(0, 8).map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  className="w-full text-left p-2 rounded border border-slate-200 hover:border-slate-300 bg-white"
-                  onClick={() => router.push(`/rfqs/${encodeURIComponent(r.id)}/overview`)}
-                >
-                  <div className="text-sm font-medium text-slate-900">{r.title ?? 'RFQ'}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{r.status ?? '—'}</div>
-                </button>
-              ))
+              <>
+                {rfqs.slice(0, 8).map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className="w-full text-left p-2 rounded border border-slate-200 hover:border-slate-300 bg-white"
+                    onClick={() => router.push(`/rfqs/${encodeURIComponent(r.id)}/overview`)}
+                  >
+                    <div className="text-sm font-medium text-slate-900">{r.title ?? 'RFQ'}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{r.status ?? '—'}</div>
+                  </button>
+                ))}
+                {rfqs.length > 8 && (
+                  <button
+                    type="button"
+                    className="text-xs text-slate-600 hover:text-slate-800 underline"
+                    onClick={() => router.push('/rfqs')}
+                  >
+                    View all ({rfqs.length})
+                  </button>
+                )}
+              </>
             )}
           </div>
         </Card>
@@ -156,14 +175,25 @@ export default function ProjectDetailPage() {
             {tasks.length === 0 ? (
               <div className="text-sm text-slate-500">No tasks linked yet.</div>
             ) : (
-              tasks.slice(0, 8).map((t) => (
-                <div key={t.id} className="p-2 rounded border border-slate-200 bg-white">
-                  <div className="text-sm font-medium text-slate-900">{t.title ?? 'Task'}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">
-                    {t.status ?? '—'} {t.dueDate ? `• Due ${t.dueDate}` : ''}
+              <>
+                {tasks.slice(0, 8).map((t) => (
+                  <div key={t.id} className="p-2 rounded border border-slate-200 bg-white">
+                    <div className="text-sm font-medium text-slate-900">{t.title ?? 'Task'}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {t.status ?? '—'} {t.dueDate ? `• Due ${t.dueDate}` : ''}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+                {tasks.length > 8 && (
+                  <button
+                    type="button"
+                    className="text-xs text-slate-600 hover:text-slate-800 underline"
+                    onClick={() => router.push('/projects')}
+                  >
+                    View all ({tasks.length})
+                  </button>
+                )}
+              </>
             )}
           </div>
         </Card>

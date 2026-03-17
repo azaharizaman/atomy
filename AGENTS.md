@@ -69,3 +69,6 @@ Nexus is a large system. Agents should follow these coordination patterns:
 - [ ] Array indices are normalized with modulo
 - [ ] Tenant filtering is applied in multi-tenant contexts
 - [ ] Failures throw domain exceptions, not return synthetic values
+
+## Agent Loopback
+For every PR review comments resolved, the agent must reflect back upon its own errors/anti-pattern and update this document with what was learnt from those PR Review comments.

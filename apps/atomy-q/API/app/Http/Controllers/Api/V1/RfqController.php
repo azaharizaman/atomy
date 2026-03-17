@@ -22,6 +22,25 @@ final class RfqController extends Controller
 {
     use ExtractsAuthContext;
 
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    private function rfqValidationRules(string $tenantId, bool $forUpdate = false): array
+    {
+        $titleRule = $forUpdate ? ['sometimes', 'string', 'max:255'] : ['required', 'string', 'max:255'];
+        return [
+            'title' => $titleRule,
+            'description' => ['nullable', 'string'],
+            'category' => ['nullable', 'string', 'max:64'],
+            'department' => ['nullable', 'string', 'max:64'],
+            'project_id' => ['nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
+            'submission_deadline' => ['nullable', 'date'],
+            'closing_date' => ['nullable', 'date'],
+            'payment_terms' => ['nullable', 'string', 'max:64'],
+            'evaluation_method' => ['nullable', 'string', 'max:64'],
+        ];
+    }
+
     public function index(Request $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);
@@ -117,21 +136,7 @@ final class RfqController extends Controller
         $tenantId = $this->tenantId($request);
         $ownerId = $this->userId($request);
 
-        $validator = Validator::make($request->all(), [
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'category' => ['nullable', 'string', 'max:64'],
-            'department' => ['nullable', 'string', 'max:64'],
-            'project_id' => ['nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
-            'submission_deadline' => ['nullable', 'date'],
-            'closing_date' => ['nullable', 'date'],
-            'payment_terms' => ['nullable', 'string', 'max:64'],
-            'evaluation_method' => ['nullable', 'string', 'max:64'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        $validated = $request->validate($this->rfqValidationRules($tenantId, false));
 
         $nextSeq = (int) Rfq::query()
             ->where('tenant_id', $tenantId)
@@ -143,18 +148,18 @@ final class RfqController extends Controller
         $rfq->tenant_id = $tenantId;
         $rfq->owner_id = $ownerId;
         $rfq->rfq_number = $rfqNumber;
-        $rfq->title = $request->input('title');
-        $rfq->description = $request->input('description');
-        $rfq->category = $request->input('category');
-        $rfq->department = $request->input('department');
-        $rfq->project_id = $validator->validated()['project_id'] ?? null;
+        $rfq->title = (string) $validated['title'];
+        $rfq->description = $validated['description'] ?? null;
+        $rfq->category = $validated['category'] ?? null;
+        $rfq->department = $validated['department'] ?? null;
+        $rfq->project_id = $validated['project_id'] ?? null;
         $rfq->status = 'draft';
         $rfq->estimated_value = (float) $request->input('estimated_value', 0);
         $rfq->savings_percentage = (float) $request->input('savings_percentage', 0);
-        $rfq->submission_deadline = $request->input('submission_deadline') ? \Carbon\Carbon::parse($request->input('submission_deadline')) : null;
-        $rfq->closing_date = $request->input('closing_date') ? \Carbon\Carbon::parse($request->input('closing_date')) : null;
-        $rfq->payment_terms = $request->input('payment_terms');
-        $rfq->evaluation_method = $request->input('evaluation_method');
+        $rfq->submission_deadline = ! empty($validated['submission_deadline']) ? Carbon::parse($validated['submission_deadline']) : null;
+        $rfq->closing_date = ! empty($validated['closing_date']) ? Carbon::parse($validated['closing_date']) : null;
+        $rfq->payment_terms = $validated['payment_terms'] ?? null;
+        $rfq->evaluation_method = $validated['evaluation_method'] ?? null;
         $rfq->save();
 
         return response()->json([
@@ -382,29 +387,9 @@ final class RfqController extends Controller
             ->where(function ($builder) use ($id): void {
                 $builder->where('id', $id)->orWhere('rfq_number', $id);
             })
-            ->first();
+            ->firstOrFail();
 
-        if ($rfq === null) {
-            return response()->json(['message' => 'RFQ not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'title' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'category' => ['nullable', 'string', 'max:64'],
-            'department' => ['nullable', 'string', 'max:64'],
-            'project_id' => ['nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
-            'submission_deadline' => ['nullable', 'date'],
-            'closing_date' => ['nullable', 'date'],
-            'payment_terms' => ['nullable', 'string', 'max:64'],
-            'evaluation_method' => ['nullable', 'string', 'max:64'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $data = $validator->validated();
+        $data = $request->validate($this->rfqValidationRules($tenantId, true));
 
         if (array_key_exists('title', $data)) $rfq->title = (string) $data['title'];
         if (array_key_exists('description', $data)) $rfq->description = $data['description'];

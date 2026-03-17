@@ -120,6 +120,7 @@ final class ProjectController extends Controller
     {
         $this->assertFeatureEnabled();
         $this->tenantId($request);
+        $this->assertProjectOwnedByTenant($request, $id);
 
         $project = $this->projects->findById($id);
 
@@ -145,6 +146,7 @@ final class ProjectController extends Controller
     {
         $this->assertFeatureEnabled();
         $this->tenantId($request);
+        $this->assertProjectOwnedByTenant($request, $id);
         $project = $this->projects->findById($id);
         if ($project === null) {
             abort(404);
@@ -160,12 +162,24 @@ final class ProjectController extends Controller
             'completion_percentage' => 'sometimes|numeric|min:0|max:100',
         ]);
 
+        $effectiveStart = isset($validated['start_date'])
+            ? new \DateTimeImmutable($validated['start_date'])
+            : $project->startDate;
+        $effectiveEnd = isset($validated['end_date'])
+            ? new \DateTimeImmutable($validated['end_date'])
+            : $project->endDate;
+        if ($effectiveEnd < $effectiveStart) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'end_date' => ['The end date must be on or after the start date.'],
+            ]);
+        }
+
         $summary = new ProjectSummary(
             id: $id,
             name: $validated['name'] ?? $project->name,
             clientId: $validated['client_id'] ?? $project->clientId,
-            startDate: isset($validated['start_date']) ? new \DateTimeImmutable($validated['start_date']) : $project->startDate,
-            endDate: isset($validated['end_date']) ? new \DateTimeImmutable($validated['end_date']) : $project->endDate,
+            startDate: $effectiveStart,
+            endDate: $effectiveEnd,
             projectManagerId: $validated['project_manager_id'] ?? $project->projectManagerId,
             status: $project->status,
             budgetType: $validated['budget_type'] ?? $project->budgetType,
@@ -193,6 +207,7 @@ final class ProjectController extends Controller
     {
         $this->assertFeatureEnabled();
         $this->tenantId($request);
+        $this->assertProjectOwnedByTenant($request, $id);
         $project = $this->projects->findById($id);
         if ($project === null) {
             abort(404);

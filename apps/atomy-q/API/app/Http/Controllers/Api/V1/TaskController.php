@@ -172,13 +172,17 @@ final class TaskController extends Controller
             'assignee_ids.*' => 'string',
         ]);
 
+        $dueDate = array_key_exists('due_date', $validated)
+            ? ($validated['due_date'] !== null && $validated['due_date'] !== '' ? new \DateTimeImmutable($validated['due_date']) : null)
+            : $task->dueDate;
+
         $updated = new TaskSummary(
             id: $id,
             title: $validated['title'] ?? $task->title,
             description: $validated['description'] ?? $task->description,
             status: $task->status,
             priority: isset($validated['priority']) ? TaskPriority::from($validated['priority']) : $task->priority,
-            dueDate: isset($validated['due_date']) ? new \DateTimeImmutable($validated['due_date']) : $task->dueDate,
+            dueDate: $dueDate,
             assigneeIds: $validated['assignee_ids'] ?? $task->assigneeIds,
             predecessorIds: $task->predecessorIds,
             completedAt: $task->completedAt,
@@ -186,6 +190,9 @@ final class TaskController extends Controller
         $this->tasks->update($updated, []);
 
         $result = $this->tasks->findById($id);
+        if ($result === null) {
+            abort(404);
+        }
         return response()->json([
             'data' => [
                 'id' => $result->id,
@@ -226,6 +233,9 @@ final class TaskController extends Controller
         $this->tasks->update($updated, []);
 
         $result = $this->tasks->findById($id);
+        if ($result === null) {
+            abort(404);
+        }
         return response()->json([
             'data' => [
                 'id' => $result->id,
@@ -309,6 +319,7 @@ final class TaskController extends Controller
     public function schedulePreview(Request $request): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $this->tenantId($request);
         return response()->json([
             'data' => [
                 'message' => 'Schedule preview (planned). Use ScheduleCalculatorInterface.',
