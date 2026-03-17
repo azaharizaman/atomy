@@ -37,6 +37,7 @@ final readonly class RequestTenantContext implements TenantContextInterface
 
     public function getCurrentTenant(): ?TenantInterface
     {
+        // TODO(phase-2): Resolve and return a full TenantInterface entity (e.g., via a tenant repository) when available.
         return null;
     }
 

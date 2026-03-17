@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\ProjectManagementOperations;
 
+use DomainException;
 use Nexus\ProjectManagementOperations\Contracts\TimelineDriftServiceInterface;
 use Nexus\ProjectManagementOperations\DTOs\TimelineHealthDTO;
 
@@ -11,13 +12,10 @@ final readonly class AtomyTimelineDriftService implements TimelineDriftServiceIn
 {
     public function calculate(string $tenantId, string $projectId, ?\DateTimeImmutable $now = null): TimelineHealthDTO
     {
-        return new TimelineHealthDTO(
-            projectId: $projectId,
-            totalMilestones: 0,
-            completedMilestones: 0,
-            delayedMilestones: 0,
-            completionPercentage: 0.0,
-            driftDetails: []
-        );
+        throw new DomainException(sprintf(
+            'Timeline drift calculation not implemented (tenant=%s, project=%s).',
+            $tenantId,
+            $projectId
+        ));
     }
 }

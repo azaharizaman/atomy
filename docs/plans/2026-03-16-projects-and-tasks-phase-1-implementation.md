@@ -1,6 +1,6 @@
 # Projects & Tasks Phase 1 Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> Execute this plan task-by-task in order.
 
 **Goal:** Implement Phase 1 of the Projects & Tasks rollout for Atomy-Q, introducing `Nexus\Project` and `Nexus\Task` as first-class concepts in the Laravel API, wiring `Nexus\ProjectManagementOperations`, and defining feature-flagged project/task APIs without impacting existing RFQ flows.
 
@@ -15,7 +15,7 @@
 **Files:**
 - Modify: `apps/atomy-q/API/app/Models/Rfq.php`
 - Modify: `apps/atomy-q/API/database/migrations/*_create_rfqs_table.php` (or add new migration if altering existing table)
-- Modify: `apps/atomy-q/API/app/Http/Resources/RfqResource.php`
+- Create/Modify: `apps/atomy-q/API/app/Http/Resources/RfqResource.php` (include `project_id` in API JSON)
 - Test: `apps/atomy-q/API/tests/Feature/RfqProjectIdTest.php`
 
 **Step 1: Write the failing test**
@@ -60,6 +60,10 @@ Expected: FAIL because the `rfqs` table/model does not yet have a `project_id` c
 - Add nullable `project_id` column (unsigned big integer) to RFQ table via migration.
 - Ensure `Rfq` model has `project_id` fillable/cast appropriately.
 - Keep foreign key constraints and indexes minimal for now (no hard enforcement to preserve optionality).
+
+**Step 3.1: Ensure API includes `project_id`**
+
+- Update `RfqResource` (or equivalent response mapping) to return `project_id` from the RFQ model.
 
 **Step 4: Run test to verify it passes**
 
@@ -312,6 +316,8 @@ Expected: FAIL because controllers/routes/flags are missing.
   - Delegate to the internal services bound to `Nexus\Project` and `Nexus\Task` contracts.
   - Return basic JSON responses (no WEB coupling).
 - Register routes under `/api/v1` but guard them with feature flags.
+- Ensure routes are authenticated and tenant-scoped (e.g., `jwt.auth` + `tenant` middleware).
+- Enforce tenant scoping in all project/task reads and writes and validate request payloads before delegating.
 
 **Step 4: Run tests to verify they pass**
 
@@ -417,4 +423,12 @@ git commit -m "test: guard RFQ flows against project_id regressions"
 ```
 
 ---
+
+## Rollback, feature flags, and observability
+
+- **Rollback migrations**: use `php artisan migrate:rollback` (or target the specific RFQ `project_id` migration) to remove the column if needed.
+- **Disable features**: set `FEATURE_PROJECTS_ENABLED=false` and/or `FEATURE_TASKS_ENABLED=false` (see `config/features.php`).
+- **Data cleanup**: if rolling back after writing `project_id` values, plan to null out `rfqs.project_id` first.
+- **Controller error mapping**: map domain/validation failures to \(4xx\) responses (e.g., circular task dependencies -> 422) and log unexpected exceptions.
+- **Minimal logs**: log project creation/update, task creation/update, and project/task association changes with tenant + ids for debugging.
 

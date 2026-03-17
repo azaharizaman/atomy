@@ -8,10 +8,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Task as TaskModel;
 use App\Services\Task\TaskService;
 use App\Services\Task\TaskTenantLinkService;
+use App\Services\Task\Exceptions\TaskNotFoundException;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Nexus\Task\Exceptions\CircularDependencyException;
+use DomainException;
 use Nexus\Task\Enums\TaskPriority;
 use Nexus\Task\Enums\TaskStatus;
 use Nexus\Task\ValueObjects\TaskSummary;
@@ -98,7 +101,13 @@ final class TaskController extends Controller
         }
 
         $projectId = $validated['project_id'] ?? null;
-        $this->taskTenantLink->setTaskProjectId($tenantId, $id, $projectId);
+        try {
+            $this->taskTenantLink->setTaskProjectId($tenantId, $id, $projectId);
+        } catch (TaskNotFoundException) {
+            abort(404);
+        } catch (DomainException $e) {
+            return response()->json(['errors' => ['project_id' => [$e->getMessage()]]], 422);
+        }
 
         return response()->json([
             'data' => [
@@ -248,8 +257,12 @@ final class TaskController extends Controller
     public function updateDependencies(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
         $task = $this->tasks->findById($id);
         if ($task === null) {
+            abort(404);
+        }
+        if (! TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->exists()) {
             abort(404);
         }
 
@@ -259,16 +272,31 @@ final class TaskController extends Controller
         ]);
         $predecessorIds = array_values($validated['predecessor_ids']);
 
-        $tenantId = $this->tenantId($request);
         $all = TaskModel::query()->where('tenant_id', $tenantId)->get();
+        $tenantTaskIds = $all->pluck('id')->all();
+        foreach ($predecessorIds as $pid) {
+            if (! in_array($pid, $tenantTaskIds, true)) {
+                return response()->json(['errors' => ['predecessor_ids' => ['Contains unknown task id for this tenant.']]], 422);
+            }
+        }
         $graph = [];
         foreach ($all as $t) {
             $graph[$t->id] = $t->predecessor_ids ?? [];
         }
         $graph[$id] = $predecessorIds;
-        $this->tasks->validateDependencies($graph);
+        try {
+            $this->tasks->validateDependencies($graph);
+        } catch (CircularDependencyException $e) {
+            return response()->json(['errors' => ['predecessor_ids' => [$e->getMessage()]]], 422);
+        }
 
-        TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->update(['predecessor_ids' => $predecessorIds]);
+        $affected = TaskModel::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->update(['predecessor_ids' => $predecessorIds]);
+        if ($affected === 0) {
+            abort(404);
+        }
 
         return response()->json([
             'data' => [

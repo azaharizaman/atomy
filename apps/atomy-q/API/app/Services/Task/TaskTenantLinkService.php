@@ -6,6 +6,8 @@ namespace App\Services\Task;
 
 use App\Models\Project;
 use App\Models\Task;
+use App\Services\Task\Exceptions\TaskNotFoundException;
+use DomainException;
 
 final readonly class TaskTenantLinkService
 {
@@ -17,7 +19,7 @@ final readonly class TaskTenantLinkService
             ->first();
 
         if ($task === null) {
-            abort(404);
+            throw new TaskNotFoundException($taskId, $tenantId);
         }
 
         if ($projectId !== null && $projectId !== '') {
@@ -27,7 +29,7 @@ final readonly class TaskTenantLinkService
                 ->exists();
 
             if (! $exists) {
-                abort(422, 'Invalid project_id for current tenant');
+                throw new DomainException('Invalid project_id for current tenant.');
             }
         }
 

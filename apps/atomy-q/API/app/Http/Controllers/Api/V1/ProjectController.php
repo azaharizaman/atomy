@@ -174,6 +174,9 @@ final class ProjectController extends Controller
         $this->projects->update($summary);
 
         $updated = $this->projects->findById($id);
+        if ($updated === null) {
+            abort(404);
+        }
         return response()->json([
             'data' => [
                 'id' => $updated->id,
@@ -212,6 +215,9 @@ final class ProjectController extends Controller
         $this->projects->update($summary);
 
         $updated = $this->projects->findById($id);
+        if ($updated === null) {
+            abort(404);
+        }
         return response()->json([
             'data' => [
                 'id' => $updated->id,
@@ -292,6 +298,7 @@ final class ProjectController extends Controller
     public function budget(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $this->assertProjectOwnedByTenant($request, $id);
         return response()->json([
             'data' => [
                 'project_id' => $id,

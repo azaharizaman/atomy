@@ -404,15 +404,17 @@ final class RfqController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        if ($request->has('title')) $rfq->title = (string) $request->input('title');
-        if ($request->has('description')) $rfq->description = $request->input('description');
-        if ($request->has('category')) $rfq->category = $request->input('category');
-        if ($request->has('department')) $rfq->department = $request->input('department');
-        if ($request->has('project_id')) $rfq->project_id = $validator->validated()['project_id'] ?? null;
-        if ($request->has('submission_deadline')) $rfq->submission_deadline = $request->input('submission_deadline') ? Carbon::parse($request->input('submission_deadline')) : null;
-        if ($request->has('closing_date')) $rfq->closing_date = $request->input('closing_date') ? Carbon::parse($request->input('closing_date')) : null;
-        if ($request->has('payment_terms')) $rfq->payment_terms = $request->input('payment_terms');
-        if ($request->has('evaluation_method')) $rfq->evaluation_method = $request->input('evaluation_method');
+        $data = $validator->validated();
+
+        if (array_key_exists('title', $data)) $rfq->title = (string) $data['title'];
+        if (array_key_exists('description', $data)) $rfq->description = $data['description'];
+        if (array_key_exists('category', $data)) $rfq->category = $data['category'];
+        if (array_key_exists('department', $data)) $rfq->department = $data['department'];
+        if (array_key_exists('project_id', $data)) $rfq->project_id = $data['project_id'] ?? null;
+        if (array_key_exists('submission_deadline', $data)) $rfq->submission_deadline = $data['submission_deadline'] ? Carbon::parse($data['submission_deadline']) : null;
+        if (array_key_exists('closing_date', $data)) $rfq->closing_date = $data['closing_date'] ? Carbon::parse($data['closing_date']) : null;
+        if (array_key_exists('payment_terms', $data)) $rfq->payment_terms = $data['payment_terms'];
+        if (array_key_exists('evaluation_method', $data)) $rfq->evaluation_method = $data['evaluation_method'];
         $rfq->save();
 
         return response()->json([

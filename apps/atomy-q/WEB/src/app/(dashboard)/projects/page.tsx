@@ -11,7 +11,16 @@ import { useProjects, type ProjectListItem } from '@/hooks/use-projects';
 export default function ProjectsPage() {
   const router = useRouter();
   const [q, setQ] = React.useState('');
-  const { data: projects = [], isLoading } = useProjects();
+  const { data: projects = [], isLoading, isError, error } = useProjects();
+
+  if (isError) {
+    return (
+      <Card padding="md">
+        <div className="text-sm font-semibold text-slate-900">Failed to load projects</div>
+        <div className="text-xs text-slate-500 mt-1">{String((error as any)?.message ?? '')}</div>
+      </Card>
+    );
+  }
 
   const filtered = React.useMemo(() => {
     const query = q.trim().toLowerCase();

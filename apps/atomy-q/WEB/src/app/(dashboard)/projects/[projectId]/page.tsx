@@ -21,13 +21,29 @@ export default function ProjectDetailPage() {
   const { data: rfqs = [] } = useProjectRfqs(projectId);
   const { data: tasks = [] } = useProjectTasks(projectId);
 
-  const notEnabled = axios.isAxiosError(projectError) && projectError.response?.status === 404;
+  const isAxios404 = axios.isAxiosError(projectError) && projectError.response?.status === 404;
+  const featureDisabledSignal =
+    axios.isAxiosError(projectError) && (projectError.response?.data as any)?.code === 'projects_not_enabled';
 
-  if (notEnabled) {
+  if (featureDisabledSignal) {
     return (
       <Card padding="md">
         <h1 className="text-lg font-semibold text-slate-900">Projects not enabled</h1>
         <p className="text-sm text-slate-500 mt-1">Enable the backend feature flags to use Projects.</p>
+        <div className="mt-3">
+          <Button size="sm" variant="secondary" onClick={() => router.push('/projects')}>
+            Back to projects
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (isAxios404) {
+    return (
+      <Card padding="md">
+        <h1 className="text-lg font-semibold text-slate-900">Project not found</h1>
+        <p className="text-sm text-slate-500 mt-1">This project may not exist, or Projects may be disabled.</p>
         <div className="mt-3">
           <Button size="sm" variant="secondary" onClick={() => router.push('/projects')}>
             Back to projects
