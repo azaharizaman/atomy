@@ -379,11 +379,13 @@ Current-user self-service only. All mutation endpoints operate on the authentica
 | Notifications | 5 |
 | Search | 1 |
 | User Settings (Account) | 14 |
-| **Total** | **203** |
+| Projects (planned, Phase 1) | 11 |
+| Tasks (planned, Phase 1) | 9 |
+| **Total** | **223** |
 
 ## 28. Projects (planned)
 
-These endpoints are **planned** to support portfolio-style projects that group RFQs, track budget/health via `Nexus\Project` and `Nexus\ProjectManagementOperations`, and enforce project-scoped governance.
+These endpoints support portfolio-style projects that group RFQs, track budget/health via `Nexus\Project` and `Nexus\ProjectManagementOperations`, and enforce project-scoped governance. **Phase 1:** Implemented behind feature flag `FEATURE_PROJECTS_ENABLED`; ACL and budget are stubbed until Phase 2/3.
 
 | Method | Endpoint | Screen | Element/Interaction | Description |
 |--------|----------|--------|---------------------|-------------|
@@ -401,7 +403,7 @@ These endpoints are **planned** to support portfolio-style projects that group R
 
 ## 29. Tasks (planned)
 
-These endpoints are **planned** to introduce user tasks backed by `Nexus\Task`, covering both project-centric work and RFQ-centric workflow items (approvals, follow-ups, etc.).
+These endpoints introduce user tasks backed by `Nexus\Task`, covering both project-centric work and RFQ-centric workflow items (approvals, follow-ups, etc.). **Phase 1:** Implemented behind feature flag `FEATURE_TASKS_ENABLED`; schedule preview is stubbed until Phase 3.
 
 | Method | Endpoint | Screen | Element/Interaction | Description |
 |--------|----------|--------|---------------------|-------------|

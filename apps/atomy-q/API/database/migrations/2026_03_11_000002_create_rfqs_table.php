@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('department')->nullable();
             $table->string('status')->default('draft');
             $table->ulid('owner_id');
+            $table->ulid('project_id')->nullable()->index();
             $table->decimal('estimated_value', 15, 2)->default(0);
             $table->decimal('savings_percentage', 5, 2)->default(0);
             $table->timestamp('submission_deadline')->nullable();

@@ -28,6 +28,7 @@ class Rfq extends Model
         'department',
         'status',
         'owner_id',
+        'project_id',
         'estimated_value',
         'savings_percentage',
         'submission_deadline',
@@ -51,6 +52,14 @@ class Rfq extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /**
+     * @return BelongsTo<Project, $this>
+     */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     /**
