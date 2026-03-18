@@ -12,6 +12,7 @@ use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Models\QuoteSubmission;
 use App\Models\VendorInvitation;
+use App\Services\Project\ProjectAclService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,23 @@ use Illuminate\Validation\Rule;
 final class RfqController extends Controller
 {
     use ExtractsAuthContext;
+
+    public function __construct(
+        private readonly ProjectAclService $projectAcl,
+    ) {
+    }
+
+    private function assertProjectAclWhenProjectSet(Request $request, ?string $projectId): void
+    {
+        if ($projectId === null || $projectId === '') {
+            return;
+        }
+        $tenantId = $this->tenantId($request);
+        $userId = $this->userId($request);
+        if (! $this->projectAcl->userCanAccessProject($tenantId, $userId, $projectId)) {
+            abort(403, 'Access denied: project permission required');
+        }
+    }
 
     /**
      * @return array<string, array<int, mixed>>
@@ -201,6 +219,7 @@ final class RfqController extends Controller
         if ($rfq === null) {
             return response()->json(['message' => 'RFQ not found'], 404);
         }
+        $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
 
         $savings = $rfq->savings_percentage !== null ? rtrim(rtrim((string) $rfq->savings_percentage, '0'), '.') . '%' : null;
         $projectName = null;
@@ -401,6 +420,8 @@ final class RfqController extends Controller
             })
             ->firstOrFail();
 
+        $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
+
         $data = $request->validate($this->rfqValidationRules($tenantId, true));
 
         if (array_key_exists('title', $data)) $rfq->title = (string) $data['title'];
@@ -441,6 +462,7 @@ final class RfqController extends Controller
         if ($rfq === null) {
             return response()->json(['message' => 'RFQ not found'], 404);
         }
+        $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
 
         $status = (string) $request->input('status');
         $allowed = ['draft', 'published', 'closed', 'awarded', 'cancelled'];

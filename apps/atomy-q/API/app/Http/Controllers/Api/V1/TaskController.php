@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task as TaskModel;
+use App\Services\Project\ProjectAclService;
 use App\Services\Task\TaskService;
 use App\Services\Task\TaskTenantLinkService;
 use App\Services\Task\Exceptions\TaskNotFoundException;
@@ -31,10 +32,28 @@ final class TaskController extends Controller
         TaskService $tasks,
         TaskQueryInterface $taskQuery,
         TaskTenantLinkService $taskTenantLink,
+        private readonly ProjectAclService $projectAcl,
     ) {
         $this->tasks = $tasks;
         $this->taskQuery = $taskQuery;
         $this->taskTenantLink = $taskTenantLink;
+    }
+
+    private function userId(Request $request): string
+    {
+        return (string) $request->attributes->get('auth_user_id', '');
+    }
+
+    private function assertProjectAclWhenProjectSet(Request $request, ?string $projectId): void
+    {
+        if ($projectId === null || $projectId === '') {
+            return;
+        }
+        $tenantId = $this->tenantId($request);
+        $userId = $this->userId($request);
+        if ($userId === '' || ! $this->projectAcl->userCanAccessProject($tenantId, $userId, $projectId)) {
+            abort(403, 'Access denied: project permission required');
+        }
     }
 
     private function assertFeatureEnabled(): void
@@ -162,6 +181,7 @@ final class TaskController extends Controller
         if ($model === null) {
             abort(404);
         }
+        $this->assertProjectAclWhenProjectSet($request, $model->project_id);
 
         return response()->json([
             'data' => [
@@ -184,6 +204,10 @@ final class TaskController extends Controller
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
         $this->assertTaskOwnedByTenant($request, $id);
+        $taskModel = TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->first();
+        if ($taskModel !== null) {
+            $this->assertProjectAclWhenProjectSet($request, $taskModel->project_id);
+        }
         $task = $this->tasks->findById($id);
         if ($task === null) {
             abort(404);
@@ -237,6 +261,10 @@ final class TaskController extends Controller
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
         $this->assertTaskOwnedByTenant($request, $id);
+        $taskModel = TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->first();
+        if ($taskModel !== null) {
+            $this->assertProjectAclWhenProjectSet($request, $taskModel->project_id);
+        }
         $task = $this->tasks->findById($id);
         if ($task === null) {
             abort(404);
