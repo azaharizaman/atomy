@@ -6,7 +6,7 @@ namespace App\Services\Project;
 
 use App\Models\ProjectAcl;
 
-final class ProjectAclService
+final readonly class ProjectAclService
 {
     public function userCanAccessProject(string $tenantId, string $userId, string $projectId): bool
     {

@@ -46,7 +46,7 @@ function TaskDetailDrawer({
   taskId: string;
   onClose: () => void;
 }) {
-  const { data: task, isLoading } = useTask(taskId);
+  const { data: task, isLoading, isError, error } = useTask(taskId);
   const updateStatus = useUpdateTaskStatus(taskId);
 
   return (
@@ -59,6 +59,9 @@ function TaskDetailDrawer({
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {isLoading && <div className="text-sm text-slate-500">Loading…</div>}
+        {isError && !isLoading && (
+          <div className="text-sm text-red-600">Failed to load task{error ? `: ${String((error as Error).message)}` : ''}</div>
+        )}
         {task && (
           <>
             <div>
@@ -139,8 +142,16 @@ export default function TasksPage() {
         <>
           <div
             className="fixed inset-0 bg-black/20 z-20"
-            aria-hidden
             onClick={() => setSelectedTaskId(null)}
+            role="button"
+            tabIndex={0}
+            aria-label="Close task drawer"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                e.preventDefault();
+                setSelectedTaskId(null);
+              }
+            }}
           />
           <TaskDetailDrawer taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
         </>

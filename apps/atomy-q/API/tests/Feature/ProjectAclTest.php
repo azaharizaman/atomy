@@ -123,7 +123,7 @@ class ProjectAclTest extends TestCase
         ]);
 
         $response = $this->getJson('/api/v1/rfqs/' . $rfq->id, $this->authHeaders($otherUser));
-        $response->assertStatus(403);
+        $response->assertStatus(404);
     }
 
     public function test_rfq_with_project_id_allowed_when_user_in_acl(): void

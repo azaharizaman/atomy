@@ -332,11 +332,13 @@ final class ProjectController extends Controller
     public function getAcl(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
         $this->assertProjectOwnedByTenant($request, $id);
         if ($this->projects->findById($id) === null) {
             abort(404);
         }
         $rows = ProjectAcl::query()
+            ->where('tenant_id', $tenantId)
             ->where('project_id', $id)
             ->get(['user_id', 'role'])
             ->map(fn (ProjectAcl $row) => ['user_id' => $row->user_id, 'role' => $row->role])
@@ -355,11 +357,14 @@ final class ProjectController extends Controller
         }
         $validated = $request->validate([
             'roles' => 'required|array',
-            'roles.*.user_id' => ['required', 'string', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
+            'roles.*.user_id' => ['required', 'string', 'distinct', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
             'roles.*.role' => ['required', 'string', Rule::in(self::ACL_ROLES)],
         ]);
         DB::transaction(function () use ($id, $tenantId, $validated): void {
-            ProjectAcl::query()->where('project_id', $id)->delete();
+            ProjectAcl::query()
+                ->where('tenant_id', $tenantId)
+                ->where('project_id', $id)
+                ->delete();
             foreach ($validated['roles'] as $entry) {
                 ProjectAcl::query()->create([
                     'project_id' => $id,
@@ -370,6 +375,7 @@ final class ProjectController extends Controller
             }
         });
         $rows = ProjectAcl::query()
+            ->where('tenant_id', $tenantId)
             ->where('project_id', $id)
             ->get(['user_id', 'role'])
             ->map(fn (ProjectAcl $row) => ['user_id' => $row->user_id, 'role' => $row->role])

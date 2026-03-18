@@ -23,18 +23,18 @@
 
 - **API:** Already implemented in ProjectController::store; no change.
 - **WEB:** In projects/page.tsx: add "Create project" button and form (modal or inline). Form fields: name, client_id, start_date, end_date, project_manager_id. On submit: api.post('/projects', payload), invalidate projects query. Add useCreateProject mutation hook.
-- **Test:** Optional E2E or manual.
+- **Test:** Automated tests required (unit + integration/E2E as appropriate). This is a prerequisite for Part 3 (ACL) to prevent regressions.
 
 ### 1.2 Project edit and status (PUT /projects/:id, PATCH /projects/:id/status)
 
 - **API:** Already implemented; no change.
 - **WEB:** In projects/[projectId]/page.tsx: add "Edit" button and edit form; add status dropdown (draft/active/on_hold/completed/cancelled). Call api.put and api.patch, invalidate queries.
-- **Test:** Manual or unit test for mutation hooks.
+- **Test:** Automated tests required. Mutation hooks must have automated unit tests + integration tests covering ACL/resource governance scenarios (permission escalation, project_id set/unset, and unauthorized access). These tests must run in CI as required checks.
 
 ### 1.3 Show project context on RFQ detail (read-only)
 
-- **API:** Single-RFQ returns project_id via RfqResource; add project_name when project_id set if needed.
-- **WEB:** In use-rfq.ts add projectId (and projectName) to RfqDetail and normalizeRfq. In RFQ layout or overview show "Project: <name>" with link to /projects/[projectId] when set.
+- **API (Option A):** Eager-load `project` in the RFQ show/overview queries (tenant-scoped) and expose `project_name` on the response (via `RfqResource` or controller mapping) as `$rfq->project?->name`.
+- **WEB:** In use-rfq.ts ensure `RfqDetail` and normalizeRfq include `projectId` (nullable) and `projectName` (string). When `project_id` is null set `projectId = null` and `projectName = "Unassigned"` (or "No project"). In RFQ layout/overview render "Project: Unassigned" with no link when `projectId` is null; render "Project: <name>" as a clickable link to `/projects/[projectId]` only when non-null.
 
 ---
 
@@ -44,6 +44,10 @@
 
 - **API:** In RfqController::index add: if ($projectId = $request->query('project_id')) { $query->where('project_id', $projectId); }
 - **Test:** Feature test GET /rfqs?project_id=<id> returns only RFQs with that project_id.
+
+**Rollout warning:** This introduces a security window if Part 2 ships before Part 3 (ACL). The `project_id` query param must not be exposed in any UI (dropdowns, links, deep-links) until Part 3 is deployed.
+- **Timeline expectation:** Part 2 (filtering) and Part 3 (ACL enforcement) should be deployed together or with minimal delay.
+- **Mitigations if decoupled:** Gate behind a feature flag; restrict the `project_id` filter to internal/admin users in `RfqController::index` until ACL is live; add an integration test ensuring unauthenticated/non-admin requests cannot use `project_id` while the flag is off.
 
 ### 2.2 WEB passes project_id to API
 
@@ -55,16 +59,17 @@
 
 ### 3.1 ACL persistence
 
-- **Schema:** Migration create_project_acl_table: project_id, user_id, role, tenant_id, unique (project_id, user_id).
+- **Schema:** Migration create_project_acl_table: project_id, user_id, role, tenant_id, unique (tenant_id, project_id, user_id). Add explicit indexes for frequent lookups: index on project_id, index on user_id, index on tenant_id, and consider composite indexes for (user_id, tenant_id) and (project_id, role) if role-based lookups are common. Keep the unique constraint (it creates a unique index).
 - **Model:** ProjectAcl (or ProjectMember) in app/Models.
 - **API:** getAcl: load from project_acl, return roles. updateAcl: validate roles array, sync project_acl, return updated ACL.
 - **Test:** Feature tests for GET/PUT /projects/:id/acl.
 
 ### 3.2 Permission enforcement when project_id is present
 
-- **Helper:** Service that given (tenant_id, user_id, project_id) returns whether user has at least viewer role. Empty ACL = no access (strict).
-- **RFQ/Task:** When resource has project_id set, check project ACL before proceeding; 403 if no access.
-- **Test:** Feature test: project_id set, user not in ACL gets 403; user in ACL gets 200.
+- **Helper:** Service that given (tenant_id, user_id, project_id) returns whether user has at least viewer role. Role hierarchy (highest → lowest): owner > admin > editor > viewer > none. “At least viewer” means any of {viewer, editor, admin, owner}. Empty ACL = no access (strict).
+- **Backfill strategy:** For existing RFQs/Tasks with `project_id` populated and empty ACLs, run a backfill migration/script to create ACL rows for the responsible principals (e.g., owner/manager) before enabling enforcement; until backfill completes, do not enable enforcement in production.
+- **RFQ/Task:** When resource.project_id is non-null, check project ACL before proceeding; return 404 on no access (avoid leaking existence). When resource.project_id is NULL, skip project ACL enforcement and treat the resource as “Unassigned”.
+- **Test:** Feature test: project_id set, user not in ACL gets 404; user in ACL gets 200.
 
 ---
 
@@ -90,5 +95,10 @@
 1. Part 0 – branch + save plan.
 2. Part 2 – RFQ filtering (API + WEB params).
 3. Part 1 – Projects UI (create, edit, status, project on RFQ detail).
-4. Part 3 – ACL (migration, model, getAcl/updateAcl persistence, then enforcement).
+4. Part 3 – ACL:
+   - (1) schema migration + DB changes (migration)
+   - (2) ACL domain model + API contracts (model)
+   - (3) implement and deploy persistence for getAcl and updateAcl + run integration tests (getAcl/updateAcl persistence)
+   - (4) verify persistence via acceptance/manual checks and automated coverage (persistence verification gate)
+   - (5) enable enforcement in code paths (enforcement)
 5. Part 4 – Task Inbox (page, use-tasks, task detail drawer, status update).

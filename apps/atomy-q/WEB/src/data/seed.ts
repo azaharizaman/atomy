@@ -99,6 +99,7 @@ export interface SeedRfq {
   rfqNumber: string;
   title: string;
   status: RfqStatus;
+  projectId?: string | null;
   category: string;
   department: string;
   owner: { name: string; email: string };
@@ -202,6 +203,14 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
     const savingsPercent = 3 + Math.floor(hash(i + 2) * 15);
     const daysFromNow = 5 + (i % 60);
     const submissionDeadline = new Date(Date.now() + daysFromNow * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const projectPool = [
+      '01JNE4ZHT9S0VQ7E2GQW1QYJ7B',
+      '01JNE4ZHTA4H0W8S8P3H7C9X2M',
+      '01JNE4ZHTB0RZ3W2F6N9J5K1Q8',
+      '01JNE4ZHTC7D1P6M3T8V2R0L5N',
+      '01JNE4ZHTDNN6E9B4Y1S7U3P0C',
+    ] as const;
+    const projectId = hash(i + 200) > 0.55 ? pick([...projectPool], i + 201) : null;
 
     let vendorsCount: number;
     let quotesCount: number;
@@ -224,6 +233,7 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
       rfqNumber,
       title,
       status,
+      projectId,
       category,
       department,
       owner,
@@ -385,6 +395,7 @@ export function getSeedRfqListItems(params: {
   owner?: string;
   category?: string;
   page?: number;
+  projectId?: string;
 }): { items: Array<{
   id: string;
   title: string;
@@ -396,6 +407,7 @@ export function getSeedRfqListItems(params: {
   savings?: string;
   vendorsCount?: number;
   quotesCount?: number;
+  projectId?: string | null;
 }>; total: number } {
   const { rfqs } = buildSeed();
   let list = rfqs.map((r) => ({
@@ -409,10 +421,14 @@ export function getSeedRfqListItems(params: {
     savings: r.savingsPercent > 0 ? `${r.savingsPercent}%` : '—',
     vendorsCount: r.vendorsCount,
     quotesCount: r.quotesCount,
+    projectId: r.projectId ?? null,
   }));
 
   if (params.status) {
     list = list.filter((r) => r.status === params.status);
+  }
+  if (params.projectId) {
+    list = list.filter((r) => r.projectId === params.projectId);
   }
   if (params.owner) {
     list = list.filter((r) => r.owner?.name.toLowerCase().includes((params.owner ?? '').toLowerCase()));

@@ -26,13 +26,20 @@ export function useCreateProject() {
     mutationFn: async (payload: CreateProjectPayload): Promise<CreateProjectResult> => {
       const { data } = await api.post('/projects', payload);
       const raw = data?.data ?? data;
+      const requireString = (value: unknown, field: string): string => {
+        const out = typeof value === 'string' ? value : value === null || value === undefined ? '' : String(value);
+        if (out.trim() === '') {
+          throw new Error(`Invalid project payload: missing ${field}`);
+        }
+        return out;
+      };
       return {
-        id: String(raw?.id ?? ''),
-        name: String(raw?.name ?? ''),
-        status: String(raw?.status ?? ''),
-        client_id: String(raw?.client_id ?? ''),
-        start_date: String(raw?.start_date ?? ''),
-        end_date: String(raw?.end_date ?? ''),
+        id: requireString(raw?.id, 'id'),
+        name: requireString(raw?.name, 'name'),
+        status: requireString(raw?.status, 'status'),
+        client_id: requireString(raw?.client_id, 'client_id'),
+        start_date: requireString(raw?.start_date, 'start_date'),
+        end_date: requireString(raw?.end_date, 'end_date'),
       };
     },
     onSuccess: () => {

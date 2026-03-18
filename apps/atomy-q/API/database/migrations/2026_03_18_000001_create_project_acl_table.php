@@ -18,8 +18,13 @@ return new class extends Migration
             $table->ulid('tenant_id')->index();
             $table->timestamps();
 
-            $table->unique(['project_id', 'user_id']);
+            $table->unique(['tenant_id', 'project_id', 'user_id']);
+            $table->index('project_id');
+            $table->index('user_id');
+            $table->index(['user_id', 'tenant_id']);
+            $table->index(['project_id', 'role']);
             $table->foreign('project_id')->references('id')->on('projects')->cascadeOnDelete();
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
     }
 

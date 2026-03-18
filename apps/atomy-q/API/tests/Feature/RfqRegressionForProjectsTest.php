@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Contracts\JwtServiceInterface;
 use App\Models\Project as ProjectModel;
+use App\Models\ProjectAcl;
 use App\Models\Rfq;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -121,6 +122,12 @@ class RfqRegressionForProjectsTest extends TestCase
             'end_date' => now()->addMonth(),
             'project_manager_id' => (string) Str::ulid(),
             'status' => 'planning',
+        ]);
+        ProjectAcl::query()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'role' => 'viewer',
+            'tenant_id' => $user->tenant_id,
         ]);
         Rfq::query()->create([
             'tenant_id' => $user->tenant_id,

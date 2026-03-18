@@ -36,7 +36,7 @@ final class RfqController extends Controller
         $tenantId = $this->tenantId($request);
         $userId = $this->userId($request);
         if (! $this->projectAcl->userCanAccessProject($tenantId, $userId, $projectId)) {
-            abort(403, 'Access denied: project permission required');
+            abort(404, 'Not found');
         }
     }
 
@@ -93,6 +93,7 @@ final class RfqController extends Controller
         }
 
         if ($projectId = $request->query('project_id')) {
+            $this->assertProjectAclWhenProjectSet($request, (string) $projectId);
             $query->where('project_id', $projectId);
         }
 
@@ -204,6 +205,9 @@ final class RfqController extends Controller
         /** @var Rfq|null $rfq */
         $rfq = Rfq::query()
             ->with('owner:id,name,email')
+            ->with(['project' => static function ($builder) use ($tenantId): void {
+                $builder->select(['id', 'name', 'tenant_id'])->where('tenant_id', $tenantId);
+            }])
             ->withCount([
                 'vendorInvitations as vendors_count',
                 'quoteSubmissions as quotes_count',
@@ -222,11 +226,7 @@ final class RfqController extends Controller
         $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
 
         $savings = $rfq->savings_percentage !== null ? rtrim(rtrim((string) $rfq->savings_percentage, '0'), '.') . '%' : null;
-        $projectName = null;
-        if ($rfq->project_id) {
-            $project = \App\Models\Project::query()->find($rfq->project_id);
-            $projectName = $project?->name;
-        }
+        $projectName = $rfq->project?->name;
 
         return response()->json([
             'data' => [
@@ -277,6 +277,7 @@ final class RfqController extends Controller
         if ($rfq === null) {
             return response()->json(['message' => 'RFQ not found'], 404);
         }
+        $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
 
         $savings = $rfq->savings_percentage !== null ? rtrim(rtrim((string) $rfq->savings_percentage, '0'), '.') . '%' : null;
 

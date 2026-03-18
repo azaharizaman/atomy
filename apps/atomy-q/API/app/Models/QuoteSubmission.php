@@ -49,6 +49,14 @@ class QuoteSubmission extends Model
         return $this->belongsTo(Rfq::class, 'rfq_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function uploader(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
 
     /**
      * @return HasMany<NormalizationSourceLine>

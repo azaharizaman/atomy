@@ -38,7 +38,11 @@ export function useTasks(params: UseTasksParams = {}) {
       if (params.assignee_id) apiParams.assignee_id = params.assignee_id;
       if (params.status) apiParams.status = params.status;
       const { data } = await api.get('/tasks', { params: apiParams });
-      return normalizeTasksPayload(data);
+      const items = normalizeTasksPayload(data);
+      if (params.status) {
+        return items.filter((t) => t.status === params.status);
+      }
+      return items;
     },
   });
 }
