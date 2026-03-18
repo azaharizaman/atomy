@@ -15,13 +15,13 @@ export interface ProjectDetail {
   completionPercentage?: number;
 }
 
-function normalizeProject(payload: any): ProjectDetail {
+function normalizeProject(payload: unknown): ProjectDetail {
   let raw = payload as Record<string, unknown> | null | undefined;
   let depth = 0;
   while (raw?.data && depth < 5) {
-    const next = raw.data as any;
+    const next = raw.data as Record<string, unknown>;
     if (next === raw) break;
-    raw = next as Record<string, unknown>;
+    raw = next;
     depth++;
   }
 

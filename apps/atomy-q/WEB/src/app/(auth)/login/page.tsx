@@ -64,12 +64,16 @@ export default function LoginPage() {
       toast.success('Signed in successfully');
       const redirect = searchParams.get('redirect');
       router.push(redirect && redirect.startsWith('/') ? redirect : '/');
-    } catch (error: any) {
-      const data = error?.response?.data;
+    } catch (error: unknown) {
+      const axiosish = error as { response?: { status?: number; data?: Record<string, unknown> } };
+      const data = axiosish?.response?.data;
+      const messageRaw = (data?.message ?? data?.error) as unknown;
       const message =
-        data?.message ??
-        data?.error ??
-        (error?.response?.status === 422 ? 'Please check Tenant ID, email, and password.' : 'Invalid credentials');
+        typeof messageRaw === 'string' && messageRaw.trim() !== ''
+          ? messageRaw
+          : axiosish?.response?.status === 422
+            ? 'Please check Tenant ID, email, and password.'
+            : 'Invalid credentials';
       setAuthError(message);
       toast.error(message);
     }

@@ -10,16 +10,17 @@ export interface ProjectRfqListItem {
   status?: string;
 }
 
-function normalize(payload: any): ProjectRfqListItem[] {
-  const list = (Array.isArray(payload) ? payload : payload?.data) ?? [];
+function normalize(payload: unknown): ProjectRfqListItem[] {
+  const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
+  const list = (Array.isArray(payload) ? payload : obj?.data) ?? [];
   if (!Array.isArray(list)) return [];
   return list
-    .filter((r: any) => r && typeof r === 'object')
-    .map((r: any) => ({
+    .filter((r: unknown): r is Record<string, unknown> => !!r && typeof r === 'object')
+    .map((r) => ({
       id: String(r.id ?? ''),
-      rfqNumber: r.rfq_number ?? r.rfqNumber,
-      title: r.title,
-      status: r.status,
+      rfqNumber: (r.rfq_number ?? r.rfqNumber) as string | undefined,
+      title: r.title as string | undefined,
+      status: r.status as string | undefined,
     }))
     .filter((x) => x.id);
 }

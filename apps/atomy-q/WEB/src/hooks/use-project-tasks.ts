@@ -10,16 +10,20 @@ export interface ProjectTaskListItem {
   dueDate?: string;
 }
 
-function normalize(payload: any): ProjectTaskListItem[] {
-  const list = (Array.isArray(payload) ? payload : payload?.data) ?? [];
+function normalize(payload: unknown): ProjectTaskListItem[] {
+  const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
+  const list = (Array.isArray(payload) ? payload : obj?.data) ?? [];
   if (!Array.isArray(list)) return [];
   return list
-    .map((t: any) => ({
-      id: String(t.id ?? ''),
-      title: t.title,
-      status: t.status,
-      dueDate: t.due_date ?? t.dueDate,
-    }))
+    .map((t: unknown) => {
+      const row = t as Record<string, unknown>;
+      return {
+        id: String(row.id ?? ''),
+        title: row.title as string | undefined,
+        status: row.status as string | undefined,
+        dueDate: (row.due_date ?? row.dueDate) as string | undefined,
+      };
+    })
     .filter((x) => x.id);
 }
 

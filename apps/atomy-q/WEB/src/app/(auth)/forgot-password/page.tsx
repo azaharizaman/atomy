@@ -37,13 +37,15 @@ export default function ForgotPasswordPage() {
       await api.post('/auth/forgot-password', payload);
       setStatus('sent');
       toast.success('Reset link sent. Check your inbox.');
-    } catch (err: any) {
-      if (useMocks || err?.response?.status === 501) {
+    } catch (err: unknown) {
+      const axiosish = err as { response?: { status?: number; data?: Record<string, unknown> } };
+      if (useMocks || axiosish?.response?.status === 501) {
         setStatus('sent');
         toast.success('Reset link simulated for development.');
         return;
       }
-      const message = err?.response?.data?.message ?? 'Unable to send reset link';
+      const messageRaw = axiosish?.response?.data?.message;
+      const message = typeof messageRaw === 'string' && messageRaw.trim() !== '' ? messageRaw : 'Unable to send reset link';
       setError(message);
       toast.error(message);
     }

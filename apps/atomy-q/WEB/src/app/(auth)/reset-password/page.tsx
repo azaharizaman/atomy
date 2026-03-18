@@ -46,13 +46,15 @@ export default function ResetPasswordPage() {
       });
       setStatus('done');
       toast.success('Password updated successfully');
-    } catch (err: any) {
-      if (useMocks || err?.response?.status === 501 || err?.response?.status === 404) {
+    } catch (err: unknown) {
+      const axiosish = err as { response?: { status?: number; data?: Record<string, unknown> } };
+      if (useMocks || axiosish?.response?.status === 501 || axiosish?.response?.status === 404) {
         setStatus('done');
         toast.success('Password updated (simulated)');
         return;
       }
-      const message = err?.response?.data?.message ?? 'Unable to reset password';
+      const messageRaw = axiosish?.response?.data?.message;
+      const message = typeof messageRaw === 'string' && messageRaw.trim() !== '' ? messageRaw : 'Unable to reset password';
       setError(message);
       toast.error(message);
     }

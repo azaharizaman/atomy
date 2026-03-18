@@ -44,7 +44,12 @@ export default function ProjectDetailPage() {
 
   const isAxios404 = axios.isAxiosError(projectError) && projectError.response?.status === 404;
   const featureDisabledSignal =
-    axios.isAxiosError(projectError) && (projectError.response?.data as any)?.code === 'projects_not_enabled';
+    axios.isAxiosError(projectError) &&
+    (() => {
+      const data = projectError.response?.data;
+      const obj = data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
+      return obj?.code === 'projects_not_enabled';
+    })();
 
   if (projectError && !featureDisabledSignal && !isAxios404) {
     return (
@@ -243,7 +248,7 @@ export default function ProjectDetailPage() {
         <Card padding="md">
           <div className="text-sm text-red-700">
             Failed to load health.{' '}
-            <span className="text-xs text-red-600">{String((healthError as any)?.message ?? '')}</span>
+            <span className="text-xs text-red-600">{String((healthError as Error | null)?.message ?? '')}</span>
           </div>
         </Card>
       )}

@@ -1,0 +1,41 @@
+name: WEB — lint and unit tests
+
+on:
+  pull_request:
+    paths:
+      - 'apps/atomy-q/WEB/**'
+      - '.github/workflows/web-tests.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/atomy-q/WEB/**'
+      - '.github/workflows/web-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/atomy-q/WEB
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/atomy-q/WEB/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test:unit
+
