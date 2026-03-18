@@ -12,8 +12,10 @@ export interface ProjectHealth {
 }
 
 function toNum(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string' && value.trim() === '') return undefined;
   const n = Number(value);
-  return Number.isNaN(n) ? undefined : n;
+  return Number.isFinite(n) ? n : undefined;
 }
 
 function normalizeHealth(payload: unknown): ProjectHealth {

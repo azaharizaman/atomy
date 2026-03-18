@@ -40,6 +40,14 @@ export interface UseRfqsParams {
   projectId?: string;
 }
 
+/** Returns undefined for null, undefined, empty or whitespace-only string; otherwise a finite number. */
+function parseOptionalNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string' && value.trim() === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   const asArray = (value: unknown): unknown[] | null => (Array.isArray(value) ? value : null);
 
@@ -64,9 +72,6 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
       ownerRaw != null && typeof ownerRaw === 'object' && !Array.isArray(ownerRaw)
         ? (ownerRaw as Record<string, unknown>)
         : null;
-    const vendorsNum = Number(r.vendorsCount ?? r.vendors_count);
-    const quotesNum = Number(r.quotesCount ?? r.quotes_count);
-
     return {
       id: String(r.id ?? r.rfqId ?? r.code ?? ''),
       title: String(r.title ?? r.name ?? 'Untitled'),
@@ -80,8 +85,8 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
       category: r.category as string | undefined,
       estValue: (r.estValue ?? r.estimated_value ?? r.estimatedValue) as string | undefined,
       savings: r.savings as string | undefined,
-      vendorsCount: Number.isNaN(vendorsNum) ? undefined : vendorsNum,
-      quotesCount: Number.isNaN(quotesNum) ? undefined : quotesNum,
+      vendorsCount: parseOptionalNumber(r.vendorsCount ?? r.vendors_count),
+      quotesCount: parseOptionalNumber(r.quotesCount ?? r.quotes_count),
       projectId: (r.project_id ?? r.projectId ?? null) as string | null,
     };
   });

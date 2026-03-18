@@ -9,14 +9,34 @@ const buildCorsHeaders = (origin: string) => ({
   'access-control-allow-methods': 'GET,POST,OPTIONS',
 });
 
+/** Shared origin tracking: updates ref.current on framenavigated so CORS headers stay correct. */
+function trackOriginOnNavigation(
+  page: import('@playwright/test').Page,
+  originRef: { current: string }
+): void {
+  page.on('framenavigated', () => {
+    try {
+      originRef.current = new URL(page.url()).origin;
+    } catch {
+      // ignore
+    }
+  });
+}
+
 async function stubAuth(page: import('@playwright/test').Page) {
   await page.goto('/login');
   await page.getByRole('button', { name: /use mock account/i }).click();
   await expect(page).toHaveURL('/', { timeout: 15000 });
 }
 
-async function stubProjectsApi(page: import('@playwright/test').Page) {
-  let origin = 'http://localhost:3000';
+async function stubProjectsApi(
+  page: import('@playwright/test').Page,
+  baseUrl?: string
+) {
+  const defaultOrigin = baseUrl ?? process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+  const originRef = { current: defaultOrigin };
+  trackOriginOnNavigation(page, originRef);
+
   const project = {
     id: '01JNE4ZHT9S0VQ7E2GQW1QYJ7B',
     name: 'Smoke Project',
@@ -29,7 +49,7 @@ async function stubProjectsApi(page: import('@playwright/test').Page) {
   };
 
   await page.route('**/api/v1/projects', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -44,7 +64,7 @@ async function stubProjectsApi(page: import('@playwright/test').Page) {
   });
 
   await page.route(`**/api/v1/projects/${project.id}`, async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -58,7 +78,7 @@ async function stubProjectsApi(page: import('@playwright/test').Page) {
   });
 
   await page.route(`**/api/v1/projects/${project.id}/health`, async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -72,7 +92,7 @@ async function stubProjectsApi(page: import('@playwright/test').Page) {
   });
 
   await page.route(`**/api/v1/projects/${project.id}/rfqs`, async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -86,7 +106,7 @@ async function stubProjectsApi(page: import('@playwright/test').Page) {
   });
 
   await page.route(`**/api/v1/projects/${project.id}/tasks`, async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -98,23 +118,20 @@ async function stubProjectsApi(page: import('@playwright/test').Page) {
       body: JSON.stringify({ data: [] }),
     });
   });
-
-  // Once we’ve navigated anywhere, update origin to match baseURL.
-  page.on('framenavigated', () => {
-    try {
-      origin = new URL(page.url()).origin;
-    } catch {
-      // ignore
-    }
-  });
 }
 
-async function stubTasksApi(page: import('@playwright/test').Page) {
-  let origin = 'http://localhost:3000';
+async function stubTasksApi(
+  page: import('@playwright/test').Page,
+  baseUrl?: string
+) {
+  const defaultOrigin = baseUrl ?? process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+  const originRef = { current: defaultOrigin };
+  trackOriginOnNavigation(page, originRef);
+
   const task = { id: 'task-1', title: 'Smoke Task', status: 'pending', due_date: null, project_id: null };
 
   await page.route('**/api/v1/tasks', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -128,7 +145,7 @@ async function stubTasksApi(page: import('@playwright/test').Page) {
   });
 
   await page.route('**/api/v1/tasks/task-1', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -140,52 +157,43 @@ async function stubTasksApi(page: import('@playwright/test').Page) {
       body: JSON.stringify({ data: task }),
     });
   });
-
-  page.on('framenavigated', () => {
-    try {
-      origin = new URL(page.url()).origin;
-    } catch {
-      // ignore
-    }
-  });
 }
 
+const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+
 test.beforeEach(async ({ page }) => {
-  await stubProjectsApi(page);
-  await stubTasksApi(page);
+  await stubProjectsApi(page, baseUrl);
+  await stubTasksApi(page, baseUrl);
   await stubAuth(page);
 });
 
-const screens: Array<{ path: string; heading: RegExp }> = [
-  { path: '/', heading: /^Dashboard$/ },
-  { path: '/projects', heading: /^Projects$/ },
-  { path: '/tasks', heading: /^Task Inbox$/ },
-  { path: '/rfqs', heading: /^Requisitions$/ },
-  { path: '/documents', heading: /^Documents$/ },
-  { path: '/reporting', heading: /^Reporting$/ },
-  { path: '/approvals', heading: /^Approval Queue$/ },
-  { path: '/settings', heading: /^Settings$/ },
-  { path: '/settings/users', heading: /^Users & Roles$/ },
+/** Screens covered by sidebar navigation + heading assert. Order matches sidebar (Dashboard first, then Projects, Task Inbox, etc.). */
+const screens: Array<{ sidebarLabel: string; heading: RegExp; expandRequisition?: boolean }> = [
+  { sidebarLabel: 'Projects', heading: /^Projects$/ },
+  { sidebarLabel: 'Task Inbox', heading: /^Task Inbox$/ },
+  { sidebarLabel: 'Active', heading: /^Requisitions$/, expandRequisition: true },
+  { sidebarLabel: 'Documents', heading: /^Documents$/ },
+  { sidebarLabel: 'Reporting', heading: /^Reporting$/ },
+  { sidebarLabel: 'Approval Queue', heading: /^Approval Queue$/ },
+  { sidebarLabel: 'Users & Roles', heading: /^Users & Roles$/, expandRequisition: false }, // Settings group: open then click sub-item
 ];
 
 test('screen smoke: core routes render headings', async ({ page }) => {
-  // Navigate via sidebar to avoid full reloads (token is in-memory; refresh flow isn't required).
   await expect(page.getByRole('heading', { name: /^Dashboard$/ })).toBeVisible();
   const nav = page.getByRole('navigation');
 
-  await nav.getByRole('link', { name: 'Projects' }).click();
-  await expect(page.getByRole('heading', { name: /^Projects$/ })).toBeVisible({ timeout: 20000 });
-
-  await nav.getByRole('link', { name: 'Task Inbox' }).click();
-  await expect(page.getByRole('heading', { name: /^Task Inbox$/ })).toBeVisible({ timeout: 20000 });
-
-  // RFQs: click the "Active" link under the Requisition nav group
-  await nav.getByRole('button', { name: 'Requisition' }).click();
-  await nav.getByRole('link', { name: 'Active' }).click();
-  await expect(page.getByRole('heading', { name: /^Requisitions$/ })).toBeVisible({ timeout: 20000 });
-
-  await nav.getByRole('link', { name: 'Documents' }).click();
-  await expect(page.getByRole('heading', { name: /^Documents$/ })).toBeVisible({ timeout: 20000 });
+  for (const s of screens) {
+    if (s.sidebarLabel === 'Users & Roles') {
+      await nav.getByRole('button', { name: 'Settings' }).click();
+      await nav.getByRole('link', { name: 'Users & Roles', exact: true }).first().click();
+    } else {
+      if (s.expandRequisition) {
+        await nav.getByRole('button', { name: 'Requisition' }).click();
+      }
+      await nav.getByRole('link', { name: s.sidebarLabel }).click();
+    }
+    await expect(page.getByRole('heading', { name: s.heading })).toBeVisible({ timeout: 20000 });
+  }
 });
 
 // Note: RFQ workspace routes require auth. The "Use mock account" shortcut is not persisted across full reloads,

@@ -1,16 +1,13 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createTestWrapper } from '@/test/utils';
 
 import { useRfqs } from '@/hooks/use-rfqs';
 
+const originalMocks = process.env.NEXT_PUBLIC_USE_MOCKS;
+process.env.NEXT_PUBLIC_USE_MOCKS = 'true';
+
 describe('useRfqs (seed fallback)', () => {
-  const originalMocks = process.env.NEXT_PUBLIC_USE_MOCKS;
-
-  beforeAll(() => {
-    process.env.NEXT_PUBLIC_USE_MOCKS = 'true';
-  });
-
   afterAll(() => {
     if (originalMocks === undefined) {
       delete process.env.NEXT_PUBLIC_USE_MOCKS;

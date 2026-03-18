@@ -15,45 +15,56 @@ const buildCorsHeaders = (origin: string) => ({
   'access-control-allow-methods': 'GET,POST,OPTIONS',
 });
 
-async function stubAuth(page: import('@playwright/test').Page) {
-  let origin = 'http://localhost:3000';
+function getRequestOrigin(route: { request: () => { url: () => string; headers: () => Record<string, string> } }): string {
+  const req = route.request();
+  const h = req.headers();
+  const origin = h['origin'] ?? h['Origin'];
+  if (origin) return origin;
+  try {
+    return new URL(req.url()).origin;
+  } catch {
+    return 'http://localhost:3000';
+  }
+}
 
+async function fulfillJsonRoute(
+  route: {
+    request: () => { method: () => string; url: () => string; headers: () => Record<string, string> };
+    fulfill: (opts: { status: number; headers?: Record<string, string>; contentType?: string; body?: string }) => Promise<void>;
+  },
+  body: unknown,
+  status = 200
+): Promise<void> {
+  const reqOrigin = getRequestOrigin(route);
+  const corsHeaders = buildCorsHeaders(reqOrigin);
+  if (route.request().method() === 'OPTIONS') {
+    await route.fulfill({ status: 204, headers: corsHeaders });
+    return;
+  }
+  await route.fulfill({
+    status,
+    headers: corsHeaders,
+    contentType: 'application/json',
+    body: JSON.stringify(body),
+  });
+}
+
+async function stubAuth(page: import('@playwright/test').Page) {
   await page.route('**/auth/login**', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        access_token: 'test-token',
-        refresh_token: 'test-refresh',
-        token_type: 'Bearer',
-        expires_in: 3600,
-        user: mockUser,
-      }),
+    await fulfillJsonRoute(route, {
+      access_token: 'test-token',
+      refresh_token: 'test-refresh',
+      token_type: 'Bearer',
+      expires_in: 3600,
+      user: mockUser,
     });
   });
 
   await page.route('**/me**', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: mockUser }),
-    });
+    await fulfillJsonRoute(route, { data: mockUser });
   });
 
   await page.goto('/login');
-  origin = new URL(page.url()).origin;
 
   await page.getByLabel('Tenant ID').fill('tenant-qa');
   await page.getByLabel('Email').fill(mockUser.email);
@@ -83,8 +94,6 @@ test('smoke: RFQs list loads and can open an RFQ', async ({ page }) => {
 });
 
 test('smoke: Projects list and detail load (stubbed API)', async ({ page }) => {
-  let origin = 'http://localhost:3000';
-
   const project = {
     id: '01JNE4ZHT9S0VQ7E2GQW1QYJ7B',
     name: 'Smoke Project',
@@ -95,77 +104,26 @@ test('smoke: Projects list and detail load (stubbed API)', async ({ page }) => {
   };
 
   await page.route('**/api/v1/projects*', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: [project] }),
-    });
+    await fulfillJsonRoute(route, { data: [project] });
   });
 
   await page.route(`**/api/v1/projects/${project.id}`, async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: project }),
-    });
+    await fulfillJsonRoute(route, { data: project });
   });
 
   await page.route(`**/api/v1/projects/${project.id}/health`, async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: { project_id: project.id, overall_score: 80 } }),
-    });
+    await fulfillJsonRoute(route, { data: { project_id: project.id, overall_score: 80 } });
   });
 
   await page.route(`**/api/v1/projects/${project.id}/rfqs`, async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: [] }),
-    });
+    await fulfillJsonRoute(route, { data: [] });
   });
 
   await page.route(`**/api/v1/projects/${project.id}/tasks`, async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: [] }),
-    });
+    await fulfillJsonRoute(route, { data: [] });
   });
 
   await page.goto('/projects');
-  origin = new URL(page.url()).origin;
 
   await expect(page.getByRole('heading', { name: 'Projects' })).toBeVisible();
   await expect(page.getByText('Smoke Project')).toBeVisible();
@@ -176,39 +134,17 @@ test('smoke: Projects list and detail load (stubbed API)', async ({ page }) => {
 });
 
 test('smoke: Tasks inbox loads and drawer opens (stubbed API)', async ({ page }) => {
-  let origin = 'http://localhost:3000';
   const task = { id: 'task-1', title: 'Smoke Task', status: 'pending', due_date: null, project_id: null };
 
   await page.route('**/api/v1/tasks*', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: [task] }),
-    });
+    await fulfillJsonRoute(route, { data: [task] });
   });
 
   await page.route('**/api/v1/tasks/task-1', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: task }),
-    });
+    await fulfillJsonRoute(route, { data: task });
   });
 
   await page.goto('/tasks');
-  origin = new URL(page.url()).origin;
 
   await expect(page.getByRole('heading', { name: 'Task Inbox' })).toBeVisible();
   await expect(page.getByText('Smoke Task')).toBeVisible();
