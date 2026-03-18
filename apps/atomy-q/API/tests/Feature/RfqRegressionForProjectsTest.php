@@ -109,4 +109,39 @@ class RfqRegressionForProjectsTest extends TestCase
         $response->assertStatus(201);
         $response->assertJsonPath('data.project_id', $project->id);
     }
+
+    public function test_rfq_index_filters_by_project_id(): void
+    {
+        $user = $this->createUser();
+        $project = ProjectModel::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'name' => 'Filter test project',
+            'client_id' => 'client-1',
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'project_manager_id' => (string) Str::ulid(),
+            'status' => 'planning',
+        ]);
+        Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-A',
+            'title' => 'RFQ in project',
+            'owner_id' => $user->id,
+            'status' => 'draft',
+            'project_id' => $project->id,
+        ]);
+        Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-B',
+            'title' => 'RFQ without project',
+            'owner_id' => $user->id,
+            'status' => 'draft',
+            'project_id' => null,
+        ]);
+        $response = $this->getJson('/api/v1/rfqs?project_id=' . urlencode($project->id), $this->authHeaders($user));
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        $this->assertCount(1, $data);
+        $this->assertSame($project->id, $data[0]['project_id']);
+    }
 }

@@ -37,6 +37,7 @@ export interface UseRfqsParams {
   owner?: string;
   category?: string;
   page?: number;
+  projectId?: string;
 }
 
 function normalizeRfqsPayload(payload: any): RfqListItem[] {
@@ -80,7 +81,9 @@ export function useRfqs(params: UseRfqsParams) {
       // but always fall back to local seed data on failures or when mocks are enabled.
       if (!useMocks) {
         try {
-          const { data } = await api.get('/rfqs', { params });
+          const apiParams: Record<string, string | number | undefined> = { ...params };
+          if (params.projectId) apiParams.project_id = params.projectId;
+          const { data } = await api.get('/rfqs', { params: apiParams });
           const items = normalizeRfqsPayload(data).filter((x) => x.id);
           if (items.length > 0) {
             return items;

@@ -74,6 +74,10 @@ final class RfqController extends Controller
             $query->where('category', $category);
         }
 
+        if ($projectId = $request->query('project_id')) {
+            $query->where('project_id', $projectId);
+        }
+
         if ($search = $request->query('q')) {
             $query->where(function ($builder) use ($search): void {
                 $builder
