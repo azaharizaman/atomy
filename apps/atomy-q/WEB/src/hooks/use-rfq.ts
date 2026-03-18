@@ -12,6 +12,8 @@ export interface RfqDetail {
   quotesCount?: number;
   estValue?: string;
   savings?: string;
+  projectId?: string | null;
+  projectName?: string | null;
 }
 
 function normalizeRfq(payload: unknown): RfqDetail {
@@ -29,6 +31,8 @@ function normalizeRfq(payload: unknown): RfqDetail {
     quotesCount: (raw?.quotesCount ?? raw?.quotes_count) as number | undefined,
     estValue: (raw?.estValue ?? raw?.estimated_value ?? raw?.estimatedValue) as string | undefined,
     savings: raw?.savings as string | undefined,
+    projectId: (raw?.project_id ?? raw?.projectId) as string | null | undefined,
+    projectName: (raw?.project_name ?? raw?.projectName) as string | null | undefined,
   };
 }
 

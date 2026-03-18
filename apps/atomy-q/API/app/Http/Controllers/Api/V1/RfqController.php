@@ -203,6 +203,11 @@ final class RfqController extends Controller
         }
 
         $savings = $rfq->savings_percentage !== null ? rtrim(rtrim((string) $rfq->savings_percentage, '0'), '.') . '%' : null;
+        $projectName = null;
+        if ($rfq->project_id) {
+            $project = \App\Models\Project::query()->find($rfq->project_id);
+            $projectName = $project?->name;
+        }
 
         return response()->json([
             'data' => [
@@ -211,6 +216,7 @@ final class RfqController extends Controller
                 'title' => $rfq->title,
                 'status' => $rfq->status,
                 'project_id' => $rfq->project_id,
+                'project_name' => $projectName,
                 'owner' => $rfq->owner ? [
                     'id' => $rfq->owner->id,
                     'name' => $rfq->owner->name,
