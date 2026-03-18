@@ -56,6 +56,7 @@ Nexus is a large system. Agents should follow these coordination patterns:
 
 ### Multi-Tenancy
 - **AVOID**: Ignoring tenant ID in queries.
+- **AVOID**: Returning 403 when a resource exists but belongs to another tenant. Use tenant-scoped existence checks only (e.g. `where('tenant_id', $tenantId)->where('id', $id)->exists()`); return **404** for both "not found" and "wrong tenant" so cross-tenant resource existence is not leaked.
 
 ### Exception Handling
 - **AVOID**: Returning synthetic IDs (e.g., `QUO-' . uniqid()`) instead of throwing exceptions when a service is unavailable.
@@ -90,4 +91,13 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Summary of mistake:** RFQ controller accepted unvalidated `estimated_value` and `savings_percentage`, allowing requests to bypass validation.
 - **Root cause:** Validation rules array omitted those fields; controller used `$request->input()` instead of `$validated`.
 - **Action taken:** Added `nullable|numeric|min:0` and `nullable|numeric|min:0|max:100` to `rfqValidationRules` and switched store/update to use `$validated` for those fields.
+- **Follow-up tasks:** None.
+
+---
+
+- **Date:** 2026-03-18
+- **PR/Issue ID:** [#296](https://github.com/azaharizaman/atomy/pull/296)
+- **Summary of mistake:** Project and task controllers returned 403 when a resource existed but belonged to another tenant (two-step check: load by id, then compare tenant_id). This allowed any authenticated tenant to probe IDs and learn whether a project/task existed in another tenant—a tenant-isolation information leak.
+- **Root cause:** Prioritised "strict" status codes (403 for forbidden) over the existing design that collapsed both "not found" and "wrong tenant" to 404 to avoid leaking existence.
+- **Action taken:** Reverted to tenant-scoped existence checks only (`where('tenant_id', $tenantId)->where('id', $id)->exists()`); return 404 when the check fails. Updated ProjectsApiTest and TasksApiTest to expect 404 for cross-tenant access. Removed unused `$userA` in ProjectsApiTest. In ApiEndpointsProjectsTasksTest, added `setUp()` to resolve path and read file once into `$apiEndpointsContent`, and asserted file existence in setUp so all tests use cached content and fail clearly if the file is missing.
 - **Follow-up tasks:** None.
