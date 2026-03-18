@@ -5,6 +5,7 @@ import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import {
   LayoutPanelTop,
   FileText,
+  FolderKanban,
   FolderArchive,
   BarChart2,
   ShieldCheck,
@@ -84,6 +85,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             icon={<LayoutPanelTop size={18} />}
             active={pathname === '/'}
             href="/"
+          />
+
+          <NavItem
+            label="Projects"
+            icon={<FolderKanban size={18} />}
+            active={pathname.startsWith('/projects')}
+            href="/projects"
           />
 
           <NavGroup

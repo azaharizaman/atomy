@@ -28,6 +28,7 @@ export interface RfqListItem {
   savings?: string;
   vendorsCount?: number;
   quotesCount?: number;
+  projectId?: string | null;
 }
 
 export interface UseRfqsParams {
@@ -65,6 +66,7 @@ function normalizeRfqsPayload(payload: any): RfqListItem[] {
     savings: raw.savings,
     vendorsCount: raw.vendorsCount ?? raw.vendors_count,
     quotesCount: raw.quotesCount ?? raw.quotes_count,
+    projectId: raw.project_id ?? raw.projectId ?? null,
   }));
 }
 

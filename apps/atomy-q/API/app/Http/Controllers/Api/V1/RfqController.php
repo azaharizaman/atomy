@@ -16,10 +16,32 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 final class RfqController extends Controller
 {
     use ExtractsAuthContext;
+
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    private function rfqValidationRules(string $tenantId, bool $forUpdate = false): array
+    {
+        $titleRule = $forUpdate ? ['sometimes', 'filled', 'string', 'max:255'] : ['required', 'string', 'max:255'];
+        return [
+            'title' => $titleRule,
+            'description' => ['nullable', 'string'],
+            'category' => ['nullable', 'string', 'max:64'],
+            'department' => ['nullable', 'string', 'max:64'],
+            'project_id' => ['nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
+            'estimated_value' => ['nullable', 'numeric', 'min:0'],
+            'savings_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'submission_deadline' => ['nullable', 'date'],
+            'closing_date' => ['nullable', 'date'],
+            'payment_terms' => ['nullable', 'string', 'max:64'],
+            'evaluation_method' => ['nullable', 'string', 'max:64'],
+        ];
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -83,6 +105,7 @@ final class RfqController extends Controller
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
                 'status' => $rfq->status,
+                'project_id' => $rfq->project_id,
                 'owner' => $rfq->owner ? [
                     'id' => $rfq->owner->id,
                     'name' => $rfq->owner->name,
@@ -115,20 +138,7 @@ final class RfqController extends Controller
         $tenantId = $this->tenantId($request);
         $ownerId = $this->userId($request);
 
-        $validator = Validator::make($request->all(), [
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'category' => ['nullable', 'string', 'max:64'],
-            'department' => ['nullable', 'string', 'max:64'],
-            'submission_deadline' => ['nullable', 'date'],
-            'closing_date' => ['nullable', 'date'],
-            'payment_terms' => ['nullable', 'string', 'max:64'],
-            'evaluation_method' => ['nullable', 'string', 'max:64'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        $validated = $request->validate($this->rfqValidationRules($tenantId, false));
 
         $nextSeq = (int) Rfq::query()
             ->where('tenant_id', $tenantId)
@@ -140,17 +150,18 @@ final class RfqController extends Controller
         $rfq->tenant_id = $tenantId;
         $rfq->owner_id = $ownerId;
         $rfq->rfq_number = $rfqNumber;
-        $rfq->title = $request->input('title');
-        $rfq->description = $request->input('description');
-        $rfq->category = $request->input('category');
-        $rfq->department = $request->input('department');
+        $rfq->title = (string) $validated['title'];
+        $rfq->description = $validated['description'] ?? null;
+        $rfq->category = $validated['category'] ?? null;
+        $rfq->department = $validated['department'] ?? null;
+        $rfq->project_id = $validated['project_id'] ?? null;
         $rfq->status = 'draft';
-        $rfq->estimated_value = (float) $request->input('estimated_value', 0);
-        $rfq->savings_percentage = (float) $request->input('savings_percentage', 0);
-        $rfq->submission_deadline = $request->input('submission_deadline') ? \Carbon\Carbon::parse($request->input('submission_deadline')) : null;
-        $rfq->closing_date = $request->input('closing_date') ? \Carbon\Carbon::parse($request->input('closing_date')) : null;
-        $rfq->payment_terms = $request->input('payment_terms');
-        $rfq->evaluation_method = $request->input('evaluation_method');
+        $rfq->estimated_value = isset($validated['estimated_value']) ? (float) $validated['estimated_value'] : 0.0;
+        $rfq->savings_percentage = isset($validated['savings_percentage']) ? (float) $validated['savings_percentage'] : 0.0;
+        $rfq->submission_deadline = ! empty($validated['submission_deadline']) ? Carbon::parse($validated['submission_deadline']) : null;
+        $rfq->closing_date = ! empty($validated['closing_date']) ? Carbon::parse($validated['closing_date']) : null;
+        $rfq->payment_terms = $validated['payment_terms'] ?? null;
+        $rfq->evaluation_method = $validated['evaluation_method'] ?? null;
         $rfq->save();
 
         return response()->json([
@@ -159,6 +170,7 @@ final class RfqController extends Controller
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
                 'status' => $rfq->status,
+                'project_id' => $rfq->project_id,
             ],
         ], 201);
     }
@@ -194,6 +206,7 @@ final class RfqController extends Controller
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
                 'status' => $rfq->status,
+                'project_id' => $rfq->project_id,
                 'owner' => $rfq->owner ? [
                     'id' => $rfq->owner->id,
                     'name' => $rfq->owner->name,
@@ -369,12 +382,37 @@ final class RfqController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
-        // TODO: tenant scoping via $this->tenantId($request)
+        $tenantId = $this->tenantId($request);
+
+        $rfq = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where(function ($builder) use ($id): void {
+                $builder->where('id', $id)->orWhere('rfq_number', $id);
+            })
+            ->firstOrFail();
+
+        $data = $request->validate($this->rfqValidationRules($tenantId, true));
+
+        if (array_key_exists('title', $data)) $rfq->title = (string) $data['title'];
+        if (array_key_exists('description', $data)) $rfq->description = $data['description'];
+        if (array_key_exists('category', $data)) $rfq->category = $data['category'];
+        if (array_key_exists('department', $data)) $rfq->department = $data['department'];
+        if (array_key_exists('project_id', $data)) $rfq->project_id = $data['project_id'] ?? null;
+        if (array_key_exists('estimated_value', $data)) $rfq->estimated_value = $data['estimated_value'] !== null ? (float) $data['estimated_value'] : null;
+        if (array_key_exists('savings_percentage', $data)) $rfq->savings_percentage = $data['savings_percentage'] !== null ? (float) $data['savings_percentage'] : null;
+        if (array_key_exists('submission_deadline', $data)) $rfq->submission_deadline = $data['submission_deadline'] ? Carbon::parse($data['submission_deadline']) : null;
+        if (array_key_exists('closing_date', $data)) $rfq->closing_date = $data['closing_date'] ? Carbon::parse($data['closing_date']) : null;
+        if (array_key_exists('payment_terms', $data)) $rfq->payment_terms = $data['payment_terms'];
+        if (array_key_exists('evaluation_method', $data)) $rfq->evaluation_method = $data['evaluation_method'];
+        $rfq->save();
 
         return response()->json([
             'data' => [
-                'id' => $id,
-                'status' => 'draft',
+                'id' => $rfq->id,
+                'rfq_number' => $rfq->rfq_number,
+                'title' => $rfq->title,
+                'status' => $rfq->status,
+                'project_id' => $rfq->project_id,
             ],
         ]);
     }

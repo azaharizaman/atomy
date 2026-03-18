@@ -29,6 +29,8 @@ use App\Http\Controllers\Api\V1\SettingController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VendorController;
 use App\Http\Controllers\Api\V1\VendorInvitationController;
+use App\Http\Controllers\Api\V1\ProjectController;
+use App\Http\Controllers\Api\V1\TaskController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -361,5 +363,32 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::post('payment-methods', [AccountController::class, 'addPaymentMethod']);
         Route::delete('payment-methods/{id}', [AccountController::class, 'removePaymentMethod']);
         Route::patch('payment-methods/{id}/default', [AccountController::class, 'setDefaultPaymentMethod']);
+    });
+
+    // --- Section 28: Projects (planned) ---
+    Route::prefix('projects')->group(function (): void {
+        Route::get('/', [ProjectController::class, 'index']);
+        Route::post('/', [ProjectController::class, 'store']);
+        Route::get('{id}', [ProjectController::class, 'show']);
+        Route::put('{id}', [ProjectController::class, 'update']);
+        Route::patch('{id}/status', [ProjectController::class, 'updateStatus']);
+        Route::get('{id}/health', [ProjectController::class, 'health']);
+        Route::get('{id}/rfqs', [ProjectController::class, 'rfqs']);
+        Route::get('{id}/tasks', [ProjectController::class, 'tasks']);
+        Route::get('{id}/budget', [ProjectController::class, 'budget']);
+        Route::get('{id}/acl', [ProjectController::class, 'getAcl']);
+        Route::put('{id}/acl', [ProjectController::class, 'updateAcl']);
+    });
+
+    // --- Section 29: Tasks (planned) ---
+    Route::prefix('tasks')->group(function (): void {
+        Route::get('/', [TaskController::class, 'index']);
+        Route::post('/', [TaskController::class, 'store']);
+        Route::post('schedule/preview', [TaskController::class, 'schedulePreview']);
+        Route::get('{id}', [TaskController::class, 'show']);
+        Route::put('{id}', [TaskController::class, 'update']);
+        Route::patch('{id}/status', [TaskController::class, 'updateStatus']);
+        Route::get('{id}/dependencies', [TaskController::class, 'getDependencies']);
+        Route::put('{id}/dependencies', [TaskController::class, 'updateDependencies']);
     });
 });

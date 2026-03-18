@@ -67,6 +67,9 @@
         "nexus/connectivity-operations": "*@dev",
         "nexus/data-exchange-operations": "*@dev",
         "nexus/insight-operations": "*@dev",
+        "nexus/project": "*@dev",
+        "nexus/task": "*@dev",
+        "nexus/project-management-operations": "*@dev",
 
         "nexus/laravel-identity-adapter": "*@dev",
         "nexus/laravel-tenant-adapter": "*@dev",
