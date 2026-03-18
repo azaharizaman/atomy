@@ -87,12 +87,12 @@ class ProjectsApiTest extends TestCase
         $response->assertStatus(404);
     }
 
-    public function test_projects_show_returns_403_for_cross_tenant_access(): void
+    public function test_projects_show_returns_404_for_cross_tenant_access(): void
     {
         $this->withProjectsEnabled();
         $tenantA = (string) Str::ulid();
         $tenantB = (string) Str::ulid();
-        $userA = $this->createUser($tenantA);
+        $this->createUser($tenantA);
         $userB = $this->createUser($tenantB);
 
         $project = ProjectModel::query()->create([
@@ -109,7 +109,7 @@ class ProjectsApiTest extends TestCase
             '/api/v1/projects/' . $project->id,
             $this->authHeaders((string) $userB->id, $tenantB)
         );
-        $response->assertStatus(403);
+        $response->assertStatus(404);
     }
 
     public function test_projects_store_returns_422_for_invalid_payload(): void

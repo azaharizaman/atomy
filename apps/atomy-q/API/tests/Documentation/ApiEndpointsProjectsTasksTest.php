@@ -9,6 +9,18 @@ use Tests\TestCase;
 
 class ApiEndpointsProjectsTasksTest extends TestCase
 {
+    private string $apiEndpointsPath = '';
+
+    private string $apiEndpointsContent = '';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->apiEndpointsPath = $this->getApiEndpointsPath();
+        $this->assertTrue(File::exists($this->apiEndpointsPath), 'API_ENDPOINTS.md should exist');
+        $this->apiEndpointsContent = File::get($this->apiEndpointsPath);
+    }
+
     private function getApiEndpointsPath(): string
     {
         $path = base_path('../API_ENDPOINTS.md');
@@ -17,37 +29,27 @@ class ApiEndpointsProjectsTasksTest extends TestCase
 
     public function test_api_endpoints_document_has_section_28_projects_planned(): void
     {
-        $path = $this->getApiEndpointsPath();
-        $this->assertTrue(File::exists($path), 'API_ENDPOINTS.md should exist');
-        $content = File::get($path);
-        $this->assertStringContainsString('## 28. Projects (planned)', $content);
+        $this->assertStringContainsString('## 28. Projects (planned)', $this->apiEndpointsContent);
     }
 
     public function test_api_endpoints_document_has_section_29_tasks_planned(): void
     {
-        $path = $this->getApiEndpointsPath();
-        $this->assertTrue(File::exists($path), 'API_ENDPOINTS.md should exist');
-        $content = File::get($path);
-        $this->assertStringContainsString('## 29. Tasks (planned)', $content);
+        $this->assertStringContainsString('## 29. Tasks (planned)', $this->apiEndpointsContent);
     }
 
     public function test_section_28_includes_planned_project_endpoints(): void
     {
-        $path = $this->getApiEndpointsPath();
-        $content = File::get($path);
-        $this->assertStringContainsString('/projects`', $content);
-        $this->assertStringContainsString('/projects/:id', $content);
-        $this->assertStringContainsString('/projects/:id/health', $content);
-        $this->assertStringContainsString('/projects/:id/rfqs', $content);
-        $this->assertStringContainsString('/projects/:id/tasks', $content);
+        $this->assertStringContainsString('/projects`', $this->apiEndpointsContent);
+        $this->assertStringContainsString('/projects/:id', $this->apiEndpointsContent);
+        $this->assertStringContainsString('/projects/:id/health', $this->apiEndpointsContent);
+        $this->assertStringContainsString('/projects/:id/rfqs', $this->apiEndpointsContent);
+        $this->assertStringContainsString('/projects/:id/tasks', $this->apiEndpointsContent);
     }
 
     public function test_section_29_includes_planned_task_endpoints(): void
     {
-        $path = $this->getApiEndpointsPath();
-        $content = File::get($path);
-        $this->assertStringContainsString('/tasks`', $content);
-        $this->assertStringContainsString('/tasks/:id', $content);
-        $this->assertStringContainsString('/tasks/:id/dependencies', $content);
+        $this->assertStringContainsString('/tasks`', $this->apiEndpointsContent);
+        $this->assertStringContainsString('/tasks/:id', $this->apiEndpointsContent);
+        $this->assertStringContainsString('/tasks/:id/dependencies', $this->apiEndpointsContent);
     }
 }

@@ -87,7 +87,7 @@ class TasksApiTest extends TestCase
         $response->assertStatus(404);
     }
 
-    public function test_tasks_show_returns_403_for_cross_tenant_access(): void
+    public function test_tasks_show_returns_404_for_cross_tenant_access(): void
     {
         $this->withTasksEnabled();
         $tenantA = (string) Str::ulid();
@@ -106,7 +106,7 @@ class TasksApiTest extends TestCase
             '/api/v1/tasks/' . $task->id,
             $this->authHeaders((string) $userB->id, $tenantB)
         );
-        $response->assertStatus(403);
+        $response->assertStatus(404);
     }
 
     public function test_tasks_store_returns_422_for_invalid_payload(): void

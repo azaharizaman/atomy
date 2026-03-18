@@ -56,12 +56,14 @@ final class TaskController extends Controller
     private function assertTaskOwnedByTenant(Request $request, string $taskId): void
     {
         $tenantId = $this->tenantId($request);
-        $model = TaskModel::query()->where('id', $taskId)->first();
-        if ($model === null) {
+
+        $exists = TaskModel::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $taskId)
+            ->exists();
+
+        if (! $exists) {
             abort(404);
-        }
-        if ($model->tenant_id !== $tenantId) {
-            abort(403, 'Access forbidden');
         }
     }
 
