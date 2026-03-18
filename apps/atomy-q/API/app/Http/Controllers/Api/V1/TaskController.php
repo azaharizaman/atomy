@@ -23,11 +23,18 @@ use Nexus\Task\ValueObjects\TaskSummary;
 
 final class TaskController extends Controller
 {
+    private readonly TaskService $tasks;
+    private readonly TaskQueryInterface $taskQuery;
+    private readonly TaskTenantLinkService $taskTenantLink;
+
     public function __construct(
-        private readonly TaskService $tasks,
-        private readonly TaskQueryInterface $taskQuery,
-        private readonly TaskTenantLinkService $taskTenantLink,
+        TaskService $tasks,
+        TaskQueryInterface $taskQuery,
+        TaskTenantLinkService $taskTenantLink,
     ) {
+        $this->tasks = $tasks;
+        $this->taskQuery = $taskQuery;
+        $this->taskTenantLink = $taskTenantLink;
     }
 
     private function assertFeatureEnabled(): void
@@ -287,7 +294,7 @@ final class TaskController extends Controller
         }
 
         $validated = $request->validate([
-            'predecessor_ids' => 'required|array',
+            'predecessor_ids' => 'present|array',
             'predecessor_ids.*' => 'string',
         ]);
         $predecessorIds = array_values($validated['predecessor_ids']);
@@ -310,13 +317,10 @@ final class TaskController extends Controller
             return response()->json(['errors' => ['predecessor_ids' => [$e->getMessage()]]], 422);
         }
 
-        $affected = TaskModel::query()
+        TaskModel::query()
             ->where('tenant_id', $tenantId)
             ->where('id', $id)
             ->update(['predecessor_ids' => $predecessorIds]);
-        if ($affected === 0) {
-            abort(404);
-        }
 
         return response()->json([
             'data' => [

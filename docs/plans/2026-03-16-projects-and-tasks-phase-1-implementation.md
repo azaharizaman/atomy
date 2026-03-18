@@ -77,6 +77,7 @@ Expected: PASS.
 
 ```bash
 git add apps/atomy-q/API/app/Models/Rfq.php \
+    apps/atomy-q/API/app/Http/Resources/RfqResource.php \
     apps/atomy-q/API/database/migrations/*project_id*rfqs*.php \
     apps/atomy-q/API/tests/Feature/RfqProjectIdTest.php
 git commit -m "feat: add optional project_id to RFQs"
@@ -304,9 +305,9 @@ Write feature tests that:
 
 Add failure-path coverage in `ProjectsApiTest` and `TasksApiTest`:
 - **Unauthorized:** Requests without auth (e.g. missing or invalid JWT) return the appropriate unauthorized response (e.g. 401) for the same endpoints.
-- **Feature flag disabled:** When the relevant feature flag is off, requests to project/task endpoints are rejected (expect 404 or 403).
-- **Cross-tenant:** Assert that reads and writes are filtered by `tenantId` and that attempts to access another tenant's project/task resources fail (404 or 403).
-- **Validation:** Invalid payloads (e.g. missing required fields, invalid types) produce 422 validation errors before delegation to Nexus services.
+- **Feature flag disabled:** When the relevant feature flag is off, requests to project/task endpoints are rejected—assert **404** (feature endpoints hidden).
+- **Cross-tenant:** Assert that reads and writes are filtered by `tenantId` and that attempts to access another tenant's project/task resources fail with **403** (forbidden).
+- **Validation:** Invalid payloads (e.g. missing required fields, invalid types) produce **422** validation errors before delegation to Nexus services.
 
 Ensure these tests hit the same routes under `/api/v1` and assert controller behaviour for feature-flag gating, tenant middleware, and payload validation.
 
