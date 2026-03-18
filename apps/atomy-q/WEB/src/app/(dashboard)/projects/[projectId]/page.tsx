@@ -168,7 +168,7 @@ export default function ProjectDetailPage() {
                 type="text"
                 value={editPmId}
                 onChange={(e) => setEditPmId(e.target.value)}
-                placeholder={project?.clientId ?? 'Optional'}
+                placeholder="Optional"
                 className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
               />
             </div>
