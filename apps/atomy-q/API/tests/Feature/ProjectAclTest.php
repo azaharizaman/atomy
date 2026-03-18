@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-class RfqRegressionForProjectsTest extends TestCase
+class ProjectAclTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -28,6 +28,7 @@ class RfqRegressionForProjectsTest extends TestCase
             'prefix' => '',
             'foreign_key_constraints' => true,
         ]);
+        $app['config']->set('features.projects', true);
         return $app;
     }
 
@@ -56,68 +57,82 @@ class RfqRegressionForProjectsTest extends TestCase
         return ['Authorization' => 'Bearer ' . $token];
     }
 
-    public function test_create_rfq_without_project_id_succeeds_and_response_has_project_id_key(): void
+    public function test_get_acl_returns_roles_and_update_acl_persists(): void
     {
-        $user = $this->createUser();
-        $payload = [
-            'title' => 'Regression RFQ without project',
-            'description' => 'Optional project_id not sent',
-        ];
-        $response = $this->postJson('/api/v1/rfqs', $payload, $this->authHeaders($user));
-        $response->assertStatus(201);
-        $response->assertJsonStructure(['data' => ['id', 'rfq_number', 'title', 'status', 'project_id']]);
-        $data = $response->json('data');
-        $this->assertArrayHasKey('project_id', $data);
-        $this->assertNull($data['project_id']);
-    }
-
-    public function test_update_rfq_without_changing_project_id_preserves_existing_behaviour(): void
-    {
-        $user = $this->createUser();
-        $rfq = Rfq::query()->create([
-            'tenant_id' => $user->tenant_id,
-            'rfq_number' => 'RFQ-2026-9001',
-            'title' => 'Original title',
-            'owner_id' => $user->id,
-            'status' => 'draft',
-            'project_id' => null,
-        ]);
-        $response = $this->putJson('/api/v1/rfqs/' . $rfq->id, ['title' => 'Updated title'], $this->authHeaders($user));
-        $response->assertStatus(200);
-        $response->assertJsonPath('data.title', 'Updated title');
-        $rfq->refresh();
-        $this->assertNull($rfq->project_id);
-    }
-
-    public function test_create_rfq_with_project_id_when_projects_enabled_is_accepted(): void
-    {
-        $this->app['config']->set('features.projects', true);
         $user = $this->createUser();
         $project = ProjectModel::query()->create([
             'tenant_id' => $user->tenant_id,
-            'name' => 'Regression project',
-            'client_id' => 'client-1',
+            'name' => 'ACL project',
+            'client_id' => 'c1',
             'start_date' => now(),
             'end_date' => now()->addMonth(),
             'project_manager_id' => (string) Str::ulid(),
             'status' => 'planning',
         ]);
-        $payload = [
-            'title' => 'RFQ linked to project',
+
+        $getResponse = $this->getJson('/api/v1/projects/' . $project->id . '/acl', $this->authHeaders($user));
+        $getResponse->assertStatus(200);
+        $getResponse->assertJsonPath('data.roles', []);
+
+        $putResponse = $this->putJson('/api/v1/projects/' . $project->id . '/acl', [
+            'roles' => [
+                ['user_id' => $user->id, 'role' => 'owner'],
+            ],
+        ], $this->authHeaders($user));
+        $putResponse->assertStatus(200);
+        $putResponse->assertJsonPath('data.roles.0.user_id', $user->id);
+        $putResponse->assertJsonPath('data.roles.0.role', 'owner');
+
+        $this->assertDatabaseHas('project_acl', [
             'project_id' => $project->id,
-        ];
-        $response = $this->postJson('/api/v1/rfqs', $payload, $this->authHeaders($user));
-        $response->assertStatus(201);
-        $response->assertJsonPath('data.project_id', $project->id);
+            'user_id' => $user->id,
+            'role' => 'owner',
+        ]);
     }
 
-    public function test_rfq_index_filters_by_project_id(): void
+    public function test_rfq_with_project_id_denied_when_user_not_in_acl(): void
+    {
+        $owner = $this->createUser();
+        $otherUser = $this->createUser();
+        $otherUser->tenant_id = $owner->tenant_id;
+        $otherUser->save();
+
+        $project = ProjectModel::query()->create([
+            'tenant_id' => $owner->tenant_id,
+            'name' => 'ACL project',
+            'client_id' => 'c1',
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'project_manager_id' => (string) Str::ulid(),
+            'status' => 'planning',
+        ]);
+        ProjectAcl::query()->create([
+            'project_id' => $project->id,
+            'user_id' => $owner->id,
+            'role' => 'owner',
+            'tenant_id' => $owner->tenant_id,
+        ]);
+
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $owner->tenant_id,
+            'rfq_number' => 'RFQ-1',
+            'title' => 'RFQ in project',
+            'owner_id' => $owner->id,
+            'status' => 'draft',
+            'project_id' => $project->id,
+        ]);
+
+        $response = $this->getJson('/api/v1/rfqs/' . $rfq->id, $this->authHeaders($otherUser));
+        $response->assertStatus(404);
+    }
+
+    public function test_rfq_with_project_id_allowed_when_user_in_acl(): void
     {
         $user = $this->createUser();
         $project = ProjectModel::query()->create([
             'tenant_id' => $user->tenant_id,
-            'name' => 'Filter test project',
-            'client_id' => 'client-1',
+            'name' => 'ACL project',
+            'client_id' => 'c1',
             'start_date' => now(),
             'end_date' => now()->addMonth(),
             'project_manager_id' => (string) Str::ulid(),
@@ -129,26 +144,16 @@ class RfqRegressionForProjectsTest extends TestCase
             'role' => 'viewer',
             'tenant_id' => $user->tenant_id,
         ]);
-        Rfq::query()->create([
+        $rfq = Rfq::query()->create([
             'tenant_id' => $user->tenant_id,
-            'rfq_number' => 'RFQ-A',
+            'rfq_number' => 'RFQ-1',
             'title' => 'RFQ in project',
             'owner_id' => $user->id,
             'status' => 'draft',
             'project_id' => $project->id,
         ]);
-        Rfq::query()->create([
-            'tenant_id' => $user->tenant_id,
-            'rfq_number' => 'RFQ-B',
-            'title' => 'RFQ without project',
-            'owner_id' => $user->id,
-            'status' => 'draft',
-            'project_id' => null,
-        ]);
-        $response = $this->getJson('/api/v1/rfqs?project_id=' . urlencode($project->id), $this->authHeaders($user));
+
+        $response = $this->getJson('/api/v1/rfqs/' . $rfq->id, $this->authHeaders($user));
         $response->assertStatus(200);
-        $data = $response->json('data');
-        $this->assertCount(1, $data);
-        $this->assertSame($project->id, $data[0]['project_id']);
     }
 }

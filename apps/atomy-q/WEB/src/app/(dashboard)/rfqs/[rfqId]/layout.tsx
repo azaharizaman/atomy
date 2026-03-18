@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutPanelTop, FileText, FolderArchive, BarChart2, Settings } from 'lucide-react';
 
@@ -86,7 +87,20 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
           {!isLoading && record && <ActiveRecordMenu record={record} />}
           <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
             <div className="p-6 flex-1">
-              <div className="max-w-7xl mx-auto space-y-6">{children}</div>
+              <div className="max-w-7xl mx-auto space-y-6">
+                {!isLoading && rfq?.projectId && (
+                  <div className="text-sm text-slate-600">
+                    Project:{' '}
+                    <Link
+                      href={`/projects/${encodeURIComponent(rfq.projectId)}`}
+                      className="text-indigo-600 hover:underline font-medium"
+                    >
+                      {rfq.projectName ?? rfq.projectId}
+                    </Link>
+                  </div>
+                )}
+                {children}
+              </div>
             </div>
           </div>
         </div>

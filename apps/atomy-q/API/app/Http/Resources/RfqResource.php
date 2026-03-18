@@ -28,6 +28,7 @@ final class RfqResource extends JsonResource
             'title' => $rfq->title,
             'status' => $rfq->status,
             'project_id' => $rfq->project_id,
+            'project_name' => $rfq->relationLoaded('project') ? $rfq->project?->name : null,
             'created_at' => $rfq->created_at?->toAtomString(),
             'updated_at' => $rfq->updated_at?->toAtomString(),
         ];

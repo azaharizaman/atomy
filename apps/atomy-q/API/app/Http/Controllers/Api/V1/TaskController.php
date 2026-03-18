@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Models\Task as TaskModel;
+use App\Services\Project\ProjectAclService;
 use App\Services\Task\TaskService;
 use App\Services\Task\TaskTenantLinkService;
 use App\Services\Task\Exceptions\TaskNotFoundException;
@@ -23,6 +25,8 @@ use Nexus\Task\ValueObjects\TaskSummary;
 
 final class TaskController extends Controller
 {
+    use ExtractsAuthContext;
+
     private readonly TaskService $tasks;
     private readonly TaskQueryInterface $taskQuery;
     private readonly TaskTenantLinkService $taskTenantLink;
@@ -31,10 +35,41 @@ final class TaskController extends Controller
         TaskService $tasks,
         TaskQueryInterface $taskQuery,
         TaskTenantLinkService $taskTenantLink,
+        private readonly ProjectAclService $projectAcl,
     ) {
         $this->tasks = $tasks;
         $this->taskQuery = $taskQuery;
         $this->taskTenantLink = $taskTenantLink;
+    }
+
+    private function requireTenantId(Request $request): string
+    {
+        $id = $this->tenantId($request);
+        if ($id === '') {
+            abort(403, 'Tenant context required');
+        }
+        return $id;
+    }
+
+    private function requireUserId(Request $request): string
+    {
+        $id = $this->userId($request);
+        if ($id === '') {
+            abort(403, 'User context required');
+        }
+        return $id;
+    }
+
+    private function assertProjectAclWhenProjectSet(Request $request, ?string $projectId): void
+    {
+        if ($projectId === null || $projectId === '') {
+            return;
+        }
+        $tenantId = $this->requireTenantId($request);
+        $userId = $this->requireUserId($request);
+        if (! $this->projectAcl->userCanAccessProject($tenantId, $userId, $projectId)) {
+            abort(404, 'Not found');
+        }
     }
 
     private function assertFeatureEnabled(): void
@@ -44,18 +79,9 @@ final class TaskController extends Controller
         }
     }
 
-    private function tenantId(Request $request): string
-    {
-        $id = (string) $request->attributes->get('auth_tenant_id', '');
-        if ($id === '') {
-            abort(403, 'Tenant context required');
-        }
-        return $id;
-    }
-
     private function assertTaskOwnedByTenant(Request $request, string $taskId): void
     {
-        $tenantId = $this->tenantId($request);
+        $tenantId = $this->requireTenantId($request);
 
         $exists = TaskModel::query()
             ->where('tenant_id', $tenantId)
@@ -70,7 +96,7 @@ final class TaskController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $tenantId = $this->tenantId($request);
+        $tenantId = $this->requireTenantId($request);
 
         $assigneeId = $request->query('assignee_id');
         $query = TaskModel::query()->where('tenant_id', $tenantId);
@@ -93,7 +119,7 @@ final class TaskController extends Controller
     public function store(Request $request): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $tenantId = $this->tenantId($request);
+        $tenantId = $this->requireTenantId($request);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -150,7 +176,7 @@ final class TaskController extends Controller
     public function show(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $tenantId = $this->tenantId($request);
+        $tenantId = $this->requireTenantId($request);
         $this->assertTaskOwnedByTenant($request, $id);
 
         $task = $this->tasks->findById($id);
@@ -158,10 +184,8 @@ final class TaskController extends Controller
             abort(404);
         }
 
-        $model = TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->first();
-        if ($model === null) {
-            abort(404);
-        }
+        $model = TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->firstOrFail();
+        $this->assertProjectAclWhenProjectSet($request, $model->project_id);
 
         return response()->json([
             'data' => [
@@ -182,8 +206,10 @@ final class TaskController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $tenantId = $this->tenantId($request);
+        $tenantId = $this->requireTenantId($request);
         $this->assertTaskOwnedByTenant($request, $id);
+        $taskModel = TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->firstOrFail();
+        $this->assertProjectAclWhenProjectSet($request, $taskModel->project_id);
         $task = $this->tasks->findById($id);
         if ($task === null) {
             abort(404);
@@ -235,8 +261,10 @@ final class TaskController extends Controller
     public function updateStatus(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $tenantId = $this->tenantId($request);
+        $tenantId = $this->requireTenantId($request);
         $this->assertTaskOwnedByTenant($request, $id);
+        $taskModel = TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->firstOrFail();
+        $this->assertProjectAclWhenProjectSet($request, $taskModel->project_id);
         $task = $this->tasks->findById($id);
         if ($task === null) {
             abort(404);
@@ -275,7 +303,7 @@ final class TaskController extends Controller
     public function getDependencies(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $tenantId = $this->tenantId($request);
+        $tenantId = $this->requireTenantId($request);
         $this->assertTaskOwnedByTenant($request, $id);
         $task = $this->tasks->findById($id);
         if ($task === null) {
@@ -293,7 +321,7 @@ final class TaskController extends Controller
     public function updateDependencies(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $tenantId = $this->tenantId($request);
+        $tenantId = $this->requireTenantId($request);
         $this->assertTaskOwnedByTenant($request, $id);
         $task = $this->tasks->findById($id);
         if ($task === null) {
@@ -340,7 +368,7 @@ final class TaskController extends Controller
     public function schedulePreview(Request $request): JsonResponse
     {
         $this->assertFeatureEnabled();
-        $this->tenantId($request);
+        $this->requireTenantId($request);
         return response()->json([
             'data' => [
                 'message' => 'Schedule preview (planned). Use ScheduleCalculatorInterface.',

@@ -6,17 +6,22 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project as ProjectModel;
+use App\Models\ProjectAcl;
 use App\Models\Rfq;
 use App\Models\Task as TaskModel;
 use App\Services\Project\ProjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Nexus\Project\Enums\ProjectStatus;
 use Nexus\Project\ValueObjects\ProjectSummary;
 use Nexus\ProjectManagementOperations\ProjectManagementOperationsCoordinator;
 
 final class ProjectController extends Controller
 {
+    private const ACL_ROLES = ['owner', 'manager', 'contributor', 'viewer', 'client_stakeholder'];
+
     public function __construct(
         private readonly ProjectService $projects,
         private readonly ProjectManagementOperationsCoordinator $healthCoordinator,
@@ -327,21 +332,56 @@ final class ProjectController extends Controller
     public function getAcl(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
         $this->assertProjectOwnedByTenant($request, $id);
         if ($this->projects->findById($id) === null) {
             abort(404);
         }
-        return response()->json(['data' => ['roles' => []]]);
+        $rows = ProjectAcl::query()
+            ->where('tenant_id', $tenantId)
+            ->where('project_id', $id)
+            ->get(['user_id', 'role'])
+            ->map(fn (ProjectAcl $row) => ['user_id' => $row->user_id, 'role' => $row->role])
+            ->values()
+            ->all();
+        return response()->json(['data' => ['roles' => $rows]]);
     }
 
     public function updateAcl(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
         $this->assertProjectOwnedByTenant($request, $id);
         if ($this->projects->findById($id) === null) {
             abort(404);
         }
-        return response()->json(['data' => ['roles' => []]]);
+        $validated = $request->validate([
+            'roles' => 'required|array',
+            'roles.*.user_id' => ['required', 'string', 'distinct', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
+            'roles.*.role' => ['required', 'string', Rule::in(self::ACL_ROLES)],
+        ]);
+        DB::transaction(function () use ($id, $tenantId, $validated): void {
+            ProjectAcl::query()
+                ->where('tenant_id', $tenantId)
+                ->where('project_id', $id)
+                ->delete();
+            foreach ($validated['roles'] as $entry) {
+                ProjectAcl::query()->create([
+                    'project_id' => $id,
+                    'user_id' => $entry['user_id'],
+                    'role' => $entry['role'],
+                    'tenant_id' => $tenantId,
+                ]);
+            }
+        });
+        $rows = ProjectAcl::query()
+            ->where('tenant_id', $tenantId)
+            ->where('project_id', $id)
+            ->get(['user_id', 'role'])
+            ->map(fn (ProjectAcl $row) => ['user_id' => $row->user_id, 'role' => $row->role])
+            ->values()
+            ->all();
+        return response()->json(['data' => ['roles' => $rows]]);
     }
 }
 

@@ -10,16 +10,37 @@ import { useProject } from '@/hooks/use-project';
 import { useProjectHealth } from '@/hooks/use-project-health';
 import { useProjectRfqs } from '@/hooks/use-project-rfqs';
 import { useProjectTasks } from '@/hooks/use-project-tasks';
+import { useUpdateProject } from '@/hooks/use-update-project';
+import { useUpdateProjectStatus, PROJECT_STATUSES } from '@/hooks/use-update-project-status';
 
 export default function ProjectDetailPage() {
   const router = useRouter();
   const params = useParams<{ projectId: string }>();
   const projectId = params.projectId;
 
+  const [editMode, setEditMode] = React.useState(false);
+  const [editName, setEditName] = React.useState('');
+  const [editClientId, setEditClientId] = React.useState('');
+  const [editStartDate, setEditStartDate] = React.useState('');
+  const [editEndDate, setEditEndDate] = React.useState('');
+  const [editPmId, setEditPmId] = React.useState('');
+
   const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId);
   const { data: health, isLoading: healthLoading, isError: healthIsError, error: healthError } = useProjectHealth(projectId);
   const { data: rfqs = [], isLoading: rfqsLoading, isError: rfqsError } = useProjectRfqs(projectId);
   const { data: tasks = [], isLoading: tasksLoading, isError: tasksError } = useProjectTasks(projectId);
+  const updateProject = useUpdateProject(projectId);
+  const updateStatus = useUpdateProjectStatus(projectId);
+
+  React.useEffect(() => {
+    if (project && !editMode) {
+      setEditName(project.name ?? '');
+      setEditClientId(project.clientId ?? '');
+      setEditStartDate(project.startDate?.slice(0, 10) ?? '');
+      setEditEndDate(project.endDate?.slice(0, 10) ?? '');
+      setEditPmId('');
+    }
+  }, [project, editMode]);
 
   const isAxios404 = axios.isAxiosError(projectError) && projectError.response?.status === 404;
   const featureDisabledSignal =
@@ -73,11 +94,121 @@ export default function ProjectDetailPage() {
         title={projectLoading ? 'Project' : project?.name ?? 'Project'}
         subtitle={project?.status ? `Status: ${project.status}` : undefined}
         actions={
-          <Button size="sm" variant="secondary" onClick={() => router.push('/projects')}>
-            Back
-          </Button>
+          <div className="flex gap-2">
+            {!editMode ? (
+              <Button size="sm" variant="secondary" onClick={() => setEditMode(true)}>
+                Edit
+              </Button>
+            ) : null}
+            <Button size="sm" variant="secondary" onClick={() => router.push('/projects')}>
+              Back
+            </Button>
+          </div>
         }
       />
+
+      {editMode && project && (
+        <Card padding="md">
+          <h2 className="text-sm font-semibold text-slate-900 mb-3">Edit project</h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateProject.mutate(
+                {
+                  name: editName.trim(),
+                  client_id: editClientId.trim(),
+                  start_date: editStartDate || undefined,
+                  end_date: editEndDate || undefined,
+                  project_manager_id: editPmId.trim() || undefined,
+                },
+                { onSuccess: () => setEditMode(false) }
+              );
+            }}
+            className="space-y-3 max-w-md"
+          >
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Name</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Client ID</label>
+              <input
+                type="text"
+                value={editClientId}
+                onChange={(e) => setEditClientId(e.target.value)}
+                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Start date</label>
+              <input
+                type="date"
+                value={editStartDate}
+                onChange={(e) => setEditStartDate(e.target.value)}
+                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">End date</label>
+              <input
+                type="date"
+                value={editEndDate}
+                onChange={(e) => setEditEndDate(e.target.value)}
+                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Project manager ID</label>
+              <input
+                type="text"
+                value={editPmId}
+                onChange={(e) => setEditPmId(e.target.value)}
+                placeholder="Optional"
+                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" size="sm" variant="primary" disabled={updateProject.isPending}>
+                Save
+              </Button>
+              <Button type="button" size="sm" variant="secondary" onClick={() => setEditMode(false)}>
+                Cancel
+              </Button>
+            </div>
+            {updateProject.isError && (
+              <p className="text-xs text-red-600">{String((updateProject.error as Error)?.message)}</p>
+            )}
+          </form>
+        </Card>
+      )}
+
+      {!editMode && project && (
+        <Card padding="md">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs font-medium text-slate-600">Status</span>
+            <select
+              value={project.status ?? 'planning'}
+              onChange={(e) => {
+                const v = e.target.value as (typeof PROJECT_STATUSES)[number];
+                if (PROJECT_STATUSES.includes(v)) updateStatus.mutate(v);
+              }}
+              className="rounded border border-slate-300 px-2 py-1 text-sm"
+              disabled={updateStatus.isPending}
+            >
+              {PROJECT_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <Card padding="md">

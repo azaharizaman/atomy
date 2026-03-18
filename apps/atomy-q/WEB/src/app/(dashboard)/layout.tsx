@@ -6,6 +6,7 @@ import {
   LayoutPanelTop,
   FileText,
   FolderKanban,
+  ListTodo,
   FolderArchive,
   BarChart2,
   ShieldCheck,
@@ -92,6 +93,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             icon={<FolderKanban size={18} />}
             active={pathname.startsWith('/projects')}
             href="/projects"
+          />
+
+          <NavItem
+            label="Task Inbox"
+            icon={<ListTodo size={18} />}
+            active={pathname.startsWith('/tasks')}
+            href="/tasks"
           />
 
           <NavGroup
