@@ -11,6 +11,11 @@ export interface ProjectHealth {
   timeline?: { completionPercentage?: number; totalMilestones?: number; completedMilestones?: number };
 }
 
+function toNum(value: unknown): number | undefined {
+  const n = Number(value);
+  return Number.isNaN(n) ? undefined : n;
+}
+
 function normalizeHealth(payload: unknown): ProjectHealth {
   let raw = payload as Record<string, unknown> | null | undefined;
   while (raw?.data) raw = raw.data as Record<string, unknown>;
@@ -21,18 +26,18 @@ function normalizeHealth(payload: unknown): ProjectHealth {
 
   return {
     projectId: String(raw?.project_id ?? raw?.projectId ?? ''),
-    overallScore: (raw?.overall_score ?? (raw as Record<string, unknown>)?.overallScore) as number | undefined,
+    overallScore: toNum(raw?.overall_score ?? (raw as Record<string, unknown>)?.overallScore),
     labor: {
-      actualHours: (laborRaw.actual_hours ?? laborRaw.actualHours) as number | undefined,
-      healthPercentage: (laborRaw.health_percentage ?? laborRaw.healthPercentage) as number | undefined,
+      actualHours: toNum(laborRaw.actual_hours ?? laborRaw.actualHours),
+      healthPercentage: toNum(laborRaw.health_percentage ?? laborRaw.healthPercentage),
     },
     expense: {
-      healthPercentage: (expenseRaw.health_percentage ?? expenseRaw.healthPercentage) as number | undefined,
+      healthPercentage: toNum(expenseRaw.health_percentage ?? expenseRaw.healthPercentage),
     },
     timeline: {
-      completionPercentage: (timelineRaw.completion_percentage ?? timelineRaw.completionPercentage) as number | undefined,
-      totalMilestones: (timelineRaw.total_milestones ?? timelineRaw.totalMilestones) as number | undefined,
-      completedMilestones: (timelineRaw.completed_milestones ?? timelineRaw.completedMilestones) as number | undefined,
+      completionPercentage: toNum(timelineRaw.completion_percentage ?? timelineRaw.completionPercentage),
+      totalMilestones: toNum(timelineRaw.total_milestones ?? timelineRaw.totalMilestones),
+      completedMilestones: toNum(timelineRaw.completed_milestones ?? timelineRaw.completedMilestones),
     },
   };
 }

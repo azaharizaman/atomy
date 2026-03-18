@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
       toast.success('Password updated successfully');
     } catch (err: unknown) {
       const axiosish = err as { response?: { status?: number; data?: Record<string, unknown> } };
-      if (useMocks || axiosish?.response?.status === 501 || axiosish?.response?.status === 404) {
+      if (axiosish?.response?.status === 501 || axiosish?.response?.status === 404) {
         setStatus('done');
         toast.success('Password updated (simulated)');
         return;

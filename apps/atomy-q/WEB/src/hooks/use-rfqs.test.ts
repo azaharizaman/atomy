@@ -1,13 +1,24 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createTestWrapper } from '@/test/utils';
-
-// Ensure the hook runs in seed/mock mode.
-process.env.NEXT_PUBLIC_USE_MOCKS = 'true';
 
 import { useRfqs } from '@/hooks/use-rfqs';
 
 describe('useRfqs (seed fallback)', () => {
+  const originalMocks = process.env.NEXT_PUBLIC_USE_MOCKS;
+
+  beforeAll(() => {
+    process.env.NEXT_PUBLIC_USE_MOCKS = 'true';
+  });
+
+  afterAll(() => {
+    if (originalMocks === undefined) {
+      delete process.env.NEXT_PUBLIC_USE_MOCKS;
+    } else {
+      process.env.NEXT_PUBLIC_USE_MOCKS = originalMocks;
+    }
+  });
+
   it('filters by projectId when provided', async () => {
     const { Wrapper } = createTestWrapper();
     const { result } = renderHook(() => useRfqs({ projectId: '01JNE4ZHT9S0VQ7E2GQW1QYJ7B' }), { wrapper: Wrapper });

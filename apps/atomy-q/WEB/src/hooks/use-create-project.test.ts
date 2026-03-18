@@ -15,7 +15,7 @@ import { api } from '@/lib/api';
 
 describe('useCreateProject', () => {
   it('throws when API returns missing required fields', async () => {
-    (api.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    vi.mocked(api.post).mockResolvedValueOnce({
       data: { data: { id: 'p1' } },
     });
 
@@ -35,7 +35,7 @@ describe('useCreateProject', () => {
   });
 
   it('returns mapped result when payload is valid', async () => {
-    (api.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    vi.mocked(api.post).mockResolvedValueOnce({
       data: {
         data: {
           id: 'p1',

@@ -151,9 +151,9 @@ async function stubTasksApi(page: import('@playwright/test').Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await stubAuth(page);
   await stubProjectsApi(page);
   await stubTasksApi(page);
+  await stubAuth(page);
 });
 
 const screens: Array<{ path: string; heading: RegExp }> = [

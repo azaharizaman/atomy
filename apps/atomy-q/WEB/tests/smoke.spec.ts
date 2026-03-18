@@ -94,7 +94,7 @@ test('smoke: Projects list and detail load (stubbed API)', async ({ page }) => {
     end_date: '2026-02-01',
   };
 
-  await page.route('**/api/v1/projects', async (route) => {
+  await page.route('**/api/v1/projects*', async (route) => {
     const corsHeaders = buildCorsHeaders(origin);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
@@ -179,7 +179,7 @@ test('smoke: Tasks inbox loads and drawer opens (stubbed API)', async ({ page })
   let origin = 'http://localhost:3000';
   const task = { id: 'task-1', title: 'Smoke Task', status: 'pending', due_date: null, project_id: null };
 
-  await page.route('**/api/v1/tasks', async (route) => {
+  await page.route('**/api/v1/tasks*', async (route) => {
     const corsHeaders = buildCorsHeaders(origin);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });

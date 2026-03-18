@@ -43,13 +43,12 @@ export default function ProjectDetailPage() {
   }, [project, editMode]);
 
   const isAxios404 = axios.isAxiosError(projectError) && projectError.response?.status === 404;
-  const featureDisabledSignal =
-    axios.isAxiosError(projectError) &&
-    (() => {
-      const data = projectError.response?.data;
-      const obj = data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
-      return obj?.code === 'projects_not_enabled';
-    })();
+  const projectErrorData = axios.isAxiosError(projectError) ? projectError.response?.data : undefined;
+  const projectErrorObj =
+    projectErrorData != null && typeof projectErrorData === 'object' && !Array.isArray(projectErrorData)
+      ? (projectErrorData as Record<string, unknown>)
+      : null;
+  const featureDisabledSignal = axios.isAxiosError(projectError) && projectErrorObj?.code === 'projects_not_enabled';
 
   if (projectError && !featureDisabledSignal && !isAxios404) {
     return (
@@ -186,7 +185,7 @@ export default function ProjectDetailPage() {
               </Button>
             </div>
             {updateProject.isError && (
-              <p className="text-xs text-red-600">{String((updateProject.error as Error)?.message)}</p>
+              <p className="text-xs text-red-600">{String((updateProject.error as Error | null)?.message ?? '')}</p>
             )}
           </form>
         </Card>

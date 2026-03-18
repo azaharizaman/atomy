@@ -34,11 +34,11 @@ export default function NewRfqPage() {
       const axiosish = e as { response?: { data?: Record<string, unknown> } } & { message?: string };
       const data = axiosish?.response?.data;
       const msgRaw =
-        (data?.error ?? data?.message) ??
+        (typeof data?.error === 'string' && data.error.trim() ? data.error : null) ??
+        (typeof data?.message === 'string' && data.message.trim() ? data.message : null) ??
         (data?.errors ? 'Validation failed' : null) ??
-        axiosish?.message ??
-        'Failed to create RFQ';
-      setError(String(msgRaw));
+        (typeof axiosish?.message === 'string' && axiosish.message.trim() ? axiosish.message : null);
+      setError(msgRaw && String(msgRaw).trim() ? String(msgRaw) : 'Failed to create RFQ');
     } finally {
       setIsSubmitting(false);
     }

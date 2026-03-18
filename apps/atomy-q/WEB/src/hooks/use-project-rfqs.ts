@@ -11,9 +11,16 @@ export interface ProjectRfqListItem {
 }
 
 function normalize(payload: unknown): ProjectRfqListItem[] {
-  const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
-  const list = (Array.isArray(payload) ? payload : obj?.data) ?? [];
-  if (!Array.isArray(list)) return [];
+  let current: unknown = payload;
+  while (current != null && typeof current === 'object' && !Array.isArray(current)) {
+    const obj = current as Record<string, unknown>;
+    if (Object.prototype.hasOwnProperty.call(obj, 'data')) {
+      current = obj.data;
+    } else {
+      break;
+    }
+  }
+  const list = Array.isArray(current) ? current : [];
   return list
     .filter((r: unknown): r is Record<string, unknown> => !!r && typeof r === 'object')
     .map((r) => ({

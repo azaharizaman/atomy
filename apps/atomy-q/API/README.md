@@ -118,16 +118,16 @@ From `apps/atomy-q/API`:
    composer install
    ```
 
-2. Ensure a database is available for tests.
+2. Ensure a **dedicated test database** is available (do not use your development DB).
 
    This project’s `phpunit.xml` uses `DB_CONNECTION=pgsql` with:
    - `DB_HOST=127.0.0.1`
    - `DB_PORT=5433`
-   - `DB_DATABASE=atomy_dev`
+   - `DB_DATABASE=atomy_test`
    - `DB_USERNAME=postgres`
    - `DB_PASSWORD=secret`
 
-   Update `apps/atomy-q/API/.env` if your local Postgres config differs.
+   Create a separate database (e.g. `atomy_test`) and set these in `apps/atomy-q/API/.env` (or rely on `phpunit.xml`) so tests never run against production or shared dev data.
 
 3. Run all tests
    ```bash

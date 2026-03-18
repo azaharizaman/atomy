@@ -57,8 +57,15 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   if (list.length === 0) return [];
 
   return list.map((raw: unknown) => {
-    const r = raw as Record<string, unknown>;
-    const owner = (r.owner ?? null) as Record<string, unknown> | null;
+    const r =
+      raw != null && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+    const ownerRaw = r.owner;
+    const owner =
+      ownerRaw != null && typeof ownerRaw === 'object' && !Array.isArray(ownerRaw)
+        ? (ownerRaw as Record<string, unknown>)
+        : null;
+    const vendorsNum = Number(r.vendorsCount ?? r.vendors_count);
+    const quotesNum = Number(r.quotesCount ?? r.quotes_count);
 
     return {
       id: String(r.id ?? r.rfqId ?? r.code ?? ''),
@@ -66,15 +73,15 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
       status: isValidRfqStatus(r.status) ? r.status : RFQ_STATUSES.ACTIVE,
       owner: owner
         ? { name: String(owner.name ?? ''), email: String(owner.email ?? '') }
-        : r.owner_name || r.owner_email
+        : r.owner_name != null || r.owner_email != null
           ? { name: String(r.owner_name ?? ''), email: String(r.owner_email ?? '') }
           : undefined,
       deadline: (r.deadline ?? r.submissionDeadline ?? r.deadlineLabel) as string | undefined,
       category: r.category as string | undefined,
       estValue: (r.estValue ?? r.estimated_value ?? r.estimatedValue) as string | undefined,
       savings: r.savings as string | undefined,
-      vendorsCount: (r.vendorsCount ?? r.vendors_count) as number | undefined,
-      quotesCount: (r.quotesCount ?? r.quotes_count) as number | undefined,
+      vendorsCount: Number.isNaN(vendorsNum) ? undefined : vendorsNum,
+      quotesCount: Number.isNaN(quotesNum) ? undefined : quotesNum,
       projectId: (r.project_id ?? r.projectId ?? null) as string | null,
     };
   });

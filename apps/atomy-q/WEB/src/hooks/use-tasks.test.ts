@@ -15,7 +15,7 @@ import { api } from '@/lib/api';
 
 describe('useTasks', () => {
   it('passes assignee_id param through to API', async () => {
-    (api.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    vi.mocked(api.get).mockResolvedValueOnce({
       data: { data: [] },
     });
 
@@ -30,7 +30,7 @@ describe('useTasks', () => {
   });
 
   it('filters locally by status when params.status is set', async () => {
-    (api.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    vi.mocked(api.get).mockResolvedValueOnce({
       data: {
         data: [
           { id: 't1', title: 'A', status: 'pending' },
@@ -47,6 +47,7 @@ describe('useTasks', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data?.map((t) => t.id)).toEqual(['t2']);
+    expect(api.get).toHaveBeenCalledWith('/tasks', { params: { status: 'completed' } });
   });
 });
 

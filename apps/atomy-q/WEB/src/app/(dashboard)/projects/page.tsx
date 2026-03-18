@@ -183,7 +183,7 @@ export default function ProjectsPage() {
               </Button>
             </div>
             {createProject.isError && (
-              <p className="text-xs text-red-600">{String((createProject.error as Error)?.message)}</p>
+              <p className="text-xs text-red-600">{String((createProject.error as Error | null)?.message ?? '')}</p>
             )}
           </form>
         </Card>
