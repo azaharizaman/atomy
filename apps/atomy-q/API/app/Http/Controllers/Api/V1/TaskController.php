@@ -53,6 +53,18 @@ final class TaskController extends Controller
         return $id;
     }
 
+    private function assertTaskOwnedByTenant(Request $request, string $taskId): void
+    {
+        $tenantId = $this->tenantId($request);
+        $model = TaskModel::query()->where('id', $taskId)->first();
+        if ($model === null) {
+            abort(404);
+        }
+        if ($model->tenant_id !== $tenantId) {
+            abort(403, 'Access forbidden');
+        }
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->assertFeatureEnabled();
@@ -137,6 +149,7 @@ final class TaskController extends Controller
     {
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
+        $this->assertTaskOwnedByTenant($request, $id);
 
         $task = $this->tasks->findById($id);
         if ($task === null) {
@@ -168,11 +181,9 @@ final class TaskController extends Controller
     {
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
+        $this->assertTaskOwnedByTenant($request, $id);
         $task = $this->tasks->findById($id);
         if ($task === null) {
-            abort(404);
-        }
-        if (! TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->exists()) {
             abort(404);
         }
 
@@ -223,11 +234,9 @@ final class TaskController extends Controller
     {
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
+        $this->assertTaskOwnedByTenant($request, $id);
         $task = $this->tasks->findById($id);
         if ($task === null) {
-            abort(404);
-        }
-        if (! TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->exists()) {
             abort(404);
         }
 
@@ -265,11 +274,9 @@ final class TaskController extends Controller
     {
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
+        $this->assertTaskOwnedByTenant($request, $id);
         $task = $this->tasks->findById($id);
         if ($task === null) {
-            abort(404);
-        }
-        if (! TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->exists()) {
             abort(404);
         }
         $predecessors = $this->taskQuery->getPredecessorIds($id);
@@ -285,11 +292,9 @@ final class TaskController extends Controller
     {
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
+        $this->assertTaskOwnedByTenant($request, $id);
         $task = $this->tasks->findById($id);
         if ($task === null) {
-            abort(404);
-        }
-        if (! TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->exists()) {
             abort(404);
         }
 

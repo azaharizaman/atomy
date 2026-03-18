@@ -443,3 +443,28 @@ git commit -m "test: guard RFQ flows against project_id regressions"
 - **Controller error mapping**: map domain/validation failures to \(4xx\) responses (e.g., circular task dependencies -> 422) and log unexpected exceptions.
 - **Minimal logs**: log project creation/update, task creation/update, and project/task association changes with tenant + ids for debugging.
 
+---
+
+## Status (implementation)
+
+- **Task 1 (COMPLETED)**: Optional RFQ `project_id` persisted as ULID; API includes `project_id`.
+  - **Files**: `apps/atomy-q/API/database/migrations/2026_03_17_000001_add_project_id_to_rfqs_table.php`, `apps/atomy-q/API/app/Models/Rfq.php`, `apps/atomy-q/API/app/Http/Resources/RfqResource.php`
+  - **Tests**: `apps/atomy-q/API/tests/Feature/RfqProjectIdTest.php`
+- **Task 2 (COMPLETED)**: Nexus Project contracts bound in Laravel container.
+  - **Files**: `apps/atomy-q/API/app/Providers/AppServiceProvider.php`, `apps/atomy-q/API/app/Services/Project/*`
+  - **Tests**: `apps/atomy-q/API/tests/Unit/Services/NexusProjectBindingsTest.php`
+- **Task 3 (COMPLETED)**: Nexus Task contracts bound in Laravel container.
+  - **Files**: `apps/atomy-q/API/app/Providers/AppServiceProvider.php`, `apps/atomy-q/API/app/Services/Task/*`
+  - **Tests**: `apps/atomy-q/API/tests/Unit/Services/NexusTaskBindingsTest.php`
+- **Task 4 (COMPLETED)**: ProjectManagementOperations wiring + required app contract for project task ids.
+  - **Files**: `orchestrators/ProjectManagementOperations/src/Contracts/ProjectTaskIdsQueryInterface.php`, `apps/atomy-q/API/app/Services/ProjectManagementOperations/AtomyProjectTaskIdsQuery.php`, `apps/atomy-q/API/app/Providers/AppServiceProvider.php`
+  - **Tests**: `apps/atomy-q/API/tests/Unit/ProjectManagementOperationsLaravelWiringTest.php`, `orchestrators/ProjectManagementOperations/tests/Unit/LaravelAdapterWiringTest.php`
+- **Task 5 (COMPLETED)**: Feature-flagged Projects/Tasks endpoints covered with strict failure-path assertions (401/404/403/422); cross-tenant is enforced as 403.
+  - **Files**: `apps/atomy-q/API/app/Http/Controllers/Api/V1/ProjectController.php`, `apps/atomy-q/API/app/Http/Controllers/Api/V1/TaskController.php`, `apps/atomy-q/API/routes/api.php`, `apps/atomy-q/API/config/features.php`
+  - **Tests**: `apps/atomy-q/API/tests/Feature/ProjectsApiTest.php`, `apps/atomy-q/API/tests/Feature/TasksApiTest.php`
+- **Task 6 (COMPLETED)**: API endpoints doc includes Sections 28/29 and is covered by a documentation test.
+  - **Files**: `apps/atomy-q/API_ENDPOINTS.md`
+  - **Tests**: `apps/atomy-q/API/tests/Documentation/ApiEndpointsProjectsTasksTest.php`
+- **Task 7 (COMPLETED)**: RFQ regression tests added for optional `project_id`.
+  - **Tests**: `apps/atomy-q/API/tests/Feature/RfqRegressionForProjectsTest.php`
+

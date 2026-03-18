@@ -12,6 +12,7 @@ use App\Services\Project\AtomyProjectQuery;
 use App\Services\ProjectManagementOperations\AtomyExpenseHealthService;
 use App\Services\ProjectManagementOperations\AtomyLaborHealthService;
 use App\Services\ProjectManagementOperations\AtomyMilestoneBillingService;
+use App\Services\ProjectManagementOperations\AtomyProjectTaskIdsQuery;
 use App\Services\ProjectManagementOperations\AtomyTimelineDriftService;
 use App\Services\Task\AtomyTaskPersist;
 use App\Services\Task\AtomyTaskQuery;
@@ -28,6 +29,7 @@ use Nexus\Task\Services\TaskManager;
 use Nexus\ProjectManagementOperations\Contracts\ExpenseHealthServiceInterface;
 use Nexus\ProjectManagementOperations\Contracts\LaborHealthServiceInterface;
 use Nexus\ProjectManagementOperations\Contracts\MilestoneBillingServiceInterface;
+use Nexus\ProjectManagementOperations\Contracts\ProjectTaskIdsQueryInterface;
 use Nexus\ProjectManagementOperations\Contracts\TimelineDriftServiceInterface;
 use Nexus\ProjectManagementOperations\ProjectManagementOperationsCoordinator;
 use Nexus\Task\Contracts\TaskManagerInterface;
@@ -78,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ExpenseHealthServiceInterface::class, AtomyExpenseHealthService::class);
         $this->app->bind(TimelineDriftServiceInterface::class, AtomyTimelineDriftService::class);
         $this->app->bind(MilestoneBillingServiceInterface::class, AtomyMilestoneBillingService::class);
+        $this->app->bind(ProjectTaskIdsQueryInterface::class, AtomyProjectTaskIdsQuery::class);
         $this->app->singleton(ProjectManagementOperationsCoordinator::class);
     }
 

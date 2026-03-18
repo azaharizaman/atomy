@@ -43,13 +43,12 @@ final class ProjectController extends Controller
     {
         $tenantId = $this->tenantId($request);
 
-        $exists = ProjectModel::query()
-            ->where('tenant_id', $tenantId)
-            ->where('id', $projectId)
-            ->exists();
-
-        if (! $exists) {
+        $project = ProjectModel::query()->where('id', $projectId)->first();
+        if ($project === null) {
             abort(404);
+        }
+        if ($project->tenant_id !== $tenantId) {
+            abort(403, 'Access forbidden');
         }
     }
 
