@@ -35,7 +35,7 @@ final class RfqController extends Controller
         }
         $tenantId = $this->tenantId($request);
         $userId = $this->userId($request);
-        if (! $this->projectAcl->userCanAccessProject($tenantId, $userId, $projectId)) {
+        if (! $this->projectAcl->userCanViewProject($tenantId, $userId, $projectId)) {
             abort(404, 'Not found');
         }
     }

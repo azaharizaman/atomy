@@ -12,6 +12,8 @@ import { useProjectRfqs } from '@/hooks/use-project-rfqs';
 import { useProjectTasks } from '@/hooks/use-project-tasks';
 import { useUpdateProject } from '@/hooks/use-update-project';
 import { useUpdateProjectStatus, PROJECT_STATUSES } from '@/hooks/use-update-project-status';
+import { useProjectAcl, type ProjectAclEntry, type ProjectAclRole } from '@/hooks/use-project-acl';
+import { useUpdateProjectAcl } from '@/hooks/use-update-project-acl';
 
 export default function ProjectDetailPage() {
   const router = useRouter();
@@ -29,8 +31,13 @@ export default function ProjectDetailPage() {
   const { data: health, isLoading: healthLoading, isError: healthIsError, error: healthError } = useProjectHealth(projectId);
   const { data: rfqs = [], isLoading: rfqsLoading, isError: rfqsError } = useProjectRfqs(projectId);
   const { data: tasks = [], isLoading: tasksLoading, isError: tasksError } = useProjectTasks(projectId);
+  const { data: acl = [], isLoading: aclLoading, isError: aclIsError, error: aclError } = useProjectAcl(projectId);
   const updateProject = useUpdateProject(projectId);
   const updateStatus = useUpdateProjectStatus(projectId);
+  const updateAcl = useUpdateProjectAcl(projectId);
+
+  const [aclDraft, setAclDraft] = React.useState<ProjectAclEntry[]>([]);
+  const [aclDirty, setAclDirty] = React.useState(false);
 
   React.useEffect(() => {
     if (project && !editMode) {
@@ -41,6 +48,12 @@ export default function ProjectDetailPage() {
       setEditPmId('');
     }
   }, [project, editMode]);
+
+  React.useEffect(() => {
+    if (!aclDirty) {
+      setAclDraft(acl);
+    }
+  }, [acl, aclDirty]);
 
   const isAxios404 = axios.isAxiosError(projectError) && projectError.response?.status === 404;
   const projectErrorData = axios.isAxiosError(projectError) ? projectError.response?.data : undefined;
@@ -355,6 +368,103 @@ export default function ProjectDetailPage() {
           </div>
         </Card>
       </div>
+
+      <Card padding="md">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-slate-900">Project access</div>
+            <div className="text-xs text-slate-500 mt-0.5">Manage who can view or work on this project.</div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                setAclDraft((prev) => [...prev, { userId: '', role: 'viewer' }]);
+                setAclDirty(true);
+              }}
+            >
+              Add user
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={!aclDirty || updateAcl.isPending}
+              onClick={() => {
+                const normalized = aclDraft
+                  .map((e) => ({ userId: e.userId.trim(), role: e.role }))
+                  .filter((e) => e.userId !== '');
+                updateAcl.mutate(normalized, {
+                  onSuccess: () => setAclDirty(false),
+                });
+              }}
+            >
+              Save access
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-2">
+          {aclLoading ? (
+            <div className="text-sm text-slate-500 animate-pulse">Loading access…</div>
+          ) : aclIsError ? (
+            <div className="text-sm text-red-600">Failed to load access. {String((aclError as Error | null)?.message ?? '')}</div>
+          ) : aclDraft.length === 0 ? (
+            <div className="text-sm text-slate-500">No users have access yet.</div>
+          ) : (
+            <div className="space-y-2">
+              {aclDraft.map((entry, idx) => {
+                const role = entry.role;
+                return (
+                  <div key={`${entry.userId}-${idx}`} className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                    <input
+                      aria-label={`User ID ${idx + 1}`}
+                      value={entry.userId}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setAclDraft((prev) => prev.map((p, i) => (i === idx ? { ...p, userId: v } : p)));
+                        setAclDirty(true);
+                      }}
+                      placeholder="User ID"
+                      className="flex-1 rounded border border-slate-300 px-2 py-1.5 text-sm"
+                    />
+                    <select
+                      aria-label={`Role ${idx + 1}`}
+                      value={role}
+                      onChange={(e) => {
+                        const v = e.target.value as ProjectAclRole;
+                        setAclDraft((prev) => prev.map((p, i) => (i === idx ? { ...p, role: v } : p)));
+                        setAclDirty(true);
+                      }}
+                      className="rounded border border-slate-300 px-2 py-1.5 text-sm"
+                    >
+                      {(['owner', 'manager', 'contributor', 'viewer', 'client_stakeholder'] as ProjectAclRole[]).map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setAclDraft((prev) => prev.filter((_, i) => i !== idx));
+                        setAclDirty(true);
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {updateAcl.isError ? (
+            <div className="text-xs text-red-600 mt-2">{String((updateAcl.error as Error | null)?.message ?? '')}</div>
+          ) : null}
+        </div>
+      </Card>
     </div>
   );
 }

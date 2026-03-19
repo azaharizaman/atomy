@@ -67,7 +67,7 @@ final class TaskController extends Controller
         }
         $tenantId = $this->requireTenantId($request);
         $userId = $this->requireUserId($request);
-        if (! $this->projectAcl->userCanAccessProject($tenantId, $userId, $projectId)) {
+        if (! $this->projectAcl->userCanViewProject($tenantId, $userId, $projectId)) {
             abort(404, 'Not found');
         }
     }
