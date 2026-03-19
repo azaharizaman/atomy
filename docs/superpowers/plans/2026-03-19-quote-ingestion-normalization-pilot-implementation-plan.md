@@ -257,7 +257,7 @@ git commit -m "feat(api): persist tenant-scoped quote submission workflow"
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/NormalizationController.php`
 - Test: `apps/atomy-q/API/tests/Feature/NormalizationReviewWorkflowTest.php`
 
-- [ ] **Step 1: Write failing tests for source-line issue states and conflict resolution**
+- [x] **Step 1: Write failing tests for source-line issue states and conflict resolution**
 
 ```php
 public function test_normalization_conflict_resolution_marks_submission_ready_only_when_no_blockers_remain(): void
@@ -282,12 +282,12 @@ public function test_submission_stays_in_needs_review_when_required_line_is_unma
 }
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter=NormalizationReviewWorkflowTest`
 Expected: FAIL
 
-- [ ] **Step 3: Implement a single readiness service**
+- [x] **Step 3: Implement a single readiness service**
 
 ```php
 final readonly class QuoteSubmissionReadinessService
@@ -311,7 +311,7 @@ Centralize all blocking rules here:
 - invalid UOM overrides
 - unresolved conflicts
 
-- [ ] **Step 4: Update `NormalizationController` to use the readiness service after every mutation**
+- [x] **Step 4: Update `NormalizationController` to use the readiness service after every mutation**
 
 After override, bulk mapping, revert, or conflict resolution:
 
@@ -319,7 +319,7 @@ After override, bulk mapping, revert, or conflict resolution:
 2. persist the correct status
 3. return machine-readable metadata
 
-- [ ] **Step 5: Re-run the tests**
+- [x] **Step 5: Re-run the tests**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter=NormalizationReviewWorkflowTest`
 Expected: PASS
@@ -327,7 +327,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add apps/atomy-q/API/app/Services/QuoteIntake/QuoteSubmissionReadinessService.php apps/atomy-q/API/app/Models/NormalizationSourceLine.php apps/atomy-q/API/app/Models/NormalizationConflict.php apps/atomy-q/API/app/Http/Controllers/Api/V1/NormalizationController.php apps/atomy-q/API/tests/Feature/NormalizationReviewWorkflowTest.php
+git add apps/atomy-q/API/app/Services/QuoteIntake/QuoteSubmissionReadinessService.php apps/atomy-q/API/app/Models/NormalizationSourceLine.php apps/atomy-q/API/app/Models/NormalizationConflict.php apps/atomy-q/API/app/Http/Controllers/Api/V1/NormalizationController.php apps/atomy-q/API/tests/Feature/NormalizationReviewWorkflowTest.php apps/atomy-q/API/tests/Unit/Models/ModelRelationsTest.php apps/atomy-q/API/IMPLEMENTATION_SUMMARY.md docs/superpowers/plans/2026-03-19-quote-ingestion-normalization-pilot-implementation-plan.md
 git commit -m "feat(api): add normalization review readiness gating"
 ```
 
@@ -340,7 +340,7 @@ git commit -m "feat(api): add normalization review readiness gating"
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/ApprovalController.php`
 - Test: `apps/atomy-q/API/tests/Feature/ComparisonSnapshotWorkflowTest.php`
 
-- [ ] **Step 1: Write failing tests for frozen snapshot behavior**
+- [x] **Step 1: Write failing tests for frozen snapshot behavior**
 
 ```php
 public function test_final_comparison_run_captures_snapshot_inputs(): void
@@ -365,12 +365,12 @@ public function test_approval_cannot_proceed_when_submission_has_blocking_issues
 }
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter=ComparisonSnapshotWorkflowTest`
 Expected: FAIL
 
-- [ ] **Step 3: Implement snapshot freezing service**
+- [x] **Step 3: Implement snapshot freezing service**
 
 ```php
 final readonly class ComparisonSnapshotService
@@ -397,12 +397,12 @@ Persist immutable snapshot payload on the comparison run record or a dedicated J
 - normalization remains unlocked with blocking issues
 - required vendor minimums are not met
 
-- [ ] **Step 5: Re-run the tests**
+- [x] **Step 5: Re-run the tests**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter=ComparisonSnapshotWorkflowTest`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit** (see [Pilot batch commit](#pilot-batch-commit-2026-03-20) — single squashed commit for tasks 4–8)
 
 ```bash
 git add apps/atomy-q/API/app/Services/QuoteIntake/ComparisonSnapshotService.php apps/atomy-q/API/app/Models/ComparisonRun.php apps/atomy-q/API/app/Http/Controllers/Api/V1/ComparisonRunController.php apps/atomy-q/API/app/Http/Controllers/Api/V1/ApprovalController.php apps/atomy-q/API/tests/Feature/ComparisonSnapshotWorkflowTest.php
@@ -410,6 +410,8 @@ git commit -m "feat(api): freeze comparison snapshots before approval"
 ```
 
 ## Task 5: Record Decision Trail Events For Upload, Review, Freeze, And Manual Assist
+
+> **Implemented:** `comparison_snapshot_frozen` on final freeze + decision trail index/show. Other event types from the plan remain **deferred** (schema requires `comparison_run_id`; no nullable migration added).
 
 **Files:**
 - Create: `apps/atomy-q/API/app/Services/QuoteIntake/DecisionTrailRecorder.php`
@@ -434,12 +436,12 @@ public function test_freezing_a_snapshot_writes_decision_trail_entry(): void
 }
 ```
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter=ComparisonSnapshotWorkflowTest`
 Expected: FAIL
 
-- [ ] **Step 3: Implement a small recorder service and call it from mutation points**
+- [x] **Step 3: Implement a small recorder service and call it from mutation points**
 
 Write entries for:
 
@@ -452,11 +454,11 @@ Write entries for:
 
 Keep payloads tenant-safe and machine-readable.
 
-- [ ] **Step 4: Verify decision trail read APIs expose the new events**
+- [x] **Step 4: Verify decision trail read APIs expose the new events**
 
 Extend the read response shape only as needed. Do not create a second audit endpoint.
 
-- [ ] **Step 5: Re-run the tests**
+- [x] **Step 5: Re-run the tests**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter=ComparisonSnapshotWorkflowTest`
 Expected: PASS
@@ -475,14 +477,14 @@ git commit -m "feat(api): audit quote intake review and freeze events"
 - Create: `apps/atomy-q/WEB/src/hooks/use-normalization-review.ts`
 - Create: `apps/atomy-q/WEB/src/hooks/use-comparison-readiness.ts`
 - Create: `apps/atomy-q/WEB/src/hooks/use-freeze-comparison.ts`
-- Create: `apps/atomy-q/WEB/src/hooks/use-quote-submission.test.ts`
+- Create: `apps/atomy-q/WEB/src/hooks/use-quote-submission.test.tsx`
 - Create: `apps/atomy-q/WEB/src/hooks/use-normalization-review.test.ts`
 - Modify: `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.tsx`
 - Modify: `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/page.tsx`
 - Modify: `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.tsx`
 - Test: `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx`
 
-- [ ] **Step 1: Write failing hook and page tests**
+- [x] **Step 1: Write failing hook and page tests**
 
 ```tsx
 it('shows blocking issues before allowing freeze', async () => {
@@ -493,12 +495,12 @@ it('shows blocking issues before allowing freeze', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the WEB tests**
+- [x] **Step 2: Run the WEB tests**
 
 Run: `cd apps/atomy-q/WEB && npm run test:unit -- normalize/page.test.tsx use-normalization-review.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: Implement focused hooks around the API contract**
+- [x] **Step 3: Implement focused hooks around the API contract**
 
 Expose:
 
@@ -511,7 +513,7 @@ Expose:
 
 Prefer thin hooks over in-page fetch logic.
 
-- [ ] **Step 4: Update the quote-intake UI to be exception-first**
+- [x] **Step 4: Update the quote-intake UI to be exception-first**
 
 Required UX changes:
 
@@ -521,15 +523,15 @@ Required UX changes:
 - freeze CTA disabled until blockers are resolved
 - manual-assist action visible only when automation is blocked
 
-- [ ] **Step 5: Re-run the WEB tests**
+- [x] **Step 5: Re-run the WEB tests**
 
 Run: `cd apps/atomy-q/WEB && npm run test:unit -- normalize/page.test.tsx use-normalization-review.test.ts`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit** (see [Pilot batch commit](#pilot-batch-commit-2026-03-20))
 
 ```bash
-git add apps/atomy-q/WEB/src/hooks/use-quote-submission.ts apps/atomy-q/WEB/src/hooks/use-normalization-review.ts apps/atomy-q/WEB/src/hooks/use-comparison-readiness.ts apps/atomy-q/WEB/src/hooks/use-freeze-comparison.ts apps/atomy-q/WEB/src/hooks/use-quote-submission.test.ts apps/atomy-q/WEB/src/hooks/use-normalization-review.test.ts "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.tsx" "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/page.tsx" "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.tsx" "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx"
+git add apps/atomy-q/WEB/src/hooks/use-quote-submission.ts apps/atomy-q/WEB/src/hooks/use-normalization-review.ts apps/atomy-q/WEB/src/hooks/use-comparison-readiness.ts apps/atomy-q/WEB/src/hooks/use-freeze-comparison.ts apps/atomy-q/WEB/src/hooks/use-quote-submission.test.tsx apps/atomy-q/WEB/src/hooks/use-normalization-review.test.ts "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.tsx" "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/page.tsx" "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.tsx" "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx"
 git commit -m "feat(web): add exception-first normalization review flow"
 ```
 
@@ -543,7 +545,7 @@ git commit -m "feat(web): add exception-first normalization review flow"
 - Test: `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.test.tsx`
 - Test: `apps/atomy-q/WEB/tests/rfq-lifecycle-e2e.spec.ts`
 
-- [ ] **Step 1: Write failing tests for snapshot status and readiness visibility**
+- [x] **Step 1: Write failing tests for snapshot status and readiness visibility**
 
 ```tsx
 it('shows snapshot frozen status and decision trail link', async () => {
@@ -554,12 +556,12 @@ it('shows snapshot frozen status and decision trail link', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the WEB tests**
+- [x] **Step 2: Run the WEB tests**
 
 Run: `cd apps/atomy-q/WEB && npm run test:unit -- comparison-runs/page.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement comparison run summary and frozen-state UI**
+- [x] **Step 3: Implement comparison run summary and frozen-state UI**
 
 Show:
 
@@ -569,7 +571,7 @@ Show:
 - included vendor count
 - direct path to decision trail evidence
 
-- [ ] **Step 4: Add or update an end-to-end workflow test**
+- [x] **Step 4: Add or update an end-to-end workflow test**
 
 Drive a mocked flow:
 
@@ -583,7 +585,7 @@ Drive a mocked flow:
 Run: `cd apps/atomy-q/WEB && npm run test:unit -- comparison-runs/page.test.tsx && npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit** (see [Pilot batch commit](#pilot-batch-commit-2026-03-20))
 
 ```bash
 git add "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.tsx" "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/[runId]/page.tsx" "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/decision-trail/page.tsx" apps/atomy-q/WEB/src/hooks/use-rfq-overview.ts "apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.test.tsx" apps/atomy-q/WEB/tests/rfq-lifecycle-e2e.spec.ts
@@ -602,7 +604,7 @@ git commit -m "feat(web): surface frozen comparison readiness and audit state"
 - Test: `apps/atomy-q/API/tests/Feature/ComparisonSnapshotWorkflowTest.php`
 - Test: `apps/atomy-q/WEB/tests/rfq-workflow.spec.ts`
 
-- [ ] **Step 1: Write a failing regression expectation for seeded ready-to-freeze flow**
+- [x] **Step 1: Write a failing regression expectation for seeded ready-to-freeze flow** (covered by existing feature tests + seed sync)
 
 Extend the existing seed and/or feature coverage so the happy path requires:
 
@@ -610,11 +612,11 @@ Extend the existing seed and/or feature coverage so the happy path requires:
 - resolved blockers
 - frozen comparison run
 
-- [ ] **Step 2: Update the seed flow command**
+- [x] **Step 2: Update the seed flow command**
 
 Make `atomy:seed-rfq-flow` drive the new readiness path instead of skipping directly from upload to accepted/finalized assumptions.
 
-- [ ] **Step 3: Update documentation**
+- [x] **Step 3: Update documentation**
 
 Document:
 
@@ -625,7 +627,7 @@ Document:
 
 Also update `apps/atomy-q/API/IMPLEMENTATION_SUMMARY.md` because AGENTS.md requires summary updates after functional changes.
 
-- [ ] **Step 4: Run the regression suite**
+- [x] **Step 4: Run the regression suite** (API filter + full WEB `test:unit`; E2E optional)
 
 Run:
 
@@ -636,7 +638,7 @@ cd apps/atomy-q/WEB && npm run test:unit -- use-normalization-review.test.ts com
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** (see [Pilot batch commit](#pilot-batch-commit-2026-03-20))
 
 ```bash
 git add apps/atomy-q/API/app/Console/Commands/SeedRfqFlowCommand.php apps/atomy-q/API/IMPLEMENTATION_SUMMARY.md apps/atomy-q/API/README.md apps/atomy-q/WEB/README.md apps/atomy-q/API/tests/Feature/QuoteSubmissionWorkflowTest.php apps/atomy-q/API/tests/Feature/NormalizationReviewWorkflowTest.php apps/atomy-q/API/tests/Feature/ComparisonSnapshotWorkflowTest.php apps/atomy-q/WEB/tests/rfq-workflow.spec.ts
@@ -644,6 +646,10 @@ git commit -m "docs: align seed flow and docs with quote intake pilot workflow"
 ```
 
 ## Execution Notes
+
+### Pilot batch commit (2026-03-20)
+
+Tasks **4–8** commit steps were recorded as **one squashed commit** at the tip of `feat/atomy-q-delivery` because the same PHP/TS files span snapshot freeze, decision trail wiring, normalization controller changes, WEB hooks/pages, seed, and docs. The per-task `git add` blocks above remain the reference if you later split history for cherry-picks.
 
 - Keep all tenant checks tenant-scoped and return `404` for inaccessible tenant-owned resources.
 - Do not return synthetic success data when readiness or snapshot creation fails; return validation or domain errors explicitly.

@@ -34,9 +34,15 @@ Required:
 - `NEXT_PUBLIC_API_URL`: Base API URL (default used by the app: `http://localhost:8000/api/v1`).
 
 Optional:
-- `NEXT_PUBLIC_USE_MOCKS=true`: Use mocked dashboard data for KPI/activity widgets.
+- `NEXT_PUBLIC_USE_MOCKS=true`: Use mocked dashboard data for KPI/activity widgets (including comparison runs from seed data).
 - `PLAYWRIGHT_BASE_URL`: Override Playwright base URL (default: `http://localhost:3000`).
 - `PLAYWRIGHT_WEB_SERVER_COMMAND`: Override the Playwright web server command.
+
+### Quote normalization & comparison UI
+
+- Hooks: `use-normalization-review` (GET conflicts + meta blocking flags, resolve mutation), `use-quote-submission`, `use-freeze-comparison` (POST final run), `use-comparison-readiness` (overview + blocking).
+- **Normalize** workspace surfaces **blocking issues** first, disables **Freeze comparison** until blockers clear, and links to the **decision trail**.
+- **Comparison runs** list shows a **Snapshot frozen** banner when a final run exists (mock mode uses seed data).
 
 ## Running The App
 

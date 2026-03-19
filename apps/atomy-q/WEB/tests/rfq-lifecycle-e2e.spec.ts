@@ -181,6 +181,10 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     await page.getByRole('link', { name: 'Comparison Runs' }).click();
     await expect(page).toHaveURL(/\/rfqs\/[^/]+\/comparison-runs/);
     await expect(page.getByRole('heading', { name: 'Comparison Runs' })).toBeVisible();
+    if ((await page.getByText(/snapshot frozen/i).count()) > 0) {
+      await expect(page.getByText(/snapshot frozen/i).first()).toBeVisible();
+      await expect(page.getByRole('link', { name: /decision trail/i })).toBeVisible();
+    }
 
     // 9) Approvals
     await page.getByRole('link', { name: 'Approvals' }).click();

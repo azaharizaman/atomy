@@ -9,7 +9,10 @@ import { ConfidenceBadge } from '@/components/ds/Badge';
 import { SecondaryTabs } from '@/components/ds/Tabs';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
+import { useQuoteSubmission } from '@/hooks/use-quote-submission';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
+
+const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
 export default function QuoteIntakeDetailPage({
   params,
@@ -19,7 +22,9 @@ export default function QuoteIntakeDetailPage({
   const router = useRouter();
   const { rfqId, quoteId } = React.use(params);
   const { data: rfq } = useRfq(rfqId);
+  const { data: submission } = useQuoteSubmission(quoteId, { enabled: !useMocks });
   const [activeTab, setActiveTab] = React.useState('overview');
+  const blockingCount = submission?.blocking_issue_count ?? 0;
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -38,6 +43,11 @@ export default function QuoteIntakeDetailPage({
   return (
     <div className="space-y-5">
       <WorkspaceBreadcrumbs items={breadcrumbItems} />
+      {!useMocks && blockingCount > 0 && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+          <span className="font-semibold">Blocking issues:</span> {blockingCount} — resolve in normalize before comparison freeze.
+        </div>
+      )}
       <RecordHeader
         title="Dell_Quote_RFQ2401.pdf"
         status="approved"

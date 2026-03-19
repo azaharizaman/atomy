@@ -38,6 +38,9 @@ export default function ComparisonMatrixPage({
       <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <div className="flex items-center gap-3 flex-wrap">
         <StatusBadge status="final" label="Final" />
+        <span className="text-xs font-medium text-green-800 bg-green-100 border border-green-200 rounded px-2 py-0.5">
+          Snapshot frozen
+        </span>
         {locked ? <Lock size={14} className="text-slate-500" /> : <Unlock size={14} className="text-slate-500" />}
         <Button size="sm" variant="ghost" onClick={() => setLocked(!locked)}>
           {locked ? 'Unlock' : 'Lock'}
@@ -48,6 +51,12 @@ export default function ComparisonMatrixPage({
           View original values
         </label>
         <Button size="sm" variant="outline">View Recommendation</Button>
+        <Link
+          href={`/rfqs/${encodeURIComponent(rfqId)}/decision-trail`}
+          className="text-sm font-medium text-indigo-600 hover:underline"
+        >
+          Decision trail
+        </Link>
       </div>
       <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 flex items-center justify-between">
         <span className="text-sm text-slate-800">

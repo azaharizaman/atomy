@@ -20,20 +20,30 @@ class DecisionTrailEntry extends Model
 
     protected $fillable = [
         'tenant_id',
+        'comparison_run_id',
         'rfq_id',
-        'scope',
+        'sequence',
         'event_type',
-        'actor_id',
-        'description',
-        'metadata',
-        'hash',
+        'payload_hash',
         'previous_hash',
+        'entry_hash',
+        'occurred_at',
     ];
 
     protected $casts = [
-        'metadata' => 'array',
+        'sequence' => 'integer',
+        'occurred_at' => 'datetime',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * @return BelongsTo<ComparisonRun, $this>
+     */
+    public function comparisonRun(): BelongsTo
+    {
+        return $this->belongsTo(ComparisonRun::class, 'comparison_run_id');
+    }
 
     /**
      * @return BelongsTo<Rfq, $this>
@@ -41,13 +51,5 @@ class DecisionTrailEntry extends Model
     public function rfq(): BelongsTo
     {
         return $this->belongsTo(Rfq::class, 'rfq_id');
-    }
-
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function actor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'actor_id');
     }
 }

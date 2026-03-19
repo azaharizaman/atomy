@@ -22,28 +22,35 @@ class ComparisonRun extends Model
     protected $fillable = [
         'tenant_id',
         'rfq_id',
-        'run_type',
-        'status',
-        'scoring_model_id',
-        'matrix_data',
-        'scoring_data',
-        'approval_data',
-        'readiness_data',
-        'decision_trail',
-        'is_locked',
-        'locked_at',
-        'locked_by',
+        'name',
+        'description',
+        'idempotency_key',
+        'is_preview',
         'created_by',
+        'request_payload',
+        'matrix_payload',
+        'scoring_payload',
+        'approval_payload',
+        'response_payload',
+        'readiness_payload',
+        'status',
+        'version',
+        'expires_at',
+        'discarded_at',
+        'discarded_by',
     ];
 
     protected $casts = [
-        'matrix_data' => 'array',
-        'scoring_data' => 'array',
-        'approval_data' => 'array',
-        'readiness_data' => 'array',
-        'decision_trail' => 'array',
-        'is_locked' => 'boolean',
-        'locked_at' => 'datetime',
+        'is_preview' => 'boolean',
+        'request_payload' => 'array',
+        'matrix_payload' => 'array',
+        'scoring_payload' => 'array',
+        'approval_payload' => 'array',
+        'response_payload' => 'array',
+        'readiness_payload' => 'array',
+        'version' => 'integer',
+        'expires_at' => 'datetime',
+        'discarded_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -57,27 +64,11 @@ class ComparisonRun extends Model
     }
 
     /**
-     * @return BelongsTo<ScoringModel, $this>
-     */
-    public function scoringModel(): BelongsTo
-    {
-        return $this->belongsTo(ScoringModel::class, 'scoring_model_id');
-    }
-
-    /**
      * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function lockedByUser(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'locked_by');
     }
 
     /**

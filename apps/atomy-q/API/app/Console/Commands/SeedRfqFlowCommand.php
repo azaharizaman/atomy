@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\NormalizationSourceLine;
+use App\Models\QuoteSubmission;
+use App\Models\RfqLineItem;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -165,6 +168,7 @@ final class SeedRfqFlowCommand extends Command
             $this->warn('No quotes submitted.');
             return true;
         }
+        $this->syncNormalizationLinesForQuotes($rfqId, $quoteIds);
         $this->hitNormalizationAndComparison($rfqId);
         $this->closeRfq($rfqId);
         if ($this->targetStatus === 'closed') {
@@ -275,6 +279,61 @@ final class SeedRfqFlowCommand extends Command
             }
         }
         return $quoteIds;
+    }
+
+    /**
+     * Ensure uploaded quotes have mapped normalization lines so comparison final/readiness gates pass.
+     *
+     * @param  list<string>  $quoteIds
+     */
+    private function syncNormalizationLinesForQuotes(string $rfqId, array $quoteIds): void
+    {
+        if ($quoteIds === [] || $this->tenantId === '') {
+            return;
+        }
+
+        $lineItems = RfqLineItem::query()
+            ->where('tenant_id', $this->tenantId)
+            ->where('rfq_id', $rfqId)
+            ->orderBy('sort_order')
+            ->get();
+
+        if ($lineItems->isEmpty()) {
+            return;
+        }
+
+        foreach ($quoteIds as $quoteId) {
+            $quoteId = (string) $quoteId;
+            $submission = QuoteSubmission::query()
+                ->where('tenant_id', $this->tenantId)
+                ->where('id', $quoteId)
+                ->first();
+            if ($submission === null) {
+                continue;
+            }
+
+            foreach ($lineItems as $li) {
+                NormalizationSourceLine::query()->updateOrCreate(
+                    [
+                        'tenant_id' => $this->tenantId,
+                        'quote_submission_id' => $quoteId,
+                        'rfq_line_item_id' => $li->id,
+                    ],
+                    [
+                        'source_description' => (string) $li->description,
+                        'source_unit_price' => $li->unit_price,
+                        'source_uom' => (string) $li->uom,
+                        'source_quantity' => $li->quantity,
+                        'sort_order' => (int) $li->sort_order,
+                    ],
+                );
+            }
+
+            $submission->status = 'ready';
+            $submission->save();
+        }
+
+        $this->line('  Normalization source lines synced for ' . count($quoteIds) . ' quote(s).');
     }
 
     private function hitNormalizationAndComparison(string $rfqId): void
