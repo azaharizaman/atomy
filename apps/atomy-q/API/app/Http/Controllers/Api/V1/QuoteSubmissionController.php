@@ -80,7 +80,7 @@ final class QuoteSubmissionController extends Controller
         $qs->rfq_id = $rfq->id;
         $qs->vendor_id = $vendorId;
         $qs->vendor_name = $vendorName;
-        $qs->status = 'processing';
+        $qs->status = 'uploaded';
         $qs->file_path = $filePath;
         $qs->file_type = $fileType;
         $qs->submitted_at = now();
@@ -206,7 +206,6 @@ final class QuoteSubmissionController extends Controller
     private function statusTransitions(): array
     {
         return [
-            'processing' => ['uploaded', 'extracting', 'failed'],
             'uploaded' => ['extracting', 'failed'],
             'extracting' => ['extracted', 'failed'],
             'extracted' => ['normalizing', 'needs_review', 'failed'],

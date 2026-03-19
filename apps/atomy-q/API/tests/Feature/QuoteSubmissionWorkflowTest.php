@@ -95,4 +95,18 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['status']);
     }
+
+    public function test_final_comparison_run_returns_ready_for_approval_state(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->postJson(
+            '/api/v1/comparison-runs/final',
+            ['rfq_id' => 'rfq-123'],
+            $this->authHeaders((string) $user->id, (string) $user->tenant_id),
+        );
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'ready_for_approval');
+    }
 }

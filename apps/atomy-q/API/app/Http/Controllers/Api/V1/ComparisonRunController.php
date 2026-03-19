@@ -77,7 +77,7 @@ final class ComparisonRunController extends Controller
             'data' => [
                 'id' => 'cr-' . uniqid(),
                 'rfq_id' => $validated['rfq_id'],
-                'status' => 'final',
+                'status' => 'ready_for_approval',
             ],
         ], 201);
     }
