@@ -1,0 +1,43 @@
+name: IdentityOperations — PHPUnit + coverage
+
+on:
+  push:
+    paths:
+      - 'orchestrators/IdentityOperations/**'
+      - 'adapters/Laravel/Identity/**'
+      - 'packages/Identity/**'
+  pull_request:
+    paths:
+      - 'orchestrators/IdentityOperations/**'
+      - 'adapters/Laravel/Identity/**'
+      - 'packages/Identity/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [8.3]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v3
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: xdebug
+          extensions: mbstring, ctype, iconv
+
+      - name: Install Composer dependencies
+        run: |
+          cd orchestrators/IdentityOperations
+          composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run PHPUnit (with coverage)
+        run: |
+          cd orchestrators/IdentityOperations
+          vendor/bin/phpunit
+

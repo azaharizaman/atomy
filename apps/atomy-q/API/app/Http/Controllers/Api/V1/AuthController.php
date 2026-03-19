@@ -8,6 +8,7 @@ use App\Contracts\JwtServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Models\User;
+use App\Services\Auth\OidcSsoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,7 +19,8 @@ final class AuthController extends Controller
     use ExtractsAuthContext;
 
     public function __construct(
-        private readonly JwtServiceInterface $jwt
+        private readonly JwtServiceInterface $jwt,
+        private readonly OidcSsoService $oidcSso,
     ) {
     }
 
@@ -78,9 +80,38 @@ final class AuthController extends Controller
      */
     public function sso(Request $request): JsonResponse
     {
-        return response()->json([
-            'message' => 'SSO authentication flow is not implemented yet.',
-        ], 501);
+        $validator = Validator::make($request->all(), [
+            'action' => ['required', 'string', 'in:init,callback'],
+            'tenant_id' => ['required', 'string', 'max:64'],
+            'redirect_uri' => ['sometimes', 'string'],
+            'code' => ['required_if:action,callback', 'string'],
+            'state' => ['required_if:action,callback', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $action = (string) $request->input('action');
+        $tenantId = (string) $request->input('tenant_id');
+
+        try {
+            if ($action === 'init') {
+                $redirectUriOverride = $request->has('redirect_uri') ? (string) $request->input('redirect_uri') : null;
+                $result = $this->oidcSso->initiate($tenantId, $redirectUriOverride);
+                return response()->json(['data' => $result]);
+            }
+
+            $result = $this->oidcSso->callback([
+                'code' => (string) $request->input('code'),
+                'state' => (string) $request->input('state'),
+            ]);
+            return response()->json($result);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        } catch (\Throwable) {
+            return response()->json(['message' => 'SSO authentication failed'], 401);
+        }
     }
 
     /**

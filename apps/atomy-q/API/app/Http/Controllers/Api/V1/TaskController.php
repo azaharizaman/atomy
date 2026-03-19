@@ -97,9 +97,22 @@ final class TaskController extends Controller
     {
         $this->assertFeatureEnabled();
         $tenantId = $this->requireTenantId($request);
+        $userId = $this->requireUserId($request);
 
         $assigneeId = $request->query('assignee_id');
-        $query = TaskModel::query()->where('tenant_id', $tenantId);
+        $query = TaskModel::query()
+            ->where('tenant_id', $tenantId)
+            ->where(function ($builder) use ($tenantId, $userId): void {
+                $builder
+                    ->whereNull('project_id')
+                    ->orWhereExists(function ($sub) use ($tenantId, $userId): void {
+                        $sub->selectRaw('1')
+                            ->from('project_acl')
+                            ->whereColumn('project_acl.project_id', 'tasks.project_id')
+                            ->where('project_acl.tenant_id', $tenantId)
+                            ->where('project_acl.user_id', $userId);
+                    });
+            });
         if ($assigneeId !== null && $assigneeId !== '') {
             $query->whereJsonContains('assignee_ids', $assigneeId);
         }

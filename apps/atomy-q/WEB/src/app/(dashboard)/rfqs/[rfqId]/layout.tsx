@@ -88,15 +88,19 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
           <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
             <div className="p-6 flex-1">
               <div className="max-w-7xl mx-auto space-y-6">
-                {!isLoading && rfq?.projectId && (
+                {!isLoading && rfq && (
                   <div className="text-sm text-slate-600">
                     Project:{' '}
-                    <Link
-                      href={`/projects/${encodeURIComponent(rfq.projectId)}`}
-                      className="text-indigo-600 hover:underline font-medium"
-                    >
-                      {rfq.projectName ?? rfq.projectId}
-                    </Link>
+                    {rfq.projectId ? (
+                      <Link
+                        href={`/projects/${encodeURIComponent(rfq.projectId)}`}
+                        className="text-indigo-600 hover:underline font-medium"
+                      >
+                        {rfq.projectName ?? rfq.projectId}
+                      </Link>
+                    ) : (
+                      <span className="text-slate-700 font-medium">Unassigned</span>
+                    )}
                   </div>
                 )}
                 {children}

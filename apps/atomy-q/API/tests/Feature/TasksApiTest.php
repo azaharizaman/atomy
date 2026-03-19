@@ -187,4 +187,83 @@ class TasksApiTest extends TestCase
         $response = $this->getJson('/api/v1/tasks/' . $task->id, $this->authHeaders((string) $user->id, $tenantId));
         $response->assertStatus(200);
     }
+
+    public function test_tasks_index_hides_project_tasks_without_acl_but_includes_unassigned(): void
+    {
+        $this->withTasksEnabled();
+        $tenantId = (string) Str::ulid();
+        $owner = $this->createUser($tenantId);
+        $other = $this->createUser($tenantId);
+
+        $project = ProjectModel::query()->create([
+            'tenant_id' => $tenantId,
+            'name' => 'ACL project',
+            'client_id' => 'c1',
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'project_manager_id' => (string) Str::ulid(),
+            'status' => 'planning',
+        ]);
+        ProjectAcl::query()->create([
+            'project_id' => $project->id,
+            'user_id' => $owner->id,
+            'role' => 'owner',
+            'tenant_id' => $tenantId,
+        ]);
+
+        $projectTask = TaskModel::query()->create([
+            'tenant_id' => $tenantId,
+            'title' => 'Secret task',
+            'status' => 'pending',
+            'priority' => 'medium',
+            'project_id' => $project->id,
+        ]);
+        $unassignedTask = TaskModel::query()->create([
+            'tenant_id' => $tenantId,
+            'title' => 'Open task',
+            'status' => 'pending',
+            'priority' => 'medium',
+            'project_id' => null,
+        ]);
+
+        $response = $this->getJson('/api/v1/tasks', $this->authHeaders((string) $other->id, $tenantId));
+        $response->assertStatus(200);
+        $response->assertJsonMissing(['id' => $projectTask->id]);
+        $response->assertJsonFragment(['id' => $unassignedTask->id]);
+    }
+
+    public function test_tasks_index_includes_project_tasks_for_acl_member(): void
+    {
+        $this->withTasksEnabled();
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+
+        $project = ProjectModel::query()->create([
+            'tenant_id' => $tenantId,
+            'name' => 'ACL project',
+            'client_id' => 'c1',
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'project_manager_id' => (string) Str::ulid(),
+            'status' => 'planning',
+        ]);
+        ProjectAcl::query()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'role' => 'viewer',
+            'tenant_id' => $tenantId,
+        ]);
+
+        $task = TaskModel::query()->create([
+            'tenant_id' => $tenantId,
+            'title' => 'Visible task',
+            'status' => 'pending',
+            'priority' => 'medium',
+            'project_id' => $project->id,
+        ]);
+
+        $response = $this->getJson('/api/v1/tasks', $this->authHeaders((string) $user->id, $tenantId));
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['id' => $task->id]);
+    }
 }

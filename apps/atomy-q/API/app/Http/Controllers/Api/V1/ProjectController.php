@@ -318,13 +318,49 @@ final class ProjectController extends Controller
     public function budget(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
         $this->assertProjectOwnedByTenant($request, $id);
+
+        $rfqIds = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where('project_id', $id)
+            ->pluck('id')
+            ->all();
+
+        $budgeted = (float) Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where('project_id', $id)
+            ->sum('estimated_value');
+
+        $actual = 0.0;
+        $currency = 'USD';
+
+        if (count($rfqIds) > 0) {
+            $actual = (float) DB::table('awards')
+                ->where('tenant_id', $tenantId)
+                ->whereIn('rfq_id', $rfqIds)
+                ->where('status', 'signed_off')
+                ->sum('amount');
+
+            $currencyRow = DB::table('awards')
+                ->where('tenant_id', $tenantId)
+                ->whereIn('rfq_id', $rfqIds)
+                ->where('status', 'signed_off')
+                ->select(['currency'])
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($currencyRow !== null && isset($currencyRow->currency) && is_string($currencyRow->currency) && $currencyRow->currency !== '') {
+                $currency = $currencyRow->currency;
+            }
+        }
+
         return response()->json([
             'data' => [
                 'project_id' => $id,
-                'budgeted' => 0,
-                'actual' => 0,
-                'currency' => 'USD',
+                'budgeted' => $budgeted,
+                'actual' => $actual,
+                'currency' => $currency,
             ],
         ]);
     }

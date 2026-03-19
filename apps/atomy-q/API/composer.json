@@ -72,6 +72,7 @@
         "nexus/project-management-operations": "*@dev",
 
         "nexus/laravel-identity-adapter": "*@dev",
+        "nexus/laravel-notifier-adapter": "*@dev",
         "nexus/laravel-tenant-adapter": "*@dev",
         "nexus/laravel-setting-adapter": "*@dev"
     },

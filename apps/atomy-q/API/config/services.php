@@ -37,4 +37,11 @@ return [
         ],
     ],
 
+    'oidc' => [
+        'issuer_url' => env('OIDC_ISSUER_URL'),
+        'client_id' => env('OIDC_CLIENT_ID'),
+        'client_secret' => env('OIDC_CLIENT_SECRET'),
+        'redirect_uri' => env('OIDC_REDIRECT_URI'),
+    ],
+
 ];
