@@ -28,14 +28,36 @@ final class QuoteSubmissionController extends Controller
         $tenantId = $this->tenantId($request);
         $pagination = $this->paginationParams($request);
 
+        $query = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->orderByDesc('submitted_at')
+            ->orderByDesc('created_at');
+
+        if ($status = $request->query('status')) {
+            $query->where('status', (string) $status);
+        }
+
+        if ($rfqId = $request->query('rfq_id')) {
+            $query->where('rfq_id', (string) $rfqId);
+        }
+
+        if ($vendorId = $request->query('vendor_id')) {
+            $query->where('vendor_id', (string) $vendorId);
+        }
+
+        $paginator = $query->paginate($pagination['per_page'], ['*'], 'page', $pagination['page']);
+        $rows = $paginator->getCollection()
+            ->map(fn (QuoteSubmission $submission): array => $this->quoteSubmissionData($submission))
+            ->values();
+
         return response()->json([
-            'data' => [],
+            'data' => $rows,
             'meta' => [
-                'current_page' => $pagination['page'],
-                'per_page' => $pagination['per_page'],
-                'total' => 0,
-                'from' => null,
-                'to' => null,
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'from' => $paginator->firstItem(),
+                'to' => $paginator->lastItem(),
             ],
         ]);
     }
@@ -80,9 +102,11 @@ final class QuoteSubmissionController extends Controller
         $qs->rfq_id = $rfq->id;
         $qs->vendor_id = $vendorId;
         $qs->vendor_name = $vendorName;
+        $qs->uploaded_by = $this->userId($request);
         $qs->status = 'uploaded';
         $qs->file_path = $filePath;
         $qs->file_type = $fileType;
+        $qs->original_filename = $file->getClientOriginalName();
         $qs->submitted_at = now();
         $qs->confidence = 85.0;
         $qs->line_items_count = 0;
@@ -91,13 +115,7 @@ final class QuoteSubmissionController extends Controller
         $qs->save();
 
         return response()->json([
-            'data' => [
-                'id' => $qs->id,
-                'rfq_id' => $qs->rfq_id,
-                'vendor_id' => $qs->vendor_id,
-                'vendor_name' => $qs->vendor_name,
-                'status' => $qs->status,
-            ],
+            'data' => $this->quoteSubmissionData($qs),
         ], 201);
     }
 
@@ -108,12 +126,18 @@ final class QuoteSubmissionController extends Controller
      */
     public function show(Request $request, string $id): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+        $submission = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->first();
+
+        if ($submission === null) {
+            return response()->json(['message' => 'Quote submission not found'], 404);
+        }
+
         return response()->json([
-            'data' => [
-                'id' => $id,
-                'rfq_id' => null,
-                'vendor_id' => null,
-                'status' => 'pending',
+            'data' => $this->quoteSubmissionData($submission) + [
                 'tab_overview' => [],
                 'tab_details' => [],
             ],
@@ -232,5 +256,25 @@ final class QuoteSubmissionController extends Controller
     private function isCompatibleLegacyTransition(string $currentStatus, string $requestedStatus): bool
     {
         return $currentStatus === 'uploaded' && $requestedStatus === 'accepted';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function quoteSubmissionData(QuoteSubmission $submission): array
+    {
+        return [
+            'id' => $submission->id,
+            'rfq_id' => $submission->rfq_id,
+            'vendor_id' => $submission->vendor_id,
+            'vendor_name' => $submission->vendor_name,
+            'uploaded_by' => $submission->uploaded_by,
+            'status' => $submission->status,
+            'file_path' => $submission->file_path,
+            'file_type' => $submission->file_type,
+            'original_filename' => $submission->original_filename,
+            'blocking_issue_count' => $submission->blockingIssueCount(),
+            'submitted_at' => $submission->submitted_at?->toAtomString(),
+        ];
     }
 }

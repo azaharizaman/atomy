@@ -8,7 +8,9 @@ use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -206,5 +208,179 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'id' => $quote->id,
             'status' => 'ready',
         ]);
+    }
+
+    public function test_quote_submission_upload_persists_uploaded_state_and_tenant_id(): void
+    {
+        Storage::fake('local');
+
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-2001',
+            'title' => 'Upload RFQ',
+            'owner_id' => $user->id,
+            'status' => 'draft',
+        ]);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Upload Vendor',
+                'file' => UploadedFile::fake()->create('quote.txt', 12, 'text/plain'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'uploaded');
+        $response->assertJsonPath('data.rfq_id', $rfq->id);
+        $response->assertJsonPath('data.blocking_issue_count', 0);
+
+        $quoteId = (string) $response->json('data.id');
+        $this->assertDatabaseHas('quote_submissions', [
+            'id' => $quoteId,
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'status' => 'uploaded',
+            'uploaded_by' => $user->id,
+        ]);
+    }
+
+    public function test_quote_submission_show_returns_404_for_other_tenant(): void
+    {
+        $owner = $this->createUser();
+        $otherTenantUser = $this->createUser();
+
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $owner->tenant_id,
+            'rfq_number' => 'RFQ-2002',
+            'title' => 'Tenant scoped RFQ',
+            'owner_id' => $owner->id,
+            'status' => 'draft',
+        ]);
+
+        $quote = QuoteSubmission::query()->create([
+            'tenant_id' => $owner->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Tenant Vendor',
+            'status' => 'uploaded',
+            'file_path' => 'quote-submissions/tenant-vendor.txt',
+            'file_type' => 'text/plain',
+            'submitted_at' => now(),
+            'uploaded_by' => $owner->id,
+            'confidence' => 100.0,
+            'line_items_count' => 0,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/quote-submissions/' . $quote->id,
+            $this->authHeaders((string) $otherTenantUser->tenant_id, (string) $otherTenantUser->id),
+        );
+
+        $response->assertNotFound();
+    }
+
+    public function test_quote_submission_index_filters_by_rfq_for_current_tenant(): void
+    {
+        $user = $this->createUser();
+
+        $rfqA = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-2003',
+            'title' => 'List RFQ A',
+            'owner_id' => $user->id,
+            'status' => 'draft',
+        ]);
+
+        $rfqB = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-2004',
+            'title' => 'List RFQ B',
+            'owner_id' => $user->id,
+            'status' => 'draft',
+        ]);
+
+        QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfqA->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Vendor A',
+            'status' => 'uploaded',
+            'file_path' => 'quote-submissions/vendor-a.txt',
+            'file_type' => 'text/plain',
+            'submitted_at' => now(),
+            'confidence' => 100.0,
+            'line_items_count' => 0,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfqB->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Vendor B',
+            'status' => 'needs_review',
+            'file_path' => 'quote-submissions/vendor-b.txt',
+            'file_type' => 'text/plain',
+            'submitted_at' => now(),
+            'confidence' => 70.0,
+            'line_items_count' => 1,
+            'warnings_count' => 1,
+            'errors_count' => 0,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/quote-submissions?rfq_id=' . urlencode((string) $rfqA->id),
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('data.0.rfq_id', $rfqA->id);
+        $response->assertJsonPath('data.0.blocking_issue_count', 0);
+    }
+
+    public function test_rfq_overview_returns_quote_readiness_buckets(): void
+    {
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-2005',
+            'title' => 'Overview Buckets RFQ',
+            'owner_id' => $user->id,
+            'status' => 'published',
+        ]);
+
+        foreach (['uploaded', 'needs_review', 'ready'] as $status) {
+            QuoteSubmission::query()->create([
+                'tenant_id' => $user->tenant_id,
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Vendor ' . $status,
+                'status' => $status,
+                'file_path' => 'quote-submissions/' . $status . '.txt',
+                'file_type' => 'text/plain',
+                'submitted_at' => now(),
+                'confidence' => 100.0,
+                'line_items_count' => 0,
+                'warnings_count' => 0,
+                'errors_count' => 0,
+            ]);
+        }
+
+        $response = $this->getJson(
+            '/api/v1/rfqs/' . $rfq->id . '/overview',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.normalization.uploaded_count', 1);
+        $response->assertJsonPath('data.normalization.needs_review_count', 1);
+        $response->assertJsonPath('data.normalization.ready_count', 1);
+        $response->assertJsonPath('data.normalization.total_quotes', 3);
     }
 }

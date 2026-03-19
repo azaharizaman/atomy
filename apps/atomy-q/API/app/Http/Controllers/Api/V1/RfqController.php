@@ -282,6 +282,21 @@ final class RfqController extends Controller
         $savings = $rfq->savings_percentage !== null ? rtrim(rtrim((string) $rfq->savings_percentage, '0'), '.') . '%' : null;
 
         $quotesTotal = (int) $rfq->quotes_count;
+        $uploadedCount = QuoteSubmission::query()
+            ->where('rfq_id', $rfq->id)
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'uploaded')
+            ->count();
+        $needsReviewCount = QuoteSubmission::query()
+            ->where('rfq_id', $rfq->id)
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'needs_review')
+            ->count();
+        $readyCount = QuoteSubmission::query()
+            ->where('rfq_id', $rfq->id)
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', ['accepted', 'ready'])
+            ->count();
         $acceptedCount = QuoteSubmission::query()
             ->where('rfq_id', $rfq->id)
             ->where('tenant_id', $tenantId)
@@ -338,6 +353,9 @@ final class RfqController extends Controller
                 ],
                 'expected_quotes' => $expectedQuotes,
                 'normalization' => [
+                    'uploaded_count' => $uploadedCount,
+                    'needs_review_count' => $needsReviewCount,
+                    'ready_count' => $readyCount,
                     'accepted_count' => $acceptedCount,
                     'total_quotes' => $quotesTotal,
                     'progress_pct' => $normProgress,

@@ -24,8 +24,10 @@ class QuoteSubmission extends Model
         'rfq_id',
         'vendor_id',
         'vendor_name',
+        'uploaded_by',
         'file_path',
         'file_type',
+        'original_filename',
         'status',
         'submitted_at',
         'confidence',
@@ -57,12 +59,16 @@ class QuoteSubmission extends Model
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 
-
     /**
      * @return HasMany<NormalizationSourceLine>
      */
     public function normalizationSourceLines(): HasMany
     {
         return $this->hasMany(NormalizationSourceLine::class, 'quote_submission_id');
+    }
+
+    public function blockingIssueCount(): int
+    {
+        return max((int) ($this->errors_count ?? 0), 0);
     }
 }
