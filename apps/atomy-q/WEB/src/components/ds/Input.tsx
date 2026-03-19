@@ -83,7 +83,7 @@ export function TextInput({
   );
 }
 
-interface PasswordInputProps extends Omit<TextInputProps, 'type' | 'suffixIcon'> {}
+type PasswordInputProps = Omit<TextInputProps, 'type' | 'suffixIcon'>;
 
 export function PasswordInput(props: PasswordInputProps) {
   const [visible, setVisible] = React.useState(false);

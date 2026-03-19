@@ -25,10 +25,17 @@ export function OverviewNextStep({
   submissionDeadline,
 }: OverviewNextStepProps) {
   const base = `/rfqs/${encodeURIComponent(rfqId)}`;
+  const [now, setNow] = React.useState<number>(() => Date.now());
+
+  React.useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const deadlineDate = submissionDeadline ? new Date(submissionDeadline) : null;
-  const isOverdue = deadlineDate && deadlineDate.getTime() < Date.now();
+  const isOverdue = deadlineDate ? deadlineDate.getTime() < now : false;
   const daysLeft = deadlineDate
-    ? Math.ceil((deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil((deadlineDate.getTime() - now) / (1000 * 60 * 60 * 24))
     : null;
 
   let stepLabel: string;

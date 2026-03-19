@@ -13,22 +13,30 @@ export interface ProjectListItem {
   endDate?: string;
 }
 
-function normalizeProjectsPayload(payload: any): ProjectListItem[] {
+function normalizeProjectsPayload(payload: unknown): ProjectListItem[] {
   const asArray = (value: unknown): unknown[] | null => (Array.isArray(value) ? value : null);
 
-  const list = asArray(payload) ?? asArray(payload?.data) ?? asArray(payload?.data?.data) ?? [];
+  const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
+  const objData = obj?.data;
+  const objDataObj = objData && typeof objData === 'object' ? (objData as Record<string, unknown>) : null;
+
+  const list =
+    asArray(payload) ??
+    asArray(objData) ??
+    asArray(objDataObj?.data) ??
+    [];
   if (list.length === 0) return [];
 
   return list
-    .filter((raw: any) => raw && typeof raw === 'object')
-    .map((raw: any) => ({
+    .filter((raw: unknown): raw is Record<string, unknown> => !!raw && typeof raw === 'object')
+    .map((raw) => ({
       id: String(raw.id ?? ''),
       name: String(raw.name ?? raw.title ?? 'Untitled'),
       status: raw.status ? String(raw.status) : undefined,
-      clientId: raw.client_id ?? raw.clientId,
-      clientName: raw.client_name ?? raw.clientName,
-      startDate: raw.start_date ?? raw.startDate,
-      endDate: raw.end_date ?? raw.endDate,
+      clientId: (raw.client_id ?? raw.clientId) as string | undefined,
+      clientName: (raw.client_name ?? raw.clientName) as string | undefined,
+      startDate: (raw.start_date ?? raw.startDate) as string | undefined,
+      endDate: (raw.end_date ?? raw.endDate) as string | undefined,
     }))
     .filter((p) => p.id);
 }

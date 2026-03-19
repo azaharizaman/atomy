@@ -11,28 +11,35 @@ export interface ProjectHealth {
   timeline?: { completionPercentage?: number; totalMilestones?: number; completedMilestones?: number };
 }
 
-function normalizeHealth(payload: any): ProjectHealth {
+function toNum(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string' && value.trim() === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function normalizeHealth(payload: unknown): ProjectHealth {
   let raw = payload as Record<string, unknown> | null | undefined;
   while (raw?.data) raw = raw.data as Record<string, unknown>;
 
-  const laborRaw = (raw?.labor ?? {}) as any;
-  const expenseRaw = (raw?.expense ?? {}) as any;
-  const timelineRaw = (raw?.timeline ?? {}) as any;
+  const laborRaw = (raw?.labor ?? {}) as Record<string, unknown>;
+  const expenseRaw = (raw?.expense ?? {}) as Record<string, unknown>;
+  const timelineRaw = (raw?.timeline ?? {}) as Record<string, unknown>;
 
   return {
     projectId: String(raw?.project_id ?? raw?.projectId ?? ''),
-    overallScore: (raw?.overall_score ?? (raw as any)?.overallScore) as number | undefined,
+    overallScore: toNum(raw?.overall_score ?? (raw as Record<string, unknown>)?.overallScore),
     labor: {
-      actualHours: laborRaw.actual_hours ?? laborRaw.actualHours,
-      healthPercentage: laborRaw.health_percentage ?? laborRaw.healthPercentage,
+      actualHours: toNum(laborRaw.actual_hours ?? laborRaw.actualHours),
+      healthPercentage: toNum(laborRaw.health_percentage ?? laborRaw.healthPercentage),
     },
     expense: {
-      healthPercentage: expenseRaw.health_percentage ?? expenseRaw.healthPercentage,
+      healthPercentage: toNum(expenseRaw.health_percentage ?? expenseRaw.healthPercentage),
     },
     timeline: {
-      completionPercentage: timelineRaw.completion_percentage ?? timelineRaw.completionPercentage,
-      totalMilestones: timelineRaw.total_milestones ?? timelineRaw.totalMilestones,
-      completedMilestones: timelineRaw.completed_milestones ?? timelineRaw.completedMilestones,
+      completionPercentage: toNum(timelineRaw.completion_percentage ?? timelineRaw.completionPercentage),
+      totalMilestones: toNum(timelineRaw.total_milestones ?? timelineRaw.totalMilestones),
+      completedMilestones: toNum(timelineRaw.completed_milestones ?? timelineRaw.completedMilestones),
     },
   };
 }

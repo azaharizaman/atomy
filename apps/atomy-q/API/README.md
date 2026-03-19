@@ -108,3 +108,36 @@ AWS_URL=http://localhost:9000
 AWS_ENDPOINT=http://localhost:9000
 AWS_USE_PATH_STYLE_ENDPOINTS=true
 ```
+
+## Running API Tests
+
+From `apps/atomy-q/API`:
+
+1. Install dependencies
+   ```bash
+   composer install
+   ```
+
+2. Ensure a **dedicated test database** is available (do not use your development DB).
+
+   This project’s `phpunit.xml` uses `DB_CONNECTION=pgsql` with:
+   - `DB_HOST=127.0.0.1`
+   - `DB_PORT=5433`
+   - `DB_DATABASE=atomy_test`
+   - `DB_USERNAME=postgres`
+   - `DB_PASSWORD=secret`
+
+   Create a separate database (e.g. `atomy_test`) and set these in `apps/atomy-q/API/.env` (or rely on `phpunit.xml`) so tests never run against production or shared dev data.
+
+3. Run all tests
+   ```bash
+   php artisan test
+   ```
+
+4. Run a specific test (example)
+   ```bash
+   php artisan test --filter ProjectAclTest
+   ```
+
+Notes:
+- Tests run via PHPUnit (see `phpunit.xml`).

@@ -10,16 +10,24 @@ export interface ProjectRfqListItem {
   status?: string;
 }
 
-function normalize(payload: any): ProjectRfqListItem[] {
-  const list = (Array.isArray(payload) ? payload : payload?.data) ?? [];
-  if (!Array.isArray(list)) return [];
+function normalize(payload: unknown): ProjectRfqListItem[] {
+  let current: unknown = payload;
+  while (current != null && typeof current === 'object' && !Array.isArray(current)) {
+    const obj = current as Record<string, unknown>;
+    if (Object.prototype.hasOwnProperty.call(obj, 'data')) {
+      current = obj.data;
+    } else {
+      break;
+    }
+  }
+  const list = Array.isArray(current) ? current : [];
   return list
-    .filter((r: any) => r && typeof r === 'object')
-    .map((r: any) => ({
+    .filter((r: unknown): r is Record<string, unknown> => !!r && typeof r === 'object')
+    .map((r) => ({
       id: String(r.id ?? ''),
-      rfqNumber: r.rfq_number ?? r.rfqNumber,
-      title: r.title,
-      status: r.status,
+      rfqNumber: (r.rfq_number ?? r.rfqNumber) as string | undefined,
+      title: r.title as string | undefined,
+      status: r.status as string | undefined,
     }))
     .filter((x) => x.id);
 }

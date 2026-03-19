@@ -43,8 +43,12 @@ export default function ProjectDetailPage() {
   }, [project, editMode]);
 
   const isAxios404 = axios.isAxiosError(projectError) && projectError.response?.status === 404;
-  const featureDisabledSignal =
-    axios.isAxiosError(projectError) && (projectError.response?.data as any)?.code === 'projects_not_enabled';
+  const projectErrorData = axios.isAxiosError(projectError) ? projectError.response?.data : undefined;
+  const projectErrorObj =
+    projectErrorData != null && typeof projectErrorData === 'object' && !Array.isArray(projectErrorData)
+      ? (projectErrorData as Record<string, unknown>)
+      : null;
+  const featureDisabledSignal = axios.isAxiosError(projectError) && projectErrorObj?.code === 'projects_not_enabled';
 
   if (projectError && !featureDisabledSignal && !isAxios404) {
     return (
@@ -181,7 +185,7 @@ export default function ProjectDetailPage() {
               </Button>
             </div>
             {updateProject.isError && (
-              <p className="text-xs text-red-600">{String((updateProject.error as Error)?.message)}</p>
+              <p className="text-xs text-red-600">{String((updateProject.error as Error | null)?.message ?? '')}</p>
             )}
           </form>
         </Card>
@@ -243,7 +247,7 @@ export default function ProjectDetailPage() {
         <Card padding="md">
           <div className="text-sm text-red-700">
             Failed to load health.{' '}
-            <span className="text-xs text-red-600">{String((healthError as any)?.message ?? '')}</span>
+            <span className="text-xs text-red-600">{String((healthError as Error | null)?.message ?? '')}</span>
           </div>
         </Card>
       )}

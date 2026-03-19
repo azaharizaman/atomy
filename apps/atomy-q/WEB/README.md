@@ -53,6 +53,12 @@ npm run start
 
 ## Running Tests
 
+Unit/Integration (Vitest):
+```bash
+npm run test:unit
+npm run test:unit:watch
+```
+
 E2E (Playwright):
 ```bash
 # one-time browser install
@@ -74,6 +80,11 @@ If login still fails in the browser, ensure the API `config/cors.php` allows you
 CI-friendly run:
 ```bash
 PLAYWRIGHT_WEB_SERVER_COMMAND="npm run build && npm run start -- --port 3000" npm run test:e2e:ci
+```
+
+Screen smoke (Playwright):
+```bash
+npm run test:e2e -- tests/screen-smoke.spec.ts
 ```
 
 ## Test Data And Mocks

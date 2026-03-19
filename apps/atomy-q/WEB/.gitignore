@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+test-results/
+test-results/.last-run.json
 
 # next.js
 /.next/

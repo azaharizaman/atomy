@@ -40,35 +40,71 @@ export interface UseRfqsParams {
   projectId?: string;
 }
 
-function normalizeRfqsPayload(payload: any): RfqListItem[] {
+/** Returns undefined for null, undefined, empty or whitespace-only string; otherwise a finite number. */
+function parseOptionalNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string' && value.trim() === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+/**
+ * Coerces value to string or undefined at runtime, but only for primitive inputs.
+ * Rejects objects/arrays/functions/symbols to avoid producing "[object Object]" and similar artifacts.
+ */
+function normalizeString(value: unknown): string | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string') return value.trim() || undefined;
+  if (typeof value === 'number' || typeof value === 'bigint') return String(value);
+  return undefined;
+}
+
+/** For optional string | null fields (e.g. projectId); preserves null, normalizes primitives, rejects objects. */
+function normalizeStringOrNull(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  return normalizeString(value) ?? null;
+}
+
+function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   const asArray = (value: unknown): unknown[] | null => (Array.isArray(value) ? value : null);
+
+  const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
+  const objData = obj?.data;
+  const objDataObj = objData && typeof objData === 'object' ? (objData as Record<string, unknown>) : null;
 
   // common shapes: [] or { data: [] } or { data: { data: [] } }
   const list =
     asArray(payload) ??
-    asArray(payload?.data) ??
-    asArray(payload?.data?.data) ??
+    asArray(objData) ??
+    asArray(objDataObj?.data) ??
     [];
 
   if (list.length === 0) return [];
 
-  return list.map((raw: any) => ({
-    id: String(raw.id ?? raw.rfqId ?? raw.code ?? ''),
-    title: String(raw.title ?? raw.name ?? 'Untitled'),
-    status: isValidRfqStatus(raw.status) ? raw.status : RFQ_STATUSES.ACTIVE,
-    owner: raw.owner
-      ? { name: raw.owner.name, email: raw.owner.email }
-      : raw.owner_name || raw.owner_email
-        ? { name: raw.owner_name, email: raw.owner_email }
-        : undefined,
-    deadline: raw.deadline ?? raw.submissionDeadline ?? raw.deadlineLabel,
-    category: raw.category,
-    estValue: raw.estValue ?? raw.estimated_value ?? raw.estimatedValue,
-    savings: raw.savings,
-    vendorsCount: raw.vendorsCount ?? raw.vendors_count,
-    quotesCount: raw.quotesCount ?? raw.quotes_count,
-    projectId: raw.project_id ?? raw.projectId ?? null,
-  }));
+  return list.map((raw: unknown) => {
+    const r =
+      raw != null && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+    const ownerRaw = r.owner;
+    const owner =
+      ownerRaw != null && typeof ownerRaw === 'object' && !Array.isArray(ownerRaw)
+        ? (ownerRaw as Record<string, unknown>)
+        : null;
+    const ownerNameVal = String(owner?.name ?? r.owner_name ?? '');
+    const ownerEmailVal = String(owner?.email ?? r.owner_email ?? '');
+    return {
+      id: normalizeString(r.id ?? r.rfqId ?? r.code) ?? '',
+      title: normalizeString(r.title ?? r.name) ?? 'Untitled',
+      status: isValidRfqStatus(r.status) ? r.status : RFQ_STATUSES.ACTIVE,
+      owner: ownerNameVal || ownerEmailVal ? { name: ownerNameVal, email: ownerEmailVal } : undefined,
+      deadline: normalizeString(r.deadline ?? r.submissionDeadline ?? r.deadlineLabel),
+      category: normalizeString(r.category),
+      estValue: normalizeString(r.estValue ?? r.estimated_value ?? r.estimatedValue),
+      savings: normalizeString(r.savings),
+      vendorsCount: parseOptionalNumber(r.vendorsCount ?? r.vendors_count),
+      quotesCount: parseOptionalNumber(r.quotesCount ?? r.quotes_count),
+      projectId: normalizeStringOrNull(r.project_id ?? r.projectId ?? null),
+    };
+  });
 }
 
 export function useRfqs(params: UseRfqsParams) {

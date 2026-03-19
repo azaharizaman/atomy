@@ -18,7 +18,7 @@ export interface TaskDetail {
 function normalizeTask(payload: unknown): TaskDetail {
   let raw = payload as Record<string, unknown> | null | undefined;
   let depth = 0;
-  while (raw?.data && depth < 5) {
+  while (depth < 5 && raw != null && typeof raw.data === 'object' && raw.data !== null && !Array.isArray(raw.data)) {
     const next = raw.data as Record<string, unknown>;
     if (next === raw) break;
     raw = next;

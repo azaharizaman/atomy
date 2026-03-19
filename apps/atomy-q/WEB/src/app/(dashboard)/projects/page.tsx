@@ -98,7 +98,7 @@ export default function ProjectsPage() {
     return (
       <Card padding="md">
         <div className="text-sm font-semibold text-slate-900">Failed to load projects</div>
-        <div className="text-xs text-slate-500 mt-1">{String((error as any)?.message ?? '')}</div>
+        <div className="text-xs text-slate-500 mt-1">{String((error as Error | null)?.message ?? '')}</div>
       </Card>
     );
   }
@@ -183,7 +183,7 @@ export default function ProjectsPage() {
               </Button>
             </div>
             {createProject.isError && (
-              <p className="text-xs text-red-600">{String((createProject.error as Error)?.message)}</p>
+              <p className="text-xs text-red-600">{String((createProject.error as Error | null)?.message ?? '')}</p>
             )}
           </form>
         </Card>

@@ -5,8 +5,6 @@
 
 import type { RfqStatus } from '@/hooks/use-rfqs';
 
-const RFQ_STATUSES: RfqStatus[] = ['draft', 'pending', 'active', 'closed', 'awarded', 'archived'];
-
 const CATEGORIES = [
   'IT Hardware',
   'Facilities',
@@ -227,6 +225,7 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
       vendorsCount = 4 + Math.floor(hash(i + 15) * 5);
       quotesCount = Math.min(vendorsCount, 3 + Math.floor(hash(i + 16) * 6));
     }
+    quotesCount = Math.min(quotesCount, vendorsCount);
 
     rfqs.push({
       id,
@@ -244,7 +243,11 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
       quotesCount,
     });
 
-    const vendorPool = [...VENDOR_NAMES].sort((a, b) => (hash(i + a.length) > 0.5 ? 1 : -1));
+    const vendorPool = [...VENDOR_NAMES].sort((a, b) => {
+      const ha = hash(i + a.length);
+      const hb = hash(i + b.length);
+      return ha !== hb ? (ha < hb ? -1 : 1) : a.localeCompare(b);
+    });
     const vendors: SeedVendor[] = [];
     for (let v = 0; v < vendorsCount; v++) {
       const name = vendorPool[v % vendorPool.length];

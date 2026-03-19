@@ -30,14 +30,15 @@ export default function NewRfqPage() {
         return;
       }
       router.push('/rfqs');
-    } catch (e: any) {
-      const msg =
-        e?.response?.data?.error ??
-        e?.response?.data?.message ??
-        (e?.response?.data?.errors ? 'Validation failed' : null) ??
-        e?.message ??
-        'Failed to create RFQ';
-      setError(String(msg));
+    } catch (e: unknown) {
+      const axiosish = e as { response?: { data?: Record<string, unknown> } } & { message?: string };
+      const data = axiosish?.response?.data;
+      const msgRaw =
+        (typeof data?.error === 'string' && data.error.trim() ? data.error : null) ??
+        (typeof data?.message === 'string' && data.message.trim() ? data.message : null) ??
+        (data?.errors ? 'Validation failed' : null) ??
+        (typeof axiosish?.message === 'string' && axiosish.message.trim() ? axiosish.message : null);
+      setError(msgRaw && String(msgRaw).trim() ? String(msgRaw) : 'Failed to create RFQ');
     } finally {
       setIsSubmitting(false);
     }
