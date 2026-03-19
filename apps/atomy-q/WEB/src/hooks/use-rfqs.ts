@@ -87,15 +87,13 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
       ownerRaw != null && typeof ownerRaw === 'object' && !Array.isArray(ownerRaw)
         ? (ownerRaw as Record<string, unknown>)
         : null;
+    const ownerNameVal = String(owner?.name ?? r.owner_name ?? '');
+    const ownerEmailVal = String(owner?.email ?? r.owner_email ?? '');
     return {
       id: String(r.id ?? r.rfqId ?? r.code ?? ''),
       title: String(r.title ?? r.name ?? 'Untitled'),
       status: isValidRfqStatus(r.status) ? r.status : RFQ_STATUSES.ACTIVE,
-      owner: owner
-        ? { name: String(owner.name ?? ''), email: String(owner.email ?? '') }
-        : r.owner_name != null || r.owner_email != null
-          ? { name: String(r.owner_name ?? ''), email: String(r.owner_email ?? '') }
-          : undefined,
+      owner: ownerNameVal || ownerEmailVal ? { name: ownerNameVal, email: ownerEmailVal } : undefined,
       deadline: normalizeString(r.deadline ?? r.submissionDeadline ?? r.deadlineLabel),
       category: normalizeString(r.category),
       estValue: normalizeString(r.estValue ?? r.estimated_value ?? r.estimatedValue),
