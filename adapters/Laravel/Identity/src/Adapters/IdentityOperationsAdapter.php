@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Laravel\Identity\Adapters;
 
 use Illuminate\Contracts\Queue\Queue;
+use Illuminate\Support\Facades\Cache;
 use Nexus\Identity\Contracts\MfaEnrollmentServiceInterface;
 use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
 use Nexus\Identity\Contracts\UserPersistInterface;
@@ -180,10 +181,20 @@ final readonly class IdentityOperationsAdapter implements
     {
         try {
             // Enqueue async delivery (plan requirement) rather than sending inline.
-            $this->queue->push(new SendWelcomeNotificationJob($userId, $temporaryPassword));
+            $setupTokenId = null;
+            if (is_string($temporaryPassword) && trim($temporaryPassword) !== '') {
+                $setupTokenId = bin2hex(random_bytes(16));
+                Cache::put(
+                    'identity:welcome-temp-password:' . $setupTokenId,
+                    $temporaryPassword,
+                    now()->addMinutes(15),
+                );
+            }
+
+            $this->queue->push(new SendWelcomeNotificationJob($userId, $setupTokenId));
             $this->logger->info('Welcome notification enqueued', ['user_id' => $userId]);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to send welcome notification', [
+            $this->logger->error('Failed to enqueue welcome notification', [
                 'user_id' => $userId,
                 'error' => $e->getMessage(),
             ]);

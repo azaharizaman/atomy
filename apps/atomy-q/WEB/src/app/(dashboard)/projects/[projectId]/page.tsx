@@ -15,6 +15,15 @@ import { useUpdateProjectStatus, PROJECT_STATUSES } from '@/hooks/use-update-pro
 import { useProjectAcl, type ProjectAclEntry, type ProjectAclRole } from '@/hooks/use-project-acl';
 import { useUpdateProjectAcl } from '@/hooks/use-update-project-acl';
 
+type AclDraftEntry = ProjectAclEntry & { draftId: string };
+
+function createAclDraftId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `acl-draft-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default function ProjectDetailPage() {
   const router = useRouter();
   const params = useParams<{ projectId: string }>();
@@ -36,7 +45,7 @@ export default function ProjectDetailPage() {
   const updateStatus = useUpdateProjectStatus(projectId);
   const updateAcl = useUpdateProjectAcl(projectId);
 
-  const [aclDraft, setAclDraft] = React.useState<ProjectAclEntry[]>([]);
+  const [aclDraft, setAclDraft] = React.useState<AclDraftEntry[]>([]);
   const [aclDirty, setAclDirty] = React.useState(false);
 
   React.useEffect(() => {
@@ -51,9 +60,22 @@ export default function ProjectDetailPage() {
 
   React.useEffect(() => {
     if (!aclDirty) {
-      setAclDraft(acl);
+      setAclDraft(
+        acl.map((entry) => ({
+          ...entry,
+          draftId: createAclDraftId(),
+        }))
+      );
     }
   }, [acl, aclDirty]);
+
+  const normalizedAcl = React.useMemo(
+    () =>
+      aclDraft
+        .map((e) => ({ userId: e.userId.trim(), role: e.role }))
+        .filter((e) => e.userId !== ''),
+    [aclDraft]
+  );
 
   const isAxios404 = axios.isAxiosError(projectError) && projectError.response?.status === 404;
   const projectErrorData = axios.isAxiosError(projectError) ? projectError.response?.data : undefined;
@@ -380,7 +402,7 @@ export default function ProjectDetailPage() {
               size="sm"
               variant="secondary"
               onClick={() => {
-                setAclDraft((prev) => [...prev, { userId: '', role: 'viewer' }]);
+                setAclDraft((prev) => [...prev, { draftId: createAclDraftId(), userId: '', role: 'viewer' }]);
                 setAclDirty(true);
               }}
             >
@@ -389,12 +411,13 @@ export default function ProjectDetailPage() {
             <Button
               size="sm"
               variant="primary"
-              disabled={!aclDirty || updateAcl.isPending}
+              disabled={!aclDirty || updateAcl.isPending || aclDraft.length === 0}
               onClick={() => {
-                const normalized = aclDraft
-                  .map((e) => ({ userId: e.userId.trim(), role: e.role }))
-                  .filter((e) => e.userId !== '');
-                updateAcl.mutate(normalized, {
+                if (normalizedAcl.length === 0) {
+                  setAclDirty(false);
+                  return;
+                }
+                updateAcl.mutate(normalizedAcl, {
                   onSuccess: () => setAclDirty(false),
                 });
               }}
@@ -416,7 +439,7 @@ export default function ProjectDetailPage() {
               {aclDraft.map((entry, idx) => {
                 const role = entry.role;
                 return (
-                  <div key={`${entry.userId}-${idx}`} className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  <div key={entry.draftId} className="flex flex-col sm:flex-row gap-2 sm:items-center">
                     <input
                       aria-label={`User ID ${idx + 1}`}
                       value={entry.userId}

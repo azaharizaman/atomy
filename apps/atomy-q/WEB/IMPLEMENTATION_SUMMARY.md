@@ -27,3 +27,9 @@
 3.  Implement Comparison Runs + Matrix + Award (Screens 6–7, 10).
 4.  Implement Approval Queue + Detail (Screens 8–9).
 5.  Expand Playwright coverage per workflow slice.
+
+## 2026-03-19 PR Remediation
+- Project ACL editor now uses stable draft-local row IDs to prevent React remounting when `userId` is edited.
+- Project ACL save flow now blocks empty ACL submissions both in button-disabled state and at click handler guard.
+- `use-update-project-acl` now validates mapped roles at runtime against canonical allowed roles and fails fast on invalid payloads.
+- Seed data now includes realistic enterprise RFQ presets (software renewal, SOC services, WAN upgrade, facilities maintenance, HRIS partner) in addition to generated lifecycle data.

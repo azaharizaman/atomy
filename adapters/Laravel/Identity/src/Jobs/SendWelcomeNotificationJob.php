@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Nexus\Identity\Contracts\UserQueryInterface;
 use Nexus\Laravel\Identity\Notifications\WelcomeNotification;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
@@ -24,7 +25,7 @@ final class SendWelcomeNotificationJob implements ShouldQueue
 
     public function __construct(
         public string $userId,
-        public ?string $temporaryPassword,
+        public ?string $setupTokenId,
     ) {
     }
 
@@ -38,8 +39,21 @@ final class SendWelcomeNotificationJob implements ShouldQueue
         $user = $userQuery->findById($this->userId);
         /** @var \Nexus\Notifier\Contracts\NotifiableInterface $user */
 
-        $notificationManager->send($user, new WelcomeNotification($this->temporaryPassword));
+        $temporaryPassword = null;
+        if (is_string($this->setupTokenId) && $this->setupTokenId !== '') {
+            $resolved = Cache::pull($this->cacheKey($this->setupTokenId));
+            if (is_string($resolved) && $resolved !== '') {
+                $temporaryPassword = $resolved;
+            }
+        }
+
+        $notificationManager->send($user, new WelcomeNotification($temporaryPassword));
         $logger->info('Welcome notification queued+sent', ['user_id' => $this->userId]);
+    }
+
+    private function cacheKey(string $setupTokenId): string
+    {
+        return 'identity:welcome-temp-password:' . $setupTokenId;
     }
 }
 

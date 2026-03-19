@@ -6,6 +6,7 @@ namespace Nexus\Laravel\Notifier\Services;
 
 use DateTimeImmutable;
 use Illuminate\Contracts\Queue\Queue;
+use Illuminate\Support\Facades\Cache;
 use Nexus\Laravel\Notifier\Jobs\SendEmailNotificationJob;
 use Nexus\Notifier\Contracts\NotifiableInterface;
 use Nexus\Notifier\Contracts\NotificationInterface;
@@ -54,7 +55,7 @@ final readonly class LaravelNotificationManager implements NotificationManagerIn
                 fromName: (string) ($this->config['from_name'] ?? 'Atomy'),
                 subject: (string) ($emailData['subject'] ?? 'Notification'),
                 template: (string) ($emailData['template'] ?? 'generic'),
-                data: is_array($emailData['data'] ?? null) ? (array) $emailData['data'] : [],
+                data: $this->sanitizeQueueEmailData(is_array($emailData['data'] ?? null) ? (array) $emailData['data'] : []),
             );
 
             $this->queue->pushOn((string) ($this->config['queue'] ?? 'default'), $job);
@@ -112,7 +113,7 @@ final readonly class LaravelNotificationManager implements NotificationManagerIn
                 fromName: (string) ($this->config['from_name'] ?? 'Atomy'),
                 subject: (string) ($emailData['subject'] ?? 'Notification'),
                 template: (string) ($emailData['template'] ?? 'generic'),
-                data: is_array($emailData['data'] ?? null) ? (array) $emailData['data'] : [],
+                data: $this->sanitizeQueueEmailData(is_array($emailData['data'] ?? null) ? (array) $emailData['data'] : []),
             ))->delay($delaySeconds);
 
             $this->queue->laterOn((string) ($this->config['queue'] ?? 'default'), $delaySeconds, $job);
@@ -138,6 +139,31 @@ final readonly class LaravelNotificationManager implements NotificationManagerIn
     private function generateNotificationId(): string
     {
         return sprintf('notif_%s_%s', (new \DateTimeImmutable())->format('YmdHis'), bin2hex(random_bytes(8)));
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private function sanitizeQueueEmailData(array $data): array
+    {
+        $temporaryPassword = $data['temporary_password'] ?? null;
+        if (!is_string($temporaryPassword) || trim($temporaryPassword) === '') {
+            return $data;
+        }
+
+        $token = bin2hex(random_bytes(16));
+        Cache::put($this->temporaryPasswordCacheKey($token), $temporaryPassword, now()->addMinutes(15));
+
+        unset($data['temporary_password']);
+        $data['temporary_password_token'] = $token;
+
+        return $data;
+    }
+
+    private function temporaryPasswordCacheKey(string $token): string
+    {
+        return 'notifier:temporary-password:' . $token;
     }
 }
 

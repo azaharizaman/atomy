@@ -49,7 +49,7 @@ final readonly class UserContextDataProvider implements UserContextProviderInter
             email: $user['email'],
             firstName: $user['first_name'] ?? null,
             lastName: $user['last_name'] ?? null,
-            tenantId: $user['tenant_id'] ?? null,
+            tenantId: $tenantId === '' ? null : $tenantId,
             status: $user['status'],
             permissions: $permissions,
             roles: $roles,

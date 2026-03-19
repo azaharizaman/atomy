@@ -24,7 +24,11 @@ final class IdentityWelcomeQueueTest extends TestCase
         // We don't need a real user persisted in this test since we're asserting enqueue only.
         $sender->sendWelcome('user-id', 'temp-pass');
 
-        Queue::assertPushed(SendWelcomeNotificationJob::class);
+        Queue::assertPushed(SendWelcomeNotificationJob::class, function (SendWelcomeNotificationJob $job): bool {
+            return $job->userId === 'user-id'
+                && is_string($job->setupTokenId)
+                && $job->setupTokenId !== '';
+        });
     }
 }
 

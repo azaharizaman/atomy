@@ -29,6 +29,8 @@ final readonly class PostmarkEmailAdapter
         string $subject,
         string $template,
         array $data,
+        ?string $fromEmail = null,
+        ?string $fromName = null,
         ?string $notificationId = null,
     ): void {
         if (trim($toEmail) === '') {
@@ -40,10 +42,10 @@ final readonly class PostmarkEmailAdapter
 
         $view = sprintf('nexus-notifier::emails.%s', $template);
 
-        $this->mailer->send($view, ['data' => $data], function ($message) use ($toEmail, $toName, $subject): void {
+        $this->mailer->send($view, ['data' => $data], function ($message) use ($toEmail, $toName, $subject, $fromEmail, $fromName): void {
             $message->from(
-                (string) ($this->config['from_email'] ?? 'no-reply@example.com'),
-                (string) ($this->config['from_name'] ?? 'Atomy'),
+                $fromEmail ?? (string) ($this->config['from_email'] ?? 'no-reply@example.com'),
+                $fromName ?? (string) ($this->config['from_name'] ?? 'Atomy'),
             );
             $message->to($toEmail, $toName);
             $message->subject($subject);

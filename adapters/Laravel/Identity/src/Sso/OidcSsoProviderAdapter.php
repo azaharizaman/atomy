@@ -80,7 +80,7 @@ final readonly class OidcSsoProviderAdapter implements SsoProviderInterface
         }
 
         $existing = $this->userQuery->findByEmailOrNull($email);
-        if ($existing !== null) {
+        if ($existing !== null && $existing->getTenantId() === $tenantId) {
             return $existing;
         }
 
@@ -96,6 +96,8 @@ final readonly class OidcSsoProviderAdapter implements SsoProviderInterface
     public function getUserProfile(string $accessToken): array
     {
         $cfg = $this->providerConfig(null);
+        $discovery = $this->oidc->getDiscoveryDocument($cfg->discoveryUrl);
+        $cfg = $this->withDiscoveryEndpoints($cfg, $discovery);
         return $this->oidc->getUserInfo($cfg, $accessToken);
     }
 

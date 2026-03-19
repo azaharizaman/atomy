@@ -74,6 +74,13 @@ class ProjectAclTest extends TestCase
         $getResponse->assertStatus(200);
         $getResponse->assertJsonPath('data.roles', []);
 
+        ProjectAcl::query()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'role' => 'owner',
+            'tenant_id' => $user->tenant_id,
+        ]);
+
         $putResponse = $this->putJson('/api/v1/projects/' . $project->id . '/acl', [
             'roles' => [
                 ['user_id' => $user->id, 'role' => 'owner'],

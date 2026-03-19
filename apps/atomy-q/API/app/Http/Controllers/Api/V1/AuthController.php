@@ -83,7 +83,6 @@ final class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'action' => ['required', 'string', 'in:init,callback'],
             'tenant_id' => ['required', 'string', 'max:64'],
-            'redirect_uri' => ['sometimes', 'string'],
             'code' => ['required_if:action,callback', 'string'],
             'state' => ['required_if:action,callback', 'string'],
         ]);
@@ -97,8 +96,7 @@ final class AuthController extends Controller
 
         try {
             if ($action === 'init') {
-                $redirectUriOverride = $request->has('redirect_uri') ? (string) $request->input('redirect_uri') : null;
-                $result = $this->identityOps->initiateSso($tenantId, $redirectUriOverride);
+                $result = $this->identityOps->initiateSso($tenantId, $this->resolveTenantRedirectUri($tenantId));
                 return response()->json(['data' => $result]);
             }
 
@@ -131,9 +129,31 @@ final class AuthController extends Controller
             ]);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            if ($e instanceof \RuntimeException || $e instanceof \Error) {
+                report($e);
+                return response()->json(['message' => 'SSO provider unavailable'], 500);
+            }
             return response()->json(['message' => 'SSO authentication failed'], 401);
         }
+    }
+
+    private function resolveTenantRedirectUri(string $tenantId): string
+    {
+        $tenantScoped = config('services.oidc.tenant_redirect_uris');
+        if (is_array($tenantScoped)) {
+            $candidate = $tenantScoped[$tenantId] ?? null;
+            if (is_string($candidate) && trim($candidate) !== '') {
+                return $candidate;
+            }
+        }
+
+        $fallback = config('services.oidc.redirect_uri');
+        if (is_string($fallback) && trim($fallback) !== '') {
+            return $fallback;
+        }
+
+        throw new \RuntimeException('OIDC redirect URI not configured');
     }
 
     /**

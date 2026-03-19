@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Nexus\Laravel\Notifier\Adapters\PostmarkEmailAdapter;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -33,18 +34,22 @@ final class SendEmailNotificationJob implements ShouldQueue
         public string $template,
         public array $data,
     ) {
+        unset($this->data['temporary_password']);
     }
 
     public function handle(PostmarkEmailAdapter $postmark, ?LoggerInterface $logger = null): void
     {
         $logger ??= new NullLogger();
+        $data = $this->resolveSensitiveData($this->data);
 
         $postmark->sendTemplatedEmail(
             toEmail: $this->toEmail,
             toName: $this->toName,
             subject: $this->subject,
             template: $this->template,
-            data: $this->data,
+            data: $data,
+            fromEmail: $this->fromEmail,
+            fromName: $this->fromName,
             notificationId: $this->notificationId,
         );
 
@@ -53,6 +58,31 @@ final class SendEmailNotificationJob implements ShouldQueue
             'to' => $this->toEmail,
             'template' => $this->template,
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private function resolveSensitiveData(array $data): array
+    {
+        $token = $data['temporary_password_token'] ?? null;
+        if (!is_string($token) || trim($token) === '') {
+            return $data;
+        }
+
+        $secret = Cache::pull($this->temporaryPasswordCacheKey($token));
+        unset($data['temporary_password_token']);
+        if (is_string($secret) && $secret !== '') {
+            $data['temporary_password'] = $secret;
+        }
+
+        return $data;
+    }
+
+    private function temporaryPasswordCacheKey(string $token): string
+    {
+        return 'notifier:temporary-password:' . $token;
     }
 }
 

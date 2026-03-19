@@ -148,3 +148,9 @@ Persistence added for flow-driven endpoints: **RfqController** (store, storeLine
 - Replaced synthetic success payloads in award/negotiation/setting mutation stubs with explicit `501 Not Implemented` responses.
 - Aligned schema/model definitions (`Scenario` fields, `comparison_runs.discarded_by` type) and strengthened several migration indexes.
 - Added missing `declare(strict_types=1);` headers in scaffolded PHP files flagged during review.
+
+## 2026-03-19 PR Remediation
+- `AuthController` SSO flow no longer accepts client-provided `redirect_uri`; redirect URI is resolved server-side from tenant-aware config with fallback to global OIDC redirect.
+- `AuthController` SSO catch-all now distinguishes server/runtime failures (reported + HTTP 500) from authentication failures (HTTP 401).
+- `ProjectController::updateAcl` now enforces project-level ACL management authorization (owner/admin only) before mutating `project_acl`.
+- Queue test `IdentityWelcomeQueueTest` now asserts enqueued job payload properties with a predicate closure, not class-only assertion.

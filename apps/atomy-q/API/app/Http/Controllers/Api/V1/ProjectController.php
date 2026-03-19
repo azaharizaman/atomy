@@ -405,9 +405,14 @@ final class ProjectController extends Controller
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
         $this->assertProjectOwnedByTenant($request, $id);
-        if ($this->projects->findById($id) === null) {
+        $project = ProjectModel::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->first();
+        if ($project === null || $this->projects->findById($id) === null) {
             abort(404);
         }
+        $this->assertCanManageAcl($request, $project);
         $validated = $request->validate([
             'roles' => 'required|array',
             'roles.*.user_id' => ['required', 'string', 'distinct', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
@@ -437,6 +442,25 @@ final class ProjectController extends Controller
             ->values()
             ->all();
         return response()->json(['data' => ['roles' => $rows]]);
+    }
+
+    private function assertCanManageAcl(Request $request, ProjectModel $project): void
+    {
+        $userId = (string) $request->attributes->get('auth_user_id', '');
+        if ($userId === '') {
+            abort(403, 'Forbidden');
+        }
+
+        $allowed = ProjectAcl::query()
+            ->where('tenant_id', $project->tenant_id)
+            ->where('project_id', $project->id)
+            ->where('user_id', $userId)
+            ->whereIn('role', ['owner', 'admin'])
+            ->exists();
+
+        if (! $allowed) {
+            abort(403, 'Forbidden');
+        }
     }
 }
 

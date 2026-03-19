@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type { ProjectAclEntry, ProjectAclRole } from '@/hooks/use-project-acl';
 
+const VALID_PROJECT_ACL_ROLES: ReadonlySet<ProjectAclRole> = new Set<ProjectAclRole>(['owner', 'admin', 'editor', 'viewer']);
+
 export interface UpdateProjectAclPayload {
   roles: Array<{ user_id: string; role: ProjectAclRole }>;
 }
@@ -33,11 +35,16 @@ export function useUpdateProjectAcl(projectId: string) {
         .filter((r): r is Record<string, unknown> => !!r && typeof r === 'object' && !Array.isArray(r))
         .map((r) => {
           const raw = String(r.role ?? 'viewer').toLowerCase().trim();
-          const role =
+          const candidate =
             raw === 'manager' ? 'admin' : raw === 'contributor' ? 'editor' : raw === 'client_stakeholder' ? 'viewer' : raw;
+          if (!VALID_PROJECT_ACL_ROLES.has(candidate as ProjectAclRole)) {
+            throw new Error(`Invalid ACL role received: ${candidate}`);
+          }
+          const role = candidate as ProjectAclRole;
+
           return {
             userId: String(r.user_id ?? ''),
-            role: (role as ProjectAclRole) || 'viewer',
+            role,
           };
         })
         .filter((r) => r.userId.trim() !== '');
