@@ -41,13 +41,21 @@ final class SendWelcomeNotificationJob implements ShouldQueue
 
         $temporaryPassword = null;
         if (is_string($this->setupTokenId) && $this->setupTokenId !== '') {
-            $resolved = Cache::pull($this->cacheKey($this->setupTokenId));
+            $resolved = Cache::get($this->cacheKey($this->setupTokenId));
             if (is_string($resolved) && $resolved !== '') {
                 $temporaryPassword = $resolved;
             }
         }
 
+        if (is_string($this->setupTokenId) && $this->setupTokenId !== '' && ($temporaryPassword === null || $temporaryPassword === '')) {
+            $logger->warning('Skipping welcome notification: missing setup secret', ['user_id' => $this->userId]);
+            return;
+        }
+
         $notificationManager->send($user, new WelcomeNotification($temporaryPassword));
+        if (is_string($this->setupTokenId) && $this->setupTokenId !== '') {
+            Cache::forget($this->cacheKey($this->setupTokenId));
+        }
         $logger->info('Welcome notification queued+sent', ['user_id' => $this->userId]);
     }
 

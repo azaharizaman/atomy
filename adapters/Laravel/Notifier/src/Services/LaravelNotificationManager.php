@@ -105,7 +105,7 @@ final readonly class LaravelNotificationManager implements NotificationManagerIn
                 continue;
             }
 
-            $job = (new SendEmailNotificationJob(
+            $job = new SendEmailNotificationJob(
                 notificationId: $notificationId,
                 toEmail: (string) ($recipient->getNotificationEmail() ?? ''),
                 toName: (string) ($recipient->getNotificationIdentifier()),
@@ -113,8 +113,11 @@ final readonly class LaravelNotificationManager implements NotificationManagerIn
                 fromName: (string) ($this->config['from_name'] ?? 'Atomy'),
                 subject: (string) ($emailData['subject'] ?? 'Notification'),
                 template: (string) ($emailData['template'] ?? 'generic'),
-                data: $this->sanitizeQueueEmailData(is_array($emailData['data'] ?? null) ? (array) $emailData['data'] : []),
-            ))->delay($delaySeconds);
+                data: $this->sanitizeQueueEmailData(
+                    is_array($emailData['data'] ?? null) ? (array) $emailData['data'] : [],
+                    $delaySeconds
+                ),
+            );
 
             $this->queue->laterOn((string) ($this->config['queue'] ?? 'default'), $delaySeconds, $job);
         }
@@ -145,7 +148,7 @@ final readonly class LaravelNotificationManager implements NotificationManagerIn
      * @param array<string, mixed> $data
      * @return array<string, mixed>
      */
-    private function sanitizeQueueEmailData(array $data): array
+    private function sanitizeQueueEmailData(array $data, ?int $ttlSeconds = null): array
     {
         $temporaryPassword = $data['temporary_password'] ?? null;
         if (!is_string($temporaryPassword) || trim($temporaryPassword) === '') {
@@ -153,7 +156,8 @@ final readonly class LaravelNotificationManager implements NotificationManagerIn
         }
 
         $token = bin2hex(random_bytes(16));
-        Cache::put($this->temporaryPasswordCacheKey($token), $temporaryPassword, now()->addMinutes(15));
+        $effectiveTtl = max(900, (int) ($ttlSeconds ?? 0) + 60);
+        Cache::put($this->temporaryPasswordCacheKey($token), $temporaryPassword, now()->addSeconds($effectiveTtl));
 
         unset($data['temporary_password']);
         $data['temporary_password_token'] = $token;

@@ -40,7 +40,9 @@ final class SendEmailNotificationJob implements ShouldQueue
     public function handle(PostmarkEmailAdapter $postmark, ?LoggerInterface $logger = null): void
     {
         $logger ??= new NullLogger();
-        $data = $this->resolveSensitiveData($this->data);
+        $resolved = $this->resolveSensitiveData($this->data);
+        $data = $resolved['data'];
+        $token = $resolved['temporary_password_token'];
 
         $postmark->sendTemplatedEmail(
             toEmail: $this->toEmail,
@@ -52,6 +54,9 @@ final class SendEmailNotificationJob implements ShouldQueue
             fromName: $this->fromName,
             notificationId: $this->notificationId,
         );
+        if (is_string($token) && $token !== '') {
+            Cache::forget($this->temporaryPasswordCacheKey($token));
+        }
 
         $logger->info('Email notification sent', [
             'notification_id' => $this->notificationId,
@@ -62,22 +67,28 @@ final class SendEmailNotificationJob implements ShouldQueue
 
     /**
      * @param array<string, mixed> $data
-     * @return array<string, mixed>
+     * @return array{data: array<string, mixed>, temporary_password_token: ?string}
      */
     private function resolveSensitiveData(array $data): array
     {
         $token = $data['temporary_password_token'] ?? null;
         if (!is_string($token) || trim($token) === '') {
-            return $data;
+            return [
+                'data' => $data,
+                'temporary_password_token' => null,
+            ];
         }
 
-        $secret = Cache::pull($this->temporaryPasswordCacheKey($token));
+        $secret = Cache::get($this->temporaryPasswordCacheKey($token));
         unset($data['temporary_password_token']);
         if (is_string($secret) && $secret !== '') {
             $data['temporary_password'] = $secret;
         }
 
-        return $data;
+        return [
+            'data' => $data,
+            'temporary_password_token' => $token,
+        ];
     }
 
     private function temporaryPasswordCacheKey(string $token): string

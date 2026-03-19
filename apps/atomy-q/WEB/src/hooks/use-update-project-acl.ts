@@ -34,9 +34,15 @@ export function useUpdateProjectAcl(projectId: string) {
       return roles
         .filter((r): r is Record<string, unknown> => !!r && typeof r === 'object' && !Array.isArray(r))
         .map((r) => {
-          const raw = String(r.role ?? 'viewer').toLowerCase().trim();
+          const roleRaw = String(r.role ?? 'viewer').toLowerCase().trim();
           const candidate =
-            raw === 'manager' ? 'admin' : raw === 'contributor' ? 'editor' : raw === 'client_stakeholder' ? 'viewer' : raw;
+            roleRaw === 'manager'
+              ? 'admin'
+              : roleRaw === 'contributor'
+              ? 'editor'
+              : roleRaw === 'client_stakeholder'
+              ? 'viewer'
+              : roleRaw;
           if (!VALID_PROJECT_ACL_ROLES.has(candidate as ProjectAclRole)) {
             throw new Error(`Invalid ACL role received: ${candidate}`);
           }

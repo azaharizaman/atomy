@@ -128,12 +128,24 @@ final readonly class OidcSsoProviderAdapter implements SsoProviderInterface
 
         $password = bin2hex(random_bytes(24));
         $passwordHash = $this->passwordHasher->hash($password);
+        $firstName = 'User';
+        $lastName = null;
+        if ($name !== '') {
+            $parts = preg_split('/\s+/', trim($name)) ?: [];
+            if (count($parts) > 0) {
+                $firstName = (string) $parts[0];
+                if (count($parts) > 1) {
+                    $lastName = implode(' ', array_slice($parts, 1));
+                }
+            }
+        }
 
         return $this->userPersist->create([
             'tenant_id' => $tenantId,
             'email' => $email,
             'password_hash' => $passwordHash,
-            'first_name' => $name !== '' ? $name : 'User',
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'status' => 'active',
         ]);
     }
