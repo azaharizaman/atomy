@@ -112,7 +112,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_id' => $rfq->id,
             'vendor_id' => (string) Str::ulid(),
             'vendor_name' => 'Vendor One',
-            'status' => 'accepted',
+            'status' => 'uploaded',
             'submitted_at' => now(),
             'confidence' => 100.0,
             'line_items_count' => 0,

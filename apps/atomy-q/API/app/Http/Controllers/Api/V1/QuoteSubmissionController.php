@@ -206,7 +206,7 @@ final class QuoteSubmissionController extends Controller
     private function statusTransitions(): array
     {
         return [
-            'uploaded' => ['extracting', 'failed'],
+            'uploaded' => ['extracting', 'ready', 'failed'],
             'extracting' => ['extracted', 'failed'],
             'extracted' => ['normalizing', 'needs_review', 'failed'],
             'normalizing' => ['needs_review', 'ready', 'failed'],
