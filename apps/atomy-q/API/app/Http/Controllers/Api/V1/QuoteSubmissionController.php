@@ -211,6 +211,7 @@ final class QuoteSubmissionController extends Controller
             'extracted' => ['normalizing', 'needs_review', 'failed'],
             'normalizing' => ['needs_review', 'ready', 'failed'],
             'needs_review' => ['normalizing', 'ready', 'failed'],
+            'accepted' => ['ready', 'failed'],
             'ready' => ['failed'],
             'failed' => ['uploaded', 'extracting'],
         ];

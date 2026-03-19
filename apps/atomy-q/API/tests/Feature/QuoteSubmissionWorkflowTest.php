@@ -55,7 +55,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         $response = $this->postJson(
             '/api/v1/quote-submissions/upload',
             [],
-            $this->authHeaders((string) $user->id, (string) $user->tenant_id),
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
         $response->assertStatus(422);
@@ -89,7 +89,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         $response = $this->patchJson(
             '/api/v1/quote-submissions/' . $quote->id . '/status',
             ['status' => 'ready'],
-            $this->authHeaders((string) $user->id, (string) $user->tenant_id),
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
         $response->assertStatus(422);
@@ -112,7 +112,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_id' => $rfq->id,
             'vendor_id' => (string) Str::ulid(),
             'vendor_name' => 'Vendor One',
-            'status' => 'uploaded',
+            'status' => 'accepted',
             'submitted_at' => now(),
             'confidence' => 100.0,
             'line_items_count' => 0,
@@ -123,7 +123,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         $response = $this->patchJson(
             '/api/v1/quote-submissions/' . $quote->id . '/status',
             ['status' => 'accepted'],
-            $this->authHeaders((string) $user->id, (string) $user->tenant_id),
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
         $response->assertOk();
@@ -161,7 +161,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
 
         $response = $this->getJson(
             '/api/v1/rfqs/' . $rfq->id . '/overview',
-            $this->authHeaders((string) $user->id, (string) $user->tenant_id),
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
         $response->assertOk();
@@ -183,7 +183,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         $response = $this->postJson(
             '/api/v1/comparison-runs/final',
             ['rfq_id' => $rfq->id],
-            $this->authHeaders((string) $user->id, (string) $user->tenant_id),
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
         $response->assertCreated();
@@ -198,7 +198,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         $response = $this->postJson(
             '/api/v1/comparison-runs/final',
             ['rfq_id' => 'rfq-123'],
-            $this->authHeaders((string) $user->id, (string) $user->tenant_id),
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
         $response->assertStatus(422);
