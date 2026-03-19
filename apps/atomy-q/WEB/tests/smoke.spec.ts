@@ -55,7 +55,7 @@ async function fulfillJsonRoute(
 }
 
 async function stubAuth(page: import('@playwright/test').Page) {
-  await page.route('**/auth/login**', async (route) => {
+  await page.route('**/auth/login', async (route) => {
     await fulfillJsonRoute(route, {
       access_token: 'test-token',
       refresh_token: 'test-refresh',
@@ -65,7 +65,7 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
   });
 
-  await page.route('**/me**', async (route) => {
+  await page.route('**/me', async (route) => {
     await fulfillJsonRoute(route, { data: mockUser });
   });
 

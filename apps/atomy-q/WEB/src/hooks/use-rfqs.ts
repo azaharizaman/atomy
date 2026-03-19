@@ -48,19 +48,21 @@ function parseOptionalNumber(value: unknown): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-/** Coerces value to string or undefined at runtime; avoids masking non-string API values. */
+/**
+ * Coerces value to string or undefined at runtime, but only for primitive inputs.
+ * Rejects objects/arrays/functions/symbols to avoid producing "[object Object]" and similar artifacts.
+ */
 function normalizeString(value: unknown): string | undefined {
   if (value === null || value === undefined) return undefined;
   if (typeof value === 'string') return value.trim() || undefined;
-  return String(value);
+  if (typeof value === 'number' || typeof value === 'bigint') return String(value);
+  return undefined;
 }
 
-/** For optional string | null fields (e.g. projectId); preserves null, coerces others. */
+/** For optional string | null fields (e.g. projectId); preserves null, normalizes primitives, rejects objects. */
 function normalizeStringOrNull(value: unknown): string | null {
-  if (value === null) return null;
-  if (value === undefined) return null;
-  if (typeof value === 'string') return value.trim() || null;
-  return String(value);
+  if (value === null || value === undefined) return null;
+  return normalizeString(value) ?? null;
 }
 
 function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
@@ -90,8 +92,8 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
     const ownerNameVal = String(owner?.name ?? r.owner_name ?? '');
     const ownerEmailVal = String(owner?.email ?? r.owner_email ?? '');
     return {
-      id: String(r.id ?? r.rfqId ?? r.code ?? ''),
-      title: String(r.title ?? r.name ?? 'Untitled'),
+      id: normalizeString(r.id ?? r.rfqId ?? r.code) ?? '',
+      title: normalizeString(r.title ?? r.name) ?? 'Untitled',
       status: isValidRfqStatus(r.status) ? r.status : RFQ_STATUSES.ACTIVE,
       owner: ownerNameVal || ownerEmailVal ? { name: ownerNameVal, email: ownerEmailVal } : undefined,
       deadline: normalizeString(r.deadline ?? r.submissionDeadline ?? r.deadlineLabel),
