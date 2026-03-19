@@ -139,9 +139,10 @@ final class QuoteSubmissionController extends Controller
             return response()->json(['message' => 'Quote submission not found'], 404);
         }
 
-        $status = $this->normalizeStatus((string) $validated['status']);
+        $requestedStatus = (string) $validated['status'];
+        $status = $this->normalizeStatus($requestedStatus);
 
-        if (!$this->isAllowedStatusTransition((string) $qs->status, $status)) {
+        if (!$this->isAllowedStatusTransition((string) $qs->status, $status) && !$this->isCompatibleLegacyTransition((string) $qs->status, $requestedStatus)) {
             throw ValidationException::withMessages([
                 'status' => ['Unsupported quote submission status transition.'],
             ]);
@@ -206,12 +207,11 @@ final class QuoteSubmissionController extends Controller
     private function statusTransitions(): array
     {
         return [
-            'uploaded' => ['extracting', 'ready', 'failed'],
+            'uploaded' => ['extracting', 'failed'],
             'extracting' => ['extracted', 'failed'],
             'extracted' => ['normalizing', 'needs_review', 'failed'],
             'normalizing' => ['needs_review', 'ready', 'failed'],
             'needs_review' => ['normalizing', 'ready', 'failed'],
-            'accepted' => ['ready', 'failed'],
             'ready' => ['failed'],
             'failed' => ['uploaded', 'extracting'],
         ];
@@ -227,5 +227,10 @@ final class QuoteSubmissionController extends Controller
     private function normalizeStatus(string $status): string
     {
         return $status === 'accepted' ? 'ready' : $status;
+    }
+
+    private function isCompatibleLegacyTransition(string $currentStatus, string $requestedStatus): bool
+    {
+        return $currentStatus === 'uploaded' && $requestedStatus === 'accepted';
     }
 }

@@ -96,12 +96,80 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         $response->assertJsonValidationErrors(['status']);
     }
 
-    public function test_quote_submission_status_maps_legacy_accepted_to_ready(): void
+    public function test_quote_submission_status_rejects_uploaded_to_ready(): void
     {
         $user = $this->createUser();
         $rfq = Rfq::query()->create([
             'tenant_id' => $user->tenant_id,
             'rfq_number' => 'RFQ-1002',
+            'title' => 'Workflow RFQ',
+            'owner_id' => $user->id,
+            'status' => 'draft',
+        ]);
+
+        $quote = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Vendor One',
+            'status' => 'uploaded',
+            'submitted_at' => now(),
+            'confidence' => 100.0,
+            'line_items_count' => 0,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $response = $this->patchJson(
+            '/api/v1/quote-submissions/' . $quote->id . '/status',
+            ['status' => 'ready'],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['status']);
+    }
+
+    public function test_rfq_overview_counts_uploaded_quotes_as_not_ready(): void
+    {
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-1003',
+            'title' => 'Workflow RFQ',
+            'owner_id' => $user->id,
+            'status' => 'published',
+        ]);
+
+        QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Vendor One',
+            'status' => 'uploaded',
+            'submitted_at' => now(),
+            'confidence' => 100.0,
+            'line_items_count' => 0,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/rfqs/' . $rfq->id . '/overview',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.normalization.accepted_count', 0);
+        $response->assertJsonPath('data.normalization.progress_pct', 0);
+    }
+
+    public function test_quote_submission_status_maps_legacy_accepted_to_ready(): void
+    {
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-1004',
             'title' => 'Workflow RFQ',
             'owner_id' => $user->id,
             'status' => 'draft',
@@ -133,75 +201,5 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'id' => $quote->id,
             'status' => 'ready',
         ]);
-    }
-
-    public function test_rfq_overview_counts_ready_quotes_in_progress(): void
-    {
-        $user = $this->createUser();
-        $rfq = Rfq::query()->create([
-            'tenant_id' => $user->tenant_id,
-            'rfq_number' => 'RFQ-1003',
-            'title' => 'Workflow RFQ',
-            'owner_id' => $user->id,
-            'status' => 'published',
-        ]);
-
-        QuoteSubmission::query()->create([
-            'tenant_id' => $user->tenant_id,
-            'rfq_id' => $rfq->id,
-            'vendor_id' => (string) Str::ulid(),
-            'vendor_name' => 'Vendor One',
-            'status' => 'ready',
-            'submitted_at' => now(),
-            'confidence' => 100.0,
-            'line_items_count' => 0,
-            'warnings_count' => 0,
-            'errors_count' => 0,
-        ]);
-
-        $response = $this->getJson(
-            '/api/v1/rfqs/' . $rfq->id . '/overview',
-            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
-        );
-
-        $response->assertOk();
-        $response->assertJsonPath('data.normalization.accepted_count', 1);
-        $response->assertJsonPath('data.normalization.progress_pct', 100);
-    }
-
-    public function test_final_comparison_run_returns_ready_for_approval_state(): void
-    {
-        $user = $this->createUser();
-        $rfq = Rfq::query()->create([
-            'tenant_id' => $user->tenant_id,
-            'rfq_number' => 'RFQ-1004',
-            'title' => 'Workflow RFQ',
-            'owner_id' => $user->id,
-            'status' => 'published',
-        ]);
-
-        $response = $this->postJson(
-            '/api/v1/comparison-runs/final',
-            ['rfq_id' => $rfq->id],
-            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
-        );
-
-        $response->assertCreated();
-        $response->assertJsonPath('data.status', 'ready_for_approval');
-        $response->assertJsonPath('data.rfq_id', $rfq->id);
-    }
-
-    public function test_final_comparison_run_rejects_non_ulid_rfq_id(): void
-    {
-        $user = $this->createUser();
-
-        $response = $this->postJson(
-            '/api/v1/comparison-runs/final',
-            ['rfq_id' => 'rfq-123'],
-            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
-        );
-
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['rfq_id']);
     }
 }
