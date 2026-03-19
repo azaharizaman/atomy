@@ -105,6 +105,7 @@ Persistence added for flow-driven endpoints: **RfqController** (store, storeLine
 ## Testing & Seed Data
 
 - Added feature test coverage for auth flows, middleware enforcement, and all protected API endpoints.
+- Added quote intake workflow validation contracts for upload payload shape, supported quote submission status values, and normalization/comparison mutation requests.
 - Auth feature tests now validate token semantics and refresh tokens via the login flow using an in-memory SQLite database; protected endpoint auth checks run per-route with unique IDs and assert non-401/403 responses, JWT issuance in API tests resolves via `JwtServiceInterface`, and example tests create users directly without model factories.
 - Added unit tests for `JwtService`, `ExtractsAuthContext`, and core model relationships.
 - `DatabaseSeeder` now generates ample mock data across all 25 tables for realistic API seed state.

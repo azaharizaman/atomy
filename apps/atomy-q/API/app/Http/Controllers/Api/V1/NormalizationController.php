@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\NormalizationOverrideRequest;
+use App\Http\Requests\NormalizationResolveConflictRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -63,15 +65,17 @@ final class NormalizationController extends Controller
     }
 
     /** PUT /normalization/source-lines/{id}/override */
-    public function override(Request $request, string $id): JsonResponse
+    public function override(NormalizationOverrideRequest $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $validated = $request->validated();
 
         return response()->json([
             'data' => [
                 'id' => $id,
                 'is_overridden' => true,
-                'override_data' => $request->input('override_data', []),
+                'override_data' => $validated['override_data'],
+                'issue_code' => $validated['issue_code'] ?? null,
             ],
         ]);
     }
@@ -96,15 +100,18 @@ final class NormalizationController extends Controller
     }
 
     /** PUT /normalization/conflicts/{id}/resolve */
-    public function resolveConflict(Request $request, string $id): JsonResponse
+    public function resolveConflict(NormalizationResolveConflictRequest $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $validated = $request->validated();
 
         return response()->json([
             'data' => [
                 'id' => $id,
                 'status' => 'resolved',
-                'resolution_data' => $request->input('resolution_data', []),
+                'resolution' => $validated['resolution'],
+                'resolution_data' => $validated['resolution_data'] ?? [],
+                'issue_code' => $validated['issue_code'] ?? null,
             ],
         ]);
     }

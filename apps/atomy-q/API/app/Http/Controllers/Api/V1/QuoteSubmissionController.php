@@ -6,11 +6,13 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\QuoteSubmissionStatusRequest;
+use App\Http\Requests\QuoteSubmissionUploadRequest;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 final class QuoteSubmissionController extends Controller
 {
@@ -40,23 +42,14 @@ final class QuoteSubmissionController extends Controller
 
     /**
      * POST /quote-submissions/upload
-     * Scoped by tenant_id. Accepts multipart file or JSON with rfq_id, vendor_id, vendor_name (for seed/testing).
+     * Scoped by tenant_id. Requires rfq_id, vendor_id, and an uploaded file.
      */
-    public function upload(Request $request): JsonResponse
+    public function upload(QuoteSubmissionUploadRequest $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $validated = $request->validated();
 
-        $validator = Validator::make($request->all(), [
-            'rfq_id' => ['required', 'string'],
-            'vendor_id' => ['nullable', 'string'],
-            'vendor_name' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $rfqId = $request->input('rfq_id');
+        $rfqId = (string) $validated['rfq_id'];
         $rfq = Rfq::query()
             ->where('tenant_id', $tenantId)
             ->where(function ($builder) use ($rfqId): void {
@@ -68,15 +61,19 @@ final class QuoteSubmissionController extends Controller
             return response()->json(['message' => 'RFQ not found'], 404);
         }
 
-        $vendorId = $request->input('vendor_id');
-        $vendorName = $request->input('vendor_name', 'Vendor');
+        $vendorId = (string) $validated['vendor_id'];
+        $vendorName = (string) ($validated['vendor_name'] ?? 'Vendor');
         $filePath = null;
         $fileType = null;
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $filePath = $file->store('quote-submissions', 'local');
-            $fileType = $file->getMimeType();
+        $file = $request->file('file');
+        if ($file === null) {
+            throw ValidationException::withMessages([
+                'file' => ['The file field is required.'],
+            ]);
         }
+
+        $filePath = $file->store('quote-submissions', 'local');
+        $fileType = $file->getMimeType();
 
         $qs = new QuoteSubmission();
         $qs->tenant_id = $tenantId;
@@ -125,12 +122,13 @@ final class QuoteSubmissionController extends Controller
 
     /**
      * PATCH /quote-submissions/:id/status
-     * Accept/reject.
+     * Update quote ingestion state.
      * Scoped by tenant_id.
      */
-    public function updateStatus(Request $request, string $id): JsonResponse
+    public function updateStatus(QuoteSubmissionStatusRequest $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $validated = $request->validated();
 
         $qs = QuoteSubmission::query()
             ->where('tenant_id', $tenantId)
@@ -141,12 +139,16 @@ final class QuoteSubmissionController extends Controller
             return response()->json(['message' => 'Quote submission not found'], 404);
         }
 
-        $status = (string) $request->input('status');
-        $allowed = ['processing', 'parsed', 'accepted', 'rejected'];
-        if ($status !== '' && in_array($status, $allowed, true)) {
-            $qs->status = $status;
-            $qs->save();
+        $status = (string) $validated['status'];
+
+        if (!$this->isAllowedStatusTransition((string) $qs->status, $status)) {
+            throw ValidationException::withMessages([
+                'status' => ['Unsupported quote submission status transition.'],
+            ]);
         }
+
+        $qs->status = $status;
+        $qs->save();
 
         return response()->json([
             'data' => [
@@ -196,5 +198,29 @@ final class QuoteSubmissionController extends Controller
                 'assigned_to' => $this->userId($request),
             ],
         ]);
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function statusTransitions(): array
+    {
+        return [
+            'processing' => ['uploaded', 'extracting', 'failed'],
+            'uploaded' => ['extracting', 'failed'],
+            'extracting' => ['extracted', 'failed'],
+            'extracted' => ['normalizing', 'needs_review', 'failed'],
+            'normalizing' => ['needs_review', 'ready', 'failed'],
+            'needs_review' => ['normalizing', 'ready', 'failed'],
+            'ready' => ['failed'],
+            'failed' => ['uploaded', 'extracting'],
+        ];
+    }
+
+    private function isAllowedStatusTransition(string $currentStatus, string $nextStatus): bool
+    {
+        $allowed = $this->statusTransitions();
+
+        return in_array($nextStatus, $allowed[$currentStatus] ?? [], true);
     }
 }

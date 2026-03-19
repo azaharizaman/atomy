@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ComparisonFinalizeRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -68,11 +69,14 @@ final class ComparisonRunController extends Controller
      * Method named final_ since final is reserved in PHP.
      * Scoped by tenant_id.
      */
-    public function final_(Request $request): JsonResponse
+    public function final_(ComparisonFinalizeRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         return response()->json([
             'data' => [
                 'id' => 'cr-' . uniqid(),
+                'rfq_id' => $validated['rfq_id'],
                 'status' => 'final',
             ],
         ], 201);
