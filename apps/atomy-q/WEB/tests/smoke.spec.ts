@@ -23,7 +23,12 @@ function getRequestOrigin(route: { request: () => { url: () => string; headers: 
   try {
     return new URL(req.url()).origin;
   } catch {
-    return 'http://localhost:3000';
+    const base = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3100';
+    try {
+      return new URL(base).origin;
+    } catch {
+      return 'http://localhost:3100';
+    }
   }
 }
 

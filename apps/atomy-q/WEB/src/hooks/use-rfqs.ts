@@ -48,6 +48,21 @@ function parseOptionalNumber(value: unknown): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+/** Coerces value to string or undefined at runtime; avoids masking non-string API values. */
+function normalizeString(value: unknown): string | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string') return value.trim() || undefined;
+  return String(value);
+}
+
+/** For optional string | null fields (e.g. projectId); preserves null, coerces others. */
+function normalizeStringOrNull(value: unknown): string | null {
+  if (value === null) return null;
+  if (value === undefined) return null;
+  if (typeof value === 'string') return value.trim() || null;
+  return String(value);
+}
+
 function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   const asArray = (value: unknown): unknown[] | null => (Array.isArray(value) ? value : null);
 
@@ -81,13 +96,13 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
         : r.owner_name != null || r.owner_email != null
           ? { name: String(r.owner_name ?? ''), email: String(r.owner_email ?? '') }
           : undefined,
-      deadline: (r.deadline ?? r.submissionDeadline ?? r.deadlineLabel) as string | undefined,
-      category: r.category as string | undefined,
-      estValue: (r.estValue ?? r.estimated_value ?? r.estimatedValue) as string | undefined,
-      savings: r.savings as string | undefined,
+      deadline: normalizeString(r.deadline ?? r.submissionDeadline ?? r.deadlineLabel),
+      category: normalizeString(r.category),
+      estValue: normalizeString(r.estValue ?? r.estimated_value ?? r.estimatedValue),
+      savings: normalizeString(r.savings),
       vendorsCount: parseOptionalNumber(r.vendorsCount ?? r.vendors_count),
       quotesCount: parseOptionalNumber(r.quotesCount ?? r.quotes_count),
-      projectId: (r.project_id ?? r.projectId ?? null) as string | null,
+      projectId: normalizeStringOrNull(r.project_id ?? r.projectId ?? null),
     };
   });
 }
