@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
-export type ProjectAclRole = 'owner' | 'manager' | 'contributor' | 'viewer' | 'client_stakeholder';
+export type ProjectAclRole = 'owner' | 'admin' | 'editor' | 'viewer';
 
 export interface ProjectAclEntry {
   userId: string;
@@ -19,7 +19,8 @@ function normalizeProjectAcl(payload: unknown): ProjectAclEntry[] {
   return roles
     .filter((r): r is Record<string, unknown> => !!r && typeof r === 'object' && !Array.isArray(r))
     .map((r) => {
-      const role = String(r.role ?? '');
+      const raw = String(r.role ?? '').toLowerCase().trim();
+      const role = raw === 'manager' ? 'admin' : raw === 'contributor' ? 'editor' : raw === 'client_stakeholder' ? 'viewer' : raw;
       return {
         userId: String(r.user_id ?? r.userId ?? ''),
         role: (role as ProjectAclRole) || 'viewer',

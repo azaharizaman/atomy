@@ -19,6 +19,7 @@ final readonly class UserAuthenticationCoordinator implements UserAuthentication
     public function __construct(
         private UserAuthenticationServiceInterface $authService,
         private UserContextProviderInterface $contextDataProvider,
+        private \Nexus\IdentityOperations\Services\SsoLoginServiceInterface $ssoLogin,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -82,5 +83,17 @@ final readonly class UserAuthenticationCoordinator implements UserAuthentication
         ]);
 
         return $this->authService->resetPassword($userId, $newPassword, $resetBy);
+    }
+
+    public function initiateSso(string $tenantId, ?string $redirectUriOverride = null): array
+    {
+        $this->logger->info('Initiating SSO', ['tenant_id' => $tenantId]);
+        return $this->ssoLogin->initiate($tenantId, $redirectUriOverride);
+    }
+
+    public function ssoCallback(string $tenantId, string $code, string $state): UserContext
+    {
+        $this->logger->info('Handling SSO callback', ['tenant_id' => $tenantId]);
+        return $this->ssoLogin->callback($tenantId, $code, $state);
     }
 }

@@ -8,7 +8,7 @@ use App\Contracts\JwtServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Models\User;
-use App\Services\Auth\OidcSsoService;
+use Nexus\IdentityOperations\Contracts\UserAuthenticationCoordinatorInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -20,7 +20,7 @@ final class AuthController extends Controller
 
     public function __construct(
         private readonly JwtServiceInterface $jwt,
-        private readonly OidcSsoService $oidcSso,
+        private readonly UserAuthenticationCoordinatorInterface $identityOps,
     ) {
     }
 
@@ -98,15 +98,37 @@ final class AuthController extends Controller
         try {
             if ($action === 'init') {
                 $redirectUriOverride = $request->has('redirect_uri') ? (string) $request->input('redirect_uri') : null;
-                $result = $this->oidcSso->initiate($tenantId, $redirectUriOverride);
+                $result = $this->identityOps->initiateSso($tenantId, $redirectUriOverride);
                 return response()->json(['data' => $result]);
             }
 
-            $result = $this->oidcSso->callback([
-                'code' => (string) $request->input('code'),
-                'state' => (string) $request->input('state'),
+            $ctx = $this->identityOps->ssoCallback(
+                tenantId: $tenantId,
+                code: (string) $request->input('code'),
+                state: (string) $request->input('state'),
+            );
+
+            $userId = (string) ($ctx->userId ?? '');
+            if ($userId === '') {
+                return response()->json(['message' => 'SSO authentication failed'], 401);
+            }
+
+            $accessToken = $this->jwt->issueAccessToken($userId, $tenantId);
+            $refreshToken = $this->jwt->issueRefreshToken($userId, $tenantId);
+
+            return response()->json([
+                'access_token' => $accessToken,
+                'refresh_token' => $refreshToken,
+                'token_type' => 'Bearer',
+                'expires_in' => $this->jwt->getTtlMinutes() * 60,
+                'user' => [
+                    'id' => $ctx->userId,
+                    'email' => $ctx->email,
+                    'name' => $ctx->firstName,
+                    'role' => null,
+                    'tenantId' => $tenantId,
+                ],
             ]);
-            return response()->json($result);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         } catch (\Throwable) {

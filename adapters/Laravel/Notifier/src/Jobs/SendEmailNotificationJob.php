@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
+use Nexus\Laravel\Notifier\Adapters\PostmarkEmailAdapter;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -35,24 +35,18 @@ final class SendEmailNotificationJob implements ShouldQueue
     ) {
     }
 
-    public function handle(?LoggerInterface $logger = null): void
+    public function handle(PostmarkEmailAdapter $postmark, ?LoggerInterface $logger = null): void
     {
         $logger ??= new NullLogger();
 
-        if (trim($this->toEmail) === '') {
-            $logger->warning('Skipping email notification: missing recipient email', [
-                'notification_id' => $this->notificationId,
-            ]);
-            return;
-        }
-
-        $view = sprintf('nexus-notifier::emails.%s', $this->template);
-
-        Mail::send($view, ['data' => $this->data], function ($message): void {
-            $message->from($this->fromEmail, $this->fromName);
-            $message->to($this->toEmail, $this->toName);
-            $message->subject($this->subject);
-        });
+        $postmark->sendTemplatedEmail(
+            toEmail: $this->toEmail,
+            toName: $this->toName,
+            subject: $this->subject,
+            template: $this->template,
+            data: $this->data,
+            notificationId: $this->notificationId,
+        );
 
         $logger->info('Email notification sent', [
             'notification_id' => $this->notificationId,

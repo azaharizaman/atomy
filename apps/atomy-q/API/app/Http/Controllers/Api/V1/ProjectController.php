@@ -20,7 +20,24 @@ use Nexus\ProjectManagementOperations\ProjectManagementOperationsCoordinator;
 
 final class ProjectController extends Controller
 {
-    private const ACL_ROLES = ['owner', 'manager', 'contributor', 'viewer', 'client_stakeholder'];
+    /**
+     * Canonical project ACL roles (Phase 2 plan): Owner > Admin > Editor > Viewer.
+     *
+     * Legacy role names are accepted for backwards compatibility and normalized
+     * to canonical values on write.
+     */
+    private const ACL_ROLES = ['owner', 'admin', 'editor', 'viewer', 'manager', 'contributor', 'client_stakeholder'];
+
+    private const ACL_ROLE_NORMALIZATION = [
+        'owner' => 'owner',
+        'admin' => 'admin',
+        'editor' => 'editor',
+        'viewer' => 'viewer',
+        // legacy aliases
+        'manager' => 'admin',
+        'contributor' => 'editor',
+        'client_stakeholder' => 'viewer',
+    ];
 
     public function __construct(
         private readonly ProjectService $projects,
@@ -402,10 +419,12 @@ final class ProjectController extends Controller
                 ->where('project_id', $id)
                 ->delete();
             foreach ($validated['roles'] as $entry) {
+                $rawRole = strtolower(trim((string) $entry['role']));
+                $normalizedRole = self::ACL_ROLE_NORMALIZATION[$rawRole] ?? 'viewer';
                 ProjectAcl::query()->create([
                     'project_id' => $id,
                     'user_id' => $entry['user_id'],
-                    'role' => $entry['role'],
+                    'role' => $normalizedRole,
                     'tenant_id' => $tenantId,
                 ]);
             }

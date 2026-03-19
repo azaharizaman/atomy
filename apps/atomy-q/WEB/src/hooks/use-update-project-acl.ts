@@ -31,10 +31,15 @@ export function useUpdateProjectAcl(projectId: string) {
 
       return roles
         .filter((r): r is Record<string, unknown> => !!r && typeof r === 'object' && !Array.isArray(r))
-        .map((r) => ({
-          userId: String(r.user_id ?? ''),
-          role: String(r.role ?? 'viewer') as ProjectAclRole,
-        }))
+        .map((r) => {
+          const raw = String(r.role ?? 'viewer').toLowerCase().trim();
+          const role =
+            raw === 'manager' ? 'admin' : raw === 'contributor' ? 'editor' : raw === 'client_stakeholder' ? 'viewer' : raw;
+          return {
+            userId: String(r.user_id ?? ''),
+            role: (role as ProjectAclRole) || 'viewer',
+          };
+        })
         .filter((r) => r.userId.trim() !== '');
     },
     onSuccess: () => {

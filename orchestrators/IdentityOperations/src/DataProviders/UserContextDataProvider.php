@@ -27,8 +27,22 @@ final readonly class UserContextDataProvider implements UserContextProviderInter
             return UserContext::anonymous();
         }
 
-        $permissions = $this->permissionQuery->getUserPermissions($userId, $user['tenant_id'] ?? null);
-        $roles = $this->permissionQuery->getUserRoles($userId, $user['tenant_id'] ?? null);
+        $tenantId = (string) ($user['tenant_id'] ?? '');
+        if ($tenantId === '') {
+            return new UserContext(
+                userId: $user['id'],
+                email: $user['email'],
+                firstName: $user['first_name'] ?? null,
+                lastName: $user['last_name'] ?? null,
+                tenantId: null,
+                status: $user['status'],
+                permissions: [],
+                roles: [],
+            );
+        }
+
+        $permissions = $this->permissionQuery->getUserPermissions($userId, $tenantId);
+        $roles = $this->permissionQuery->getUserRoles($userId, $tenantId);
 
         return new UserContext(
             userId: $user['id'],

@@ -438,7 +438,7 @@ export default function ProjectDetailPage() {
                       }}
                       className="rounded border border-slate-300 px-2 py-1.5 text-sm"
                     >
-                      {(['owner', 'manager', 'contributor', 'viewer', 'client_stakeholder'] as ProjectAclRole[]).map((r) => (
+                      {(['owner', 'admin', 'editor', 'viewer'] as ProjectAclRole[]).map((r) => (
                         <option key={r} value={r}>
                           {r}
                         </option>

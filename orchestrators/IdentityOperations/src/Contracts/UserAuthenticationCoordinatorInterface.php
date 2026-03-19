@@ -40,4 +40,16 @@ interface UserAuthenticationCoordinatorInterface extends CoordinatorInterface
      * Reset user password (admin function).
      */
     public function resetPassword(string $userId, string $newPassword, string $resetBy): bool;
+
+    /**
+     * Initiate OIDC SSO authentication.
+     *
+     * @return array{authorization_url: string, state: string}
+     */
+    public function initiateSso(string $tenantId, ?string $redirectUriOverride = null): array;
+
+    /**
+     * Handle OIDC SSO callback and return authenticated user context.
+     */
+    public function ssoCallback(string $tenantId, string $code, string $state): UserContext;
 }
