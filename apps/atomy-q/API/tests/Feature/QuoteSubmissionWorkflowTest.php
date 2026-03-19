@@ -59,7 +59,10 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['rfq_id', 'vendor_id', 'file']);
+        $response->assertJsonPath('error', 'Validation failed');
+        $response->assertJsonPath('details.rfq_id.0', 'The rfq id field is required.');
+        $response->assertJsonPath('details.vendor_id.0', 'The vendor id field is required.');
+        $response->assertJsonPath('details.file.0', 'The file field is required.');
     }
 
     public function test_quote_submission_status_rejects_unsupported_transition(): void
@@ -93,7 +96,8 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['status']);
+        $response->assertJsonPath('error', 'Validation failed');
+        $response->assertJsonPath('details.status.0', 'Unsupported quote submission status transition.');
     }
 
     public function test_quote_submission_status_rejects_uploaded_to_ready(): void
@@ -127,7 +131,8 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['status']);
+        $response->assertJsonPath('error', 'Validation failed');
+        $response->assertJsonPath('details.status.0', 'Unsupported quote submission status transition.');
     }
 
     public function test_rfq_overview_counts_uploaded_quotes_as_not_ready(): void

@@ -10,17 +10,16 @@
   },
   "autoload": {
     "psr-4": {
-      "Nexus\\\\Laravel\\\\Notifier\\\\": "src/"
+      "Nexus\\Laravel\\Notifier\\": "src/"
     }
   },
   "extra": {
     "laravel": {
       "providers": [
-        "Nexus\\\\Laravel\\\\Notifier\\\\Providers\\\\NotifierAdapterServiceProvider"
+        "Nexus\\Laravel\\Notifier\\Providers\\NotifierAdapterServiceProvider"
       ]
     }
   },
   "minimum-stability": "dev",
   "prefer-stable": true
 }
-
