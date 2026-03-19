@@ -41,7 +41,7 @@ final readonly class OidcSsoProviderAdapter implements SsoProviderInterface
         $redirectUriOverride = isset($parameters['redirect_uri']) ? (string) $parameters['redirect_uri'] : null;
 
         if ($tenantId === '' || $state === '') {
-            throw new \InvalidArgumentException('tenant_id and state are required');
+            throw new SsoAuthenticationException($this->getName(), 'tenant_id and state are required');
         }
 
         $cfg = $this->providerConfig($redirectUriOverride);

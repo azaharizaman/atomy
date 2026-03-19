@@ -11,6 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Nexus\Laravel\Notifier\Adapters\PostmarkEmailAdapter;
+use Nexus\Laravel\Notifier\Support\NotifierCacheKeys;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -44,18 +45,24 @@ final class SendEmailNotificationJob implements ShouldQueue
         $data = $resolved['data'];
         $token = $resolved['temporary_password_token'];
 
-        $postmark->sendTemplatedEmail(
-            toEmail: $this->toEmail,
-            toName: $this->toName,
-            subject: $this->subject,
-            template: $this->template,
-            data: $data,
-            fromEmail: $this->fromEmail,
-            fromName: $this->fromName,
-            notificationId: $this->notificationId,
-        );
-        if (is_string($token) && $token !== '') {
-            Cache::forget($this->temporaryPasswordCacheKey($token));
+        try {
+            $postmark->sendTemplatedEmail(
+                toEmail: $this->toEmail,
+                toName: $this->toName,
+                subject: $this->subject,
+                template: $this->template,
+                data: $data,
+                fromEmail: $this->fromEmail,
+                fromName: $this->fromName,
+                notificationId: $this->notificationId,
+            );
+            if (is_string($token) && $token !== '') {
+                Cache::forget($this->temporaryPasswordCacheKey($token));
+            }
+            Cache::put(NotifierCacheKeys::status($this->notificationId), 'sent', now()->addDay());
+        } catch (\Throwable $e) {
+            Cache::put(NotifierCacheKeys::status($this->notificationId), 'failed', now()->addDay());
+            throw $e;
         }
 
         $logger->info('Email notification sent', [
@@ -80,10 +87,12 @@ final class SendEmailNotificationJob implements ShouldQueue
         }
 
         $secret = Cache::get($this->temporaryPasswordCacheKey($token));
-        unset($data['temporary_password_token']);
-        if (is_string($secret) && $secret !== '') {
-            $data['temporary_password'] = $secret;
+        if (!is_string($secret) || $secret === '') {
+            throw new \RuntimeException(sprintf('Missing temporary password secret for token: %s', $token));
         }
+
+        unset($data['temporary_password_token']);
+        $data['temporary_password'] = $secret;
 
         return [
             'data' => $data,
@@ -93,7 +102,7 @@ final class SendEmailNotificationJob implements ShouldQueue
 
     private function temporaryPasswordCacheKey(string $token): string
     {
-        return 'notifier:temporary-password:' . $token;
+        return NotifierCacheKeys::temporaryPassword($token);
     }
 }
 

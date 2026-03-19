@@ -11,6 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Nexus\Identity\Contracts\UserQueryInterface;
+use Nexus\Identity\Exceptions\UserNotFoundException;
 use Nexus\Laravel\Identity\Notifications\WelcomeNotification;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -36,7 +37,12 @@ final class SendWelcomeNotificationJob implements ShouldQueue
     ): void {
         $logger ??= new NullLogger();
 
-        $user = $userQuery->findById($this->userId);
+        try {
+            $user = $userQuery->findById($this->userId);
+        } catch (UserNotFoundException) {
+            $logger->warning('Skipping welcome notification: user not found', ['user_id' => $this->userId]);
+            return;
+        }
         /** @var \Nexus\Notifier\Contracts\NotifiableInterface $user */
 
         $temporaryPassword = null;
