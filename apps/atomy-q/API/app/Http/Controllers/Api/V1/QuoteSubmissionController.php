@@ -139,7 +139,7 @@ final class QuoteSubmissionController extends Controller
             return response()->json(['message' => 'Quote submission not found'], 404);
         }
 
-        $status = (string) $validated['status'];
+        $status = $this->normalizeStatus((string) $validated['status']);
 
         if (!$this->isAllowedStatusTransition((string) $qs->status, $status)) {
             throw ValidationException::withMessages([
@@ -221,5 +221,10 @@ final class QuoteSubmissionController extends Controller
         $allowed = $this->statusTransitions();
 
         return in_array($nextStatus, $allowed[$currentStatus] ?? [], true);
+    }
+
+    private function normalizeStatus(string $status): string
+    {
+        return $status === 'accepted' ? 'ready' : $status;
     }
 }

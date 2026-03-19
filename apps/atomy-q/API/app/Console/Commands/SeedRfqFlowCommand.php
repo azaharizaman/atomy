@@ -129,6 +129,19 @@ final class SeedRfqFlowCommand extends Command
         };
     }
 
+    private function apiWithFile(string $method, string $path, array $body, string $fileField, string $fileName, string $contents, string $mimeType = 'text/plain'): \Illuminate\Http\Client\Response
+    {
+        $url = $this->baseUrl . '/api/v1/' . ltrim($path, '/');
+        $req = Http::withToken($this->token)->attach($fileField, $contents, $fileName, ['Content-Type' => $mimeType]);
+
+        return match (strtoupper($method)) {
+            'POST' => $req->post($url, $body),
+            'PUT' => $req->put($url, $body),
+            'PATCH' => $req->patch($url, $body),
+            default => $req->post($url, $body),
+        };
+    }
+
     private function runFlowForOneRfq(): bool
     {
         $rfqId = $this->createRfq();
@@ -247,11 +260,11 @@ final class SeedRfqFlowCommand extends Command
         $subset = array_slice($invitations, 0, $toSubmit);
         $quoteIds = [];
         foreach ($subset as $inv) {
-            $response = $this->api('POST', 'quote-submissions/upload', [
+            $response = $this->apiWithFile('POST', 'quote-submissions/upload', [
                 'rfq_id' => $rfqId,
                 'vendor_id' => $inv['vendor_id'],
                 'vendor_name' => $inv['vendor_name'],
-            ]);
+            ], 'file', $inv['vendor_name'] . '-quote.txt', 'Seed quote payload for ' . $inv['vendor_name']);
             if ($response->successful()) {
                 $quoteId = $response->json('data.id');
                 $quoteIds[] = $quoteId;

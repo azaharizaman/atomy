@@ -285,7 +285,7 @@ final class RfqController extends Controller
         $acceptedCount = QuoteSubmission::query()
             ->where('rfq_id', $rfq->id)
             ->where('tenant_id', $tenantId)
-            ->where('status', 'accepted')
+            ->whereIn('status', ['accepted', 'ready'])
             ->count();
         $normProgress = $quotesTotal > 0 ? (int) round($acceptedCount / $quotesTotal * 100) : 0;
 
@@ -373,11 +373,12 @@ final class RfqController extends Controller
 
         foreach (QuoteSubmission::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->orderByDesc('submitted_at')->orderByDesc('created_at')->limit(10)->get() as $qs) {
             $submittedAt = $qs->submitted_at ?? $qs->created_at;
+            $statusLabel = $this->quoteSubmissionStatusLabel((string) $qs->status);
             $events[] = [
                 'id' => 'qs-' . $qs->id,
                 'type' => 'quote',
                 'actor' => $qs->vendor_name ?? 'Vendor',
-                'action' => 'Quote submitted' . ($qs->status === 'accepted' ? ' (accepted)' : ''),
+                'action' => 'Quote submitted' . ($statusLabel !== null ? ' (' . $statusLabel . ')' : ''),
                 'timestamp' => $submittedAt instanceof \DateTimeInterface ? Carbon::instance($submittedAt)->toAtomString() : $qs->created_at?->toAtomString() ?? '',
             ];
         }
@@ -408,6 +409,15 @@ final class RfqController extends Controller
         });
 
         return array_slice($events, 0, 20);
+    }
+
+    private function quoteSubmissionStatusLabel(string $status): ?string
+    {
+        return match ($status) {
+            'accepted' => 'accepted',
+            'ready' => 'ready',
+            default => null,
+        };
     }
 
     public function update(Request $request, string $id): JsonResponse

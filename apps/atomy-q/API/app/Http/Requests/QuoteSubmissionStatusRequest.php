@@ -30,6 +30,7 @@ final class QuoteSubmissionStatusRequest extends FormRequest
                     'normalizing',
                     'needs_review',
                     'ready',
+                    'accepted',
                     'failed',
                 ]),
             ],

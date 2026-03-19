@@ -249,8 +249,17 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
       data: { vendor_email: 'vendor@test.com', vendor_name: 'E2E Vendor' },
     });
     const uploadRes = await request.post(`${apiBase}/quote-submissions/upload`, {
-      headers,
-      data: { rfq_id: rfqId, vendor_id: '01' + '0'.repeat(24), vendor_name: 'E2E Vendor' },
+      headers: { Authorization: headers.Authorization },
+      multipart: {
+        rfq_id: rfqId,
+        vendor_id: '01' + '0'.repeat(24),
+        vendor_name: 'E2E Vendor',
+        file: {
+          name: 'e2e-quote.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from('E2E quote payload'),
+        },
+      },
     });
     if (uploadRes.ok()) {
       const qData = await uploadRes.json();
