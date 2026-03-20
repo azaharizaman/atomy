@@ -54,6 +54,7 @@ const PROJECT_COLUMNS: ColumnDef<ProjectListItem>[] = [
 ];
 
 export default function ProjectsPage() {
+  const isDev = process.env.NODE_ENV === 'development';
   const router = useRouter();
   const [q, setQ] = React.useState('');
   const [showCreateForm, setShowCreateForm] = React.useState(false);
@@ -119,7 +120,6 @@ export default function ProjectsPage() {
   }
 
   if (isError) {
-    const isDev = process.env.NODE_ENV === 'development';
     const genericDetail = 'Projects are disabled or not found.';
     const is404 = axios.isAxiosError(error) && error.response?.status === 404;
     const detail = is404
@@ -215,7 +215,11 @@ export default function ProjectsPage() {
               </Button>
             </div>
             {createProject.isError && (
-              <p className="text-xs text-red-600">{String((createProject.error as Error | null)?.message ?? '')}</p>
+              <p className="text-xs text-red-600">
+                {isDev
+                  ? String((createProject.error as Error | null)?.message ?? '')
+                  : 'An error occurred while creating the project.'}
+              </p>
             )}
           </form>
         </Card>

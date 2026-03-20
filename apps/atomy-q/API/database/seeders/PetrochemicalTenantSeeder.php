@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * Single-tenant demo dataset: petrochemical buyer, 10+ projects, 50+ RFQs, 100+ quotes,
@@ -53,6 +54,9 @@ final class PetrochemicalTenantSeeder extends Seeder
         $this->now = now();
         $envTenant = env('ATOMY_SEED_TENANT_ID');
         $this->tenantId = $envTenant !== null && $envTenant !== '' ? (string) $envTenant : self::DEFAULT_TENANT_ID;
+        if (DB::table('rfqs')->where('tenant_id', $this->tenantId)->exists()) {
+            return;
+        }
 
         $this->seedUsers();
         $this->seedProjectsAndAcl();
@@ -261,6 +265,10 @@ final class PetrochemicalTenantSeeder extends Seeder
      */
     private function buildRfqContext(int $i): array
     {
+        if ($this->projectIds === [] || $this->userIds === []) {
+            throw new RuntimeException('Seeder prerequisites not met: users and projects must be seeded first.');
+        }
+
         $kind = $this->rfqKind($i);
         $projectId = ($i % 11 === 0) ? null : $this->projectIds[$i % count($this->projectIds)];
         $lineProfile = ['tiny', 'small', 'medium', 'large'][$i % 4];

@@ -114,10 +114,15 @@ function TaskDetailDrawer({
 
 export default function TasksPage() {
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
-  const { data: flags, isLoading: flagsLoading } = useFeatureFlags();
+  const {
+    data: flags,
+    isLoading: flagsLoading,
+    isError: flagsError,
+    error: flagsErrorDetail,
+  } = useFeatureFlags();
   const tasksEnabled = flags?.tasks === true;
   const { data: tasks = [], isLoading, isError, error } = useTasks({
-    enabled: !flagsLoading && tasksEnabled,
+    enabled: !flagsLoading && !flagsError && flags?.tasks === true,
   });
 
   if (flagsLoading) {
@@ -128,6 +133,15 @@ export default function TasksPage() {
           <div className="h-24 w-full rounded bg-slate-100 animate-pulse" aria-busy />
         </Card>
       </div>
+    );
+  }
+
+  if (flagsError) {
+    return (
+      <Card padding="md">
+        <div className="text-sm font-semibold text-slate-900">Failed to load feature flags</div>
+        <div className="text-xs text-slate-500 mt-1">{String((flagsErrorDetail as Error | null)?.message ?? '')}</div>
+      </Card>
     );
   }
 

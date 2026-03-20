@@ -113,8 +113,15 @@ export function buildRfqScheduleLayout(ctx: RfqScheduleContext, nowMs: number = 
 
   const milestones: ScheduleMilestone[] = [];
 
-  const push = (id: string, label: string, iso: string | null | undefined, late: boolean, lateNote: string | null): void => {
-    const ms = parseScheduleInstant(iso);
+  const push = (
+    id: string,
+    label: string,
+    iso: string | null | undefined,
+    late: boolean,
+    lateNote: string | null,
+    parsedMs?: number | null,
+  ): void => {
+    const ms = parsedMs ?? parseScheduleInstant(iso);
     if (ms === null) return;
     milestones.push({ id, label, ms, late, lateNote: late ? lateNote : null });
   };
@@ -128,6 +135,7 @@ export function buildRfqScheduleLayout(ctx: RfqScheduleContext, nowMs: number = 
       ctx.submission_deadline,
       late,
       late ? 'Submission deadline has passed while the RFQ is still open.' : null,
+      sd,
     );
   }
 
@@ -140,6 +148,7 @@ export function buildRfqScheduleLayout(ctx: RfqScheduleContext, nowMs: number = 
       ctx.closing_date,
       late,
       late ? 'Closing date has passed before the RFQ reached a closed state.' : null,
+      cd,
     );
   }
 
@@ -152,6 +161,7 @@ export function buildRfqScheduleLayout(ctx: RfqScheduleContext, nowMs: number = 
       ctx.technical_review_due_at,
       late,
       late ? 'Technical review due date has passed with review work still outstanding.' : null,
+      tr,
     );
   }
 
@@ -164,6 +174,7 @@ export function buildRfqScheduleLayout(ctx: RfqScheduleContext, nowMs: number = 
       ctx.financial_review_due_at,
       late,
       late ? 'Financial review due date has passed before approvals completed.' : null,
+      fr,
     );
   }
 
@@ -176,6 +187,7 @@ export function buildRfqScheduleLayout(ctx: RfqScheduleContext, nowMs: number = 
       ctx.expected_award_at,
       late,
       late ? 'Expected award date has passed and the RFQ is not yet awarded.' : null,
+      ea,
     );
   }
 
