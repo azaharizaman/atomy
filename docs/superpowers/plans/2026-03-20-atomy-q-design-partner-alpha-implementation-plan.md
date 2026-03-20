@@ -98,7 +98,7 @@
 - Modify: `apps/atomy-q/API/bootstrap/app.php` or `AppServiceProvider` (Scramble registration per package docs)
 - Modify: `apps/atomy-q/API/.env.example` — document `SCRAMBLE_*` if any
 
-- [ ] **Step 1:** Choose generator and add dependency.
+- [x] **Step 1:** Choose generator and add dependency.
 
 Run:
 
@@ -137,7 +137,7 @@ git commit -m "chore(api): add OpenAPI export via Scramble"
 - Create: `apps/atomy-q/WEB/scripts/generate-api.sh` or npm script copying `../API/storage/app/openapi.json`
 - Create: `apps/atomy-q/WEB/src/generated/api/` (or team convention) — generated output **gitignored** or committed per team policy; **recommend gitignore + CI generate**
 
-- [ ] **Step 1:** Add dev dependency `@hey-api/openapi-ts`.
+- [x] **Step 1:** Add dev dependency `@hey-api/openapi-ts`.
 
 Run:
 
@@ -161,7 +161,7 @@ cd apps/atomy-q/WEB && npm install -D @hey-api/openapi-ts
 - Create: `apps/atomy-q/WEB/src/lib/api-error.test.ts`
 - Modify: one representative hook (e.g. `use-rfqs` or auth) to use parser
 
-- [ ] **Step 1:** Write failing unit test for parser.
+- [x] **Step 1:** Write failing unit test for parser.
 
 ```typescript
 // apps/atomy-q/WEB/src/lib/api-error.test.ts
@@ -180,13 +180,13 @@ describe("parseApiError", () => {
 });
 ```
 
-- [ ] **Step 2:** Run `cd apps/atomy-q/WEB && npm run test:unit -- src/lib/api-error.test.ts` — expect FAIL until implementation exists.
+- [x] **Step 2:** Run `cd apps/atomy-q/WEB && npm run test:unit -- src/lib/api-error.test.ts` — expect FAIL until implementation exists.
 
-- [ ] **Step 3:** Implement `parseApiError` for Axios error shape + optional `message` string.
+- [x] **Step 3:** Implement `parseApiError` for Axios error shape + optional `message` string.
 
-- [ ] **Step 4:** Run tests — expect PASS.
+- [x] **Step 4:** Run tests — expect PASS.
 
-- [ ] **Step 5:** Commit.
+- [x] **Step 5:** Commit.
 
 ---
 
