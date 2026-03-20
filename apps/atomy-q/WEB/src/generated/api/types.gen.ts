@@ -3752,11 +3752,55 @@ export type RfqOverviewResponses = {
                 overall: 'pending' | 'approved' | 'rejected' | 'none';
             };
             activity: Array<unknown>;
+            expectedQuotes: number;
+            normalizationProgress: number | 0;
+            latestComparisonRun: {
+                id: string;
+                mode: 'preview' | 'final';
+                status: string;
+            };
+            approvalStatus: {
+                overall: 'pending' | 'approved' | 'rejected' | 'none';
+                pending_count: number;
+                approved_count: number;
+                rejected_count: number;
+            };
         };
     };
 };
 
 export type RfqOverviewResponse = RfqOverviewResponses[keyof RfqOverviewResponses];
+
+export type RfqActivityData = {
+    body?: never;
+    path: {
+        rfqId: string;
+    };
+    query?: never;
+    url: '/rfqs/{rfqId}/activity';
+};
+
+export type RfqActivityErrors = {
+    404: {
+        message: 'RFQ not found';
+    };
+};
+
+export type RfqActivityError = RfqActivityErrors[keyof RfqActivityErrors];
+
+export type RfqActivityResponses = {
+    200: {
+        data: Array<unknown>;
+        meta: {
+            limit: {
+                [key: string]: unknown;
+            } | null;
+            rfq_id: string;
+        };
+    };
+};
+
+export type RfqActivityResponse = RfqActivityResponses[keyof RfqActivityResponses];
 
 export type RfqUpdateStatusData = {
     body?: never;

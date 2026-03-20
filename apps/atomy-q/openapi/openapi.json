@@ -9719,6 +9719,77 @@
                                                 "activity": {
                                                     "type": "array",
                                                     "items": {}
+                                                },
+                                                "expectedQuotes": {
+                                                    "type": "integer"
+                                                },
+                                                "normalizationProgress": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "integer"
+                                                        },
+                                                        {
+                                                            "type": "integer",
+                                                            "enum": [
+                                                                0
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "latestComparisonRun": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "mode": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "preview",
+                                                                "final"
+                                                            ]
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "mode",
+                                                        "status"
+                                                    ]
+                                                },
+                                                "approvalStatus": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "overall": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "pending",
+                                                                "approved",
+                                                                "rejected",
+                                                                "none"
+                                                            ]
+                                                        },
+                                                        "pending_count": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "approved_count": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "rejected_count": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "overall",
+                                                        "pending_count",
+                                                        "approved_count",
+                                                        "rejected_count"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -9727,12 +9798,94 @@
                                                 "normalization",
                                                 "comparison",
                                                 "approvals",
-                                                "activity"
+                                                "activity",
+                                                "expectedQuotes",
+                                                "normalizationProgress",
+                                                "latestComparisonRun",
+                                                "approvalStatus"
                                             ]
                                         }
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rfqs/{rfqId}/activity": {
+            "get": {
+                "operationId": "rfq.activity",
+                "summary": "GET /rfqs/:rfqId/activity?limit=20 \u2014 tenant-scoped activity feed (lighter than full overview)",
+                "tags": [
+                    "Rfq"
+                ],
+                "parameters": [
+                    {
+                        "name": "rfqId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "limit": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "rfq_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "limit",
+                                                "rfq_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
                                     ]
                                 }
                             }

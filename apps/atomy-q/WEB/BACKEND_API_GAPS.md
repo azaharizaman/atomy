@@ -48,29 +48,31 @@ Status: **Implemented**. Response now includes `{ data, meta: { total, total_pag
 
 Status: **Not implemented**. The Requisition sidebar could show per-status counts (e.g. Active: 12, Closed: 5) when a source is available — e.g. `GET /api/v1/rfqs/counts` or counts in the list meta. Until then, badges are omitted.
 
-## RFQ Workspace Overview (`GET /api/v1/rfqs/:id`)
+## RFQ Workspace Overview (`GET /api/v1/rfqs/:rfqId/overview`)
+
+Workspace KPIs and nested `rfq` mirror list/detail fields (`vendors_count` / `quotes_count`, `estValue`, `savings`, etc.).
 
 ### Response fields (needed for Active Record Menu snippet + KPI scorecards)
 
-- [x] `id`, `title`, `status`
-- [x] `vendorsCount`, `quotesCount`, `estValue`, `savings`
-- [ ] Suggested additionally (Blueprint KPI wants these):
-  - `expectedQuotes` (number)
-  - `normalizationProgress` (0–100)
-  - `latestComparisonRun` summary: `{ id, mode, status }`
-  - `approvalStatus` summary
+- [x] `id`, `title`, `status` (under `data.rfq`)
+- [x] `vendorsCount`, `quotesCount`, `estValue`, `savings` (under `data.rfq` as snake_case + `estValue` alias)
+- [x] Blueprint aliases on **`data`** (alongside nested `normalization` / `approvals`):
+  - `expectedQuotes` (number) — same as `expected_quotes`
+  - `normalizationProgress` (0–100) — same as `normalization.progress_pct`
+  - `latestComparisonRun` — `{ id, mode: preview|final, status }` or `null`
+  - `approvalStatus` — `{ overall, pending_count, approved_count, rejected_count }`
 
 ### Activity timeline
 
 Screen Blueprint shows a 6-entry activity feed on Overview.
 
-- [ ] **Suggestion A**: include `activity: ActivityEvent[]` inside `GET /api/v1/rfqs/:id`
-- [ ] **Suggestion B (preferred for payload size)**: add `GET /api/v1/rfqs/:id/activity?limit=20`
+- [x] **A**: `activity` is included inside **`GET /api/v1/rfqs/:rfqId/overview`** (`data.activity`, newest first, capped at 20).
+- [x] **B**: **`GET /api/v1/rfqs/:rfqId/activity?limit=20`** (optional `limit` 1–50) returns `{ data, meta: { limit, rfq_id } }` for smaller payloads when the UI loads activity separately.
 
-Proposed `ActivityEvent` shape:
+Implemented event shape (WEB `use-rfq-overview` today):
 
 - `id` (string)
-- `timestamp` (ISO string) + optional `relativeLabel`
-- `actor: { id, name }` (or `actorName`)
+- `timestamp` (ISO string)
 - `type` (string)
-- `detail` (string)
+- `actor` (string display name)
+- `action` (string — human-readable detail line)
