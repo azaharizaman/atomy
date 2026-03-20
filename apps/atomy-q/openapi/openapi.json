@@ -838,35 +838,109 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "rfq_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "rfq_title": {
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "string"
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "Requisition"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "type_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "priority": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "high",
+                                                            "medium",
+                                                            "low"
+                                                        ]
+                                                    },
+                                                    "summary": {
+                                                        "type": "string"
+                                                    },
+                                                    "sla": {
+                                                        "type": "string",
+                                                        "const": "\u2014"
+                                                    },
+                                                    "sla_variant": {
+                                                        "type": "string",
+                                                        "const": "safe"
+                                                    },
+                                                    "assignee": {
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "string"
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "\u2014"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "requested_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "rfq_id",
+                                                    "rfq_title",
+                                                    "type",
+                                                    "type_label",
+                                                    "status",
+                                                    "priority",
+                                                    "summary",
+                                                    "sla",
+                                                    "sla_variant",
+                                                    "assignee",
+                                                    "requested_at"
+                                                ]
+                                            }
                                         },
                                         "meta": {
                                             "type": "object",
                                             "properties": {
                                                 "current_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
+                                                    "type": "integer"
                                                 },
                                                 "per_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
+                                                    "type": "integer"
                                                 },
                                                 "total": {
+                                                    "type": "integer"
+                                                },
+                                                "total_pages": {
                                                     "type": "integer"
                                                 }
                                             },
                                             "required": [
                                                 "current_page",
                                                 "per_page",
-                                                "total"
+                                                "total",
+                                                "total_pages"
                                             ]
                                         }
                                     },
@@ -1056,33 +1130,146 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
+                                                "rfq_id": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_title": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "Requisition"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
                                                 "type": {
-                                                    "type": "string",
-                                                    "const": "quote_approval"
+                                                    "type": "string"
+                                                },
+                                                "type_label": {
+                                                    "type": "string"
                                                 },
                                                 "status": {
-                                                    "type": "string",
-                                                    "const": "pending"
+                                                    "type": "string"
                                                 },
                                                 "priority": {
                                                     "type": "string",
-                                                    "const": "normal"
+                                                    "enum": [
+                                                        "high",
+                                                        "medium",
+                                                        "low"
+                                                    ]
+                                                },
+                                                "summary": {
+                                                    "type": "string"
+                                                },
+                                                "sla": {
+                                                    "type": "string",
+                                                    "const": "\u2014"
+                                                },
+                                                "sla_variant": {
+                                                    "type": "string",
+                                                    "const": "safe"
+                                                },
+                                                "assignee": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "\u2014"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "requested_at": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_number": {
+                                                    "type": "string"
+                                                },
+                                                "notes": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "comparison_run": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "is_preview": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "status",
+                                                        "is_preview"
+                                                    ]
                                                 },
                                                 "created_at": {
-                                                    "type": "null"
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "id",
+                                                "rfq_id",
+                                                "rfq_title",
                                                 "type",
+                                                "type_label",
                                                 "status",
                                                 "priority",
+                                                "summary",
+                                                "sla",
+                                                "sla_variant",
+                                                "assignee",
+                                                "requested_at",
+                                                "rfq_number",
+                                                "notes",
+                                                "comparison_run",
                                                 "created_at"
                                             ]
                                         }
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Approval not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -1306,6 +1493,24 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -1325,7 +1530,7 @@
                                                     "const": "rejected"
                                                 },
                                                 "rejected_at": {
-                                                    "type": "null"
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -1337,6 +1542,28 @@
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Approval not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -2034,7 +2261,7 @@
                     }
                 },
                 "responses": {
-                    "501": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
@@ -2043,7 +2270,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "const": "Password reset flow is not implemented yet."
+                                            "const": "If an account exists for this email, password reset instructions have been sent."
                                         }
                                     },
                                     "required": [
@@ -2066,6 +2293,105 @@
                                     },
                                     "required": [
                                         "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "operationId": "auth.resetPassword",
+                "description": "POST /auth/reset-password",
+                "summary": "Complete password reset using email + token from the forgot-password mail",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "token": {
+                                        "type": "string",
+                                        "minLength": 10
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 8
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "minLength": 8
+                                    }
+                                },
+                                "required": [
+                                    "email",
+                                    "token",
+                                    "password",
+                                    "password_confirmation"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Password has been reset."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Invalid or expired reset token."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "$ref": "#/components/schemas/MessageBag"
+                                                }
+                                            },
+                                            "required": [
+                                                "errors"
+                                            ]
+                                        }
                                     ]
                                 }
                             }
@@ -9229,6 +9555,72 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/rfqs/counts": {
+            "get": {
+                "operationId": "rfq.counts",
+                "description": "Keys align with WEB sidebar filters: active \u2248 published, archived \u2248 cancelled.",
+                "summary": "GET /rfqs/counts \u2014 tenant-scoped RFQ counts for dashboard nav badges",
+                "tags": [
+                    "Rfq"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "draft": {
+                                                    "type": "integer"
+                                                },
+                                                "published": {
+                                                    "type": "integer"
+                                                },
+                                                "closed": {
+                                                    "type": "integer"
+                                                },
+                                                "awarded": {
+                                                    "type": "integer"
+                                                },
+                                                "cancelled": {
+                                                    "type": "integer"
+                                                },
+                                                "active": {
+                                                    "type": "integer"
+                                                },
+                                                "pending": {
+                                                    "type": "integer"
+                                                },
+                                                "archived": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "draft",
+                                                "published",
+                                                "closed",
+                                                "awarded",
+                                                "cancelled",
+                                                "active",
+                                                "pending",
+                                                "archived"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }

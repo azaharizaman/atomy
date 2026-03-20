@@ -99,7 +99,7 @@
 
 | Area | Risk | Notes |
 |------|------|--------|
-| Login | Low | User must supply tenant_id + email + password; token is for that tenant only. |
+| Login | Low | User supplies email + password; tenant comes from the user row; token is for that tenant only. |
 | Protected API | Low | Tenant and user come from JWT only (`auth_tenant_id`, `auth_user_id`). |
 | GET /me, /rfqs, /rfqs/:id, etc. | Low | Controllers use `$this->tenantId($request)` and scope by it. |
 | VendorController | Medium (future) | Stub today; when implemented, must add tenant filter. |
@@ -118,3 +118,14 @@
 - [x] WEB: Store and send refresh_token for refresh and session restore — implemented in store (`refreshToken` + `setTokens`), auth-provider (init refresh with body), api interceptor (401 retry with body).
 - [ ] API: When implementing VendorController and RfqController stubs, add tenant scoping (VendorController docblock added).
 - [ ] Production: Disable mock auth and avoid default tenant IDs for real users.
+
+---
+
+## 6. Design-partner alpha sign-off (2026-03-20)
+
+- **Auth:** Login remains JWT-based; forgot-password returns a uniform success message (no user enumeration); reset-password validates token + password strength server-side.
+- **Tenant isolation:** RFQ activity, approval `index` / `show` / `reject`, and RFQ counts use `tenant_id` from JWT; cross-tenant resource IDs return **404** where tested (`ApprovalAlphaPathTest`, existing RFQ activity tests).
+- **Approvals:** List/detail are backed by real queries; approve path unchanged (final comparison + readiness checks).
+- **Residual:** VendorController and unfinished RfqController write paths remain out of alpha scope; production must keep `NEXT_PUBLIC_USE_MOCKS` off and configure mail + `APP_URL` for reset emails.
+
+**Signed (engineering):** Alpha checklist reviewed and above items verified in code/tests as of 2026-03-20.

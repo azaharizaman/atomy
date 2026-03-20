@@ -22,7 +22,7 @@ describe('useRfqs (seed fallback)', () => {
 
     await waitFor(() => expect(result.current.isError || result.current.isSuccess).toBe(true));
     if (result.current.isError) throw result.current.error;
-    const items = result.current.data ?? [];
+    const items = result.current.data?.items ?? [];
     expect(items.length).toBeGreaterThan(0);
     expect(items.every((x) => x.projectId === '01JNE4ZHT9S0VQ7E2GQW1QYJ7B')).toBe(true);
   });
@@ -33,7 +33,7 @@ describe('useRfqs (seed fallback)', () => {
 
     await waitFor(() => expect(result.current.isError || result.current.isSuccess).toBe(true));
     if (result.current.isError) throw result.current.error;
-    expect(result.current.data).toEqual([]);
+    expect(result.current.data?.items).toEqual([]);
   });
 });
 

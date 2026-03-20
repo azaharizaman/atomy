@@ -43,6 +43,7 @@ Route::prefix('auth')->group(function (): void {
     Route::post('sso', [AuthController::class, 'sso']);
     Route::post('mfa/verify', [AuthController::class, 'mfaVerify']);
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('reset-password', [AuthController::class, 'resetPassword']);
     Route::post('refresh', [AuthController::class, 'refresh']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('device-trust', [AuthController::class, 'deviceTrust']);
@@ -67,6 +68,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
     // --- Section 3: RFQ Management (12 endpoints) ---
     Route::prefix('rfqs')->group(function (): void {
         Route::get('/', [RfqController::class, 'index']);
+        Route::get('counts', [RfqController::class, 'counts']);
         Route::post('/', [RfqController::class, 'store']);
         Route::post('bulk-action', [RfqController::class, 'bulkAction']);
 

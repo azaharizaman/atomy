@@ -226,10 +226,10 @@ describe("parseApiError", () => {
 - Modify: hooks under `apps/atomy-q/WEB/src/hooks/` (e.g. `use-rfqs.ts`, `use-rfq-overview.ts`)
 - Modify: pages under `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/`
 - Modify: `apps/atomy-q/WEB/IMPLEMENTATION_STATUS.md`
-- **Step 1:** Ensure list uses pagination meta from API `{ data, meta }`.
-- **Step 2:** Overview shows new KPI fields; activity list renders from activity endpoint.
-- **Step 3:** `cd apps/atomy-q/WEB && npm run test:unit` for affected hooks.
-- **Step 4:** Commit.
+- [x] **Step 1:** Ensure list uses pagination meta from API `{ data, meta }`.
+- [x] **Step 2:** Overview shows new KPI fields; activity list renders from activity endpoint.
+- [x] **Step 3:** `cd apps/atomy-q/WEB && npm run test:unit` for affected hooks.
+- [ ] **Step 4:** Commit.
 
 ---
 
@@ -239,9 +239,9 @@ describe("parseApiError", () => {
 
 **Files:** See `[2026-03-19-quote-ingestion-normalization-pilot-implementation-plan.md](2026-03-19-quote-ingestion-normalization-pilot-implementation-plan.md)`.
 
-- **Step 1:** Verify buyer can upload / create quote submission **without vendor portal** (tenant user only).
-- **Step 2:** Verify `ComparisonRunController` can produce a **final** run usable by `ApprovalController::approve`.
-- **Step 3:** If gaps remain, add tasks from pilot plan until **one** RFQ can go: intake → normalize (minimal) → finalize comparison.
+- [x] **Step 1:** Verify buyer can upload / create quote submission **without vendor portal** (tenant user only). *(Covered by existing quote workflow tests in API.)*
+- [x] **Step 2:** Verify `ComparisonRunController` can produce a **final** run usable by `ApprovalController::approve`. *(Verified via `ComparisonSnapshotWorkflowTest`.)*
+- [ ] **Step 3:** If gaps remain, add tasks from pilot plan until **one** RFQ can go: intake → normalize (minimal) → finalize comparison.
 
 ---
 
@@ -255,10 +255,10 @@ describe("parseApiError", () => {
 - Create: `apps/atomy-q/WEB/src/app/(dashboard)/approvals/page.tsx`
 - Create: `apps/atomy-q/WEB/src/app/(dashboard)/approvals/[id]/page.tsx`
 - Modify: `apps/atomy-q/WEB/src/components/layout/sidebar.tsx`
-- **Step 1:** Feature test: `GET /api/v1/approvals` returns seeded approval for tenant A; empty or 404 behavior documented for tenant with none.
-- **Step 2:** Implement `index` query: `where('tenant_id', $tenantId)` with pagination.
-- **Step 3:** WEB: list page + detail with approve/reject calling existing endpoints; handle **404** as generic not found.
-- **Step 4:** Commit.
+- [x] **Step 1:** Feature test: `GET /api/v1/approvals` returns seeded approval for tenant A; empty or 404 behavior documented for tenant with none.
+- [x] **Step 2:** Implement `index` query: `where('tenant_id', $tenantId)` with pagination.
+- [x] **Step 3:** WEB: list page + detail with approve/reject calling existing endpoints; handle **404** as generic not found.
+- [ ] **Step 4:** Commit.
 
 ---
 
@@ -275,7 +275,7 @@ describe("parseApiError", () => {
 - Create: `apps/atomy-q/WEB/src/app/(auth)/forgot-password/page.tsx`
 - Create: `apps/atomy-q/WEB/src/app/(auth)/reset-password/page.tsx`
 - Modify: `apps/atomy-q/API/tests/Feature/Api/AuthTest.php` if assertions expect `501` on forgot-password
-- **Step 1:** Write failing test: `POST /api/v1/auth/forgot-password` returns **200** with generic message (not 501).
+- [x] **Step 1:** Write failing test: `POST /api/v1/auth/forgot-password` returns **200** with generic message (not 501).
 
 ```php
 public function test_forgot_password_returns_ok_without_leaking_user_existence(): void
@@ -288,11 +288,11 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 }
 ```
 
-- **Step 2:** Implement token persistence, email notification (use `Mail::fake()` in tests).
-- **Step 3:** Add `POST /api/v1/auth/reset-password` with `email`, `token`, `password`, `password_confirmation` (validate strength).
-- **Step 4:** Run `cd apps/atomy-q/API && php artisan test --filter=PasswordReset`.
-- **Step 5:** WEB pages + Playwright step (use `log` mail driver or intercept).
-- **Step 6:** Commit.
+- [x] **Step 2:** Implement token persistence, email notification (use `Mail::fake()` in tests).
+- [x] **Step 3:** Add `POST /api/v1/auth/reset-password` with `email`, `token`, `password`, `password_confirmation` (validate strength).
+- [x] **Step 4:** Run `cd apps/atomy-q/API && php artisan test --filter=PasswordReset`.
+- [ ] **Step 5:** WEB pages + Playwright step (use `log` mail driver or intercept).
+- [ ] **Step 6:** Commit.
 
 ---
 
@@ -302,9 +302,9 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 
 - Modify: `apps/atomy-q/WEB/docs/SECURITY_REVIEW_AUTH_AND_TENANTS.md` — add “Alpha sign-off” section with date
 - Add/extend tests: RFQ, Approval, QuoteSubmission cross-tenant **404** tests
-- **Step 1:** Walk checklist; file issues for any gap.
-- **Step 2:** Add PHPUnit coverage for **every** alpha-exposed write endpoint touched in P1–P2.
-- **Step 3:** Commit.
+- [x] **Step 1:** Walk checklist; file issues for any gap.
+- [x] **Step 2:** Add PHPUnit coverage for **every** alpha-exposed write endpoint touched in P1–P2. *(Approval + RFQ counts + existing activity/quote tests.)*
+- [ ] **Step 3:** Commit.
 
 ---
 
@@ -315,9 +315,9 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 - Modify: `apps/atomy-q/API/.env.example`
 - Modify: `apps/atomy-q/WEB/.env.example`
 - Optional: `deploy/` or `docs/atomy-q/STAGING.md`
-- **Step 1:** Document required env vars: `APP_URL`, `JWT_SECRET`, mail, `DATABASE_URL`, CORS origins for WEB.
-- **Step 2:** Health route verified (`/up` Laravel 11+ or existing).
-- **Step 3:** Commit.
+- [x] **Step 1:** Document required env vars: `APP_URL`, `JWT_SECRET`, mail, `DATABASE_URL`, CORS origins for WEB.
+- [x] **Step 2:** Health route verified (`/up` Laravel 11+ or existing).
+- [ ] **Step 3:** Commit.
 
 ---
 
@@ -329,7 +329,7 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/RfqController.php` or new `RfqCountsController`
 - Modify: WEB sidebar
-- **Step 1:** If still valuable after alpha nav review, add `GET /api/v1/rfqs/counts` tenant-scoped.
+- [x] **Step 1:** If still valuable after alpha nav review, add `GET /api/v1/rfqs/counts` tenant-scoped.
 
 ---
 

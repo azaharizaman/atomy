@@ -5,13 +5,14 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { KeyRound, Lock } from 'lucide-react';
+import { KeyRound, Lock, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ds/Button';
 import { PasswordInput, TextInput } from '@/components/ds/Input';
 
 const schema = z.object({
+  email: z.string().email('Enter a valid email'),
   token: z.string().min(6, 'Reset token is required'),
   password: z.string().min(8, 'Use at least 8 characters'),
   confirm_password: z.string().min(8, 'Confirm your password'),
@@ -40,6 +41,7 @@ function ResetPasswordPageContent() {
     setError(null);
     try {
       await api.post('/auth/reset-password', {
+        email: payload.email.trim().toLowerCase(),
         token: payload.token,
         password: payload.password,
         password_confirmation: payload.confirm_password,
@@ -48,7 +50,7 @@ function ResetPasswordPageContent() {
       toast.success('Password updated successfully');
     } catch (err: unknown) {
       const axiosish = err as { response?: { status?: number; data?: Record<string, unknown> } };
-      if (axiosish?.response?.status === 501 || axiosish?.response?.status === 404) {
+      if (axiosish?.response?.status === 501) {
         setStatus('done');
         toast.success('Password updated (simulated)');
         return;
@@ -78,6 +80,15 @@ function ResetPasswordPageContent() {
         </div>
       ) : (
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <TextInput
+            label="Email"
+            type="email"
+            autoComplete="email"
+            {...register('email')}
+            placeholder="Account email"
+            error={errors.email?.message}
+            prefixIcon={<Mail size={16} className="shrink-0" />}
+          />
           <TextInput
             label="Reset token"
             {...register('token')}

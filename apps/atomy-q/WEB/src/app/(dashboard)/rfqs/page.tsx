@@ -42,13 +42,16 @@ export default function RfqsPage() {
 
   const [page, setPage] = React.useState(1);
 
-  const { data: rows = [], isLoading } = useRfqs({ q, status, owner, category, page, projectId });
+  const { data, isLoading } = useRfqs({ q, status, owner, category, page, projectId });
   const { data: projects = [] } = useProjects();
 
-  const visibleRows = rows;
+  React.useEffect(() => {
+    setPage(1);
+  }, [q, status, owner, category, projectId]);
 
-  const totalPages = 1;
-  const totalItems = visibleRows.length;
+  const visibleRows = data?.items ?? [];
+  const totalPages = data?.meta?.total_pages ?? 1;
+  const totalItems = data?.meta?.total ?? visibleRows.length;
 
   const activeFilters = [
     status ? { key: 'status', label: 'Status', value: status } : null,

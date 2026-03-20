@@ -16,6 +16,7 @@ use App\Services\Identity\AtomySessionManagerStub;
 use App\Services\Identity\AtomyUserAuthenticator;
 use App\Services\Identity\AtomyUserPersist;
 use App\Services\Identity\AtomyUserQuery;
+use App\Services\Auth\PasswordResetService;
 use App\Services\JwtService;
 use App\Services\Project\AtomyIncompleteTaskCount;
 use App\Services\Project\AtomyProjectPersist;
@@ -80,6 +81,10 @@ class AppServiceProvider extends ServiceProvider
                 (string) config('jwt.algo'),
                 (string) config('jwt.issuer'),
             );
+        });
+
+        $this->app->singleton(PasswordResetService::class, function (): PasswordResetService {
+            return new PasswordResetService((int) config('auth.passwords.users.expire', 60));
         });
 
         // Nexus Project: Laravel implementations + package Manager.

@@ -156,6 +156,35 @@ final class RfqController extends Controller
         ]);
     }
 
+    /**
+     * GET /rfqs/counts — tenant-scoped RFQ counts for dashboard nav badges.
+     *
+     * Keys align with WEB sidebar filters: active ≈ published, archived ≈ cancelled.
+     */
+    public function counts(Request $request): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+
+        $draft = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'draft')->count();
+        $published = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'published')->count();
+        $closed = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'closed')->count();
+        $awarded = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'awarded')->count();
+        $cancelled = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'cancelled')->count();
+
+        return response()->json([
+            'data' => [
+                'draft' => $draft,
+                'published' => $published,
+                'closed' => $closed,
+                'awarded' => $awarded,
+                'cancelled' => $cancelled,
+                'active' => $published,
+                'pending' => 0,
+                'archived' => $cancelled,
+            ],
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);

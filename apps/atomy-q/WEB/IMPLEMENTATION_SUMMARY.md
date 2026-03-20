@@ -10,16 +10,16 @@
 | **API errors** | ✅ | `src/lib/api-error.ts` normalizes Laravel `errors` / `details` / `message`; login uses `parseApiError`. |
 | **Dashboard** | ✅ | Implemented Screen-Blueprint style dashboard (pipeline stats, savings, activity, approvals, category breakdown, SLA alerts, quick actions). |
 | **UI Components** | ✅ | Ported Design-System-v2 primitives into `src/components/ds/*` (Badge, Button, Input, FilterBar/PageHeader, DataTable, Card). |
-| **Default Layout (Blueprint)** | ✅ | Sidebar structure + TopBar actions aligned to Screen Blueprint (Requisition accordion, Settings accordion, New RFQ + AI Insights, search with “/”, notifications count). |
-| **RFQ List (Blueprint Screen 1)** | ✅ | `/rfqs` implemented with filters, bulk selection toolbar, expandable row details, pagination footer (UI), and navigation into workspace. |
+| **Default Layout (Blueprint)** | ✅ | Sidebar structure + TopBar actions aligned to Screen Blueprint; RFQ sub-nav badges from `GET /rfqs/counts` when live API is enabled. |
+| **RFQ List (Blueprint Screen 1)** | ✅ | `/rfqs` uses API pagination meta (`useRfqs` → `{ items, meta }`), filters, bulk selection, expandable rows, and workspace navigation. |
 | **Workspace Layout (Blueprint Screen 2 frame)** | ✅ | `/rfqs/[rfqId]/*` uses collapsed rail + Active Record Menu + work surface. |
-| **RFQ Workspace Overview (Blueprint Screen 2)** | ✅ | `/rfqs/[rfqId]/overview` with KPI scorecards + activity timeline (mocked until API supports). |
+| **RFQ Workspace Overview (Blueprint Screen 2)** | ✅ | `/rfqs/[rfqId]/overview` with KPI scorecards; live mode loads activity via `GET .../activity` merged into overview hook. |
 | **E2E Testing** | ✅ | Added Playwright coverage for RFQ List → Workspace Overview (`tests/rfq-workflow.spec.ts`). |
 | **Routing** | ✅ | Added not-found page for undefined routes with design-system styling. |
 | **RFQ Management** | 🚧 | RFQ List + Workspace Overview done; other workspace sections are scaffolded via `/rfqs/[rfqId]/[section]`. |
 | **Vendor Management** | ❌ | Pending implementation. |
 | **Quote Intake** | ❌ | Pending implementation. |
-| **Approvals** | ❌ | Pending implementation. |
+| **Approvals** | 🚧 | Global queue `/approvals` + detail `/approvals/[id]` call API; RFQ-scoped approval URLs redirect to global detail. Approve/reject wired for pending rows. |
 | **Turbopack Root Config** | ✅ | Resolve `tailwindcss` from WEB config dir to avoid parent-root module resolution. |
 
 ## Next Steps

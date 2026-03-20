@@ -9,6 +9,7 @@ import { Button } from '@/components/ds/Button';
 import { CountBadge, StatusBadge, StatusDot } from '@/components/ds/Badge';
 import { NavigationLink } from '@/components/layout/sidebar';
 import { type RfqStatus } from '@/hooks/use-rfqs';
+import { useRfqPendingApprovalCount } from '@/hooks/use-approvals';
 import { MetricChip } from './metric-chip';
 
 export interface ActiveRfqRecord {
@@ -24,6 +25,10 @@ export interface ActiveRfqRecord {
 
 export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
   const pathname = usePathname();
+  const { data: pendingApprovalCount } = useRfqPendingApprovalCount(record.id);
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+  const approvalsBadgeRaw = useMocks ? 2 : (pendingApprovalCount ?? 0);
+  const approvalsBadge = approvalsBadgeRaw > 0 ? approvalsBadgeRaw : undefined;
 
   const rfqBase = `/rfqs/${encodeURIComponent(record.id)}`;
 
@@ -38,7 +43,7 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
   const childLinks = [
     { id: 'quote-intake', label: 'Quote Intake', href: `${rfqBase}/quote-intake`, icon: <Inbox size={14} />, badge: record.quotesCount },
     { id: 'comparison-runs', label: 'Comparison Runs', href: `${rfqBase}/comparison-runs`, icon: <GitCompareArrows size={14} />, badge: 3 },
-    { id: 'approvals', label: 'Approvals', href: `${rfqBase}/approvals`, icon: <ShieldCheck size={14} />, badge: 2 },
+    { id: 'approvals', label: 'Approvals', href: `${rfqBase}/approvals`, icon: <ShieldCheck size={14} />, badge: approvalsBadge },
     { id: 'negotiations', label: 'Negotiations', href: `${rfqBase}/negotiations`, icon: <HandCoins size={14} />, badge: 1 },
     { id: 'documents', label: 'Documents', href: `${rfqBase}/documents`, icon: <FolderArchive size={14} />, badge: 12 },
     { id: 'risk', label: 'Risk & Compliance', href: `${rfqBase}/risk`, icon: <ShieldAlert size={14} />, statusDot: 'green' as const },

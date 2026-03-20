@@ -16,9 +16,13 @@
 - **Does not** use `nexus/identity-operations` for this path.
 - `AuthController` only injects `JwtServiceInterface` in the constructor so login/refresh work **without** registering Nexus Identity write/query adapters.
 
-### `POST /api/v1/auth/forgot-password` (stub)
+### `POST /api/v1/auth/forgot-password`
 
-- **Request body:** `email` only (no tenant). Returns **501** until reset flow is implemented; **422** if `email` is missing or invalid.
+- **Request body:** `email` only. Returns **200** with a generic message (no user enumeration). Sends `PasswordResetMail` when the user exists (`App\Services\Auth\PasswordResetService` + `password_reset_tokens` table).
+
+### `POST /api/v1/auth/reset-password`
+
+- **Request body:** `email`, `token`, `password`, `password_confirmation`. Validates token against hashed row; updates `users.password_hash`; **422** on invalid/expired token.
 
 ### Tenancy & identity (policy)
 

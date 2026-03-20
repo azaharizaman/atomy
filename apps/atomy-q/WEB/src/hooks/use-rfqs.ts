@@ -65,6 +65,40 @@ function normalizeStringOrNull(value: unknown): string | null {
   return normalizeString(value) ?? null;
 }
 
+export interface RfqsListMeta {
+  current_page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface RfqsListResult {
+  items: RfqListItem[];
+  meta: RfqsListMeta;
+}
+
+function parseRfqsMeta(payload: unknown, fallbackPage: number, fallbackPerPage: number): RfqsListMeta | null {
+  const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
+  const m = obj?.meta;
+  if (m === null || m === undefined || typeof m !== 'object') return null;
+  const meta = m as Record<string, unknown>;
+  const total = Number(meta.total);
+  if (!Number.isFinite(total) || total < 0) return null;
+  const perPage = Math.max(1, Number(meta.per_page) || fallbackPerPage);
+  const currentPage = Math.max(1, Number(meta.current_page) || fallbackPage);
+  const totalPagesRaw = Number(meta.total_pages);
+  const totalPages =
+    Number.isFinite(totalPagesRaw) && totalPagesRaw > 0
+      ? Math.max(1, totalPagesRaw)
+      : Math.max(1, Math.ceil(total / perPage));
+  return {
+    current_page: currentPage,
+    per_page: perPage,
+    total,
+    total_pages: totalPages,
+  };
+}
+
 function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   const asArray = (value: unknown): unknown[] | null => (Array.isArray(value) ? value : null);
 
@@ -107,12 +141,16 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   });
 }
 
+const SEED_PER_PAGE = 20;
+
 export function useRfqs(params: UseRfqsParams) {
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   return useQuery({
     queryKey: ['rfqs', params],
-    queryFn: async (): Promise<RfqListItem[]> => {
+    queryFn: async (): Promise<RfqsListResult> => {
+      const page = Math.max(1, params.page ?? 1);
+
       // Prefer live API when mocks are disabled and API is reachable,
       // but always fall back to local seed data on failures or when mocks are enabled.
       if (!useMocks) {
@@ -121,17 +159,47 @@ export function useRfqs(params: UseRfqsParams) {
           if (params.projectId) apiParams.project_id = params.projectId;
           const { data } = await api.get('/rfqs', { params: apiParams });
           const items = normalizeRfqsPayload(data).filter((x) => x.id);
-          if (items.length > 0) {
-            return items;
+          const metaFromApi = parseRfqsMeta(data, page, 25);
+          if (metaFromApi !== null) {
+            return { items, meta: metaFromApi };
           }
+          if (items.length > 0) {
+            return {
+              items,
+              meta: {
+                current_page: page,
+                per_page: items.length,
+                total: items.length,
+                total_pages: 1,
+              },
+            };
+          }
+          return {
+            items: [],
+            meta: {
+              current_page: page,
+              per_page: 25,
+              total: 0,
+              total_pages: 1,
+            },
+          };
         } catch {
           // ignore and fall through to seed data
         }
       }
 
       const { getSeedRfqListItems } = await import('@/data/seed');
-      const { items } = getSeedRfqListItems(params);
-      return items;
+      const { items, total } = getSeedRfqListItems(params);
+      const totalPages = Math.max(1, Math.ceil(total / SEED_PER_PAGE));
+      return {
+        items,
+        meta: {
+          current_page: page,
+          per_page: SEED_PER_PAGE,
+          total,
+          total_pages: totalPages,
+        },
+      };
     },
   });
 }

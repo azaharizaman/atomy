@@ -8,6 +8,7 @@ use App\Contracts\JwtServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Models\User;
+use App\Services\Auth\PasswordResetService;
 use Nexus\IdentityOperations\Contracts\UserAuthenticationCoordinatorInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -189,7 +190,7 @@ final class AuthController extends Controller
      *
      * POST /auth/forgot-password — body: `email` only (tenant resolved when flow is implemented).
      */
-    public function forgotPassword(Request $request): JsonResponse
+    public function forgotPassword(Request $request, PasswordResetService $passwordReset): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'string', 'email'],
@@ -199,9 +200,41 @@ final class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $passwordReset->sendResetLink((string) $request->input('email'));
+
         return response()->json([
-            'message' => 'Password reset flow is not implemented yet.',
-        ], 501);
+            'message' => 'If an account exists for this email, password reset instructions have been sent.',
+        ]);
+    }
+
+    /**
+     * Complete password reset using email + token from the forgot-password mail.
+     *
+     * POST /auth/reset-password
+     */
+    public function resetPassword(Request $request, PasswordResetService $passwordReset): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email'],
+            'token' => ['required', 'string', 'min:10'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $passwordReset->resetPassword(
+                (string) $request->input('email'),
+                (string) $request->input('token'),
+                (string) $request->input('password'),
+            );
+        } catch (\InvalidArgumentException) {
+            return response()->json(['message' => 'Invalid or expired reset token.'], 422);
+        }
+
+        return response()->json(['message' => 'Password has been reset.']);
     }
 
     /**

@@ -28,14 +28,43 @@ final class ApprovalController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
         $params = $this->paginationParams($request);
 
+        $query = Approval::query()
+            ->where('tenant_id', $tenantId)
+            ->with([
+                'rfq:id,title,tenant_id',
+                'requestedBy:id,name,email',
+            ])
+            ->orderByDesc('requested_at')
+            ->orderByDesc('created_at');
+
+        if ($status = $request->query('status')) {
+            $query->where('status', (string) $status);
+        }
+
+        if ($type = $request->query('type')) {
+            $query->where('type', (string) $type);
+        }
+
+        if ($rfqId = $request->query('rfq_id')) {
+            $query->where('rfq_id', (string) $rfqId);
+        }
+
+        $paginator = $query->paginate($params['per_page'], ['*'], 'page', $params['page']);
+
+        $rows = $paginator->getCollection()->map(function (Approval $approval): array {
+            return $this->serializeApprovalListRow($approval);
+        })->values();
+
         return response()->json([
-            'data' => [],
+            'data' => $rows,
             'meta' => [
-                'current_page' => $params['page'],
-                'per_page' => $params['per_page'],
-                'total' => 0,
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'total_pages' => $paginator->lastPage(),
             ],
         ]);
     }
@@ -45,14 +74,26 @@ final class ApprovalController extends Controller
      */
     public function show(Request $request, string $id): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+
+        /** @var Approval|null $approval */
+        $approval = Approval::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->with([
+                'rfq:id,title,tenant_id,rfq_number',
+                'comparisonRun:id,name,status,is_preview,tenant_id',
+                'requestedBy:id,name,email',
+                'approvedByUser:id,name,email',
+            ])
+            ->first();
+
+        if ($approval === null) {
+            return response()->json(['message' => 'Approval not found'], 404);
+        }
+
         return response()->json([
-            'data' => [
-                'id' => $id,
-                'type' => 'quote_approval',
-                'status' => 'pending',
-                'priority' => 'normal',
-                'created_at' => null,
-            ],
+            'data' => $this->serializeApprovalDetail($approval),
         ]);
     }
 
@@ -142,11 +183,40 @@ final class ApprovalController extends Controller
      */
     public function reject(Request $request, string $id): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        /** @var Approval|null $approval */
+        $approval = Approval::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->first();
+
+        if ($approval === null) {
+            return response()->json(['message' => 'Approval not found'], 404);
+        }
+
+        if ($approval->status !== 'pending') {
+            return response()->json([
+                'error' => 'Approval is not pending.',
+                'details' => [],
+            ], 422);
+        }
+
+        $approval->status = 'rejected';
+        $approval->notes = isset($validated['reason']) ? (string) $validated['reason'] : $approval->notes;
+        $approval->approved_at = now();
+        $approval->approved_by = $this->userId($request);
+        $approval->save();
+
         return response()->json([
             'data' => [
                 'id' => $id,
                 'status' => 'rejected',
-                'rejected_at' => null,
+                'rejected_at' => $approval->approved_at?->toAtomString(),
             ],
         ]);
     }
@@ -264,5 +334,51 @@ final class ApprovalController extends Controller
         return response()->json([
             'data' => [],
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serializeApprovalListRow(Approval $approval): array
+    {
+        $level = (int) ($approval->level ?? 1);
+        $priority = $level >= 3 ? 'high' : ($level >= 2 ? 'medium' : 'low');
+        $rfqTitle = $approval->rfq?->title ?? 'Requisition';
+        $typeLabel = ucwords(str_replace('_', ' ', (string) $approval->type));
+
+        return [
+            'id' => $approval->id,
+            'rfq_id' => $approval->rfq_id,
+            'rfq_title' => $rfqTitle,
+            'type' => $approval->type,
+            'type_label' => $typeLabel,
+            'status' => $approval->status,
+            'priority' => $priority,
+            'summary' => $typeLabel . ' — ' . $rfqTitle,
+            'sla' => '—',
+            'sla_variant' => 'safe',
+            'assignee' => $approval->requestedBy?->name ?? $approval->requestedBy?->email ?? '—',
+            'requested_at' => $approval->requested_at?->toAtomString(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serializeApprovalDetail(Approval $approval): array
+    {
+        $run = $approval->comparisonRun;
+        $row = $this->serializeApprovalListRow($approval);
+        $row['rfq_number'] = $approval->rfq?->rfq_number;
+        $row['notes'] = $approval->notes;
+        $row['comparison_run'] = $run !== null ? [
+            'id' => $run->id,
+            'name' => $run->name,
+            'status' => $run->status,
+            'is_preview' => (bool) ($run->is_preview ?? false),
+        ] : null;
+        $row['created_at'] = $approval->created_at?->toAtomString();
+
+        return $row;
     }
 }
