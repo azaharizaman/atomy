@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-20  
 **Branch:** `docs/atomy-q-alpha-brainstorm-2026-03-20`  
-**Status:** Strategic scope locked for **design-partner alpha** (§3); implementation plan still pending (`writing-plans`).
+**Status:** Product decisions in §3 and §8 are **complete**; scope locked for **design-partner alpha**. Next: **`writing-plans`** implementation plan (this doc does not authorize code changes by itself).
 
 ---
 
@@ -69,7 +69,7 @@ Pick one primary bar; they imply different ordering:
 
 ### 5.1 Must-have (design-partner alpha)
 
-- **Identity:** Forgot-password flow (email, token, reset) — **blocking** for external users today (`501` is not acceptable). Document SSO as beta unless a partner contract requires OIDC for go-live.
+- **Identity:** **Email/password + JWT** (existing) plus **forgot-password** (email, token, reset) — **blocking** for external users (`501` is not acceptable). **SSO/OIDC is not an alpha gate** (decision **B**): defer productizing SSO for design partners; keep or hide SSO entry points in WEB per UX choice, and state in the partner guide that alpha accounts are **email/password only**. Post-alpha: enterprise SSO when required.
 - **Contract:** OpenAPI as source of truth; regenerate TS client in CI or documented gate; normalize error envelope in WEB (`PLAN.md` §3.4).
 - **RFQ core:** List + detail + create/edit aligned with implemented filters/pagination; overview KPIs and **activity** per `BACKEND_API_GAPS.md` (prefer dedicated `.../activity` if payload size matters).
 - **Quotes & comparison (minimal):** **Buyer-side** quote capture (intake UI and/or API used only by authenticated tenant users) plus a **comparison matrix** run—even if scoring is simplified.
@@ -84,6 +84,7 @@ Pick one primary bar; they imply different ordering:
 - **Vendor self-service** portal, vendor invitations as an external-facing workflow, and **vendor-authenticated** submission — **out of scope** for this alpha (buyer-only decision).
 - **Projects/tasks** Gantt and full ACL matrix (follow `PROJECTS_AND_TASKS_ROLLOUT_PLAN.md` for later phases).
 - Billing/subscription (unless alpha is sales-led and required).
+- **SSO as required onboarding** for design partners — **out of scope** for alpha (email/password + forgot-password only).
 
 ### 5.3 Package / CI hygiene (parallel, time-boxed)
 
@@ -115,20 +116,18 @@ Phases can overlap; **P0 and P1** should start in parallel if two contributors a
 | Contract drift | OpenAPI CI diff; MSW fixtures from schema |
 | Scope creep (projects/tasks) | Keep Phase 2 rollout plan as **post-alpha** unless explicitly pulled in |
 | Approvals scope ballooning | Ship **one** documented variant; defer multi-step policies and edge cases to post-alpha |
+| Partner expects SSO | Partner guide states **email/password + forgot-password**; schedule SSO for **post-alpha** enterprise track |
 
 ---
 
-## 8. Open decisions (remaining)
+## 8. Product decisions (complete)
 
-**Resolved:** Primary alpha bar = **design-partner alpha (B)** — external orgs on real data with strict tenant isolation and account recovery.
-
-**Resolved:** **Persona A** — **buyer-only** alpha (no vendor-submission / vendor-portal requirement for go-live).
-
-**Resolved:** **Approvals A** — **in-scope**: one real buyer-side approval path (API + UI), with the supported variant documented for partners; full approvals surface not required.
-
-Still need product input:
-
-1. **SSO:** Required for first external tenant or enterprise beta later?
+| # | Topic | Choice |
+|---|--------|--------|
+| 1 | Alpha bar | **Design-partner alpha** — 1–3 external orgs on real data (original option **B**). |
+| 2 | Persona | **Buyer-only** — no vendor portal / vendor auth for alpha (option **A**). |
+| 3 | Approvals | **In-scope** — one end-to-end path, API + UI, documented variant (option **A**). |
+| 4 | SSO | **Deferred** — alpha onboarding is email/password + forgot-password; SSO not required before first external tenant (option **B**). |
 
 ---
 
@@ -139,12 +138,13 @@ Still need product input:
 | 2026-03-20 | Alpha bar: **B** — design-partner alpha (1–3 external orgs). |
 | 2026-03-20 | Persona: **A** — buyer-only; vendor self-service out of scope for alpha. |
 | 2026-03-20 | Approvals: **A** — in-scope; one end-to-end path (API + UI), documented variant only. |
+| 2026-03-20 | SSO: **B** — deferred for alpha; email/password + forgot-password for design partners. |
 
 ---
 
 ## 10. Next step (process)
 
-After the **SSO** decision in §8 is recorded, run **`writing-plans`** to produce a dated implementation plan with file-level tasks and test gates—this brainstorm doc does **not** authorize implementation by itself.
+Run **`writing-plans`** to produce a dated implementation plan with file-level tasks and test gates. This brainstorm spec is the **input** to that plan; it does **not** authorize implementation by itself.
 
 ---
 
