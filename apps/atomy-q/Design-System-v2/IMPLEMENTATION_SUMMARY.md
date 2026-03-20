@@ -150,3 +150,12 @@ Implemented additional UI/UX refinements requested after P1:
   - non-prominent remove control (ghost without hover emphasis)
   - sortable row handle with drag/drop reordering
   - heading/subheading grouping rows for line item sections
+
+## Update - Horizontal process track & Stepper (2026-03-21)
+
+- Added `horizontalProcessTrackLogic.ts` with pure helpers: `segmentToneAfterStep`, `computeTodayCursor`, `collectDateAnchors`.
+- Added `HorizontalProcessTrack.tsx`: horizontal milestone rail (compact/detailed), `completeAppearance` (`success` | `accent`), semantic **issue** (amber) / **blocked** (red) nodes and segments, optional **Today** cursor when steps include `date` (ISO) and `showTodayCursor` is set; `pinTodayCursorToEnds` optional.
+- `Stepper` in `CreateRFQComponents.tsx` now wraps `HorizontalProcessTrack` and keeps `steps` + `activeStepId`; extended optional `StepperStep` fields (`description`, `status`, `date`); optional `showProgressBar` (default true), `showTodayCursor`, `today`, `variant`.
+- Showcase **Create RFQ** subsection: two extra cards demo detailed+issue and schedule+today cursor.
+- Spec: `docs/superpowers/specs/2026-03-21-atomy-q-horizontal-process-track-design.md`.
+- Parity: same files updated under `apps/atomy-q/Screen-Blueprint`.

@@ -1,54 +1,87 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Plus, UploadCloud, GripVertical, Rows3 } from 'lucide-react';
 import { Card, UploadZone } from './Card';
 import { TextInput, SelectInput } from './Input';
 import { Button } from './Button';
 import { ProgressBar } from './Progress';
+import { HorizontalProcessTrack, type HorizontalProcessTrackStep } from './HorizontalProcessTrack';
 
 export interface StepperStep {
   id: string;
   label: string;
+  description?: string;
+  /** Maps to track health (amber/red node + segment). */
+  status?: 'default' | 'issue' | 'blocked';
+  /** ISO date string; use with `showTodayCursor` on `Stepper`. */
+  date?: string;
 }
 
 interface StepperProps {
   steps: StepperStep[];
   activeStepId: string;
   className?: string;
+  /** @default true */
+  showProgressBar?: boolean;
+  showTodayCursor?: boolean;
+  today?: Date;
+  pinTodayCursorToEnds?: boolean;
+  variant?: 'compact' | 'detailed';
 }
 
-export function Stepper({ steps, activeStepId, className = '' }: StepperProps) {
+export function Stepper({
+  steps,
+  activeStepId,
+  className = '',
+  showProgressBar = true,
+  showTodayCursor = false,
+  today,
+  pinTodayCursorToEnds = false,
+  variant = 'compact',
+}: StepperProps) {
   const activeIndex = Math.max(steps.findIndex(step => step.id === activeStepId), 0);
+
+  const trackSteps: HorizontalProcessTrackStep[] = useMemo(
+    () =>
+      steps.map((step, idx) => {
+        const progress =
+          idx < activeIndex ? 'complete' : idx === activeIndex ? 'current' : 'upcoming';
+        const health =
+          step.status === 'issue'
+            ? 'issue'
+            : step.status === 'blocked'
+              ? 'blocked'
+              : 'default';
+        return {
+          id: step.id,
+          label: step.label,
+          description: step.description,
+          progress,
+          health,
+          date: step.date,
+        };
+      }),
+    [steps, activeIndex],
+  );
 
   return (
     <div className={className}>
-      <div className="flex items-center gap-2">
-        {steps.map((step, idx) => {
-          const state = idx < activeIndex ? 'done' : idx === activeIndex ? 'active' : 'todo';
-          return (
-            <div key={step.id} className="flex items-center flex-1 gap-2 min-w-0">
-              <div
-                className={[
-                  'w-5 h-5 rounded-full text-[10px] font-semibold flex items-center justify-center shrink-0',
-                  state === 'done'
-                    ? 'bg-green-100 text-green-700'
-                    : state === 'active'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-200 text-slate-500',
-                ].join(' ')}
-              >
-                {idx + 1}
-              </div>
-              <span className={['text-xs truncate', state === 'active' ? 'text-slate-800 font-medium' : 'text-slate-500'].join(' ')}>
-                {step.label}
-              </span>
-              {idx < steps.length - 1 && <div className="h-px flex-1 bg-slate-200" />}
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-2">
-        <ProgressBar value={((activeIndex + 1) / steps.length) * 100} size="sm" variant="indigo" />
-      </div>
+      <HorizontalProcessTrack
+        steps={trackSteps}
+        variant={variant}
+        completeAppearance="success"
+        showTodayCursor={showTodayCursor}
+        today={today}
+        pinTodayCursorToEnds={pinTodayCursorToEnds}
+      />
+      {showProgressBar && (
+        <div className="mt-3">
+          <ProgressBar
+            value={((activeIndex + 1) / steps.length) * 100}
+            size="sm"
+            variant="indigo"
+          />
+        </div>
+      )}
     </div>
   );
 }

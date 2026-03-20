@@ -38,6 +38,7 @@ import { SlideOverStackManager, type SlideOverStackItem } from '../components/ds
 import { TopBar } from '../components/ds/TopBar';
 import { SignInCard, MfaPromptPanel } from '../components/ds/AuthComponents';
 import { Stepper, StickyActionBar, LineItemEditor, UploadDropzoneWithProgress } from '../components/ds/CreateRFQComponents';
+import { HorizontalProcessTrack } from '../components/ds/HorizontalProcessTrack';
 import type { LineItem, UploadItemProgress } from '../components/ds/CreateRFQComponents';
 import { QuoteDetailActionBar, ValidationCallout, OverrideChip, RevertControl } from '../components/ds/QuoteIntakeComponents';
 import { ConversionBadge, ConflictIndicator, NormalizationLockBar, MappingGrid } from '../components/ds/NormalizationComponents';
@@ -1656,6 +1657,83 @@ export function ShowcasePage() {
                       { id: 'attachments', label: 'Attachments' },
                     ]}
                     activeStepId="line-items"
+                  />
+                </Card>
+                <Card padding="md">
+                  <p className="mb-3 text-xs font-medium text-slate-600">
+                    Process track — detailed + issue on current step
+                  </p>
+                  <HorizontalProcessTrack
+                    variant="detailed"
+                    completeAppearance="success"
+                    steps={[
+                      {
+                        id: 'a',
+                        label: 'Intake',
+                        description: 'RFQ metadata captured and validated.',
+                        progress: 'complete',
+                      },
+                      {
+                        id: 'b',
+                        label: 'Normalization',
+                        description: 'Two vendor lines need manual mapping before comparison.',
+                        progress: 'current',
+                        health: 'issue',
+                      },
+                      {
+                        id: 'c',
+                        label: 'Approval',
+                        description: 'Pending policy gate and sign-off.',
+                        progress: 'upcoming',
+                      },
+                      {
+                        id: 'd',
+                        label: 'Award',
+                        description: 'Final award and handoff.',
+                        progress: 'upcoming',
+                        health: 'blocked',
+                      },
+                    ]}
+                  />
+                </Card>
+                <Card padding="md">
+                  <p className="mb-3 text-xs font-medium text-slate-600">
+                    Schedule mode — today cursor (fixed demo date)
+                  </p>
+                  <HorizontalProcessTrack
+                    variant="detailed"
+                    showTodayCursor
+                    today={new Date('2026-01-15T12:00:00.000Z')}
+                    steps={[
+                      {
+                        id: 's0',
+                        label: 'Kickoff',
+                        description: 'Jan 1',
+                        progress: 'complete',
+                        date: '2026-01-01',
+                      },
+                      {
+                        id: 's1',
+                        label: 'Vendor review',
+                        description: 'Jan 10',
+                        progress: 'complete',
+                        date: '2026-01-10',
+                      },
+                      {
+                        id: 's2',
+                        label: 'Award target',
+                        description: 'Jan 20',
+                        progress: 'current',
+                        date: '2026-01-20',
+                      },
+                      {
+                        id: 's3',
+                        label: 'Close',
+                        description: 'Jan 31',
+                        progress: 'upcoming',
+                        date: '2026-01-31',
+                      },
+                    ]}
                   />
                 </Card>
                 <LineItemEditor items={lineItems} onChange={setLineItems} currency="USD" locale="en-US" />

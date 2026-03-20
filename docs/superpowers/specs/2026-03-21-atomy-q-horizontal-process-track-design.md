@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-21  
 **Product / area:** `apps/atomy-q/Design-System-v2`  
-**Status:** Approved for implementation planning  
+**Status:** Implemented (Design-System-v2 + Screen-Blueprint, 2026-03-21)  
 
 ## 1. Summary
 
