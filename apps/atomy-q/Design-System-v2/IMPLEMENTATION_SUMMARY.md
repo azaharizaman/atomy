@@ -159,3 +159,4 @@ Implemented additional UI/UX refinements requested after P1:
 - Showcase **Create RFQ** subsection: two extra cards demo detailed+issue and schedule+today cursor.
 - Spec: `docs/superpowers/specs/2026-03-21-atomy-q-horizontal-process-track-design.md`.
 - Parity: same files updated under `apps/atomy-q/Screen-Blueprint`.
+- **Refinement:** Horizontal track nodes reuse exported `TIMELINE_DOT_PALETTE` / `timelineNodeSizeClass` / `timelineIconTextClass` from `Timeline.tsx`; connectors are `h-px` (1px, matching vertical `w-px` spine) and meet node centers via per-step left/right flex segments. Showcase demos live under **Timeline → Horizontal process track** after the vertical timeline.

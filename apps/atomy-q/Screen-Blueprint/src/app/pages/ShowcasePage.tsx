@@ -27,6 +27,7 @@ import type { ColumnDef } from '../components/ds/DataTable';
 import { TableFooter, Pagination } from '../components/ds/Pagination';
 import { SlideOver, SlideOverSection } from '../components/ds/SlideOver';
 import { Timeline, ActivityFeed } from '../components/ds/Timeline';
+import { HorizontalProcessTrack } from '../components/ds/HorizontalProcessTrack';
 import { Alert, Banner, Checklist } from '../components/ds/Alert';
 import { NavItem, NavGroup, SubNavItem, NavigationLink, NavLabel } from '../components/ds/Sidebar';
 import { FilterBar, PageHeader, SectionHeader } from '../components/ds/FilterBar';
@@ -38,7 +39,6 @@ import { SlideOverStackManager, type SlideOverStackItem } from '../components/ds
 import { TopBar } from '../components/ds/TopBar';
 import { SignInCard, MfaPromptPanel } from '../components/ds/AuthComponents';
 import { Stepper, StickyActionBar, LineItemEditor, UploadDropzoneWithProgress } from '../components/ds/CreateRFQComponents';
-import { HorizontalProcessTrack } from '../components/ds/HorizontalProcessTrack';
 import type { LineItem, UploadItemProgress } from '../components/ds/CreateRFQComponents';
 import { QuoteDetailActionBar, ValidationCallout, OverrideChip, RevertControl } from '../components/ds/QuoteIntakeComponents';
 import { ConversionBadge, ConflictIndicator, NormalizationLockBar, MappingGrid } from '../components/ds/NormalizationComponents';
@@ -1415,6 +1415,105 @@ export function ShowcasePage() {
                 <ActivityFeed events={ACTIVITY_EVENTS} />
               </SectionCard>
             </div>
+
+            <SubSection title="Horizontal process track">
+              <p className="mb-3 max-w-3xl text-sm text-slate-600">
+                Same node palette and 1px connector weight as the vertical timeline above. Connectors run from the center of one node to the center of the next (Create RFQ stepper uses the compact variant).
+              </p>
+              <div className="flex flex-col gap-4">
+                <Card padding="md">
+                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Create RFQ (compact stepper)
+                  </h4>
+                  <Stepper
+                    steps={[
+                      { id: 'meta', label: 'Metadata' },
+                      { id: 'line-items', label: 'Line Items' },
+                      { id: 'terms', label: 'Terms' },
+                      { id: 'attachments', label: 'Attachments' },
+                    ]}
+                    activeStepId="line-items"
+                  />
+                </Card>
+                <Card padding="md">
+                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Detailed + issue / blocked
+                  </h4>
+                  <HorizontalProcessTrack
+                    variant="detailed"
+                    completeAppearance="success"
+                    steps={[
+                      {
+                        id: 'a',
+                        label: 'Intake',
+                        description: 'RFQ metadata captured and validated.',
+                        progress: 'complete',
+                      },
+                      {
+                        id: 'b',
+                        label: 'Normalization',
+                        description: 'Two vendor lines need manual mapping before comparison.',
+                        progress: 'current',
+                        health: 'issue',
+                      },
+                      {
+                        id: 'c',
+                        label: 'Approval',
+                        description: 'Pending policy gate and sign-off.',
+                        progress: 'upcoming',
+                      },
+                      {
+                        id: 'd',
+                        label: 'Award',
+                        description: 'Final award and handoff.',
+                        progress: 'upcoming',
+                        health: 'blocked',
+                      },
+                    ]}
+                  />
+                </Card>
+                <Card padding="md">
+                  <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Schedule + today cursor (demo date)
+                  </h4>
+                  <HorizontalProcessTrack
+                    variant="detailed"
+                    showTodayCursor
+                    today={new Date('2026-01-15T12:00:00.000Z')}
+                    steps={[
+                      {
+                        id: 's0',
+                        label: 'Kickoff',
+                        description: 'Jan 1',
+                        progress: 'complete',
+                        date: '2026-01-01',
+                      },
+                      {
+                        id: 's1',
+                        label: 'Vendor review',
+                        description: 'Jan 10',
+                        progress: 'complete',
+                        date: '2026-01-10',
+                      },
+                      {
+                        id: 's2',
+                        label: 'Award target',
+                        description: 'Jan 20',
+                        progress: 'current',
+                        date: '2026-01-20',
+                      },
+                      {
+                        id: 's3',
+                        label: 'Close',
+                        description: 'Jan 31',
+                        progress: 'upcoming',
+                        date: '2026-01-31',
+                      },
+                    ]}
+                  />
+                </Card>
+              </div>
+            </SubSection>
           </Section>
 
           {/* ═══════════════════════════════════════════════════════════
@@ -1648,94 +1747,6 @@ export function ShowcasePage() {
 
             <SubSection title="Create RFQ">
               <div className="space-y-3">
-                <Card padding="md">
-                  <Stepper
-                    steps={[
-                      { id: 'meta', label: 'Metadata' },
-                      { id: 'line-items', label: 'Line Items' },
-                      { id: 'terms', label: 'Terms' },
-                      { id: 'attachments', label: 'Attachments' },
-                    ]}
-                    activeStepId="line-items"
-                  />
-                </Card>
-                <Card padding="md">
-                  <p className="mb-3 text-xs font-medium text-slate-600">
-                    Process track — detailed + issue on current step
-                  </p>
-                  <HorizontalProcessTrack
-                    variant="detailed"
-                    completeAppearance="success"
-                    steps={[
-                      {
-                        id: 'a',
-                        label: 'Intake',
-                        description: 'RFQ metadata captured and validated.',
-                        progress: 'complete',
-                      },
-                      {
-                        id: 'b',
-                        label: 'Normalization',
-                        description: 'Two vendor lines need manual mapping before comparison.',
-                        progress: 'current',
-                        health: 'issue',
-                      },
-                      {
-                        id: 'c',
-                        label: 'Approval',
-                        description: 'Pending policy gate and sign-off.',
-                        progress: 'upcoming',
-                      },
-                      {
-                        id: 'd',
-                        label: 'Award',
-                        description: 'Final award and handoff.',
-                        progress: 'upcoming',
-                        health: 'blocked',
-                      },
-                    ]}
-                  />
-                </Card>
-                <Card padding="md">
-                  <p className="mb-3 text-xs font-medium text-slate-600">
-                    Schedule mode — today cursor (fixed demo date)
-                  </p>
-                  <HorizontalProcessTrack
-                    variant="detailed"
-                    showTodayCursor
-                    today={new Date('2026-01-15T12:00:00.000Z')}
-                    steps={[
-                      {
-                        id: 's0',
-                        label: 'Kickoff',
-                        description: 'Jan 1',
-                        progress: 'complete',
-                        date: '2026-01-01',
-                      },
-                      {
-                        id: 's1',
-                        label: 'Vendor review',
-                        description: 'Jan 10',
-                        progress: 'complete',
-                        date: '2026-01-10',
-                      },
-                      {
-                        id: 's2',
-                        label: 'Award target',
-                        description: 'Jan 20',
-                        progress: 'current',
-                        date: '2026-01-20',
-                      },
-                      {
-                        id: 's3',
-                        label: 'Close',
-                        description: 'Jan 31',
-                        progress: 'upcoming',
-                        date: '2026-01-31',
-                      },
-                    ]}
-                  />
-                </Card>
                 <LineItemEditor items={lineItems} onChange={setLineItems} currency="USD" locale="en-US" />
                 <UploadDropzoneWithProgress uploads={uploadItems} />
                 <div className="rounded-md border border-slate-200 overflow-hidden bg-white">
