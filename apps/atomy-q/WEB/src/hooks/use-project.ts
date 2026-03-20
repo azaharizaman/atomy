@@ -38,13 +38,15 @@ function normalizeProject(payload: unknown): ProjectDetail {
   };
 }
 
-export function useProject(projectId: string) {
+export function useProject(projectId: string, options?: { enabled?: boolean }) {
+  const enabled = (options?.enabled ?? true) && projectId !== '';
   return useQuery({
     queryKey: ['projects', projectId],
     queryFn: async (): Promise<ProjectDetail> => {
       const { data } = await api.get(`/projects/${encodeURIComponent(projectId)}`);
       return normalizeProject(data);
     },
+    enabled,
   });
 }
 

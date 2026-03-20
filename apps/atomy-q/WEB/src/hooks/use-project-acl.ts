@@ -29,13 +29,15 @@ function normalizeProjectAcl(payload: unknown): ProjectAclEntry[] {
     .filter((r) => r.userId.trim() !== '');
 }
 
-export function useProjectAcl(projectId: string) {
+export function useProjectAcl(projectId: string, options?: { enabled?: boolean }) {
+  const enabled = (options?.enabled ?? true) && projectId !== '';
   return useQuery({
     queryKey: ['projects', projectId, 'acl'],
     queryFn: async (): Promise<ProjectAclEntry[]> => {
       const { data } = await api.get(`/projects/${encodeURIComponent(projectId)}/acl`);
       return normalizeProjectAcl(data);
     },
+    enabled,
   });
 }
 

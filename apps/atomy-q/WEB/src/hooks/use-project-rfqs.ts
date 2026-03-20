@@ -32,13 +32,15 @@ function normalize(payload: unknown): ProjectRfqListItem[] {
     .filter((x) => x.id);
 }
 
-export function useProjectRfqs(projectId: string) {
+export function useProjectRfqs(projectId: string, options?: { enabled?: boolean }) {
+  const enabled = (options?.enabled ?? true) && projectId !== '';
   return useQuery({
     queryKey: ['projects', projectId, 'rfqs'],
     queryFn: async () => {
       const { data } = await api.get(`/projects/${encodeURIComponent(projectId)}/rfqs`);
       return normalize(data);
     },
+    enabled,
   });
 }
 

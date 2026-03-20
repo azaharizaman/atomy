@@ -6,12 +6,15 @@ import { Card } from '@/components/ds/Card';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { SelectInput, TextInput } from '@/components/ds/Input';
 import { useProjects } from '@/hooks/use-projects';
+import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ds/Button';
 
 export default function NewRfqPage() {
   const router = useRouter();
-  const { data: projects = [] } = useProjects();
+  const { data: flags, isLoading: flagsLoading } = useFeatureFlags();
+  const projectsEnabled = flags?.projects === true;
+  const { data: projects = [] } = useProjects({ enabled: !flagsLoading && projectsEnabled });
   const [projectId, setProjectId] = React.useState('');
   const [title, setTitle] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -65,15 +68,17 @@ export default function NewRfqPage() {
             placeholder="e.g. Laptops for Q3 onboarding"
           />
 
-          <div className="mt-3">
-          <SelectInput
-            label="Project (optional)"
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-            placeholder="No project"
-            options={projects.map((p) => ({ value: p.id, label: p.name }))}
-          />
-          </div>
+          {projectsEnabled ? (
+            <div className="mt-3">
+              <SelectInput
+                label="Project (optional)"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                placeholder="No project"
+                options={projects.map((p) => ({ value: p.id, label: p.name }))}
+              />
+            </div>
+          ) : null}
 
           {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
 

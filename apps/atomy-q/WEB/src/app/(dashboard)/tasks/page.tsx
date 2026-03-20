@@ -7,6 +7,7 @@ import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { useTasks, type TaskListItem } from '@/hooks/use-tasks';
 import { useTask } from '@/hooks/use-task';
+import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { useUpdateTaskStatus, TASK_STATUSES } from '@/hooks/use-update-task-status';
 
 const TASK_COLUMNS: ColumnDef<TaskListItem>[] = [
@@ -46,7 +47,10 @@ function TaskDetailDrawer({
   taskId: string;
   onClose: () => void;
 }) {
-  const { data: task, isLoading, isError, error } = useTask(taskId);
+  const { data: flags } = useFeatureFlags();
+  const { data: task, isLoading, isError, error } = useTask(taskId, {
+    enabled: flags?.tasks === true,
+  });
   const updateStatus = useUpdateTaskStatus(taskId);
 
   return (
@@ -113,7 +117,26 @@ function TaskDetailDrawer({
 
 export default function TasksPage() {
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
-  const { data: tasks = [], isLoading, isError, error } = useTasks();
+  const { data: flags, isLoading: flagsLoading } = useFeatureFlags();
+  const tasksEnabled = flags?.tasks === true;
+  const { data: tasks = [], isLoading, isError, error } = useTasks({
+    enabled: !flagsLoading && tasksEnabled,
+  });
+
+  if (flagsLoading) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Task Inbox" subtitle="Loading…" />
+        <Card padding="md">
+          <div className="h-24 w-full rounded bg-slate-100 animate-pulse" aria-busy />
+        </Card>
+      </div>
+    );
+  }
+
+  if (!tasksEnabled) {
+    return null;
+  }
 
   return (
     <div className="space-y-4">

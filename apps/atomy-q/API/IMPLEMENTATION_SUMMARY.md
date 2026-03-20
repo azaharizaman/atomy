@@ -44,6 +44,8 @@
 
 - `JWT_SECRET` must be non-empty (`php artisan key:generate` sets `APP_KEY`; JWT uses `config/jwt.php` / `.env` `JWT_SECRET`).
 
+- **`GET /api/v1/feature-flags`:** Returns `{ data: { projects: bool, tasks: bool } }` mirroring `config('features.*')` for WEB nav and graceful degradation when routes return 404.
+
 ## OpenAPI (Scramble)
 
 - **Package:** `dedoc/scramble` (dev). Config: `config/scramble.php` — documents routes under `api/v1` only.

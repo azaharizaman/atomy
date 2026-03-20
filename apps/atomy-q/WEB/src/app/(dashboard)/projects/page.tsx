@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { Button } from '@/components/ds/Button';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { FilterBar, PageHeader } from '@/components/ds/FilterBar';
@@ -61,7 +62,11 @@ export default function ProjectsPage() {
   const [createStartDate, setCreateStartDate] = React.useState('');
   const [createEndDate, setCreateEndDate] = React.useState('');
   const [createPmId, setCreatePmId] = React.useState('');
-  const { data: projects = [], isLoading, isError, error } = useProjects();
+  const { data: flags, isLoading: flagsLoading } = useFeatureFlags();
+  const projectsEnabled = flags?.projects === true;
+  const { data: projects = [], isLoading, isError, error } = useProjects({
+    enabled: !flagsLoading && projectsEnabled,
+  });
   const createProject = useCreateProject();
 
   const handleCreateSubmit = (e: React.FormEvent) => {
@@ -94,6 +99,24 @@ export default function ProjectsPage() {
     if (!query) return projects;
     return projects.filter((p) => p.name.toLowerCase().includes(query) || p.id.toLowerCase().includes(query));
   }, [projects, q]);
+
+  if (flagsLoading) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Projects" subtitle="Loading…" actions={null} />
+        <Card padding="md">
+          <div className="space-y-2" aria-busy="true">
+            <div className="h-4 w-40 rounded bg-slate-200 animate-pulse" />
+            <div className="h-24 w-full rounded bg-slate-100 animate-pulse" />
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!projectsEnabled) {
+    return null;
+  }
 
   if (isError) {
     const is404 = axios.isAxiosError(error) && error.response?.status === 404;

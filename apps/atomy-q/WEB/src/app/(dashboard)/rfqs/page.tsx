@@ -9,6 +9,7 @@ import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { InlineDetailPanel } from '@/components/ds/Card';
 import { useRfqs, type RfqListItem } from '@/hooks/use-rfqs';
 import { useProjects } from '@/hooks/use-projects';
+import { useFeatureFlags } from '@/hooks/use-feature-flags';
 
 function OwnerCell({ name }: { name: string }) {
   const initials = name
@@ -42,12 +43,21 @@ export default function RfqsPage() {
 
   const [page, setPage] = React.useState(1);
 
+  const { data: flags, isLoading: flagsLoading } = useFeatureFlags();
+  const projectsEnabled = flags?.projects === true;
+
   const { data, isLoading } = useRfqs({ q, status, owner, category, page, projectId });
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useProjects({ enabled: !flagsLoading && projectsEnabled });
 
   React.useEffect(() => {
     setPage(1);
   }, [q, status, owner, category, projectId]);
+
+  React.useEffect(() => {
+    if (!flagsLoading && !projectsEnabled && projectId) {
+      setProjectId('');
+    }
+  }, [flagsLoading, projectsEnabled, projectId]);
 
   const visibleRows = data?.items ?? [];
   const totalPages = data?.meta?.total_pages ?? 1;
@@ -158,13 +168,17 @@ export default function RfqsPage() {
               { value: 'security', label: 'Security' },
             ],
           },
-          {
-            key: 'projectId',
-            label: 'Project',
-            value: projectId,
-            onChange: setProjectId,
-            options: projects.map((p) => ({ value: p.id, label: p.name })),
-          },
+          ...(projectsEnabled
+            ? [
+                {
+                  key: 'projectId',
+                  label: 'Project',
+                  value: projectId,
+                  onChange: setProjectId,
+                  options: projects.map((p) => ({ value: p.id, label: p.name })),
+                },
+              ]
+            : []),
         ]}
         activeFilters={activeFilters}
         onRemoveFilter={(key) => {
