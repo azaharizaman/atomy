@@ -82,7 +82,7 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
       rfq?.technical_review_due_at,
       rfq?.financial_review_due_at,
       overview?.normalization?.needs_review_count,
-      comparison,
+      comparison?.is_preview,
       approvals?.overall,
     ],
   );

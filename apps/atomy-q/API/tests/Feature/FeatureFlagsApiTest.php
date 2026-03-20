@@ -21,4 +21,17 @@ final class FeatureFlagsApiTest extends ApiTestCase
         $response->assertJsonPath('data.projects', true);
         $response->assertJsonPath('data.tasks', false);
     }
+
+    public function test_feature_flags_returns_inverted_config(): void
+    {
+        Config::set('features.projects', false);
+        Config::set('features.tasks', true);
+
+        $response = $this->withHeaders($this->authHeaders())
+            ->getJson('/api/v1/feature-flags');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.projects', false);
+        $response->assertJsonPath('data.tasks', true);
+    }
 }

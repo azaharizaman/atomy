@@ -115,7 +115,7 @@ export default function ProjectsPage() {
   }
 
   if (!projectsEnabled) {
-    return null;
+    return <div className="text-sm text-slate-500">Redirecting…</div>;
   }
 
   if (isError) {

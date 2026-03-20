@@ -47,10 +47,7 @@ function TaskDetailDrawer({
   taskId: string;
   onClose: () => void;
 }) {
-  const { data: flags } = useFeatureFlags();
-  const { data: task, isLoading, isError, error } = useTask(taskId, {
-    enabled: flags?.tasks === true,
-  });
+  const { data: task, isLoading, isError, error } = useTask(taskId);
   const updateStatus = useUpdateTaskStatus(taskId);
 
   return (

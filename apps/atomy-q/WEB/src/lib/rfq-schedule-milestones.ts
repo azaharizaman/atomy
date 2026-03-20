@@ -49,6 +49,20 @@ function isPastDue(ms: number, nowMs: number): boolean {
   return nowMs > ms;
 }
 
+function parseOptionalCount(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string' && value.trim() === '') return undefined;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.max(0, n);
+}
+
+function normalizeApprovalOverall(value: unknown): string | undefined {
+  if (value === null || value === undefined) return undefined;
+  const s = String(value).trim().toLowerCase();
+  return s === '' ? undefined : s;
+}
+
 function submissionDeadlineLate(statusNorm: string, nowMs: number, deadlineMs: number): boolean {
   if (!isPastDue(deadlineMs, nowMs)) return false;
   return ['draft', 'published', 'active', 'pending'].includes(statusNorm);
@@ -66,10 +80,10 @@ function technicalReviewLate(nowMs: number, dueMs: number, needsReview: number, 
   return false;
 }
 
-function financialReviewLate(statusNorm: string, nowMs: number, dueMs: number, approvalOverall: string): boolean {
+function financialReviewLate(statusNorm: string, nowMs: number, dueMs: number, approvalOverall: string | undefined): boolean {
   if (!isPastDue(dueMs, nowMs)) return false;
   if (['awarded', 'cancelled', 'archived'].includes(statusNorm)) return false;
-  return approvalOverall !== 'approved';
+  return (approvalOverall ?? 'none') !== 'approved';
 }
 
 function expectedAwardLate(statusNorm: string, nowMs: number, awardMs: number): boolean {
@@ -92,8 +106,8 @@ function padRange(minMs: number, maxMs: number): { minMs: number; maxMs: number 
  */
 export function buildRfqScheduleLayout(ctx: RfqScheduleContext, nowMs: number = Date.now()): ScheduleLayout | null {
   const statusNorm = normStatus(ctx.status);
-  const needsReview = Math.max(0, Number(ctx.needs_review_count ?? 0));
-  const approvalOverall = String(ctx.approval_overall ?? 'none');
+  const needsReview = parseOptionalCount(ctx.needs_review_count) ?? 0;
+  const approvalOverall = normalizeApprovalOverall(ctx.approval_overall);
   const comparisonPreview = ctx.comparison_is_preview ?? null;
 
   const milestones: ScheduleMilestone[] = [];

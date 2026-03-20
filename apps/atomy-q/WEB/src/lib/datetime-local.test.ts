@@ -13,6 +13,8 @@ describe('datetime-local bridge', () => {
     expect(datetimeLocalToIsoOrNull('   ')).toBeNull();
   });
 
+  // The intermediate datetime-local value depends on local timezone and may shift date boundaries.
+  // We assert epoch milliseconds after round-trip to validate the same instant regardless of locale.
   it('round-trips a fixed instant (UTC string → local input → ISO)', () => {
     const iso = '2026-06-15T14:30:00.000Z';
     const local = isoOrNullToDatetimeLocal(iso);

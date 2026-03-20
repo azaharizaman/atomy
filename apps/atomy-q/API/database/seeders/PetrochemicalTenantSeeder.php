@@ -192,7 +192,7 @@ final class PetrochemicalTenantSeeder extends Seeder
             'updated_at' => $this->now,
         ]);
 
-        foreach (['Valve & rotating packages', 'Chemicals & catalysts'] as $idx => $name) {
+        foreach (['Valve & rotating packages', 'Chemicals & catalysts'] as $name) {
             DB::table('rfq_templates')->insert([
                 'id' => (string) Str::ulid(),
                 'tenant_id' => $this->tenantId,
@@ -319,6 +319,9 @@ final class PetrochemicalTenantSeeder extends Seeder
             'cancelled' => $this->now->copy()->subDays(20),
             default => $this->now->copy()->subDays(1 + ($i % 5)),
         };
+        $technicalReviewDueAt = $closing->copy()->subDays(5 + ($i % 3));
+        $financialReviewDueAt = $closing->copy()->subDays(2 + ($i % 2));
+        $expectedAwardAt = $closing->copy()->addDays(4 + ($i % 6));
 
         $ev = 25000.0 + ($i * 17500) + self::hash($i + 3) * 420000;
         $savings = 2.5 + self::hash($i + 5) * 16.0;
@@ -339,6 +342,9 @@ final class PetrochemicalTenantSeeder extends Seeder
             'savings_percentage' => round($savings, 2),
             'submission_deadline' => $deadline,
             'closing_date' => $closing,
+            'technical_review_due_at' => $technicalReviewDueAt,
+            'financial_review_due_at' => $financialReviewDueAt,
+            'expected_award_at' => $expectedAwardAt,
             'line_profile' => $lineProfile,
             'line_count' => $lineCount,
             'scoring_spread' => $kind === 'closed_pending' ? (self::hash($i) > 0.35) : (self::hash($i + 7) > 0.55),
@@ -399,6 +405,9 @@ final class PetrochemicalTenantSeeder extends Seeder
             'savings_percentage' => $ctx['savings_percentage'],
             'submission_deadline' => $ctx['submission_deadline'],
             'closing_date' => $ctx['closing_date'],
+            'technical_review_due_at' => $ctx['technical_review_due_at'],
+            'financial_review_due_at' => $ctx['financial_review_due_at'],
+            'expected_award_at' => $ctx['expected_award_at'],
             'payment_terms' => ($ctx['index'] % 3 === 0) ? 'Net 45 EOM' : 'Net 30',
             'evaluation_method' => 'weighted',
             'created_at' => $this->now,
@@ -492,7 +501,7 @@ final class PetrochemicalTenantSeeder extends Seeder
             $vend = $invitationMeta[$invId];
             $quoteId = (string) Str::ulid();
             $quoteIds[] = $quoteId;
-            $st = $this->quoteStatusFor($kind, $qIdx, $i);
+            $st = $this->quoteStatusFor($kind, $qIdx);
             $warnings = match ($st) {
                 'needs_review' => 2 + ($qIdx % 3),
                 'failed' => 0,
@@ -546,7 +555,7 @@ final class PetrochemicalTenantSeeder extends Seeder
         $ctx['_invitation_meta'] = $invitationMeta;
     }
 
-    private function quoteStatusFor(string $kind, int $qIdx, int $i): string
+    private function quoteStatusFor(string $kind, int $qIdx): string
     {
         return match ($kind) {
             'published_intake' => match ($qIdx % 4) {

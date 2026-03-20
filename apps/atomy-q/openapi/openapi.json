@@ -9744,13 +9744,25 @@
                                                     "type": "string"
                                                 },
                                                 "expected_award_at": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "format": "date-time"
                                                 },
                                                 "technical_review_due_at": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "format": "date-time"
                                                 },
                                                 "financial_review_due_at": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "format": "date-time"
                                                 },
                                                 "category": {
                                                     "type": "string"
@@ -9975,13 +9987,25 @@
                                                             "type": "string"
                                                         },
                                                         "expected_award_at": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ],
+                                                            "format": "date-time"
                                                         },
                                                         "technical_review_due_at": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ],
+                                                            "format": "date-time"
                                                         },
                                                         "financial_review_due_at": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ],
+                                                            "format": "date-time"
                                                         },
                                                         "category": {
                                                             "type": "string"
