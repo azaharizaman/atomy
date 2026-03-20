@@ -12,6 +12,45 @@
 
 ---
 
+## Status (2026-03-20)
+
+### Blocker — full Playwright E2E on Fedora (and other unsupported hosts)
+
+Playwright does **not** officially support Fedora. Browser installs use a fallback build (e.g. Ubuntu), which is fragile for **full** `npm run test:e2e` confidence. **Treat complete E2E suite execution as blocked** on this OS until run on an **officially supported** environment (e.g. Ubuntu LTS in CI or a local Ubuntu machine).
+
+**Unblock checklist:**
+
+1. On Ubuntu (or CI): `cd apps/atomy-q/WEB && npm run test:e2e:install && npm run test:e2e`
+2. Optionally against staging: `PLAYWRIGHT_BASE_URL=… npm run test:e2e`
+3. Record pass/fail in PR or release notes before inviting design partners.
+
+**Partial verification done elsewhere:** `tests/auth.spec.ts` (login, forgot-password, reset-password mocks) was validated with Chromium installed; full suite not claimed green on Fedora.
+
+---
+
+### Accomplishments (plan closure — remaining items)
+
+| Area | Done |
+|------|------|
+| **Task 6 Step 3** | Confirmed no extra pilot tasks needed: intake → final comparison → approval gate covered by `ComparisonSnapshotWorkflowTest` + API README pilot notes. |
+| **Task 8 Step 5** | WEB `/forgot-password` and `/reset-password` already existed; added Playwright coverage in `apps/atomy-q/WEB/tests/auth.spec.ts` using the same CORS stub pattern as `smoke.spec.ts` (`getRequestOrigin` + `fulfillJsonRoute`). |
+| **Task 12** | Added `apps/atomy-q/ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md` (identity, buyer-only, SSO not required, `comparison_approval` variant, stubs, verification commands). Linked from `apps/atomy-q/API/README.md` and `apps/atomy-q/WEB/README.md`. |
+| **Summaries** | Updated `apps/atomy-q/API/IMPLEMENTATION_SUMMARY.md` and `apps/atomy-q/WEB/IMPLEMENTATION_SUMMARY.md` for partner doc + E2E notes. |
+| **Plan checkboxes** | Task 6 Step 3, Task 8 Step 5, Task 12 steps 1–3 marked complete in this document. |
+
+Earlier phases (P0 OpenAPI/codegen, P1 RFQ overview/activity + WEB wiring, P2 approvals path, P3 password reset API/tests, security/staging tasks, P4 RFQ counts) were already marked complete before this closure.
+
+---
+
+### Next steps to move ahead
+
+1. **Unblock E2E:** Run full `npm run test:e2e` on Ubuntu or in CI; fix any failures.
+2. **API gate:** Run full `cd apps/atomy-q/API && php artisan test` (PostgreSQL test DB per `phpunit.xml`) before partner invite.
+3. **Optional:** Run plan **plan-document-reviewer** pass (spec + plan alignment).
+4. **Partner onboarding:** Share `ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md` + ensure staging env matches `.env.example` (mail, CORS, `APP_URL`, `JWT_SECRET`).
+
+---
+
 ## File structure map
 
 ### API — auth & password reset
@@ -241,7 +280,7 @@ describe("parseApiError", () => {
 
 - [x] **Step 1:** Verify buyer can upload / create quote submission **without vendor portal** (tenant user only). *(Covered by existing quote workflow tests in API.)*
 - [x] **Step 2:** Verify `ComparisonRunController` can produce a **final** run usable by `ApprovalController::approve`. *(Verified via `ComparisonSnapshotWorkflowTest`.)*
-- [ ] **Step 3:** If gaps remain, add tasks from pilot plan until **one** RFQ can go: intake → normalize (minimal) → finalize comparison.
+- [x] **Step 3:** If gaps remain, add tasks from pilot plan until **one** RFQ can go: intake → normalize (minimal) → finalize comparison. *(No further gaps: `ComparisonSnapshotWorkflowTest` + API README pilot notes cover intake → final run → approval gate.)*
 
 ---
 
@@ -340,9 +379,9 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 **Files:**
 
 - Create: `apps/atomy-q/ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md`
-- **Step 1:** Document: identity (email/password + reset), **no SSO requirement**, buyer-only (no vendor portal), **one** approval variant, list of stubbed nav items.
-- **Step 2:** Link from `apps/atomy-q/API/README.md` and `apps/atomy-q/WEB/README.md`.
-- **Step 3:** Commit.
+- [x] **Step 1:** Document: identity (email/password + reset), **no SSO requirement**, buyer-only (no vendor portal), **one** approval variant, list of stubbed nav items.
+- [x] **Step 2:** Link from `apps/atomy-q/API/README.md` and `apps/atomy-q/WEB/README.md`.
+- [x] **Step 3:** Commit.
 
 ---
 
@@ -353,6 +392,8 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 - **Step 3:** `cd apps/atomy-q/WEB && npm run test:e2e` (against staging URL via `PLAYWRIGHT_BASE_URL`)
 
 Expected: all pass; E2E includes login, RFQ create/list/detail, **approval** action, forgot-password request (or tagged `@alpha` subset if suite is large).
+
+**Blocked on Fedora / unsupported Playwright hosts:** do not sign off the full E2E gate until Step 3 runs on a supported OS (see **Status → Blocker** above).
 
 ---
 

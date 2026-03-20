@@ -167,6 +167,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - RFQ index endpoint now reads from `rfqs` table with tenant scoping and basic filters.
 - RFQ list/show endpoints now return real RFQ data (owner, counts, ISO deadlines, pagination meta) with sorting and search support.
 - **`GET /api/v1/rfqs/{rfqId}/activity`:** tenant-scoped activity feed (query `limit` 1–50, default 20); **`GET .../overview`** embeds the same feed under `data.activity` and adds blueprint aliases: `expectedQuotes`, `normalizationProgress`, `latestComparisonRun`, `approvalStatus`. Tests: `RfqOverviewActivityTest`.
+- **Partner onboarding:** `../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md` documents supported vs stubbed flows for design-partner alpha (identity, buyer-only scope, `comparison_approval` variant, verification commands).
 - Account profile endpoints now return real user data (including tenant/role) for seeded logins.
 - Seeder can use `ATOMY_SEED_TENANT_ID` for a predictable tenant in local environments.
 - PHPUnit is configured to use PostgreSQL (port `5433`) with JWT + Redis env defaults for tests.
