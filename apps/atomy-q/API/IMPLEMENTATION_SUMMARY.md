@@ -7,6 +7,39 @@
 - **Cache/Queue**: Redis via `REDIS_URL`
 - **Auth**: JWT (Bearer token) via `firebase/php-jwt`
 
+## Authentication
+
+### `POST /api/v1/auth/login` (email + password)
+
+- **Request body:** `email`, `password` only. Tenant is **not** sent by the client; it is read from `users.tenant_id` after a successful match (`users.email` is globally unique).
+- Validates credentials against Eloquent `User` (`email`, `password_hash`) and returns JWT access + refresh tokens (claims include the user’s `tenant_id`).
+- **Does not** use `nexus/identity-operations` for this path.
+- `AuthController` only injects `JwtServiceInterface` in the constructor so login/refresh work **without** registering Nexus Identity write/query adapters.
+
+### `POST /api/v1/auth/forgot-password` (stub)
+
+- **Request body:** `email` only (no tenant). Returns **501** until reset flow is implemented; **422** if `email` is missing or invalid.
+
+### Tenancy & identity (policy)
+
+- **One user → one tenant:** each `users` row is tied to exactly one `tenant_id`. A single user account does not span multiple tenants.
+- **Two tenants → two users:** if a person must represent two separate organizations, they use **two separate user accounts** (two distinct user IDs).
+- **Login:** `POST /api/v1/auth/login` uses email + password only; any legacy `tenant_id` field in the JSON body is **ignored**.
+- **Uniqueness:** migration `2026_03_20_000001_users_email_unique_globally` replaces `UNIQUE(tenant_id, email)` with **`UNIQUE(email)`** on `users`.
+
+### SSO (`POST /api/v1/auth/sso`) and full Identity coordinator
+
+- `UserAuthenticationCoordinatorInterface` is resolved **only when** the SSO action runs (`app(UserAuthenticationCoordinatorInterface::class)` inside `sso()`).
+- `nexus/laravel-identity-adapter` registers `IdentityAdapterServiceProvider`, which wires `OidcSsoProviderAdapter` and `IdentityOperationsAdapter`.
+- **Atomy-Q bindings** (see `App\Providers\AppServiceProvider` and `App\Services\Identity\*`):
+  - **Eloquent-backed**: `UserPersistInterface`, `UserQueryInterface`, `PasswordHasherInterface`, `UserAuthenticatorInterface` (maps to `users` table; JIT SSO provisioning writes `tenant_id`, `email`, `name`, `password_hash`, `status`, etc.).
+  - **Stubs / no-ops until productized**: Identity `TokenManagerInterface`, `SessionManagerInterface` (JWT remains the app token), MFA enrollment/verification services, `PermissionQueryInterface` / `RoleQueryInterface` (no RBAC catalog tables yet), `AuditLogRepositoryInterface` (in-memory no-op sink so `IdentityOperationsAdapter::log` does not throw).
+- `AuthTest::test_sso_*` exercise OIDC init + mock callback (`mock_authorization_code` + `SSO_MOCK_DISCOVERY_DOCUMENT`) end-to-end against these bindings.
+
+### Environment
+
+- `JWT_SECRET` must be non-empty (`php artisan key:generate` sets `APP_KEY`; JWT uses `config/jwt.php` / `.env` `JWT_SECRET`).
+
 ## Endpoint Coverage
 
 All **203 endpoints** from `API_ENDPOINTS.md` are registered and returning stub responses with correct HTTP status codes and response shapes.

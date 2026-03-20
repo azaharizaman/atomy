@@ -25,7 +25,7 @@ final class NotifierAdapterServiceProvider extends ServiceProvider
 
         $this->app->singleton(NotificationManagerInterface::class, function ($app): NotificationManagerInterface {
             return new LaravelNotificationManager(
-                queue: $app['queue'],
+                queue: $app['queue.connection'],
                 config: (array) $app['config']->get('notifier-adapter', []),
                 logger: $app['log'],
             );

@@ -12,7 +12,6 @@ import { Button } from '@/components/ds/Button';
 import { TextInput } from '@/components/ds/Input';
 
 const schema = z.object({
-  tenant_id: z.string().min(1, 'Tenant ID is required'),
   email: z.string().email('Enter a valid email'),
 });
 
@@ -27,14 +26,16 @@ export default function ForgotPasswordPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting }, getValues } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      tenant_id: process.env.NEXT_PUBLIC_TENANT_ID || '',
+      email: '',
     },
   });
 
   const onSubmit = async (payload: FormData) => {
     setError(null);
     try {
-      await api.post('/auth/forgot-password', payload);
+      await api.post('/auth/forgot-password', {
+        email: payload.email.trim().toLowerCase(),
+      });
       setStatus('sent');
       toast.success('Reset link sent. Check your inbox.');
     } catch (err: unknown) {
@@ -56,7 +57,7 @@ export default function ForgotPasswordPage() {
       <div className="space-y-1 text-center sm:text-left">
         <h1 className="text-xl font-bold text-slate-900">Forgot password?</h1>
         <p className="text-sm text-slate-500">
-          Enter your tenant and email. We’ll send a secure reset link to your inbox.
+          Enter your email. We’ll send a secure reset link to your inbox if an account exists.
         </p>
       </div>
 
@@ -76,12 +77,6 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-          <TextInput
-            label="Tenant ID"
-            {...register('tenant_id')}
-            placeholder="01HZX... or your tenant slug"
-            error={errors.tenant_id?.message}
-          />
           <TextInput
             label="Email"
             type="email"

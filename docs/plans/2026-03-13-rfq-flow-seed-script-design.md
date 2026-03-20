@@ -10,7 +10,7 @@ A terminal script in the API app that (1) seeds real-world-like RFQ data and (2)
 
 - **Artisan command** `atomy:seed-rfq-flow` in the API app.
 - **HTTP client**: The command calls the same app’s API over HTTP (e.g. `APP_URL`) so that (1) persistence goes through the real API and (2) the flow doubles as an API smoke test.
-- **Auth**: Command logs in via `POST /api/v1/auth/login` (tenant_id, email, password from env or prompts), then sends `Authorization: Bearer <token>` on every request.
+- **Auth**: Command logs in via `POST /api/v1/auth/login` (email, password from env or prompts; tenant resolved server-side from the user row), then sends `Authorization: Bearer <token>` on every request.
 - **Flow driver**: Sequential steps; each step is one or more API calls. For steps that require “user” input (e.g. resolve conflict, approve), the script calls the corresponding API with a default/mock choice.
 
 ## Flow Steps (by target status)

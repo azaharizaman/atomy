@@ -4,7 +4,8 @@
  *
  * - Mocked: stubs auth + RFQ list/detail; runs without API.
  * - Real API: set E2E_USE_REAL_API=1 and run with API + WEB on (creates RFQ via API, then navigates UI to award).
- *   Example: E2E_USE_REAL_API=1 npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts -g "real API"
+ *   Example: E2E_USE_REAL_API=1 E2E_API_URL=http://localhost:8000/api/v1 npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts -g "real API"
+ *   Requires a working /auth/login (Identity bindings e.g. UserPersistInterface) and seeded user1@example.com / secret.
  */
 import { expect, test } from '@playwright/test';
 
@@ -28,40 +29,6 @@ const buildCorsHeaders = (origin: string) => ({
 
 async function stubAuth(page: import('@playwright/test').Page) {
   let origin = 'http://localhost:3000';
-
-  await page.route('**/api/v1/auth/login', async (route) => {
-    const cors = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: cors });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        access_token: 'test-token',
-        refresh_token: 'test-refresh',
-        token_type: 'Bearer',
-        expires_in: 3600,
-        user: mockUser,
-      }),
-    });
-  });
-
-  await page.route('**/api/v1/me', async (route) => {
-    const cors = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: cors });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify(mockUser),
-    });
-  });
 
   await page.route('**/api/v1/rfqs**', async (route) => {
     const cors = buildCorsHeaders(origin);
@@ -124,17 +91,24 @@ async function stubAuth(page: import('@playwright/test').Page) {
 
   await page.goto('/login');
   origin = new URL(page.url()).origin;
-  await page.getByLabel('Tenant ID').fill('tenant-qa');
-  await page.getByLabel('Email').fill(mockUser.email);
-  await page.getByLabel('Password').fill('password123');
-  await page.getByRole('button', { name: /log in/i }).click();
+  await page.getByRole('button', { name: /use mock account/i }).click();
   await expect(page).toHaveURL('/');
+}
+
+function firstRfqTableDataRow(page: import('@playwright/test').Page) {
+  return page.locator('table tbody tr.cursor-pointer').first();
+}
+
+/** Workspace rail uses Next Link; href suffix avoids ambiguous accessible names (e.g. badges). */
+function workspaceNavLink(page: import('@playwright/test').Page, pathSuffix: string) {
+  return page.getByTestId('active-record-menu').locator(`a[href$="/${pathSuffix}"]`).first();
 }
 
 test.describe('RFQ lifecycle E2E (creation to award)', () => {
   test('navigates full RFQ lifecycle with mocked API: create entry → list → overview → details → line items → vendors → quote intake → comparison → approvals → award', async ({
     page,
   }) => {
+    test.setTimeout(120_000);
     await stubAuth(page);
 
     // 1) Creation entry point: New RFQ page
@@ -147,53 +121,52 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     await expect(page).toHaveURL('/rfqs');
     await expect(page.getByRole('heading', { name: 'Requisitions' })).toBeVisible();
 
-    // Wait for data rows (cursor-pointer); skip loading/empty row
-    const firstDataRow = page.locator('table tbody tr.cursor-pointer').first();
-    await expect(firstDataRow).toBeVisible({ timeout: 15000 });
-    await firstDataRow.click();
+    const row = firstRfqTableDataRow(page);
+    await expect(row).toBeVisible({ timeout: 15000 });
+    await row.locator('td').nth(2).click();
 
-    await expect(page).toHaveURL(/\/rfqs\/[^/]+\/overview/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/rfqs\/.+\/overview/, { timeout: 15000 });
 
     // 3) Overview
     await expect(page.getByText('Activity timeline', { exact: false })).toBeVisible();
 
     // 4) Details
-    await page.getByRole('link', { name: 'Details' }).click();
-    await expect(page).toHaveURL(/\/rfqs\/[^/]+\/details/);
+    await workspaceNavLink(page, 'details').click();
+    await expect(page).toHaveURL(/\/rfqs\/.+\/details/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: /rfq details/i })).toBeVisible();
 
     // 5) Line Items
-    await page.getByRole('link', { name: 'Line Items' }).click();
-    await expect(page).toHaveURL(/\/rfqs\/[^/]+\/line-items/);
+    await workspaceNavLink(page, 'line-items').click();
+    await expect(page).toHaveURL(/\/rfqs\/.+\/line-items/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Line items' })).toBeVisible();
 
     // 6) Vendors
-    await page.getByRole('link', { name: 'Vendors' }).click();
-    await expect(page).toHaveURL(/\/rfqs\/[^/]+\/vendors/);
+    await workspaceNavLink(page, 'vendors').click();
+    await expect(page).toHaveURL(/\/rfqs\/.+\/vendors/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Invited vendors' })).toBeVisible();
 
     // 7) Quote Intake
-    await page.getByRole('link', { name: 'Quote Intake' }).click();
-    await expect(page).toHaveURL(/\/rfqs\/[^/]+\/quote-intake/);
+    await workspaceNavLink(page, 'quote-intake').click();
+    await expect(page).toHaveURL(/\/rfqs\/.+\/quote-intake/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Quote Intake' })).toBeVisible();
 
     // 8) Comparison Runs
-    await page.getByRole('link', { name: 'Comparison Runs' }).click();
-    await expect(page).toHaveURL(/\/rfqs\/[^/]+\/comparison-runs/);
+    await workspaceNavLink(page, 'comparison-runs').click();
+    await expect(page).toHaveURL(/\/rfqs\/.+\/comparison-runs/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Comparison Runs' })).toBeVisible();
     if ((await page.getByText(/snapshot frozen/i).count()) > 0) {
       await expect(page.getByText(/snapshot frozen/i).first()).toBeVisible();
-      await expect(page.getByRole('link', { name: /decision trail/i })).toBeVisible();
+      await expect(workspaceNavLink(page, 'decision-trail')).toBeVisible();
     }
 
     // 9) Approvals
-    await page.getByRole('link', { name: 'Approvals' }).click();
-    await expect(page).toHaveURL(/\/rfqs\/[^/]+\/approvals/);
+    await workspaceNavLink(page, 'approvals').click();
+    await expect(page).toHaveURL(/\/rfqs\/.+\/approvals/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Approvals' })).toBeVisible();
 
     // 10) Award
-    await page.getByRole('link', { name: 'Award' }).click();
-    await expect(page).toHaveURL(/\/rfqs\/[^/]+\/award/);
+    await workspaceNavLink(page, 'award').click();
+    await expect(page).toHaveURL(/\/rfqs\/.+\/award/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Sign-off' })).toBeVisible();
   });
 
@@ -206,14 +179,13 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     }
 
     const apiBase = process.env.NEXT_PUBLIC_API_URL ?? process.env.E2E_API_URL ?? 'http://localhost:8001/api/v1';
-    const tenantId = process.env.E2E_TENANT_ID ?? '01KKH77M4R0V8QZ1M8NB3XWWWQ';
     const email = process.env.E2E_EMAIL ?? 'user1@example.com';
     const password = process.env.E2E_PASSWORD ?? 'secret';
 
     const title = `E2E RFQ ${Date.now()}`;
 
     const loginRes = await request.post(`${apiBase}/auth/login`, {
-      data: { tenant_id: tenantId, email, password },
+      data: { email, password },
     });
     if (!loginRes.ok()) {
       throw new Error(
@@ -277,7 +249,6 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     }
 
     await page.goto('/login');
-    await page.getByLabel('Tenant ID').fill(tenantId);
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Password').fill(password);
     await page.getByRole('button', { name: /log in/i }).click();

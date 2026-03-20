@@ -46,7 +46,10 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
   ];
 
   return (
-    <div className="w-[360px] shrink-0 bg-white border-r border-slate-200 overflow-y-auto">
+    <div
+      className="w-[360px] shrink-0 bg-white border-r border-slate-200 overflow-y-auto"
+      data-testid="active-record-menu"
+    >
       {/* Zone 1: Record Snippet — per Screen-Blueprint */}
       <div className="px-4 pt-4 pb-4 border-b border-slate-200">
         <div className="flex items-start justify-between gap-3">

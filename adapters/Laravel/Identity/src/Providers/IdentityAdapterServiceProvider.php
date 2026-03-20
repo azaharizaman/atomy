@@ -66,7 +66,7 @@ class IdentityAdapterServiceProvider extends ServiceProvider
                 userQuery: $app[\Nexus\Identity\Contracts\UserQueryInterface::class],
                 userPersist: $app[\Nexus\Identity\Contracts\UserPersistInterface::class],
                 passwordHasher: $app[\Nexus\Identity\Contracts\PasswordHasherInterface::class],
-                config: (array) $app['config']->get('services.oidc', []),
+                config: $app['config'],
             );
         });
 
@@ -90,6 +90,7 @@ class IdentityAdapterServiceProvider extends ServiceProvider
             return new LaravelPermissionQuery(
                 $app[\Nexus\Identity\Contracts\PermissionQueryInterface::class],
                 $app[\Nexus\Identity\Contracts\RoleQueryInterface::class],
+                $app[\Nexus\Identity\Contracts\UserQueryInterface::class],
             );
         });
         $this->app->singleton(UserContextProviderInterface::class, function ($app): UserContextProviderInterface {

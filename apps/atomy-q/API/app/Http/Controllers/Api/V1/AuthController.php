@@ -14,25 +14,30 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * Login and refresh use Eloquent + {@see JwtServiceInterface} only.
+ * SSO resolves {@see UserAuthenticationCoordinatorInterface} lazily; that path requires Nexus Identity
+ * container bindings (e.g. {@see \Nexus\Identity\Contracts\UserPersistInterface}).
+ */
 final class AuthController extends Controller
 {
     use ExtractsAuthContext;
 
     public function __construct(
         private readonly JwtServiceInterface $jwt,
-        private readonly UserAuthenticationCoordinatorInterface $identityOps,
     ) {
     }
 
     /**
      * Authenticate user with email and password, return JWT tokens.
      *
+     * Tenant is taken from the user row (one user → one tenant). `tenant_id` in the body is ignored.
+     *
      * POST /auth/login
      */
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'tenant_id' => ['required', 'string', 'max:64'],
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ]);
@@ -41,19 +46,17 @@ final class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $tenantId = (string) $request->input('tenant_id');
-        $email = $request->input('email');
-        $password = $request->input('password');
+        $email = strtolower(trim((string) $request->input('email')));
+        $password = (string) $request->input('password');
 
         /** @var User|null $user */
-        $user = User::query()
-            ->where('tenant_id', $tenantId)
-            ->where('email', $email)
-            ->first();
+        $user = User::query()->where('email', $email)->first();
 
         if ($user === null || !Hash::check($password, (string) $user->password_hash)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
+
+        $tenantId = (string) $user->tenant_id;
 
         $accessToken = $this->jwt->issueAccessToken((string) $user->id, $tenantId);
         $refreshToken = $this->jwt->issueRefreshToken((string) $user->id, $tenantId);
@@ -94,13 +97,16 @@ final class AuthController extends Controller
         $action = (string) $request->input('action');
         $tenantId = (string) $request->input('tenant_id');
 
+        /** @var UserAuthenticationCoordinatorInterface $identityOps */
+        $identityOps = app(UserAuthenticationCoordinatorInterface::class);
+
         try {
             if ($action === 'init') {
-                $result = $this->identityOps->initiateSso($tenantId, $this->resolveTenantRedirectUri($tenantId));
+                $result = $identityOps->initiateSso($tenantId, $this->resolveTenantRedirectUri($tenantId));
                 return response()->json(['data' => $result]);
             }
 
-            $ctx = $this->identityOps->ssoCallback(
+            $ctx = $identityOps->ssoCallback(
                 tenantId: $tenantId,
                 code: (string) $request->input('code'),
                 state: (string) $request->input('state'),
@@ -181,10 +187,18 @@ final class AuthController extends Controller
     /**
      * Request password reset.
      *
-     * POST /auth/forgot-password
+     * POST /auth/forgot-password — body: `email` only (tenant resolved when flow is implemented).
      */
     public function forgotPassword(Request $request): JsonResponse
     {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         return response()->json([
             'message' => 'Password reset flow is not implemented yet.',
         ], 501);

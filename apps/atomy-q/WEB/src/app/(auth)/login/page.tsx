@@ -13,7 +13,6 @@ import { Button } from '@/components/ds/Button';
 import { Checkbox, PasswordInput, TextInput } from '@/components/ds/Input';
 
 const schema = z.object({
-  tenant_id: z.string().min(1, 'Tenant ID is required'),
   email: z.string().email('Enter a valid email'),
   password: z.string().min(1, 'Password is required'),
   remember_device: z.boolean().optional(),
@@ -45,7 +44,6 @@ export default function LoginPage() {
     setAuthError(null);
     try {
       const response = await api.post('/auth/login', {
-        tenant_id: payload.tenant_id.trim(),
         email: payload.email.trim().toLowerCase(),
         password: payload.password,
       });
@@ -72,7 +70,7 @@ export default function LoginPage() {
         typeof messageRaw === 'string' && messageRaw.trim() !== ''
           ? messageRaw
           : axiosish?.response?.status === 422
-            ? 'Please check Tenant ID, email, and password.'
+            ? 'Please check email and password.'
             : 'Invalid credentials';
       setAuthError(message);
       toast.error(message);
@@ -188,7 +186,7 @@ export default function LoginPage() {
       </form>
 
       <p className="text-xs text-slate-500 text-center sm:text-left">
-        Need access? Contact your workspace administrator to provision a user or reset your tenant credentials.
+        Need access? Contact your workspace administrator to provision an account or reset your password.
       </p>
     </div>
   );

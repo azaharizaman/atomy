@@ -5,6 +5,17 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Contracts\JwtServiceInterface;
+use App\Services\Identity\AtomyIdentityTokenManagerStub;
+use App\Services\Identity\AtomyNoopAuditLogRepository;
+use App\Services\Identity\AtomyNoopMfaEnrollmentService;
+use App\Services\Identity\AtomyNoopMfaVerificationService;
+use App\Services\Identity\AtomyPasswordHasher;
+use App\Services\Identity\AtomyPermissionQueryStub;
+use App\Services\Identity\AtomyRoleQueryStub;
+use App\Services\Identity\AtomySessionManagerStub;
+use App\Services\Identity\AtomyUserAuthenticator;
+use App\Services\Identity\AtomyUserPersist;
+use App\Services\Identity\AtomyUserQuery;
 use App\Services\JwtService;
 use App\Services\Project\AtomyIncompleteTaskCount;
 use App\Services\Project\AtomyProjectPersist;
@@ -18,6 +29,17 @@ use App\Services\Task\AtomyTaskPersist;
 use App\Services\Task\AtomyTaskQuery;
 use App\Services\Tenant\RequestTenantContext;
 use Illuminate\Support\ServiceProvider;
+use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
+use Nexus\Identity\Contracts\MfaEnrollmentServiceInterface;
+use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
+use Nexus\Identity\Contracts\PasswordHasherInterface;
+use Nexus\Identity\Contracts\PermissionQueryInterface;
+use Nexus\Identity\Contracts\RoleQueryInterface;
+use Nexus\Identity\Contracts\SessionManagerInterface;
+use Nexus\Identity\Contracts\TokenManagerInterface as IdentityTokenManagerInterface;
+use Nexus\Identity\Contracts\UserAuthenticatorInterface;
+use Nexus\Identity\Contracts\UserPersistInterface;
+use Nexus\Identity\Contracts\UserQueryInterface as IdentityUserQueryInterface;
 use Nexus\Project\Contracts\IncompleteTaskCountInterface;
 use Nexus\Project\Contracts\ProjectManagerInterface;
 use Nexus\Project\Contracts\ProjectPersistInterface;
@@ -82,6 +104,19 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MilestoneBillingServiceInterface::class, AtomyMilestoneBillingService::class);
         $this->app->bind(ProjectTaskIdsQueryInterface::class, AtomyProjectTaskIdsQuery::class);
         $this->app->singleton(ProjectManagementOperationsCoordinator::class);
+
+        // Nexus Identity (L3): required by nexus/laravel-identity-adapter for SSO + coordinator resolution.
+        $this->app->singleton(IdentityUserQueryInterface::class, AtomyUserQuery::class);
+        $this->app->singleton(UserPersistInterface::class, AtomyUserPersist::class);
+        $this->app->singleton(PasswordHasherInterface::class, AtomyPasswordHasher::class);
+        $this->app->singleton(UserAuthenticatorInterface::class, AtomyUserAuthenticator::class);
+        $this->app->singleton(IdentityTokenManagerInterface::class, AtomyIdentityTokenManagerStub::class);
+        $this->app->singleton(SessionManagerInterface::class, AtomySessionManagerStub::class);
+        $this->app->singleton(MfaEnrollmentServiceInterface::class, AtomyNoopMfaEnrollmentService::class);
+        $this->app->singleton(MfaVerificationServiceInterface::class, AtomyNoopMfaVerificationService::class);
+        $this->app->singleton(PermissionQueryInterface::class, AtomyPermissionQueryStub::class);
+        $this->app->singleton(RoleQueryInterface::class, AtomyRoleQueryStub::class);
+        $this->app->singleton(AuditLogRepositoryInterface::class, AtomyNoopAuditLogRepository::class);
     }
 
     /**

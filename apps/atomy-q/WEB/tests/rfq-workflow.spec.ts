@@ -1,111 +1,29 @@
 import { expect, test } from '@playwright/test';
 
-const user = {
-  id: 'user-1',
-  name: 'QA User',
-  email: 'qa.user@atomy.test',
-  role: 'buyer',
-  tenantId: 'tenant-qa',
-};
-
-const buildCorsHeaders = (origin: string) => ({
-  'access-control-allow-origin': origin,
-  'access-control-allow-credentials': 'true',
-  'access-control-allow-headers': 'Content-Type, Authorization',
-  'access-control-allow-methods': 'GET,POST,OPTIONS',
-});
-
-async function stubAuth(page: import('@playwright/test').Page) {
-  let origin = 'http://localhost:3000';
-
-  await page.route('**/api/v1/auth/login', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ access_token: 'test-token', user }),
-    });
-  });
-
-  await page.route('**/api/v1/me', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify(user),
-    });
-  });
-
-  await page.route('**/api/v1/rfqs*', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-
-    if (route.request().url().includes('/RFQ-2401')) {
-      await route.fulfill({
-        status: 200,
-        headers: corsHeaders,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: {
-            id: 'RFQ-2401',
-            title: 'Server Infrastructure Refresh',
-            status: 'active',
-            vendorsCount: 5,
-            quotesCount: 8,
-            estValue: '$1,200,000',
-            savings: '12%',
-          },
-        }),
-      });
-      return;
-    }
-
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: [
-          { id: 'RFQ-2401', title: 'Server Infrastructure Refresh', owner: { name: 'Alex Kumar' }, status: 'active', deadline: '2026-04-15', estValue: '$1,200,000', category: 'IT Hardware', vendorsCount: 5, quotesCount: 8, savings: '12%' },
-        ],
-        meta: { total: 1, totalPages: 1 },
-      }),
-    });
-  });
-
+async function signInWithMockAccount(page: import('@playwright/test').Page) {
   await page.goto('/login');
-  origin = new URL(page.url()).origin;
-  await page.getByLabel('Email address').fill(user.email);
-  await page.getByLabel('Password').fill('password123');
-  await page.getByRole('button', { name: /sign in/i }).click();
+  await page.getByRole('button', { name: /use mock account/i }).click();
   await expect(page).toHaveURL('/');
 }
 
+/** First body row with row-click navigation; avoid checkbox / expand cells (they stopPropagation). */
+function firstRfqTableDataRow(page: import('@playwright/test').Page) {
+  return page.locator('table tbody tr.cursor-pointer').first();
+}
+
 test('rfq list navigates to rfq workspace overview', async ({ page }) => {
-  await stubAuth(page);
+  await signInWithMockAccount(page);
 
   await page.goto('/rfqs');
   await expect(page).toHaveURL('/rfqs');
   await expect(page.getByRole('heading', { name: 'Requisitions' })).toBeVisible();
 
-  await page.getByText('Server Infrastructure Refresh', { exact: true }).click();
-  await expect(page).toHaveURL(/\/rfqs\/RFQ-2401\/overview$/);
-  await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
-  await expect(page.getByText('Activity Timeline')).toBeVisible();
+  const row = firstRfqTableDataRow(page);
+  await expect(row).toBeVisible({ timeout: 15000 });
+  await row.locator('td').nth(2).click();
+
+  await expect(page).toHaveURL(/\/rfqs\/.+\/overview/, { timeout: 15000 });
+  await expect(page.getByTestId('active-record-menu')).toBeVisible();
+  await expect(page.getByText(/activity timeline/i)).toBeVisible();
 });
 

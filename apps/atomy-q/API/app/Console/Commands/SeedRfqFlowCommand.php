@@ -101,7 +101,6 @@ final class SeedRfqFlowCommand extends Command
         $url = $this->baseUrl . '/api/v1/auth/login';
         $this->line("Login: {$url}");
         $response = Http::asJson()->post($url, [
-            'tenant_id' => $tenant,
             'email' => $email,
             'password' => $password,
         ]);

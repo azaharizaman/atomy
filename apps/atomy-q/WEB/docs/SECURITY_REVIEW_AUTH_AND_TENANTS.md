@@ -17,7 +17,7 @@
 
 ### 2.1 Login (WEB → API)
 
-- **WEB:** `POST /api/v1/auth/login` with `{ tenant_id, email, password }`.
+- **WEB:** `POST /api/v1/auth/login` with `{ email, password }`; tenant context comes from the API response (`user.tenantId`) and JWT claims after authentication.
 - **API:** Validates input; looks up user by `tenant_id` + `email`; checks password; issues access + refresh JWTs with `sub=userId`, `tenant_id=tenantId`, `type=access|refresh`. Returns `access_token`, `refresh_token`, `user` (id, email, name, role, tenantId).
 - **WEB:** Stores `access_token` and `user` in Zustand; **does not store `refresh_token`** (see Issue 3 below).
 
@@ -70,9 +70,9 @@
 
 ### Issue 3: Mock login and env tenant (WEB) — **Low**
 
-**Finding:** When `NEXT_PUBLIC_USE_MOCKS === 'true'`, the login page can “Use mock account” with `tenantId` from `NEXT_PUBLIC_TENANT_ID`. Default tenant ID is hardcoded in the form. This is acceptable for dev/demo only; ensure this is disabled or gated in production.
+**Finding:** When `NEXT_PUBLIC_USE_MOCKS === 'true'`, the login page can “Use mock account” with `tenantId` from `NEXT_PUBLIC_TENANT_ID` in the mocked user payload (not from a tenant field on the real login form). This is acceptable for dev/demo only; ensure this is disabled or gated in production.
 
-**Recommendation:** Ensure production builds do not set `NEXT_PUBLIC_USE_MOCKS=true` and that production config does not rely on default tenant IDs for real auth.
+**Recommendation:** Ensure production builds do not set `NEXT_PUBLIC_USE_MOCKS=true` and that production config does not rely on mock tenant IDs for real auth.
 
 ---
 

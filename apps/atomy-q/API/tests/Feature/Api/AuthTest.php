@@ -43,7 +43,6 @@ final class AuthTest extends TestCase
         $user = $this->createTestUser();
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'tenant_id' => $user['tenant_id'],
             'email' => $user['email'],
             'password' => 'wrong',
         ]);
@@ -57,7 +56,6 @@ final class AuthTest extends TestCase
         $user = $this->createTestUser();
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'tenant_id' => $user['tenant_id'],
             'email' => $user['email'],
             'password' => $user['password'],
         ]);
@@ -70,6 +68,21 @@ final class AuthTest extends TestCase
             'expires_in',
         ]);
         $this->assertTokenResponse($response);
+        $response->assertJsonPath('user.tenantId', $user['tenant_id']);
+    }
+
+    public function test_login_ignores_wrong_tenant_id_when_email_matches(): void
+    {
+        $user = $this->createTestUser();
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'tenant_id' => (string) Str::ulid(),
+            'email' => $user['email'],
+            'password' => $user['password'],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('user.tenantId', $user['tenant_id']);
     }
 
     public function test_refresh_invalid_token(): void
@@ -86,7 +99,6 @@ final class AuthTest extends TestCase
         $user = $this->createTestUser();
 
         $loginResponse = $this->postJson('/api/v1/auth/login', [
-            'tenant_id' => $user['tenant_id'],
             'email' => $user['email'],
             'password' => $user['password'],
         ]);
@@ -209,9 +221,18 @@ final class AuthTest extends TestCase
             ->assertJsonFragment(['verified' => false]);
     }
 
+    public function test_forgot_password_requires_email(): void
+    {
+        $this->postJson('/api/v1/auth/forgot-password', [])
+            ->assertStatus(422)
+            ->assertJsonStructure(['errors']);
+    }
+
     public function test_forgot_password_returns_message(): void
     {
-        $this->postJson('/api/v1/auth/forgot-password')
+        $this->postJson('/api/v1/auth/forgot-password', [
+            'email' => 'user@example.com',
+        ])
             ->assertStatus(501)
             ->assertJsonStructure(['message']);
     }

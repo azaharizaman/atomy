@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Laravel\Identity\Sso;
 
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Nexus\Identity\Contracts\PasswordHasherInterface;
 use Nexus\Identity\Contracts\SsoProviderInterface;
 use Nexus\Identity\Contracts\UserInterface;
@@ -17,14 +18,11 @@ use Nexus\SSO\ValueObjects\SsoProviderConfig;
 
 final readonly class OidcSsoProviderAdapter implements SsoProviderInterface
 {
-    /**
-     * @param array<string, mixed> $config
-     */
     public function __construct(
         private UserQueryInterface $userQuery,
         private UserPersistInterface $userPersist,
         private PasswordHasherInterface $passwordHasher,
-        private array $config,
+        private ConfigRepository $config,
         private OidcProvider $oidc = new OidcProvider(),
     ) {
     }
@@ -113,7 +111,7 @@ final readonly class OidcSsoProviderAdapter implements SsoProviderInterface
 
     public function isJitProvisioningEnabled(): bool
     {
-        return (bool) ($this->config['jit'] ?? true);
+        return (bool) ($this->oidcConfig()['jit'] ?? true);
     }
 
     public function provisionUser(array $ssoAttributes): UserInterface
@@ -150,12 +148,21 @@ final readonly class OidcSsoProviderAdapter implements SsoProviderInterface
         ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function oidcConfig(): array
+    {
+        return (array) $this->config->get('services.oidc', []);
+    }
+
     private function providerConfig(?string $redirectUriOverride): SsoProviderConfig
     {
-        $issuerUrl = (string) ($this->config['issuer_url'] ?? '');
-        $clientId = (string) ($this->config['client_id'] ?? '');
-        $clientSecret = (string) ($this->config['client_secret'] ?? '');
-        $redirectUri = $redirectUriOverride ?: (string) ($this->config['redirect_uri'] ?? '');
+        $cfg = $this->oidcConfig();
+        $issuerUrl = (string) ($cfg['issuer_url'] ?? '');
+        $clientId = (string) ($cfg['client_id'] ?? '');
+        $clientSecret = (string) ($cfg['client_secret'] ?? '');
+        $redirectUri = $redirectUriOverride ?: (string) ($cfg['redirect_uri'] ?? '');
 
         if ($issuerUrl === '' || $clientId === '' || $clientSecret === '' || $redirectUri === '') {
             throw new \RuntimeException('OIDC is not configured');
@@ -168,8 +175,8 @@ final readonly class OidcSsoProviderAdapter implements SsoProviderInterface
         ]);
 
         $metadata = [];
-        if (isset($this->config['mock_id_token_claims']) && is_array($this->config['mock_id_token_claims'])) {
-            $metadata['mock_id_token_claims'] = $this->config['mock_id_token_claims'];
+        if (isset($cfg['mock_id_token_claims']) && is_array($cfg['mock_id_token_claims'])) {
+            $metadata['mock_id_token_claims'] = $cfg['mock_id_token_claims'];
         }
 
         return new SsoProviderConfig(
