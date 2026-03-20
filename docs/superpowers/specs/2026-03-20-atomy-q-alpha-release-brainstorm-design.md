@@ -72,9 +72,9 @@ Pick one primary bar; they imply different ordering:
 - **Identity:** Forgot-password flow (email, token, reset) — **blocking** for external users today (`501` is not acceptable). Document SSO as beta unless a partner contract requires OIDC for go-live.
 - **Contract:** OpenAPI as source of truth; regenerate TS client in CI or documented gate; normalize error envelope in WEB (`PLAN.md` §3.4).
 - **RFQ core:** List + detail + create/edit aligned with implemented filters/pagination; overview KPIs and **activity** per `BACKEND_API_GAPS.md` (prefer dedicated `.../activity` if payload size matters).
-- **Quotes & comparison (minimal):** Enough real data to show **quote intake** and a **comparison matrix** run—even if scoring is simplified.
-- **Approvals:** At least one approval path wired (API + UI) or explicitly **out of alpha** with UI hidden and docs updated.
-- **Quality:** Playwright flows: login, RFQ list, create RFQ, open detail; API feature tests on tenant isolation for touched endpoints.
+- **Quotes & comparison (minimal):** **Buyer-side** quote capture (intake UI and/or API used only by authenticated tenant users) plus a **comparison matrix** run—even if scoring is simplified.
+- **Approvals (locked in-scope):** At least **one** end-to-end path: create or surface an approval request → act (approve/reject or equivalent) → persist state — **real API + WEB**, tenant-scoped. Full approval matrix / all 12 `ApprovalController` scenarios is **not** required; document the **supported** approval variant in the partner guide.
+- **Quality:** Playwright flows: login, RFQ list, create RFQ, open detail, plus **one approval** path aligned with the supported variant; API feature tests on tenant isolation for touched endpoints (including approvals).
 - **Ops:** Staging deploy story, env template, health check; no production promises.
 - **Partner readiness:** Short **“supported flows”** doc for partners (what works, what is stubbed); lightweight **audit** on mutating actions where the product promises traceability (align with existing audit-adapter posture in API).
 
@@ -98,7 +98,7 @@ Pick one primary bar; they imply different ordering:
 |-------|--------|-------------|
 | **P0** | OpenAPI publish + generated client + error normalization | WEB hooks use generated types; less manual DTO drift |
 | **P1** | RFQ vertical slice (API real + WEB) + activity/overview gaps closed | Scripted demo without stubs on core reads/writes |
-| **P2** | Quote intake + comparison minimal + approvals (or cut) | One complete “sourcing event” narrative |
+| **P2** | Quote intake + comparison minimal + **approvals** (one path) | One complete “sourcing event” narrative incl. approval |
 | **P3** | Forgot-password + security checklist + staging (**partner gate**) | Safe for first external tenant; run before inviting orgs |
 | **P4** | Optional: sidebar RFQ counts, reporting placeholders → real charts | Polish for narrative, not gate |
 
@@ -114,6 +114,7 @@ Phases can overlap; **P0 and P1** should start in parallel if two contributors a
 | Cross-tenant leakage | Tenant-scoped existence checks (404 pattern per AGENTS.md); tests per resource type |
 | Contract drift | OpenAPI CI diff; MSW fixtures from schema |
 | Scope creep (projects/tasks) | Keep Phase 2 rollout plan as **post-alpha** unless explicitly pulled in |
+| Approvals scope ballooning | Ship **one** documented variant; defer multi-step policies and edge cases to post-alpha |
 
 ---
 
@@ -123,10 +124,11 @@ Phases can overlap; **P0 and P1** should start in parallel if two contributors a
 
 **Resolved:** **Persona A** — **buyer-only** alpha (no vendor-submission / vendor-portal requirement for go-live).
 
+**Resolved:** **Approvals A** — **in-scope**: one real buyer-side approval path (API + UI), with the supported variant documented for partners; full approvals surface not required.
+
 Still need product input:
 
-1. **Approvals:** In-scope for alpha or explicitly deferred (with nav/docs aligned)?
-2. **SSO:** Required for first external tenant or enterprise beta later?
+1. **SSO:** Required for first external tenant or enterprise beta later?
 
 ---
 
@@ -136,12 +138,13 @@ Still need product input:
 |------|----------|
 | 2026-03-20 | Alpha bar: **B** — design-partner alpha (1–3 external orgs). |
 | 2026-03-20 | Persona: **A** — buyer-only; vendor self-service out of scope for alpha. |
+| 2026-03-20 | Approvals: **A** — in-scope; one end-to-end path (API + UI), documented variant only. |
 
 ---
 
 ## 10. Next step (process)
 
-After product answers §8, run **`writing-plans`** skill to produce a dated implementation plan with file-level tasks and test gates—this brainstorm doc does **not** authorize implementation by itself.
+After the **SSO** decision in §8 is recorded, run **`writing-plans`** to produce a dated implementation plan with file-level tasks and test gates—this brainstorm doc does **not** authorize implementation by itself.
 
 ---
 
