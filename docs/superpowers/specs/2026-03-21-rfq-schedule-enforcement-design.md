@@ -12,7 +12,7 @@
 Define **typed lifecycle milestones** for an RFQ with **planned dates**, separate **actual timestamps** (or derived events), and **enforcement** that governs whether actions are blocked, warned, or informational only.
 
 - **Tenant-wide policy** is the default; **RFQ owner/editor** may apply **sparse per-RFQ overrides** for allowlisted constraints. Every override is **append-only audit** and **visible to all internal users** who can view the RFQ.
-- **Relaxed closing** is not open-ended: when enabled, a **grace window** (configurable **calendar** days, **capped at 5** at product level) extends **buyer-only** quote intake after the published submission close. **Vendor self-service** (future portal) remains **hard-closed** at the published closing instant; vendors must not see internal “soft” policy wording.
+- **Relaxed closing** is not open-ended: when enabled, a **grace window** (configurable **calendar** days, **capped at 5** at product level) extends **buyer-only** quote intake after **`submission_deadline`** (see §5.1). **`closing_date`** is a separate milestone and does **not** extend vendor or grace logic unless product explicitly adds a future rule.
 - **Alpha:** No vendor portal; quotes enter via **buyer-side intake**; this spec still locks rules for API/domain so future vendor UX does not leak enforcement internals.
 
 ---
@@ -28,7 +28,7 @@ Without an explicit model, teams mix **intended schedule**, **what actually happ
 1. **Planned milestone dates** on an RFQ with **validation** against a documented **partial order** (optional branches for optional events).
 2. **Tenant policy** defining default **enforcement** (`hard` | `soft` | `off`) per **constraint kind**, plus which constraints **RFQs may override**.
 3. **Per-RFQ overrides** (sparse deltas only), editable by **RFQ owner/editor**; **logged** and **visible** internally.
-4. **Relaxed closing:** tenant-configurable **grace days** (within product cap **≤ 5**); **effective buyer intake deadline** = submission close + grace; **no** vendor self-upload after published close.
+4. **Relaxed closing:** tenant-configurable **grace days** (within product cap **≤ 5**); **effective buyer intake deadline** = **`submission_deadline` + grace**; **no** vendor self-upload after **`submission_deadline`** (see §5.1).
 5. **Clear separation** for future vendor surfaces: no exposure of relaxation flags/reasons; show honest **receipt timestamps** without internal policy narrative.
 6. **Multi-tenancy:** all policy and RFQ schedule data **scoped by `tenant_id`**; no cross-tenant leakage in queries or API responses.
 
@@ -53,6 +53,19 @@ Without an explicit model, teams mix **intended schedule**, **what actually happ
 | **Constraint kind** | Named rule, e.g. `invite_after_lock`, `briefing_between_invite_and_close`, `eval_after_close`, `late_submission`, etc. (final enum in implementation plan). |
 | **Relaxed closing** | RFQ flag + **grace_days**; extends **buyer** intake only; capped by tenant and product. |
 
+### 5.1 Submission deadline vs closing date (**locked: keep separate**)
+
+Atomy-Q persists two distinct timestamps on `rfqs` (see migration + `Rfq` model). **Do not merge** them; enforcement and copy must use the right field.
+
+| Field | Role | Enforcement / UX anchor |
+|--------|------|-------------------------|
+| **`submission_deadline`** | End of the **quotation / submission** window—the date buyers communicate to vendors as “quotes in by.” | **Vendor self-upload (future):** hard stop at this instant. **Buyer intake grace:** `effective_intake_deadline = submission_deadline + grace_days` when relaxed closing is on. **Ordering:** briefing (if any) must precede this; evaluation milestones follow this in the default graph. |
+| **`closing_date`** | **Formal RFQ / tender closing** milestone—when the event is expected to be **closed** as a process state (aligns with overview rail: overdue if past while RFQ not yet `closed` / `awarded` / `cancelled`). | Not used for quote upload cut-off. Use for schedule, reporting, and validation relative to **workflow state** (e.g. buyer expects to move off “open” reception by this date). |
+
+**Default validation when both are set:** require **`closing_date` ≥ `submission_deadline`** (same instant allowed unless tenant policy requires a gap). Reject or warn on inversion per tenant **hard/soft** for constraint kind `closing_after_submission` (name in plan).
+
+**Public / vendor-visible “deadline” copy (future):** refer to **`submission_deadline`** only for “last moment to submit”; do not conflate with **`closing_date`** unless the buyer explicitly chooses identical values and UI still labels them distinctly for internal users.
+
 ---
 
 ## 6. Milestone ordering (normative intent)
@@ -62,12 +75,13 @@ Default **partial order** among milestones **that exist** for the RFQ (optional 
 1. **RFQ finalized / locked** — prerequisite for starting vendor invitation in strict modes.  
 2. **Vendor invitation** — opens after lock (exact predicate: “locked” vs “first send” is an implementation detail; document chosen predicate).  
 3. **Briefing (optional)** — if present: after invitation predicate satisfied, before quote submission **close** (or before evaluation start if modeled separately).  
-4. **Quote submission closing** — published close for **vendor self-service** and reporting.  
-5. **Technical evaluation** — after submission close (when enforcement not `off`).  
-6. **Financial evaluation** — after technical or **parallel** if tenant template allows (parallelism as explicit template edge in later revision).  
-7. **Normalization / comparison** — after relevant eval or freeze milestone.  
-8. **Negotiations (optional)** — window after shortlist / pre-award as product defines.  
-9. **Award** — terminal or near-terminal.
+4. **Quote submission closing** — **`submission_deadline`**; published close for **vendor self-service** and buyer grace baseline.  
+5. **RFQ closing (formal)** — **`closing_date`**; distinct milestone, on or after step 4 by default (§5.1).  
+6. **Technical evaluation** — after **`submission_deadline`** (when enforcement not `off`).  
+7. **Financial evaluation** — after technical or **parallel** if tenant template allows (parallelism as explicit template edge in later revision).  
+8. **Normalization / comparison** — after relevant eval or freeze milestone.  
+9. **Negotiations (optional)** — window after shortlist / pre-award as product defines.  
+10. **Award** — terminal or near-terminal.
 
 **Validation:** on **write** of planned dates, reject impossible orderings relative to **present** milestones. **Tenant** may forbid certain optional milestones or fix ordering variants via policy template.
 
@@ -103,10 +117,10 @@ When evaluating an action (e.g. register quote, open evaluation):
 | **Tenant** | Allowed grace set, e.g. `{0, 3, 5}` or range `0..min(tenant_max, 5)`; `0` = feature disabled for RFQs unless product allows per-RFQ enable (product decision: typically tenant enables band first). |
 | **RFQ** | Owner/editor may enable **relaxed closing** and pick **grace_days** within tenant-allowed values. |
 
-**Effective buyer intake deadline:** `submission_close` (as stored, with documented timezone/EOD semantics) **+ grace_days** (calendar days unless product later adds business-day mode).
+**Effective buyer intake deadline:** **`submission_deadline`** (as stored, with documented timezone/EOD semantics) **+ grace_days** (calendar days unless product later adds business-day mode). **`closing_date` does not replace or shift this anchor.**
 
 - **Buyer-side intake** (upload / manual register): allowed **after** published close **only until** effective buyer intake deadline, when relaxed closing is on; after that, **hard deny** even for buyer in v1 (separate “break-glass” admin flow is **out of scope** unless explicitly added later).
-- **Vendor self-service (future):** upload **disabled** at published close regardless of relaxed closing; vendors never see relaxation labels.
+- **Vendor self-service (future):** upload **disabled** at **`submission_deadline`** regardless of relaxed closing; vendors never see relaxation labels.
 
 **Rationale:** leeway for **disruption** (outages, festive periods), not indefinite slack; **5-day cap** enforces good procurement discipline.
 
@@ -121,7 +135,7 @@ When evaluating an action (e.g. register quote, open evaluation):
 ## 10. Vendor-facing principles (future portal)
 
 - Do **not** expose internal enforcement modes, override reasons, or “soft” wording.  
-- Published **closing** remains the **hard** stop for **vendor-initiated** upload.  
+- Published **submission** end (**`submission_deadline`**) remains the **hard** stop for **vendor-initiated** upload.  
 - If buyer registers a quote after close (within grace), vendor-visible copy shows **factual receipt time** without explaining buyer-only policy.
 
 ---
@@ -159,11 +173,11 @@ When evaluating an action (e.g. register quote, open evaluation):
 
 ### 12.4 Constraint catalog (starter list for plan)
 
-Wire names to match product copy later: `invite_after_lock`, `briefing_order`, `evaluation_after_submission_close`, `financial_after_technical_or_parallel`, `late_quote_intake` (buyer path + grace), `buyer_intake_after_grace` (hard stop).
+Wire names to match product copy later: `invite_after_lock`, `briefing_order`, `closing_after_submission` (`closing_date` ≥ `submission_deadline`), `evaluation_after_submission_close`, `financial_after_technical_or_parallel`, `late_quote_intake` (buyer path + grace), `buyer_intake_after_grace` (hard stop).
 
 ### 12.5 Testing
 
-- Unit: ordering validation, resolution order (tenant vs override), grace boundary (timezone/EOD), deny after `close + grace`.  
+- Unit: ordering validation, resolution order (tenant vs override), grace boundary (timezone/EOD), deny after **`submission_deadline` + grace**; **`closing_date` ≥ `submission_deadline`** when both set.  
 - Feature/API: tenant isolation, owner/editor-only override, audit append-only, intake behavior pre/post close with relaxed flag.
 
 ---
@@ -171,9 +185,11 @@ Wire names to match product copy later: `invite_after_lock`, `briefing_order`, `
 ## 13. Open decisions (capture in implementation plan)
 
 1. Exact **milestone enum** and which are optional v1.  
-2. **Submission close** storage: date-only vs instant; org timezone source.  
+2. **Datetime precision** for `submission_deadline` / `closing_date`: instant vs end-of-day; **org timezone** source for display and boundaries.  
 3. Whether **RFQ type/template** sits between tenant and RFQ for policy (recommended follow-on).  
 4. Soft path: **reason required** always vs only when relaxing from hard.
+
+**Locked (no longer open):** **`submission_deadline`** and **`closing_date`** remain **separate** fields with roles in §5.1; quote intake and grace use **`submission_deadline`** only.
 
 ---
 
