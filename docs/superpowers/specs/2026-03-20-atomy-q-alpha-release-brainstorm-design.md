@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-20  
 **Branch:** `docs/atomy-q-alpha-brainstorm-2026-03-20`  
-**Status:** Brainstorm / pre-alpha scope definition (not implementation-approved)
+**Status:** Strategic scope locked for **design-partner alpha** (§3); implementation plan still pending (`writing-plans`).
 
 ---
 
@@ -33,7 +33,9 @@ Pick one primary bar; they imply different ordering:
 2. **Design-partner alpha** — 1–3 external orgs on real data; strict tenant isolation; **forgot password**, audit-friendly actions, and a **short list** of supported flows only.
 3. **Feature-complete alpha (risky)** — Broad surface (vendors, normalization, comparison, awards) before depth—likely slips on quality and security review.
 
-**Recommendation:** Target **design-partner alpha** as the north star but **sequence** work as **internal alpha first** (prove the slice end-to-end, then widen).
+**Locked decision (product):** **Design-partner alpha (definition 2)** — 1–3 external orgs on real data.
+
+**Sequencing:** Still **internal proof first** (end-to-end slice on staging with the same security bar), then **onboard partners** only after forgot-password, tenant-isolation tests, and the security checklist pass. No “soft launch” without that gate.
 
 ---
 
@@ -63,15 +65,16 @@ Pick one primary bar; they imply different ordering:
 
 ## 5. Proposed alpha scope (engineering-facing)
 
-### 5.1 Must-have (suggested)
+### 5.1 Must-have (design-partner alpha)
 
-- **Identity:** Forgot-password flow (end email, token, reset); document SSO as beta if not fully productized.
+- **Identity:** Forgot-password flow (email, token, reset) — **blocking** for external users today (`501` is not acceptable). Document SSO as beta unless a partner contract requires OIDC for go-live.
 - **Contract:** OpenAPI as source of truth; regenerate TS client in CI or documented gate; normalize error envelope in WEB (`PLAN.md` §3.4).
 - **RFQ core:** List + detail + create/edit aligned with implemented filters/pagination; overview KPIs and **activity** per `BACKEND_API_GAPS.md` (prefer dedicated `.../activity` if payload size matters).
 - **Quotes & comparison (minimal):** Enough real data to show **quote intake** and a **comparison matrix** run—even if scoring is simplified.
 - **Approvals:** At least one approval path wired (API + UI) or explicitly **out of alpha** with UI hidden and docs updated.
 - **Quality:** Playwright flows: login, RFQ list, create RFQ, open detail; API feature tests on tenant isolation for touched endpoints.
 - **Ops:** Staging deploy story, env template, health check; no production promises.
+- **Partner readiness:** Short **“supported flows”** doc for partners (what works, what is stubbed); lightweight **audit** on mutating actions where the product promises traceability (align with existing audit-adapter posture in API).
 
 ### 5.2 Explicit non-goals for alpha (unless partner demands)
 
@@ -94,7 +97,7 @@ Pick one primary bar; they imply different ordering:
 | **P0** | OpenAPI publish + generated client + error normalization | WEB hooks use generated types; less manual DTO drift |
 | **P1** | RFQ vertical slice (API real + WEB) + activity/overview gaps closed | Scripted demo without stubs on core reads/writes |
 | **P2** | Quote intake + comparison minimal + approvals (or cut) | One complete “sourcing event” narrative |
-| **P3** | Forgot-password + security checklist + staging | Safe for first external tenant |
+| **P3** | Forgot-password + security checklist + staging (**partner gate**) | Safe for first external tenant; run before inviting orgs |
 | **P4** | Optional: sidebar RFQ counts, reporting placeholders → real charts | Polish for narrative, not gate |
 
 Phases can overlap; **P0 and P1** should start in parallel if two contributors are available.
@@ -112,21 +115,33 @@ Phases can overlap; **P0 and P1** should start in parallel if two contributors a
 
 ---
 
-## 8. Open decisions (need product input)
+## 8. Open decisions (remaining)
 
-1. **Primary alpha persona:** Buyer-only org vs vendors submitting quotes in the same alpha?
-2. **Approvals:** In-scope for alpha or explicitly deferred?
+**Resolved:** Primary alpha bar = **design-partner alpha (B)** — external orgs on real data with strict tenant isolation and account recovery.
+
+Still need product input:
+
+1. **Persona:** Buyer-only org vs vendors submitting quotes in the same alpha? (If vendors are in-scope, minimum vendor auth + invitation path becomes must-have.)
+2. **Approvals:** In-scope for alpha or explicitly deferred (with nav/docs aligned)?
 3. **SSO:** Required for first external tenant or enterprise beta later?
 
 ---
 
-## 9. Next step (process)
+## 9. Decision log
+
+| Date | Decision |
+|------|----------|
+| 2026-03-20 | Alpha bar: **B** — design-partner alpha (1–3 external orgs). |
+
+---
+
+## 10. Next step (process)
 
 After product answers §8, run **`writing-plans`** skill to produce a dated implementation plan with file-level tasks and test gates—this brainstorm doc does **not** authorize implementation by itself.
 
 ---
 
-## References (in-repo)
+## 11. References (in-repo)
 
 - `apps/atomy-q/PLAN.md`
 - `apps/atomy-q/WEB/IMPLEMENTATION_STATUS.md`
