@@ -15,7 +15,7 @@ export const api = axios.create({
 
 type RetryableRequest = AxiosRequestConfig & { _retry?: boolean };
 
-let refreshPromise: Promise<{ accessToken: string; user: User }> | null = null;
+let refreshPromise: Promise<{ accessToken: string; refreshToken: string; user: User }> | null = null;
 
 api.interceptors.request.use(
   (config) => {
@@ -50,8 +50,17 @@ api.interceptors.response.use(
               { withCredentials: true }
             )
             .then(async ({ data }) => {
-              const newToken = data.access_token as string;
-              const newRefreshToken = (data.refresh_token as string) ?? refreshToken;
+              const accessRaw = data?.access_token;
+              const refreshRaw = data?.refresh_token;
+              if (typeof accessRaw !== 'string' || accessRaw.trim() === '') {
+                throw new Error('Token refresh failed: missing access_token');
+              }
+              const newToken = accessRaw.trim();
+              const newRefreshToken =
+                typeof refreshRaw === 'string' && refreshRaw.trim() !== '' ? refreshRaw.trim() : refreshToken;
+              if (typeof newRefreshToken !== 'string' || newRefreshToken.trim() === '') {
+                throw new Error('Token refresh failed: missing refresh_token');
+              }
               useAuthStore.getState().setTokens(newToken, newRefreshToken);
               const currentUser = useAuthStore.getState().user;
 

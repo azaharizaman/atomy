@@ -230,10 +230,12 @@ final class AuthTest extends TestCase
 
     public function test_forgot_password_returns_message(): void
     {
+        \Illuminate\Support\Facades\Mail::fake();
+
         $this->postJson('/api/v1/auth/forgot-password', [
             'email' => 'user@example.com',
         ])
-            ->assertStatus(501)
+            ->assertOk()
             ->assertJsonStructure(['message']);
     }
 

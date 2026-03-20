@@ -65,6 +65,50 @@ function normalizeStringOrNull(value: unknown): string | null {
   return normalizeString(value) ?? null;
 }
 
+export interface RfqsListMeta {
+  current_page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface RfqsListResult {
+  items: RfqListItem[];
+  meta: RfqsListMeta;
+}
+
+function isNonNegativeFiniteInt(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  const n = Number(typeof value === 'string' ? value.trim() : value);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) return null;
+  return n;
+}
+
+function isPositiveFiniteInt(value: unknown): number | null {
+  const n = isNonNegativeFiniteInt(value);
+  if (n === null || n < 1) return null;
+  return n;
+}
+
+function parseRfqsMeta(payload: unknown): RfqsListMeta | null {
+  const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
+  const m = obj?.meta;
+  if (m === null || m === undefined || typeof m !== 'object') return null;
+  const meta = m as Record<string, unknown>;
+  const total = isNonNegativeFiniteInt(meta.total);
+  const perPage = isPositiveFiniteInt(meta.per_page);
+  const currentPage = isPositiveFiniteInt(meta.current_page);
+  const totalPages = isPositiveFiniteInt(meta.total_pages);
+  if (total === null || perPage === null || currentPage === null || totalPages === null) return null;
+  return {
+    current_page: currentPage,
+    per_page: perPage,
+    total,
+    total_pages: totalPages,
+  };
+}
+
 function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   const asArray = (value: unknown): unknown[] | null => (Array.isArray(value) ? value : null);
 
@@ -107,12 +151,16 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   });
 }
 
+const SEED_PER_PAGE = 20;
+
 export function useRfqs(params: UseRfqsParams) {
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   return useQuery({
     queryKey: ['rfqs', params],
-    queryFn: async (): Promise<RfqListItem[]> => {
+    queryFn: async (): Promise<RfqsListResult> => {
+      const page = Math.max(1, params.page ?? 1);
+
       // Prefer live API when mocks are disabled and API is reachable,
       // but always fall back to local seed data on failures or when mocks are enabled.
       if (!useMocks) {
@@ -121,17 +169,31 @@ export function useRfqs(params: UseRfqsParams) {
           if (params.projectId) apiParams.project_id = params.projectId;
           const { data } = await api.get('/rfqs', { params: apiParams });
           const items = normalizeRfqsPayload(data).filter((x) => x.id);
-          if (items.length > 0) {
-            return items;
+          const metaFromApi = parseRfqsMeta(data);
+          if (metaFromApi === null) {
+            throw new Error('Invalid RFQ list response: pagination meta');
           }
-        } catch {
+          return { items, meta: metaFromApi };
+        } catch (e) {
+          if (e instanceof Error && e.message === 'Invalid RFQ list response: pagination meta') {
+            throw e;
+          }
           // ignore and fall through to seed data
         }
       }
 
       const { getSeedRfqListItems } = await import('@/data/seed');
-      const { items } = getSeedRfqListItems(params);
-      return items;
+      const { items, total } = getSeedRfqListItems(params);
+      const totalPages = Math.max(1, Math.ceil(total / SEED_PER_PAGE));
+      return {
+        items,
+        meta: {
+          current_page: page,
+          per_page: SEED_PER_PAGE,
+          total,
+          total_pages: totalPages,
+        },
+      };
     },
   });
 }

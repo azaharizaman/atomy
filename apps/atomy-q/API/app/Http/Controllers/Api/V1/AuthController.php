@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\JwtServiceInterface;
+use App\Contracts\PasswordResetServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Models\User;
@@ -25,6 +26,7 @@ final class AuthController extends Controller
 
     public function __construct(
         private readonly JwtServiceInterface $jwt,
+        private readonly PasswordResetServiceInterface $passwordResetService,
     ) {
     }
 
@@ -187,7 +189,7 @@ final class AuthController extends Controller
     /**
      * Request password reset.
      *
-     * POST /auth/forgot-password — body: `email` only (tenant resolved when flow is implemented).
+     * POST /auth/forgot-password — body: `email` only. Reset tokens are stored per user tenant (from the user row).
      */
     public function forgotPassword(Request $request): JsonResponse
     {
@@ -199,9 +201,51 @@ final class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        try {
+            $this->passwordResetService->sendResetLink((string) $request->input('email'));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return response()->json([
-            'message' => 'Password reset flow is not implemented yet.',
-        ], 501);
+            'message' => 'If an account exists for this email, password reset instructions have been sent.',
+        ]);
+    }
+
+    /**
+     * Complete password reset using email + token from the forgot-password mail.
+     *
+     * POST /auth/reset-password
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email'],
+            'token' => ['required', 'string', 'min:10'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $this->passwordResetService->resetPassword(
+                (string) $request->input('email'),
+                (string) $request->input('token'),
+                (string) $request->input('password'),
+            );
+        } catch (\InvalidArgumentException) {
+            return response()->json(['message' => 'Invalid or expired reset token.'], 422);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'Unable to complete password reset. Please try again later.',
+            ], 500);
+        }
+
+        return response()->json(['message' => 'Password has been reset.']);
     }
 
     /**

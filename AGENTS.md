@@ -28,6 +28,12 @@ All development MUST strictly adhere to the project's **Three-Layer Architecture
 - **Multi-Tenancy**: Always filter by `tenantId`. Guard against cross-tenant data leakage.
 - **Zero-Check**: Guard against division by zero and empty array operations.
 
+## 🔍 Code review (superpowers: requesting-code-review)
+
+When dispatching the **code-reviewer** subagent for changes that touch **`apps/atomy-q/`**, the reviewer **must** walk the checklist in [`docs/superpowers/CODE_REVIEW_GUIDELINES_ATOMY_Q.md`](docs/superpowers/CODE_REVIEW_GUIDELINES_ATOMY_Q.md) and append **`### Atomy-Q guideline pass`** to the review. The superpowers template **`requesting-code-review/code-reviewer.md`** (in your skills install) embeds this requirement.
+
+---
+
 ## 👥 Multi-Agent Coordination
 
 Nexus is a large system. Agents should follow these coordination patterns:

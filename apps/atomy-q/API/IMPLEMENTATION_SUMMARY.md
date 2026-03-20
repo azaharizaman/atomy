@@ -14,11 +14,15 @@
 - **Request body:** `email`, `password` only. Tenant is **not** sent by the client; it is read from `users.tenant_id` after a successful match (`users.email` is globally unique).
 - Validates credentials against Eloquent `User` (`email`, `password_hash`) and returns JWT access + refresh tokens (claims include the user’s `tenant_id`).
 - **Does not** use `nexus/identity-operations` for this path.
-- `AuthController` only injects `JwtServiceInterface` in the constructor so login/refresh work **without** registering Nexus Identity write/query adapters.
+- `AuthController` injects `JwtServiceInterface` and `PasswordResetServiceInterface` (bound to `PasswordResetService`) in the constructor (login/refresh do not require Nexus Identity write/query adapters).
 
-### `POST /api/v1/auth/forgot-password` (stub)
+### `POST /api/v1/auth/forgot-password`
 
-- **Request body:** `email` only (no tenant). Returns **501** until reset flow is implemented; **422** if `email` is missing or invalid.
+- **Request body:** `email` only. Returns **200** with a generic message (no user enumeration). Mail send failures are logged and **do not** change the JSON response. When a user exists, `PasswordResetService` stores a hashed token keyed by **`(tenant_id, email)`** from that user’s row and sends `PasswordResetMail` (TTL text comes from `auth.passwords.users.expire`, minimum 1 minute via `AppServiceProvider`).
+
+### `POST /api/v1/auth/reset-password`
+
+- **Request body:** `email`, `token`, `password`, `password_confirmation`. Resolves the user by email, loads the token row for that user’s **tenant**, validates TTL and `Hash::check` inside a **DB transaction** with `lockForUpdate()` on the token row; updates `users.password_hash`; deletes the token row; **422** on invalid/expired token; unexpected failures are **logged** and return **500** with a generic message (no exception details).
 
 ### Tenancy & identity (policy)
 
@@ -39,6 +43,12 @@
 ### Environment
 
 - `JWT_SECRET` must be non-empty (`php artisan key:generate` sets `APP_KEY`; JWT uses `config/jwt.php` / `.env` `JWT_SECRET`).
+
+## OpenAPI (Scramble)
+
+- **Package:** `dedoc/scramble` (dev). Config: `config/scramble.php` — documents routes under `api/v1` only.
+- **Interactive UI:** `GET /docs/api` and `GET /docs/api.json` when the app is running.
+- **Static export (for WEB client generation):** `php artisan scramble:export --path=../openapi/openapi.json` from `apps/atomy-q/API` writes `apps/atomy-q/openapi/openapi.json`. Regenerate after meaningful API contract changes.
 
 ## Endpoint Coverage
 
@@ -156,6 +166,8 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Seeder aligned with `report_runs` columns (`schedule_id`, `report_type`, `file_path`, `parameters`).
 - RFQ index endpoint now reads from `rfqs` table with tenant scoping and basic filters.
 - RFQ list/show endpoints now return real RFQ data (owner, counts, ISO deadlines, pagination meta) with sorting and search support.
+- **`GET /api/v1/rfqs/{rfqId}/activity`:** tenant-scoped activity feed (query `limit` 1–50, default 20); **`GET .../overview`** embeds the same feed under `data.activity` and adds blueprint aliases: `expectedQuotes`, `normalizationProgress`, `latestComparisonRun`, `approvalStatus`. Tests: `RfqOverviewActivityTest`.
+- **Partner onboarding:** `../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md` documents supported vs stubbed flows for design-partner alpha (identity, buyer-only scope, `comparison_approval` variant, verification commands).
 - Account profile endpoints now return real user data (including tenant/role) for seeded logins.
 - Seeder can use `ATOMY_SEED_TENANT_ID` for a predictable tenant in local environments.
 - PHPUnit is configured to use PostgreSQL (port `5433`) with JWT + Redis env defaults for tests.

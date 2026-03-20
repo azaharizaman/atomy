@@ -1,18 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { KeyRound, Lock } from 'lucide-react';
+import { KeyRound, Lock, Mail } from 'lucide-react';
+import axios from 'axios';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ds/Button';
 import { PasswordInput, TextInput } from '@/components/ds/Input';
 
 const schema = z.object({
-  token: z.string().min(6, 'Reset token is required'),
+  email: z.string().email('Enter a valid email'),
+  token: z.string().min(10, 'Reset token must be at least 10 characters'),
   password: z.string().min(8, 'Use at least 8 characters'),
   confirm_password: z.string().min(8, 'Confirm your password'),
 }).refine((data) => data.password === data.confirm_password, {
@@ -22,7 +24,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
@@ -40,6 +42,7 @@ export default function ResetPasswordPage() {
     setError(null);
     try {
       await api.post('/auth/reset-password', {
+        email: payload.email.trim().toLowerCase(),
         token: payload.token,
         password: payload.password,
         password_confirmation: payload.confirm_password,
@@ -47,13 +50,16 @@ export default function ResetPasswordPage() {
       setStatus('done');
       toast.success('Password updated successfully');
     } catch (err: unknown) {
-      const axiosish = err as { response?: { status?: number; data?: Record<string, unknown> } };
-      if (axiosish?.response?.status === 501 || axiosish?.response?.status === 404) {
+      if (axios.isAxiosError(err) && err.response?.status === 501) {
         setStatus('done');
         toast.success('Password updated (simulated)');
         return;
       }
-      const messageRaw = axiosish?.response?.data?.message;
+      const data = axios.isAxiosError(err) ? err.response?.data : undefined;
+      const messageRaw =
+        data !== null && data !== undefined && typeof data === 'object' && !Array.isArray(data)
+          ? (data as Record<string, unknown>).message
+          : undefined;
       const message = typeof messageRaw === 'string' && messageRaw.trim() !== '' ? messageRaw : 'Unable to reset password';
       setError(message);
       toast.error(message);
@@ -78,6 +84,15 @@ export default function ResetPasswordPage() {
         </div>
       ) : (
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <TextInput
+            label="Email"
+            type="email"
+            autoComplete="email"
+            {...register('email')}
+            placeholder="Account email"
+            error={errors.email?.message}
+            prefixIcon={<Mail size={16} className="shrink-0" />}
+          />
           <TextInput
             label="Reset token"
             {...register('token')}
@@ -119,5 +134,21 @@ export default function ResetPasswordPage() {
         </form>
       )}
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6 animate-pulse">
+          <div className="h-6 w-56 rounded bg-slate-200" />
+          <div className="h-4 w-full max-w-md rounded bg-slate-100" />
+          <div className="h-10 w-full rounded bg-slate-100" />
+        </div>
+      }
+    >
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }

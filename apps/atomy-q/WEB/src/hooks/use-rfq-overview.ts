@@ -62,6 +62,40 @@ export interface RfqOverviewData {
   activity: RfqOverviewActivityItem[];
 }
 
+function normalizeActivityList(raw: unknown): RfqOverviewActivityItem[] {
+  if (!Array.isArray(raw)) return [];
+  const out: RfqOverviewActivityItem[] = [];
+  raw.forEach((item: unknown, index: number) => {
+    if (item === null || typeof item !== 'object' || Array.isArray(item)) {
+      if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+        console.warn(`Skipping RFQ activity row at index ${index}: expected object`);
+      }
+      return;
+    }
+    const r = item as Record<string, unknown>;
+    const id = r.id !== null && r.id !== undefined ? String(r.id).trim() : '';
+    const type = r.type !== null && r.type !== undefined ? String(r.type).trim() : '';
+    const actor = r.actor !== null && r.actor !== undefined ? String(r.actor).trim() : '';
+    const action = r.action !== null && r.action !== undefined ? String(r.action).trim() : '';
+    const tsRaw = r.timestamp !== null && r.timestamp !== undefined ? String(r.timestamp).trim() : '';
+    if (!id || !type || !actor || !action || !tsRaw) {
+      if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+        console.warn(`Skipping RFQ activity row at index ${index}: missing required fields`);
+      }
+      return;
+    }
+    const parsed = Date.parse(tsRaw);
+    if (!Number.isFinite(parsed)) {
+      if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+        console.warn(`Skipping RFQ activity row at index ${index}: invalid timestamp`);
+      }
+      return;
+    }
+    out.push({ id, type, actor, action, timestamp: tsRaw });
+  });
+  return out;
+}
+
 function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
   const raw = (payload as { data?: unknown })?.data ?? payload;
   const d = raw as Record<string, unknown>;
@@ -69,7 +103,23 @@ function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
   const norm = (d?.normalization ?? {}) as Record<string, unknown>;
   const comp = d?.comparison as Record<string, unknown> | null | undefined;
   const app = (d?.approvals ?? {}) as Record<string, unknown>;
-  const activity = (d?.activity ?? []) as RfqOverviewActivityItem[];
+  const activity = normalizeActivityList(d?.activity);
+
+  let expectedQuotesRaw: unknown = d?.expected_quotes ?? d?.expectedQuotes ?? rfq?.vendors_count;
+  if (typeof expectedQuotesRaw === 'string' && expectedQuotesRaw.trim() === '') {
+    expectedQuotesRaw = undefined;
+  }
+  if (expectedQuotesRaw === null || expectedQuotesRaw === undefined) {
+    expectedQuotesRaw = rfq?.vendors_count;
+  }
+  const expectedQuotesNum = Number(expectedQuotesRaw);
+  const vendorFallback =
+    rfq?.vendors_count !== null &&
+    rfq?.vendors_count !== undefined &&
+    Number.isFinite(Number(rfq.vendors_count))
+      ? Number(rfq.vendors_count)
+      : 0;
+  const expected_quotes = Number.isFinite(expectedQuotesNum) ? expectedQuotesNum : vendorFallback;
 
   return {
     rfq: {
@@ -81,14 +131,14 @@ function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
       submission_deadline: rfq?.submission_deadline as string | null,
       closing_date: rfq?.closing_date as string | null,
       category: rfq?.category as string | null,
-      estimated_value: rfq?.estimated_value ?? rfq?.estValue,
-      estValue: rfq?.estValue ?? rfq?.estimated_value,
-      savings_percentage: rfq?.savings_percentage,
+      estimated_value: (rfq?.estimated_value ?? rfq?.estValue) as string | number | null | undefined,
+      estValue: (rfq?.estValue ?? rfq?.estimated_value) as string | number | null | undefined,
+      savings_percentage: rfq?.savings_percentage as number | string | null | undefined,
       savings: rfq?.savings as string | null,
       vendors_count: (rfq?.vendors_count ?? rfq?.vendorsCount) as number | undefined,
       quotes_count: (rfq?.quotes_count ?? rfq?.quotesCount) as number | undefined,
     },
-    expected_quotes: Number(d?.expected_quotes ?? rfq?.vendors_count ?? 0),
+    expected_quotes,
     normalization: {
       accepted_count: Number(norm?.accepted_count ?? 0),
       total_quotes: Number(norm?.total_quotes ?? 0),
@@ -112,7 +162,7 @@ function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
       rejected_count: Number(app?.rejected_count ?? 0),
       overall: (app?.overall as RfqOverviewApprovals['overall']) ?? 'none',
     },
-    activity: Array.isArray(activity) ? activity : [],
+    activity,
   };
 }
 
@@ -176,8 +226,21 @@ export function useRfqOverview(rfqId: string) {
         };
       }
 
-      const { data } = await api.get(`/rfqs/${encodeURIComponent(rfqId)}/overview`);
-      return normalizeOverviewPayload(data);
+      const [overviewRes, activityRes] = await Promise.all([
+        api.get(`/rfqs/${encodeURIComponent(rfqId)}/overview`),
+        api
+          .get(`/rfqs/${encodeURIComponent(rfqId)}/activity`, { params: { limit: 50 } })
+          .catch(() => null),
+      ]);
+      const base = normalizeOverviewPayload(overviewRes.data);
+      if (activityRes?.data && typeof activityRes.data === 'object') {
+        const body = activityRes.data as Record<string, unknown>;
+        const fromEndpoint = normalizeActivityList(body.data);
+        if (fromEndpoint.length > 0) {
+          return { ...base, activity: fromEndpoint };
+        }
+      }
+      return base;
     },
     enabled: Boolean(rfqId),
   });

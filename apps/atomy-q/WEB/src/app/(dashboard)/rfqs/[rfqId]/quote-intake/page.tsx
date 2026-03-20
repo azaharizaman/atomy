@@ -43,6 +43,7 @@ export default function QuoteIntakeListPage({ params }: { params: Promise<{ rfqI
   const router = useRouter();
   const { rfqId } = React.use(params);
   const { data: rfq } = useRfq(rfqId);
+  const norm = useNormalizationReview(rfqId);
   const allRows = useQuoteRows(rfqId);
   const [statusFilter, setStatusFilter] = React.useState('');
   const [vendorFilter, setVendorFilter] = React.useState('');

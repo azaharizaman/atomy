@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Contracts\JwtServiceInterface;
+use App\Contracts\PasswordResetServiceInterface;
 use App\Services\Identity\AtomyIdentityTokenManagerStub;
 use App\Services\Identity\AtomyNoopAuditLogRepository;
 use App\Services\Identity\AtomyNoopMfaEnrollmentService;
@@ -16,6 +17,7 @@ use App\Services\Identity\AtomySessionManagerStub;
 use App\Services\Identity\AtomyUserAuthenticator;
 use App\Services\Identity\AtomyUserPersist;
 use App\Services\Identity\AtomyUserQuery;
+use App\Services\Auth\PasswordResetService;
 use App\Services\JwtService;
 use App\Services\Project\AtomyIncompleteTaskCount;
 use App\Services\Project\AtomyProjectPersist;
@@ -81,6 +83,15 @@ class AppServiceProvider extends ServiceProvider
                 (string) config('jwt.issuer'),
             );
         });
+
+        $this->app->singleton(PasswordResetService::class, function (): PasswordResetService {
+            $ttl = (int) config('auth.passwords.users.expire', 60);
+            $ttl = max(1, $ttl);
+
+            return new PasswordResetService($ttl);
+        });
+
+        $this->app->bind(PasswordResetServiceInterface::class, static fn ($app): PasswordResetServiceInterface => $app->make(PasswordResetService::class));
 
         // Nexus Project: Laravel implementations + package Manager.
         $this->app->bind(ProjectPersistInterface::class, AtomyProjectPersist::class);

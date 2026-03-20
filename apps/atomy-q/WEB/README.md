@@ -2,6 +2,8 @@
 
 This is the Next.js frontend for the Atomy-Q Quote Comparison & Procurement platform.
 
+**Design-partner alpha:** Supported vs stubbed flows for external pilots are documented in [`../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md`](../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md).
+
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router)
 - **Styling**: Tailwind CSS v4
@@ -27,6 +29,16 @@ This is the Next.js frontend for the Atomy-Q Quote Comparison & Procurement plat
     ```bash
     npm run dev
     ```
+
+## API types (OpenAPI)
+
+The OpenAPI document is exported from the Laravel API into `../openapi/openapi.json` (see `apps/atomy-q/API/README.md`). Regenerate the typed client after API changes:
+
+```bash
+npm run generate:api
+```
+
+Output is committed under `src/generated/api/` so `npm run build` works without running PHP locally; CI or pre-merge workflows should run `generate:api` when the spec changes.
 
 ## Environment Variables
 
@@ -73,6 +85,8 @@ npm run test:e2e:install
 # run tests (starts Next dev server automatically)
 npm run test:e2e
 ```
+
+**OS note:** Playwright does not officially support **Fedora**; installs may use a fallback browser build. For **full-suite** E2E sign-off before production or partner onboarding, run `npm run test:e2e` on **Ubuntu LTS** (or rely on CI on a supported image).
 
 By default, the auth test uses a **mocked** API. To run the **login test against the real API** (catches "Invalid credentials" and redirect):
 

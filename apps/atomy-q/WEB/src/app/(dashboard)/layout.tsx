@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import {
   LayoutPanelTop,
@@ -17,6 +17,7 @@ import { Header } from '@/components/layout/header';
 import { AppFooter } from '@/components/layout/app-footer';
 import { useAuthStore } from '@/store/use-auth-store';
 import { RFQ_STATUSES } from '@/hooks/use-rfqs';
+import { useRfqNavCounts } from '@/hooks/use-rfq-counts';
 
 /** True when on an RFQ workspace route (e.g. /rfqs/[rfqId]/overview). Use Workspace layout only (Rail + Active Record Menu + Work surface). */
 function isRfqWorkspacePath(pathname: string): boolean {
@@ -26,7 +27,7 @@ function isRfqWorkspacePath(pathname: string): boolean {
   return segments.length >= 2 && segments[0] === 'rfqs';
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
+  const { data: rfqCounts } = useRfqNavCounts();
 
   // Deny access when not authenticated (after auth init). Redirect to login.
   useEffect(() => {
@@ -112,31 +114,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               label="Active"
               active={pathname === '/rfqs' && (!currentStatus || currentStatus === RFQ_STATUSES.ACTIVE)}
               href="/rfqs"
+              badge={rfqCounts && rfqCounts.active > 0 ? rfqCounts.active : undefined}
             />
             <SubNavItem
               label="Pending"
               active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.PENDING}
               href="/rfqs?status=pending"
+              badge={rfqCounts && rfqCounts.pending > 0 ? rfqCounts.pending : undefined}
             />
             <SubNavItem
               label="Closed"
               active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.CLOSED}
               href={`/rfqs?status=${RFQ_STATUSES.CLOSED}`}
+              badge={rfqCounts && rfqCounts.closed > 0 ? rfqCounts.closed : undefined}
             />
             <SubNavItem
               label="Awarded"
               active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.AWARDED}
               href={`/rfqs?status=${RFQ_STATUSES.AWARDED}`}
+              badge={rfqCounts && rfqCounts.awarded > 0 ? rfqCounts.awarded : undefined}
             />
             <SubNavItem
               label="Archived"
               active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.ARCHIVED}
               href={`/rfqs?status=${RFQ_STATUSES.ARCHIVED}`}
+              badge={rfqCounts && rfqCounts.archived > 0 ? rfqCounts.archived : undefined}
             />
             <SubNavItem
               label="Draft"
               active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.DRAFT}
               href={`/rfqs?status=${RFQ_STATUSES.DRAFT}`}
+              badge={rfqCounts && rfqCounts.draft > 0 ? rfqCounts.draft : undefined}
             />
           </NavGroup>
 
@@ -201,5 +209,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <AppFooter />
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-slate-50">
+          <div className="text-sm text-slate-500">Loading…</div>
+        </div>
+      }
+    >
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
   );
 }

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "generate:api": "openapi-ts -i ../openapi/openapi.json -o src/generated/api -c @hey-api/client-fetch",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
@@ -34,6 +35,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "^0.94.3",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.0",

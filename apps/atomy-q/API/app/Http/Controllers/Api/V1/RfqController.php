@@ -156,6 +156,41 @@ final class RfqController extends Controller
         ]);
     }
 
+    /**
+     * GET /rfqs/counts — tenant-scoped RFQ counts for dashboard nav badges.
+     *
+     * Keys align with WEB sidebar filters: active ≈ published, archived ≈ cancelled.
+     */
+    public function counts(Request $request): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+
+        $byStatus = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->selectRaw('status, COUNT(*) as cnt')
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+
+        $draft = (int) ($byStatus['draft'] ?? 0);
+        $published = (int) ($byStatus['published'] ?? 0);
+        $closed = (int) ($byStatus['closed'] ?? 0);
+        $awarded = (int) ($byStatus['awarded'] ?? 0);
+        $cancelled = (int) ($byStatus['cancelled'] ?? 0);
+
+        return response()->json([
+            'data' => [
+                'draft' => $draft,
+                'published' => $published,
+                'closed' => $closed,
+                'awarded' => $awarded,
+                'cancelled' => $cancelled,
+                'active' => $published,
+                'pending' => 0,
+                'archived' => $cancelled,
+            ],
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);
@@ -326,8 +361,17 @@ final class RfqController extends Controller
         $approvalsRejected = Approval::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->where('status', 'rejected')->count();
         $approvalOverall = $approvalsPending > 0 ? 'pending' : ($approvalsApproved > 0 ? 'approved' : ($approvalsRejected > 0 ? 'rejected' : 'none'));
 
-        $activity = $this->buildOverviewActivity($tenantId, $rfq);
+        $activity = $this->buildOverviewActivity($tenantId, $rfq, 20);
         $expectedQuotes = (int) $rfq->vendors_count;
+
+        $latestComparisonRun = null;
+        if ($comparison !== null) {
+            $latestComparisonRun = [
+                'id' => $comparison['id'],
+                'mode' => ($comparison['is_preview'] ?? true) ? 'preview' : 'final',
+                'status' => $comparison['status'],
+            ];
+        }
 
         return response()->json([
             'data' => [
@@ -368,18 +412,90 @@ final class RfqController extends Controller
                     'overall' => $approvalOverall,
                 ],
                 'activity' => $activity,
+                'expectedQuotes' => $expectedQuotes,
+                'normalizationProgress' => $normProgress,
+                'latestComparisonRun' => $latestComparisonRun,
+                'approvalStatus' => [
+                    'overall' => $approvalOverall,
+                    'pending_count' => $approvalsPending,
+                    'approved_count' => $approvalsApproved,
+                    'rejected_count' => $approvalsRejected,
+                ],
             ],
         ]);
     }
 
     /**
+     * GET /rfqs/:rfqId/activity?limit=20 — tenant-scoped activity feed (lighter than full overview).
+     *
+     * @queryParam limit int 1–50, default 20
+     */
+    public function activity(Request $request, string $rfqId): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+        $limit = $this->clampActivityLimit((int) $request->query('limit', 20));
+
+        $rfq = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where(function ($builder) use ($rfqId): void {
+                $builder->where('id', $rfqId)->orWhere('rfq_number', $rfqId);
+            })
+            ->first();
+
+        if ($rfq === null) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+        $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
+
+        $events = $this->buildOverviewActivity($tenantId, $rfq, $limit);
+
+        return response()->json([
+            'data' => $events,
+            'meta' => [
+                'limit' => $limit,
+                'rfq_id' => $rfq->id,
+            ],
+        ]);
+    }
+
+    private function clampActivityLimit(int $limit): int
+    {
+        return max(1, min(50, $limit));
+    }
+
+    /**
+     * Split a total activity cap across N sources (remainder distributed to earlier sources).
+     *
+     * @return list<int>
+     */
+    private function distributeActivityPerSourceLimits(int $limit, int $sourceCount): array
+    {
+        $limit = $this->clampActivityLimit($limit);
+        if ($sourceCount < 1) {
+            return [];
+        }
+
+        $base = intdiv($limit, $sourceCount);
+        $remainder = $limit % $sourceCount;
+        $limits = [];
+        for ($i = 0; $i < $sourceCount; $i++) {
+            $limits[] = $base + ($i < $remainder ? 1 : 0);
+        }
+
+        return $limits;
+    }
+
+    /**
      * @return list<array{id: string, type: string, actor: string, action: string, timestamp: string}>
      */
-    private function buildOverviewActivity(string $tenantId, Rfq $rfq): array
+    private function buildOverviewActivity(string $tenantId, Rfq $rfq, int $limit = 20): array
     {
+        $limit = $this->clampActivityLimit($limit);
+        [$lInv, $lQs, $lRun, $lApp] = $this->distributeActivityPerSourceLimits($limit, 4);
+
         $events = [];
 
-        foreach (VendorInvitation::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->whereNotNull('invited_at')->orderByDesc('invited_at')->limit(10)->get() as $inv) {
+        foreach (VendorInvitation::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->whereNotNull('invited_at')->orderByDesc('invited_at')->limit($lInv)->get() as $inv) {
             $events[] = [
                 'id' => 'inv-' . $inv->id,
                 'type' => 'invitation',
@@ -389,7 +505,7 @@ final class RfqController extends Controller
             ];
         }
 
-        foreach (QuoteSubmission::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->orderByDesc('submitted_at')->orderByDesc('created_at')->limit(10)->get() as $qs) {
+        foreach (QuoteSubmission::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->orderByDesc('submitted_at')->orderByDesc('created_at')->limit($lQs)->get() as $qs) {
             $submittedAt = $qs->submitted_at ?? $qs->created_at;
             $statusLabel = $this->quoteSubmissionStatusLabel((string) $qs->status);
             $events[] = [
@@ -401,7 +517,7 @@ final class RfqController extends Controller
             ];
         }
 
-        foreach (ComparisonRun::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->orderByDesc('created_at')->limit(5)->get() as $run) {
+        foreach (ComparisonRun::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->orderByDesc('created_at')->limit($lRun)->get() as $run) {
             $events[] = [
                 'id' => 'run-' . $run->id,
                 'type' => 'comparison',
@@ -411,7 +527,7 @@ final class RfqController extends Controller
             ];
         }
 
-        foreach (Approval::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->orderByDesc('requested_at')->orderByDesc('created_at')->limit(5)->get() as $app) {
+        foreach (Approval::query()->where('rfq_id', $rfq->id)->where('tenant_id', $tenantId)->orderByDesc('requested_at')->orderByDesc('created_at')->limit($lApp)->get() as $app) {
             $ts = $app->approved_at ?? $app->requested_at ?? $app->created_at;
             $events[] = [
                 'id' => 'app-' . $app->id,
@@ -426,7 +542,7 @@ final class RfqController extends Controller
             return strcmp($b['timestamp'], $a['timestamp']);
         });
 
-        return array_slice($events, 0, 20);
+        return array_slice($events, 0, $limit);
     }
 
     private function quoteSubmissionStatusLabel(string $status): ?string

@@ -2,6 +2,8 @@
 
 This is the backend API for the Atomy‑Q Quote Comparison & Procurement platform. It exposes the `/api/v1` REST endpoints used by the WEB app and includes JWT authentication, multi‑tenant scoping, and stubbed controllers for the full endpoint surface.
 
+**Design-partner alpha:** What is in scope for external buying-org pilots (identity, RFQ slice, approvals variant, stubs) is summarized in [`../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md`](../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md).
+
 ## Requirements
 - PHP 8.3+
 - Composer
@@ -35,6 +37,18 @@ This is the backend API for the Atomy‑Q Quote Comparison & Procurement platfor
    php artisan serve
    ```
    The API will be available at `http://localhost:8000/api/v1`.
+
+## OpenAPI (Scramble)
+
+Interactive docs (local): `GET /docs/api` and `GET /docs/api.json` (see `config/scramble.php`; `api_path` is `api/v1`).
+
+Export a static spec for the WEB client generator (written to the monorepo `apps/atomy-q/openapi/` folder):
+
+```bash
+php artisan scramble:export --path=../openapi/openapi.json
+```
+
+Optional: set `API_VERSION` in `.env` for the `info.version` field in the exported document.
 
 ## Required Environment Variables
 

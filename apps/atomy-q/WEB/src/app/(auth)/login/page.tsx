@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,11 +8,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { parseApiError } from '@/lib/api-error';
 import { useAuthStore } from '@/store/use-auth-store';
 import { Button } from '@/components/ds/Button';
 import { Checkbox, PasswordInput, TextInput } from '@/components/ds/Input';
 
 const schema = z.object({
+  /** Shown for legacy/dev UX; login API resolves tenant from the user row. */
+  tenant_id: z.string().optional(),
   email: z.string().email('Enter a valid email'),
   password: z.string().min(1, 'Password is required'),
   remember_device: z.boolean().optional(),
@@ -20,7 +23,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionExpired = searchParams.get('session_expired') === '1';
@@ -63,15 +66,10 @@ export default function LoginPage() {
       const redirect = searchParams.get('redirect');
       router.push(redirect && redirect.startsWith('/') ? redirect : '/');
     } catch (error: unknown) {
-      const axiosish = error as { response?: { status?: number; data?: Record<string, unknown> } };
-      const data = axiosish?.response?.data;
-      const messageRaw = (data?.message ?? data?.error) as unknown;
+      const parsed = parseApiError(error);
       const message =
-        typeof messageRaw === 'string' && messageRaw.trim() !== ''
-          ? messageRaw
-          : axiosish?.response?.status === 422
-            ? 'Please check email and password.'
-            : 'Invalid credentials';
+        parsed.message ??
+        (parsed.status === 422 ? 'Please check email and password.' : 'Invalid credentials');
       setAuthError(message);
       toast.error(message);
     }
@@ -189,5 +187,22 @@ export default function LoginPage() {
         Need access? Contact your workspace administrator to provision an account or reset your password.
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6 animate-pulse">
+          <div className="h-6 w-48 rounded bg-slate-200" />
+          <div className="h-4 w-full max-w-md rounded bg-slate-100" />
+          <div className="h-10 w-full rounded bg-slate-100" />
+          <div className="h-10 w-full rounded bg-slate-100" />
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }
