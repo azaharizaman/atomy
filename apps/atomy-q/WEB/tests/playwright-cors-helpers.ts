@@ -2,12 +2,23 @@
  * Shared CORS + JSON route stubs for Playwright tests (request-derived Origin).
  */
 
-export const buildCorsHeaders = (origin: string) => ({
-  'access-control-allow-origin': origin,
-  'access-control-allow-credentials': 'true',
-  'access-control-allow-headers': 'Content-Type, Authorization',
-  'access-control-allow-methods': 'GET,POST,OPTIONS',
-});
+const DEFAULT_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+const DEFAULT_HEADERS = ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'X-XSRF-TOKEN'];
+
+export function buildCorsHeaders(
+  origin: string,
+  methods: string[] = DEFAULT_METHODS,
+  headers: string[] = DEFAULT_HEADERS,
+): Record<string, string> {
+  const methodList = [...new Set([...methods, 'OPTIONS'])];
+  const headerList = [...new Set(headers)];
+  return {
+    'access-control-allow-origin': origin,
+    'access-control-allow-credentials': 'true',
+    'access-control-allow-headers': headerList.join(', '),
+    'access-control-allow-methods': methodList.join(', '),
+  };
+}
 
 export function getRequestOrigin(route: {
   request: () => { url: () => string; headers: () => Record<string, string> };
@@ -40,9 +51,10 @@ export async function fulfillJsonRoute(
   },
   body: unknown,
   status = 200,
+  corsOptions?: { methods?: string[]; headers?: string[] },
 ): Promise<void> {
   const reqOrigin = getRequestOrigin(route);
-  const corsHeaders = buildCorsHeaders(reqOrigin);
+  const corsHeaders = buildCorsHeaders(reqOrigin, corsOptions?.methods, corsOptions?.headers);
   if (route.request().method() === 'OPTIONS') {
     await route.fulfill({ status: 204, headers: corsHeaders });
     return;

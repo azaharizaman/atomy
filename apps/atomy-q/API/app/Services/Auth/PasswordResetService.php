@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Auth;
 
+use App\Contracts\PasswordResetServiceInterface;
 use App\Mail\PasswordResetMail;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
-final readonly class PasswordResetService
+final readonly class PasswordResetService implements PasswordResetServiceInterface
 {
     public function __construct(
         private int $tokenTtlMinutes,

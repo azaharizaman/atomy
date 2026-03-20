@@ -7,28 +7,11 @@ import { Button } from '@/components/ds/Button';
 import { StatusBadge } from '@/components/ds/Badge';
 import { RecordHeader } from '@/components/ds/RecordHeader';
 import { PageHeader } from '@/components/ds/FilterBar';
+import { OwnerCell } from '@/components/ds/OwnerCell';
 import { useApprovalDetail } from '@/hooks/use-approvals';
 import { api } from '@/lib/api';
 import { parseApiError } from '@/lib/api-error';
 import { toast } from 'sonner';
-
-function OwnerCell({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600">
-        {initials}
-      </div>
-      <span className="text-sm text-slate-700">{name}</span>
-    </div>
-  );
-}
 
 export default function GlobalApprovalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();

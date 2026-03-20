@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\JwtServiceInterface;
+use App\Contracts\PasswordResetServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Models\User;
-use App\Services\Auth\PasswordResetService;
 use Nexus\IdentityOperations\Contracts\UserAuthenticationCoordinatorInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,7 +26,7 @@ final class AuthController extends Controller
 
     public function __construct(
         private readonly JwtServiceInterface $jwt,
-        private readonly PasswordResetService $passwordResetService,
+        private readonly PasswordResetServiceInterface $passwordResetService,
     ) {
     }
 
@@ -237,6 +237,12 @@ final class AuthController extends Controller
             );
         } catch (\InvalidArgumentException) {
             return response()->json(['message' => 'Invalid or expired reset token.'], 422);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'Unable to complete password reset. Please try again later.',
+            ], 500);
         }
 
         return response()->json(['message' => 'Password has been reset.']);

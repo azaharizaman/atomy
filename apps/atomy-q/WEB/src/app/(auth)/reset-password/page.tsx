@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { KeyRound, Lock, Mail } from 'lucide-react';
+import axios from 'axios';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ds/Button';
@@ -49,13 +50,16 @@ function ResetPasswordPageContent() {
       setStatus('done');
       toast.success('Password updated successfully');
     } catch (err: unknown) {
-      const axiosish = err as { response?: { status?: number; data?: Record<string, unknown> } };
-      if (axiosish?.response?.status === 501) {
+      if (axios.isAxiosError(err) && err.response?.status === 501) {
         setStatus('done');
         toast.success('Password updated (simulated)');
         return;
       }
-      const messageRaw = axiosish?.response?.data?.message;
+      const data = axios.isAxiosError(err) ? err.response?.data : undefined;
+      const messageRaw =
+        data !== null && data !== undefined && typeof data === 'object' && !Array.isArray(data)
+          ? (data as Record<string, unknown>).message
+          : undefined;
       const message = typeof messageRaw === 'string' && messageRaw.trim() !== '' ? messageRaw : 'Unable to reset password';
       setError(message);
       toast.error(message);

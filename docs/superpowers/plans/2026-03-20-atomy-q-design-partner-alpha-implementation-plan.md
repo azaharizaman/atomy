@@ -71,7 +71,7 @@ Earlier phases (P0 OpenAPI/codegen, P1 RFQ overview/activity + WEB wiring, P2 ap
 
 | Path                                                 | Responsibility                                                                                                                    |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/atomy-q/API/composer.json`                     | Add OpenAPI generator dependency (recommended: `**dedoc/scramble`** — OpenAPI 3 from routes/controllers with minimal annotations) |
+| `apps/atomy-q/API/composer.json`                     | Add OpenAPI generator dependency (recommended: **`dedoc/scramble`** — OpenAPI 3 from routes/controllers with minimal annotations) |
 | `apps/atomy-q/API/config/scramble.php`               | Scramble config: API title, version, route filter `/api/v1/*`                                                                     |
 | `apps/atomy-q/API/routes/web.php` or dedicated route | Expose `GET /docs/api` (Scramble UI) **only non-production** or behind admin if needed                                            |
 | `apps/atomy-q/API/.github/workflows/*` or root CI    | Optional: `php artisan scramble:export` → `openapi.json` artifact; fail if drift                                                  |
@@ -113,8 +113,8 @@ Earlier phases (P0 OpenAPI/codegen, P1 RFQ overview/activity + WEB wiring, P2 ap
 | Path                                                       | Responsibility                                                             |
 | ---------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `apps/atomy-q/WEB/src/app/(auth)/login/page.tsx`           | Link to forgot-password                                                    |
-| `apps/atomy-q/WEB/src/app/(auth)/forgot-password/page.tsx` | **Create** — POST forgot-password                                          |
-| `apps/atomy-q/WEB/src/app/(auth)/reset-password/page.tsx`  | **Create** — token from email link query param + POST reset                |
+| `apps/atomy-q/WEB/src/app/(auth)/forgot-password/page.tsx` | **Modify/Verify** — POST forgot-password                                   |
+| `apps/atomy-q/WEB/src/app/(auth)/reset-password/page.tsx`  | **Modify/Verify** — token from email link query param + POST reset         |
 | `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/`**             | Complete list/detail/overview per blueprint; wire activity                 |
 | `apps/atomy-q/WEB/src/app/(dashboard)/approvals/**`        | **Create** minimal queue + detail + approve/reject for **one** variant     |
 | `apps/atomy-q/WEB/src/components/layout/sidebar.tsx`       | Show Approvals nav when feature enabled; hide SSO prominence per alpha doc |
@@ -311,8 +311,8 @@ describe("parseApiError", () => {
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/AuthController.php`
 - Create migration if table missing for reset tokens
 - Create: `apps/atomy-q/API/tests/Feature/Api/PasswordResetTest.php`
-- Create: `apps/atomy-q/WEB/src/app/(auth)/forgot-password/page.tsx`
-- Create: `apps/atomy-q/WEB/src/app/(auth)/reset-password/page.tsx`
+- Modify/Verify: `apps/atomy-q/WEB/src/app/(auth)/forgot-password/page.tsx`
+- Modify/Verify: `apps/atomy-q/WEB/src/app/(auth)/reset-password/page.tsx`
 - Modify: `apps/atomy-q/API/tests/Feature/Api/AuthTest.php` if assertions expect `501` on forgot-password
 - [x] **Step 1:** Write failing test: `POST /api/v1/auth/forgot-password` returns **200** with generic message (not 501).
 
@@ -389,7 +389,7 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 
 - **Step 1:** `cd apps/atomy-q/API && php artisan test`
 - **Step 2:** `cd apps/atomy-q/WEB && npm run test:unit`
-- **Step 3:** `cd apps/atomy-q/WEB && npm run test:e2e` (against staging URL via `PLAYWRIGHT_BASE_URL`)
+- **Step 3:** `cd apps/atomy-q/WEB && PLAYWRIGHT_BASE_URL=https://staging.example.com npm run test:e2e` (replace `https://staging.example.com` with your staging WEB origin; omit the variable to target local dev server)
 
 Expected: all pass; E2E includes login, RFQ create/list/detail, **approval** action, forgot-password request (or tagged `@alpha` subset if suite is large).
 
