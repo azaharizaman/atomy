@@ -229,7 +229,7 @@ describe("parseApiError", () => {
 - [x] **Step 1:** Ensure list uses pagination meta from API `{ data, meta }`.
 - [x] **Step 2:** Overview shows new KPI fields; activity list renders from activity endpoint.
 - [x] **Step 3:** `cd apps/atomy-q/WEB && npm run test:unit` for affected hooks.
-- [ ] **Step 4:** Commit.
+- [x] **Step 4:** Commit.
 
 ---
 
@@ -258,7 +258,7 @@ describe("parseApiError", () => {
 - [x] **Step 1:** Feature test: `GET /api/v1/approvals` returns seeded approval for tenant A; empty or 404 behavior documented for tenant with none.
 - [x] **Step 2:** Implement `index` query: `where('tenant_id', $tenantId)` with pagination.
 - [x] **Step 3:** WEB: list page + detail with approve/reject calling existing endpoints; handle **404** as generic not found.
-- [ ] **Step 4:** Commit.
+- [x] **Step 4:** Commit.
 
 ---
 
@@ -292,7 +292,7 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 - [x] **Step 3:** Add `POST /api/v1/auth/reset-password` with `email`, `token`, `password`, `password_confirmation` (validate strength).
 - [x] **Step 4:** Run `cd apps/atomy-q/API && php artisan test --filter=PasswordReset`.
 - [ ] **Step 5:** WEB pages + Playwright step (use `log` mail driver or intercept).
-- [ ] **Step 6:** Commit.
+- [x] **Step 6:** Commit.
 
 ---
 
@@ -304,7 +304,7 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 - Add/extend tests: RFQ, Approval, QuoteSubmission cross-tenant **404** tests
 - [x] **Step 1:** Walk checklist; file issues for any gap.
 - [x] **Step 2:** Add PHPUnit coverage for **every** alpha-exposed write endpoint touched in P1–P2. *(Approval + RFQ counts + existing activity/quote tests.)*
-- [ ] **Step 3:** Commit.
+- [x] **Step 3:** Commit.
 
 ---
 
@@ -317,7 +317,7 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 - Optional: `deploy/` or `docs/atomy-q/STAGING.md`
 - [x] **Step 1:** Document required env vars: `APP_URL`, `JWT_SECRET`, mail, `DATABASE_URL`, CORS origins for WEB.
 - [x] **Step 2:** Health route verified (`/up` Laravel 11+ or existing).
-- [ ] **Step 3:** Commit.
+- [x] **Step 3:** Commit.
 
 ---
 
