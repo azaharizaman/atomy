@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-20  
 **Branch:** `docs/atomy-q-alpha-brainstorm-2026-03-20`  
-**Status:** Product decisions in §3 and §8 are **complete**; scope locked for **design-partner alpha**. Next: **`writing-plans`** implementation plan (this doc does not authorize code changes by itself).
+**Status:** Product decisions in §3 and §8 are **complete**; scope locked for **design-partner alpha**. Implementation plan: [`../plans/2026-03-20-atomy-q-design-partner-alpha-implementation-plan.md`](../plans/2026-03-20-atomy-q-design-partner-alpha-implementation-plan.md).
 
 ---
 
@@ -144,7 +144,7 @@ Phases can overlap; **P0 and P1** should start in parallel if two contributors a
 
 ## 10. Next step (process)
 
-Run **`writing-plans`** to produce a dated implementation plan with file-level tasks and test gates. This brainstorm spec is the **input** to that plan; it does **not** authorize implementation by itself.
+**Done:** [`../plans/2026-03-20-atomy-q-design-partner-alpha-implementation-plan.md`](../plans/2026-03-20-atomy-q-design-partner-alpha-implementation-plan.md). Execute that plan task-by-task; this brainstorm spec remains the **product** input only.
 
 ---
 
