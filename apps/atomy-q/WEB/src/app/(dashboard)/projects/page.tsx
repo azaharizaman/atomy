@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { Button } from '@/components/ds/Button';
@@ -116,7 +116,7 @@ export default function ProjectsPage() {
   }
 
   if (!projectsEnabled) {
-    redirect('/dashboard');
+    return null;
   }
 
   if (isError) {

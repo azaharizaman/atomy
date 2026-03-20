@@ -54,7 +54,7 @@ function parseOptionalCount(value: unknown): number | undefined {
   if (typeof value === 'string' && value.trim() === '') return undefined;
   const n = Number(value);
   if (!Number.isFinite(n)) return undefined;
-  if (n < 0) return undefined;
+  if (n <= 0) return undefined;
   return n;
 }
 

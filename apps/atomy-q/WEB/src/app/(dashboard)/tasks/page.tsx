@@ -122,7 +122,7 @@ export default function TasksPage() {
   } = useFeatureFlags();
   const tasksEnabled = flags?.tasks === true;
   const { data: tasks = [], isLoading, isError, error } = useTasks({
-    enabled: !flagsLoading && !flagsError && flags?.tasks === true,
+    enabled: !flagsLoading && !flagsError && tasksEnabled,
   });
 
   if (flagsLoading) {
