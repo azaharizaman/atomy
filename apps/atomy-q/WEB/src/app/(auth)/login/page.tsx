@@ -66,7 +66,13 @@ function LoginPageContent() {
       const parsed = parseApiError(error);
       const message =
         parsed.message ??
-        (parsed.status === 422 ? 'Please check email and password.' : 'Invalid credentials');
+        (parsed.status === 422
+          ? 'Please check email and password.'
+          : parsed.status === 401
+            ? 'Invalid credentials'
+            : parsed.status === 404
+              ? 'API route not found. Ensure NEXT_PUBLIC_API_URL ends with /api/v1 (e.g. http://localhost:8000/api/v1).'
+              : 'Sign-in failed. Check that the API is running and NEXT_PUBLIC_API_URL is correct.');
       setAuthError(message);
       toast.error(message);
     }
