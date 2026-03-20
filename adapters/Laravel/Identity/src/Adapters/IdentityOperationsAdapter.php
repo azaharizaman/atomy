@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\Laravel\Identity\Adapters;
 
+use Illuminate\Contracts\Queue\Queue;
+use Illuminate\Support\Facades\Cache;
 use Nexus\Identity\Contracts\MfaEnrollmentServiceInterface;
 use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
 use Nexus\Identity\Contracts\UserPersistInterface;
@@ -42,6 +44,7 @@ use Nexus\Notifier\Contracts\NotificationManagerInterface;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Nexus\Laravel\Identity\Jobs\SendWelcomeNotificationJob;
 
 /**
  * Adapter for IdentityOperations orchestrator.
@@ -76,6 +79,7 @@ final readonly class IdentityOperationsAdapter implements
         private MfaEnrollmentServiceInterface $mfaEnrollment,
         private MfaVerificationServiceInterface $mfaVerification,
         private NotificationManagerInterface $notificationManager,
+        private Queue $queue,
         private AuditLogRepositoryInterface $auditLogRepository,
         private CacheRepositoryInterface $cache,
         private PasswordHasherInterface $passwordHasher,
@@ -176,27 +180,21 @@ final readonly class IdentityOperationsAdapter implements
     public function sendWelcome(string $userId, ?string $temporaryPassword = null): void
     {
         try {
-            $user = $this->userQuery->findById($userId);
-            
-            $notification = new class($temporaryPassword) extends \Nexus\Notifier\Services\AbstractNotification {
-                public function __construct(private ?string $temporaryPassword) {}
-                public function toEmail(): array { 
-                    return [
-                        'subject' => 'Welcome to Atomy',
-                        'template' => 'welcome',
-                        'data' => ['temporary_password' => $this->temporaryPassword],
-                    ];
-                }
-                public function toSms(): ?string { return null; }
-                public function toPush(): ?array { return null; }
-                public function toInApp(): ?array { return null; }
-            };
+            // Enqueue async delivery (plan requirement) rather than sending inline.
+            $setupTokenId = null;
+            if (is_string($temporaryPassword) && trim($temporaryPassword) !== '') {
+                $setupTokenId = bin2hex(random_bytes(16));
+                Cache::put(
+                    'identity:welcome-temp-password:' . $setupTokenId,
+                    $temporaryPassword,
+                    now()->addMinutes(15),
+                );
+            }
 
-            /** @var \Nexus\Notifier\Contracts\NotifiableInterface $user */
-            $this->notificationManager->send($user, $notification);
-            $this->logger->info('Welcome notification sent', ['user_id' => $userId]);
+            $this->queue->push(new SendWelcomeNotificationJob($userId, $setupTokenId));
+            $this->logger->info('Welcome notification enqueued', ['user_id' => $userId]);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to send welcome notification', [
+            $this->logger->error('Failed to enqueue welcome notification', [
                 'user_id' => $userId,
                 'error' => $e->getMessage(),
             ]);

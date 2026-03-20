@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\NormalizationSourceLine;
+use App\Models\QuoteSubmission;
+use App\Models\RfqLineItem;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -98,7 +101,6 @@ final class SeedRfqFlowCommand extends Command
         $url = $this->baseUrl . '/api/v1/auth/login';
         $this->line("Login: {$url}");
         $response = Http::asJson()->post($url, [
-            'tenant_id' => $tenant,
             'email' => $email,
             'password' => $password,
         ]);
@@ -129,6 +131,19 @@ final class SeedRfqFlowCommand extends Command
         };
     }
 
+    private function apiWithFile(string $method, string $path, array $body, string $fileField, string $fileName, string $contents, string $mimeType = 'text/plain'): \Illuminate\Http\Client\Response
+    {
+        $url = $this->baseUrl . '/api/v1/' . ltrim($path, '/');
+        $req = Http::withToken($this->token)->attach($fileField, $contents, $fileName, ['Content-Type' => $mimeType]);
+
+        return match (strtoupper($method)) {
+            'POST' => $req->post($url, $body),
+            'PUT' => $req->put($url, $body),
+            'PATCH' => $req->patch($url, $body),
+            default => $req->post($url, $body),
+        };
+    }
+
     private function runFlowForOneRfq(): bool
     {
         $rfqId = $this->createRfq();
@@ -152,6 +167,7 @@ final class SeedRfqFlowCommand extends Command
             $this->warn('No quotes submitted.');
             return true;
         }
+        $this->syncNormalizationLinesForQuotes($rfqId, $quoteIds);
         $this->hitNormalizationAndComparison($rfqId);
         $this->closeRfq($rfqId);
         if ($this->targetStatus === 'closed') {
@@ -247,11 +263,11 @@ final class SeedRfqFlowCommand extends Command
         $subset = array_slice($invitations, 0, $toSubmit);
         $quoteIds = [];
         foreach ($subset as $inv) {
-            $response = $this->api('POST', 'quote-submissions/upload', [
+            $response = $this->apiWithFile('POST', 'quote-submissions/upload', [
                 'rfq_id' => $rfqId,
                 'vendor_id' => $inv['vendor_id'],
                 'vendor_name' => $inv['vendor_name'],
-            ]);
+            ], 'file', $inv['vendor_name'] . '-quote.txt', 'Seed quote payload for ' . $inv['vendor_name']);
             if ($response->successful()) {
                 $quoteId = $response->json('data.id');
                 $quoteIds[] = $quoteId;
@@ -262,6 +278,61 @@ final class SeedRfqFlowCommand extends Command
             }
         }
         return $quoteIds;
+    }
+
+    /**
+     * Ensure uploaded quotes have mapped normalization lines so comparison final/readiness gates pass.
+     *
+     * @param  list<string>  $quoteIds
+     */
+    private function syncNormalizationLinesForQuotes(string $rfqId, array $quoteIds): void
+    {
+        if ($quoteIds === [] || $this->tenantId === '') {
+            return;
+        }
+
+        $lineItems = RfqLineItem::query()
+            ->where('tenant_id', $this->tenantId)
+            ->where('rfq_id', $rfqId)
+            ->orderBy('sort_order')
+            ->get();
+
+        if ($lineItems->isEmpty()) {
+            return;
+        }
+
+        foreach ($quoteIds as $quoteId) {
+            $quoteId = (string) $quoteId;
+            $submission = QuoteSubmission::query()
+                ->where('tenant_id', $this->tenantId)
+                ->where('id', $quoteId)
+                ->first();
+            if ($submission === null) {
+                continue;
+            }
+
+            foreach ($lineItems as $li) {
+                NormalizationSourceLine::query()->updateOrCreate(
+                    [
+                        'tenant_id' => $this->tenantId,
+                        'quote_submission_id' => $quoteId,
+                        'rfq_line_item_id' => $li->id,
+                    ],
+                    [
+                        'source_description' => (string) $li->description,
+                        'source_unit_price' => $li->unit_price,
+                        'source_uom' => (string) $li->uom,
+                        'source_quantity' => $li->quantity,
+                        'sort_order' => (int) $li->sort_order,
+                    ],
+                );
+            }
+
+            $submission->status = 'ready';
+            $submission->save();
+        }
+
+        $this->line('  Normalization source lines synced for ' . count($quoteIds) . ' quote(s).');
     }
 
     private function hitNormalizationAndComparison(string $rfqId): void

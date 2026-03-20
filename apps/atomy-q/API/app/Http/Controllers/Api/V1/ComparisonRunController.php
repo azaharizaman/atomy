@@ -6,12 +6,25 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ComparisonFinalizeRequest;
+use App\Models\ComparisonRun;
+use App\Models\QuoteSubmission;
+use App\Models\Rfq;
+use App\Services\QuoteIntake\ComparisonSnapshotService;
+use App\Services\QuoteIntake\DecisionTrailRecorder;
+use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class ComparisonRunController extends Controller
 {
     use ExtractsAuthContext;
+
+    public function __construct(
+        private readonly ComparisonSnapshotService $snapshotService,
+        private readonly QuoteSubmissionReadinessService $readinessService,
+        private readonly DecisionTrailRecorder $decisionTrail,
+    ) {}
 
     /**
      * GET /comparison-runs
@@ -22,14 +35,35 @@ final class ComparisonRunController extends Controller
         $tenantId = $this->tenantId($request);
         $pagination = $this->paginationParams($request);
 
+        $query = ComparisonRun::query()
+            ->where('tenant_id', $tenantId)
+            ->orderByDesc('created_at');
+
+        $rfqFilter = $request->query('rfq_id');
+        if (is_string($rfqFilter) && $rfqFilter !== '') {
+            $query->where('rfq_id', $rfqFilter);
+        }
+
+        $total = $query->count();
+        $runs = $query
+            ->forPage($pagination['page'], $pagination['per_page'])
+            ->get();
+
         return response()->json([
-            'data' => [],
+            'data' => $runs->map(static fn (ComparisonRun $run) => [
+                'id' => $run->id,
+                'rfq_id' => $run->rfq_id,
+                'name' => $run->name,
+                'status' => $run->status,
+                'is_preview' => (bool) $run->is_preview,
+                'created_at' => $run->created_at?->toAtomString(),
+            ])->values()->all(),
             'meta' => [
                 'current_page' => $pagination['page'],
                 'per_page' => $pagination['per_page'],
-                'total' => 0,
-                'from' => null,
-                'to' => null,
+                'total' => $total,
+                'from' => $total > 0 ? (($pagination['page'] - 1) * $pagination['per_page']) + 1 : null,
+                'to' => $total > 0 ? min($pagination['page'] * $pagination['per_page'], $total) : null,
             ],
         ]);
     }
@@ -40,11 +74,25 @@ final class ComparisonRunController extends Controller
      */
     public function show(Request $request, string $id): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+
+        $run = ComparisonRun::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->first();
+        if ($run === null) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
+        }
+
         return response()->json([
             'data' => [
-                'id' => $id,
-                'rfq_id' => null,
-                'status' => 'draft',
+                'id' => $run->id,
+                'rfq_id' => $run->rfq_id,
+                'name' => $run->name,
+                'status' => $run->status,
+                'is_preview' => (bool) $run->is_preview,
+                'snapshot' => $run->response_payload['snapshot'] ?? null,
+                'created_at' => $run->created_at?->toAtomString(),
             ],
         ]);
     }
@@ -68,12 +116,102 @@ final class ComparisonRunController extends Controller
      * Method named final_ since final is reserved in PHP.
      * Scoped by tenant_id.
      */
-    public function final_(Request $request): JsonResponse
+    public function final_(ComparisonFinalizeRequest $request): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+        $validated = $request->validated();
+
+        $rfq = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $validated['rfq_id'])
+            ->withCount('vendorInvitations')
+            ->first();
+        if ($rfq === null) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        $submissions = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfq->id)
+            ->get();
+
+        if ($submissions->isEmpty()) {
+            return response()->json([
+                'error' => 'No quote submissions for this RFQ.',
+                'details' => [],
+            ], 422);
+        }
+
+        $vendorsExpected = max(0, (int) ($rfq->vendor_invitations_count ?? 0));
+        $minReady = $vendorsExpected >= 2 ? 2 : 1;
+        $readyCount = $submissions->filter(static fn (QuoteSubmission $s) => $s->status === 'ready')->count();
+        if ($readyCount < $minReady) {
+            return response()->json([
+                'error' => sprintf('At least %d ready quote submission(s) are required.', $minReady),
+                'details' => [],
+            ], 422);
+        }
+
+        foreach ($submissions as $submission) {
+            if ($submission->status !== 'ready') {
+                return response()->json([
+                    'error' => 'All quote submissions must be in ready state before freezing comparison.',
+                    'details' => [],
+                ], 422);
+            }
+
+            $readiness = $this->readinessService->evaluate($submission);
+            if ($readiness['has_blocking_issues']) {
+                return response()->json([
+                    'error' => 'Blocking normalization issues remain.',
+                    'details' => [],
+                ], 422);
+            }
+        }
+
+        $snapshot = $this->snapshotService->freezeForRfq($tenantId, (string) $rfq->id);
+
+        $run = ComparisonRun::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_id' => $rfq->id,
+            'name' => 'Final comparison',
+            'description' => null,
+            'idempotency_key' => null,
+            'is_preview' => false,
+            'created_by' => $this->userId($request),
+            'request_payload' => ['rfq_id' => $rfq->id],
+            'matrix_payload' => ['rows' => []],
+            'scoring_payload' => [],
+            'approval_payload' => [],
+            'response_payload' => ['snapshot' => $snapshot],
+            'readiness_payload' => [
+                'all_ready' => true,
+                'submission_count' => $submissions->count(),
+            ],
+            'status' => 'final',
+            'version' => 1,
+            'expires_at' => null,
+            'discarded_at' => null,
+            'discarded_by' => null,
+        ]);
+
+        $this->decisionTrail->recordSnapshotFrozen(
+            $tenantId,
+            (string) $rfq->id,
+            (string) $run->id,
+            [
+                'comparison_run_id' => $run->id,
+                'quote_submission_count' => $submissions->count(),
+                'normalized_line_count' => count($snapshot['normalized_lines']),
+            ],
+        );
+
         return response()->json([
             'data' => [
-                'id' => 'cr-' . uniqid(),
+                'id' => $run->id,
+                'rfq_id' => $rfq->id,
                 'status' => 'final',
+                'snapshot' => $snapshot,
             ],
         ], 201);
     }

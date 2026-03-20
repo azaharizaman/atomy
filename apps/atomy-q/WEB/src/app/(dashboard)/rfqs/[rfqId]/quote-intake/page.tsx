@@ -11,6 +11,7 @@ import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { FilterBar } from '@/components/ds/FilterBar';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
+import { useNormalizationReview } from '@/hooks/use-normalization-review';
 import { getSeedQuotesByRfqId } from '@/data/seed';
 import { Plus, Mail, FileText } from 'lucide-react';
 
@@ -95,6 +96,12 @@ export default function QuoteIntakeListPage({ params }: { params: Promise<{ rfqI
   return (
     <div className="space-y-5">
       <WorkspaceBreadcrumbs items={breadcrumbItems} />
+      {!useMocks && norm.hasBlockingIssues && (
+        <Card className="border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+          <span className="font-semibold">Blocking issues</span> — {norm.blockingIssueCount} open issue(s) in normalization.
+          Review the normalize workspace before freezing comparison.
+        </Card>
+      )}
       <PageHeader
         title="Quote Intake"
         subtitle={`${rows.length} submissions`}

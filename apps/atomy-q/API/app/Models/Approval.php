@@ -25,17 +25,22 @@ class Approval extends Model
         'comparison_run_id',
         'type',
         'status',
-        'priority',
-        'summary',
-        'assignee_id',
-        'reason',
-        'sla_deadline',
+        'requested_by',
+        'requested_at',
+        'amount',
+        'currency',
+        'level',
+        'notes',
+        'approved_at',
+        'approved_by',
         'snoozed_until',
-        'created_by',
     ];
 
     protected $casts = [
-        'sla_deadline' => 'datetime',
+        'requested_at' => 'datetime',
+        'amount' => 'decimal:2',
+        'level' => 'integer',
+        'approved_at' => 'datetime',
         'snoozed_until' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -60,17 +65,17 @@ class Approval extends Model
     /**
      * @return BelongsTo<User, $this>
      */
-    public function assignee(): BelongsTo
+    public function requestedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assignee_id');
+        return $this->belongsTo(User::class, 'requested_by');
     }
 
     /**
      * @return BelongsTo<User, $this>
      */
-    public function creator(): BelongsTo
+    public function approvedByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     /**

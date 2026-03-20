@@ -78,6 +78,14 @@ This is the backend API for the Atomy‑Q Quote Comparison & Procurement platfor
 - `ATOMY_MIN_VENDORS_PREVIEW`
 - `ATOMY_CONFIDENCE_THRESHOLD`
 
+## Quote intake & comparison (pilot)
+
+- **Quote submissions** move through normalization review; `QuoteSubmissionReadinessService` marks blockers (unmapped RFQ lines, missing unit prices, open conflicts) and drives `needs_review` vs `ready`.
+- **POST `/comparison-runs/final`** persists a **final** `comparison_runs` row with an immutable `response_payload.snapshot` (normalized lines, resolutions, currency meta). It requires every quote on the RFQ to be `ready` and free of blocking issues; when the RFQ expects ≥2 vendors (`vendors_count` from list/overview), at least **two** ready submissions are required.
+- **POST `/approvals/{id}/approve`** requires a linked **final** comparison run whose snapshot includes `normalized_lines`, and re-checks that all submissions are still `ready` without blocking issues.
+- **Decision trail**: freezing a snapshot appends a `decision_trail_entries` row with `event_type = comparison_snapshot_frozen` (hash-chained per run). **GET `/decision-trail`** returns tenant-scoped entries; filter with `?rfq_id=`.
+- **`atomy:seed-rfq-flow`**: after HTTP quote upload, syncs `normalization_source_lines` in the database for each seeded quote so the comparison-final step can succeed against the new gates (still requires a running API and valid login).
+
 ## Example `.env`
 ```env
 APP_ENV=local

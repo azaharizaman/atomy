@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { StatusBadge } from '@/components/ds/Badge';
@@ -36,9 +37,8 @@ function OwnerCell({ name }: { name: string }) {
   );
 }
 
-export default function ComparisonRunsListPage({ params }: { params: Promise<{ rfqId: string }> }) {
+export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
-  const { rfqId } = React.use(params);
   const { data: rfq } = useRfq(rfqId);
   const runs: RunRow[] = useMocks
     ? getSeedComparisonRunsByRfqId(rfqId).map((r) => ({
@@ -82,9 +82,25 @@ export default function ComparisonRunsListPage({ params }: { params: Promise<{ r
     { key: 'createdBy', label: 'Created by', render: (row) => <OwnerCell name={row.createdBy} /> },
   ];
 
+  const hasFinalRun = runs.some((r) => r.type === 'final');
+
   return (
     <div className="space-y-5">
       <WorkspaceBreadcrumbs items={breadcrumbItems} />
+      {hasFinalRun && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-slate-800">
+            <span className="font-semibold">Snapshot frozen</span>
+            <span className="text-slate-600"> — comparison inputs are locked for approval.</span>
+          </p>
+          <Link
+            href={`/rfqs/${encodeURIComponent(rfqId)}/decision-trail`}
+            className="text-sm font-medium text-indigo-600 hover:underline"
+          >
+            Decision trail
+          </Link>
+        </div>
+      )}
       <PageHeader
         title="Comparison Runs"
         subtitle={`${runs.length} runs`}
@@ -102,4 +118,9 @@ export default function ComparisonRunsListPage({ params }: { params: Promise<{ r
       />
     </div>
   );
+}
+
+export default function ComparisonRunsListPage({ params }: { params: Promise<{ rfqId: string }> }) {
+  const { rfqId } = React.use(params);
+  return <ComparisonRunsListContent rfqId={rfqId} />;
 }

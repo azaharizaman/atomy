@@ -43,7 +43,6 @@ final class AuthTest extends TestCase
         $user = $this->createTestUser();
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'tenant_id' => $user['tenant_id'],
             'email' => $user['email'],
             'password' => 'wrong',
         ]);
@@ -57,7 +56,6 @@ final class AuthTest extends TestCase
         $user = $this->createTestUser();
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'tenant_id' => $user['tenant_id'],
             'email' => $user['email'],
             'password' => $user['password'],
         ]);
@@ -70,6 +68,21 @@ final class AuthTest extends TestCase
             'expires_in',
         ]);
         $this->assertTokenResponse($response);
+        $response->assertJsonPath('user.tenantId', $user['tenant_id']);
+    }
+
+    public function test_login_ignores_wrong_tenant_id_when_email_matches(): void
+    {
+        $user = $this->createTestUser();
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'tenant_id' => (string) Str::ulid(),
+            'email' => $user['email'],
+            'password' => $user['password'],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('user.tenantId', $user['tenant_id']);
     }
 
     public function test_refresh_invalid_token(): void
@@ -86,7 +99,6 @@ final class AuthTest extends TestCase
         $user = $this->createTestUser();
 
         $loginResponse = $this->postJson('/api/v1/auth/login', [
-            'tenant_id' => $user['tenant_id'],
             'email' => $user['email'],
             'password' => $user['password'],
         ]);
@@ -112,9 +124,90 @@ final class AuthTest extends TestCase
 
     public function test_sso_endpoint_returns_redirect_url(): void
     {
-        $this->postJson('/api/v1/auth/sso')
-            ->assertStatus(501)
-            ->assertJsonStructure(['message']);
+        $this->app['config']->set('services.oidc', [
+            'issuer_url' => 'https://example.com',
+            'client_id' => 'test-client',
+            'client_secret' => 'test-secret',
+            'redirect_uri' => 'https://app.example.com/callback',
+        ]);
+
+        $GLOBALS['SSO_MOCK_DISCOVERY_DOCUMENT'] = [
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/oauth2/authorize',
+            'token_endpoint' => 'https://example.com/oauth2/token',
+            'userinfo_endpoint' => 'https://example.com/oauth2/userinfo',
+            'jwks_uri' => 'https://example.com/.well-known/jwks.json',
+        ];
+
+        $tenantId = (string) Str::ulid();
+
+        $resp = $this->postJson('/api/v1/auth/sso', [
+            'action' => 'init',
+            'tenant_id' => $tenantId,
+        ]);
+
+        $resp->assertOk();
+        $resp->assertJsonStructure(['data' => ['authorization_url', 'state']]);
+        $this->assertIsString((string) $resp->json('data.authorization_url'));
+        $this->assertNotSame('', (string) $resp->json('data.authorization_url'));
+        $this->assertIsString((string) $resp->json('data.state'));
+        $this->assertNotSame('', (string) $resp->json('data.state'));
+
+        unset($GLOBALS['SSO_MOCK_DISCOVERY_DOCUMENT']);
+    }
+
+    public function test_sso_callback_returns_tokens_for_mock_authorization_code(): void
+    {
+        $this->app['config']->set('services.oidc', [
+            'issuer_url' => 'https://example.com',
+            'client_id' => 'test-client',
+            'client_secret' => 'test-secret',
+            'redirect_uri' => 'https://app.example.com/callback',
+        ]);
+
+        $GLOBALS['SSO_MOCK_DISCOVERY_DOCUMENT'] = [
+            'issuer' => 'https://example.com',
+            'authorization_endpoint' => 'https://example.com/oauth2/authorize',
+            'token_endpoint' => 'https://example.com/oauth2/token',
+            'userinfo_endpoint' => 'https://example.com/oauth2/userinfo',
+            'jwks_uri' => 'https://example.com/.well-known/jwks.json',
+        ];
+
+        $tenantId = (string) Str::ulid();
+
+        $init = $this->postJson('/api/v1/auth/sso', [
+            'action' => 'init',
+            'tenant_id' => $tenantId,
+        ]);
+        $init->assertOk();
+
+        $state = (string) $init->json('data.state');
+
+        // Provide deterministic claims via the SSO provider's mock hook.
+        $this->app['config']->set('services.oidc.mock_id_token_claims', [
+            'iss' => 'https://example.com',
+            'sub' => 'user-123',
+            'aud' => 'test-client',
+            'exp' => 9999999999,
+            'iat' => 1700000000,
+            'email' => 'sso-user@example.com',
+            'name' => 'SSO User',
+            'groups' => ['admin'],
+        ]);
+
+        $cb = $this->postJson('/api/v1/auth/sso', [
+            'action' => 'callback',
+            'tenant_id' => $tenantId,
+            'code' => 'mock_authorization_code',
+            'state' => $state,
+        ]);
+
+        $cb->assertOk();
+        $this->assertTokenResponse($cb);
+        $cb->assertJsonStructure(['user' => ['id', 'email', 'name', 'role', 'tenantId']]);
+        $cb->assertJsonFragment(['email' => 'sso-user@example.com', 'tenantId' => $tenantId]);
+
+        unset($GLOBALS['SSO_MOCK_DISCOVERY_DOCUMENT']);
     }
 
     public function test_mfa_verify_endpoint_returns_message_and_verified(): void
@@ -128,9 +221,18 @@ final class AuthTest extends TestCase
             ->assertJsonFragment(['verified' => false]);
     }
 
+    public function test_forgot_password_requires_email(): void
+    {
+        $this->postJson('/api/v1/auth/forgot-password', [])
+            ->assertStatus(422)
+            ->assertJsonStructure(['errors']);
+    }
+
     public function test_forgot_password_returns_message(): void
     {
-        $this->postJson('/api/v1/auth/forgot-password')
+        $this->postJson('/api/v1/auth/forgot-password', [
+            'email' => 'user@example.com',
+        ])
             ->assertStatus(501)
             ->assertJsonStructure(['message']);
     }

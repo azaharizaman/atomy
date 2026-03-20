@@ -74,6 +74,13 @@ class ProjectAclTest extends TestCase
         $getResponse->assertStatus(200);
         $getResponse->assertJsonPath('data.roles', []);
 
+        ProjectAcl::query()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'role' => 'owner',
+            'tenant_id' => $user->tenant_id,
+        ]);
+
         $putResponse = $this->putJson('/api/v1/projects/' . $project->id . '/acl', [
             'roles' => [
                 ['user_id' => $user->id, 'role' => 'owner'],
@@ -147,6 +154,37 @@ class ProjectAclTest extends TestCase
         $rfq = Rfq::query()->create([
             'tenant_id' => $user->tenant_id,
             'rfq_number' => 'RFQ-1',
+            'title' => 'RFQ in project',
+            'owner_id' => $user->id,
+            'status' => 'draft',
+            'project_id' => $project->id,
+        ]);
+
+        $response = $this->getJson('/api/v1/rfqs/' . $rfq->id, $this->authHeaders($user));
+        $response->assertStatus(200);
+    }
+
+    public function test_client_stakeholder_role_can_view_project_scoped_rfq(): void
+    {
+        $user = $this->createUser();
+        $project = ProjectModel::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'name' => 'ACL project',
+            'client_id' => 'c1',
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'project_manager_id' => (string) Str::ulid(),
+            'status' => 'planning',
+        ]);
+        ProjectAcl::query()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'role' => 'client_stakeholder',
+            'tenant_id' => $user->tenant_id,
+        ]);
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-2',
             'title' => 'RFQ in project',
             'owner_id' => $user->id,
             'status' => 'draft',

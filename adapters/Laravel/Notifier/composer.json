@@ -1,0 +1,25 @@
+{
+  "name": "nexus/laravel-notifier-adapter",
+  "description": "Laravel adapter for nexus/notifier (Postmark email via queue).",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.3",
+    "laravel/framework": "^12.0",
+    "nexus/notifier": "*@dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "Nexus\\Laravel\\Notifier\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Nexus\\Laravel\\Notifier\\Providers\\NotifierAdapterServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

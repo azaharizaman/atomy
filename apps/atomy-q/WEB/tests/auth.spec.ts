@@ -55,7 +55,6 @@ test('login with mocked API redirects to dashboard', async ({ page }) => {
   await page.goto('/login');
   origin = new URL(page.url()).origin;
 
-  await page.getByLabel('Tenant ID').fill('tenant-qa');
   await page.getByLabel('Email').fill(mockUser.email);
   await page.getByLabel('Password').fill('password123');
   await page.getByRole('button', { name: /log in/i }).click();
@@ -77,13 +76,11 @@ test('login with real API redirects to dashboard', async ({ page }, testInfo) =>
     testInfo.skip();
     return;
   }
-  const tenantId = '01KKGX0YT42CRG3XFB1E24SH1A';
   const email = 'user1@example.com';
   const password = 'secret';
 
   await page.goto('/login');
 
-  await page.getByLabel('Tenant ID').fill(tenantId);
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: /log in/i }).click();

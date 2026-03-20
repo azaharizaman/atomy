@@ -20,37 +20,25 @@ class NormalizationConflict extends Model
 
     protected $fillable = [
         'tenant_id',
-        'rfq_id',
-        'source_line_id',
+        'normalization_source_line_id',
         'conflict_type',
-        'description',
-        'status',
-        'resolution_data',
-        'resolved_by',
+        'resolution',
         'resolved_at',
+        'resolved_by',
     ];
 
     protected $casts = [
-        'resolution_data' => 'array',
         'resolved_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
     /**
-     * @return BelongsTo<Rfq, $this>
-     */
-    public function rfq(): BelongsTo
-    {
-        return $this->belongsTo(Rfq::class, 'rfq_id');
-    }
-
-    /**
      * @return BelongsTo<NormalizationSourceLine, $this>
      */
     public function sourceLine(): BelongsTo
     {
-        return $this->belongsTo(NormalizationSourceLine::class, 'source_line_id');
+        return $this->belongsTo(NormalizationSourceLine::class, 'normalization_source_line_id');
     }
 
     /**

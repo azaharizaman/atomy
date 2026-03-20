@@ -20,7 +20,24 @@ use Nexus\ProjectManagementOperations\ProjectManagementOperationsCoordinator;
 
 final class ProjectController extends Controller
 {
-    private const ACL_ROLES = ['owner', 'manager', 'contributor', 'viewer', 'client_stakeholder'];
+    /**
+     * Canonical project ACL roles (Phase 2 plan): Owner > Admin > Editor > Viewer.
+     *
+     * Legacy role names are accepted for backwards compatibility and normalized
+     * to canonical values on write.
+     */
+    private const ACL_ROLES = ['owner', 'admin', 'editor', 'viewer', 'manager', 'contributor', 'client_stakeholder'];
+
+    private const ACL_ROLE_NORMALIZATION = [
+        'owner' => 'owner',
+        'admin' => 'admin',
+        'editor' => 'editor',
+        'viewer' => 'viewer',
+        // legacy aliases
+        'manager' => 'admin',
+        'contributor' => 'editor',
+        'client_stakeholder' => 'viewer',
+    ];
 
     public function __construct(
         private readonly ProjectService $projects,
@@ -318,13 +335,49 @@ final class ProjectController extends Controller
     public function budget(Request $request, string $id): JsonResponse
     {
         $this->assertFeatureEnabled();
+        $tenantId = $this->tenantId($request);
         $this->assertProjectOwnedByTenant($request, $id);
+
+        $rfqIds = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where('project_id', $id)
+            ->pluck('id')
+            ->all();
+
+        $budgeted = (float) Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where('project_id', $id)
+            ->sum('estimated_value');
+
+        $actual = 0.0;
+        $currency = 'USD';
+
+        if (count($rfqIds) > 0) {
+            $actual = (float) DB::table('awards')
+                ->where('tenant_id', $tenantId)
+                ->whereIn('rfq_id', $rfqIds)
+                ->where('status', 'signed_off')
+                ->sum('amount');
+
+            $currencyRow = DB::table('awards')
+                ->where('tenant_id', $tenantId)
+                ->whereIn('rfq_id', $rfqIds)
+                ->where('status', 'signed_off')
+                ->select(['currency'])
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($currencyRow !== null && isset($currencyRow->currency) && is_string($currencyRow->currency) && $currencyRow->currency !== '') {
+                $currency = $currencyRow->currency;
+            }
+        }
+
         return response()->json([
             'data' => [
                 'project_id' => $id,
-                'budgeted' => 0,
-                'actual' => 0,
-                'currency' => 'USD',
+                'budgeted' => $budgeted,
+                'actual' => $actual,
+                'currency' => $currency,
             ],
         ]);
     }
@@ -352,9 +405,14 @@ final class ProjectController extends Controller
         $this->assertFeatureEnabled();
         $tenantId = $this->tenantId($request);
         $this->assertProjectOwnedByTenant($request, $id);
-        if ($this->projects->findById($id) === null) {
+        $project = ProjectModel::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->first();
+        if ($project === null || $this->projects->findById($id) === null) {
             abort(404);
         }
+        $this->assertCanManageAcl($request, $project);
         $validated = $request->validate([
             'roles' => 'required|array',
             'roles.*.user_id' => ['required', 'string', 'distinct', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
@@ -366,10 +424,12 @@ final class ProjectController extends Controller
                 ->where('project_id', $id)
                 ->delete();
             foreach ($validated['roles'] as $entry) {
+                $rawRole = strtolower(trim((string) $entry['role']));
+                $normalizedRole = self::ACL_ROLE_NORMALIZATION[$rawRole] ?? 'viewer';
                 ProjectAcl::query()->create([
                     'project_id' => $id,
                     'user_id' => $entry['user_id'],
-                    'role' => $entry['role'],
+                    'role' => $normalizedRole,
                     'tenant_id' => $tenantId,
                 ]);
             }
@@ -382,6 +442,25 @@ final class ProjectController extends Controller
             ->values()
             ->all();
         return response()->json(['data' => ['roles' => $rows]]);
+    }
+
+    private function assertCanManageAcl(Request $request, ProjectModel $project): void
+    {
+        $userId = (string) $request->attributes->get('auth_user_id', '');
+        if ($userId === '') {
+            abort(403, 'Forbidden');
+        }
+
+        $allowed = ProjectAcl::query()
+            ->where('tenant_id', $project->tenant_id)
+            ->where('project_id', $project->id)
+            ->where('user_id', $userId)
+            ->whereIn('role', ['owner', 'admin'])
+            ->exists();
+
+        if (! $allowed) {
+            abort(403, 'Forbidden');
+        }
     }
 }
 

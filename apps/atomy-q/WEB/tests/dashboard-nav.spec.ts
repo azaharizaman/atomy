@@ -51,7 +51,6 @@ test.beforeEach(async ({ page }) => {
   });
   await page.goto('/login');
   origin = new URL(page.url()).origin;
-  await page.getByLabel('Tenant ID').fill('tenant-qa');
   await page.getByLabel('Email').fill(mockUser.email);
   await page.getByLabel('Password').fill('password123');
   await page.getByRole('button', { name: /log in/i }).click();

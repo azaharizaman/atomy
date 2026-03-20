@@ -5,10 +5,27 @@ declare(strict_types=1);
 namespace Nexus\Laravel\Identity\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Queue\Queue;
 use Nexus\Identity\Contracts\CacheRepositoryInterface;
 use Nexus\Identity\Contracts\PermissionCheckerInterface;
+use Nexus\Identity\Contracts\SsoProviderInterface;
 use Nexus\Laravel\Identity\Adapters\CacheRepositoryAdapter;
 use Nexus\Laravel\Identity\Adapters\PermissionCheckerAdapter;
+use Nexus\Laravel\Identity\Sso\OidcSsoProviderAdapter;
+use Nexus\IdentityOperations\Services\SsoLoginServiceInterface;
+use Nexus\IdentityOperations\Services\OidcSsoLoginService;
+use Nexus\IdentityOperations\Services\SsoStateStoreInterface;
+use Nexus\Laravel\Identity\Sso\LaravelSsoStateStore;
+use Nexus\IdentityOperations\Contracts\UserAuthenticationCoordinatorInterface;
+use Nexus\IdentityOperations\Contracts\UserAuthenticationServiceInterface;
+use Nexus\IdentityOperations\Contracts\UserContextProviderInterface;
+use Nexus\IdentityOperations\Coordinators\UserAuthenticationCoordinator;
+use Nexus\IdentityOperations\Services\UserAuthenticationService;
+use Nexus\IdentityOperations\DataProviders\UserContextDataProvider;
+use Nexus\IdentityOperations\DataProviders\UserQueryInterface as OrchestratorUserQueryInterface;
+use Nexus\IdentityOperations\DataProviders\PermissionQueryInterface as OrchestratorPermissionQueryInterface;
+use Nexus\Laravel\Identity\DataProviders\LaravelUserQuery;
+use Nexus\Laravel\Identity\DataProviders\LaravelPermissionQuery;
 
 /**
  * Laravel Service Provider for Identity package adapters.
@@ -42,6 +59,64 @@ class IdentityAdapterServiceProvider extends ServiceProvider
 
         // Register IdentityOperations orchestrator adapter
         $this->registerIdentityOperationsAdapters();
+
+        // Register OIDC SSO provider (Identity contract) + orchestrator SSO service
+        $this->app->singleton(SsoProviderInterface::class, function ($app): SsoProviderInterface {
+            return new OidcSsoProviderAdapter(
+                userQuery: $app[\Nexus\Identity\Contracts\UserQueryInterface::class],
+                userPersist: $app[\Nexus\Identity\Contracts\UserPersistInterface::class],
+                passwordHasher: $app[\Nexus\Identity\Contracts\PasswordHasherInterface::class],
+                config: $app['config'],
+            );
+        });
+
+        $this->app->singleton(SsoStateStoreInterface::class, function ($app): SsoStateStoreInterface {
+            return new LaravelSsoStateStore($app['cache.store']);
+        });
+
+        $this->app->singleton(SsoLoginServiceInterface::class, function ($app): SsoLoginServiceInterface {
+            return new OidcSsoLoginService(
+                provider: $app[SsoProviderInterface::class],
+                stateStore: $app[SsoStateStoreInterface::class],
+                logger: $app['log'],
+            );
+        });
+
+        // UserAuthenticationCoordinator wiring (plan requirement: route SSO through coordinator)
+        $this->app->singleton(OrchestratorUserQueryInterface::class, function ($app): OrchestratorUserQueryInterface {
+            return new LaravelUserQuery($app[\Nexus\Identity\Contracts\UserQueryInterface::class]);
+        });
+        $this->app->singleton(OrchestratorPermissionQueryInterface::class, function ($app): OrchestratorPermissionQueryInterface {
+            return new LaravelPermissionQuery(
+                $app[\Nexus\Identity\Contracts\PermissionQueryInterface::class],
+                $app[\Nexus\Identity\Contracts\RoleQueryInterface::class],
+                $app[\Nexus\Identity\Contracts\UserQueryInterface::class],
+            );
+        });
+        $this->app->singleton(UserContextProviderInterface::class, function ($app): UserContextProviderInterface {
+            return new UserContextDataProvider(
+                userQuery: $app[OrchestratorUserQueryInterface::class],
+                permissionQuery: $app[OrchestratorPermissionQueryInterface::class],
+            );
+        });
+        $this->app->singleton(UserAuthenticationServiceInterface::class, function ($app): UserAuthenticationServiceInterface {
+            return new UserAuthenticationService(
+                authenticator: $app[\Nexus\IdentityOperations\Services\AuthenticatorInterface::class],
+                tokenManager: $app[\Nexus\IdentityOperations\Services\TokenManagerInterface::class],
+                passwordChanger: $app[\Nexus\IdentityOperations\Services\PasswordChangerInterface::class],
+                sessionValidator: $app[\Nexus\IdentityOperations\Services\SessionValidatorInterface::class],
+                auditLogger: $app[\Nexus\IdentityOperations\Services\AuditLoggerInterface::class],
+                logger: $app['log'],
+            );
+        });
+        $this->app->singleton(UserAuthenticationCoordinatorInterface::class, function ($app): UserAuthenticationCoordinatorInterface {
+            return new UserAuthenticationCoordinator(
+                authService: $app[UserAuthenticationServiceInterface::class],
+                contextDataProvider: $app[UserContextProviderInterface::class],
+                ssoLogin: $app[SsoLoginServiceInterface::class],
+                logger: $app['log'],
+            );
+        });
     }
 
     /**
@@ -59,6 +134,7 @@ class IdentityAdapterServiceProvider extends ServiceProvider
                 mfaEnrollment: $app[\Nexus\Identity\Contracts\MfaEnrollmentServiceInterface::class],
                 mfaVerification: $app[\Nexus\Identity\Contracts\MfaVerificationServiceInterface::class],
                 notificationManager: $app[\Nexus\Notifier\Contracts\NotificationManagerInterface::class],
+                queue: $app[Queue::class],
                 auditLogRepository: $app[\Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface::class],
                 cache: $app[\Nexus\Identity\Contracts\CacheRepositoryInterface::class],
                 passwordHasher: $app[\Nexus\Identity\Contracts\PasswordHasherInterface::class],

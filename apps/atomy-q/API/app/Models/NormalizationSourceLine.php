@@ -21,39 +21,25 @@ class NormalizationSourceLine extends Model
 
     protected $fillable = [
         'tenant_id',
-        'rfq_id',
         'quote_submission_id',
-        'vendor_id',
-        'description',
-        'quantity',
-        'uom',
-        'unit_price',
-        'currency',
-        'confidence',
-        'rfq_line_id',
-        'mapped_to_rfq_line_id',
-        'override_data',
-        'is_overridden',
-        'validation_warning',
+        'rfq_line_item_id',
+        'source_vendor',
+        'source_description',
+        'source_quantity',
+        'source_uom',
+        'source_unit_price',
+        'raw_data',
+        'sort_order',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:4',
-        'unit_price' => 'decimal:2',
-        'confidence' => 'decimal:2',
-        'override_data' => 'array',
-        'is_overridden' => 'boolean',
+        'source_quantity' => 'decimal:4',
+        'source_unit_price' => 'decimal:4',
+        'raw_data' => 'array',
+        'sort_order' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-
-    /**
-     * @return BelongsTo<Rfq, $this>
-     */
-    public function rfq(): BelongsTo
-    {
-        return $this->belongsTo(Rfq::class, 'rfq_id');
-    }
 
     /**
      * @return BelongsTo<QuoteSubmission, $this>
@@ -66,17 +52,9 @@ class NormalizationSourceLine extends Model
     /**
      * @return BelongsTo<RfqLineItem, $this>
      */
-    public function rfqLine(): BelongsTo
+    public function rfqLineItem(): BelongsTo
     {
-        return $this->belongsTo(RfqLineItem::class, 'rfq_line_id');
-    }
-
-    /**
-     * @return BelongsTo<RfqLineItem, $this>
-     */
-    public function mappedToRfqLine(): BelongsTo
-    {
-        return $this->belongsTo(RfqLineItem::class, 'mapped_to_rfq_line_id');
+        return $this->belongsTo(RfqLineItem::class, 'rfq_line_item_id');
     }
 
     /**
@@ -84,6 +62,6 @@ class NormalizationSourceLine extends Model
      */
     public function conflicts(): HasMany
     {
-        return $this->hasMany(NormalizationConflict::class, 'source_line_id');
+        return $this->hasMany(NormalizationConflict::class, 'normalization_source_line_id');
     }
 }

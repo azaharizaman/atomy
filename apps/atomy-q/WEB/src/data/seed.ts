@@ -82,6 +82,75 @@ const TITLE_TEMPLATES = [
   'Temporary Staffing',
 ];
 
+const REAL_WORLD_RFQ_PRESETS: Array<{
+  title: string;
+  category: string;
+  department: string;
+  ownerEmail: string;
+  estimatedValue: number;
+  savingsPercent: number;
+  status: RfqStatus;
+  vendorsCount: number;
+  quotesCount: number;
+  projectId?: string | null;
+}> = [
+  {
+    title: 'Office 365 E5 Enterprise Renewal FY26',
+    category: 'Software',
+    department: 'IT',
+    ownerEmail: 'alex@example.com',
+    estimatedValue: 680000,
+    savingsPercent: 7,
+    status: 'active',
+    vendorsCount: 4,
+    quotesCount: 3,
+  },
+  {
+    title: 'HQ HVAC Preventive Maintenance Contract',
+    category: 'Facilities',
+    department: 'Facilities',
+    ownerEmail: 'elena@example.com',
+    estimatedValue: 210000,
+    savingsPercent: 6,
+    status: 'closed',
+    vendorsCount: 5,
+    quotesCount: 4,
+  },
+  {
+    title: 'Managed SOC and SIEM Monitoring Services',
+    category: 'Security',
+    department: 'IT',
+    ownerEmail: 'marcus@example.com',
+    estimatedValue: 430000,
+    savingsPercent: 9,
+    status: 'awarded',
+    vendorsCount: 6,
+    quotesCount: 5,
+  },
+  {
+    title: 'Regional Branch WAN Upgrade (SD-WAN)',
+    category: 'IT Hardware',
+    department: 'Operations',
+    ownerEmail: 'david@example.com',
+    estimatedValue: 520000,
+    savingsPercent: 8,
+    status: 'pending',
+    vendorsCount: 4,
+    quotesCount: 2,
+  },
+  {
+    title: 'Global Payroll and HRIS Implementation Partner',
+    category: 'Professional Services',
+    department: 'HR',
+    ownerEmail: 'priya@example.com',
+    estimatedValue: 790000,
+    savingsPercent: 5,
+    status: 'draft',
+    vendorsCount: 2,
+    quotesCount: 0,
+  },
+];
+
 /** Deterministic hash from number to 0..1 */
 function hash(n: number): number {
   const x = Math.sin(n * 9999) * 10000;
@@ -192,13 +261,14 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
   for (let i = 1; i <= SEED_RFQ_COUNT; i++) {
     const rfqNumber = `RFQ-2026-${String(i).padStart(4, '0')}`;
     const id = rfqNumber;
-    const status = statusByIndex(i);
-    const owner = pick(OWNERS, i);
-    const category = pick(CATEGORIES, i);
-    const department = pick(DEPARTMENTS, i);
-    const title = pick(TITLE_TEMPLATES, i) + (i > 20 ? ` #${i}` : '');
-    const estimatedValue = 15000 + (i * 8000) + Math.floor(hash(i + 1) * 50000);
-    const savingsPercent = 3 + Math.floor(hash(i + 2) * 15);
+    const preset = REAL_WORLD_RFQ_PRESETS[i - 1];
+    const status = preset?.status ?? statusByIndex(i);
+    const owner = preset ? OWNERS.find((o) => o.email === preset.ownerEmail) ?? pick(OWNERS, i) : pick(OWNERS, i);
+    const category = preset?.category ?? pick(CATEGORIES, i);
+    const department = preset?.department ?? pick(DEPARTMENTS, i);
+    const title = preset?.title ?? (pick(TITLE_TEMPLATES, i) + (i > 20 ? ` #${i}` : ''));
+    const estimatedValue = preset?.estimatedValue ?? (15000 + (i * 8000) + Math.floor(hash(i + 1) * 50000));
+    const savingsPercent = preset?.savingsPercent ?? (3 + Math.floor(hash(i + 2) * 15));
     const daysFromNow = 5 + (i % 60);
     const submissionDeadline = new Date(Date.now() + daysFromNow * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const projectPool = [
@@ -208,11 +278,14 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
       '01JNE4ZHTC7D1P6M3T8V2R0L5N',
       '01JNE4ZHTDNN6E9B4Y1S7U3P0C',
     ] as const;
-    const projectId = hash(i + 200) > 0.55 ? pick([...projectPool], i + 201) : null;
+    const projectId = preset?.projectId ?? (hash(i + 200) > 0.55 ? pick([...projectPool], i + 201) : null);
 
     let vendorsCount: number;
     let quotesCount: number;
-    if (status === 'draft') {
+    if (preset) {
+      vendorsCount = preset.vendorsCount;
+      quotesCount = preset.quotesCount;
+    } else if (status === 'draft') {
       vendorsCount = Math.floor(hash(i + 10) * 3);
       quotesCount = 0;
     } else if (status === 'pending') {

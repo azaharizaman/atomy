@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Models\DecisionTrailEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,17 +20,41 @@ final class DecisionTrailController extends Controller
         $tenantId = $this->tenantId($request);
         $pagination = $this->paginationParams($request);
 
+        $query = DecisionTrailEntry::query()
+            ->where('tenant_id', $tenantId)
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('created_at');
+
+        $rfqFilter = $request->query('rfq_id');
+        if (is_string($rfqFilter) && $rfqFilter !== '') {
+            $query->where('rfq_id', $rfqFilter);
+        }
+
+        $total = $query->count();
+        $entries = $query
+            ->forPage($pagination['page'], $pagination['per_page'])
+            ->get();
+
         return response()->json([
-            'data' => [],
+            'data' => $entries->map(static fn (DecisionTrailEntry $e) => [
+                'id' => $e->id,
+                'rfq_id' => $e->rfq_id,
+                'comparison_run_id' => $e->comparison_run_id,
+                'sequence' => $e->sequence,
+                'event_type' => $e->event_type,
+                'payload_hash' => $e->payload_hash,
+                'occurred_at' => $e->occurred_at?->toAtomString(),
+            ])->values()->all(),
             'meta' => [
                 'current_page' => $pagination['page'],
                 'per_page' => $pagination['per_page'],
-                'total' => 0,
+                'total' => $total,
                 'filters' => [
                     'scope' => $request->query('scope'),
                     'type' => $request->query('type'),
                     'date_from' => $request->query('date_from'),
                     'date_to' => $request->query('date_to'),
+                    'rfq_id' => $rfqFilter,
                 ],
             ],
         ]);
@@ -40,18 +65,33 @@ final class DecisionTrailController extends Controller
     {
         $tenantId = $this->tenantId($request);
 
+        $entry = DecisionTrailEntry::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->first();
+        if ($entry === null) {
+            return response()->json(['message' => 'Decision trail entry not found'], 404);
+        }
+
         return response()->json([
             'data' => [
-                'id' => $id,
+                'id' => $entry->id,
                 'tenant_id' => $tenantId,
-                'scope' => '',
-                'event_type' => '',
+                'rfq_id' => $entry->rfq_id,
+                'comparison_run_id' => $entry->comparison_run_id,
+                'sequence' => $entry->sequence,
+                'scope' => 'rfq',
+                'event_type' => $entry->event_type,
                 'actor_id' => '',
-                'description' => '',
-                'metadata' => [],
-                'hash' => '',
-                'previous_hash' => '',
-                'created_at' => now()->toIso8601String(),
+                'description' => $entry->event_type,
+                'metadata' => [
+                    'payload_hash' => $entry->payload_hash,
+                    'previous_hash' => $entry->previous_hash,
+                    'entry_hash' => $entry->entry_hash,
+                ],
+                'hash' => $entry->entry_hash,
+                'previous_hash' => $entry->previous_hash,
+                'created_at' => $entry->created_at?->toAtomString(),
             ],
         ]);
     }
@@ -64,7 +104,7 @@ final class DecisionTrailController extends Controller
         return response()->json([
             'data' => [
                 'verified' => true,
-                'entries_checked' => 0,
+                'entries_checked' => DecisionTrailEntry::query()->where('tenant_id', $tenantId)->count(),
                 'integrity_status' => 'valid',
                 'verified_at' => now()->toIso8601String(),
             ],
@@ -74,8 +114,6 @@ final class DecisionTrailController extends Controller
     /** POST /decision-trail/export */
     public function export(Request $request): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
-
         return response()->json([
             'data' => [
                 'export_id' => 'stub-export-id',

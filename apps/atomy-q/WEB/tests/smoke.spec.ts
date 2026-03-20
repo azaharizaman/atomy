@@ -71,7 +71,6 @@ async function stubAuth(page: import('@playwright/test').Page) {
 
   await page.goto('/login');
 
-  await page.getByLabel('Tenant ID').fill('tenant-qa');
   await page.getByLabel('Email').fill(mockUser.email);
   await page.getByLabel('Password').fill('password123');
   await page.getByRole('button', { name: /log in/i }).click();

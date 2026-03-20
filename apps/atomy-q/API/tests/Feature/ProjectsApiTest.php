@@ -6,8 +6,10 @@ namespace Tests\Feature;
 
 use App\Contracts\JwtServiceInterface;
 use App\Models\Project as ProjectModel;
+use App\Models\Rfq;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -118,5 +120,60 @@ class ProjectsApiTest extends TestCase
         $user = $this->createUser((string) Str::ulid());
         $response = $this->postJson('/api/v1/projects', [], $this->authHeaders((string) $user->id, (string) $user->tenant_id));
         $response->assertStatus(422);
+    }
+
+    public function test_project_budget_sums_rfq_estimated_value_and_signed_off_awards(): void
+    {
+        $this->withProjectsEnabled();
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+
+        $project = ProjectModel::query()->create([
+            'tenant_id' => $tenantId,
+            'name' => 'Budget project',
+            'client_id' => 'client-1',
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'project_manager_id' => (string) Str::ulid(),
+            'status' => 'planning',
+        ]);
+
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_number' => 'RFQ-1',
+            'title' => 'RFQ',
+            'owner_id' => $user->id,
+            'status' => 'awarded',
+            'project_id' => $project->id,
+            'estimated_value' => 1000,
+        ]);
+
+        DB::table('awards')->insert([
+            'id' => (string) Str::ulid(),
+            'tenant_id' => $tenantId,
+            'rfq_id' => $rfq->id,
+            'comparison_run_id' => null,
+            'vendor_id' => (string) Str::ulid(),
+            'status' => 'signed_off',
+            'amount' => 800,
+            'currency' => 'USD',
+            'split_details' => json_encode([], JSON_THROW_ON_ERROR),
+            'protest_id' => null,
+            'signoff_at' => now(),
+            'signed_off_by' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/projects/' . $project->id . '/budget',
+            $this->authHeaders((string) $user->id, (string) $user->tenant_id)
+        );
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.project_id', $project->id);
+        $response->assertJsonPath('data.budgeted', 1000.0);
+        $response->assertJsonPath('data.actual', 800.0);
+        $response->assertJsonPath('data.currency', 'USD');
     }
 }

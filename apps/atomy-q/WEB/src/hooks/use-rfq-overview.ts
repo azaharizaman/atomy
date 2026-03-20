@@ -25,6 +25,9 @@ export interface RfqOverviewNormalization {
   accepted_count: number;
   total_quotes: number;
   progress_pct: number;
+  uploaded_count?: number;
+  needs_review_count?: number;
+  ready_count?: number;
 }
 
 export interface RfqOverviewComparison {
@@ -90,6 +93,9 @@ function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
       accepted_count: Number(norm?.accepted_count ?? 0),
       total_quotes: Number(norm?.total_quotes ?? 0),
       progress_pct: Number(norm?.progress_pct ?? 0),
+      uploaded_count: norm?.uploaded_count !== undefined ? Number(norm.uploaded_count) : undefined,
+      needs_review_count: norm?.needs_review_count !== undefined ? Number(norm.needs_review_count) : undefined,
+      ready_count: norm?.ready_count !== undefined ? Number(norm.ready_count) : undefined,
     },
     comparison: comp
       ? {
@@ -143,6 +149,9 @@ export function useRfqOverview(rfqId: string) {
             accepted_count: accepted,
             total_quotes: quotesCount,
             progress_pct: quotesCount > 0 ? Math.round((accepted / quotesCount) * 100) : 0,
+            uploaded_count: Math.max(0, quotesCount - accepted),
+            needs_review_count: 0,
+            ready_count: accepted,
           },
           comparison: {
             id: 'run-1',

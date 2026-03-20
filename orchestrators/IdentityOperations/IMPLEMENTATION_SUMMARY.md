@@ -49,3 +49,6 @@ The **IdentityOperations** orchestrator provides mission-critical user lifecycle
 **Prepared By:** Gemini CLI (Security & Architecture Team)  
 **Review Date:** 2026-02-25  
 **Next Review:** 2026-05-25 (Quarterly)
+
+## 2026-03-19 PR Remediation
+- `UserContextDataProvider` now writes normalized tenant context into `UserContext` consistently with permission/role query tenant scoping.

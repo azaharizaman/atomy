@@ -6,12 +6,20 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Models\Approval;
+use App\Models\ComparisonRun;
+use App\Models\QuoteSubmission;
+use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class ApprovalController extends Controller
 {
     use ExtractsAuthContext;
+
+    public function __construct(
+        private readonly QuoteSubmissionReadinessService $readinessService,
+    ) {}
 
     /**
      * GET /approvals
@@ -55,11 +63,74 @@ final class ApprovalController extends Controller
      */
     public function approve(Request $request, string $id): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+
+        $approval = Approval::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->first();
+        if ($approval === null) {
+            return response()->json(['message' => 'Approval not found'], 404);
+        }
+
+        if ($approval->comparison_run_id === null) {
+            return response()->json([
+                'error' => 'Approval is not linked to a frozen comparison run.',
+                'details' => [],
+            ], 422);
+        }
+
+        $run = ComparisonRun::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $approval->comparison_run_id)
+            ->first();
+        if ($run === null || $run->status !== 'final') {
+            return response()->json([
+                'error' => 'Comparison run is not finalized.',
+                'details' => [],
+            ], 422);
+        }
+
+        $snapshot = $run->response_payload['snapshot'] ?? null;
+        if (! is_array($snapshot) || ! isset($snapshot['normalized_lines']) || ! is_array($snapshot['normalized_lines'])) {
+            return response()->json([
+                'error' => 'Comparison snapshot is missing.',
+                'details' => [],
+            ], 422);
+        }
+
+        $submissions = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $approval->rfq_id)
+            ->get();
+
+        foreach ($submissions as $submission) {
+            if ($submission->status !== 'ready') {
+                return response()->json([
+                    'error' => 'All quote submissions must be ready before approval.',
+                    'details' => [],
+                ], 422);
+            }
+
+            $readiness = $this->readinessService->evaluate($submission);
+            if ($readiness['has_blocking_issues']) {
+                return response()->json([
+                    'error' => 'Blocking normalization issues remain.',
+                    'details' => [],
+                ], 422);
+            }
+        }
+
+        $approval->status = 'approved';
+        $approval->approved_at = now();
+        $approval->approved_by = $this->userId($request);
+        $approval->save();
+
         return response()->json([
             'data' => [
                 'id' => $id,
                 'status' => 'approved',
-                'approved_at' => null,
+                'approved_at' => $approval->approved_at?->toAtomString(),
             ],
         ]);
     }

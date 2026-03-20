@@ -7,6 +7,39 @@
 - **Cache/Queue**: Redis via `REDIS_URL`
 - **Auth**: JWT (Bearer token) via `firebase/php-jwt`
 
+## Authentication
+
+### `POST /api/v1/auth/login` (email + password)
+
+- **Request body:** `email`, `password` only. Tenant is **not** sent by the client; it is read from `users.tenant_id` after a successful match (`users.email` is globally unique).
+- Validates credentials against Eloquent `User` (`email`, `password_hash`) and returns JWT access + refresh tokens (claims include the user’s `tenant_id`).
+- **Does not** use `nexus/identity-operations` for this path.
+- `AuthController` only injects `JwtServiceInterface` in the constructor so login/refresh work **without** registering Nexus Identity write/query adapters.
+
+### `POST /api/v1/auth/forgot-password` (stub)
+
+- **Request body:** `email` only (no tenant). Returns **501** until reset flow is implemented; **422** if `email` is missing or invalid.
+
+### Tenancy & identity (policy)
+
+- **One user → one tenant:** each `users` row is tied to exactly one `tenant_id`. A single user account does not span multiple tenants.
+- **Two tenants → two users:** if a person must represent two separate organizations, they use **two separate user accounts** (two distinct user IDs).
+- **Login:** `POST /api/v1/auth/login` uses email + password only; any legacy `tenant_id` field in the JSON body is **ignored**.
+- **Uniqueness:** migration `2026_03_20_000001_users_email_unique_globally` replaces `UNIQUE(tenant_id, email)` with **`UNIQUE(email)`** on `users`.
+
+### SSO (`POST /api/v1/auth/sso`) and full Identity coordinator
+
+- `UserAuthenticationCoordinatorInterface` is resolved **only when** the SSO action runs (`app(UserAuthenticationCoordinatorInterface::class)` inside `sso()`).
+- `nexus/laravel-identity-adapter` registers `IdentityAdapterServiceProvider`, which wires `OidcSsoProviderAdapter` and `IdentityOperationsAdapter`.
+- **Atomy-Q bindings** (see `App\Providers\AppServiceProvider` and `App\Services\Identity\*`):
+  - **Eloquent-backed**: `UserPersistInterface`, `UserQueryInterface`, `PasswordHasherInterface`, `UserAuthenticatorInterface` (maps to `users` table; JIT SSO provisioning writes `tenant_id`, `email`, `name`, `password_hash`, `status`, etc.).
+  - **Stubs / no-ops until productized**: Identity `TokenManagerInterface`, `SessionManagerInterface` (JWT remains the app token), MFA enrollment/verification services, `PermissionQueryInterface` / `RoleQueryInterface` (no RBAC catalog tables yet), `AuditLogRepositoryInterface` (in-memory no-op sink so `IdentityOperationsAdapter::log` does not throw).
+- `AuthTest::test_sso_*` exercise OIDC init + mock callback (`mock_authorization_code` + `SSO_MOCK_DISCOVERY_DOCUMENT`) end-to-end against these bindings.
+
+### Environment
+
+- `JWT_SECRET` must be non-empty (`php artisan key:generate` sets `APP_KEY`; JWT uses `config/jwt.php` / `.env` `JWT_SECRET`).
+
 ## Endpoint Coverage
 
 All **203 endpoints** from `API_ENDPOINTS.md` are registered and returning stub responses with correct HTTP status codes and response shapes.
@@ -102,9 +135,20 @@ Custom config files: `config/jwt.php`, `config/atomy.php`
 
 Persistence added for flow-driven endpoints: **RfqController** (store, storeLineItem, updateStatus, lineItems, updateLineItem, destroyLineItem), **VendorInvitationController** (store), **QuoteSubmissionController** (upload, updateStatus). QuoteSubmission model fillable/casts aligned with `quote_submissions` migration.
 
+Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`: uploads persist `uploaded_by` and `original_filename`, quote list/show endpoints return real stored submissions with `blocking_issue_count`, and RFQ overview now exposes normalization readiness buckets (`uploaded_count`, `needs_review_count`, `ready_count`) alongside the legacy accepted/progress fields for compatibility.
+
+**Normalization review (pilot Task 3):** `NormalizationSourceLine` and `NormalizationConflict` models now match the shipped migrations (`rfq_line_item_id`, `normalization_source_line_id`, etc.). `QuoteSubmissionReadinessService` centralizes blocking rules: each RFQ line must be covered by a mapped source line, mapped lines require `source_unit_price`, and open conflicts (`resolution` null) block readiness. `NormalizationController` persists mapping/bulk-mapping/override/revert/conflict-resolution, returns `404` when the RFQ or rows are not tenant-visible, and recalculates `quote_submissions.status` to `needs_review` or `ready` after mutations. `GET /normalization/{rfqId}/conflicts` lists conflicts for the RFQ and includes `meta.has_blocking_issues` / `meta.blocking_issue_count` aggregated across that RFQ’s submissions. Feature coverage: `NormalizationReviewWorkflowTest`.
+
+**Comparison snapshot & approval (pilot Tasks 4–5):** `ComparisonRun` / `Approval` / `DecisionTrailEntry` models align with migrations (`response_payload`, `requested_by`, hash-chain columns). `ComparisonSnapshotService` builds tenant-scoped frozen payloads from RFQ line items + normalization source lines. `POST /comparison-runs/final` creates a `final` run, stores `response_payload.snapshot`, enforces all submissions `ready` + readiness pass, and requires two ready quotes when `vendors_count >= 2` on the RFQ (from loaded attributes; otherwise at least one). `GET /comparison-runs` supports `?rfq_id=`. `POST /approvals/{id}/approve` gates on final run + snapshot + live readiness. `DecisionTrailRecorder::recordSnapshotFrozen` writes `comparison_snapshot_frozen` entries. `DecisionTrailController` index/show read from `decision_trail_entries`. Tests: `ComparisonSnapshotWorkflowTest`.
+
+**WEB pilot (Tasks 6–7):** Hooks `use-normalization-review`, `use-quote-submission`, `use-freeze-comparison`, `use-comparison-readiness`; normalize page is exception-first with freeze CTA; comparison runs list shows snapshot-frozen banner + decision trail link; RFQ overview normalization parsing includes optional bucket counts from API.
+
+**Seed flow (Task 8):** `atomy:seed-rfq-flow` calls `syncNormalizationLinesForQuotes()` after HTTP uploads so comparison final can pass pilot gates.
+
 ## Testing & Seed Data
 
 - Added feature test coverage for auth flows, middleware enforcement, and all protected API endpoints.
+- Added quote intake workflow validation contracts for upload payload shape, supported quote submission status values, and normalization/comparison mutation requests.
 - Auth feature tests now validate token semantics and refresh tokens via the login flow using an in-memory SQLite database; protected endpoint auth checks run per-route with unique IDs and assert non-401/403 responses, JWT issuance in API tests resolves via `JwtServiceInterface`, and example tests create users directly without model factories.
 - Added unit tests for `JwtService`, `ExtractsAuthContext`, and core model relationships.
 - `DatabaseSeeder` now generates ample mock data across all 25 tables for realistic API seed state.
@@ -148,3 +192,9 @@ Persistence added for flow-driven endpoints: **RfqController** (store, storeLine
 - Replaced synthetic success payloads in award/negotiation/setting mutation stubs with explicit `501 Not Implemented` responses.
 - Aligned schema/model definitions (`Scenario` fields, `comparison_runs.discarded_by` type) and strengthened several migration indexes.
 - Added missing `declare(strict_types=1);` headers in scaffolded PHP files flagged during review.
+
+## 2026-03-19 PR Remediation
+- `AuthController` SSO flow no longer accepts client-provided `redirect_uri`; redirect URI is resolved server-side from tenant-aware config with fallback to global OIDC redirect.
+- `AuthController` SSO catch-all now distinguishes server/runtime failures (reported + HTTP 500) from authentication failures (HTTP 401).
+- `ProjectController::updateAcl` now enforces project-level ACL management authorization (owner/admin only) before mutating `project_acl`.
+- Queue test `IdentityWelcomeQueueTest` now asserts enqueued job payload properties with a predicate closure, not class-only assertion.
