@@ -40,6 +40,12 @@
 
 - `JWT_SECRET` must be non-empty (`php artisan key:generate` sets `APP_KEY`; JWT uses `config/jwt.php` / `.env` `JWT_SECRET`).
 
+## OpenAPI (Scramble)
+
+- **Package:** `dedoc/scramble` (dev). Config: `config/scramble.php` — documents routes under `api/v1` only.
+- **Interactive UI:** `GET /docs/api` and `GET /docs/api.json` when the app is running.
+- **Static export (for WEB client generation):** `php artisan scramble:export --path=../openapi/openapi.json` from `apps/atomy-q/API` writes `apps/atomy-q/openapi/openapi.json`. Regenerate after meaningful API contract changes.
+
 ## Endpoint Coverage
 
 All **203 endpoints** from `API_ENDPOINTS.md` are registered and returning stub responses with correct HTTP status codes and response shapes.

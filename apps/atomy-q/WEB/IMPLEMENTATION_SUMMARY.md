@@ -6,7 +6,8 @@
 | :--- | :--- | :--- |
 | **Project Setup** | ✅ | Next.js 16, Tailwind, TypeScript initialized. |
 | **Authentication** | ✅ | JWT Auth with refresh token flow, Zustand store, redesigned login, plus forgot/reset password flows. |
-| **API Client** | ⚠️ | Manual Axios client set up. OpenAPI generation pending backend support. |
+| **API Client** | ⚠️ | Axios instance in `src/lib/api.ts`; OpenAPI spec at `../openapi/openapi.json` with `npm run generate:api` → `src/generated/api` (@hey-api/client-fetch). Hooks still use manual types until migrated. |
+| **API errors** | ✅ | `src/lib/api-error.ts` normalizes Laravel `errors` / `details` / `message`; login uses `parseApiError`. |
 | **Dashboard** | ✅ | Implemented Screen-Blueprint style dashboard (pipeline stats, savings, activity, approvals, category breakdown, SLA alerts, quick actions). |
 | **UI Components** | ✅ | Ported Design-System-v2 primitives into `src/components/ds/*` (Badge, Button, Input, FilterBar/PageHeader, DataTable, Card). |
 | **Default Layout (Blueprint)** | ✅ | Sidebar structure + TopBar actions aligned to Screen Blueprint (Requisition accordion, Settings accordion, New RFQ + AI Insights, search with “/”, notifications count). |

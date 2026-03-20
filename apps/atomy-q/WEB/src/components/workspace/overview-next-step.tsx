@@ -58,7 +58,7 @@ export function OverviewNextStep({
   } else if (approvalOverall === 'pending') {
     stepLabel = 'Review pending approvals';
     stepHref = `${base}/approvals`;
-  } else if (status === RFQ_STATUSES.CLOSED && approvalOverall !== 'pending') {
+  } else if (status === RFQ_STATUSES.CLOSED) {
     stepLabel = 'Proceed to award';
     stepHref = `${base}/award`;
   } else if (status === RFQ_STATUSES.AWARDED) {

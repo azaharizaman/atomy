@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import {
   LayoutPanelTop,
@@ -26,7 +26,7 @@ function isRfqWorkspacePath(pathname: string): boolean {
   return segments.length >= 2 && segments[0] === 'rfqs';
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -201,5 +201,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <AppFooter />
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-slate-50">
+          <div className="text-sm text-slate-500">Loading…</div>
+        </div>
+      }
+    >
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
   );
 }

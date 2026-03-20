@@ -15,7 +15,7 @@ export const api = axios.create({
 
 type RetryableRequest = AxiosRequestConfig & { _retry?: boolean };
 
-let refreshPromise: Promise<{ accessToken: string; user: User }> | null = null;
+let refreshPromise: Promise<{ accessToken: string; refreshToken: string; user: User }> | null = null;
 
 api.interceptors.request.use(
   (config) => {

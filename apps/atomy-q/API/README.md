@@ -36,6 +36,18 @@ This is the backend API for the Atomy‑Q Quote Comparison & Procurement platfor
    ```
    The API will be available at `http://localhost:8000/api/v1`.
 
+## OpenAPI (Scramble)
+
+Interactive docs (local): `GET /docs/api` and `GET /docs/api.json` (see `config/scramble.php`; `api_path` is `api/v1`).
+
+Export a static spec for the WEB client generator (written to the monorepo `apps/atomy-q/openapi/` folder):
+
+```bash
+php artisan scramble:export --path=../openapi/openapi.json
+```
+
+Optional: set `API_VERSION` in `.env` for the `info.version` field in the exported document.
+
 ## Required Environment Variables
 
 ### App

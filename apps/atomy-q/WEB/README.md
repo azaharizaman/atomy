@@ -28,6 +28,16 @@ This is the Next.js frontend for the Atomy-Q Quote Comparison & Procurement plat
     npm run dev
     ```
 
+## API types (OpenAPI)
+
+The OpenAPI document is exported from the Laravel API into `../openapi/openapi.json` (see `apps/atomy-q/API/README.md`). Regenerate the typed client after API changes:
+
+```bash
+npm run generate:api
+```
+
+Output is committed under `src/generated/api/` so `npm run build` works without running PHP locally; CI or pre-merge workflows should run `generate:api` when the spec changes.
+
 ## Environment Variables
 
 Required:
