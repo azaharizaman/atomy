@@ -63,7 +63,12 @@ export default function ProjectsPage() {
   const [createStartDate, setCreateStartDate] = React.useState('');
   const [createEndDate, setCreateEndDate] = React.useState('');
   const [createPmId, setCreatePmId] = React.useState('');
-  const { data: flags, isLoading: flagsLoading } = useFeatureFlags();
+  const {
+    data: flags,
+    isLoading: flagsLoading,
+    isError: flagsError,
+    error: flagsErrorDetail,
+  } = useFeatureFlags();
   const projectsEnabled = flags?.projects === true;
   const { data: projects = [], isLoading, isError, error } = useProjects({
     enabled: !flagsLoading && projectsEnabled,
@@ -115,7 +120,17 @@ export default function ProjectsPage() {
     );
   }
 
+  if (flagsError) {
+    return (
+      <Card padding="md">
+        <div className="text-sm font-semibold text-slate-900">Failed to load feature flags</div>
+        <div className="text-xs text-slate-500 mt-1">{String((flagsErrorDetail as Error | null)?.message ?? '')}</div>
+      </Card>
+    );
+  }
+
   if (!projectsEnabled) {
+    // Intentionally render nothing here: feature gating/redirect is handled by the dashboard layout.
     return null;
   }
 

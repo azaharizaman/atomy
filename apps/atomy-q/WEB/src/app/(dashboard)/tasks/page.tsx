@@ -113,6 +113,7 @@ function TaskDetailDrawer({
 }
 
 export default function TasksPage() {
+  const isDev = process.env.NODE_ENV === 'development';
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
   const {
     data: flags,
@@ -130,7 +131,7 @@ export default function TasksPage() {
       <div className="space-y-4">
         <PageHeader title="Task Inbox" subtitle="Loading…" />
         <Card padding="md">
-          <div className="h-24 w-full rounded bg-slate-100 animate-pulse" aria-busy />
+          <div className="h-24 w-full rounded bg-slate-100 animate-pulse" aria-busy="true" />
         </Card>
       </div>
     );
@@ -140,7 +141,9 @@ export default function TasksPage() {
     return (
       <Card padding="md">
         <div className="text-sm font-semibold text-slate-900">Failed to load feature flags</div>
-        <div className="text-xs text-slate-500 mt-1">{String((flagsErrorDetail as Error | null)?.message ?? '')}</div>
+        <div className="text-xs text-slate-500 mt-1">
+          {isDev ? String((flagsErrorDetail as Error | null)?.message ?? '') : 'Unable to load feature settings.'}
+        </div>
       </Card>
     );
   }
