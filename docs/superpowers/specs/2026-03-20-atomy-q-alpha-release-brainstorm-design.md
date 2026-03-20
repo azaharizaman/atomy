@@ -35,6 +35,8 @@ Pick one primary bar; they imply different ordering:
 
 **Locked decision (product):** **Design-partner alpha (definition 2)** — 1–3 external orgs on real data.
 
+**Locked decision (product):** **Buyer-only alpha** — partner users are **buying-org** accounts only. **Vendor self-service** (invites, vendor login, external submission portal) is **out of scope** for this alpha; quotes are captured via **buyer-side** intake (manual entry, upload, or internal tooling), documented in the supported-flows guide.
+
 **Sequencing:** Still **internal proof first** (end-to-end slice on staging with the same security bar), then **onboard partners** only after forgot-password, tenant-isolation tests, and the security checklist pass. No “soft launch” without that gate.
 
 ---
@@ -57,7 +59,7 @@ Pick one primary bar; they imply different ordering:
 
 - **Track 1 (product):** Approach A slice with explicit **MVP screen list** from Screen Blueprint / `QUOTE_COMPARISON_FRONTEND_BLUEPRINT_v2.md` (RFQ list → detail → workspace tabs that matter for alpha only).
 - **Track 2 (platform):** Non-negotiables for external alpha: **tenant-scoped queries everywhere**, **forgot-password + email**, **OpenAPI + codegen** (per `PLAN.md`), **Playwright smoke** on that slice, and **security pass** on auth/tenants (`WEB/docs/SECURITY_REVIEW_AUTH_AND_TENANTS.md` as checklist).
-- **Defer by default:** Projects/tasks Phase 2+ UI breadth, full vendor portal, advanced normalization/scoring, unless a design partner requires them.
+- **Defer by default:** Projects/tasks Phase 2+ UI breadth, **vendor portal / vendor auth**, advanced normalization/scoring. (Buyer-only alpha explicitly excludes vendor-facing flows.)
 
 **Recommendation:** **Approach C** — it matches the repo’s own frontend plan (OpenAPI + Query + auth first) while forcing a **thin end-to-end** story for alpha narrative.
 
@@ -76,10 +78,10 @@ Pick one primary bar; they imply different ordering:
 - **Ops:** Staging deploy story, env template, health check; no production promises.
 - **Partner readiness:** Short **“supported flows”** doc for partners (what works, what is stubbed); lightweight **audit** on mutating actions where the product promises traceability (align with existing audit-adapter posture in API).
 
-### 5.2 Explicit non-goals for alpha (unless partner demands)
+### 5.2 Explicit non-goals for alpha
 
 - Full **203-endpoint** parity with rich stubs.
-- Complete **vendor self-service** portal.
+- **Vendor self-service** portal, vendor invitations as an external-facing workflow, and **vendor-authenticated** submission — **out of scope** for this alpha (buyer-only decision).
 - **Projects/tasks** Gantt and full ACL matrix (follow `PROJECTS_AND_TASKS_ROLLOUT_PLAN.md` for later phases).
 - Billing/subscription (unless alpha is sales-led and required).
 
@@ -119,11 +121,12 @@ Phases can overlap; **P0 and P1** should start in parallel if two contributors a
 
 **Resolved:** Primary alpha bar = **design-partner alpha (B)** — external orgs on real data with strict tenant isolation and account recovery.
 
+**Resolved:** **Persona A** — **buyer-only** alpha (no vendor-submission / vendor-portal requirement for go-live).
+
 Still need product input:
 
-1. **Persona:** Buyer-only org vs vendors submitting quotes in the same alpha? (If vendors are in-scope, minimum vendor auth + invitation path becomes must-have.)
-2. **Approvals:** In-scope for alpha or explicitly deferred (with nav/docs aligned)?
-3. **SSO:** Required for first external tenant or enterprise beta later?
+1. **Approvals:** In-scope for alpha or explicitly deferred (with nav/docs aligned)?
+2. **SSO:** Required for first external tenant or enterprise beta later?
 
 ---
 
@@ -132,6 +135,7 @@ Still need product input:
 | Date | Decision |
 |------|----------|
 | 2026-03-20 | Alpha bar: **B** — design-partner alpha (1–3 external orgs). |
+| 2026-03-20 | Persona: **A** — buyer-only; vendor self-service out of scope for alpha. |
 
 ---
 
