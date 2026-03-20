@@ -14,8 +14,6 @@ import { Button } from '@/components/ds/Button';
 import { Checkbox, PasswordInput, TextInput } from '@/components/ds/Input';
 
 const schema = z.object({
-  /** Shown for legacy/dev UX; login API resolves tenant from the user row. */
-  tenant_id: z.string().optional(),
   email: z.string().email('Enter a valid email'),
   password: z.string().min(1, 'Password is required'),
   remember_device: z.boolean().optional(),
@@ -34,7 +32,6 @@ function LoginPageContent() {
   const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      tenant_id: process.env.NEXT_PUBLIC_TENANT_ID || '01KKGX0YT42CRG3XFB1E24SH1A',
       email: '',
       password: '',
       remember_device: true,
@@ -92,12 +89,6 @@ function LoginPageContent() {
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <TextInput
-          label="Tenant ID"
-          {...register('tenant_id')}
-          placeholder="01HZX... or your tenant slug"
-          error={errors.tenant_id?.message}
-        />
-        <TextInput
           label="Email"
           type="email"
           autoComplete="email"
@@ -147,7 +138,8 @@ function LoginPageContent() {
             fullWidth
             size="md"
             onClick={() => {
-              const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || '01KKGX0YT42CRG3XFB1E24SH1A';
+              const tenantId =
+                process.env.NEXT_PUBLIC_TENANT_ID || '01KKH77M4R0V8QZ1M8NB3XWWWQ';
               login('mock-access-token', null, {
                 id: 'mock-user-1',
                 name: 'Alex Kumar',
