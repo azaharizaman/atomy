@@ -62,6 +62,7 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-SNAP-' . Str::lower((string) Str::ulid()),
             'title' => 'Snapshot RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
 
@@ -125,6 +126,7 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-APP-' . Str::lower((string) Str::ulid()),
             'title' => 'Approval RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
 

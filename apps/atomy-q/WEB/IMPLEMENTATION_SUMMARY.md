@@ -16,7 +16,7 @@
 | **RFQ Workspace Overview (Blueprint Screen 2)** | ✅ | `/rfqs/[rfqId]/overview` with KPI scorecards; live mode loads activity via `GET .../activity` merged into overview hook. |
 | **E2E Testing** | ✅ | Playwright: RFQ list → workspace overview (`tests/rfq-workflow.spec.ts`); auth forgot/reset with mocked API (`tests/auth.spec.ts`). Full suite not signed off on Fedora — run on Ubuntu or CI before partner invite. |
 | **Routing** | ✅ | Added not-found page for undefined routes with design-system styling. |
-| **RFQ Management** | 🚧 | RFQ List + Workspace Overview done; other workspace sections are scaffolded via `/rfqs/[rfqId]/[section]`. |
+| **RFQ Management** | 🚧 | RFQ List + Workspace Overview done; other workspace sections are scaffolded via `/rfqs/[rfqId]/[section]`. **`/rfqs/new` and RFQ Details require `submission_deadline`** (aligned with API NOT NULL). |
 | **Vendor Management** | ❌ | Pending implementation. |
 | **Quote Intake** | ❌ | Pending implementation. |
 | **Approvals** | 🚧 | Global queue `/approvals` + detail `/approvals/[id]` call API; RFQ-scoped approval URLs redirect to global detail. Approve/reject wired for pending rows. |

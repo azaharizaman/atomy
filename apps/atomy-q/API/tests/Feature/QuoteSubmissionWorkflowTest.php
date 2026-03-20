@@ -75,6 +75,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-1001',
             'title' => 'Workflow RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
 
@@ -110,6 +111,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-1002',
             'title' => 'Workflow RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
 
@@ -145,6 +147,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-1003',
             'title' => 'Workflow RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
 
@@ -179,6 +182,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-1004',
             'title' => 'Workflow RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
 
@@ -220,6 +224,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-2001',
             'title' => 'Upload RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
 
@@ -256,6 +261,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-2002',
             'title' => 'Tenant scoped RFQ',
             'owner_id' => $owner->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
 
@@ -292,6 +298,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-2003',
             'title' => 'List RFQ A',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
 
@@ -300,6 +307,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-2004',
             'title' => 'List RFQ B',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
 
@@ -352,6 +360,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-2005',
             'title' => 'Overview Buckets RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
 

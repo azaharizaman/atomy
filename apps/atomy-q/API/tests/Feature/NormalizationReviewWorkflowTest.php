@@ -59,6 +59,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-NORM-1',
             'title' => 'Normalization RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
 
@@ -112,6 +113,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
             'rfq_number' => 'RFQ-NORM-2',
             'title' => 'Normalization RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
 

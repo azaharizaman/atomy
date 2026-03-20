@@ -2,6 +2,13 @@
  * Bridge RFC 3339 / Atom timestamps from the API to <input type="datetime-local"> (local, no TZ suffix).
  */
 
+/** Default value for `<input type="datetime-local">`: current local calendar date + `days`. */
+export function defaultDatetimeLocalDaysFromNow(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return isoOrNullToDatetimeLocal(d.toISOString());
+}
+
 export function isoOrNullToDatetimeLocal(iso: string | null | undefined): string {
   if (iso == null || String(iso).trim() === '') return '';
   const d = new Date(iso);

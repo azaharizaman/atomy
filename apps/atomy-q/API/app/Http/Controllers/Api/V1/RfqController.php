@@ -18,6 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 final class RfqController extends Controller
 {
@@ -46,6 +47,10 @@ final class RfqController extends Controller
     private function rfqValidationRules(string $tenantId, bool $forUpdate = false): array
     {
         $titleRule = $forUpdate ? ['sometimes', 'filled', 'string', 'max:255'] : ['required', 'string', 'max:255'];
+        $submissionDeadlineRule = $forUpdate
+            ? ['sometimes', 'required', 'date']
+            : ['required', 'date'];
+
         return [
             'title' => $titleRule,
             'description' => ['nullable', 'string'],
@@ -54,7 +59,7 @@ final class RfqController extends Controller
             'project_id' => ['nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
             'estimated_value' => ['nullable', 'numeric', 'min:0'],
             'savings_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'submission_deadline' => ['nullable', 'date'],
+            'submission_deadline' => $submissionDeadlineRule,
             'closing_date' => ['nullable', 'date'],
             'expected_award_at' => ['nullable', 'date'],
             'technical_review_due_at' => ['nullable', 'date'],
@@ -62,6 +67,18 @@ final class RfqController extends Controller
             'payment_terms' => ['nullable', 'string', 'max:64'],
             'evaluation_method' => ['nullable', 'string', 'max:64'],
         ];
+    }
+
+    private function assertClosingOnOrAfterSubmission(Carbon $submissionDeadline, ?Carbon $closingDate): void
+    {
+        if ($closingDate === null) {
+            return;
+        }
+        if ($closingDate->lt($submissionDeadline)) {
+            throw ValidationException::withMessages([
+                'closing_date' => ['The closing date must be on or after the submission deadline.'],
+            ]);
+        }
     }
 
     public function index(Request $request): JsonResponse
@@ -219,8 +236,11 @@ final class RfqController extends Controller
         $rfq->status = 'draft';
         $rfq->estimated_value = isset($validated['estimated_value']) ? (float) $validated['estimated_value'] : 0.0;
         $rfq->savings_percentage = isset($validated['savings_percentage']) ? (float) $validated['savings_percentage'] : 0.0;
-        $rfq->submission_deadline = ! empty($validated['submission_deadline']) ? Carbon::parse($validated['submission_deadline']) : null;
-        $rfq->closing_date = ! empty($validated['closing_date']) ? Carbon::parse($validated['closing_date']) : null;
+        $submission = Carbon::parse((string) $validated['submission_deadline']);
+        $closing = ! empty($validated['closing_date']) ? Carbon::parse((string) $validated['closing_date']) : null;
+        $this->assertClosingOnOrAfterSubmission($submission, $closing);
+        $rfq->submission_deadline = $submission;
+        $rfq->closing_date = $closing;
         $rfq->payment_terms = $validated['payment_terms'] ?? null;
         $rfq->evaluation_method = $validated['evaluation_method'] ?? null;
         $rfq->save();
@@ -587,8 +607,25 @@ final class RfqController extends Controller
         if (array_key_exists('project_id', $data)) $rfq->project_id = $data['project_id'] ?? null;
         if (array_key_exists('estimated_value', $data)) $rfq->estimated_value = $data['estimated_value'] !== null ? (float) $data['estimated_value'] : null;
         if (array_key_exists('savings_percentage', $data)) $rfq->savings_percentage = $data['savings_percentage'] !== null ? (float) $data['savings_percentage'] : null;
-        if (array_key_exists('submission_deadline', $data)) $rfq->submission_deadline = $data['submission_deadline'] ? Carbon::parse($data['submission_deadline']) : null;
-        if (array_key_exists('closing_date', $data)) $rfq->closing_date = $data['closing_date'] ? Carbon::parse($data['closing_date']) : null;
+        if (array_key_exists('submission_deadline', $data)) {
+            $rfq->submission_deadline = Carbon::parse((string) $data['submission_deadline']);
+        }
+        if (array_key_exists('closing_date', $data)) {
+            $rfq->closing_date = $data['closing_date'] !== null && $data['closing_date'] !== ''
+                ? Carbon::parse((string) $data['closing_date'])
+                : null;
+        }
+
+        if ($rfq->submission_deadline === null) {
+            throw ValidationException::withMessages([
+                'submission_deadline' => ['The submission deadline field is required.'],
+            ]);
+        }
+
+        $this->assertClosingOnOrAfterSubmission(
+            Carbon::instance($rfq->submission_deadline),
+            $rfq->closing_date !== null ? Carbon::instance($rfq->closing_date) : null,
+        );
         if (array_key_exists('expected_award_at', $data)) $rfq->expected_award_at = $data['expected_award_at'] ? Carbon::parse($data['expected_award_at']) : null;
         if (array_key_exists('technical_review_due_at', $data)) $rfq->technical_review_due_at = $data['technical_review_due_at'] ? Carbon::parse($data['technical_review_due_at']) : null;
         if (array_key_exists('financial_review_due_at', $data)) $rfq->financial_review_due_at = $data['financial_review_due_at'] ? Carbon::parse($data['financial_review_due_at']) : null;

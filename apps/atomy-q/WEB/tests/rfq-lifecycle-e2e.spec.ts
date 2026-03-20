@@ -198,6 +198,7 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
 
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
+    const submissionDeadline = new Date(Date.now() + 14 * 86400000).toISOString();
     const createRes = await request.post(`${apiBase}/rfqs`, {
       headers,
       data: {
@@ -206,6 +207,7 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
         category: 'IT Hardware',
         department: 'Procurement',
         estimated_value: 25000,
+        submission_deadline: submissionDeadline,
       },
     });
     if (!createRes.ok()) {

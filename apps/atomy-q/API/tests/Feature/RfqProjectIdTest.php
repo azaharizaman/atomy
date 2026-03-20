@@ -36,6 +36,7 @@ class RfqProjectIdTest extends TestCase
             'rfq_number' => 'RFQ-2026-0001',
             'title' => 'Test RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
             'project_id' => null,
         ]);
@@ -53,6 +54,7 @@ class RfqProjectIdTest extends TestCase
             'rfq_number' => 'RFQ-2026-0002',
             'title' => 'Test RFQ with project',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
             'project_id' => $projectId,
         ]);

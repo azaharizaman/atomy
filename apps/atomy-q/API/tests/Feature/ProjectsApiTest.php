@@ -143,6 +143,7 @@ class ProjectsApiTest extends TestCase
             'rfq_number' => 'RFQ-1',
             'title' => 'RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'awarded',
             'project_id' => $project->id,
             'estimated_value' => 1000,

@@ -65,6 +65,7 @@ final class RfqCountsTest extends ApiTestCase
             'rfq_number' => 'RFQ-A1',
             'title' => 'A draft',
             'owner_id' => $userA->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
         Rfq::query()->create([
@@ -72,6 +73,7 @@ final class RfqCountsTest extends ApiTestCase
             'rfq_number' => 'RFQ-A2',
             'title' => 'A pub',
             'owner_id' => $userA->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
         Rfq::query()->create([
@@ -79,6 +81,7 @@ final class RfqCountsTest extends ApiTestCase
             'rfq_number' => 'RFQ-B1',
             'title' => 'B pub',
             'owner_id' => $userB->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
 

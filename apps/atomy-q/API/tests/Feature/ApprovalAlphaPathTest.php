@@ -59,6 +59,7 @@ final class ApprovalAlphaPathTest extends ApiTestCase
             'rfq_number' => 'RFQ-APP-' . Str::lower((string) Str::ulid()),
             'title' => 'Alpha RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
 
@@ -121,6 +122,7 @@ final class ApprovalAlphaPathTest extends ApiTestCase
             'rfq_number' => 'RFQ-NOISE-' . Str::lower((string) Str::ulid()),
             'title' => 'Noise RFQ',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
         ]);
         Approval::query()->create([

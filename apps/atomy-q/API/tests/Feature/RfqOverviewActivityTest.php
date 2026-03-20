@@ -60,6 +60,7 @@ final class RfqOverviewActivityTest extends ApiTestCase
             'rfq_number' => 'RFQ-ACT-0001',
             'title' => 'Tenant A RFQ',
             'owner_id' => $userA->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'active',
         ]);
 
@@ -82,6 +83,7 @@ final class RfqOverviewActivityTest extends ApiTestCase
             'rfq_number' => 'RFQ-ACT-0002',
             'title' => 'With quote activity',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'active',
         ]);
 
@@ -130,6 +132,7 @@ final class RfqOverviewActivityTest extends ApiTestCase
             'rfq_number' => 'RFQ-ACT-0003',
             'title' => 'Limit clamp',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
 
@@ -160,6 +163,7 @@ final class RfqOverviewActivityTest extends ApiTestCase
             'rfq_number' => 'RFQ-OV-ISO-1',
             'title' => 'Tenant A overview target',
             'owner_id' => $userA->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'active',
         ]);
 
@@ -181,6 +185,7 @@ final class RfqOverviewActivityTest extends ApiTestCase
             'rfq_number' => 'RFQ-ACT-0004',
             'title' => 'Overview KPIs',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'active',
         ]);
 
@@ -222,6 +227,7 @@ final class RfqOverviewActivityTest extends ApiTestCase
             'rfq_number' => 'RFQ-SCHED-MS-1',
             'title' => 'Schedule milestones',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'published',
             'expected_award_at' => $expectedAward,
             'technical_review_due_at' => $technicalDue,
@@ -276,6 +282,7 @@ final class RfqOverviewActivityTest extends ApiTestCase
             'rfq_number' => 'RFQ-DESC-PAYLOAD',
             'title' => 'Description payload',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'description' => 'SOW and evaluation notes.',
         ]);
 

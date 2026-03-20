@@ -125,6 +125,7 @@ class ProjectAclTest extends TestCase
             'rfq_number' => 'RFQ-1',
             'title' => 'RFQ in project',
             'owner_id' => $owner->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
             'project_id' => $project->id,
         ]);
@@ -156,6 +157,7 @@ class ProjectAclTest extends TestCase
             'rfq_number' => 'RFQ-1',
             'title' => 'RFQ in project',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
             'project_id' => $project->id,
         ]);
@@ -187,6 +189,7 @@ class ProjectAclTest extends TestCase
             'rfq_number' => 'RFQ-2',
             'title' => 'RFQ in project',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
             'project_id' => $project->id,
         ]);

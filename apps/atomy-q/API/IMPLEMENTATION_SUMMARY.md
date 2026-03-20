@@ -207,10 +207,11 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Aligned schema/model definitions (`Scenario` fields, `comparison_runs.discarded_by` type) and strengthened several migration indexes.
 - Added missing `declare(strict_types=1);` headers in scaffolded PHP files flagged during review.
 
-## RFQ schedule milestones (2026-03-20)
+## RFQ schedule milestones (2026-03-20 + 2026-03-21)
 
 - **`rfqs` table:** nullable timestamps `expected_award_at`, `technical_review_due_at`, `financial_review_due_at` (migration `2026_03_20_000002_add_schedule_milestone_dates_to_rfqs_table.php`) for horizontal timeline / planning dates (queryable, explicit).
-- **API:** Optional on `POST /rfqs` and `PUT /rfqs/{id}` (`nullable|date`). Returned as RFC 3339 atom strings (or JSON `null`) on `GET /rfqs/{id}` and under `data.rfq` on `GET /rfqs/{id}/overview`.
+- **`submission_deadline`:** **Required** on create (`POST /rfqs`); **NOT NULL** in DB after migration `2026_03_21_000001_make_submission_deadline_required_on_rfqs_table.php` (existing nulls backfilled to `created_at + 14 days`). On `PUT /rfqs/{id}`, the value cannot be cleared; when both `submission_deadline` and `closing_date` are set, **`closing_date` must be ≥ `submission_deadline`** (422 otherwise).
+- **API:** `closing_date` and review/award milestones remain optional on `POST`/`PUT` (`nullable|date`). Schedule fields returned as RFC 3339 atom strings (or JSON `null`) on `GET /rfqs/{id}` and under `data.rfq` on `GET /rfqs/{id}/overview`.
 - **`description`:** Included on `GET /rfqs/{id}` and `GET /rfqs/{id}/overview` (`data` / `data.rfq`) as nullable text; still writable via existing `POST`/`PUT` validation.
 - **OpenAPI:** `apps/atomy-q/openapi/openapi.json` updated for show + overview `rfq` shapes. Regenerate via `php artisan scramble:export` when using Scramble as source of truth.
 

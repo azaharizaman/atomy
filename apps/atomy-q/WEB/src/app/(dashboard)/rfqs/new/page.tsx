@@ -8,6 +8,7 @@ import { SelectInput, TextInput } from '@/components/ds/Input';
 import { useProjects } from '@/hooks/use-projects';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { api } from '@/lib/api';
+import { datetimeLocalToIsoOrNull, defaultDatetimeLocalDaysFromNow } from '@/lib/datetime-local';
 import { Button } from '@/components/ds/Button';
 
 export default function NewRfqPage() {
@@ -17,6 +18,7 @@ export default function NewRfqPage() {
   const { data: projects = [] } = useProjects({ enabled: !flagsLoading && projectsEnabled });
   const [projectId, setProjectId] = React.useState('');
   const [title, setTitle] = React.useState('');
+  const [submissionDeadlineLocal, setSubmissionDeadlineLocal] = React.useState(() => defaultDatetimeLocalDaysFromNow(14));
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -58,7 +60,9 @@ export default function NewRfqPage() {
 
       <Card padding="md">
         <h1 className="text-lg font-semibold text-slate-900">Create New RFQ</h1>
-        <p className="text-sm text-slate-500 mt-1">Create a draft RFQ. You can attach a project optionally.</p>
+        <p className="text-sm text-slate-500 mt-1">
+          Create a draft RFQ with a submission deadline. You can attach a project optionally.
+        </p>
 
         <div className="mt-4 max-w-md">
           <TextInput
@@ -83,8 +87,24 @@ export default function NewRfqPage() {
           {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
 
           <div className="mt-4 flex items-center gap-2">
-            <Button size="sm" variant="primary" onClick={onCreate} disabled={!title.trim() || isSubmitting}>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={onCreate}
+              disabled={!title.trim() || !submissionDeadlineLocal.trim() || isSubmitting}
+            >
               {isSubmitting ? 'Creating…' : 'Create RFQ'}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => router.push('/rfqs')} disabled={isSubmitting}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+ng ? 'Creating…' : 'Create RFQ'}
             </Button>
             <Button size="sm" variant="secondary" onClick={() => router.push('/rfqs')} disabled={isSubmitting}>
               Cancel

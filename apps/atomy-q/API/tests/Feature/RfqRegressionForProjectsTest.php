@@ -79,6 +79,7 @@ class RfqRegressionForProjectsTest extends TestCase
             'rfq_number' => 'RFQ-2026-9001',
             'title' => 'Original title',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
             'project_id' => null,
         ]);
@@ -134,6 +135,7 @@ class RfqRegressionForProjectsTest extends TestCase
             'rfq_number' => 'RFQ-A',
             'title' => 'RFQ in project',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
             'project_id' => $project->id,
         ]);
@@ -142,6 +144,7 @@ class RfqRegressionForProjectsTest extends TestCase
             'rfq_number' => 'RFQ-B',
             'title' => 'RFQ without project',
             'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
             'project_id' => null,
         ]);

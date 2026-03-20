@@ -14,7 +14,7 @@
 
 | Item | Decision for Phase 1 |
 |------|----------------------|
-| Milestone enum | Use **existing** `rfqs` columns only (`submission_deadline`, `closing_date`, review/award fields). No `rfq_milestones` table in Phase 1. Optional events (briefing, etc.) **deferred**. |
+| Milestone enum | Use **existing** `rfqs` columns only (`submission_deadline`, `closing_date`, review/award fields). No `rfq_milestones` table in Phase 1. Optional events (briefing, etc.) **deferred**. **`submission_deadline` is mandatory** (implemented 2026-03-21: validation + NOT NULL + WEB create/details). |
 | Datetime precision | **Instant semantics:** compare **`now()`** to stored timestamps **as-is** (UTC in DB). **Display** timezone remains a WEB concern. **End-of-day** UX is a **follow-up** (spec §13). |
 | RFQ type/template policy layer | **Deferred** (Phase 3). |
 | Soft path / reason | Phase 1 is **hard deny** after `submission_deadline + grace` for buyer upload; **soft + reason** when overrides exist — **Phase 2**. |
@@ -34,8 +34,8 @@
 
 - [ ] **4. Quote intake service**  
   Implement **single** helper used by `QuoteSubmissionController::upload` (and any other quote-create path):  
-  - If `submission_deadline` is null → **allow** intake (document as “no gate”; or choose **deny**—pick one and test; **recommend allow** to avoid breaking RFQs without deadlines).  
-  - If `now > submission_deadline`: allow only if `relaxed_submission_closing` and `now <= submission_deadline + grace_days` (**calendar days** from deadline instant: add `grace_days * 86400` seconds in UTC, or Carbon `addDays` on parsed instant—**document** edge case around DST; **calendar day** from spec = `addDays` on the deadline **instant** is acceptable for v1).  
+  - **`submission_deadline` is always set** (NOT NULL + required on create); no “null means open” branch.  
+  - If `now > submission_deadline`: allow only if `relaxed_submission_closing` and `now <= submission_deadline + grace_days` (**calendar days** from deadline instant: Carbon `addDays` on parsed instant—**document** DST edge cases; acceptable for v1).  
   - Else **422** with stable error code/message for WEB.
 
 - [ ] **5. Wire `QuoteSubmissionController::upload`**  

@@ -20,7 +20,7 @@ const scheduleFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   category: z.string().optional(),
   description: z.string().optional(),
-  submission_deadline: z.string().optional(),
+  submission_deadline: z.string().min(1, 'Submission deadline is required'),
   closing_date: z.string().optional(),
   expected_award_at: z.string().optional(),
   technical_review_due_at: z.string().optional(),
@@ -245,7 +245,7 @@ export default function RfqDetailsPage({ params }: { params: Promise<{ rfqId: st
 
           <SectionCard
             title="Schedule & deadlines"
-            subtitle="Clear a field and save to remove that date on the server"
+            subtitle="Submission deadline is required. For other dates, clear the field and save to remove on the server."
           >
             <div className="p-4 pt-0 space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -254,6 +254,7 @@ export default function RfqDetailsPage({ params }: { params: Promise<{ rfqId: st
                   label="Submission deadline"
                   type="datetime-local"
                   step={60}
+                  required
                   {...form.register('submission_deadline')}
                 />
                 <TextInput
