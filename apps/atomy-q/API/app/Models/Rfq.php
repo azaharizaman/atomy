@@ -33,6 +33,9 @@ class Rfq extends Model
         'savings_percentage',
         'submission_deadline',
         'closing_date',
+        'expected_award_at',
+        'technical_review_due_at',
+        'financial_review_due_at',
         'payment_terms',
         'evaluation_method',
     ];
@@ -42,6 +45,9 @@ class Rfq extends Model
         'savings_percentage' => 'decimal:2',
         'submission_deadline' => 'datetime',
         'closing_date' => 'datetime',
+        'expected_award_at' => 'datetime',
+        'technical_review_due_at' => 'datetime',
+        'financial_review_due_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

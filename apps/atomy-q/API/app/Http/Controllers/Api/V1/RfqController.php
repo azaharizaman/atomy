@@ -56,6 +56,9 @@ final class RfqController extends Controller
             'savings_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'submission_deadline' => ['nullable', 'date'],
             'closing_date' => ['nullable', 'date'],
+            'expected_award_at' => ['nullable', 'date'],
+            'technical_review_due_at' => ['nullable', 'date'],
+            'financial_review_due_at' => ['nullable', 'date'],
             'payment_terms' => ['nullable', 'string', 'max:64'],
             'evaluation_method' => ['nullable', 'string', 'max:64'],
         ];
@@ -268,6 +271,7 @@ final class RfqController extends Controller
                 'id' => $rfq->id,
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
+                'description' => $rfq->description,
                 'status' => $rfq->status,
                 'project_id' => $rfq->project_id,
                 'project_name' => $projectName,
@@ -279,6 +283,9 @@ final class RfqController extends Controller
                 'deadline' => optional($rfq->submission_deadline)->toAtomString(),
                 'submission_deadline' => optional($rfq->submission_deadline)->toAtomString(),
                 'closing_date' => optional($rfq->closing_date)->toAtomString(),
+                'expected_award_at' => optional($rfq->expected_award_at)->toAtomString(),
+                'technical_review_due_at' => optional($rfq->technical_review_due_at)->toAtomString(),
+                'financial_review_due_at' => optional($rfq->financial_review_due_at)->toAtomString(),
                 'category' => $rfq->category,
                 'estimated_value' => $rfq->estimated_value,
                 'estValue' => $rfq->estimated_value,
@@ -379,6 +386,7 @@ final class RfqController extends Controller
                     'id' => $rfq->id,
                     'rfq_number' => $rfq->rfq_number,
                     'title' => $rfq->title,
+                    'description' => $rfq->description,
                     'status' => $rfq->status,
                     'owner' => $rfq->owner ? [
                         'id' => $rfq->owner->id,
@@ -387,6 +395,9 @@ final class RfqController extends Controller
                     ] : null,
                     'submission_deadline' => optional($rfq->submission_deadline)->toAtomString(),
                     'closing_date' => optional($rfq->closing_date)->toAtomString(),
+                    'expected_award_at' => optional($rfq->expected_award_at)->toAtomString(),
+                    'technical_review_due_at' => optional($rfq->technical_review_due_at)->toAtomString(),
+                    'financial_review_due_at' => optional($rfq->financial_review_due_at)->toAtomString(),
                     'category' => $rfq->category,
                     'estimated_value' => $rfq->estimated_value,
                     'estValue' => $rfq->estimated_value,
@@ -578,6 +589,9 @@ final class RfqController extends Controller
         if (array_key_exists('savings_percentage', $data)) $rfq->savings_percentage = $data['savings_percentage'] !== null ? (float) $data['savings_percentage'] : null;
         if (array_key_exists('submission_deadline', $data)) $rfq->submission_deadline = $data['submission_deadline'] ? Carbon::parse($data['submission_deadline']) : null;
         if (array_key_exists('closing_date', $data)) $rfq->closing_date = $data['closing_date'] ? Carbon::parse($data['closing_date']) : null;
+        if (array_key_exists('expected_award_at', $data)) $rfq->expected_award_at = $data['expected_award_at'] ? Carbon::parse($data['expected_award_at']) : null;
+        if (array_key_exists('technical_review_due_at', $data)) $rfq->technical_review_due_at = $data['technical_review_due_at'] ? Carbon::parse($data['technical_review_due_at']) : null;
+        if (array_key_exists('financial_review_due_at', $data)) $rfq->financial_review_due_at = $data['financial_review_due_at'] ? Carbon::parse($data['financial_review_due_at']) : null;
         if (array_key_exists('payment_terms', $data)) $rfq->payment_terms = $data['payment_terms'];
         if (array_key_exists('evaluation_method', $data)) $rfq->evaluation_method = $data['evaluation_method'];
         $rfq->save();

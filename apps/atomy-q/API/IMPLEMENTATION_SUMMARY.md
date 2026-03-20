@@ -207,6 +207,13 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Aligned schema/model definitions (`Scenario` fields, `comparison_runs.discarded_by` type) and strengthened several migration indexes.
 - Added missing `declare(strict_types=1);` headers in scaffolded PHP files flagged during review.
 
+## RFQ schedule milestones (2026-03-20)
+
+- **`rfqs` table:** nullable timestamps `expected_award_at`, `technical_review_due_at`, `financial_review_due_at` (migration `2026_03_20_000002_add_schedule_milestone_dates_to_rfqs_table.php`) for horizontal timeline / planning dates (queryable, explicit).
+- **API:** Optional on `POST /rfqs` and `PUT /rfqs/{id}` (`nullable|date`). Returned as RFC 3339 atom strings (or JSON `null`) on `GET /rfqs/{id}` and under `data.rfq` on `GET /rfqs/{id}/overview`.
+- **`description`:** Included on `GET /rfqs/{id}` and `GET /rfqs/{id}/overview` (`data` / `data.rfq`) as nullable text; still writable via existing `POST`/`PUT` validation.
+- **OpenAPI:** `apps/atomy-q/openapi/openapi.json` updated for show + overview `rfq` shapes. Regenerate via `php artisan scramble:export` when using Scramble as source of truth.
+
 ## 2026-03-19 PR Remediation
 - `AuthController` SSO flow no longer accepts client-provided `redirect_uri`; redirect URI is resolved server-side from tenant-aware config with fallback to global OIDC redirect.
 - `AuthController` SSO catch-all now distinguishes server/runtime failures (reported + HTTP 500) from authentication failures (HTTP 401).
