@@ -37,12 +37,19 @@
             };
             const csrfToken = getCookieValue(CSRF_TOKEN_COOKIE_KEY);
             if (csrfToken) {
-                const { headers = new Headers() } = options || {};
-                updateFetchHeaders(headers, CSRF_TOKEN_HEADER_KEY, decodeURIComponent(csrfToken));
-                return originalFetch(url, {
-                    ...options,
-                    headers,
-                });
+                try {
+                    const requestOrigin = new URL(url, window.location.href).origin;
+                    if (requestOrigin === window.location.origin) {
+                        const { headers = new Headers() } = options || {};
+                        updateFetchHeaders(headers, CSRF_TOKEN_HEADER_KEY, decodeURIComponent(csrfToken));
+                        return originalFetch(url, {
+                            ...options,
+                            headers,
+                        });
+                    }
+                } catch {
+                    /* invalid URL — never attach CSRF to cross-origin or malformed requests */
+                }
             }
 
             return originalFetch(url, options);

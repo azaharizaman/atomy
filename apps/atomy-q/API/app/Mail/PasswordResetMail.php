@@ -17,6 +17,7 @@ final class PasswordResetMail extends Mailable
 
     public function __construct(
         public string $plainToken,
+        public int $expiresInMinutes,
     ) {}
 
     public function envelope(): Envelope
@@ -32,6 +33,7 @@ final class PasswordResetMail extends Mailable
             text: 'mail.password-reset-text',
             with: [
                 'token' => $this->plainToken,
+                'expiresInMinutes' => $this->expiresInMinutes,
             ],
         );
     }

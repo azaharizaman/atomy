@@ -10,6 +10,12 @@ import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { useApprovalsList, type ApprovalListRow } from '@/hooks/use-approvals';
 import { Button } from '@/components/ds/Button';
 
+const SLA_VARIANTS = new Set(['safe', 'warning', 'overdue']);
+
+function normalizeSlaVariant(raw: unknown): 'safe' | 'warning' | 'overdue' | undefined {
+  return typeof raw === 'string' && SLA_VARIANTS.has(raw) ? (raw as 'safe' | 'warning' | 'overdue') : undefined;
+}
+
 function OwnerCell({ name }: { name: string }) {
   const initials = name
     .split(' ')
@@ -84,12 +90,14 @@ export default function ApprovalQueuePage() {
       key: 'sla',
       label: 'SLA',
       width: '90px',
-      render: (row) =>
-        row.sla_variant ? (
-          <SLATimerBadge variant={row.sla_variant as 'safe' | 'warning' | 'overdue'} value={row.sla ?? '—'} />
+      render: (row) => {
+        const variant = normalizeSlaVariant(row.sla_variant);
+        return variant ? (
+          <SLATimerBadge variant={variant} value={row.sla ?? '—'} />
         ) : (
           <span className="text-xs text-slate-500">{row.sla ?? '—'}</span>
-        ),
+        );
+      },
     },
     {
       key: 'assignee',

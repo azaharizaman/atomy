@@ -26,6 +26,7 @@ final class AuthController extends Controller
 
     public function __construct(
         private readonly JwtServiceInterface $jwt,
+        private readonly PasswordResetService $passwordResetService,
     ) {
     }
 
@@ -188,9 +189,9 @@ final class AuthController extends Controller
     /**
      * Request password reset.
      *
-     * POST /auth/forgot-password — body: `email` only (tenant resolved when flow is implemented).
+     * POST /auth/forgot-password — body: `email` only. Reset tokens are stored per user tenant (from the user row).
      */
-    public function forgotPassword(Request $request, PasswordResetService $passwordReset): JsonResponse
+    public function forgotPassword(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'string', 'email'],
@@ -200,7 +201,11 @@ final class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $passwordReset->sendResetLink((string) $request->input('email'));
+        try {
+            $this->passwordResetService->sendResetLink((string) $request->input('email'));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json([
             'message' => 'If an account exists for this email, password reset instructions have been sent.',
@@ -212,7 +217,7 @@ final class AuthController extends Controller
      *
      * POST /auth/reset-password
      */
-    public function resetPassword(Request $request, PasswordResetService $passwordReset): JsonResponse
+    public function resetPassword(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'string', 'email'],
@@ -225,7 +230,7 @@ final class AuthController extends Controller
         }
 
         try {
-            $passwordReset->resetPassword(
+            $this->passwordResetService->resetPassword(
                 (string) $request->input('email'),
                 (string) $request->input('token'),
                 (string) $request->input('password'),

@@ -35,6 +35,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
+  const { data: rfqCounts } = useRfqNavCounts();
 
   // Deny access when not authenticated (after auth init). Redirect to login.
   useEffect(() => {
@@ -58,8 +59,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   if (isRfqWorkspacePath(pathname)) {
     return <>{children}</>;
   }
-
-  const { data: rfqCounts } = useRfqNavCounts();
 
   const displayName = user?.name || user?.email;
   const initials = displayName

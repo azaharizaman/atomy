@@ -116,6 +116,34 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $user = $this->createUser($tenantId);
         [, , , $approval] = $this->seedPendingApproval($user);
 
+        $noiseRfq = Rfq::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_number' => 'RFQ-NOISE-' . Str::lower((string) Str::ulid()),
+            'title' => 'Noise RFQ',
+            'owner_id' => $user->id,
+            'status' => 'published',
+        ]);
+        Approval::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_id' => $noiseRfq->id,
+            'comparison_run_id' => null,
+            'type' => 'comparison_approval',
+            'status' => 'approved',
+            'requested_by' => $user->id,
+            'requested_at' => now(),
+            'amount' => null,
+            'currency' => null,
+            'level' => 1,
+            'notes' => null,
+            'approved_at' => now(),
+            'approved_by' => $user->id,
+            'snoozed_until' => null,
+        ]);
+
+        $tenantB = (string) Str::ulid();
+        $userB = $this->createUser($tenantB);
+        $this->seedPendingApproval($userB);
+
         $response = $this->getJson(
             '/api/v1/approvals?status=pending',
             $this->authHeaders($tenantId, (string) $user->id),
@@ -179,6 +207,15 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $user = $this->createUser($tenantId);
         [, , , $approval] = $this->seedPendingApproval($user);
 
+        $otherTenantId = (string) Str::ulid();
+        $otherUser = $this->createUser($otherTenantId);
+        $this->postJson(
+            '/api/v1/approvals/' . $approval->id . '/reject',
+            ['reason' => 'Cross-tenant attempt'],
+            $this->authHeaders($otherTenantId, (string) $otherUser->id),
+        )->assertStatus(404);
+        $this->assertSame('pending', $approval->fresh()?->status);
+
         $response = $this->postJson(
             '/api/v1/approvals/' . $approval->id . '/reject',
             ['reason' => 'No go'],
@@ -195,6 +232,12 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
         [, $rfq, , $approval] = $this->seedPendingApproval($user);
+
+        $this->seedPendingApproval($user);
+
+        $tenantB = (string) Str::ulid();
+        $userB = $this->createUser($tenantB);
+        $this->seedPendingApproval($userB);
 
         $response = $this->getJson(
             '/api/v1/approvals?rfq_id=' . $rfq->id . '&per_page=1',

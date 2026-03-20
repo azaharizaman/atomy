@@ -14,15 +14,15 @@
 - **Request body:** `email`, `password` only. Tenant is **not** sent by the client; it is read from `users.tenant_id` after a successful match (`users.email` is globally unique).
 - Validates credentials against Eloquent `User` (`email`, `password_hash`) and returns JWT access + refresh tokens (claims include the user’s `tenant_id`).
 - **Does not** use `nexus/identity-operations` for this path.
-- `AuthController` only injects `JwtServiceInterface` in the constructor so login/refresh work **without** registering Nexus Identity write/query adapters.
+- `AuthController` injects `JwtServiceInterface` and `PasswordResetService` in the constructor (login/refresh do not require Nexus Identity write/query adapters).
 
 ### `POST /api/v1/auth/forgot-password`
 
-- **Request body:** `email` only. Returns **200** with a generic message (no user enumeration). Sends `PasswordResetMail` when the user exists (`App\Services\Auth\PasswordResetService` + `password_reset_tokens` table).
+- **Request body:** `email` only. Returns **200** with a generic message (no user enumeration). Mail send failures are logged and **do not** change the JSON response. When a user exists, `PasswordResetService` stores a hashed token keyed by **`(tenant_id, email)`** from that user’s row and sends `PasswordResetMail` (TTL text comes from `auth.passwords.users.expire`, minimum 1 minute via `AppServiceProvider`).
 
 ### `POST /api/v1/auth/reset-password`
 
-- **Request body:** `email`, `token`, `password`, `password_confirmation`. Validates token against hashed row; updates `users.password_hash`; **422** on invalid/expired token.
+- **Request body:** `email`, `token`, `password`, `password_confirmation`. Resolves the user by email, loads the token row for that user’s **tenant**, validates TTL and `Hash::check` inside a **DB transaction** with `lockForUpdate()` on the token row; updates `users.password_hash`; deletes the token row; **422** on invalid/expired token.
 
 ### Tenancy & identity (policy)
 

@@ -165,11 +165,17 @@ final class RfqController extends Controller
     {
         $tenantId = $this->tenantId($request);
 
-        $draft = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'draft')->count();
-        $published = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'published')->count();
-        $closed = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'closed')->count();
-        $awarded = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'awarded')->count();
-        $cancelled = (int) Rfq::query()->where('tenant_id', $tenantId)->where('status', 'cancelled')->count();
+        $byStatus = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->selectRaw('status, COUNT(*) as cnt')
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+
+        $draft = (int) ($byStatus['draft'] ?? 0);
+        $published = (int) ($byStatus['published'] ?? 0);
+        $closed = (int) ($byStatus['closed'] ?? 0);
+        $awarded = (int) ($byStatus['awarded'] ?? 0);
+        $cancelled = (int) ($byStatus['cancelled'] ?? 0);
 
         return response()->json([
             'data' => [

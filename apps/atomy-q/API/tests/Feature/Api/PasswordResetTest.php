@@ -30,28 +30,26 @@ final class PasswordResetTest extends TestCase
         return $app;
     }
 
-    public function test_forgot_password_returns_ok_without_leaking_user_existence(): void
+    public function test_forgot_password_returns_identical_payload_for_missing_and_existing_email(): void
     {
         Mail::fake();
 
-        $response = $this->postJson('/api/v1/auth/forgot-password', [
+        $expected = [
+            'message' => 'If an account exists for this email, password reset instructions have been sent.',
+        ];
+
+        $missing = $this->postJson('/api/v1/auth/forgot-password', [
             'email' => 'nobody@example.com',
         ]);
-
-        $response->assertOk();
-        $response->assertJsonStructure(['message']);
+        $missing->assertOk();
+        $missing->assertExactJson($expected);
         Mail::assertNothingSent();
-    }
 
-    public function test_forgot_password_sends_mail_when_user_exists(): void
-    {
-        Mail::fake();
-
-        $email = 'reset-' . Str::lower((string) Str::ulid()) . '@example.com';
+        $email = 'existing-' . Str::lower((string) Str::ulid()) . '@example.com';
         User::query()->create([
             'tenant_id' => (string) Str::ulid(),
             'email' => $email,
-            'name' => 'Reset User',
+            'name' => 'Existing User',
             'password_hash' => Hash::make('old-password'),
             'role' => 'admin',
             'status' => 'active',
@@ -60,9 +58,11 @@ final class PasswordResetTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        $this->postJson('/api/v1/auth/forgot-password', [
+        $existing = $this->postJson('/api/v1/auth/forgot-password', [
             'email' => $email,
-        ])->assertOk();
+        ]);
+        $existing->assertOk();
+        $existing->assertExactJson($expected);
 
         Mail::assertSent(PasswordResetMail::class, function (PasswordResetMail $mail) use ($email): bool {
             return $mail->hasTo($email);

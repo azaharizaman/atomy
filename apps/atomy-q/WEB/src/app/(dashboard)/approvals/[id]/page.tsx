@@ -36,6 +36,27 @@ export default function GlobalApprovalDetailPage({ params }: { params: Promise<{
   const { data: approval, isLoading, error, refetch } = useApprovalDetail(id);
   const [reason, setReason] = React.useState('');
   const [busy, setBusy] = React.useState(false);
+  const [errorDismissed, setErrorDismissed] = React.useState(false);
+
+  const errParsed = error ? parseApiError(error) : undefined;
+  const isNotFound =
+    !approval &&
+    (errParsed?.status === 404 || (error instanceof Error && error.message === 'Not found'));
+  const blockingError = Boolean(error) && !isNotFound;
+  const showErrorOverlay = blockingError && !errorDismissed;
+
+  React.useEffect(() => {
+    setErrorDismissed(false);
+  }, [id]);
+
+  React.useEffect(() => {
+    if (!showErrorOverlay) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setErrorDismissed(true);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showErrorOverlay]);
 
   const onApprove = async () => {
     if (!approval) return;
@@ -78,7 +99,7 @@ export default function GlobalApprovalDetailPage({ params }: { params: Promise<{
     );
   }
 
-  if (error || !approval) {
+  if (!isLoading && isNotFound) {
     return (
       <div className="space-y-4">
         <PageHeader title="Approval" subtitle="Not found" />
@@ -92,6 +113,70 @@ export default function GlobalApprovalDetailPage({ params }: { params: Promise<{
         </Card>
       </div>
     );
+  }
+
+  if (!isLoading && blockingError && !approval) {
+    return (
+      <div className="space-y-4 relative">
+        <PageHeader title="Approval" subtitle="Unable to load" />
+        {showErrorOverlay ? (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="approval-error-title"
+            aria-describedby="approval-error-desc"
+          >
+            <Card className="max-w-md w-full p-6 shadow-xl space-y-4">
+              <h2 id="approval-error-title" className="text-sm font-semibold text-slate-900">
+                Something went wrong
+              </h2>
+              <p id="approval-error-desc" className="text-sm text-slate-600">
+                {errParsed?.message ?? 'Could not load this approval. Check your connection and try again.'}
+              </p>
+              <p className="text-xs text-slate-500">Press Escape to close this dialog.</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() => {
+                    setErrorDismissed(false);
+                    void refetch();
+                  }}
+                >
+                  Retry
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setErrorDismissed(true)}>
+                  Dismiss
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => router.push('/approvals')}>
+                  Back to queue
+                </Button>
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <Card className="p-6 text-sm text-slate-600 space-y-4">
+            <p>{errParsed?.message ?? 'Could not load this approval.'}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="primary" onClick={() => void refetch()}>
+                Retry
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => router.refresh()}>
+                Refresh page
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => router.push('/approvals')}>
+                Back to queue
+              </Button>
+            </div>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  if (!approval) {
+    return null;
   }
 
   const statusForBadge =

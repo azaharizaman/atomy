@@ -13,7 +13,7 @@ import { PasswordInput, TextInput } from '@/components/ds/Input';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
-  token: z.string().min(6, 'Reset token is required'),
+  token: z.string().min(10, 'Reset token must be at least 10 characters'),
   password: z.string().min(8, 'Use at least 8 characters'),
   confirm_password: z.string().min(8, 'Confirm your password'),
 }).refine((data) => data.password === data.confirm_password, {

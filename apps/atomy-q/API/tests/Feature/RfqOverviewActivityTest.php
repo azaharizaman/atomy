@@ -148,6 +148,29 @@ final class RfqOverviewActivityTest extends ApiTestCase
         $high->assertJsonPath('meta.limit', 50);
     }
 
+    public function test_overview_is_tenant_isolated_returns_404(): void
+    {
+        $tenantA = (string) Str::ulid();
+        $tenantB = (string) Str::ulid();
+        $userA = $this->createUser($tenantA);
+        $userB = $this->createUser($tenantB);
+
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $tenantA,
+            'rfq_number' => 'RFQ-OV-ISO-1',
+            'title' => 'Tenant A overview target',
+            'owner_id' => $userA->id,
+            'status' => 'active',
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/rfqs/' . $rfq->id . '/overview',
+            $this->authHeaders($tenantB, (string) $userB->id),
+        );
+
+        $response->assertStatus(404);
+    }
+
     public function test_overview_includes_blueprint_kpi_aliases(): void
     {
         $tenantId = (string) Str::ulid();

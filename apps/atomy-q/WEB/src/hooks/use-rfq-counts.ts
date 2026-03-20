@@ -25,6 +25,14 @@ const emptyCounts: RfqNavCounts = {
   archived: 0,
 };
 
+function parseCount(raw: unknown, fallback: number): number {
+  if (raw === null || raw === undefined) return fallback;
+  if (typeof raw === 'string' && raw.trim() === '') return fallback;
+  const n = Number(typeof raw === 'string' ? raw.trim() : raw);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.trunc(n);
+}
+
 export function useRfqNavCounts() {
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
@@ -33,15 +41,17 @@ export function useRfqNavCounts() {
     queryFn: async (): Promise<RfqNavCounts> => {
       const { data } = await api.get<{ data?: Partial<RfqNavCounts> }>('/rfqs/counts');
       const d = data?.data;
+      const published = parseCount(d?.published, 0);
+      const cancelled = parseCount(d?.cancelled, 0);
       return {
-        draft: Number(d?.draft ?? 0),
-        published: Number(d?.published ?? 0),
-        closed: Number(d?.closed ?? 0),
-        awarded: Number(d?.awarded ?? 0),
-        cancelled: Number(d?.cancelled ?? 0),
-        active: Number(d?.active ?? d?.published ?? 0),
-        pending: Number(d?.pending ?? 0),
-        archived: Number(d?.archived ?? d?.cancelled ?? 0),
+        draft: parseCount(d?.draft, 0),
+        published,
+        closed: parseCount(d?.closed, 0),
+        awarded: parseCount(d?.awarded, 0),
+        cancelled,
+        active: parseCount(d?.active, published),
+        pending: parseCount(d?.pending, 0),
+        archived: parseCount(d?.archived, cancelled),
       };
     },
     enabled: !useMocks,

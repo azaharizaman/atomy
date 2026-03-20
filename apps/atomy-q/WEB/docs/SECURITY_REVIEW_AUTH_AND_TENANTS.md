@@ -9,7 +9,7 @@
 
 - **Backend (API):** Authentication and tenant context are correctly derived from the JWT. Protected routes use `jwt.auth` and `tenant` middleware; `auth_tenant_id` and `auth_user_id` come only from the token, not from client input. **No cross-tenant leakage via client-supplied tenant ID on protected endpoints.**
 - **Frontend (WEB):** Two main gaps: (1) **No route-level protection** — unauthenticated users can open dashboard URLs and see layout until API calls return 401; (2) **Refresh flow broken** — `refresh_token` is never stored or sent, so session restore on reload fails and 401 retry cannot refresh.
-- **Cross-tenant:** Login requires tenant_id + email + password; tokens are bound to (user, tenant). Several API controllers still have **TODO: tenant scoping** on stub or future implementations (VendorController, some RfqController methods); when those are implemented, they must use `$this->tenantId($request)` only.
+- **Cross-tenant:** Login uses **email + password** only; the API resolves the user by email, reads `tenant_id` from that user row, and issues JWTs bound to `(userId, tenantId)`. Several API controllers still have **TODO: tenant scoping** on stub or future implementations (VendorController, some RfqController methods); when those are implemented, they must use `$this->tenantId($request)` only.
 
 ---
 
@@ -18,10 +18,10 @@
 ### 2.1 Login (WEB → API)
 
 - **WEB:** `POST /api/v1/auth/login` with `{ email, password }`; tenant context comes from the API response (`user.tenantId`) and JWT claims after authentication.
-- **API:** Validates input; looks up user by `tenant_id` + `email`; checks password; issues access + refresh JWTs with `sub=userId`, `tenant_id=tenantId`, `type=access|refresh`. Returns `access_token`, `refresh_token`, `user` (id, email, name, role, tenantId).
-- **WEB:** Stores `access_token` and `user` in Zustand; **does not store `refresh_token`** (see Issue 3 below).
+- **API:** Validates input; looks up the user **by email** (unique per deployment); checks password; reads `tenant_id` from the user row; issues access + refresh JWTs with `sub=userId`, `tenant_id=tenantId`, `type=access|refresh`. Returns `access_token`, `refresh_token`, `user` (id, email, name, role, tenantId).
+- **WEB:** Stores access + refresh tokens and `user` in Zustand (see Issue 2 for historical note on refresh persistence).
 
-**Verdict:** Login is correct. Tenant is required and used only for lookup; tokens are bound to that tenant. No privilege escalation via login.
+**Verdict:** Login is correct. The client does not send a tenant identifier on login; **tenant scope is taken from the authenticated user record** and embedded in the JWT. No privilege escalation via login.
 
 ### 2.2 Protected Requests (WEB → API)
 
@@ -99,7 +99,7 @@
 
 | Area | Risk | Notes |
 |------|------|--------|
-| Login | Low | User supplies email + password; tenant comes from the user row; token is for that tenant only. |
+| Login | Low | User supplies email + password; API resolves tenant from the matched user row; JWT `tenant_id` matches that user’s tenant. |
 | Protected API | Low | Tenant and user come from JWT only (`auth_tenant_id`, `auth_user_id`). |
 | GET /me, /rfqs, /rfqs/:id, etc. | Low | Controllers use `$this->tenantId($request)` and scope by it. |
 | VendorController | Medium (future) | Stub today; when implemented, must add tenant filter. |

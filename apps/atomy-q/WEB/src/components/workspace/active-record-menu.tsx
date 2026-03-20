@@ -27,8 +27,13 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
   const pathname = usePathname();
   const { data: pendingApprovalCount } = useRfqPendingApprovalCount(record.id);
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-  const approvalsBadgeRaw = useMocks ? 2 : (pendingApprovalCount ?? 0);
-  const approvalsBadge = approvalsBadgeRaw > 0 ? approvalsBadgeRaw : undefined;
+  const normalizedPending = useMocks
+    ? 2
+    : typeof pendingApprovalCount === 'number' && Number.isFinite(pendingApprovalCount)
+      ? pendingApprovalCount
+      : undefined;
+  const approvalsBadge =
+    normalizedPending !== undefined && normalizedPending > 0 ? normalizedPending : undefined;
 
   const rfqBase = `/rfqs/${encodeURIComponent(record.id)}`;
 

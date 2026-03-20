@@ -12,14 +12,16 @@ Align engineering and product on what **“alpha”** means for **Atomy-Q** (Lar
 
 ---
 
-## 2. Current state (facts from the codebase)
+## 2. Current state (as of 2026-03-20)
+
+Snapshot for planning; individual files may move faster than this table—verify in-repo docs for release gates.
 
 | Area | State |
 |------|--------|
-| **API** | 203 endpoints registered; many responses are **stubs** with correct status/shape. Auth: JWT login; forgot-password **501**; SSO path exists with adapters; RBAC catalog **stubbed**. |
-| **WEB** | Auth + dashboard shell + settings placeholders; **RFQ** list/detail **partial**; vendor, quote intake, approvals **not started**; API client **manual Axios**; **OpenAPI generation pending**. |
-| **Contract drift** | `BACKEND_API_GAPS.md` still lists overview KPIs, activity feed, optional sidebar counts as **open or partial**. |
-| **Broader monorepo** | Several Nexus packages used by adapters lack CI confidence (`PACKAGE_TEST_READINESS.md` notes failures/gaps). |
+| **API** | Large route surface with many stubs outside the alpha slice. **Email/password:** JWT login + **forgot-password / reset-password** (200 responses, tenant-scoped reset tokens). SSO adapters present. OpenAPI exposed via **Scramble** in dev (`config/scramble.php`, `/docs/api`). |
+| **WEB** | Next.js app: JWT + refresh, RFQ list/workspace (**overview**, activity merge), global **approvals** queue/detail, dashboard shell; Axios client in `src/lib/api.ts` with optional generated types from `../openapi/openapi.json`. |
+| **Contract drift** | Use `BACKEND_API_GAPS.md` as the living checklist for WEB/API field and endpoint parity. |
+| **Broader monorepo** | Nexus package health summarized in `PACKAGE_TEST_READINESS.md` (CI gaps vary by package). |
 
 **Implication:** Alpha is not “ship all 203 endpoints”—it is **a credible, tenant-safe vertical slice** plus **minimum operability** (signup/login, data isolation, recoverability, basic support).
 

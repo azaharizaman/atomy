@@ -64,16 +64,36 @@ export interface RfqOverviewData {
 
 function normalizeActivityList(raw: unknown): RfqOverviewActivityItem[] {
   if (!Array.isArray(raw)) return [];
-  return raw.map((item: unknown, index: number) => {
-    const r = item != null && typeof item === 'object' && !Array.isArray(item) ? (item as Record<string, unknown>) : {};
-    return {
-      id: String(r.id ?? `activity-${index}`),
-      type: String(r.type ?? 'system'),
-      actor: String(r.actor ?? '—'),
-      action: String(r.action ?? ''),
-      timestamp: String(r.timestamp ?? new Date().toISOString()),
-    };
+  const out: RfqOverviewActivityItem[] = [];
+  raw.forEach((item: unknown, index: number) => {
+    if (item === null || typeof item !== 'object' || Array.isArray(item)) {
+      if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+        console.warn(`Skipping RFQ activity row at index ${index}: expected object`);
+      }
+      return;
+    }
+    const r = item as Record<string, unknown>;
+    const id = r.id !== null && r.id !== undefined ? String(r.id).trim() : '';
+    const type = r.type !== null && r.type !== undefined ? String(r.type).trim() : '';
+    const actor = r.actor !== null && r.actor !== undefined ? String(r.actor).trim() : '';
+    const action = r.action !== null && r.action !== undefined ? String(r.action).trim() : '';
+    const tsRaw = r.timestamp !== null && r.timestamp !== undefined ? String(r.timestamp).trim() : '';
+    if (!id || !type || !actor || !action || !tsRaw) {
+      if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+        console.warn(`Skipping RFQ activity row at index ${index}: missing required fields`);
+      }
+      return;
+    }
+    const parsed = Date.parse(tsRaw);
+    if (!Number.isFinite(parsed)) {
+      if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+        console.warn(`Skipping RFQ activity row at index ${index}: invalid timestamp`);
+      }
+      return;
+    }
+    out.push({ id, type, actor, action, timestamp: tsRaw });
   });
+  return out;
 }
 
 function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
@@ -85,9 +105,21 @@ function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
   const app = (d?.approvals ?? {}) as Record<string, unknown>;
   const activity = normalizeActivityList(d?.activity);
 
-  const expectedQuotesRaw = d?.expected_quotes ?? d?.expectedQuotes ?? rfq?.vendors_count;
+  let expectedQuotesRaw: unknown = d?.expected_quotes ?? d?.expectedQuotes ?? rfq?.vendors_count;
+  if (typeof expectedQuotesRaw === 'string' && expectedQuotesRaw.trim() === '') {
+    expectedQuotesRaw = undefined;
+  }
+  if (expectedQuotesRaw === null || expectedQuotesRaw === undefined) {
+    expectedQuotesRaw = rfq?.vendors_count;
+  }
   const expectedQuotesNum = Number(expectedQuotesRaw);
-  const expected_quotes = Number.isFinite(expectedQuotesNum) ? expectedQuotesNum : 0;
+  const vendorFallback =
+    rfq?.vendors_count !== null &&
+    rfq?.vendors_count !== undefined &&
+    Number.isFinite(Number(rfq.vendors_count))
+      ? Number(rfq.vendors_count)
+      : 0;
+  const expected_quotes = Number.isFinite(expectedQuotesNum) ? expectedQuotesNum : vendorFallback;
 
   return {
     rfq: {

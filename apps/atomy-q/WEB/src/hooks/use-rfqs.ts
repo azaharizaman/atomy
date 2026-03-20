@@ -77,20 +77,30 @@ export interface RfqsListResult {
   meta: RfqsListMeta;
 }
 
-function parseRfqsMeta(payload: unknown, fallbackPage: number, fallbackPerPage: number): RfqsListMeta | null {
+function isNonNegativeFiniteInt(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  const n = Number(typeof value === 'string' ? value.trim() : value);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) return null;
+  return n;
+}
+
+function isPositiveFiniteInt(value: unknown): number | null {
+  const n = isNonNegativeFiniteInt(value);
+  if (n === null || n < 1) return null;
+  return n;
+}
+
+function parseRfqsMeta(payload: unknown): RfqsListMeta | null {
   const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
   const m = obj?.meta;
   if (m === null || m === undefined || typeof m !== 'object') return null;
   const meta = m as Record<string, unknown>;
-  const total = Number(meta.total);
-  if (!Number.isFinite(total) || total < 0) return null;
-  const perPage = Math.max(1, Number(meta.per_page) || fallbackPerPage);
-  const currentPage = Math.max(1, Number(meta.current_page) || fallbackPage);
-  const totalPagesRaw = Number(meta.total_pages);
-  const totalPages =
-    Number.isFinite(totalPagesRaw) && totalPagesRaw > 0
-      ? Math.max(1, totalPagesRaw)
-      : Math.max(1, Math.ceil(total / perPage));
+  const total = isNonNegativeFiniteInt(meta.total);
+  const perPage = isPositiveFiniteInt(meta.per_page);
+  const currentPage = isPositiveFiniteInt(meta.current_page);
+  const totalPages = isPositiveFiniteInt(meta.total_pages);
+  if (total === null || perPage === null || currentPage === null || totalPages === null) return null;
   return {
     current_page: currentPage,
     per_page: perPage,
@@ -159,31 +169,15 @@ export function useRfqs(params: UseRfqsParams) {
           if (params.projectId) apiParams.project_id = params.projectId;
           const { data } = await api.get('/rfqs', { params: apiParams });
           const items = normalizeRfqsPayload(data).filter((x) => x.id);
-          const metaFromApi = parseRfqsMeta(data, page, 25);
-          if (metaFromApi !== null) {
-            return { items, meta: metaFromApi };
+          const metaFromApi = parseRfqsMeta(data);
+          if (metaFromApi === null) {
+            throw new Error('Invalid RFQ list response: pagination meta');
           }
-          if (items.length > 0) {
-            return {
-              items,
-              meta: {
-                current_page: page,
-                per_page: items.length,
-                total: items.length,
-                total_pages: 1,
-              },
-            };
+          return { items, meta: metaFromApi };
+        } catch (e) {
+          if (e instanceof Error && e.message === 'Invalid RFQ list response: pagination meta') {
+            throw e;
           }
-          return {
-            items: [],
-            meta: {
-              current_page: page,
-              per_page: 25,
-              total: 0,
-              total_pages: 1,
-            },
-          };
-        } catch {
           // ignore and fall through to seed data
         }
       }

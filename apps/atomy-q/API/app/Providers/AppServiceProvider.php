@@ -84,7 +84,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(PasswordResetService::class, function (): PasswordResetService {
-            return new PasswordResetService((int) config('auth.passwords.users.expire', 60));
+            $ttl = (int) config('auth.passwords.users.expire', 60);
+            $ttl = max(1, $ttl);
+
+            return new PasswordResetService($ttl);
         });
 
         // Nexus Project: Laravel implementations + package Manager.

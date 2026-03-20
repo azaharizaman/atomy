@@ -34,8 +34,16 @@ final class ApprovalController extends Controller
         $query = Approval::query()
             ->where('tenant_id', $tenantId)
             ->with([
-                'rfq:id,title,tenant_id',
-                'requestedBy:id,name,email',
+                'rfq' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'title', 'tenant_id');
+                },
+                'requestedBy' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'name', 'email', 'tenant_id');
+                },
             ])
             ->orderByDesc('requested_at')
             ->orderByDesc('created_at');
@@ -46,6 +54,17 @@ final class ApprovalController extends Controller
 
         if ($type = $request->query('type')) {
             $query->where('type', (string) $type);
+        }
+
+        if ($priority = $request->query('priority')) {
+            $p = strtolower((string) $priority);
+            if ($p === 'high') {
+                $query->where('level', '>=', 3);
+            } elseif ($p === 'medium') {
+                $query->where('level', 2);
+            } elseif ($p === 'low') {
+                $query->where('level', 1);
+            }
         }
 
         if ($rfqId = $request->query('rfq_id')) {
@@ -81,10 +100,26 @@ final class ApprovalController extends Controller
             ->where('tenant_id', $tenantId)
             ->where('id', $id)
             ->with([
-                'rfq:id,title,tenant_id,rfq_number',
-                'comparisonRun:id,name,status,is_preview,tenant_id',
-                'requestedBy:id,name,email',
-                'approvedByUser:id,name,email',
+                'rfq' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'title', 'tenant_id', 'rfq_number');
+                },
+                'comparisonRun' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'name', 'status', 'is_preview', 'tenant_id');
+                },
+                'requestedBy' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'name', 'email', 'tenant_id');
+                },
+                'approvedByUser' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'name', 'email', 'tenant_id');
+                },
             ])
             ->first();
 
@@ -105,6 +140,10 @@ final class ApprovalController extends Controller
     public function approve(Request $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:2000'],
+        ]);
 
         $approval = Approval::query()
             ->where('tenant_id', $tenantId)
@@ -165,6 +204,9 @@ final class ApprovalController extends Controller
         $approval->status = 'approved';
         $approval->approved_at = now();
         $approval->approved_by = $this->userId($request);
+        if (array_key_exists('reason', $validated) && $validated['reason'] !== null) {
+            $approval->notes = (string) $validated['reason'];
+        }
         $approval->save();
 
         return response()->json([

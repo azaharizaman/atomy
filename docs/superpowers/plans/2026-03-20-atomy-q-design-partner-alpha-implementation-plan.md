@@ -330,7 +330,7 @@ public function test_forgot_password_returns_ok_without_leaking_user_existence()
 - [x] **Step 2:** Implement token persistence, email notification (use `Mail::fake()` in tests).
 - [x] **Step 3:** Add `POST /api/v1/auth/reset-password` with `email`, `token`, `password`, `password_confirmation` (validate strength).
 - [x] **Step 4:** Run `cd apps/atomy-q/API && php artisan test --filter=PasswordReset`.
-- [ ] **Step 5:** WEB pages + Playwright step (use `log` mail driver or intercept).
+- [x] **Step 5:** WEB pages + Playwright step (use `log` mail driver or intercept).
 - [x] **Step 6:** Commit.
 
 ---

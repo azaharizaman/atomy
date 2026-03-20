@@ -30,21 +30,42 @@ export interface ApprovalsListResult {
   meta: ApprovalsListMeta;
 }
 
-function parseApprovalsMeta(payload: unknown, fallbackPage: number, fallbackPerPage: number): ApprovalsListMeta | null {
+function isNonNegativeFiniteInt(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  const n = Number(typeof value === 'string' ? value.trim() : value);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) return null;
+  return n;
+}
+
+function isPositiveFiniteInt(value: unknown): number | null {
+  const n = isNonNegativeFiniteInt(value);
+  if (n === null || n < 1) return null;
+  return n;
+}
+
+function parseApprovalsMeta(payload: unknown): ApprovalsListMeta | null {
   const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
   const m = obj?.meta;
   if (m === null || m === undefined || typeof m !== 'object') return null;
   const meta = m as Record<string, unknown>;
-  const total = Number(meta.total);
-  if (!Number.isFinite(total) || total < 0) return null;
-  const perPage = Math.max(1, Number(meta.per_page) || fallbackPerPage);
-  const currentPage = Math.max(1, Number(meta.current_page) || fallbackPage);
-  const totalPagesRaw = Number(meta.total_pages);
-  const totalPages =
-    Number.isFinite(totalPagesRaw) && totalPagesRaw > 0
-      ? Math.max(1, totalPagesRaw)
-      : Math.max(1, Math.ceil(total / perPage));
+  const total = isNonNegativeFiniteInt(meta.total);
+  const perPage = isPositiveFiniteInt(meta.per_page);
+  const currentPage = isPositiveFiniteInt(meta.current_page);
+  const totalPages = isPositiveFiniteInt(meta.total_pages);
+  if (total === null || perPage === null || currentPage === null || totalPages === null) return null;
   return { current_page: currentPage, per_page: perPage, total, total_pages: totalPages };
+}
+
+function requireNonEmptyStringField(value: unknown, field: string, index: number): string {
+  if (value === null || value === undefined) {
+    throw new Error(`Invalid approval row at index ${index}: missing ${field}`);
+  }
+  const s = String(value).trim();
+  if (s === '') {
+    throw new Error(`Invalid approval row at index ${index}: empty ${field}`);
+  }
+  return s;
 }
 
 function normalizeApprovalRows(payload: unknown): ApprovalListRow[] {
@@ -52,19 +73,34 @@ function normalizeApprovalRows(payload: unknown): ApprovalListRow[] {
   const raw = obj?.data;
   if (!Array.isArray(raw)) return [];
   return raw.map((item: unknown, index: number) => {
-    const r = item != null && typeof item === 'object' && !Array.isArray(item) ? (item as Record<string, unknown>) : {};
-    const rfqTitle = String(r.rfq_title ?? '');
-    const type = String(r.type ?? 'approval');
-    const typeLabel = String(r.type_label ?? type);
+    if (item === null || typeof item !== 'object' || Array.isArray(item)) {
+      throw new Error(`Invalid approval row at index ${index}: expected object`);
+    }
+    const r = item as Record<string, unknown>;
+    const id = requireNonEmptyStringField(r.id, 'id', index);
+    const rfq_id = requireNonEmptyStringField(r.rfq_id, 'rfq_id', index);
+    const type = requireNonEmptyStringField(r.type, 'type', index);
+    const status = requireNonEmptyStringField(r.status, 'status', index);
+    const rfqTitle = r.rfq_title !== undefined && r.rfq_title !== null ? String(r.rfq_title).trim() : '';
+    const typeLabel =
+      r.type_label !== undefined && r.type_label !== null && String(r.type_label).trim() !== ''
+        ? String(r.type_label).trim()
+        : type;
     return {
-      id: String(r.id ?? `approval-${index}`),
-      rfq_id: String(r.rfq_id ?? ''),
+      id,
+      rfq_id,
       rfq_title: rfqTitle || undefined,
       type,
       type_label: typeLabel,
-      status: String(r.status ?? 'pending'),
-      priority: String(r.priority ?? 'normal'),
-      summary: String(r.summary ?? `${typeLabel} — ${rfqTitle || 'RFQ'}`),
+      status,
+      priority:
+        r.priority !== undefined && r.priority !== null && String(r.priority).trim() !== ''
+          ? String(r.priority).trim()
+          : 'normal',
+      summary:
+        r.summary !== undefined && r.summary !== null && String(r.summary).trim() !== ''
+          ? String(r.summary).trim()
+          : `${typeLabel} — ${rfqTitle || 'RFQ'}`,
       sla: r.sla !== undefined && r.sla !== null ? String(r.sla) : undefined,
       sla_variant: r.sla_variant !== undefined && r.sla_variant !== null ? String(r.sla_variant) : undefined,
       assignee: r.assignee !== undefined && r.assignee !== null ? String(r.assignee) : undefined,
@@ -95,19 +131,11 @@ export function useApprovalsList(params: UseApprovalsParams) {
           },
         });
         const items = normalizeApprovalRows(data);
-        const meta = parseApprovalsMeta(data, page, 25);
-        if (meta !== null) {
-          return { items, meta };
+        const meta = parseApprovalsMeta(data);
+        if (meta === null) {
+          throw new Error('Invalid approvals list response: pagination meta');
         }
-        return {
-          items,
-          meta: {
-            current_page: page,
-            per_page: Math.max(1, items.length || 25),
-            total: items.length,
-            total_pages: 1,
-          },
-        };
+        return { items, meta };
       }
 
       const { getSeedPendingApprovals } = await import('@/data/seed');
@@ -195,8 +223,11 @@ export function useApprovalDetail(id: string | undefined) {
           rec.comparison_run !== null && rec.comparison_run !== undefined && typeof rec.comparison_run === 'object'
             ? (() => {
                 const c = rec.comparison_run as Record<string, unknown>;
+                if (c.id === null || c.id === undefined || String(c.id).trim() === '') {
+                  throw new Error('Invalid approval detail: comparison_run.id');
+                }
                 return {
-                  id: String(c.id ?? ''),
+                  id: String(c.id).trim(),
                   name: String(c.name ?? ''),
                   status: String(c.status ?? ''),
                   is_preview: Boolean(c.is_preview),
@@ -219,8 +250,11 @@ export function useRfqPendingApprovalCount(rfqId: string | undefined) {
       const { data } = await api.get('/approvals', {
         params: { status: 'pending', rfq_id: rfqId, per_page: 1, page: 1 },
       });
-      const meta = (data as { meta?: { total?: number } })?.meta;
-      return Number(meta?.total ?? 0);
+      const meta = parseApprovalsMeta(data);
+      if (meta === null) {
+        throw new Error('Invalid approvals pending-count response: pagination meta');
+      }
+      return meta.total;
     },
     enabled: Boolean(rfqId) && !useMocks,
     initialData: useMocks && rfqId ? 2 : undefined,
