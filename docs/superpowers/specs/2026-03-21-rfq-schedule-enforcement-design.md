@@ -3,6 +3,7 @@
 **Date:** 2026-03-21  
 **Product / area:** Atomy-Q (buyer workspace; API + WEB); vendor portal **out of scope** for alpha  
 **Status:** Design (brainstorm consolidated); **not yet implemented**  
+**Implementation plan:** [`../plans/2026-03-21-rfq-schedule-enforcement-implementation-plan.md`](../plans/2026-03-21-rfq-schedule-enforcement-implementation-plan.md)  
 **Related:** [`2026-03-21-atomy-q-horizontal-process-track-design.md`](2026-03-21-atomy-q-horizontal-process-track-design.md) (presentation only; date-anchored track + today cursor)
 
 ---
@@ -195,4 +196,4 @@ Wire names to match product copy later: `invite_after_lock`, `briefing_order`, `
 
 ## 14. Approval
 
-Product/engineering: confirm §6 ordering, §9 grace cap (5 calendar days), and §8 audit visibility before **writing-plans** for this vertical.
+Product/engineering: confirm §6 ordering, §9 grace cap (5 calendar days), and §8 audit visibility. **Implementation plan** (checklist + Phase 1 §13 defaults) is in [`../plans/2026-03-21-rfq-schedule-enforcement-implementation-plan.md`](../plans/2026-03-21-rfq-schedule-enforcement-implementation-plan.md).
