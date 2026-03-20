@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { Button } from '@/components/ds/Button';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { FilterBar, PageHeader } from '@/components/ds/FilterBar';
@@ -95,10 +96,14 @@ export default function ProjectsPage() {
   }, [projects, q]);
 
   if (isError) {
+    const is404 = axios.isAxiosError(error) && error.response?.status === 404;
+    const detail = is404
+      ? 'The API returned 404 — Projects are usually disabled. Set FEATURE_PROJECTS_ENABLED=true in apps/atomy-q/API/.env and restart php artisan serve (or your PHP process).'
+      : String((error as Error | null)?.message ?? '');
     return (
       <Card padding="md">
         <div className="text-sm font-semibold text-slate-900">Failed to load projects</div>
-        <div className="text-xs text-slate-500 mt-1">{String((error as Error | null)?.message ?? '')}</div>
+        <div className="text-xs text-slate-500 mt-1">{detail}</div>
       </Card>
     );
   }
