@@ -17,6 +17,9 @@ import { useUpdateProjectAcl } from '@/hooks/use-update-project-acl';
 
 type AclDraftEntry = ProjectAclEntry & { draftId: string };
 
+/** Stable fallback so `useEffect([acl])` does not see a new [] every render while loading. */
+const EMPTY_PROJECT_ACL: ProjectAclEntry[] = [];
+
 function createAclDraftId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -40,7 +43,8 @@ export default function ProjectDetailPage() {
   const { data: health, isLoading: healthLoading, isError: healthIsError, error: healthError } = useProjectHealth(projectId);
   const { data: rfqs = [], isLoading: rfqsLoading, isError: rfqsError } = useProjectRfqs(projectId);
   const { data: tasks = [], isLoading: tasksLoading, isError: tasksError } = useProjectTasks(projectId);
-  const { data: acl = [], isLoading: aclLoading, isError: aclIsError, error: aclError } = useProjectAcl(projectId);
+  const { data: aclData, isLoading: aclLoading, isError: aclIsError, error: aclError } = useProjectAcl(projectId);
+  const acl = aclData ?? EMPTY_PROJECT_ACL;
   const updateProject = useUpdateProject(projectId);
   const updateStatus = useUpdateProjectStatus(projectId);
   const updateAcl = useUpdateProjectAcl(projectId);
@@ -58,16 +62,26 @@ export default function ProjectDetailPage() {
     }
   }, [project, editMode]);
 
-  React.useEffect(() => {
-    if (!aclDirty) {
+  const aclSyncKey = React.useMemo(
+    () => acl.map((e) => `${e.userId}:${e.role}`).join('|'),
+    [acl],
+  );
+
+  React.useEffect(
+    () => {
+      if (aclDirty) {
+        return;
+      }
       setAclDraft(
         acl.map((entry) => ({
           ...entry,
           draftId: createAclDraftId(),
-        }))
+        })),
       );
-    }
-  }, [acl, aclDirty]);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `acl` omitted: stable EMPTY_PROJECT_ACL + aclSyncKey tracks content
+    [aclSyncKey, aclDirty],
+  );
 
   const normalizedAcl = React.useMemo(
     () =>
