@@ -132,6 +132,7 @@ export default function TasksPage() {
   }
 
   if (!tasksEnabled) {
+    // Intentionally render nothing here: feature gating/redirect is handled by the dashboard layout.
     return null;
   }
 

@@ -54,7 +54,8 @@ function parseOptionalCount(value: unknown): number | undefined {
   if (typeof value === 'string' && value.trim() === '') return undefined;
   const n = Number(value);
   if (!Number.isFinite(n)) return undefined;
-  return Math.max(0, n);
+  if (n < 0) return undefined;
+  return n;
 }
 
 function normalizeApprovalOverall(value: unknown): string | undefined {
@@ -73,9 +74,9 @@ function closingDateLate(statusNorm: string, nowMs: number, closingMs: number): 
   return !['closed', 'awarded', 'cancelled', 'archived'].includes(statusNorm);
 }
 
-function technicalReviewLate(nowMs: number, dueMs: number, needsReview: number, comparisonPreview: boolean | null): boolean {
+function technicalReviewLate(nowMs: number, dueMs: number, needsReview: number | undefined, comparisonPreview: boolean | null): boolean {
   if (!isPastDue(dueMs, nowMs)) return false;
-  if (needsReview > 0) return true;
+  if (needsReview !== undefined && needsReview > 0) return true;
   if (comparisonPreview === true) return true;
   return false;
 }
@@ -106,7 +107,7 @@ function padRange(minMs: number, maxMs: number): { minMs: number; maxMs: number 
  */
 export function buildRfqScheduleLayout(ctx: RfqScheduleContext, nowMs: number = Date.now()): ScheduleLayout | null {
   const statusNorm = normStatus(ctx.status);
-  const needsReview = parseOptionalCount(ctx.needs_review_count) ?? 0;
+  const needsReview = parseOptionalCount(ctx.needs_review_count);
   const approvalOverall = normalizeApprovalOverall(ctx.approval_overall);
   const comparisonPreview = ctx.comparison_is_preview ?? null;
 

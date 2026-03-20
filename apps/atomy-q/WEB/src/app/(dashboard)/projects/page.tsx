@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { Button } from '@/components/ds/Button';
@@ -115,14 +115,18 @@ export default function ProjectsPage() {
   }
 
   if (!projectsEnabled) {
-    return <div className="text-sm text-slate-500">Redirecting…</div>;
+    redirect('/dashboard');
   }
 
   if (isError) {
+    const isDev = process.env.NODE_ENV === 'development';
+    const genericDetail = 'Projects are disabled or not found.';
     const is404 = axios.isAxiosError(error) && error.response?.status === 404;
     const detail = is404
-      ? 'The API returned 404 — Projects are usually disabled. Set FEATURE_PROJECTS_ENABLED=true in apps/atomy-q/API/.env and restart php artisan serve (or your PHP process).'
-      : String((error as Error | null)?.message ?? '');
+      ? (isDev
+          ? 'The API returned 404 — Projects are usually disabled. Set FEATURE_PROJECTS_ENABLED=true in apps/atomy-q/API/.env and restart php artisan serve (or your PHP process).'
+          : genericDetail)
+      : (isDev ? String((error as Error | null)?.message ?? '') : genericDetail);
     return (
       <Card padding="md">
         <div className="text-sm font-semibold text-slate-900">Failed to load projects</div>

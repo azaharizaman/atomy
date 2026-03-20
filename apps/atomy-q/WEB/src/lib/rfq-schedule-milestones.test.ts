@@ -86,6 +86,20 @@ describe('buildRfqScheduleLayout', () => {
     expect(m?.late).toBe(false);
   });
 
+  it('treats negative needs_review_count as missing', () => {
+    const layout = buildRfqScheduleLayout(
+      {
+        status: 'published',
+        technical_review_due_at: '2026-06-01T00:00:00Z',
+        needs_review_count: -1,
+        comparison_is_preview: false,
+      },
+      now,
+    );
+    const m = layout?.milestones.find((x) => x.id === 'technical_review_due_at');
+    expect(m?.late).toBe(false);
+  });
+
   it('normalizes approval_overall before financial late evaluation', () => {
     const layout = buildRfqScheduleLayout(
       {

@@ -35,7 +35,12 @@ final class PetrochemicalTenantSeeder extends Seeder
 
     private string $scoringPolicyId = '';
 
-    /** Deterministic float in [0,1) from index */
+    /**
+     * Returns a deterministic pseudo-random float in [0,1) from an integer index.
+     *
+     * Intended for reproducible seed-data variation. It computes sin($n * 9999) * 10000
+     * and extracts the fractional component via $x - floor($x).
+     */
     private static function hash(int $n): float
     {
         $x = sin($n * 9999) * 10000;
@@ -61,9 +66,10 @@ final class PetrochemicalTenantSeeder extends Seeder
             $rfqRows[] = $this->insertRfqAndLines($this->buildRfqContext($i));
         }
 
-        foreach ($rfqRows as $idx => $_) {
-            $this->insertInvitationsAndQuotes($rfqRows[$idx]);
+        foreach ($rfqRows as &$ctx) {
+            $this->insertInvitationsAndQuotes($ctx);
         }
+        unset($ctx);
 
         foreach ($rfqRows as $ctx) {
             $this->insertComparisonApprovalsAwards($ctx);
