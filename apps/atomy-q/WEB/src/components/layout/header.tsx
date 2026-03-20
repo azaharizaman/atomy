@@ -21,7 +21,10 @@ export function Header() {
     .slice(0, 2)
     .toUpperCase();
 
-  const breadcrumb = pathname === '/' ? 'Dashboard' : pathname;
+  const breadcrumb =
+    pathname === '/' || pathname === ''
+      ? 'Dashboard'
+      : pathname.replace(/^\/+|\/+$/g, '').replace(/\//g, ' / ') || 'Dashboard';
 
   return (
     <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-4 sticky top-0 z-10">

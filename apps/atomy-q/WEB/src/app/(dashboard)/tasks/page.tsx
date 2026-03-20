@@ -7,6 +7,7 @@ import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { useTasks, type TaskListItem } from '@/hooks/use-tasks';
 import { useTask } from '@/hooks/use-task';
+import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { useUpdateTaskStatus, TASK_STATUSES } from '@/hooks/use-update-task-status';
 
 const TASK_COLUMNS: ColumnDef<TaskListItem>[] = [
@@ -112,8 +113,45 @@ function TaskDetailDrawer({
 }
 
 export default function TasksPage() {
+  const isDev = process.env.NODE_ENV === 'development';
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
-  const { data: tasks = [], isLoading, isError, error } = useTasks();
+  const {
+    data: flags,
+    isLoading: flagsLoading,
+    isError: flagsError,
+    error: flagsErrorDetail,
+  } = useFeatureFlags();
+  const tasksEnabled = flags?.tasks === true;
+  const { data: tasks = [], isLoading, isError, error } = useTasks({
+    enabled: !flagsLoading && !flagsError && tasksEnabled,
+  });
+
+  if (flagsLoading) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Task Inbox" subtitle="Loading…" />
+        <Card padding="md">
+          <div className="h-24 w-full rounded bg-slate-100 animate-pulse" aria-busy="true" />
+        </Card>
+      </div>
+    );
+  }
+
+  if (flagsError) {
+    return (
+      <Card padding="md">
+        <div className="text-sm font-semibold text-slate-900">Failed to load feature flags</div>
+        <div className="text-xs text-slate-500 mt-1">
+          {isDev ? String((flagsErrorDetail as Error | null)?.message ?? '') : 'Unable to load feature settings.'}
+        </div>
+      </Card>
+    );
+  }
+
+  if (!tasksEnabled) {
+    // Intentionally render nothing here: feature gating/redirect is handled by the dashboard layout.
+    return null;
+  }
 
   return (
     <div className="space-y-4">

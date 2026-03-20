@@ -44,13 +44,15 @@ function normalizeHealth(payload: unknown): ProjectHealth {
   };
 }
 
-export function useProjectHealth(projectId: string) {
+export function useProjectHealth(projectId: string, options?: { enabled?: boolean }) {
+  const enabled = (options?.enabled ?? true) && projectId !== '';
   return useQuery({
     queryKey: ['projects', projectId, 'health'],
     queryFn: async (): Promise<ProjectHealth> => {
       const { data } = await api.get(`/projects/${encodeURIComponent(projectId)}/health`);
       return normalizeHealth(data);
     },
+    enabled,
   });
 }
 

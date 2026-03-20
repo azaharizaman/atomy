@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Upload, BarChart2, Send, FileText, ShieldCheck, Calendar } from 'lucide-react';
+import { CheckCircle2, Upload, BarChart2, Send, FileText, ShieldCheck } from 'lucide-react';
 
 import { KPIScorecard } from '@/components/ds/KPIScorecard';
 import { StatusBadge } from '@/components/ds/Badge';
@@ -11,6 +11,7 @@ import { Timeline, type TimelineEvent } from '@/components/ds/Timeline';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { OverviewNextStep } from '@/components/workspace/overview-next-step';
 import { useRfqOverview, type RfqOverviewActivityItem } from '@/hooks/use-rfq-overview';
+import { RfqScheduleTimeline } from '@/components/workspace/rfq-schedule-timeline';
 
 function formatRelativeTime(iso: string): string {
   const date = new Date(iso);
@@ -60,6 +61,31 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
   const comparison = overview?.comparison;
   const approvals = overview?.approvals;
   const activityEvents = (overview?.activity ?? []).map(activityToTimelineEvent);
+
+  const scheduleContext = React.useMemo(
+    () => ({
+      status: rfq?.status ?? 'draft',
+      submission_deadline: rfq?.submission_deadline,
+      closing_date: rfq?.closing_date,
+      expected_award_at: rfq?.expected_award_at,
+      technical_review_due_at: rfq?.technical_review_due_at,
+      financial_review_due_at: rfq?.financial_review_due_at,
+      needs_review_count: overview?.normalization?.needs_review_count,
+      comparison_is_preview: comparison != null ? Boolean(comparison.is_preview) : null,
+      approval_overall: approvals?.overall ?? 'none',
+    }),
+    [
+      rfq?.status,
+      rfq?.submission_deadline,
+      rfq?.closing_date,
+      rfq?.expected_award_at,
+      rfq?.technical_review_due_at,
+      rfq?.financial_review_due_at,
+      overview?.normalization?.needs_review_count,
+      comparison?.is_preview,
+      approvals?.overall,
+    ],
+  );
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -112,43 +138,9 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
         submissionDeadline={rfq?.submission_deadline ?? undefined}
       />
 
-      {/* Deadlines */}
-      {(rfq?.submission_deadline ?? rfq?.closing_date) && (
-        <SectionCard title="Deadlines" subtitle="Key dates for this RFQ">
-          <div className="grid gap-4 sm:grid-cols-2 p-4 pt-0">
-            {rfq?.submission_deadline && (
-              <div className="flex items-start gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Calendar className="text-slate-600" size={14} />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Submission deadline</p>
-                  <p className="text-sm text-slate-800 mt-0.5">
-                    {new Date(rfq.submission_deadline).toLocaleDateString(undefined, {
-                      dateStyle: 'medium',
-                    })}
-                  </p>
-                </div>
-              </div>
-            )}
-            {rfq?.closing_date && (
-              <div className="flex items-start gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Calendar className="text-slate-600" size={14} />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Closing date</p>
-                  <p className="text-sm text-slate-800 mt-0.5">
-                    {new Date(rfq.closing_date).toLocaleDateString(undefined, {
-                      dateStyle: 'medium',
-                    })}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </SectionCard>
-      )}
+      <SectionCard title="Schedule" subtitle="Deadlines, planning milestones, and today on one axis">
+        <RfqScheduleTimeline {...scheduleContext} />
+      </SectionCard>
 
       {/* 4 KPI scorecards */}
       <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">

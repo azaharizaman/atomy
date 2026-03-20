@@ -14,6 +14,8 @@ export interface TaskListItem {
 export interface UseTasksParams {
   assignee_id?: string;
   status?: string;
+  /** When false, skips fetch (e.g. Tasks feature off on API). */
+  enabled?: boolean;
 }
 
 function normalizeTasksPayload(payload: unknown): TaskListItem[] {
@@ -31,18 +33,21 @@ function normalizeTasksPayload(payload: unknown): TaskListItem[] {
 }
 
 export function useTasks(params: UseTasksParams = {}) {
+  const { enabled: enabledParam, assignee_id, status, ...rest } = params;
+  const enabled = enabledParam ?? true;
   return useQuery({
-    queryKey: ['tasks', params],
+    queryKey: ['tasks', { assignee_id, status, ...rest }],
     queryFn: async (): Promise<TaskListItem[]> => {
       const apiParams: Record<string, string> = {};
-      if (params.assignee_id) apiParams.assignee_id = params.assignee_id;
-      if (params.status) apiParams.status = params.status;
+      if (assignee_id) apiParams.assignee_id = assignee_id;
+      if (status) apiParams.status = status;
       const { data } = await api.get('/tasks', { params: apiParams });
       const items = normalizeTasksPayload(data);
-      if (params.status) {
-        return items.filter((t) => t.status === params.status);
+      if (status) {
+        return items.filter((t) => t.status === status);
       }
       return items;
     },
+    enabled,
   });
 }

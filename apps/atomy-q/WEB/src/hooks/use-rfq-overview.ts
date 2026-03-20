@@ -8,10 +8,14 @@ export interface RfqOverviewRfq {
   id: string;
   rfq_number: string;
   title: string;
+  description?: string | null;
   status: RfqStatus;
   owner?: { id: string; name: string; email: string } | null;
   submission_deadline?: string | null;
   closing_date?: string | null;
+  expected_award_at?: string | null;
+  technical_review_due_at?: string | null;
+  financial_review_due_at?: string | null;
   category?: string | null;
   estimated_value?: number | string | null;
   estValue?: number | string | null;
@@ -126,10 +130,20 @@ function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
       id: String(rfq?.id ?? ''),
       rfq_number: String(rfq?.rfq_number ?? ''),
       title: String(rfq?.title ?? 'Requisition'),
+      description:
+        rfq?.description === null || rfq?.description === undefined
+          ? null
+          : (() => {
+              const s = String(rfq.description).trim();
+              return s === '' ? null : s;
+            })(),
       status: (rfq?.status as RfqStatus) ?? 'draft',
       owner: rfq?.owner as RfqOverviewRfq['owner'],
       submission_deadline: rfq?.submission_deadline as string | null,
       closing_date: rfq?.closing_date as string | null,
+      expected_award_at: (rfq?.expected_award_at ?? rfq?.expectedAwardAt ?? null) as string | null,
+      technical_review_due_at: (rfq?.technical_review_due_at ?? rfq?.technicalReviewDueAt ?? null) as string | null,
+      financial_review_due_at: (rfq?.financial_review_due_at ?? rfq?.financialReviewDueAt ?? null) as string | null,
       category: rfq?.category as string | null,
       estimated_value: (rfq?.estimated_value ?? rfq?.estValue) as string | number | null | undefined,
       estValue: (rfq?.estValue ?? rfq?.estimated_value) as string | number | null | undefined,
@@ -183,10 +197,14 @@ export function useRfqOverview(rfqId: string) {
             id: detail?.id ?? rfqId,
             rfq_number: detail?.id ?? rfqId,
             title: detail?.title ?? 'Requisition',
+            description: detail?.description ?? null,
             status: (detail?.status as RfqStatus) ?? 'active',
             owner: null,
-            submission_deadline: null,
-            closing_date: null,
+            submission_deadline: new Date(Date.now() + 86400000 * 5).toISOString(),
+            closing_date: new Date(Date.now() + 86400000 * 12).toISOString(),
+            expected_award_at: new Date(Date.now() + 86400000 * 45).toISOString(),
+            technical_review_due_at: new Date(Date.now() + 86400000 * 18).toISOString(),
+            financial_review_due_at: new Date(Date.now() + 86400000 * 28).toISOString(),
             category: null,
             estimated_value: detail?.estValue,
             estValue: detail?.estValue,

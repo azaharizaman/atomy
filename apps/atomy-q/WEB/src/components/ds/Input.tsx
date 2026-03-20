@@ -83,6 +83,51 @@ export function TextInput({
   );
 }
 
+interface TextAreaInputProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: string;
+  hint?: string;
+  error?: string;
+  containerClassName?: string;
+}
+
+export function TextAreaInput({
+  label,
+  hint,
+  error,
+  containerClassName = '',
+  className = '',
+  id,
+  required,
+  rows = 5,
+  ...props
+}: TextAreaInputProps) {
+  const inputId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+
+  return (
+    <div className={['flex flex-col', containerClassName].join(' ')}>
+      {label && (
+        <FieldLabel htmlFor={inputId} required={required}>
+          {label}
+        </FieldLabel>
+      )}
+      <textarea
+        id={inputId}
+        required={required}
+        rows={rows}
+        className={[
+          inputBase,
+          'min-h-[96px] px-3 py-2 resize-y',
+          error ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : '',
+          className,
+        ].join(' ')}
+        {...props}
+      />
+      {error && <FieldError>{error}</FieldError>}
+      {hint && !error && <FieldHint>{hint}</FieldHint>}
+    </div>
+  );
+}
+
 type PasswordInputProps = Omit<TextInputProps, 'type' | 'suffixIcon'>;
 
 export function PasswordInput(props: PasswordInputProps) {

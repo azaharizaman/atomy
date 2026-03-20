@@ -18,8 +18,14 @@ import { AppFooter } from '@/components/layout/app-footer';
 import { useAuthStore } from '@/store/use-auth-store';
 import { RFQ_STATUSES } from '@/hooks/use-rfqs';
 import { useRfqNavCounts } from '@/hooks/use-rfq-counts';
+import { useFeatureFlags } from '@/hooks/use-feature-flags';
 
 /** True when on an RFQ workspace route (e.g. /rfqs/[rfqId]/overview). Use Workspace layout only (Rail + Active Record Menu + Work surface). */
+/** Placeholder rows matching nav item height while feature flags load (no dead links). */
+function NavFeatureSlotSkeleton() {
+  return <div className="h-9 mx-0.5 rounded-md bg-slate-100 animate-pulse" aria-hidden />;
+}
+
 function isRfqWorkspacePath(pathname: string): boolean {
   if (!pathname.startsWith('/rfqs/') || pathname === '/rfqs' || pathname === '/rfqs/') return false;
   if (pathname.startsWith('/rfqs/new')) return false;
@@ -36,6 +42,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
   const { data: rfqCounts } = useRfqNavCounts();
+  const { data: featureFlags, isLoading: featureFlagsLoading } = useFeatureFlags();
 
   // Deny access when not authenticated (after auth init). Redirect to login.
   useEffect(() => {
@@ -44,6 +51,19 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
   }, [isLoading, isAuthenticated, router, pathname]);
+
+  useEffect(() => {
+    if (featureFlagsLoading || featureFlags === undefined) {
+      return;
+    }
+    if (pathname.startsWith('/projects') && !featureFlags.projects) {
+      router.replace('/');
+      return;
+    }
+    if ((pathname === '/tasks' || pathname.startsWith('/tasks/')) && !featureFlags.tasks) {
+      router.replace('/');
+    }
+  }, [featureFlagsLoading, featureFlags, pathname, router]);
 
   // While auth is loading or user is not authenticated, show minimal loading then redirect (handled in useEffect).
   if (isLoading || !isAuthenticated) {
@@ -90,19 +110,31 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             href="/"
           />
 
-          <NavItem
-            label="Projects"
-            icon={<FolderKanban size={18} />}
-            active={pathname.startsWith('/projects')}
-            href="/projects"
-          />
-
-          <NavItem
-            label="Task Inbox"
-            icon={<ListTodo size={18} />}
-            active={pathname.startsWith('/tasks')}
-            href="/tasks"
-          />
+          {featureFlagsLoading ? (
+            <>
+              <NavFeatureSlotSkeleton />
+              <NavFeatureSlotSkeleton />
+            </>
+          ) : (
+            <>
+              {featureFlags?.projects ? (
+                <NavItem
+                  label="Projects"
+                  icon={<FolderKanban size={18} />}
+                  active={pathname.startsWith('/projects')}
+                  href="/projects"
+                />
+              ) : null}
+              {featureFlags?.tasks ? (
+                <NavItem
+                  label="Task Inbox"
+                  icon={<ListTodo size={18} />}
+                  active={pathname.startsWith('/tasks')}
+                  href="/tasks"
+                />
+              ) : null}
+            </>
+          )}
 
           <NavGroup
             label="Requisition"

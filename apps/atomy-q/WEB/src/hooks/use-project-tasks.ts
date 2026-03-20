@@ -27,13 +27,15 @@ function normalize(payload: unknown): ProjectTaskListItem[] {
     .filter((x) => x.id);
 }
 
-export function useProjectTasks(projectId: string) {
+export function useProjectTasks(projectId: string, options?: { enabled?: boolean }) {
+  const enabled = (options?.enabled ?? true) && projectId !== '';
   return useQuery({
     queryKey: ['projects', projectId, 'tasks'],
     queryFn: async () => {
       const { data } = await api.get(`/projects/${encodeURIComponent(projectId)}/tasks`);
       return normalize(data);
     },
+    enabled,
   });
 }
 

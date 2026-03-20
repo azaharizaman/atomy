@@ -9697,6 +9697,12 @@
                                                 "title": {
                                                     "type": "string"
                                                 },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "status": {
                                                     "type": "string"
                                                 },
@@ -9737,6 +9743,27 @@
                                                 "closing_date": {
                                                     "type": "string"
                                                 },
+                                                "expected_award_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "format": "date-time"
+                                                },
+                                                "technical_review_due_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "format": "date-time"
+                                                },
+                                                "financial_review_due_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "format": "date-time"
+                                                },
                                                 "category": {
                                                     "type": "string"
                                                 },
@@ -9766,6 +9793,7 @@
                                                 "id",
                                                 "rfq_number",
                                                 "title",
+                                                "description",
                                                 "status",
                                                 "project_id",
                                                 "project_name",
@@ -9773,6 +9801,9 @@
                                                 "deadline",
                                                 "submission_deadline",
                                                 "closing_date",
+                                                "expected_award_at",
+                                                "technical_review_due_at",
+                                                "financial_review_due_at",
                                                 "category",
                                                 "estimated_value",
                                                 "estValue",
@@ -9918,6 +9949,12 @@
                                                         "title": {
                                                             "type": "string"
                                                         },
+                                                        "description": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
                                                         "status": {
                                                             "type": "string"
                                                         },
@@ -9949,6 +9986,27 @@
                                                         "closing_date": {
                                                             "type": "string"
                                                         },
+                                                        "expected_award_at": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ],
+                                                            "format": "date-time"
+                                                        },
+                                                        "technical_review_due_at": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ],
+                                                            "format": "date-time"
+                                                        },
+                                                        "financial_review_due_at": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ],
+                                                            "format": "date-time"
+                                                        },
                                                         "category": {
                                                             "type": "string"
                                                         },
@@ -9978,10 +10036,14 @@
                                                         "id",
                                                         "rfq_number",
                                                         "title",
+                                                        "description",
                                                         "status",
                                                         "owner",
                                                         "submission_deadline",
                                                         "closing_date",
+                                                        "expected_award_at",
+                                                        "technical_review_due_at",
+                                                        "financial_review_due_at",
                                                         "category",
                                                         "estimated_value",
                                                         "estValue",

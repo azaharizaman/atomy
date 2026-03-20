@@ -6,6 +6,10 @@ import { renderWithProviders } from '@/test/utils';
 const mockUseTasks = vi.fn();
 const mockUseTask = vi.fn();
 
+vi.mock('@/hooks/use-feature-flags', () => ({
+  useFeatureFlags: () => ({ data: { projects: true, tasks: true }, isLoading: false }),
+}));
+
 vi.mock('@/hooks/use-tasks', () => ({
   useTasks: (...args: unknown[]) => mockUseTasks(...args),
 }));

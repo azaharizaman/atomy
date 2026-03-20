@@ -67,14 +67,19 @@ final class SettingController extends Controller
     }
 
     /**
-     * List feature flags.
+     * List feature flags (read-only mirror of server config).
+     *
+     * Used by WEB for nav / graceful degradation; matches {@see config('features.*')} used by controllers.
      *
      * GET /feature-flags
      */
     public function featureFlags(Request $request): JsonResponse
     {
-        return $this->notImplemented('Listing feature flags', [
-            'tenant_id' => $this->tenantId($request),
+        return response()->json([
+            'data' => [
+                'projects' => (bool) config('features.projects'),
+                'tasks' => (bool) config('features.tasks'),
+            ],
         ]);
     }
 

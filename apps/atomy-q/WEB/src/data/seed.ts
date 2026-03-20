@@ -314,6 +314,7 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
       submissionDeadline,
       vendorsCount,
       quotesCount,
+      description: `Scope and evaluation context for ${title}. Department: ${department}; category ${category}.`,
     });
 
     const vendorPool = [...VENDOR_NAMES].sort((a, b) => {
@@ -535,6 +536,8 @@ export function getSeedRfqDetail(id: string): {
   quotesCount: number;
   estValue: string;
   savings: string;
+  description?: string | null;
+  category?: string | null;
 } | null {
   const r = getSeedRfqById(id);
   if (!r) return null;
@@ -546,6 +549,8 @@ export function getSeedRfqDetail(id: string): {
     quotesCount: r.quotesCount,
     estValue: `$${r.estimatedValue.toLocaleString()}`,
     savings: r.savingsPercent > 0 ? `${r.savingsPercent}%` : '—',
+    description: r.description ?? null,
+    category: r.category,
   };
 }
 

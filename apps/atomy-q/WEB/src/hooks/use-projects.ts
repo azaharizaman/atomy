@@ -41,13 +41,15 @@ function normalizeProjectsPayload(payload: unknown): ProjectListItem[] {
     .filter((p) => p.id);
 }
 
-export function useProjects() {
+export function useProjects(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: ['projects'],
     queryFn: async (): Promise<ProjectListItem[]> => {
       const { data } = await api.get('/projects');
       return normalizeProjectsPayload(data);
     },
+    enabled,
   });
 }
 

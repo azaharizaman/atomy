@@ -399,15 +399,25 @@ export type ApprovalIndexData = {
 
 export type ApprovalIndexResponses = {
     200: {
-        data: Array<string>;
+        data: Array<{
+            id: string;
+            rfq_id: string;
+            rfq_title: string | 'Requisition';
+            type: string;
+            type_label: string;
+            status: string;
+            priority: 'high' | 'medium' | 'low';
+            summary: string;
+            sla: '—';
+            sla_variant: 'safe';
+            assignee: string | '—';
+            requested_at: string;
+        }>;
         meta: {
-            current_page: {
-                [key: string]: unknown;
-            } | null;
-            per_page: {
-                [key: string]: unknown;
-            } | null;
+            current_page: number;
+            per_page: number;
             total: number;
+            total_pages: number;
         };
     };
 };
@@ -477,14 +487,38 @@ export type ApprovalShowData = {
     url: '/approvals/{id}';
 };
 
+export type ApprovalShowErrors = {
+    404: {
+        message: 'Approval not found';
+    };
+};
+
+export type ApprovalShowError = ApprovalShowErrors[keyof ApprovalShowErrors];
+
 export type ApprovalShowResponses = {
     200: {
         data: {
             id: string;
-            type: 'quote_approval';
-            status: 'pending';
-            priority: 'normal';
-            created_at: null;
+            rfq_id: string;
+            rfq_title: string | 'Requisition';
+            type: string;
+            type_label: string;
+            status: string;
+            priority: 'high' | 'medium' | 'low';
+            summary: string;
+            sla: '—';
+            sla_variant: 'safe';
+            assignee: string | '—';
+            requested_at: string;
+            rfq_number: string;
+            notes: string | null;
+            comparison_run: {
+                id: string;
+                name: string;
+                status: string;
+                is_preview: boolean;
+            } | null;
+            created_at: string;
         };
     };
 };
@@ -537,7 +571,9 @@ export type ApprovalApproveResponses = {
 export type ApprovalApproveResponse = ApprovalApproveResponses[keyof ApprovalApproveResponses];
 
 export type ApprovalRejectData = {
-    body?: never;
+    body?: {
+        reason?: string | null;
+    };
     path: {
         id: string;
     };
@@ -545,12 +581,35 @@ export type ApprovalRejectData = {
     url: '/approvals/{id}/reject';
 };
 
+export type ApprovalRejectErrors = {
+    404: {
+        message: 'Approval not found';
+    };
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type ApprovalRejectError = ApprovalRejectErrors[keyof ApprovalRejectErrors];
+
 export type ApprovalRejectResponses = {
     200: {
         data: {
             id: string;
             status: 'rejected';
-            rejected_at: null;
+            rejected_at: string;
         };
     };
 };
@@ -779,12 +838,47 @@ export type AuthForgotPasswordErrors = {
     422: {
         errors: MessageBag;
     };
-    501: {
-        message: 'Password reset flow is not implemented yet.';
-    };
 };
 
 export type AuthForgotPasswordError = AuthForgotPasswordErrors[keyof AuthForgotPasswordErrors];
+
+export type AuthForgotPasswordResponses = {
+    200: {
+        message: 'If an account exists for this email, password reset instructions have been sent.';
+    };
+};
+
+export type AuthForgotPasswordResponse = AuthForgotPasswordResponses[keyof AuthForgotPasswordResponses];
+
+export type AuthResetPasswordData = {
+    body: {
+        email: string;
+        token: string;
+        password: string;
+        password_confirmation: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/auth/reset-password';
+};
+
+export type AuthResetPasswordErrors = {
+    422: {
+        message: 'Invalid or expired reset token.';
+    } | {
+        errors: MessageBag;
+    };
+};
+
+export type AuthResetPasswordError = AuthResetPasswordErrors[keyof AuthResetPasswordErrors];
+
+export type AuthResetPasswordResponses = {
+    200: {
+        message: 'Password has been reset.';
+    };
+};
+
+export type AuthResetPasswordResponse = AuthResetPasswordResponses[keyof AuthResetPasswordResponses];
 
 export type AuthRefreshData = {
     body: {
@@ -3578,6 +3672,30 @@ export type RfqStoreResponses = {
 
 export type RfqStoreResponse = RfqStoreResponses[keyof RfqStoreResponses];
 
+export type RfqCountsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/rfqs/counts';
+};
+
+export type RfqCountsResponses = {
+    200: {
+        data: {
+            draft: number;
+            published: number;
+            closed: number;
+            awarded: number;
+            cancelled: number;
+            active: number;
+            pending: number;
+            archived: number;
+        };
+    };
+};
+
+export type RfqCountsResponse = RfqCountsResponses[keyof RfqCountsResponses];
+
 export type RfqBulkActionData = {
     body?: never;
     path?: never;
@@ -3622,6 +3740,7 @@ export type RfqShowResponses = {
             id: string;
             rfq_number: string;
             title: string;
+            description: string | null;
             status: string;
             project_id: string;
             project_name: string;
@@ -3633,6 +3752,9 @@ export type RfqShowResponses = {
             deadline: string;
             submission_deadline: string;
             closing_date: string;
+            expected_award_at: string;
+            technical_review_due_at: string;
+            financial_review_due_at: string;
             category: string;
             estimated_value: string;
             estValue: string;
@@ -3713,6 +3835,7 @@ export type RfqOverviewResponses = {
                 id: string;
                 rfq_number: string;
                 title: string;
+                description: string | null;
                 status: string;
                 owner: {
                     id: string;
@@ -3721,6 +3844,9 @@ export type RfqOverviewResponses = {
                 } | null;
                 submission_deadline: string;
                 closing_date: string;
+                expected_award_at: string;
+                technical_review_due_at: string;
+                financial_review_due_at: string;
                 category: string;
                 estimated_value: string;
                 estValue: string;

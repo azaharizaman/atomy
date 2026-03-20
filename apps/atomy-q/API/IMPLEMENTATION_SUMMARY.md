@@ -44,6 +44,8 @@
 
 - `JWT_SECRET` must be non-empty (`php artisan key:generate` sets `APP_KEY`; JWT uses `config/jwt.php` / `.env` `JWT_SECRET`).
 
+- **`GET /api/v1/feature-flags`:** Returns `{ data: { projects: bool, tasks: bool } }` mirroring `config('features.*')` for WEB nav and graceful degradation when routes return 404.
+
 ## OpenAPI (Scramble)
 
 - **Package:** `dedoc/scramble` (dev). Config: `config/scramble.php` — documents routes under `api/v1` only.
@@ -161,7 +163,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Added quote intake workflow validation contracts for upload payload shape, supported quote submission status values, and normalization/comparison mutation requests.
 - Auth feature tests now validate token semantics and refresh tokens via the login flow using an in-memory SQLite database; protected endpoint auth checks run per-route with unique IDs and assert non-401/403 responses, JWT issuance in API tests resolves via `JwtServiceInterface`, and example tests create users directly without model factories.
 - Added unit tests for `JwtService`, `ExtractsAuthContext`, and core model relationships.
-- `DatabaseSeeder` now generates ample mock data across all 25 tables for realistic API seed state.
+- **`DatabaseSeeder`** delegates to **`PetrochemicalTenantSeeder`**: single fixed tenant (default ULID `01KKH77M4R0V8QZ1M8NB3XWWWQ` or `ATOMY_SEED_TENANT_ID`), fictional buyer **Nordfjord Process Chemicals AS**, **12** capital projects with **`project_acl`**, **56** RFQs (mix of draft / published / closed / awarded / cancelled), **150+** quote submissions, petrochemical-style line items (tiny through large bundles), vendor pool with **risk-flagged** suppliers, **`risk_items`** on risky bids, quote statuses along the real intake pipeline (`uploaded` → … → `ready`), normalization source lines + optional **open conflicts** for stuck RFQs, preview + **`final`** comparison runs with **tight vs spread** `scoring_payload`, approvals (**pending** on closed, **approved** on awarded), **awards** + **handoffs** where appropriate. Login: `user1@example.com` … `user8@example.com` / `secret`.
 - Seeder aligned with `approval_history.metadata` column (replacing legacy `payload` field).
 - Seeder aligned with `report_runs` columns (`schedule_id`, `report_type`, `file_path`, `parameters`).
 - RFQ index endpoint now reads from `rfqs` table with tenant scoping and basic filters.
@@ -204,6 +206,13 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Replaced synthetic success payloads in award/negotiation/setting mutation stubs with explicit `501 Not Implemented` responses.
 - Aligned schema/model definitions (`Scenario` fields, `comparison_runs.discarded_by` type) and strengthened several migration indexes.
 - Added missing `declare(strict_types=1);` headers in scaffolded PHP files flagged during review.
+
+## RFQ schedule milestones (2026-03-20)
+
+- **`rfqs` table:** nullable timestamps `expected_award_at`, `technical_review_due_at`, `financial_review_due_at` (migration `2026_03_20_000002_add_schedule_milestone_dates_to_rfqs_table.php`) for horizontal timeline / planning dates (queryable, explicit).
+- **API:** Optional on `POST /rfqs` and `PUT /rfqs/{id}` (`nullable|date`). Returned as RFC 3339 atom strings (or JSON `null`) on `GET /rfqs/{id}` and under `data.rfq` on `GET /rfqs/{id}/overview`.
+- **`description`:** Included on `GET /rfqs/{id}` and `GET /rfqs/{id}/overview` (`data` / `data.rfq`) as nullable text; still writable via existing `POST`/`PUT` validation.
+- **OpenAPI:** `apps/atomy-q/openapi/openapi.json` updated for show + overview `rfq` shapes. Regenerate via `php artisan scramble:export` when using Scramble as source of truth.
 
 ## 2026-03-19 PR Remediation
 - `AuthController` SSO flow no longer accepts client-provided `redirect_uri`; redirect URI is resolved server-side from tenant-aware config with fallback to global OIDC redirect.

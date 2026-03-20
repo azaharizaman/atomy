@@ -14,8 +14,12 @@ import { useUpdateProject } from '@/hooks/use-update-project';
 import { useUpdateProjectStatus, PROJECT_STATUSES } from '@/hooks/use-update-project-status';
 import { useProjectAcl, type ProjectAclEntry, type ProjectAclRole } from '@/hooks/use-project-acl';
 import { useUpdateProjectAcl } from '@/hooks/use-update-project-acl';
+import { useFeatureFlags } from '@/hooks/use-feature-flags';
 
 type AclDraftEntry = ProjectAclEntry & { draftId: string };
+
+/** Stable fallback so `useEffect([acl])` does not see a new [] every render while loading. */
+const EMPTY_PROJECT_ACL: ProjectAclEntry[] = [];
 
 function createAclDraftId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -29,6 +33,9 @@ export default function ProjectDetailPage() {
   const params = useParams<{ projectId: string }>();
   const projectId = params.projectId;
 
+  const { data: flags, isLoading: featureFlagsLoading } = useFeatureFlags();
+  const projectsQueryEnabled = !featureFlagsLoading && flags?.projects === true;
+
   const [editMode, setEditMode] = React.useState(false);
   const [editName, setEditName] = React.useState('');
   const [editClientId, setEditClientId] = React.useState('');
@@ -36,11 +43,23 @@ export default function ProjectDetailPage() {
   const [editEndDate, setEditEndDate] = React.useState('');
   const [editPmId, setEditPmId] = React.useState('');
 
-  const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId);
-  const { data: health, isLoading: healthLoading, isError: healthIsError, error: healthError } = useProjectHealth(projectId);
-  const { data: rfqs = [], isLoading: rfqsLoading, isError: rfqsError } = useProjectRfqs(projectId);
-  const { data: tasks = [], isLoading: tasksLoading, isError: tasksError } = useProjectTasks(projectId);
-  const { data: acl = [], isLoading: aclLoading, isError: aclIsError, error: aclError } = useProjectAcl(projectId);
+  const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId, {
+    enabled: projectsQueryEnabled,
+  });
+  const { data: health, isLoading: healthLoading, isError: healthIsError, error: healthError } = useProjectHealth(
+    projectId,
+    { enabled: projectsQueryEnabled },
+  );
+  const { data: rfqs = [], isLoading: rfqsLoading, isError: rfqsError } = useProjectRfqs(projectId, {
+    enabled: projectsQueryEnabled,
+  });
+  const { data: tasks = [], isLoading: tasksLoading, isError: tasksError } = useProjectTasks(projectId, {
+    enabled: projectsQueryEnabled,
+  });
+  const { data: aclData, isLoading: aclLoading, isError: aclIsError, error: aclError } = useProjectAcl(projectId, {
+    enabled: projectsQueryEnabled,
+  });
+  const acl = aclData ?? EMPTY_PROJECT_ACL;
   const updateProject = useUpdateProject(projectId);
   const updateStatus = useUpdateProjectStatus(projectId);
   const updateAcl = useUpdateProjectAcl(projectId);
@@ -58,16 +77,26 @@ export default function ProjectDetailPage() {
     }
   }, [project, editMode]);
 
-  React.useEffect(() => {
-    if (!aclDirty) {
+  const aclSyncKey = React.useMemo(
+    () => acl.map((e) => `${e.userId}:${e.role}`).join('|'),
+    [acl],
+  );
+
+  React.useEffect(
+    () => {
+      if (aclDirty) {
+        return;
+      }
       setAclDraft(
         acl.map((entry) => ({
           ...entry,
           draftId: createAclDraftId(),
-        }))
+        })),
       );
-    }
-  }, [acl, aclDirty]);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `acl` omitted: stable EMPTY_PROJECT_ACL + aclSyncKey tracks content
+    [aclSyncKey, aclDirty],
+  );
 
   const normalizedAcl = React.useMemo(
     () =>
@@ -76,6 +105,21 @@ export default function ProjectDetailPage() {
         .filter((e) => e.userId !== ''),
     [aclDraft]
   );
+
+  if (featureFlagsLoading) {
+    return (
+      <Card padding="md">
+        <div className="space-y-3 animate-pulse" aria-busy="true">
+          <div className="h-6 w-48 rounded bg-slate-200" />
+          <div className="h-32 w-full rounded bg-slate-100" />
+        </div>
+      </Card>
+    );
+  }
+
+  if (!flags?.projects) {
+    return null;
+  }
 
   const isAxios404 = axios.isAxiosError(projectError) && projectError.response?.status === 404;
   const projectErrorData = axios.isAxiosError(projectError) ? projectError.response?.data : undefined;

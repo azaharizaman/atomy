@@ -10,6 +10,7 @@ import { Header } from '@/components/layout/header';
 import { AppFooter } from '@/components/layout/app-footer';
 import { ActiveRecordMenu } from '@/components/workspace/active-record-menu';
 import { useRfq } from '@/hooks/use-rfq';
+import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { type RfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
 
 function getPrimaryActionLabel(status: RfqStatus): string {
@@ -34,6 +35,8 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
 
   const { rfqId } = React.use(params);
   const { data: rfq, isLoading } = useRfq(rfqId);
+  const { data: flags, isLoading: flagsLoading } = useFeatureFlags();
+  const projectsLinkEnabled = flags?.projects === true;
 
   const record = rfq
     ? {
@@ -91,13 +94,19 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
                 {!isLoading && rfq && (
                   <div className="text-sm text-slate-600">
                     Project:{' '}
-                    {rfq.projectId ? (
-                      <Link
-                        href={`/projects/${encodeURIComponent(rfq.projectId)}`}
-                        className="text-indigo-600 hover:underline font-medium"
-                      >
-                        {rfq.projectName ?? rfq.projectId}
-                      </Link>
+                    {flagsLoading ? (
+                      <span className="inline-block h-4 w-32 rounded bg-slate-200 animate-pulse align-middle" aria-hidden />
+                    ) : rfq.projectId ? (
+                      projectsLinkEnabled ? (
+                        <Link
+                          href={`/projects/${encodeURIComponent(rfq.projectId)}`}
+                          className="text-indigo-600 hover:underline font-medium"
+                        >
+                          {rfq.projectName ?? rfq.projectId}
+                        </Link>
+                      ) : (
+                        <span className="text-slate-700 font-medium">{rfq.projectName ?? rfq.projectId}</span>
+                      )
                     ) : (
                       <span className="text-slate-700 font-medium">Unassigned</span>
                     )}

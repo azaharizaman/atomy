@@ -208,4 +208,85 @@ final class RfqOverviewActivityTest extends ApiTestCase
             ],
         ]);
     }
+
+    public function test_overview_and_show_include_schedule_milestone_dates(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $expectedAward = now()->addDays(30);
+        $technicalDue = now()->addDays(10);
+        $financialDue = now()->addDays(20);
+
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_number' => 'RFQ-SCHED-MS-1',
+            'title' => 'Schedule milestones',
+            'owner_id' => $user->id,
+            'status' => 'published',
+            'expected_award_at' => $expectedAward,
+            'technical_review_due_at' => $technicalDue,
+            'financial_review_due_at' => $financialDue,
+        ]);
+
+        $overview = $this->getJson(
+            '/api/v1/rfqs/' . $rfq->id . '/overview',
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+        $overview->assertOk();
+        $overview->assertJsonPath('data.rfq.expected_award_at', $expectedAward->toAtomString());
+        $overview->assertJsonPath('data.rfq.technical_review_due_at', $technicalDue->toAtomString());
+        $overview->assertJsonPath('data.rfq.financial_review_due_at', $financialDue->toAtomString());
+
+        $show = $this->getJson(
+            '/api/v1/rfqs/' . $rfq->id,
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+        $show->assertOk();
+        $show->assertJsonPath('data.expected_award_at', $expectedAward->toAtomString());
+        $show->assertJsonPath('data.technical_review_due_at', $technicalDue->toAtomString());
+        $show->assertJsonPath('data.financial_review_due_at', $financialDue->toAtomString());
+
+        $this->putJson(
+            '/api/v1/rfqs/' . $rfq->id,
+            [
+                'expected_award_at' => null,
+                'technical_review_due_at' => null,
+                'financial_review_due_at' => null,
+            ],
+            $this->authHeaders($tenantId, (string) $user->id),
+        )->assertOk();
+
+        $cleared = $this->getJson(
+            '/api/v1/rfqs/' . $rfq->id . '/overview',
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+        $cleared->assertOk();
+        $cleared->assertJsonPath('data.rfq.expected_award_at', null);
+        $cleared->assertJsonPath('data.rfq.technical_review_due_at', null);
+        $cleared->assertJsonPath('data.rfq.financial_review_due_at', null);
+    }
+
+    public function test_show_and_overview_include_description(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_number' => 'RFQ-DESC-PAYLOAD',
+            'title' => 'Description payload',
+            'owner_id' => $user->id,
+            'description' => 'SOW and evaluation notes.',
+        ]);
+
+        $headers = $this->authHeaders($tenantId, (string) $user->id);
+
+        $this->getJson('/api/v1/rfqs/' . $rfq->id, $headers)
+            ->assertOk()
+            ->assertJsonPath('data.description', 'SOW and evaluation notes.');
+
+        $this->getJson('/api/v1/rfqs/' . $rfq->id . '/overview', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.rfq.description', 'SOW and evaluation notes.');
+    }
 }

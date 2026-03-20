@@ -37,7 +37,8 @@ function normalizeTask(payload: unknown): TaskDetail {
   };
 }
 
-export function useTask(taskId: string | null) {
+export function useTask(taskId: string | null, options?: { enabled?: boolean }) {
+  const enabled = Boolean(taskId) && (options?.enabled ?? true);
   return useQuery({
     queryKey: ['tasks', taskId],
     queryFn: async (): Promise<TaskDetail> => {
@@ -45,6 +46,6 @@ export function useTask(taskId: string | null) {
       const { data } = await api.get(`/tasks/${encodeURIComponent(taskId)}`);
       return normalizeTask(data);
     },
-    enabled: !!taskId,
+    enabled,
   });
 }

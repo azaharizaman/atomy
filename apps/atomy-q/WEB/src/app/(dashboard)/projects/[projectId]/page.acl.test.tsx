@@ -30,6 +30,10 @@ vi.mock('@/hooks/use-project-acl', () => ({
   useProjectAcl: (...args: unknown[]) => mockUseProjectAcl(...args),
 }));
 
+vi.mock('@/hooks/use-feature-flags', () => ({
+  useFeatureFlags: () => ({ data: { projects: true, tasks: true }, isLoading: false }),
+}));
+
 const mockUpdateAclMutate = vi.fn();
 vi.mock('@/hooks/use-update-project-acl', () => ({
   useUpdateProjectAcl: () => ({ mutate: mockUpdateAclMutate, isPending: false, isError: false, error: null }),

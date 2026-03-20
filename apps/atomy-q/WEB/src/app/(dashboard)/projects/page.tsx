@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { Button } from '@/components/ds/Button';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { FilterBar, PageHeader } from '@/components/ds/FilterBar';
@@ -52,6 +54,7 @@ const PROJECT_COLUMNS: ColumnDef<ProjectListItem>[] = [
 ];
 
 export default function ProjectsPage() {
+  const isDev = process.env.NODE_ENV === 'development';
   const router = useRouter();
   const [q, setQ] = React.useState('');
   const [showCreateForm, setShowCreateForm] = React.useState(false);
@@ -60,7 +63,16 @@ export default function ProjectsPage() {
   const [createStartDate, setCreateStartDate] = React.useState('');
   const [createEndDate, setCreateEndDate] = React.useState('');
   const [createPmId, setCreatePmId] = React.useState('');
-  const { data: projects = [], isLoading, isError, error } = useProjects();
+  const {
+    data: flags,
+    isLoading: flagsLoading,
+    isError: flagsError,
+    error: flagsErrorDetail,
+  } = useFeatureFlags();
+  const projectsEnabled = flags?.projects === true;
+  const { data: projects = [], isLoading, isError, error } = useProjects({
+    enabled: !flagsLoading && projectsEnabled,
+  });
   const createProject = useCreateProject();
 
   const handleCreateSubmit = (e: React.FormEvent) => {
@@ -94,11 +106,46 @@ export default function ProjectsPage() {
     return projects.filter((p) => p.name.toLowerCase().includes(query) || p.id.toLowerCase().includes(query));
   }, [projects, q]);
 
+  if (flagsLoading) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Projects" subtitle="Loading…" actions={null} />
+        <Card padding="md">
+          <div className="space-y-2" aria-busy="true">
+            <div className="h-4 w-40 rounded bg-slate-200 animate-pulse" />
+            <div className="h-24 w-full rounded bg-slate-100 animate-pulse" />
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (flagsError) {
+    return (
+      <Card padding="md">
+        <div className="text-sm font-semibold text-slate-900">Failed to load feature flags</div>
+        <div className="text-xs text-slate-500 mt-1">{String((flagsErrorDetail as Error | null)?.message ?? '')}</div>
+      </Card>
+    );
+  }
+
+  if (!projectsEnabled) {
+    // Intentionally render nothing here: feature gating/redirect is handled by the dashboard layout.
+    return null;
+  }
+
   if (isError) {
+    const genericDetail = 'Projects are disabled or not found.';
+    const is404 = axios.isAxiosError(error) && error.response?.status === 404;
+    const detail = is404
+      ? (isDev
+          ? 'The API returned 404 — Projects are usually disabled. Set FEATURE_PROJECTS_ENABLED=true in apps/atomy-q/API/.env and restart php artisan serve (or your PHP process).'
+          : genericDetail)
+      : (isDev ? String((error as Error | null)?.message ?? '') : genericDetail);
     return (
       <Card padding="md">
         <div className="text-sm font-semibold text-slate-900">Failed to load projects</div>
-        <div className="text-xs text-slate-500 mt-1">{String((error as Error | null)?.message ?? '')}</div>
+        <div className="text-xs text-slate-500 mt-1">{detail}</div>
       </Card>
     );
   }
@@ -183,7 +230,11 @@ export default function ProjectsPage() {
               </Button>
             </div>
             {createProject.isError && (
-              <p className="text-xs text-red-600">{String((createProject.error as Error | null)?.message ?? '')}</p>
+              <p className="text-xs text-red-600">
+                {isDev
+                  ? String((createProject.error as Error | null)?.message ?? '')
+                  : 'An error occurred while creating the project.'}
+              </p>
             )}
           </form>
         </Card>

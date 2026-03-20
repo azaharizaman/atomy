@@ -91,6 +91,7 @@ Optional: set `API_VERSION` in `.env` for the `info.version` field in the export
 - `ATOMY_MIN_VENDORS_FINAL`
 - `ATOMY_MIN_VENDORS_PREVIEW`
 - `ATOMY_CONFIDENCE_THRESHOLD`
+- **`FEATURE_PROJECTS_ENABLED`** / **`FEATURE_TASKS_ENABLED`** (default `false`): when `false`, `GET /projects` and related routes **return 404** (feature hidden). Set to `true` in local `.env` for Atomy-Q WEB Projects / Tasks screens.
 
 ## Quote intake & comparison (pilot)
 
@@ -129,6 +130,9 @@ AWS_BUCKET=your-bucket-name
 AWS_URL=http://localhost:9000
 AWS_ENDPOINT=http://localhost:9000
 AWS_USE_PATH_STYLE_ENDPOINTS=true
+
+FEATURE_PROJECTS_ENABLED=true
+FEATURE_TASKS_ENABLED=true
 ```
 
 ## Running API Tests
