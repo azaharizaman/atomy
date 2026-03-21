@@ -6,6 +6,7 @@ namespace Nexus\PolicyEngine\Services;
 
 use Nexus\PolicyEngine\Contracts\PolicyEngineInterface;
 use Nexus\PolicyEngine\Contracts\PolicyRegistryInterface;
+use Nexus\PolicyEngine\Contracts\PolicyValidatorInterface;
 use Nexus\PolicyEngine\Domain\PolicyDecision;
 use Nexus\PolicyEngine\Domain\PolicyDefinition;
 use Nexus\PolicyEngine\Domain\PolicyRequest;
@@ -13,7 +14,9 @@ use Nexus\PolicyEngine\Domain\RuleDefinition;
 use Nexus\PolicyEngine\Enums\DecisionOutcome;
 use Nexus\PolicyEngine\Enums\EvaluationStrategy;
 use Nexus\PolicyEngine\Enums\PolicyKind;
-use Nexus\PolicyEngine\Exceptions\TenantMismatch;
+use Nexus\PolicyEngine\Exceptions\PolicyEvaluationFailed;
+use Nexus\PolicyEngine\Exceptions\PolicyNotFound;
+use Nexus\PolicyEngine\Exceptions\UnsupportedPolicyKind;
 use Nexus\PolicyEngine\ValueObjects\Obligation;
 use Nexus\PolicyEngine\ValueObjects\ReasonCode;
 
@@ -21,7 +24,7 @@ final readonly class PolicyEvaluator implements PolicyEngineInterface
 {
     public function __construct(
         private PolicyRegistryInterface $registry,
-        private PolicyValidator $validator,
+        private PolicyValidatorInterface $validator,
     ) {
     }
 
@@ -29,7 +32,7 @@ final readonly class PolicyEvaluator implements PolicyEngineInterface
     {
         $definition = $this->registry->get($request->policyId, $request->policyVersion, $request->tenantId);
         if ($definition->tenantId->value !== $request->tenantId->value) {
-            throw TenantMismatch::between($request->tenantId, $definition->tenantId);
+            throw PolicyNotFound::for($request->policyId, $request->policyVersion, $request->tenantId);
         }
 
         $this->validator->validate($definition);
@@ -77,40 +80,43 @@ final readonly class PolicyEvaluator implements PolicyEngineInterface
      */
     private function resolveOutcome(PolicyDefinition $definition, array $matchedRules): DecisionOutcome
     {
-        if ($definition->kind === PolicyKind::Authorization) {
-            if ($matchedRules === []) {
-                return DecisionOutcome::Deny;
-            }
-            $outcomes = array_map(static fn (RuleDefinition $r): DecisionOutcome => $r->outcome, $matchedRules);
-            if (in_array(DecisionOutcome::Deny, $outcomes, true)) {
-                return DecisionOutcome::Deny;
-            }
+        return match ($definition->kind) {
+            PolicyKind::Authorization => (function () use ($matchedRules): DecisionOutcome {
+                if ($matchedRules === []) {
+                    return DecisionOutcome::Deny;
+                }
+                $outcomes = array_map(static fn (RuleDefinition $r): DecisionOutcome => $r->outcome, $matchedRules);
+                if (in_array(DecisionOutcome::Deny, $outcomes, true)) {
+                    return DecisionOutcome::Deny;
+                }
 
-            return DecisionOutcome::Allow;
-        }
+                return DecisionOutcome::Allow;
+            })(),
+            PolicyKind::Workflow, PolicyKind::Threshold => (function () use ($matchedRules, $definition): DecisionOutcome {
+                if ($matchedRules === []) {
+                    return DecisionOutcome::Reject;
+                }
+                if ($definition->strategy === EvaluationStrategy::FirstMatch) {
+                    return $matchedRules[0]->outcome;
+                }
 
-        // Workflow / threshold kind.
-        if ($matchedRules === []) {
-            return DecisionOutcome::Reject;
-        }
-        if ($definition->strategy === EvaluationStrategy::FirstMatch) {
-            return $matchedRules[0]->outcome;
-        }
+                $priority = [
+                    DecisionOutcome::Escalate->value => 400,
+                    DecisionOutcome::Reject->value => 300,
+                    DecisionOutcome::Approve->value => 200,
+                    DecisionOutcome::Route->value => 100,
+                ];
+                $best = $matchedRules[0]->outcome;
+                foreach ($matchedRules as $rule) {
+                    if (($priority[$rule->outcome->value] ?? 0) > ($priority[$best->value] ?? 0)) {
+                        $best = $rule->outcome;
+                    }
+                }
 
-        $priority = [
-            DecisionOutcome::Escalate->value => 400,
-            DecisionOutcome::Reject->value => 300,
-            DecisionOutcome::Approve->value => 200,
-            DecisionOutcome::Route->value => 100,
-        ];
-        $best = $matchedRules[0]->outcome;
-        foreach ($matchedRules as $rule) {
-            if (($priority[$rule->outcome->value] ?? 0) > ($priority[$best->value] ?? 0)) {
-                $best = $rule->outcome;
-            }
-        }
-
-        return $best;
+                return $best;
+            })(),
+            default => throw UnsupportedPolicyKind::for($definition->kind),
+        };
     }
 
     /**
@@ -125,20 +131,24 @@ final readonly class PolicyEvaluator implements PolicyEngineInterface
         array $reasonCodes,
         array $obligations,
     ): string {
-        $fingerprint = json_encode([
-            'tenant' => $definition->tenantId->value,
-            'policy' => $definition->id->value,
-            'version' => $definition->version->value,
-            'kind' => $definition->kind->value,
-            'strategy' => $definition->strategy->value,
-            'outcome' => $outcome->value,
-            'rules' => $matchedRuleIds,
-            'reasons' => array_map(static fn (ReasonCode $r): string => $r->value, $reasonCodes),
-            'obligations' => array_map(
-                static fn (Obligation $o): array => ['key' => $o->key, 'value' => $o->value],
-                $obligations
-            ),
-        ], JSON_THROW_ON_ERROR);
+        try {
+            $fingerprint = json_encode([
+                'tenant' => $definition->tenantId->value,
+                'policy' => $definition->id->value,
+                'version' => $definition->version->value,
+                'kind' => $definition->kind->value,
+                'strategy' => $definition->strategy->value,
+                'outcome' => $outcome->value,
+                'rules' => $matchedRuleIds,
+                'reasons' => array_map(static fn (ReasonCode $r): string => $r->value, $reasonCodes),
+                'obligations' => array_map(
+                    static fn (Obligation $o): array => ['key' => $o->key, 'value' => $o->value],
+                    $obligations
+                ),
+            ], JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new PolicyEvaluationFailed('Failed to serialize policy fingerprint', 0, $e);
+        }
 
         return sha1($fingerprint);
     }

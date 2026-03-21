@@ -3,8 +3,8 @@
 ## In Scope
 
 1. Evaluate authorization policies deterministically.
-2. Evaluate workflow policies deterministically.
-3. Evaluate threshold/limit policies using numeric comparators (`GT`, `GTE`, `LT`, `LTE`, `BETWEEN`).
+2. Execute workflow policies deterministically.
+3. Enforce threshold/limit policies using numeric comparators (`GT`, `GTE`, `LT`, `LTE`, `BETWEEN`).
 4. Enforce tenant-scoped policy lookup and evaluation.
 5. Validate policy structure before evaluation.
 6. Produce machine-consumable decision output with reason codes and obligations.

@@ -6,10 +6,14 @@ namespace Nexus\PolicyEngine\ValueObjects;
 
 final readonly class TenantId
 {
-    public function __construct(public string $value)
+    public string $value;
+
+    public function __construct(string $value)
     {
-        if (trim($this->value) === '') {
+        $normalized = mb_strtolower(trim($value));
+        if ($normalized === '') {
             throw new \InvalidArgumentException('TenantId cannot be empty.');
         }
+        $this->value = $normalized;
     }
 }

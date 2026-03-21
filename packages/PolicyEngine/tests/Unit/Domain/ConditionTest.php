@@ -25,6 +25,9 @@ final class ConditionTest extends TestCase
     {
         $context = ['amount' => 'not_numeric'];
         self::assertFalse((new Condition('amount', ConditionOperator::GreaterThan, 1000))->matches($context));
+        self::assertFalse((new Condition('amount', ConditionOperator::GreaterThanOrEquals, 1000))->matches($context));
+        self::assertFalse((new Condition('amount', ConditionOperator::LessThan, 1000))->matches($context));
+        self::assertFalse((new Condition('amount', ConditionOperator::LessThanOrEquals, 1000))->matches($context));
         self::assertFalse((new Condition('amount', ConditionOperator::Between, [1000, 2000]))->matches($context));
     }
 }

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Nexus\PolicyEngine\Services;
 
+use Nexus\PolicyEngine\Contracts\PolicyValidatorInterface;
 use Nexus\PolicyEngine\Domain\PolicyDefinition;
 use Nexus\PolicyEngine\Enums\DecisionOutcome;
 use Nexus\PolicyEngine\Enums\PolicyKind;
 use Nexus\PolicyEngine\Exceptions\PolicyValidationFailed;
 
-final readonly class PolicyValidator
+final readonly class PolicyValidator implements PolicyValidatorInterface
 {
     public function validate(PolicyDefinition $definition): void
     {

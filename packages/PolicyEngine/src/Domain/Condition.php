@@ -55,8 +55,12 @@ final readonly class Condition
         if (!is_array($range) || count($range) !== 2) {
             return false;
         }
-        $min = $this->asFloat($range[0]);
-        $max = $this->asFloat($range[1]);
+        $normalized = array_values($range);
+        if (!isset($normalized[0], $normalized[1])) {
+            return false;
+        }
+        $min = $this->asFloat($normalized[0]);
+        $max = $this->asFloat($normalized[1]);
         $val = $this->asFloat($actual);
         if (is_nan($min) || is_nan($max) || is_nan($val)) {
             return false;

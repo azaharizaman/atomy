@@ -13,6 +13,7 @@ use Nexus\PolicyEngine\Enums\ConditionOperator;
 use Nexus\PolicyEngine\Enums\DecisionOutcome;
 use Nexus\PolicyEngine\Enums\EvaluationStrategy;
 use Nexus\PolicyEngine\Enums\PolicyKind;
+use Nexus\PolicyEngine\Exceptions\PolicyNotFound;
 use Nexus\PolicyEngine\Services\InMemoryPolicyRegistry;
 use Nexus\PolicyEngine\Services\PolicyEvaluator;
 use Nexus\PolicyEngine\Services\PolicyValidator;
@@ -194,6 +195,31 @@ final class PolicyEvaluatorTest extends TestCase
         ));
 
         self::assertSame(DecisionOutcome::Reject, $decision->outcome);
+    }
+
+    public function test_wrong_tenant_access_throws_not_found_semantics(): void
+    {
+        $engine = $this->makeEngineWithDefinitions([
+            new PolicyDefinition(
+                new PolicyId('auth_policy'),
+                new PolicyVersion('v1'),
+                new TenantId('tenant_a'),
+                PolicyKind::Authorization,
+                EvaluationStrategy::FirstMatch,
+                [
+                    $this->rule('r_allow_admin', 100, DecisionOutcome::Allow, 'role', 'admin'),
+                ]
+            ),
+        ]);
+
+        $this->expectException(PolicyNotFound::class);
+        $engine->evaluate(new PolicyRequest(
+            new TenantId('tenant_b'),
+            new PolicyId('auth_policy'),
+            new PolicyVersion('v1'),
+            'approve',
+            ['role' => 'admin']
+        ));
     }
 
     private function makeEngineWithDefinitions(array $definitions): PolicyEvaluator

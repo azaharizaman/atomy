@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\PolicyEngine\Services;
 
 use Nexus\PolicyEngine\Contracts\PolicyDefinitionDecoderInterface;
+use Nexus\PolicyEngine\Contracts\PolicyValidatorInterface;
 use Nexus\PolicyEngine\Domain\Condition;
 use Nexus\PolicyEngine\Domain\ConditionGroup;
 use Nexus\PolicyEngine\Domain\PolicyDefinition;
@@ -23,7 +24,7 @@ use Nexus\PolicyEngine\ValueObjects\TenantId;
 
 final readonly class JsonPolicyDecoder implements PolicyDefinitionDecoderInterface
 {
-    public function __construct(private PolicyValidator $validator)
+    public function __construct(private PolicyValidatorInterface $validator)
     {
     }
 
@@ -87,37 +88,49 @@ final readonly class JsonPolicyDecoder implements PolicyDefinitionDecoderInterfa
             throw new PolicyDecodeFailed('Rule conditions must include mode and items.');
         }
 
-        $conditions = [];
-        foreach ($conditionsPayload['items'] as $item) {
-            if (!is_array($item) || !isset($item['field'], $item['operator'])) {
-                throw new PolicyDecodeFailed('Condition item must include field and operator.');
+        $priorityRaw = $rule['priority'];
+        if (!(is_int($priorityRaw) || (is_string($priorityRaw) && preg_match('/^-?\d+$/', trim($priorityRaw)) === 1))) {
+            throw new PolicyDecodeFailed('Rule priority must be an integer or integer string.');
+        }
+        $priority = (int) $priorityRaw;
+
+        try {
+            $conditions = [];
+            foreach ($conditionsPayload['items'] as $item) {
+                if (!is_array($item) || !isset($item['field'], $item['operator'])) {
+                    throw new PolicyDecodeFailed('Condition item must include field and operator.');
+                }
+                $conditions[] = new Condition(
+                    (string) $item['field'],
+                    ConditionOperator::from((string) $item['operator']),
+                    $item['value'] ?? null
+                );
             }
-            $conditions[] = new Condition(
-                (string) $item['field'],
-                ConditionOperator::from((string) $item['operator']),
-                $item['value'] ?? null
+
+            $obligations = [];
+            $rawObligations = $rule['obligations'] ?? [];
+            if (!is_array($rawObligations)) {
+                throw new PolicyDecodeFailed('Rule obligations must be an array.');
+            }
+            foreach ($rawObligations as $obligation) {
+                if (!is_array($obligation) || !isset($obligation['key'])) {
+                    throw new PolicyDecodeFailed('Each obligation must include key.');
+                }
+                $obligations[] = new Obligation((string) $obligation['key'], $obligation['value'] ?? null);
+            }
+
+            return new RuleDefinition(
+                new RuleId((string) $rule['id']),
+                $priority,
+                DecisionOutcome::from((string) $rule['outcome']),
+                new ConditionGroup((string) $conditionsPayload['mode'], $conditions),
+                new ReasonCode((string) $rule['reason_code']),
+                $obligations
             );
+        } catch (PolicyDecodeFailed $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new PolicyDecodeFailed('Rule decode failed: ' . $e->getMessage(), 0, $e);
         }
-
-        $obligations = [];
-        $rawObligations = $rule['obligations'] ?? [];
-        if (!is_array($rawObligations)) {
-            throw new PolicyDecodeFailed('Rule obligations must be an array.');
-        }
-        foreach ($rawObligations as $obligation) {
-            if (!is_array($obligation) || !isset($obligation['key'])) {
-                throw new PolicyDecodeFailed('Each obligation must include key.');
-            }
-            $obligations[] = new Obligation((string) $obligation['key'], $obligation['value'] ?? null);
-        }
-
-        return new RuleDefinition(
-            new RuleId((string) $rule['id']),
-            (int) $rule['priority'],
-            DecisionOutcome::from((string) $rule['outcome']),
-            new ConditionGroup((string) $conditionsPayload['mode'], $conditions),
-            new ReasonCode((string) $rule['reason_code']),
-            $obligations
-        );
     }
 }

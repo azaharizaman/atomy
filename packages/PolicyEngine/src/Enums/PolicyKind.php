@@ -8,5 +8,5 @@ enum PolicyKind: string
 {
     case Authorization = 'authorization';
     case Workflow = 'workflow';
-    case Threshold = 'threshold'; // Reserved for v2 runtime support.
+    case Threshold = 'threshold'; // Supported at runtime.
 }

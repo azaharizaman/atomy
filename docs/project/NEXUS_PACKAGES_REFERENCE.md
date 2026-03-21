@@ -2,14 +2,13 @@
 
 **Version:** 1.8  
 **Last Updated:** March 20, 2026  
+**Target Audience:** Coding Agents & Developers  
+**Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
+
 **Recent Updates (March 20, 2026):**
 - **NEW:** Added `Nexus\PolicyEngine` (Layer 1) - deterministic policy evaluation for authorization, workflow, and threshold decisions.
 - **PolicyEngine** - supports typed policy model, JSON-to-domain decoding, priority-based evaluation strategies, and tenant-scoped policy lookup.
 - **IMPROVED:** Documented multi-layer usage: Layer 1 owns evaluation/validation/decoding; Layer 2 orchestrates context assembly; Layer 3 owns persistence adapters and admin UI.
-
-**Recent Updates (March 15, 2026):**
-**Target Audience:** Coding Agents & Developers  
-**Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
 
 **Recent Updates (March 15, 2026):**
 - **NEW:** Added Project & Delivery Layer 1 packages: `Nexus\Task`, `Nexus\TimeTracking`, `Nexus\Project`, `Nexus\ResourceAllocation`, `Nexus\Milestone` (production-ready, tests and 70%+ coverage target).

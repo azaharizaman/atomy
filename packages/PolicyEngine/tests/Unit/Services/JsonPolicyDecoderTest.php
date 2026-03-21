@@ -62,4 +62,36 @@ JSON;
         $this->expectException(PolicyDecodeFailed::class);
         $decoder->decode('{"id":"x","rules":"not-array"}');
     }
+
+    public function test_decode_throws_on_malformed_json(): void
+    {
+        $decoder = new JsonPolicyDecoder(new PolicyValidator());
+
+        $this->expectException(PolicyDecodeFailed::class);
+        $decoder->decode('{"id":"x",');
+    }
+
+    public function test_decode_throws_when_required_top_level_field_missing(): void
+    {
+        $decoder = new JsonPolicyDecoder(new PolicyValidator());
+
+        $this->expectException(PolicyDecodeFailed::class);
+        $decoder->decode('{"id":"p","version":"v1","tenant_id":"t","strategy":"first_match","rules":[]}');
+    }
+
+    public function test_decode_throws_on_invalid_kind_enum(): void
+    {
+        $decoder = new JsonPolicyDecoder(new PolicyValidator());
+
+        $this->expectException(PolicyDecodeFailed::class);
+        $decoder->decode('{"id":"p","version":"v1","tenant_id":"t","kind":"unknown","strategy":"first_match","rules":[{"id":"r1","priority":1,"outcome":"approve","reason_code":"x","conditions":{"mode":"all","items":[{"field":"a","operator":"exists"}]}}]}');
+    }
+
+    public function test_decode_throws_when_rules_are_empty(): void
+    {
+        $decoder = new JsonPolicyDecoder(new PolicyValidator());
+
+        $this->expectException(PolicyDecodeFailed::class);
+        $decoder->decode('{"id":"p","version":"v1","tenant_id":"t","kind":"workflow","strategy":"first_match","rules":[]}');
+    }
 }

@@ -35,10 +35,10 @@ final readonly class PolicyRequest
     public function evaluationContext(): array
     {
         return array_merge(
-            ['action' => $this->action],
             $this->subject,
             $this->resource,
-            $this->context
+            $this->context,
+            ['action' => $this->action]
         );
     }
 }

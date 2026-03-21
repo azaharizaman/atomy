@@ -60,7 +60,7 @@ packages/PolicyEngine/
     Domain/
       PolicyDefinition.php
       RuleDefinition.php
-      ConditionTree.php
+      ConditionGroup.php
       PolicyRequest.php
       PolicyDecision.php
       Enums/

@@ -20,7 +20,7 @@ Version 1 supports:
 
 - `Nexus\PolicyEngine\Contracts\PolicyEngineInterface`
 - `Nexus\PolicyEngine\Contracts\PolicyRegistryInterface`
-- `Nexus\PolicyEngine\Contracts\PolicyCompilerInterface`
+- `Nexus\PolicyEngine\Contracts\PolicyCompilerInterface` (reserved for future compilation/caching use in v1)
 - `Nexus\PolicyEngine\Contracts\PolicyDefinitionDecoderInterface` (JSON to typed domain policy)
 
 ## Requirements Mapping

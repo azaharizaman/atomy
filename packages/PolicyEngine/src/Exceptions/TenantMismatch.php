@@ -10,10 +10,6 @@ final class TenantMismatch extends PolicyEngineException
 {
     public static function between(TenantId $requestTenant, TenantId $policyTenant): self
     {
-        return new self(sprintf(
-            'Tenant mismatch: request tenant %s does not match policy tenant %s.',
-            $requestTenant->value,
-            $policyTenant->value
-        ));
+        return new self('Tenant mismatch.');
     }
 }

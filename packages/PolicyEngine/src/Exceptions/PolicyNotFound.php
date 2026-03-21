@@ -13,10 +13,9 @@ final class PolicyNotFound extends PolicyEngineException
     public static function for(PolicyId $policyId, PolicyVersion $version, TenantId $tenantId): self
     {
         return new self(sprintf(
-            'Policy not found: policyId=%s version=%s tenantId=%s',
+            'Policy not found: policyId=%s version=%s',
             $policyId->value,
-            $version->value,
-            $tenantId->value
+            $version->value
         ));
     }
 }

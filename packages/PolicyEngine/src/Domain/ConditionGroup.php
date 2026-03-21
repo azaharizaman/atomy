@@ -6,15 +6,17 @@ namespace Nexus\PolicyEngine\Domain;
 
 final readonly class ConditionGroup
 {
+    public string $mode;
+
     /**
      * @param list<Condition> $conditions
      */
     public function __construct(
-        public string $mode,
+        string $mode,
         public array $conditions,
     ) {
-        $m = strtolower(trim($this->mode));
-        if (!in_array($m, ['all', 'any'], true)) {
+        $this->mode = strtolower(trim($mode));
+        if (!in_array($this->mode, ['all', 'any'], true)) {
             throw new \InvalidArgumentException('ConditionGroup mode must be "all" or "any".');
         }
         if ($this->conditions === []) {
@@ -27,8 +29,7 @@ final readonly class ConditionGroup
      */
     public function matches(array $context): bool
     {
-        $mode = strtolower(trim($this->mode));
-        if ($mode === 'all') {
+        if ($this->mode === 'all') {
             foreach ($this->conditions as $condition) {
                 if (!$condition->matches($context)) {
                     return false;
