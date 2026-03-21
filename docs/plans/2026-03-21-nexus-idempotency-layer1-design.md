@@ -1,7 +1,7 @@
 # Nexus\Idempotency — Layer 1 Design (Brainstorm → Spec)
 
 Date: 2026-03-21  
-Status: **Proposed** (awaiting approval before implementation)  
+Status: **Proposed** — **Option B (explicit begin / complete / fail) selected** (2026-03-21)  
 Owner: Architecture + Implementation  
 Related: Future `Nexus\Outbox` (TBD), `Nexus\PolicyEngine` (pattern reference)
 
@@ -46,6 +46,28 @@ Introduce **`Nexus\Idempotency`** as a Layer 1 package that defines **domain-lev
 - “Weak” idempotency (time-window only, no fingerprint) as optional profile.
 - Hierarchical operation scopes (parent/child keys for saga steps).
 - Metrics hooks (`Psr\Log\LoggerInterface` optional injection only if needed; avoid pulling heavy telemetry into L1).
+
+### Layer 1 responsibility boundaries (anti-overlap) — **mandatory**
+
+Overlapping another Layer 1 package’s responsibility is a **serious anti-pattern**. `Nexus\Idempotency` must remain a **narrow command de-duplication and replay-result** package. It **must not** absorb concerns owned elsewhere.
+
+| Concern | **Owned by** | **Idempotency does / does not** |
+|--------|----------------|----------------------------------|
+| Deduplicating **ingress commands** (same key + fingerprint → same outcome) | **`Nexus\Idempotency`** | **Does** — store contract + begin/complete/fail semantics |
+| **Reliable async publication** of domain events to external systems | **`Nexus\Outbox`** (TBD, L1 model + L3 dispatcher) | **Does not** — no outbox rows, no publish/retry/dispatch |
+| **Event sourcing** / aggregate event history as system of record | **`Nexus\EventStream`** (per architecture catalog) | **Does not** — no append-only domain event log; no stream versioning |
+| **Message queue abstraction** (produce/consume transport) | **`Nexus\Messaging`** | **Does not** — no broker, no topic names, no consumer loops |
+| **Audit trail / timeline / compliance feed** | **`Nexus\AuditLogger`** / **`Nexus\Audit`** | **Does not** — no “who did what” narrative; optional correlation ids are **opaque metadata** only, not audit records |
+| **Human-readable identifiers** (invoice #, PO #) | **`Nexus\Sequencing`** | **Does not** — idempotency keys are **client-supplied** or app-generated; not sequence generation |
+| **Authorization / policy decisions** | **`Nexus\PolicyEngine`** + **`Nexus\Identity`** | **Does not** — no rule evaluation; caller may gate commands **before** idempotency |
+| **Cryptographic hashing as a product feature** | **`Nexus\Crypto`** (if used) | **Does not** — L1 may define **fingerprint as opaque string** + optional `FingerprintHasherInterface` **purely for idempotency**; no general-purpose crypto API |
+
+**Concrete rules:**
+
+1. **Single reason to change:** Idempotency code changes only for deduplication semantics, storage contract, TTL/conflict policy—not for messaging, audit, or streaming.
+2. **No duplicate event log:** Do not store a second “history” of business events inside idempotency; that is **EventStream** or **Outbox**, depending on use case.
+3. **Result envelope is not an event:** The stored `ResultEnvelope` is a **replay cache** for the command outcome, not a published domain event stream.
+4. **Composition at L2/L3:** Orchestrators/adapters may call **PolicyEngine → Idempotency → domain service → Outbox** in order; **no** package merges those roles in L1.
 
 ## 4) Approaches Considered (2–3 Options)
 
@@ -198,5 +220,6 @@ Per `docs/project/ARCHITECTURE.md`:
 
 ## Approval
 
-- [ ] Architecture / product owner approves this Layer 1 design  
+- [x] **Option B** selected (explicit state machine + store) — 2026-03-21  
+- [ ] Layer 1 design approved for implementation (final sign-off)  
 - [ ] Date approved: _____________
