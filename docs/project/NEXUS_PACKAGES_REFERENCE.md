@@ -1,9 +1,13 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.8  
-**Last Updated (March 20, 2026)**  
+**Version:** 1.9  
+**Last Updated (March 21, 2026)**  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
+
+**Recent Updates (March 21, 2026):**
+- **NEW:** Added `Nexus\Idempotency` (Layer 1) — tenant-scoped command idempotency, fingerprint conflict detection, and replay-safe `ResultEnvelope` storage (no outbox/HTTP/DB in package).
+- **Idempotency** — `begin` / `complete` / `fail` with `IdempotencyStoreInterface` + `IdempotencyClockInterface`; `InMemoryIdempotencyStore` for tests.
 
 **Recent Updates (March 20, 2026):**
 - **NEW:** Added `Nexus\PolicyEngine` (Layer 1) - deterministic policy evaluation for authorization, workflow, and threshold decisions.
@@ -73,6 +77,7 @@
 | **Project lifecycle** | **Use `Nexus\Project\Contracts\ProjectManagerInterface`** |
 | **Milestone / billing vs budget** | **Use `Nexus\Milestone\Contracts\MilestoneManagerInterface`, `BudgetReservationInterface`** |
 | **Policy evaluation / rule decisions** | **Use `Nexus\PolicyEngine\Contracts\PolicyEngineInterface`, `Nexus\PolicyEngine\Contracts\PolicyRegistryInterface`, `Nexus\PolicyEngine\Contracts\PolicyDefinitionDecoderInterface`** |
+| **Command idempotency / replay of mutating API results** | **Use `Nexus\Idempotency\Contracts\IdempotencyServiceInterface`, `Nexus\Idempotency\Contracts\IdempotencyStoreInterface`, `Nexus\Idempotency\Contracts\IdempotencyClockInterface`** |
 
 ---
 
@@ -102,6 +107,13 @@
 - JSON policy decoding into typed domain objects
 - Tenant-scoped policy lookup through contracts
 - Framework-agnostic Layer 1 evaluator and validator
+
+#### **Nexus\Idempotency** ✅ **NEW**
+**Capabilities:**
+- Tenant-scoped idempotency keys with operation name + client key (composite identity)
+- Request fingerprint equality for intent detection; conflict on key reuse with different fingerprint
+- `begin` / `complete` / `fail` lifecycle with opaque `ResultEnvelope` replay for safe retries
+- `InMemoryIdempotencyStore` for unit tests; persistence via `IdempotencyStoreInterface` (Layer 3 adapters)
 
 ---
 
@@ -251,6 +263,6 @@ Orchestrators coordinate multiple Layer 1 packages to fulfill complex business w
 
 ---
 
-**Package Count:** 100 Atomic Packages (99 + PolicyEngine)  
+**Package Count:** 101 Atomic Packages (includes PolicyEngine, Idempotency)  
 **Orchestrator Count:** 19 Orchestrators  
 **Architecture Version:** 3.0 (Nexus Three-Layer)

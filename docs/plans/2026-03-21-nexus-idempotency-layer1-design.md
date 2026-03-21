@@ -221,5 +221,5 @@ Per `docs/project/ARCHITECTURE.md`:
 ## Approval
 
 - [x] **Option B** selected (explicit state machine + store) — 2026-03-21  
-- [ ] Layer 1 design approved for implementation (final sign-off)  
-- [ ] Date approved: _____________
+- [x] Layer 1 design approved for implementation (final sign-off) — 2026-03-21  
+- [x] Date approved: 2026-03-21
