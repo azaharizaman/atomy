@@ -26,7 +26,13 @@ export default function NewRfqPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const payload: Record<string, unknown> = { title };
+      const submissionDeadlineIso = datetimeLocalToIsoOrNull(submissionDeadlineLocal);
+      if (submissionDeadlineIso === null) {
+        setError('Submission deadline is required.');
+        setIsSubmitting(false);
+        return;
+      }
+      const payload: Record<string, unknown> = { title, submission_deadline: submissionDeadlineIso };
       if (projectId) payload.project_id = projectId;
       const { data } = await api.post('/rfqs', payload);
       const id = String(data?.data?.id ?? data?.id ?? '');
@@ -72,6 +78,15 @@ export default function NewRfqPage() {
             placeholder="e.g. Laptops for Q3 onboarding"
           />
 
+          <TextInput
+            className="mt-3"
+            label="Submission deadline"
+            type="datetime-local"
+            required
+            value={submissionDeadlineLocal}
+            onChange={(e) => setSubmissionDeadlineLocal(e.target.value)}
+          />
+
           {projectsEnabled ? (
             <div className="mt-3">
               <SelectInput
@@ -94,17 +109,6 @@ export default function NewRfqPage() {
               disabled={!title.trim() || !submissionDeadlineLocal.trim() || isSubmitting}
             >
               {isSubmitting ? 'Creating…' : 'Create RFQ'}
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => router.push('/rfqs')} disabled={isSubmitting}>
-              Cancel
-            </Button>
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-}
-ng ? 'Creating…' : 'Create RFQ'}
             </Button>
             <Button size="sm" variant="secondary" onClick={() => router.push('/rfqs')} disabled={isSubmitting}>
               Cancel

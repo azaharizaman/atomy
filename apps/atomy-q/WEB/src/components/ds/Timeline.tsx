@@ -18,13 +18,24 @@ interface TimelineProps {
   className?: string;
 }
 
-const DOT_COLORS: Record<NonNullable<TimelineEvent['iconColor']>, string> = {
+/** Shared with `HorizontalProcessTrack` — keep node chrome aligned across vertical + horizontal rails. */
+export const TIMELINE_DOT_PALETTE = {
   indigo: 'bg-indigo-100 text-indigo-600 border border-indigo-200',
   green: 'bg-green-100 text-green-600 border border-green-200',
   amber: 'bg-amber-100 text-amber-600 border border-amber-200',
   red: 'bg-red-100 text-red-600 border border-red-200',
   slate: 'bg-slate-100 text-slate-500 border border-slate-200',
-};
+} as const;
+
+const DOT_COLORS: Record<NonNullable<TimelineEvent['iconColor']>, string> = TIMELINE_DOT_PALETTE;
+
+export function timelineNodeSizeClass(compact: boolean): string {
+  return compact ? 'w-6 h-6' : 'w-7 h-7';
+}
+
+export function timelineIconTextClass(compact: boolean): string {
+  return compact ? 'text-[11px]' : 'text-xs';
+}
 
 export function Timeline({ events, compact = false, className = '' }: TimelineProps) {
   return (
