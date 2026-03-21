@@ -176,7 +176,6 @@ Layer 1 should document **expected adapter behavior**:
 
 ## 8) Exceptions (Domain)
 
-- `IdempotencyKeyMissingException`
 - `IdempotencyKeyInvalidException`
 - `IdempotencyFingerprintConflictException` (includes tenant + operation + key **without** leaking other tenant data)
 - `IdempotencyTenantMismatchException`

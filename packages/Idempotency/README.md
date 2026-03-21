@@ -10,7 +10,7 @@ It does **not** implement HTTP, databases, outbox, event streams, or audit trail
 
 - Layer 1: pure PHP 8.3+, framework-agnostic
 - Explicit lifecycle: `begin()` → domain work → `complete()` or `fail()`
-- Persistence via `IdempotencyStoreInterface` (e.g. `InMemoryIdempotencyStore` for tests)
+- Persistence via `IdempotencyStoreInterface` (e.g. `InMemoryIdempotencyStore` for tests — uses JSON-encoded tuple keys so tenant/operation/client segments cannot collide across `|` characters)
 - Time via `IdempotencyClockInterface` (`SystemClock` or test doubles)
 
 ## Key interfaces

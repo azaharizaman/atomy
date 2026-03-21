@@ -7,8 +7,9 @@ namespace Nexus\Idempotency\Tests\Unit\Services;
 use DateTimeImmutable;
 use Nexus\Idempotency\Domain\IdempotencyPolicy;
 use Nexus\Idempotency\Enums\BeginOutcome;
-use Nexus\Idempotency\Exceptions\IdempotencyCompletionException;
+use Nexus\Idempotency\Exceptions\IdempotencyFailedRetryNotAllowedException;
 use Nexus\Idempotency\Exceptions\IdempotencyFingerprintConflictException;
+use Nexus\Idempotency\Exceptions\IdempotencyRecordExpiredException;
 use Nexus\Idempotency\Services\IdempotencyService;
 use Nexus\Idempotency\Services\InMemoryIdempotencyStore;
 use Nexus\Idempotency\Tests\Support\FixedClock;
@@ -135,7 +136,7 @@ final class IdempotencyServiceTest extends TestCase
         $service->begin($tenant, $op, $key, $fp);
         $service->fail($tenant, $op, $key, $fp);
 
-        $this->expectException(IdempotencyCompletionException::class);
+        $this->expectException(IdempotencyFailedRetryNotAllowedException::class);
         $service->begin($tenant, $op, $key, $fp);
     }
 
@@ -174,5 +175,52 @@ final class IdempotencyServiceTest extends TestCase
 
         $decision = $service->begin($tenant, $op, $key, $fp);
         $this->assertSame(BeginOutcome::FirstExecution, $decision->outcome);
+    }
+
+    public function testCompleteThrowsWhenPendingExpired(): void
+    {
+        $clock = new FixedClock(new DateTimeImmutable('2026-03-21 12:00:00'));
+        $store = new InMemoryIdempotencyStore();
+        $policy = new IdempotencyPolicy(pendingTtlSeconds: 60, allowRetryAfterFail: true);
+        $service = new IdempotencyService($store, $clock, $policy);
+
+        $tenant = new TenantId('tenant-a');
+        $op = new OperationRef('rfq.create');
+        $key = new ClientKey('idem-1');
+        $fp = new RequestFingerprint('sha256-aaa');
+
+        $service->begin($tenant, $op, $key, $fp);
+        $clock->setTime(new DateTimeImmutable('2026-03-21 12:02:00'));
+
+        $this->expectException(IdempotencyRecordExpiredException::class);
+        $service->complete($tenant, $op, $key, $fp, new ResultEnvelope('{"ok":true}'));
+    }
+
+    public function testCompletedReplayExpiresAndAllowsNewFirstExecution(): void
+    {
+        $clock = new FixedClock(new DateTimeImmutable('2026-03-21 12:00:00'));
+        $store = new InMemoryIdempotencyStore();
+        $policy = new IdempotencyPolicy(
+            pendingTtlSeconds: 3600,
+            allowRetryAfterFail: true,
+            expireCompletedAfterSeconds: 120,
+        );
+        $service = new IdempotencyService($store, $clock, $policy);
+
+        $tenant = new TenantId('tenant-a');
+        $op = new OperationRef('rfq.create');
+        $key = new ClientKey('idem-1');
+        $fp = new RequestFingerprint('sha256-aaa');
+
+        $service->begin($tenant, $op, $key, $fp);
+        $service->complete($tenant, $op, $key, $fp, new ResultEnvelope('{"id":"1"}'));
+
+        $replay = $service->begin($tenant, $op, $key, $fp);
+        $this->assertSame(BeginOutcome::Replay, $replay->outcome);
+
+        $clock->setTime(new DateTimeImmutable('2026-03-21 12:03:00'));
+
+        $fresh = $service->begin($tenant, $op, $key, $fp);
+        $this->assertSame(BeginOutcome::FirstExecution, $fresh->outcome);
     }
 }

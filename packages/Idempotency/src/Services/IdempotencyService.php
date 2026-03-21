@@ -14,6 +14,7 @@ use Nexus\Idempotency\Domain\IdempotencyRecord;
 use Nexus\Idempotency\Enums\BeginOutcome;
 use Nexus\Idempotency\Enums\IdempotencyRecordStatus;
 use Nexus\Idempotency\Exceptions\IdempotencyCompletionException;
+use Nexus\Idempotency\Exceptions\IdempotencyFailedRetryNotAllowedException;
 use Nexus\Idempotency\Exceptions\IdempotencyFingerprintConflictException;
 use Nexus\Idempotency\Exceptions\IdempotencyRecordExpiredException;
 use Nexus\Idempotency\Exceptions\IdempotencyTenantMismatchException;
@@ -43,9 +44,7 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
 
         if ($record !== null && $record->status === IdempotencyRecordStatus::Failed) {
             if (! $this->policy->allowRetryAfterFail) {
-                throw IdempotencyCompletionException::wrongState(
-                    'Idempotency key is in a failed state and retry is not allowed by policy.'
-                );
+                throw IdempotencyFailedRetryNotAllowedException::create();
             }
             $this->store->delete($tenantId, $operationRef, $clientKey);
             $record = null;
@@ -150,10 +149,7 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
     private function assertTenantMatch(IdempotencyRecord $record, TenantId $tenantId): void
     {
         if ($record->tenantId->value !== $tenantId->value) {
-            throw new IdempotencyTenantMismatchException(
-                expectedTenantId: $tenantId->value,
-                actualTenantId: $record->tenantId->value,
-            );
+            throw IdempotencyTenantMismatchException::create();
         }
     }
 

@@ -8,6 +8,10 @@
 4. **Complete / fail:** Only for **open** records (`Pending` or `InProgress`) with matching fingerprint; transitions to `Completed` or `Failed`.
 5. **Policy:** Configurable pending TTL, optional completed replay TTL, and whether failed keys may be retried.
 
+## Record status enum
+
+`IdempotencyRecordStatus` includes `InProgress` and `Expired` for **adapter / future** use. The Layer 1 service creates `Pending` and transitions to `Completed` or `Failed`; it does not currently set `InProgress` or `Expired` (those may be used by Layer 3 for locking or cleanup).
+
 ## Non-functional
 
 - **Layer 1 only:** No framework imports, no database.
