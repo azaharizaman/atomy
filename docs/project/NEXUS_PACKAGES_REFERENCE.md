@@ -72,7 +72,7 @@
 | **Resource allocation / overallocation** | **Use `Nexus\ResourceAllocation\Contracts\AllocationManagerInterface`, `OverallocationCheckerInterface`** |
 | **Project lifecycle** | **Use `Nexus\Project\Contracts\ProjectManagerInterface`** |
 | **Milestone / billing vs budget** | **Use `Nexus\Milestone\Contracts\MilestoneManagerInterface`, `BudgetReservationInterface`** |
-| **Policy evaluation / rule decisions** | **Use `Nexus\PolicyEngine\Contracts\PolicyEngineInterface`, `PolicyRegistryInterface`, `PolicyDefinitionDecoderInterface`** |
+| **Policy evaluation / rule decisions** | **Use `Nexus\PolicyEngine\Contracts\PolicyEngineInterface`, `Nexus\PolicyEngine\Contracts\PolicyRegistryInterface`, `Nexus\PolicyEngine\Contracts\PolicyDefinitionDecoderInterface`** |
 
 ---
 

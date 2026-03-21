@@ -25,7 +25,7 @@ final class InMemoryPolicyRegistry implements PolicyRegistryInterface
     {
         $key = $this->key($id, $version, $tenantId);
         if (!isset($this->items[$key])) {
-            throw PolicyNotFound::for($id, $version, $tenantId);
+            throw PolicyNotFound::for($id, $version);
         }
 
         return $this->items[$key];

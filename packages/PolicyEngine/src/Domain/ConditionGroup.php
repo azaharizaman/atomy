@@ -22,6 +22,15 @@ final readonly class ConditionGroup
         if ($this->conditions === []) {
             throw new \InvalidArgumentException('ConditionGroup must contain at least one condition.');
         }
+        foreach ($this->conditions as $index => $condition) {
+            if (!$condition instanceof Condition) {
+                throw new \InvalidArgumentException(sprintf(
+                    'ConditionGroup conditions[%d] must be an instance of %s.',
+                    $index,
+                    Condition::class
+                ));
+            }
+        }
     }
 
     /**

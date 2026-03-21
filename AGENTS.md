@@ -134,3 +134,12 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Root cause:** Prioritised feature delivery speed over a final architecture/security hardening pass; relied on happy-path correctness and missed cross-tenant leakage, deterministic normalization, and documentation parity checks.
 - **Action taken:** Aligned docs with shipped symbols, introduced `PolicyValidatorInterface`, switched tenant mismatch behavior to not-found semantics in evaluator, wrapped fingerprint serialization with domain exception mapping, hardened JSON decode rule validation and error normalization, canonicalized IDs (`PolicyId`, `PolicyVersion`, `RuleId`, `TenantId`), normalized `ConditionGroup` mode storage, fixed `PolicyRequest` action precedence, added missing comparator and decoder tests, and updated package reference docs.
 - **Follow-up tasks:** Keep a mandatory pre-PR checklist for (1) tenant-leak review, (2) VO normalization determinism, (3) interface-first DI, (4) decode/encode exception mapping, and (5) docs-symbol parity against current code.
+
+---
+
+- **Date:** 2026-03-20
+- **PR/Issue ID:** PolicyEngine follow-up review
+- **Summary of mistake:** A follow-up review still found unused parameters/signatures, incomplete runtime-safe constructor validation for typed arrays, and partially-qualified contract references in central documentation.
+- **Root cause:** First hardening pass fixed primary security/runtime issues but missed secondary consistency cleanup (dead params, API signature simplification, and doc namespace strictness) that should be part of the same quality gate.
+- **Action taken:** Added explicit `ConditionGroup` item type validation, removed unused parameters from `PolicyNotFound::for` and `TenantMismatch::between` signatures and updated call sites, aligned package reference table to fully-qualified PolicyEngine contracts, and added regression test coverage for invalid `ConditionGroup` items.
+- **Follow-up tasks:** Add a mandatory "API signature hygiene" and "doc fully-qualified symbol pass" checklist step before final commit.

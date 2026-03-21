@@ -32,7 +32,7 @@ final readonly class PolicyEvaluator implements PolicyEngineInterface
     {
         $definition = $this->registry->get($request->policyId, $request->policyVersion, $request->tenantId);
         if ($definition->tenantId->value !== $request->tenantId->value) {
-            throw PolicyNotFound::for($request->policyId, $request->policyVersion, $request->tenantId);
+            throw PolicyNotFound::for($request->policyId, $request->policyVersion);
         }
 
         $this->validator->validate($definition);

@@ -30,4 +30,12 @@ final class ConditionTest extends TestCase
         self::assertFalse((new Condition('amount', ConditionOperator::LessThanOrEquals, 1000))->matches($context));
         self::assertFalse((new Condition('amount', ConditionOperator::Between, [1000, 2000]))->matches($context));
     }
+
+    public function test_condition_group_constructor_rejects_non_condition_items(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('ConditionGroup conditions[0] must be an instance');
+
+        new \Nexus\PolicyEngine\Domain\ConditionGroup('all', ['not-a-condition']);
+    }
 }
