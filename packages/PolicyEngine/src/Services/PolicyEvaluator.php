@@ -22,6 +22,14 @@ use Nexus\PolicyEngine\ValueObjects\ReasonCode;
 
 final readonly class PolicyEvaluator implements PolicyEngineInterface
 {
+    /** @var array<string, int> */
+    private const OUTCOME_PRECEDENCE = [
+        DecisionOutcome::Escalate->value => 400,
+        DecisionOutcome::Reject->value => 300,
+        DecisionOutcome::Approve->value => 200,
+        DecisionOutcome::Route->value => 100,
+    ];
+
     public function __construct(
         private PolicyRegistryInterface $registry,
         private PolicyValidatorInterface $validator,
@@ -100,15 +108,9 @@ final readonly class PolicyEvaluator implements PolicyEngineInterface
                     return $matchedRules[0]->outcome;
                 }
 
-                $priority = [
-                    DecisionOutcome::Escalate->value => 400,
-                    DecisionOutcome::Reject->value => 300,
-                    DecisionOutcome::Approve->value => 200,
-                    DecisionOutcome::Route->value => 100,
-                ];
                 $best = $matchedRules[0]->outcome;
                 foreach ($matchedRules as $rule) {
-                    if (($priority[$rule->outcome->value] ?? 0) > ($priority[$best->value] ?? 0)) {
+                    if ((self::OUTCOME_PRECEDENCE[$rule->outcome->value] ?? 0) > (self::OUTCOME_PRECEDENCE[$best->value] ?? 0)) {
                         $best = $rule->outcome;
                     }
                 }

@@ -1,7 +1,7 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
 **Version:** 1.8  
-**Last Updated:** March 20, 2026  
+**Last Updated (March 20, 2026)**  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
 
