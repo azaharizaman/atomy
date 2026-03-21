@@ -1,7 +1,13 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.7  
-**Last Updated:** March 15, 2026  
+**Version:** 1.8  
+**Last Updated:** March 20, 2026  
+**Recent Updates (March 20, 2026):**
+- **NEW:** Added `Nexus\PolicyEngine` (Layer 1) - deterministic policy evaluation for authorization, workflow, and threshold decisions.
+- **PolicyEngine** - supports typed policy model, JSON-to-domain decoding, priority-based evaluation strategies, and tenant-scoped policy lookup.
+- **IMPROVED:** Documented multi-layer usage: Layer 1 owns evaluation/validation/decoding; Layer 2 orchestrates context assembly; Layer 3 owns persistence adapters and admin UI.
+
+**Recent Updates (March 15, 2026):**
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
 
@@ -67,6 +73,7 @@
 | **Resource allocation / overallocation** | **Use `Nexus\ResourceAllocation\Contracts\AllocationManagerInterface`, `OverallocationCheckerInterface`** |
 | **Project lifecycle** | **Use `Nexus\Project\Contracts\ProjectManagerInterface`** |
 | **Milestone / billing vs budget** | **Use `Nexus\Milestone\Contracts\MilestoneManagerInterface`, `BudgetReservationInterface`** |
+| **Policy evaluation / rule decisions** | **Use `Nexus\PolicyEngine\Contracts\PolicyEngineInterface`, `PolicyRegistryInterface`, `PolicyDefinitionDecoderInterface`** |
 
 ---
 
@@ -88,6 +95,14 @@
 - Single Sign-On (SSO) orchestration (SAML, OAuth2, OIDC)
 - Azure AD, Google Workspace, Okta integration
 - Just-In-Time (JIT) user provisioning
+
+#### **Nexus\PolicyEngine** ✅ **NEW**
+**Capabilities:**
+- Deterministic policy evaluation (authorization, workflow, threshold)
+- Rule priority and strategy (`first_match`, `collect_all`) execution
+- JSON policy decoding into typed domain objects
+- Tenant-scoped policy lookup through contracts
+- Framework-agnostic Layer 1 evaluator and validator
 
 ---
 
@@ -237,6 +252,6 @@ Orchestrators coordinate multiple Layer 1 packages to fulfill complex business w
 
 ---
 
-**Package Count:** 99 Atomic Packages (94 + 5 Project & Delivery)  
+**Package Count:** 100 Atomic Packages (99 + PolicyEngine)  
 **Orchestrator Count:** 19 Orchestrators  
 **Architecture Version:** 3.0 (Nexus Three-Layer)
