@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, ChevronDown, X, Eye, EyeOff } from 'lucide-react';
+import { Search, ChevronDown, X, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 // ─── Shared Styles ─────────────────────────────────────────────────────────────
 
@@ -29,12 +29,69 @@ export function FieldLabel({ htmlFor, required, children, className = '' }: Labe
 
 // ─── Helper / Error Text ──────────────────────────────────────────────────────
 
-export function FieldHint({ children }: { children: React.ReactNode }) {
-  return <p className="mt-1 text-xs text-slate-500">{children}</p>;
+export interface FieldHintProps {
+  children: React.ReactNode;
+  /** Default: helper copy; error uses danger tokens and optional icon. */
+  variant?: 'default' | 'error';
+  /** Optional “pointing” panel (Semantic-style); keep `id` for `aria-describedby` on the control. */
+  pointing?: boolean;
+  id?: string;
+  className?: string;
 }
 
-export function FieldError({ children }: { children: React.ReactNode }) {
-  return <p className="mt-1 text-xs text-red-600">{children}</p>;
+export function FieldHint({
+  children,
+  variant = 'default',
+  pointing = false,
+  id,
+  className = '',
+}: FieldHintProps) {
+  const isError = variant === 'error';
+
+  if (!pointing) {
+    return (
+      <p
+        id={id}
+        className={[
+          'mt-1 text-xs',
+          isError ? 'text-red-600 flex items-start gap-1' : 'text-slate-500',
+          className,
+        ].join(' ')}
+      >
+        {isError && <AlertCircle className="size-3.5 shrink-0 mt-0.5" aria-hidden />}
+        <span>{children}</span>
+      </p>
+    );
+  }
+
+  return (
+    <div id={id} className={['relative mt-2', className].join(' ')}>
+      <span
+        className={[
+          'absolute h-0 w-0 border-x-[6px] border-x-transparent border-b-[6px]',
+          isError ? 'border-b-red-200 left-4 -top-1.5' : 'border-b-slate-200 left-4 -top-1.5',
+        ].join(' ')}
+        aria-hidden
+      />
+      <p
+        className={[
+          'rounded-md border px-2 py-1.5 text-xs',
+          isError ? 'border-red-200 bg-red-50 text-red-700 flex items-start gap-1.5' : 'border-slate-200 bg-slate-50 text-slate-600',
+        ].join(' ')}
+      >
+        {isError && <AlertCircle className="size-3.5 shrink-0 mt-0.5" aria-hidden />}
+        <span>{children}</span>
+      </p>
+    </div>
+  );
+}
+
+export function FieldError({ children, id, className }: Pick<FieldHintProps, 'children' | 'id' | 'className'>) {
+  return (
+    <FieldHint variant="error" id={id} className={className}>
+      {children}
+    </FieldHint>
+  );
 }
 
 // ─── Text Input ───────────────────────────────────────────────────────────────
