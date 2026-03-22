@@ -4,6 +4,11 @@ This is the Next.js frontend for the Atomy-Q Quote Comparison & Procurement plat
 
 **Design-partner alpha:** Supported vs stubbed flows for external pilots are documented in [`../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md`](../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md).
 
+## Viewport & layout
+
+- **Desktop-only:** Atomy-Q WEB targets **desktop viewports** with enough width for multi-column workspaces (RFQ shell, dashboards, comparison matrices). **Responsive / mobile layouts are not supported** in the current product scope unless explicitly added later.
+- Prefer fixed or flexible **horizontal** layouts; avoid spending effort on narrow breakpoints unless requirements change.
+
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router)
 - **Styling**: Tailwind CSS v4

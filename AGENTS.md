@@ -19,6 +19,10 @@ All development MUST strictly adhere to the project's **Three-Layer Architecture
     - **Layer 3 (adapters/)**: Framework-specific implementation (Laravel).
 - **Anti-Patterns**: NO `use Illuminate\*` in Layers 1 or 2. NO direct imports of L1 in L2. NO synthetic return values on failure.
 
+### Atomy-Q WEB (frontend)
+
+- **Viewport:** **Desktop-only.** The product assumes sufficient screen real estate for dense workspaces (RFQ overview, comparison, approvals). **Responsive / mobile layouts are out of scope** unless explicitly requested—do not add breakpoint-driven reflows, single-column “mobile” patterns, or hamburger navigation by default.
+
 ## 🤖 Agentic Workflow & Tool Engagement
 
 - **Discovery First**: Map relevant packages before changing code. Use `grep_search` and `ls -R`.
