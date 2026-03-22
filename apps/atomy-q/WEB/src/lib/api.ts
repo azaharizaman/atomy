@@ -17,11 +17,36 @@ type RetryableRequest = AxiosRequestConfig & { _retry?: boolean };
 
 let refreshPromise: Promise<{ accessToken: string; refreshToken: string; user: User }> | null = null;
 
+/** Phase 1 idempotent POST paths (relative to baseURL, e.g. /api/v1). */
+function requiresIdempotencyKey(url: string): boolean {
+  const path = url.split('?')[0]?.replace(/^\/+/, '') ?? '';
+  if (path === 'rfqs' || path === 'rfqs/bulk-action') return true;
+  if (/^rfqs\/.+\/duplicate$/.test(path)) return true;
+  if (/^rfqs\/.+\/invitations$/.test(path)) return true;
+  if (/^rfqs\/.+\/invitations\/.+\/remind$/.test(path)) return true;
+  if (path === 'rfq-templates') return true;
+  if (/^rfq-templates\/.+\/duplicate$/.test(path)) return true;
+  if (/^rfq-templates\/.+\/apply$/.test(path)) return true;
+  if (path === 'projects' || path === 'tasks') return true;
+  return false;
+}
+
 api.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers = config.headers ?? {};
+    const method = (config.method ?? 'get').toLowerCase();
+    const url = typeof config.url === 'string' ? config.url : '';
+    if (method === 'post' && requiresIdempotencyKey(url)) {
+      const h = config.headers as Record<string, string>;
+      const existing = h['Idempotency-Key'] ?? h['idempotency-key'];
+      if (!existing) {
+        const ext = config as AxiosRequestConfig & { idempotencyKey?: string };
+        h['Idempotency-Key'] = ext.idempotencyKey ?? crypto.randomUUID();
+      }
     }
     return config;
   },

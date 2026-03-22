@@ -69,8 +69,12 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
     Route::prefix('rfqs')->group(function (): void {
         Route::get('/', [RfqController::class, 'index']);
         Route::get('counts', [RfqController::class, 'counts']);
-        Route::post('/', [RfqController::class, 'store']);
-        Route::post('bulk-action', [RfqController::class, 'bulkAction']);
+        Route::post('/', [RfqController::class, 'store'])
+            ->middleware('idempotency')
+            ->name('v1.rfqs.store');
+        Route::post('bulk-action', [RfqController::class, 'bulkAction'])
+            ->middleware('idempotency')
+            ->name('v1.rfqs.bulk-action');
 
         Route::prefix('{rfqId}')->group(function (): void {
             Route::get('/', [RfqController::class, 'show']);
@@ -78,7 +82,9 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
             Route::get('activity', [RfqController::class, 'activity']);
             Route::put('/', [RfqController::class, 'update']);
             Route::patch('status', [RfqController::class, 'updateStatus']);
-            Route::post('duplicate', [RfqController::class, 'duplicate']);
+            Route::post('duplicate', [RfqController::class, 'duplicate'])
+                ->middleware('idempotency')
+                ->name('v1.rfqs.duplicate');
             Route::put('draft', [RfqController::class, 'saveDraft']);
 
             // Line items
@@ -89,20 +95,30 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
 
             // --- Section 6: Vendor Invitations (3 endpoints) ---
             Route::get('invitations', [VendorInvitationController::class, 'index']);
-            Route::post('invitations', [VendorInvitationController::class, 'store']);
-            Route::post('invitations/{invId}/remind', [VendorInvitationController::class, 'remind']);
+            Route::post('invitations', [VendorInvitationController::class, 'store'])
+                ->middleware('idempotency')
+                ->name('v1.rfqs.invitations.store');
+            Route::post('invitations/{invId}/remind', [VendorInvitationController::class, 'remind'])
+                ->middleware('idempotency')
+                ->name('v1.rfqs.invitations.remind');
         });
     });
 
     // --- Section 4: RFQ Templates (7 endpoints) ---
     Route::prefix('rfq-templates')->group(function (): void {
         Route::get('/', [RfqTemplateController::class, 'index']);
-        Route::post('/', [RfqTemplateController::class, 'store']);
+        Route::post('/', [RfqTemplateController::class, 'store'])
+            ->middleware('idempotency')
+            ->name('v1.rfq-templates.store');
         Route::get('{id}', [RfqTemplateController::class, 'show']);
         Route::put('{id}', [RfqTemplateController::class, 'update']);
         Route::patch('{id}/status', [RfqTemplateController::class, 'updateStatus']);
-        Route::post('{id}/duplicate', [RfqTemplateController::class, 'duplicate']);
-        Route::post('{id}/apply', [RfqTemplateController::class, 'apply']);
+        Route::post('{id}/duplicate', [RfqTemplateController::class, 'duplicate'])
+            ->middleware('idempotency')
+            ->name('v1.rfq-templates.duplicate');
+        Route::post('{id}/apply', [RfqTemplateController::class, 'apply'])
+            ->middleware('idempotency')
+            ->name('v1.rfq-templates.apply');
     });
 
     // --- Section 5: Vendor Management (5 endpoints) ---
@@ -371,7 +387,9 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
     // --- Section 28: Projects (planned) ---
     Route::prefix('projects')->group(function (): void {
         Route::get('/', [ProjectController::class, 'index']);
-        Route::post('/', [ProjectController::class, 'store']);
+        Route::post('/', [ProjectController::class, 'store'])
+            ->middleware('idempotency')
+            ->name('v1.projects.store');
         Route::get('{id}', [ProjectController::class, 'show']);
         Route::put('{id}', [ProjectController::class, 'update']);
         Route::patch('{id}/status', [ProjectController::class, 'updateStatus']);
@@ -386,7 +404,9 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
     // --- Section 29: Tasks (planned) ---
     Route::prefix('tasks')->group(function (): void {
         Route::get('/', [TaskController::class, 'index']);
-        Route::post('/', [TaskController::class, 'store']);
+        Route::post('/', [TaskController::class, 'store'])
+            ->middleware('idempotency')
+            ->name('v1.tasks.store');
         Route::post('schedule/preview', [TaskController::class, 'schedulePreview']);
         Route::get('{id}', [TaskController::class, 'show']);
         Route::put('{id}', [TaskController::class, 'update']);

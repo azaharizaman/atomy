@@ -62,7 +62,10 @@ class ProjectsApiTest extends TestCase
     {
         $jwt = app(JwtServiceInterface::class);
         $token = $jwt->issueAccessToken($userId, $tenantId);
-        return ['Authorization' => 'Bearer ' . $token];
+        return [
+            'Authorization' => 'Bearer ' . $token,
+            'Idempotency-Key' => (string) Str::uuid(),
+        ];
     }
 
     public function test_projects_index_returns_200_with_auth_and_feature_enabled(): void
@@ -173,8 +176,8 @@ class ProjectsApiTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.project_id', $project->id);
-        $response->assertJsonPath('data.budgeted', 1000.0);
-        $response->assertJsonPath('data.actual', 800.0);
+        $response->assertJsonPath('data.budgeted', 1000);
+        $response->assertJsonPath('data.actual', 800);
         $response->assertJsonPath('data.currency', 'USD');
     }
 }

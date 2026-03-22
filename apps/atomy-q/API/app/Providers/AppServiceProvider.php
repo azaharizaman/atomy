@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
 use App\Contracts\PasswordResetServiceInterface;
 use App\Services\Identity\AtomyIdentityTokenManagerStub;
@@ -60,6 +61,7 @@ use Nexus\Task\Contracts\TaskManagerInterface;
 use Nexus\Task\Contracts\TaskPersistInterface;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
+use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -68,6 +70,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(ReplayResponseFactoryInterface::class, IdempotencyReplayResponseFactory::class);
+
         $this->app->singleton(JwtServiceInterface::class, function (): JwtServiceInterface {
             $secret = (string) config('jwt.secret');
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Http\Controllers\Controller;
 use App\Models\Project as ProjectModel;
 use App\Models\ProjectAcl;
@@ -14,6 +15,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 use Nexus\Project\Enums\ProjectStatus;
 use Nexus\Project\ValueObjects\ProjectSummary;
 use Nexus\ProjectManagementOperations\ProjectManagementOperationsCoordinator;
@@ -96,46 +99,56 @@ final class ProjectController extends Controller
         return response()->json(['data' => $items]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, IdempotencyServiceInterface $idempotency): JsonResponse
     {
-        $this->assertFeatureEnabled();
-        $this->tenantId($request);
+        try {
+            $this->assertFeatureEnabled();
+            $this->tenantId($request);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'client_id' => 'required|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'project_manager_id' => 'required|string',
-        ]);
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'client_id' => 'required|string',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'project_manager_id' => 'required|string',
+            ]);
 
-        $id = (string) \Illuminate\Support\Str::ulid();
-        $summary = new ProjectSummary(
-            id: $id,
-            name: $validated['name'],
-            clientId: $validated['client_id'],
-            startDate: new \DateTimeImmutable($validated['start_date']),
-            endDate: new \DateTimeImmutable($validated['end_date']),
-            projectManagerId: $validated['project_manager_id'],
-            status: ProjectStatus::Planning,
-        );
-        $this->projects->create($summary);
+            $id = (string) \Illuminate\Support\Str::ulid();
+            $summary = new ProjectSummary(
+                id: $id,
+                name: $validated['name'],
+                clientId: $validated['client_id'],
+                startDate: new \DateTimeImmutable($validated['start_date']),
+                endDate: new \DateTimeImmutable($validated['end_date']),
+                projectManagerId: $validated['project_manager_id'],
+                status: ProjectStatus::Planning,
+            );
+            $this->projects->create($summary);
 
-        $project = $this->projects->findById($id);
-        if ($project === null) {
-            abort(500, 'Project creation failed');
+            $project = $this->projects->findById($id);
+            if ($project === null) {
+                abort(500, 'Project creation failed');
+            }
+
+            $response = response()->json([
+                'data' => [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'status' => $project->status->value,
+                    'client_id' => $project->clientId,
+                    'start_date' => $project->startDate->format(DATE_ATOM),
+                    'end_date' => $project->endDate->format(DATE_ATOM),
+                ],
+            ], 201);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (ValidationException $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        } catch (\Throwable $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
         }
-
-        return response()->json([
-            'data' => [
-                'id' => $project->id,
-                'name' => $project->name,
-                'status' => $project->status->value,
-                'client_id' => $project->clientId,
-                'start_date' => $project->startDate->format(DATE_ATOM),
-                'end_date' => $project->endDate->format(DATE_ATOM),
-            ],
-        ], 201);
     }
 
     public function show(Request $request, string $id): JsonResponse

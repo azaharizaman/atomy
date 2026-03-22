@@ -53,7 +53,10 @@ class RfqRegressionForProjectsTest extends TestCase
     {
         $jwt = app(JwtServiceInterface::class);
         $token = $jwt->issueAccessToken((string) $user->id, (string) $user->tenant_id);
-        return ['Authorization' => 'Bearer ' . $token];
+        return [
+            'Authorization' => 'Bearer ' . $token,
+            'Idempotency-Key' => (string) Str::uuid(),
+        ];
     }
 
     public function test_create_rfq_without_project_id_succeeds_and_response_has_project_id_key(): void
@@ -62,6 +65,7 @@ class RfqRegressionForProjectsTest extends TestCase
         $payload = [
             'title' => 'Regression RFQ without project',
             'description' => 'Optional project_id not sent',
+            'submission_deadline' => now()->addDays(14)->toAtomString(),
         ];
         $response = $this->postJson('/api/v1/rfqs', $payload, $this->authHeaders($user));
         $response->assertStatus(201);
@@ -106,6 +110,7 @@ class RfqRegressionForProjectsTest extends TestCase
         $payload = [
             'title' => 'RFQ linked to project',
             'project_id' => $project->id,
+            'submission_deadline' => now()->addDays(14)->toAtomString(),
         ];
         $response = $this->postJson('/api/v1/rfqs', $payload, $this->authHeaders($user));
         $response->assertStatus(201);

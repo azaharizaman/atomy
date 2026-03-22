@@ -62,7 +62,10 @@ class TasksApiTest extends TestCase
     {
         $jwt = app(JwtServiceInterface::class);
         $token = $jwt->issueAccessToken($userId, $tenantId);
-        return ['Authorization' => 'Bearer ' . $token];
+        return [
+            'Authorization' => 'Bearer ' . $token,
+            'Idempotency-Key' => (string) Str::uuid(),
+        ];
     }
 
     public function test_tasks_index_returns_200_with_auth_and_feature_enabled(): void
