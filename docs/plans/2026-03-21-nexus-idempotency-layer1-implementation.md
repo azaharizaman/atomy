@@ -10,6 +10,7 @@
 
 **Prerequisites (read once):**
 
+- `docs/project/NEXUS_PACKAGES_REFERENCE.md` — **consult before starting** to avoid duplicating packages or interfaces (“Consult `NEXUS_PACKAGES_REFERENCE.md` to prevent duplication”).
 - `docs/plans/2026-03-21-nexus-idempotency-layer1-design.md` — source of truth
 - `docs/project/ARCHITECTURE.md` — Layer 1 rules
 - `AGENTS.md` — mandates
@@ -28,7 +29,7 @@ Expected after full implementation: PHPUnit **PASS**, **0** risky coverage gaps 
 
 ---
 
-### Task 0: Scaffold package skeleton
+## Task 0: Scaffold package skeleton
 
 **Files:**
 
@@ -53,7 +54,7 @@ git commit -m "chore: scaffold Nexus Idempotency package skeleton"
 
 ---
 
-### Task 1: Domain enums — record status & begin outcome
+## Task 1: Domain enums — record status & begin outcome
 
 **Files:**
 
@@ -79,7 +80,7 @@ Expected: FAIL until enums exist.
 
 ---
 
-### Task 2: Value objects — TenantId, OperationRef, ClientKey, RequestFingerprint, ResultEnvelope
+## Task 2: Value objects — TenantId, OperationRef, ClientKey, RequestFingerprint, ResultEnvelope
 
 **Files:**
 
@@ -106,7 +107,7 @@ Expected: FAIL until enums exist.
 
 ---
 
-### Task 3: Domain exceptions
+## Task 3: Domain exceptions
 
 **Files:**
 
@@ -128,7 +129,7 @@ Expected: FAIL until enums exist.
 
 ---
 
-### Task 4: Domain records — `IdempotencyRecord`, `BeginDecision`, `IdempotencyPolicy`
+## Task 4: Domain records — `IdempotencyRecord`, `BeginDecision`, `IdempotencyPolicy`
 
 **Files:**
 
@@ -144,7 +145,7 @@ Expected: FAIL until enums exist.
 
 ---
 
-### Task 5: Contracts
+## Task 5: Contracts
 
 **Files:**
 
@@ -179,13 +180,13 @@ interface IdempotencyClockInterface
 
 ---
 
-### Task 6: `SystemClock` + `InMemoryIdempotencyStore`
+## Task 6: `SystemClock` + `InMemoryIdempotencyStore`
 
 **Files:**
 
 - Create: `packages/Idempotency/src/Services/SystemClock.php` — implements `IdempotencyClockInterface` using `new DateTimeImmutable('now')` (or inject timezone **only if needed** — YAGNI: UTC document in README)
 
-- Create: `packages/Idempotency/src/Services/InMemoryIdempotencyStore.php` — implements `IdempotencyStoreInterface`; array storage keyed by a **JSON-encoded tuple** `json_encode([tenant, operation, client_key], JSON_THROW_ON_ERROR)` (same shape as `InMemoryIdempotencyStore::compositeKey` and [README](packages/Idempotency/README.md)); JSON avoids delimiter collisions (e.g. `|` inside segments). Concurrent `begin` uses **`claimPending()`** (insert-if-absent) on `IdempotencyPersistInterface`; losers observe the winner’s row (see `IdempotencyService`).
+- Create: `packages/Idempotency/src/Services/InMemoryIdempotencyStore.php` — implements `IdempotencyStoreInterface`; array storage keyed by **JSON-encoding the tuple** `[tenantId, operationRef, clientKey]` with `json_encode(..., JSON_THROW_ON_ERROR)` so delimiter characters in segment values cannot collide (e.g. `|` inside a segment). (This is the same tuple shape that `InMemoryIdempotencyStore::compositeKey` will implement and that [README](packages/Idempotency/README.md) will describe—name the method in the plan only as forward reference, not as a prerequisite symbol.) Concurrent `begin` uses **`claimPending()`** (insert-if-absent) on `IdempotencyPersistInterface`; losers observe the winner’s row (see `IdempotencyService`).
 
 **Step 1:** Tests `packages/Idempotency/tests/Unit/Services/InMemoryIdempotencyStoreTest.php`:
 
@@ -199,7 +200,7 @@ interface IdempotencyClockInterface
 
 ---
 
-### Task 7: `IdempotencyService` (core) — TDD
+## Task 7: `IdempotencyService` (core) — TDD
 
 **Files:**
 
@@ -230,22 +231,26 @@ interface IdempotencyClockInterface
 
 ---
 
-### Task 8: Documentation package artifacts
+## Task 8: Documentation package artifacts
 
 **Files:**
 
 - Create: `packages/Idempotency/README.md` — overview, Layer 1 boundaries, anti-overlap pointer to design doc, usage example (begin → domain work → complete)
 - Create: `packages/Idempotency/REQUIREMENTS.md` — functional requirements + fingerprint rules
-- Create: `packages/Idempotency/IMPLEMENTATION_SUMMARY.md` — checklist, version, what’s done
+- Create: `packages/Idempotency/IMPLEMENTATION_SUMMARY.md` — **living** checklist: update it incrementally after **each** relevant task or behavioral change (at minimum after Tasks **1–7** and any follow-up fixes) so status, surface area, and verification commands stay truthful.
 - Create: `packages/Idempotency/VALUATION_MATRIX.md` — complexity/coverage notes (template like other packages)
 
-**Step 1:** Fill IMPLEMENTATION_SUMMARY with honest status.
+**Step 1:** Fill `IMPLEMENTATION_SUMMARY.md` with honest initial status.
 
-**Step 2:** Commit `docs(idempotency): add package documentation`
+**Step 2:** Commit `docs(idempotency): add package documentation`.
+
+**Ongoing:** Whenever implementation changes land, update `IMPLEMENTATION_SUMMARY.md` in the **same** change (or an immediate follow-up commit). Prefer pairing commits such as `docs(idempotency): update IMPLEMENTATION_SUMMARY` with the implementation commit so the summary always reflects current progress.
+
+**Step 3:** After Tasks 1–7, ensure `IMPLEMENTATION_SUMMARY.md` documents shipped contracts, behaviors, and verification; repeat after any subsequent fix.
 
 ---
 
-### Task 9: Nexus packages reference + design approval checkbox
+## Task 9: Nexus packages reference + design approval checkbox
 
 **Files:**
 
@@ -258,7 +263,7 @@ interface IdempotencyClockInterface
 
 ---
 
-### Task 10: Final verification
+## Task 10: Final verification
 
 **Step 1:** From repo root:
 

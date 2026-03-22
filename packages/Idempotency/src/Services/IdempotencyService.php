@@ -28,6 +28,12 @@ use Nexus\Idempotency\ValueObjects\TenantId;
 
 final readonly class IdempotencyService implements IdempotencyServiceInterface
 {
+    /**
+     * Bounds {@see claimFirstExecution} recursion when repeated claim+normalize cycles return null
+     * (pathological store behavior; should not occur with a correct {@see IdempotencyPersistInterface}).
+     */
+    private const MAX_CLAIM_FIRST_EXECUTION_RETRIES = 32;
+
     public function __construct(
         private IdempotencyQueryInterface $query,
         private IdempotencyPersistInterface $persist,
@@ -50,7 +56,7 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
             return $this->claimFirstExecution($tenantId, $operationRef, $clientKey, $fingerprint, $now);
         }
 
-        return $this->decideForExistingRecord($record, $tenantId, $operationRef, $clientKey, $fingerprint, $now);
+        return $this->decideForExistingRecord($record, $tenantId, $operationRef, $clientKey, $fingerprint);
     }
 
     public function complete(
@@ -138,6 +144,7 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
         ClientKey $clientKey,
         RequestFingerprint $fingerprint,
         DateTimeImmutable $now,
+        int $retryCount = 0,
     ): BeginDecision {
         $attemptToken = self::newAttemptToken();
         $candidate = new IdempotencyRecord(
@@ -165,7 +172,20 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
             $now,
         );
         if ($normalized === null) {
-            return $this->claimFirstExecution($tenantId, $operationRef, $clientKey, $fingerprint, $now);
+            if ($retryCount >= self::MAX_CLAIM_FIRST_EXECUTION_RETRIES) {
+                throw IdempotencyCompletionException::wrongState(
+                    'Idempotency claim could not be resolved after maximum retries; store may be contended or misbehaving.'
+                );
+            }
+
+            return $this->claimFirstExecution(
+                $tenantId,
+                $operationRef,
+                $clientKey,
+                $fingerprint,
+                $now,
+                $retryCount + 1,
+            );
         }
 
         return $this->decideForExistingRecord(
@@ -174,7 +194,6 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
             $operationRef,
             $clientKey,
             $fingerprint,
-            $now,
         );
     }
 
@@ -184,7 +203,6 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
         OperationRef $operationRef,
         ClientKey $clientKey,
         RequestFingerprint $fingerprint,
-        DateTimeImmutable $now,
     ): BeginDecision {
         $this->assertTenantMatch($record, $tenantId);
 
