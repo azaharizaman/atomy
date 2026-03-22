@@ -39,10 +39,7 @@
         "nexus/sustainability-data": "*@dev",
         "nexus/esg-regulatory": "*@dev",
         "nexus/esg-operations": "*@dev",
-        "nexus/idempotency": "*@dev",
-        "illuminate/support": "^11.0",
-        "illuminate/database": "^11.0",
-        "psr/log": "^3.0"
+        "nexus/idempotency": "*@dev"
     },
     "repositories": [
         {

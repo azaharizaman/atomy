@@ -2,6 +2,93 @@
 
 This document serves as the absolute source of truth for Coding CLI agents working on the Atomy (Nexus) project. These mandates take precedence over general defaults.
 
+## ⚡ Build, Lint & Test Commands
+
+### PHP (Composer-based packages)
+```bash
+# Run all tests in a package (from package directory)
+composer install
+./vendor/bin/phpunit
+
+# Run single test file
+./vendor/bin/phpunit tests/Unit/Services/MyServiceTest.php
+
+# Run single test method
+./vendor/bin/phpunit --filter testMyMethod
+
+# Run static analysis (PHPStan)
+./vendor/bin/phpstan analyse src --level=max
+
+# Run with coverage
+./vendor/bin/phpunit --coverage-html build/coverage
+```
+
+### Frontend (React/Next.js in apps/atomy-q/)
+```bash
+cd apps/atomy-q/WEB
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build production
+npm run build
+
+# Lint
+npm run lint
+
+# Unit tests (Vitest)
+npm run test:unit
+npm run test:unit:watch  # watch mode
+
+# Run single unit test file
+npx vitest run src/hooks/useMyHook.test.ts
+
+# E2E tests (Playwright)
+npm run test:e2e
+npm run test:e2e:headed      # visible browser
+npm run test:e2e:ui          # Playwright UI
+npm run test:e2e:debug       # Debug mode
+
+# Generate API client from OpenAPI
+npm run generate:api
+```
+
+### Root-level E2E tests
+```bash
+npm run test:e2e             # All Playwright tests
+npm run test:e2e:laravel    # Laravel-specific tests
+npm run test:e2e:api        # API tests
+npm run test:e2e:report     # View HTML report
+```
+
+## 📝 Code Style Guidelines
+
+**Detailed standards are in [ARCHITECTURE.md](docs/project/ARCHITECTURE.md) Section 6.**
+
+### Quick Reference
+- **Strict Types**: `declare(strict_types=1);` mandatory in every PHP file
+- **Immutability**: Use `final readonly class` for services; `readonly` properties for VOs
+- **Dependency Injection**: Constructor injection with specific interfaces. NEVER use generic `object`
+- **Interfaces over Classes**: Depend on interfaces, never concrete implementations
+- **No Framework Coupling**: Layers 1 & 2 must NOT use `Illuminate\*` or `Symfony\*`
+- **Error Handling**: Use domain-specific exceptions, never generic `\Exception`
+- **CQRS**: Split repositories into `*QueryInterface` and `*PersistInterface`
+
+### Naming Conventions
+- **Classes**: `PascalCase` (e.g., `ProjectManager`)
+- **Interfaces**: `PascalCase` with `Interface` suffix (e.g., `ProjectManagerInterface`)
+- **Exceptions**: `*Exception` suffix (e.g., `TenantNotFoundException`)
+- **Value Objects**: `*Id`, `*VO`, or descriptive names (e.g., `ProjectId`, `Money`)
+- **Methods**: `camelCase`, verb-first (e.g., `createProject`, `getActiveProjects`)
+
+### Imports
+- Use fully-qualified class names or explicit `use` statements
+- Group imports: `php` built-ins → `psr` interfaces → `nexus` packages → project local
+- Sort alphabetically within groups
+
 ## 🏗️ Core Architecture & Standards
 
 All development MUST strictly adhere to the project's **Three-Layer Architecture** and **Coding Standards**.
