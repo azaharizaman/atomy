@@ -177,15 +177,45 @@ final class OutboxServiceTest extends TestCase
             $clock->now(),
         ));
 
-        $claimed = $service->claimNextPending(new TenantId('t1'), $this->utc('2026-03-22T12:05:00+00:00'));
+        $expiresAt = $this->utc('2026-03-22T12:05:00+00:00');
+        $claimed = $service->claimNextPending(new TenantId('t1'), $expiresAt);
         self::assertNotNull($claimed);
         $token = $claimed->claimToken;
         self::assertNotNull($token);
 
-        $clock->setNow($this->utc('2026-03-22T12:06:00+00:00'));
+        $clock->setNow($expiresAt);
 
         $this->expectException(OutboxClaimExpiredException::class);
         $service->markSent(new TenantId('t1'), $claimed->id, $token);
+    }
+
+    public function testMarkFailedThrowsWhenClaimExpired(): void
+    {
+        $clock = new FixedClock($this->utc('2026-03-22T12:00:00+00:00'));
+        $store = new InMemoryOutboxStore();
+        $service = new OutboxService($store, $store, $clock);
+
+        $service->enqueue(new OutboxEnqueueCommand(
+            new TenantId('t1'),
+            new DedupKey('exp-fail'),
+            new EventTypeRef('E'),
+            [],
+            [],
+            null,
+            null,
+            $clock->now(),
+        ));
+
+        $expiresAt = $this->utc('2026-03-22T12:05:00+00:00');
+        $claimed = $service->claimNextPending(new TenantId('t1'), $expiresAt);
+        self::assertNotNull($claimed);
+        $token = $claimed->claimToken;
+        self::assertNotNull($token);
+
+        $clock->setNow($expiresAt);
+
+        $this->expectException(OutboxClaimExpiredException::class);
+        $service->markFailed(new TenantId('t1'), $claimed->id, $token, new FailureReason('down'));
     }
 
     public function testCompletionThrowsOnTokenMismatch(): void

@@ -112,7 +112,7 @@ final readonly class OutboxService implements OutboxServiceInterface
         if ($expiresAt === null) {
             throw OutboxClaimTokenMismatchException::create();
         }
-        if ($this->clock->now() > $expiresAt) {
+        if (! ($this->clock->now() < $expiresAt)) {
             throw OutboxClaimExpiredException::create();
         }
 

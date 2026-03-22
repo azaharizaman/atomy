@@ -4,7 +4,7 @@
 
 This package defines **contracts and invariants** for the [transactional outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html): enqueue integration messages **in the same unit of work** as business state, then **publish asynchronously** with explicit **pending → sending → sent | failed** semantics.
 
-It is **not** a message broker, queue driver, or database layer. Persistence and workers live in **Layer 3** adapters.
+It is **not** a message broker, queue driver, or database layer. Persistence and workers live in **Layer 3** adapters. `InMemoryOutboxStore` is for tests and single-process use only (not a cross-process concurrency model; L3 should use row locking and unique constraints).
 
 ## When to use
 

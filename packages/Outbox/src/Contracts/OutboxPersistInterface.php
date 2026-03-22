@@ -22,7 +22,7 @@ interface OutboxPersistInterface
      * Atomically leases the oldest pending message for the tenant: Pending → Sending with a new claim token and expiry.
      *
      * @param DateTimeImmutable $transitionedAt Timestamp for {@see OutboxRecord::$updatedAt} (typically clock "now").
-     * @param DateTimeImmutable $claimExpiresAt Exclusive lease upper bound for {@see OutboxRecord::$claimExpiresAt}.
+     * @param DateTimeImmutable $claimExpiresAt Lease end (half-open interval: valid while `transitionedAt <= now < claimExpiresAt` at store level; completion requires `now < claimExpiresAt`).
      */
     public function claimNextPending(
         TenantId $tenantId,
