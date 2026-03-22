@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-  Palette, Type, LayoutGrid, MousePointer2, Tag, FormInput,
+  Palette, Type, LayoutGrid, MousePointer2, Tag as TagIcon, FormInput,
   Table2, Layers, Navigation, SlidersHorizontal, Bell, BookOpen,
   ChevronRight, BarChart2, Clock, Eye, FileText, Users,
   Award, List, FileCheck, ShieldCheck, GitBranch, AlertTriangle,
   Plus, Download, RefreshCw, Lock, CheckCircle2, Upload, Star,
-  FolderArchive, Settings, Sparkles, Search
+  FolderArchive, Settings, Sparkles, Search, Mail
 } from 'lucide-react';
 
 // Import DS components
@@ -13,9 +13,10 @@ import { Button, IconButton } from '../components/ds/Button';
 import {
   StatusBadge, SLATimerBadge, ConfidenceBadge, VersionChip, CountBadge, StatusDot
 } from '../components/ds/Badge';
+import { Tag as DsTag, CornerLabel } from '../components/ds/Tag';
 import { Avatar, AvatarLabel, AvatarStack } from '../components/ds/Avatar';
 import {
-  TextInput, SearchInput, SelectInput, Textarea, Checkbox, ToggleSwitch, FilterChip
+  TextInput, SearchInput, SelectInput, Textarea, Checkbox, ToggleSwitch, FilterChip, FieldHint
 } from '../components/ds/Input';
 import { Card, SectionCard, InfoGrid, EmptyState, UploadZone, DocPreview } from '../components/ds/Card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../components/ui/collapsible';
@@ -78,7 +79,7 @@ const SECTIONS = [
   { id: 'foundation',    label: 'Foundation',       icon: <Palette size={14} /> },
   { id: 'typography',    label: 'Typography',        icon: <Type size={14} /> },
   { id: 'buttons',       label: 'Buttons',           icon: <MousePointer2 size={14} /> },
-  { id: 'badges',        label: 'Badges & Status',   icon: <Tag size={14} /> },
+  { id: 'badges',        label: 'Badges & Status',   icon: <TagIcon size={14} /> },
   { id: 'avatar',        label: 'Avatars',           icon: <Users size={14} /> },
   { id: 'inputs',        label: 'Form Controls',     icon: <FormInput size={14} /> },
   { id: 'cards',         label: 'Cards & Surfaces',  icon: <Layers size={14} /> },
@@ -785,7 +786,7 @@ export function ShowcasePage() {
           {/* ═══════════════════════════════════════════════════════════
               BADGES & STATUS
           ════════════════════════════════════════════════════════════ */}
-          <Section id="badges" title="Badges & Status" subtitle="Semantic status badges, SLA timers, confidence levels, and version chips.">
+          <Section id="badges" title="Badges & Status" subtitle="Domain status badges, generic tags, SLA timers, confidence levels, version chips, and corner labels.">
             <SubSection title="Status Badges">
               <Card padding="lg">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -840,6 +841,80 @@ export function ShowcasePage() {
                   <StatusDot color="amber" />
                   <StatusDot color="red" />
                   <StatusDot color="slate" />
+                </div>
+              </Card>
+            </SubSection>
+
+            <SubSection title="Tags & classification chips">
+              <Card padding="lg">
+                <p className="text-xs text-slate-500 mb-3">Generic <code className="text-indigo-700">Tag</code> — token variants, solid vs outline, optional icon, detail segment, removable.</p>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DsTag>Neutral</DsTag>
+                    <DsTag variant="success">Success</DsTag>
+                    <DsTag variant="warning">Warning</DsTag>
+                    <DsTag variant="danger">Danger</DsTag>
+                    <DsTag variant="info">Info</DsTag>
+                    <DsTag variant="accent">Accent</DsTag>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DsTag appearance="outline" variant="neutral">Outline</DsTag>
+                    <DsTag appearance="outline" variant="success">Outline</DsTag>
+                    <DsTag appearance="outline" variant="accent">Outline</DsTag>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DsTag size="xs" variant="info">XS</DsTag>
+                    <DsTag size="sm" variant="info">SM</DsTag>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DsTag icon={<Mail className="size-3" />} variant="neutral">Mail</DsTag>
+                    <DsTag variant="success" detail={214}>Dogs</DsTag>
+                    <DsTag variant="warning" onRemove={() => {}}>Removable</DsTag>
+                  </div>
+                </div>
+              </Card>
+            </SubSection>
+
+            <SubSection title="Corner labels">
+              <Card padding="lg">
+                <p className="text-xs text-slate-500 mb-3">Parent must be <code className="text-indigo-700">relative</code>; use <code className="text-indigo-700">overflow-hidden</code> on rounded surfaces so the tag clips cleanly.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+                  <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm min-h-[100px]">
+                    <CornerLabel position="top-right">
+                      <DsTag size="xs" variant="accent">New</DsTag>
+                    </CornerLabel>
+                    <div className="p-4 pt-7 text-sm text-slate-700">Card body (top-right)</div>
+                  </div>
+                  <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm min-h-[100px]">
+                    <CornerLabel position="top-left">
+                      <DsTag size="xs" variant="info">Beta</DsTag>
+                    </CornerLabel>
+                    <div className="p-4 pt-7 text-sm text-slate-700">Card body (top-left)</div>
+                  </div>
+                </div>
+              </Card>
+            </SubSection>
+
+            <SubSection title="Field hints">
+              <Card padding="lg">
+                <p className="text-xs text-slate-500 mb-3"><code className="text-indigo-700">FieldHint</code> — default helper, error (with icon), optional pointing panel.</p>
+                <div className="flex flex-col gap-4 max-w-md">
+                  <div>
+                    <span className="text-xs font-medium text-slate-600">Default</span>
+                    <FieldHint>Use at least 8 characters.</FieldHint>
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-slate-600">Error</span>
+                    <FieldHint variant="error">That username is already taken.</FieldHint>
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-slate-600">Pointing</span>
+                    <FieldHint pointing>Please enter a value for this field.</FieldHint>
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-slate-600">Pointing + error</span>
+                    <FieldHint variant="error" pointing>This value failed validation.</FieldHint>
+                  </div>
                 </div>
               </Card>
             </SubSection>

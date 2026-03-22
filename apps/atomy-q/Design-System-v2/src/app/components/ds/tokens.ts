@@ -95,6 +95,9 @@ export const DS_TOKENS = {
   },
 } as const;
 
+/** Generic classification chip (Tag) — maps to DS_TOKENS semantic families */
+export type TagVariant = 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'accent';
+
 export type StatusVariant =
   | 'active' | 'closed' | 'awarded' | 'draft' | 'pending'
   | 'approved' | 'rejected' | 'processing' | 'locked' | 'stale'

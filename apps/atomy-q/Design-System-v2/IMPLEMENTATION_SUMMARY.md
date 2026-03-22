@@ -12,7 +12,7 @@ Primary risk is not visual styling; it is contract coverage and behavior orchest
 
 ## Existing Coverage (Implemented)
 
-- Foundations/tokens, buttons, badges, avatars, inputs, tabs, cards.
+- Foundations/tokens, buttons, badges (including generic **`Tag`**, **`CornerLabel`**, and enhanced **`FieldHint`**), avatars, inputs, tabs, cards.
 - Data table with sorting, selection, row expansion, and bulk actions.
 - Slide-over with width variants (`sm|md|lg|xl`).
 - Layout primitives (Default + Workspace), top bar, active record menu, breadcrumb, timeline.
