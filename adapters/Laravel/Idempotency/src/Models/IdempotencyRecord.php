@@ -6,7 +6,7 @@ namespace Nexus\Laravel\Idempotency\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-final class IdempotencyRecord extends Model
+class IdempotencyRecord extends Model
 {
     protected $table = 'nexus_idempotency_records';
 
