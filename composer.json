@@ -114,7 +114,8 @@
             "Nexus\\Project\\": "packages/Project/src/",
             "Nexus\\ResourceAllocation\\": "packages/ResourceAllocation/src/",
             "Nexus\\Milestone\\": "packages/Milestone/src/",
-            "Nexus\\PolicyEngine\\": "packages/PolicyEngine/src/"
+            "Nexus\\PolicyEngine\\": "packages/PolicyEngine/src/",
+            "Nexus\\Idempotency\\": "packages/Idempotency/src/"
         }
     },
     "autoload-dev": {
@@ -148,7 +149,8 @@
             "Nexus\\Project\\Tests\\": "packages/Project/tests/",
             "Nexus\\ResourceAllocation\\Tests\\": "packages/ResourceAllocation/tests/",
             "Nexus\\Milestone\\Tests\\": "packages/Milestone/tests/",
-            "Nexus\\PolicyEngine\\Tests\\": "packages/PolicyEngine/tests/"
+            "Nexus\\PolicyEngine\\Tests\\": "packages/PolicyEngine/tests/",
+            "Nexus\\Idempotency\\Tests\\": "packages/Idempotency/tests/"
         }
     }
 }
