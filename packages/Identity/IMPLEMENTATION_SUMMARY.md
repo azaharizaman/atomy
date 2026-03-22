@@ -229,10 +229,11 @@ The package has minimal, well-justified external dependencies:
   "spomky-labs/otphp": "^11.3",
   "endroid/qr-code": "^5.0",
   "web-auth/webauthn-lib": "^4.7",
-  "web-auth/cose-lib": "^4.2",
-  "web-auth/metadata-service": "^4.7"
+  "web-auth/cose-lib": "^4.2"
 }
 ```
+
+FIDO metadata (`web-auth/metadata-service`) was removed: it is abandoned upstream, and `WebAuthnManager` uses `NoneAttestationStatementSupport` only (no authenticator metadata lookup).
 
 All dependencies are:
 - **Industry-standard** libraries (PSR-compliant, WebAuthn spec-compliant)

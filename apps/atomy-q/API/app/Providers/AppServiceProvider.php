@@ -31,6 +31,8 @@ use App\Services\ProjectManagementOperations\AtomyTimelineDriftService;
 use App\Services\Task\AtomyTaskPersist;
 use App\Services\Task\AtomyTaskQuery;
 use App\Services\Tenant\RequestTenantContext;
+use App\OpenApi\IdempotencyErrorCodesDocumentTransformer;
+use Dedoc\Scramble\Scramble;
 use Illuminate\Support\ServiceProvider;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Nexus\Identity\Contracts\MfaEnrollmentServiceInterface;
@@ -139,6 +141,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Scramble::configure()->withDocumentTransformers([
+            IdempotencyErrorCodesDocumentTransformer::class,
+        ]);
     }
 }

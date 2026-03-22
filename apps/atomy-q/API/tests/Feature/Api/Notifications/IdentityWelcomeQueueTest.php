@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api\Notifications;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Nexus\IdentityOperations\Services\NotificationSenderInterface;
 use Nexus\Laravel\Identity\Jobs\SendWelcomeNotificationJob;
@@ -12,8 +11,6 @@ use Tests\TestCase;
 
 final class IdentityWelcomeQueueTest extends TestCase
 {
-    use RefreshDatabase;
-
     public function test_identity_operations_send_welcome_enqueues_job(): void
     {
         Queue::fake();

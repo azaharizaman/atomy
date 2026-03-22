@@ -18,7 +18,7 @@ type RetryableRequest = AxiosRequestConfig & { _retry?: boolean };
 let refreshPromise: Promise<{ accessToken: string; refreshToken: string; user: User }> | null = null;
 
 /** Phase 1 idempotent POST paths (relative to baseURL, e.g. /api/v1). */
-function requiresIdempotencyKey(url: string): boolean {
+export function requiresIdempotencyKey(url: string): boolean {
   const path = url.split('?')[0]?.replace(/^\/+/, '') ?? '';
   if (path === 'rfqs' || path === 'rfqs/bulk-action') return true;
   if (/^rfqs\/.+\/duplicate$/.test(path)) return true;
