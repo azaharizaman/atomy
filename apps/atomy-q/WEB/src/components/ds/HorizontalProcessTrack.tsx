@@ -21,6 +21,7 @@ export interface HorizontalProcessTrackStep {
   id: string;
   label: string;
   description?: string;
+  icon?: React.ReactNode;
   progress: ProcessStepProgress;
   health?: ProcessStepHealth;
   /** ISO-8601 date string; used when `showTodayCursor` is true (caller supplies consistent calendar semantics). */
@@ -30,6 +31,7 @@ export interface HorizontalProcessTrackStep {
 export interface HorizontalProcessTrackProps {
   steps: HorizontalProcessTrackStep[];
   variant?: 'compact' | 'detailed';
+  showDescriptionsInCompact?: boolean;
   completeAppearance?: 'success' | 'accent';
   showTodayCursor?: boolean;
   /** Defaults to `new Date()` when `showTodayCursor` is true. */
@@ -80,13 +82,13 @@ function nodeContent(
   if (step.progress === 'current') {
     return {
       paletteClass: TIMELINE_DOT_PALETTE.indigo,
-      inner: <span className={numCls}>{index + 1}</span>,
+      inner: step.icon ?? <span className={numCls}>{index + 1}</span>,
     };
   }
 
   return {
     paletteClass: TIMELINE_DOT_PALETTE.slate,
-    inner: <span className={numCls}>{index + 1}</span>,
+    inner: step.icon ?? <span className={numCls}>{index + 1}</span>,
   };
 }
 
@@ -96,6 +98,7 @@ function nodeContent(
 export function HorizontalProcessTrack({
   steps,
   variant = 'detailed',
+  showDescriptionsInCompact = false,
   completeAppearance = 'success',
   showTodayCursor = false,
   today: todayProp,
@@ -197,7 +200,7 @@ export function HorizontalProcessTrack({
 
                   <div className="mt-2 flex flex-col items-center px-0.5 min-w-0">
                     <p className={titleCls}>{step.label}</p>
-                    {variant === 'detailed' && step.description && (
+                    {(variant === 'detailed' || showDescriptionsInCompact) && step.description && (
                       <p className={descCls}>{step.description}</p>
                     )}
                   </div>

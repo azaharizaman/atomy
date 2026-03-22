@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Calendar, ClipboardCheck, DollarSign, Flag, Trophy } from 'lucide-react';
 
 import { HorizontalProcessTrack, type HorizontalProcessTrackStep } from '@/components/ds/HorizontalProcessTrack';
 import type { ProcessStepHealth, ProcessStepProgress } from '@/components/ds/horizontalProcessTrackLogic';
@@ -11,6 +12,14 @@ import {
 } from '@/lib/rfq-schedule-milestones';
 
 export type RfqScheduleTimelineProps = RfqScheduleContext;
+
+const MILESTONE_ICON: Record<string, React.ReactNode> = {
+  submission_deadline: <Calendar className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />,
+  closing_date: <Flag className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />,
+  technical_review_due_at: <ClipboardCheck className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />,
+  financial_review_due_at: <DollarSign className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />,
+  expected_award_at: <Trophy className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />,
+};
 
 function formatDateTitle(ms: number): string {
   return new Date(ms).toLocaleDateString(undefined, { dateStyle: 'medium' });
@@ -47,6 +56,7 @@ function milestonesToTrackSteps(milestones: ScheduleMilestone[], nowMs: number):
       id: m.id,
       label: title,
       description,
+      icon: MILESTONE_ICON[m.id],
       progress,
       health,
       date: iso,
@@ -55,7 +65,7 @@ function milestonesToTrackSteps(milestones: ScheduleMilestone[], nowMs: number):
 }
 
 export function RfqScheduleTimeline(props: RfqScheduleTimelineProps) {
-  const nowMs = Date.now();
+  const [nowMs] = React.useState<number>(() => Date.now());
   const layout = buildRfqScheduleLayout(props, nowMs);
 
   if (layout === null) {
@@ -80,6 +90,7 @@ export function RfqScheduleTimeline(props: RfqScheduleTimelineProps) {
       <HorizontalProcessTrack
         steps={steps}
         variant="compact"
+        showDescriptionsInCompact
         completeAppearance="success"
         showTodayCursor={steps.length >= 2}
         today={new Date(nowMs)}
