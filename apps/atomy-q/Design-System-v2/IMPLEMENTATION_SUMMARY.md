@@ -16,6 +16,7 @@ Primary risk is not visual styling; it is contract coverage and behavior orchest
 - Data table with sorting, selection, row expansion, and bulk actions.
 - Slide-over with width variants (`sm|md|lg|xl`).
 - Layout primitives (Default + Workspace), top bar, active record menu, breadcrumb, timeline.
+- **`ProjectVitalsPanel`** — ~200px sidebar strip: project identity, composite mission health (`nominal` | `attention` | `blocked`), KPI rows, owner (`AvatarLabel`), milestone, optional “View project” action. Showcase: Layouts → “Project vitals panel (200px)”.
 
 ## Missing Components Required for Blueprint v2 Completion
 

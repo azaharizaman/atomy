@@ -37,6 +37,7 @@ import { ActiveRecordSnippet, ActiveRecordMenu } from '../components/ds/ActiveRe
 import { MainNav } from '../components/ds/MainNav';
 import { WorkspaceBreadcrumbs } from '../components/ds/WorkspaceBreadcrumbs';
 import { RecordHeader } from '../components/ds/RecordHeader';
+import { ProjectVitalsPanel } from '../components/ds/ProjectVitalsPanel';
 import { SlideOverStackManager, type SlideOverStackItem } from '../components/ds/SlideOverStackManager';
 import { TopBar } from '../components/ds/TopBar';
 import { SignInCard, MfaPromptPanel } from '../components/ds/AuthComponents';
@@ -2485,6 +2486,85 @@ export function ShowcasePage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </SubSection>
+
+            <SubSection title="Project vitals panel (200px)">
+              <p className="text-sm text-slate-500 mb-4">
+                Dense sidebar strip: project code and title, a single composite health headline (nominal / attention / blocked), optional reason line, a handful of KPI rows, owner, next milestone, and one navigation action. Width matches{' '}
+                <code className="text-xs font-mono text-indigo-700">layout.sidebarW</code> (200px) in tokens.
+              </p>
+              <div className="flex flex-wrap gap-5 items-start mb-6">
+                <ProjectVitalsPanel
+                  projectCode="PRJ-2044"
+                  projectName="Regional DC Refresh"
+                  missionHealth="nominal"
+                  healthReason="No open risks on the golden path."
+                  metrics={[
+                    { label: 'Open RFQs', value: '4' },
+                    { label: 'Pending approvals', value: '0' },
+                    { label: 'Tasks due (7d)', value: '2' },
+                  ]}
+                  ownerName="Alex Kumar"
+                  ownerSubtitle="Procurement lead"
+                  milestoneLabel="Submission gate"
+                  milestoneDate="Apr 12, 2026"
+                  onViewProject={() => {}}
+                />
+                <ProjectVitalsPanel
+                  projectCode="PRJ-1891"
+                  projectName="Office Consolidation — Phase 2 North America Sites and Vendor Rationalization"
+                  missionHealth="attention"
+                  healthReason="Pending approvals must clear before comparison can finalize."
+                  metrics={[
+                    { label: 'Open RFQs', value: '7' },
+                    { label: 'Pending approvals', value: '3' },
+                    { label: 'Tasks due (7d)', value: '5' },
+                  ]}
+                  ownerName="Jordan Lee"
+                  ownerSubtitle="Category manager"
+                  milestoneLabel="Exec sign-off"
+                  milestoneDate="Mar 28, 2026"
+                  onViewProject={() => {}}
+                />
+                <ProjectVitalsPanel
+                  projectCode="PRJ-0912"
+                  projectName="Fleet Telematics Renewal"
+                  missionHealth="blocked"
+                  healthReason="Normalization conflicts must be resolved before comparison."
+                  metrics={[
+                    { label: 'Open RFQs', value: '2' },
+                    { label: 'Blocking issues', value: '1' },
+                  ]}
+                  ownerName="Sam Rivera"
+                  milestoneLabel="Kickoff"
+                  milestoneDate="TBD"
+                  viewProjectLabel="Open project"
+                  onViewProject={() => {}}
+                />
+              </div>
+              <p className="text-xs text-slate-500 mb-2">In context: vitals column beside a work surface (desktop shell).</p>
+              <div className="flex max-w-2xl rounded-xl border border-slate-300 overflow-hidden shadow-sm bg-slate-100">
+                <ProjectVitalsPanel
+                  className="rounded-none border-0 border-r border-slate-200 shadow-none"
+                  projectCode="PRJ-2044"
+                  projectName="Regional DC Refresh"
+                  missionHealth="nominal"
+                  metrics={[
+                    { label: 'Open RFQs', value: '4' },
+                    { label: 'Approvals', value: '0' },
+                  ]}
+                  ownerName="Alex Kumar"
+                  milestoneLabel="Next checkpoint"
+                  milestoneDate="Apr 12, 2026"
+                  onViewProject={() => {}}
+                />
+                <div className="flex-1 min-h-[280px] p-4 text-sm text-slate-500">
+                  <p className="font-medium text-slate-700 mb-1">RFQ workspace</p>
+                  <p className="text-xs leading-relaxed">
+                    Main content (overview, tables, timeline) occupies the flex region; the vitals panel stays a fixed 200px rail for scan-level project state.
+                  </p>
                 </div>
               </div>
             </SubSection>
