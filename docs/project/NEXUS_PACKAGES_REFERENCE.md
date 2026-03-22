@@ -1,9 +1,13 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.9  
-**Last Updated (March 21, 2026)**  
+**Version:** 1.10  
+**Last Updated (March 22, 2026)**  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
+
+**Recent Updates (March 22, 2026):**
+- **NEW:** Added `Nexus\Outbox` (Layer 1) — transactional outbox model, publish lifecycle (`Pending` → `Sending` → `Sent`|`Failed`), tenant-scoped dedup keys, claim tokens; no queue/HTTP/DB in package.
+- **Outbox** — `enqueue` / `claimNextPending` / `markSent` / `markFailed` / `scheduleRetry` with `OutboxStoreInterface` + `OutboxClockInterface`; `InMemoryOutboxStore` for tests; EventStream dual-write mapping documented in package `docs/event-stream-bridge.md`.
 
 **Recent Updates (March 21, 2026):**
 - **NEW:** Added `Nexus\Idempotency` (Layer 1) — tenant-scoped command idempotency, fingerprint conflict detection, and replay-safe `ResultEnvelope` storage (no outbox/HTTP/DB in package).
@@ -78,6 +82,7 @@
 | **Milestone / billing vs budget** | **Use `Nexus\Milestone\Contracts\MilestoneManagerInterface`, `BudgetReservationInterface`** |
 | **Policy evaluation / rule decisions** | **Use `Nexus\PolicyEngine\Contracts\PolicyEngineInterface`, `Nexus\PolicyEngine\Contracts\PolicyRegistryInterface`, `Nexus\PolicyEngine\Contracts\PolicyDefinitionDecoderInterface`** |
 | **Command idempotency / replay of mutating API results** | **Use `Nexus\Idempotency\Contracts\IdempotencyServiceInterface`, `Nexus\Idempotency\Contracts\IdempotencyStoreInterface` (or `IdempotencyQueryInterface` / `IdempotencyPersistInterface` where only reads or writes are needed), `Nexus\Idempotency\Contracts\IdempotencyClockInterface`** |
+| **Transactional outbox / integration fan-out after commit** | **Use `Nexus\Outbox\Contracts\OutboxServiceInterface`, `Nexus\Outbox\Contracts\OutboxStoreInterface` (or `OutboxQueryInterface` / `OutboxPersistInterface`), `Nexus\Outbox\Contracts\OutboxClockInterface`** |
 
 ---
 
@@ -117,7 +122,19 @@
 
 ---
 
-### 📊 **2. Observability & Monitoring**
+### 🔗 **2. Integration & Messaging**
+
+#### **Nexus\Outbox** ✅ **NEW**
+**Capabilities:**
+- Tenant-scoped enqueue with deduplication key (e.g. EventStream `event_id`)
+- Publish lifecycle with claim token and lease expiry between `Sending` and terminal states
+- `enqueue` / `claimNextPending` / `markSent` / `markFailed` / `scheduleRetry`
+- `InMemoryOutboxStore` for unit tests; persistence via `OutboxStoreInterface` (Layer 3 adapters)
+- EventStream bridge documentation for dual-write ordering (append + enqueue in one transaction)
+
+---
+
+### 📊 **3. Observability & Monitoring**
 
 #### **Nexus\Telemetry** (Formerly Monitoring)
 **Capabilities:**
@@ -134,7 +151,7 @@
 
 ---
 
-### 💼 **3. Financial Management**
+### 💼 **4. Financial Management**
 
 #### **Nexus\GeneralLedger** ✅ **NEW**
 **Capabilities:**
@@ -159,7 +176,7 @@
 
 ---
 
-### 🛠️ **4. Operations & Logistics**
+### 🛠️ **5. Operations & Logistics**
 
 #### **Nexus\FieldService** ✅ **NEW**
 **Capabilities:**
@@ -182,7 +199,7 @@
 
 ---
 
-### 🤝 **5. CRM & Loyalty**
+### 🤝 **6. CRM & Loyalty**
 
 #### **Nexus\Loyalty** ✅ **NEW**
 **Capabilities:**
@@ -199,7 +216,7 @@
 
 ---
 
-### 📋 **6. Project & Delivery**
+### 📋 **7. Project & Delivery**
 
 #### **Nexus\Task**
 **Capabilities:**
@@ -263,6 +280,6 @@ Orchestrators coordinate multiple Layer 1 packages to fulfill complex business w
 
 ---
 
-**Package Count:** 101 Atomic Packages (includes PolicyEngine, Idempotency)  
+**Package Count:** 102 Atomic Packages (includes PolicyEngine, Idempotency, Outbox)  
 **Orchestrator Count:** 19 Orchestrators  
 **Architecture Version:** 3.0 (Nexus Three-Layer)

@@ -158,12 +158,13 @@ Customer relationship and field service management.
 | **Party** | `Nexus\Party` | Customers, vendors, employees | `PartyManagerInterface`, `ContactManagerInterface`, `AddressManagerInterface` |
 | **FieldService** | `Nexus\FieldService` | Work orders and service | `FieldServiceManagerInterface`, `WorkOrderInterface`, `TechnicianScheduleInterface` |
 
-### 2.7 Integration & Automation (9 packages)
+### 2.7 Integration & Automation (10 packages)
 
 Integration hub, workflow automation, and processing.
 
 | Package | Namespace | Purpose | Key Interfaces |
 |---------|-----------|---------|----------------|
+| **Outbox** | `Nexus\Outbox` | Transactional outbox for integration fan-out | `OutboxServiceInterface`, `OutboxStoreInterface`, `OutboxClockInterface` |
 | **Connector** | `Nexus\Connector` | Integration hub | `IntegrationHubInterface`, `ConnectorInterface`, `DataMapperInterface` |
 | **Workflow** | `Nexus\Workflow` | Process automation | `WorkflowEngineInterface`, `WorkflowDefinitionInterface` |
 | **Notifier** | `Nexus\Notifier` | Multi-channel notifications | `NotificationManagerInterface`, `ChannelInterface`, `TemplateInterface` |
