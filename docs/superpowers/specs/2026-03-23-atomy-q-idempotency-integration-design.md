@@ -1,7 +1,7 @@
 # Atomy-Q SaaS API — Idempotency Integration Design
 
 **Date:** 2026-03-23  
-**Status:** Draft (for implementation)  
+**Status:** Approved for implementation  
 **Related:** [2026-03-22-idempotency-laravel-adapter-design.md](./2026-03-22-idempotency-laravel-adapter-design.md) (Layer 3 adapter package)  
 **Layer 1:** `nexus/idempotency` (`packages/Idempotency/`)
 
