@@ -9,8 +9,10 @@ import { StatusBadge } from '@/components/ds/Badge';
 import { SectionCard } from '@/components/ds/Card';
 import { Timeline, type TimelineEvent } from '@/components/ds/Timeline';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
+import { MissionHealthBanner } from '@/components/workspace/mission-health-banner';
 import { OverviewNextStep } from '@/components/workspace/overview-next-step';
 import { useRfqOverview, type RfqOverviewActivityItem } from '@/hooks/use-rfq-overview';
+import { computeMissionHealth } from '@/lib/rfq-mission-health';
 import { RfqScheduleTimeline } from '@/components/workspace/rfq-schedule-timeline';
 
 function formatRelativeTime(iso: string): string {
@@ -87,6 +89,28 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
     ],
   );
 
+  const missionHealth = React.useMemo(
+    () =>
+      computeMissionHealth({
+        status: rfq?.status ?? 'draft',
+        submission_deadline: rfq?.submission_deadline,
+        needs_review_count: overview?.normalization?.needs_review_count,
+        approvals: {
+          overall: approvals?.overall ?? 'none',
+          pending_count: approvals?.pending_count ?? 0,
+        },
+        comparison: comparison ? { is_preview: Boolean(comparison.is_preview) } : null,
+      }),
+    [
+      rfq?.status,
+      rfq?.submission_deadline,
+      overview?.normalization?.needs_review_count,
+      approvals?.overall,
+      approvals?.pending_count,
+      comparison?.is_preview,
+    ],
+  );
+
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
     { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
@@ -97,6 +121,7 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
     return (
       <div className="space-y-5">
         <WorkspaceBreadcrumbs items={breadcrumbItems} />
+        <div className="h-24 rounded-lg border border-slate-200 bg-slate-50 animate-pulse" aria-hidden />
         <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-28 rounded-lg border border-slate-200 bg-slate-50 animate-pulse" />
@@ -127,6 +152,8 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
   return (
     <div className="space-y-5">
       <WorkspaceBreadcrumbs items={breadcrumbItems} />
+
+      <MissionHealthBanner result={missionHealth} />
 
       {/* Next step + deadline */}
       <OverviewNextStep

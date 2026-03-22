@@ -92,6 +92,26 @@ function expectedAwardLate(statusNorm: string, nowMs: number, awardMs: number): 
   return !['awarded', 'cancelled', 'archived'].includes(statusNorm);
 }
 
+/**
+ * True when the submission deadline is in the past while the RFQ is still in an “open” status
+ * (draft / published / active / pending) — same rule as the schedule rail “late” flag for submission.
+ */
+export function isSubmissionDeadlineLateForMission(
+  status: string,
+  submissionDeadlineIso: string | null | undefined,
+  nowMs: number,
+): boolean {
+  const deadlineMs = parseScheduleInstant(submissionDeadlineIso);
+  if (deadlineMs === null) {
+    return false;
+  }
+  const statusNorm = normStatus(status);
+  if (!isPastDue(deadlineMs, nowMs)) {
+    return false;
+  }
+  return ['draft', 'published', 'active', 'pending'].includes(statusNorm);
+}
+
 const DAY_MS = 86400000;
 
 function padRange(minMs: number, maxMs: number): { minMs: number; maxMs: number } {

@@ -13,7 +13,7 @@
 | **Default Layout (Blueprint)** | ✅ | Sidebar structure + TopBar actions aligned to Screen Blueprint; RFQ sub-nav badges from `GET /rfqs/counts` when live API is enabled. |
 | **RFQ List (Blueprint Screen 1)** | ✅ | `/rfqs` uses API pagination meta (`useRfqs` → `{ items, meta }`), filters, bulk selection, expandable rows, and workspace navigation. |
 | **Workspace Layout (Blueprint Screen 2 frame)** | ✅ | `/rfqs/[rfqId]/*` uses collapsed rail + Active Record Menu + work surface. |
-| **RFQ Workspace Overview (Blueprint Screen 2)** | ✅ | `/rfqs/[rfqId]/overview` with KPI scorecards; **Schedule** uses `HorizontalProcessTrack` (date = title, event = subtitle, equal-width columns, no horizontal scroll); live mode loads activity via `GET .../activity` merged into overview hook. |
+| **RFQ Workspace Overview (Blueprint Screen 2)** | ✅ | `/rfqs/[rfqId]/overview` with KPI scorecards; **Mission health** composite (`computeMissionHealth` + `MissionHealthBanner`) headline above next-step; **Schedule** uses `HorizontalProcessTrack` (date = title, event = subtitle, equal-width columns, no horizontal scroll); live mode loads activity via `GET .../activity` merged into overview hook. |
 | **E2E Testing** | ✅ | Playwright: RFQ list → workspace overview (`tests/rfq-workflow.spec.ts`); auth forgot/reset with mocked API (`tests/auth.spec.ts`). Full suite not signed off on Fedora — run on Ubuntu or CI before partner invite. |
 | **Routing** | ✅ | Added not-found page for undefined routes with design-system styling. |
 | **RFQ Management** | 🚧 | RFQ List + Workspace Overview done; other workspace sections are scaffolded via `/rfqs/[rfqId]/[section]`. **`/rfqs/new` and RFQ Details require `submission_deadline`** (aligned with API NOT NULL). |
