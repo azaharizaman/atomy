@@ -11,6 +11,9 @@ use Nexus\Idempotency\Exceptions\IdempotencyKeyInvalidException;
  */
 final readonly class IdempotencyPolicy
 {
+    /** Default time-to-live for incomplete (pending/in-progress) records: 7 days. */
+    public const DEFAULT_PENDING_TTL_SECONDS = 604800;
+
     public readonly ?int $pendingTtlSeconds;
 
     public readonly bool $allowRetryAfterFail;
@@ -36,7 +39,7 @@ final readonly class IdempotencyPolicy
     public static function default(): self
     {
         return new self(
-            pendingTtlSeconds: 604800,
+            pendingTtlSeconds: self::DEFAULT_PENDING_TTL_SECONDS,
             allowRetryAfterFail: true,
             expireCompletedAfterSeconds: null,
         );

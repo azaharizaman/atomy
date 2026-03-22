@@ -185,7 +185,7 @@ interface IdempotencyClockInterface
 
 - Create: `packages/Idempotency/src/Services/SystemClock.php` — implements `IdempotencyClockInterface` using `new DateTimeImmutable('now')` (or inject timezone **only if needed** — YAGNI: UTC document in README)
 
-- Create: `packages/Idempotency/src/Services/InMemoryIdempotencyStore.php` — implements `IdempotencyStoreInterface`; array storage keyed by composite string `tenant|operation|key`; simulate **unique** insert for concurrent `begin` (throw domain exception or return false — **document** chosen behavior in service)
+- Create: `packages/Idempotency/src/Services/InMemoryIdempotencyStore.php` — implements `IdempotencyStoreInterface`; array storage keyed by a **JSON-encoded tuple** `json_encode([tenant, operation, client_key], JSON_THROW_ON_ERROR)` (same shape as `InMemoryIdempotencyStore::compositeKey` and [README](packages/Idempotency/README.md)); JSON avoids delimiter collisions (e.g. `|` inside segments). Concurrent `begin` uses **`claimPending()`** (insert-if-absent) on `IdempotencyPersistInterface`; losers observe the winner’s row (see `IdempotencyService`).
 
 **Step 1:** Tests `packages/Idempotency/tests/Unit/Services/InMemoryIdempotencyStoreTest.php`:
 

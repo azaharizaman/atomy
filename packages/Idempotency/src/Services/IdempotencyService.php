@@ -6,8 +6,9 @@ namespace Nexus\Idempotency\Services;
 
 use DateTimeImmutable;
 use Nexus\Idempotency\Contracts\IdempotencyClockInterface;
+use Nexus\Idempotency\Contracts\IdempotencyPersistInterface;
+use Nexus\Idempotency\Contracts\IdempotencyQueryInterface;
 use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
-use Nexus\Idempotency\Contracts\IdempotencyStoreInterface;
 use Nexus\Idempotency\Domain\BeginDecision;
 use Nexus\Idempotency\Domain\IdempotencyPolicy;
 use Nexus\Idempotency\Domain\IdempotencyRecord;
@@ -18,6 +19,7 @@ use Nexus\Idempotency\Exceptions\IdempotencyFailedRetryNotAllowedException;
 use Nexus\Idempotency\Exceptions\IdempotencyFingerprintConflictException;
 use Nexus\Idempotency\Exceptions\IdempotencyRecordExpiredException;
 use Nexus\Idempotency\Exceptions\IdempotencyTenantMismatchException;
+use Nexus\Idempotency\ValueObjects\AttemptToken;
 use Nexus\Idempotency\ValueObjects\ClientKey;
 use Nexus\Idempotency\ValueObjects\OperationRef;
 use Nexus\Idempotency\ValueObjects\RequestFingerprint;
@@ -27,7 +29,8 @@ use Nexus\Idempotency\ValueObjects\TenantId;
 final readonly class IdempotencyService implements IdempotencyServiceInterface
 {
     public function __construct(
-        private IdempotencyStoreInterface $store,
+        private IdempotencyQueryInterface $query,
+        private IdempotencyPersistInterface $persist,
         private IdempotencyClockInterface $clock,
         private IdempotencyPolicy $policy,
     ) {
@@ -40,28 +43,152 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
         RequestFingerprint $fingerprint,
     ): BeginDecision {
         $now = $this->clock->now();
-        $record = $this->store->find($tenantId, $operationRef, $clientKey);
+        $record = $this->query->find($tenantId, $operationRef, $clientKey);
+        $record = $this->applyRecordCleanup($record, $tenantId, $operationRef, $clientKey, $fingerprint, $now);
 
-        if ($record !== null && $record->status === IdempotencyRecordStatus::Failed) {
+        if ($record === null) {
+            return $this->claimFirstExecution($tenantId, $operationRef, $clientKey, $fingerprint, $now);
+        }
+
+        return $this->decideForExistingRecord($record, $tenantId, $operationRef, $clientKey, $fingerprint, $now);
+    }
+
+    public function complete(
+        TenantId $tenantId,
+        OperationRef $operationRef,
+        ClientKey $clientKey,
+        RequestFingerprint $fingerprint,
+        AttemptToken $attemptToken,
+        ResultEnvelope $result,
+    ): void {
+        $now = $this->clock->now();
+        $record = $this->requireOpenRecord($tenantId, $operationRef, $clientKey, $fingerprint, $attemptToken);
+        $completed = $record->withCompleted($result, $now);
+        $this->persist->save($completed);
+    }
+
+    public function fail(
+        TenantId $tenantId,
+        OperationRef $operationRef,
+        ClientKey $clientKey,
+        RequestFingerprint $fingerprint,
+        AttemptToken $attemptToken,
+    ): void {
+        $now = $this->clock->now();
+        $record = $this->requireOpenRecord($tenantId, $operationRef, $clientKey, $fingerprint, $attemptToken);
+        $failed = $record->withFailed($now);
+        $this->persist->save($failed);
+    }
+
+    /**
+     * Deletes or nulls the record when policy/TTL says a fresh reservation is allowed.
+     * For failed records with retry, requires matching fingerprint before delete.
+     */
+    private function applyRecordCleanup(
+        ?IdempotencyRecord $record,
+        TenantId $tenantId,
+        OperationRef $operationRef,
+        ClientKey $clientKey,
+        RequestFingerprint $fingerprint,
+        DateTimeImmutable $now,
+    ): ?IdempotencyRecord {
+        if ($record === null) {
+            return null;
+        }
+
+        if ($record->status === IdempotencyRecordStatus::Failed) {
             if (! $this->policy->allowRetryAfterFail) {
                 throw IdempotencyFailedRetryNotAllowedException::create();
             }
-            $this->store->delete($tenantId, $operationRef, $clientKey);
-            $record = null;
+            if (! $fingerprint->equals($record->fingerprint)) {
+                throw new IdempotencyFingerprintConflictException($operationRef->value, $clientKey->value);
+            }
+            $this->persist->delete($tenantId, $operationRef, $clientKey);
+
+            return null;
         }
 
-        if ($record === null) {
-            return $this->createFirstExecution($tenantId, $operationRef, $clientKey, $fingerprint, $now);
+        if ($record->status === IdempotencyRecordStatus::Completed && $this->isCompletedReplayExpired($record, $now)) {
+            $this->persist->delete($tenantId, $operationRef, $clientKey);
+
+            return null;
         }
 
+        if ($record->status === IdempotencyRecordStatus::Expired) {
+            $this->persist->delete($tenantId, $operationRef, $clientKey);
+
+            return null;
+        }
+
+        if ($record->status === IdempotencyRecordStatus::Pending
+            || $record->status === IdempotencyRecordStatus::InProgress) {
+            if ($this->isPendingExpired($record, $now)) {
+                $this->persist->delete($tenantId, $operationRef, $clientKey);
+
+                return null;
+            }
+        }
+
+        return $record;
+    }
+
+    private function claimFirstExecution(
+        TenantId $tenantId,
+        OperationRef $operationRef,
+        ClientKey $clientKey,
+        RequestFingerprint $fingerprint,
+        DateTimeImmutable $now,
+    ): BeginDecision {
+        $attemptToken = self::newAttemptToken();
+        $candidate = new IdempotencyRecord(
+            $tenantId,
+            $operationRef,
+            $clientKey,
+            IdempotencyRecordStatus::Pending,
+            $fingerprint,
+            $attemptToken,
+            null,
+            $now,
+            $now,
+        );
+        $claim = $this->persist->claimPending($candidate);
+        if ($claim->claimedNew) {
+            return new BeginDecision(BeginOutcome::FirstExecution, null, $claim->record);
+        }
+
+        $normalized = $this->applyRecordCleanup(
+            $claim->record,
+            $tenantId,
+            $operationRef,
+            $clientKey,
+            $fingerprint,
+            $now,
+        );
+        if ($normalized === null) {
+            return $this->claimFirstExecution($tenantId, $operationRef, $clientKey, $fingerprint, $now);
+        }
+
+        return $this->decideForExistingRecord(
+            $normalized,
+            $tenantId,
+            $operationRef,
+            $clientKey,
+            $fingerprint,
+            $now,
+        );
+    }
+
+    private function decideForExistingRecord(
+        IdempotencyRecord $record,
+        TenantId $tenantId,
+        OperationRef $operationRef,
+        ClientKey $clientKey,
+        RequestFingerprint $fingerprint,
+        DateTimeImmutable $now,
+    ): BeginDecision {
         $this->assertTenantMatch($record, $tenantId);
 
         if ($record->status === IdempotencyRecordStatus::Completed) {
-            if ($this->isCompletedReplayExpired($record, $now)) {
-                $this->store->delete($tenantId, $operationRef, $clientKey);
-
-                return $this->createFirstExecution($tenantId, $operationRef, $clientKey, $fingerprint, $now);
-            }
             if (! $fingerprint->equals($record->fingerprint)) {
                 throw new IdempotencyFingerprintConflictException($operationRef->value, $clientKey->value);
             }
@@ -76,11 +203,6 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
 
         if ($record->status === IdempotencyRecordStatus::Pending
             || $record->status === IdempotencyRecordStatus::InProgress) {
-            if ($this->isPendingExpired($record, $now)) {
-                $this->store->delete($tenantId, $operationRef, $clientKey);
-
-                return $this->createFirstExecution($tenantId, $operationRef, $clientKey, $fingerprint, $now);
-            }
             if (! $fingerprint->equals($record->fingerprint)) {
                 throw new IdempotencyFingerprintConflictException($operationRef->value, $clientKey->value);
             }
@@ -88,62 +210,14 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
             return new BeginDecision(BeginOutcome::InProgress, null, $record);
         }
 
-        if ($record->status === IdempotencyRecordStatus::Expired) {
-            $this->store->delete($tenantId, $operationRef, $clientKey);
-
-            return $this->createFirstExecution($tenantId, $operationRef, $clientKey, $fingerprint, $now);
-        }
-
         throw IdempotencyCompletionException::wrongState(
             'Unexpected idempotency record state: ' . $record->status->value
         );
     }
 
-    public function complete(
-        TenantId $tenantId,
-        OperationRef $operationRef,
-        ClientKey $clientKey,
-        RequestFingerprint $fingerprint,
-        ResultEnvelope $result,
-    ): void {
-        $now = $this->clock->now();
-        $record = $this->requireOpenRecord($tenantId, $operationRef, $clientKey, $fingerprint);
-        $completed = $record->withCompleted($result, $now);
-        $this->store->save($completed);
-    }
-
-    public function fail(
-        TenantId $tenantId,
-        OperationRef $operationRef,
-        ClientKey $clientKey,
-        RequestFingerprint $fingerprint,
-    ): void {
-        $now = $this->clock->now();
-        $record = $this->requireOpenRecord($tenantId, $operationRef, $clientKey, $fingerprint);
-        $failed = $record->withFailed($now);
-        $this->store->save($failed);
-    }
-
-    private function createFirstExecution(
-        TenantId $tenantId,
-        OperationRef $operationRef,
-        ClientKey $clientKey,
-        RequestFingerprint $fingerprint,
-        DateTimeImmutable $now,
-    ): BeginDecision {
-        $record = new IdempotencyRecord(
-            $tenantId,
-            $operationRef,
-            $clientKey,
-            IdempotencyRecordStatus::Pending,
-            $fingerprint,
-            null,
-            $now,
-            $now,
-        );
-        $this->store->save($record);
-
-        return new BeginDecision(BeginOutcome::FirstExecution, null, $record);
+    private static function newAttemptToken(): AttemptToken
+    {
+        return new AttemptToken(bin2hex(random_bytes(16)));
     }
 
     private function assertTenantMatch(IdempotencyRecord $record, TenantId $tenantId): void
@@ -180,14 +254,20 @@ final readonly class IdempotencyService implements IdempotencyServiceInterface
         OperationRef $operationRef,
         ClientKey $clientKey,
         RequestFingerprint $fingerprint,
+        AttemptToken $attemptToken,
     ): IdempotencyRecord {
-        $record = $this->store->find($tenantId, $operationRef, $clientKey);
+        $record = $this->query->find($tenantId, $operationRef, $clientKey);
         if ($record === null) {
             throw IdempotencyCompletionException::wrongState('No idempotency record for this key.');
         }
         $this->assertTenantMatch($record, $tenantId);
         if (! $fingerprint->equals($record->fingerprint)) {
             throw new IdempotencyFingerprintConflictException($operationRef->value, $clientKey->value);
+        }
+        if (! $attemptToken->equals($record->attemptToken)) {
+            throw IdempotencyCompletionException::wrongState(
+                'Attempt token does not match the open idempotency record.'
+            );
         }
         if ($record->status !== IdempotencyRecordStatus::Pending
             && $record->status !== IdempotencyRecordStatus::InProgress) {

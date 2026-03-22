@@ -6,6 +6,7 @@ namespace Nexus\Idempotency\Domain;
 
 use DateTimeImmutable;
 use Nexus\Idempotency\Enums\IdempotencyRecordStatus;
+use Nexus\Idempotency\ValueObjects\AttemptToken;
 use Nexus\Idempotency\ValueObjects\ClientKey;
 use Nexus\Idempotency\ValueObjects\OperationRef;
 use Nexus\Idempotency\ValueObjects\RequestFingerprint;
@@ -20,6 +21,7 @@ final readonly class IdempotencyRecord
         public ClientKey $clientKey,
         public IdempotencyRecordStatus $status,
         public RequestFingerprint $fingerprint,
+        public AttemptToken $attemptToken,
         public ?ResultEnvelope $resultEnvelope,
         public DateTimeImmutable $createdAt,
         public DateTimeImmutable $lastTransitionAt,
@@ -36,6 +38,7 @@ final readonly class IdempotencyRecord
             $this->clientKey,
             $status,
             $this->fingerprint,
+            $this->attemptToken,
             $this->resultEnvelope,
             $this->createdAt,
             $at,
@@ -52,6 +55,7 @@ final readonly class IdempotencyRecord
             $this->clientKey,
             IdempotencyRecordStatus::Completed,
             $this->fingerprint,
+            $this->attemptToken,
             $result,
             $this->createdAt,
             $at,
@@ -66,6 +70,7 @@ final readonly class IdempotencyRecord
             $this->clientKey,
             IdempotencyRecordStatus::Failed,
             $this->fingerprint,
+            $this->attemptToken,
             $this->resultEnvelope,
             $this->createdAt,
             $at,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Idempotency\Contracts;
 
 use Nexus\Idempotency\Domain\BeginDecision;
+use Nexus\Idempotency\ValueObjects\AttemptToken;
 use Nexus\Idempotency\ValueObjects\ClientKey;
 use Nexus\Idempotency\ValueObjects\OperationRef;
 use Nexus\Idempotency\ValueObjects\RequestFingerprint;
@@ -25,6 +26,7 @@ interface IdempotencyServiceInterface
         OperationRef $operationRef,
         ClientKey $clientKey,
         RequestFingerprint $fingerprint,
+        AttemptToken $attemptToken,
         ResultEnvelope $result,
     ): void;
 
@@ -33,5 +35,6 @@ interface IdempotencyServiceInterface
         OperationRef $operationRef,
         ClientKey $clientKey,
         RequestFingerprint $fingerprint,
+        AttemptToken $attemptToken,
     ): void;
 }

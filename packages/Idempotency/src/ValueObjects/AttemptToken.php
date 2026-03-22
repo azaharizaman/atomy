@@ -6,15 +6,18 @@ namespace Nexus\Idempotency\ValueObjects;
 
 use Nexus\Idempotency\Internal\BoundedStringValidator;
 
-final readonly class RequestFingerprint
+/**
+ * Opaque token bound to a single attempt after a successful FirstExecution reservation.
+ */
+final readonly class AttemptToken
 {
-    public const MAX_LENGTH = 512;
+    public const MAX_LENGTH = 128;
 
     public readonly string $value;
 
     public function __construct(string $value)
     {
-        $this->value = BoundedStringValidator::requireTrimmedNonEmpty($value, self::MAX_LENGTH, 'fingerprint');
+        $this->value = BoundedStringValidator::requireTrimmedNonEmpty($value, self::MAX_LENGTH, 'attempt_token');
     }
 
     public function equals(self $other): bool

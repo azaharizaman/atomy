@@ -77,7 +77,7 @@
 | **Project lifecycle** | **Use `Nexus\Project\Contracts\ProjectManagerInterface`** |
 | **Milestone / billing vs budget** | **Use `Nexus\Milestone\Contracts\MilestoneManagerInterface`, `BudgetReservationInterface`** |
 | **Policy evaluation / rule decisions** | **Use `Nexus\PolicyEngine\Contracts\PolicyEngineInterface`, `Nexus\PolicyEngine\Contracts\PolicyRegistryInterface`, `Nexus\PolicyEngine\Contracts\PolicyDefinitionDecoderInterface`** |
-| **Command idempotency / replay of mutating API results** | **Use `Nexus\Idempotency\Contracts\IdempotencyServiceInterface`, `Nexus\Idempotency\Contracts\IdempotencyStoreInterface`, `Nexus\Idempotency\Contracts\IdempotencyClockInterface`** |
+| **Command idempotency / replay of mutating API results** | **Use `Nexus\Idempotency\Contracts\IdempotencyServiceInterface`, `Nexus\Idempotency\Contracts\IdempotencyStoreInterface` (or `IdempotencyQueryInterface` / `IdempotencyPersistInterface` where only reads or writes are needed), `Nexus\Idempotency\Contracts\IdempotencyClockInterface`** |
 
 ---
 

@@ -6,11 +6,12 @@ namespace Nexus\Idempotency\Services;
 
 use JsonException;
 use Nexus\Idempotency\Contracts\IdempotencyStoreInterface;
-use RuntimeException;
+use Nexus\Idempotency\Domain\ClaimPendingResult;
 use Nexus\Idempotency\Domain\IdempotencyRecord;
 use Nexus\Idempotency\ValueObjects\ClientKey;
 use Nexus\Idempotency\ValueObjects\OperationRef;
 use Nexus\Idempotency\ValueObjects\TenantId;
+use RuntimeException;
 
 final class InMemoryIdempotencyStore implements IdempotencyStoreInterface
 {
@@ -25,6 +26,21 @@ final class InMemoryIdempotencyStore implements IdempotencyStoreInterface
         $key = self::compositeKey($tenantId, $operationRef, $clientKey);
 
         return $this->records[$key] ?? null;
+    }
+
+    public function claimPending(IdempotencyRecord $newRecordIfAbsent): ClaimPendingResult
+    {
+        $key = self::compositeKey(
+            $newRecordIfAbsent->tenantId,
+            $newRecordIfAbsent->operationRef,
+            $newRecordIfAbsent->clientKey,
+        );
+        if (isset($this->records[$key])) {
+            return new ClaimPendingResult(false, $this->records[$key]);
+        }
+        $this->records[$key] = $newRecordIfAbsent;
+
+        return new ClaimPendingResult(true, $newRecordIfAbsent);
     }
 
     public function save(IdempotencyRecord $record): void

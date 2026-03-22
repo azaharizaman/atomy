@@ -10,13 +10,13 @@ It does **not** implement HTTP, databases, outbox, event streams, or audit trail
 
 - Layer 1: pure PHP 8.3+, framework-agnostic
 - Explicit lifecycle: `begin()` → domain work → `complete()` or `fail()`
-- Persistence via `IdempotencyStoreInterface` (e.g. `InMemoryIdempotencyStore` for tests — uses JSON-encoded tuple keys so tenant/operation/client segments cannot collide across `|` characters)
-- Time via `IdempotencyClockInterface` (`SystemClock` or test doubles)
+- Persistence via `IdempotencyStoreInterface` (composite of `IdempotencyQueryInterface` + `IdempotencyPersistInterface`; e.g. `InMemoryIdempotencyStore` for tests — uses **JSON-encoded tuple keys** `json_encode([tenantId, operationRef, clientKey])` so segments cannot collide across delimiter characters)
+- Time via `IdempotencyClockInterface` (`SystemClock` returns UTC `DateTimeImmutable`, or test doubles)
 
 ## Key interfaces
 
 - `Nexus\Idempotency\Contracts\IdempotencyServiceInterface`
-- `Nexus\Idempotency\Contracts\IdempotencyStoreInterface`
+- `Nexus\Idempotency\Contracts\IdempotencyStoreInterface` (extends query + persist ports)
 - `Nexus\Idempotency\Contracts\IdempotencyClockInterface`
 
 ## Installation
@@ -31,7 +31,7 @@ vendor/bin/phpunit -c packages/Idempotency/phpunit.xml
 ## Usage (conceptual)
 
 ```php
-$service = new IdempotencyService($store, $clock, IdempotencyPolicy::default());
+$service = new IdempotencyService($store, $store, $clock, IdempotencyPolicy::default());
 
 $decision = $service->begin($tenantId, $operationRef, $clientKey, $fingerprint);
 
@@ -40,12 +40,22 @@ if ($decision->outcome === BeginOutcome::Replay) {
 }
 
 if ($decision->outcome === BeginOutcome::InProgress) {
-    // another in-flight execution; surface 409/Retry-After in Layer 3
+    // Another in-flight execution for the same key + fingerprint; surface 409 + Retry-After in Layer 3.
+    return;
 }
 
-// FirstExecution: run domain command, then:
-$service->complete($tenantId, $operationRef, $clientKey, $fingerprint, new ResultEnvelope($json));
+// BeginOutcome::FirstExecution — run domain command, then complete using the attempt bound to this reservation:
+$service->complete(
+    $tenantId,
+    $operationRef,
+    $clientKey,
+    $fingerprint,
+    $decision->record->attemptToken,
+    new ResultEnvelope($json),
+);
 ```
+
+`complete()` / `fail()` require the **`AttemptToken`** from the `FirstExecution` record for that attempt so completions cannot attach to a superseded reservation after TTL expiry/replace.
 
 ## License
 

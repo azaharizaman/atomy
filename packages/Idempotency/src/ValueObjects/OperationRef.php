@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Idempotency\ValueObjects;
 
-use Nexus\Idempotency\Exceptions\IdempotencyKeyInvalidException;
+use Nexus\Idempotency\Internal\BoundedStringValidator;
 
 final readonly class OperationRef
 {
@@ -14,16 +14,6 @@ final readonly class OperationRef
 
     public function __construct(string $value)
     {
-        $trimmed = trim($value);
-        if ($trimmed === '') {
-            throw IdempotencyKeyInvalidException::forField('operation', 'must not be empty');
-        }
-        if (strlen($trimmed) > self::MAX_LENGTH) {
-            throw IdempotencyKeyInvalidException::forField(
-                'operation',
-                'exceeds maximum length of ' . (string) self::MAX_LENGTH,
-            );
-        }
-        $this->value = $trimmed;
+        $this->value = BoundedStringValidator::requireTrimmedNonEmpty($value, self::MAX_LENGTH, 'operation');
     }
 }

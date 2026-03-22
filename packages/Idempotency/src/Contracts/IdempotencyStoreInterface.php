@@ -4,24 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\Idempotency\Contracts;
 
-use Nexus\Idempotency\Domain\IdempotencyRecord;
-use Nexus\Idempotency\ValueObjects\ClientKey;
-use Nexus\Idempotency\ValueObjects\OperationRef;
-use Nexus\Idempotency\ValueObjects\TenantId;
-
-interface IdempotencyStoreInterface
+/**
+ * Composite persistence port: reads + writes + atomic claim.
+ * Prefer depending on {@see IdempotencyQueryInterface} and/or {@see IdempotencyPersistInterface}
+ * when a consumer only needs one side.
+ */
+interface IdempotencyStoreInterface extends IdempotencyQueryInterface, IdempotencyPersistInterface
 {
-    public function find(
-        TenantId $tenantId,
-        OperationRef $operationRef,
-        ClientKey $clientKey,
-    ): ?IdempotencyRecord;
-
-    public function save(IdempotencyRecord $record): void;
-
-    public function delete(
-        TenantId $tenantId,
-        OperationRef $operationRef,
-        ClientKey $clientKey,
-    ): void;
 }
