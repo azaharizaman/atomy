@@ -84,7 +84,9 @@ Examples:
 | `POST api/v1/rfqs/bulk-action` | `v1.rfqs.bulk-action` |
 | `POST api/v1/rfqs/{rfqId}/invitations` | `v1.rfqs.invitations.store` |
 
-Implementation note: prefer Laravel **`->name('...')`** on routes and derive `OperationRef` from `route()->getName()` in middleware when possible, with a denylist for unnamed routes.
+Implementation note: prefer Laravel **`->name('...')`** on routes and derive `OperationRef` from `route()->getName()` in middleware.
+
+**Unnamed routes:** Routes registered under the idempotency middleware **must** have a non-null route name. If `route()->getName()` is null or empty, the middleware **must not** invent a fallback `OperationRef` from the path (that risks collisions or drift). Respond with **500**, `error` describing misconfiguration, and `code` **`idempotency_operation_ref_missing`**. This is a deploy-time/CI catch: add a test or `route:list` assertion that every idempotency-group route is named.
 
 ---
 
@@ -124,7 +126,7 @@ Rules:
 
 - `version` is reserved for future format changes; middleware **must** deserialize v1 and build a Laravel `Response`.
 - `body` is the **exact JSON string** (or error payload) returned to the client on first success, so replay is byte-stable for tests.
-- If the natural response exceeds `ResultEnvelope::MAX_BYTES`, the controller **must not** store the full body; instead return an error or a minimal reference (product decision). Default: **fail closed** with a domain error if serialization would exceed the limit.
+- If the natural response exceeds `ResultEnvelope::MAX_BYTES`, the controller **must not** store the full body; instead return an error or a minimal reference (product decision). Default: **fail closed** — HTTP **500** with `code` **`idempotency_envelope_too_large`** (see §10).
 
 On **`complete()`**, controllers pass `new ResultEnvelope($jsonString)`.
 
@@ -143,6 +145,8 @@ Align with existing `{ "error": "..." }` style where possible; add a **machine-r
 | `BeginOutcome::InProgress` | 409 | Request is already in progress | `idempotency_in_progress` |
 | Fingerprint conflict (same key, different command) | 409 | Idempotency conflict | `idempotency_fingerprint_conflict` |
 | Tenant not available (middleware mis-order) | 500 | Internal error | `idempotency_tenant_missing` (log + fix; should not occur if stack is correct) |
+| Replay envelope would exceed `ResultEnvelope::MAX_BYTES` (65536) after canonical serialization | 500 | Response too large to store for replay | `idempotency_envelope_too_large` |
+| Route has no Laravel name while idempotency middleware runs | 500 | Idempotency operation reference missing | `idempotency_operation_ref_missing` |
 
 Optional: `Retry-After` header for `409` in-progress (seconds), if policy provides a sensible value.
 
