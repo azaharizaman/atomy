@@ -223,42 +223,42 @@ Route::middleware(['api', 'idempotency'])->group(function () {
 ### 6.3 Controller Usage
 
 ```php
+use Nexus\Laravel\Idempotency\Http\Idempotency;
 use Nexus\Idempotency\ValueObjects\ResultEnvelope;
 
 class InvoiceController extends Controller
 {
+    use Idempotency;
+    
     public function store(Request $request, IdempotencyServiceInterface $idempotency)
     {
-        // Middleware already called begin() and stored decision in request
-        $decision = $request->attributes->get('idempotency_decision');
+        $idempRequest = $this->getIdempotencyRequest($request);
         
-        // If replay, return cached result immediately
-        if ($decision->outcome === BeginOutcome::Replay) {
-            return response()->json($decision->resultEnvelope->value, 200);
+        if ($idempRequest === null) {
+            return response()->json(['error' => 'No idempotency context'], 400);
         }
         
         try {
             $invoice = Invoice::create($request->validated());
             
-            // Build result envelope
             $result = new ResultEnvelope(['invoice_id' => $invoice->id]);
             $idempotency->complete(
-                $decision->record->tenantId,
-                $decision->record->operationRef,
-                $decision->record->clientKey,
-                $decision->record->fingerprint,
-                $decision->record->attemptToken,
+                $idempRequest->tenantId,
+                $idempRequest->operationRef,
+                $idempRequest->clientKey,
+                $idempRequest->fingerprint,
+                $idempRequest->attemptToken,
                 $result
             );
             
             return response()->json(['invoice' => $invoice], 201);
         } catch (\Throwable $e) {
             $idempotency->fail(
-                $decision->record->tenantId,
-                $decision->record->operationRef,
-                $decision->record->clientKey,
-                $decision->record->fingerprint,
-                $decision->record->attemptToken,
+                $idempRequest->tenantId,
+                $idempRequest->operationRef,
+                $idempRequest->clientKey,
+                $idempRequest->fingerprint,
+                $idempRequest->attemptToken,
             );
             throw $e;
         }
@@ -266,7 +266,7 @@ class InvoiceController extends Controller
 }
 ```
 
-**Note:** The controller needs access to domain VOs (`TenantId`, `OperationRef`, etc.). The adapter should provide a trait or helper to extract these from the request attributes.
+**Note:** See Section 14 for full details on the `Idempotency` trait and `IdempotencyRequest` object.
 
 ---
 
@@ -290,18 +290,9 @@ class InvoiceController extends Controller
 
 ---
 
-## 9. Deferred / Future
+## 10. Cleanup Strategy
 
-- Redis store implementation (Phase 2)
-- Layer 2 orchestration with PolicyEngine
-- Automatic idempotency for Laravel resources
-- Metrics/monitoring dashboard
-
----
-
-## 9. Cleanup Strategy
-
-### 9.1 Database Cleanup
+### 10.1 Database Cleanup
 
 A Laravel artisan command for scheduled cleanup:
 
@@ -313,7 +304,7 @@ php artisan idempotency:cleanup
 - Uses chunked deletion for large datasets
 - Can be run via Laravel Scheduler daily
 
-### 9.2 Redis TTL
+### 10.2 Redis TTL
 
 Redis keys automatically expire based on `expires_at` timestamp:
 - Set key with TTL on write: `SET key value EX ttl_seconds`
@@ -341,7 +332,16 @@ Redis keys automatically expire based on `expires_at` timestamp:
 
 ---
 
-## 11. File Structure
+## 11. Deferred / Future
+
+- Redis store implementation (Phase 2)
+- Layer 2 orchestration with PolicyEngine
+- Automatic idempotency for Laravel resources
+- Metrics/monitoring dashboard
+
+---
+
+## 13. File Structure
 
 ```
 adapters/Laravel/Idempotency/
@@ -384,7 +384,7 @@ adapters/Laravel/Idempotency/
 
 ---
 
-## 12. Controller Helper - Resolved
+## 14. Controller Helper - Resolved
 
 To bridge between middleware (stores strings) and IdempotencyService (requires VOs), we provide a trait and request object:
 
@@ -468,7 +468,7 @@ class InvoiceController extends Controller
 
 ---
 
-## 13. Open Questions (Resolved)
+## 15. Open Questions (Resolved)
 
 1. ✅ **Controller Helper:** Resolved with `IdempotencyRequest` object + trait
 2. ✅ **Redis Phase 2:** Redis store deferred to Phase 2
