@@ -8,7 +8,7 @@ use Carbon\CarbonImmutable;
 use DateTimeImmutable;
 use Nexus\Idempotency\Contracts\IdempotencyClockInterface;
 
-final class LaravelIdempotencyClock implements IdempotencyClockInterface
+final readonly class LaravelIdempotencyClock implements IdempotencyClockInterface
 {
     public function now(): DateTimeImmutable
     {

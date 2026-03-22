@@ -46,10 +46,16 @@ class IdempotencyMiddleware
             ], 400);
         }
 
-        $tenantId = new TenantId($tenantIdValue);
-        $operationRef = new OperationRef($request->method() . ' ' . $request->path());
-        $clientKey = new ClientKey($clientKeyValue);
-        $fingerprint = $this->computeFingerprint($request);
+        try {
+            $tenantId = new TenantId($tenantIdValue);
+            $operationRef = new OperationRef($request->method() . ' ' . $request->path());
+            $clientKey = new ClientKey($clientKeyValue);
+            $fingerprint = $this->computeFingerprint($request);
+        } catch (\Nexus\Idempotency\Exceptions\IdempotencyKeyInvalidException $e) {
+            return response()->json([
+                'error' => 'Invalid idempotency key: ' . $e->getMessage(),
+            ], 400);
+        }
 
         $decision = $this->idempotencyService->begin(
             $tenantId,
@@ -93,6 +99,27 @@ class IdempotencyMiddleware
             'body' => $request->except(['password', 'token', 'secret']),
         ];
 
-        return new RequestFingerprint(json_encode($data));
+        $normalized = $this->normalizePayload($data);
+        $json = json_encode($normalized);
+        $hash = 'sha256-' . hash('sha256', $json);
+
+        return new RequestFingerprint($hash);
+    }
+
+    private function normalizePayload(array $data): array
+    {
+        $normalized = [];
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $normalized[$key] = $this->normalizePayload($value);
+            } elseif (is_object($value)) {
+                $normalized[$key] = $this->normalizePayload((array) $value);
+            } else {
+                $normalized[$key] = $value;
+            }
+        }
+
+        ksort($normalized);
+        return $normalized;
     }
 }

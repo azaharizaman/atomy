@@ -19,7 +19,7 @@ use Nexus\Idempotency\ValueObjects\ResultEnvelope;
 use Nexus\Idempotency\ValueObjects\TenantId;
 use Nexus\Laravel\Idempotency\Models\IdempotencyRecord as EloquentModel;
 
-final class DatabaseIdempotencyStore implements IdempotencyStoreInterface
+final readonly class DatabaseIdempotencyStore implements IdempotencyStoreInterface
 {
     public function __construct(
         private readonly EloquentModel $model
@@ -46,10 +46,10 @@ final class DatabaseIdempotencyStore implements IdempotencyStoreInterface
     public function claimPending(IdempotencyRecord $newRecordIfAbsent): ClaimPendingResult
     {
         $now = $newRecordIfAbsent->createdAt;
-        $expiresAt = $this->calculateExpiresAt($now, $newRecordIfAbsent);
+        $expiresAt = $this->calculateExpiresAt($now);
 
-        $this->model->unguarded(function ($query) use ($newRecordIfAbsent, $expiresAt) {
-            return $query->upsert(
+        $this->model->unguarded(function () use ($newRecordIfAbsent, $expiresAt) {
+            return $this->model->upsert(
                 [
                     'tenant_id' => $newRecordIfAbsent->tenantId->value,
                     'operation_ref' => $newRecordIfAbsent->operationRef->value,
@@ -99,12 +99,12 @@ final class DatabaseIdempotencyStore implements IdempotencyStoreInterface
         $eloquent->status = $record->status->value;
         $eloquent->attempt_token = $record->attemptToken->value;
         $eloquent->request_fingerprint = $record->fingerprint->value;
-        
-        if ($record->resultEnvelope !== null) {
-            $eloquent->result_envelope = $record->resultEnvelope->value;
-        }
+        $eloquent->result_envelope = $record->resultEnvelope?->value;
 
-        $eloquent->expires_at = $record->lastTransitionAt->modify('+' . $this->getPendingTtlSeconds() . ' seconds');
+        $ttl = $this->isTerminalStatus($record->status) 
+            ? $this->getExpireCompletedAfterSeconds() 
+            : $this->getPendingTtlSeconds();
+        $eloquent->expires_at = $record->lastTransitionAt->modify('+' . $ttl . ' seconds');
         $eloquent->save();
     }
 
@@ -135,7 +135,7 @@ final class DatabaseIdempotencyStore implements IdempotencyStoreInterface
         );
     }
 
-    private function calculateExpiresAt(DateTimeImmutable $now, IdempotencyRecord $record): DateTimeImmutable
+    private function calculateExpiresAt(DateTimeImmutable $now): DateTimeImmutable
     {
         return $now->modify('+' . $this->getPendingTtlSeconds() . ' seconds');
     }
@@ -143,5 +143,16 @@ final class DatabaseIdempotencyStore implements IdempotencyStoreInterface
     private function getPendingTtlSeconds(): int
     {
         return config('nexus-idempotency.policy.pending_ttl_seconds', 604800);
+    }
+
+    private function getExpireCompletedAfterSeconds(): int
+    {
+        return config('nexus-idempotency.policy.expire_completed_after_seconds', 86400);
+    }
+
+    private function isTerminalStatus(IdempotencyRecordStatus $status): bool
+    {
+        return $status === IdempotencyRecordStatus::Completed 
+            || $status === IdempotencyRecordStatus::Failed;
     }
 }

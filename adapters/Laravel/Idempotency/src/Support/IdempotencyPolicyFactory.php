@@ -16,7 +16,7 @@ final class IdempotencyPolicyFactory
         return new IdempotencyPolicy(
             pendingTtlSeconds: $config['pending_ttl_seconds'] ?? IdempotencyPolicy::DEFAULT_PENDING_TTL_SECONDS,
             allowRetryAfterFail: $config['allow_retry_after_fail'] ?? true,
-            expireCompletedAfterSeconds: $config['expire_completed_after_seconds'] ?? null,
+            expireCompletedAfterSeconds: $config['expire_completed_after_seconds'] ?? 86400,
         );
     }
 }
