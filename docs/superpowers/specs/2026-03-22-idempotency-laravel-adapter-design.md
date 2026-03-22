@@ -126,6 +126,12 @@ CREATE TABLE nexus_idempotency_records (
 - Database: Uses `INSERT ... ON DUPLICATE KEY UPDATE` for MySQL
 - Redis: Uses `SETNX` + pipeline for atomic claim
 
+**VO Serialization:**
+The store converts Layer 1 VOs to/from database columns:
+- `tenant_id`, `operation_ref`, `client_key`, `request_fingerprint`, `attempt_token` → VARCHAR/TEXT
+- `result_envelope` → JSON column (reconstructed via constructor)
+- `expires_at` → TIMESTAMP
+
 ### 5.6 HTTP Middleware
 
 **Class:** `Nexus\Laravel\Idempotency\Http\IdempotencyMiddleware`
@@ -138,11 +144,10 @@ CREATE TABLE nexus_idempotency_records (
 
 **Request Flow (Critical):**
 1. Middleware calls `begin()` → returns `BeginDecision`
-2. Middleware stores `BeginDecision` in request attributes:
-   - `$request->attributes->set('idempotency_decision', $decision)`
-   - `$request->attributes->set('idempotency_attempt_token', $decision->record->attemptToken)`
-3. Controller retrieves via `$request->attributes->get('idempotency_attempt_token')`
-4. Controller calls `complete()` or `fail()` after business logic
+2. Middleware stores `IdempotencyRequest` (with all VOs) in request attributes:
+   - `$request->attributes->set('idempotency_request', new IdempotencyRequest(...))`
+3. Controller retrieves via `Idempotency` trait: `$this->getIdempotencyRequest($request)`
+4. Controller calls `complete()` or `fail()` using the IdempotencyRequest VOs
 
 **Response Handling:**
 - Returns 409 Conflict if `BeginOutcome::InProgress`
@@ -379,8 +384,92 @@ adapters/Laravel/Idempotency/
 
 ---
 
-## 12. Open Questions
+## 12. Controller Helper - Resolved
 
-1. **Controller Helper:** Should we provide a trait to extract VOs from request?
-2. **Redis Phase 2:** Confirm if Redis store is needed in v1
-3. **Multi-tenancy:** Is `tenant_id` always from header or should we support subdomain-based?
+To bridge between middleware (stores strings) and IdempotencyService (requires VOs), we provide a trait and request object:
+
+### 12.1 IdempotencyRequest Object
+
+**Class:** `Nexus\Laravel\Idempotency\Http\IdempotencyRequest`
+
+```php
+final readonly class IdempotencyRequest
+{
+    public function __construct(
+        public TenantId $tenantId,
+        public OperationRef $operationRef,
+        public ClientKey $clientKey,
+        public RequestFingerprint $fingerprint,
+        public AttemptToken $attemptToken,
+    ) {}
+}
+```
+
+### 12.2 Trait for Controllers
+
+**Trait:** `Nexus\Laravel\Idempotency\Http\Idempotency`
+
+```php
+trait Idempotency
+{
+    protected function getIdempotencyRequest(Request $request): ?IdempotencyRequest
+    {
+        return $request->attributes->get('idempotency_request');
+    }
+}
+```
+
+### 12.3 Middleware Update
+
+Middleware creates and stores `IdempotencyRequest` in attributes:
+
+```php
+$request->attributes->set('idempotency_request', new IdempotencyRequest(
+    $tenantId,           // from auth/header
+    $operationRef,       // from route
+    $clientKey,          // from Idempotency-Key header
+    $fingerprint,        // computed from request
+    $decision->record->attemptToken
+));
+```
+
+### 12.4 Controller Usage (Updated)
+
+```php
+use Nexus\Laravel\Idempotency\Http\Idempotency;
+
+class InvoiceController extends Controller
+{
+    use Idempotency;
+    
+    public function store(Request $request, IdempotencyServiceInterface $idempotency)
+    {
+        $idempRequest = $this->getIdempotencyRequest($request);
+        
+        // Handle replay
+        if ($idempRequest === null) {
+            return response()->json(['error' => 'No idempotency context'], 400);
+        }
+        
+        // ... business logic ...
+        
+        $result = new ResultEnvelope(['invoice_id' => $invoice->id]);
+        $idempotency->complete(
+            $idempRequest->tenantId,
+            $idempRequest->operationRef,
+            $idempRequest->clientKey,
+            $idempRequest->fingerprint,
+            $idempRequest->attemptToken,
+            $result
+        );
+    }
+}
+```
+
+---
+
+## 13. Open Questions (Resolved)
+
+1. ✅ **Controller Helper:** Resolved with `IdempotencyRequest` object + trait
+2. ✅ **Redis Phase 2:** Redis store deferred to Phase 2
+3. ✅ **Multi-tenancy:** Header-based (X-Tenant-ID), extensible
