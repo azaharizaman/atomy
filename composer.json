@@ -38,7 +38,8 @@
         "nexus/esg": "*@dev",
         "nexus/sustainability-data": "*@dev",
         "nexus/esg-regulatory": "*@dev",
-        "nexus/esg-operations": "*@dev"
+        "nexus/esg-operations": "*@dev",
+        "nexus/idempotency": "*@dev"
     },
     "repositories": [
         {
