@@ -894,3 +894,10 @@ All tasks complete. The adapter provides:
 5. Controller helpers (trait + request object)
 6. Full service provider wiring
 7. Unit tests for core components
+
+## Deferred to Future Phases
+
+As specified in the design (Section 11 - Deferred / Future):
+- **Cleanup Command** (`php artisan idempotency:cleanup`) - deferred to Phase 2
+- **Redis Store** - deferred to Phase 2
+- **IdempotencyStoreManager** - implemented inline in service provider (functionally equivalent)
