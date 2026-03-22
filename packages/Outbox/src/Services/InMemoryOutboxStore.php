@@ -21,6 +21,9 @@ final class InMemoryOutboxStore implements OutboxStoreInterface
     /** @var array<string, OutboxRecord> */
     private array $byId = [];
 
+    /** @var array<string, string> dedup composite key → outbox message id */
+    private array $dedupIndex = [];
+
     public function findById(TenantId $tenantId, OutboxMessageId $id): ?OutboxRecord
     {
         $record = $this->byId[$id->value] ?? null;
@@ -44,9 +47,6 @@ final class InMemoryOutboxStore implements OutboxStoreInterface
 
         return $this->byId[$id] ?? null;
     }
-
-    /** @var array<string, string> dedup composite key → outbox message id */
-    private array $dedupIndex = [];
 
     public function enqueue(OutboxRecord $newRecordIfAbsent): EnqueueResult
     {

@@ -17,7 +17,7 @@ final class BoundedStringValidator
         if ($trimmed === '') {
             throw OutboxKeyInvalidException::forField($fieldName, 'must not be empty');
         }
-        if (strlen($trimmed) > $maxLength) {
+        if (self::utf8CharLength($trimmed) > $maxLength) {
             throw OutboxKeyInvalidException::forField(
                 $fieldName,
                 'exceeds maximum length of ' . (string) $maxLength,
@@ -37,7 +37,7 @@ final class BoundedStringValidator
         if ($trimmed === '') {
             return null;
         }
-        if (strlen($trimmed) > $maxLength) {
+        if (self::utf8CharLength($trimmed) > $maxLength) {
             throw OutboxKeyInvalidException::forField(
                 $fieldName,
                 'exceeds maximum length of ' . (string) $maxLength,
@@ -45,5 +45,10 @@ final class BoundedStringValidator
         }
 
         return $trimmed;
+    }
+
+    private static function utf8CharLength(string $value): int
+    {
+        return mb_strlen($value, 'UTF-8');
     }
 }

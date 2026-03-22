@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Nexus\Outbox\Contracts;
 
-use DateTimeImmutable;
+use Psr\Clock\ClockInterface;
 
-interface OutboxClockInterface
+/**
+ * Application clock for outbox transitions and lease checks (UTC in {@see SystemClock}).
+ * Marker extending PSR-20 {@see ClockInterface} for interoperability.
+ */
+interface OutboxClockInterface extends ClockInterface
 {
-    public function now(): DateTimeImmutable;
 }

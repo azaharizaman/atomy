@@ -37,25 +37,29 @@ use Nexus\Outbox\ValueObjects\DedupKey;
 use Nexus\Outbox\ValueObjects\EventTypeRef;
 use Nexus\Outbox\ValueObjects\TenantId;
 
+$tenantId = new TenantId('tenant-1');
 $store = new InMemoryOutboxStore();
 $clock = new SystemClock();
 $outbox = new OutboxService($store, $store, $clock);
 
+$now = $clock->now();
+$leaseExpiresAt = $now->modify('+5 minutes');
+
 $result = $outbox->enqueue(new OutboxEnqueueCommand(
-    new TenantId($tenantId),
+    $tenantId,
     new DedupKey($streamEventId),
     new EventTypeRef($eventTypeFqcn),
     $payload,
     $metadata,
     $correlationId,
     $causationId,
-    $clock->now(),
+    $now,
 ));
 
-$claimed = $outbox->claimNextPending(new TenantId($tenantId), $leaseExpiresAt);
+$claimed = $outbox->claimNextPending($tenantId, $leaseExpiresAt);
 if ($claimed !== null) {
     // publish to external bus, then:
-    $outbox->markSent(new TenantId($tenantId), $claimed->id, $claimed->claimToken);
+    $outbox->markSent($tenantId, $claimed->id, $claimed->claimToken);
 }
 ```
 

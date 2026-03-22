@@ -120,6 +120,10 @@
 - `begin` / `complete` / `fail` lifecycle with opaque `ResultEnvelope` replay for safe retries
 - `InMemoryIdempotencyStore` for unit tests; persistence via `IdempotencyStoreInterface` (Layer 3 adapters)
 
+---
+
+### 🔗 **2. Integration & Messaging**
+
 #### **Nexus\Outbox** ✅ **NEW**
 **Capabilities:**
 - Tenant-scoped enqueue with deduplication key (e.g. EventStream `event_id`)
@@ -130,7 +134,7 @@
 
 ---
 
-### 📊 **2. Observability & Monitoring**
+### 📊 **3. Observability & Monitoring**
 
 #### **Nexus\Telemetry** (Formerly Monitoring)
 **Capabilities:**
@@ -147,7 +151,7 @@
 
 ---
 
-### 💼 **3. Financial Management**
+### 💼 **4. Financial Management**
 
 #### **Nexus\GeneralLedger** ✅ **NEW**
 **Capabilities:**
@@ -172,7 +176,7 @@
 
 ---
 
-### 🛠️ **4. Operations & Logistics**
+### 🛠️ **5. Operations & Logistics**
 
 #### **Nexus\FieldService** ✅ **NEW**
 **Capabilities:**
@@ -195,7 +199,7 @@
 
 ---
 
-### 🤝 **5. CRM & Loyalty**
+### 🤝 **6. CRM & Loyalty**
 
 #### **Nexus\Loyalty** ✅ **NEW**
 **Capabilities:**
@@ -212,7 +216,7 @@
 
 ---
 
-### 📋 **6. Project & Delivery**
+### 📋 **7. Project & Delivery**
 
 #### **Nexus\Task**
 **Capabilities:**

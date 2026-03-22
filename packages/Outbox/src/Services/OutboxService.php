@@ -17,7 +17,6 @@ use Nexus\Outbox\Exceptions\OutboxClaimExpiredException;
 use Nexus\Outbox\Exceptions\OutboxClaimTokenMismatchException;
 use Nexus\Outbox\Exceptions\OutboxInvalidTransitionException;
 use Nexus\Outbox\Exceptions\OutboxNotFoundException;
-use Nexus\Outbox\Internal\BoundedStringValidator;
 use Nexus\Outbox\ValueObjects\ClaimToken;
 use Nexus\Outbox\ValueObjects\FailureReason;
 use Nexus\Outbox\ValueObjects\OutboxMessageId;
@@ -34,17 +33,6 @@ final readonly class OutboxService implements OutboxServiceInterface
 
     public function enqueue(OutboxEnqueueCommand $command): EnqueueResult
     {
-        $correlationId = BoundedStringValidator::requireNullableBounded(
-            $command->correlationId,
-            128,
-            'correlation_id',
-        );
-        $causationId = BoundedStringValidator::requireNullableBounded(
-            $command->causationId,
-            128,
-            'causation_id',
-        );
-
         $record = OutboxRecord::newPending(
             OutboxMessageId::generate(),
             $command->tenantId,
@@ -52,8 +40,8 @@ final readonly class OutboxService implements OutboxServiceInterface
             $command->eventType,
             $command->payload,
             $command->metadata,
-            $correlationId,
-            $causationId,
+            $command->correlationId,
+            $command->causationId,
             $command->createdAt,
         );
 
@@ -69,14 +57,16 @@ final readonly class OutboxService implements OutboxServiceInterface
 
     public function markSent(TenantId $tenantId, OutboxMessageId $id, ClaimToken $claimToken): void
     {
-        $record = $this->requireSendingForCompletion($tenantId, $id, $claimToken);
-        $this->persist->save($record->withSent($this->clock->now()));
+        $now = $this->clock->now();
+        $record = $this->requireSendingForCompletion($tenantId, $id, $claimToken, $now);
+        $this->persist->save($record->withSent($now));
     }
 
     public function markFailed(TenantId $tenantId, OutboxMessageId $id, ClaimToken $claimToken, FailureReason $failureReason): void
     {
-        $record = $this->requireSendingForCompletion($tenantId, $id, $claimToken);
-        $this->persist->save($record->withFailed($failureReason->value, $this->clock->now()));
+        $now = $this->clock->now();
+        $record = $this->requireSendingForCompletion($tenantId, $id, $claimToken, $now);
+        $this->persist->save($record->withFailed($failureReason->value, $now));
     }
 
     public function scheduleRetry(TenantId $tenantId, OutboxMessageId $id): void
@@ -96,6 +86,7 @@ final readonly class OutboxService implements OutboxServiceInterface
         TenantId $tenantId,
         OutboxMessageId $id,
         ClaimToken $claimToken,
+        DateTimeImmutable $now,
     ): OutboxRecord {
         $record = $this->query->findById($tenantId, $id);
         if ($record === null) {
@@ -112,7 +103,7 @@ final readonly class OutboxService implements OutboxServiceInterface
         if ($expiresAt === null) {
             throw OutboxClaimTokenMismatchException::create();
         }
-        if (! ($this->clock->now() < $expiresAt)) {
+        if (! ($now < $expiresAt)) {
             throw OutboxClaimExpiredException::create();
         }
 

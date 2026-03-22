@@ -21,6 +21,10 @@ Enqueue is **idempotent per (tenant, dedup key)**: second enqueue with the same 
 
 `findById` is tenant-scoped: a message belonging to another tenant is invisible (`null`), avoiding cross-tenant existence leaks.
 
+## Enqueue command validation
+
+`OutboxEnqueueCommand` normalizes `correlationId` / `causationId` (trim, empty → `null`), enforces a **255 UTF-8 character** maximum (`mb_strlen`), and rejects C0 control characters (excluding tab). Invalid input throws `InvalidArgumentException` before the record is built.
+
 ## Relation to other packages
 
 | Package | Relationship |
