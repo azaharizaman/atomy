@@ -63,6 +63,8 @@ Provides Laravel-specific implementations for the `Nexus\Idempotency` Layer 1 pa
 
 ### 5.1 Database Schema
 
+**Critical:** The unique constraint MUST be enforced at database level for atomic `claimPending()` to work correctly.
+
 ```sql
 CREATE TABLE nexus_idempotency_records (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -72,15 +74,17 @@ CREATE TABLE nexus_idempotency_records (
     request_fingerprint TEXT NOT NULL,
     attempt_token VARCHAR(36) NOT NULL,
     status ENUM('pending', 'completed', 'failed') NOT NULL DEFAULT 'pending',
-    result_envelope JSONB,
+    result_envelope JSON,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY idx_tenant_operation_client (tenant_id, operation_ref, client_key),
+    UNIQUE KEY uk_tenant_operation_client (tenant_id, operation_ref, client_key),
     INDEX idx_expires_at (expires_at),
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
+
+**Note:** Uses `JSON` for MySQL compatibility (PostgreSQL uses `JSONB` in separate migration).
 
 ### 5.2 Eloquent Model
 
@@ -90,43 +94,91 @@ CREATE TABLE nexus_idempotency_records (
 - Uses `HasFactory` trait
 - Casts `result_envelope` to array
 - Casts `expires_at` to datetime
+- Implements tenant scope via global scope to prevent cross-tenant queries
 
-### 5.3 Store Implementations
+### 5.3 Clock Implementation (Required Dependency)
+
+**Class:** `Nexus\Laravel\Idempotency\Clock\LaravelIdempotencyClock`
+
+- Implements `IdempotencyClockInterface`
+- Returns `DateTimeImmutable` via `CarbonImmutable::now()`
+- Registered as singleton in service provider
+
+### 5.4 Policy Factory
+
+**Class:** `Nexus\Laravel\Idempotency\Support\IdempotencyPolicyFactory`
+
+- Creates `IdempotencyPolicy` from config
+- Uses config values:
+  - `pending_ttl_seconds` (default: 604800 = 7 days)
+  - `allow_retry_after_fail` (default: true)
+  - `expire_completed_after_seconds` (default: null = never)
+
+### 5.5 Store Implementations
 
 | Class | Interface | Description |
 |-------|-----------|-------------|
 | `DatabaseIdempotencyStore` | `IdempotencyStoreInterface` | MySQL/PostgreSQL implementation using Eloquent |
-| `RedisIdempotencyStore` | `IdempotencyStoreInterface` | Redis implementation for high-throughput |
+| `RedisIdempotencyStore` | `IdempotencyStoreInterface` | Redis implementation for high-throughput (Phase 2) |
 | `IdempotencyStoreManager` | - | Resolves store based on config (db/redis) |
 
-### 5.4 HTTP Middleware
+**Atomic claimPending() Implementation:**
+- Database: Uses `INSERT ... ON DUPLICATE KEY UPDATE` for MySQL
+- Redis: Uses `SETNX` + pipeline for atomic claim
+
+### 5.6 HTTP Middleware
 
 **Class:** `Nexus\Laravel\Idempotency\Http\IdempotencyMiddleware`
 
 - Extracts `Idempotency-Key` header (required)
 - Resolves `tenant_id` from Laravel auth or header
-- Extracts `operation_ref` from route or request (e.g., `POST /api/invoices`)
+- Extracts `operation_ref` from route (e.g., `POST /api/invoices`)
+- Computes `RequestFingerprint` from request body/method/uri
 - Calls `$idempotencyService->begin()` before controller
-- Returns 409 Conflict if duplicate in progress
-- Attaches `Idempotency-Key` to response headers
 
-### 5.5 Service Provider
+**Request Flow (Critical):**
+1. Middleware calls `begin()` → returns `BeginDecision`
+2. Middleware stores `BeginDecision` in request attributes:
+   - `$request->attributes->set('idempotency_decision', $decision)`
+   - `$request->attributes->set('idempotency_attempt_token', $decision->record->attemptToken)`
+3. Controller retrieves via `$request->attributes->get('idempotency_attempt_token')`
+4. Controller calls `complete()` or `fail()` after business logic
+
+**Response Handling:**
+- Returns 409 Conflict if `BeginOutcome::InProgress`
+- Returns cached result if `BeginOutcome::Replay`
+- Returns 201 with result if `BeginOutcome::FirstExecution`
+- Adds `Idempotency-Key` to response headers
+
+### 5.7 Service Provider
 
 **Class:** `Nexus\Laravel\Idempotency\Providers\IdempotencyAdapterServiceProvider`
 
-- Registers store implementations
+- Registers `LaravelIdempotencyClock` as singleton implementing `IdempotencyClockInterface`
+- Registers `IdempotencyPolicyFactory` 
+- Registers `DatabaseIdempotencyStore` (or resolves via manager)
+- Registers `IdempotencyService` with all dependencies:
+  - `IdempotencyQueryInterface` → `DatabaseIdempotencyStore`
+  - `IdempotencyPersistInterface` → `DatabaseIdempotencyStore`
+  - `IdempotencyClockInterface` → `LaravelIdempotencyClock`
+  - `IdempotencyPolicy` → from factory
 - Registers middleware alias
 - Publishes migration file
 - Config: `config/nexus-idempotency.php`
 
-### 5.6 Configuration
+### 5.8 Configuration
 
 ```php
 // config/nexus-idempotency.php
 return [
     'store' => env('IDEMPOTENCY_STORE', 'database'), // 'database' | 'redis'
     
-    'default_ttl_seconds' => env('IDEMPOTENCY_TTL', 86400), // 24 hours
+    // Policy settings
+    'policy' => [
+        'pending_ttl_seconds' => (int) env('IDEMPOTENCY_PENDING_TTL', 604800), // 7 days
+        'allow_retry_after_fail' => env('IDEMPOTENCY_ALLOW_RETRY', true),
+        'expire_completed_after_seconds' => (int) env('IDEMPOTENCY_COMPLETED_TTL', 86400), // 24 hours
+    ],
     
     'redis' => [
         'connection' => env('IDEMPOTENCY_REDIS_CONNECTION', 'default'),
@@ -166,22 +218,50 @@ Route::middleware(['api', 'idempotency'])->group(function () {
 ### 6.3 Controller Usage
 
 ```php
+use Nexus\Idempotency\ValueObjects\ResultEnvelope;
+
 class InvoiceController extends Controller
 {
-    public function store(Request $request, IdempotencyService $idempotency)
+    public function store(Request $request, IdempotencyServiceInterface $idempotency)
     {
-        // Idempotency middleware already called begin()
-        // $idempotency->complete($result) on success
-        // $idempotency->fail($reason) on error
+        // Middleware already called begin() and stored decision in request
+        $decision = $request->attributes->get('idempotency_decision');
         
-        $invoice = Invoice::create($request->validated());
+        // If replay, return cached result immediately
+        if ($decision->outcome === BeginOutcome::Replay) {
+            return response()->json($decision->resultEnvelope->value, 200);
+        }
         
-        $idempotency->complete(['invoice_id' => $invoice->id]);
-        
-        return response()->json(['invoice' => $invoice], 201);
+        try {
+            $invoice = Invoice::create($request->validated());
+            
+            // Build result envelope
+            $result = new ResultEnvelope(['invoice_id' => $invoice->id]);
+            $idempotency->complete(
+                $decision->record->tenantId,
+                $decision->record->operationRef,
+                $decision->record->clientKey,
+                $decision->record->fingerprint,
+                $decision->record->attemptToken,
+                $result
+            );
+            
+            return response()->json(['invoice' => $invoice], 201);
+        } catch (\Throwable $e) {
+            $idempotency->fail(
+                $decision->record->tenantId,
+                $decision->record->operationRef,
+                $decision->record->clientKey,
+                $decision->record->fingerprint,
+                $decision->record->attemptToken,
+            );
+            throw $e;
+        }
     }
 }
 ```
+
+**Note:** The controller needs access to domain VOs (`TenantId`, `OperationRef`, etc.). The adapter should provide a trait or helper to extract these from the request attributes.
 
 ---
 
@@ -214,6 +294,28 @@ class InvoiceController extends Controller
 
 ---
 
+## 9. Cleanup Strategy
+
+### 9.1 Database Cleanup
+
+A Laravel artisan command for scheduled cleanup:
+
+```bash
+php artisan idempotency:cleanup
+```
+
+- Deletes records where `expires_at < NOW()`
+- Uses chunked deletion for large datasets
+- Can be run via Laravel Scheduler daily
+
+### 9.2 Redis TTL
+
+Redis keys automatically expire based on `expires_at` timestamp:
+- Set key with TTL on write: `SET key value EX ttl_seconds`
+- TTL refreshed on each access
+
+---
+
 ## 10. Dependencies
 
 ```json
@@ -243,22 +345,42 @@ adapters/Laravel/Idempotency/
 │   └── nexus-idempotency.php
 ├── database/
 │   └── migrations/
-│       └── 2026_03_22_000001_create_nexus_idempotency_records_table.php
+│       ├── 2026_03_22_000001_create_nexus_idempotency_records_table.php (MySQL)
+│       └── 2026_03_22_000001_create_nexus_idempotency_records_table.php (PostgreSQL)
 ├── src/
 │   ├── Adapters/
 │   │   ├── DatabaseIdempotencyStore.php
-│   │   └── RedisIdempotencyStore.php
+│   │   └── RedisIdempotencyStore.php (Phase 2)
+│   ├── Clock/
+│   │   └── LaravelIdempotencyClock.php
 │   ├── Http/
 │   │   └── IdempotencyMiddleware.php
 │   ├── Models/
 │   │   └── IdempotencyRecord.php
 │   ├── Providers/
 │   │   └── IdempotencyAdapterServiceProvider.php
-│   └── Support/
-│       └── IdempotencyStoreManager.php
+│   ├── Support/
+│   │   ├── IdempotencyStoreManager.php
+│   │   └── IdempotencyPolicyFactory.php
+│   └── Contracts/
+│       └── IdempotencyServiceBinderInterface.php (for controller helpers)
+├── database/migrations/
+│   └── 2026_03_22_000001_create_nexus_idempotency_records_table.php
+├── src/Console/
+│   └── Commands/
+│       └── IdempotencyCleanupCommand.php
 └── tests/
     ├── Unit/
-    │   └── DatabaseIdempotencyStoreTest.php
+    │   ├── DatabaseIdempotencyStoreTest.php
+    │   └── LaravelIdempotencyClockTest.php
     └── Integration/
         └── IdempotencyMiddlewareTest.php
 ```
+
+---
+
+## 12. Open Questions
+
+1. **Controller Helper:** Should we provide a trait to extract VOs from request?
+2. **Redis Phase 2:** Confirm if Redis store is needed in v1
+3. **Multi-tenancy:** Is `tenant_id` always from header or should we support subdomain-based?
