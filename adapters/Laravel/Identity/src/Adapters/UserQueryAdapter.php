@@ -190,10 +190,12 @@ final readonly class UserQueryAdapter implements UserQueryInterface
 
         $query = UserModel::query();
 
-        if ($tenantId !== null && $tenantId !== '') {
-            $query->where('tenant_id', (string) $tenantId);
-        } elseif ($tenantId !== null) {
-            throw new \InvalidArgumentException('tenant_id is required for search when provided');
+        if (isset($criteria['tenant_id'])) {
+            $tenantId = (string) $criteria['tenant_id'];
+            if ($tenantId === '') {
+                throw new \InvalidArgumentException('tenant_id must be a non-empty string when provided');
+            }
+            $query->where('tenant_id', $tenantId);
         }
 
         if (isset($criteria['status']) && $criteria['status'] !== '') {

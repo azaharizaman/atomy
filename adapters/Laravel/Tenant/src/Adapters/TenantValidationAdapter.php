@@ -13,9 +13,14 @@ final readonly class TenantValidationAdapter implements TenantValidationInterfac
         private LoggerInterface $logger,
     ) {}
 
+    private function hashIdentifier(string $value): string
+    {
+        return substr(hash('sha256', $value), 0, 8);
+    }
+
     public function codeExists(string $code, ?string $excludeId = null): bool
     {
-        $this->logger->debug('Validating tenant code', ['code' => $code, 'excludeId' => $excludeId]);
+        $this->logger->debug('Validating tenant code', ['codeHash' => $this->hashIdentifier($code), 'excludeIdProvided' => $excludeId !== null]);
 
         $query = \App\Models\Tenant::where('code', $code);
 
@@ -28,7 +33,7 @@ final readonly class TenantValidationAdapter implements TenantValidationInterfac
 
     public function domainExists(string $domain, ?string $excludeId = null): bool
     {
-        $this->logger->debug('Validating tenant domain', ['domain' => $domain, 'excludeId' => $excludeId]);
+        $this->logger->debug('Validating tenant domain', ['domainHash' => $this->hashIdentifier($domain), 'excludeIdProvided' => $excludeId !== null]);
 
         $query = \App\Models\Tenant::where('domain', $domain);
 
@@ -41,7 +46,7 @@ final readonly class TenantValidationAdapter implements TenantValidationInterfac
 
     public function nameExists(string $name, ?string $excludeId = null): bool
     {
-        $this->logger->debug('Validating tenant name', ['name' => $name, 'excludeId' => $excludeId]);
+        $this->logger->debug('Validating tenant name', ['nameHash' => $this->hashIdentifier($name), 'excludeIdProvided' => $excludeId !== null]);
 
         $query = \App\Models\Tenant::where('name', $name);
 

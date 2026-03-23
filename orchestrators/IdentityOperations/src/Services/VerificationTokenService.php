@@ -8,13 +8,13 @@ use ArrayObject;
 use DateTimeImmutable;
 use Nexus\Common\Contracts\ClockInterface;
 use Nexus\Crypto\Contracts\AsymmetricSignerInterface;
-use Nexus\Crypto\Enums\AsymmetricAlgorithm;
 use Nexus\IdentityOperations\Contracts\VerificationTokenServiceInterface;
 
 final readonly class VerificationTokenService implements VerificationTokenServiceInterface
 {
     private const string PURPOSE = 'email_verification';
     private const int TTL_SECONDS = 86400;
+    private const array REQUIRED_KEYS = ['user_id', 'tenant_id', 'purpose', 'issued_at', 'expires_at'];
 
     public function __construct(
         private AsymmetricSignerInterface $signer,
@@ -37,8 +37,9 @@ final readonly class VerificationTokenService implements VerificationTokenServic
             'expires_at' => $expiresAt,
         ];
 
-        $encoded = base64_encode(json_encode($payload));
-        $signature = $this->signer->hmac($encoded, $this->secretKey, AsymmetricAlgorithm::HMACSHA256);
+        $json = json_encode($payload, JSON_THROW_ON_ERROR);
+        $encoded = base64_encode($json);
+        $signature = $this->signer->hmac($encoded, $this->secretKey);
 
         $token = $encoded . '.' . $signature;
 
@@ -57,7 +58,7 @@ final readonly class VerificationTokenService implements VerificationTokenServic
 
         [$encoded, $signature] = $parts;
 
-        if (!$this->signer->verifyHmac($encoded, $signature, $this->secretKey, AsymmetricAlgorithm::HMACSHA256)) {
+        if (!$this->signer->verifyHmac($encoded, $signature, $this->secretKey)) {
             return null;
         }
 
@@ -72,6 +73,17 @@ final readonly class VerificationTokenService implements VerificationTokenServic
 
         $now = $this->clock->now()->getTimestamp();
         if (($decoded['expires_at'] ?? 0) < $now) {
+            return null;
+        }
+
+        foreach (self::REQUIRED_KEYS as $key) {
+            if (!isset($decoded[$key])) {
+                return null;
+            }
+        }
+
+        $storedKey = $this->getStoreKey($decoded['user_id'], $decoded['tenant_id']);
+        if (!isset($this->tokenStore[$storedKey]) || $this->tokenStore[$storedKey] !== $token) {
             return null;
         }
 

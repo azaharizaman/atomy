@@ -42,30 +42,38 @@ interface UserQueryInterface
     /**
      * Get all roles assigned to a user
      *
+     * @param string $userId User ID
+     * @param string|null $tenantId Tenant ID for tenant-scoped queries
      * @return RoleInterface[]
      */
-    public function getUserRoles(string $userId): array;
+    public function getUserRoles(string $userId, ?string $tenantId = null): array;
 
     /**
      * Get all direct permissions assigned to a user
      *
+     * @param string $userId User ID
+     * @param string|null $tenantId Tenant ID for tenant-scoped queries
      * @return PermissionInterface[]
      */
-    public function getUserPermissions(string $userId): array;
+    public function getUserPermissions(string $userId, ?string $tenantId = null): array;
 
     /**
      * Get users by status
      *
+     * @param string $status User status
+     * @param string $tenantId Tenant ID (required for tenant-scoped queries)
      * @return UserInterface[]
      */
-    public function findByStatus(string $status): array;
+    public function findByStatus(string $status, string $tenantId): array;
 
     /**
      * Get users by role
      *
+     * @param string $roleId Role ID
+     * @param string $tenantId Tenant ID (required for tenant-scoped queries)
      * @return UserInterface[]
      */
-    public function findByRole(string $roleId): array;
+    public function findByRole(string $roleId, string $tenantId): array;
 
     /**
      * Search users by query

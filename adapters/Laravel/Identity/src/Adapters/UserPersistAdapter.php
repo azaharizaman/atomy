@@ -36,7 +36,7 @@ final readonly class UserPersistAdapter implements UserPersistInterface
             'status' => $status,
             'timezone' => (string) ($data['timezone'] ?? 'UTC'),
             'locale' => (string) ($data['locale'] ?? 'en'),
-            'email_verified_at' => $data['email_verified_at'] ?? now(),
+            'email_verified_at' => $data['email_verified_at'] ?? null,
         ]);
 
         return LaravelUserMapper::fromModel($user);

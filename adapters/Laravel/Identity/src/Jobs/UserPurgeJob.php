@@ -21,7 +21,6 @@ final class UserPurgeJob extends Command
     protected $description = 'Permanently delete users whose retention period has expired';
 
     public function handle(
-        UserQueryInterface $userQuery,
         UserPersistInterface $userPersist,
         InvitationServiceInterface $invitationService,
         TenantQueryInterface $tenantQuery,

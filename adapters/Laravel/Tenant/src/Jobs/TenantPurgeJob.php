@@ -33,17 +33,21 @@ final class TenantPurgeJob extends Command
         'scoring_models',
         'scenarios',
         'rfq_line_items',
-        'vendor_invitations',
     ];
 
     private const TENANT_SCOPED_TABLES = [
         'projects',
         'tasks',
         'rfqs',
-        'users',
+        'vendor_invitations',
         'project_acl',
         'notifications',
         'integrations',
+        'users',
+    ];
+
+    private const BEFORE_USERS_TABLES = [
+        'invitations',
     ];
 
     public function handle(LoggerInterface $logger): int
@@ -133,11 +137,13 @@ final class TenantPurgeJob extends Command
             $this->deleteByTenantOrRfq($table, $tenantId, $rfqIds, $logger);
         }
 
-        foreach (self::TENANT_SCOPED_TABLES as $table) {
+        foreach (self::BEFORE_USERS_TABLES as $table) {
             $this->deleteByTenantId($table, $tenantId, $logger);
         }
 
-        $this->deleteByTenantId('invitations', $tenantId, $logger);
+        foreach (self::TENANT_SCOPED_TABLES as $table) {
+            $this->deleteByTenantId($table, $tenantId, $logger);
+        }
     }
 
     private function deleteByTenantOrRfq(string $table, string $tenantId, array $rfqIds, LoggerInterface $logger): void

@@ -53,12 +53,20 @@ final class UserRoleDTO implements RoleInterface
 
     public function getCreatedAt(): \DateTimeInterface
     {
-        return $this->createdAt ?? new \DateTimeImmutable();
+        if ($this->createdAt === null) {
+            throw new \RuntimeException('Role created_at timestamp is not available');
+        }
+
+        return $this->createdAt;
     }
 
     public function getUpdatedAt(): \DateTimeInterface
     {
-        return $this->updatedAt ?? new \DateTimeImmutable();
+        if ($this->updatedAt === null) {
+            throw new \RuntimeException('Role updated_at timestamp is not available');
+        }
+
+        return $this->updatedAt;
     }
 
     public function requiresMfa(): bool
