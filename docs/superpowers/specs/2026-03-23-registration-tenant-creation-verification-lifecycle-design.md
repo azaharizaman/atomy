@@ -1,7 +1,7 @@
 # Registration, Tenant Creation & User Verification Lifecycle
 
 **Date:** 2026-03-23
-**Status:** Draft
+**Status:** Draft — Pending Package Integration Review
 
 ---
 
@@ -337,3 +337,60 @@ Not possible — invite for a tenant the user already belongs to is blocked at s
 - Tenant name uniqueness is enforced at the DB level with a unique constraint
 - Retention hold timestamps prevent premature purge even if cron misfires
 - No tenant existence or user existence information is leaked via timing or error messages
+
+---
+
+## 12. Nexus Package Integration
+
+This section maps each implementation step to existing Nexus Layer 1 packages and identifies what must be built new.
+
+### 12.1 Existing Packages — Full Reuse
+
+| Flow Step | Package | Interface / Method to Use | Notes |
+|-----------|---------|--------------------------|-------|
+| Create user record | `Nexus\Identity` | `UserManager::createUser()` | Validates email uniqueness, password complexity, hashes password, sets `PENDING_ACTIVATION` status |
+| Activate user on verification | `Nexus\Identity` | `UserManager::activateUser()` | Sets `status → ACTIVE`, `email_verified_at = now` |
+| Password hashing | `Nexus\Identity` | `PasswordHasherInterface` | bcrypt/argon2 via adapter |
+| Password validation | `Nexus\Identity` | `PasswordValidatorInterface` | Enforces min length + complexity rules |
+| Create tenant record | `Nexus\Tenant` | `TenantLifecycleService::createTenant()` | Sets status `Pending`; dispatch `TenantCreatedEvent` |
+| Activate tenant on verification | `Nexus\Tenant` | `TenantLifecycleService::activateTenant()` | Transitions `Pending → Active`; dispatch `TenantActivatedEvent` |
+| Archive orphan tenant (queue for deletion) | `Nexus\Tenant` | `TenantLifecycleService::archiveTenant()` | Transitions to `Archived`; dispatch `TenantArchivedEvent`; `retention_hold_until` set via metadata or `updateTenant()` |
+| Tenant name uniqueness | `Nexus\Tenant` | `TenantValidationInterface` | Adapt `codeExists()` / `domainExists()` logic to validate `name` uniqueness |
+| Tenant context (auth middleware) | `Nexus\Tenant` | `TenantContextManager` / `TenantContextInterface` | Request-scoped tenant resolution |
+| Audit logging (all lifecycle events) | `Nexus\AuditLogger` | `AuditLogManager::log()` / `logSystemActivity()` | Generic enough for registration, verification, invite, delegation, unregistration |
+
+### 12.2 Existing Packages — Require Adapter Layer
+
+| Flow Step | Package | Interface / Method | Adapter Work Required |
+|-----------|---------|---------------------|----------------------|
+| Signed token generation (verification + invite) | `Nexus\Crypto` | `CryptoManager::hmac()` / `SodiumSigner::hmac()` | Build token envelope: encode payload + expiry into signed string; `purpose` in payload prevents cross-flow reuse |
+| Async email notifications | `Nexus\Notifier` | `NotificationManagerInterface` + `AbstractNotification` + `ChannelType::Email` + `NotifiableInterface` | Implement: `EmailChannel` (Laravel Mail / PSR-18), `NotificationQueueInterface` (Laravel Queue), `NotificationHistoryRepositoryInterface` (DB table), `NotificationRendererInterface` (simple `{{var}}` substitution) |
+| Endpoint idempotency (all mutating endpoints) | `Nexus\Idempotency` | `IdempotencyServiceInterface::begin()/complete()/fail()` | Bind `IdempotencyStoreInterface` to Laravel DB adapter; per-endpoint `OperationRef` (e.g. `"register"`, `"invite"`); `ClientKey` from `X-Idempotency-Key` request header |
+
+### 12.3 New Code Required
+
+The following are **not covered by any existing Nexus package** and must be built as part of this feature:
+
+| Component | Layer | Description |
+|-----------|-------|-------------|
+| **VerificationToken** service + VO | Layer 1 (`Nexus\Identity` or new `Nexus\AuthTokens`) | Generate signed tokens (use `Nexus\Crypto` for signing), validate expiry + purpose, invalidate per user or per token |
+| **Invitation** entity, repository, service | Layer 1 (`Nexus\Identity` or new `Nexus\Invitation`) | Create invite, invalidate previous per tenant, accept invite (Path A + Path B denounce), enforce one-active-invite-per-tenant rule, 24h expiry |
+| **Denounce & Join** logic | Orchestrator (`IdentityOperations`) | Transfer user between tenants, detect orphan old tenant, queue for deletion, send confirmation email |
+| **Admin delegation** | Layer 1 + Orchestrator | Transfer `admin` role to member, revoke all sessions of delegating admin, email both parties |
+| **User unregistration** | Layer 1 (`Nexus\Identity`) + Orchestrator | Soft-delete: `status → queued_deletion`, `deleted_at = now + 7 days`; enforce solo-admin gate; trigger orphan tenant detection |
+| **Retention hold extension** on tenant | Layer 1 (`Nexus\Tenant`) | Add `retention_hold_until` to `TenantInterface` metadata or as a first-class field; expose via `TenantLifecycleService` |
+| **Purge scheduled jobs** | Adapter (Laravel) | Daily command: purge users past `deleted_at`; daily command: purge tenants past `retention_hold_until`; cascade-delete all associated data; cancel related pending invites first |
+
+### 12.4 Adapter Layer Completions Required
+
+The current `AuthController` uses Eloquent directly for login. Before Layer 2 orchestrators can be properly wired, these Laravel adapter bindings must exist:
+
+| Interface | Package | Status |
+|----------|---------|--------|
+| `Nexus\Identity\Contracts\UserPersistInterface` | `Nexus\Identity` | Needs Laravel adapter binding |
+| `Nexus\Identity\Contracts\UserQueryInterface` | `Nexus\Identity` | Needs Laravel adapter binding |
+| `Nexus\Tenant\Contracts\TenantPersistenceInterface` | `Nexus\Tenant` | Partial — check `adapters/Laravel/Tenant/` |
+| `Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface` | `Nexus\AuditLogger` | Needs Laravel adapter binding |
+| `Nexus\Notifier\Contracts\NotificationChannelInterface` | `Nexus\Notifier` | Email channel not yet implemented |
+
+These adapter completions are a prerequisite for the implementation plan and should be listed as the first phase of work.
