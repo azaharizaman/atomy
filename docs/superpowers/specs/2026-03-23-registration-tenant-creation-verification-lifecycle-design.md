@@ -23,7 +23,7 @@ This spec covers the end-to-end self-service registration flow for Atomy-Q, incl
 
 | Role | Capabilities |
 |------|-------------|
-| `admin` | Send invites, delegate admin, unregister |
+| `admin` | Send invites, delegate admin, unregister (subject to constraints in §6) |
 | `member` | Accept invite, request unregister |
 
 - A tenant must always have **exactly one admin**
@@ -165,8 +165,9 @@ User must explicitly acknowledge the warning before proceeding.
 
 A daily scheduled job:
 1. Find all tenants where `status = queued_deletion` AND `retention_hold_until < now`
-2. Hard-delete tenant and ALL associated data (users, RFQs, projects, tasks, etc.)
-3. No data transfer — orphaned data is permanently lost
+2. For each tenant: cancel all pending invitations (`status → cancelled`) to avoid FK constraint violations on user hard-delete
+3. Hard-delete tenant and ALL associated data (users, RFQs, projects, tasks, invitations, etc.)
+4. No data transfer — orphaned data is permanently lost
 
 ---
 
@@ -185,7 +186,7 @@ A daily scheduled job:
 2. Validate target user is a `member` of the same tenant
 3. Show confirmation: *"You will be logged out immediately. [Name] must log in to gain admin access."*
 4. On confirm:
-   - Inviting admin: `role → member`, all sessions revoked immediately
+   - Inviting admin: `role → member`, all sessions of the delegating admin revoked immediately
    - Target user: `role → admin`
    - Queue email job: notify both parties of the delegation
 5. Inviting admin's session is invalidated; they must log in fresh to regain access with their (new) member role
@@ -215,9 +216,10 @@ A daily scheduled job:
 
 A daily scheduled job:
 1. Find all users where `status = queued_deletion` AND `deleted_at < now`
-2. Hard-delete user record and cascade delete user-owned data (RFQs, projects, tasks, etc. created solely by this user)
-3. After purge, check if the user's former tenant has any remaining active users
-4. If no remaining active users: tenant `status → queued_deletion`, `retention_hold_until = now + 7 days`
+2. Cancel any pending invitations sent by the departing user (`status → cancelled`) to avoid FK constraint violations
+3. Hard-delete user record and cascade delete user-owned data (RFQs, projects, tasks, etc. created solely by this user)
+4. After purge, check if the user's former tenant has any remaining active users
+5. If no remaining active users: tenant `status → queued_deletion`, `retention_hold_until = now + 7 days`
 
 ---
 
