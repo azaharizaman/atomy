@@ -79,8 +79,10 @@ class TenantAdapterServiceProvider extends ServiceProvider
         });
 
         // Register tenant validation adapter
-        $this->app->singleton(TenantValidationInterface::class, function () {
-            return new TenantValidationAdapter();
+        $this->app->singleton(TenantValidationInterface::class, function ($app) {
+            return new TenantValidationAdapter(
+                logger: $app['log']
+            );
         });
     }
 
