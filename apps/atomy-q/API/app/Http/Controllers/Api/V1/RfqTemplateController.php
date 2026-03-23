@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 
 final class RfqTemplateController extends Controller
 {
@@ -30,18 +32,25 @@ final class RfqTemplateController extends Controller
     }
 
     /** POST /rfq-templates */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, IdempotencyServiceInterface $idempotency): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
+        try {
+            $tenantId = $this->tenantId($request);
 
-        return response()->json([
-            'data' => [
-                'id' => 'stub-template-id',
-                'tenant_id' => $tenantId,
-                'name' => $request->input('name', ''),
-                'status' => 'draft',
-            ],
-        ], 201);
+            $response = response()->json([
+                'data' => [
+                    'id' => 'stub-template-id',
+                    'tenant_id' => $tenantId,
+                    'name' => $request->input('name', ''),
+                    'status' => 'draft',
+                ],
+            ], 201);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (\Throwable $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        }
     }
 
     /** GET /rfq-templates/{id} */
@@ -87,30 +96,44 @@ final class RfqTemplateController extends Controller
     }
 
     /** POST /rfq-templates/{id}/duplicate */
-    public function duplicate(Request $request, string $id): JsonResponse
+    public function duplicate(Request $request, string $id, IdempotencyServiceInterface $idempotency): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
+        try {
+            $this->tenantId($request);
 
-        return response()->json([
-            'data' => [
-                'id' => 'stub-duplicated-template-id',
-                'source_id' => $id,
-                'status' => 'draft',
-            ],
-        ], 201);
+            $response = response()->json([
+                'data' => [
+                    'id' => 'stub-duplicated-template-id',
+                    'source_id' => $id,
+                    'status' => 'draft',
+                ],
+            ], 201);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (\Throwable $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        }
     }
 
     /** POST /rfq-templates/{id}/apply */
-    public function apply(Request $request, string $id): JsonResponse
+    public function apply(Request $request, string $id, IdempotencyServiceInterface $idempotency): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
+        try {
+            $this->tenantId($request);
 
-        return response()->json([
-            'data' => [
-                'template_id' => $id,
-                'applied' => true,
-                'pre_filled' => [],
-            ],
-        ]);
+            $response = response()->json([
+                'data' => [
+                    'template_id' => $id,
+                    'applied' => true,
+                    'pre_filled' => [],
+                ],
+            ]);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (\Throwable $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        }
     }
 }

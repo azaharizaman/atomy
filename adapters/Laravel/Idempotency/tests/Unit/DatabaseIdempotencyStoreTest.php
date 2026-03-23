@@ -4,21 +4,16 @@ declare(strict_types=1);
 
 namespace Nexus\Laravel\Idempotency\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
+use Nexus\Idempotency\Contracts\IdempotencyStoreInterface;
 use Nexus\Laravel\Idempotency\Adapters\DatabaseIdempotencyStore;
-use Nexus\Laravel\Idempotency\Models\IdempotencyRecord as EloquentModel;
+use PHPUnit\Framework\TestCase;
 
-class DatabaseIdempotencyStoreTest extends TestCase
+final class DatabaseIdempotencyStoreTest extends TestCase
 {
     public function test_implements_store_interface(): void
     {
-        $store = new DatabaseIdempotencyStore(
-            $this->createMock(EloquentModel::class)
-        );
-        
-        $this->assertInstanceOf(
-            \Nexus\Idempotency\Contracts\IdempotencyStoreInterface::class,
-            $store
-        );
+        $store = new DatabaseIdempotencyStore();
+
+        $this->assertInstanceOf(IdempotencyStoreInterface::class, $store);
     }
 }

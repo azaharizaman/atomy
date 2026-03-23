@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Exceptions\IdempotencyEnvelopeTooLargeException;
 use App\Http\Middleware\JwtAuthenticate;
 use App\Http\Middleware\TenantContext;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Nexus\Laravel\Idempotency\Http\IdempotencyMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,10 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         apiPrefix: 'api/v1',
     )
+    ->withSchedule(function (Schedule $schedule): void {
+        $schedule->command('idempotency:cleanup')->daily();
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'jwt.auth' => JwtAuthenticate::class,
             'tenant' => TenantContext::class,
+            'idempotency' => IdempotencyMiddleware::class,
         ]);
 
         $middleware->api(prepend: [
@@ -45,6 +52,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($e instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
                 return response()->json(['error' => 'Method not allowed'], 405);
+            }
+
+            if ($e instanceof IdempotencyEnvelopeTooLargeException) {
+                return response()->json([
+                    'error' => 'Response too large to store for replay',
+                    'code' => 'idempotency_envelope_too_large',
+                ], 500);
             }
         });
     })->create();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Models\Approval;
@@ -19,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 
 final class RfqController extends Controller
 {
@@ -211,49 +213,59 @@ final class RfqController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, IdempotencyServiceInterface $idempotency): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
-        $ownerId = $this->userId($request);
+        try {
+            $tenantId = $this->tenantId($request);
+            $ownerId = $this->userId($request);
 
-        $validated = $request->validate($this->rfqValidationRules($tenantId, false));
+            $validated = $request->validate($this->rfqValidationRules($tenantId, false));
 
-        $nextSeq = (int) Rfq::query()
-            ->where('tenant_id', $tenantId)
-            ->where('rfq_number', 'like', 'RFQ-%')
-            ->count() + 1;
-        $rfqNumber = sprintf('RFQ-%s-%04d', date('Y'), $nextSeq);
+            $nextSeq = (int) Rfq::query()
+                ->where('tenant_id', $tenantId)
+                ->where('rfq_number', 'like', 'RFQ-%')
+                ->count() + 1;
+            $rfqNumber = sprintf('RFQ-%s-%04d', date('Y'), $nextSeq);
 
-        $rfq = new Rfq();
-        $rfq->tenant_id = $tenantId;
-        $rfq->owner_id = $ownerId;
-        $rfq->rfq_number = $rfqNumber;
-        $rfq->title = (string) $validated['title'];
-        $rfq->description = $validated['description'] ?? null;
-        $rfq->category = $validated['category'] ?? null;
-        $rfq->department = $validated['department'] ?? null;
-        $rfq->project_id = $validated['project_id'] ?? null;
-        $rfq->status = 'draft';
-        $rfq->estimated_value = isset($validated['estimated_value']) ? (float) $validated['estimated_value'] : 0.0;
-        $rfq->savings_percentage = isset($validated['savings_percentage']) ? (float) $validated['savings_percentage'] : 0.0;
-        $submission = Carbon::parse((string) $validated['submission_deadline']);
-        $closing = ! empty($validated['closing_date']) ? Carbon::parse((string) $validated['closing_date']) : null;
-        $this->assertClosingOnOrAfterSubmission($submission, $closing);
-        $rfq->submission_deadline = $submission;
-        $rfq->closing_date = $closing;
-        $rfq->payment_terms = $validated['payment_terms'] ?? null;
-        $rfq->evaluation_method = $validated['evaluation_method'] ?? null;
-        $rfq->save();
+            $rfq = new Rfq();
+            $rfq->tenant_id = $tenantId;
+            $rfq->owner_id = $ownerId;
+            $rfq->rfq_number = $rfqNumber;
+            $rfq->title = (string) $validated['title'];
+            $rfq->description = $validated['description'] ?? null;
+            $rfq->category = $validated['category'] ?? null;
+            $rfq->department = $validated['department'] ?? null;
+            $rfq->project_id = $validated['project_id'] ?? null;
+            $rfq->status = 'draft';
+            $rfq->estimated_value = isset($validated['estimated_value']) ? (float) $validated['estimated_value'] : 0.0;
+            $rfq->savings_percentage = isset($validated['savings_percentage']) ? (float) $validated['savings_percentage'] : 0.0;
+            $submission = Carbon::parse((string) $validated['submission_deadline']);
+            $closing = ! empty($validated['closing_date']) ? Carbon::parse((string) $validated['closing_date']) : null;
+            $this->assertClosingOnOrAfterSubmission($submission, $closing);
+            $rfq->submission_deadline = $submission;
+            $rfq->closing_date = $closing;
+            $rfq->payment_terms = $validated['payment_terms'] ?? null;
+            $rfq->evaluation_method = $validated['evaluation_method'] ?? null;
+            $rfq->save();
 
-        return response()->json([
-            'data' => [
-                'id' => $rfq->id,
-                'rfq_number' => $rfq->rfq_number,
-                'title' => $rfq->title,
-                'status' => $rfq->status,
-                'project_id' => $rfq->project_id,
-            ],
-        ], 201);
+            $response = response()->json([
+                'data' => [
+                    'id' => $rfq->id,
+                    'rfq_number' => $rfq->rfq_number,
+                    'title' => $rfq->title,
+                    'status' => $rfq->status,
+                    'project_id' => $rfq->project_id,
+                ],
+            ], 201);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (ValidationException $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        } catch (\Throwable $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        }
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -675,16 +687,23 @@ final class RfqController extends Controller
         ]);
     }
 
-    public function duplicate(Request $request, string $id): JsonResponse
+    public function duplicate(Request $request, string $id, IdempotencyServiceInterface $idempotency): JsonResponse
     {
-        // TODO: tenant scoping via $this->tenantId($request)
+        try {
+            // TODO: tenant scoping via $this->tenantId($request)
 
-        return response()->json([
-            'data' => [
-                'id' => 'stub-duplicate-id',
-                'status' => 'draft',
-            ],
-        ], 201);
+            $response = response()->json([
+                'data' => [
+                    'id' => 'stub-duplicate-id',
+                    'status' => 'draft',
+                ],
+            ], 201);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (\Throwable $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        }
     }
 
     public function saveDraft(Request $request, string $id): JsonResponse
@@ -699,16 +718,23 @@ final class RfqController extends Controller
         ]);
     }
 
-    public function bulkAction(Request $request): JsonResponse
+    public function bulkAction(Request $request, IdempotencyServiceInterface $idempotency): JsonResponse
     {
-        // TODO: tenant scoping via $this->tenantId($request)
-        // Bulk close/archive/assign
+        try {
+            // TODO: tenant scoping via $this->tenantId($request)
+            // Bulk close/archive/assign
 
-        return response()->json([
-            'data' => [
-                'affected' => 0,
-            ],
-        ]);
+            $response = response()->json([
+                'data' => [
+                    'affected' => 0,
+                ],
+            ]);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (\Throwable $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        }
     }
 
     public function lineItems(Request $request, string $rfqId): JsonResponse

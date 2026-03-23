@@ -12,6 +12,6 @@ final readonly class LaravelIdempotencyClock implements IdempotencyClockInterfac
 {
     public function now(): DateTimeImmutable
     {
-        return CarbonImmutable::now();
+        return CarbonImmutable::now('UTC')->toDateTimeImmutable();
     }
 }

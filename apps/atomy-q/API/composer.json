@@ -70,11 +70,13 @@
         "nexus/project": "*@dev",
         "nexus/task": "*@dev",
         "nexus/project-management-operations": "*@dev",
+        "nexus/idempotency": "*@dev",
 
         "nexus/laravel-identity-adapter": "*@dev",
         "nexus/laravel-notifier-adapter": "*@dev",
         "nexus/laravel-tenant-adapter": "*@dev",
-        "nexus/laravel-setting-adapter": "*@dev"
+        "nexus/laravel-setting-adapter": "*@dev",
+        "nexus/laravel-idempotency-adapter": "*@dev"
     },
     "require-dev": {
         "dedoc/scramble": "^0.13.15",

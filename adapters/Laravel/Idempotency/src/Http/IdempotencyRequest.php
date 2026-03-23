@@ -18,5 +18,6 @@ final readonly class IdempotencyRequest
         public ClientKey $clientKey,
         public RequestFingerprint $fingerprint,
         public AttemptToken $attemptToken,
-    ) {}
+    ) {
+    }
 }

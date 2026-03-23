@@ -185,7 +185,6 @@
 | **endroid/qr-code ^5.0** | Library | Low | QR code generation, active development, 10M+ downloads |
 | **web-auth/webauthn-lib ^4.7** | Library | Medium | WebAuthn spec implementation, active but niche, FIDO2 certified |
 | **web-auth/cose-lib ^4.2** | Library | Medium | COSE cryptography for WebAuthn, dependency of webauthn-lib |
-| **web-auth/metadata-service ^4.7** | Library | Low | FIDO metadata service, optional, only needed for attestation verification |
 
 **Overall Dependency Risk:** **Low-Medium**
 - All dependencies actively maintained

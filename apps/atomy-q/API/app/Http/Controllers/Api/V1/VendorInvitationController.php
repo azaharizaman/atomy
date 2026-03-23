@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Models\Rfq;
@@ -11,6 +12,7 @@ use App\Models\VendorInvitation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 
 final class VendorInvitationController extends Controller
 {
@@ -53,7 +55,7 @@ final class VendorInvitationController extends Controller
         return response()->json(['data' => $rows]);
     }
 
-    public function store(Request $request, string $rfqId): JsonResponse
+    public function store(Request $request, string $rfqId, IdempotencyServiceInterface $idempotency): JsonResponse
     {
         $tenantId = $this->tenantId($request);
 
@@ -65,6 +67,8 @@ final class VendorInvitationController extends Controller
             ->first();
 
         if ($rfq === null) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
             return response()->json(['message' => 'RFQ not found'], 404);
         }
 
@@ -75,6 +79,8 @@ final class VendorInvitationController extends Controller
         ]);
 
         if ($validator->fails()) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
@@ -89,7 +95,7 @@ final class VendorInvitationController extends Controller
         $inv->channel = $request->input('channel', 'email');
         $inv->save();
 
-        return response()->json([
+        $response = response()->json([
             'data' => [
                 'id' => $inv->id,
                 'rfq_id' => $inv->rfq_id,
@@ -99,18 +105,27 @@ final class VendorInvitationController extends Controller
                 'invited_at' => $inv->invited_at?->toAtomString(),
             ],
         ], 201);
+
+        return IdempotencyCompletion::succeed($request, $idempotency, $response);
     }
 
-    public function remind(Request $request, string $rfqId, string $invId): JsonResponse
+    public function remind(Request $request, string $rfqId, string $invId, IdempotencyServiceInterface $idempotency): JsonResponse
     {
-        // TODO: tenant scoping via $this->tenantId($request)
+        try {
+            // TODO: tenant scoping via $this->tenantId($request)
 
-        return response()->json([
-            'data' => [
-                'id' => $invId,
-                'rfq_id' => $rfqId,
-                'status' => 'pending',
-            ],
-        ]);
+            $response = response()->json([
+                'data' => [
+                    'id' => $invId,
+                    'rfq_id' => $rfqId,
+                    'status' => 'pending',
+                ],
+            ]);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (\Throwable $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        }
     }
 }

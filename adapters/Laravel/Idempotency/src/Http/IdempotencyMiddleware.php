@@ -5,121 +5,136 @@ declare(strict_types=1);
 namespace Nexus\Laravel\Idempotency\Http;
 
 use Closure;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 use Nexus\Idempotency\Enums\BeginOutcome;
+use Nexus\Idempotency\Exceptions\IdempotencyFingerprintConflictException;
+use Nexus\Idempotency\Exceptions\IdempotencyKeyInvalidException;
 use Nexus\Idempotency\ValueObjects\ClientKey;
 use Nexus\Idempotency\ValueObjects\OperationRef;
-use Nexus\Idempotency\ValueObjects\RequestFingerprint;
 use Nexus\Idempotency\ValueObjects\TenantId;
+use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
+use Nexus\Laravel\Idempotency\Support\RequestFingerprintFactory;
 use Symfony\Component\HttpFoundation\Response;
 
-class IdempotencyMiddleware
+final readonly class IdempotencyMiddleware
 {
     public function __construct(
-        private readonly IdempotencyServiceInterface $idempotencyService
-    ) {}
+        private IdempotencyServiceInterface $idempotencyService,
+        private RequestFingerprintFactory $fingerprintFactory,
+        private ReplayResponseFactoryInterface $replayResponseFactory,
+    ) {
+    }
 
     public function handle(Request $request, Closure $next): Response
     {
-        $headerName = config('nexus-idempotency.middleware.header_name', 'Idempotency-Key');
-        $tenantHeader = config('nexus-idempotency.middleware.tenant_header', 'X-Tenant-ID');
-        
-        $clientKeyValue = $request->header($headerName);
-        
-        if (empty($clientKeyValue)) {
-            return response()->json([
-                'error' => 'Idempotency-Key header required',
-            ], 400);
-        }
-
-        $tenantIdValue = $request->header($tenantHeader);
-        
-        if (empty($tenantIdValue)) {
-            $user = $request->user();
-            $tenantIdValue = $user?->tenant_id;
-        }
-
-        if (empty($tenantIdValue)) {
-            return response()->json([
-                'error' => 'Tenant identification failed',
-            ], 400);
-        }
-
-        try {
-            $tenantId = new TenantId($tenantIdValue);
-            $operationRef = new OperationRef($request->method() . ' ' . $request->path());
-            $clientKey = new ClientKey($clientKeyValue);
-            $fingerprint = $this->computeFingerprint($request);
-        } catch (\Nexus\Idempotency\Exceptions\IdempotencyKeyInvalidException $e) {
-            return response()->json([
-                'error' => 'Invalid idempotency key: ' . $e->getMessage(),
-            ], 400);
-        }
-
-        $decision = $this->idempotencyService->begin(
-            $tenantId,
-            $operationRef,
-            $clientKey,
-            $fingerprint
-        );
-
-        if ($decision->outcome === BeginOutcome::InProgress) {
-            return response()->json([
-                'error' => 'Duplicate request in progress',
-            ], 409)->withHeaders([
-                'Retry-After' => 60,
-            ]);
-        }
-
-        if ($decision->outcome === BeginOutcome::Replay && $decision->resultEnvelope !== null) {
-            return response()->json(
-                $decision->resultEnvelope->value,
-                200
+        $route = $request->route();
+        $routeName = $route?->getName();
+        if ($routeName === null || $routeName === '') {
+            return $this->jsonError(
+                'Idempotency operation reference missing',
+                'idempotency_operation_ref_missing',
+                500,
             );
         }
 
-        $request->attributes->set('idempotency_request', new IdempotencyRequest(
-            $tenantId,
-            $operationRef,
-            $clientKey,
-            $fingerprint,
-            $decision->record->attemptToken
-        ));
+        $headerKey = $request->header('Idempotency-Key');
+        if ($headerKey === null || trim($headerKey) === '') {
+            return $this->jsonError(
+                'Idempotency-Key header is required',
+                'idempotency_key_required',
+                400,
+            );
+        }
+
+        try {
+            $clientKey = new ClientKey(trim($headerKey));
+        } catch (IdempotencyKeyInvalidException $e) {
+            return $this->jsonError(
+                'Invalid Idempotency-Key',
+                'idempotency_key_invalid',
+                400,
+            );
+        }
+
+        $tenantRaw = $request->attributes->get('auth_tenant_id');
+        if (! is_string($tenantRaw) || $tenantRaw === '') {
+            return $this->jsonError(
+                'Internal error',
+                'idempotency_tenant_missing',
+                500,
+            );
+        }
+
+        $tenantId = new TenantId($tenantRaw);
+        $operationRef = new OperationRef($routeName);
+        $fingerprint = $this->fingerprintFactory->make($request);
+
+        try {
+            $decision = $this->idempotencyService->begin(
+                $tenantId,
+                $operationRef,
+                $clientKey,
+                $fingerprint,
+            );
+        } catch (IdempotencyFingerprintConflictException) {
+            return $this->jsonError(
+                'Idempotency conflict',
+                'idempotency_fingerprint_conflict',
+                409,
+            );
+        }
+
+        if ($decision->outcome === BeginOutcome::Replay) {
+            $replay = $decision->replayResult;
+            if ($replay === null) {
+                return $this->jsonError(
+                    'Internal error',
+                    'idempotency_replay_missing',
+                    500,
+                );
+            }
+
+            return $this->replayResponseFactory->fromPayloadString($replay->payload);
+        }
+
+        if ($decision->outcome === BeginOutcome::InProgress) {
+            return $this->jsonError(
+                'Request is already in progress',
+                'idempotency_in_progress',
+                409,
+            );
+        }
+
+        $record = $decision->record;
+        if ($record === null) {
+            return $this->jsonError(
+                'Internal error',
+                'idempotency_record_missing',
+                500,
+            );
+        }
+
+        $request->attributes->set(
+            'idempotency_request',
+            new IdempotencyRequest(
+                $tenantId,
+                $operationRef,
+                $clientKey,
+                $fingerprint,
+                $record->attemptToken,
+            ),
+        );
 
         return $next($request);
     }
 
-    private function computeFingerprint(Request $request): RequestFingerprint
+    private function jsonError(string $message, string $code, int $status): JsonResponse
     {
-        $data = [
-            'method' => $request->method(),
-            'uri' => $request->getPathInfo(),
-            'query' => $request->query->all(),
-            'body' => $request->except(['password', 'token', 'secret']),
-        ];
-
-        $normalized = $this->normalizePayload($data);
-        $json = json_encode($normalized);
-        $hash = 'sha256-' . hash('sha256', $json);
-
-        return new RequestFingerprint($hash);
-    }
-
-    private function normalizePayload(array $data): array
-    {
-        $normalized = [];
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                $normalized[$key] = $this->normalizePayload($value);
-            } elseif (is_object($value)) {
-                $normalized[$key] = $this->normalizePayload((array) $value);
-            } else {
-                $normalized[$key] = $value;
-            }
-        }
-
-        ksort($normalized);
-        return $normalized;
+        return new JsonResponse([
+            'error' => $message,
+            'code' => $code,
+        ], $status);
     }
 }

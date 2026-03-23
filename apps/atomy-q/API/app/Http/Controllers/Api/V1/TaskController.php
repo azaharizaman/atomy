@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Models\Task as TaskModel;
@@ -17,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 use Nexus\Task\Exceptions\CircularDependencyException;
 use DomainException;
 use Nexus\Task\Enums\TaskPriority;
@@ -129,20 +131,25 @@ final class TaskController extends Controller
         return response()->json(['data' => $items]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, IdempotencyServiceInterface $idempotency): JsonResponse
     {
         $this->assertFeatureEnabled();
         $tenantId = $this->requireTenantId($request);
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'sometimes|string',
-            'project_id' => ['sometimes', 'nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
-            'assignee_ids' => 'sometimes|array',
-            'assignee_ids.*' => 'string',
-            'priority' => 'sometimes|string|in:low,medium,high,critical',
-            'due_date' => 'sometimes|nullable|date',
-        ]);
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'sometimes|string',
+                'project_id' => ['sometimes', 'nullable', Rule::exists('projects', 'id')->where('tenant_id', $tenantId)],
+                'assignee_ids' => 'sometimes|array',
+                'assignee_ids.*' => 'string',
+                'priority' => 'sometimes|string|in:low,medium,high,critical',
+                'due_date' => 'sometimes|nullable|date',
+            ]);
+        } catch (ValidationException $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        }
 
         $id = (string) \Illuminate\Support\Str::ulid();
         $task = new TaskSummary(
@@ -165,17 +172,22 @@ final class TaskController extends Controller
                     throw new \RuntimeException('Task creation failed');
                 }
                 $this->taskTenantLink->setTaskProjectId($tenantId, $id, $projectId);
+
                 return $created;
             });
         } catch (TaskNotFoundException) {
+            IdempotencyCompletion::fail($request, $idempotency);
             abort(404);
         } catch (DomainException $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
             return response()->json(['errors' => ['project_id' => [$e->getMessage()]]], 422);
         } catch (\RuntimeException $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
             abort(500, $e->getMessage());
         }
 
-        return response()->json([
+        $response = response()->json([
             'data' => [
                 'id' => $created->id,
                 'title' => $created->title,
@@ -184,6 +196,8 @@ final class TaskController extends Controller
                 'due_date' => $created->dueDate?->format(DATE_ATOM),
             ],
         ], 201);
+
+        return IdempotencyCompletion::succeed($request, $idempotency, $response);
     }
 
     public function show(Request $request, string $id): JsonResponse

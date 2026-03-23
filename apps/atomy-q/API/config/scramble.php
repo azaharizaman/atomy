@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\OpenApi\IdempotencyKeyOperationExtension;
 use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
 
 return [
@@ -134,5 +135,7 @@ return [
         RestrictedDocsAccess::class,
     ],
 
-    'extensions' => [],
+    'extensions' => [
+        IdempotencyKeyOperationExtension::class,
+    ],
 ];

@@ -7,58 +7,68 @@ namespace Nexus\Laravel\Idempotency\Providers;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Nexus\Idempotency\Contracts\IdempotencyClockInterface;
+use Nexus\Idempotency\Contracts\IdempotencyPersistInterface;
+use Nexus\Idempotency\Contracts\IdempotencyQueryInterface;
 use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 use Nexus\Idempotency\Contracts\IdempotencyStoreInterface;
+use Nexus\Idempotency\Domain\IdempotencyPolicy;
+use Nexus\Idempotency\Services\IdempotencyService;
 use Nexus\Laravel\Idempotency\Adapters\DatabaseIdempotencyStore;
 use Nexus\Laravel\Idempotency\Clock\LaravelIdempotencyClock;
+use Nexus\Laravel\Idempotency\Console\Commands\IdempotencyCleanupCommand;
 use Nexus\Laravel\Idempotency\Http\IdempotencyMiddleware;
-use Nexus\Laravel\Idempotency\Models\IdempotencyRecord;
 use Nexus\Laravel\Idempotency\Support\IdempotencyPolicyFactory;
+use Nexus\Laravel\Idempotency\Support\RequestFingerprintFactory;
 
 final class IdempotencyAdapterServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(
-            __DIR__ . '/../../config/nexus-idempotency.php',
-            'nexus-idempotency'
-        );
+        $this->mergeConfigFrom(__DIR__ . '/../../config/nexus-idempotency.php', 'nexus-idempotency');
+
+        $this->app->singleton(DatabaseIdempotencyStore::class);
+        $this->app->singleton(IdempotencyStoreInterface::class, static fn ($app) => $app->make(DatabaseIdempotencyStore::class));
+        $this->app->singleton(IdempotencyQueryInterface::class, static fn ($app) => $app->make(IdempotencyStoreInterface::class));
+        $this->app->singleton(IdempotencyPersistInterface::class, static fn ($app) => $app->make(IdempotencyStoreInterface::class));
 
         $this->app->singleton(IdempotencyClockInterface::class, LaravelIdempotencyClock::class);
-
         $this->app->singleton(IdempotencyPolicyFactory::class);
+        $this->app->singleton(RequestFingerprintFactory::class);
 
-        $this->app->singleton(IdempotencyStoreInterface::class, function ($app) {
-            $store = config('nexus-idempotency.store', 'database');
-            
-            if ($store === 'database') {
-                return new DatabaseIdempotencyStore(
-                    new IdempotencyRecord()
-                );
-            }
+        $this->app->singleton(IdempotencyPolicy::class, function ($app): IdempotencyPolicy {
+            /** @var array<string, mixed> $policy */
+            $policy = $app['config']->get('nexus-idempotency.policy', []);
 
-            throw new \RuntimeException("Unsupported idempotency store: {$store}");
+            return $app->make(IdempotencyPolicyFactory::class)->make($policy);
         });
 
-        $this->app->singleton(IdempotencyServiceInterface::class, function ($app) {
-            $store = $app->make(IdempotencyStoreInterface::class);
-            
-            return new \Nexus\Idempotency\Services\IdempotencyService(
-                $store,
-                $store,
+        $this->app->singleton(IdempotencyServiceInterface::class, function ($app): IdempotencyServiceInterface {
+            return new IdempotencyService(
+                $app->make(IdempotencyQueryInterface::class),
+                $app->make(IdempotencyPersistInterface::class),
                 $app->make(IdempotencyClockInterface::class),
-                $app->make(IdempotencyPolicyFactory::class)->make()
+                $app->make(IdempotencyPolicy::class),
             );
         });
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                IdempotencyCleanupCommand::class,
+            ]);
+        }
     }
 
     public function boot(): void
     {
+        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+
+        $this->publishes([
+            __DIR__ . '/../../database/migrations' => database_path('migrations'),
+        ], 'nexus-idempotency-migrations');
+
         $this->publishes([
             __DIR__ . '/../../config/nexus-idempotency.php' => config_path('nexus-idempotency.php'),
-        ], 'config');
-
-        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+        ], 'nexus-idempotency-config');
 
         if (config('nexus-idempotency.middleware.enabled', true)) {
             $router = $this->app->make(Router::class);

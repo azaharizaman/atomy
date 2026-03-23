@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api\Notifications;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Nexus\Laravel\Notifier\Jobs\SendEmailNotificationJob;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
@@ -12,8 +11,6 @@ use Tests\TestCase;
 
 final class PostmarkQueueTest extends TestCase
 {
-    use RefreshDatabase;
-
     public function test_notification_manager_queues_email_job_for_welcome_notification(): void
     {
         Queue::fake();
@@ -26,11 +23,11 @@ final class PostmarkQueueTest extends TestCase
             public function getNotificationEmail(): ?string { return 'user@example.com'; }
             public function getNotificationPhone(): ?string { return null; }
             public function getNotificationDeviceTokens(): array { return []; }
-            public function getNotificationLocale(): ?string { return 'en'; }
-            public function getNotificationTimezone(): ?string { return 'UTC'; }
+            public function getNotificationLocale(): string { return 'en'; }
+            public function getNotificationTimezone(): string { return 'UTC'; }
         };
 
-        $notification = new class extends \Nexus\Notifier\Services\AbstractNotification {
+        $notification = new readonly class extends \Nexus\Notifier\Services\AbstractNotification {
             public function toEmail(): array {
                 return [
                     'subject' => 'Welcome to Atomy',
@@ -38,9 +35,9 @@ final class PostmarkQueueTest extends TestCase
                     'data' => ['temporary_password' => 'temp-pass'],
                 ];
             }
-            public function toSms(): ?string { return null; }
-            public function toPush(): ?array { return null; }
-            public function toInApp(): ?array { return null; }
+            public function toSms(): string { return ''; }
+            public function toPush(): array { return ['title' => '', 'body' => '']; }
+            public function toInApp(): array { return ['title' => '', 'message' => '']; }
         };
 
         $notifier->send($recipient, $notification);

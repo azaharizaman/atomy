@@ -16,9 +16,12 @@
 
 ## Deferred
 
-- Database / Redis adapters (Layer 3)
-- HTTP `Idempotency-Key` handling (Layer 3)
+- Redis-backed store (optional Layer 3)
 - Distributed locks (Layer 2/3)
+
+## Layer 3
+
+- **`nexus/laravel-idempotency-adapter`** (`adapters/Laravel/Idempotency/`): `DatabaseIdempotencyStore`, `IdempotencyMiddleware`, cleanup command, `ReplayResponseFactoryInterface`. Consumed by Atomy-Q API with `ReplayResponseFactoryInterface` bound to `App\Http\Idempotency\IdempotencyReplayResponseFactory`.
 
 ## Verification
 

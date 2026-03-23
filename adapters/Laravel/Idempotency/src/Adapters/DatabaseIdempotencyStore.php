@@ -5,107 +5,97 @@ declare(strict_types=1);
 namespace Nexus\Laravel\Idempotency\Adapters;
 
 use DateTimeImmutable;
-use Nexus\Idempotency\Contracts\IdempotencyPersistInterface;
-use Nexus\Idempotency\Contracts\IdempotencyQueryInterface;
+use DateTimeZone;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Nexus\Idempotency\Contracts\IdempotencyStoreInterface;
 use Nexus\Idempotency\Domain\ClaimPendingResult;
 use Nexus\Idempotency\Domain\IdempotencyRecord;
 use Nexus\Idempotency\Enums\IdempotencyRecordStatus;
+use Nexus\Idempotency\Exceptions\IdempotencyCompletionException;
 use Nexus\Idempotency\ValueObjects\AttemptToken;
 use Nexus\Idempotency\ValueObjects\ClientKey;
 use Nexus\Idempotency\ValueObjects\OperationRef;
 use Nexus\Idempotency\ValueObjects\RequestFingerprint;
 use Nexus\Idempotency\ValueObjects\ResultEnvelope;
 use Nexus\Idempotency\ValueObjects\TenantId;
-use Nexus\Laravel\Idempotency\Models\IdempotencyRecord as EloquentModel;
 
 final readonly class DatabaseIdempotencyStore implements IdempotencyStoreInterface
 {
-    public function __construct(
-        private readonly EloquentModel $model
-    ) {}
+    private const TABLE = 'nexus_idempotency_records';
 
     public function find(
         TenantId $tenantId,
         OperationRef $operationRef,
         ClientKey $clientKey,
     ): ?IdempotencyRecord {
-        $record = $this->model
+        $row = DB::table(self::TABLE)
             ->where('tenant_id', $tenantId->value)
             ->where('operation_ref', $operationRef->value)
             ->where('client_key', $clientKey->value)
             ->first();
 
-        if ($record === null) {
+        if ($row === null) {
             return null;
         }
 
-        return $this->toDomainRecord($record);
+        return $this->rowToDomain($row);
     }
 
     public function claimPending(IdempotencyRecord $newRecordIfAbsent): ClaimPendingResult
     {
         $now = $newRecordIfAbsent->createdAt;
-        $expiresAt = $this->calculateExpiresAt($now);
+        $values = [
+            'tenant_id' => $newRecordIfAbsent->tenantId->value,
+            'operation_ref' => $newRecordIfAbsent->operationRef->value,
+            'client_key' => $newRecordIfAbsent->clientKey->value,
+            'request_fingerprint' => $newRecordIfAbsent->fingerprint->value,
+            'attempt_token' => $newRecordIfAbsent->attemptToken->value,
+            'status' => $newRecordIfAbsent->status->value,
+            'result_envelope' => null,
+            'created_at' => $this->formatUtc($now),
+            'last_transition_at' => $this->formatUtc($newRecordIfAbsent->lastTransitionAt),
+        ];
 
-        $this->model->unguarded(function () use ($newRecordIfAbsent, $expiresAt) {
-            return $this->model->upsert(
-                [
-                    'tenant_id' => $newRecordIfAbsent->tenantId->value,
-                    'operation_ref' => $newRecordIfAbsent->operationRef->value,
-                    'client_key' => $newRecordIfAbsent->clientKey->value,
-                    'request_fingerprint' => $newRecordIfAbsent->fingerprint->value,
-                    'attempt_token' => $newRecordIfAbsent->attemptToken->value,
-                    'status' => IdempotencyRecordStatus::Pending->value,
-                    'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
-                    'created_at' => $newRecordIfAbsent->createdAt->format('Y-m-d H:i:s'),
-                    'updated_at' => $newRecordIfAbsent->lastTransitionAt->format('Y-m-d H:i:s'),
-                ],
-                ['tenant_id', 'operation_ref', 'client_key'],
-                [
-                    'request_fingerprint' => $newRecordIfAbsent->fingerprint->value,
-                    'attempt_token' => $newRecordIfAbsent->attemptToken->value,
-                    'status' => IdempotencyRecordStatus::Pending->value,
-                    'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
-                    'updated_at' => $newRecordIfAbsent->lastTransitionAt->format('Y-m-d H:i:s'),
-                ]
-            );
-        });
+        DB::table(self::TABLE)->insertOrIgnore($values);
 
         $existing = $this->find(
             $newRecordIfAbsent->tenantId,
             $newRecordIfAbsent->operationRef,
-            $newRecordIfAbsent->clientKey
+            $newRecordIfAbsent->clientKey,
         );
-
         if ($existing === null) {
-            throw new \RuntimeException('Failed to find or create idempotency record');
+            throw IdempotencyCompletionException::wrongState(
+                'Idempotency claim failed: row missing after insert attempt.'
+            );
         }
 
-        $claimedNew = $existing->fingerprint->value === $newRecordIfAbsent->fingerprint->value
-            && $existing->attemptToken->value === $newRecordIfAbsent->attemptToken->value;
+        if ($existing->attemptToken->value === $newRecordIfAbsent->attemptToken->value) {
+            return new ClaimPendingResult(true, $existing);
+        }
 
-        return new ClaimPendingResult($claimedNew, $existing);
+        return new ClaimPendingResult(false, $existing);
     }
 
     public function save(IdempotencyRecord $record): void
     {
-        $eloquent = $this->model
+        $payload = [
+            'request_fingerprint' => $record->fingerprint->value,
+            'attempt_token' => $record->attemptToken->value,
+            'status' => $record->status->value,
+            'result_envelope' => $record->resultEnvelope?->payload,
+            'last_transition_at' => $this->formatUtc($record->lastTransitionAt),
+        ];
+
+        $updated = DB::table(self::TABLE)
             ->where('tenant_id', $record->tenantId->value)
             ->where('operation_ref', $record->operationRef->value)
             ->where('client_key', $record->clientKey->value)
-            ->firstOrFail();
+            ->update($payload);
 
-        $eloquent->status = $record->status->value;
-        $eloquent->attempt_token = $record->attemptToken->value;
-        $eloquent->request_fingerprint = $record->fingerprint->value;
-        $eloquent->result_envelope = $record->resultEnvelope?->value;
-
-        $ttl = $this->isTerminalStatus($record->status) 
-            ? $this->getExpireCompletedAfterSeconds() 
-            : $this->getPendingTtlSeconds();
-        $eloquent->expires_at = $record->lastTransitionAt->modify('+' . $ttl . ' seconds');
-        $eloquent->save();
+        if ($updated === 0) {
+            throw IdempotencyCompletionException::wrongState('Idempotency save affected zero rows.');
+        }
     }
 
     public function delete(
@@ -113,46 +103,45 @@ final readonly class DatabaseIdempotencyStore implements IdempotencyStoreInterfa
         OperationRef $operationRef,
         ClientKey $clientKey,
     ): void {
-        $this->model
+        DB::table(self::TABLE)
             ->where('tenant_id', $tenantId->value)
             ->where('operation_ref', $operationRef->value)
             ->where('client_key', $clientKey->value)
             ->delete();
     }
 
-    private function toDomainRecord(EloquentModel $model): IdempotencyRecord
+    private function rowToDomain(object $row): IdempotencyRecord
     {
+        $status = IdempotencyRecordStatus::tryFrom((string) $row->status);
+        if ($status === null) {
+            throw IdempotencyCompletionException::wrongState('Unknown idempotency status in storage: ' . (string) $row->status);
+        }
+
+        $resultEnvelope = null;
+        if (isset($row->result_envelope) && $row->result_envelope !== null && $row->result_envelope !== '') {
+            $resultEnvelope = new ResultEnvelope((string) $row->result_envelope);
+        }
+
         return new IdempotencyRecord(
-            new TenantId($model->tenant_id),
-            new OperationRef($model->operation_ref),
-            new ClientKey($model->client_key),
-            IdempotencyRecordStatus::from($model->status),
-            new RequestFingerprint($model->request_fingerprint),
-            new AttemptToken($model->attempt_token),
-            $model->result_envelope !== null ? new ResultEnvelope($model->result_envelope) : null,
-            new DateTimeImmutable($model->created_at),
-            new DateTimeImmutable($model->updated_at),
+            new TenantId((string) $row->tenant_id),
+            new OperationRef((string) $row->operation_ref),
+            new ClientKey((string) $row->client_key),
+            $status,
+            new RequestFingerprint((string) $row->request_fingerprint),
+            new AttemptToken((string) $row->attempt_token),
+            $resultEnvelope,
+            $this->parseUtc((string) $row->created_at),
+            $this->parseUtc((string) $row->last_transition_at),
         );
     }
 
-    private function calculateExpiresAt(DateTimeImmutable $now): DateTimeImmutable
+    private function formatUtc(DateTimeImmutable $at): string
     {
-        return $now->modify('+' . $this->getPendingTtlSeconds() . ' seconds');
+        return $at->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
     }
 
-    private function getPendingTtlSeconds(): int
+    private function parseUtc(string $value): DateTimeImmutable
     {
-        return config('nexus-idempotency.policy.pending_ttl_seconds', 604800);
-    }
-
-    private function getExpireCompletedAfterSeconds(): int
-    {
-        return config('nexus-idempotency.policy.expire_completed_after_seconds', 86400);
-    }
-
-    private function isTerminalStatus(IdempotencyRecordStatus $status): bool
-    {
-        return $status === IdempotencyRecordStatus::Completed 
-            || $status === IdempotencyRecordStatus::Failed;
+        return Carbon::parse($value)->utc()->toDateTimeImmutable();
     }
 }

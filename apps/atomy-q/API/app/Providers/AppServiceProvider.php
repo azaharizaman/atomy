@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
 use App\Contracts\PasswordResetServiceInterface;
 use App\Services\Identity\AtomyIdentityTokenManagerStub;
@@ -30,6 +31,8 @@ use App\Services\ProjectManagementOperations\AtomyTimelineDriftService;
 use App\Services\Task\AtomyTaskPersist;
 use App\Services\Task\AtomyTaskQuery;
 use App\Services\Tenant\RequestTenantContext;
+use App\OpenApi\IdempotencyErrorCodesDocumentTransformer;
+use Dedoc\Scramble\Scramble;
 use Illuminate\Support\ServiceProvider;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Nexus\Identity\Contracts\MfaEnrollmentServiceInterface;
@@ -60,6 +63,7 @@ use Nexus\Task\Contracts\TaskManagerInterface;
 use Nexus\Task\Contracts\TaskPersistInterface;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
+use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -68,6 +72,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(ReplayResponseFactoryInterface::class, IdempotencyReplayResponseFactory::class);
+
         $this->app->singleton(JwtServiceInterface::class, function (): JwtServiceInterface {
             $secret = (string) config('jwt.secret');
 
@@ -135,6 +141,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Scramble::configure()->withDocumentTransformers([
+            IdempotencyErrorCodesDocumentTransformer::class,
+        ]);
     }
 }
