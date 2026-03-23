@@ -118,6 +118,7 @@
             "Nexus\\Milestone\\": "packages/Milestone/src/",
             "Nexus\\PolicyEngine\\": "packages/PolicyEngine/src/",
             "Nexus\\Idempotency\\": "packages/Idempotency/src/",
+            "Nexus\\Laravel\\Idempotency\\": "adapters/Laravel/Idempotency/src/",
             "Nexus\\Outbox\\": "packages/Outbox/src/"
         }
     },
@@ -154,6 +155,7 @@
             "Nexus\\Milestone\\Tests\\": "packages/Milestone/tests/",
             "Nexus\\PolicyEngine\\Tests\\": "packages/PolicyEngine/tests/",
             "Nexus\\Idempotency\\Tests\\": "packages/Idempotency/tests/",
+            "Nexus\\Laravel\\Idempotency\\Tests\\": "adapters/Laravel/Idempotency/tests/",
             "Nexus\\Outbox\\Tests\\": "packages/Outbox/tests/"
         }
     }

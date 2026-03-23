@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\Laravel\Idempotency\Providers;
 
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Nexus\Idempotency\Contracts\IdempotencyClockInterface;
 use Nexus\Idempotency\Contracts\IdempotencyPersistInterface;
@@ -15,6 +16,7 @@ use Nexus\Idempotency\Services\IdempotencyService;
 use Nexus\Laravel\Idempotency\Adapters\DatabaseIdempotencyStore;
 use Nexus\Laravel\Idempotency\Clock\LaravelIdempotencyClock;
 use Nexus\Laravel\Idempotency\Console\Commands\IdempotencyCleanupCommand;
+use Nexus\Laravel\Idempotency\Http\IdempotencyMiddleware;
 use Nexus\Laravel\Idempotency\Support\IdempotencyPolicyFactory;
 use Nexus\Laravel\Idempotency\Support\RequestFingerprintFactory;
 
@@ -67,5 +69,10 @@ final class IdempotencyAdapterServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../../config/nexus-idempotency.php' => config_path('nexus-idempotency.php'),
         ], 'nexus-idempotency-config');
+
+        if (config('nexus-idempotency.middleware.enabled', true)) {
+            $router = $this->app->make(Router::class);
+            $router->aliasMiddleware('idempotency', IdempotencyMiddleware::class);
+        }
     }
 }
