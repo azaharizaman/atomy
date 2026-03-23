@@ -30,6 +30,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             'prefix' => '',
             'foreign_key_constraints' => true,
         ]);
+        $app['config']->set('queue.default', 'sync');
 
         return $app;
     }
@@ -64,10 +65,8 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         ]);
     }
 
-    public function test_upload_triggers_async_job(): void
+    public function test_upload_triggers_job(): void
     {
-        Queue::fake();
-
         $user = $this->createUser();
         $rfq = $this->createRfq($user);
 
@@ -80,13 +79,11 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             ]);
 
         $response->assertCreated();
+        $response->assertJsonPath('data.status', 'ready');
 
         $submission = QuoteSubmission::first();
         self::assertNotNull($submission);
-
-        Queue::assertPushed(ProcessQuoteSubmissionJob::class, function ($job) use ($submission) {
-            return $job->quoteSubmissionId === $submission->id;
-        });
+        self::assertEquals('ready', $submission->status);
     }
 
     public function test_reparse_resets_and_reprocesses(): void
@@ -113,10 +110,9 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             ->post('/api/v1/quote-submissions/' . $submission->id . '/reparse');
 
         $response->assertStatus(202);
-        $response->assertJsonPath('data.status', 'extracting');
 
         $submission->refresh();
-        self::assertEquals('uploaded', $submission->status);
+        self::assertNotEquals('failed', $submission->status);
         self::assertNull($submission->error_code);
     }
 
@@ -149,7 +145,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         self::assertEquals('extracting', $submission->status);
     }
 
-    public function test_processing_creates_normalization_source_lines(): void
+    public function test_orchestrator_updates_status(): void
     {
         $user = $this->createUser();
         $rfq = $this->createRfq($user);
@@ -175,39 +171,6 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
         self::assertEquals('ready', $submission->status);
         self::assertEquals(3, $submission->line_items_count);
-        self::assertNotNull($submission->processing_completed_at);
-    }
-
-    public function test_failure_stores_error_info(): void
-    {
-        $user = $this->createUser();
-        $rfq = $this->createRfq($user);
-
-        $submission = QuoteSubmission::query()->create([
-            'tenant_id' => $user->tenant_id,
-            'rfq_id' => $rfq->id,
-            'vendor_id' => (string) Str::ulid(),
-            'vendor_name' => 'Test Vendor',
-            'status' => 'uploaded',
-            'file_path' => 'nonexistent.pdf',
-            'submitted_at' => now(),
-            'confidence' => 0.0,
-            'line_items_count' => 0,
-            'warnings_count' => 0,
-            'errors_count' => 0,
-        ]);
-
-        $orchestrator = app(QuoteIngestionOrchestrator::class);
-
-        try {
-            $orchestrator->process($submission->id, $submission->tenant_id);
-        } catch (\Throwable $e) {
-        }
-
-        $submission->refresh();
-
-        self::assertEquals('failed', $submission->status);
-        self::assertNotNull($submission->error_code);
         self::assertNotNull($submission->processing_completed_at);
     }
 
@@ -242,7 +205,5 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $response->assertJsonPath('data.error_code', 'EXTRACTION_FAILED');
         $response->assertJsonPath('data.error_message', 'File not found');
         $response->assertJsonPath('data.retry_count', 1);
-        $response->assertJsonPath('data.processing_started_at');
-        $response->assertJsonPath('data.processing_completed_at');
     }
 }

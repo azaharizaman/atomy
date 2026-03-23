@@ -237,7 +237,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             ]);
 
         $response->assertCreated();
-        $response->assertJsonPath('data.status', 'uploaded');
+        $response->assertJsonPath('data.status', 'ready');
         $response->assertJsonPath('data.rfq_id', $rfq->id);
         $response->assertJsonPath('data.blocking_issue_count', 0);
 
@@ -246,7 +246,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'id' => $quoteId,
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
-            'status' => 'uploaded',
+            'status' => 'ready',
             'uploaded_by' => $user->id,
         ]);
     }

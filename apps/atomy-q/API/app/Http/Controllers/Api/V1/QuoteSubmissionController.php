@@ -117,6 +117,7 @@ final class QuoteSubmissionController extends Controller
         $qs->save();
 
         $this->dispatchProcessingJob($qs);
+        $qs->refresh();
 
         return response()->json([
             'data' => $this->quoteSubmissionData($qs),
