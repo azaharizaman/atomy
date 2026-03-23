@@ -8,15 +8,25 @@ use App\Models\QuoteSubmission;
 use Nexus\MachineLearning\Contracts\QuoteExtractionServiceInterface;
 use Nexus\MachineLearning\ValueObjects\QuoteExtractionResult;
 
-final class QuoteIngestionOrchestrator
+final readonly class QuoteIngestionOrchestrator
 {
     public function __construct(
         private QuoteExtractionServiceInterface $extractionService,
     ) {}
 
-    public function process(string $quoteSubmissionId): void
+    /**
+     * Process a quote submission through the full pipeline
+     *
+     * @param string $quoteSubmissionId
+     * @param string $tenantId
+     * @return void
+     */
+    public function process(string $quoteSubmissionId, string $tenantId): void
     {
-        $submission = QuoteSubmission::find($quoteSubmissionId);
+        $submission = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $quoteSubmissionId)
+            ->first();
         
         if ($submission === null) {
             return;

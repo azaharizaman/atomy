@@ -7,7 +7,7 @@ namespace Nexus\MachineLearning\Services;
 use Nexus\MachineLearning\Contracts\QuoteExtractionServiceInterface;
 use Nexus\MachineLearning\ValueObjects\QuoteExtractionResult;
 
-final class VertexAIMockProvider implements QuoteExtractionServiceInterface
+final readonly class VertexAIMockProvider implements QuoteExtractionServiceInterface
 {
     public function extract(string $filePath, string $tenantId): QuoteExtractionResult
     {
