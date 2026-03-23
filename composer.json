@@ -39,7 +39,8 @@
         "nexus/sustainability-data": "*@dev",
         "nexus/esg-regulatory": "*@dev",
         "nexus/esg-operations": "*@dev",
-        "nexus/idempotency": "*@dev"
+        "nexus/idempotency": "*@dev",
+        "nexus/quote-ingestion": "*@dev"
     },
     "repositories": [
         {
@@ -119,7 +120,8 @@
             "Nexus\\PolicyEngine\\": "packages/PolicyEngine/src/",
             "Nexus\\Idempotency\\": "packages/Idempotency/src/",
             "Nexus\\Laravel\\Idempotency\\": "adapters/Laravel/Idempotency/src/",
-            "Nexus\\Outbox\\": "packages/Outbox/src/"
+            "Nexus\\Outbox\\": "packages/Outbox/src/",
+            "Nexus\\QuoteIngestion\\": "orchestrators/QuoteIngestion/src/"
         }
     },
     "autoload-dev": {
@@ -156,7 +158,8 @@
             "Nexus\\PolicyEngine\\Tests\\": "packages/PolicyEngine/tests/",
             "Nexus\\Idempotency\\Tests\\": "packages/Idempotency/tests/",
             "Nexus\\Laravel\\Idempotency\\Tests\\": "adapters/Laravel/Idempotency/tests/",
-            "Nexus\\Outbox\\Tests\\": "packages/Outbox/tests/"
+            "Nexus\\Outbox\\Tests\\": "packages/Outbox/tests/",
+            "Nexus\\QuoteIngestion\\Tests\\": "orchestrators/QuoteIngestion/tests/"
         }
     }
 }

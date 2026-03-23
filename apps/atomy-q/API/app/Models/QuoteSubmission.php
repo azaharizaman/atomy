@@ -34,6 +34,12 @@ class QuoteSubmission extends Model
         'line_items_count',
         'warnings_count',
         'errors_count',
+        'error_code',
+        'error_message',
+        'processing_started_at',
+        'processing_completed_at',
+        'parsed_at',
+        'retry_count',
     ];
 
     protected $casts = [
@@ -41,6 +47,10 @@ class QuoteSubmission extends Model
         'submitted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'processing_started_at' => 'datetime',
+        'processing_completed_at' => 'datetime',
+        'parsed_at' => 'datetime',
+        'retry_count' => 'integer',
     ];
 
     /**

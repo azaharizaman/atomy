@@ -64,6 +64,9 @@ use Nexus\Task\Contracts\TaskPersistInterface;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
+use Nexus\MachineLearning\Contracts\QuoteExtractionServiceInterface;
+use Nexus\MachineLearning\Services\VertexAIMockProvider;
+use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -73,6 +76,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ReplayResponseFactoryInterface::class, IdempotencyReplayResponseFactory::class);
+
+        // Nexus MachineLearning: Quote extraction mock for Alpha testing.
+        $this->app->singleton(QuoteExtractionServiceInterface::class, VertexAIMockProvider::class);
+
+        // Nexus QuoteIngestion: Orchestrator for quote submission processing.
+        $this->app->singleton(QuoteIngestionOrchestrator::class);
 
         $this->app->singleton(JwtServiceInterface::class, function (): JwtServiceInterface {
             $secret = (string) config('jwt.secret');

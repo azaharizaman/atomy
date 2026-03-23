@@ -58,6 +58,7 @@
         "nexus/connector": "*@dev",
         "nexus/scheduler": "*@dev",
         "nexus/machine-learning": "*@dev",
+        "nexus/quote-ingestion": "*@dev",
         "nexus/workflow": "*@dev",
         "nexus/messaging": "*@dev",
 
