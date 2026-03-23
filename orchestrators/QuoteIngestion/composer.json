@@ -1,0 +1,25 @@
+{
+    "name": "nexus/quote-ingestion",
+    "description": "Quote ingestion orchestration - extraction, normalization, persistence",
+    "type": "library",
+    "require": {
+        "php": "^8.3",
+        "nexus/machine-learning": "*@dev",
+        "laravel/framework": "^11.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\QuoteIngestion\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\QuoteIngestion\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
