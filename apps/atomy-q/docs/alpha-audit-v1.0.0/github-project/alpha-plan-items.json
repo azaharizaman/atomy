@@ -1,0 +1,242 @@
+[
+  {
+    "day": 1,
+    "week": "W1",
+    "theme": "Foundation",
+    "target_date": "2026-03-23",
+    "title": "[Alpha W1 \u00b7 D01] P0 triage & ownership",
+    "body": "## Alpha plan (Day 1)\n\n**Week:** W1\n**Theme:** Foundation\n**Target date:** 2026-03-23\n\n### Focus\nImport P0/P1 from ALPHA_RELEASE_AUDIT; RACI; API contract sync (auth, tenant_id, errors); branch/tag strategy; PG/Redis/S3 inventory; internal Alpha one-pager; IR risk register (no external comms).\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-1.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-1.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 2,
+    "week": "W1",
+    "theme": "Foundation",
+    "target_date": "2026-03-24",
+    "title": "[Alpha W1 \u00b7 D02] Fix Next.js production build",
+    "body": "## Alpha plan (Day 2)\n\n**Week:** W1\n**Theme:** Foundation\n**Target date:** 2026-03-24\n\n### Focus\nWEB: HorizontalProcessTrack aria-label TS fix. CI: npm ci + build. Pin Node in .nvmrc/engines if needed.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-1.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-1.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 3,
+    "week": "W1",
+    "theme": "Foundation",
+    "target_date": "2026-03-25",
+    "title": "[Alpha W1 \u00b7 D03] Tenants table migration",
+    "body": "## Alpha plan (Day 3)\n\n**Week:** W1\n**Theme:** Foundation\n**Target date:** 2026-03-25\n\n### Focus\nMigration create_tenants; optional users FK follow-up. Backup-before-migrate note. Integration: tenant as top-level object. Verify: php artisan migrate.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-1.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-1.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 4,
+    "week": "W1",
+    "theme": "Foundation",
+    "target_date": "2026-03-26",
+    "title": "[Alpha W1 \u00b7 D04] Align seeder with tenants",
+    "body": "## Alpha plan (Day 4)\n\n**Week:** W1\n**Theme:** Foundation\n**Target date:** 2026-03-26\n\n### Focus\nPetrochemicalTenantSeeder inserts tenant row before users/RFQs. Postman seed tenant id. Staging: migrate + seed.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-1.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-1.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 5,
+    "week": "W1",
+    "theme": "Foundation",
+    "target_date": "2026-03-27",
+    "title": "[Alpha W1 \u00b7 D05] Create tenant API (minimal)",
+    "body": "## Alpha plan (Day 5)\n\n**Week:** W1\n**Theme:** Foundation\n**Target date:** 2026-03-27\n\n### Focus\nPOST /api/v1/tenants (or admin). Feature flag if needed. Rate limit. Marketing: invite-only vs self-serve. Tests: feature/API.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-1.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-1.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 6,
+    "week": "W1",
+    "theme": "Foundation",
+    "target_date": "2026-03-28",
+    "title": "[Alpha W1 \u00b7 D06] Register flow (optional)",
+    "body": "## Alpha plan (Day 6)\n\n**Week:** W1\n**Theme:** Foundation\n**Target date:** 2026-03-28\n\n### Focus\nOpen registration vs invite-only \u2014 product decision. AuthController register; anti-enumeration. Email verification doc. Marketing copy.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-1.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-1.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 7,
+    "week": "W1",
+    "theme": "Foundation",
+    "target_date": "2026-03-29",
+    "title": "[Alpha W1 \u00b7 D07] VendorController real DB",
+    "body": "## Alpha plan (Day 7)\n\n**Week:** W1\n**Theme:** Foundation\n**Target date:** 2026-03-29\n\n### Focus\nReplace stubs: vendors table or aggregate + tenant scope. CRM-stable JSON. Two-tenant isolation tests.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-1.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-1.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 8,
+    "week": "W2",
+    "theme": "Golden-path API",
+    "target_date": "2026-03-30",
+    "title": "[Alpha W2 \u00b7 D08] Normalization GET endpoints",
+    "body": "## Alpha plan (Day 8)\n\n**Week:** W2\n**Theme:** Golden-path API\n**Target date:** 2026-03-30\n\n### Focus\nnormalization source-lines + normalized-items return real rows. OpenAPI/Scramble. Staging EXPLAIN. WEB mocks off.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-2.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-2.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 9,
+    "week": "W2",
+    "theme": "Golden-path API",
+    "target_date": "2026-03-31",
+    "title": "[Alpha W2 \u00b7 D09] RFQ duplicate (real)",
+    "body": "## Alpha plan (Day 9)\n\n**Week:** W2\n**Theme:** Golden-path API\n**Target date:** 2026-03-31\n\n### Focus\nTransaction copy RFQ + lines; new ULIDs; idempotency tests. Document Idempotency-Key on duplicate.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-2.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-2.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 10,
+    "week": "W2",
+    "theme": "Golden-path API",
+    "target_date": "2026-04-01",
+    "title": "[Alpha W2 \u00b7 D10] saveDraft & bulkAction",
+    "body": "## Alpha plan (Day 10)\n\n**Week:** W2\n**Theme:** Golden-path API\n**Target date:** 2026-04-01\n\n### Focus\nPersist draft; tenant-scoped bulk; rate limit bulk. Cross-tenant negative tests.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-2.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-2.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 11,
+    "week": "W2",
+    "theme": "Golden-path API",
+    "target_date": "2026-04-02",
+    "title": "[Alpha W2 \u00b7 D11] Vendor invitation remind",
+    "body": "## Alpha plan (Day 11)\n\n**Week:** W2\n**Theme:** Golden-path API\n**Target date:** 2026-04-02\n\n### Focus\nLoad invitation by tenant+rfq+id; 404 mismatch; reminded_at. Email optional: queue + template + mail fake.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-2.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-2.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 12,
+    "week": "W2",
+    "theme": "Golden-path API",
+    "target_date": "2026-04-03",
+    "title": "[Alpha W2 \u00b7 D12] Quote reparse \u2192 queue",
+    "body": "## Alpha plan (Day 12)\n\n**Week:** W2\n**Theme:** Golden-path API\n**Target date:** 2026-04-03\n\n### Focus\nShouldQueue job; 202 + poll contract. Staging queue worker. Redis. Marketing: processing UX.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-2.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-2.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 13,
+    "week": "W2",
+    "theme": "Golden-path API",
+    "target_date": "2026-04-04",
+    "title": "[Alpha W2 \u00b7 D13] AI provider configuration",
+    "body": "## Alpha plan (Day 13)\n\n**Week:** W2\n**Theme:** Golden-path API\n**Target date:** 2026-04-04\n\n### Focus\nOPENAI_* env; config/services; secrets; egress; legal data residency. No key logging.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-2.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-2.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 14,
+    "week": "W2",
+    "theme": "Golden-path API",
+    "target_date": "2026-04-05",
+    "title": "[Alpha W2 \u00b7 D14] AI extraction wired (one path)",
+    "body": "## Alpha plan (Day 14)\n\n**Week:** W2\n**Theme:** Golden-path API\n**Target date:** 2026-04-05\n\n### Focus\nquotation-intelligence or ML in job; HTTP fake in CI; FEATURE_AI_EXTRACTION staging. Marketing one approved sentence.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-2.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-2.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 15,
+    "week": "W3",
+    "theme": "AI + Awards + mocks",
+    "target_date": "2026-04-06",
+    "title": "[Alpha W3 \u00b7 D15] Populate NormalizationSourceLine",
+    "body": "## Alpha plan (Day 15)\n\n**Week:** W3\n**Theme:** AI + Awards + mocks\n**Target date:** 2026-04-06\n\n### Focus\nMap extraction \u2192 source lines; conflicts; chunking large files; temp disk cleanup.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-3.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-3.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 16,
+    "week": "W3",
+    "theme": "AI + Awards + mocks",
+    "target_date": "2026-04-07",
+    "title": "[Alpha W3 \u00b7 D16] Normalization errors & UX",
+    "body": "## Alpha plan (Day 16)\n\n**Week:** W3\n**Theme:** AI + Awards + mocks\n**Target date:** 2026-04-07\n\n### Focus\nStructured API errors; retries; alerts; logs; Marketing FAQ; IR AI risk.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-3.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-3.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 17,
+    "week": "W3",
+    "theme": "AI + Awards + mocks",
+    "target_date": "2026-04-08",
+    "title": "[Alpha W3 \u00b7 D17] Comparison preview (persist or cut)",
+    "body": "## Alpha plan (Day 17)\n\n**Week:** W3\n**Theme:** AI + Awards + mocks\n**Target date:** 2026-04-08\n\n### Focus\nOption A persist preview runs or B remove from UI; OpenAPI + product sign-off.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-3.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-3.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 18,
+    "week": "W3",
+    "theme": "AI + Awards + mocks",
+    "target_date": "2026-04-09",
+    "title": "[Alpha W3 \u00b7 D18] Matrix endpoint from snapshot",
+    "body": "## Alpha plan (Day 18)\n\n**Week:** W3\n**Theme:** AI + Awards + mocks\n**Target date:** 2026-04-09\n\n### Focus\nGET comparison-runs/{id}/matrix from snapshot; export-stable JSON; demo script.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-3.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-3.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 19,
+    "week": "W3",
+    "theme": "AI + Awards + mocks",
+    "target_date": "2026-04-10",
+    "title": "[Alpha W3 \u00b7 D19] AwardController store + index",
+    "body": "## Alpha plan (Day 19)\n\n**Week:** W3\n**Theme:** AI + Awards + mocks\n**Target date:** 2026-04-10\n\n### Focus\nTenant-scoped awards; API tests; Marketing Award vs Winner copy.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-3.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-3.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 20,
+    "week": "W3",
+    "theme": "AI + Awards + mocks",
+    "target_date": "2026-04-11",
+    "title": "[Alpha W3 \u00b7 D20] WEB award UI + API",
+    "body": "## Alpha plan (Day 20)\n\n**Week:** W3\n**Theme:** AI + Awards + mocks\n**Target date:** 2026-04-11\n\n### Focus\nRemove seed path; E2E staging live API; internal demo video; IR snippet.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-3.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-3.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 21,
+    "week": "W3",
+    "theme": "AI + Awards + mocks",
+    "target_date": "2026-04-12",
+    "title": "[Alpha W3 \u00b7 D21] Remove mock fallbacks",
+    "body": "## Alpha plan (Day 21)\n\n**Week:** W3\n**Theme:** AI + Awards + mocks\n**Target date:** 2026-04-12\n\n### Focus\nFail loud on API errors; env audit; integrator changelog; Marketing no mock prod.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-3.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-3.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 22,
+    "week": "W4",
+    "theme": "Release candidate",
+    "target_date": "2026-04-13",
+    "title": "[Alpha W4 \u00b7 D22] CORS & environment matrix",
+    "body": "## Alpha plan (Day 22)\n\n**Week:** W4\n**Theme:** Release candidate\n**Target date:** 2026-04-13\n\n### Focus\nProduction origins; APP_URL vs NEXT_PUBLIC_APP_URL; cookie consent note; browser smoke.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-4.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 23,
+    "week": "W4",
+    "theme": "Release candidate",
+    "target_date": "2026-04-14",
+    "title": "[Alpha W4 \u00b7 D23] Identity stubs: ADR",
+    "body": "## Alpha plan (Day 23)\n\n**Week:** W4\n**Theme:** Release candidate\n**Target date:** 2026-04-14\n\n### Focus\nReplace stubs or document JWT-only Alpha; security sign-off; Marketing role claims.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-4.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 24,
+    "week": "W4",
+    "theme": "Release candidate",
+    "target_date": "2026-04-15",
+    "title": "[Alpha W4 \u00b7 D24] Queue workers (production)",
+    "body": "## Alpha plan (Day 24)\n\n**Week:** W4\n**Theme:** Release candidate\n**Target date:** 2026-04-15\n\n### Focus\nsystemd/supervisor; drain on deploy; SLA note to partners; IR ops narrative.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-4.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 25,
+    "week": "W4",
+    "theme": "Release candidate",
+    "target_date": "2026-04-16",
+    "title": "[Alpha W4 \u00b7 D25] S3 production",
+    "body": "## Alpha plan (Day 25)\n\n**Week:** W4\n**Theme:** Release candidate\n**Target date:** 2026-04-16\n\n### Focus\nPrivate bucket; presigned URLs; lifecycle; encryption; IR data handling.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-4.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 26,
+    "week": "W4",
+    "theme": "Release candidate",
+    "target_date": "2026-04-17",
+    "title": "[Alpha W4 \u00b7 D26] Staging deploy + regression",
+    "body": "## Alpha plan (Day 26)\n\n**Week:** W4\n**Theme:** Release candidate\n**Target date:** 2026-04-17\n\n### Focus\nFull test matrix; rc-1 tag; partner smoke; cohort schedule; IR milestone date.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-4.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 27,
+    "week": "W4",
+    "theme": "Release candidate",
+    "target_date": "2026-04-18",
+    "title": "[Alpha W4 \u00b7 D27] Performance hot paths",
+    "body": "## Alpha plan (Day 27)\n\n**Week:** W4\n**Theme:** Release candidate\n**Target date:** 2026-04-18\n\n### Focus\nN+1 audit; rate limit docs; CDN; no unverified benchmark claims.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-4.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 28,
+    "week": "W4",
+    "theme": "Release candidate",
+    "target_date": "2026-04-19",
+    "title": "[Alpha W4 \u00b7 D28] Security: tenant isolation",
+    "body": "## Alpha plan (Day 28)\n\n**Week:** W4\n**Theme:** Release candidate\n**Target date:** 2026-04-19\n\n### Focus\n404 cross-tenant; regression tests; WAF optional; IR SOC2 honesty.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-4.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 29,
+    "week": "W5",
+    "theme": "Launch + comms",
+    "target_date": "2026-04-20",
+    "title": "[Alpha W5 \u00b7 D29] Release freeze + runbook",
+    "body": "## Alpha plan (Day 29)\n\n**Week:** W5\n**Theme:** Launch + comms\n**Target date:** 2026-04-20\n\n### Focus\nCode freeze; tag alpha-1.0.0; changelog; partner release pack; go/no-go; on-call alerts.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-5.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-5.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  },
+  {
+    "day": 30,
+    "week": "W5",
+    "theme": "Launch + comms",
+    "target_date": "2026-04-21",
+    "title": "[Alpha W5 \u00b7 D30] Alpha deployed + comms",
+    "body": "## Alpha plan (Day 30)\n\n**Week:** W5\n**Theme:** Launch + comms\n**Target date:** 2026-04-21\n\n### Focus\nProd deploy; golden path smoke; partner go-live email; cohort launch; investor update; 48h watch.\n\n### Docs\n- [PLAN-INDEX.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md)\n- [PLAN-WEEK-5.md](https://github.com/azaharizaman/atomy/blob/main/apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-5.md)\n\n### Tracks (edit in project)\nSet **Primary track** to: Engineering \u00b7 Integration \u00b7 Deployment \u00b7 Infra \u00b7 Marketing \u00b7 IR \u00b7 Product \u2014 or use **Assignees** for ownership.\n"
+  }
+]

@@ -43,4 +43,10 @@ Each week document is structured for:
 
 ---
 
+## GitHub Project import
+
+To create **draft items** on [Project #4](https://github.com/users/azaharizaman/projects/4) (week, theme, target date, primary track), see [`github-project/README.md`](./github-project/README.md) and run `github-project/bootstrap-alpha-project.sh` after `gh auth refresh -s read:project -s project`.
+
+---
+
 *Version: 1.0.0 — aligned with ALPHA_RELEASE_AUDIT.md*
