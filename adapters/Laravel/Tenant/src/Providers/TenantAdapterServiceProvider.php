@@ -19,6 +19,7 @@ use Nexus\Laravel\Tenant\Adapters\TenantValidationAdapter;
 use Nexus\Laravel\Tenant\Adapters\CacheRepositoryAdapter;
 use Nexus\Laravel\Tenant\Adapters\EventDispatcherAdapter;
 use Nexus\Laravel\Tenant\Adapters\ImpersonationStorageAdapter;
+use Nexus\Laravel\Tenant\Jobs\TenantPurgeJob;
 
 /**
  * Laravel Service Provider for Tenant package adapters.
@@ -91,6 +92,13 @@ class TenantAdapterServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register console commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                TenantPurgeJob::class,
+            ]);
+        }
+
         // Publish configuration if needed
         $this->publishes([
             __DIR__ . '/../../config/tenant-adapter.php' => config_path('tenant-adapter.php'),
