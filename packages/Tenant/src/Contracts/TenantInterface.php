@@ -239,4 +239,18 @@ interface TenantInterface
      * @return \DateTimeInterface|null
      */
     public function getDeletedAt(): ?\DateTimeInterface;
+
+    /**
+     * Get the retention hold timestamp (for queued deletion).
+     *
+     * @return \DateTimeInterface|null
+     */
+    public function getRetentionHoldUntil(): ?\DateTimeInterface;
+
+    /**
+     * Check if tenant is queued for deletion.
+     *
+     * @return bool
+     */
+    public function isQueuedForDeletion(): bool;
 }
