@@ -21,5 +21,5 @@ interface VerificationTokenServiceInterface
      */
     public function validate(string $token): ?array;
 
-    public function invalidateForUser(string $userId): void;
+    public function invalidateForUser(string $userId, string $tenantId): void;
 }

@@ -7,17 +7,26 @@ namespace Nexus\Laravel\Identity\Adapters;
 use App\Models\User as UserModel;
 use Illuminate\Support\Facades\DB;
 use Nexus\Laravel\Identity\Mappers\LaravelUserMapper;
+use Nexus\Laravel\Identity\ValueObjects\UserPermissionDTO;
+use Nexus\Laravel\Identity\ValueObjects\UserRoleDTO;
 use Nexus\Identity\Contracts\PermissionInterface;
 use Nexus\Identity\Contracts\RoleInterface;
 use Nexus\Identity\Contracts\UserInterface;
 use Nexus\Identity\Contracts\UserQueryInterface;
 use Nexus\Identity\Exceptions\UserNotFoundException;
+use Nexus\Identity\ValueObjects\RoleEnum;
 
 final readonly class UserQueryAdapter implements UserQueryInterface
 {
-    public function findById(string $id): UserInterface
+    public function findById(string $id, ?string $tenantId = null): UserInterface
     {
-        $user = UserModel::query()->find($id);
+        $query = UserModel::query()->whereKey($id);
+
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $user = $query->first();
 
         if ($user === null) {
             throw new UserNotFoundException($id);
@@ -40,13 +49,17 @@ final readonly class UserQueryAdapter implements UserQueryInterface
         return LaravelUserMapper::fromModel($user);
     }
 
-    public function findByEmail(string $email): UserInterface
+    public function findByEmail(string $email, ?string $tenantId = null): UserInterface
     {
         $normalizedEmail = strtolower(trim($email));
 
-        $user = UserModel::query()
-            ->where('email', $normalizedEmail)
-            ->first();
+        $query = UserModel::query()->where('email', $normalizedEmail);
+
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $user = $query->first();
 
         if ($user === null) {
             throw new UserNotFoundException("email:{$email}");
@@ -55,13 +68,17 @@ final readonly class UserQueryAdapter implements UserQueryInterface
         return LaravelUserMapper::fromModel($user);
     }
 
-    public function findByEmailOrNull(string $email): ?UserInterface
+    public function findByEmailOrNull(string $email, ?string $tenantId = null): ?UserInterface
     {
         $normalizedEmail = strtolower(trim($email));
 
-        $user = UserModel::query()
-            ->where('email', $normalizedEmail)
-            ->first();
+        $query = UserModel::query()->where('email', $normalizedEmail);
+
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $user = $query->first();
 
         if ($user === null) {
             return null;
@@ -70,11 +87,15 @@ final readonly class UserQueryAdapter implements UserQueryInterface
         return LaravelUserMapper::fromModel($user);
     }
 
-    public function emailExists(string $email, ?string $excludeUserId = null): bool
+    public function emailExists(string $email, ?string $excludeUserId = null, ?string $tenantId = null): bool
     {
         $normalizedEmail = strtolower(trim($email));
 
         $query = UserModel::query()->where('email', $normalizedEmail);
+
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
 
         if ($excludeUserId !== null) {
             $query->whereKeyNot($excludeUserId);
@@ -83,9 +104,12 @@ final readonly class UserQueryAdapter implements UserQueryInterface
         return $query->exists();
     }
 
-    public function getUserRoles(string $userId): array
+    public function getUserRoles(string $userId, string $tenantId): array
     {
-        $user = UserModel::query()->find($userId);
+        $user = UserModel::query()
+            ->where('tenant_id', $tenantId)
+            ->whereKey($userId)
+            ->first();
 
         if ($user === null) {
             return [];
@@ -93,72 +117,26 @@ final readonly class UserQueryAdapter implements UserQueryInterface
 
         $roleId = (string) $user->role;
 
-        if ($roleId === '' || $roleId === 'user') {
+        if ($roleId === '' || $roleId === RoleEnum::USER->value) {
             return [];
         }
 
         return [
-            new class($roleId) implements RoleInterface {
-                public function __construct(private string $roleId)
-                {
-                }
-
-                public function getId(): string
-                {
-                    return $this->roleId;
-                }
-
-                public function getName(): string
-                {
-                    return $this->roleId;
-                }
-
-                public function getDescription(): ?string
-                {
-                    return null;
-                }
-
-                public function getTenantId(): ?string
-                {
-                    return null;
-                }
-
-                public function isSystemRole(): bool
-                {
-                    return in_array($this->roleId, ['admin', 'super-admin'], true);
-                }
-
-                public function isSuperAdmin(): bool
-                {
-                    return $this->roleId === 'super-admin';
-                }
-
-                public function getParentRoleId(): ?string
-                {
-                    return null;
-                }
-
-                public function getCreatedAt(): \DateTimeInterface
-                {
-                    return new \DateTimeImmutable();
-                }
-
-                public function getUpdatedAt(): \DateTimeInterface
-                {
-                    return new \DateTimeImmutable();
-                }
-
-                public function requiresMfa(): bool
-                {
-                    return $this->roleId === 'super-admin';
-                }
-            }
+            new UserRoleDTO(
+                id: $roleId,
+                tenantId: $tenantId,
+                createdAt: $user->created_at?->toImmutable(),
+                updatedAt: $user->updated_at?->toImmutable(),
+            ),
         ];
     }
 
-    public function getUserPermissions(string $userId): array
+    public function getUserPermissions(string $userId, string $tenantId): array
     {
-        $user = UserModel::query()->find($userId);
+        $user = UserModel::query()
+            ->where('tenant_id', $tenantId)
+            ->whereKey($userId)
+            ->first();
 
         if ($user === null) {
             return [];
@@ -174,80 +152,16 @@ final readonly class UserQueryAdapter implements UserQueryInterface
 
         $permissions = [];
         foreach ($permissionRecords as $record) {
-            $permissions[] = new class((string) $record->permission_id) implements PermissionInterface {
-                public function __construct(private string $permissionId)
-                {
-                }
-
-                public function getId(): string
-                {
-                    return $this->permissionId;
-                }
-
-                public function getName(): string
-                {
-                    return $this->permissionId;
-                }
-
-                public function getResource(): string
-                {
-                    $pos = strpos($this->permissionId, '.');
-
-                    return $pos !== false ? substr($this->permissionId, 0, $pos) : $this->permissionId;
-                }
-
-                public function getAction(): string
-                {
-                    $pos = strpos($this->permissionId, '.');
-
-                    return $pos !== false ? substr($this->permissionId, $pos + 1) : '*';
-                }
-
-                public function getDescription(): ?string
-                {
-                    return null;
-                }
-
-                public function isWildcard(): bool
-                {
-                    $parts = explode('.', $this->permissionId, 2);
-
-                    return isset($parts[1]) && $parts[1] === '*';
-                }
-
-                public function getCreatedAt(): \DateTimeInterface
-                {
-                    return new \DateTimeImmutable();
-                }
-
-                public function getUpdatedAt(): \DateTimeInterface
-                {
-                    return new \DateTimeImmutable();
-                }
-
-                public function matches(string $permissionName): bool
-                {
-                    if ($this->permissionId === $permissionName) {
-                        return true;
-                    }
-
-                    if ($this->isWildcard()) {
-                        $targetParts = explode('.', $permissionName, 2);
-
-                        return count($targetParts) === 2 && $targetParts[0] === $this->getResource();
-                    }
-
-                    return false;
-                }
-            };
+            $permissions[] = UserPermissionDTO::fromDatabaseRow($record);
         }
 
         return $permissions;
     }
 
-    public function findByStatus(string $status): array
+    public function findByStatus(string $status, string $tenantId): array
     {
         $users = UserModel::query()
+            ->where('tenant_id', $tenantId)
             ->where('status', $status)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -257,9 +171,10 @@ final readonly class UserQueryAdapter implements UserQueryInterface
         )->all();
     }
 
-    public function findByRole(string $roleId): array
+    public function findByRole(string $roleId, string $tenantId): array
     {
         $users = UserModel::query()
+            ->where('tenant_id', $tenantId)
             ->where('role', $roleId)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -271,10 +186,14 @@ final readonly class UserQueryAdapter implements UserQueryInterface
 
     public function search(array $criteria): array
     {
+        $tenantId = $criteria['tenant_id'] ?? null;
+
         $query = UserModel::query();
 
-        if (isset($criteria['tenant_id']) && $criteria['tenant_id'] !== '') {
-            $query->where('tenant_id', (string) $criteria['tenant_id']);
+        if ($tenantId !== null && $tenantId !== '') {
+            $query->where('tenant_id', (string) $tenantId);
+        } elseif ($tenantId !== null) {
+            throw new \InvalidArgumentException('tenant_id is required for search when provided');
         }
 
         if (isset($criteria['status']) && $criteria['status'] !== '') {

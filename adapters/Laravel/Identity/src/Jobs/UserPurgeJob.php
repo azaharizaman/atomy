@@ -48,7 +48,7 @@ final class UserPurgeJob extends Command
         foreach ($usersToPurge as $user) {
             $logger->info('Purging user', ['user_id' => $user->id, 'tenant_id' => $user->tenant_id]);
 
-            $this->cancelPendingInvitations($user->id, $invitationService, $logger);
+            $this->cancelPendingInvitations($user->id, $user->tenant_id, $invitationService, $logger);
 
             $userPersist->delete($user->id, $user->tenant_id);
 
@@ -78,12 +78,14 @@ final class UserPurgeJob extends Command
 
     private function cancelPendingInvitations(
         string $userId,
+        string $tenantId,
         InvitationServiceInterface $invitationService,
         LoggerInterface $logger,
     ): void {
         try {
             $invitations = DB::table('invitations')
                 ->where('inviter_id', $userId)
+                ->where('tenant_id', $tenantId)
                 ->where('status', 'pending')
                 ->get();
 

@@ -84,13 +84,10 @@ final readonly class VerificationTokenService implements VerificationTokenServic
         ];
     }
 
-    public function invalidateForUser(string $userId): void
+    public function invalidateForUser(string $userId, string $tenantId): void
     {
-        foreach ($this->tokenStore as $key => $token) {
-            if (str_starts_with($key, 'verification:' . $userId . ':')) {
-                unset($this->tokenStore[$key]);
-            }
-        }
+        $key = $this->getStoreKey($userId, $tenantId);
+        unset($this->tokenStore[$key]);
     }
 
     private function getStoreKey(string $userId, string $tenantId): string
