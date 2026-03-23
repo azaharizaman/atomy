@@ -168,9 +168,9 @@ POST /quote-submissions
 ### Reparse (to implement)
 ```
 POST /quote-submissions/{id}/reparse
-- Idempotent: if status='processing', return current state
+- Idempotent: if status is 'extracting' or 'normalizing', return current state (no new job)
 - Otherwise, reset to 'uploaded' and re-dispatch job
-- Returns 202 with status='processing'
+- Returns 202 with status='extracting'
 ```
 
 ### Status Check (existing, to enhance)
@@ -198,10 +198,12 @@ GET /normalization/source-lines?quote_submission_id={id}
 |-----------|---------------|---------|
 | Add processing fields | error_code (varchar, nullable) | Store error type |
 | Add processing fields | error_message (text, nullable) | Store error details |
-| Add processing fields | processing_started_at (timestamp, nullable) | Track start time |
-| Add processing fields | processing_completed_at (timestamp, nullable) | Track completion |
-| Add processing fields | parsed_at (timestamp, nullable) | When extraction done |
+| Add processing fields | processing_started_at (timestamp, nullable) | Set when first entering processing flow (uploaded→extracting) |
+| Add processing fields | processing_completed_at (timestamp, nullable) | Set when terminal state reached (ready/needs_review/failed) |
+| Add processing fields | parsed_at (timestamp, nullable) | Alias for processing_completed_at - when extraction done |
 | Add processing fields | retry_count (integer, default 0) | Track attempts |
+
+**Note:** `processing_started_at` marks when the job starts (transition from `uploaded` to `extracting`). `processing_completed_at` marks when processing ends (transition to `ready`, `needs_review`, or `failed`). Intermediate states (extracting, extracted, normalizing) don't need individual timestamps - they're tracked via the status field.
 
 ### Existing Tables
 
@@ -324,11 +326,11 @@ No vector/pgvector needed for Alpha - extraction is handled by Vertex AI on thei
 
 ---
 
-## 16. Open Questions
+## 16. Resolved Design Decisions
 
-| Question | Resolution |
+| Decision | Resolution |
 |----------|-------------|
-| PDF library for extraction | Use Laravel's built-in PDF parsing or external library |
-| Mock provider output format | JSON structure matching normalization_source_lines |
-| Confidence threshold for auto-ready | Default to 80% - below goes to needs_review |
-| Concurrent job locking | Use database advisory lock or optimistic locking |
+| PDF library for extraction | Use **spatie/pdf-to-text** (Poppler wrapper) - reliable for text extraction from PDF |
+| Mock provider output format | JSON array matching `normalization_source_lines` columns: source_vendor, source_description, source_quantity, source_uom, source_unit_price, raw_data |
+| Confidence threshold for auto-ready | **80%** - above this status = `ready`, below = `needs_review` |
+| Concurrent job locking | Use Laravel's **unique job** with Redis/database lock via `uniqueId` on quote_submission_id |
