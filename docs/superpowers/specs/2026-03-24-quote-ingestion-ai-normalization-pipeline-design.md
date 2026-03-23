@@ -122,7 +122,10 @@ Ship one real end-to-end quote ingestion pipeline: upload file, enqueue processi
 3. Call extraction provider
 4. Transform extraction output → normalization lines
 5. Persist to `normalization_source_lines`
-6. Update submission status (ready / needs_review / failed)
+6. Determine final status based on confidence threshold:
+   - confidence >= 80% → status = `ready`
+   - confidence < 80% → status = `needs_review`
+   - extraction failed → status = `failed`
 7. Handle retries and error escalation
 
 **Boundaries:**
@@ -239,7 +242,7 @@ No vector/pgvector needed for Alpha - extraction is handled by Vertex AI on thei
 ## 11. Idempotency and Concurrency
 
 ### Reparse Idempotency
-- If status is already 'processing' or 'extracting', return current state (no new job)
+- If status is already 'extracting' or 'normalizing', return current state (no new job)
 - Otherwise reset status to 'uploaded' and dispatch fresh job
 
 ### Job Concurrency
