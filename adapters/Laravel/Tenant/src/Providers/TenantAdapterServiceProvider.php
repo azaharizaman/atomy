@@ -8,15 +8,18 @@ use Illuminate\Support\ServiceProvider;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\Tenant\Contracts\TenantPersistenceInterface;
 use Nexus\Tenant\Contracts\TenantQueryInterface;
+use Nexus\Tenant\Contracts\TenantValidationInterface;
 use Nexus\Tenant\Contracts\CacheRepositoryInterface;
 use Nexus\Tenant\Contracts\EventDispatcherInterface;
 use Nexus\Tenant\Contracts\ImpersonationStorageInterface;
 use Nexus\Laravel\Tenant\Adapters\TenantContextAdapter;
 use Nexus\Laravel\Tenant\Adapters\TenantPersistenceAdapter;
 use Nexus\Laravel\Tenant\Adapters\TenantQueryAdapter;
+use Nexus\Laravel\Tenant\Adapters\TenantValidationAdapter;
 use Nexus\Laravel\Tenant\Adapters\CacheRepositoryAdapter;
 use Nexus\Laravel\Tenant\Adapters\EventDispatcherAdapter;
 use Nexus\Laravel\Tenant\Adapters\ImpersonationStorageAdapter;
+use Nexus\Laravel\Tenant\Jobs\TenantPurgeJob;
 
 /**
  * Laravel Service Provider for Tenant package adapters.
@@ -75,6 +78,13 @@ class TenantAdapterServiceProvider extends ServiceProvider
                 logger: $app['log']
             );
         });
+
+        // Register tenant validation adapter
+        $this->app->singleton(TenantValidationInterface::class, function ($app) {
+            return new TenantValidationAdapter(
+                logger: $app['log']
+            );
+        });
     }
 
     /**
@@ -82,6 +92,13 @@ class TenantAdapterServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register console commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                TenantPurgeJob::class,
+            ]);
+        }
+
         // Publish configuration if needed
         $this->publishes([
             __DIR__ . '/../../config/tenant-adapter.php' => config_path('tenant-adapter.php'),
@@ -99,6 +116,7 @@ class TenantAdapterServiceProvider extends ServiceProvider
             TenantContextInterface::class,
             TenantPersistenceInterface::class,
             TenantQueryInterface::class,
+            TenantValidationInterface::class,
             CacheRepositoryInterface::class,
             EventDispatcherInterface::class,
             ImpersonationStorageInterface::class,

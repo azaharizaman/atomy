@@ -11,6 +11,7 @@ use Nexus\Identity\Contracts\PermissionCheckerInterface;
 use Nexus\Identity\Contracts\SsoProviderInterface;
 use Nexus\Laravel\Identity\Adapters\CacheRepositoryAdapter;
 use Nexus\Laravel\Identity\Adapters\PermissionCheckerAdapter;
+use Nexus\Laravel\Identity\Adapters\UserPersistAdapter;
 use Nexus\Laravel\Identity\Sso\OidcSsoProviderAdapter;
 use Nexus\IdentityOperations\Services\SsoLoginServiceInterface;
 use Nexus\IdentityOperations\Services\OidcSsoLoginService;
@@ -37,6 +38,11 @@ class IdentityAdapterServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Register UserPersist adapter
+        $this->app->singleton(\Nexus\Identity\Contracts\UserPersistInterface::class, function () {
+            return new UserPersistAdapter();
+        });
+
         // Register cache repository adapter
         $this->app->singleton(CacheRepositoryInterface::class, function ($app) {
             return new CacheRepositoryAdapter(
@@ -186,6 +192,7 @@ class IdentityAdapterServiceProvider extends ServiceProvider
     public function provides(): array
     {
         return [
+            \Nexus\Identity\Contracts\UserPersistInterface::class,
             CacheRepositoryInterface::class,
             PermissionCheckerInterface::class,
             \Nexus\Laravel\Identity\Adapters\IdentityOperationsAdapter::class,

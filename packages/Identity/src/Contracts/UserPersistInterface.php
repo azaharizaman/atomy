@@ -29,8 +29,11 @@ interface UserPersistInterface
 
     /**
      * Delete a user
+     *
+     * @param string $id User identifier
+     * @param string|null $tenantId Tenant ID for tenant-scoped deletion
      */
-    public function delete(string $id): bool;
+    public function delete(string $id, ?string $tenantId = null): bool;
 
     /**
      * Assign a role to a user

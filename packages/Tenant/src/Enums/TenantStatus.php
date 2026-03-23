@@ -20,6 +20,7 @@ enum TenantStatus: string
     case Suspended = 'suspended';
     case Archived = 'archived';
     case Trial = 'trial';
+    case QueuedDeletion = 'queued_deletion';
 
     /**
      * Check if tenant is in pending state
@@ -71,6 +72,11 @@ enum TenantStatus: string
         return $this === self::Trial;
     }
 
+    public function isQueuedDeletion(): bool
+    {
+        return $this === self::QueuedDeletion;
+    }
+
     /**
      * Check if transition to a new status is allowed
      *
@@ -80,10 +86,11 @@ enum TenantStatus: string
     public function canTransitionTo(self $newStatus): bool
     {
         $transitions = [
-            self::Pending->value => [self::Active->value, self::Archived->value, self::Trial->value],
-            self::Active->value => [self::Suspended->value, self::Archived->value],
-            self::Suspended->value => [self::Active->value, self::Archived->value],
-            self::Trial->value => [self::Active->value, self::Suspended->value, self::Archived->value],
+            self::Pending->value => [self::Active->value, self::Archived->value, self::Trial->value, self::QueuedDeletion->value],
+            self::Active->value => [self::Suspended->value, self::Archived->value, self::QueuedDeletion->value],
+            self::Suspended->value => [self::Active->value, self::Archived->value, self::QueuedDeletion->value],
+            self::Trial->value => [self::Active->value, self::Suspended->value, self::Archived->value, self::QueuedDeletion->value],
+            self::QueuedDeletion->value => [self::Active->value],
             self::Archived->value => [], // Cannot transition from archived
         ];
 
