@@ -32,4 +32,13 @@ interface TenantValidationInterface
      * @return bool True if domain exists, false otherwise
      */
     public function domainExists(string $domain, ?string $excludeId = null): bool;
+
+    /**
+     * Check if a tenant name is already in use.
+     *
+     * @param string $name Tenant name to check
+     * @param string|null $excludeId Tenant ID to exclude from check (for updates)
+     * @return bool True if name exists, false otherwise
+     */
+    public function nameExists(string $name, ?string $excludeId = null): bool;
 }
