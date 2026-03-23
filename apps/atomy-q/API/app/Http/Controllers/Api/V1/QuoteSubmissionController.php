@@ -8,11 +8,13 @@ use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\QuoteSubmissionStatusRequest;
 use App\Http\Requests\QuoteSubmissionUploadRequest;
+use App\Jobs\ProcessQuoteSubmissionJob;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 
 final class QuoteSubmissionController extends Controller
 {
@@ -114,9 +116,24 @@ final class QuoteSubmissionController extends Controller
         $qs->errors_count = 0;
         $qs->save();
 
+        $this->dispatchProcessingJob($qs);
+
         return response()->json([
             'data' => $this->quoteSubmissionData($qs),
         ], 201);
+    }
+
+    private function dispatchProcessingJob(QuoteSubmission $submission): void
+    {
+        $shouldRunSync = in_array(config('queue.default'), ['sync', 'null'], true)
+            || app()->environment(['local', 'testing']);
+
+        if ($shouldRunSync) {
+            $job = new ProcessQuoteSubmissionJob($submission->id);
+            $job->runSync(app(QuoteIngestionOrchestrator::class));
+        } else {
+            ProcessQuoteSubmissionJob::dispatch($submission->id);
+        }
     }
 
     /**
@@ -203,10 +220,43 @@ final class QuoteSubmissionController extends Controller
      */
     public function reparse(Request $request, string $id): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+        
+        $qs = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->first();
+
+        if ($qs === null) {
+            return response()->json(['message' => 'Quote submission not found'], 404);
+        }
+
+        if (in_array($qs->status, ['extracting', 'normalizing'], true)) {
+            return response()->json([
+                'data' => [
+                    'id' => $qs->id,
+                    'status' => $qs->status,
+                    'message' => 'Processing already in progress',
+                ],
+            ], 202);
+        }
+
+        $qs->status = 'uploaded';
+        $qs->error_code = null;
+        $qs->error_message = null;
+        $qs->processing_started_at = null;
+        $qs->processing_completed_at = null;
+        $qs->retry_count = 0;
+        $qs->save();
+
+        $qs->normalizationSourceLines()->delete();
+
+        $this->dispatchProcessingJob($qs);
+
         return response()->json([
             'data' => [
-                'id' => $id,
-                'status' => 'reparsing',
+                'id' => $qs->id,
+                'status' => 'extracting',
             ],
         ], 202);
     }
@@ -275,6 +325,14 @@ final class QuoteSubmissionController extends Controller
             'original_filename' => $submission->original_filename,
             'blocking_issue_count' => $submission->blockingIssueCount(),
             'submitted_at' => $submission->submitted_at?->toAtomString(),
+            'error_code' => $submission->error_code,
+            'error_message' => $submission->error_message,
+            'processing_started_at' => $submission->processing_started_at?->toAtomString(),
+            'processing_completed_at' => $submission->processing_completed_at?->toAtomString(),
+            'parsed_at' => $submission->parsed_at?->toAtomString(),
+            'retry_count' => $submission->retry_count,
+            'line_items_count' => $submission->line_items_count,
+            'confidence' => $submission->confidence,
         ];
     }
 }
