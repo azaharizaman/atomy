@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "nexus/common": "*@dev",
         "nexus/workflow": "*@dev",
         "nexus/policy-engine": "*@dev",
         "psr/log": "^3.0"

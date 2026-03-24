@@ -72,6 +72,9 @@
         "nexus/task": "*@dev",
         "nexus/project-management-operations": "*@dev",
         "nexus/idempotency": "*@dev",
+        "nexus/policy-engine": "*@dev",
+        "nexus/approval-operations": "*@dev",
+        "nexus/laravel-approval-operations-adapter": "*@dev",
         "nexus/sourcing": "*@dev",
         "nexus/vendor": "*@dev",
 

@@ -361,6 +361,9 @@ orchestrators/AccountingOperations/
 | **ComplianceOperations** | Compliance, Audit, AML, GDPR, PDPA | Compliance monitoring, audit trails |
 | **CRMOperations** | CRM, Party, Sales, Notifications | Lead management, pipeline, activities |
 | **ProjectManagementOperations** | Project, Task, TimeTracking, ResourceAllocation, Milestone, Budget, Receivable, Notifier | Project health, timeline drift, milestone billing, dashboard |
+| **ApprovalOperations** | Workflow, PolicyEngine, Common | Operational (generic) approvals: templates, instances, policy gate, workflow correlation; distinct from RFQ quote approval UX |
+
+See also: `docs/superpowers/specs/2026-03-24-nexus-approval-operations-design.md`.
 
 ---
 

@@ -45,7 +45,8 @@
         "nexus/sourcing": "*@dev",
         "nexus/sourcing-scoring": "*@dev",
         "nexus/sourcing-operations": "*@dev",
-        "nexus/approval-operations": "*@dev"
+        "nexus/approval-operations": "*@dev",
+        "nexus/laravel-approval-operations-adapter": "*@dev"
     },
     "repositories": [
         {
@@ -127,6 +128,7 @@
             "Nexus\\Vendor\\": "packages/Vendor/src/",
             "Nexus\\Laravel\\Idempotency\\": "adapters/Laravel/Idempotency/src/",
             "Nexus\\Laravel\\Sourcing\\": "adapters/Laravel/Sourcing/src/",
+            "Nexus\\Laravel\\ApprovalOperations\\": "adapters/Laravel/ApprovalOperations/src/",
             "Nexus\\Outbox\\": "packages/Outbox/src/",
             "Nexus\\QuoteIngestion\\": "orchestrators/QuoteIngestion/src/",
             "Nexus\\Vendor\\": "packages/Vendor/src/",
@@ -171,6 +173,7 @@
             "Nexus\\Idempotency\\Tests\\": "packages/Idempotency/tests/",
             "Nexus\\Laravel\\Idempotency\\Tests\\": "adapters/Laravel/Idempotency/tests/",
             "Nexus\\Laravel\\Sourcing\\Tests\\": "adapters/Laravel/Sourcing/tests/",
+            "Nexus\\Laravel\\ApprovalOperations\\Tests\\": "adapters/Laravel/ApprovalOperations/tests/",
             "Nexus\\Adapter\\Laravel\\Vendor\\Tests\\": "adapters/Laravel/Vendor/tests/",
             "Nexus\\Outbox\\Tests\\": "packages/Outbox/tests/",
             "Nexus\\QuoteIngestion\\Tests\\": "orchestrators/QuoteIngestion/tests/",

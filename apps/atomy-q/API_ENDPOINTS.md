@@ -416,3 +416,13 @@ These endpoints introduce user tasks backed by `Nexus\Task`, covering both proje
 | PUT | `/tasks/:id/dependencies` | Task Detail | Edit Dependencies action | **Planned.** Update a task's predecessor/dependency list, enforcing acyclicity checks via `DependencyGraphInterface`. |
 | POST | `/tasks/schedule/preview` | Project Detail, Gantt View | "Preview Schedule" button | **Planned.** Run `ScheduleCalculatorInterface` for a set of tasks (typically within a project) to compute early/late dates and slack for Gantt-style schedule visualization. |
 
+## 30. Operational approvals (Nexus ApprovalOperations)
+
+Generic operational approval API (`Nexus\ApprovalOperations`), **not** RFQ quote approval (see Section 15). Routes and resource names are distinct from `/approvals` RFQ flows.
+
+| Method | Endpoint | Screen | Element/Interaction | Description |
+|--------|----------|--------|---------------------|-------------|
+| POST | `/operational-approvals/instances` | (optional future) | Start operational approval | Create instance from template + subject; policy + workflow correlation via orchestrator. |
+| GET | `/operational-approvals/instances/:instanceId` | (optional future) | Instance detail | SLA snapshot stub; 404 if missing or wrong tenant. |
+| POST | `/operational-approvals/instances/:instanceId/decisions` | (optional future) | Approve / Reject | Record decision; tenant-scoped. |
+

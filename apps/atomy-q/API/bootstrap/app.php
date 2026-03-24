@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Exceptions\IdempotencyEnvelopeTooLargeException;
+use Nexus\ApprovalOperations\Exceptions\ApprovalTemplateNotFoundException;
+use Nexus\ApprovalOperations\Exceptions\OperationalApprovalDeniedException;
+use Nexus\ApprovalOperations\Exceptions\OperationalApprovalNotFoundException;
 use App\Http\Middleware\JwtAuthenticate;
 use App\Http\Middleware\TenantContext;
 use Illuminate\Console\Scheduling\Schedule;
@@ -37,6 +40,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->renderable(function (\Throwable $e, \Illuminate\Http\Request $request) {
             if (!$request->is('api/*') && !$request->wantsJson()) {
                 return null;
+            }
+
+            if ($e instanceof ApprovalTemplateNotFoundException || $e instanceof OperationalApprovalNotFoundException) {
+                return response()->json(['error' => 'Resource not found'], 404);
+            }
+
+            if ($e instanceof OperationalApprovalDeniedException) {
+                return response()->json(['error' => 'Policy denied'], 403);
             }
 
             if ($e instanceof \Illuminate\Validation\ValidationException) {

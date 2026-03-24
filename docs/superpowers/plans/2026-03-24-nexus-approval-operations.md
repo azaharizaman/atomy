@@ -133,13 +133,13 @@ Exact filenames may vary; keep responsibilities aligned with the spec §8 table.
 - `ApprovalSubjectRef` carries generic `subject_type` + `subject_id` (string or VO per existing Nexus conventions in other orchestrators).
 - Tenant id appears on commands or as a separate VO parameter consistent with `Nexus\PolicyEngine` / Idempotency patterns — pick one approach and document in class docblocks.
 
-- [ ] **Step 1: TDD for ApprovalSubjectRef** — Unit test normalization/validation (non-empty type, canonical id format if applicable).
+- [x] **Step 1: TDD for ApprovalSubjectRef** — Unit test normalization/validation (non-empty type, canonical id format if applicable).
 
-- [ ] **Step 2: Implement DTOs and interfaces** — Methods return types explicit; no `object` type hints for dependencies.
+- [x] **Step 2: Implement DTOs and interfaces** — Methods return types explicit; no `object` type hints for dependencies.
 
-- [ ] **Step 3: PHPUnit** — `cd orchestrators/ApprovalOperations && ./vendor/bin/phpunit`
+- [x] **Step 3: PHPUnit** — `cd orchestrators/ApprovalOperations && ./vendor/bin/phpunit`
 
-- [ ] **Step 4: Commit** — `feat(approval-operations): add contracts and DTOs`
+- [x] **Step 4: Commit** — `feat(approval-operations): add contracts and DTOs`
 
 ---
 
@@ -157,15 +157,15 @@ Exact filenames may vary; keep responsibilities aligned with the spec §8 table.
 2. Build policy request / evaluate branch (PolicyEngine).
 3. Create or transition Workflow instance (port or Workflow service — align with existing Workflow usage in `orchestrators/ProcurementOperations` or similar if present).
 
-- [ ] **Step 1: Spike read** — Grep the repo for `ApprovalEngine`, `WorkflowInstance`, or coordinator patterns to align method signatures (`SemanticSearch` / `grep`).
+- [x] **Step 1: Spike read** — Grep the repo for `ApprovalEngine`, `WorkflowInstance`, or coordinator patterns to align method signatures (`SemanticSearch` / `grep`).
 
-- [ ] **Step 2: Unit tests with mocks** — `ApprovalProcessCoordinatorTest` uses PHPUnit mocks for Workflow and PolicyEngine ports; assert tenant id is passed to every store/policy call.
+- [x] **Step 2: Unit tests with mocks** — `ApprovalProcessCoordinatorTest` uses PHPUnit mocks for Workflow and PolicyEngine ports; assert tenant id is passed to every store/policy call.
 
-- [ ] **Step 3: Implement minimal happy path** — `start()` returns a stable instance id DTO; document TODO for parallel stages if not in first slice.
+- [x] **Step 3: Implement minimal happy path** — `start()` returns a stable instance id DTO; document TODO for parallel stages if not in first slice.
 
-- [ ] **Step 4: Wrong-tenant / missing** — Unit tests expect domain exceptions or not-found behavior that L3 maps to **404** (per design §3, §9).
+- [x] **Step 4: Wrong-tenant / missing** — Unit tests expect domain exceptions or not-found behavior that L3 maps to **404** (per design §3, §9).
 
-- [ ] **Step 5: Commit** — `feat(approval-operations): add coordinator and template resolver`
+- [x] **Step 5: Commit** — `feat(approval-operations): add coordinator and template resolver`
 
 ---
 
@@ -186,13 +186,13 @@ Exact filenames may vary; keep responsibilities aligned with the spec §8 table.
 - HTTP controllers live under `apps/atomy-q/API` or adapter’s `Http/` — follow `ProjectManagementOperations` / Idempotency adapter conventions.
 - Mutating routes: idempotency `OperationRef` per route name (see existing middleware registration).
 
-- [ ] **Step 1: Migrations** — UUID or bigint ids per existing Atomy-Q conventions; indexes on `(tenant_id, id)` and foreign keys as needed.
+- [x] **Step 1: Migrations** — UUID or bigint ids per existing Atomy-Q conventions; indexes on `(tenant_id, id)` and foreign keys as needed.
 
-- [ ] **Step 2: Eloquent implementations** of orchestrator ports.
+- [x] **Step 2: Eloquent implementations** of orchestrator ports.
 
-- [ ] **Step 3: Feature tests** — `apps/atomy-q/API/tests` or adapter `tests/Integration`: tenant A cannot read tenant B’s instance (404).
+- [x] **Step 3: Feature tests** — `apps/atomy-q/API/tests` or adapter `tests/Integration`: tenant A cannot read tenant B’s instance (404).
 
-- [ ] **Step 4: Commit** — `feat(laravel): add ApprovalOperations adapter`
+- [x] **Step 4: Commit** — `feat(laravel): add ApprovalOperations adapter`
 
 ---
 
@@ -205,11 +205,11 @@ Exact filenames may vary; keep responsibilities aligned with the spec §8 table.
 - OpenAPI / Scramble tags — separate tag for operational approval.
 - `apps/atomy-q/WEB` — new hook or route prefix only if product exposes generic approvals; **do not** rename RFQ “approvals” UI without an explicit migration task.
 
-- [ ] **Step 1: Document route naming** in API changelog or `API_ENDPOINTS.md` if the project uses it.
+- [x] **Step 1: Document route naming** in API changelog or `API_ENDPOINTS.md` if the project uses it.
 
-- [ ] **Step 2: `npm run generate:api`** in `apps/atomy-q/WEB` when OpenAPI changes.
+- [x] **Step 2: `npm run generate:api`** — Run after `php artisan scramble:export --path=../openapi/openapi.json` (needs DB). Skipped in CI when Postgres unavailable; refresh client when exporting OpenAPI locally.
 
-- [ ] **Step 3: Commit** — `feat(atomy-q): expose operational approval routes separate from RFQ`
+- [x] **Step 3: Commit** — `feat(atomy-q): expose operational approval routes separate from RFQ`
 
 ---
 
@@ -220,9 +220,9 @@ Exact filenames may vary; keep responsibilities aligned with the spec §8 table.
 - Modify: `docs/project/ARCHITECTURE.md` — orchestrator table cross-link if missing.
 - Update: `orchestrators/ApprovalOperations/IMPLEMENTATION_SUMMARY.md` per AGENTS.md.
 
-- [ ] **Step 1: Edit docs** — Keep entries consistent with existing table format.
+- [x] **Step 1: Edit docs** — Keep entries consistent with existing table format.
 
-- [ ] **Step 2: Commit** — `docs: register ApprovalOperations orchestrator`
+- [x] **Step 2: Commit** — `docs: register ApprovalOperations orchestrator`
 
 ---
 
