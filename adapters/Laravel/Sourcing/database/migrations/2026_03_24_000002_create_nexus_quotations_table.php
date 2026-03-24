@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->ulid('id')->primary();
             $table->ulid('tenant_id')->index();
             $table->ulid('sourcing_event_id')->index();
+            $table->index(['tenant_id', 'sourcing_event_id'], 'nexus_tenant_event_idx');
             $table->ulid('vendor_id')->index();
             $table->string('status');
             $table->json('normalization_data')->nullable();

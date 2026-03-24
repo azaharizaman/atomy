@@ -6,18 +6,18 @@ namespace Nexus\Laravel\Sourcing\Repositories;
 
 use Nexus\Laravel\Sourcing\Models\EloquentQuotation;
 use Nexus\Sourcing\Contracts\QuotationInterface;
-use Nexus\Sourcing\Contracts\QuotationRepositoryInterface;
+use Nexus\Sourcing\Contracts\QuotationQueryInterface;
 
-final readonly class EloquentQuotationRepository implements QuotationRepositoryInterface
+final readonly class EloquentQuotationRepository implements QuotationQueryInterface
 {
     /**
      * @return array<QuotationInterface>
      */
-    public function findBySourcingEvent(string $tenantId, string $rfqId): array
+    public function findBySourcingEvent(string $tenantId, string $sourcingEventId): array
     {
         return EloquentQuotation::query()
             ->where('tenant_id', $tenantId)
-            ->where('sourcing_event_id', $rfqId)
+            ->where('sourcing_event_id', $sourcingEventId)
             ->get()
             ->all();
     }

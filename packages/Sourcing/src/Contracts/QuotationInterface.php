@@ -8,6 +8,8 @@ use Nexus\Sourcing\ValueObjects\NormalizationLine;
 
 interface QuotationInterface
 {
+    public function getTenantId(): string;
+
     public function getId(): string;
 
     public function getVendorId(): string;

@@ -6,8 +6,9 @@ Layer 1 domain contracts for quotations, sourcing events, and normalization payl
 
 ## Contracts
 
-- `QuotationInterface` — identity, vendor, status, normalized line items (`NormalizationLine`).
-- `QuotationRepositoryInterface` — tenant-scoped reads by sourcing event (`sourcing_event_id` / RFQ) and by quotation id.
+- `QuotationInterface` — tenant, identity, vendor, status, normalized line items (`NormalizationLine`).
+- `QuotationQueryInterface` — tenant-scoped reads by sourcing event (`sourcing_event_id`) and by quotation id.
+- `QuotationPersistInterface` — write-side contract (CQRS; methods added when persistence is implemented).
 - `AwardInterface` — award identity and links to quotation and vendor.
 - `SourcingEventInterface` — marker for future sourcing-event aggregate (RFQ/RFP).
 
@@ -22,4 +23,4 @@ Layer 1 domain contracts for quotations, sourcing events, and normalization payl
 
 ## Laravel adapter
 
-See `adapters/Laravel/Sourcing` (`nexus/laravel-sourcing-adapter`): Eloquent models, migrations `nexus_quotations` and `nexus_sourcing_awards`, `EloquentQuotationRepository` binding `QuotationRepositoryInterface`.
+See `adapters/Laravel/Sourcing` (`nexus/laravel-sourcing-adapter`): Eloquent models, migrations `nexus_quotations` and `nexus_sourcing_awards`, `EloquentQuotationRepository` binding `QuotationQueryInterface`.

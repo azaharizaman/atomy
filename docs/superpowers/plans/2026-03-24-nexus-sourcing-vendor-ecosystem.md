@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Scaffold New Packages and Orchestrator
+## Task 1: Scaffold New Packages and Orchestrator
 
 **Files:**
 - Create: `packages/Vendor/src/Contracts/VendorProfileInterface.php`
@@ -34,7 +34,7 @@ git commit -m "chore: scaffold sourcing and vendor ecosystem packages"
 
 ---
 
-### Task 2: Implement Vendor Identity Role (Layer 1)
+## Task 2: Implement Vendor Identity Role (Layer 1)
 
 **Files:**
 - Create: `packages/Vendor/src/Contracts/VendorProfileInterface.php`
@@ -50,7 +50,7 @@ git commit -m "chore: scaffold sourcing and vendor ecosystem packages"
 
 ---
 
-### Task 3: Extract RFQ/Quote Domain from Procurement (Layer 1)
+## Task 3: Extract RFQ/Quote Domain from Procurement (Layer 1)
 
 **Files:**
 - Modify: `packages/Procurement/src/Contracts/VendorQuoteInterface.php` (Deprecate or Move)
@@ -65,7 +65,7 @@ git commit -m "chore: scaffold sourcing and vendor ecosystem packages"
 
 ---
 
-### Task 4: Implement Sourcing Scoring Engine (Layer 1)
+## Task 4: Implement Sourcing Scoring Engine (Layer 1)
 
 **Files:**
 - Create: `packages/SourcingScoring/src/Services/WeightedScoringEngine.php`
@@ -77,7 +77,7 @@ git commit -m "chore: scaffold sourcing and vendor ecosystem packages"
 
 ---
 
-### Task 5: Refactor QuotationIntelligence to Suggestion Engine (Layer 2)
+## Task 5: Refactor QuotationIntelligence to Suggestion Engine (Layer 2)
 
 **Files:**
 - Modify: `orchestrators/QuotationIntelligence/src/Coordinators/QuotationIntelligenceCoordinator.php`
@@ -89,7 +89,7 @@ git commit -m "chore: scaffold sourcing and vendor ecosystem packages"
 
 ---
 
-### Task 6: Implement SourcingOperations Orchestrator (Layer 2)
+## Task 6: Implement SourcingOperations Orchestrator (Layer 2)
 
 **Files:**
 - Create: `orchestrators/SourcingOperations/src/SourcingOperationsCoordinator.php`
@@ -107,7 +107,7 @@ git commit -m "chore: scaffold sourcing and vendor ecosystem packages"
 
 ---
 
-### Task 7: Implement Laravel Adapters (Layer 3)
+## Task 7: Implement Laravel Adapters (Layer 3)
 
 **Files:**
 - Create: `adapters/Laravel/Sourcing/SourcingLaravelAdapter.php`
@@ -121,7 +121,7 @@ git commit -m "chore: scaffold sourcing and vendor ecosystem packages"
 
 ---
 
-### Task 8: Atomy-Q Application Refactoring
+## Task 8: Atomy-Q Application Refactoring
 
 **Files:**
 - Modify: `apps/atomy-q/src/Http/Controllers/NormalizationController.php`
@@ -134,7 +134,7 @@ git commit -m "chore: scaffold sourcing and vendor ecosystem packages"
 
 ---
 
-### Task 9: Verification and Alpha Gap Closure
+## Task 9: Verification and Alpha Gap Closure
 
 - [ ] **Step 1: Verify `GET /normalization/{id}/source-lines`**
 - [ ] **Step 2: Verify `POST /awards` generates PO**

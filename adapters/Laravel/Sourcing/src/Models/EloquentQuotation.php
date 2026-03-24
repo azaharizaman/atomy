@@ -51,6 +51,11 @@ class EloquentQuotation extends Model implements QuotationInterface
         return (string) $this->id;
     }
 
+    public function getTenantId(): string
+    {
+        return (string) $this->tenant_id;
+    }
+
     public function getVendorId(): string
     {
         return (string) $this->vendor_id;

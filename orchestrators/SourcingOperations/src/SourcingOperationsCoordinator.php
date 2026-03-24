@@ -7,7 +7,7 @@ namespace Nexus\SourcingOperations;
 /**
  * Coordinator for sourcing operations.
  */
-class SourcingOperationsCoordinator
+final readonly class SourcingOperationsCoordinator
 {
     public function __construct()
     {

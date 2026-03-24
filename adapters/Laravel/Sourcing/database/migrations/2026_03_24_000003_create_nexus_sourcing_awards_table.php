@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->ulid('tenant_id')->index();
             $table->ulid('quotation_id')->index();
             $table->ulid('vendor_id')->index();
-            $table->ulid('purchase_order_id')->nullable();
+            $table->ulid('purchase_order_id')->nullable()->index();
             $table->timestamps();
         });
     }

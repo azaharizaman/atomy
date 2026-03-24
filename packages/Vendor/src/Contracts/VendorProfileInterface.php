@@ -9,4 +9,15 @@ namespace Nexus\Vendor\Contracts;
  */
 interface VendorProfileInterface
 {
+    public function getId(): string;
+
+    public function getName(): string;
+
+    public function getEmail(): ?string;
+
+    public function getPhone(): ?string;
+
+    public function getAddress(): ?string;
+
+    public function getCreatedAt(): ?\DateTimeImmutable;
 }
