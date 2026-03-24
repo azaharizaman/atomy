@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\ApprovalOperations\Tests\Unit\Services;
 
+use Nexus\ApprovalOperations\Contracts\ApprovalCommentPersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstancePersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalTemplateQueryInterface;
@@ -90,6 +91,7 @@ final class ApprovalProcessCoordinatorTest extends TestCase
             $policyEngine,
             $bridge,
             $ulid,
+            $this->createMock(ApprovalCommentPersistInterface::class),
         );
 
         $result = $coordinator->start(new StartOperationalApprovalCommand(
@@ -114,6 +116,7 @@ final class ApprovalProcessCoordinatorTest extends TestCase
             $this->createMock(PolicyEngineInterface::class),
             $this->createMock(OperationalWorkflowBridgeInterface::class),
             $this->createMock(UlidInterface::class),
+            $this->createMock(ApprovalCommentPersistInterface::class),
         );
 
         $this->expectException(ApprovalTemplateNotFoundException::class);
@@ -139,6 +142,7 @@ final class ApprovalProcessCoordinatorTest extends TestCase
             $this->createMock(PolicyEngineInterface::class),
             $this->createMock(OperationalWorkflowBridgeInterface::class),
             $this->createMock(UlidInterface::class),
+            $this->createMock(ApprovalCommentPersistInterface::class),
         );
 
         $this->expectException(OperationalApprovalNotFoundException::class);

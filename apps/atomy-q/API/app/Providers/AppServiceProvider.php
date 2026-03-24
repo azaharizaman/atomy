@@ -67,9 +67,12 @@ use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
 use Nexus\MachineLearning\Contracts\QuoteExtractionServiceInterface;
 use Nexus\MachineLearning\Services\VertexAIMockProvider;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use Nexus\ApprovalOperations\Contracts\ApprovalCommentPersistInterface;
+use Nexus\ApprovalOperations\Contracts\ApprovalInstancePersistInterface;
+use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
+use Nexus\ApprovalOperations\Contracts\OperationalWorkflowBridgeInterface;
 use Nexus\ApprovalOperations\Services\ApprovalProcessCoordinator;
 use Nexus\ApprovalOperations\Services\ApprovalTemplateResolver;
-use Nexus\PolicyEngine\Contracts\PolicyEngineInterface;
 use App\Services\ApprovalOperations\AtomyPermissivePolicyEngine;
 use App\Services\ApprovalOperations\LaravelUlidGenerator;
 use Nexus\Common\Contracts\UlidInterface;
@@ -84,10 +87,20 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ReplayResponseFactoryInterface::class, IdempotencyReplayResponseFactory::class);
 
         // Nexus ApprovalOperations (operational approvals — distinct from RFQ quote flows).
-        $this->app->singleton(PolicyEngineInterface::class, AtomyPermissivePolicyEngine::class);
+        $this->app->singleton(AtomyPermissivePolicyEngine::class);
         $this->app->singleton(UlidInterface::class, LaravelUlidGenerator::class);
         $this->app->singleton(ApprovalTemplateResolver::class);
-        $this->app->singleton(ApprovalProcessCoordinator::class);
+        $this->app->singleton(ApprovalProcessCoordinator::class, static function ($app): ApprovalProcessCoordinator {
+            return new ApprovalProcessCoordinator(
+                $app->make(ApprovalTemplateResolver::class),
+                $app->make(ApprovalInstancePersistInterface::class),
+                $app->make(ApprovalInstanceQueryInterface::class),
+                $app->make(AtomyPermissivePolicyEngine::class),
+                $app->make(OperationalWorkflowBridgeInterface::class),
+                $app->make(UlidInterface::class),
+                $app->make(ApprovalCommentPersistInterface::class),
+            );
+        });
 
         // Nexus MachineLearning: Quote extraction mock for Alpha testing.
         $this->app->singleton(QuoteExtractionServiceInterface::class, VertexAIMockProvider::class);

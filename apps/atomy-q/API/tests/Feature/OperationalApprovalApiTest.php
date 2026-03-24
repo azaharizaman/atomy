@@ -36,6 +36,7 @@ final class OperationalApprovalApiTest extends TestCase
 
         return [
             'Authorization' => 'Bearer ' . $token,
+            'Idempotency-Key' => (string) Str::uuid(),
         ];
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\ApprovalOperations\Services;
 
+use Nexus\ApprovalOperations\Contracts\ApprovalCommentPersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstancePersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
 use Nexus\ApprovalOperations\Contracts\OperationalWorkflowBridgeInterface;
@@ -33,6 +34,7 @@ final readonly class ApprovalProcessCoordinator
         private PolicyEngineInterface $policyEngine,
         private OperationalWorkflowBridgeInterface $workflowBridge,
         private UlidInterface $ulid,
+        private ApprovalCommentPersistInterface $comments,
     ) {
     }
 
@@ -105,6 +107,17 @@ final readonly class ApprovalProcessCoordinator
             $command->actorPrincipalId,
             $command->comment,
         );
+
+        $comment = $command->comment;
+        if ($comment !== null && \trim($comment) !== '') {
+            $this->comments->append(
+                $command->tenantId,
+                $command->instanceId,
+                $command->actorPrincipalId,
+                $comment,
+                null,
+            );
+        }
 
         $status = $command->decision === OperationalApprovalDecision::Approve ? 'approved' : 'rejected';
         $updated = new ApprovalInstanceReadModel(

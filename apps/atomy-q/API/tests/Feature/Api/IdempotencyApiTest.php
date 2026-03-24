@@ -53,6 +53,8 @@ final class IdempotencyApiTest extends ApiTestCase
             'v1.rfq-templates.apply',
             'v1.projects.store',
             'v1.tasks.store',
+            'v1.operational-approvals.instances.store',
+            'v1.operational-approvals.instances.decisions.store',
         ];
 
         foreach ($names as $name) {
