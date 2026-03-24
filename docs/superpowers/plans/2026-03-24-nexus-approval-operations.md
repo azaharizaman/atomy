@@ -102,16 +102,16 @@ Exact filenames may vary; keep responsibilities aligned with the spec §8 table.
 
 **Autoload:** `Nexus\ApprovalOperations\` → `src/`
 
-- [ ] **Step 1: Create composer.json** — Name: `nexus/approval-operations`. Match `orchestrators/SourcingOperations/composer.json` style.
+- [x] **Step 1: Create composer.json** — Name: `nexus/approval-operations`. Match `orchestrators/SourcingOperations/composer.json` style.
 
-- [ ] **Step 2: composer install** — Run from `orchestrators/ApprovalOperations` with monorepo path repositories (install from repo root or symlink packages per local convention).
+- [x] **Step 2: composer install** — Run from `orchestrators/ApprovalOperations` with monorepo path repositories (install from repo root or symlink packages per local convention).
 
-- [ ] **Step 3: Add root integration** — If other orchestrators are registered in root `composer.json` `autoload` / `autoload-dev`, add:
+- [x] **Step 3: Add root integration** — If other orchestrators are registered in root `composer.json` `autoload` / `autoload-dev`, add:
   - `"Nexus\\ApprovalOperations\\": "orchestrators/ApprovalOperations/src/"`
   - `"Nexus\\ApprovalOperations\\Tests\\": "orchestrators/ApprovalOperations/tests/"`  
   And add `"nexus/approval-operations": "*@dev"` to root `require` if required by monorepo policy (mirror how `nexus/sourcing-operations` is wired).
 
-- [ ] **Step 4: Commit** — `chore(approval-operations): add orchestrator package scaffold`
+- [x] **Step 4: Commit** — `chore(approval-operations): add orchestrator package scaffold`
 
 ---
 

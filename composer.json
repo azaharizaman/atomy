@@ -44,7 +44,8 @@
         "nexus/vendor": "*@dev",
         "nexus/sourcing": "*@dev",
         "nexus/sourcing-scoring": "*@dev",
-        "nexus/sourcing-operations": "*@dev"
+        "nexus/sourcing-operations": "*@dev",
+        "nexus/approval-operations": "*@dev"
     },
     "repositories": [
         {
@@ -131,7 +132,8 @@
             "Nexus\\Vendor\\": "packages/Vendor/src/",
             "Nexus\\Sourcing\\": "packages/Sourcing/src/",
             "Nexus\\SourcingScoring\\": "packages/SourcingScoring/src/",
-            "Nexus\\SourcingOperations\\": "orchestrators/SourcingOperations/src/"
+            "Nexus\\SourcingOperations\\": "orchestrators/SourcingOperations/src/",
+            "Nexus\\ApprovalOperations\\": "orchestrators/ApprovalOperations/src/"
         }
     },
     "autoload-dev": {
@@ -175,7 +177,8 @@
             "Nexus\\Vendor\\Tests\\": "packages/Vendor/tests/",
             "Nexus\\Sourcing\\Tests\\": "packages/Sourcing/tests/",
             "Nexus\\SourcingScoring\\Tests\\": "packages/SourcingScoring/tests/",
-            "Nexus\\SourcingOperations\\Tests\\": "orchestrators/SourcingOperations/tests/"
+            "Nexus\\SourcingOperations\\Tests\\": "orchestrators/SourcingOperations/tests/",
+            "Nexus\\ApprovalOperations\\Tests\\": "orchestrators/ApprovalOperations/tests/"
         }
     }
 }
