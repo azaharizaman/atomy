@@ -167,6 +167,7 @@
             "Nexus\\PolicyEngine\\Tests\\": "packages/PolicyEngine/tests/",
             "Nexus\\Idempotency\\Tests\\": "packages/Idempotency/tests/",
             "Nexus\\Laravel\\Idempotency\\Tests\\": "adapters/Laravel/Idempotency/tests/",
+            "Nexus\\Laravel\\Sourcing\\Tests\\": "adapters/Laravel/Sourcing/tests/",
             "Nexus\\Outbox\\Tests\\": "packages/Outbox/tests/",
             "Nexus\\QuoteIngestion\\Tests\\": "orchestrators/QuoteIngestion/tests/",
             "Nexus\\Vendor\\Tests\\": "packages/Vendor/tests/",
