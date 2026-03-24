@@ -6,7 +6,6 @@ namespace Nexus\Adapter\Laravel\Vendor\Repositories;
 use Nexus\Vendor\Contracts\VendorRepositoryInterface;
 use Nexus\Vendor\Contracts\VendorProfileInterface;
 use Nexus\Adapter\Laravel\Vendor\Models\EloquentVendorProfile;
-use Nexus\Vendor\ValueObjects\VendorStatus;
 
 final readonly class EloquentVendorRepository implements VendorRepositoryInterface {
     public function findById(string $tenantId, string $id): ?VendorProfileInterface {

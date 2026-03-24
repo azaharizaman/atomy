@@ -40,6 +40,7 @@
         "nexus/esg-regulatory": "*@dev",
         "nexus/esg-operations": "*@dev",
         "nexus/idempotency": "*@dev",
+        "nexus/vendor": "*@dev",
         "nexus/quote-ingestion": "*@dev"
     },
     "repositories": [
@@ -119,7 +120,9 @@
             "Nexus\\Milestone\\": "packages/Milestone/src/",
             "Nexus\\PolicyEngine\\": "packages/PolicyEngine/src/",
             "Nexus\\Idempotency\\": "packages/Idempotency/src/",
+            "Nexus\\Vendor\\": "packages/Vendor/src/",
             "Nexus\\Laravel\\Idempotency\\": "adapters/Laravel/Idempotency/src/",
+            "Nexus\\Adapter\\Laravel\\Vendor\\": "adapters/Laravel/Vendor/src/",
             "Nexus\\Outbox\\": "packages/Outbox/src/",
             "Nexus\\QuoteIngestion\\": "orchestrators/QuoteIngestion/src/"
         }
@@ -158,6 +161,7 @@
             "Nexus\\PolicyEngine\\Tests\\": "packages/PolicyEngine/tests/",
             "Nexus\\Idempotency\\Tests\\": "packages/Idempotency/tests/",
             "Nexus\\Laravel\\Idempotency\\Tests\\": "adapters/Laravel/Idempotency/tests/",
+            "Nexus\\Adapter\\Laravel\\Vendor\\Tests\\": "adapters/Laravel/Vendor/tests/",
             "Nexus\\Outbox\\Tests\\": "packages/Outbox/tests/",
             "Nexus\\QuoteIngestion\\Tests\\": "orchestrators/QuoteIngestion/tests/"
         }

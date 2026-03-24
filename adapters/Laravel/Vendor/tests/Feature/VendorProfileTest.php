@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Nexus\Adapter\Laravel\Vendor\Tests\Feature;
@@ -31,5 +30,22 @@ final class VendorProfileTest extends TestCase
         $this->assertNotNull($found);
         $this->assertSame((string) $profile->id, $found->getId());
         $this->assertSame($partyId, $found->getPartyId());
+    }
+
+    public function test_find_by_id_does_not_return_row_for_wrong_tenant(): void
+    {
+        $tenantA = (string) Str::ulid();
+        $tenantB = (string) Str::ulid();
+
+        $profile = EloquentVendorProfile::create([
+            'tenant_id' => $tenantA,
+            'party_id' => (string) Str::ulid(),
+            'status' => 'active',
+        ]);
+
+        $repo = $this->app->make(VendorRepositoryInterface::class);
+
+        $this->assertNull($repo->findById($tenantB, (string) $profile->id));
+        $this->assertNotNull($repo->findById($tenantA, (string) $profile->id));
     }
 }
