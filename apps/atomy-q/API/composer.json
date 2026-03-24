@@ -80,7 +80,7 @@
         "nexus/laravel-tenant-adapter": "*@dev",
         "nexus/laravel-setting-adapter": "*@dev",
         "nexus/laravel-idempotency-adapter": "*@dev",
-        "nexus/laravel-sourcing-adapter": "*@dev"
+        "nexus/laravel-sourcing-adapter": "*@dev",
         "nexus/vendor-laravel-adapter": "*@dev"
     },
     "require-dev": {
