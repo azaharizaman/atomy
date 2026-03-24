@@ -40,7 +40,11 @@
         "nexus/esg-regulatory": "*@dev",
         "nexus/esg-operations": "*@dev",
         "nexus/idempotency": "*@dev",
-        "nexus/quote-ingestion": "*@dev"
+        "nexus/quote-ingestion": "*@dev",
+        "nexus/vendor": "*@dev",
+        "nexus/sourcing": "*@dev",
+        "nexus/sourcing-scoring": "*@dev",
+        "nexus/sourcing-operations": "*@dev"
     },
     "repositories": [
         {
@@ -120,8 +124,13 @@
             "Nexus\\PolicyEngine\\": "packages/PolicyEngine/src/",
             "Nexus\\Idempotency\\": "packages/Idempotency/src/",
             "Nexus\\Laravel\\Idempotency\\": "adapters/Laravel/Idempotency/src/",
+            "Nexus\\Laravel\\Sourcing\\": "adapters/Laravel/Sourcing/src/",
             "Nexus\\Outbox\\": "packages/Outbox/src/",
-            "Nexus\\QuoteIngestion\\": "orchestrators/QuoteIngestion/src/"
+            "Nexus\\QuoteIngestion\\": "orchestrators/QuoteIngestion/src/",
+            "Nexus\\Vendor\\": "packages/Vendor/src/",
+            "Nexus\\Sourcing\\": "packages/Sourcing/src/",
+            "Nexus\\SourcingScoring\\": "packages/SourcingScoring/src/",
+            "Nexus\\SourcingOperations\\": "orchestrators/SourcingOperations/src/"
         }
     },
     "autoload-dev": {
@@ -159,7 +168,11 @@
             "Nexus\\Idempotency\\Tests\\": "packages/Idempotency/tests/",
             "Nexus\\Laravel\\Idempotency\\Tests\\": "adapters/Laravel/Idempotency/tests/",
             "Nexus\\Outbox\\Tests\\": "packages/Outbox/tests/",
-            "Nexus\\QuoteIngestion\\Tests\\": "orchestrators/QuoteIngestion/tests/"
+            "Nexus\\QuoteIngestion\\Tests\\": "orchestrators/QuoteIngestion/tests/",
+            "Nexus\\Vendor\\Tests\\": "packages/Vendor/tests/",
+            "Nexus\\Sourcing\\Tests\\": "packages/Sourcing/tests/",
+            "Nexus\\SourcingScoring\\Tests\\": "packages/SourcingScoring/tests/",
+            "Nexus\\SourcingOperations\\Tests\\": "orchestrators/SourcingOperations/tests/"
         }
     }
 }
