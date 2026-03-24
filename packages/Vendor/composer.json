@@ -1,0 +1,14 @@
+{
+    "name": "nexus/vendor",
+    "description": "Nexus Vendor Domain Package",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Vendor\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.3"
+    }
+}
