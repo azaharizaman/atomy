@@ -5,6 +5,12 @@
 **Scope:** `apps/atomy-q/Design-System-v2`  
 **Status:** Brainstorm / design guideline (not implemented)
 
+## Decisions
+
+| Topic | Resolution |
+|-------|------------|
+| Workflow / chart colors | **DS semantics only** — map states to existing token families (`neutral`, `warning`, `accent`/`info`, `success`) via `DS_TOKENS`, `StatusBadge`, and related patterns. **No** parallel “marketing” or chart-only hex palette for pixel parity with the reference image. |
+
 ## Reference
 
 Visual guideline: task-management dashboard mockup (status distribution, KPI row, status mini-cards, horizontal task calendar).
@@ -88,8 +94,8 @@ These are **not** duplicates of existing exports; they close specific UI contrac
 
 ## Token considerations
 
-- **Reference palette** (orange, purple, green) should be expressed as **semantic lanes** in code, e.g. `workflowStatus: { todo: 'neutral', inProgress: 'warning', inReview: 'accent', done: 'success' }` mapping to existing Tailwind classes in `DS_TOKENS` / `StatusBadge` variants.
-- If product requires **exact** chroma parity with marketing mockups, add a dedicated subsection in `tokens.ts` (e.g. `workflowChart.*`) and document that it is **chart-only**, not for text links (keeps indigo primary intact).
+- Express workflow lanes **only** through DS semantics, e.g. `workflowStatus: { todo: 'neutral', inProgress: 'warning', inReview: 'accent', done: 'success' }` mapping to existing Tailwind classes in `DS_TOKENS` / `StatusBadge` variants.
+- Implementations **must not** introduce ad hoc hex colors for these widgets; extend `DS_TOKENS` only if a genuinely new semantic role is approved for the whole system (not a one-off chart exception).
 
 ## Showcase & docs
 
