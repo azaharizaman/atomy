@@ -10,6 +10,8 @@
 
 **Purpose:** Bidirectional HTTP event handling for external system integration
 
+> **Composition vs. a new `Nexus\Webhook` package:** The capabilities below overlap **transactional fan-out** (`Nexus\Outbox`), **command idempotency** (`Nexus\Idempotency`), **HMAC / signing** (`Nexus\Crypto`), **tenant scope** (`Nexus\Tenant`), and optional **EventStream** dual-write. A monolithic Layer 1 “Webhook” package would largely duplicate those packages. See the **“Recipe: Webhook-style integrations (composition)”** section in [`docs/project/NEXUS_PACKAGES_REFERENCE.md`](../../project/NEXUS_PACKAGES_REFERENCE.md) for inbound/outbound flows and a pseudocode sketch using existing Nexus contracts.
+
 ### Capabilities
 - **Inbound**: Receive events from Stripe, Twilio, external ERPs
 - **Outbound**: Send events to external HTTP endpoints with retry logic

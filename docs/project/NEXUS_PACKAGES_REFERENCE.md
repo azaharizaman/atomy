@@ -1,9 +1,12 @@
 # 📚 NEXUS FIRST-PARTY PACKAGES REFERENCE GUIDE
 
-**Version:** 1.10  
-**Last Updated (March 22, 2026)**  
+**Version:** 1.11  
+**Last Updated (March 24, 2026)**  
 **Target Audience:** Coding Agents & Developers  
 **Purpose:** Prevent architectural violations by explicitly documenting available packages and their proper usage patterns.
+
+**Recent Updates (March 24, 2026):**
+- **NEW:** [Recipe: Webhook-style integrations (composition)](#recipe-webhook-style-integrations-composition) — inbound/outbound flows using existing packages (`Idempotency`, `Outbox`, `Crypto`, `Tenant`, `EventStream`, etc.); **no** standalone `Nexus\Webhook` package is required for these mechanisms.
 
 **Recent Updates (March 22, 2026):**
 - **NEW:** Added `Nexus\Outbox` (Layer 1) — transactional outbox model, publish lifecycle (`Pending` → `Sending` → `Sent`|`Failed`), tenant-scoped dedup keys, claim tokens; no queue/HTTP/DB in package.
@@ -83,6 +86,7 @@
 | **Policy evaluation / rule decisions** | **Use `Nexus\PolicyEngine\Contracts\PolicyEngineInterface`, `Nexus\PolicyEngine\Contracts\PolicyRegistryInterface`, `Nexus\PolicyEngine\Contracts\PolicyDefinitionDecoderInterface`** |
 | **Command idempotency / replay of mutating API results** | **Use `Nexus\Idempotency\Contracts\IdempotencyServiceInterface`, `Nexus\Idempotency\Contracts\IdempotencyStoreInterface` (or `IdempotencyQueryInterface` / `IdempotencyPersistInterface` where only reads or writes are needed), `Nexus\Idempotency\Contracts\IdempotencyClockInterface`** |
 | **Transactional outbox / integration fan-out after commit** | **Use `Nexus\Outbox\Contracts\OutboxServiceInterface`, `Nexus\Outbox\Contracts\OutboxStoreInterface` (or `OutboxQueryInterface` / `OutboxPersistInterface`), `Nexus\Outbox\Contracts\OutboxClockInterface`** |
+| **“Webhook platform” (ingress verification, retries, fan-out)** | **Compose** `Nexus\Idempotency`, `Nexus\Outbox`, `Nexus\Crypto`, `Nexus\Tenant`, `Nexus\EventStream` (optional dual-write), `Nexus\AuditLogger` / `Nexus\Telemetry` — see [recipe below](#recipe-webhook-style-integrations-composition). **Do not** introduce a monolithic `Nexus\Webhook` that duplicates these responsibilities. |
 
 ---
 
@@ -131,6 +135,58 @@
 - `enqueue` / `claimNextPending` / `markSent` / `markFailed` / `scheduleRetry`
 - `InMemoryOutboxStore` for unit tests; persistence via `OutboxStoreInterface` (Layer 3 adapters)
 - EventStream bridge documentation for dual-write ordering (append + enqueue in one transaction)
+
+---
+
+#### Recipe: Webhook-style integrations (composition)
+
+**Why this exists:** Inbound HTTP callbacks and outbound HTTP delivery touch **verification**, **idempotency**, **durable send**, and **tenant scope**. Those concerns are already split across first-party packages. A single “webhook” Layer 1 package that also owns retries, signatures, and HTTP types would **overlap** `Nexus\Outbox`, `Nexus\Idempotency`, and `Nexus\Crypto`. Instead, wire the following **roles** (Layer 3 owns controllers, HTTP clients, and queues).
+
+**Inbound (vendor → Nexus): e.g. Stripe, Twilio**
+
+| Step | Package / contract | Role |
+|------|---------------------|------|
+| Resolve tenant & secrets | `Nexus\Tenant\Contracts\TenantContextInterface` (+ app config / DB in L3) | Know which signing secret and idempotency scope apply. |
+| Verify authenticity | `Nexus\Crypto` (e.g. HMAC via `CryptoManagerInterface` / signer capabilities) | Constant-time compare of provider signature over raw body; **no** duplicate “webhook crypto” package. |
+| Deduplicate retries | `Nexus\Idempotency` (`IdempotencyServiceInterface`, …) | Use provider event id (or composite key) as `clientKey` + stable `operationRef` so duplicate deliveries replay the same outcome. |
+| Optional audit | `Nexus\AuditLogger` | Record receipt / processing for compliance. |
+| Domain reaction | Bounded-context services (e.g. `Nexus\Payment`, invoices, etc.) | After verification + idempotency gate, run business logic. |
+
+**Outbound (Nexus → customer URL): e.g. “order confirmed” callback**
+
+| Step | Package / contract | Role |
+|------|---------------------|------|
+| Same transaction as domain change | `Nexus\EventStream` (optional) + **`Nexus\Outbox`** | Append domain event if applicable; **`enqueue`** an outbox row with tenant-scoped `DedupKey` (see Outbox README). HTTP happens **after** commit. |
+| Sign request (if subscribers verify HMAC) | `Nexus\Crypto` | Compute signature over canonical body + timestamp in L3 before POST. |
+| Reliability | **`Nexus\Outbox`** | Worker claims pending (`claimNextPending`), POSTs via HTTP client in L3, then `markSent` / `markFailed` / `scheduleRetry`. |
+| Metrics / tracing | `Nexus\Telemetry` | Latency, failures, retry counts. |
+
+**Sketch (pseudocode — not copy-paste API surface):**
+
+```text
+// Inbound POST handler (L3)
+tenantId = TenantContext::current();
+rawBody = request->getContent();
+if (!Crypto::verifyProviderSignature(rawBody, headers, secret)) { return 401; }
+
+decision = IdempotencyService::begin(tenantId, 'webhook:stripe', providerEventId, fingerprint(rawBody));
+if (decision->Replay) { return 200 with cached response body; }
+if (decision->InProgress) { return 409; }
+
+try {
+    DomainService::applyStripeEvent(parsed(rawBody));
+    IdempotencyService::complete(..., ResultEnvelope::fromHttpResponse(...));
+} catch (...) {
+    IdempotencyService::fail(...);
+    throw;
+}
+
+// Outbound after successful commit (L3 + worker)
+OutboxService::enqueue(OutboxEnqueueCommand(..., dedupKey: streamEventId, payload: callbackPayload));
+// Async worker: claimNextPending -> HTTP POST -> markSent / scheduleRetry
+```
+
+**Payment-specific webhooks** may additionally use payment-bounded implementations in the monorepo (e.g. gateway webhook processors) **on top of** the same primitives where appropriate.
 
 ---
 
