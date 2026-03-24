@@ -11,20 +11,28 @@ namespace Nexus\ApprovalOperations\DTOs;
  */
 final readonly class StartOperationalApprovalCommand
 {
+    public string $tenantId;
+
+    public string $initiatorPrincipalId;
+
     /**
      * @param array<string, mixed> $context
      */
     public function __construct(
-        public string $tenantId,
+        string $tenantId,
         public ApprovalSubjectRef $subject,
-        public string $initiatorPrincipalId,
+        string $initiatorPrincipalId,
         public array $context = [],
     ) {
-        if (\trim($this->tenantId) === '') {
+        $tenantId = \trim($tenantId);
+        $initiatorPrincipalId = \trim($initiatorPrincipalId);
+        if ($tenantId === '') {
             throw new \InvalidArgumentException('tenantId cannot be empty.');
         }
-        if (\trim($this->initiatorPrincipalId) === '') {
+        if ($initiatorPrincipalId === '') {
             throw new \InvalidArgumentException('initiatorPrincipalId cannot be empty.');
         }
+        $this->tenantId = $tenantId;
+        $this->initiatorPrincipalId = $initiatorPrincipalId;
     }
 }

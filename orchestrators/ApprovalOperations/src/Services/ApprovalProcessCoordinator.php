@@ -7,6 +7,7 @@ namespace Nexus\ApprovalOperations\Services;
 use Nexus\ApprovalOperations\Contracts\ApprovalCommentPersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstancePersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
+use Nexus\ApprovalOperations\Contracts\ApprovalTemplateResolverInterface;
 use Nexus\ApprovalOperations\Contracts\OperationalWorkflowBridgeInterface;
 use Nexus\ApprovalOperations\DTOs\ApprovalInstanceReadModel;
 use Nexus\ApprovalOperations\DTOs\RecordApprovalDecisionCommand;
@@ -15,6 +16,7 @@ use Nexus\ApprovalOperations\DTOs\StartedOperationalApprovalResult;
 use Nexus\ApprovalOperations\DTOs\OperationalApprovalDecision;
 use Nexus\ApprovalOperations\Exceptions\OperationalApprovalDeniedException;
 use Nexus\ApprovalOperations\Exceptions\OperationalApprovalNotFoundException;
+use Nexus\ApprovalOperations\Exceptions\OperationalApprovalWorkflowMissingException;
 use Nexus\Common\Contracts\UlidInterface;
 use Nexus\PolicyEngine\Contracts\PolicyEngineInterface;
 use Nexus\PolicyEngine\Domain\PolicyRequest;
@@ -28,7 +30,7 @@ final readonly class ApprovalProcessCoordinator
     private const string POLICY_ACTION_START = 'operational_approval.start';
 
     public function __construct(
-        private ApprovalTemplateResolver $templateResolver,
+        private ApprovalTemplateResolverInterface $templateResolver,
         private ApprovalInstancePersistInterface $instancesPersist,
         private ApprovalInstanceQueryInterface $instancesQuery,
         private PolicyEngineInterface $policyEngine,
@@ -64,20 +66,32 @@ final readonly class ApprovalProcessCoordinator
             throw OperationalApprovalDeniedException::fromDecision($decision);
         }
 
-        $context = \array_merge($command->context, [
+        $instanceId = $this->ulid->generate();
+
+        $contextForWorkflow = \array_merge($command->context, [
             'templateId' => $template->id,
             'initiatorPrincipalId' => $command->initiatorPrincipalId,
+            'operationalInstanceId' => $instanceId,
         ]);
+
+        $pending = new ApprovalInstanceReadModel(
+            id: $instanceId,
+            tenantId: $command->tenantId,
+            templateId: $template->id,
+            workflowInstanceId: null,
+            subject: $command->subject,
+            status: 'pending',
+        );
+        $this->instancesPersist->save($pending);
 
         $workflowInstanceId = $this->workflowBridge->startWorkflow(
             $command->tenantId,
             $template->workflowDefinitionId,
             $command->subject,
-            $context,
+            $contextForWorkflow,
         );
 
-        $instanceId = $this->ulid->generate();
-        $instance = new ApprovalInstanceReadModel(
+        $completed = new ApprovalInstanceReadModel(
             id: $instanceId,
             tenantId: $command->tenantId,
             templateId: $template->id,
@@ -85,7 +99,7 @@ final readonly class ApprovalProcessCoordinator
             subject: $command->subject,
             status: 'pending',
         );
-        $this->instancesPersist->save($instance);
+        $this->instancesPersist->save($completed);
 
         return new StartedOperationalApprovalResult(
             instanceId: $instanceId,
@@ -98,6 +112,10 @@ final readonly class ApprovalProcessCoordinator
         $instance = $this->instancesQuery->findById($command->tenantId, $command->instanceId);
         if ($instance === null) {
             throw OperationalApprovalNotFoundException::forInstance($command->instanceId);
+        }
+
+        if ($instance->workflowInstanceId === null || \trim($instance->workflowInstanceId) === '') {
+            throw OperationalApprovalWorkflowMissingException::forInstance($instance->id);
         }
 
         $this->workflowBridge->applyDecision(

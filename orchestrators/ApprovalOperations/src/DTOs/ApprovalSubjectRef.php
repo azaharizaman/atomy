@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\ApprovalOperations\DTOs;
 
+use Nexus\ApprovalOperations\Exceptions\InvalidApprovalSubjectRefException;
+
 /**
  * Generic subject reference for operational approvals (not RFQ-domain-specific).
  */
@@ -14,10 +16,10 @@ final readonly class ApprovalSubjectRef
         public string $subjectId,
     ) {
         if (\trim($this->subjectType) === '') {
-            throw new \InvalidArgumentException('subjectType cannot be empty.');
+            throw InvalidApprovalSubjectRefException::emptySubjectType();
         }
         if (\trim($this->subjectId) === '') {
-            throw new \InvalidArgumentException('subjectId cannot be empty.');
+            throw InvalidApprovalSubjectRefException::emptySubjectId();
         }
     }
 }

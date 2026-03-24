@@ -11,6 +11,9 @@ use Nexus\ApprovalOperations\DTOs\OperationalApprovalDecision;
 
 /**
  * Generates correlation IDs until Workflow is fully wired to repositories.
+ *
+ * TODO: Replace with a bridge that starts real workflow instances (pass `operationalInstanceId` from
+ * `$context` into Workflow repositories) and applies decisions to the persisted workflow state.
  */
 final readonly class GeneratingOperationalWorkflowBridge implements OperationalWorkflowBridgeInterface
 {

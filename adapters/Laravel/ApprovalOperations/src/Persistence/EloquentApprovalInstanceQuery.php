@@ -22,11 +22,13 @@ final readonly class EloquentApprovalInstanceQuery implements ApprovalInstanceQu
             return null;
         }
 
+        $wf = $row->workflow_instance_id;
+
         return new ApprovalInstanceReadModel(
             id: (string) $row->id,
             tenantId: (string) $row->tenant_id,
             templateId: (string) $row->template_id,
-            workflowInstanceId: (string) $row->workflow_instance_id,
+            workflowInstanceId: $wf === null ? null : (string) $wf,
             subject: new ApprovalSubjectRef((string) $row->subject_type, (string) $row->subject_id),
             status: (string) $row->status,
         );

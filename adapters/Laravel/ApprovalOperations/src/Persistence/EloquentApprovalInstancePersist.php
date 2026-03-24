@@ -15,6 +15,7 @@ final readonly class EloquentApprovalInstancePersist implements ApprovalInstance
         OperationalApprovalInstance::query()->updateOrCreate(
             [
                 'id' => $instance->id,
+                'tenant_id' => $instance->tenantId,
             ],
             [
                 'tenant_id' => $instance->tenantId,

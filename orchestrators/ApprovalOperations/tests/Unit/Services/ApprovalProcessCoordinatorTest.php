@@ -16,6 +16,7 @@ use Nexus\ApprovalOperations\DTOs\OperationalApprovalDecision;
 use Nexus\ApprovalOperations\DTOs\RecordApprovalDecisionCommand;
 use Nexus\ApprovalOperations\DTOs\StartOperationalApprovalCommand;
 use Nexus\ApprovalOperations\Exceptions\ApprovalTemplateNotFoundException;
+use Nexus\ApprovalOperations\Exceptions\OperationalApprovalDeniedException;
 use Nexus\ApprovalOperations\Exceptions\OperationalApprovalNotFoundException;
 use Nexus\ApprovalOperations\Services\ApprovalProcessCoordinator;
 use Nexus\ApprovalOperations\Services\ApprovalTemplateResolver;
@@ -70,16 +71,26 @@ final class ApprovalProcessCoordinatorTest extends TestCase
                 $tenantId,
                 'wf-def',
                 self::isInstanceOf(ApprovalSubjectRef::class),
-                self::anything(),
+                self::callback(static function (array $ctx): bool {
+                    return isset($ctx['operationalInstanceId'], $ctx['templateId'], $ctx['initiatorPrincipalId']);
+                }),
             )
             ->willReturn('wf-instance-1');
 
         $persist = $this->createMock(ApprovalInstancePersistInterface::class);
-        $persist->expects(self::once())
+        $saveCall = 0;
+        $persist->expects(self::exactly(2))
             ->method('save')
-            ->with(self::callback(static function (ApprovalInstanceReadModel $i) use ($tenantId): bool {
-                return $i->tenantId === $tenantId && $i->workflowInstanceId === 'wf-instance-1';
-            }));
+            ->willReturnCallback(function (ApprovalInstanceReadModel $i) use (&$saveCall, $tenantId): void {
+                ++$saveCall;
+                self::assertSame($tenantId, $i->tenantId);
+                self::assertSame('pending', $i->status);
+                if ($saveCall === 1) {
+                    self::assertNull($i->workflowInstanceId);
+                } else {
+                    self::assertSame('wf-instance-1', $i->workflowInstanceId);
+                }
+            });
 
         $ulid = $this->createMock(UlidInterface::class);
         $ulid->method('generate')->willReturn('01hzyd8yq1v9zq8x9zq8x9zq9');
@@ -102,6 +113,55 @@ final class ApprovalProcessCoordinatorTest extends TestCase
 
         self::assertSame('01hzyd8yq1v9zq8x9zq8x9zq9', $result->instanceId);
         self::assertSame('wf-instance-1', $result->workflowInstanceId);
+    }
+
+    public function testStartThrowsWhenPolicyDenies(): void
+    {
+        $tenantId = '01hzyd8yq1v9zq8x9zq8x9zq8';
+        $template = new ApprovalTemplateReadModel(
+            id: 'tpl-1',
+            tenantId: $tenantId,
+            subjectType: 'x',
+            workflowDefinitionId: 'wf-def',
+            policyId: 'pol-1',
+            policyVersion: 'v1',
+            templateVersion: 1,
+        );
+
+        $templateQuery = $this->createMock(ApprovalTemplateQueryInterface::class);
+        $templateQuery->method('findBySubjectType')->willReturn($template);
+
+        $policyEngine = $this->createMock(PolicyEngineInterface::class);
+        $policyEngine->method('evaluate')->willReturn(new PolicyDecision(
+            outcome: DecisionOutcome::Deny,
+            matchedRuleIds: [],
+            reasonCodes: [],
+            obligations: [],
+            traceId: 'trace',
+        ));
+
+        $persist = $this->createMock(ApprovalInstancePersistInterface::class);
+        $persist->expects(self::never())->method('save');
+
+        $bridge = $this->createMock(OperationalWorkflowBridgeInterface::class);
+        $bridge->expects(self::never())->method('startWorkflow');
+
+        $coordinator = new ApprovalProcessCoordinator(
+            new ApprovalTemplateResolver($templateQuery),
+            $persist,
+            $this->createMock(ApprovalInstanceQueryInterface::class),
+            $policyEngine,
+            $bridge,
+            $this->createMock(UlidInterface::class),
+            $this->createMock(ApprovalCommentPersistInterface::class),
+        );
+
+        $this->expectException(OperationalApprovalDeniedException::class);
+        $coordinator->start(new StartOperationalApprovalCommand(
+            tenantId: $tenantId,
+            subject: new ApprovalSubjectRef('x', 'sub-1'),
+            initiatorPrincipalId: 'user-1',
+        ));
     }
 
     public function testStartThrowsWhenTemplateMissing(): void

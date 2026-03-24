@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Nexus\ApprovalOperations\Services;
 
 use Nexus\ApprovalOperations\Contracts\ApprovalTemplateQueryInterface;
+use Nexus\ApprovalOperations\Contracts\ApprovalTemplateResolverInterface;
 use Nexus\ApprovalOperations\DTOs\ApprovalSubjectRef;
 use Nexus\ApprovalOperations\DTOs\ApprovalTemplateReadModel;
 use Nexus\ApprovalOperations\Exceptions\ApprovalTemplateNotFoundException;
 
-final readonly class ApprovalTemplateResolver
+final readonly class ApprovalTemplateResolver implements ApprovalTemplateResolverInterface
 {
     public function __construct(
         private ApprovalTemplateQueryInterface $templates,

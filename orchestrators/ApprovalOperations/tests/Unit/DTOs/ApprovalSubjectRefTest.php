@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace Nexus\ApprovalOperations\Tests\Unit\DTOs;
 
 use Nexus\ApprovalOperations\DTOs\ApprovalSubjectRef;
+use Nexus\ApprovalOperations\Exceptions\InvalidApprovalSubjectRefException;
 use PHPUnit\Framework\TestCase;
 
 final class ApprovalSubjectRefTest extends TestCase
 {
     public function testRejectsEmptySubjectType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidApprovalSubjectRefException::class);
         new ApprovalSubjectRef(' ', 'x');
     }
 
     public function testRejectsEmptySubjectId(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidApprovalSubjectRefException::class);
         new ApprovalSubjectRef('type', "\t");
     }
 

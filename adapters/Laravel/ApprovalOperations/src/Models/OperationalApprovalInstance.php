@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $id
  * @property string $tenant_id
  * @property string $template_id
- * @property string $workflow_instance_id
+ * @property string|null $workflow_instance_id
  * @property string $subject_type
  * @property string $subject_id
  * @property string $status

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\ApprovalOperations\DTOs;
 
+use Nexus\ApprovalOperations\Exceptions\RecordApprovalDecisionValidationException;
+
 /**
  * Record an approve/reject (or similar) decision on an instance.
  */
@@ -17,13 +19,13 @@ final readonly class RecordApprovalDecisionCommand
         public ?string $comment = null,
     ) {
         if (\trim($this->tenantId) === '') {
-            throw new \InvalidArgumentException('tenantId cannot be empty.');
+            throw RecordApprovalDecisionValidationException::emptyTenantId();
         }
         if (\trim($this->instanceId) === '') {
-            throw new \InvalidArgumentException('instanceId cannot be empty.');
+            throw RecordApprovalDecisionValidationException::emptyInstanceId();
         }
         if (\trim($this->actorPrincipalId) === '') {
-            throw new \InvalidArgumentException('actorPrincipalId cannot be empty.');
+            throw RecordApprovalDecisionValidationException::emptyActorPrincipalId();
         }
     }
 }

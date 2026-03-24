@@ -13,7 +13,7 @@ final readonly class ApprovalInstanceReadModel
         public string $id,
         public string $tenantId,
         public string $templateId,
-        public string $workflowInstanceId,
+        public ?string $workflowInstanceId,
         public ApprovalSubjectRef $subject,
         public string $status,
     ) {

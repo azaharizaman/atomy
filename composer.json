@@ -131,7 +131,6 @@
             "Nexus\\Laravel\\ApprovalOperations\\": "adapters/Laravel/ApprovalOperations/src/",
             "Nexus\\Outbox\\": "packages/Outbox/src/",
             "Nexus\\QuoteIngestion\\": "orchestrators/QuoteIngestion/src/",
-            "Nexus\\Vendor\\": "packages/Vendor/src/",
             "Nexus\\Sourcing\\": "packages/Sourcing/src/",
             "Nexus\\SourcingScoring\\": "packages/SourcingScoring/src/",
             "Nexus\\SourcingOperations\\": "orchestrators/SourcingOperations/src/",

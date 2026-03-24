@@ -40,12 +40,12 @@ final class OperationalApprovalApiTest extends TestCase
         ];
     }
 
-    public function test_start_operational_approval_returns_201_when_template_exists(): void
+    /**
+     * @return array{0: string, 1: string} [userId, tenantId]
+     */
+    private function seedUserForTenant(string $tenantId): array
     {
-        $tenantId = (string) Str::ulid();
         $userId = (string) Str::ulid();
-        $templateId = (string) Str::ulid();
-
         DB::table('users')->insert([
             'id' => $userId,
             'tenant_id' => $tenantId,
@@ -60,6 +60,16 @@ final class OperationalApprovalApiTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        return [$userId, $tenantId];
+    }
+
+    public function test_start_operational_approval_returns_201_when_template_exists(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $templateId = (string) Str::ulid();
+
+        [$userId] = $this->seedUserForTenant($tenantId);
 
         DB::table('operational_approval_templates')->insert([
             'id' => $templateId,
@@ -96,24 +106,10 @@ final class OperationalApprovalApiTest extends TestCase
     {
         $tenantA = (string) Str::ulid();
         $tenantB = (string) Str::ulid();
-        $userA = (string) Str::ulid();
         $instanceId = (string) Str::ulid();
         $templateId = (string) Str::ulid();
 
-        DB::table('users')->insert([
-            'id' => $userA,
-            'tenant_id' => $tenantA,
-            'email' => 'oa2-' . Str::lower((string) Str::ulid()) . '@example.com',
-            'name' => 'OA User',
-            'password_hash' => Hash::make('password'),
-            'role' => 'admin',
-            'status' => 'active',
-            'timezone' => 'UTC',
-            'locale' => 'en',
-            'email_verified_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        [$userA] = $this->seedUserForTenant($tenantA);
 
         DB::table('operational_approval_templates')->insert([
             'id' => $templateId,

@@ -70,6 +70,7 @@ use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 use Nexus\ApprovalOperations\Contracts\ApprovalCommentPersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstancePersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
+use Nexus\ApprovalOperations\Contracts\ApprovalTemplateResolverInterface;
 use Nexus\ApprovalOperations\Contracts\OperationalWorkflowBridgeInterface;
 use Nexus\ApprovalOperations\Services\ApprovalProcessCoordinator;
 use Nexus\ApprovalOperations\Services\ApprovalTemplateResolver;
@@ -90,9 +91,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AtomyPermissivePolicyEngine::class);
         $this->app->singleton(UlidInterface::class, LaravelUlidGenerator::class);
         $this->app->singleton(ApprovalTemplateResolver::class);
+        $this->app->bind(ApprovalTemplateResolverInterface::class, static function ($app): ApprovalTemplateResolverInterface {
+            return $app->make(ApprovalTemplateResolver::class);
+        });
         $this->app->singleton(ApprovalProcessCoordinator::class, static function ($app): ApprovalProcessCoordinator {
             return new ApprovalProcessCoordinator(
-                $app->make(ApprovalTemplateResolver::class),
+                $app->make(ApprovalTemplateResolverInterface::class),
                 $app->make(ApprovalInstancePersistInterface::class),
                 $app->make(ApprovalInstanceQueryInterface::class),
                 $app->make(AtomyPermissivePolicyEngine::class),
