@@ -1,0 +1,34 @@
+{
+    "name": "nexus/laravel-sourcing-adapter",
+    "description": "Laravel adapter for Nexus Sourcing (Layer 3): quotations, awards, Eloquent repository.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "illuminate/database": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0",
+        "nexus/sourcing": "*@dev"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Laravel\\Sourcing\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Laravel\\Sourcing\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nexus\\Laravel\\Sourcing\\Providers\\SourcingAdapterServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

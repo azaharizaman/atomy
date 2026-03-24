@@ -40,8 +40,11 @@
         "nexus/esg-regulatory": "*@dev",
         "nexus/esg-operations": "*@dev",
         "nexus/idempotency": "*@dev",
+        "nexus/quote-ingestion": "*@dev",
         "nexus/vendor": "*@dev",
-        "nexus/quote-ingestion": "*@dev"
+        "nexus/sourcing": "*@dev",
+        "nexus/sourcing-scoring": "*@dev",
+        "nexus/sourcing-operations": "*@dev"
     },
     "repositories": [
         {
@@ -122,9 +125,13 @@
             "Nexus\\Idempotency\\": "packages/Idempotency/src/",
             "Nexus\\Vendor\\": "packages/Vendor/src/",
             "Nexus\\Laravel\\Idempotency\\": "adapters/Laravel/Idempotency/src/",
-            "Nexus\\Adapter\\Laravel\\Vendor\\": "adapters/Laravel/Vendor/src/",
+            "Nexus\\Laravel\\Sourcing\\": "adapters/Laravel/Sourcing/src/",
             "Nexus\\Outbox\\": "packages/Outbox/src/",
-            "Nexus\\QuoteIngestion\\": "orchestrators/QuoteIngestion/src/"
+            "Nexus\\QuoteIngestion\\": "orchestrators/QuoteIngestion/src/",
+            "Nexus\\Vendor\\": "packages/Vendor/src/",
+            "Nexus\\Sourcing\\": "packages/Sourcing/src/",
+            "Nexus\\SourcingScoring\\": "packages/SourcingScoring/src/",
+            "Nexus\\SourcingOperations\\": "orchestrators/SourcingOperations/src/"
         }
     },
     "autoload-dev": {
@@ -161,9 +168,14 @@
             "Nexus\\PolicyEngine\\Tests\\": "packages/PolicyEngine/tests/",
             "Nexus\\Idempotency\\Tests\\": "packages/Idempotency/tests/",
             "Nexus\\Laravel\\Idempotency\\Tests\\": "adapters/Laravel/Idempotency/tests/",
+            "Nexus\\Laravel\\Sourcing\\Tests\\": "adapters/Laravel/Sourcing/tests/",
             "Nexus\\Adapter\\Laravel\\Vendor\\Tests\\": "adapters/Laravel/Vendor/tests/",
             "Nexus\\Outbox\\Tests\\": "packages/Outbox/tests/",
-            "Nexus\\QuoteIngestion\\Tests\\": "orchestrators/QuoteIngestion/tests/"
+            "Nexus\\QuoteIngestion\\Tests\\": "orchestrators/QuoteIngestion/tests/",
+            "Nexus\\Vendor\\Tests\\": "packages/Vendor/tests/",
+            "Nexus\\Sourcing\\Tests\\": "packages/Sourcing/tests/",
+            "Nexus\\SourcingScoring\\Tests\\": "packages/SourcingScoring/tests/",
+            "Nexus\\SourcingOperations\\Tests\\": "orchestrators/SourcingOperations/tests/"
         }
     }
 }

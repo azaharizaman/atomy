@@ -1,6 +1,6 @@
 {
-    "name": "nexus/vendor",
-    "description": "Vendor management for Nexus ERP ecosystem",
+    "name": "nexus/sourcing-scoring",
+    "description": "Scoring engine for vendor evaluation and sourcing analysis",
     "type": "library",
     "license": "MIT",
     "require": {
@@ -11,12 +11,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Nexus\\Vendor\\": "src/"
+            "Nexus\\SourcingScoring\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\\Vendor\\Tests\\": "tests/"
+            "Nexus\\SourcingScoring\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "dev",

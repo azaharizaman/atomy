@@ -1,0 +1,24 @@
+{
+    "name": "nexus/sourcing-operations",
+    "description": "Nexus SourcingOperations Orchestrator - Cross-package workflow coordination for vendor sourcing and ecosystem management",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "nexus/sourcing": "*@dev",
+        "nexus/sourcing-scoring": "*@dev",
+        "nexus/vendor": "*@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\SourcingOperations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\SourcingOperations\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

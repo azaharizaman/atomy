@@ -1,22 +1,23 @@
 {
-    "name": "nexus/vendor",
-    "description": "Vendor management for Nexus ERP ecosystem",
+    "name": "nexus/sourcing",
+    "description": "Nexus Sourcing Domain Package",
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": "^8.3"
+        "php": "^8.3",
+        "nexus/vendor": "*@dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"
     },
     "autoload": {
         "psr-4": {
-            "Nexus\\Vendor\\": "src/"
+            "Nexus\\Sourcing\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nexus\\Vendor\\Tests\\": "tests/"
+            "Nexus\\Sourcing\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "dev",
