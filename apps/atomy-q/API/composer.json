@@ -73,6 +73,7 @@
         "nexus/project-management-operations": "*@dev",
         "nexus/idempotency": "*@dev",
         "nexus/sourcing": "*@dev",
+        "nexus/vendor": "*@dev",
 
         "nexus/laravel-identity-adapter": "*@dev",
         "nexus/laravel-notifier-adapter": "*@dev",
@@ -80,6 +81,7 @@
         "nexus/laravel-setting-adapter": "*@dev",
         "nexus/laravel-idempotency-adapter": "*@dev",
         "nexus/laravel-sourcing-adapter": "*@dev"
+        "nexus/vendor-laravel-adapter": "*@dev"
     },
     "require-dev": {
         "dedoc/scramble": "^0.13.15",

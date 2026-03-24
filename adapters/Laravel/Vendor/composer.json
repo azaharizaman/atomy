@@ -1,0 +1,44 @@
+{
+    "name": "nexus/vendor-laravel-adapter",
+    "description": "Laravel adapter for Nexus Vendor (Layer 3): Eloquent models and repository.",
+    "type": "library",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../../packages/Vendor",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "illuminate/database": "^12.0",
+        "illuminate/support": "^12.0",
+        "nexus/vendor": "*@dev"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\Adapter\\Laravel\\Vendor\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\Adapter\\Laravel\\Vendor\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nexus\\Adapter\\Laravel\\Vendor\\VendorServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
