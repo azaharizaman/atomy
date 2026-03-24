@@ -71,19 +71,19 @@ Exact filenames may vary; keep responsibilities aligned with the spec §8 table.
 - Modify: `packages/Workflow/src/Core/ApprovalEngine.php`
 - Test: `packages/Workflow/tests/Unit/Core/ApprovalEngineTest.php` (extend or create alongside existing ApprovalEngine tests)
 
-- [ ] **Step 1: Write failing test** — Assert `canProceed()` with an unregistered strategy throws `UnknownApprovalStrategyException` (not `RuntimeException`).
+- [x] **Step 1: Write failing test** — Assert `canProceed()` with an unregistered strategy throws `UnknownApprovalStrategyException` (not `RuntimeException`).
 
-- [ ] **Step 2: Run test** — From `packages/Workflow`: `composer install` then `./vendor/bin/phpunit tests/Unit/Core/ApprovalEngineTest.php` (adjust path if tests live under a different subfolder; use `glob` to locate `ApprovalEngineTest.php`).
+- [x] **Step 2: Run test** — From `packages/Workflow`: `composer install` then `./vendor/bin/phpunit tests/Unit/Core/ApprovalEngineTest.php` (adjust path if tests live under a different subfolder; use `glob` to locate `ApprovalEngineTest.php`).
 
-- [ ] **Step 3: Implement** — Add `final readonly class UnknownApprovalStrategyException extends \DomainException` (or project-standard base if one exists under `Nexus\Workflow\Exceptions`); replace both `RuntimeException` throws in `ApprovalEngine::canProceed` and `shouldReject` with this exception; include strategy name in exception message for operators (avoid leaking tenant data).
+- [x] **Step 3: Implement** — Add `UnknownApprovalStrategyException` extending `\RuntimeException` (aligned with other `Nexus\Workflow\Exceptions`); replace both `RuntimeException` throws in `ApprovalEngine::canProceed` and `shouldReject`; include strategy name in exception message.
 
-- [ ] **Step 4: Run full Workflow unit tests** — `./vendor/bin/phpunit` in `packages/Workflow`.
+- [x] **Step 4: Run full Workflow unit tests** — `./vendor/bin/phpunit` in `packages/Workflow`.
 
-- [ ] **Step 5: PHPStan** — `./vendor/bin/phpstan analyse src --level=max` if Workflow uses PHPStan.
+- [x] **Step 5: PHPStan** — Skipped: Workflow package has no PHPStan dev dependency yet; add when package adopts static analysis.
 
-- [ ] **Step 6: Commit** — `feat(workflow): use UnknownApprovalStrategyException in ApprovalEngine`
+- [x] **Step 6: Commit** — `feat(workflow): add UnknownApprovalStrategyException for ApprovalEngine` (`f1ec54d8`).
 
-- [ ] **Step 7: Update Workflow package docs** — `packages/Workflow/README.md` or `IMPLEMENTATION_SUMMARY.md` note the exception change for L3 error mapping.
+- [x] **Step 7: Update Workflow package docs** — `IMPLEMENTATION_SUMMARY.md` updated.
 
 ---
 
