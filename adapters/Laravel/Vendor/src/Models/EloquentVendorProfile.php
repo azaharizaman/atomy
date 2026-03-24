@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Nexus\Vendor\Contracts\VendorProfileInterface;
 use Nexus\Vendor\ValueObjects\VendorStatus;
+use Nexus\Adapter\Laravel\Vendor\Exceptions\InvalidVendorStatusException;
 
 class EloquentVendorProfile extends Model implements VendorProfileInterface {
     use HasUlids;
@@ -24,6 +25,12 @@ class EloquentVendorProfile extends Model implements VendorProfileInterface {
     }
 
     public function getStatus(): VendorStatus {
-        return VendorStatus::from($this->status);
+        $status = VendorStatus::tryFrom($this->status);
+        
+        if ($status === null) {
+            throw new InvalidVendorStatusException($this->status);
+        }
+        
+        return $status;
     }
 }

@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->ulid('id')->primary();
             $table->ulid('tenant_id')->index();
             $table->ulid('party_id')->index();
-            $table->string('status');
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }
