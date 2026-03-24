@@ -5,7 +5,8 @@ import {
   ChevronRight, BarChart2, Clock, Eye, FileText, Users,
   Award, List, FileCheck, ShieldCheck, GitBranch, AlertTriangle,
   Plus, Download, RefreshCw, Lock, CheckCircle2, Upload, Star,
-  FolderArchive, Settings, Sparkles, Search, Mail
+  FolderArchive, Settings, Sparkles, Search, Mail,
+  Hourglass, ArrowUpRight, MoreHorizontal,
 } from 'lucide-react';
 
 // Import DS components
@@ -60,6 +61,8 @@ import {
   QuickActionCard,
 } from '../components/ds/DashboardCards';
 import { SpotlightSearch, type SpotlightResult } from '../components/ds/SpotlightSearch';
+import { StatusDistributionCard, StatusBreakdownGrid } from '../components/ds/TaskDashboardWidgets';
+import { ScheduleStrip } from '../components/ds/ScheduleStrip';
 import type { StatusVariant } from '../components/ds/tokens';
 import {
   RFQ_ROWS,
@@ -72,6 +75,27 @@ import {
   DASHBOARD_CATEGORY_BREAKDOWN,
   DASHBOARD_PENDING_APPROVALS,
 } from '../data/mockData';
+
+// ─── Task / workflow dashboard (showcase demo; fixed dates) ───────────────────
+
+const WORKFLOW_DEMO_SEGMENTS = [
+  { id: 'todo', label: 'To-do', pct: 26, count: 12, tone: 'neutral' as const },
+  { id: 'prog', label: 'In progress', pct: 33, count: 15, tone: 'warning' as const },
+  { id: 'rev', label: 'In review', pct: 13, count: 6, tone: 'accent' as const },
+  { id: 'done', label: 'Completed', pct: 28, count: 13, tone: 'success' as const },
+];
+
+const SCHEDULE_DEMO_RANGE = {
+  start: new Date('2026-03-11T00:00:00'),
+  end: new Date('2026-03-18T23:59:59'),
+};
+const SCHEDULE_DEMO_TODAY = new Date('2026-03-15T12:00:00');
+const SCHEDULE_DEMO_ITEMS = [
+  { id: 't1', label: 'Draft Client Proposal', start: new Date('2026-03-11T09:00:00'), end: new Date('2026-03-12T17:00:00') },
+  { id: 't2', label: 'UI Testing', start: new Date('2026-03-13T10:00:00') },
+  { id: 't3', label: 'Prototype Testing', start: new Date('2026-03-15T11:00:00') },
+  { id: 't4', label: 'Stakeholder review', start: new Date('2026-03-16T14:00:00'), end: new Date('2026-03-17T16:00:00') },
+];
 
 // ─── Showcase Navigation Sections ─────────────────────────────────────────────
 
@@ -1404,6 +1428,84 @@ export function ShowcasePage() {
                     onAction={() => {}}
                   />
                 </div>
+              </div>
+            </SubSection>
+
+            <SubSection title="Task / workflow dashboard">
+              <p className="text-sm text-slate-600 mb-4">
+                Status distribution, breakdown tiles, KPI scorecards with leading icon and drill-down, and a horizontal schedule strip (DS semantic tones only).
+              </p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <KPIScorecard
+                    title="Tasks completed"
+                    value="128"
+                    leadingIcon={<CheckCircle2 size={18} className="text-green-600" />}
+                    trailingAction={(
+                      <IconButton variant="ghost" size="sm" label="Open details">
+                        <ArrowUpRight size={16} className="text-slate-400" />
+                      </IconButton>
+                    )}
+                    trend={{ direction: 'up', label: '+10% from last month' }}
+                  />
+                  <KPIScorecard
+                    title="Pending tasks"
+                    value="47"
+                    leadingIcon={<Hourglass size={18} className="text-amber-600" />}
+                    trailingAction={(
+                      <IconButton variant="ghost" size="sm" label="Open queue">
+                        <ArrowUpRight size={16} className="text-slate-400" />
+                      </IconButton>
+                    )}
+                    trend={{ direction: 'up', label: '+14% from last month' }}
+                  />
+                  <KPIScorecard
+                    title="Upcoming deadlines"
+                    value="15"
+                    leadingIcon={<Bell size={18} className="text-slate-500" />}
+                    trailingAction={(
+                      <IconButton variant="ghost" size="sm" label="Open calendar">
+                        <ArrowUpRight size={16} className="text-slate-400" />
+                      </IconButton>
+                    )}
+                    trend={{ direction: 'down', label: '-5% from last month' }}
+                  />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <StatusDistributionCard
+                    title="Task status overview"
+                    segments={[...WORKFLOW_DEMO_SEGMENTS]}
+                    variant="stacked"
+                    actions={(
+                      <IconButton variant="ghost" size="sm" label="Chart actions">
+                        <MoreHorizontal size={16} className="text-slate-500" />
+                      </IconButton>
+                    )}
+                  />
+                  <StatusDistributionCard
+                    title="Spark column variant"
+                    segments={[...WORKFLOW_DEMO_SEGMENTS]}
+                    variant="spark"
+                  />
+                </div>
+                <StatusBreakdownGrid
+                  segments={[...WORKFLOW_DEMO_SEGMENTS]}
+                  columns={4}
+                  onInfoClick={() => {
+                    /* demo */
+                  }}
+                />
+                <ScheduleStrip
+                  title="Task calendar"
+                  range={SCHEDULE_DEMO_RANGE}
+                  today={SCHEDULE_DEMO_TODAY}
+                  items={SCHEDULE_DEMO_ITEMS}
+                  actions={(
+                    <IconButton variant="ghost" size="sm" label="Schedule actions">
+                      <MoreHorizontal size={16} className="text-slate-500" />
+                    </IconButton>
+                  )}
+                />
               </div>
             </SubSection>
 

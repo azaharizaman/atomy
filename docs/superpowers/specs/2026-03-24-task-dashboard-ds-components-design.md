@@ -3,7 +3,7 @@
 **Date:** 2026-03-24  
 **Branch:** `brainstorm/design-system-dashboard-components`  
 **Scope:** `apps/atomy-q/Design-System-v2`  
-**Status:** Brainstorm / design guideline (not implemented)
+**Status:** Implemented in `apps/atomy-q/Design-System-v2` (2026-03-24)
 
 ## Decisions
 

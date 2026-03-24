@@ -160,3 +160,14 @@ Implemented additional UI/UX refinements requested after P1:
 - Spec: `docs/superpowers/specs/2026-03-21-atomy-q-horizontal-process-track-design.md`.
 - Parity: same files updated under `apps/atomy-q/Screen-Blueprint`.
 - **Refinement:** Horizontal track nodes reuse exported `TIMELINE_DOT_PALETTE` / `timelineNodeSizeClass` / `timelineIconTextClass` from `Timeline.tsx`; connectors are `h-px` (1px, matching vertical `w-px` spine) and meet node centers via per-step left/right flex segments. Showcase demos live under **Timeline → Horizontal process track** after the vertical timeline.
+
+## Update — Task / workflow dashboard widgets (2026-03-24)
+
+Spec: `docs/superpowers/specs/2026-03-24-task-dashboard-ds-components-design.md`
+
+- **`workflowSegment.ts`:** `WorkflowSemanticTone`, `WorkflowSegment`, `normalizeSegmentWidths`, DS-only tone maps (`WORKFLOW_TONE_BAR`, `WORKFLOW_TONE_TILE`, `WORKFLOW_TONE_PILL`, etc.).
+- **`TaskDashboardWidgets.tsx`:** `StatusDistributionCard` (`stacked` | `spark`), `StatusBreakdownGrid` (responsive 2/4 columns, optional info affordance).
+- **`scheduleStripLogic.ts`:** pure layout helpers (`positionPercentInRange`, `widthPercentSpan`, `effectiveSpanEnd`, `placeScheduleItems`, `maxLaneIndex`); tests in `scheduleStripLogic.test.ts`.
+- **`ScheduleStrip.tsx`:** date header row, today marker line, lane-stacked task pills (indigo emphasis for “today” / same-day).
+- **`KPIScorecard`:** optional `leadingIcon`, `trailingAction`.
+- **`ShowcasePage`:** **Data Display → Task / workflow dashboard** demos; `npm test` runs Vitest for schedule logic.

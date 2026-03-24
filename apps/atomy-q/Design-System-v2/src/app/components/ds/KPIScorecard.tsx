@@ -13,6 +13,10 @@ interface KPIScorecardProps {
   value: React.ReactNode;
   subtitle?: string;
   badge?: React.ReactNode;
+  /** Leading icon (e.g. metric category). */
+  leadingIcon?: React.ReactNode;
+  /** Trailing control (e.g. drill-down `IconButton` with `ArrowUpRight`). */
+  trailingAction?: React.ReactNode;
   trend?: { direction: TrendDirection; label: string };
   progress?: { value: number; type?: ProgressType; variant?: 'indigo' | 'green' | 'amber' | 'red' };
   onClick?: () => void;
@@ -27,7 +31,17 @@ const TREND_STYLES: Record<TrendDirection, { icon: React.ReactNode; className: s
 };
 
 export function KPIScorecard({
-  title, value, subtitle, badge, trend, progress, onClick, className = '', highlight = false,
+  title,
+  value,
+  subtitle,
+  badge,
+  leadingIcon,
+  trailingAction,
+  trend,
+  progress,
+  onClick,
+  className = '',
+  highlight = false,
 }: KPIScorecardProps) {
   return (
     <div
@@ -41,8 +55,14 @@ export function KPIScorecard({
     >
       {/* Header row */}
       <div className="flex items-start justify-between gap-2">
-        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</span>
-        {badge && <span className="shrink-0">{badge}</span>}
+        <div className="flex items-start gap-2 min-w-0">
+          {leadingIcon && <span className="text-slate-400 shrink-0 mt-0.5">{leadingIcon}</span>}
+          <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</span>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {badge && <span>{badge}</span>}
+          {trailingAction}
+        </div>
       </div>
 
       {/* Value */}
