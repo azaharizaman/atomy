@@ -12,7 +12,7 @@ Add a collapsible right sidebar to the RFQ workspace that displays AI insights, 
 
 - **Container**: Add to `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/layout.tsx`
 - **Position**: Right of the main content area, between content and the edge of the viewport
-- **Width**: 280px expanded, 48px collapsed (icon only)
+- **Width**: 288px (w-72) expanded, 48px collapsed (icon only)
 - **Default State**: Expanded (visible by default)
 - **Toggle**: Chevron button in sidebar header to collapse/expand
 
@@ -21,7 +21,7 @@ Add a collapsible right sidebar to the RFQ workspace that displays AI insights, 
 │  Rail  │  Header                                           │
 │        ├───────────────────────────────────────┬───────────┤
 │        │  Active Record Menu                    │           │
-│  48px  │  ┌─────────────────────────────────┐   │  280px   │
+│  48px  │  ┌─────────────────────────────────┐   │  288px  │
 │        │  │     Main Content Area           │   │  Sidebar │
 │        │  │                                 │   │           │
 │        │  │                                 │   │  ┌─────┐ │

@@ -56,11 +56,11 @@ export function KPIScorecard({
       {/* Header row */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2 min-w-0">
-          {leadingIcon && <span className="text-slate-400 shrink-0 mt-0.5">{leadingIcon}</span>}
+          {leadingIcon != null && <span className="text-slate-400 shrink-0 mt-0.5">{leadingIcon}</span>}
           <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          {badge && <span>{badge}</span>}
+          {badge != null && <span>{badge}</span>}
           {trailingAction}
         </div>
       </div>

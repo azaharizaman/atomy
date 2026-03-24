@@ -68,7 +68,7 @@ export function StatusDistributionCard({
             aria-label={chartLabel}
           >
             {segments.map(seg => {
-              const h = maxPct > 0 ? (Math.max(0, seg.pct) / maxPct) * 100 : 0;
+              const h = (Math.max(0, seg.pct) / maxPct) * 100;
               return (
                 <div
                   key={seg.id}

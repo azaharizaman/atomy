@@ -10,6 +10,7 @@ import Link from 'next/link';
 
 interface RfqInsightsSidebarProps {
   rfqId: string;
+  isNewRfq?: boolean;
 }
 
 function PlaceholderCard({ icon, title, message }: { icon: React.ReactNode; title: string; message: string }) {
@@ -26,17 +27,19 @@ function PlaceholderCard({ icon, title, message }: { icon: React.ReactNode; titl
   );
 }
 
-export function RfqInsightsSidebar({ rfqId }: RfqInsightsSidebarProps) {
+export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqInsightsSidebarProps) {
   const [expanded, setExpanded] = React.useState(true);
   const { data: rfq, isLoading: rfqLoading } = useRfq(rfqId);
   const { data: overview, isLoading: overviewLoading } = useRfqOverview(rfqId);
 
-  const isNewRfq = !rfqLoading && rfq && (rfq.status === 'draft' || (rfq.quotesCount ?? 0) === 0);
+  const derivedIsNewRfq = !rfqLoading && rfq && (rfq.status === 'draft' || (rfq.quotesCount ?? 0) === 0);
+  const isNewRfq = explicitIsNewRfq !== undefined ? explicitIsNewRfq : derivedIsNewRfq;
 
   const comparison = overview?.comparison;
-  const riskSummary = { high: 0, medium: 0, low: 0 }; // Placeholder - can be extended with actual data
+  // TODO: Derive from actual RFQ/insights data when available
+  const riskSummary = { high: 0, medium: 0, low: 0 };
 
-  if (overviewLoading) {
+  if (overviewLoading || rfqLoading) {
     return (
       <div className="w-72 border-l border-slate-200 bg-slate-50 p-4 space-y-3 animate-pulse">
         <div className="h-4 w-24 bg-slate-200 rounded" />

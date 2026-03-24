@@ -39,9 +39,9 @@ export function ScheduleStrip({
     () =>
       eachDayOfInterval({
         start: rangeStart,
-        end: startOfDay(range.end),
+        end: rangeEnd,
       }),
-    [rangeStart, range.end],
+    [rangeStart, rangeEnd],
   );
 
   const placed = React.useMemo(

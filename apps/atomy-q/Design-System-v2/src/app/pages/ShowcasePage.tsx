@@ -1491,8 +1491,8 @@ export function ShowcasePage() {
                 <StatusBreakdownGrid
                   segments={[...WORKFLOW_DEMO_SEGMENTS]}
                   columns={4}
-                  onInfoClick={() => {
-                    /* demo */
+                  onInfoClick={(segmentId) => {
+                    console.log('Info clicked for segment:', segmentId);
                   }}
                 />
                 <ScheduleStrip
