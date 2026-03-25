@@ -9,6 +9,10 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Nexus\ApprovalOperations\Exceptions\ApprovalTemplateNotFoundException;
+use Nexus\ApprovalOperations\Exceptions\OperationalApprovalDeniedException;
+use Nexus\ApprovalOperations\Exceptions\OperationalApprovalNotFoundException;
+use Nexus\ApprovalOperations\Exceptions\OperationalApprovalWorkflowMissingException;
 use Nexus\Laravel\Idempotency\Http\IdempotencyMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -37,6 +41,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->renderable(function (\Throwable $e, \Illuminate\Http\Request $request) {
             if (!$request->is('api/*') && !$request->wantsJson()) {
                 return null;
+            }
+
+            if ($e instanceof ApprovalTemplateNotFoundException || $e instanceof OperationalApprovalNotFoundException) {
+                return response()->json(['error' => 'Resource not found'], 404);
+            }
+
+            if ($e instanceof OperationalApprovalDeniedException) {
+                return response()->json(['error' => 'Policy denied'], 403);
+            }
+
+            if ($e instanceof OperationalApprovalWorkflowMissingException) {
+                return response()->json(['error' => 'Operational approval instance is incomplete'], 500);
             }
 
             if ($e instanceof \Illuminate\Validation\ValidationException) {

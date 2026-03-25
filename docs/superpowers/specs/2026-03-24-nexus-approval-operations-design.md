@@ -1,7 +1,8 @@
 # Nexus ApprovalOperations — Design Specification
 
 **Date:** 2026-03-24  
-**Status:** Draft (brainstorm consolidated)  
+**Status:** Draft — implementation plan ready  
+**Implementation plan:** [2026-03-24-nexus-approval-operations.md](../plans/2026-03-24-nexus-approval-operations.md)  
 **Related research:** [Approval_Package_Research_Report.md](../../research/Approval_Package_Research_20260324/Approval_Package_Research_Report.md)  
 **Related packages:** `Nexus\Workflow`, `Nexus\PolicyEngine`, `Nexus\Identity`, `Nexus\Storage`, `Nexus\Notifier`, `Nexus\Idempotency`, `Nexus\Outbox`
 
@@ -182,8 +183,8 @@ This spec also **separates** that mechanism from **RFQ quote approvals** (domain
 ## 15. Next steps
 
 1. **Stakeholder review** of this spec (especially §2 and §10).  
-2. **`writing-plans` skill** → `docs/superpowers/plans/YYYY-MM-DD-nexus-approval-operations.md` with phased tasks (L1 touch-ups → L2 skeleton → L3 → Atomy-Q boundaries).  
-3. **Implementation** in a dedicated worktree (per project conventions).
+2. **Implementation plan** — [`docs/superpowers/plans/2026-03-24-nexus-approval-operations.md`](../plans/2026-03-24-nexus-approval-operations.md) (phases: Workflow exception → L2 orchestrator → Laravel adapter → Atomy-Q boundaries → docs). *(Created via `writing-plans` skill, 2026-03-24.)*  
+3. **Implementation** in a dedicated worktree (per project conventions); use subagent-driven or executing-plans per plan header.
 
 ---
 

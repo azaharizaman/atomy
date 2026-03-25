@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\Workflow\Core;
 
-use Nexus\Workflow\Contracts\{TaskInterface, ApprovalStrategyInterface};
+use Nexus\Workflow\Contracts\ApprovalStrategyInterface;
+use Nexus\Workflow\Exceptions\UnknownApprovalStrategyException;
 
 /**
  * Internal approval logic engine.
@@ -34,9 +35,8 @@ final class ApprovalEngine
         array $approvals,
         array $config = []
     ): bool {
-        $strategy = $this->strategies[$strategyName] ?? throw new \RuntimeException(
-            "Approval strategy '{$strategyName}' not found."
-        );
+        $strategy = $this->strategies[$strategyName]
+            ?? throw UnknownApprovalStrategyException::forStrategy($strategyName);
 
         return $strategy->canProceed($approvals, $config);
     }
@@ -52,9 +52,8 @@ final class ApprovalEngine
         array $approvals,
         array $config = []
     ): bool {
-        $strategy = $this->strategies[$strategyName] ?? throw new \RuntimeException(
-            "Approval strategy '{$strategyName}' not found."
-        );
+        $strategy = $this->strategies[$strategyName]
+            ?? throw UnknownApprovalStrategyException::forStrategy($strategyName);
 
         return $strategy->shouldReject($approvals, $config);
     }

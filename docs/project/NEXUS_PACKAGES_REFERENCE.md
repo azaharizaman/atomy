@@ -323,6 +323,7 @@ Orchestrators coordinate multiple Layer 1 packages to fulfill complex business w
 | **SupplyChainOperations** | Inventory, Manufacturing, Warehouse, Procurement |
 | **ProjectManagementOperations** | Project, Task, TimeTracking, ResourceAllocation, Milestone, Budget, Receivable, Notifier |
 | **InsightOperations** | QueryEngine, Notifier, Reporting |
+| **ApprovalOperations** | Workflow, PolicyEngine, Common (ULID); Laravel adapter for persistence |
 
 ---
 
@@ -337,5 +338,5 @@ Orchestrators coordinate multiple Layer 1 packages to fulfill complex business w
 ---
 
 **Package Count:** 102 Atomic Packages (includes PolicyEngine, Idempotency, Outbox)  
-**Orchestrator Count:** 19 Orchestrators  
+**Orchestrator Count:** 20 Orchestrators  
 **Architecture Version:** 3.0 (Nexus Three-Layer)

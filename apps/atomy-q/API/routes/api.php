@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\HandoffController;
 use App\Http\Controllers\Api\V1\IntegrationController;
 use App\Http\Controllers\Api\V1\NegotiationController;
 use App\Http\Controllers\Api\V1\NormalizationController;
+use App\Http\Controllers\Api\V1\OperationalApprovalController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\QuoteSubmissionController;
 use App\Http\Controllers\Api\V1\RecommendationController;
@@ -413,5 +414,17 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::patch('{id}/status', [TaskController::class, 'updateStatus']);
         Route::get('{id}/dependencies', [TaskController::class, 'getDependencies']);
         Route::put('{id}/dependencies', [TaskController::class, 'updateDependencies']);
+    });
+
+    // --- Operational approvals (Nexus\ApprovalOperations; distinct from RFQ quote flows) ---
+    Route::prefix('operational-approvals')->group(function (): void {
+        Route::post('instances', [OperationalApprovalController::class, 'store'])
+            ->middleware('idempotency')
+            ->name('v1.operational-approvals.instances.store');
+        Route::get('instances/{instanceId}', [OperationalApprovalController::class, 'show'])
+            ->name('v1.operational-approvals.instances.show');
+        Route::post('instances/{instanceId}/decisions', [OperationalApprovalController::class, 'storeDecision'])
+            ->middleware('idempotency')
+            ->name('v1.operational-approvals.instances.decisions.store');
     });
 });

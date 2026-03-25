@@ -32,7 +32,7 @@ This package enables:
 - [x] All 18 core interfaces defined
 - [x] All 6 service classes implemented
 - [x] All 10 value objects created
-- [x] All 13 exceptions implemented
+- [x] All 14 exceptions implemented
 - [x] All 4 core engine classes created
 
 ### Phase 2: State Machine Engine (Completed ✅)
@@ -122,7 +122,7 @@ Immutable domain objects:
 9. `SlaConfiguration` - SLA settings
 10. `WorkflowData` - Typed workflow data container
 
-#### Exceptions (13 files)
+#### Exceptions (14 files)
 Domain-specific exceptions with static factory methods:
 
 1. `WorkflowNotFoundException` - Workflow not found
@@ -138,6 +138,7 @@ Domain-specific exceptions with static factory methods:
 11. `SlaBreachException` - SLA deadline breached
 12. `DelegationChainExceededException` - Delegation too deep
 13. `CircularDependencyException` - Circular state dependency
+14. `UnknownApprovalStrategyException` - Approval strategy name not registered on `ApprovalEngine` (`forStrategy`)
 
 ---
 
@@ -217,14 +218,14 @@ Domain-specific exceptions with static factory methods:
 - **Number of Core Engines**: 4
 - **Number of Value Objects**: 10
 - **Number of Enums**: 7
-- **Number of Exceptions**: 13
+- **Number of Exceptions**: 14
 
 ### Breakdown by Type
 - **Contracts/**: 18 files (~900 lines)
 - **Services/**: 6 files (~600 lines)
 - **Core/**: 4 files (~400 lines)
 - **ValueObjects/**: 10 files (~250 lines)
-- **Exceptions/**: 13 files (~200 lines)
+- **Exceptions/**: 14 files (~200 lines)
 
 ### Test Coverage
 - **Unit Test Coverage**: Pending test implementation
