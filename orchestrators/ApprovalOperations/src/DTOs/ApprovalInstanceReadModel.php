@@ -18,6 +18,8 @@ final readonly class ApprovalInstanceReadModel
         public ?string $workflowInstanceId,
         public ApprovalSubjectRef $subject,
         public ApprovalStatus $status,
+        public ?\DateTimeImmutable $dueAt = null,
+        public ?\DateTimeImmutable $createdAt = null,
     ) {
     }
 }

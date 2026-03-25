@@ -13,4 +13,9 @@ final class OperationalApprovalWorkflowMissingException extends \DomainException
     {
         return new self(\sprintf('Operational approval instance %s has no workflow correlation.', $instanceId));
     }
+
+    public static function forWorkflowInstance(string $workflowInstanceId): self
+    {
+        return new self(\sprintf('Operational approval workflow instance %s was not found.', $workflowInstanceId));
+    }
 }

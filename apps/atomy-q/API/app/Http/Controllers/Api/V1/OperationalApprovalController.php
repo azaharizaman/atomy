@@ -7,10 +7,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
 use Nexus\ApprovalOperations\DTOs\OperationalApprovalDecision;
 use Nexus\ApprovalOperations\DTOs\RecordApprovalDecisionCommand;
 use Nexus\ApprovalOperations\DTOs\StartOperationalApprovalCommand;
 use Nexus\ApprovalOperations\DTOs\ApprovalSubjectRef;
+use Nexus\ApprovalOperations\DTOs\StartedOperationalApprovalResult;
 use Nexus\ApprovalOperations\Services\ApprovalProcessCoordinator;
 use Nexus\ApprovalOperations\Services\ApprovalSlaViewBuilder;
 
@@ -19,6 +22,7 @@ final class OperationalApprovalController extends Controller
     public function __construct(
         private readonly ApprovalProcessCoordinator $coordinator,
         private readonly ApprovalSlaViewBuilder $slaViewBuilder,
+        private readonly ApprovalInstanceQueryInterface $instancesQuery,
     ) {
     }
 
@@ -59,7 +63,7 @@ final class OperationalApprovalController extends Controller
             context: $validated['context'] ?? [],
         );
 
-        $result = $this->coordinator->start($command);
+        $result = DB::transaction(fn (): StartedOperationalApprovalResult => $this->coordinator->start($command));
 
         return response()->json([
             'data' => [
@@ -83,12 +87,37 @@ final class OperationalApprovalController extends Controller
         ]);
     }
 
+    public function index(Request $request): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+
+        $items = array_map(
+            function ($instance): array {
+                $sla = $this->slaViewBuilder->buildFromInstance($instance);
+
+                return [
+                    'instance_id' => $instance->id,
+                    'tenant_id' => $instance->tenantId,
+                    'subject_type' => $instance->subject->subjectType,
+                    'subject_id' => $instance->subject->subjectId,
+                    'status' => $instance->status->value,
+                    'due_at' => $sla->dueAtIso8601,
+                    'seconds_remaining' => $sla->secondsRemaining,
+                ];
+            },
+            $this->instancesQuery->findByTenant($tenantId),
+        );
+
+        return response()->json(['data' => $items]);
+    }
+
     public function storeDecision(Request $request, string $instanceId): JsonResponse
     {
         $tenantId = $this->tenantId($request);
         $validated = $request->validate([
             'decision' => 'required|string|in:approve,reject',
             'comment' => 'sometimes|nullable|string|max:8000',
+            'attachment_storage_key' => 'sometimes|nullable|string|max:512',
         ]);
 
         $principalId = (string) $request->attributes->get('auth_user_id', '');
@@ -100,13 +129,16 @@ final class OperationalApprovalController extends Controller
             ? OperationalApprovalDecision::Approve
             : OperationalApprovalDecision::Reject;
 
-        $this->coordinator->recordDecision(new RecordApprovalDecisionCommand(
-            tenantId: $tenantId,
-            instanceId: $instanceId,
-            actorPrincipalId: $principalId,
-            decision: $decision,
-            comment: $validated['comment'] ?? null,
-        ));
+        DB::transaction(function () use ($tenantId, $instanceId, $principalId, $decision, $validated): void {
+            $this->coordinator->recordDecision(new RecordApprovalDecisionCommand(
+                tenantId: $tenantId,
+                instanceId: $instanceId,
+                actorPrincipalId: $principalId,
+                decision: $decision,
+                comment: $validated['comment'] ?? null,
+                attachmentStorageKey: $validated['attachment_storage_key'] ?? null,
+            ));
+        });
 
         return response()->json(['data' => ['ok' => true]], 200);
     }

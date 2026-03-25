@@ -74,9 +74,16 @@ use Nexus\ApprovalOperations\Contracts\ApprovalTemplateResolverInterface;
 use Nexus\ApprovalOperations\Contracts\OperationalWorkflowBridgeInterface;
 use Nexus\ApprovalOperations\Services\ApprovalProcessCoordinator;
 use Nexus\ApprovalOperations\Services\ApprovalTemplateResolver;
-use App\Services\ApprovalOperations\AtomyPermissivePolicyEngine;
+use App\Services\ApprovalOperations\AtomyApprovalPolicyRegistry;
+use App\Services\ApprovalOperations\AtomyApprovalPolicyEngine;
 use App\Services\ApprovalOperations\LaravelUlidGenerator;
 use Nexus\Common\Contracts\UlidInterface;
+use Nexus\PolicyEngine\Contracts\PolicyEngineInterface;
+use Nexus\PolicyEngine\Contracts\PolicyDefinitionDecoderInterface;
+use Nexus\PolicyEngine\Contracts\PolicyRegistryInterface;
+use Nexus\PolicyEngine\Contracts\PolicyValidatorInterface;
+use Nexus\PolicyEngine\Services\JsonPolicyDecoder;
+use Nexus\PolicyEngine\Services\PolicyValidator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -88,7 +95,20 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ReplayResponseFactoryInterface::class, IdempotencyReplayResponseFactory::class);
 
         // Nexus ApprovalOperations (operational approvals — distinct from RFQ quote flows).
-        $this->app->singleton(AtomyPermissivePolicyEngine::class);
+        $this->app->singleton(AtomyApprovalPolicyRegistry::class);
+        $this->app->singleton(PolicyValidatorInterface::class, PolicyValidator::class);
+        $this->app->singleton(PolicyDefinitionDecoderInterface::class, static function ($app): PolicyDefinitionDecoderInterface {
+            return new JsonPolicyDecoder($app->make(PolicyValidatorInterface::class));
+        });
+        $this->app->singleton(PolicyRegistryInterface::class, static function ($app): PolicyRegistryInterface {
+            return new AtomyApprovalPolicyRegistry($app->make(PolicyDefinitionDecoderInterface::class));
+        });
+        $this->app->singleton(PolicyEngineInterface::class, static function ($app): PolicyEngineInterface {
+            return new AtomyApprovalPolicyEngine(
+                $app->make(PolicyRegistryInterface::class),
+                $app->make(PolicyValidatorInterface::class),
+            );
+        });
         $this->app->singleton(UlidInterface::class, LaravelUlidGenerator::class);
         $this->app->singleton(ApprovalTemplateResolver::class);
         $this->app->bind(ApprovalTemplateResolverInterface::class, static function ($app): ApprovalTemplateResolverInterface {
@@ -99,7 +119,7 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(ApprovalTemplateResolverInterface::class),
                 $app->make(ApprovalInstancePersistInterface::class),
                 $app->make(ApprovalInstanceQueryInterface::class),
-                $app->make(AtomyPermissivePolicyEngine::class),
+                $app->make(PolicyEngineInterface::class),
                 $app->make(OperationalWorkflowBridgeInterface::class),
                 $app->make(UlidInterface::class),
                 $app->make(ApprovalCommentPersistInterface::class),

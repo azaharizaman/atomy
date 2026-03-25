@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-24  
 **Status:** Draft — implementation plan ready  
-**Implementation plan:** [2026-03-24-nexus-approval-operations.md](../plans/2026-03-24-nexus-approval-operations.md)  
+**Implementation plan:** [2026-03-26-nexus-approval-operations.md](../plans/2026-03-26-nexus-approval-operations.md)
 **Related research:** [Approval_Package_Research_Report.md](../../research/Approval_Package_Research_20260324/Approval_Package_Research_Report.md)  
 **Related packages:** `Nexus\Workflow`, `Nexus\PolicyEngine`, `Nexus\Identity`, `Nexus\Storage`, `Nexus\Notifier`, `Nexus\Idempotency`, `Nexus\Outbox`
 

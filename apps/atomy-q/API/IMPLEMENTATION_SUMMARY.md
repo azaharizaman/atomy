@@ -207,6 +207,11 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Aligned schema/model definitions (`Scenario` fields, `comparison_runs.discarded_by` type) and strengthened several migration indexes.
 - Added missing `declare(strict_types=1);` headers in scaffolded PHP files flagged during review.
 
+## Operational Approvals Hardening (2026-03-26)
+
+- `OperationalApprovalController` now wraps start and decision mutations in DB transactions so the instance row, workflow row, and comments stay in sync on failure.
+- `OperationalApprovalApiTest` now asserts persisted `operational_approval_workflows` rows are created on start and transition to `approved` on decision.
+
 ## RFQ schedule milestones (2026-03-20 + 2026-03-21)
 
 - **`rfqs` table:** nullable timestamps `expected_award_at`, `technical_review_due_at`, `financial_review_due_at` (migration `2026_03_20_000002_add_schedule_milestone_dates_to_rfqs_table.php`) for horizontal timeline / planning dates (queryable, explicit).
