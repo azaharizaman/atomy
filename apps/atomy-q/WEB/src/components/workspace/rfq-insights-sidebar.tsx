@@ -13,6 +13,12 @@ interface RfqInsightsSidebarProps {
   isNewRfq?: boolean;
 }
 
+interface RfqRiskSummary {
+  high: number;
+  medium: number;
+  low: number;
+}
+
 function PlaceholderCard({ icon, title, message }: { icon: React.ReactNode; title: string; message: string }) {
   return (
     <Card padding="sm" className="bg-slate-50 border-dashed">
@@ -32,12 +38,15 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
   const { data: rfq, isLoading: rfqLoading } = useRfq(rfqId);
   const { data: overview, isLoading: overviewLoading } = useRfqOverview(rfqId);
 
-  const derivedIsNewRfq = !rfqLoading && rfq && (rfq.status === 'draft' || (rfq.quotesCount ?? 0) === 0);
+  const derivedIsNewRfq =
+    !rfqLoading &&
+    rfq &&
+    (rfq.status === 'draft' && (Number.isFinite(rfq.quotesCount) ? rfq.quotesCount === 0 : false));
   const isNewRfq = explicitIsNewRfq !== undefined ? explicitIsNewRfq : derivedIsNewRfq;
 
   const comparison = overview?.comparison;
-  // TODO: Derive from actual RFQ/insights data when available
-  const riskSummary = { high: 0, medium: 0, low: 0 };
+  const placeholderRiskSummary: RfqRiskSummary = { high: 0, medium: 0, low: 0 };
+  const riskSummary = isNewRfq ? undefined : placeholderRiskSummary;
 
   if (overviewLoading || rfqLoading) {
     return (
@@ -122,9 +131,11 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
                           ? 'approved'
                           : comparison.is_preview
                             ? 'preview'
-                            : 'draft'
+                            : comparison.status === 'draft'
+                              ? 'draft'
+                              : 'draft'
                       }
-                      label={comparison.status}
+                      label={comparison.status ?? 'unknown'}
                     />
                   </div>
                 ) : (
@@ -149,25 +160,31 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
                   Risk Items
                 </h4>
                 <div className="flex items-center gap-2">
-                  {riskSummary.high > 0 && (
+                  {riskSummary?.high ? (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700">
                       {riskSummary.high} High
                     </span>
-                  )}
-                  {riskSummary.medium > 0 && (
+                  ) : null}
+                  {riskSummary?.medium ? (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700">
                       {riskSummary.medium} Med
                     </span>
-                  )}
-                  {riskSummary.low > 0 && (
+                  ) : null}
+                  {riskSummary?.low ? (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
                       {riskSummary.low} Low
                     </span>
-                  )}
-                  {riskSummary.high === 0 && riskSummary.medium === 0 && riskSummary.low === 0 && (
-                    <span className="text-xs text-green-600 flex items-center gap-1">
-                      <StatusBadge status="approved" label="No issues" />
-                    </span>
+                  ) : null}
+                  {riskSummary &&
+                    riskSummary.high === 0 &&
+                    riskSummary.medium === 0 &&
+                    riskSummary.low === 0 && (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <StatusBadge status="approved" label="No issues" />
+                      </span>
+                    )}
+                  {riskSummary === undefined && (
+                    <span className="text-xs text-slate-400">Loading...</span>
                   )}
                 </div>
               </Link>

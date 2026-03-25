@@ -16,7 +16,7 @@ Add a collapsible right sidebar to the RFQ workspace that displays AI insights, 
 - **Default State**: Expanded (visible by default)
 - **Toggle**: Chevron button in sidebar header to collapse/expand
 
-```
+```text
 ┌────────────────────────────────────────────────────────────┐
 │  Rail  │  Header                                           │
 │        ├───────────────────────────────────────┬───────────┤
@@ -84,7 +84,7 @@ An RFQ is considered "new" (show placeholders) when:
 
 ## 5. Styling
 
-- Use existing design system components: `Card`, `SectionCard`, `StatusBadge`
+- Use existing design system components: `Card`, `StatusBadge`
 - Colors: Follow existing palette (slate-50 for backgrounds, indigo-600 for accents)
 - Spacing: 16px padding inside cards, 12px gap between cards
 - Collapsed state: Show only toggle button with rotate animation
