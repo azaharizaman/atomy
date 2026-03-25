@@ -1,5 +1,13 @@
 # ApprovalOperations — Implementation Summary
 
+## Shipped (2026-03-25)
+
+- **PR Review Fixes:**
+    - Migration: Updated `2026_03_25_000001` down migration to assign unique ULIDs per row during workflow nullability reversion.
+    - Orchestrator: Implemented `ApprovalStatus` enum and `InvalidStartApprovalCommandException` domain exception; updated `ApprovalProcessCoordinator` and `ApprovalInstanceReadModel` to use them.
+    - API: Reordered provider imports in `bootstrap/providers.php` and strengthened `OperationalApprovalApiTest` assertions (ID non-empty string validation).
+    - Infrastructure: Fixed root `composer.json` repository mapping for nested adapters to enable monorepo testing.
+
 ## Shipped (2026-03-24)
 
 - **Layer 2 (`nexus/approval-operations`):** CQRS-style contracts (templates, instances, comments), DTOs, domain exceptions, `ApprovalTemplateResolver`, `ApprovalProcessCoordinator` (PolicyEngine gate + workflow bridge port + instance/comment persistence), `ApprovalSlaViewBuilder` (stub SLA read model).
@@ -17,4 +25,4 @@
 
 ## Last updated
 
-2026-03-24
+2026-03-25
