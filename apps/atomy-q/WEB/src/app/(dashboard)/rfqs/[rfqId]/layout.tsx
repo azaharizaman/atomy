@@ -9,6 +9,7 @@ import { NavGroup, NavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { AppFooter } from '@/components/layout/app-footer';
 import { ActiveRecordMenu } from '@/components/workspace/active-record-menu';
+import { RfqInsightsSidebar } from '@/components/workspace/rfq-insights-sidebar';
 import { useRfq } from '@/hooks/use-rfq';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { type RfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
@@ -89,31 +90,36 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
         <div className="flex flex-1 min-h-0">
           {!isLoading && record && <ActiveRecordMenu record={record} />}
           <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
-            <div className="p-6 flex-1">
-              <div className="max-w-7xl mx-auto space-y-6">
-                {!isLoading && rfq && (
-                  <div className="text-sm text-slate-600">
-                    Project:{' '}
-                    {flagsLoading ? (
-                      <span className="inline-block h-4 w-32 rounded bg-slate-200 animate-pulse align-middle" aria-hidden />
-                    ) : rfq.projectId ? (
-                      projectsLinkEnabled ? (
-                        <Link
-                          href={`/projects/${encodeURIComponent(rfq.projectId)}`}
-                          className="text-indigo-600 hover:underline font-medium"
-                        >
-                          {rfq.projectName ?? rfq.projectId}
-                        </Link>
-                      ) : (
-                        <span className="text-slate-700 font-medium">{rfq.projectName ?? rfq.projectId}</span>
-                      )
-                    ) : (
-                      <span className="text-slate-700 font-medium">Unassigned</span>
+            <div className="flex flex-1">
+              <div className="flex-1 min-w-0">
+                <div className="p-6 flex-1">
+                  <div className="max-w-7xl mx-auto space-y-6">
+                    {!isLoading && rfq && (
+                      <div className="text-sm text-slate-600">
+                        Project:{' '}
+                        {flagsLoading ? (
+                          <span className="inline-block h-4 w-32 rounded bg-slate-200 animate-pulse align-middle" aria-hidden />
+                        ) : rfq.projectId ? (
+                          projectsLinkEnabled ? (
+                            <Link
+                              href={`/projects/${encodeURIComponent(rfq.projectId)}`}
+                              className="text-indigo-600 hover:underline font-medium"
+                            >
+                              {rfq.projectName ?? rfq.projectId}
+                            </Link>
+                          ) : (
+                            <span className="text-slate-700 font-medium">{rfq.projectName ?? rfq.projectId}</span>
+                          )
+                        ) : (
+                          <span className="text-slate-700 font-medium">Unassigned</span>
+                        )}
+                      </div>
                     )}
+                    {children}
                   </div>
-                )}
-                {children}
+                </div>
               </div>
+              <RfqInsightsSidebar rfqId={rfqId} />
             </div>
           </div>
         </div>
