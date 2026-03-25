@@ -90,7 +90,14 @@ final class OperationalApprovalController extends Controller
     public function index(Request $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $validated = $request->validate([
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 25);
 
+        $pageResult = $this->instancesQuery->findByTenant($tenantId, $page, $perPage);
         $items = array_map(
             function ($instance): array {
                 $sla = $this->slaViewBuilder->buildFromInstance($instance);
@@ -105,10 +112,18 @@ final class OperationalApprovalController extends Controller
                     'seconds_remaining' => $sla->secondsRemaining,
                 ];
             },
-            $this->instancesQuery->findByTenant($tenantId),
+            $pageResult->items,
         );
 
-        return response()->json(['data' => $items]);
+        return response()->json([
+            'data' => $items,
+            'meta' => [
+                'total' => $pageResult->total,
+                'per_page' => $pageResult->perPage,
+                'current_page' => $pageResult->currentPage,
+                'last_page' => $pageResult->lastPage,
+            ],
+        ]);
     }
 
     public function storeDecision(Request $request, string $instanceId): JsonResponse

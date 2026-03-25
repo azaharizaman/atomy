@@ -82,8 +82,10 @@ use Nexus\PolicyEngine\Contracts\PolicyEngineInterface;
 use Nexus\PolicyEngine\Contracts\PolicyDefinitionDecoderInterface;
 use Nexus\PolicyEngine\Contracts\PolicyRegistryInterface;
 use Nexus\PolicyEngine\Contracts\PolicyValidatorInterface;
+use Nexus\PolicyEngine\Services\PolicyEvaluator;
 use Nexus\PolicyEngine\Services\JsonPolicyDecoder;
 use Nexus\PolicyEngine\Services\PolicyValidator;
+use Psr\Log\LoggerInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -103,10 +105,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PolicyRegistryInterface::class, static function ($app): PolicyRegistryInterface {
             return new AtomyApprovalPolicyRegistry($app->make(PolicyDefinitionDecoderInterface::class));
         });
-        $this->app->singleton(PolicyEngineInterface::class, static function ($app): PolicyEngineInterface {
-            return new AtomyApprovalPolicyEngine(
+        $this->app->singleton(PolicyEvaluator::class, static function ($app): PolicyEvaluator {
+            return new PolicyEvaluator(
                 $app->make(PolicyRegistryInterface::class),
                 $app->make(PolicyValidatorInterface::class),
+            );
+        });
+        $this->app->singleton(PolicyEngineInterface::class, static function ($app): PolicyEngineInterface {
+            return new AtomyApprovalPolicyEngine(
+                $app->make(PolicyEvaluator::class),
+                $app->make(LoggerInterface::class),
             );
         });
         $this->app->singleton(UlidInterface::class, LaravelUlidGenerator::class);

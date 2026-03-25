@@ -20,7 +20,6 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['tenant_id', 'policy_id', 'policy_version']);
-            $table->index(['tenant_id', 'policy_id', 'policy_version']);
         });
     }
 

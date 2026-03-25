@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\ApprovalOperations\Services;
 
 use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
+use Nexus\ApprovalOperations\DTOs\ApprovalInstanceReadModel;
 use Nexus\ApprovalOperations\DTOs\ApprovalSlaView;
 use Nexus\ApprovalOperations\Exceptions\OperationalApprovalNotFoundException;
 
@@ -27,7 +28,7 @@ final readonly class ApprovalSlaViewBuilder
         return $this->buildFromInstance($instance);
     }
 
-    public function buildFromInstance(\Nexus\ApprovalOperations\DTOs\ApprovalInstanceReadModel $instance): ApprovalSlaView
+    public function buildFromInstance(ApprovalInstanceReadModel $instance): ApprovalSlaView
     {
         $dueAt = $instance->dueAt;
         if ($dueAt === null && $instance->createdAt !== null) {

@@ -183,7 +183,7 @@ This spec also **separates** that mechanism from **RFQ quote approvals** (domain
 ## 15. Next steps
 
 1. **Stakeholder review** of this spec (especially §2 and §10).  
-2. **Implementation plan** — [`docs/superpowers/plans/2026-03-24-nexus-approval-operations.md`](../plans/2026-03-24-nexus-approval-operations.md) (phases: Workflow exception → L2 orchestrator → Laravel adapter → Atomy-Q boundaries → docs). *(Created via `writing-plans` skill, 2026-03-24.)*  
+2. **Implementation plan** — [`docs/superpowers/plans/2026-03-26-nexus-approval-operations.md`](../plans/2026-03-26-nexus-approval-operations.md) (phases: Workflow exception → L2 orchestrator → Laravel adapter → Atomy-Q boundaries → docs). *(Created via `writing-plans` skill, 2026-03-24.)*
 3. **Implementation** in a dedicated worktree (per project conventions); use subagent-driven or executing-plans per plan header.
 
 ---

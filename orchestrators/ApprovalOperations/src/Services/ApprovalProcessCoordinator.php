@@ -175,7 +175,7 @@ final readonly class ApprovalProcessCoordinator
         if (isset($context['sla_seconds']) && \is_numeric($context['sla_seconds'])) {
             $seconds = max(60, (int) $context['sla_seconds']);
         } elseif (isset($context['sla_hours']) && \is_numeric($context['sla_hours'])) {
-            $seconds = max(1, (int) $context['sla_hours']) * 3600;
+            $seconds = max(60, (int) round(((float) $context['sla_hours']) * 3600));
         }
 
         return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))

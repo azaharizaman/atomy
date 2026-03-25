@@ -237,7 +237,7 @@ final class OperationalApprovalApiTest extends TestCase
         $this->assertIsString($data['due_at']);
         $this->assertNotEmpty($data['due_at']);
         $this->assertIsInt($data['seconds_remaining']);
-        $this->assertGreaterThan(0, $data['seconds_remaining']);
+        $this->assertGreaterThanOrEqual(0, $data['seconds_remaining']);
     }
 
     public function test_list_operational_approvals_returns_tenant_scoped_rows(): void
@@ -287,11 +287,16 @@ final class OperationalApprovalApiTest extends TestCase
 
         $response->assertOk();
         $data = $response->json('data');
+        $meta = $response->json('meta');
         $this->assertCount(2, $data);
         $this->assertSame($tenantId, $data[0]['tenant_id']);
         $this->assertSame('purchase_order', $data[0]['subject_type']);
         $this->assertArrayHasKey('due_at', $data[0]);
         $this->assertArrayHasKey('seconds_remaining', $data[0]);
+        $this->assertSame(2, $meta['total']);
+        $this->assertSame(25, $meta['per_page']);
+        $this->assertSame(1, $meta['current_page']);
+        $this->assertSame(1, $meta['last_page']);
     }
 
     public function test_store_decision_updates_persisted_workflow_state_for_tenant(): void

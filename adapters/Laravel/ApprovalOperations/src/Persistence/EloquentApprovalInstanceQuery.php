@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Laravel\ApprovalOperations\Persistence;
 
 use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
+use Nexus\ApprovalOperations\DTOs\ApprovalInstancePageReadModel;
 use Nexus\ApprovalOperations\DTOs\ApprovalInstanceReadModel;
 use Nexus\ApprovalOperations\DTOs\ApprovalSubjectRef;
 use Nexus\ApprovalOperations\Enums\ApprovalStatus;
@@ -26,17 +27,29 @@ final readonly class EloquentApprovalInstanceQuery implements ApprovalInstanceQu
         return $this->hydrate($row);
     }
 
-    /**
-     * @return list<ApprovalInstanceReadModel>
-     */
-    public function findByTenant(string $tenantId): array
+    public function findByTenant(string $tenantId, int $page = 1, int $perPage = 25): ApprovalInstancePageReadModel
     {
-        return OperationalApprovalInstance::query()
+        $page = max(1, $page);
+        $perPage = max(1, $perPage);
+
+        $query = OperationalApprovalInstance::query()
             ->where('tenant_id', $tenantId)
-            ->orderByDesc('created_at')
+            ->orderByDesc('created_at');
+
+        $total = (clone $query)->count();
+        $items = $query
+            ->forPage($page, $perPage)
             ->get()
             ->map(fn (OperationalApprovalInstance $row): ApprovalInstanceReadModel => $this->hydrate($row))
             ->all();
+
+        return new ApprovalInstancePageReadModel(
+            items: $items,
+            total: $total,
+            perPage: $perPage,
+            currentPage: $page,
+            lastPage: max(1, (int) \ceil($total / $perPage)),
+        );
     }
 
     private function hydrate(OperationalApprovalInstance $row): ApprovalInstanceReadModel
@@ -47,12 +60,20 @@ final readonly class EloquentApprovalInstanceQuery implements ApprovalInstanceQu
         if ($row->due_at instanceof \DateTimeInterface) {
             $dueAt = \DateTimeImmutable::createFromInterface($row->due_at);
         } elseif (\is_string($row->due_at) && \trim($row->due_at) !== '') {
-            $dueAt = new \DateTimeImmutable($row->due_at, new \DateTimeZone('UTC'));
+            try {
+                $dueAt = new \DateTimeImmutable($row->due_at, new \DateTimeZone('UTC'));
+            } catch (\Throwable) {
+                $dueAt = null;
+            }
         }
         if ($row->created_at instanceof \DateTimeInterface) {
             $createdAt = \DateTimeImmutable::createFromInterface($row->created_at);
         } elseif (\is_string($row->created_at) && \trim($row->created_at) !== '') {
-            $createdAt = new \DateTimeImmutable($row->created_at, new \DateTimeZone('UTC'));
+            try {
+                $createdAt = new \DateTimeImmutable($row->created_at, new \DateTimeZone('UTC'));
+            } catch (\Throwable) {
+                $createdAt = null;
+            }
         }
 
         return new ApprovalInstanceReadModel(

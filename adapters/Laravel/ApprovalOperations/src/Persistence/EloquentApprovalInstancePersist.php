@@ -21,7 +21,7 @@ final readonly class EloquentApprovalInstancePersist implements ApprovalInstance
                 'tenant_id' => $instance->tenantId,
                 'template_id' => $instance->templateId,
                 'workflow_instance_id' => $instance->workflowInstanceId,
-                'due_at' => $instance->dueAt?->format('Y-m-d H:i:s'),
+                'due_at' => $instance->dueAt?->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
                 'subject_type' => $instance->subject->subjectType,
                 'subject_id' => $instance->subject->subjectId,
                 'status' => $instance->status->value,
