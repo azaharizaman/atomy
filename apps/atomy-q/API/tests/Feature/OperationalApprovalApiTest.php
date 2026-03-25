@@ -94,12 +94,11 @@ final class OperationalApprovalApiTest extends TestCase
         );
 
         $response->assertStatus(201);
-        $response->assertJsonStructure([
-            'data' => [
-                'instance_id',
-                'workflow_instance_id',
-            ],
-        ]);
+        $data = $response->json('data');
+        $this->assertIsString($data['instance_id']);
+        $this->assertNotEmpty($data['instance_id']);
+        $this->assertIsString($data['workflow_instance_id']);
+        $this->assertNotEmpty($data['workflow_instance_id']);
     }
 
     public function test_get_instance_returns_404_for_other_tenant(): void

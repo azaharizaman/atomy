@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\ApprovalOperations\DTOs;
 
+use Nexus\ApprovalOperations\Exceptions\InvalidStartApprovalCommandException;
+
 /**
  * Start a new operational approval instance.
  *
@@ -27,10 +29,10 @@ final readonly class StartOperationalApprovalCommand
         $tenantId = \trim($tenantId);
         $initiatorPrincipalId = \trim($initiatorPrincipalId);
         if ($tenantId === '') {
-            throw new \InvalidArgumentException('tenantId cannot be empty.');
+            throw InvalidStartApprovalCommandException::fromEmptyTenantId();
         }
         if ($initiatorPrincipalId === '') {
-            throw new \InvalidArgumentException('initiatorPrincipalId cannot be empty.');
+            throw InvalidStartApprovalCommandException::fromEmptyInitiatorPrincipalId();
         }
         $this->tenantId = $tenantId;
         $this->initiatorPrincipalId = $initiatorPrincipalId;

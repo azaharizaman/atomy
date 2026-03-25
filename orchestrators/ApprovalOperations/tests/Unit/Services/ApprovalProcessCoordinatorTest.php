@@ -15,6 +15,7 @@ use Nexus\ApprovalOperations\DTOs\ApprovalTemplateReadModel;
 use Nexus\ApprovalOperations\DTOs\OperationalApprovalDecision;
 use Nexus\ApprovalOperations\DTOs\RecordApprovalDecisionCommand;
 use Nexus\ApprovalOperations\DTOs\StartOperationalApprovalCommand;
+use Nexus\ApprovalOperations\Enums\ApprovalStatus;
 use Nexus\ApprovalOperations\Exceptions\ApprovalTemplateNotFoundException;
 use Nexus\ApprovalOperations\Exceptions\OperationalApprovalDeniedException;
 use Nexus\ApprovalOperations\Exceptions\OperationalApprovalNotFoundException;
@@ -84,7 +85,7 @@ final class ApprovalProcessCoordinatorTest extends TestCase
             ->willReturnCallback(function (ApprovalInstanceReadModel $i) use (&$saveCall, $tenantId): void {
                 ++$saveCall;
                 self::assertSame($tenantId, $i->tenantId);
-                self::assertSame('pending', $i->status);
+                self::assertSame(ApprovalStatus::PENDING, $i->status);
                 if ($saveCall === 1) {
                     self::assertNull($i->workflowInstanceId);
                 } else {

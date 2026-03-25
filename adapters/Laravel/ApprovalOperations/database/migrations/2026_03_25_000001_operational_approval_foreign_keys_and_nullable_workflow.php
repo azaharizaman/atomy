@@ -43,7 +43,12 @@ return new class extends Migration
 
         DB::table('operational_approval_instances')
             ->whereNull('workflow_instance_id')
-            ->update(['workflow_instance_id' => (string) Str::ulid()]);
+            ->orderBy('id')
+            ->each(function (object $row): void {
+                DB::table('operational_approval_instances')
+                    ->where('id', $row->id)
+                    ->update(['workflow_instance_id' => (string) Str::ulid()]);
+            });
 
         Schema::table('operational_approval_instances', function (Blueprint $table): void {
             $table->string('workflow_instance_id', 256)->nullable(false)->change();

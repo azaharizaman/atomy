@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Providers\AppServiceProvider;
 use Nexus\Laravel\ApprovalOperations\Providers\ApprovalOperationsAdapterServiceProvider;
+use App\Providers\AppServiceProvider;
 
 return [
     ApprovalOperationsAdapterServiceProvider::class,

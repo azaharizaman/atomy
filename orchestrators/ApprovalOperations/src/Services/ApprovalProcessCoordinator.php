@@ -14,6 +14,7 @@ use Nexus\ApprovalOperations\DTOs\RecordApprovalDecisionCommand;
 use Nexus\ApprovalOperations\DTOs\StartOperationalApprovalCommand;
 use Nexus\ApprovalOperations\DTOs\StartedOperationalApprovalResult;
 use Nexus\ApprovalOperations\DTOs\OperationalApprovalDecision;
+use Nexus\ApprovalOperations\Enums\ApprovalStatus;
 use Nexus\ApprovalOperations\Exceptions\OperationalApprovalDeniedException;
 use Nexus\ApprovalOperations\Exceptions\OperationalApprovalNotFoundException;
 use Nexus\ApprovalOperations\Exceptions\OperationalApprovalWorkflowMissingException;
@@ -80,7 +81,7 @@ final readonly class ApprovalProcessCoordinator
             templateId: $template->id,
             workflowInstanceId: null,
             subject: $command->subject,
-            status: 'pending',
+            status: ApprovalStatus::PENDING,
         );
         $this->instancesPersist->save($pending);
 
@@ -97,7 +98,7 @@ final readonly class ApprovalProcessCoordinator
             templateId: $template->id,
             workflowInstanceId: $workflowInstanceId,
             subject: $command->subject,
-            status: 'pending',
+            status: ApprovalStatus::PENDING,
         );
         $this->instancesPersist->save($completed);
 
@@ -137,7 +138,7 @@ final readonly class ApprovalProcessCoordinator
             );
         }
 
-        $status = $command->decision === OperationalApprovalDecision::Approve ? 'approved' : 'rejected';
+        $status = $command->decision === OperationalApprovalDecision::Approve ? ApprovalStatus::APPROVED : ApprovalStatus::REJECTED;
         $updated = new ApprovalInstanceReadModel(
             id: $instance->id,
             tenantId: $instance->tenantId,

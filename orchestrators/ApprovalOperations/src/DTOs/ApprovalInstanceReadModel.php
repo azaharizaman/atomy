@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\ApprovalOperations\DTOs;
 
+use Nexus\ApprovalOperations\Enums\ApprovalStatus;
+
 /**
  * Read model for a persisted operational approval instance.
  */
@@ -15,7 +17,7 @@ final readonly class ApprovalInstanceReadModel
         public string $templateId,
         public ?string $workflowInstanceId,
         public ApprovalSubjectRef $subject,
-        public string $status,
+        public ApprovalStatus $status,
     ) {
     }
 }
