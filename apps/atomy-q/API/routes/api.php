@@ -418,6 +418,8 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
 
     // --- Operational approvals (Nexus\ApprovalOperations; distinct from RFQ quote flows) ---
     Route::prefix('operational-approvals')->group(function (): void {
+        Route::get('instances', [OperationalApprovalController::class, 'index'])
+            ->name('v1.operational-approvals.instances.index');
         Route::post('instances', [OperationalApprovalController::class, 'store'])
             ->middleware('idempotency')
             ->name('v1.operational-approvals.instances.store');

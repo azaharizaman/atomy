@@ -44,6 +44,7 @@ final readonly class ApprovalProcessCoordinator
     public function start(StartOperationalApprovalCommand $command): StartedOperationalApprovalResult
     {
         $template = $this->templateResolver->resolve($command->tenantId, $command->subject);
+        $dueAt = $this->resolveDueAt($command->context);
 
         $policyRequest = new PolicyRequest(
             tenantId: new PolicyTenantId($command->tenantId),
@@ -82,6 +83,8 @@ final readonly class ApprovalProcessCoordinator
             workflowInstanceId: null,
             subject: $command->subject,
             status: ApprovalStatus::PENDING,
+            dueAt: $dueAt,
+            createdAt: null,
         );
         $this->instancesPersist->save($pending);
 
@@ -99,6 +102,8 @@ final readonly class ApprovalProcessCoordinator
             workflowInstanceId: $workflowInstanceId,
             subject: $command->subject,
             status: ApprovalStatus::PENDING,
+            dueAt: $dueAt,
+            createdAt: null,
         );
         $this->instancesPersist->save($completed);
 
@@ -128,13 +133,14 @@ final readonly class ApprovalProcessCoordinator
         );
 
         $comment = $command->comment;
-        if ($comment !== null && \trim($comment) !== '') {
+        $attachmentStorageKey = $command->attachmentStorageKey;
+        if (($comment !== null && \trim($comment) !== '') || ($attachmentStorageKey !== null && \trim($attachmentStorageKey) !== '')) {
             $this->comments->append(
                 $command->tenantId,
                 $command->instanceId,
                 $command->actorPrincipalId,
-                $comment,
-                null,
+                $comment ?? '',
+                $attachmentStorageKey,
             );
         }
 
@@ -146,6 +152,7 @@ final readonly class ApprovalProcessCoordinator
             workflowInstanceId: $instance->workflowInstanceId,
             subject: $instance->subject,
             status: $status,
+            createdAt: $instance->createdAt,
         );
         $this->instancesPersist->save($updated);
     }
@@ -157,5 +164,21 @@ final readonly class ApprovalProcessCoordinator
             DecisionOutcome::Approve,
             DecisionOutcome::Route,
         ], true);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function resolveDueAt(array $context): \DateTimeImmutable
+    {
+        $seconds = 172800;
+        if (isset($context['sla_seconds']) && \is_numeric($context['sla_seconds'])) {
+            $seconds = max(60, (int) $context['sla_seconds']);
+        } elseif (isset($context['sla_hours']) && \is_numeric($context['sla_hours'])) {
+            $seconds = max(60, (int) round(((float) $context['sla_hours']) * 3600));
+        }
+
+        return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))
+            ->add(new \DateInterval('PT' . $seconds . 'S'));
     }
 }

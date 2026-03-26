@@ -52,6 +52,10 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($e instanceof OperationalApprovalWorkflowMissingException) {
+                if ($e->isWorkflowInstanceMissing()) {
+                    return response()->json(['error' => 'Resource not found'], 404);
+                }
+
                 return response()->json(['error' => 'Operational approval instance is incomplete'], 500);
             }
 

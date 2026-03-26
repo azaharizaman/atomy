@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Nexus\Laravel\ApprovalOperations\Bridge;
 
 use Illuminate\Support\Str;
+use Nexus\ApprovalOperations\Exceptions\OperationalApprovalWorkflowMissingException;
 use Nexus\ApprovalOperations\Contracts\OperationalWorkflowBridgeInterface;
 use Nexus\ApprovalOperations\DTOs\ApprovalSubjectRef;
 use Nexus\ApprovalOperations\DTOs\OperationalApprovalDecision;
+use Nexus\Laravel\ApprovalOperations\Models\OperationalApprovalWorkflow;
 
 /**
- * Generates correlation IDs until Workflow is fully wired to repositories.
- *
- * TODO: Replace with a bridge that starts real workflow instances (pass `operationalInstanceId` from
- * `$context` into Workflow repositories) and applies decisions to the persisted workflow state.
+ * Operational approval workflow bridge backed by the local workflow table.
  */
 final readonly class GeneratingOperationalWorkflowBridge implements OperationalWorkflowBridgeInterface
 {
@@ -23,7 +22,22 @@ final readonly class GeneratingOperationalWorkflowBridge implements OperationalW
         ApprovalSubjectRef $subject,
         array $context,
     ): string {
-        return (string) Str::ulid();
+        $workflowId = (string) Str::ulid();
+        $instanceId = (string) ($context['operationalInstanceId'] ?? '');
+
+        OperationalApprovalWorkflow::query()->create([
+            'id' => $workflowId,
+            'tenant_id' => $tenantId,
+            'operational_approval_instance_id' => $instanceId,
+            'workflow_definition_id' => $workflowDefinitionId,
+            'subject_type' => $subject->subjectType,
+            'subject_id' => $subject->subjectId,
+            'current_state' => 'pending',
+            'last_actor_principal_id' => null,
+            'last_comment' => null,
+        ]);
+
+        return $workflowId;
     }
 
     public function applyDecision(
@@ -33,5 +47,20 @@ final readonly class GeneratingOperationalWorkflowBridge implements OperationalW
         ?string $actorPrincipalId,
         ?string $comment,
     ): void {
+        $currentState = $decision === OperationalApprovalDecision::Approve ? 'approved' : 'rejected';
+
+        $updated = OperationalApprovalWorkflow::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $workflowInstanceId)
+            ->update([
+                'current_state' => $currentState,
+                'last_actor_principal_id' => $actorPrincipalId,
+                'last_comment' => $comment,
+                'updated_at' => now(),
+            ]);
+
+        if ($updated === 0) {
+            throw OperationalApprovalWorkflowMissingException::forWorkflowInstance($workflowInstanceId);
+        }
     }
 }

@@ -207,6 +207,15 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Aligned schema/model definitions (`Scenario` fields, `comparison_runs.discarded_by` type) and strengthened several migration indexes.
 - Added missing `declare(strict_types=1);` headers in scaffolded PHP files flagged during review.
 
+## Operational Approvals Hardening (2026-03-26)
+
+- `OperationalApprovalController` now wraps start and decision mutations in DB transactions so the instance row, workflow row, and comments stay in sync on failure.
+- `OperationalApprovalController@index` now returns tenant-scoped paginated approval instances with `meta.total`, `meta.per_page`, `meta.current_page`, and `meta.last_page` instead of loading the full list into memory.
+- `PolicyEngineInterface` is bound to an app-level engine that evaluates stored policy definitions (table `policy_definitions`) using `Nexus\PolicyEngine`, logs fail-closed denials, and denies on missing/invalid policies.
+- `AtomyApprovalPolicyRegistry` is registered as a singleton and reused by the `PolicyRegistryInterface` binding so the app-level policy registry resolves to one shared instance.
+- `OperationalApprovalWorkflowMissingException` now carries a reason discriminator so the exception renderer returns 404 for a missing workflow row and 500 when the approval row has no workflow correlation.
+- `OperationalApprovalApiTest` now asserts persisted `operational_approval_workflows` rows are created on start and transition to `approved` on decision.
+
 ## RFQ schedule milestones (2026-03-20 + 2026-03-21)
 
 - **`rfqs` table:** nullable timestamps `expected_award_at`, `technical_review_due_at`, `financial_review_due_at` (migration `2026_03_20_000002_add_schedule_milestone_dates_to_rfqs_table.php`) for horizontal timeline / planning dates (queryable, explicit).

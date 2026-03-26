@@ -17,6 +17,7 @@ final readonly class RecordApprovalDecisionCommand
         public string $actorPrincipalId,
         public OperationalApprovalDecision $decision,
         public ?string $comment = null,
+        public ?string $attachmentStorageKey = null,
     ) {
         if (\trim($this->tenantId) === '') {
             throw RecordApprovalDecisionValidationException::emptyTenantId();
