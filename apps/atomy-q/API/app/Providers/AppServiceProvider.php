@@ -103,7 +103,7 @@ class AppServiceProvider extends ServiceProvider
             return new JsonPolicyDecoder($app->make(PolicyValidatorInterface::class));
         });
         $this->app->singleton(PolicyRegistryInterface::class, static function ($app): PolicyRegistryInterface {
-            return new AtomyApprovalPolicyRegistry($app->make(PolicyDefinitionDecoderInterface::class));
+            return $app->make(AtomyApprovalPolicyRegistry::class);
         });
         $this->app->singleton(PolicyEvaluator::class, static function ($app): PolicyEvaluator {
             return new PolicyEvaluator(
