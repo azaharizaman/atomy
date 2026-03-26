@@ -407,7 +407,7 @@ final class OperationalApprovalApiTest extends TestCase
         ]);
     }
 
-    public function test_store_decision_returns_500_when_workflow_row_is_missing(): void
+    public function test_store_decision_returns_404_when_workflow_row_is_missing(): void
     {
         $tenantId = (string) Str::ulid();
         $templateId = (string) Str::ulid();
@@ -454,7 +454,7 @@ final class OperationalApprovalApiTest extends TestCase
             $this->authHeaders($userId, $tenantId),
         );
 
-        $decisionResponse->assertStatus(500);
+        $decisionResponse->assertStatus(404);
         $this->assertDatabaseHas('operational_approval_instances', [
             'id' => $instanceId,
             'tenant_id' => $tenantId,

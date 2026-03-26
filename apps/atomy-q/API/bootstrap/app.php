@@ -52,7 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($e instanceof OperationalApprovalWorkflowMissingException) {
-                return response()->json(['error' => 'Operational approval instance is incomplete'], 500);
+                return response()->json(['error' => 'Resource not found'], 404);
             }
 
             if ($e instanceof \Illuminate\Validation\ValidationException) {
