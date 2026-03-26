@@ -18,7 +18,7 @@
 
 ## Shipped (2026-03-26)
 
-- **Hardening:** `OperationalApprovalController` now wraps start/decision flows in DB transactions, `GeneratingOperationalWorkflowBridge::applyDecision()` fails fast when the workflow row is missing, and the new operational workflow table enforces a foreign key to `operational_approval_instances`.
+- **Hardening:** `OperationalApprovalController` now wraps start/decision flows in DB transactions, `GeneratingOperationalWorkflowBridge::applyDecision()` fails fast when the workflow row is missing, `OperationalApprovalWorkflowMissingException` distinguishes missing workflow rows from broken approval/workflow correlation, and the new operational workflow table enforces a foreign key to `operational_approval_instances`.
 - **Policy:** `PolicyEngineInterface` is bound to an app-level engine that evaluates stored policy definitions (table `policy_definitions`) using `Nexus\PolicyEngine`, logs fail-closed denials, and denies on missing/invalid policies.
 
 ## Follow-ups

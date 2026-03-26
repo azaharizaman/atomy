@@ -213,6 +213,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - `OperationalApprovalController@index` now returns tenant-scoped paginated approval instances with `meta.total`, `meta.per_page`, `meta.current_page`, and `meta.last_page` instead of loading the full list into memory.
 - `PolicyEngineInterface` is bound to an app-level engine that evaluates stored policy definitions (table `policy_definitions`) using `Nexus\PolicyEngine`, logs fail-closed denials, and denies on missing/invalid policies.
 - `AtomyApprovalPolicyRegistry` is registered as a singleton and reused by the `PolicyRegistryInterface` binding so the app-level policy registry resolves to one shared instance.
+- `OperationalApprovalWorkflowMissingException` now carries a reason discriminator so the exception renderer returns 404 for a missing workflow row and 500 when the approval row has no workflow correlation.
 - `OperationalApprovalApiTest` now asserts persisted `operational_approval_workflows` rows are created on start and transition to `approved` on decision.
 
 ## RFQ schedule milestones (2026-03-20 + 2026-03-21)

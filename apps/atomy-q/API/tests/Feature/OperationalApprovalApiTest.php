@@ -462,6 +462,50 @@ final class OperationalApprovalApiTest extends TestCase
         ]);
     }
 
+    public function test_store_decision_returns_500_when_instance_lacks_workflow_correlation(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $instanceId = (string) Str::ulid();
+        $templateId = (string) Str::ulid();
+
+        [$userId] = $this->seedUserForTenant($tenantId);
+
+        DB::table('operational_approval_templates')->insert([
+            'id' => $templateId,
+            'tenant_id' => $tenantId,
+            'subject_type' => 'purchase_order',
+            'workflow_definition_id' => 'wf-demo',
+            'policy_id' => 'pol-demo',
+            'policy_version' => '1',
+            'template_version' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('operational_approval_instances')->insert([
+            'id' => $instanceId,
+            'tenant_id' => $tenantId,
+            'template_id' => $templateId,
+            'workflow_instance_id' => null,
+            'subject_type' => 'purchase_order',
+            'subject_id' => 'po-corrupt',
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $decisionResponse = $this->postJson(
+            '/api/v1/operational-approvals/instances/' . $instanceId . '/decisions',
+            [
+                'decision' => 'approve',
+                'comment' => 'should fail',
+            ],
+            $this->authHeaders($userId, $tenantId),
+        );
+
+        $decisionResponse->assertStatus(500);
+    }
+
     public function test_get_instance_returns_sla_fields_for_tenant(): void
     {
         $tenantId = (string) Str::ulid();
