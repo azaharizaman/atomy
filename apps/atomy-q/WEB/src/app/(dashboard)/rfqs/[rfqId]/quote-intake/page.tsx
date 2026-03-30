@@ -12,39 +12,33 @@ import { FilterBar } from '@/components/ds/FilterBar';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { useNormalizationReview } from '@/hooks/use-normalization-review';
-import { getSeedQuotesByRfqId } from '@/data/seed';
+import { useQuoteSubmissions, type QuoteSubmissionRow } from '@/hooks/use-quote-submissions';
 import { Plus, Mail, FileText } from 'lucide-react';
-
-type QuoteRow = {
-  id: string;
-  fileName: string;
-  vendor: string;
-  status: 'accepted' | 'parsed' | 'processing' | 'rejected' | 'error';
-  confidence: 'high' | 'medium' | 'low';
-  uploadedAt: string;
-};
 
 const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
-function useQuoteRows(rfqId: string): QuoteRow[] {
-  if (!useMocks) return [];
-  const quotes = getSeedQuotesByRfqId(rfqId);
-  return quotes.map((q) => ({
-    id: q.id,
-    fileName: q.fileName,
-    vendor: q.vendorName,
-    status: q.status,
-    confidence: q.confidence,
-    uploadedAt: q.uploadedAt,
-  }));
+function mapQuoteStatus(status: string | undefined): { badge: string; label: string } {
+  const normalized = (status ?? '').toLowerCase();
+  if (normalized === 'ready' || normalized === 'accepted') {
+    return { badge: 'approved', label: 'Ready' };
+  }
+  if (normalized === 'needs_review') {
+    return { badge: 'pending', label: 'Needs review' };
+  }
+  if (normalized === 'failed' || normalized === 'error') {
+    return { badge: 'error', label: 'Failed' };
+  }
+  if (normalized === 'uploaded' || normalized === 'extracting' || normalized === 'extracted' || normalized === 'normalizing') {
+    return { badge: 'processing', label: 'Processing' };
+  }
+  return { badge: 'pending', label: status ? status : 'Pending' };
 }
 
-export default function QuoteIntakeListPage({ params }: { params: Promise<{ rfqId: string }> }) {
+export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
-  const { rfqId } = React.use(params);
   const { data: rfq } = useRfq(rfqId);
   const norm = useNormalizationReview(rfqId);
-  const allRows = useQuoteRows(rfqId);
+  const { data: submissions = [] } = useQuoteSubmissions(rfqId);
   const [statusFilter, setStatusFilter] = React.useState('');
   const [vendorFilter, setVendorFilter] = React.useState('');
 
@@ -54,44 +48,40 @@ export default function QuoteIntakeListPage({ params }: { params: Promise<{ rfqI
     { label: 'Quote Intake' },
   ];
 
-  const rows = allRows.filter((q) => {
+  const rows = submissions.filter((q) => {
     if (statusFilter && q.status !== statusFilter) return false;
-    if (vendorFilter && q.vendor !== vendorFilter) return false;
+    if (vendorFilter && q.vendor_name !== vendorFilter) return false;
     return true;
   });
 
-  const columns: ColumnDef<QuoteRow>[] = [
+  const columns: ColumnDef<QuoteSubmissionRow>[] = [
     {
       key: 'fileName',
       label: 'File name',
       render: (row) => (
         <div className="flex items-center gap-2">
           <FileText size={14} className="text-slate-400 shrink-0" />
-          <span className="text-sm font-medium text-slate-800">{row.fileName}</span>
+          <span className="text-sm font-medium text-slate-800">{row.file_name}</span>
         </div>
       ),
     },
-    { key: 'vendor', label: 'Vendor', render: (row) => <span className="text-sm text-slate-700">{row.vendor}</span> },
+    { key: 'vendor', label: 'Vendor', render: (row) => <span className="text-sm text-slate-700">{row.vendor_name}</span> },
     {
       key: 'status',
       label: 'Status',
       width: '110px',
-      render: (row) => (
-        <StatusBadge
-          status={
-            row.status === 'accepted' ? 'approved' : row.status === 'parsed' ? 'preview' : row.status === 'processing' ? 'processing' : row.status === 'rejected' ? 'rejected' : 'error'
-          }
-          label={row.status.charAt(0).toUpperCase() + row.status.slice(1)}
-        />
-      ),
+      render: (row) => {
+        const mapped = mapQuoteStatus(row.status);
+        return <StatusBadge status={mapped.badge} label={mapped.label} />;
+      },
     },
     {
       key: 'confidence',
       label: 'Parse confidence',
       width: '120px',
-      render: (row) => <ConfidenceBadge variant={row.confidence} />,
+      render: (row) => <ConfidenceBadge variant={row.confidence as 'high' | 'medium' | 'low'} />,
     },
-    { key: 'uploadedAt', label: 'Uploaded at', width: '100px', render: (row) => <span className="text-xs text-slate-500">{row.uploadedAt}</span> },
+    { key: 'uploadedAt', label: 'Uploaded at', width: '100px', render: (row) => <span className="text-xs text-slate-500">{row.uploaded_at ?? '—'}</span> },
   ];
 
   return (
@@ -125,11 +115,12 @@ export default function QuoteIntakeListPage({ params }: { params: Promise<{ rfqI
             onChange: (v) => setStatusFilter(v ?? ''),
             options: [
               { value: '', label: 'All statuses' },
-              { value: 'accepted', label: 'Accepted' },
-              { value: 'parsed', label: 'Parsed' },
-              { value: 'processing', label: 'Processing' },
-              { value: 'rejected', label: 'Rejected' },
-              { value: 'error', label: 'Error' },
+              { value: 'uploaded', label: 'Uploaded' },
+              { value: 'extracting', label: 'Extracting' },
+              { value: 'normalizing', label: 'Normalizing' },
+              { value: 'needs_review', label: 'Needs review' },
+              { value: 'ready', label: 'Ready' },
+              { value: 'failed', label: 'Failed' },
             ],
           },
           {
@@ -139,7 +130,7 @@ export default function QuoteIntakeListPage({ params }: { params: Promise<{ rfqI
             onChange: (v) => setVendorFilter(v ?? ''),
             options: [
               { value: '', label: 'All vendors' },
-              ...Array.from(new Set(allRows.map((q) => q.vendor))).map((v) => ({ value: v, label: v })),
+              ...Array.from(new Set(submissions.map((q) => q.vendor_name))).map((v) => ({ value: v, label: v })),
             ],
           },
         ]}
@@ -159,4 +150,9 @@ export default function QuoteIntakeListPage({ params }: { params: Promise<{ rfqI
       />
     </div>
   );
+}
+
+export default function QuoteIntakeListPage({ params }: { params: Promise<{ rfqId: string }> }) {
+  const { rfqId } = React.use(params);
+  return <QuoteIntakeListContent rfqId={rfqId} />;
 }

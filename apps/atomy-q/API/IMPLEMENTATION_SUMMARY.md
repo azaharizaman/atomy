@@ -1,7 +1,7 @@
 # Implementation Summary - Atomy-Q Backend API
 
 ## Status
-- **Phase**: Foundation complete (stub endpoints, models, migrations, auth)
+- **Phase**: Foundation complete, quote lifecycle productionized
 - **Framework**: Laravel 12 (PHP 8.3)
 - **Database**: PostgreSQL (25 tables migrated)
 - **Cache/Queue**: Redis via `REDIS_URL`
@@ -54,7 +54,7 @@
 
 ## Endpoint Coverage
 
-All **203 endpoints** from `API_ENDPOINTS.md` are registered and returning stub responses with correct HTTP status codes and response shapes.
+All **203 endpoints** from `API_ENDPOINTS.md` are registered. The quote lifecycle slice now returns live tenant-scoped data and mutations; the remaining areas still use the earlier stub or partially live patterns documented below.
 
 | Section | Category | Endpoints | Controller |
 |---------|----------|-----------|------------|
@@ -149,11 +149,11 @@ Persistence added for flow-driven endpoints: **RfqController** (store, storeLine
 
 Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`: uploads persist `uploaded_by` and `original_filename`, quote list/show endpoints return real stored submissions with `blocking_issue_count`, and RFQ overview now exposes normalization readiness buckets (`uploaded_count`, `needs_review_count`, `ready_count`) alongside the legacy accepted/progress fields for compatibility.
 
-**Normalization review (pilot Task 3):** `NormalizationSourceLine` and `NormalizationConflict` models now match the shipped migrations (`rfq_line_item_id`, `normalization_source_line_id`, etc.). `QuoteSubmissionReadinessService` centralizes blocking rules: each RFQ line must be covered by a mapped source line, mapped lines require `source_unit_price`, and open conflicts (`resolution` null) block readiness. `NormalizationController` persists mapping/bulk-mapping/override/revert/conflict-resolution, returns `404` when the RFQ or rows are not tenant-visible, and recalculates `quote_submissions.status` to `needs_review` or `ready` after mutations. `GET /normalization/{rfqId}/conflicts` lists conflicts for the RFQ and includes `meta.has_blocking_issues` / `meta.blocking_issue_count` aggregated across that RFQ’s submissions. Feature coverage: `NormalizationReviewWorkflowTest`.
+**Quote intake + normalization (live):** `QuoteSubmissionController` now persists live upload/show/reparse data, returns quote-submission state with processing metadata, and requeues reparses against the tenant-scoped row. `NormalizationSourceLine` and `NormalizationConflict` models match the shipped migrations (`rfq_line_item_id`, `normalization_source_line_id`, etc.). `QuoteSubmissionReadinessService` centralizes blocking rules: each RFQ line must be covered by a mapped source line, mapped lines require `source_unit_price`, and open conflicts (`resolution` null) block readiness. `NormalizationController` persists mapping/bulk-mapping/override/revert/conflict-resolution, returns `404` when the RFQ or rows are not tenant-visible, and recalculates `quote_submissions.status` to `needs_review` or `ready` after mutations. `GET /normalization/{rfqId}/conflicts` lists conflicts for the RFQ and includes `meta.has_blocking_issues` / `meta.blocking_issue_count` aggregated across that RFQ’s submissions. Feature coverage: `QuoteIngestionPipelineTest`, `NormalizationReviewWorkflowTest`.
 
-**Comparison snapshot & approval (pilot Tasks 4–5):** `ComparisonRun` / `Approval` / `DecisionTrailEntry` models align with migrations (`response_payload`, `requested_by`, hash-chain columns). `ComparisonSnapshotService` builds tenant-scoped frozen payloads from RFQ line items + normalization source lines. `POST /comparison-runs/final` creates a `final` run, stores `response_payload.snapshot`, enforces all submissions `ready` + readiness pass, and requires two ready quotes when `vendors_count >= 2` on the RFQ (from loaded attributes; otherwise at least one). `GET /comparison-runs` supports `?rfq_id=`. `POST /approvals/{id}/approve` gates on final run + snapshot + live readiness. `DecisionTrailRecorder::recordSnapshotFrozen` writes `comparison_snapshot_frozen` entries. `DecisionTrailController` index/show read from `decision_trail_entries`. Tests: `ComparisonSnapshotWorkflowTest`.
+**Comparison snapshot, award, and approval (live):** `ComparisonRun` / `Approval` / `DecisionTrailEntry` models align with migrations (`response_payload`, `requested_by`, hash-chain columns). `ComparisonSnapshotService` builds tenant-scoped frozen payloads from RFQ line items + normalization source lines. `POST /comparison-runs/final` creates a `final` run, stores `response_payload.snapshot`, enforces all submissions `ready` + readiness pass, and requires two ready quotes when `vendors_count >= 2` on the RFQ (from loaded attributes; otherwise at least one). `GET /comparison-runs` supports `?rfq_id=`. `AwardController` now creates, lists, signs off, and debriefs live award records instead of returning `501` stubs. `POST /approvals/{id}/approve` gates on final run + snapshot + live readiness. `DecisionTrailRecorder::recordSnapshotFrozen` writes `comparison_snapshot_frozen` entries. `DecisionTrailController` index/show read from `decision_trail_entries`. Tests: `ComparisonSnapshotWorkflowTest`, `AwardWorkflowTest`.
 
-**WEB pilot (Tasks 6–7):** Hooks `use-normalization-review`, `use-quote-submission`, `use-freeze-comparison`, `use-comparison-readiness`; normalize page is exception-first with freeze CTA; comparison runs list shows snapshot-frozen banner + decision trail link; RFQ overview normalization parsing includes optional bucket counts from API.
+**WEB pilot (Tasks 6–7):** Hooks `use-normalization-review`, `use-quote-submission`, `use-quote-submissions`, `use-comparison-runs`, `use-award`, `use-freeze-comparison`, `use-comparison-readiness`; quote intake, comparison runs, award, and approvals pages now render live API data in non-mock mode while preserving mock/demo branches; normalize page is exception-first with freeze CTA; comparison runs list shows snapshot-frozen banner + decision trail link; RFQ overview normalization parsing includes optional bucket counts from API.
 
 **Seed flow (Task 8):** `atomy:seed-rfq-flow` calls `syncNormalizationLinesForQuotes()` after HTTP uploads so comparison final can pass pilot gates.
 
@@ -190,14 +190,13 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 
 ## Next Steps (for production readiness)
 
-1. Wire controllers to actual Eloquent queries (replace stubs with DB operations)
-2. Add Form Request validation classes for each endpoint
+1. Finish the remaining live controller surfaces outside the quote lifecycle flow
+2. Add Form Request validation classes for the next write-heavy endpoints
 3. Create API Resource transformers for consistent response formatting
-4. Implement real authentication flow with database-backed users
-5. Create `adapters/Laravel/QuotationIntelligence` adapter for orchestrator ports
-6. Add rate-limiting middleware
-7. Add OpenAPI/Swagger documentation
-8. Write feature tests for critical flows
+4. Create `adapters/Laravel/QuotationIntelligence` adapter for orchestrator ports
+5. Add rate-limiting middleware
+6. Add OpenAPI/Swagger documentation
+7. Continue adding feature tests as the remaining flow slices are productionized
 
 ## Post-Review Remediation (PR #285)
 

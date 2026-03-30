@@ -57,6 +57,8 @@ export function useNormalizationReview(rfqId: string, options?: { enabled?: bool
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['normalization-conflicts', rfqId] });
+      qc.invalidateQueries({ queryKey: ['quote-submissions', 'list', rfqId] });
+      qc.invalidateQueries({ queryKey: ['quote-submissions', rfqId] });
       qc.invalidateQueries({ queryKey: ['rfqs', rfqId, 'overview'] });
     },
   });

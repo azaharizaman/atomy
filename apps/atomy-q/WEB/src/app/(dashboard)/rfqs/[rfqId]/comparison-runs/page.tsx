@@ -9,30 +9,25 @@ import { VersionChip } from '@/components/ds/Badge';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
-import { getSeedComparisonRunsByRfqId } from '@/data/seed';
+import { useComparisonRuns, type ComparisonRunRow } from '@/hooks/use-comparison-runs';
 import { Button } from '@/components/ds/Button';
 import { Plus } from 'lucide-react';
 
-type RunRow = {
-  id: string;
-  runId: string;
-  date: string;
-  type: 'preview' | 'final';
-  status: 'generated' | 'stale' | 'locked';
-  scoringModel: string;
-  createdBy: string;
-};
-
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
 function OwnerCell({ name }: { name: string }) {
-  const initials = name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+  const safeName = name.trim() || 'System';
+  const initials = safeName
+    .split(' ')
+    .filter(Boolean)
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
   return (
     <div className="flex items-center gap-2">
       <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600">
         {initials}
       </div>
-      <span className="text-sm text-slate-700">{name}</span>
+      <span className="text-sm text-slate-700">{safeName}</span>
     </div>
   );
 }
@@ -40,17 +35,7 @@ function OwnerCell({ name }: { name: string }) {
 export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const { data: rfq } = useRfq(rfqId);
-  const runs: RunRow[] = useMocks
-    ? getSeedComparisonRunsByRfqId(rfqId).map((r) => ({
-        id: r.id,
-        runId: r.runId,
-        date: r.date,
-        type: r.type,
-        status: r.status,
-        scoringModel: r.scoringModel,
-        createdBy: r.createdBy,
-      }))
-    : [];
+  const { data: runs = [] } = useComparisonRuns(rfqId);
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -58,8 +43,8 @@ export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
     { label: 'Comparison Runs' },
   ];
 
-  const columns: ColumnDef<RunRow>[] = [
-    { key: 'runId', label: 'Run ID', render: (row) => <span className="font-mono text-sm font-medium text-slate-800">{row.runId}</span> },
+  const columns: ColumnDef<ComparisonRunRow>[] = [
+    { key: 'runId', label: 'Run ID', render: (row) => <span className="font-mono text-sm font-medium text-slate-800">{row.run_id}</span> },
     { key: 'date', label: 'Date', width: '100px', render: (row) => <span className="text-sm text-slate-600">{row.date}</span> },
     {
       key: 'type',
@@ -78,8 +63,8 @@ export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
         />
       ),
     },
-    { key: 'scoringModel', label: 'Scoring model', width: '80px', render: (row) => <VersionChip version={row.scoringModel} /> },
-    { key: 'createdBy', label: 'Created by', render: (row) => <OwnerCell name={row.createdBy} /> },
+    { key: 'scoringModel', label: 'Scoring model', width: '80px', render: (row) => <VersionChip version={row.scoring_model} /> },
+    { key: 'createdBy', label: 'Created by', render: (row) => <OwnerCell name={row.created_by || 'System'} /> },
   ];
 
   const hasFinalRun = runs.some((r) => r.type === 'final');

@@ -7,7 +7,7 @@ import { StatusBadge } from '@/components/ds/Badge';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
-import { getSeedApprovalsByRfqId } from '@/data/seed';
+import { useApprovalsList } from '@/hooks/use-approvals';
 import { EmptyState } from '@/components/ds/Card';
 import { ShieldCheck } from 'lucide-react';
 
@@ -26,16 +26,24 @@ export default function ApprovalsListPage({ params }: { params: Promise<{ rfqId:
   const router = useRouter();
   const { rfqId } = React.use(params);
   const { data: rfq } = useRfq(rfqId);
+  const { data } = useApprovalsList({ rfq_id: rfqId, status: 'pending' });
   const approvals: ApprovalRow[] = useMocks
-    ? getSeedApprovalsByRfqId(rfqId).map((a) => ({
+    ? (data?.items ?? []).map((a) => ({
         id: a.id,
-        rfqId: a.rfqId,
+        rfqId: a.rfq_id,
         type: a.type,
         summary: a.summary,
-        priority: a.priority,
-        assignee: a.assignee,
+        priority: (a.priority as ApprovalRow['priority']) ?? 'medium',
+        assignee: a.assignee ?? 'Unassigned',
       }))
-    : [];
+    : (data?.items ?? []).map((a) => ({
+        id: a.id,
+        rfqId: a.rfq_id,
+        type: a.type,
+        summary: a.summary,
+        priority: (a.priority as ApprovalRow['priority']) ?? 'medium',
+        assignee: a.assignee ?? 'Unassigned',
+      }));
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
