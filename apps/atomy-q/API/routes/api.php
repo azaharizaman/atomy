@@ -252,6 +252,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
     Route::prefix('awards')->group(function (): void {
         Route::get('/', [AwardController::class, 'index']);
         Route::post('/', [AwardController::class, 'store']);
+        Route::get('{id}', [AwardController::class, 'show']);
         Route::put('{id}/split', [AwardController::class, 'updateSplit']);
         Route::post('{id}/debrief/{vendorId}', [AwardController::class, 'debrief']);
         Route::post('{id}/protest', [AwardController::class, 'protest']);

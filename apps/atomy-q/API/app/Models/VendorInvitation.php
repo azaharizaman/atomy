@@ -22,10 +22,13 @@ class VendorInvitation extends Model
         'tenant_id',
         'rfq_id',
         'vendor_id',
+        'vendor_email',
+        'vendor_name',
         'status',
         'invited_at',
         'responded_at',
         'reminded_at',
+        'channel',
     ];
 
     protected $casts = [
