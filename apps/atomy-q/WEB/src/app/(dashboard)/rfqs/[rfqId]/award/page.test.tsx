@@ -39,6 +39,15 @@ vi.mock('@/hooks/use-award', () => ({
   }),
 }));
 
+vi.mock('@/hooks/use-rfq-vendors', () => ({
+  useRfqVendors: () => ({
+    data: [
+      { id: 'inv-1', vendor_id: 'vendor-1', name: 'Winner Vendor', status: 'responded', contact: 'winner@example.com' },
+      { id: 'inv-2', vendor_id: 'vendor-2', name: 'Other Vendor', status: 'invited', contact: 'other@example.com' },
+    ],
+  }),
+}));
+
 import { RfqAwardPageContent } from './page';
 
 describe('RfqAwardPage', () => {
@@ -47,6 +56,6 @@ describe('RfqAwardPage', () => {
 
     expect(await screen.findByText('Winner Vendor', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
-    expect(screen.getByText('Non-winning vendors are resolved from the frozen comparison snapshot.')).toBeInTheDocument();
+    expect(screen.getByText('Other Vendor')).toBeInTheDocument();
   });
 });

@@ -19,8 +19,8 @@ export interface NormalizationSourceLineRow {
   rfq_line_unit_price: string | null;
   sort_order: number | null;
   confidence: string;
-  conflict_count: number;
-  blocking_issue_count: number;
+  conflict_count: number | null;
+  blocking_issue_count: number | null;
   has_blocking_issue: boolean;
   quote_submission_status: string | null;
 }
@@ -59,10 +59,10 @@ function normalizeSourceLines(payload: unknown): NormalizationSourceLineRow[] {
         row.rfq_line_unit_price !== undefined && row.rfq_line_unit_price !== null
           ? String(row.rfq_line_unit_price)
           : null,
-      sort_order: row.sort_order !== undefined && row.sort_order !== null ? Number(row.sort_order) : null,
+      sort_order: parseOptionalNumber(row.sort_order),
       confidence: String(row.confidence ?? 'low'),
-      conflict_count: Number(row.conflict_count ?? 0),
-      blocking_issue_count: Number(row.blocking_issue_count ?? 0),
+      conflict_count: parseOptionalNumber(row.conflict_count),
+      blocking_issue_count: parseOptionalNumber(row.blocking_issue_count),
       has_blocking_issue: Boolean(row.has_blocking_issue),
       quote_submission_status:
         row.quote_submission_status !== undefined && row.quote_submission_status !== null
@@ -70,6 +70,13 @@ function normalizeSourceLines(payload: unknown): NormalizationSourceLineRow[] {
           : null,
     };
   });
+}
+
+function parseOptionalNumber(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 export function useNormalizationSourceLines(rfqId: string) {

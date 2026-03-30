@@ -10,6 +10,7 @@ use App\Models\Award;
 use App\Models\ComparisonRun;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
+use App\Services\QuoteIntake\DecisionTrailRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -79,6 +80,16 @@ final class AwardController extends Controller
             return response()->json(['message' => 'RFQ not found'], 404);
         }
 
+        $submission = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfq->id)
+            ->where('vendor_id', $validated['vendor_id'])
+            ->first();
+
+        if ($submission === null) {
+            return response()->json(['message' => 'Vendor not found'], 404);
+        }
+
         if (! empty($validated['comparison_run_id'])) {
             $run = ComparisonRun::query()
                 ->where('tenant_id', $tenantId)
@@ -135,7 +146,7 @@ final class AwardController extends Controller
     /**
      * POST /awards/:id/debrief/:vendorId
      */
-    public function debrief(Request $request, string $id, string $vendorId): JsonResponse
+    public function debrief(Request $request, string $id, string $vendorId, DecisionTrailRecorder $decisionTrail): JsonResponse
     {
         $tenantId = $this->tenantId($request);
         $validated = $request->validate([
@@ -143,14 +154,38 @@ final class AwardController extends Controller
         ]);
 
         $award = $this->findAward($tenantId, $id);
-        if ($award === null || $award->vendor_id !== $vendorId) {
+        if ($award === null) {
             return response()->json(['message' => 'Award not found'], 404);
+        }
+
+        $submission = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $award->rfq_id)
+            ->where('vendor_id', $vendorId)
+            ->first();
+
+        if ($submission === null) {
+            return response()->json(['message' => 'Vendor not found'], 404);
+        }
+
+        if ($award->comparison_run_id !== null) {
+            $decisionTrail->recordAwardDebriefed(
+                $tenantId,
+                $award->rfq_id,
+                $award->comparison_run_id,
+                [
+                    'award_id' => $award->id,
+                    'vendor_id' => $vendorId,
+                    'message_present' => array_key_exists('message', $validated),
+                ],
+            );
         }
 
         return response()->json([
             'data' => [
                 'award_id' => $award->id,
                 'vendor_id' => $vendorId,
+                'vendor_name' => $submission->vendor_name,
                 'message' => $validated['message'] ?? null,
                 'status' => $award->status,
                 'debriefed_at' => now()->toAtomString(),
@@ -215,6 +250,12 @@ final class AwardController extends Controller
         $award = $this->findAward($tenantId, $id);
         if ($award === null) {
             return response()->json(['message' => 'Award not found'], 404);
+        }
+
+        if ($award->status === 'signed_off' && $award->signoff_at !== null) {
+            return response()->json([
+                'data' => $this->serializeAward($award),
+            ]);
         }
 
         $award->status = 'signed_off';

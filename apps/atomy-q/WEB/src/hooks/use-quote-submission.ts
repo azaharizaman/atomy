@@ -7,23 +7,23 @@ export interface QuoteSubmissionSummary {
   id: string;
   rfq_id?: string;
   vendor_id?: string;
-  vendor_name?: string;
-  file_name?: string;
+  vendor_name?: string | null;
+  file_name?: string | null;
   status?: string;
-  blocking_issue_count?: number;
-  original_filename?: string;
-  file_type?: string;
-  submitted_at?: string;
-  confidence?: number;
-  line_items_count?: number;
-  warnings_count?: number;
-  errors_count?: number;
+  blocking_issue_count?: number | null;
+  original_filename?: string | null;
+  file_type?: string | null;
+  submitted_at?: string | null;
+  confidence?: number | null;
+  line_items_count?: number | null;
+  warnings_count?: number | null;
+  errors_count?: number | null;
   error_code?: string | null;
   error_message?: string | null;
   processing_started_at?: string | null;
   processing_completed_at?: string | null;
   parsed_at?: string | null;
-  retry_count?: number;
+  retry_count?: number | null;
 }
 
 function normalizeQuoteSubmission(payload: unknown): QuoteSubmissionSummary {
@@ -32,7 +32,7 @@ function normalizeQuoteSubmission(payload: unknown): QuoteSubmissionSummary {
     id: String(raw?.id ?? ''),
     rfq_id: raw?.rfq_id !== undefined ? String(raw.rfq_id) : undefined,
     vendor_id: raw?.vendor_id !== undefined ? String(raw.vendor_id) : undefined,
-    vendor_name: raw?.vendor_name !== undefined ? String(raw.vendor_name) : undefined,
+    vendor_name: normalizeNullableString(raw?.vendor_name),
     file_name:
       raw?.original_filename !== undefined && raw.original_filename !== null
         ? String(raw.original_filename)
@@ -40,29 +40,41 @@ function normalizeQuoteSubmission(payload: unknown): QuoteSubmissionSummary {
           ? String(raw.file_path)
           : undefined,
     status: raw?.status !== undefined ? String(raw.status) : undefined,
-    blocking_issue_count:
-      raw?.blocking_issue_count !== undefined ? Number(raw.blocking_issue_count) : undefined,
-    original_filename: raw?.original_filename !== undefined ? String(raw.original_filename) : undefined,
-    file_type: raw?.file_type !== undefined ? String(raw.file_type) : undefined,
-    submitted_at: raw?.submitted_at !== undefined ? String(raw.submitted_at) : undefined,
-    confidence: raw?.confidence !== undefined ? Number(raw.confidence) : undefined,
-    line_items_count: raw?.line_items_count !== undefined ? Number(raw.line_items_count) : undefined,
-    warnings_count: raw?.warnings_count !== undefined ? Number(raw.warnings_count) : undefined,
-    errors_count: raw?.errors_count !== undefined ? Number(raw.errors_count) : undefined,
-    error_code: raw?.error_code !== undefined ? (raw.error_code === null ? null : String(raw.error_code)) : undefined,
+    blocking_issue_count: normalizeNullableNumber(raw?.blocking_issue_count, 'blocking_issue_count'),
+    original_filename: normalizeNullableString(raw?.original_filename),
+    file_type: normalizeNullableString(raw?.file_type),
+    submitted_at: normalizeNullableString(raw?.submitted_at),
+    confidence: normalizeNullableNumber(raw?.confidence, 'confidence'),
+    line_items_count: normalizeNullableNumber(raw?.line_items_count, 'line_items_count'),
+    warnings_count: normalizeNullableNumber(raw?.warnings_count, 'warnings_count'),
+    errors_count: normalizeNullableNumber(raw?.errors_count, 'errors_count'),
+    error_code: normalizeNullableString(raw?.error_code),
     error_message:
-      raw?.error_message !== undefined ? (raw.error_message === null ? null : String(raw.error_message)) : undefined,
-    processing_started_at:
-      raw?.processing_started_at !== undefined
-        ? (raw.processing_started_at === null ? null : String(raw.processing_started_at))
-        : undefined,
-    processing_completed_at:
-      raw?.processing_completed_at !== undefined
-        ? (raw.processing_completed_at === null ? null : String(raw.processing_completed_at))
-        : undefined,
-    parsed_at: raw?.parsed_at !== undefined ? (raw.parsed_at === null ? null : String(raw.parsed_at)) : undefined,
-    retry_count: raw?.retry_count !== undefined ? Number(raw.retry_count) : undefined,
+      normalizeNullableString(raw?.error_message),
+    processing_started_at: normalizeNullableString(raw?.processing_started_at),
+    processing_completed_at: normalizeNullableString(raw?.processing_completed_at),
+    parsed_at: normalizeNullableString(raw?.parsed_at),
+    retry_count: normalizeNullableNumber(raw?.retry_count, 'retry_count'),
   };
+}
+
+function normalizeNullableString(value: unknown): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  return String(value);
+}
+
+function normalizeNullableNumber(value: unknown, field: string): number | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value === 'string' && value.trim() === '') {
+    throw new Error(`Invalid quote submission field ${field}: empty string`);
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    throw new Error(`Invalid quote submission field ${field}: ${String(value)}`);
+  }
+  return n;
 }
 
 export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolean }) {

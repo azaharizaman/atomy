@@ -35,7 +35,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
   const blockingIssueCount = useMocks ? (mockBlocking ? MOCK_SOURCE_LINES.filter((l) => l.conflict).length : 0) : normLive.blockingIssueCount;
   const conflicts = normLive.conflicts;
   const openConflicts = conflicts.filter((c) => c.resolution === null);
-  const sourceLines = useMocks ? MOCK_SOURCE_LINES : liveSourceLines;
+  const sourceLines = useMocks ? MOCK_SOURCE_LINES : liveSourceLines.filter((line) => line.quote_submission_id === quoteId);
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },

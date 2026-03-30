@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { SectionCard, Card, DocPreview } from '@/components/ds/Card';
+import { SectionCard, DocPreview } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
 import { RecordHeader } from '@/components/ds/RecordHeader';
 import { ConfidenceBadge } from '@/components/ds/Badge';
@@ -90,7 +90,11 @@ export default function QuoteIntakeDetailPage({
               <div className="space-y-3">
                 <p className="text-sm font-medium text-slate-800">{vendorName}</p>
                 <p className="text-xs text-slate-500">{submission?.vendor_id ?? '—'}</p>
-                <ConfidenceBadge variant={confidenceVariant} showBar percentage={confidenceValue ?? 0} />
+                <ConfidenceBadge
+                  variant={confidenceVariant}
+                  showBar
+                  percentage={typeof confidenceValue === 'number' ? confidenceValue : undefined}
+                />
                 <div className="rounded-md bg-slate-50 px-3 py-2 space-y-2">
                   <p className="text-[10px] font-semibold uppercase text-slate-400">Validation results</p>
                   {validationItems.map((item, i) => (

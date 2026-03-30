@@ -20,30 +20,24 @@ type ApprovalRow = {
   assignee: string;
 };
 
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+function normalizePriority(priority: string | null | undefined): ApprovalRow['priority'] {
+  return priority === 'high' || priority === 'medium' || priority === 'low' ? priority : 'medium';
+}
 
 export default function ApprovalsListPage({ params }: { params: Promise<{ rfqId: string }> }) {
   const router = useRouter();
   const { rfqId } = React.use(params);
   const { data: rfq } = useRfq(rfqId);
   const { data } = useApprovalsList({ rfq_id: rfqId, status: 'pending' });
-  const approvals: ApprovalRow[] = useMocks
-    ? (data?.items ?? []).map((a) => ({
-        id: a.id,
-        rfqId: a.rfq_id,
-        type: a.type,
-        summary: a.summary,
-        priority: (a.priority as ApprovalRow['priority']) ?? 'medium',
-        assignee: a.assignee ?? 'Unassigned',
-      }))
-    : (data?.items ?? []).map((a) => ({
-        id: a.id,
-        rfqId: a.rfq_id,
-        type: a.type,
-        summary: a.summary,
-        priority: (a.priority as ApprovalRow['priority']) ?? 'medium',
-        assignee: a.assignee ?? 'Unassigned',
-      }));
+  const scopedItems = (data?.items ?? []).filter((a) => a.rfq_id === rfqId);
+  const approvals: ApprovalRow[] = scopedItems.map((a) => ({
+    id: a.id,
+    rfqId: a.rfq_id,
+    type: a.type,
+    summary: a.summary,
+    priority: normalizePriority(a.priority),
+    assignee: a.assignee ?? 'Unassigned',
+  }));
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },

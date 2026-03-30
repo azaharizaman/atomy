@@ -24,10 +24,14 @@ function normalizeComparisonRuns(payload: unknown): ComparisonRunRow[] {
       throw new Error(`Invalid comparison run row at index ${index}: expected object`);
     }
     const row = item as Record<string, unknown>;
+    const runIdRaw = row.run_id ?? row.runId ?? row.name;
+    if (runIdRaw === null || runIdRaw === undefined || String(runIdRaw).trim() === '') {
+      throw new Error(`Missing run_id for comparison row at index ${index}: ${JSON.stringify(row)}`);
+    }
     return {
       id: String(row.id ?? ''),
       rfq_id: String(row.rfq_id ?? ''),
-      run_id: String(row.run_id ?? row.runId ?? row.name ?? `RUN-${index + 1}`),
+      run_id: String(runIdRaw),
       date:
         row.created_at !== undefined && row.created_at !== null
           ? String(row.created_at)

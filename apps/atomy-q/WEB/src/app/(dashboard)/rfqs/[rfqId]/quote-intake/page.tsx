@@ -34,6 +34,14 @@ function mapQuoteStatus(status: string | undefined): { badge: string; label: str
   return { badge: 'pending', label: status ? status : 'Pending' };
 }
 
+const STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'All statuses' },
+  { value: 'approved', label: 'Ready' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'pending', label: 'Needs review' },
+  { value: 'error', label: 'Failed' },
+] as const;
+
 export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const { data: rfq } = useRfq(rfqId);
@@ -49,7 +57,7 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   ];
 
   const rows = submissions.filter((q) => {
-    if (statusFilter && q.status !== statusFilter) return false;
+    if (statusFilter && mapQuoteStatus(q.status).badge !== statusFilter) return false;
     if (vendorFilter && q.vendor_name !== vendorFilter) return false;
     return true;
   });
@@ -113,15 +121,7 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
             label: 'Status',
             value: statusFilter,
             onChange: (v) => setStatusFilter(v ?? ''),
-            options: [
-              { value: '', label: 'All statuses' },
-              { value: 'uploaded', label: 'Uploaded' },
-              { value: 'extracting', label: 'Extracting' },
-              { value: 'normalizing', label: 'Normalizing' },
-              { value: 'needs_review', label: 'Needs review' },
-              { value: 'ready', label: 'Ready' },
-              { value: 'failed', label: 'Failed' },
-            ],
+            options: [...STATUS_FILTER_OPTIONS],
           },
           {
             key: 'vendor',

@@ -24,13 +24,26 @@ function formatAmount(amount: number | null | undefined, currency: string | null
   }
 }
 
+function awardBadge(status: string | null | undefined): { status: 'pending' | 'approved' | 'rejected'; label: string } {
+  if (status === 'signed_off') {
+    return { status: 'approved', label: 'Signed off' };
+  }
+  if (status === 'protested') {
+    return { status: 'rejected', label: 'Protested' };
+  }
+  return { status: 'pending', label: 'Pending' };
+}
+
 export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const { data: rfq } = useRfq(rfqId);
   const { award, debrief, signoff } = useAward(rfqId);
   const { data: vendors = [] } = useRfqVendors(rfqId);
   const displayAward = award ?? null;
-  const nonWinners = displayAward ? vendors.filter((vendor) => vendor.id !== displayAward.vendor_id) : vendors;
+  const awardStatus = awardBadge(displayAward?.status);
+  const nonWinners = displayAward
+    ? vendors.filter((vendor) => vendor.vendor_id !== null && vendor.vendor_id !== displayAward.vendor_id)
+    : [];
   const awardAmount = formatAmount(displayAward?.amount ?? null, displayAward?.currency ?? null);
 
   const breadcrumbItems = [
@@ -52,7 +65,7 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
         }
       />
       <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 flex items-center gap-2">
-        <StatusBadge status={displayAward?.status === 'signed_off' ? 'approved' : 'pending'} label={displayAward?.status === 'signed_off' ? 'Signed off' : 'Pending'} />
+        <StatusBadge status={awardStatus.status} label={awardStatus.label} />
         <span className="text-sm text-slate-700">
           {displayAward
             ? `Awarded to ${displayAward.vendor_name ?? 'Unknown vendor'} · Total: ${awardAmount}`
@@ -69,7 +82,7 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                   ? `Amount: ${awardAmount}`
                   : 'Freeze a comparison run to create an award record.'}
               </p>
-              <StatusBadge status={displayAward ? 'approved' : 'pending'} label={displayAward ? 'Awarded' : 'Recommended'} />
+              <StatusBadge status={awardStatus.status} label={displayAward ? awardStatus.label : 'Recommended'} />
             </div>
           </SectionCard>
           <SectionCard title="Sign-off">
@@ -102,12 +115,12 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                   <Button
                     size="xs"
                     variant="ghost"
-                    disabled={!displayAward || debrief.isPending || useMocks}
+                    disabled={!displayAward || vendor.vendor_id === null || debrief.isPending || useMocks}
                     onClick={() => {
-                      if (displayAward) {
+                      if (displayAward && vendor.vendor_id) {
                         debrief.mutate({
                           awardId: displayAward.id,
-                          vendorId: vendor.id,
+                          vendorId: vendor.vendor_id,
                           message: `Debrief for ${vendor.name}`,
                         });
                       }
@@ -119,7 +132,11 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-500">Non-winning vendors are resolved from the frozen comparison snapshot.</p>
+              <p className="text-sm text-slate-500">
+                {displayAward
+                  ? 'No non-winning vendors were found in the frozen comparison snapshot.'
+                  : 'Create an award to reveal non-winning vendors.'}
+              </p>
             )}
           </div>
         </Card>

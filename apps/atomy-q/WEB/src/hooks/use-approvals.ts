@@ -110,6 +110,7 @@ function normalizeApprovalRows(payload: unknown): ApprovalListRow[] {
 }
 
 export interface UseApprovalsParams {
+  rfq_id?: string;
   status?: string;
   type?: string;
   page?: number;
@@ -119,12 +120,18 @@ export function useApprovalsList(params: UseApprovalsParams) {
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   return useQuery({
-    queryKey: ['approvals', 'list', params],
+    queryKey: ['approvals', 'list', {
+      rfq_id: params.rfq_id ?? null,
+      status: params.status ?? null,
+      type: params.type ?? null,
+      page: params.page ?? 1,
+    }],
     queryFn: async (): Promise<ApprovalsListResult> => {
       const page = Math.max(1, params.page ?? 1);
       if (!useMocks) {
         const { data } = await api.get('/approvals', {
           params: {
+            rfq_id: params.rfq_id || undefined,
             status: params.status || undefined,
             type: params.type || undefined,
             page,
@@ -154,6 +161,9 @@ export function useApprovalsList(params: UseApprovalsParams) {
         assignee: a.assignee,
         requested_at: null,
       }));
+      if (params.rfq_id) {
+        rows = rows.filter((r) => r.rfq_id === params.rfq_id);
+      }
       if (params.type) {
         rows = rows.filter((r) => r.type === params.type);
       }
