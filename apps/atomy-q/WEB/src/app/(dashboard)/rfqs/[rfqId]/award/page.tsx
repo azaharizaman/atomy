@@ -37,6 +37,7 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const { data: rfq } = useRfq(rfqId);
   const { award, debrief, signoff } = useAward(rfqId);
+  const [debriefMessage, setDebriefMessage] = React.useState('');
   const displayAward = award ?? null;
   const awardStatus = awardBadge(displayAward?.status);
   const isFinalized = awardStatus.status === 'approved';
@@ -109,7 +110,21 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
           </SectionCard>
         </div>
         <Card className="space-y-3">
-          <p className="text-xs text-slate-500">Non-winning vendors</p>
+          <div className="space-y-2">
+            <p className="text-xs text-slate-500">Non-winning vendors</p>
+            <label className="block space-y-1">
+              <span className="text-xs font-medium text-slate-600">Debrief message</span>
+              <textarea
+                className="min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                value={debriefMessage}
+                onChange={(event) => setDebriefMessage(event.target.value)}
+                placeholder="Add the message that will be sent to non-winning vendors."
+              />
+            </label>
+            <p className="text-[11px] text-slate-500">
+              The same message is sent to each selected non-winning vendor.
+            </p>
+          </div>
           <div className="space-y-2">
             {nonWinners.length > 0 ? (
               nonWinners.map((vendor) => (
@@ -118,13 +133,20 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                   <Button
                     size="xs"
                     variant="ghost"
-                    disabled={!displayAward || vendor.vendor_id === '' || debrief.isPending || useMocks}
+                    disabled={
+                      !displayAward ||
+                      vendor.vendor_id === '' ||
+                      debrief.isPending ||
+                      useMocks ||
+                      debriefMessage.trim() === ''
+                    }
                     onClick={() => {
-                      if (displayAward && vendor.vendor_id) {
+                      const message = debriefMessage.trim();
+                      if (displayAward && vendor.vendor_id && message !== '') {
                         debrief.mutate({
                           awardId: displayAward.id,
                           vendorId: vendor.vendor_id,
-                          message: `Debrief for ${vendor.vendor_name ?? vendor.vendor_id}`,
+                          message,
                         });
                       }
                     }}

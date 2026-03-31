@@ -105,7 +105,25 @@ final class AwardWorkflowTest extends ApiTestCase
             'matrix_payload' => [],
             'scoring_payload' => [],
             'approval_payload' => [],
-            'response_payload' => ['snapshot' => ['normalized_lines' => [['source_line_id' => 'x']]]],
+            'response_payload' => [
+                'snapshot' => [
+                    'normalized_lines' => [
+                        ['source_line_id' => 'x'],
+                    ],
+                    'vendors' => [
+                        [
+                            'vendor_id' => $winnerVendorId,
+                            'vendor_name' => 'Winner Vendor',
+                            'quote_submission_id' => $quote->id,
+                        ],
+                        [
+                            'vendor_id' => (string) Str::ulid(),
+                            'vendor_name' => 'Runner Up Vendor',
+                            'quote_submission_id' => null,
+                        ],
+                    ],
+                ],
+            ],
             'readiness_payload' => [],
             'status' => 'final',
             'version' => 1,
@@ -145,6 +163,7 @@ final class AwardWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.0.id', $award->id);
         $response->assertJsonPath('data.0.rfq_id', $rfq->id);
         $response->assertJsonPath('data.0.vendor_name', 'Winner Vendor');
+        $response->assertJsonPath('data.0.comparison.vendors.0.vendor_id', $award->vendor_id);
     }
 
     public function test_store_creates_award_for_vendor_submitted_to_rfq(): void

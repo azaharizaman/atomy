@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 
 beforeAll(() => {
@@ -54,5 +54,18 @@ describe('RfqAwardPage', () => {
     expect(await screen.findByText('Winner Vendor', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
     expect(screen.getByText('Other Vendor')).toBeInTheDocument();
+  });
+
+  it('uses the drafted debrief message for vendor follow-up', async () => {
+    renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
+
+    const debriefInput = await screen.findByLabelText(/debrief message/i);
+    const sendButton = screen.getByRole('button', { name: /send debrief/i });
+
+    expect(sendButton).toBeDisabled();
+
+    fireEvent.change(debriefInput, { target: { value: 'Thanks for your proposal.' } });
+
+    expect(sendButton).toBeEnabled();
   });
 });

@@ -46,9 +46,17 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
     return selectedLineIds.includes(lineId);
   }
 
-  function formatPrice(value: number | string | null | undefined): string {
-    if (value === null || value === undefined) return '—';
+  function parseOptionalPrice(value: number | string | null | undefined): number | null {
+    if (value === null || value === undefined) return null;
+    if (typeof value === 'string' && value.trim() === '') return null;
     const numericValue = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(numericValue)) return null;
+    return numericValue;
+  }
+
+  function formatPrice(value: number | string | null | undefined): string {
+    const numericValue = parseOptionalPrice(value);
+    if (numericValue === null) return '—';
     if (!Number.isFinite(numericValue)) return '—';
     return `$${numericValue.toLocaleString()}`;
   }
@@ -164,7 +172,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                 );
               }
 
-              const unitPrice = line.source_unit_price !== null ? Number(line.source_unit_price) : null;
+              const unitPrice = parseOptionalPrice(line.source_unit_price);
               const lineNumber = getLineNumber(line, index);
               const sourceCheckboxId = checkboxId('source', line.id);
               return (
@@ -185,9 +193,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                   <span className="w-6 text-slate-500">{lineNumber}</span>
                   <span className="flex-1 truncate text-slate-800">{line.source_description}</span>
                   <span className="text-slate-500">{`${line.source_quantity ?? '—'} ${line.source_uom ?? ''}`.trim()}</span>
-                  <span className="font-medium tabular-nums">
-                    {unitPrice !== null && Number.isFinite(unitPrice) ? `$${unitPrice.toLocaleString()}` : '—'}
-                  </span>
+                  <span className="font-medium tabular-nums">{formatPrice(unitPrice)}</span>
                   <StatusBadge status={line.has_blocking_issue ? 'pending' : 'approved'} size="xs" label={line.confidence} />
                 </div>
               );
@@ -228,7 +234,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                 );
               }
 
-              const unitPrice = line.rfq_line_unit_price !== null ? Number(line.rfq_line_unit_price) : null;
+              const unitPrice = parseOptionalPrice(line.rfq_line_unit_price);
               const lineNumber = getLineNumber(line, index);
               const mappingCheckboxId = checkboxId('mapping', line.id);
               return (
@@ -253,9 +259,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                   </span>
                   <span className="text-slate-500 font-mono">—</span>
                   <span>{`${line.rfq_line_quantity ?? '—'} ${line.rfq_line_uom ?? ''}`.trim()}</span>
-                  <span className="tabular-nums font-medium">
-                    {unitPrice !== null && Number.isFinite(unitPrice) ? `$${unitPrice.toLocaleString()}` : '—'}
-                  </span>
+                  <span className="tabular-nums font-medium">{formatPrice(unitPrice)}</span>
                 </div>
               );
             })}

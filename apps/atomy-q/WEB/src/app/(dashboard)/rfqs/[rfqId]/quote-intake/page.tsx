@@ -119,7 +119,8 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
         }
       />
       <Card padding="none">
-        <UploadZone compact onBrowse={() => {}} />
+        {/* TODO: wire UploadZone browse behavior to the real quote-upload flow once vendor selection exists. */}
+        <UploadZone compact />
       </Card>
       <FilterBar
         filters={[
