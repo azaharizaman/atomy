@@ -14,7 +14,8 @@
 1. **Environment:** Copy `apps/atomy-q/WEB/.env.example` → `.env.local`.
 2. **API:** Set `NEXT_PUBLIC_API_URL` to the public API base including `/api/v1`.
 3. **Mocks:** Ensure `NEXT_PUBLIC_USE_MOCKS` is **false** in staging/production.
+4. **Quote lifecycle:** Confirm the staging API includes live quote intake, normalization, comparison freeze, award, and approval endpoints before validating the RFQ workflow screens.
 
 ## Smoke
 
-- Login, RFQ list (pagination), RFQ overview, approval queue list + detail, forgot/reset password request.
+- Login, RFQ list (pagination), RFQ overview, quote intake list/detail, normalize freeze gate, comparison runs list, award sign-off, approval queue list + detail, forgot/reset password request.

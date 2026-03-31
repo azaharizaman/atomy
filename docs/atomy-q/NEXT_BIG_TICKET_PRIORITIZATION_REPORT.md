@@ -7,6 +7,8 @@
 
 The next big ticket is **Quote Lifecycle Productionization**: take the existing RFQ -> quote intake -> normalization -> comparison -> award/approval flow from a partially seeded/demo experience to a fully live, tenant-safe, auditable product flow.
 
+**Update 2026-03-31:** the quote lifecycle slice has now been materially productionized in the API and WEB tree. The next highest-value ticket has shifted to **Vendor Management and Invitation Lifecycle**.
+
 This is the highest-leverage item because:
 
 1. The WEB app already exposes the intended buyer journey, but the most valuable screens are still seed-backed or mock-backed.
@@ -15,6 +17,8 @@ This is the highest-leverage item because:
 4. This ticket directly pushes Atomy-Q from "structured prototype" toward "pilotable SaaS".
 
 If only one thing gets funded next, fund ticket #1 below.
+
+> Historical note: the ranked list below reflects the 2026-03-29 analysis that produced this report. The 2026-03-31 update above supersedes the “next ticket” recommendation after the quote lifecycle work landed.
 
 ## Ranked Tickets
 

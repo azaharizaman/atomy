@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { SectionCard, Card, DocPreview } from '@/components/ds/Card';
+import { SectionCard, DocPreview } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
 import { RecordHeader } from '@/components/ds/RecordHeader';
 import { ConfidenceBadge } from '@/components/ds/Badge';
@@ -22,15 +22,29 @@ export default function QuoteIntakeDetailPage({
   const router = useRouter();
   const { rfqId, quoteId } = React.use(params);
   const { data: rfq } = useRfq(rfqId);
-  const { data: submission } = useQuoteSubmission(quoteId, { enabled: !useMocks });
+  const { data: submission } = useQuoteSubmission(quoteId);
   const [activeTab, setActiveTab] = React.useState('overview');
   const blockingCount = submission?.blocking_issue_count ?? 0;
+  const fileName = submission?.original_filename ?? 'Quote submission';
+  const vendorName = submission?.vendor_name ?? 'Vendor';
+  const confidenceValue = submission?.confidence ?? null;
+  const confidenceVariant =
+    confidenceValue === null || confidenceValue === undefined
+      ? 'medium'
+      : confidenceValue >= 90
+        ? 'high'
+        : confidenceValue >= 70
+          ? 'medium'
+          : 'low';
+  const uploadedAt = submission?.submitted_at ?? null;
+  const statusLabel = submission?.status === 'ready' ? 'Ready' : submission?.status === 'needs_review' ? 'Needs review' : submission?.status ?? 'Uploaded';
+  const statusBadge = submission?.status === 'ready' ? 'approved' : submission?.status === 'needs_review' ? 'pending' : submission?.status === 'failed' ? 'error' : 'processing';
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
     { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
     { label: 'Quote Intake', href: `/rfqs/${encodeURIComponent(rfqId)}/quote-intake` },
-    { label: 'Dell Technologies Quote' },
+    { label: vendorName },
   ];
 
   const validationItems = [
@@ -49,13 +63,13 @@ export default function QuoteIntakeDetailPage({
         </div>
       )}
       <RecordHeader
-        title="Dell_Quote_RFQ2401.pdf"
-        status="approved"
+        title={fileName}
+        status={statusBadge}
         metadata={[
-          { label: 'Vendor', value: 'Dell Technologies' },
-          { label: 'Uploaded', value: '2 hours ago' },
-          { label: 'Parse confidence', value: '85%' },
-          { label: 'Normalization', value: 'Editable' },
+          { label: 'Vendor', value: vendorName },
+          { label: 'Uploaded', value: uploadedAt ?? '—' },
+          { label: 'Parse confidence', value: confidenceValue !== null && confidenceValue !== undefined ? `${Math.round(confidenceValue)}%` : '—' },
+          { label: 'Normalization', value: statusLabel },
         ]}
       />
       <SecondaryTabs
@@ -69,14 +83,18 @@ export default function QuoteIntakeDetailPage({
       {activeTab === 'overview' ? (
         <div className="grid gap-5 xl:grid-cols-[1.15fr,0.85fr]">
           <SectionCard title="Document preview" noPadBody>
-            <DocPreview fileName="Dell_Quote_RFQ2401.pdf" pageInfo="Page 1 of 4" className="m-4 h-[360px]" />
+            <DocPreview fileName={fileName} pageInfo="Page 1 of 4" className="m-4 h-[360px]" />
           </SectionCard>
           <div className="space-y-5">
             <SectionCard title="Parse summary">
               <div className="space-y-3">
-                <p className="text-sm font-medium text-slate-800">Dell Technologies</p>
-                <p className="text-xs text-slate-500">vendor@dell.com</p>
-                <ConfidenceBadge variant="high" showBar percentage={85} />
+                <p className="text-sm font-medium text-slate-800">{vendorName}</p>
+                <p className="text-xs text-slate-500">{submission?.vendor_id ?? '—'}</p>
+                <ConfidenceBadge
+                  variant={confidenceVariant}
+                  showBar
+                  percentage={typeof confidenceValue === 'number' ? confidenceValue : undefined}
+                />
                 <div className="rounded-md bg-slate-50 px-3 py-2 space-y-2">
                   <p className="text-[10px] font-semibold uppercase text-slate-400">Validation results</p>
                   {validationItems.map((item, i) => (

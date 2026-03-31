@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class VendorInvitation extends Model
+class Debrief extends Model
 {
     use HasUlids;
 
@@ -16,28 +16,30 @@ class VendorInvitation extends Model
 
     public $incrementing = false;
 
-    protected $table = 'vendor_invitations';
+    protected $table = 'debriefs';
 
     protected $fillable = [
         'tenant_id',
         'rfq_id',
+        'award_id',
         'vendor_id',
-        'vendor_email',
-        'vendor_name',
-        'status',
-        'invited_at',
-        'responded_at',
-        'reminded_at',
-        'channel',
+        'message',
+        'debriefed_at',
     ];
 
     protected $casts = [
-        'invited_at' => 'datetime',
-        'responded_at' => 'datetime',
-        'reminded_at' => 'datetime',
+        'debriefed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * @return BelongsTo<Award, $this>
+     */
+    public function award(): BelongsTo
+    {
+        return $this->belongsTo(Award::class, 'award_id');
+    }
 
     /**
      * @return BelongsTo<Rfq, $this>

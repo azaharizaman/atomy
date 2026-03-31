@@ -23,20 +23,20 @@ class Award extends Model
         'tenant_id',
         'rfq_id',
         'comparison_run_id',
+        'vendor_id',
         'status',
-        'winner_vendor_id',
-        'split_allocation',
-        'savings_amount',
-        'savings_percentage',
-        'standstill_until',
-        'created_by',
+        'amount',
+        'currency',
+        'split_details',
+        'protest_id',
+        'signoff_at',
+        'signed_off_by',
     ];
 
     protected $casts = [
-        'split_allocation' => 'array',
-        'savings_amount' => 'decimal:2',
-        'savings_percentage' => 'decimal:2',
-        'standstill_until' => 'datetime',
+        'amount' => 'decimal:2',
+        'split_details' => 'array',
+        'signoff_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -60,9 +60,9 @@ class Award extends Model
     /**
      * @return BelongsTo<User, $this>
      */
-    public function creator(): BelongsTo
+    public function signedOffByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'signed_off_by');
     }
 
     /**
