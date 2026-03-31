@@ -34,6 +34,13 @@ function mapQuoteStatus(status: string | undefined): { badge: string; label: str
   return { badge: 'pending', label: status ? status : 'Pending' };
 }
 
+function getConfidenceVariant(confidence: unknown): 'high' | 'medium' | 'low' {
+  if (confidence === 'high' || confidence === 'medium' || confidence === 'low') {
+    return confidence;
+  }
+  return 'medium';
+}
+
 const STATUS_FILTER_OPTIONS = [
   { value: '', label: 'All statuses' },
   { value: 'approved', label: 'Ready' },
@@ -45,7 +52,7 @@ const STATUS_FILTER_OPTIONS = [
 export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const { data: rfq } = useRfq(rfqId);
-  const norm = useNormalizationReview(rfqId);
+  const norm = useNormalizationReview(rfqId, { enabled: !useMocks });
   const { data: submissions = [] } = useQuoteSubmissions(rfqId);
   const [statusFilter, setStatusFilter] = React.useState('');
   const [vendorFilter, setVendorFilter] = React.useState('');
@@ -87,7 +94,7 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
       key: 'confidence',
       label: 'Parse confidence',
       width: '120px',
-      render: (row) => <ConfidenceBadge variant={row.confidence as 'high' | 'medium' | 'low'} />,
+      render: (row) => <ConfidenceBadge variant={getConfidenceVariant(row.confidence)} />,
     },
     { key: 'uploadedAt', label: 'Uploaded at', width: '100px', render: (row) => <span className="text-xs text-slate-500">{row.uploaded_at ?? '—'}</span> },
   ];

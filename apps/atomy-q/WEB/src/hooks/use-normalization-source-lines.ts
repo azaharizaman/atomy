@@ -79,8 +79,9 @@ function parseOptionalNumber(value: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function useNormalizationSourceLines(rfqId: string) {
+export function useNormalizationSourceLines(rfqId: string, options?: { enabled?: boolean }) {
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+  const enabled = (options?.enabled ?? true) && Boolean(rfqId) && !useMocks;
 
   return useQuery({
     queryKey: ['normalization-source-lines', rfqId],
@@ -92,6 +93,6 @@ export function useNormalizationSourceLines(rfqId: string) {
       const { data } = await api.get('/normalization/' + encodeURIComponent(rfqId) + '/source-lines');
       return normalizeSourceLines(data);
     },
-    enabled: Boolean(rfqId) && !useMocks,
+    enabled,
   });
 }

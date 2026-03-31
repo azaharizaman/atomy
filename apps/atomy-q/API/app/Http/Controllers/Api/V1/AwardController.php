@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Models\Award;
+use App\Models\Debrief;
 use App\Models\ComparisonRun;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
@@ -168,7 +169,20 @@ final class AwardController extends Controller
             return response()->json(['message' => 'Vendor not found'], 404);
         }
 
-        if ($award->comparison_run_id !== null) {
+        $debrief = Debrief::query()->firstOrCreate(
+            [
+                'tenant_id' => $tenantId,
+                'award_id' => $award->id,
+                'vendor_id' => $vendorId,
+            ],
+            [
+                'rfq_id' => $award->rfq_id,
+                'message' => $validated['message'] ?? null,
+                'debriefed_at' => now(),
+            ],
+        );
+
+        if ($debrief->wasRecentlyCreated && $award->comparison_run_id !== null) {
             $decisionTrail->recordAwardDebriefed(
                 $tenantId,
                 $award->rfq_id,
@@ -183,12 +197,12 @@ final class AwardController extends Controller
 
         return response()->json([
             'data' => [
-                'award_id' => $award->id,
-                'vendor_id' => $vendorId,
+                'award_id' => $debrief->award_id,
+                'vendor_id' => $debrief->vendor_id,
                 'vendor_name' => $submission->vendor_name,
-                'message' => $validated['message'] ?? null,
+                'message' => $debrief->message,
                 'status' => $award->status,
-                'debriefed_at' => now()->toAtomString(),
+                'debriefed_at' => $debrief->debriefed_at?->toAtomString(),
             ],
         ]);
     }
@@ -290,6 +304,18 @@ final class AwardController extends Controller
             ->first();
 
         $rfq = $award->rfq()->select('id', 'title', 'rfq_number')->first();
+        $comparisonRun = $award->comparisonRun()->select('id', 'response_payload')->first();
+        $snapshot = $comparisonRun !== null ? ($comparisonRun->response_payload['snapshot'] ?? null) : null;
+        $vendors = [];
+        if (is_array($snapshot) && array_key_exists('vendors', $snapshot) && is_array($snapshot['vendors'])) {
+            $vendors = array_values(array_map(static function (array $vendor): array {
+                return [
+                    'vendor_id' => isset($vendor['vendor_id']) ? (string) $vendor['vendor_id'] : '',
+                    'vendor_name' => array_key_exists('vendor_name', $vendor) && $vendor['vendor_name'] !== null ? (string) $vendor['vendor_name'] : null,
+                    'quote_submission_id' => array_key_exists('quote_submission_id', $vendor) && $vendor['quote_submission_id'] !== null ? (string) $vendor['quote_submission_id'] : null,
+                ];
+            }, $snapshot['vendors']));
+        }
 
         return [
             'id' => $award->id,
@@ -306,6 +332,9 @@ final class AwardController extends Controller
             'protest_id' => $award->protest_id,
             'signoff_at' => $award->signoff_at?->toAtomString(),
             'signed_off_by' => $award->signed_off_by,
+            'comparison' => [
+                'vendors' => $vendors,
+            ],
         ];
     }
 }

@@ -32,19 +32,16 @@ vi.mock('@/hooks/use-award', () => ({
       protest_id: null,
       signoff_at: null,
       signed_off_by: null,
+      comparison: {
+        vendors: [
+          { vendor_id: 'vendor-1', vendor_name: 'Winner Vendor', quote_submission_id: 'quote-1' },
+          { vendor_id: 'vendor-2', vendor_name: 'Other Vendor', quote_submission_id: 'quote-2' },
+        ],
+      },
     },
     awards: [],
     debrief: { mutate: vi.fn(), isPending: false, isError: false },
     signoff: { mutate: vi.fn(), isPending: false, isError: false },
-  }),
-}));
-
-vi.mock('@/hooks/use-rfq-vendors', () => ({
-  useRfqVendors: () => ({
-    data: [
-      { id: 'inv-1', vendor_id: 'vendor-1', name: 'Winner Vendor', status: 'responded', contact: 'winner@example.com' },
-      { id: 'inv-2', vendor_id: 'vendor-2', name: 'Other Vendor', status: 'invited', contact: 'other@example.com' },
-    ],
   }),
 }));
 

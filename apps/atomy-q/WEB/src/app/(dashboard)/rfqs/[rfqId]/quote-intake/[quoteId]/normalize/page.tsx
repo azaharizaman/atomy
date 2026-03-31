@@ -26,9 +26,10 @@ const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: string }) {
   const { data: rfq } = useRfq(rfqId);
   const normLive = useNormalizationReview(rfqId, { enabled: !useMocks });
-  const { data: liveSourceLines = [] } = useNormalizationSourceLines(rfqId);
+  const { data: liveSourceLines = [] } = useNormalizationSourceLines(rfqId, { enabled: !useMocks });
   const freeze = useFreezeComparison();
   const [locked, setLocked] = React.useState(false);
+  const [selectedLineIds, setSelectedLineIds] = React.useState<string[]>([]);
 
   const mockBlocking = useMocks && MOCK_SOURCE_LINES.some((l) => l.conflict);
   const hasBlockingIssues = useMocks ? mockBlocking : normLive.hasBlockingIssues;
@@ -36,6 +37,29 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
   const conflicts = normLive.conflicts;
   const openConflicts = conflicts.filter((c) => c.resolution === null);
   const sourceLines = useMocks ? MOCK_SOURCE_LINES : liveSourceLines.filter((line) => line.quote_submission_id === quoteId);
+
+  function toggleSelection(lineId: string): void {
+    setSelectedLineIds((current) => (current.includes(lineId) ? current.filter((id) => id !== lineId) : [...current, lineId]));
+  }
+
+  function isSelected(lineId: string): boolean {
+    return selectedLineIds.includes(lineId);
+  }
+
+  function formatPrice(value: number | string | null | undefined): string {
+    if (value === null || value === undefined) return '—';
+    const numericValue = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(numericValue)) return '—';
+    return `$${numericValue.toLocaleString()}`;
+  }
+
+  function getLineNumber(line: { lineNo?: number; sort_order?: number | null }, index: number): number {
+    return line.lineNo ?? ((line.sort_order ?? index) + 1);
+  }
+
+  function checkboxId(section: 'source' | 'mapping', lineId: string): string {
+    return `${section}-${lineId}`;
+  }
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -114,29 +138,51 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
           <div className="space-y-2">
             {sourceLines.map((line, index) => {
               if (useMocks) {
+                const lineNumber = getLineNumber(line, index);
+                const sourceCheckboxId = checkboxId('source', line.id);
                 return (
                   <div
                     key={line.id}
                     className="flex items-center gap-3 rounded border border-slate-200 px-3 py-2 text-xs"
                   >
-                    <input type="checkbox" className="rounded border-slate-300" />
-                    <span className="w-6 text-slate-500">{line.lineNo}</span>
+                    <input
+                      id={sourceCheckboxId}
+                      type="checkbox"
+                      className="rounded border-slate-300"
+                      checked={isSelected(line.id)}
+                      onChange={() => toggleSelection(line.id)}
+                    />
+                    <label htmlFor={sourceCheckboxId} className="sr-only">
+                      Select source line {lineNumber}
+                    </label>
+                    <span className="w-6 text-slate-500">{lineNumber}</span>
                     <span className="flex-1 truncate text-slate-800">{line.description}</span>
                     <span className="text-slate-500">{line.qty} {line.unit}</span>
-                    <span className="font-medium tabular-nums">${Number(line.unitPrice ?? 0).toLocaleString()}</span>
+                    <span className="font-medium tabular-nums">{formatPrice(line.unitPrice)}</span>
                     <StatusBadge status={line.conflict ? 'pending' : 'approved'} size="xs" label={line.confidence} />
                   </div>
                 );
               }
 
               const unitPrice = line.source_unit_price !== null ? Number(line.source_unit_price) : null;
+              const lineNumber = getLineNumber(line, index);
+              const sourceCheckboxId = checkboxId('source', line.id);
               return (
                 <div
                   key={line.id}
                   className="flex items-center gap-3 rounded border border-slate-200 px-3 py-2 text-xs"
                 >
-                  <input type="checkbox" className="rounded border-slate-300" />
-                  <span className="w-6 text-slate-500">{(line.sort_order ?? index) + 1}</span>
+                  <input
+                    id={sourceCheckboxId}
+                    type="checkbox"
+                    className="rounded border-slate-300"
+                    checked={isSelected(line.id)}
+                    onChange={() => toggleSelection(line.id)}
+                  />
+                  <label htmlFor={sourceCheckboxId} className="sr-only">
+                    Select source line {lineNumber}
+                  </label>
+                  <span className="w-6 text-slate-500">{lineNumber}</span>
                   <span className="flex-1 truncate text-slate-800">{line.source_description}</span>
                   <span className="text-slate-500">{`${line.source_quantity ?? '—'} ${line.source_uom ?? ''}`.trim()}</span>
                   <span className="font-medium tabular-nums">
@@ -155,27 +201,55 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
           <div className="space-y-2 text-xs">
             {sourceLines.map((line, index) => {
               if (useMocks) {
+                const lineNumber = getLineNumber(line, index);
+                const mappingCheckboxId = checkboxId('mapping', line.id);
                 return (
                   <div
                     key={line.id}
                     className="grid grid-cols-5 gap-2 rounded border border-slate-200 px-3 py-2 items-center"
                   >
-                    <span className="col-span-2 truncate text-slate-800">RFQ Line #{line.lineNo}</span>
+                    <span className="col-span-2 flex items-center gap-2 truncate text-slate-800">
+                      <input
+                        id={mappingCheckboxId}
+                        type="checkbox"
+                        className="rounded border-slate-300"
+                        checked={isSelected(line.id)}
+                        onChange={() => toggleSelection(line.id)}
+                      />
+                      <label htmlFor={mappingCheckboxId} className="sr-only">
+                        Select normalized line {lineNumber}
+                      </label>
+                      <span>RFQ Line #{lineNumber}</span>
+                    </span>
                     <span className="text-slate-500 font-mono">43211500</span>
                     <span>{line.qty} {line.unit}</span>
-                    <span className="tabular-nums font-medium">${Number(line.unitPrice ?? 0).toLocaleString()}</span>
+                    <span className="tabular-nums font-medium">{formatPrice(line.unitPrice)}</span>
                   </div>
                 );
               }
 
               const unitPrice = line.rfq_line_unit_price !== null ? Number(line.rfq_line_unit_price) : null;
+              const lineNumber = getLineNumber(line, index);
+              const mappingCheckboxId = checkboxId('mapping', line.id);
               return (
                 <div
                   key={line.id}
                   className="grid grid-cols-5 gap-2 rounded border border-slate-200 px-3 py-2 items-center"
                 >
-                  <span className="col-span-2 truncate text-slate-800">
+                  <span className="col-span-2 flex items-center gap-2 truncate text-slate-800">
+                    <input
+                      id={mappingCheckboxId}
+                      type="checkbox"
+                      className="rounded border-slate-300"
+                      checked={isSelected(line.id)}
+                      onChange={() => toggleSelection(line.id)}
+                    />
+                    <label htmlFor={mappingCheckboxId} className="sr-only">
+                      Select normalized line {lineNumber}
+                    </label>
+                    <span>
                     {line.rfq_line_description ?? `RFQ Line #${(line.sort_order ?? index) + 1}`}
+                    </span>
                   </span>
                   <span className="text-slate-500 font-mono">—</span>
                   <span>{`${line.rfq_line_quantity ?? '—'} ${line.rfq_line_uom ?? ''}`.trim()}</span>

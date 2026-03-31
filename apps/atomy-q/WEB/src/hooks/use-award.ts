@@ -19,6 +19,13 @@ export interface AwardRecord {
   protest_id?: string | null;
   signoff_at?: string | null;
   signed_off_by?: string | null;
+  comparison?: {
+    vendors: Array<{
+      vendor_id: string;
+      vendor_name?: string | null;
+      quote_submission_id?: string | null;
+    }>;
+  } | null;
 }
 
 function parseOptionalNumber(value: unknown): number | null {
@@ -53,6 +60,30 @@ function normalizeAwardRows(payload: unknown): AwardRecord[] {
       protest_id: row.protest_id !== undefined && row.protest_id !== null ? String(row.protest_id) : null,
       signoff_at: row.signoff_at !== undefined && row.signoff_at !== null ? String(row.signoff_at) : null,
       signed_off_by: row.signed_off_by !== undefined && row.signed_off_by !== null ? String(row.signed_off_by) : null,
+      comparison:
+        row.comparison !== undefined && row.comparison !== null && typeof row.comparison === 'object' && !Array.isArray(row.comparison)
+          ? {
+              vendors: Array.isArray((row.comparison as { vendors?: unknown }).vendors)
+                ? ((row.comparison as { vendors?: unknown }).vendors as unknown[]).map((vendor, vendorIndex) => {
+                    if (vendor === null || typeof vendor !== 'object' || Array.isArray(vendor)) {
+                      throw new Error(`Invalid award comparison vendor at index ${vendorIndex}`);
+                    }
+                    const vendorRow = vendor as Record<string, unknown>;
+                    return {
+                      vendor_id: String(vendorRow.vendor_id ?? ''),
+                      vendor_name:
+                        vendorRow.vendor_name !== undefined && vendorRow.vendor_name !== null
+                          ? String(vendorRow.vendor_name)
+                          : null,
+                      quote_submission_id:
+                        vendorRow.quote_submission_id !== undefined && vendorRow.quote_submission_id !== null
+                          ? String(vendorRow.quote_submission_id)
+                          : null,
+                    };
+                  })
+                : [],
+            }
+          : null,
     };
   });
 }
@@ -80,6 +111,15 @@ export function useAward(rfqId: string) {
             protest_id: null,
             signoff_at: null,
             signed_off_by: null,
+            comparison: {
+              vendors: [
+                {
+                  vendor_id: seed.winnerVendorId,
+                  vendor_name: seed.winnerVendorName,
+                  quote_submission_id: null,
+                },
+              ],
+            },
           },
         ];
       }

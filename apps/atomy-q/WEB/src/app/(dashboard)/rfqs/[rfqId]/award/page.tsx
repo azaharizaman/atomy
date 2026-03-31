@@ -10,7 +10,6 @@ import { PageHeader } from '@/components/ds/FilterBar';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useAward } from '@/hooks/use-award';
 import { useRfq } from '@/hooks/use-rfq';
-import { useRfqVendors } from '@/hooks/use-rfq-vendors';
 
 const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
@@ -38,11 +37,11 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const { data: rfq } = useRfq(rfqId);
   const { award, debrief, signoff } = useAward(rfqId);
-  const { data: vendors = [] } = useRfqVendors(rfqId);
   const displayAward = award ?? null;
   const awardStatus = awardBadge(displayAward?.status);
-  const nonWinners = displayAward
-    ? vendors.filter((vendor) => vendor.vendor_id !== null && vendor.vendor_id !== displayAward.vendor_id)
+  const isFinalized = awardStatus.status === 'approved';
+  const nonWinners = displayAward?.comparison?.vendors?.length
+    ? displayAward.comparison.vendors.filter((vendor) => vendor.vendor_id !== '' && vendor.vendor_id !== displayAward.vendor_id)
     : [];
   const awardAmount = formatAmount(displayAward?.amount ?? null, displayAward?.currency ?? null);
 
@@ -57,7 +56,11 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
       <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader
         title="Award"
-        subtitle={displayAward ? `Award for ${displayAward.rfq_number ?? rfq?.rfq_number ?? rfqId}` : 'No award record yet'}
+        subtitle={
+          displayAward
+            ? `${isFinalized ? 'Award for' : 'Recommended winner for'} ${displayAward.rfq_number ?? rfq?.rfq_number ?? rfqId}`
+            : 'No award record yet'
+        }
         actions={
           <Button size="sm" variant="outline" onClick={() => router.push(`/rfqs/${encodeURIComponent(rfqId)}/comparison-runs`)}>
             Comparison runs
@@ -68,21 +71,21 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
         <StatusBadge status={awardStatus.status} label={awardStatus.label} />
         <span className="text-sm text-slate-700">
           {displayAward
-            ? `Awarded to ${displayAward.vendor_name ?? 'Unknown vendor'} · Total: ${awardAmount}`
+            ? `${isFinalized ? 'Awarded to' : 'Recommended for'} ${displayAward.vendor_name ?? 'Unknown vendor'} · ${isFinalized ? 'Total' : 'Proposed total'}: ${awardAmount}`
             : 'No award has been created for this RFQ yet.'}
         </span>
       </div>
       <div className="grid gap-5 xl:grid-cols-[1fr,400px]">
         <div className="space-y-5">
-          <SectionCard title={displayAward ? 'Awarded winner' : 'Recommended winner'}>
+          <SectionCard title={displayAward ? (isFinalized ? 'Awarded winner' : 'Recommended winner') : 'Recommended winner'}>
             <div className="space-y-2">
               <p className="text-sm font-semibold text-slate-900">{displayAward?.vendor_name ?? 'No award selected'}</p>
               <p className="text-xs text-slate-600">
                 {displayAward
-                  ? `Amount: ${awardAmount}`
+                  ? `${isFinalized ? 'Amount' : 'Proposed amount'}: ${awardAmount}`
                   : 'Freeze a comparison run to create an award record.'}
               </p>
-              <StatusBadge status={awardStatus.status} label={displayAward ? awardStatus.label : 'Recommended'} />
+              <StatusBadge status={awardStatus.status} label={displayAward ? (isFinalized ? awardStatus.label : 'Recommended') : 'Recommended'} />
             </div>
           </SectionCard>
           <SectionCard title="Sign-off">
@@ -110,18 +113,18 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
           <div className="space-y-2">
             {nonWinners.length > 0 ? (
               nonWinners.map((vendor) => (
-                <div key={vendor.id} className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-slate-700">{vendor.name}</span>
+                <div key={vendor.vendor_id} className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-slate-700">{vendor.vendor_name ?? vendor.vendor_id}</span>
                   <Button
                     size="xs"
                     variant="ghost"
-                    disabled={!displayAward || vendor.vendor_id === null || debrief.isPending || useMocks}
+                    disabled={!displayAward || vendor.vendor_id === '' || debrief.isPending || useMocks}
                     onClick={() => {
                       if (displayAward && vendor.vendor_id) {
                         debrief.mutate({
                           awardId: displayAward.id,
                           vendorId: vendor.vendor_id,
-                          message: `Debrief for ${vendor.name}`,
+                          message: `Debrief for ${vendor.vendor_name ?? vendor.vendor_id}`,
                         });
                       }
                     }}

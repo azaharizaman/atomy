@@ -256,7 +256,24 @@ final class AwardWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.award_id', $award->id);
         $response->assertJsonPath('data.vendor_id', $loserVendorId);
         $response->assertJsonPath('data.vendor_name', 'Loser Vendor');
+        $response->assertJsonPath('data.message', 'Thanks for participating.');
+        $this->assertDatabaseHas('debriefs', [
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'award_id' => $award->id,
+            'vendor_id' => $loserVendorId,
+            'message' => 'Thanks for participating.',
+        ]);
 
+        $secondResponse = $this->postJson(
+            '/api/v1/awards/' . $award->id . '/debrief/' . $loserVendorId,
+            ['message' => 'Thanks for participating.'],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $secondResponse->assertOk();
+        $this->assertSame($response->json('data.debriefed_at'), $secondResponse->json('data.debriefed_at'));
+        $this->assertDatabaseCount('debriefs', 1);
         $this->assertDatabaseHas('decision_trail_entries', [
             'tenant_id' => $user->tenant_id,
             'comparison_run_id' => $run->id,
