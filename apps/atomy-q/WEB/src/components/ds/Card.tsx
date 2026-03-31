@@ -186,6 +186,7 @@ interface UploadZoneProps {
 
 export function UploadZone({ onBrowse, className = '', compact = false }: UploadZoneProps) {
   const [hover, setHover] = React.useState(false);
+  const canBrowse = typeof onBrowse === 'function';
   return (
     <div
       onDragOver={(e) => {
@@ -197,21 +198,22 @@ export function UploadZone({ onBrowse, className = '', compact = false }: Upload
         e.preventDefault();
         setHover(false);
       }}
-      onClick={onBrowse}
-      role="button"
-      tabIndex={0}
+      onClick={canBrowse ? onBrowse : undefined}
+      role={canBrowse ? 'button' : undefined}
+      tabIndex={canBrowse ? 0 : undefined}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (canBrowse && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onBrowse?.();
         }
       }}
       className={[
-        'flex items-center justify-center gap-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-150',
+        'flex items-center justify-center gap-3 border-2 border-dashed rounded-lg transition-colors duration-150',
         compact ? 'py-3 px-4' : 'py-5 px-6',
         hover
           ? 'border-indigo-400 bg-indigo-50'
           : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white',
+        canBrowse ? 'cursor-pointer' : 'cursor-default',
         className,
       ].join(' ')}
     >
@@ -231,7 +233,12 @@ export function UploadZone({ onBrowse, className = '', compact = false }: Upload
           />
         </svg>
         <p className={['font-medium text-slate-600', compact ? 'text-xs' : 'text-sm'].join(' ')}>
-          Drop files here or <span className="text-indigo-600 hover:text-indigo-700">click to browse</span>
+          Drop files here{canBrowse ? (
+            <>
+              {' '}
+              or <span className="text-indigo-600 hover:text-indigo-700">click to browse</span>
+            </>
+          ) : null}
         </p>
         {!compact && <p className="text-xs text-slate-400">PDF, XLSX, CSV · Max 50 MB</p>}
       </div>
@@ -251,4 +258,3 @@ export function OverflowMenuTrigger({ onClick, className = '' }: OverflowMenuPro
     </IconButton>
   );
 }
-

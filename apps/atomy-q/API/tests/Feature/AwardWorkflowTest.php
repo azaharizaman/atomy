@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Award;
 use App\Models\ComparisonRun;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
+use App\Models\RfqLineItem;
 use App\Models\User;
-use App\Models\VendorInvitation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
@@ -32,11 +34,11 @@ final class AwardWorkflowTest extends ApiTestCase
         return $app;
     }
 
-    private function createUser(string $tenantId): User
+    private function createUser(): User
     {
         /** @var User $user */
         $user = User::query()->create([
-            'tenant_id' => $tenantId,
+            'tenant_id' => (string) Str::ulid(),
             'email' => 'award-' . Str::lower((string) Str::ulid()) . '@example.com',
             'name' => 'Award User',
             'password_hash' => Hash::make('password'),
@@ -51,22 +53,47 @@ final class AwardWorkflowTest extends ApiTestCase
     }
 
     /**
-     * @return array{0: User, 1: Rfq, 2: ComparisonRun, 3: VendorInvitation, 4: QuoteSubmission}
+     * @return array{0: User, 1: Rfq, 2: ComparisonRun, 3: Award, 4: QuoteSubmission}
      */
-    private function seedAwardContext(User $user): array
+    private function seedAward(User $user): array
     {
+        $winnerVendorId = (string) Str::ulid();
+
         $rfq = Rfq::query()->create([
             'tenant_id' => $user->tenant_id,
             'rfq_number' => 'RFQ-AWARD-' . Str::lower((string) Str::ulid()),
             'title' => 'Award RFQ',
             'owner_id' => $user->id,
-            'estimated_value' => 1000,
-            'savings_percentage' => 10,
             'submission_deadline' => now()->addDays(14),
-            'status' => 'published',
+            'status' => 'closed',
         ]);
 
-        $comparisonRun = ComparisonRun::query()->create([
+        RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Line',
+            'quantity' => 1,
+            'uom' => 'ea',
+            'unit_price' => 10,
+            'currency' => 'USD',
+            'sort_order' => 0,
+        ]);
+
+        /** @var QuoteSubmission $quote */
+        $quote = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => $winnerVendorId,
+            'vendor_name' => 'Winner Vendor',
+            'status' => 'ready',
+            'submitted_at' => now(),
+            'confidence' => 95.0,
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $run = ComparisonRun::query()->create([
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
             'name' => 'Final comparison',
@@ -74,24 +101,30 @@ final class AwardWorkflowTest extends ApiTestCase
             'idempotency_key' => null,
             'is_preview' => false,
             'created_by' => $user->id,
-            'request_payload' => ['rfq_id' => $rfq->id],
+            'request_payload' => [],
             'matrix_payload' => [],
             'scoring_payload' => [],
             'approval_payload' => [],
             'response_payload' => [
                 'snapshot' => [
                     'normalized_lines' => [
-                        ['quote_submission_id' => 'line-1'],
+                        ['source_line_id' => 'x'],
                     ],
-                    'rfq_version' => 1,
-                    'resolutions' => [],
-                    'currency_meta' => [],
+                    'vendors' => [
+                        [
+                            'vendor_id' => $winnerVendorId,
+                            'vendor_name' => 'Winner Vendor',
+                            'quote_submission_id' => $quote->id,
+                        ],
+                        [
+                            'vendor_id' => (string) Str::ulid(),
+                            'vendor_name' => 'Runner Up Vendor',
+                            'quote_submission_id' => null,
+                        ],
+                    ],
                 ],
             ],
-            'readiness_payload' => [
-                'all_ready' => true,
-                'submission_count' => 1,
-            ],
+            'readiness_payload' => [],
             'status' => 'final',
             'version' => 1,
             'expires_at' => null,
@@ -99,99 +132,172 @@ final class AwardWorkflowTest extends ApiTestCase
             'discarded_by' => null,
         ]);
 
-        $vendorId = (string) Str::ulid();
-
-        $invitation = VendorInvitation::query()->create([
+        /** @var Award $award */
+        $award = Award::query()->create([
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
-            'vendor_id' => $vendorId,
-            'vendor_email' => 'winner@example.com',
-            'vendor_name' => 'Winner Vendor',
-            'status' => 'accepted',
-            'invited_at' => now(),
-            'responded_at' => now(),
-            'channel' => 'email',
+            'comparison_run_id' => $run->id,
+            'vendor_id' => $winnerVendorId,
+            'status' => 'pending',
+            'amount' => '1000.00',
+            'currency' => 'USD',
+            'split_details' => [],
+            'protest_id' => null,
+            'signoff_at' => null,
+            'signed_off_by' => null,
         ]);
 
-        $quote = QuoteSubmission::query()->create([
-            'tenant_id' => $user->tenant_id,
-            'rfq_id' => $rfq->id,
-            'vendor_id' => $vendorId,
-            'vendor_name' => 'Winner Vendor',
-            'uploaded_by' => $user->id,
-            'file_path' => '/tmp/winner.pdf',
-            'file_type' => 'application/pdf',
-            'original_filename' => 'winner.pdf',
-            'status' => 'ready',
-            'submitted_at' => now(),
-            'confidence' => 100,
-            'line_items_count' => 1,
-            'warnings_count' => 0,
-            'errors_count' => 0,
-            'retry_count' => 0,
-        ]);
-
-        return [$user, $rfq, $comparisonRun, $invitation, $quote];
+        return [$user, $rfq, $run, $award, $quote];
     }
 
-    public function test_store_auto_creates_signed_off_award_from_workflow_selection(): void
+    public function test_index_returns_live_award_rows_for_rfq(): void
     {
-        $tenantId = (string) Str::ulid();
-        $user = $this->createUser($tenantId);
-        [, $rfq, $comparisonRun, $invitation] = $this->seedAwardContext($user);
+        [$user, $rfq, , $award] = $this->seedAward($this->createUser());
+
+        $response = $this->getJson(
+            '/api/v1/awards?rfqId=' . $rfq->id,
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.0.id', $award->id);
+        $response->assertJsonPath('data.0.rfq_id', $rfq->id);
+        $response->assertJsonPath('data.0.vendor_name', 'Winner Vendor');
+        $response->assertJsonPath('data.0.comparison.vendors.0.vendor_id', $award->vendor_id);
+    }
+
+    public function test_store_creates_award_for_vendor_submitted_to_rfq(): void
+    {
+        [$user, $rfq, $run,, $quote] = $this->seedAward($this->createUser());
 
         $response = $this->postJson(
             '/api/v1/awards',
             [
                 'rfq_id' => $rfq->id,
-                'comparison_run_id' => $comparisonRun->id,
-                'vendor_id' => $invitation->vendor_id,
+                'comparison_run_id' => $run->id,
+                'vendor_id' => $quote->vendor_id,
+                'amount' => '1000.00',
+                'currency' => 'usd',
+                'split_details' => [],
             ],
-            $this->authHeaders($tenantId, (string) $user->id),
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
         $response->assertCreated();
-        $response->assertJsonPath('data.rfq_id', $rfq->id);
-        $response->assertJsonPath('data.comparison_run_id', $comparisonRun->id);
-        $response->assertJsonPath('data.vendor_id', $invitation->vendor_id);
-        $response->assertJsonPath('data.vendor_name', $invitation->vendor_name);
-        $response->assertJsonPath('data.status', 'signed_off');
-        $response->assertJsonPath('data.amount', 900);
+        $response->assertJsonPath('data.vendor_name', 'Winner Vendor');
         $this->assertDatabaseHas('awards', [
-            'tenant_id' => $tenantId,
+            'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
-            'comparison_run_id' => $comparisonRun->id,
-            'vendor_id' => $invitation->vendor_id,
-            'status' => 'signed_off',
+            'vendor_id' => $quote->vendor_id,
         ]);
     }
 
-    public function test_show_returns_404_for_cross_tenant_award(): void
+    public function test_store_rejects_vendor_not_linked_to_rfq(): void
     {
-        $tenantA = (string) Str::ulid();
-        $tenantB = (string) Str::ulid();
-        $userA = $this->createUser($tenantA);
-        $userB = $this->createUser($tenantB);
-        [, $rfq, $comparisonRun, $invitation] = $this->seedAwardContext($userA);
+        [$user, $rfq, $run] = $this->seedAward($this->createUser());
 
-        $awardResponse = $this->postJson(
+        $response = $this->postJson(
             '/api/v1/awards',
             [
                 'rfq_id' => $rfq->id,
-                'comparison_run_id' => $comparisonRun->id,
-                'vendor_id' => $invitation->vendor_id,
+                'comparison_run_id' => $run->id,
+                'vendor_id' => (string) Str::ulid(),
+                'amount' => '1000.00',
+                'currency' => 'USD',
             ],
-            $this->authHeaders($tenantA, (string) $userA->id),
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
-        $awardId = (string) $awardResponse->json('data.id');
+        $response->assertNotFound();
+    }
 
-        $response = $this->getJson(
-            '/api/v1/awards/' . $awardId,
-            $this->authHeaders($tenantB, (string) $userB->id),
+    public function test_signoff_updates_award_status_and_timestamps(): void
+    {
+        [$user, , , $award] = $this->seedAward($this->createUser());
+
+        Carbon::setTestNow(Carbon::parse('2026-03-30 12:00:00', 'UTC'));
+
+        $response = $this->postJson(
+            '/api/v1/awards/' . $award->id . '/signoff',
+            [],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
-        $response->assertStatus(404);
+        $response->assertOk();
+        $response->assertJsonPath('data.status', 'signed_off');
+
+        $award->refresh();
+        self::assertSame('signed_off', $award->status);
+        self::assertNotNull($award->signoff_at);
+        self::assertSame($user->id, $award->signed_off_by);
+
+        Carbon::setTestNow(Carbon::parse('2026-03-30 12:05:00', 'UTC'));
+        $secondResponse = $this->postJson(
+            '/api/v1/awards/' . $award->id . '/signoff',
+            [],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $secondResponse->assertOk();
+        $award->refresh();
+        self::assertSame('signed_off', $award->status);
+        self::assertSame('2026-03-30T12:00:00+00:00', $award->signoff_at?->toAtomString());
+        self::assertSame($user->id, $award->signed_off_by);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_debrief_returns_live_response_for_non_winning_vendor(): void
+    {
+        [$user, $rfq, $run, $award] = $this->seedAward($this->createUser());
+        $loserVendorId = (string) Str::ulid();
+
+        QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => $loserVendorId,
+            'vendor_name' => 'Loser Vendor',
+            'status' => 'ready',
+            'submitted_at' => now(),
+            'confidence' => 90.0,
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $response = $this->postJson(
+            '/api/v1/awards/' . $award->id . '/debrief/' . $loserVendorId,
+            ['message' => 'Thanks for participating.'],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.award_id', $award->id);
+        $response->assertJsonPath('data.vendor_id', $loserVendorId);
+        $response->assertJsonPath('data.vendor_name', 'Loser Vendor');
+        $response->assertJsonPath('data.message', 'Thanks for participating.');
+        $this->assertDatabaseHas('debriefs', [
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'award_id' => $award->id,
+            'vendor_id' => $loserVendorId,
+            'message' => 'Thanks for participating.',
+        ]);
+
+        $secondResponse = $this->postJson(
+            '/api/v1/awards/' . $award->id . '/debrief/' . $loserVendorId,
+            ['message' => 'Thanks for participating.'],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $secondResponse->assertOk();
+        $this->assertSame($response->json('data.debriefed_at'), $secondResponse->json('data.debriefed_at'));
+        $this->assertDatabaseCount('debriefs', 1);
+        $this->assertDatabaseHas('decision_trail_entries', [
+            'tenant_id' => $user->tenant_id,
+            'comparison_run_id' => $run->id,
+            'rfq_id' => $rfq->id,
+            'event_type' => 'award_debriefed',
+        ]);
     }
 }
-

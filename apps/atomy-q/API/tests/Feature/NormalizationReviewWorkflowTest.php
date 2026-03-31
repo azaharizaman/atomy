@@ -171,4 +171,72 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
 
         $this->assertSame('ready', $quote->status);
     }
+
+    public function test_source_lines_endpoint_returns_live_rows_and_mappings(): void
+    {
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-NORM-3',
+            'title' => 'Normalization RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'published',
+        ]);
+
+        $lineItem = RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Widget',
+            'quantity' => 1,
+            'uom' => 'ea',
+            'unit_price' => 10,
+            'currency' => 'USD',
+            'sort_order' => 0,
+        ]);
+
+        $quote = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Vendor',
+            'status' => 'ready',
+            'submitted_at' => now(),
+            'confidence' => 92.0,
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $sourceLine = NormalizationSourceLine::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'quote_submission_id' => $quote->id,
+            'rfq_line_item_id' => $lineItem->id,
+            'source_description' => 'Widget line',
+            'source_quantity' => 1,
+            'source_uom' => 'ea',
+            'source_unit_price' => 10,
+            'raw_data' => ['line_number' => 1],
+            'sort_order' => 0,
+        ]);
+
+        NormalizationConflict::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'normalization_source_line_id' => $sourceLine->id,
+            'conflict_type' => 'price_mismatch',
+            'resolution' => null,
+            'resolved_at' => null,
+            'resolved_by' => null,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/normalization/' . $rfq->id . '/source-lines',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('meta.rfq_id', $rfq->id);
+        $response->assertJsonPath('meta.source_line_count', 1);
+    }
 }

@@ -19,6 +19,43 @@ final readonly class DecisionTrailRecorder
         string $comparisonRunId,
         array $summary,
     ): void {
+        $this->record(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $comparisonRunId,
+            eventType: 'comparison_snapshot_frozen',
+            summary: $summary,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
+    public function recordAwardDebriefed(
+        string $tenantId,
+        string $rfqId,
+        string $comparisonRunId,
+        array $summary,
+    ): void {
+        $this->record(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $comparisonRunId,
+            eventType: 'award_debriefed',
+            summary: $summary,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
+    private function record(
+        string $tenantId,
+        string $rfqId,
+        string $comparisonRunId,
+        string $eventType,
+        array $summary,
+    ): void {
         $previous = DecisionTrailEntry::query()
             ->where('comparison_run_id', $comparisonRunId)
             ->orderByDesc('sequence')
@@ -36,7 +73,7 @@ final readonly class DecisionTrailRecorder
             'comparison_run_id' => $comparisonRunId,
             'rfq_id' => $rfqId,
             'sequence' => $sequence,
-            'event_type' => 'comparison_snapshot_frozen',
+            'event_type' => $eventType,
             'payload_hash' => $payloadHash,
             'previous_hash' => $previousHash,
             'entry_hash' => $entryHash,

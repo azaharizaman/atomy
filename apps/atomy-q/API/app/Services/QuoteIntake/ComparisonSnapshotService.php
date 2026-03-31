@@ -10,7 +10,7 @@ use App\Models\Rfq;
 final readonly class ComparisonSnapshotService
 {
     /**
-     * @return array{rfq_version: int, normalized_lines: list<array<string, mixed>>, resolutions: list<array<string, mixed>>, currency_meta: array<string, string>}
+     * @return array{rfq_version: int, normalized_lines: list<array<string, mixed>>, resolutions: list<array<string, mixed>>, currency_meta: array<string, string>, vendors: list<array<string, mixed>>}
      */
     public function freezeForRfq(string $tenantId, string $rfqId): array
     {
@@ -23,6 +23,7 @@ final readonly class ComparisonSnapshotService
 
         $normalizedLines = [];
         $resolutions = [];
+        $vendors = [];
 
         $submissions = QuoteSubmission::query()
             ->where('tenant_id', $tenantId)
@@ -32,6 +33,14 @@ final readonly class ComparisonSnapshotService
             ->get();
 
         foreach ($submissions as $submission) {
+            if (! array_key_exists((string) $submission->vendor_id, $vendors)) {
+                $vendors[(string) $submission->vendor_id] = [
+                    'vendor_id' => (string) $submission->vendor_id,
+                    'vendor_name' => $submission->vendor_name,
+                    'quote_submission_id' => (string) $submission->id,
+                ];
+            }
+
             foreach ($submission->normalizationSourceLines as $line) {
                 $normalizedLines[] = [
                     'quote_submission_id' => $submission->id,
@@ -65,6 +74,7 @@ final readonly class ComparisonSnapshotService
             'normalized_lines' => $normalizedLines,
             'resolutions' => $resolutions,
             'currency_meta' => $currencyMeta,
+            'vendors' => array_values($vendors),
         ];
     }
 }

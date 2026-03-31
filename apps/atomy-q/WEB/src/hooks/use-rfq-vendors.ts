@@ -6,6 +6,7 @@ import { getSeedVendorsByRfqId } from '@/data/seed';
 
 export interface RfqVendorRow {
   id: string;
+  vendor_id: string | null;
   name: string;
   status: 'invited' | 'responded';
   contact: string;
@@ -23,6 +24,7 @@ function normalizeInvitationPayload(payload: unknown): RfqVendorRow[] {
     const row = item as Record<string, unknown>;
     return {
       id: String(row.id ?? ''),
+      vendor_id: row.vendor_id !== undefined && row.vendor_id !== null ? String(row.vendor_id) : null,
       name: String(row.vendor_name ?? row.name ?? ''),
       status: (row.status === 'accepted' || row.status === 'responded' ? 'responded' : 'invited') as 'invited' | 'responded',
       contact: String(row.vendor_email ?? row.email ?? row.contact ?? ''),
@@ -37,6 +39,7 @@ export function useRfqVendors(rfqId: string) {
       if (useMocks) {
         return getSeedVendorsByRfqId(rfqId).map((v) => ({
           id: v.id,
+          vendor_id: v.id,
           name: v.name,
           status: v.status,
           contact: v.email,

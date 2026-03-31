@@ -60,14 +60,6 @@ class Award extends Model
     /**
      * @return BelongsTo<User, $this>
      */
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'signed_off_by');
-    }
-
-    /**
-     * @return BelongsTo<User, $this>
-     */
     public function signedOffByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'signed_off_by');
