@@ -83,7 +83,7 @@ describe('RfqAwardPage', () => {
     renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
 
     const debriefInput = await screen.findByLabelText(/debrief message/i);
-    const sendButton = screen.getByRole('button', { name: /send deb //send debrief/i });
+    const sendButton = screen.getByRole('button', { name: /send debrief/i }); // Corrected regex
 
     expect(sendButton).toBeDisabled();
 
@@ -100,14 +100,14 @@ describe('RfqAwardPage', () => {
       debrief: { mutate: vi.fn(), isPending: false, isError: false },
       store: { mutate: vi.fn(), isPending: false, isError: false },
     } as any);
-
+    
     vi.mocked(useComparisonRuns).mockReturnValue({
       data: [{ id: 'run-1', type: 'final', status: 'frozen' }],
     } as any);
 
     renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
 
-    expect(await screen.findByText(/Select a vendor to award/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Select a vendor to award the contract based on the final comparison run/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create award/i })).toBeInTheDocument();
   });
 });
