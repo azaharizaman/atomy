@@ -239,3 +239,39 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Root cause:** Layer 1 examples focused on the happy path; concurrency and TTL edge cases were under-specified; documentation was not re-synced after implementation chose JSON keys; token binding for superseded attempts was not modeled.
 - **Action taken:** README now branches Replay / InProgress / FirstExecution so only `FirstExecution` calls `complete()`, and documents `AttemptToken` on `complete`/`fail`. Added `claimPending()` on `IdempotencyPersistInterface`, `AttemptToken` on `IdempotencyRecord`, and validation in `complete`/`fail`. Failed-retry path compares fingerprint before delete. `SystemClock::now()` returns UTC. Plan/README/IMPLEMENTATION_SUMMARY/VALUATION_MATRIX aligned on JSON-encoded keys; `IdempotencyPolicy::DEFAULT_PENDING_TTL_SECONDS`; `BoundedStringValidator` shared by VOs; split `IdempotencyQueryInterface` / `IdempotencyPersistInterface` with composite `IdempotencyStoreInterface`. Tests added for stale attempt token and fingerprint-before-delete on failed retry.
 - **Follow-up tasks:** DB adapters must implement `claimPending` with a real unique constraint on `(tenant_id, operation_ref, client_key)` and document UTC timestamps.
+
+---
+
+- **Date:** 2026-03-31
+- **PR/Issue ID:** [#340](https://github.com/azaharizaman/atomy/pull/340)
+- **Summary of mistake:** The normalize workspace review thread stayed open even after mock-mode query gating was added and verified in the branch.
+- **Root cause:** I rechecked the code but did not sync the resolved thread state on GitHub once the fix was confirmed.
+- **Action taken:** Verified `useNormalizationSourceLines(..., { enabled: !useMocks })` in `normalize/page.tsx` and resolved the corresponding PR thread.
+- **Follow-up tasks:** Keep PR thread status aligned with code verification before moving on.
+
+---
+
+- **Date:** 2026-03-31
+- **PR/Issue ID:** [#340](https://github.com/azaharizaman/atomy/pull/340)
+- **Summary of mistake:** The normalize row-checkbox accessibility thread stayed open even though the branch already added labels, checked state, and selection handlers.
+- **Root cause:** I verified the implementation locally but did not immediately mark the GitHub review thread as resolved.
+- **Action taken:** Confirmed the checkbox controls in `normalize/page.tsx` are now named and controlled, then resolved the inline review thread.
+- **Follow-up tasks:** Resolve accessibility follow-up threads at the same time the fix is validated.
+
+---
+
+- **Date:** 2026-03-31
+- **PR/Issue ID:** [#340](https://github.com/azaharizaman/atomy/pull/340)
+- **Summary of mistake:** The quote-intake normalization review query thread remained open after the mock-mode `enabled: !useMocks` guard had already been applied.
+- **Root cause:** The implementation was correct, but I did not sync the review thread state after verification.
+- **Action taken:** Reconfirmed `useNormalizationReview(rfqId, { enabled: !useMocks })` in `quote-intake/page.tsx` and resolved the review thread.
+- **Follow-up tasks:** Check GitHub thread state whenever a fix is already present in the branch.
+
+---
+
+- **Date:** 2026-03-31
+- **PR/Issue ID:** [#340](https://github.com/azaharizaman/atomy/pull/340)
+- **Summary of mistake:** The debrief persistence review thread stayed open after the branch added a persistent `Debrief` record and comparison snapshot storage.
+- **Root cause:** I confirmed the data model change in code but did not sync the review thread resolution immediately.
+- **Action taken:** Reverified debrief persistence in `AwardController.php` and resolved the remaining PR thread.
+- **Follow-up tasks:** Keep audit-data fixes and review-thread cleanup paired in the same pass.
