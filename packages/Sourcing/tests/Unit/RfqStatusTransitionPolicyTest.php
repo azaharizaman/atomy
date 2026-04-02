@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Sourcing\Tests\Unit;
 
 use Nexus\Sourcing\Exceptions\InvalidRfqStatusTransitionException;
+use Nexus\Sourcing\Exceptions\RfqLifecyclePreconditionException;
 use Nexus\Sourcing\Services\RfqStatusTransitionPolicy;
 use PHPUnit\Framework\TestCase;
 
@@ -28,5 +29,14 @@ final class RfqStatusTransitionPolicyTest extends TestCase
         $this->expectException(InvalidRfqStatusTransitionException::class);
 
         $policy->assertTransitionAllowed('awarded', 'published');
+    }
+
+    public function test_policy_rejects_unknown_status_vocabulary(): void
+    {
+        $policy = new RfqStatusTransitionPolicy();
+
+        $this->expectException(RfqLifecyclePreconditionException::class);
+
+        $policy->allowedTransitions('archived');
     }
 }

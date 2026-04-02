@@ -16,9 +16,11 @@ final class RfqLifecycleActionTest extends TestCase
     public function test_lifecycle_action_normalizes_input_deterministically(): void
     {
         $action = RfqLifecycleAction::fromString('  Save Draft  ');
+        $reminder = RfqLifecycleAction::fromString(' Remind Invitation ');
 
         $this->assertSame('save_draft', $action->value());
         $this->assertSame('save_draft', (string) $action);
+        $this->assertSame('remind_invitation', $reminder->value());
     }
 
     public function test_lifecycle_action_rejects_empty_input_with_domain_exception(): void
@@ -44,13 +46,23 @@ final class RfqLifecycleActionTest extends TestCase
         RfqBulkAction::fromString('archive');
     }
 
+    public function test_lifecycle_action_rejects_unsupported_actions_with_domain_exception(): void
+    {
+        $this->expectException(RfqLifecyclePreconditionException::class);
+
+        RfqLifecycleAction::fromString('archive');
+    }
+
     public function test_duplication_options_default_to_copying_only_line_items(): void
     {
         $options = new RfqDuplicationOptions();
 
         $this->assertTrue($options->copyLineItems);
         $this->assertFalse($options->copyVendorInvitations);
-        $this->assertFalse($options->copyQuotes);
+        $this->assertFalse($options->copyQuoteSubmissions);
+        $this->assertFalse($options->copyComparisonRuns);
         $this->assertFalse($options->copyAwards);
+        $this->assertFalse($options->copyApprovalState);
+        $this->assertFalse($options->copyActivityHistory);
     }
 }

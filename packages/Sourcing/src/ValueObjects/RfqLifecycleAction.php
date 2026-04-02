@@ -13,6 +13,7 @@ final readonly class RfqLifecycleAction
         'save_draft',
         'bulk_action',
         'transition_status',
+        'remind_invitation',
     ];
 
     private function __construct(private string $value)
@@ -28,7 +29,10 @@ final readonly class RfqLifecycleAction
         }
 
         if (!in_array($normalized, self::ALLOWED, true)) {
-            throw new \InvalidArgumentException(sprintf('Unsupported RFQ lifecycle action "%s".', trim($value)));
+            throw RfqLifecyclePreconditionException::forReason(sprintf(
+                'Unsupported RFQ lifecycle action "%s".',
+                trim($value),
+            ));
         }
 
         return new self($normalized);

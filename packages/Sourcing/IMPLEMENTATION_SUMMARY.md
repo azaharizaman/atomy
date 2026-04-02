@@ -17,10 +17,10 @@ Layer 1 domain contracts for quotations, sourcing events, normalization payloads
 
 - `NormalizationLine` - line id, description, quantity, UOM, unit price, optional `rfq_line_id`.
 - `Conflict` - normalization conflict type and message.
-- `RfqLifecycleAction` - deterministic lifecycle action normalization for `duplicate`, `save_draft`, `bulk_action`, and `transition_status`.
+- `RfqLifecycleAction` - deterministic lifecycle action normalization for `duplicate`, `save_draft`, `bulk_action`, `transition_status`, and `remind_invitation`.
 - `RfqBulkAction` - allowlisted bulk action wrapper for `close` and `cancel`.
-- `RfqDuplicationOptions` - copy policy defaults for RFQ duplication; line items are copied, other child collections stay opt-in.
-- `RfqLifecycleResult` - framework-agnostic lifecycle outcome carrying created/updated RFQ ids plus copy/affected counts.
+- `RfqDuplicationOptions` - copy policy defaults for RFQ duplication; line items are copied, while invitations, quotes, comparison runs, approvals, and activity stay opt-in.
+- `RfqLifecycleResult` - framework-agnostic lifecycle outcome carrying action, status, relevant identifiers, and copy/affected counts.
 
 ## Exceptions
 

@@ -6,6 +6,7 @@ namespace Nexus\Sourcing\Services;
 
 use Nexus\Sourcing\Contracts\RfqStatusTransitionPolicyInterface;
 use Nexus\Sourcing\Exceptions\InvalidRfqStatusTransitionException;
+use Nexus\Sourcing\Exceptions\RfqLifecyclePreconditionException;
 
 final readonly class RfqStatusTransitionPolicy implements RfqStatusTransitionPolicyInterface
 {
@@ -32,7 +33,7 @@ final readonly class RfqStatusTransitionPolicy implements RfqStatusTransitionPol
     {
         $from = $this->normalizeStatus($fromStatus);
 
-        return self::TRANSITIONS[$from] ?? [];
+        return self::TRANSITIONS[$from];
     }
 
     public function assertTransitionAllowed(string $fromStatus, string $toStatus): void
@@ -46,6 +47,15 @@ final readonly class RfqStatusTransitionPolicy implements RfqStatusTransitionPol
 
     private function normalizeStatus(string $status): string
     {
-        return strtolower(trim($status));
+        $normalized = strtolower(trim($status));
+
+        if ($normalized === '' || !array_key_exists($normalized, self::TRANSITIONS)) {
+            throw RfqLifecyclePreconditionException::forReason(sprintf(
+                'Unknown RFQ status "%s".',
+                trim($status),
+            ));
+        }
+
+        return $normalized;
     }
 }
