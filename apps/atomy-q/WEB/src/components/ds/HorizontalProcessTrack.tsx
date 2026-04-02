@@ -125,9 +125,9 @@ export function HorizontalProcessTrack({
   const descCls =
     'text-[10px] sm:text-[11px] text-slate-500 text-center w-full min-w-0 line-clamp-2 mt-0.5';
 
-  const ariaToday =
-    cursor &&
-    `Today marker on ${cursor.isoDate}, about ${Math.round(cursor.leftPercent)} percent along the schedule between dated milestones.`;
+  const ariaToday = cursor
+    ? `Today marker on ${cursor.isoDate}, about ${Math.round(cursor.leftPercent)} percent along the schedule between dated milestones.`
+    : undefined;
 
   const n = steps.length;
 

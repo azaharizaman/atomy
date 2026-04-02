@@ -3,11 +3,11 @@
     "info": {
         "title": "Atomy-Q API",
         "version": "0.0.1",
-        "description": "Atomy-Q Quote Comparison API \u2014 generated OpenAPI for client tooling (design-partner alpha)."
+        "description": "Atomy-Q Quote Comparison API \u2014 generated OpenAPI for client tooling (design-partner alpha).\n\n### Idempotency error `code` values\n\nJSON error bodies may include a string `code` for clients and tooling. Idempotency-related values:\n\n| `code` | HTTP | Meaning |\n|--------|------|---------|\n| `idempotency_key_required` | 400 | `Idempotency-Key` header missing or empty |\n| `idempotency_key_invalid` | 400 | Key failed validation (e.g. length) |\n| `idempotency_fingerprint_conflict` | 409 | Same key, different request body |\n| `idempotency_in_progress` | 409 | Same key; prior attempt not finished |\n| `idempotency_operation_ref_missing` | 500 | Route has no name (misconfiguration) |\n| `idempotency_tenant_missing` | 500 | Tenant not on request after auth |\n| `idempotency_replay_missing` | 500 | Replay outcome without stored payload |\n| `idempotency_record_missing` | 500 | Internal idempotency state inconsistency |\n| `idempotency_envelope_too_large` | 500 | Response too large to store for replay |\n"
     },
     "servers": [
         {
-            "url": "http://localhost:8000/api/v1"
+            "url": "http://localhost/api/v1"
         }
     ],
     "paths": {
@@ -1194,10 +1194,7 @@
                                                     "type": "string"
                                                 },
                                                 "notes": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "comparison_run": {
                                                     "type": [
@@ -1296,6 +1293,24 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -1333,125 +1348,7 @@
                         }
                     },
                     "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "error": {
-                                                    "type": "string",
-                                                    "const": "Blocking normalization issues remain."
-                                                },
-                                                "details": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "error",
-                                                "details"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "error": {
-                                                    "type": "string",
-                                                    "const": "All quote submissions must be ready before approval."
-                                                },
-                                                "details": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "error",
-                                                "details"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "error": {
-                                                    "type": "string",
-                                                    "const": "Comparison snapshot is missing."
-                                                },
-                                                "details": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "error",
-                                                "details"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "error": {
-                                                    "type": "string",
-                                                    "const": "Comparison run is not finalized."
-                                                },
-                                                "details": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "error",
-                                                "details"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "error": {
-                                                    "type": "string",
-                                                    "const": "Approval is not linked to a frozen comparison run."
-                                                },
-                                                "details": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "error",
-                                                "details"
-                                            ]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "404": {
                         "description": "",
@@ -2236,7 +2133,7 @@
         "/auth/forgot-password": {
             "post": {
                 "operationId": "auth.forgotPassword",
-                "description": "POST /auth/forgot-password \u2014 body: `email` only (tenant resolved when flow is implemented).",
+                "description": "POST /auth/forgot-password \u2014 body: `email` only. Reset tokens are stored per user tenant (from the user row).",
                 "summary": "Request password reset",
                 "tags": [
                     "Auth"
@@ -2354,6 +2251,25 @@
                                         "message": {
                                             "type": "string",
                                             "const": "Password has been reset."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Unable to complete password reset. Please try again later."
                                         }
                                     },
                                     "required": [
@@ -2584,37 +2500,152 @@
                 "tags": [
                     "Award"
                 ],
+                "parameters": [
+                    {
+                        "name": "rfq_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "rfqId",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
-                    "501": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Not implemented"
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "rfq_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "rfq_title": {
+                                                        "type": "string"
+                                                    },
+                                                    "rfq_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "comparison_run_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "vendor_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "vendor_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "amount": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "currency": {
+                                                        "type": "string"
+                                                    },
+                                                    "split_details": {
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "string"
+                                                            },
+                                                            {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                },
+                                                                "minItems": 0,
+                                                                "maxItems": 0,
+                                                                "additionalItems": false
+                                                            }
+                                                        ]
+                                                    },
+                                                    "protest_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "signoff_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "signed_off_by": {
+                                                        "type": "string"
+                                                    },
+                                                    "comparison": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "vendors": {
+                                                                "type": "array",
+                                                                "items": {}
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "vendors"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "rfq_id",
+                                                    "rfq_title",
+                                                    "rfq_number",
+                                                    "comparison_run_id",
+                                                    "vendor_id",
+                                                    "vendor_name",
+                                                    "status",
+                                                    "amount",
+                                                    "currency",
+                                                    "split_details",
+                                                    "protest_id",
+                                                    "signoff_at",
+                                                    "signed_off_by",
+                                                    "comparison"
+                                                ]
+                                            }
                                         },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "context": {
+                                        "meta": {
                                             "type": "object",
                                             "properties": {
-                                                "tenant_id": {
-                                                    "type": "string"
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "total_pages": {
+                                                    "type": "integer"
                                                 }
                                             },
                                             "required": [
-                                                "tenant_id"
+                                                "current_page",
+                                                "per_page",
+                                                "total",
+                                                "total_pages"
                                             ]
                                         }
                                     },
                                     "required": [
-                                        "error",
-                                        "message",
-                                        "context"
+                                        "data",
+                                        "meta"
                                     ]
                                 }
                             }
@@ -2629,41 +2660,211 @@
                 "tags": [
                     "Award"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "rfq_id": {
+                                        "type": "string"
+                                    },
+                                    "comparison_run_id": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "vendor_id": {
+                                        "type": "string"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "minimum": 0
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "maxLength": 3
+                                    },
+                                    "split_details": {
+                                        "type": [
+                                            "array",
+                                            "null"
+                                        ],
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "rfq_id",
+                                    "vendor_id",
+                                    "amount",
+                                    "currency"
+                                ]
+                            }
+                        }
+                    }
+                },
                 "responses": {
-                    "501": {
+                    "201": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Not implemented"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "context": {
+                                        "data": {
                                             "type": "object",
                                             "properties": {
-                                                "tenant_id": {
+                                                "id": {
                                                     "type": "string"
+                                                },
+                                                "rfq_id": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_title": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_number": {
+                                                    "type": "string"
+                                                },
+                                                "comparison_run_id": {
+                                                    "type": "string"
+                                                },
+                                                "vendor_id": {
+                                                    "type": "string"
+                                                },
+                                                "vendor_name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "amount": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "currency": {
+                                                    "type": "string"
+                                                },
+                                                "split_details": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    ]
+                                                },
+                                                "protest_id": {
+                                                    "type": "string"
+                                                },
+                                                "signoff_at": {
+                                                    "type": "string"
+                                                },
+                                                "signed_off_by": {
+                                                    "type": "string"
+                                                },
+                                                "comparison": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "vendors": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "vendors"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "tenant_id"
+                                                "id",
+                                                "rfq_id",
+                                                "rfq_title",
+                                                "rfq_number",
+                                                "comparison_run_id",
+                                                "vendor_id",
+                                                "vendor_name",
+                                                "status",
+                                                "amount",
+                                                "currency",
+                                                "split_details",
+                                                "protest_id",
+                                                "signoff_at",
+                                                "signed_off_by",
+                                                "comparison"
                                             ]
                                         }
                                     },
                                     "required": [
-                                        "error",
-                                        "message",
-                                        "context"
+                                        "data"
                                     ]
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Comparison run not found"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Vendor not found"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "RFQ not found"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -2685,45 +2886,157 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "split_details": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "minItems": 1
+                                    }
+                                },
+                                "required": [
+                                    "split_details"
+                                ]
+                            }
+                        }
+                    }
+                },
                 "responses": {
-                    "501": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Not implemented"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "context": {
+                                        "data": {
                                             "type": "object",
                                             "properties": {
-                                                "tenant_id": {
+                                                "id": {
                                                     "type": "string"
                                                 },
-                                                "award_id": {
+                                                "rfq_id": {
                                                     "type": "string"
+                                                },
+                                                "rfq_title": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_number": {
+                                                    "type": "string"
+                                                },
+                                                "comparison_run_id": {
+                                                    "type": "string"
+                                                },
+                                                "vendor_id": {
+                                                    "type": "string"
+                                                },
+                                                "vendor_name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "amount": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "currency": {
+                                                    "type": "string"
+                                                },
+                                                "split_details": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    ]
+                                                },
+                                                "protest_id": {
+                                                    "type": "string"
+                                                },
+                                                "signoff_at": {
+                                                    "type": "string"
+                                                },
+                                                "signed_off_by": {
+                                                    "type": "string"
+                                                },
+                                                "comparison": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "vendors": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "vendors"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "tenant_id",
-                                                "award_id"
+                                                "id",
+                                                "rfq_id",
+                                                "rfq_title",
+                                                "rfq_number",
+                                                "comparison_run_id",
+                                                "vendor_id",
+                                                "vendor_name",
+                                                "status",
+                                                "amount",
+                                                "currency",
+                                                "split_details",
+                                                "protest_id",
+                                                "signoff_at",
+                                                "signed_off_by",
+                                                "comparison"
                                             ]
                                         }
                                     },
                                     "required": [
-                                        "error",
-                                        "message",
-                                        "context"
+                                        "data"
                                     ]
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Award not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -2753,49 +3066,108 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "message": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
-                    "501": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Not implemented"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "context": {
+                                        "data": {
                                             "type": "object",
                                             "properties": {
-                                                "tenant_id": {
-                                                    "type": "string"
-                                                },
                                                 "award_id": {
                                                     "type": "string"
                                                 },
                                                 "vendor_id": {
                                                     "type": "string"
+                                                },
+                                                "vendor_name": {
+                                                    "type": "string"
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "debriefed_at": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
-                                                "tenant_id",
                                                 "award_id",
-                                                "vendor_id"
+                                                "vendor_id",
+                                                "vendor_name",
+                                                "message",
+                                                "status",
+                                                "debriefed_at"
                                             ]
                                         }
                                     },
                                     "required": [
-                                        "error",
-                                        "message",
-                                        "context"
+                                        "data"
                                     ]
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Vendor not found"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Award not found"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -2817,45 +3189,64 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 2000
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
-                    "501": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Not implemented"
-                                        },
-                                        "message": {
+                                        "data": {
                                             "type": "string"
-                                        },
-                                        "context": {
-                                            "type": "object",
-                                            "properties": {
-                                                "tenant_id": {
-                                                    "type": "string"
-                                                },
-                                                "award_id": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "tenant_id",
-                                                "award_id"
-                                            ]
                                         }
                                     },
                                     "required": [
-                                        "error",
-                                        "message",
-                                        "context"
+                                        "data"
                                     ]
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Award not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -2886,44 +3277,127 @@
                     }
                 ],
                 "responses": {
-                    "501": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Not implemented"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "context": {
+                                        "data": {
                                             "type": "object",
                                             "properties": {
-                                                "tenant_id": {
+                                                "id": {
                                                     "type": "string"
                                                 },
-                                                "award_id": {
+                                                "rfq_id": {
                                                     "type": "string"
+                                                },
+                                                "rfq_title": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_number": {
+                                                    "type": "string"
+                                                },
+                                                "comparison_run_id": {
+                                                    "type": "string"
+                                                },
+                                                "vendor_id": {
+                                                    "type": "string"
+                                                },
+                                                "vendor_name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "amount": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "currency": {
+                                                    "type": "string"
+                                                },
+                                                "split_details": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    ]
                                                 },
                                                 "protest_id": {
                                                     "type": "string"
+                                                },
+                                                "signoff_at": {
+                                                    "type": "string"
+                                                },
+                                                "signed_off_by": {
+                                                    "type": "string"
+                                                },
+                                                "comparison": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "vendors": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "vendors"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "tenant_id",
-                                                "award_id",
-                                                "protest_id"
+                                                "id",
+                                                "rfq_id",
+                                                "rfq_title",
+                                                "rfq_number",
+                                                "comparison_run_id",
+                                                "vendor_id",
+                                                "vendor_name",
+                                                "status",
+                                                "amount",
+                                                "currency",
+                                                "split_details",
+                                                "protest_id",
+                                                "signoff_at",
+                                                "signed_off_by",
+                                                "comparison"
                                             ]
                                         }
                                     },
                                     "required": [
-                                        "error",
-                                        "message",
-                                        "context"
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Award protest not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -2950,41 +3424,127 @@
                     }
                 ],
                 "responses": {
-                    "501": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Not implemented"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Signing off awards is not implemented yet."
-                                        },
-                                        "context": {
+                                        "data": {
                                             "type": "object",
                                             "properties": {
-                                                "tenant_id": {
+                                                "id": {
                                                     "type": "string"
                                                 },
-                                                "award_id": {
+                                                "rfq_id": {
                                                     "type": "string"
+                                                },
+                                                "rfq_title": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_number": {
+                                                    "type": "string"
+                                                },
+                                                "comparison_run_id": {
+                                                    "type": "string"
+                                                },
+                                                "vendor_id": {
+                                                    "type": "string"
+                                                },
+                                                "vendor_name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "amount": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "currency": {
+                                                    "type": "string"
+                                                },
+                                                "split_details": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    ]
+                                                },
+                                                "protest_id": {
+                                                    "type": "string"
+                                                },
+                                                "signoff_at": {
+                                                    "type": "string"
+                                                },
+                                                "signed_off_by": {
+                                                    "type": "string"
+                                                },
+                                                "comparison": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "vendors": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "vendors"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "tenant_id",
-                                                "award_id"
+                                                "id",
+                                                "rfq_id",
+                                                "rfq_title",
+                                                "rfq_number",
+                                                "comparison_run_id",
+                                                "vendor_id",
+                                                "vendor_name",
+                                                "status",
+                                                "amount",
+                                                "currency",
+                                                "split_details",
+                                                "protest_id",
+                                                "signoff_at",
+                                                "signed_off_by",
+                                                "comparison"
                                             ]
                                         }
                                     },
                                     "required": [
-                                        "error",
-                                        "message",
-                                        "context"
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Award not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -3233,13 +3793,18 @@
                                                         },
                                                         "currency_meta": {
                                                             "type": "string"
+                                                        },
+                                                        "vendors": {
+                                                            "type": "array",
+                                                            "items": {}
                                                         }
                                                     },
                                                     "required": [
                                                         "rfq_version",
                                                         "normalized_lines",
                                                         "resolutions",
-                                                        "currency_meta"
+                                                        "currency_meta",
+                                                        "vendors"
                                                     ]
                                                 }
                                             },
@@ -5988,20 +6553,31 @@
                                             "type": "array",
                                             "items": {
                                                 "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
+                                            }
                                         },
                                         "meta": {
                                             "type": "object",
                                             "properties": {
                                                 "rfq_id": {
                                                     "type": "string"
+                                                },
+                                                "source_line_count": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "mapped_count": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "blocking_issue_count": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
-                                                "rfq_id"
+                                                "rfq_id",
+                                                "source_line_count",
+                                                "mapped_count",
+                                                "blocking_issue_count"
                                             ]
                                         }
                                     },
@@ -6064,20 +6640,22 @@
                                             "type": "array",
                                             "items": {
                                                 "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
+                                            }
                                         },
                                         "meta": {
                                             "type": "object",
                                             "properties": {
                                                 "rfq_id": {
                                                     "type": "string"
+                                                },
+                                                "normalized_count": {
+                                                    "type": "integer",
+                                                    "minimum": 0
                                                 }
                                             },
                                             "required": [
-                                                "rfq_id"
+                                                "rfq_id",
+                                                "normalized_count"
                                             ]
                                         }
                                     },
@@ -7141,6 +7719,332 @@
                 }
             }
         },
+        "/operational-approvals/instances": {
+            "get": {
+                "operationId": "v1.operational-approvals.instances.index",
+                "tags": [
+                    "OperationalApproval"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "total",
+                                                "per_page",
+                                                "current_page",
+                                                "last_page"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "v1.operational-approvals.instances.store",
+                "summary": "Start a generic operational approval (distinct from RFQ quote approvals)",
+                "tags": [
+                    "OperationalApproval"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "subject_type": {
+                                        "type": "string",
+                                        "maxLength": 128
+                                    },
+                                    "subject_id": {
+                                        "type": "string",
+                                        "maxLength": 256
+                                    },
+                                    "context": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "subject_type",
+                                    "subject_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "instance_id": {
+                                                    "type": "string"
+                                                },
+                                                "workflow_instance_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "instance_id",
+                                                "workflow_instance_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "example": "User context required"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/operational-approvals/instances/{instanceId}": {
+            "get": {
+                "operationId": "v1.operational-approvals.instances.show",
+                "tags": [
+                    "OperationalApproval"
+                ],
+                "parameters": [
+                    {
+                        "name": "instanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "instance_id": {
+                                                    "type": "string"
+                                                },
+                                                "due_at": {
+                                                    "type": "string"
+                                                },
+                                                "seconds_remaining": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "instance_id",
+                                                "due_at",
+                                                "seconds_remaining"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/operational-approvals/instances/{instanceId}/decisions": {
+            "post": {
+                "operationId": "v1.operational-approvals.instances.decisions.store",
+                "tags": [
+                    "OperationalApproval"
+                ],
+                "parameters": [
+                    {
+                        "name": "instanceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "approve",
+                                            "reject"
+                                        ]
+                                    },
+                                    "comment": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 8000
+                                    },
+                                    "attachment_storage_key": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 512
+                                    }
+                                },
+                                "required": [
+                                    "decision"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "ok": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "ok"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "example": "User context required"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/projects": {
             "get": {
                 "operationId": "project.index",
@@ -7200,9 +8104,22 @@
                 }
             },
             "post": {
-                "operationId": "project.store",
+                "operationId": "v1.projects.store",
                 "tags": [
                     "Project"
+                ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    }
                 ],
                 "requestBody": {
                     "required": true,
@@ -7242,48 +8159,12 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "name": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string"
-                                                },
-                                                "client_id": {
-                                                    "type": "string"
-                                                },
-                                                "start_date": {
-                                                    "type": "string"
-                                                },
-                                                "end_date": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "name",
-                                                "status",
-                                                "client_id",
-                                                "start_date",
-                                                "end_date"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -7946,7 +8827,8 @@
                                                 "user_id",
                                                 "role"
                                             ]
-                                        }
+                                        },
+                                        "minItems": 1
                                     }
                                 },
                                 "required": [
@@ -8022,48 +8904,54 @@
                                                         "type": "string"
                                                     },
                                                     "vendor_id": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "vendor_name": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "uploaded_by": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "status": {
                                                         "type": "string"
                                                     },
                                                     "file_path": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "file_type": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "original_filename": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "blocking_issue_count": {
                                                         "type": "integer"
                                                     },
                                                     "submitted_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "error_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "error_message": {
+                                                        "type": "string"
+                                                    },
+                                                    "processing_started_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "processing_completed_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "parsed_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "retry_count": {
+                                                        "type": "string"
+                                                    },
+                                                    "line_items_count": {
+                                                        "type": "string"
+                                                    },
+                                                    "confidence": {
                                                         "type": "string"
                                                     }
                                                 },
@@ -8078,7 +8966,15 @@
                                                     "file_type",
                                                     "original_filename",
                                                     "blocking_issue_count",
-                                                    "submitted_at"
+                                                    "submitted_at",
+                                                    "error_code",
+                                                    "error_message",
+                                                    "processing_started_at",
+                                                    "processing_completed_at",
+                                                    "parsed_at",
+                                                    "retry_count",
+                                                    "line_items_count",
+                                                    "confidence"
                                                 ]
                                             }
                                         },
@@ -8162,48 +9058,54 @@
                                                     "type": "string"
                                                 },
                                                 "vendor_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "vendor_name": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "uploaded_by": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "status": {
                                                     "type": "string"
                                                 },
                                                 "file_path": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "file_type": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "original_filename": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "blocking_issue_count": {
                                                     "type": "integer"
                                                 },
                                                 "submitted_at": {
+                                                    "type": "string"
+                                                },
+                                                "error_code": {
+                                                    "type": "string"
+                                                },
+                                                "error_message": {
+                                                    "type": "string"
+                                                },
+                                                "processing_started_at": {
+                                                    "type": "string"
+                                                },
+                                                "processing_completed_at": {
+                                                    "type": "string"
+                                                },
+                                                "parsed_at": {
+                                                    "type": "string"
+                                                },
+                                                "retry_count": {
+                                                    "type": "string"
+                                                },
+                                                "line_items_count": {
+                                                    "type": "string"
+                                                },
+                                                "confidence": {
                                                     "type": "string"
                                                 }
                                             },
@@ -8218,7 +9120,15 @@
                                                 "file_type",
                                                 "original_filename",
                                                 "blocking_issue_count",
-                                                "submitted_at"
+                                                "submitted_at",
+                                                "error_code",
+                                                "error_message",
+                                                "processing_started_at",
+                                                "processing_completed_at",
+                                                "parsed_at",
+                                                "retry_count",
+                                                "line_items_count",
+                                                "confidence"
                                             ]
                                         }
                                     },
@@ -8470,27 +9380,78 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
+                                    "anyOf": [
+                                        {
                                             "type": "object",
                                             "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "const": "reparsing"
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "const": "extracting"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "status"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "id",
-                                                "status"
+                                                "data"
                                             ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "message": {
+                                                            "type": "string",
+                                                            "const": "Processing already in progress"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "status",
+                                                        "message"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "data"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Quote submission not found"
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "message"
                                     ]
                                 }
                             }
@@ -9386,10 +10347,7 @@
                                                         "type": "string"
                                                     },
                                                     "project_id": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "owner": {
                                                         "type": [
@@ -9417,10 +10375,7 @@
                                                         "type": "string"
                                                     },
                                                     "category": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "estimated_value": {
                                                         "type": "string"
@@ -9503,52 +10458,30 @@
                 }
             },
             "post": {
-                "operationId": "rfq.store",
+                "operationId": "v1.rfqs.store",
                 "tags": [
                     "Rfq"
                 ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "rfq_number": {
-                                                    "type": "string"
-                                                },
-                                                "title": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string"
-                                                },
-                                                "project_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "rfq_number",
-                                                "title",
-                                                "status",
-                                                "project_id"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -9627,32 +10560,61 @@
         },
         "/rfqs/bulk-action": {
             "post": {
-                "operationId": "rfq.bulkAction",
+                "operationId": "v1.rfqs.bulk-action",
                 "tags": [
                     "Rfq"
                 ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RfqBulkActionRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "200": {
-                        "description": "TODO: tenant scoping via $this->tenantId($request)\nBulk close/archive/assign",
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "affected": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "required": [
-                                                "affected"
-                                            ]
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "message"
                                     ]
                                 }
                             }
@@ -9698,10 +10660,7 @@
                                                     "type": "string"
                                                 },
                                                 "description": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "status": {
                                                     "type": "string"
@@ -9744,25 +10703,13 @@
                                                     "type": "string"
                                                 },
                                                 "expected_award_at": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ],
-                                                    "format": "date-time"
+                                                    "type": "string"
                                                 },
                                                 "technical_review_due_at": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ],
-                                                    "format": "date-time"
+                                                    "type": "string"
                                                 },
                                                 "financial_review_due_at": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ],
-                                                    "format": "date-time"
+                                                    "type": "string"
                                                 },
                                                 "category": {
                                                     "type": "string"
@@ -9881,10 +10828,7 @@
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -9950,10 +10894,7 @@
                                                             "type": "string"
                                                         },
                                                         "description": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         },
                                                         "status": {
                                                             "type": "string"
@@ -9987,25 +10928,13 @@
                                                             "type": "string"
                                                         },
                                                         "expected_award_at": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ],
-                                                            "format": "date-time"
+                                                            "type": "string"
                                                         },
                                                         "technical_review_due_at": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ],
-                                                            "format": "date-time"
+                                                            "type": "string"
                                                         },
                                                         "financial_review_due_at": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ],
-                                                            "format": "date-time"
+                                                            "type": "string"
                                                         },
                                                         "category": {
                                                             "type": "string"
@@ -10322,10 +11251,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "limit": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
+                                                    "type": "integer"
                                                 },
                                                 "rfq_id": {
                                                     "type": "string"
@@ -10383,6 +11309,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RfqStatusTransitionRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -10397,13 +11333,84 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
+                                                "tenant_id": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_number": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
                                                 "status": {
+                                                    "type": "string"
+                                                },
+                                                "project_id": {
+                                                    "type": "string"
+                                                },
+                                                "project_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "estimated_value": {
+                                                    "type": "string"
+                                                },
+                                                "savings_percentage": {
+                                                    "type": "string"
+                                                },
+                                                "submission_deadline": {
+                                                    "type": "string"
+                                                },
+                                                "closing_date": {
+                                                    "type": "string"
+                                                },
+                                                "expected_award_at": {
+                                                    "type": "string"
+                                                },
+                                                "technical_review_due_at": {
+                                                    "type": "string"
+                                                },
+                                                "financial_review_due_at": {
+                                                    "type": "string"
+                                                },
+                                                "payment_terms": {
+                                                    "type": "string"
+                                                },
+                                                "evaluation_method": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "updated_at": {
                                                     "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "status"
+                                                "tenant_id",
+                                                "rfq_number",
+                                                "title",
+                                                "description",
+                                                "status",
+                                                "project_id",
+                                                "project_name",
+                                                "estimated_value",
+                                                "savings_percentage",
+                                                "submission_deadline",
+                                                "closing_date",
+                                                "expected_award_at",
+                                                "technical_review_due_at",
+                                                "financial_review_due_at",
+                                                "payment_terms",
+                                                "evaluation_method",
+                                                "created_at",
+                                                "updated_at"
                                             ]
                                         }
                                     },
@@ -10432,13 +11439,16 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
         },
         "/rfqs/{id}/duplicate": {
             "post": {
-                "operationId": "rfq.duplicate",
+                "operationId": "v1.rfqs.duplicate",
                 "tags": [
                     "Rfq"
                 ],
@@ -10450,37 +11460,84 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "TODO: tenant scoping via $this->tenantId($request)",
+                    "422": {
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "error": {
+                                            "type": "string",
+                                            "const": "Validation failed"
+                                        },
+                                        "details": {
                                             "type": "object",
                                             "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "const": "stub-duplicate-id"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "const": "draft"
+                                                "rfq": {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "type": "string"
+                                                        }
+                                                    ],
+                                                    "minItems": 1,
+                                                    "maxItems": 1,
+                                                    "additionalItems": false
                                                 }
                                             },
                                             "required": [
-                                                "id",
-                                                "status"
+                                                "rfq"
                                             ]
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "error",
+                                        "details"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
                                 }
                             }
                         }
@@ -10504,9 +11561,18 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RfqDraftRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "TODO: tenant scoping via $this->tenantId($request)",
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10518,14 +11584,84 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
+                                                "tenant_id": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_number": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
                                                 "status": {
-                                                    "type": "string",
-                                                    "const": "draft"
+                                                    "type": "string"
+                                                },
+                                                "project_id": {
+                                                    "type": "string"
+                                                },
+                                                "project_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "estimated_value": {
+                                                    "type": "string"
+                                                },
+                                                "savings_percentage": {
+                                                    "type": "string"
+                                                },
+                                                "submission_deadline": {
+                                                    "type": "string"
+                                                },
+                                                "closing_date": {
+                                                    "type": "string"
+                                                },
+                                                "expected_award_at": {
+                                                    "type": "string"
+                                                },
+                                                "technical_review_due_at": {
+                                                    "type": "string"
+                                                },
+                                                "financial_review_due_at": {
+                                                    "type": "string"
+                                                },
+                                                "payment_terms": {
+                                                    "type": "string"
+                                                },
+                                                "evaluation_method": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "status"
+                                                "tenant_id",
+                                                "rfq_number",
+                                                "title",
+                                                "description",
+                                                "status",
+                                                "project_id",
+                                                "project_name",
+                                                "estimated_value",
+                                                "savings_percentage",
+                                                "submission_deadline",
+                                                "closing_date",
+                                                "expected_award_at",
+                                                "technical_review_due_at",
+                                                "financial_review_due_at",
+                                                "payment_terms",
+                                                "evaluation_method",
+                                                "created_at",
+                                                "updated_at"
                                             ]
                                         }
                                     },
@@ -10535,6 +11671,28 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -10695,7 +11853,7 @@
                                                     "type": "string"
                                                 },
                                                 "sort_order": {
-                                                    "type": "integer"
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -11012,10 +12170,23 @@
                 }
             },
             "post": {
-                "operationId": "rfqTemplate.store",
+                "operationId": "v1.rfq-templates.store",
                 "summary": "POST /rfq-templates",
                 "tags": [
                     "RfqTemplate"
+                ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    }
                 ],
                 "requestBody": {
                     "content": {
@@ -11033,40 +12204,12 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "const": "stub-template-id"
-                                                },
-                                                "tenant_id": {
-                                                    "type": "string"
-                                                },
-                                                "name": {},
-                                                "status": {
-                                                    "type": "string",
-                                                    "const": "draft"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "tenant_id",
-                                                "name",
-                                                "status"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -11277,7 +12420,7 @@
         },
         "/rfq-templates/{id}/duplicate": {
             "post": {
-                "operationId": "rfqTemplate.duplicate",
+                "operationId": "v1.rfq-templates.duplicate",
                 "summary": "POST /rfq-templates/{id}/duplicate",
                 "tags": [
                     "RfqTemplate"
@@ -11290,41 +12433,26 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
                     }
                 ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "const": "stub-duplicated-template-id"
-                                                },
-                                                "source_id": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "const": "draft"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "source_id",
-                                                "status"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -11334,7 +12462,7 @@
         },
         "/rfq-templates/{id}/apply": {
             "post": {
-                "operationId": "rfqTemplate.apply",
+                "operationId": "v1.rfq-templates.apply",
                 "summary": "POST /rfq-templates/{id}/apply",
                 "tags": [
                     "RfqTemplate"
@@ -11347,6 +12475,17 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
                     }
                 ],
                 "responses": {
@@ -11355,37 +12494,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "template_id": {
-                                                    "type": "string"
-                                                },
-                                                "applied": {
-                                                    "type": "boolean"
-                                                },
-                                                "pre_filled": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "template_id",
-                                                "applied",
-                                                "pre_filled"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13279,42 +14388,37 @@
         "/feature-flags": {
             "get": {
                 "operationId": "setting.featureFlags",
-                "description": "GET /feature-flags",
-                "summary": "List feature flags",
+                "description": "Used by WEB for nav / graceful degradation; matches {@see config('features.*')} used by controllers.\n\nGET /feature-flags",
+                "summary": "List feature flags (read-only mirror of server config)",
                 "tags": [
                     "Setting"
                 ],
                 "responses": {
-                    "501": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Not implemented"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "context": {
+                                        "data": {
                                             "type": "object",
                                             "properties": {
-                                                "tenant_id": {
-                                                    "type": "string"
+                                                "projects": {
+                                                    "type": "boolean"
+                                                },
+                                                "tasks": {
+                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
-                                                "tenant_id"
+                                                "projects",
+                                                "tasks"
                                             ]
                                         }
                                     },
                                     "required": [
-                                        "error",
-                                        "message",
-                                        "context"
+                                        "data"
                                     ]
                                 }
                             }
@@ -13425,10 +14529,7 @@
                                                         "type": "string"
                                                     },
                                                     "project_id": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     }
                                                 },
                                                 "required": [
@@ -13451,9 +14552,22 @@
                 }
             },
             "post": {
-                "operationId": "task.store",
+                "operationId": "v1.tasks.store",
                 "tags": [
                     "Task"
+                ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    }
                 ],
                 "requestBody": {
                     "required": true,
@@ -13471,7 +14585,7 @@
                                     },
                                     "project_id": {
                                         "type": [
-                                            "string",
+                                            "integer",
                                             "null"
                                         ]
                                     },
@@ -13506,44 +14620,12 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "title": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string"
-                                                },
-                                                "assignee_ids": {
-                                                    "type": "string"
-                                                },
-                                                "due_date": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "title",
-                                                "status",
-                                                "assignee_ids",
-                                                "due_date"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13668,10 +14750,7 @@
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -14840,7 +15919,7 @@
                 }
             },
             "post": {
-                "operationId": "vendorInvitation.store",
+                "operationId": "v1.rfqs.invitations.store",
                 "tags": [
                     "VendorInvitation"
                 ],
@@ -14852,6 +15931,17 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
                     }
                 ],
                 "requestBody": {
@@ -14892,51 +15982,12 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "rfq_id": {
-                                                    "type": "string"
-                                                },
-                                                "vendor_email": {
-                                                    "type": "string"
-                                                },
-                                                "vendor_name": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "status": {
-                                                    "type": "string"
-                                                },
-                                                "invited_at": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "rfq_id",
-                                                "vendor_email",
-                                                "vendor_name",
-                                                "status",
-                                                "invited_at"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -14983,7 +16034,7 @@
         },
         "/rfqs/{rfqId}/invitations/{invId}/remind": {
             "post": {
-                "operationId": "vendorInvitation.remind",
+                "operationId": "v1.rfqs.invitations.remind",
                 "tags": [
                     "VendorInvitation"
                 ],
@@ -15003,40 +16054,45 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Required on idempotent POST operations. Non-empty string, max 256 characters. Same key + same request fingerprint replays the stored response; same key + different body returns 409 with `code` `idempotency_fingerprint_conflict`.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        },
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "TODO: tenant scoping via $this->tenantId($request)",
+                    "404": {
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "rfq_id": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "const": "pending"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "rfq_id",
-                                                "status"
-                                            ]
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "message"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
                                 }
                             }
                         }
@@ -15076,7 +16132,8 @@
                         "type": "array",
                         "items": {
                             "type": "string"
-                        }
+                        },
+                        "minItems": 1
                     },
                     "issue_code": {
                         "type": [
@@ -15206,6 +16263,132 @@
                     "file"
                 ],
                 "title": "QuoteSubmissionUploadRequest"
+            },
+            "RfqBulkActionRequest": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "close",
+                            "cancel"
+                        ]
+                    },
+                    "rfq_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "action",
+                    "rfq_ids"
+                ],
+                "title": "RfqBulkActionRequest"
+            },
+            "RfqDraftRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "project_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "estimated_value": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "savings_percentage": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 100
+                    },
+                    "submission_deadline": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "closing_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "expected_award_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "technical_review_due_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "financial_review_due_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "payment_terms": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 64
+                    },
+                    "evaluation_method": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 64
+                    }
+                },
+                "title": "RfqDraftRequest"
+            },
+            "RfqStatusTransitionRequest": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "published",
+                            "closed",
+                            "awarded",
+                            "cancelled"
+                        ]
+                    }
+                },
+                "required": [
+                    "status"
+                ],
+                "title": "RfqStatusTransitionRequest"
             }
         },
         "responses": {

@@ -52,6 +52,15 @@
 - **Interactive UI:** `GET /docs/api` and `GET /docs/api.json` when the app is running.
 - **Static export (for WEB client generation):** `php artisan scramble:export --path=../openapi/openapi.json` from `apps/atomy-q/API` writes `apps/atomy-q/openapi/openapi.json`. Regenerate after meaningful API contract changes.
 
+## RFQ lifecycle mutations (2026-04-03)
+
+- `POST /api/v1/rfqs/{id}/duplicate` now creates a real tenant-scoped duplicate RFQ and copies line items through `Nexus\SourcingOperations`.
+- `PUT /api/v1/rfqs/{id}/draft` now persists draft-editable RFQ fields instead of echoing the request payload.
+- `POST /api/v1/rfqs/bulk-action` now supports real persisted bulk `close` and `cancel` actions with honest affected counts.
+- `PATCH /api/v1/rfqs/{id}/status` now delegates to the shared RFQ lifecycle transition policy rather than controller-local status assignment.
+- `POST /api/v1/rfqs/{id}/invitations/{invId}/remind` now enforces tenant-scoped RFQ/invitation lookup and stores `vendor_invitations.reminded_at`.
+- Layer 3 bindings live in `AppServiceProvider`; the Laravel adapters sit under `App\Services\SourcingOperations\*`.
+
 ## Endpoint Coverage
 
 All **203 endpoints** from `API_ENDPOINTS.md` are registered. The quote lifecycle slice now returns live tenant-scoped data and mutations; the remaining areas still use the earlier stub or partially live patterns documented below.

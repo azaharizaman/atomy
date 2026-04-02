@@ -7,6 +7,7 @@ import { Card, UploadZone, EmptyState } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
 import { StatusBadge } from '@/components/ds/Badge';
 import { ConfidenceBadge } from '@/components/ds/Badge';
+import type { StatusVariant } from '@/components/ds/tokens';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { FilterBar } from '@/components/ds/FilterBar';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
@@ -17,7 +18,7 @@ import { Plus, Mail, FileText } from 'lucide-react';
 
 const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
-function mapQuoteStatus(status: string | undefined): { badge: string; label: string } {
+function mapQuoteStatus(status: string | undefined): { badge: StatusVariant; label: string } {
   const normalized = (status ?? '').toLowerCase();
   if (normalized === 'ready' || normalized === 'accepted') {
     return { badge: 'approved', label: 'Ready' };

@@ -100,14 +100,14 @@ export function useAward(rfqId: string) {
         if (!seed) return [];
         return [
           {
-            id: seed.id,
+            id: `seed-award-${seed.rfqId}`,
             rfq_id: rfqId,
             vendor_id: seed.winnerVendorId,
             vendor_name: seed.winnerVendorName,
             status: 'signed_off',
             amount: seed.amount ?? null,
             currency: 'USD',
-            split_details: seed.splitAllocation ?? [],
+            split_details: [],
             protest_id: null,
             signoff_at: null,
             signed_off_by: null,
