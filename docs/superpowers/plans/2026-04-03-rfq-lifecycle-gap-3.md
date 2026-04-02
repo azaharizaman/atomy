@@ -1,6 +1,6 @@
 # RFQ Lifecycle Gap 3 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Close Alpha Gap 3 by replacing RFQ duplicate, draft-save, bulk-action, and status-transition stubs with real tenant-safe lifecycle mutations that persist through the Nexus Layer 1/2/3 architecture.
 
@@ -116,7 +116,7 @@
 - Create `packages/Sourcing/tests/Unit/RfqStatusTransitionPolicyTest.php`
 - Create `packages/Sourcing/tests/Unit/RfqLifecycleResultTest.php`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
   Add tests that prove:
   - the lifecycle action and bulk-action value objects normalize input deterministically,
@@ -125,7 +125,7 @@
   - duplication options preserve the intended child-copy defaults,
   - lifecycle result objects carry the created/updated RFQ identifiers and counts needed by the orchestrator.
 
-- [ ] **Step 2: Run the package tests to confirm the current baseline**
+- [x] **Step 2: Run the package tests to confirm the current baseline**
 
   Run:
   ```bash
@@ -136,7 +136,7 @@
 
   Expected: the baseline still passes before the new assertions land, then the new tests fail until the primitives exist.
 
-- [ ] **Step 3: Implement the Layer 1 primitives**
+- [x] **Step 3: Implement the Layer 1 primitives**
 
   Add the VOs, exceptions, and transition policy contract with strict tenant-agnostic semantics:
   - no framework imports,
@@ -146,7 +146,7 @@
 
   Keep the first slice narrow: duplication copies RFQ core data and line items, bulk actions are allowlisted, and transition validation is explicit.
 
-- [ ] **Step 4: Re-run the package tests**
+- [x] **Step 4: Re-run the package tests**
 
   Run:
   ```bash
@@ -156,7 +156,7 @@
 
   Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add packages/Sourcing/src packages/Sourcing/tests/Unit packages/Sourcing/IMPLEMENTATION_SUMMARY.md
@@ -184,7 +184,7 @@
 - Create `orchestrators/SourcingOperations/tests/Unit/RfqLifecycleCoordinatorTest.php`
 - Create `orchestrators/SourcingOperations/tests/Unit/RfqLifecycleOutcomeTest.php`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
   Add tests with in-memory fake ports that prove:
   - duplicate looks up the source RFQ with tenant scope only,
@@ -194,7 +194,7 @@
   - status transitions run through the shared Layer 1 policy instead of controller-local rules,
   - reminder reads and writes stay tenant-scoped and never return a synthetic success payload.
 
-- [ ] **Step 2: Run the orchestrator tests to confirm the current baseline**
+- [x] **Step 2: Run the orchestrator tests to confirm the current baseline**
 
   Run:
   ```bash
@@ -205,7 +205,7 @@
 
   Expected: the stub coordinator still passes the current baseline, then the new unit tests fail until the orchestration boundary is implemented.
 
-- [ ] **Step 3: Implement the coordinator and ports**
+- [x] **Step 3: Implement the coordinator and ports**
 
   Turn `SourcingOperationsCoordinator` into the concrete facade for the RFQ lifecycle boundary.
   - inject the query and persist ports via interfaces,
@@ -215,7 +215,7 @@
 
   The default duplicate path should copy the RFQ core record and line items only. Bulk actions should stay conservative: `close` and `cancel` are in scope; `archive` stays deferred unless it maps cleanly to a persisted state.
 
-- [ ] **Step 4: Re-run the orchestrator tests**
+- [x] **Step 4: Re-run the orchestrator tests**
 
   Run:
   ```bash
@@ -225,7 +225,7 @@
 
   Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add orchestrators/SourcingOperations/src orchestrators/SourcingOperations/tests/Unit orchestrators/SourcingOperations/README.md orchestrators/SourcingOperations/IMPLEMENTATION_SUMMARY.md
@@ -252,7 +252,7 @@
 - Create `apps/atomy-q/API/tests/Feature/Api/RfqLifecycleIdempotencyTest.php`
 - Create `apps/atomy-q/API/tests/Feature/Api/RfqInvitationReminderTest.php`
 
-- [ ] **Step 1: Write the failing feature tests**
+- [x] **Step 1: Write the failing feature tests**
 
   Add API tests that prove:
   - duplicate returns a real persisted RFQ record instead of `stub-duplicate-id`,
@@ -265,7 +265,7 @@
 
   Reuse `RfqResource` so the controller returns the same canonical RFQ shape as the rest of the API.
 
-- [ ] **Step 2: Run the API tests to confirm the current baseline**
+- [x] **Step 2: Run the API tests to confirm the current baseline**
 
   Run:
   ```bash
@@ -276,7 +276,7 @@
 
   Expected: the existing code still passes the old baseline, then the new lifecycle assertions fail until the controller and bindings are updated.
 
-- [ ] **Step 3: Implement the adapter wiring**
+- [x] **Step 3: Implement the adapter wiring**
 
   - Add the request classes so the controller stops accepting free-form action/status payloads.
   - Implement the Eloquent-backed adapters under `app/Services/SourcingOperations/` for RFQ queries and persistence.
@@ -286,7 +286,7 @@
   - Update `VendorInvitationController` to route remind through the same tenant-safe invitation/reminder ports instead of echoing the request ids.
   - Keep the existing `IdempotencyCompletion` wrapper on the mutating POST paths so replay behavior stays deterministic.
 
-- [ ] **Step 4: Re-run the API tests**
+- [x] **Step 4: Re-run the API tests**
 
   Run:
   ```bash
@@ -296,7 +296,7 @@
 
   Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add apps/atomy-q/API/app/Http/Controllers/Api/V1/RfqController.php apps/atomy-q/API/app/Http/Controllers/Api/V1/VendorInvitationController.php apps/atomy-q/API/app/Http/Requests apps/atomy-q/API/app/Services/SourcingOperations apps/atomy-q/API/app/Providers/AppServiceProvider.php apps/atomy-q/API/app/Http/Resources/RfqResource.php apps/atomy-q/API/tests/Feature/Api/RfqLifecycleMutationTest.php apps/atomy-q/API/tests/Feature/Api/RfqLifecycleIdempotencyTest.php apps/atomy-q/API/tests/Feature/Api/RfqInvitationReminderTest.php
@@ -318,7 +318,7 @@
 - Modify `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/page.tsx` to hide or disable unsupported live-mode bulk actions
 - Create `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/page.test.tsx` to keep the toolbar aligned with the supported backend actions
 
-- [ ] **Step 1: Write the documentation diffs**
+- [x] **Step 1: Write the documentation diffs**
 
   Update the docs so they say:
   - duplicate, save-draft, bulk-action, and status-transition are real persisted flows,
@@ -326,7 +326,7 @@
   - bulk action intentionally stays conservative if archive is not backed by a persisted state, and the RFQ list toolbar no longer advertises unsupported actions in live mode,
   - Gap 3 is closed in `ALPHA_PROGRESS_ANALYSIS_2026-03-31.md`.
 
-- [ ] **Step 2: Regenerate the OpenAPI export and the web client**
+- [x] **Step 2: Regenerate the OpenAPI export and the web client**
 
   Run:
   ```bash
@@ -339,7 +339,7 @@
 
   Expected: the OpenAPI file and generated client now match the real RFQ lifecycle responses, and the web build succeeds against the regenerated types.
 
-- [ ] **Step 3: Run the focused verification suite**
+- [x] **Step 3: Run the focused verification suite**
 
   Run:
   ```bash
@@ -351,7 +351,7 @@
 
   Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
   ```bash
   git add apps/atomy-q/API/IMPLEMENTATION_SUMMARY.md apps/atomy-q/API_ENDPOINTS.md apps/atomy-q/docs/ALPHA_PROGRESS_ANALYSIS_2026-03-31.md apps/atomy-q/openapi/openapi.json apps/atomy-q/WEB/src/generated/api apps/atomy-q/WEB/src/app/(dashboard)/rfqs/page.tsx apps/atomy-q/WEB/src/app/(dashboard)/rfqs/page.test.tsx apps/atomy-q/WEB/IMPLEMENTATION_SUMMARY.md apps/atomy-q/WEB/BACKEND_API_GAPS.md

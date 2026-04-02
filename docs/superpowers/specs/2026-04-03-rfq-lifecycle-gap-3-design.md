@@ -3,7 +3,7 @@
 Date: 2026-04-03
 Scope: Atomy-Q alpha gap 3, expanded to cover adjacent RFQ lifecycle integrity actions
 Author: Codex
-Status: Approved in chat for design write-up
+Status: Completed
 
 ## Context
 
