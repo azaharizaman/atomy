@@ -6,20 +6,25 @@ namespace App\Services\SourcingOperations;
 
 use App\Models\Rfq;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Nexus\Sourcing\ValueObjects\RfqBulkAction;
+use Nexus\Sourcing\ValueObjects\RfqStatus;
 use Nexus\SourcingOperations\Contracts\RfqLifecyclePersistPortInterface;
 use Nexus\SourcingOperations\DTOs\DuplicateRfqCommand;
 use Nexus\SourcingOperations\DTOs\RfqLifecycleRecord;
+use Nexus\SourcingOperations\DTOs\RfqLineItemRecord;
 use Nexus\SourcingOperations\DTOs\SaveRfqDraftCommand;
 use Nexus\SourcingOperations\DTOs\TransitionRfqStatusCommand;
 
 final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPortInterface
 {
     /**
-     * @param array<int, mixed> $lineItems
+     * @param array<int, RfqLineItemRecord> $lineItems
      */
     public function createDuplicate(RfqLifecycleRecord $sourceRfq, DuplicateRfqCommand $command, array $lineItems): RfqLifecycleRecord
     {
+        // $lineItems is used in the coordinator via RfqLineItemPersistPortInterface::copyToRfq
+        // We still load the source model here to copy its properties.
         $source = $this->findModel($command->tenantId, $sourceRfq->rfqId);
 
         $rfq = new Rfq();
@@ -30,7 +35,7 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
         $rfq->description = $source->description;
         $rfq->category = $source->category;
         $rfq->department = $source->department;
-        $rfq->status = 'draft';
+        $rfq->status = RfqStatus::DRAFT;
         $rfq->project_id = $source->project_id;
         $rfq->estimated_value = $source->estimated_value;
         $rfq->savings_percentage = $source->savings_percentage;
@@ -82,8 +87,8 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
     public function applyBulkAction(string $tenantId, RfqBulkAction $action, array $rfqIds): int
     {
         $status = match ($action->value()) {
-            'close' => 'closed',
-            'cancel' => 'cancelled',
+            'close' => RfqStatus::CLOSED,
+            'cancel' => RfqStatus::CANCELLED,
             default => null,
         };
 
@@ -110,12 +115,26 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
 
     private function nextRfqNumber(string $tenantId): string
     {
-        $nextSeq = (int) Rfq::query()
-            ->where('tenant_id', $tenantId)
-            ->where('rfq_number', 'like', 'RFQ-%')
-            ->count() + 1;
+        return DB::transaction(function () use ($tenantId) {
+            $year = date('Y');
+            $prefix = "RFQ-{$year}-";
+            
+            // Atomic max sequence fetch
+            $lastRfq = Rfq::query()
+                ->where('tenant_id', $tenantId)
+                ->where('rfq_number', 'like', "{$prefix}%")
+                ->lockForUpdate()
+                ->orderByDesc('rfq_number')
+                ->first();
 
-        return sprintf('RFQ-%s-%04d', date('Y'), $nextSeq);
+            $nextSeq = 1;
+            if ($lastRfq !== null) {
+                $lastNum = (int) substr((string)$lastRfq->rfq_number, strlen($prefix));
+                $nextSeq = $lastNum + 1;
+            }
+
+            return sprintf('%s%04d', $prefix, $nextSeq);
+        });
     }
 
     private function parseDate(?string $value): ?CarbonImmutable

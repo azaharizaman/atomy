@@ -113,5 +113,7 @@ final class RfqInvitationReminderTest extends ApiTestCase
             [],
             $this->authHeaders((string) $other->tenant_id, (string) $other->id, 'remind-key-2'),
         )->assertStatus(404);
+
+        $this->assertNull($invitation->fresh()->reminded_at);
     }
 }

@@ -42,7 +42,8 @@ function normalizeProjectsPayload(payload: unknown): ProjectListItem[] {
 }
 
 export function useProjects(options?: { enabled?: boolean }) {
-  const enabled = options?.enabled ?? true;
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+  const enabled = (options?.enabled ?? true) && !useMocks;
   return useQuery({
     queryKey: ['projects'],
     queryFn: async (): Promise<ProjectListItem[]> => {

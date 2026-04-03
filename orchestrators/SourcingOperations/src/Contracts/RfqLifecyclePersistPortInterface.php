@@ -7,13 +7,14 @@ namespace Nexus\SourcingOperations\Contracts;
 use Nexus\Sourcing\ValueObjects\RfqBulkAction;
 use Nexus\SourcingOperations\DTOs\DuplicateRfqCommand;
 use Nexus\SourcingOperations\DTOs\RfqLifecycleRecord;
+use Nexus\SourcingOperations\DTOs\RfqLineItemRecord;
 use Nexus\SourcingOperations\DTOs\SaveRfqDraftCommand;
 use Nexus\SourcingOperations\DTOs\TransitionRfqStatusCommand;
 
 interface RfqLifecyclePersistPortInterface
 {
     /**
-     * @param array<int, mixed> $lineItems
+     * @param array<int, RfqLineItemRecord> $lineItems
      */
     public function createDuplicate(RfqLifecycleRecord $sourceRfq, DuplicateRfqCommand $command, array $lineItems): RfqLifecycleRecord;
 

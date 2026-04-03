@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Nexus\Sourcing\ValueObjects\RfqStatus;
 use Illuminate\Validation\Rule;
 
 final class RfqStatusTransitionRequest extends FormRequest
@@ -20,17 +21,7 @@ final class RfqStatusTransitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => [
-                'required',
-                'string',
-                Rule::in([
-                    'draft',
-                    'published',
-                    'closed',
-                    'awarded',
-                    'cancelled',
-                ]),
-            ],
+            'status' => ['required', 'string', Rule::in(RfqStatus::ALL)],
         ];
     }
 }

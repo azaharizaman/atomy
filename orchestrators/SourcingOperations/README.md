@@ -25,6 +25,6 @@ composer install
 ## Notes
 
 - All coordinator methods require tenant-scoped ports.
-- Duplicate copies the RFQ core record and line items only in the current Alpha slice.
+- Duplicate creates a copy of the RFQ core record and line items only within the current Alpha slice.
 - Bulk actions are limited to the Layer 1 allowlist (`close`, `cancel`).
 - Invitation reminders must return real tenant-scoped results, not synthetic placeholders.

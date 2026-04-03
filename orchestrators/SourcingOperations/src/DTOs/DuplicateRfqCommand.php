@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\SourcingOperations\DTOs;
 
+use Nexus\SourcingOperations\Exceptions\CommandValidationException;
 use Nexus\Sourcing\ValueObjects\RfqDuplicationOptions;
 
 final readonly class DuplicateRfqCommand
@@ -18,11 +19,11 @@ final readonly class DuplicateRfqCommand
         ?RfqDuplicationOptions $options = null,
     ) {
         if (trim($tenantId) === '') {
-            throw new \InvalidArgumentException('Tenant id cannot be empty.');
+            throw new CommandValidationException('Tenant id cannot be empty.');
         }
 
         if (trim($sourceRfqId) === '') {
-            throw new \InvalidArgumentException('Source RFQ id cannot be empty.');
+            throw new CommandValidationException('Source RFQ id cannot be empty.');
         }
 
         $this->tenantId = trim($tenantId);

@@ -151,7 +151,7 @@ final class VendorInvitationController extends Controller
             if ($invitation === null) {
                 IdempotencyCompletion::fail($request, $idempotency);
 
-                return response()->json(['message' => 'RFQ not found'], 404);
+                return response()->json(['message' => 'Invitation not found'], 404);
             }
 
             $response = response()->json([
@@ -164,10 +164,17 @@ final class VendorInvitationController extends Controller
             ]);
 
             return IdempotencyCompletion::succeed($request, $idempotency, $response);
-        } catch (RfqLifecyclePreconditionException) {
+        } catch (RfqLifecyclePreconditionException $e) {
             IdempotencyCompletion::fail($request, $idempotency);
 
-            return response()->json(['message' => 'RFQ not found'], 404);
+            if ($e->isNotFound()) {
+                return response()->json(['message' => 'Invitation not found'], 404);
+            }
+
+            return response()->json([
+                'error' => 'Precondition failed',
+                'message' => $e->getMessage(),
+            ], 412);
         } catch (\Throwable $e) {
             IdempotencyCompletion::fail($request, $idempotency);
             throw $e;

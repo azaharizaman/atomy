@@ -6,6 +6,11 @@ namespace Nexus\Sourcing\Exceptions;
 
 final class RfqLifecyclePreconditionException extends \RuntimeException
 {
+    public function isNotFound(): bool
+    {
+        return $this instanceof RfqNotFoundException;
+    }
+
     public static function forReason(string $reason): self
     {
         return new self($reason);

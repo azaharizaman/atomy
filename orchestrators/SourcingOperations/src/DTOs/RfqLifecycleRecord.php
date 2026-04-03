@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\SourcingOperations\DTOs;
 
+use Nexus\SourcingOperations\Exceptions\TenantInvalidException;
+use Nexus\SourcingOperations\Exceptions\RfqInvalidException;
+use Nexus\SourcingOperations\Exceptions\StatusInvalidException;
+
 final readonly class RfqLifecycleRecord
 {
     public string $tenantId;
@@ -40,15 +44,15 @@ final readonly class RfqLifecycleRecord
         ?string $evaluationMethod = null,
     ) {
         if (trim($tenantId) === '') {
-            throw new \InvalidArgumentException('Tenant id cannot be empty.');
+            throw new TenantInvalidException('Tenant id cannot be empty.');
         }
 
         if (trim($rfqId) === '') {
-            throw new \InvalidArgumentException('RFQ id cannot be empty.');
+            throw new RfqInvalidException('RFQ id cannot be empty.');
         }
 
         if (trim($status) === '') {
-            throw new \InvalidArgumentException('Status cannot be empty.');
+            throw new StatusInvalidException('Status cannot be empty.');
         }
 
         $this->tenantId = trim($tenantId);

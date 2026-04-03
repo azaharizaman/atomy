@@ -8,6 +8,7 @@ use Nexus\Sourcing\Contracts\RfqStatusTransitionPolicyInterface;
 use Nexus\Sourcing\Exceptions\RfqLifecyclePreconditionException;
 use Nexus\Sourcing\Exceptions\UnsupportedRfqBulkActionException;
 use Nexus\Sourcing\ValueObjects\RfqBulkAction;
+use Nexus\Sourcing\ValueObjects\RfqStatus;
 use Nexus\SourcingOperations\Contracts\RfqInvitationPersistPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqInvitationQueryPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqInvitationReminderPortInterface;
@@ -72,7 +73,7 @@ final readonly class SourcingOperationsCoordinator implements RfqLifecycleCoordi
     {
         $rfq = $this->loadRfq($command->tenantId, $command->rfqId);
 
-        if ($rfq->status !== 'draft') {
+        if ($rfq->status !== RfqStatus::DRAFT) {
             throw RfqLifecyclePreconditionException::forRfq($rfq->rfqId, 'draft edits are only allowed while the RFQ is in draft.');
         }
 
@@ -80,18 +81,18 @@ final readonly class SourcingOperationsCoordinator implements RfqLifecycleCoordi
             tenantId: $rfq->tenantId,
             rfqId: $rfq->rfqId,
             status: $rfq->status,
-            title: $command->title !== null ? $command->title : $rfq->title,
-            projectId: $command->projectId !== null ? $command->projectId : $rfq->projectId,
-            description: $command->description !== null ? $command->description : $rfq->description,
-            estimatedValue: $command->estimatedValue !== null ? $command->estimatedValue : $rfq->estimatedValue,
-            savingsPercentage: $command->savingsPercentage !== null ? $command->savingsPercentage : $rfq->savingsPercentage,
-            submissionDeadline: $command->submissionDeadline !== null ? $command->submissionDeadline : $rfq->submissionDeadline,
-            closingDate: $command->closingDate !== null ? $command->closingDate : $rfq->closingDate,
-            expectedAwardAt: $command->expectedAwardAt !== null ? $command->expectedAwardAt : $rfq->expectedAwardAt,
-            technicalReviewDueAt: $command->technicalReviewDueAt !== null ? $command->technicalReviewDueAt : $rfq->technicalReviewDueAt,
-            financialReviewDueAt: $command->financialReviewDueAt !== null ? $command->financialReviewDueAt : $rfq->financialReviewDueAt,
-            paymentTerms: $command->paymentTerms !== null ? $command->paymentTerms : $rfq->paymentTerms,
-            evaluationMethod: $command->evaluationMethod !== null ? $command->evaluationMethod : $rfq->evaluationMethod,
+            title: $command->title ?? $rfq->title,
+            projectId: $command->projectId ?? $rfq->projectId,
+            description: $command->description ?? $rfq->description,
+            estimatedValue: $command->estimatedValue ?? $rfq->estimatedValue,
+            savingsPercentage: $command->savingsPercentage ?? $rfq->savingsPercentage,
+            submissionDeadline: $command->submissionDeadline ?? $rfq->submissionDeadline,
+            closingDate: $command->closingDate ?? $rfq->closingDate,
+            expectedAwardAt: $command->expectedAwardAt ?? $rfq->expectedAwardAt,
+            technicalReviewDueAt: $command->technicalReviewDueAt ?? $rfq->technicalReviewDueAt,
+            financialReviewDueAt: $command->financialReviewDueAt ?? $rfq->financialReviewDueAt,
+            paymentTerms: $command->paymentTerms ?? $rfq->paymentTerms,
+            evaluationMethod: $command->evaluationMethod ?? $rfq->evaluationMethod,
         );
 
         $saved = $this->rfqPersist->saveDraft($updated, $command);
@@ -105,29 +106,39 @@ final readonly class SourcingOperationsCoordinator implements RfqLifecycleCoordi
         );
     }
 
-    public function applyBulkAction(ApplyRfqBulkActionCommand $command): RfqLifecycleOutcome
+    public function applyBulkAction(ApplyRfqBulkActionCommand $command, ?array $records = null): RfqLifecycleOutcome
     {
         $bulkAction = RfqBulkAction::fromString($command->action);
         $targetStatus = match ($bulkAction->value()) {
-            'close' => 'closed',
-            'cancel' => 'cancelled',
+            'close' => RfqStatus::CLOSED,
+            'cancel' => RfqStatus::CANCELLED,
             default => throw UnsupportedRfqBulkActionException::fromAction($command->action, ['close', 'cancel']),
         };
 
-        $affected = 0;
-        foreach ($command->rfqIds as $rfqId) {
-            $rfq = $this->loadRfq($command->tenantId, $rfqId);
-            $this->statusTransitionPolicy->assertTransitionAllowed($rfq->status, $targetStatus);
+        if ($records === null) {
+            $affected = 0;
+            foreach ($command->rfqIds as $rfqId) {
+                $rfq = $this->loadRfq($command->tenantId, $rfqId);
+                $this->statusTransitionPolicy->assertTransitionAllowed($rfq->status, $targetStatus);
 
-            $this->rfqPersist->transitionStatus(
-                $rfq,
-                new TransitionRfqStatusCommand(
-                    tenantId: $command->tenantId,
-                    rfqId: $rfq->rfqId,
-                    status: $targetStatus,
-                ),
-            );
-            ++$affected;
+                $this->rfqPersist->transitionStatus(
+                    $rfq,
+                    new TransitionRfqStatusCommand(
+                        tenantId: $command->tenantId,
+                        rfqId: $rfq->rfqId,
+                        status: $targetStatus,
+                    ),
+                );
+                ++$affected;
+            }
+        } else {
+            foreach ($records as $rfq) {
+                if ($rfq->tenantId !== $command->tenantId) {
+                    throw RfqLifecyclePreconditionException::forRfq($rfq->rfqId, 'cross-tenant record provided.');
+                }
+                $this->statusTransitionPolicy->assertTransitionAllowed($rfq->status, $targetStatus);
+            }
+            $affected = $this->rfqPersist->applyBulkAction($command->tenantId, $bulkAction, $command->rfqIds);
         }
 
         return new RfqLifecycleOutcome(

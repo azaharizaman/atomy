@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\SourcingOperations\DTOs;
 
+use Nexus\SourcingOperations\Exceptions\CommandValidationException;
+
 final readonly class ApplyRfqBulkActionCommand
 {
     public string $tenantId;
@@ -22,20 +24,23 @@ final readonly class ApplyRfqBulkActionCommand
         array $rfqIds,
     ) {
         if (trim($tenantId) === '') {
-            throw new \InvalidArgumentException('Tenant id cannot be empty.');
+            throw new CommandValidationException('Tenant id cannot be empty.');
         }
 
         if (trim($action) === '') {
-            throw new \InvalidArgumentException('Action cannot be empty.');
+            throw new CommandValidationException('Action cannot be empty.');
         }
 
         if ($rfqIds === []) {
-            throw new \InvalidArgumentException('RFQ ids cannot be empty.');
+            throw new CommandValidationException('RFQ ids cannot be empty.');
         }
 
         foreach ($rfqIds as $rfqId) {
+            if (!is_string($rfqId)) {
+                throw new CommandValidationException('RFQ ids must be strings.');
+            }
             if (trim($rfqId) === '') {
-                throw new \InvalidArgumentException('RFQ ids cannot contain empty values.');
+                throw new CommandValidationException('RFQ ids cannot contain empty values.');
             }
         }
 

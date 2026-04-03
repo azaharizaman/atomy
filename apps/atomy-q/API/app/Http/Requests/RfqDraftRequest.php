@@ -31,7 +31,7 @@ final class RfqDraftRequest extends FormRequest
             'project_id' => ['sometimes', 'nullable', 'string', $projectRule],
             'estimated_value' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'savings_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100'],
-            'submission_deadline' => ['sometimes', 'date'],
+            'submission_deadline' => ['sometimes', 'nullable', 'date'],
             'closing_date' => ['sometimes', 'nullable', 'date'],
             'expected_award_at' => ['sometimes', 'nullable', 'date'],
             'technical_review_due_at' => ['sometimes', 'nullable', 'date'],

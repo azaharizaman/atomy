@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\Sourcing\ValueObjects;
 
+use Nexus\Sourcing\Exceptions\RfqLifecycleException;
+
 final readonly class RfqLifecycleResult
 {
     public function __construct(
@@ -17,35 +19,35 @@ final readonly class RfqLifecycleResult
         public int $copiedChildRecordCount = 0,
     ) {
         if (trim($action) === '') {
-            throw new \InvalidArgumentException('Action cannot be empty.');
+            throw RfqLifecycleException::validationFailed('Action cannot be empty.');
         }
 
         if (trim($status) === '') {
-            throw new \InvalidArgumentException('Status cannot be empty.');
+            throw RfqLifecycleException::validationFailed('Status cannot be empty.');
         }
 
         if ($rfqId !== null && trim($rfqId) === '') {
-            throw new \InvalidArgumentException('RFQ id cannot be empty when provided.');
+            throw RfqLifecycleException::validationFailed('RFQ id cannot be empty when provided.');
         }
 
         if ($sourceRfqId !== null && trim($sourceRfqId) === '') {
-            throw new \InvalidArgumentException('Source RFQ id cannot be empty when provided.');
+            throw RfqLifecycleException::validationFailed('Source RFQ id cannot be empty when provided.');
         }
 
         if ($invitationId !== null && trim($invitationId) === '') {
-            throw new \InvalidArgumentException('Invitation id cannot be empty when provided.');
+            throw RfqLifecycleException::validationFailed('Invitation id cannot be empty when provided.');
         }
 
         if ($affectedCount < 0) {
-            throw new \InvalidArgumentException('Affected count cannot be negative.');
+            throw RfqLifecycleException::validationFailed('Affected count cannot be negative.');
         }
 
         if ($copiedLineItemCount < 0) {
-            throw new \InvalidArgumentException('Copied line item count cannot be negative.');
+            throw RfqLifecycleException::validationFailed('Copied line item count cannot be negative.');
         }
 
         if ($copiedChildRecordCount < 0) {
-            throw new \InvalidArgumentException('Copied child record count cannot be negative.');
+            throw RfqLifecycleException::validationFailed('Copied child record count cannot be negative.');
         }
     }
 }

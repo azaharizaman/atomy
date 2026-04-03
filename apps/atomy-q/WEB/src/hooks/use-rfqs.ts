@@ -158,11 +158,10 @@ export function useRfqs(params: UseRfqsParams) {
 
   return useQuery({
     queryKey: ['rfqs', params],
+    enabled: true, // Always enabled, but queryFn switches logic
     queryFn: async (): Promise<RfqsListResult> => {
       const page = Math.max(1, params.page ?? 1);
 
-      // Prefer live API when mocks are disabled and API is reachable,
-      // but always fall back to local seed data on failures or when mocks are enabled.
       if (!useMocks) {
         try {
           const apiParams: Record<string, string | number | undefined> = { ...params };
@@ -178,7 +177,7 @@ export function useRfqs(params: UseRfqsParams) {
           if (e instanceof Error && e.message === 'Invalid RFQ list response: pagination meta') {
             throw e;
           }
-          // ignore and fall through to seed data
+          // fallback to seed data on connection error if preferred, or throw
         }
       }
 

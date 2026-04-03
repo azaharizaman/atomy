@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\SourcingOperations\DTOs;
 
+use Nexus\SourcingOperations\Exceptions\RfqLifecycleOutcomeException;
+
 final readonly class RfqLifecycleOutcome
 {
     public string $action;
@@ -28,39 +30,39 @@ final readonly class RfqLifecycleOutcome
         int $copiedChildRecordCount = 0,
     ) {
         if (trim($action) === '') {
-            throw new \InvalidArgumentException('Action cannot be empty.');
+            throw new RfqLifecycleOutcomeException('Action cannot be empty.');
         }
 
         if (trim($tenantId) === '') {
-            throw new \InvalidArgumentException('Tenant id cannot be empty.');
+            throw new RfqLifecycleOutcomeException('Tenant id cannot be empty.');
         }
 
         if (trim($status) === '') {
-            throw new \InvalidArgumentException('Status cannot be empty.');
+            throw new RfqLifecycleOutcomeException('Status cannot be empty.');
         }
 
         if ($rfqId !== null && trim($rfqId) === '') {
-            throw new \InvalidArgumentException('RFQ id cannot be empty when provided.');
+            throw new RfqLifecycleOutcomeException('RFQ id cannot be empty when provided.');
         }
 
         if ($sourceRfqId !== null && trim($sourceRfqId) === '') {
-            throw new \InvalidArgumentException('Source RFQ id cannot be empty when provided.');
+            throw new RfqLifecycleOutcomeException('Source RFQ id cannot be empty when provided.');
         }
 
         if ($invitationId !== null && trim($invitationId) === '') {
-            throw new \InvalidArgumentException('Invitation id cannot be empty when provided.');
+            throw new RfqLifecycleOutcomeException('Invitation id cannot be empty when provided.');
         }
 
         if ($affectedCount < 0) {
-            throw new \InvalidArgumentException('Affected count cannot be negative.');
+            throw new RfqLifecycleOutcomeException('Affected count cannot be negative.');
         }
 
         if ($copiedLineItemCount < 0) {
-            throw new \InvalidArgumentException('Copied line item count cannot be negative.');
+            throw new RfqLifecycleOutcomeException('Copied line item count cannot be negative.');
         }
 
         if ($copiedChildRecordCount < 0) {
-            throw new \InvalidArgumentException('Copied child record count cannot be negative.');
+            throw new RfqLifecycleOutcomeException('Copied child record count cannot be negative.');
         }
 
         $this->action = trim($action);

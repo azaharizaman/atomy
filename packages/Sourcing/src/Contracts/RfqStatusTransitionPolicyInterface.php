@@ -13,5 +13,8 @@ interface RfqStatusTransitionPolicyInterface
      */
     public function allowedTransitions(string $fromStatus): array;
 
+    /**
+     * @throws \Nexus\Sourcing\Exceptions\InvalidRfqStatusTransitionException
+     */
     public function assertTransitionAllowed(string $fromStatus, string $toStatus): void;
 }

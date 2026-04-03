@@ -126,18 +126,14 @@ final class RfqController extends Controller
 
     private function lifecyclePreconditionResponse(RfqLifecyclePreconditionException $exception): JsonResponse
     {
-        $message = $exception->getMessage();
-        $notFound = str_contains($message, 'could not be found')
-            || str_contains($message, 'was not found');
-
-        if ($notFound) {
+        if ($exception->isNotFound()) {
             return response()->json(['message' => 'RFQ not found'], 404);
         }
 
         return response()->json([
             'error' => 'Validation failed',
             'details' => [
-                'rfq' => [$message],
+                'rfq' => [$exception->getMessage()],
             ],
         ], 422);
     }
@@ -870,11 +866,29 @@ final class RfqController extends Controller
                 $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
             }
 
+            $records = $rfqs->map(fn (Rfq $rfq) => new \Nexus\SourcingOperations\DTOs\RfqLifecycleRecord(
+                tenantId: (string) $rfq->tenant_id,
+                rfqId: (string) $rfq->id,
+                status: (string) $rfq->status,
+                title: $rfq->title,
+                projectId: $rfq->project_id,
+                description: $rfq->description,
+                estimatedValue: $rfq->estimated_value !== null ? (float) $rfq->estimated_value : null,
+                savingsPercentage: $rfq->savings_percentage !== null ? (float) $rfq->savings_percentage : null,
+                submissionDeadline: $rfq->submission_deadline?->toAtomString(),
+                closingDate: $rfq->closing_date?->toAtomString(),
+                expectedAwardAt: $rfq->expected_award_at?->toAtomString(),
+                technicalReviewDueAt: $rfq->technical_review_due_at?->toAtomString(),
+                financialReviewDueAt: $rfq->financial_review_due_at?->toAtomString(),
+                paymentTerms: $rfq->payment_terms,
+                evaluationMethod: $rfq->evaluation_method,
+            ))->all();
+
             $outcome = $this->rfqLifecycle->applyBulkAction(new ApplyRfqBulkActionCommand(
                 tenantId: $tenantId,
                 action: $validated['action'],
                 rfqIds: $validated['rfq_ids'],
-            ));
+            ), $records);
 
             $response = response()->json([
                 'data' => [

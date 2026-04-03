@@ -24,5 +24,14 @@ final readonly class AtomyRfqInvitationReminder implements RfqInvitationReminder
             'invitation_id' => $invitation->id,
             'requested_by' => $command->requestedByPrincipalId,
         ]);
+
+        // In a real implementation, this would dispatch to a Notifier or Mailer.
+        // For Alpha, we log the intended dispatch.
+        $this->logger->info(sprintf(
+            'Reminder dispatched to "%s" for RFQ "%s" via channel "%s".',
+            $invitation->vendorEmail,
+            $rfq->title ?? $rfq->rfqId,
+            $invitation->channel
+        ));
     }
 }

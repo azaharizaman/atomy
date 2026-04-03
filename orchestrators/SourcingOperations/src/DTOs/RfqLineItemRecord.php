@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\SourcingOperations\DTOs;
 
+use Nexus\SourcingOperations\Exceptions\RfqLineItemInvalidException;
+
 final readonly class RfqLineItemRecord
 {
     public string $id;
@@ -26,19 +28,19 @@ final readonly class RfqLineItemRecord
         int $sortOrder,
     ) {
         if (trim($id) === '') {
-            throw new \InvalidArgumentException('Line item id cannot be empty.');
+            throw new RfqLineItemInvalidException('Line item id cannot be empty.');
         }
 
         if (trim($description) === '') {
-            throw new \InvalidArgumentException('Description cannot be empty.');
+            throw new RfqLineItemInvalidException('Description cannot be empty.');
         }
 
         if (trim($uom) === '') {
-            throw new \InvalidArgumentException('Unit of measure cannot be empty.');
+            throw new RfqLineItemInvalidException('Unit of measure cannot be empty.');
         }
 
         if (trim($currency) === '') {
-            throw new \InvalidArgumentException('Currency cannot be empty.');
+            throw new RfqLineItemInvalidException('Currency cannot be empty.');
         }
 
         $this->id = trim($id);

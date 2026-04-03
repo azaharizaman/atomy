@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\Sourcing\Tests\Unit;
 
 use Nexus\Sourcing\ValueObjects\RfqLifecycleResult;
+use Nexus\Sourcing\Exceptions\RfqLifecycleException;
 use PHPUnit\Framework\TestCase;
 
 final class RfqLifecycleResultTest extends TestCase
@@ -34,7 +35,7 @@ final class RfqLifecycleResultTest extends TestCase
 
     public function test_result_rejects_empty_identifier_strings(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(RfqLifecycleException::class);
 
         new RfqLifecycleResult(
             action: 'duplicate',

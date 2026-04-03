@@ -105,7 +105,18 @@ final class RfqLifecycleMutationTest extends ApiTestCase
         ]);
         $this->assertDatabaseCount('rfqs', 2);
         $this->assertSame(1, RfqLineItem::query()->where('rfq_id', $rfq->id)->count());
-        $this->assertSame(1, RfqLineItem::query()->where('rfq_id', $newId)->count());
+        
+        $this->assertDatabaseHas('rfq_line_items', [
+            'rfq_id' => $newId,
+            'tenant_id' => $tenantId,
+            'description' => 'Servers',
+            'quantity' => 2,
+            'uom' => 'EA',
+            'unit_price' => 500,
+            'currency' => 'USD',
+            'specifications' => 'Rack units',
+            'sort_order' => 1,
+        ]);
     }
 
     public function test_duplicate_returns_404_for_wrong_tenant(): void

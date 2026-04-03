@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\SourcingOperations\Tests\Unit;
 
 use Nexus\SourcingOperations\DTOs\RfqLifecycleOutcome;
+use Nexus\SourcingOperations\Exceptions\RfqLifecycleOutcomeException;
 use PHPUnit\Framework\TestCase;
 
 final class RfqLifecycleOutcomeTest extends TestCase
@@ -36,7 +37,7 @@ final class RfqLifecycleOutcomeTest extends TestCase
 
     public function test_outcome_rejects_invalid_counts(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(RfqLifecycleOutcomeException::class);
 
         new RfqLifecycleOutcome(
             action: 'bulk_action',

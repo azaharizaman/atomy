@@ -13,7 +13,7 @@ final readonly class RfqBulkAction
         'cancel',
     ];
 
-    private function __construct(private string $value)
+    private function __construct(public readonly string $value)
     {
     }
 

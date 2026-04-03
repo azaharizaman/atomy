@@ -7,6 +7,7 @@ namespace Nexus\Sourcing\Services;
 use Nexus\Sourcing\Contracts\RfqStatusTransitionPolicyInterface;
 use Nexus\Sourcing\Exceptions\InvalidRfqStatusTransitionException;
 use Nexus\Sourcing\Exceptions\RfqLifecyclePreconditionException;
+use Nexus\Sourcing\ValueObjects\RfqStatus;
 
 final readonly class RfqStatusTransitionPolicy implements RfqStatusTransitionPolicyInterface
 {
@@ -14,11 +15,11 @@ final readonly class RfqStatusTransitionPolicy implements RfqStatusTransitionPol
      * @var array<string, array<string>>
      */
     private const TRANSITIONS = [
-        'draft' => ['published', 'cancelled'],
-        'published' => ['closed', 'cancelled'],
-        'closed' => ['awarded', 'cancelled'],
-        'awarded' => [],
-        'cancelled' => [],
+        RfqStatus::DRAFT => [RfqStatus::PUBLISHED, RfqStatus::CANCELLED],
+        RfqStatus::PUBLISHED => [RfqStatus::CLOSED, RfqStatus::CANCELLED],
+        RfqStatus::CLOSED => [RfqStatus::AWARDED, RfqStatus::CANCELLED],
+        RfqStatus::AWARDED => [],
+        RfqStatus::CANCELLED => [],
     ];
 
     public function canTransition(string $fromStatus, string $toStatus): bool
