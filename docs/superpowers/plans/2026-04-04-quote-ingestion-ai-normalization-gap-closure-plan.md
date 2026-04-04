@@ -36,7 +36,7 @@
 **Files:**
 - Create: `apps/atomy-q/API/database/migrations/2026_04_04_000000_add_intelligence_fields_to_normalization_source_lines.php`
 
-- [ ] **Step 1: Create migration for intelligence fields**
+- [x] **Step 1: Create migration for intelligence fields**
 Add `ai_confidence` (decimal 5,2), `taxonomy_code` (string), and `mapping_version` (string) to `normalization_source_lines`.
 
 - [ ] **Step 2: Run migration**
