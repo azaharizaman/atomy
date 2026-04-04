@@ -6,6 +6,7 @@ namespace App\Services\SourcingOperations;
 
 use App\Models\Rfq;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Nexus\Sourcing\ValueObjects\RfqBulkAction;
 use Nexus\Sourcing\ValueObjects\RfqStatus;
@@ -18,6 +19,8 @@ use Nexus\SourcingOperations\DTOs\TransitionRfqStatusCommand;
 
 final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPortInterface
 {
+    private const DUPLICATE_NUMBER_RETRY_LIMIT = 3;
+
     /**
      * @param array<int, RfqLineItemRecord> $lineItems
      */
@@ -27,28 +30,43 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
         // We still load the source model here to copy its properties.
         $source = $this->findModel($command->tenantId, $sourceRfq->rfqId);
 
-        $rfq = new Rfq();
-        $rfq->tenant_id = $command->tenantId;
-        $rfq->owner_id = $source->owner_id;
-        $rfq->rfq_number = $this->nextRfqNumber($command->tenantId);
-        $rfq->title = $source->title;
-        $rfq->description = $source->description;
-        $rfq->category = $source->category;
-        $rfq->department = $source->department;
-        $rfq->status = RfqStatus::DRAFT;
-        $rfq->project_id = $source->project_id;
-        $rfq->estimated_value = $source->estimated_value;
-        $rfq->savings_percentage = $source->savings_percentage;
-        $rfq->submission_deadline = $source->submission_deadline;
-        $rfq->closing_date = $source->closing_date;
-        $rfq->expected_award_at = $source->expected_award_at;
-        $rfq->technical_review_due_at = $source->technical_review_due_at;
-        $rfq->financial_review_due_at = $source->financial_review_due_at;
-        $rfq->payment_terms = $source->payment_terms;
-        $rfq->evaluation_method = $source->evaluation_method;
-        $rfq->save();
+        for ($attempt = 0; $attempt < self::DUPLICATE_NUMBER_RETRY_LIMIT; ++$attempt) {
+            try {
+                /** @var Rfq $rfq */
+                $rfq = DB::transaction(function () use ($command, $source): Rfq {
+                    $rfq = new Rfq();
+                    $rfq->tenant_id = $command->tenantId;
+                    $rfq->owner_id = $source->owner_id;
+                    $rfq->rfq_number = $this->nextRfqNumber($command->tenantId);
+                    $rfq->title = $source->title;
+                    $rfq->description = $source->description;
+                    $rfq->category = $source->category;
+                    $rfq->department = $source->department;
+                    $rfq->status = RfqStatus::DRAFT;
+                    $rfq->project_id = $source->project_id;
+                    $rfq->estimated_value = $source->estimated_value;
+                    $rfq->savings_percentage = $source->savings_percentage;
+                    $rfq->submission_deadline = $source->submission_deadline;
+                    $rfq->closing_date = $source->closing_date;
+                    $rfq->expected_award_at = $source->expected_award_at;
+                    $rfq->technical_review_due_at = $source->technical_review_due_at;
+                    $rfq->financial_review_due_at = $source->financial_review_due_at;
+                    $rfq->payment_terms = $source->payment_terms;
+                    $rfq->evaluation_method = $source->evaluation_method;
+                    $rfq->save();
 
-        return $this->toRecord($rfq);
+                    return $rfq;
+                });
+
+                return $this->toRecord($rfq);
+            } catch (QueryException $exception) {
+                if (! $this->isDuplicateRfqNumberViolation($exception) || $attempt === self::DUPLICATE_NUMBER_RETRY_LIMIT - 1) {
+                    throw $exception;
+                }
+            }
+        }
+
+        throw new \RuntimeException('Unable to create RFQ duplicate.');
     }
 
     public function saveDraft(RfqLifecycleRecord $rfq, SaveRfqDraftCommand $command): RfqLifecycleRecord
@@ -115,26 +133,36 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
 
     private function nextRfqNumber(string $tenantId): string
     {
-        return DB::transaction(function () use ($tenantId) {
-            $year = date('Y');
-            $prefix = "RFQ-{$year}-";
-            
-            // Atomic max sequence fetch
-            $lastRfq = Rfq::query()
-                ->where('tenant_id', $tenantId)
-                ->where('rfq_number', 'like', "{$prefix}%")
-                ->lockForUpdate()
-                ->orderByDesc('rfq_number')
-                ->first();
+        $year = date('Y');
+        $prefix = "RFQ-{$year}-";
 
-            $nextSeq = 1;
-            if ($lastRfq !== null) {
-                $lastNum = (int) substr((string)$lastRfq->rfq_number, strlen($prefix));
-                $nextSeq = $lastNum + 1;
-            }
+        $lastRfq = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_number', 'like', "{$prefix}%")
+            ->lockForUpdate()
+            ->orderByDesc('rfq_number')
+            ->first();
 
-            return sprintf('%s%04d', $prefix, $nextSeq);
-        });
+        $nextSeq = 1;
+        if ($lastRfq !== null) {
+            $lastNum = (int) substr((string) $lastRfq->rfq_number, strlen($prefix));
+            $nextSeq = $lastNum + 1;
+        }
+
+        return sprintf('%s%04d', $prefix, $nextSeq);
+    }
+
+    private function isDuplicateRfqNumberViolation(QueryException $exception): bool
+    {
+        $errorCode = (string) ($exception->errorInfo[0] ?? '');
+        $driverCode = (string) ($exception->errorInfo[1] ?? '');
+        $message = strtolower($exception->getMessage());
+
+        return $errorCode === '23000'
+            || $errorCode === '23505'
+            || $driverCode === '1062'
+            || str_contains($message, 'unique')
+            || str_contains($message, 'rfqs_tenant_id_rfq_number_unique');
     }
 
     private function parseDate(?string $value): ?CarbonImmutable

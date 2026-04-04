@@ -9,7 +9,9 @@ use App\Models\User;
 use App\Models\VendorInvitation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
+use Nexus\Laravel\Notifier\Jobs\SendEmailNotificationJob;
 
 final class RfqInvitationReminderTest extends ApiTestCase
 {
@@ -49,6 +51,8 @@ final class RfqInvitationReminderTest extends ApiTestCase
 
     public function test_remind_updates_metadata_with_tenant_scope(): void
     {
+        Queue::fake();
+
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
 
@@ -81,6 +85,7 @@ final class RfqInvitationReminderTest extends ApiTestCase
         $response->assertOk();
         $response->assertJsonPath('data.id', (string) $invitation->id);
         $this->assertNotNull(VendorInvitation::query()->findOrFail($invitation->id)->reminded_at);
+        Queue::assertPushed(SendEmailNotificationJob::class);
     }
 
     public function test_remind_returns_404_for_cross_tenant_access(): void

@@ -30,6 +30,7 @@ final readonly class AtomyRfqInvitationPersist implements RfqInvitationPersistPo
             vendorEmail: $model->vendor_email,
             vendorName: $model->vendor_name,
             status: (string) $model->status,
+            channel: $model->channel,
         );
     }
 }

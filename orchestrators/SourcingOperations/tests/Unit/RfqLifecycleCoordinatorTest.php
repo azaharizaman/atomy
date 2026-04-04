@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\SourcingOperations\Tests\Unit;
 
-use Nexus\Sourcing\Contracts\RfqStatusTransitionPolicyInterface;
 use Nexus\Sourcing\Exceptions\RfqLifecyclePreconditionException;
 use Nexus\Sourcing\Exceptions\UnsupportedRfqBulkActionException;
 use Nexus\Sourcing\ValueObjects\RfqBulkAction;
@@ -15,6 +14,8 @@ use Nexus\SourcingOperations\Contracts\RfqLifecyclePersistPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqLifecycleQueryPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqLineItemPersistPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqLineItemQueryPortInterface;
+use Nexus\SourcingOperations\Contracts\SourcingRfqStatusTransitionPolicyInterface;
+use Nexus\SourcingOperations\Contracts\SourcingTransactionManagerInterface;
 use Nexus\SourcingOperations\DTOs\ApplyRfqBulkActionCommand;
 use Nexus\SourcingOperations\DTOs\DuplicateRfqCommand;
 use Nexus\SourcingOperations\DTOs\RemindRfqInvitationCommand;
@@ -29,6 +30,41 @@ use PHPUnit\Framework\TestCase;
 
 final class RfqLifecycleCoordinatorTest extends TestCase
 {
+    private function createTransactionManagerStub(?array &$calls = null): SourcingTransactionManagerInterface
+    {
+        return new class($calls) implements SourcingTransactionManagerInterface {
+            /**
+             * @param array<int, string>|null $calls
+             */
+            public function __construct(private ?array &$calls)
+            {
+            }
+
+            public function transaction(callable $callback): mixed
+            {
+                if ($this->calls !== null) {
+                    $this->calls[] = 'begin';
+                }
+
+                try {
+                    $result = $callback();
+
+                    if ($this->calls !== null) {
+                        $this->calls[] = 'commit';
+                    }
+
+                    return $result;
+                } catch (\Throwable $throwable) {
+                    if ($this->calls !== null) {
+                        $this->calls[] = 'rollback';
+                    }
+
+                    throw $throwable;
+                }
+            }
+        };
+    }
+
     public function test_duplicate_uses_tenant_scoped_reads_and_copies_only_approved_data(): void
     {
         $tenantId = 'tenant-001';
@@ -162,6 +198,8 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             }
         };
 
+        $transactionCalls = [];
+
         $coordinator = new SourcingOperationsCoordinator(
             $query,
             $persist,
@@ -170,7 +208,8 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             $this->createMock(RfqInvitationQueryPortInterface::class),
             $this->createMock(RfqInvitationPersistPortInterface::class),
             $this->createMock(RfqInvitationReminderPortInterface::class),
-            $this->createMock(RfqStatusTransitionPolicyInterface::class),
+            $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class),
+            $this->createTransactionManagerStub($transactionCalls),
         );
 
         $result = $coordinator->duplicate(new DuplicateRfqCommand(
@@ -192,6 +231,7 @@ final class RfqLifecycleCoordinatorTest extends TestCase
         self::assertSame([[$tenantId, 'rfq-100']], $lineItemQuery->calls);
         self::assertCount(1, $persist->duplicateCalls);
         self::assertCount(1, $lineItemPersist->calls);
+        self::assertSame(['begin', 'commit'], $transactionCalls);
     }
 
     public function test_save_draft_rejects_non_draft_rfq(): void
@@ -238,7 +278,8 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             $this->createMock(RfqInvitationQueryPortInterface::class),
             $this->createMock(RfqInvitationPersistPortInterface::class),
             $this->createMock(RfqInvitationReminderPortInterface::class),
-            $this->createMock(RfqStatusTransitionPolicyInterface::class),
+            $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class),
+            $this->createTransactionManagerStub(),
         );
 
         $this->expectException(RfqLifecyclePreconditionException::class);
@@ -307,7 +348,8 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             $this->createMock(RfqInvitationQueryPortInterface::class),
             $this->createMock(RfqInvitationPersistPortInterface::class),
             $this->createMock(RfqInvitationReminderPortInterface::class),
-            $this->createMock(RfqStatusTransitionPolicyInterface::class),
+            $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class),
+            $this->createTransactionManagerStub(),
         );
 
         $result = $coordinator->saveDraft(new SaveRfqDraftCommand(
@@ -316,6 +358,7 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             title: 'Updated title',
             projectId: 'proj-2',
             paymentTerms: 'Net 45',
+            presentFields: ['title', 'project_id', 'payment_terms'],
         ));
 
         self::assertSame('save_draft', $result->action);
@@ -343,7 +386,7 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             }
         };
 
-        $policy = $this->createMock(RfqStatusTransitionPolicyInterface::class);
+        $policy = $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class);
         $policyCalls = [];
         $policy->expects(self::exactly(2))
             ->method('assertTransitionAllowed')
@@ -391,6 +434,7 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             $this->createMock(RfqInvitationPersistPortInterface::class),
             $this->createMock(RfqInvitationReminderPortInterface::class),
             $policy,
+            $this->createTransactionManagerStub(),
         );
 
         $result = $coordinator->applyBulkAction(new ApplyRfqBulkActionCommand(
@@ -419,7 +463,8 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             $this->createMock(RfqInvitationQueryPortInterface::class),
             $this->createMock(RfqInvitationPersistPortInterface::class),
             $this->createMock(RfqInvitationReminderPortInterface::class),
-            $this->createMock(RfqStatusTransitionPolicyInterface::class),
+            $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class),
+            $this->createTransactionManagerStub(),
         );
 
         $this->expectException(UnsupportedRfqBulkActionException::class);
@@ -445,7 +490,7 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             }
         };
 
-        $policy = $this->createMock(RfqStatusTransitionPolicyInterface::class);
+        $policy = $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class);
         $policy->expects(self::once())
             ->method('assertTransitionAllowed')
             ->with('draft', 'published');
@@ -490,6 +535,7 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             $this->createMock(RfqInvitationPersistPortInterface::class),
             $this->createMock(RfqInvitationReminderPortInterface::class),
             $policy,
+            $this->createTransactionManagerStub(),
         );
 
         $result = $coordinator->transitionStatus(new TransitionRfqStatusCommand(
@@ -520,6 +566,7 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             vendorEmail: 'vendor@example.com',
             vendorName: 'Vendor Co',
             status: 'pending',
+            channel: 'email',
         );
 
         $query = new class($rfq, $invitation) implements RfqLifecycleQueryPortInterface, RfqInvitationQueryPortInterface {
@@ -565,6 +612,7 @@ final class RfqLifecycleCoordinatorTest extends TestCase
                     vendorEmail: $invitation->vendorEmail,
                     vendorName: $invitation->vendorName,
                     status: $invitation->status,
+                    channel: $invitation->channel,
                 );
             }
         };
@@ -586,7 +634,8 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             $query,
             $persist,
             $reminder,
-            $this->createMock(RfqStatusTransitionPolicyInterface::class),
+            $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class),
+            $this->createTransactionManagerStub(),
         );
 
         $result = $coordinator->remindInvitation(new RemindRfqInvitationCommand(
@@ -605,6 +654,8 @@ final class RfqLifecycleCoordinatorTest extends TestCase
         self::assertCount(1, $query->invitationCalls);
         self::assertCount(1, $persist->calls);
         self::assertCount(1, $reminder->calls);
+        self::assertSame($invitation->id, $persist->calls[0][0]->id);
+        self::assertSame($invitation->id, $reminder->calls[0][1]->id);
     }
 
     public function test_remind_invitation_rejects_cross_tenant_resources(): void
@@ -629,7 +680,8 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             $query,
             $this->createMock(RfqInvitationPersistPortInterface::class),
             $this->createMock(RfqInvitationReminderPortInterface::class),
-            $this->createMock(RfqStatusTransitionPolicyInterface::class),
+            $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class),
+            $this->createTransactionManagerStub(),
         );
 
         $this->expectException(RfqLifecyclePreconditionException::class);
@@ -640,5 +692,200 @@ final class RfqLifecycleCoordinatorTest extends TestCase
             invitationId: 'inv-1',
             requestedByPrincipalId: 'user-7',
         ));
+    }
+
+    public function test_save_draft_can_clear_nullable_fields_when_present_with_null(): void
+    {
+        $query = new class implements RfqLifecycleQueryPortInterface {
+            public function findByTenantAndId(string $tenantId, string $rfqId): ?RfqLifecycleRecord
+            {
+                return new RfqLifecycleRecord(
+                    tenantId: $tenantId,
+                    rfqId: $rfqId,
+                    status: 'draft',
+                    title: 'Original title',
+                    projectId: 'proj-1',
+                    description: 'Original description',
+                    estimatedValue: 1200.0,
+                    paymentTerms: 'Net 30',
+                );
+            }
+        };
+
+        $persist = new class implements RfqLifecyclePersistPortInterface {
+            public ?RfqLifecycleRecord $savedRecord = null;
+
+            public function createDuplicate(RfqLifecycleRecord $sourceRfq, DuplicateRfqCommand $command, array $lineItems): RfqLifecycleRecord
+            {
+                throw new \LogicException('Unexpected createDuplicate call.');
+            }
+
+            public function saveDraft(RfqLifecycleRecord $rfq, SaveRfqDraftCommand $command): RfqLifecycleRecord
+            {
+                $this->savedRecord = $rfq;
+
+                return $rfq;
+            }
+
+            public function transitionStatus(RfqLifecycleRecord $rfq, TransitionRfqStatusCommand $command): RfqLifecycleRecord
+            {
+                throw new \LogicException('Unexpected transitionStatus call.');
+            }
+
+            public function applyBulkAction(string $tenantId, RfqBulkAction $action, array $rfqIds): int
+            {
+                throw new \LogicException('Unexpected applyBulkAction call.');
+            }
+        };
+
+        $coordinator = new SourcingOperationsCoordinator(
+            $query,
+            $persist,
+            $this->createMock(RfqLineItemQueryPortInterface::class),
+            $this->createMock(RfqLineItemPersistPortInterface::class),
+            $this->createMock(RfqInvitationQueryPortInterface::class),
+            $this->createMock(RfqInvitationPersistPortInterface::class),
+            $this->createMock(RfqInvitationReminderPortInterface::class),
+            $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class),
+            $this->createTransactionManagerStub(),
+        );
+
+        $coordinator->saveDraft(new SaveRfqDraftCommand(
+            tenantId: 'tenant-001',
+            rfqId: 'rfq-100',
+            projectId: null,
+            description: null,
+            estimatedValue: null,
+            paymentTerms: null,
+            presentFields: ['project_id', 'description', 'estimated_value', 'payment_terms'],
+        ));
+
+        self::assertNotNull($persist->savedRecord);
+        self::assertNull($persist->savedRecord?->projectId);
+        self::assertNull($persist->savedRecord?->description);
+        self::assertNull($persist->savedRecord?->estimatedValue);
+        self::assertNull($persist->savedRecord?->paymentTerms);
+        self::assertSame('Original title', $persist->savedRecord?->title);
+    }
+
+    public function test_bulk_action_rejects_preloaded_records_that_do_not_match_requested_ids(): void
+    {
+        $policy = $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class);
+        $policy->expects(self::once())
+            ->method('assertTransitionAllowed')
+            ->with('published', 'closed');
+
+        $persist = $this->createMock(RfqLifecyclePersistPortInterface::class);
+        $persist->expects(self::never())->method('applyBulkAction');
+
+        $coordinator = new SourcingOperationsCoordinator(
+            $this->createMock(RfqLifecycleQueryPortInterface::class),
+            $persist,
+            $this->createMock(RfqLineItemQueryPortInterface::class),
+            $this->createMock(RfqLineItemPersistPortInterface::class),
+            $this->createMock(RfqInvitationQueryPortInterface::class),
+            $this->createMock(RfqInvitationPersistPortInterface::class),
+            $this->createMock(RfqInvitationReminderPortInterface::class),
+            $policy,
+            $this->createTransactionManagerStub(),
+        );
+
+        $this->expectException(RfqLifecyclePreconditionException::class);
+
+        $coordinator->applyBulkAction(
+            new ApplyRfqBulkActionCommand(
+                tenantId: 'tenant-001',
+                action: 'close',
+                rfqIds: ['rfq-1', 'rfq-2'],
+            ),
+            [
+                new RfqLifecycleRecord(
+                    tenantId: 'tenant-001',
+                    rfqId: 'rfq-1',
+                    status: 'published',
+                    title: 'RFQ 1',
+                ),
+            ],
+        );
+    }
+
+    public function test_remind_invitation_persists_only_after_successful_delivery(): void
+    {
+        $rfq = new RfqLifecycleRecord(
+            tenantId: 'tenant-001',
+            rfqId: 'rfq-100',
+            status: 'published',
+            title: 'Server Refresh',
+        );
+        $invitation = new RfqInvitationRecord(
+            id: 'inv-1',
+            tenantId: 'tenant-001',
+            rfqId: 'rfq-100',
+            vendorEmail: 'vendor@example.com',
+            vendorName: 'Vendor Co',
+            status: 'pending',
+            channel: 'email',
+        );
+
+        $query = new class($rfq, $invitation) implements RfqLifecycleQueryPortInterface, RfqInvitationQueryPortInterface {
+            public function __construct(
+                private readonly RfqLifecycleRecord $rfq,
+                private readonly RfqInvitationRecord $invitation,
+            ) {
+            }
+
+            public function findByTenantAndId(string $tenantId, string $rfqId): ?RfqLifecycleRecord
+            {
+                return $this->rfq;
+            }
+
+            public function findInvitationByTenantAndId(string $tenantId, string $rfqId, string $invitationId): ?RfqInvitationRecord
+            {
+                return $this->invitation;
+            }
+        };
+
+        $persist = new class implements RfqInvitationPersistPortInterface {
+            public int $calls = 0;
+
+            public function markInvitationReminded(RfqInvitationRecord $invitation, RemindRfqInvitationCommand $command): RfqInvitationRecord
+            {
+                ++$this->calls;
+
+                return $invitation;
+            }
+        };
+
+        $reminder = new class implements RfqInvitationReminderPortInterface {
+            public function sendReminder(RfqLifecycleRecord $rfq, RfqInvitationRecord $invitation, RemindRfqInvitationCommand $command): void
+            {
+                throw new \RuntimeException('Delivery failed.');
+            }
+        };
+
+        $coordinator = new SourcingOperationsCoordinator(
+            $query,
+            $this->createMock(RfqLifecyclePersistPortInterface::class),
+            $this->createMock(RfqLineItemQueryPortInterface::class),
+            $this->createMock(RfqLineItemPersistPortInterface::class),
+            $query,
+            $persist,
+            $reminder,
+            $this->createMock(SourcingRfqStatusTransitionPolicyInterface::class),
+            $this->createTransactionManagerStub(),
+        );
+
+        $this->expectException(\RuntimeException::class);
+
+        try {
+            $coordinator->remindInvitation(new RemindRfqInvitationCommand(
+                tenantId: 'tenant-001',
+                rfqId: 'rfq-100',
+                invitationId: 'inv-1',
+                requestedByPrincipalId: 'user-7',
+            ));
+        } finally {
+            self::assertSame(0, $persist->calls);
+        }
     }
 }

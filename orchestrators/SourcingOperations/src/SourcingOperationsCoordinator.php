@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\SourcingOperations;
 
-use Nexus\Sourcing\Contracts\RfqStatusTransitionPolicyInterface;
 use Nexus\Sourcing\Exceptions\RfqLifecyclePreconditionException;
 use Nexus\Sourcing\Exceptions\UnsupportedRfqBulkActionException;
 use Nexus\Sourcing\ValueObjects\RfqBulkAction;
@@ -17,6 +16,8 @@ use Nexus\SourcingOperations\Contracts\RfqLifecyclePersistPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqLifecycleQueryPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqLineItemPersistPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqLineItemQueryPortInterface;
+use Nexus\SourcingOperations\Contracts\SourcingRfqStatusTransitionPolicyInterface;
+use Nexus\SourcingOperations\Contracts\SourcingTransactionManagerInterface;
 use Nexus\SourcingOperations\DTOs\ApplyRfqBulkActionCommand;
 use Nexus\SourcingOperations\DTOs\DuplicateRfqCommand;
 use Nexus\SourcingOperations\DTOs\RemindRfqInvitationCommand;
@@ -38,7 +39,8 @@ final readonly class SourcingOperationsCoordinator implements RfqLifecycleCoordi
         private RfqInvitationQueryPortInterface $invitationQuery,
         private RfqInvitationPersistPortInterface $invitationPersist,
         private RfqInvitationReminderPortInterface $invitationReminder,
-        private RfqStatusTransitionPolicyInterface $statusTransitionPolicy,
+        private SourcingRfqStatusTransitionPolicyInterface $statusTransitionPolicy,
+        private SourcingTransactionManagerInterface $transactionManager,
     ) {
     }
 
@@ -50,13 +52,19 @@ final readonly class SourcingOperationsCoordinator implements RfqLifecycleCoordi
         $source = $this->loadRfq($command->tenantId, $command->sourceRfqId);
         $lineItems = $this->lineItemQuery->findByTenantAndRfqId($command->tenantId, $command->sourceRfqId);
 
-        $duplicated = $this->rfqPersist->createDuplicate($source, $command, $lineItems);
-        $copiedLineItemCount = $this->lineItemPersist->copyToRfq(
-            $command->tenantId,
-            $source->rfqId,
-            $duplicated->rfqId,
-            $lineItems,
-        );
+        $duplicateResult = $this->transactionManager->transaction(function () use ($command, $source, $lineItems): array {
+            $duplicated = $this->rfqPersist->createDuplicate($source, $command, $lineItems);
+            $copiedLineItemCount = $this->lineItemPersist->copyToRfq(
+                $command->tenantId,
+                $source->rfqId,
+                $duplicated->rfqId,
+                $lineItems,
+            );
+
+            return [$duplicated, $copiedLineItemCount];
+        });
+        /** @var array{0: RfqLifecycleRecord, 1: int} $duplicateResult */
+        [$duplicated, $copiedLineItemCount] = $duplicateResult;
 
         return new RfqLifecycleOutcome(
             action: 'duplicate',
@@ -81,18 +89,18 @@ final readonly class SourcingOperationsCoordinator implements RfqLifecycleCoordi
             tenantId: $rfq->tenantId,
             rfqId: $rfq->rfqId,
             status: $rfq->status,
-            title: $command->title ?? $rfq->title,
-            projectId: $command->projectId ?? $rfq->projectId,
-            description: $command->description ?? $rfq->description,
-            estimatedValue: $command->estimatedValue ?? $rfq->estimatedValue,
-            savingsPercentage: $command->savingsPercentage ?? $rfq->savingsPercentage,
-            submissionDeadline: $command->submissionDeadline ?? $rfq->submissionDeadline,
-            closingDate: $command->closingDate ?? $rfq->closingDate,
-            expectedAwardAt: $command->expectedAwardAt ?? $rfq->expectedAwardAt,
-            technicalReviewDueAt: $command->technicalReviewDueAt ?? $rfq->technicalReviewDueAt,
-            financialReviewDueAt: $command->financialReviewDueAt ?? $rfq->financialReviewDueAt,
-            paymentTerms: $command->paymentTerms ?? $rfq->paymentTerms,
-            evaluationMethod: $command->evaluationMethod ?? $rfq->evaluationMethod,
+            title: $command->hasTitle() ? $command->title : $rfq->title,
+            projectId: $command->hasProjectId() ? $command->projectId : $rfq->projectId,
+            description: $command->hasDescription() ? $command->description : $rfq->description,
+            estimatedValue: $command->hasEstimatedValue() ? $command->estimatedValue : $rfq->estimatedValue,
+            savingsPercentage: $command->hasSavingsPercentage() ? $command->savingsPercentage : $rfq->savingsPercentage,
+            submissionDeadline: $command->hasSubmissionDeadline() ? $command->submissionDeadline : $rfq->submissionDeadline,
+            closingDate: $command->hasClosingDate() ? $command->closingDate : $rfq->closingDate,
+            expectedAwardAt: $command->hasExpectedAwardAt() ? $command->expectedAwardAt : $rfq->expectedAwardAt,
+            technicalReviewDueAt: $command->hasTechnicalReviewDueAt() ? $command->technicalReviewDueAt : $rfq->technicalReviewDueAt,
+            financialReviewDueAt: $command->hasFinancialReviewDueAt() ? $command->financialReviewDueAt : $rfq->financialReviewDueAt,
+            paymentTerms: $command->hasPaymentTerms() ? $command->paymentTerms : $rfq->paymentTerms,
+            evaluationMethod: $command->hasEvaluationMethod() ? $command->evaluationMethod : $rfq->evaluationMethod,
         );
 
         $saved = $this->rfqPersist->saveDraft($updated, $command);
@@ -138,6 +146,23 @@ final readonly class SourcingOperationsCoordinator implements RfqLifecycleCoordi
                 }
                 $this->statusTransitionPolicy->assertTransitionAllowed($rfq->status, $targetStatus);
             }
+
+            $requestedIds = $command->rfqIds;
+            sort($requestedIds);
+
+            $recordIds = array_map(
+                static fn (RfqLifecycleRecord $rfq): string => $rfq->rfqId,
+                $records,
+            );
+            sort($recordIds);
+
+            if ($recordIds !== $requestedIds) {
+                throw RfqLifecyclePreconditionException::forRfq(
+                    implode(',', $command->rfqIds),
+                    'preloaded RFQ records do not match the requested bulk-action IDs.',
+                );
+            }
+
             $affected = $this->rfqPersist->applyBulkAction($command->tenantId, $bulkAction, $command->rfqIds);
         }
 
@@ -182,8 +207,8 @@ final readonly class SourcingOperationsCoordinator implements RfqLifecycleCoordi
             ));
         }
 
+        $this->invitationReminder->sendReminder($rfq, $invitation, $command);
         $marked = $this->invitationPersist->markInvitationReminded($invitation, $command);
-        $this->invitationReminder->sendReminder($rfq, $marked, $command);
 
         return new RfqLifecycleOutcome(
             action: 'remind_invitation',

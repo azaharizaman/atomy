@@ -77,6 +77,17 @@
 
 ---
 
+## 11. Sourcing lifecycle review pass
+
+- [ ] Layer 2 sourcing coordinators depend on **orchestrator-local contracts** for policies and transaction management, not directly on Layer 1 concrete contracts or `DB` facades.
+- [ ] Multi-write lifecycle flows such as RFQ duplication wrap all dependent persistence steps in **one adapter-owned transaction boundary** so partial duplicates cannot leak on failure.
+- [ ] Reminder / notification workflows update persisted delivery metadata **only after** the notifier/mailer dispatch succeeds.
+- [ ] Request-to-DTO patch flows do not use bare **`??`** merges for nullable fields; they track **field presence** so explicit null clears survive into persistence.
+- [ ] DTOs and adapter mappings stay in sync with actual usage (for example, if logs or notifiers need invitation `channel`, the DTO and query/persist mapping expose it).
+- [ ] Reviewers check request validation against persistence schema for nullable fields so API contracts do not advertise clears that the database cannot store.
+
+---
+
 ## Review output template (append to code-reviewer response)
 
 ```markdown
@@ -91,6 +102,7 @@
 - §8 Docs/plans: …
 - §9 Password reset: …
 - §10 Verification: …
+- §11 Sourcing lifecycle: …
 ```
 
 When **no** paths under **`apps/atomy-q/`** appear in the diff, still state: **`### Atomy-Q guideline pass: N/A`** (no Atomy-Q files in scope).

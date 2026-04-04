@@ -830,6 +830,7 @@ final class RfqController extends Controller
                 financialReviewDueAt: array_key_exists('financial_review_due_at', $validated) && $validated['financial_review_due_at'] !== null ? Carbon::parse((string) $validated['financial_review_due_at'])->toAtomString() : null,
                 paymentTerms: is_string($validated['payment_terms'] ?? null) ? $validated['payment_terms'] : null,
                 evaluationMethod: is_string($validated['evaluation_method'] ?? null) ? $validated['evaluation_method'] : null,
+                presentFields: array_keys($validated),
             ));
         } catch (RfqLifecyclePreconditionException $exception) {
             return $this->lifecyclePreconditionResponse($exception);

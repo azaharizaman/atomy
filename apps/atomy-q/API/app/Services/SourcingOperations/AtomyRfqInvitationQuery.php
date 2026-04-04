@@ -29,6 +29,7 @@ final readonly class AtomyRfqInvitationQuery implements RfqInvitationQueryPortIn
             vendorEmail: $invitation->vendor_email,
             vendorName: $invitation->vendor_name,
             status: (string) $invitation->status,
+            channel: $invitation->channel,
         );
     }
 }

@@ -35,6 +35,8 @@ use App\Services\SourcingOperations\AtomyRfqLifecyclePersist;
 use App\Services\SourcingOperations\AtomyRfqLifecycleQuery;
 use App\Services\SourcingOperations\AtomyRfqLineItemPersist;
 use App\Services\SourcingOperations\AtomyRfqLineItemQuery;
+use App\Services\SourcingOperations\AtomySourcingRfqStatusTransitionPolicy;
+use App\Services\SourcingOperations\AtomySourcingTransactionManager;
 use App\Services\Task\AtomyTaskPersist;
 use App\Services\Task\AtomyTaskQuery;
 use App\Services\Tenant\RequestTenantContext;
@@ -76,6 +78,8 @@ use Nexus\SourcingOperations\Contracts\RfqLifecyclePersistPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqLifecycleQueryPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqLineItemPersistPortInterface;
 use Nexus\SourcingOperations\Contracts\RfqLineItemQueryPortInterface;
+use Nexus\SourcingOperations\Contracts\SourcingRfqStatusTransitionPolicyInterface;
+use Nexus\SourcingOperations\Contracts\SourcingTransactionManagerInterface;
 use Nexus\SourcingOperations\SourcingOperationsCoordinator;
 use Nexus\Task\Contracts\TaskManagerInterface;
 use Nexus\Task\Contracts\TaskPersistInterface;
@@ -215,6 +219,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RfqInvitationPersistPortInterface::class, AtomyRfqInvitationPersist::class);
         $this->app->bind(RfqInvitationReminderPortInterface::class, AtomyRfqInvitationReminder::class);
         $this->app->singleton(RfqStatusTransitionPolicyInterface::class, RfqStatusTransitionPolicy::class);
+        $this->app->bind(SourcingRfqStatusTransitionPolicyInterface::class, AtomySourcingRfqStatusTransitionPolicy::class);
+        $this->app->bind(SourcingTransactionManagerInterface::class, AtomySourcingTransactionManager::class);
         $this->app->singleton(RfqLifecycleCoordinatorInterface::class, SourcingOperationsCoordinator::class);
 
         // Nexus Identity (L3): required by nexus/laravel-identity-adapter for SSO + coordinator resolution.

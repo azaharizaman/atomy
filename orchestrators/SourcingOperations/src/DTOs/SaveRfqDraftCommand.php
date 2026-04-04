@@ -22,6 +22,10 @@ final readonly class SaveRfqDraftCommand
     public ?string $financialReviewDueAt;
     public ?string $paymentTerms;
     public ?string $evaluationMethod;
+    /**
+     * @var array<string, true>
+     */
+    private array $presentFields;
 
     public function __construct(
         string $tenantId,
@@ -38,6 +42,7 @@ final readonly class SaveRfqDraftCommand
         ?string $financialReviewDueAt = null,
         ?string $paymentTerms = null,
         ?string $evaluationMethod = null,
+        array $presentFields = [],
     ) {
         if (trim($tenantId) === '') {
             throw new CommandValidationException('Tenant id cannot be empty.');
@@ -62,5 +67,81 @@ final readonly class SaveRfqDraftCommand
         $this->financialReviewDueAt = ($financialReviewDueAt !== null && trim($financialReviewDueAt) !== '') ? trim($financialReviewDueAt) : null;
         $this->paymentTerms = ($paymentTerms !== null && trim($paymentTerms) !== '') ? trim($paymentTerms) : null;
         $this->evaluationMethod = ($evaluationMethod !== null && trim($evaluationMethod) !== '') ? trim($evaluationMethod) : null;
+        $presentFieldMap = [];
+
+        foreach ($presentFields as $field) {
+            if (!is_string($field) || trim($field) === '') {
+                continue;
+            }
+
+            $presentFieldMap[trim($field)] = true;
+        }
+
+        $this->presentFields = $presentFieldMap;
+    }
+
+    public function hasTitle(): bool
+    {
+        return $this->hasField('title');
+    }
+
+    public function hasDescription(): bool
+    {
+        return $this->hasField('description');
+    }
+
+    public function hasProjectId(): bool
+    {
+        return $this->hasField('project_id');
+    }
+
+    public function hasEstimatedValue(): bool
+    {
+        return $this->hasField('estimated_value');
+    }
+
+    public function hasSavingsPercentage(): bool
+    {
+        return $this->hasField('savings_percentage');
+    }
+
+    public function hasSubmissionDeadline(): bool
+    {
+        return $this->hasField('submission_deadline');
+    }
+
+    public function hasClosingDate(): bool
+    {
+        return $this->hasField('closing_date');
+    }
+
+    public function hasExpectedAwardAt(): bool
+    {
+        return $this->hasField('expected_award_at');
+    }
+
+    public function hasTechnicalReviewDueAt(): bool
+    {
+        return $this->hasField('technical_review_due_at');
+    }
+
+    public function hasFinancialReviewDueAt(): bool
+    {
+        return $this->hasField('financial_review_due_at');
+    }
+
+    public function hasPaymentTerms(): bool
+    {
+        return $this->hasField('payment_terms');
+    }
+
+    public function hasEvaluationMethod(): bool
+    {
+        return $this->hasField('evaluation_method');
+    }
+
+    private function hasField(string $field): bool
+    {
+        return array_key_exists($field, $this->presentFields);
     }
 }

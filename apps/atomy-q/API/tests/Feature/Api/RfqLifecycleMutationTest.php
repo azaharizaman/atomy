@@ -160,6 +160,44 @@ final class RfqLifecycleMutationTest extends ApiTestCase
         ]);
     }
 
+    public function test_save_draft_can_clear_nullable_fields_with_explicit_nulls(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $rfq = $this->createRfq($user, [
+            'description' => 'Needs clearing',
+            'payment_terms' => 'Net 45',
+            'expected_award_at' => now()->addDays(14),
+            'technical_review_due_at' => now()->addDays(8),
+            'financial_review_due_at' => now()->addDays(9),
+        ]);
+
+        $response = $this->putJson(
+            '/api/v1/rfqs/' . $rfq->id . '/draft',
+            [
+                'description' => null,
+                'payment_terms' => null,
+                'expected_award_at' => null,
+                'technical_review_due_at' => null,
+                'financial_review_due_at' => null,
+            ],
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.description', null);
+        $response->assertJsonPath('data.payment_terms', null);
+
+        $this->assertDatabaseHas('rfqs', [
+            'id' => $rfq->id,
+            'description' => null,
+            'payment_terms' => null,
+            'expected_award_at' => null,
+            'technical_review_due_at' => null,
+            'financial_review_due_at' => null,
+        ]);
+    }
+
     public function test_save_draft_rejects_non_draft_rfqs(): void
     {
         $tenantId = (string) Str::ulid();

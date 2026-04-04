@@ -12,6 +12,7 @@ final readonly class RfqInvitationRecord
     public ?string $vendorEmail;
     public ?string $vendorName;
     public string $status;
+    public ?string $channel;
 
     public function __construct(
         string $id,
@@ -20,6 +21,7 @@ final readonly class RfqInvitationRecord
         ?string $vendorEmail,
         ?string $vendorName,
         string $status,
+        ?string $channel = null,
     ) {
         if (trim($id) === '') {
             throw new \InvalidArgumentException('Invitation id cannot be empty.');
@@ -43,5 +45,6 @@ final readonly class RfqInvitationRecord
         $this->vendorEmail = $vendorEmail !== null ? trim($vendorEmail) : null;
         $this->vendorName = $vendorName !== null ? trim($vendorName) : null;
         $this->status = trim($status);
+        $this->channel = $channel !== null ? trim($channel) : null;
     }
 }
