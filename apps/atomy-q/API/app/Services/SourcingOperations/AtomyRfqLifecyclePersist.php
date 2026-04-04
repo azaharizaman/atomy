@@ -34,7 +34,15 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
     {
         // The coordinator intentionally owns line-item copying so core RFQ persistence and child-copy
         // orchestration can stay split across ports inside one transaction boundary.
-        $source = $this->findModel($command->tenantId, $sourceRfq->rfqId);
+
+        // Sanity check: verify $sourceRfq represents the same entity as $command->sourceRfqId
+        if ($sourceRfq->rfqId !== $command->sourceRfqId) {
+            throw new \InvalidArgumentException(
+                "Source RFQ ID mismatch: record has '{$sourceRfq->rfqId}' but command specifies '{$command->sourceRfqId}'"
+            );
+        }
+
+        $source = $this->findModel($command->tenantId, $command->sourceRfqId);
 
         for ($attempt = 0; $attempt < self::DUPLICATE_NUMBER_RETRY_LIMIT; ++$attempt) {
             try {
@@ -71,12 +79,12 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
                 }
 
                 if ($attempt === self::DUPLICATE_NUMBER_RETRY_LIMIT - 1) {
-                    throw DuplicateRfqNumberException::fromStorageFailure($command->tenantId, $sourceRfq->rfqId, $exception);
+                    throw DuplicateRfqNumberException::fromStorageFailure($command->tenantId, $command->sourceRfqId, $exception);
                 }
             }
         }
 
-        throw DuplicateRfqNumberException::afterRetries($command->tenantId, $sourceRfq->rfqId);
+        throw DuplicateRfqNumberException::afterRetries($command->tenantId, $command->sourceRfqId);
     }
 
     public function saveDraft(RfqLifecycleRecord $rfq, SaveRfqDraftCommand $command): RfqLifecycleRecord
@@ -164,11 +172,12 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
         $driverCode = (string) ($exception->errorInfo[1] ?? '');
         $message = strtolower($exception->getMessage());
 
-        return $errorCode === '23000'
-            || $errorCode === '23505'
-            || $driverCode === '1062'
-            || str_contains($message, 'unique')
-            || str_contains($message, 'rfqs_tenant_id_rfq_number_unique');
+        // Only return true for unique-index violations on the RFQ number constraint
+        $isUniqueViolation = $errorCode === '23505' || $driverCode === '1062';
+        $isRfqNumberConstraint = str_contains($message, 'rfqs_tenant_id_rfq_number_unique')
+            || str_contains($message, 'rfqs.tenant_id, rfqs.rfq_number');
+
+        return $isUniqueViolation && $isRfqNumberConstraint;
     }
 
     private function extractNumericSuffix(string $rfqNumber, string $prefix): int

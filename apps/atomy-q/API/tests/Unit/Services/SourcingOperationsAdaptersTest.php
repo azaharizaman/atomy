@@ -38,26 +38,25 @@ final class SourcingOperationsAdaptersTest extends TestCase
 
         Schema::dropIfExists('rfqs');
         Schema::create('rfqs', static function ($table): void {
-            $table->string('id')->primary();
-            $table->string('tenant_id')->index();
+            $table->ulid('id')->primary();
+            $table->ulid('tenant_id')->index();
             $table->string('rfq_number');
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('category')->nullable();
             $table->string('department')->nullable();
             $table->string('status')->default('draft');
-            $table->string('owner_id');
-            $table->string('project_id')->nullable();
-            $table->decimal('estimated_value', 15, 2)->nullable();
-            $table->decimal('savings_percentage', 5, 2)->nullable();
+            $table->ulid('owner_id');
+            $table->decimal('estimated_value', 15, 2)->default(0);
+            $table->decimal('savings_percentage', 5, 2)->default(0);
             $table->timestamp('submission_deadline')->nullable();
             $table->timestamp('closing_date')->nullable();
-            $table->timestamp('expected_award_at')->nullable();
-            $table->timestamp('technical_review_due_at')->nullable();
-            $table->timestamp('financial_review_due_at')->nullable();
             $table->string('payment_terms')->nullable();
             $table->string('evaluation_method')->nullable();
             $table->timestamps();
+
+            $table->index(['tenant_id', 'status']);
+            $table->index(['tenant_id', 'owner_id']);
             $table->unique(['tenant_id', 'rfq_number']);
         });
     }
