@@ -42,10 +42,10 @@ There is also active in-flight work in the workspace around quote lifecycle prod
    - Evidence: the vendor controller returns empty arrays and "Stub Vendor" responses (`apps/atomy-q/API/app/Http/Controllers/Api/V1/VendorController.php:23-75`), and the audit calls `/vendors` stubbed (`apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_RELEASE_AUDIT.md:69-78`).
    - Result: integrations and UI screens that depend on vendor browse/history/performance are not production-grade.
 
-3. **RFQ lifecycle mutations are still partially fake or unsafe**
-   - Why it matters: Alpha depends on duplicate/saveDraft/bulkAction working honestly and tenant-safely.
-   - Evidence: `duplicate` returns a hardcoded `stub-duplicate-id`, `saveDraft` just echoes the request id, and `bulkAction` returns `affected: 0` with tenant-scoping TODOs (`apps/atomy-q/API/app/Http/Controllers/Api/V1/RfqController.php:690-738`).
-   - Result: the app can show RFQ management UI, but important actions do not yet persist real business state.
+3. **RFQ lifecycle mutations have now been closed in the live API**
+   - Why it mattered: Alpha depends on duplicate/saveDraft/bulkAction working honestly and tenant-safely.
+   - Resolution on 2026-04-03: `POST /rfqs/{id}/duplicate`, `PUT /rfqs/{id}/draft`, `POST /rfqs/bulk-action`, `PATCH /rfqs/{id}/status`, and `POST /rfqs/{id}/invitations/{invId}/remind` now delegate through the Nexus `SourcingOperations` lifecycle boundary and persist real tenant-scoped state.
+   - Result: the RFQ management surface no longer depends on synthetic duplicate IDs, draft echo responses, or fake bulk-action counts.
 
 4. **Quote ingestion and AI normalization are not complete**
    - Why it matters: the Alpha scope explicitly requires real quote intake and AI-assisted normalization.
@@ -102,7 +102,7 @@ This is the most relevant current execution plan. It targets the exact live gaps
 
 ## Bottom line
 
-If Alpha were declared today, the biggest risk would not be lack of screens. It would be that the product still has several paths where the UI looks complete while the backend returns stub, seed, or partially wired behavior.
+If Alpha were declared today, the biggest risk would not be lack of screens. It would be that some paths still look complete while the backend returns stub, seed, or partially wired behavior outside the now-closed RFQ lifecycle mutation gap.
 
 The repo is close on structure and far from done on honesty. The next phase should focus on:
 

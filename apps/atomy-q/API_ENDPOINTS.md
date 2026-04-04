@@ -40,10 +40,10 @@ This document maps every required API endpoint to the UI screens, elements, and 
 | POST | `/rfqs` | Create RFQ | Submit/Publish button | Create a new RFQ |
 | GET | `/rfqs/:id` | RFQ Detail | Page load | Get single RFQ with full details |
 | PUT | `/rfqs/:id` | RFQ Detail | Edit action | Update RFQ metadata |
-| PATCH | `/rfqs/:id/status` | RFQ Detail | Close/Reopen/Archive actions | Transition RFQ status (close, reopen, archive) |
-| POST | `/rfqs/:id/duplicate` | RFQ List, RFQ Detail | Duplicate action | Clone RFQ as new draft |
-| PUT | `/rfqs/:id/draft` | Create RFQ | Save Draft button | Save current form state without validation |
-| POST | `/rfqs/bulk-action` | RFQ List | Bulk action toolbar | Bulk close, archive, or assign selected RFQs |
+| PATCH | `/rfqs/:id/status` | RFQ Detail | Status actions | Transition RFQ status through the shared lifecycle policy (`draft`, `published`, `closed`, `awarded`, `cancelled`) |
+| POST | `/rfqs/:id/duplicate` | RFQ List, RFQ Detail | Duplicate action | Clone RFQ as a real persisted draft, copying RFQ core fields and line items |
+| PUT | `/rfqs/:id/draft` | Create RFQ | Save Draft button | Persist allowed draft-editable RFQ fields for draft RFQs |
+| POST | `/rfqs/bulk-action` | RFQ List | Bulk action toolbar | Bulk close or cancel selected RFQs with real affected counts |
 | GET | `/rfqs/:id/line-items` | RFQ Detail, Create RFQ | Line items tab/section | List line items for an RFQ |
 | POST | `/rfqs/:id/line-items` | Create RFQ | Line item editor | Add line item to RFQ |
 | PUT | `/rfqs/:id/line-items/:itemId` | Create RFQ | Line item editor | Update a line item |
@@ -77,7 +77,7 @@ This document maps every required API endpoint to the UI screens, elements, and 
 |--------|----------|--------|---------------------|-------------|
 | GET | `/rfqs/:id/invitations` | RFQ Detail | Vendors tab | List vendor invitations for an RFQ |
 | POST | `/rfqs/:id/invitations` | RFQ Detail | Send Invitations slide-over | Send invitations to vendors |
-| POST | `/rfqs/:id/invitations/:invId/remind` | RFQ Detail | Send Reminder button | Send reminder to a specific vendor |
+| POST | `/rfqs/:id/invitations/:invId/remind` | RFQ Detail | Send Reminder button | Persist reminder metadata and trigger the RFQ invitation reminder boundary |
 
 ## 7. Quote Intake
 
@@ -425,4 +425,3 @@ Generic operational approval API (`Nexus\ApprovalOperations`), **not** RFQ quote
 | POST | `/operational-approvals/instances` | (optional future) | Start operational approval | Create instance from template + subject; policy + workflow correlation via orchestrator. |
 | GET | `/operational-approvals/instances/:instanceId` | (optional future) | Instance detail | SLA snapshot stub; 404 if missing or wrong tenant. |
 | POST | `/operational-approvals/instances/:instanceId/decisions` | (optional future) | Approve / Reject | Record decision; tenant-scoped. |
-

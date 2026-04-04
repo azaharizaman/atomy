@@ -11,7 +11,7 @@ import {
   conflictTypeLabel,
   useNormalizationReview,
 } from '@/hooks/use-normalization-review';
-import { useNormalizationSourceLines } from '@/hooks/use-normalization-source-lines';
+import { type NormalizationSourceLineRow, useNormalizationSourceLines } from '@/hooks/use-normalization-source-lines';
 import { useFreezeComparison } from '@/hooks/use-freeze-comparison';
 import { Lock, Unlock } from 'lucide-react';
 
@@ -146,6 +146,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
           <div className="space-y-2">
             {sourceLines.map((line, index) => {
               if (useMocks) {
+                const mockLine = line as (typeof MOCK_SOURCE_LINES)[number];
                 const lineNumber = getLineNumber(line, index);
                 const sourceCheckboxId = checkboxId('source', line.id);
                 return (
@@ -164,20 +165,21 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                       Select source line {lineNumber}
                     </label>
                     <span className="w-6 text-slate-500">{lineNumber}</span>
-                    <span className="flex-1 truncate text-slate-800">{line.description}</span>
-                    <span className="text-slate-500">{line.qty} {line.unit}</span>
-                    <span className="font-medium tabular-nums">{formatPrice(line.unitPrice)}</span>
-                    <StatusBadge status={line.conflict ? 'pending' : 'approved'} size="xs" label={line.confidence} />
+                    <span className="flex-1 truncate text-slate-800">{mockLine.description}</span>
+                    <span className="text-slate-500">{mockLine.qty} {mockLine.unit}</span>
+                    <span className="font-medium tabular-nums">{formatPrice(mockLine.unitPrice)}</span>
+                    <StatusBadge status={mockLine.conflict ? 'pending' : 'approved'} size="xs" label={mockLine.confidence} />
                   </div>
                 );
               }
 
-              const unitPrice = parseOptionalPrice(line.source_unit_price);
-              const lineNumber = getLineNumber(line, index);
-              const sourceCheckboxId = checkboxId('source', line.id);
+              const liveLine = line as NormalizationSourceLineRow;
+              const unitPrice = parseOptionalPrice(liveLine.source_unit_price);
+              const lineNumber = getLineNumber(liveLine, index);
+              const sourceCheckboxId = checkboxId('source', liveLine.id);
               return (
                 <div
-                  key={line.id}
+                  key={liveLine.id}
                   className="flex items-center gap-3 rounded border border-slate-200 px-3 py-2 text-xs"
                 >
                   <input
@@ -191,10 +193,10 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                     Select source line {lineNumber}
                   </label>
                   <span className="w-6 text-slate-500">{lineNumber}</span>
-                  <span className="flex-1 truncate text-slate-800">{line.source_description}</span>
-                  <span className="text-slate-500">{`${line.source_quantity ?? '—'} ${line.source_uom ?? ''}`.trim()}</span>
+                  <span className="flex-1 truncate text-slate-800">{liveLine.source_description}</span>
+                  <span className="text-slate-500">{`${liveLine.source_quantity ?? '—'} ${liveLine.source_uom ?? ''}`.trim()}</span>
                   <span className="font-medium tabular-nums">{formatPrice(unitPrice)}</span>
-                  <StatusBadge status={line.has_blocking_issue ? 'pending' : 'approved'} size="xs" label={line.confidence} />
+                  <StatusBadge status={liveLine.has_blocking_issue ? 'pending' : 'approved'} size="xs" label={liveLine.confidence} />
                 </div>
               );
             })}
@@ -207,6 +209,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
           <div className="space-y-2 text-xs">
             {sourceLines.map((line, index) => {
               if (useMocks) {
+                const mockLine = line as (typeof MOCK_SOURCE_LINES)[number];
                 const lineNumber = getLineNumber(line, index);
                 const mappingCheckboxId = checkboxId('mapping', line.id);
                 return (
@@ -228,18 +231,19 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                       <span>RFQ Line #{lineNumber}</span>
                     </span>
                     <span className="text-slate-500 font-mono">43211500</span>
-                    <span>{line.qty} {line.unit}</span>
-                    <span className="tabular-nums font-medium">{formatPrice(line.unitPrice)}</span>
+                    <span>{mockLine.qty} {mockLine.unit}</span>
+                    <span className="tabular-nums font-medium">{formatPrice(mockLine.unitPrice)}</span>
                   </div>
                 );
               }
 
-              const unitPrice = parseOptionalPrice(line.rfq_line_unit_price);
-              const lineNumber = getLineNumber(line, index);
-              const mappingCheckboxId = checkboxId('mapping', line.id);
+              const liveLine = line as NormalizationSourceLineRow;
+              const unitPrice = parseOptionalPrice(liveLine.rfq_line_unit_price);
+              const lineNumber = getLineNumber(liveLine, index);
+              const mappingCheckboxId = checkboxId('mapping', liveLine.id);
               return (
                 <div
-                  key={line.id}
+                  key={liveLine.id}
                   className="grid grid-cols-5 gap-2 rounded border border-slate-200 px-3 py-2 items-center"
                 >
                   <span className="col-span-2 flex items-center gap-2 truncate text-slate-800">
@@ -254,11 +258,11 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                       Select normalized line {lineNumber}
                     </label>
                     <span>
-                    {line.rfq_line_description ?? `RFQ Line #${(line.sort_order ?? index) + 1}`}
+                    {liveLine.rfq_line_description ?? `RFQ Line #${(liveLine.sort_order ?? index) + 1}`}
                     </span>
                   </span>
                   <span className="text-slate-500 font-mono">—</span>
-                  <span>{`${line.rfq_line_quantity ?? '—'} ${line.rfq_line_uom ?? ''}`.trim()}</span>
+                  <span>{`${liveLine.rfq_line_quantity ?? '—'} ${liveLine.rfq_line_uom ?? ''}`.trim()}</span>
                   <span className="tabular-nums font-medium">{formatPrice(unitPrice)}</span>
                 </div>
               );

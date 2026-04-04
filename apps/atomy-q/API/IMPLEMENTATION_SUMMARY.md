@@ -52,6 +52,24 @@
 - **Interactive UI:** `GET /docs/api` and `GET /docs/api.json` when the app is running.
 - **Static export (for WEB client generation):** `php artisan scramble:export --path=../openapi/openapi.json` from `apps/atomy-q/API` writes `apps/atomy-q/openapi/openapi.json`. Regenerate after meaningful API contract changes.
 
+## RFQ lifecycle mutations (2026-04-03)
+
+- `POST /api/v1/rfqs/{id}/duplicate` creates a real tenant-scoped duplicate RFQ and copies line items through `Nexus\SourcingOperations`.
+- `PUT /api/v1/rfqs/{id}/draft` persists draft-editable RFQ fields instead of echoing the request payload.
+- `POST /api/v1/rfqs/bulk-action` supports real persisted bulk `close` and `cancel` actions with honest affected counts.
+- `PATCH /api/v1/rfqs/{id}/status` delegates to the shared RFQ lifecycle transition policy rather than controller-local status assignment.
+- `POST /api/v1/rfqs/{id}/invitations/{invId}/remind` enforces tenant-scoped RFQ/invitation lookup and stores `vendor_invitations.reminded_at`.
+- Layer 3 bindings live in `AppServiceProvider`; the Laravel adapters sit under `App\Services\SourcingOperations\*`.
+
+## RFQ lifecycle hardening (2026-04-04)
+
+- Added Laravel bindings for orchestrator-local sourcing transaction and status-policy adapters so `SourcingOperationsCoordinator` stays Layer 2 clean while still using DB-backed transactions in Layer 3.
+- `AtomyRfqInvitationReminder` now dispatches a real `Nexus\Notifier` email reminder instead of log-only behavior, using the new `rfq-invitation-reminder` template and DTO-carried invitation `channel`.
+- Invitation reminder state is now persisted only after notification dispatch succeeds, preventing `reminded_at` from being written on delivery failure.
+- Draft saves now preserve explicit nulls for nullable fields that are actually present in the request instead of falling back through `??` to old values.
+- Duplicate RFQs now create `rfq_number` and insert inside a single transaction with retry on unique-key conflicts, closing the atomicity gap between number generation and persistence.
+- Bulk-action execution now rejects preloaded record sets that do not exactly match the requested RFQ ids, preventing writes against unvalidated identifiers.
+
 ## Endpoint Coverage
 
 All **203 endpoints** from `API_ENDPOINTS.md` are registered. The quote lifecycle slice now returns live tenant-scoped data and mutations; the remaining areas still use the earlier stub or partially live patterns documented below.

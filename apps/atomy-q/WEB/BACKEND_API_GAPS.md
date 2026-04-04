@@ -90,3 +90,11 @@ The following backend support is now live and consumed by the quote-lifecycle WE
 - [x] `GET /api/v1/approvals` returns the live pending approval queue that the RFQ-scoped approvals page now consumes.
 
 Remaining gaps for the quote lifecycle slice are now mostly UX polish and future workflow extensions, not core transport/API support.
+
+## RFQ lifecycle mutations
+
+- [x] `POST /api/v1/rfqs/{id}/duplicate` returns a real persisted RFQ instead of a synthetic stub ID.
+- [x] `PUT /api/v1/rfqs/{id}/draft` persists draft-editable fields.
+- [x] `POST /api/v1/rfqs/bulk-action` now performs live `close` / `cancel` mutations with honest affected counts.
+- [x] `PATCH /api/v1/rfqs/{id}/status` now uses the shared lifecycle transition policy.
+- [x] `POST /api/v1/rfqs/{id}/invitations/{invId}/remind` is tenant-scoped and records reminder metadata.

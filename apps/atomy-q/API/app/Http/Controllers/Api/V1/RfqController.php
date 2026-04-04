@@ -7,6 +7,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Idempotency\IdempotencyCompletion;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RfqBulkActionRequest;
+use App\Http\Requests\RfqDraftRequest;
+use App\Http\Requests\RfqStatusTransitionRequest;
+use App\Http\Resources\RfqResource;
 use App\Models\Approval;
 use App\Models\ComparisonRun;
 use App\Models\Rfq;
@@ -21,6 +25,14 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
+use Nexus\Sourcing\Exceptions\InvalidRfqStatusTransitionException;
+use Nexus\Sourcing\Exceptions\RfqLifecyclePreconditionException;
+use Nexus\Sourcing\Exceptions\UnsupportedRfqBulkActionException;
+use Nexus\SourcingOperations\Contracts\RfqLifecycleCoordinatorInterface;
+use Nexus\SourcingOperations\DTOs\ApplyRfqBulkActionCommand;
+use Nexus\SourcingOperations\DTOs\DuplicateRfqCommand;
+use Nexus\SourcingOperations\DTOs\SaveRfqDraftCommand;
+use Nexus\SourcingOperations\DTOs\TransitionRfqStatusCommand;
 
 final class RfqController extends Controller
 {
@@ -28,6 +40,7 @@ final class RfqController extends Controller
 
     public function __construct(
         private readonly ProjectAclService $projectAcl,
+        private readonly RfqLifecycleCoordinatorInterface $rfqLifecycle,
     ) {
     }
 
@@ -81,6 +94,48 @@ final class RfqController extends Controller
                 'closing_date' => ['The closing date must be on or after the submission deadline.'],
             ]);
         }
+    }
+
+    private function findTenantScopedRfq(string $tenantId, string $id): ?Rfq
+    {
+        return Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where(function ($builder) use ($id): void {
+                $builder->where('id', $id)->orWhere('rfq_number', $id);
+            })
+            ->first();
+    }
+
+    private function loadResourceRfq(string $tenantId, string $rfqId): ?Rfq
+    {
+        return Rfq::query()
+            ->with(['project' => static function ($builder) use ($tenantId): void {
+                $builder->select(['id', 'name', 'tenant_id'])->where('tenant_id', $tenantId);
+            }])
+            ->where('tenant_id', $tenantId)
+            ->where('id', $rfqId)
+            ->first();
+    }
+
+    private function resourceResponse(Rfq $rfq, int $status = 200): JsonResponse
+    {
+        return response()->json([
+            'data' => (new RfqResource($rfq))->toArray(request()),
+        ], $status);
+    }
+
+    private function lifecyclePreconditionResponse(RfqLifecyclePreconditionException $exception): JsonResponse
+    {
+        if ($exception->isNotFound()) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        return response()->json([
+            'error' => 'Validation failed',
+            'details' => [
+                'rfq' => [$exception->getMessage()],
+            ],
+        ], 422);
     }
 
     public function index(Request $request): JsonResponse
@@ -656,81 +711,205 @@ final class RfqController extends Controller
         ]);
     }
 
-    public function updateStatus(Request $request, string $id): JsonResponse
+    public function updateStatus(RfqStatusTransitionRequest $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
-
-        $rfq = Rfq::query()
-            ->where('tenant_id', $tenantId)
-            ->where(function ($builder) use ($id): void {
-                $builder->where('id', $id)->orWhere('rfq_number', $id);
-            })
-            ->first();
+        $rfq = $this->findTenantScopedRfq($tenantId, $id);
 
         if ($rfq === null) {
             return response()->json(['message' => 'RFQ not found'], 404);
         }
         $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
 
-        $status = (string) $request->input('status');
-        $allowed = ['draft', 'published', 'closed', 'awarded', 'cancelled'];
-        if ($status !== '' && in_array($status, $allowed, true)) {
-            $rfq->status = $status;
-            $rfq->save();
+        try {
+            $outcome = $this->rfqLifecycle->transitionStatus(new TransitionRfqStatusCommand(
+                tenantId: $tenantId,
+                rfqId: (string) $rfq->id,
+                status: (string) $request->validated('status'),
+            ));
+        } catch (RfqLifecyclePreconditionException $exception) {
+            return $this->lifecyclePreconditionResponse($exception);
+        } catch (InvalidRfqStatusTransitionException $exception) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => [
+                    'status' => [$exception->getMessage()],
+                ],
+            ], 422);
         }
 
-        return response()->json([
-            'data' => [
-                'id' => $rfq->id,
-                'status' => $rfq->status,
-            ],
-        ]);
+        $updated = $this->loadResourceRfq($tenantId, (string) $outcome->rfqId);
+
+        if ($updated === null) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        return $this->resourceResponse($updated);
     }
 
     public function duplicate(Request $request, string $id, IdempotencyServiceInterface $idempotency): JsonResponse
     {
         try {
-            // TODO: tenant scoping via $this->tenantId($request)
+            $tenantId = $this->tenantId($request);
+            $rfq = $this->findTenantScopedRfq($tenantId, $id);
 
-            $response = response()->json([
-                'data' => [
-                    'id' => 'stub-duplicate-id',
-                    'status' => 'draft',
-                ],
-            ], 201);
+            if ($rfq === null) {
+                IdempotencyCompletion::fail($request, $idempotency);
+
+                return response()->json(['message' => 'RFQ not found'], 404);
+            }
+
+            $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
+
+            $outcome = $this->rfqLifecycle->duplicate(new DuplicateRfqCommand(
+                tenantId: $tenantId,
+                sourceRfqId: (string) $rfq->id,
+            ));
+
+            $duplicated = $this->loadResourceRfq($tenantId, (string) $outcome->rfqId);
+            if ($duplicated === null) {
+                IdempotencyCompletion::fail($request, $idempotency);
+
+                return response()->json(['message' => 'RFQ not found'], 404);
+            }
+
+            $response = $this->resourceResponse($duplicated, 201);
 
             return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (RfqLifecyclePreconditionException $exception) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
+            return $this->lifecyclePreconditionResponse($exception);
         } catch (\Throwable $e) {
             IdempotencyCompletion::fail($request, $idempotency);
             throw $e;
         }
     }
 
-    public function saveDraft(Request $request, string $id): JsonResponse
+    public function saveDraft(RfqDraftRequest $request, string $id): JsonResponse
     {
-        // TODO: tenant scoping via $this->tenantId($request)
+        $tenantId = $this->tenantId($request);
+        $rfq = $this->findTenantScopedRfq($tenantId, $id);
 
-        return response()->json([
-            'data' => [
-                'id' => $id,
-                'status' => 'draft',
-            ],
-        ]);
+        if ($rfq === null) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
+
+        $validated = $request->validated();
+
+        if (array_key_exists('project_id', $validated)) {
+            $this->assertProjectAclWhenProjectSet($request, is_string($validated['project_id'] ?? null) ? $validated['project_id'] : null);
+        }
+
+        $submissionDeadline = array_key_exists('submission_deadline', $validated)
+            ? ($validated['submission_deadline'] !== null ? Carbon::parse((string) $validated['submission_deadline']) : null)
+            : ($rfq->submission_deadline !== null ? Carbon::instance($rfq->submission_deadline) : null);
+        $closingDate = array_key_exists('closing_date', $validated)
+            ? (($validated['closing_date'] ?? null) !== null ? Carbon::parse((string) $validated['closing_date']) : null)
+            : ($rfq->closing_date !== null ? Carbon::instance($rfq->closing_date) : null);
+
+        if ($submissionDeadline !== null) {
+            $this->assertClosingOnOrAfterSubmission($submissionDeadline, $closingDate);
+        }
+
+        try {
+            $outcome = $this->rfqLifecycle->saveDraft(new SaveRfqDraftCommand(
+                tenantId: $tenantId,
+                rfqId: (string) $rfq->id,
+                title: is_string($validated['title'] ?? null) ? $validated['title'] : null,
+                description: is_string($validated['description'] ?? null) ? $validated['description'] : null,
+                projectId: is_string($validated['project_id'] ?? null) ? $validated['project_id'] : null,
+                estimatedValue: array_key_exists('estimated_value', $validated) && $validated['estimated_value'] !== null ? (float) $validated['estimated_value'] : null,
+                savingsPercentage: array_key_exists('savings_percentage', $validated) && $validated['savings_percentage'] !== null ? (float) $validated['savings_percentage'] : null,
+                submissionDeadline: $submissionDeadline?->toAtomString(),
+                closingDate: $closingDate?->toAtomString(),
+                expectedAwardAt: array_key_exists('expected_award_at', $validated) && $validated['expected_award_at'] !== null ? Carbon::parse((string) $validated['expected_award_at'])->toAtomString() : null,
+                technicalReviewDueAt: array_key_exists('technical_review_due_at', $validated) && $validated['technical_review_due_at'] !== null ? Carbon::parse((string) $validated['technical_review_due_at'])->toAtomString() : null,
+                financialReviewDueAt: array_key_exists('financial_review_due_at', $validated) && $validated['financial_review_due_at'] !== null ? Carbon::parse((string) $validated['financial_review_due_at'])->toAtomString() : null,
+                paymentTerms: is_string($validated['payment_terms'] ?? null) ? $validated['payment_terms'] : null,
+                evaluationMethod: is_string($validated['evaluation_method'] ?? null) ? $validated['evaluation_method'] : null,
+                presentFields: array_keys($validated),
+            ));
+        } catch (RfqLifecyclePreconditionException $exception) {
+            return $this->lifecyclePreconditionResponse($exception);
+        }
+
+        $saved = $this->loadResourceRfq($tenantId, (string) $outcome->rfqId);
+
+        if ($saved === null) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        return $this->resourceResponse($saved);
     }
 
-    public function bulkAction(Request $request, IdempotencyServiceInterface $idempotency): JsonResponse
+    public function bulkAction(RfqBulkActionRequest $request, IdempotencyServiceInterface $idempotency): JsonResponse
     {
         try {
-            // TODO: tenant scoping via $this->tenantId($request)
-            // Bulk close/archive/assign
+            $tenantId = $this->tenantId($request);
+            /** @var array{action: string, rfq_ids: array<int, string>} $validated */
+            $validated = $request->validated();
+
+            $rfqs = Rfq::query()
+                ->where('tenant_id', $tenantId)
+                ->whereIn('id', $validated['rfq_ids'])
+                ->get();
+
+            if ($rfqs->count() !== count($validated['rfq_ids'])) {
+                IdempotencyCompletion::fail($request, $idempotency);
+
+                return response()->json(['message' => 'RFQ not found'], 404);
+            }
+
+            foreach ($rfqs as $rfq) {
+                $this->assertProjectAclWhenProjectSet($request, $rfq->project_id);
+            }
+
+            $records = $rfqs->map(fn (Rfq $rfq) => new \Nexus\SourcingOperations\DTOs\RfqLifecycleRecord(
+                tenantId: (string) $rfq->tenant_id,
+                rfqId: (string) $rfq->id,
+                status: (string) $rfq->status,
+                title: $rfq->title,
+                projectId: $rfq->project_id,
+                description: $rfq->description,
+                estimatedValue: $rfq->estimated_value !== null ? (float) $rfq->estimated_value : null,
+                savingsPercentage: $rfq->savings_percentage !== null ? (float) $rfq->savings_percentage : null,
+                submissionDeadline: $rfq->submission_deadline?->toAtomString(),
+                closingDate: $rfq->closing_date?->toAtomString(),
+                expectedAwardAt: $rfq->expected_award_at?->toAtomString(),
+                technicalReviewDueAt: $rfq->technical_review_due_at?->toAtomString(),
+                financialReviewDueAt: $rfq->financial_review_due_at?->toAtomString(),
+                paymentTerms: $rfq->payment_terms,
+                evaluationMethod: $rfq->evaluation_method,
+            ))->all();
+
+            $outcome = $this->rfqLifecycle->applyBulkAction(new ApplyRfqBulkActionCommand(
+                tenantId: $tenantId,
+                action: $validated['action'],
+                rfqIds: $validated['rfq_ids'],
+            ), $records);
 
             $response = response()->json([
                 'data' => [
-                    'affected' => 0,
+                    'action' => $outcome->action,
+                    'status' => $outcome->status,
+                    'affected' => $outcome->affectedCount,
+                    'rfq_ids' => $validated['rfq_ids'],
                 ],
             ]);
 
             return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (UnsupportedRfqBulkActionException|RfqLifecyclePreconditionException|InvalidRfqStatusTransitionException $exception) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => [
+                    'action' => [$exception->getMessage()],
+                ],
+            ], 422);
         } catch (\Throwable $e) {
             IdempotencyCompletion::fail($request, $idempotency);
             throw $e;

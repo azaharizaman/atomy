@@ -28,6 +28,15 @@ use App\Services\ProjectManagementOperations\AtomyLaborHealthService;
 use App\Services\ProjectManagementOperations\AtomyMilestoneBillingService;
 use App\Services\ProjectManagementOperations\AtomyProjectTaskIdsQuery;
 use App\Services\ProjectManagementOperations\AtomyTimelineDriftService;
+use App\Services\SourcingOperations\AtomyRfqInvitationPersist;
+use App\Services\SourcingOperations\AtomyRfqInvitationQuery;
+use App\Services\SourcingOperations\AtomyRfqInvitationReminder;
+use App\Services\SourcingOperations\AtomyRfqLifecyclePersist;
+use App\Services\SourcingOperations\AtomyRfqLifecycleQuery;
+use App\Services\SourcingOperations\AtomyRfqLineItemPersist;
+use App\Services\SourcingOperations\AtomyRfqLineItemQuery;
+use App\Services\SourcingOperations\AtomySourcingRfqStatusTransitionPolicy;
+use App\Services\SourcingOperations\AtomySourcingTransactionManager;
 use App\Services\Task\AtomyTaskPersist;
 use App\Services\Task\AtomyTaskQuery;
 use App\Services\Tenant\RequestTenantContext;
@@ -59,6 +68,19 @@ use Nexus\ProjectManagementOperations\Contracts\MilestoneBillingServiceInterface
 use Nexus\ProjectManagementOperations\Contracts\ProjectTaskIdsQueryInterface;
 use Nexus\ProjectManagementOperations\Contracts\TimelineDriftServiceInterface;
 use Nexus\ProjectManagementOperations\ProjectManagementOperationsCoordinator;
+use Nexus\Sourcing\Contracts\RfqStatusTransitionPolicyInterface;
+use Nexus\Sourcing\Services\RfqStatusTransitionPolicy;
+use Nexus\SourcingOperations\Contracts\RfqInvitationPersistPortInterface;
+use Nexus\SourcingOperations\Contracts\RfqInvitationQueryPortInterface;
+use Nexus\SourcingOperations\Contracts\RfqInvitationReminderPortInterface;
+use Nexus\SourcingOperations\Contracts\RfqLifecycleCoordinatorInterface;
+use Nexus\SourcingOperations\Contracts\RfqLifecyclePersistPortInterface;
+use Nexus\SourcingOperations\Contracts\RfqLifecycleQueryPortInterface;
+use Nexus\SourcingOperations\Contracts\RfqLineItemPersistPortInterface;
+use Nexus\SourcingOperations\Contracts\RfqLineItemQueryPortInterface;
+use Nexus\SourcingOperations\Contracts\SourcingRfqStatusTransitionPolicyInterface;
+use Nexus\SourcingOperations\Contracts\SourcingTransactionManagerInterface;
+use Nexus\SourcingOperations\SourcingOperationsCoordinator;
 use Nexus\Task\Contracts\TaskManagerInterface;
 use Nexus\Task\Contracts\TaskPersistInterface;
 use Nexus\Task\Contracts\TaskQueryInterface;
@@ -187,6 +209,19 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MilestoneBillingServiceInterface::class, AtomyMilestoneBillingService::class);
         $this->app->bind(ProjectTaskIdsQueryInterface::class, AtomyProjectTaskIdsQuery::class);
         $this->app->singleton(ProjectManagementOperationsCoordinator::class);
+
+        // Nexus SourcingOperations: RFQ lifecycle orchestration + Laravel adapters.
+        $this->app->bind(RfqLifecycleQueryPortInterface::class, AtomyRfqLifecycleQuery::class);
+        $this->app->bind(RfqLifecyclePersistPortInterface::class, AtomyRfqLifecyclePersist::class);
+        $this->app->bind(RfqLineItemQueryPortInterface::class, AtomyRfqLineItemQuery::class);
+        $this->app->bind(RfqLineItemPersistPortInterface::class, AtomyRfqLineItemPersist::class);
+        $this->app->bind(RfqInvitationQueryPortInterface::class, AtomyRfqInvitationQuery::class);
+        $this->app->bind(RfqInvitationPersistPortInterface::class, AtomyRfqInvitationPersist::class);
+        $this->app->bind(RfqInvitationReminderPortInterface::class, AtomyRfqInvitationReminder::class);
+        $this->app->singleton(RfqStatusTransitionPolicyInterface::class, RfqStatusTransitionPolicy::class);
+        $this->app->bind(SourcingRfqStatusTransitionPolicyInterface::class, AtomySourcingRfqStatusTransitionPolicy::class);
+        $this->app->bind(SourcingTransactionManagerInterface::class, AtomySourcingTransactionManager::class);
+        $this->app->singleton(RfqLifecycleCoordinatorInterface::class, SourcingOperationsCoordinator::class);
 
         // Nexus Identity (L3): required by nexus/laravel-identity-adapter for SSO + coordinator resolution.
         $this->app->singleton(IdentityUserQueryInterface::class, AtomyUserQuery::class);

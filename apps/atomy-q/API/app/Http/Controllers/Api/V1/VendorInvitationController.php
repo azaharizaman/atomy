@@ -13,10 +13,18 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
+use Nexus\Sourcing\Exceptions\RfqLifecyclePreconditionException;
+use Nexus\SourcingOperations\Contracts\RfqLifecycleCoordinatorInterface;
+use Nexus\SourcingOperations\DTOs\RemindRfqInvitationCommand;
 
 final class VendorInvitationController extends Controller
 {
     use ExtractsAuthContext;
+
+    public function __construct(
+        private readonly RfqLifecycleCoordinatorInterface $rfqLifecycle,
+    ) {
+    }
 
     public function index(Request $request, string $rfqId): JsonResponse
     {
@@ -49,6 +57,7 @@ final class VendorInvitationController extends Controller
                 'status' => $inv->status,
                 'invited_at' => $inv->invited_at?->toAtomString(),
                 'responded_at' => $inv->responded_at?->toAtomString(),
+                'reminded_at' => $inv->reminded_at?->toAtomString(),
             ];
         })->values()->all();
 
@@ -112,17 +121,60 @@ final class VendorInvitationController extends Controller
     public function remind(Request $request, string $rfqId, string $invId, IdempotencyServiceInterface $idempotency): JsonResponse
     {
         try {
-            // TODO: tenant scoping via $this->tenantId($request)
+            $tenantId = $this->tenantId($request);
+            $rfq = Rfq::query()
+                ->where('tenant_id', $tenantId)
+                ->where(function ($builder) use ($rfqId): void {
+                    $builder->where('id', $rfqId)->orWhere('rfq_number', $rfqId);
+                })
+                ->first();
+
+            if ($rfq === null) {
+                IdempotencyCompletion::fail($request, $idempotency);
+
+                return response()->json(['message' => 'RFQ not found'], 404);
+            }
+
+            $outcome = $this->rfqLifecycle->remindInvitation(new RemindRfqInvitationCommand(
+                tenantId: $tenantId,
+                rfqId: (string) $rfq->id,
+                invitationId: $invId,
+                requestedByPrincipalId: $this->userId($request),
+            ));
+
+            $invitation = VendorInvitation::query()
+                ->where('tenant_id', $tenantId)
+                ->where('rfq_id', $rfq->id)
+                ->where('id', (string) $outcome->invitationId)
+                ->first();
+
+            if ($invitation === null) {
+                IdempotencyCompletion::fail($request, $idempotency);
+
+                return response()->json(['message' => 'Invitation not found'], 404);
+            }
 
             $response = response()->json([
                 'data' => [
-                    'id' => $invId,
-                    'rfq_id' => $rfqId,
-                    'status' => 'pending',
+                    'id' => $invitation->id,
+                    'rfq_id' => $invitation->rfq_id,
+                    'status' => $invitation->status,
+                    'reminded_at' => $invitation->reminded_at?->toAtomString(),
                 ],
             ]);
 
             return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (RfqLifecyclePreconditionException $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
+            if ($e->isNotFound()) {
+                return response()->json(['message' => 'Invitation not found'], 404);
+            }
+
+            return response()->json([
+                'error' => 'Precondition failed',
+                'message' => $e->getMessage(),
+            ], 412);
         } catch (\Throwable $e) {
             IdempotencyCompletion::fail($request, $idempotency);
             throw $e;
