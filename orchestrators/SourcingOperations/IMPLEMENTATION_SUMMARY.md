@@ -2,12 +2,12 @@
 
 ## Shipped (2026-04-03)
 
-- Added the RFQ lifecycle orchestration boundary in `SourcingOperationsCoordinator`.
-- Added Layer 2 contracts for RFQ reads, persistence, line-item reads/copying, and invitation reminder coordination.
-- Added DTOs for duplicate, save-draft, bulk-action, transition, reminder, and lifecycle outcome flows.
+- Introduced the RFQ lifecycle orchestration boundary in `SourcingOperationsCoordinator`.
+- Defined Layer 2 contracts for RFQ reads, persistence, line-item reads/copying, and invitation reminder coordination.
+- Implemented DTOs for duplicate, save-draft, bulk-action, transition, reminder, and lifecycle outcome flows.
 - Wired the coordinator to the Layer 1 RFQ transition policy and bulk-action allowlist.
 - Implemented tenant-scoped failure semantics for missing RFQs and invitations.
-- Added unit tests covering duplicate, draft save, bulk action, status transition, invitation reminder, and outcome validation.
+- Covered duplicate, draft save, bulk action, status transition, invitation reminder, and outcome validation with unit tests.
 
 ## Hardening (2026-04-04)
 
@@ -24,4 +24,4 @@
 
 ## Last updated
 
-2026-04-04
+2026-04-05

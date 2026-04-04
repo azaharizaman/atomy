@@ -82,10 +82,13 @@
 - [ ] Layer 2 sourcing coordinators depend on **orchestrator-local contracts** for policies and transaction management, not directly on Layer 1 concrete contracts or `DB` facades.
 - [ ] Multi-write lifecycle flows such as RFQ duplication wrap all dependent persistence steps in **one adapter-owned transaction boundary** so partial duplicates cannot leak on failure.
 - [ ] Laravel transaction adapters that accept **`callable`** inputs convert them to **`Closure`** before passing them to **`DB::transaction()`** so invokable objects and array/string callables do not fail at runtime.
+- [ ] RFQ number allocation orders by the **numeric suffix**, not the whole `rfq_number` string, so lexicographic sorting cannot skip larger numbers like `...-10` vs `...-9`.
+- [ ] Layer 3 persistence adapters throw **domain exceptions** for duplicate RFQ number allocation or unsupported actions instead of leaking `QueryException`/`RuntimeException` or returning synthetic success values.
 - [ ] Reminder / notification workflows update persisted delivery metadata **only after** the notifier/mailer dispatch succeeds.
 - [ ] Reminder notification template data treats **blank strings as missing** for fallbackable fields like RFQ title, vendor name, and channel; do not rely on bare **`??`** when empty strings are possible.
 - [ ] Reminder template payloads avoid unnecessary **PII** such as raw vendor email unless a downstream renderer truly requires it.
 - [ ] Notification recipients use a **stable unique identifier** (for example invitation id plus label) and derive locale/timezone from runtime or stored preferences with **`en` / `UTC`** only as fallbacks.
+- [ ] Coordinator-owned child-copy orchestration stays in Layer 2 even if a Layer 3 port receives context parameters such as `lineItems`; do not move cross-port work into one adapter just to silence an unused-parameter warning.
 - [ ] Request-to-DTO patch flows do not use bare **`??`** merges for nullable fields; they track **field presence** so explicit null clears survive into persistence.
 - [ ] DTOs and adapter mappings stay in sync with actual usage (for example, if logs or notifiers need invitation `channel`, the DTO and query/persist mapping expose it).
 - [ ] Reviewers check request validation against persistence schema for nullable fields so API contracts do not advertise clears that the database cannot store.

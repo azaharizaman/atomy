@@ -8,6 +8,7 @@ use App\Models\Rfq;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Nexus\Sourcing\Exceptions\UnsupportedRfqBulkActionException;
 use Nexus\Sourcing\ValueObjects\RfqBulkAction;
 use Nexus\Sourcing\ValueObjects\RfqStatus;
 use Nexus\SourcingOperations\Contracts\RfqLifecyclePersistPortInterface;
@@ -16,6 +17,7 @@ use Nexus\SourcingOperations\DTOs\RfqLifecycleRecord;
 use Nexus\SourcingOperations\DTOs\RfqLineItemRecord;
 use Nexus\SourcingOperations\DTOs\SaveRfqDraftCommand;
 use Nexus\SourcingOperations\DTOs\TransitionRfqStatusCommand;
+use Nexus\SourcingOperations\Exceptions\DuplicateRfqNumberException;
 
 final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPortInterface
 {
@@ -30,8 +32,8 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
      */
     public function createDuplicate(RfqLifecycleRecord $sourceRfq, DuplicateRfqCommand $command, array $lineItems): RfqLifecycleRecord
     {
-        // $lineItems is used in the coordinator via RfqLineItemPersistPortInterface::copyToRfq
-        // We still load the source model here to copy its properties.
+        // The coordinator intentionally owns line-item copying so core RFQ persistence and child-copy
+        // orchestration can stay split across ports inside one transaction boundary.
         $source = $this->findModel($command->tenantId, $sourceRfq->rfqId);
 
         for ($attempt = 0; $attempt < self::DUPLICATE_NUMBER_RETRY_LIMIT; ++$attempt) {
@@ -64,13 +66,17 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
 
                 return $this->toRecord($rfq);
             } catch (QueryException $exception) {
-                if (! $this->isDuplicateRfqNumberViolation($exception) || $attempt === self::DUPLICATE_NUMBER_RETRY_LIMIT - 1) {
+                if (! $this->isDuplicateRfqNumberViolation($exception)) {
                     throw $exception;
+                }
+
+                if ($attempt === self::DUPLICATE_NUMBER_RETRY_LIMIT - 1) {
+                    throw DuplicateRfqNumberException::fromStorageFailure($command->tenantId, $sourceRfq->rfqId, $exception);
                 }
             }
         }
 
-        throw new \RuntimeException('Unable to create RFQ duplicate.');
+        throw DuplicateRfqNumberException::afterRetries($command->tenantId, $sourceRfq->rfqId);
     }
 
     public function saveDraft(RfqLifecycleRecord $rfq, SaveRfqDraftCommand $command): RfqLifecycleRecord
@@ -111,12 +117,8 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
         $status = match ($action->value()) {
             'close' => RfqStatus::CLOSED,
             'cancel' => RfqStatus::CANCELLED,
-            default => null,
+            default => throw UnsupportedRfqBulkActionException::fromAction($action->value(), ['close', 'cancel']),
         };
-
-        if ($status === null) {
-            return 0;
-        }
 
         return Rfq::query()
             ->where('tenant_id', $tenantId)
@@ -144,12 +146,12 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
             ->where('tenant_id', $tenantId)
             ->where('rfq_number', 'like', "{$prefix}%")
             ->lockForUpdate()
-            ->orderByDesc('rfq_number')
+            ->orderByRaw('CAST(SUBSTR(rfq_number, ?) AS INTEGER) DESC', [strlen($prefix) + 1])
             ->first();
 
         $nextSeq = 1;
         if ($lastRfq !== null) {
-            $lastNum = (int) substr((string) $lastRfq->rfq_number, strlen($prefix));
+            $lastNum = $this->extractNumericSuffix((string) $lastRfq->rfq_number, $prefix);
             $nextSeq = $lastNum + 1;
         }
 
@@ -167,6 +169,15 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
             || $driverCode === '1062'
             || str_contains($message, 'unique')
             || str_contains($message, 'rfqs_tenant_id_rfq_number_unique');
+    }
+
+    private function extractNumericSuffix(string $rfqNumber, string $prefix): int
+    {
+        if (! str_starts_with($rfqNumber, $prefix)) {
+            return 0;
+        }
+
+        return (int) substr($rfqNumber, strlen($prefix));
     }
 
     private function parseDate(?string $value): ?CarbonImmutable
