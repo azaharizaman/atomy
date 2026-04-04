@@ -22,7 +22,11 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
     private const DUPLICATE_NUMBER_RETRY_LIMIT = 3;
 
     /**
-     * @param array<int, RfqLineItemRecord> $lineItems
+     * @param array<int, RfqLineItemRecord> $lineItems Source line items passed through this port so the
+     *   coordinator can copy them with RfqLineItemPersistPortInterface::copyToRfq after the duplicate RFQ
+     *   exists. The Laravel adapter does not read them directly here.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function createDuplicate(RfqLifecycleRecord $sourceRfq, DuplicateRfqCommand $command, array $lineItems): RfqLifecycleRecord
     {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\SourcingOperations;
 
+use Illuminate\Support\Facades\App;
 use Nexus\Notifier\Contracts\NotifiableInterface;
 use Nexus\SourcingOperations\DTOs\RfqInvitationRecord;
 
@@ -15,7 +16,13 @@ final readonly class RfqInvitationReminderRecipient implements NotifiableInterfa
 
     public function getNotificationEmail(): ?string
     {
-        return $this->invitation->vendorEmail;
+        if ($this->invitation->vendorEmail === null) {
+            return null;
+        }
+
+        $email = trim($this->invitation->vendorEmail);
+
+        return $email !== '' ? $email : null;
     }
 
     public function getNotificationPhone(): ?string
@@ -30,18 +37,27 @@ final readonly class RfqInvitationReminderRecipient implements NotifiableInterfa
 
     public function getNotificationLocale(): string
     {
-        return 'en';
+        $locale = App::getLocale();
+
+        return trim($locale) !== '' ? $locale : 'en';
     }
 
     public function getNotificationTimezone(): string
     {
-        return 'UTC';
+        $timezone = (string) config('app.timezone', 'UTC');
+
+        return trim($timezone) !== '' ? $timezone : 'UTC';
     }
 
     public function getNotificationIdentifier(): string
     {
-        return $this->invitation->vendorName
-            ?? $this->invitation->vendorEmail
-            ?? $this->invitation->id;
+        $label = $this->invitation->vendorName;
+        if ($label === null || trim($label) === '') {
+            $label = $this->invitation->vendorEmail;
+        }
+
+        $label = $label !== null && trim($label) !== '' ? trim($label) : 'unknown';
+
+        return $this->invitation->id . ':' . $label;
     }
 }

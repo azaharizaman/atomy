@@ -18,7 +18,9 @@ final readonly class RfqInvitationReminderNotification extends AbstractNotificat
 
     public function toEmail(): array
     {
-        $title = $this->rfq->title ?? $this->rfq->rfqId;
+        $title = $this->nonEmptyOrFallback($this->rfq->title, $this->rfq->rfqId);
+        $vendorName = $this->nonEmptyOrFallback($this->invitation->vendorName, 'Vendor');
+        $channel = $this->nonEmptyOrFallback($this->invitation->channel, 'email');
 
         return [
             'subject' => sprintf('Reminder: RFQ %s is awaiting your response', $title),
@@ -26,9 +28,8 @@ final readonly class RfqInvitationReminderNotification extends AbstractNotificat
             'data' => [
                 'rfq_id' => $this->rfq->rfqId,
                 'rfq_title' => $title,
-                'vendor_name' => $this->invitation->vendorName ?? 'Vendor',
-                'vendor_email' => $this->invitation->vendorEmail,
-                'channel' => $this->invitation->channel ?? 'email',
+                'vendor_name' => $vendorName,
+                'channel' => $channel,
                 'submission_deadline' => $this->rfq->submissionDeadline,
             ],
         ];
@@ -53,5 +54,14 @@ final readonly class RfqInvitationReminderNotification extends AbstractNotificat
             'title' => '',
             'message' => '',
         ];
+    }
+
+    private function nonEmptyOrFallback(?string $value, string $fallback): string
+    {
+        if ($value === null || trim($value) === '') {
+            return $fallback;
+        }
+
+        return trim($value);
     }
 }

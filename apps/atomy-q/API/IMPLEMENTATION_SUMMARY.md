@@ -54,11 +54,11 @@
 
 ## RFQ lifecycle mutations (2026-04-03)
 
-- `POST /api/v1/rfqs/{id}/duplicate` now creates a real tenant-scoped duplicate RFQ and copies line items through `Nexus\SourcingOperations`.
-- `PUT /api/v1/rfqs/{id}/draft` now persists draft-editable RFQ fields instead of echoing the request payload.
-- `POST /api/v1/rfqs/bulk-action` now supports real persisted bulk `close` and `cancel` actions with honest affected counts.
-- `PATCH /api/v1/rfqs/{id}/status` now delegates to the shared RFQ lifecycle transition policy rather than controller-local status assignment.
-- `POST /api/v1/rfqs/{id}/invitations/{invId}/remind` now enforces tenant-scoped RFQ/invitation lookup and stores `vendor_invitations.reminded_at`.
+- `POST /api/v1/rfqs/{id}/duplicate` creates a real tenant-scoped duplicate RFQ and copies line items through `Nexus\SourcingOperations`.
+- `PUT /api/v1/rfqs/{id}/draft` persists draft-editable RFQ fields instead of echoing the request payload.
+- `POST /api/v1/rfqs/bulk-action` supports real persisted bulk `close` and `cancel` actions with honest affected counts.
+- `PATCH /api/v1/rfqs/{id}/status` delegates to the shared RFQ lifecycle transition policy rather than controller-local status assignment.
+- `POST /api/v1/rfqs/{id}/invitations/{invId}/remind` enforces tenant-scoped RFQ/invitation lookup and stores `vendor_invitations.reminded_at`.
 - Layer 3 bindings live in `AppServiceProvider`; the Laravel adapters sit under `App\Services\SourcingOperations\*`.
 
 ## RFQ lifecycle hardening (2026-04-04)

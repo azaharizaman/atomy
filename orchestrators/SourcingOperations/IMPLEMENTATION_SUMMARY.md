@@ -20,8 +20,6 @@
 
 ## Follow-ups
 
-- Wire the coordinator into the Laravel adapter layer in `apps/atomy-q/API`.
-- Replace the current in-memory test doubles with adapter-backed implementations in Layer 3.
 - Keep the orchestration layer aligned with future Layer 1 lifecycle contract changes.
 
 ## Last updated
