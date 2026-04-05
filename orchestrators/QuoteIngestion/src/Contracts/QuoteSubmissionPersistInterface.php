@@ -6,13 +6,13 @@ namespace Nexus\QuoteIngestion\Contracts;
 
 interface QuoteSubmissionPersistInterface
 {
-    public function updateStatus(object $submission, string $status): void;
+    public function updateStatus(QuoteSubmissionInterface $submission, string $status): void;
 
-    public function markExtracting(object $submission): void;
+    public function markExtracting(QuoteSubmissionInterface $submission): void;
 
-    public function markNormalizing(object $submission): void;
+    public function markNormalizing(QuoteSubmissionInterface $submission): void;
 
-    public function markCompleted(object $submission, string $status, float $confidence, int $lineCount): void;
+    public function markCompleted(QuoteSubmissionInterface $submission, string $status, float $confidence, int $lineCount): void;
 
-    public function markFailed(object $submission, string $errorCode, ?string $errorMessage): void;
+    public function markFailed(QuoteSubmissionInterface $submission, string $errorCode, ?string $errorMessage): void;
 }
