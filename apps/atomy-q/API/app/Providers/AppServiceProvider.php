@@ -64,9 +64,27 @@ use Nexus\Task\Contracts\TaskPersistInterface;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
-use Nexus\MachineLearning\Contracts\QuoteExtractionServiceInterface;
-use Nexus\MachineLearning\Services\VertexAIMockProvider;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorDocumentRepositoryInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorTenantRepositoryInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorProcurementManagerInterface;
+use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
+use App\Adapters\QuotationIntelligence\OrchestratorDocumentRepository;
+use App\Adapters\QuotationIntelligence\OrchestratorTenantRepository;
+use App\Adapters\QuotationIntelligence\OrchestratorProcurementManager;
+use App\Adapters\QuotationIntelligence\AtomyDecisionTrailWriter;
+use App\Adapters\QuotationIntelligence\MockContentProcessor;
+use App\Adapters\QuotationIntelligence\MockSemanticMapper;
+use Nexus\QuotationIntelligence\Coordinators\QuotationIntelligenceCoordinator;
+use Nexus\QuotationIntelligence\Contracts\QuoteNormalizationServiceInterface;
+use Nexus\QuotationIntelligence\Contracts\CommercialTermsExtractorInterface;
+use Nexus\QuotationIntelligence\Contracts\RiskAssessmentServiceInterface;
+use Nexus\QuotationIntelligence\Services\QuoteNormalizationService;
+use Nexus\QuotationIntelligence\Services\RegexCommercialTermsExtractor;
+use Nexus\QuotationIntelligence\Services\RuleBasedRiskAssessmentService;
 use Nexus\ApprovalOperations\Contracts\ApprovalCommentPersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstancePersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
@@ -134,11 +152,38 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        // Nexus MachineLearning: Quote extraction mock for Alpha testing.
-        $this->app->singleton(QuoteExtractionServiceInterface::class, VertexAIMockProvider::class);
+        // Nexus QuotationIntelligence: Intelligent quote ingestion pipeline.
+        $this->app->singleton(OrchestratorDocumentRepositoryInterface::class, OrchestratorDocumentRepository::class);
+        $this->app->singleton(OrchestratorTenantRepositoryInterface::class, OrchestratorTenantRepository::class);
+        $this->app->singleton(OrchestratorProcurementManagerInterface::class, OrchestratorProcurementManager::class);
+        $this->app->singleton(DecisionTrailWriterInterface::class, AtomyDecisionTrailWriter::class);
+        $this->app->singleton(OrchestratorContentProcessorInterface::class, MockContentProcessor::class);
+        $this->app->singleton(SemanticMapperInterface::class, MockSemanticMapper::class);
+        $this->app->singleton(QuoteNormalizationServiceInterface::class, QuoteNormalizationService::class);
+        $this->app->singleton(CommercialTermsExtractorInterface::class, RegexCommercialTermsExtractor::class);
+        $this->app->singleton(RiskAssessmentServiceInterface::class, RuleBasedRiskAssessmentService::class);
+        $this->app->singleton(QuotationIntelligenceCoordinatorInterface::class, static function ($app): QuotationIntelligenceCoordinator {
+            return new QuotationIntelligenceCoordinator(
+                $app->make(OrchestratorContentProcessorInterface::class),
+                $app->make(OrchestratorDocumentRepositoryInterface::class),
+                $app->make(OrchestratorTenantRepositoryInterface::class),
+                $app->make(OrchestratorProcurementManagerInterface::class),
+                $app->make(SemanticMapperInterface::class),
+                $app->make(QuoteNormalizationServiceInterface::class),
+                $app->make(CommercialTermsExtractorInterface::class),
+                $app->make(RiskAssessmentServiceInterface::class),
+                $app->make(LoggerInterface::class),
+            );
+        });
 
         // Nexus QuoteIngestion: Orchestrator for quote submission processing.
-        $this->app->singleton(QuoteIngestionOrchestrator::class);
+        $this->app->singleton(QuoteIngestionOrchestrator::class, static function ($app): QuoteIngestionOrchestrator {
+            return new QuoteIngestionOrchestrator(
+                $app->make(QuotationIntelligenceCoordinatorInterface::class),
+                $app->make(DecisionTrailWriterInterface::class),
+                $app->make(LoggerInterface::class),
+            );
+        });
 
         $this->app->singleton(JwtServiceInterface::class, function (): JwtServiceInterface {
             $secret = (string) config('jwt.secret');
