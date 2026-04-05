@@ -9,45 +9,39 @@ use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 
 final class MockContentProcessor implements OrchestratorContentProcessorInterface
 {
-    /**
-     * Analyze document content and return mock extracted lines.
-     * We use the storagePath to find the submission and its RFQ context.
-     */
+    private const VARIATIONS = [
+        ' (Mock Variation)',
+        ' - Premium Grade',
+        ' (Industrial Grade)',
+        ' - Standard Model',
+        ' (Professional Series)',
+    ];
+
     public function analyze(string $storagePath): object
     {
-        // Extract original filename or path to identify the submission
         $submission = QuoteSubmission::query()
-            ->with(['rfq.lineItems'])
+            ->whereHas('rfq', fn($q) => $q->whereColumn('rfqs.tenant_id', 'quote_submissions.tenant_id'))
+            ->with(['rfq.lineItems' => fn($q) => $q->orderBy('sort_order')])
             ->get()
             ->first(fn($s) => str_contains($storagePath, (string) $s->file_path));
 
         $lines = [];
 
-        if ($submission && $submission->rfq) {
-            foreach ($submission->rfq->lineItems as $item) {
+        if ($submission && $submission->rfq && $submission->rfq->lineItems->isNotEmpty()) {
+            $items = $submission->rfq->lineItems->take(5)->values();
+            foreach ($items as $index => $item) {
+                $variation = self::VARIATIONS[$index % count(self::VARIATIONS)];
                 $lines[] = [
                     'rfq_line_id' => $item->id,
-                    'description' => $item->description . ' (Mock Variation)',
+                    'description' => $item->description . $variation,
                     'quantity' => (float) $item->quantity,
-                    'unit_price' => 100.0, // Mock price
+                    'unit_price' => 100.0 + ($index * 10),
                     'unit' => $item->uom ?? 'EA',
-                    'currency' => 'USD',
+                    'currency' => $submission->rfq->currency ?? 'USD',
                     'terms' => 'Net 30',
-                    'bbox' => ['x' => 10, 'y' => 20, 'w' => 100, 'h' => 15],
+                    'bbox' => ['x' => 10, 'y' => 20 + ($index * 30), 'w' => 100, 'h' => 15],
                 ];
             }
-        } else {
-            // Fallback if no submission found
-            $lines[] = [
-                'rfq_line_id' => 'dummy-id',
-                'description' => 'Mock Item',
-                'quantity' => 1.0,
-                'unit_price' => 100.0,
-                'unit' => 'EA',
-                'currency' => 'USD',
-                'terms' => 'Net 30',
-                'bbox' => ['x' => 10, 'y' => 20, 'w' => 100, 'h' => 15],
-            ];
         }
 
         return new class($lines) {
