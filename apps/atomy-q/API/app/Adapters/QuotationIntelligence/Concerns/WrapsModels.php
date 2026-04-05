@@ -55,17 +55,41 @@ trait WrapsModels
     {
         return new class($rfq) implements OrchestratorRequisitionInterface {
             public function __construct(private Rfq $rfq) {}
-            public function getId(): string { return $this->rfq->id; }
-            public function getCurrency(): string { return $this->rfq->currency ?? 'USD'; }
-            public function getLines(): array {
+
+            public function getId(): string
+            {
+                return $this->rfq->id;
+            }
+
+            public function getLines(): array
+            {
                 return $this->rfq->lineItems->map(fn($line) => $this->wrapLine($line))->toArray();
             }
-            private function wrapLine(RfqLineItem $line): OrchestratorRequisitionLineInterface {
+
+            public function getClosingDate(): ?\DateTimeImmutable
+            {
+                $closingDate = $this->rfq->closing_date;
+                return $closingDate ? \DateTimeImmutable::createFromInterface($closingDate) : null;
+            }
+
+            public function isClosedForQuotes(): bool
+            {
+                $closingDate = $this->rfq->closing_date;
+                if ($closingDate === null) {
+                    return false;
+                }
+                return $closingDate->isPast();
+            }
+
+            private function wrapLine(RfqLineItem $line): OrchestratorRequisitionLineInterface
+            {
                 return new class($line) implements OrchestratorRequisitionLineInterface {
                     public function __construct(private RfqLineItem $line) {}
-                    public function getId(): string { return $this->line->id; }
-                    public function getUnit(): string { return $this->line->uom ?? 'EA'; }
-                    public function getQuantity(): float { return (float) $this->line->quantity; }
+
+                    public function getUnit(): ?string
+                    {
+                        return $this->line->uom;
+                    }
                 };
             }
         };
