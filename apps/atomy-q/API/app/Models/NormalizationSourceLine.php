@@ -30,11 +30,15 @@ class NormalizationSourceLine extends Model
         'source_unit_price',
         'raw_data',
         'sort_order',
+        'ai_confidence',
+        'taxonomy_code',
+        'mapping_version',
     ];
 
     protected $casts = [
         'source_quantity' => 'decimal:4',
         'source_unit_price' => 'decimal:4',
+        'ai_confidence' => 'decimal:2',
         'raw_data' => 'array',
         'sort_order' => 'integer',
         'created_at' => 'datetime',
