@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\QuoteIngestion;
 
+use Nexus\QuoteIngestion\Contracts\QuoteSubmissionInterface;
 use Nexus\QuoteIngestion\Contracts\QuoteSubmissionQueryInterface;
 use Nexus\QuoteIngestion\Contracts\QuoteSubmissionPersistInterface;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineRepositoryInterface;
+use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineQueryInterface;
+use Nexus\QuoteIngestion\Contracts\NormalizationSourceLinePersistInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
@@ -23,7 +25,8 @@ final readonly class QuoteIngestionOrchestrator
         private LoggerInterface $logger,
         private QuoteSubmissionQueryInterface $submissionQuery,
         private QuoteSubmissionPersistInterface $submissionPersist,
-        private NormalizationSourceLineRepositoryInterface $sourceLineRepo,
+        private NormalizationSourceLineQueryInterface $sourceLineQuery,
+        private NormalizationSourceLinePersistInterface $sourceLinePersist,
     ) {}
 
     public function process(string $quoteSubmissionId, string $tenantId): void
@@ -31,6 +34,10 @@ final readonly class QuoteIngestionOrchestrator
         $submission = $this->submissionQuery->find($tenantId, $quoteSubmissionId);
 
         if ($submission === null) {
+            $this->logger->error('Quote submission not found', [
+                'tenant_id' => $tenantId,
+                'quote_submission_id' => $quoteSubmissionId,
+            ]);
             return;
         }
 
@@ -57,12 +64,12 @@ final readonly class QuoteIngestionOrchestrator
         }
     }
 
-    private function persistSourceLines(object $submission, array $lines): void
+    private function persistSourceLines(QuoteSubmissionInterface $submission, array $lines): void
     {
         $sortOrder = 0;
-        $tenantId = $submission->tenant_id;
-        $quoteSubmissionId = $submission->id;
-        $vendorName = $submission->vendor_name;
+        $tenantId = $submission->getTenantId();
+        $quoteSubmissionId = $submission->getId();
+        $vendorName = $submission->getVendorName();
 
         foreach ($lines as $line) {
             $rfqLineId = $line['rfq_line_id'] ?? null;
@@ -70,16 +77,21 @@ final readonly class QuoteIngestionOrchestrator
                 continue;
             }
 
-            $existingLine = $this->sourceLineRepo->findExisting($tenantId, $quoteSubmissionId, $rfqLineId);
+            $existingLine = $this->sourceLineQuery->findExisting($tenantId, $quoteSubmissionId, $rfqLineId);
 
             if ($existingLine !== null) {
                 $existingRaw = is_array($existingLine->raw_data) ? $existingLine->raw_data : [];
                 if (array_key_exists('override', $existingRaw)) {
+                    $this->logger->info('Skipping source line due to existing override', [
+                        'tenant_id' => $tenantId,
+                        'quote_submission_id' => $quoteSubmissionId,
+                        'rfq_line_id' => $rfqLineId,
+                    ]);
                     continue;
                 }
             }
 
-            $this->sourceLineRepo->upsert(
+            $this->sourceLinePersist->upsert(
                 $tenantId,
                 $quoteSubmissionId,
                 $rfqLineId,
@@ -113,18 +125,18 @@ final readonly class QuoteIngestionOrchestrator
         }
     }
 
-    private function writeDecisionTrail(object $submission, string $rfqLineId, array $line): void
+    private function writeDecisionTrail(QuoteSubmissionInterface $submission, string $rfqLineId, array $line): void
     {
         $confidence = (float) ($line['ai_confidence'] ?? 0);
         if ($confidence >= 80.0) {
             $this->decisionTrailWriter->write(
-                $submission->tenant_id,
-                $submission->rfq_id,
+                $submission->getTenantId(),
+                $submission->getRfqId(),
                 [
                     [
                         'event_type' => self::DECISION_ACTION_AUTO_MAP,
                         'payload' => [
-                            'quote_submission_id' => $submission->id,
+                            'quote_submission_id' => $submission->getId(),
                             'rfq_line_item_id' => $rfqLineId,
                             'taxonomy_code' => $line['taxonomy_code'] ?? '',
                             'confidence' => $confidence,
@@ -147,11 +159,10 @@ final readonly class QuoteIngestionOrchestrator
             $total += (float) ($line['ai_confidence'] ?? 0);
         }
 
-        $count = count($lines);
-        return $count > 0 ? $total / $count : 0.0;
+        return $total / count($lines);
     }
 
-    private function handleFailure(object $submission, string $errorCode, ?string $errorMessage): void
+    private function handleFailure(QuoteSubmissionInterface $submission, string $errorCode, ?string $errorMessage): void
     {
         $this->submissionPersist->markFailed($submission, $errorCode, $errorMessage);
     }
