@@ -93,8 +93,7 @@ trait WrapsModels
                 $closingDate = $this->rfq->closing_date;
 
                 return $closingDate instanceof \DateTimeInterface
-                    && method_exists($closingDate, 'isPast')
-                    && $closingDate->isPast();
+                    && $closingDate < new \DateTimeImmutable();
             }
         };
     }

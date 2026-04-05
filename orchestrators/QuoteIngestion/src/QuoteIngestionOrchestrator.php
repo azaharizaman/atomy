@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\QuoteIngestion;
 
-use App\Models\QuoteSubmission;
-use App\Models\NormalizationSourceLine;
+use Nexus\QuoteIngestion\Contracts\QuoteSubmissionQueryInterface;
+use Nexus\QuoteIngestion\Contracts\QuoteSubmissionPersistInterface;
+use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineRepositoryInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
@@ -20,14 +21,14 @@ final readonly class QuoteIngestionOrchestrator
         private DecisionTrailWriterInterface $decisionTrailWriter,
         private TenantContextInterface $tenantContext,
         private LoggerInterface $logger,
+        private QuoteSubmissionQueryInterface $submissionQuery,
+        private QuoteSubmissionPersistInterface $submissionPersist,
+        private NormalizationSourceLineRepositoryInterface $sourceLineRepo,
     ) {}
 
     public function process(string $quoteSubmissionId, string $tenantId): void
     {
-        $submission = QuoteSubmission::query()
-            ->where('tenant_id', $tenantId)
-            ->where('id', $quoteSubmissionId)
-            ->first();
+        $submission = $this->submissionQuery->find($tenantId, $quoteSubmissionId);
 
         if ($submission === null) {
             return;
@@ -35,27 +36,19 @@ final readonly class QuoteIngestionOrchestrator
 
         $this->tenantContext->setTenant($tenantId);
 
-        $submission->status = 'extracting';
-        $submission->processing_started_at = now();
-        $submission->save();
+        $this->submissionPersist->markExtracting($submission);
 
         try {
             $result = $this->coordinator->processQuote($tenantId, $quoteSubmissionId);
 
-            $submission->status = 'normalizing';
-            $submission->save();
+            $this->submissionPersist->markNormalizing($submission);
 
             $lines = $result['lines'] ?? [];
             $this->persistSourceLines($submission, $lines);
 
             $avgConfidence = $this->calculateAvgConfidence($lines);
             $finalStatus = $avgConfidence >= 80.0 ? 'ready' : 'needs_review';
-            $submission->status = $finalStatus;
-            $submission->confidence = $avgConfidence;
-            $submission->line_items_count = count($lines);
-            $submission->processing_completed_at = now();
-            $submission->parsed_at = now();
-            $submission->save();
+            $this->submissionPersist->markCompleted($submission, $finalStatus, $avgConfidence, count($lines));
 
         } catch (\Throwable $e) {
             $this->handleFailure($submission, 'INTELLIGENCE_FAILED', $e->getMessage());
@@ -64,9 +57,12 @@ final readonly class QuoteIngestionOrchestrator
         }
     }
 
-    private function persistSourceLines(QuoteSubmission $submission, array $lines): void
+    private function persistSourceLines(object $submission, array $lines): void
     {
         $sortOrder = 0;
+        $tenantId = $submission->tenant_id;
+        $quoteSubmissionId = $submission->id;
+        $vendorName = $submission->vendor_name;
 
         foreach ($lines as $line) {
             $rfqLineId = $line['rfq_line_id'] ?? null;
@@ -74,11 +70,7 @@ final readonly class QuoteIngestionOrchestrator
                 continue;
             }
 
-            $existingLine = NormalizationSourceLine::query()
-                ->where('tenant_id', $submission->tenant_id)
-                ->where('quote_submission_id', $submission->id)
-                ->where('rfq_line_item_id', $rfqLineId)
-                ->first();
+            $existingLine = $this->sourceLineRepo->findExisting($tenantId, $quoteSubmissionId, $rfqLineId);
 
             if ($existingLine !== null) {
                 $existingRaw = is_array($existingLine->raw_data) ? $existingLine->raw_data : [];
@@ -87,14 +79,12 @@ final readonly class QuoteIngestionOrchestrator
                 }
             }
 
-            NormalizationSourceLine::updateOrCreate(
+            $this->sourceLineRepo->upsert(
+                $tenantId,
+                $quoteSubmissionId,
+                $rfqLineId,
                 [
-                    'tenant_id' => $submission->tenant_id,
-                    'quote_submission_id' => $submission->id,
-                    'rfq_line_item_id' => $rfqLineId,
-                ],
-                [
-                    'source_vendor' => $submission->vendor_name,
+                    'source_vendor' => $vendorName,
                     'source_description' => $line['vendor_description'],
                     'source_quantity' => (float) ($line['quoted_quantity'] ?? 0),
                     'source_uom' => $line['quoted_unit'] ?? 'EA',
@@ -123,7 +113,7 @@ final readonly class QuoteIngestionOrchestrator
         }
     }
 
-    private function writeDecisionTrail(QuoteSubmission $submission, string $rfqLineId, array $line): void
+    private function writeDecisionTrail(object $submission, string $rfqLineId, array $line): void
     {
         $confidence = (float) ($line['ai_confidence'] ?? 0);
         if ($confidence >= 80.0) {
@@ -161,12 +151,8 @@ final readonly class QuoteIngestionOrchestrator
         return $count > 0 ? $total / $count : 0.0;
     }
 
-    private function handleFailure(QuoteSubmission $submission, string $errorCode, ?string $errorMessage): void
+    private function handleFailure(object $submission, string $errorCode, ?string $errorMessage): void
     {
-        $submission->status = 'failed';
-        $submission->error_code = $errorCode;
-        $submission->error_message = $errorMessage;
-        $submission->processing_completed_at = now();
-        $submission->save();
+        $this->submissionPersist->markFailed($submission, $errorCode, $errorMessage);
     }
 }

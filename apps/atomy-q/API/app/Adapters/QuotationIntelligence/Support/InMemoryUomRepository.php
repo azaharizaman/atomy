@@ -90,8 +90,8 @@ final class InMemoryUomRepository implements UomRepositoryInterface
 
         return array_values(array_filter(
             $this->conversions,
-            static fn (ConversionRuleInterface $r, string $key): bool => str_starts_with($key, $prefix),
-            ARRAY_FILTER_USE_BOTH,
+            static fn (string $key): bool => str_starts_with($key, $prefix),
+            ARRAY_FILTER_USE_KEY,
         ));
     }
 

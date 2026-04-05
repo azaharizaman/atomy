@@ -8,9 +8,13 @@ use App\Models\ComparisonRun;
 use App\Models\DecisionTrailEntry;
 use App\Models\QuoteSubmission;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
+use Psr\Log\LoggerInterface;
 
 final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
 {
+    public function __construct(
+        private ?LoggerInterface $logger = null,
+    ) {}
     /**
      * @param string $tenantId
      * @param string $rfqId
@@ -33,22 +37,11 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
     public function write(
         string $tenantId,
         string $rfqId,
-        $entries,
-        $startingSequence = 1,
-        $previousHash = ''
+        array $entries,
+        int $startingSequence = 1,
+        string $previousHash = ''
     ): array {
-        // Backward-compat shim: some Alpha callers still pass (source, action, payload)
-        // instead of (entries, startingSequence, previousHash).
-        if (is_string($entries) && is_string($startingSequence) && is_array($previousHash)) {
-            $entries = [[
-                'event_type' => $entries . ':' . $startingSequence,
-                'payload' => $previousHash,
-            ]];
-            $startingSequence = 1;
-            $previousHash = '';
-        }
-
-        if (!is_array($entries)) {
+        if ($entries === []) {
             return [];
         }
 
@@ -57,7 +50,7 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
         $results = [];
         $comparisonRunId = $this->resolveComparisonRunId($tenantId, $resolvedRfqId, $idempotencyKey);
 
-        $currentPreviousHash = is_string($previousHash) ? $previousHash : '';
+        $currentPreviousHash = $previousHash;
         if ($currentPreviousHash === '') {
             $last = DecisionTrailEntry::query()
                 ->where('tenant_id', $tenantId)
@@ -69,15 +62,19 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
         }
 
         $nextSequence = max(
-            (int) $startingSequence,
+            $startingSequence,
             ((int) DecisionTrailEntry::query()
                 ->where('tenant_id', $tenantId)
                 ->where('comparison_run_id', $comparisonRunId)
                 ->max('sequence')) + 1
         );
 
-        foreach ($entries as $entry) {
+        foreach ($entries as $index => $entry) {
             if (!is_array($entry) || !isset($entry['event_type'], $entry['payload']) || !is_array($entry['payload'])) {
+                $this->logger?->warning('Skipping malformed decision trail entry', [
+                    'index' => $index,
+                    'entry' => $entry,
+                ]);
                 continue;
             }
 
@@ -111,6 +108,41 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
         }
 
         return $results;
+    }
+
+    /**
+     * Legacy entrypoint for backward compatibility with Alpha callers that pass (source, action, payload).
+     *
+     * @deprecated Use write() with typed array entries instead
+     *
+     * @param string $tenantId
+     * @param string $rfqId
+     * @param string $source Event source name
+     * @param string $action Action name
+     * @param array<string, mixed> $payload Event payload
+     *
+     * @return array<int, array{
+     *   sequence: int,
+     *   event_type: string,
+     *   payload_hash: string,
+     *   previous_hash: string,
+     *   entry_hash: string,
+     *   occurred_at: string
+     * }>
+     */
+    public function writeLegacy(
+        string $tenantId,
+        string $rfqId,
+        string $source,
+        string $action,
+        array $payload
+    ): array {
+        $entries = [[
+            'event_type' => $source . ':' . $action,
+            'payload' => $payload,
+        ]];
+
+        return $this->write($tenantId, $rfqId, $entries, 1, '');
     }
 
     /**

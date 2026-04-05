@@ -65,6 +65,9 @@ use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use Nexus\QuoteIngestion\Contracts\QuoteSubmissionQueryInterface;
+use Nexus\QuoteIngestion\Contracts\QuoteSubmissionPersistInterface;
+use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineRepositoryInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorDocumentRepositoryInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorTenantRepositoryInterface;
@@ -82,6 +85,9 @@ use App\Adapters\QuotationIntelligence\MockContentProcessor;
 use App\Adapters\QuotationIntelligence\MockSemanticMapper;
 use App\Adapters\QuotationIntelligence\Support\InMemoryUomRepository;
 use App\Adapters\QuotationIntelligence\Support\StaticExchangeRateProvider;
+use App\Adapters\QuoteIngestion\EloquentQuoteSubmissionQuery;
+use App\Adapters\QuoteIngestion\EloquentQuoteSubmissionPersist;
+use App\Adapters\QuoteIngestion\EloquentNormalizationSourceLineRepository;
 use Nexus\QuotationIntelligence\Coordinators\QuotationIntelligenceCoordinator;
 use Nexus\QuotationIntelligence\Contracts\QuoteNormalizationServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\CommercialTermsExtractorInterface;
@@ -183,12 +189,18 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Nexus QuoteIngestion: Orchestrator for quote submission processing.
+        $this->app->singleton(QuoteSubmissionQueryInterface::class, EloquentQuoteSubmissionQuery::class);
+        $this->app->singleton(QuoteSubmissionPersistInterface::class, EloquentQuoteSubmissionPersist::class);
+        $this->app->singleton(NormalizationSourceLineRepositoryInterface::class, EloquentNormalizationSourceLineRepository::class);
         $this->app->singleton(QuoteIngestionOrchestrator::class, static function ($app): QuoteIngestionOrchestrator {
             return new QuoteIngestionOrchestrator(
                 $app->make(QuotationIntelligenceCoordinatorInterface::class),
                 $app->make(DecisionTrailWriterInterface::class),
                 $app->make(TenantContextInterface::class),
                 $app->make(LoggerInterface::class),
+                $app->make(QuoteSubmissionQueryInterface::class),
+                $app->make(QuoteSubmissionPersistInterface::class),
+                $app->make(NormalizationSourceLineRepositoryInterface::class),
             );
         });
 

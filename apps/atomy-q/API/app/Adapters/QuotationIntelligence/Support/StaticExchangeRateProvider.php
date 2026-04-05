@@ -26,9 +26,13 @@ final readonly class StaticExchangeRateProvider implements ExchangeRateProviderI
         $rates = [];
 
         foreach ($pairs as $pair) {
-            if ($pair instanceof CurrencyPair) {
-                $rates[$pair->toString()] = $this->getRate($pair, $asOf);
+            if (!$pair instanceof CurrencyPair) {
+                throw new \InvalidArgumentException(
+                    sprintf('Expected CurrencyPair instance, got %s', gettype($pair))
+                );
             }
+
+            $rates[$pair->toString()] = $this->getRate($pair, $asOf);
         }
 
         return $rates;

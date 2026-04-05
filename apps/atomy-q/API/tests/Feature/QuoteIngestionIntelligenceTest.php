@@ -292,7 +292,6 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
         $sourceLines = $submission->normalizationSourceLines()->orderBy('sort_order')->get();
         self::assertNotEmpty($sourceLines, 'Source lines should be created after upload and processing');
 
-        $lineItems = $rfq->lineItems()->get();
         $mappedRfqs = $sourceLines->pluck('rfq_line_item_id')->filter()->unique();
 
         self::assertGreaterThan(

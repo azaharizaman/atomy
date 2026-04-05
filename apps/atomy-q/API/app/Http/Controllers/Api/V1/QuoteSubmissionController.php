@@ -272,6 +272,7 @@ final class QuoteSubmissionController extends Controller
 
             // Delta reparse: only delete lines that are unmapped or still unresolved, and have no manual override.
             if (!$isMapped || $hasUnresolvedConflict) {
+                $line->conflicts()->delete();
                 $line->delete();
             }
         }
