@@ -23,13 +23,14 @@ final class MockSemanticMapper implements SemanticMapperInterface
     public function mapToTaxonomy(string $description, string $tenantId): array
     {
         $lowerDesc = strtolower($description);
-        
+
         foreach (self::UNSPSC_CODES as $code => $keywords) {
             foreach ($keywords as $keyword) {
                 if (str_contains($lowerDesc, $keyword)) {
                     return [
                         'code' => $code,
-                        'confidence' => 0.92 + (random_int(0, 8) / 100),
+                        // Stable percent-like confidence (0-100) for the Alpha state machine.
+                        'confidence' => 92.0,
                         'version' => 'v25.0',
                     ];
                 }
@@ -38,14 +39,14 @@ final class MockSemanticMapper implements SemanticMapperInterface
 
         return [
             'code' => self::DEFAULT_CODE,
-            'confidence' => 0.90,
+            'confidence' => 90.0,
             'version' => 'v25.0',
         ];
     }
 
     public function validateCode(string $code, string $version): bool
     {
-        return in_array($code, array_keys(self::UNSPSC_CODES), true) 
+        return in_array($code, array_keys(self::UNSPSC_CODES), true)
             || $code === self::DEFAULT_CODE;
     }
 }

@@ -20,15 +20,24 @@ final class MockContentProcessor implements OrchestratorContentProcessorInterfac
     public function analyze(string $storagePath): object
     {
         $submission = QuoteSubmission::query()
-            ->whereHas('rfq', fn($q) => $q->whereColumn('rfqs.tenant_id', 'quote_submissions.tenant_id'))
-            ->with(['rfq.lineItems' => fn($q) => $q->orderBy('sort_order')])
-            ->get()
-            ->first(fn($s) => str_contains($storagePath, (string) $s->file_path));
+            ->where('file_path', $this->resolveRelativePath($storagePath))
+            ->with(['rfq.lineItems' => fn ($q) => $q->orderBy('sort_order')])
+            ->first();
 
         $lines = [];
 
         if ($submission && $submission->rfq && $submission->rfq->lineItems->isNotEmpty()) {
+            // Hard stop on tenant mismatch to avoid cross-tenant leakage through mocks.
+            if ((string) $submission->rfq->tenant_id !== (string) $submission->tenant_id) {
+                $submission = null;
+            }
+        }
+
+        if ($submission && $submission->rfq && $submission->rfq->lineItems->isNotEmpty()) {
             $items = $submission->rfq->lineItems->take(5)->values();
+            $baseUnit = (string) ($items->first()->uom ?? 'EA');
+            $currency = (string) ($items->first()->currency ?? 'USD');
+
             foreach ($items as $index => $item) {
                 $variation = self::VARIATIONS[$index % count(self::VARIATIONS)];
                 $lines[] = [
@@ -36,8 +45,8 @@ final class MockContentProcessor implements OrchestratorContentProcessorInterfac
                     'description' => $item->description . $variation,
                     'quantity' => (float) $item->quantity,
                     'unit_price' => 100.0 + ($index * 10),
-                    'unit' => $item->uom ?? 'EA',
-                    'currency' => $submission->rfq->currency ?? 'USD',
+                    'unit' => $baseUnit,
+                    'currency' => $currency,
                     'terms' => 'Net 30',
                     'bbox' => ['x' => 10, 'y' => 20 + ($index * 30), 'w' => 100, 'h' => 15],
                 ];
@@ -50,5 +59,15 @@ final class MockContentProcessor implements OrchestratorContentProcessorInterfac
                 return $field === 'lines' ? $this->lines : $default;
             }
         };
+    }
+
+    private function resolveRelativePath(string $storagePath): string
+    {
+        $prefix = storage_path('app') . DIRECTORY_SEPARATOR;
+        if (str_starts_with($storagePath, $prefix)) {
+            return substr($storagePath, strlen($prefix));
+        }
+
+        return basename($storagePath);
     }
 }

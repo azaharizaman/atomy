@@ -8,16 +8,17 @@ use App\Models\QuoteSubmission;
 use App\Models\NormalizationSourceLine;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 use Psr\Log\LoggerInterface;
 
 final readonly class QuoteIngestionOrchestrator
 {
-    private const DECISION_SOURCE = 'quote_ingestion';
     private const DECISION_ACTION_AUTO_MAP = 'auto_map';
 
     public function __construct(
         private QuotationIntelligenceCoordinatorInterface $coordinator,
         private DecisionTrailWriterInterface $decisionTrailWriter,
+        private TenantContextInterface $tenantContext,
         private LoggerInterface $logger,
     ) {}
 
@@ -31,6 +32,8 @@ final readonly class QuoteIngestionOrchestrator
         if ($submission === null) {
             return;
         }
+
+        $this->tenantContext->setTenant($tenantId);
 
         $submission->status = 'extracting';
         $submission->processing_started_at = now();
@@ -56,6 +59,8 @@ final readonly class QuoteIngestionOrchestrator
 
         } catch (\Throwable $e) {
             $this->handleFailure($submission, 'INTELLIGENCE_FAILED', $e->getMessage());
+        } finally {
+            $this->tenantContext->clearTenant();
         }
     }
 
@@ -69,14 +74,27 @@ final readonly class QuoteIngestionOrchestrator
                 continue;
             }
 
-            $normalizedLine = NormalizationSourceLine::updateOrCreate(
+            $existingLine = NormalizationSourceLine::query()
+                ->where('tenant_id', $submission->tenant_id)
+                ->where('quote_submission_id', $submission->id)
+                ->where('rfq_line_item_id', $rfqLineId)
+                ->first();
+
+            if ($existingLine !== null) {
+                $existingRaw = is_array($existingLine->raw_data) ? $existingLine->raw_data : [];
+                if (array_key_exists('override', $existingRaw)) {
+                    continue;
+                }
+            }
+
+            NormalizationSourceLine::updateOrCreate(
                 [
                     'tenant_id' => $submission->tenant_id,
                     'quote_submission_id' => $submission->id,
                     'rfq_line_item_id' => $rfqLineId,
                 ],
                 [
-                    'source_vendor' => $line['vendor_description'],
+                    'source_vendor' => $submission->vendor_name,
                     'source_description' => $line['vendor_description'],
                     'source_quantity' => (float) ($line['quoted_quantity'] ?? 0),
                     'source_uom' => $line['quoted_unit'] ?? 'EA',
@@ -111,14 +129,18 @@ final readonly class QuoteIngestionOrchestrator
         if ($confidence >= 80.0) {
             $this->decisionTrailWriter->write(
                 $submission->tenant_id,
-                $submission->id,
-                self::DECISION_SOURCE,
-                self::DECISION_ACTION_AUTO_MAP,
+                $submission->rfq_id,
                 [
-                    'rfq_line_item_id' => $rfqLineId,
-                    'taxonomy_code' => $line['taxonomy_code'] ?? '',
-                    'confidence' => $confidence,
-                    'mapping_version' => $line['metadata']['mapping_version'] ?? '',
+                    [
+                        'event_type' => self::DECISION_ACTION_AUTO_MAP,
+                        'payload' => [
+                            'quote_submission_id' => $submission->id,
+                            'rfq_line_item_id' => $rfqLineId,
+                            'taxonomy_code' => $line['taxonomy_code'] ?? '',
+                            'confidence' => $confidence,
+                            'mapping_version' => $line['metadata']['mapping_version'] ?? '',
+                        ],
+                    ],
                 ]
             );
         }

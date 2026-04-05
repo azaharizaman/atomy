@@ -250,7 +250,31 @@ final class QuoteSubmissionController extends Controller
         $qs->retry_count = 0;
         $qs->save();
 
-        $qs->normalizationSourceLines()->delete();
+        $sourceLines = $qs->normalizationSourceLines()
+            ->with('conflicts')
+            ->get();
+
+        foreach ($sourceLines as $line) {
+            $raw = is_array($line->raw_data) ? $line->raw_data : [];
+            $hasOverride = array_key_exists('override', $raw);
+
+            if ($hasOverride) {
+                continue;
+            }
+
+            $hasResolvedConflict = $line->conflicts->contains(static fn ($c): bool => $c->resolution !== null);
+            if ($hasResolvedConflict) {
+                continue;
+            }
+
+            $isMapped = $line->rfq_line_item_id !== null;
+            $hasUnresolvedConflict = $line->conflicts->contains(static fn ($c): bool => $c->resolution === null);
+
+            // Delta reparse: only delete lines that are unmapped or still unresolved, and have no manual override.
+            if (!$isMapped || $hasUnresolvedConflict) {
+                $line->delete();
+            }
+        }
 
         $this->dispatchProcessingJob($qs);
 

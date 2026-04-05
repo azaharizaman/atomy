@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapters\QuotationIntelligence;
 
+use App\Models\ComparisonRun;
 use App\Models\DecisionTrailEntry;
+use App\Models\QuoteSubmission;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 
 final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
@@ -31,29 +33,63 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
     public function write(
         string $tenantId,
         string $rfqId,
-        array $entries,
-        int $startingSequence = 1,
-        string $previousHash = ''
+        $entries,
+        $startingSequence = 1,
+        $previousHash = ''
     ): array {
+        // Backward-compat shim: some Alpha callers still pass (source, action, payload)
+        // instead of (entries, startingSequence, previousHash).
+        if (is_string($entries) && is_string($startingSequence) && is_array($previousHash)) {
+            $entries = [[
+                'event_type' => $entries . ':' . $startingSequence,
+                'payload' => $previousHash,
+            ]];
+            $startingSequence = 1;
+            $previousHash = '';
+        }
+
+        if (!is_array($entries)) {
+            return [];
+        }
+
+        [$resolvedRfqId, $idempotencyKey] = $this->resolveRfqContext($tenantId, $rfqId);
+
         $results = [];
-        $currentPreviousHash = $previousHash;
-        $sequence = $startingSequence;
+        $comparisonRunId = $this->resolveComparisonRunId($tenantId, $resolvedRfqId, $idempotencyKey);
+
+        $currentPreviousHash = is_string($previousHash) ? $previousHash : '';
+        if ($currentPreviousHash === '') {
+            $last = DecisionTrailEntry::query()
+                ->where('tenant_id', $tenantId)
+                ->where('comparison_run_id', $comparisonRunId)
+                ->orderByDesc('sequence')
+                ->first();
+
+            $currentPreviousHash = $last?->entry_hash ?? str_repeat('0', 64);
+        }
+
+        $nextSequence = max(
+            (int) $startingSequence,
+            ((int) DecisionTrailEntry::query()
+                ->where('tenant_id', $tenantId)
+                ->where('comparison_run_id', $comparisonRunId)
+                ->max('sequence')) + 1
+        );
 
         foreach ($entries as $entry) {
+            if (!is_array($entry) || !isset($entry['event_type'], $entry['payload']) || !is_array($entry['payload'])) {
+                continue;
+            }
+
             $payload = $entry['payload'];
-            $payloadHash = hash('sha256', (string) json_encode($payload));
-            
-            // Simplified hashing logic for the bridge/mock
+            $payloadHash = hash('sha256', (string) json_encode($payload, JSON_THROW_ON_ERROR));
             $entryHash = hash('sha256', $currentPreviousHash . $payloadHash . $entry['event_type']);
 
-            // Note: comparison_run_id is required in schema, but for quote ingestion, 
-            // we might not have it yet. We'll use a placeholder if it's not provided 
-            // from some higher-level context.
             DecisionTrailEntry::create([
                 'tenant_id' => $tenantId,
-                'rfq_id' => $rfqId,
-                'comparison_run_id' => $payload['comparison_run_id'] ?? '00000000000000000000000000', // Placeholder
-                'sequence' => $sequence,
+                'rfq_id' => $resolvedRfqId,
+                'comparison_run_id' => $comparisonRunId,
+                'sequence' => $nextSequence,
                 'event_type' => $entry['event_type'],
                 'payload_hash' => $payloadHash,
                 'previous_hash' => $currentPreviousHash,
@@ -62,7 +98,7 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
             ]);
 
             $results[] = [
-                'sequence' => $sequence,
+                'sequence' => $nextSequence,
                 'event_type' => $entry['event_type'],
                 'payload_hash' => $payloadHash,
                 'previous_hash' => $currentPreviousHash,
@@ -71,9 +107,56 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
             ];
 
             $currentPreviousHash = $entryHash;
-            $sequence++;
+            $nextSequence++;
         }
 
         return $results;
+    }
+
+    /**
+     * @return array{0: string, 1: string|null} [rfqId, idempotencyKey]
+     */
+    private function resolveRfqContext(string $tenantId, string $rfqId): array
+    {
+        $submission = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $rfqId)
+            ->first();
+
+        if ($submission === null) {
+            return [$rfqId, null];
+        }
+
+        // If caller accidentally passed QuoteSubmissionId, translate to RFQ context and
+        // use an idempotency key to keep a per-submission comparison run.
+        return [(string) $submission->rfq_id, 'quote-submission:' . (string) $submission->id];
+    }
+
+    private function resolveComparisonRunId(string $tenantId, string $rfqId, ?string $idempotencyKey): string
+    {
+        $comparisonRun = ComparisonRun::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfqId)
+            ->when($idempotencyKey !== null, static fn ($q) => $q->where('idempotency_key', $idempotencyKey))
+            ->orderByDesc('created_at')
+            ->first();
+
+        if ($comparisonRun !== null) {
+            return $comparisonRun->id;
+        }
+
+        /** @var ComparisonRun $comparisonRun */
+        $comparisonRun = ComparisonRun::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_id' => $rfqId,
+            'idempotency_key' => $idempotencyKey,
+            'name' => 'AI normalization decision trail',
+            'description' => 'Auto-created comparison run for quote ingestion decision trail entries.',
+            'is_preview' => false,
+            'status' => 'draft',
+            'version' => 1,
+        ]);
+
+        return $comparisonRun->id;
     }
 }

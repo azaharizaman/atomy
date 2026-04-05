@@ -72,12 +72,16 @@ use Nexus\QuotationIntelligence\Contracts\OrchestratorProcurementManagerInterfac
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
+use Nexus\Currency\Contracts\ExchangeRateProviderInterface;
+use Nexus\Uom\Contracts\UomRepositoryInterface;
 use App\Adapters\QuotationIntelligence\OrchestratorDocumentRepository;
 use App\Adapters\QuotationIntelligence\OrchestratorTenantRepository;
 use App\Adapters\QuotationIntelligence\OrchestratorProcurementManager;
 use App\Adapters\QuotationIntelligence\AtomyDecisionTrailWriter;
 use App\Adapters\QuotationIntelligence\MockContentProcessor;
 use App\Adapters\QuotationIntelligence\MockSemanticMapper;
+use App\Adapters\QuotationIntelligence\Support\InMemoryUomRepository;
+use App\Adapters\QuotationIntelligence\Support\StaticExchangeRateProvider;
 use Nexus\QuotationIntelligence\Coordinators\QuotationIntelligenceCoordinator;
 use Nexus\QuotationIntelligence\Contracts\QuoteNormalizationServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\CommercialTermsExtractorInterface;
@@ -153,6 +157,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Nexus QuotationIntelligence: Intelligent quote ingestion pipeline.
+        $this->app->singleton(UomRepositoryInterface::class, InMemoryUomRepository::class);
+        $this->app->singleton(ExchangeRateProviderInterface::class, StaticExchangeRateProvider::class);
         $this->app->singleton(OrchestratorDocumentRepositoryInterface::class, OrchestratorDocumentRepository::class);
         $this->app->singleton(OrchestratorTenantRepositoryInterface::class, OrchestratorTenantRepository::class);
         $this->app->singleton(OrchestratorProcurementManagerInterface::class, OrchestratorProcurementManager::class);
@@ -181,6 +187,7 @@ class AppServiceProvider extends ServiceProvider
             return new QuoteIngestionOrchestrator(
                 $app->make(QuotationIntelligenceCoordinatorInterface::class),
                 $app->make(DecisionTrailWriterInterface::class),
+                $app->make(TenantContextInterface::class),
                 $app->make(LoggerInterface::class),
             );
         });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\QuotationIntelligence\Concerns;
 
+use DateTimeImmutable;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
@@ -53,8 +54,20 @@ trait WrapsModels
      */
     protected function wrapRequisition(Rfq $rfq): OrchestratorRequisitionInterface
     {
-        return new class($rfq) implements OrchestratorRequisitionInterface {
-            public function __construct(private Rfq $rfq) {}
+        $lines = $rfq->lineItems
+            ->map(fn (RfqLineItem $line): OrchestratorRequisitionLineInterface => $this->wrapLine($line))
+            ->values()
+            ->all();
+
+        return new class($rfq, $lines) implements OrchestratorRequisitionInterface {
+            /**
+             * @param array<int, OrchestratorRequisitionLineInterface> $lines
+             */
+            public function __construct(
+                private Rfq $rfq,
+                private array $lines,
+            ) {
+            }
 
             public function getId(): string
             {
@@ -63,34 +76,37 @@ trait WrapsModels
 
             public function getLines(): array
             {
-                return $this->rfq->lineItems->map(fn($line) => $this->wrapLine($line))->toArray();
+                return $this->lines;
             }
 
-            public function getClosingDate(): ?\DateTimeImmutable
+            public function getClosingDate(): ?DateTimeImmutable
             {
                 $closingDate = $this->rfq->closing_date;
-                return $closingDate ? \DateTimeImmutable::createFromInterface($closingDate) : null;
+
+                return $closingDate instanceof \DateTimeInterface
+                    ? DateTimeImmutable::createFromInterface($closingDate)
+                    : null;
             }
 
             public function isClosedForQuotes(): bool
             {
                 $closingDate = $this->rfq->closing_date;
-                if ($closingDate === null) {
-                    return false;
-                }
-                return $closingDate->isPast();
+
+                return $closingDate instanceof \DateTimeInterface
+                    && method_exists($closingDate, 'isPast')
+                    && $closingDate->isPast();
             }
+        };
+    }
 
-            private function wrapLine(RfqLineItem $line): OrchestratorRequisitionLineInterface
+    protected function wrapLine(RfqLineItem $line): OrchestratorRequisitionLineInterface
+    {
+        return new class($line) implements OrchestratorRequisitionLineInterface {
+            public function __construct(private RfqLineItem $line) {}
+
+            public function getUnit(): ?string
             {
-                return new class($line) implements OrchestratorRequisitionLineInterface {
-                    public function __construct(private RfqLineItem $line) {}
-
-                    public function getUnit(): ?string
-                    {
-                        return $this->line->uom;
-                    }
-                };
+                return $this->line->uom;
             }
         };
     }

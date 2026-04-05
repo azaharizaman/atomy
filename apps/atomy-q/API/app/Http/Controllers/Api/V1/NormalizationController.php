@@ -77,6 +77,9 @@ final class NormalizationController extends Controller
             'blocking_issue_count' => $blockingIssueCount,
             'has_blocking_issue' => $blockingIssueCount > 0,
             'quote_submission_status' => $line->quoteSubmission?->status,
+            'ai_confidence' => $line->ai_confidence !== null ? (string) $line->ai_confidence : null,
+            'taxonomy_code' => $line->taxonomy_code,
+            'mapping_version' => $line->mapping_version,
         ];
     }
 

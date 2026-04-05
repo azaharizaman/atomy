@@ -146,6 +146,23 @@
   - hash-chain integrity in decision trail
   - batch coordinator governance output integration
 
+## Quote Ingestion Integration - April 2026
+
+### Delivered
+- Added RFQ-aware quote ingestion support via tenant-scoped bridge adapters in the API layer:
+  - `OrchestratorDocumentRepository`
+  - `OrchestratorTenantRepository`
+  - `OrchestratorProcurementManager`
+  - `AtomyDecisionTrailWriter`
+- Wired `QuoteIngestionOrchestrator` to `QuotationIntelligenceCoordinator` with tenant-context propagation and deterministic decision-trail writes.
+- Added smart-mock ingestion coverage for quote submission processing and delta reparse preservation of manual overrides.
+- Added local support shims for API-side runtime wiring where the package contracts are used from the Laravel app.
+
+### Test Coverage Delta
+- Quote ingestion integration feature tests now pass with:
+  - `QuoteIngestionIntelligenceTest` - `3 tests`, `59 assertions`
+  - `QuoteIngestionPipelineTest` - `5 tests`, `17 assertions`
+
 ## Components
 
 ### Layer 2 Orchestrator

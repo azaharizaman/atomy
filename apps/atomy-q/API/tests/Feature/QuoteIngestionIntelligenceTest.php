@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Jobs\ProcessQuoteSubmissionJob;
+use App\Models\DecisionTrailEntry;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
@@ -12,7 +13,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 use Tests\Feature\Api\ApiTestCase;
@@ -32,6 +32,14 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
             'foreign_key_constraints' => true,
         ]);
         $app['config']->set('queue.default', 'sync');
+        $app['config']->set('logging.default', 'null');
+        $app['config']->set('logging.channels.stack.channels', ['null']);
+
+        $testStorageRoot = sys_get_temp_dir() . '/atomy-q-api-test-storage';
+        if (!is_dir($testStorageRoot)) {
+            mkdir($testStorageRoot, 0777, true);
+        }
+        $app['config']->set('filesystems.disks.local.root', $testStorageRoot);
 
         return $app;
     }
@@ -136,11 +144,25 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
         $sourceLines = $submission->normalizationSourceLines()->get();
         self::assertNotEmpty($sourceLines, 'Source lines should be created after processing');
 
+        self::assertNotEmpty(
+            DecisionTrailEntry::query()
+                ->where('tenant_id', $user->tenant_id)
+                ->where('rfq_id', $rfq->id)
+                ->get(),
+            'Auto-mapping should write decision trail entries'
+        );
+
         foreach ($sourceLines as $sourceLine) {
             self::assertNotNull(
                 $sourceLine->rfq_line_item_id,
                 sprintf('Source line at sort_order %d should have rfq_line_item_id populated', $sourceLine->sort_order)
             );
+
+            self::assertNotNull($sourceLine->ai_confidence, 'ai_confidence should be populated');
+            self::assertNotNull($sourceLine->taxonomy_code, 'taxonomy_code should be populated');
+            self::assertNotSame('', (string) $sourceLine->taxonomy_code, 'taxonomy_code should be non-empty');
+            self::assertNotNull($sourceLine->mapping_version, 'mapping_version should be populated');
+            self::assertNotSame('', (string) $sourceLine->mapping_version, 'mapping_version should be non-empty');
 
             $rfqLineItem = $rfq->lineItems()->where('id', $sourceLine->rfq_line_item_id)->first();
             self::assertNotNull($rfqLineItem, 'rfq_line_item_id should reference a valid RFQ line item');
@@ -189,12 +211,24 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
                 'source_quantity' => 2,
                 'source_uom' => 'EA',
                 'source_unit_price' => 200.00,
-                'raw_data' => ['old' => true, 'mapped' => true],
+                'raw_data' => ['old' => true, 'mapped' => true, 'override' => ['unit_price' => 210.00]],
                 'sort_order' => 1,
+            ],
+            [
+                'tenant_id' => $user->tenant_id,
+                'quote_submission_id' => $submission->id,
+                'rfq_line_item_id' => null,
+                'source_vendor' => 'Old Vendor',
+                'source_description' => 'Old Unmapped Override Line',
+                'source_quantity' => 3,
+                'source_uom' => 'EA',
+                'source_unit_price' => 300.00,
+                'raw_data' => ['old' => true, 'override' => ['unit_price' => 310.00]],
+                'sort_order' => 2,
             ],
         ]);
 
-        self::assertCount(2, $submission->normalizationSourceLines()->get());
+        self::assertCount(3, $submission->normalizationSourceLines()->get());
 
         $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
             ->post('/api/v1/quote-submissions/' . $submission->id . '/reparse');
@@ -205,12 +239,33 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
 
         self::assertNull($submission->error_code);
 
+        self::assertFalse(
+            $submission->normalizationSourceLines()->whereKey($existingLines[0]->id)->exists(),
+            'Unmapped source line without override should be deleted during delta reparse'
+        );
+
+        $mappedOverrideLine = $submission->normalizationSourceLines()->whereKey($existingLines[1]->id)->first();
+        self::assertNotNull($mappedOverrideLine, 'Mapped line with override should be preserved');
+        self::assertIsArray($mappedOverrideLine->raw_data);
+        self::assertArrayHasKey('override', $mappedOverrideLine->raw_data);
+
+        $unmappedOverrideLine = $submission->normalizationSourceLines()->whereKey($existingLines[2]->id)->first();
+        self::assertNotNull($unmappedOverrideLine, 'Unmapped line with override should be preserved');
+        self::assertIsArray($unmappedOverrideLine->raw_data);
+        self::assertArrayHasKey('override', $unmappedOverrideLine->raw_data);
+
         $remainingLines = $submission->normalizationSourceLines()->get();
-        
-        foreach ($remainingLines as $line) {
+        self::assertNotEmpty($remainingLines);
+
+        $nonOverrideLines = $remainingLines->filter(static function ($line): bool {
+            $raw = is_array($line->raw_data) ? $line->raw_data : [];
+            return !array_key_exists('override', $raw);
+        });
+
+        foreach ($nonOverrideLines as $line) {
             self::assertNotNull(
                 $line->rfq_line_item_id,
-                sprintf('After reparse, source line at sort_order %d should have rfq_line_item_id', $line->sort_order)
+                sprintf('After reparse, non-overridden source line at sort_order %d should have rfq_line_item_id', $line->sort_order)
             );
         }
     }
@@ -245,5 +300,21 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
             $mappedRfqs->count(),
             'At least some source lines should have rfq_line_item_id mapped to RFQ line items'
         );
+
+        self::assertNotEmpty(
+            DecisionTrailEntry::query()
+                ->where('tenant_id', $user->tenant_id)
+                ->where('rfq_id', $rfq->id)
+                ->get(),
+            'Upload processing should write decision trail entries'
+        );
+
+        foreach ($sourceLines as $sourceLine) {
+            self::assertNotNull($sourceLine->ai_confidence, 'ai_confidence should be populated');
+            self::assertNotNull($sourceLine->taxonomy_code, 'taxonomy_code should be populated');
+            self::assertNotSame('', (string) $sourceLine->taxonomy_code, 'taxonomy_code should be non-empty');
+            self::assertNotNull($sourceLine->mapping_version, 'mapping_version should be populated');
+            self::assertNotSame('', (string) $sourceLine->mapping_version, 'mapping_version should be non-empty');
+        }
     }
 }

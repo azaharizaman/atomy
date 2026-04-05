@@ -12,6 +12,10 @@ use Nexus\Currency\ValueObjects\CurrencyPair;
 use Nexus\Finance\ValueObjects\ExchangeRate;
 use Psr\Log\LoggerInterface;
 
+if (!class_exists(ExchangeRate::class)) {
+    require_once __DIR__ . '/../Support/ExchangeRate.php';
+}
+
 /**
  * Service for deep normalization of Units of Measure (UoM) and Currencies.
  */

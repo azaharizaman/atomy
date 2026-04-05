@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Jobs\ProcessQuoteSubmissionJob;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
+use App\Models\RfqLineItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -55,7 +56,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
     private function createRfq(User $user): Rfq
     {
-        return Rfq::query()->create([
+        $rfq = Rfq::query()->create([
             'tenant_id' => $user->tenant_id,
             'rfq_number' => 'RFQ-PIPELINE-' . Str::upper(Str::random(6)),
             'title' => 'Pipeline Test RFQ',
@@ -63,6 +64,41 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
+
+        RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Industrial Pump Model X500',
+            'quantity' => 5,
+            'uom' => 'EA',
+            'unit_price' => 2500.00,
+            'currency' => 'USD',
+            'sort_order' => 0,
+        ]);
+
+        RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Control Valve DN50',
+            'quantity' => 10,
+            'uom' => 'EA',
+            'unit_price' => 450.00,
+            'currency' => 'USD',
+            'sort_order' => 1,
+        ]);
+
+        RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Stainless Steel Piping 2 inch',
+            'quantity' => 100,
+            'uom' => 'M',
+            'unit_price' => 85.00,
+            'currency' => 'USD',
+            'sort_order' => 2,
+        ]);
+
+        return $rfq;
     }
 
     public function test_upload_triggers_job(): void
