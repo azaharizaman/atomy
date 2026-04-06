@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Adapters\QuotationIntelligence;
 
+use App\Exceptions\DecisionTrailSerializationException;
 use App\Models\ComparisonRun;
 use App\Models\DecisionTrailEntry;
 use App\Models\QuoteSubmission;
 use Illuminate\Support\Facades\DB;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
+use JsonException;
 use Psr\Log\LoggerInterface;
 
 final readonly class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
@@ -85,7 +87,17 @@ final readonly class AtomyDecisionTrailWriter implements DecisionTrailWriterInte
                 }
 
                 $payload = $entry['payload'];
-                $payloadHash = hash('sha256', (string) json_encode($payload, JSON_THROW_ON_ERROR));
+                try {
+                    $payloadJson = json_encode($payload, JSON_THROW_ON_ERROR);
+                } catch (JsonException $exception) {
+                    throw new DecisionTrailSerializationException(
+                        'Failed to serialize decision trail payload.',
+                        0,
+                        $exception
+                    );
+                }
+
+                $payloadHash = hash('sha256', (string) $payloadJson);
                 $entryHash = hash('sha256', $currentPreviousHash . $payloadHash . $entry['event_type']);
 
                 DecisionTrailEntry::query()->create([
@@ -174,10 +186,17 @@ final readonly class AtomyDecisionTrailWriter implements DecisionTrailWriterInte
 
     private function resolveComparisonRunId(string $tenantId, string $rfqId, ?string $idempotencyKey): string
     {
-        $comparisonRun = ComparisonRun::query()
+        $comparisonRunQuery = ComparisonRun::query()
             ->where('tenant_id', $tenantId)
-            ->where('rfq_id', $rfqId)
-            ->when($idempotencyKey !== null, static fn ($q) => $q->where('idempotency_key', $idempotencyKey))
+            ->where('rfq_id', $rfqId);
+
+        if ($idempotencyKey === null) {
+            $comparisonRunQuery->whereNull('idempotency_key');
+        } else {
+            $comparisonRunQuery->where('idempotency_key', $idempotencyKey);
+        }
+
+        $comparisonRun = $comparisonRunQuery
             ->orderByDesc('created_at')
             ->lockForUpdate()
             ->first();

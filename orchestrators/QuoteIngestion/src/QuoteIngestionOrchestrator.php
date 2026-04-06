@@ -17,6 +17,7 @@ use Psr\Log\LoggerInterface;
 final readonly class QuoteIngestionOrchestrator
 {
     private const DECISION_ACTION_AUTO_MAP = 'auto_map';
+    private const CONFIDENCE_THRESHOLD = 80.0;
 
     public function __construct(
         private QuotationIntelligenceCoordinatorInterface $coordinator,
@@ -54,7 +55,7 @@ final readonly class QuoteIngestionOrchestrator
             $this->persistSourceLines($submission, $lines);
 
             $avgConfidence = $this->calculateAvgConfidence($lines);
-            $finalStatus = $avgConfidence >= 80.0 ? 'ready' : 'needs_review';
+            $finalStatus = $avgConfidence >= self::CONFIDENCE_THRESHOLD ? 'ready' : 'needs_review';
             $this->submissionPersist->markCompleted($submission, $finalStatus, $avgConfidence, count($lines));
 
         } catch (\Throwable $e) {
@@ -95,24 +96,7 @@ final readonly class QuoteIngestionOrchestrator
                 $tenantId,
                 $quoteSubmissionId,
                 $rfqLineId,
-                [
-                    'source_vendor' => $vendorName,
-                    'source_description' => $line['vendor_description'],
-                    'source_quantity' => (float) ($line['quoted_quantity'] ?? 0),
-                    'source_uom' => $line['quoted_unit'] ?? 'EA',
-                    'source_unit_price' => (float) ($line['quoted_unit_price'] ?? 0),
-                    'raw_data' => [
-                        'quoted_quantity' => $line['quoted_quantity'],
-                        'quoted_unit' => $line['quoted_unit'],
-                        'quoted_unit_price' => $line['quoted_unit_price'],
-                        'normalized_quantity' => $line['normalized_quantity'] ?? null,
-                        'normalized_unit_price' => $line['normalized_unit_price'] ?? null,
-                    ],
-                    'sort_order' => $sortOrder,
-                    'ai_confidence' => (float) ($line['ai_confidence'] ?? 0),
-                    'taxonomy_code' => $line['taxonomy_code'] ?? '',
-                    'mapping_version' => $line['metadata']['mapping_version'] ?? '',
-                ]
+                $this->buildSourceLinePayload($submission, $rfqLineId, $line, $sortOrder, $vendorName)
             );
 
             $this->writeDecisionTrail(
@@ -128,7 +112,7 @@ final readonly class QuoteIngestionOrchestrator
     private function writeDecisionTrail(QuoteSubmissionInterface $submission, string $rfqLineId, array $line): void
     {
         $confidence = (float) ($line['ai_confidence'] ?? 0);
-        if ($confidence >= 80.0) {
+        if ($confidence >= self::CONFIDENCE_THRESHOLD) {
             $this->decisionTrailWriter->write(
                 $submission->getTenantId(),
                 $submission->getRfqId(),
@@ -160,5 +144,58 @@ final readonly class QuoteIngestionOrchestrator
     private function handleFailure(QuoteSubmissionInterface $submission, string $errorCode, ?string $errorMessage): void
     {
         $this->submissionPersist->markFailed($submission, $errorCode, $errorMessage);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildSourceLinePayload(
+        QuoteSubmissionInterface $submission,
+        string $rfqLineId,
+        array $line,
+        int $sortOrder,
+        string $vendorName
+    ): array {
+        $missingFields = [];
+        if (!array_key_exists('quoted_quantity', $line)) {
+            $missingFields[] = 'quoted_quantity';
+        }
+
+        if (!array_key_exists('quoted_unit', $line)) {
+            $missingFields[] = 'quoted_unit';
+        }
+
+        if (!array_key_exists('quoted_unit_price', $line)) {
+            $missingFields[] = 'quoted_unit_price';
+        }
+
+        if ($missingFields !== []) {
+            $this->logger->warning('Missing upstream quote data for normalization source line', [
+                'tenant_id' => $submission->getTenantId(),
+                'quote_submission_id' => $submission->getId(),
+                'rfq_id' => $submission->getRfqId(),
+                'rfq_line_id' => $rfqLineId,
+                'missing_fields' => $missingFields,
+            ]);
+        }
+
+        return [
+            'source_vendor' => $vendorName,
+            'source_description' => $line['vendor_description'],
+            'source_quantity' => (float) ($line['quoted_quantity'] ?? 0),
+            'source_uom' => $line['quoted_unit'] ?? 'EA',
+            'source_unit_price' => (float) ($line['quoted_unit_price'] ?? 0),
+            'raw_data' => [
+                'quoted_quantity' => $line['quoted_quantity'] ?? null,
+                'quoted_unit' => $line['quoted_unit'] ?? null,
+                'quoted_unit_price' => $line['quoted_unit_price'] ?? null,
+                'normalized_quantity' => $line['normalized_quantity'] ?? null,
+                'normalized_unit_price' => $line['normalized_unit_price'] ?? null,
+            ],
+            'sort_order' => $sortOrder,
+            'ai_confidence' => (float) ($line['ai_confidence'] ?? 0),
+            'taxonomy_code' => $line['taxonomy_code'] ?? '',
+            'mapping_version' => $line['metadata']['mapping_version'] ?? '',
+        ];
     }
 }

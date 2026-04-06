@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use DomainException;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -87,6 +88,10 @@ class NormalizationSourceLine extends Model implements NormalizationSourceLineRe
 
     public function getRfqLineItemId(): string
     {
+        if ($this->rfq_line_item_id === null) {
+            throw new DomainException('rfq_line_item_id is null');
+        }
+
         return (string) $this->rfq_line_item_id;
     }
 
