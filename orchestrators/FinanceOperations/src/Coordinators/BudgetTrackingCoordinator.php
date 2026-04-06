@@ -8,6 +8,7 @@ use Nexus\FinanceOperations\Contracts\BudgetTrackingCoordinatorInterface;
 use Nexus\FinanceOperations\Contracts\BudgetVarianceProviderInterface;
 use Nexus\FinanceOperations\DTOs\BudgetCheckRequest;
 use Nexus\FinanceOperations\DTOs\BudgetCheckResult;
+use Nexus\FinanceOperations\DTOs\RuleContext;
 use Nexus\FinanceOperations\DTOs\BudgetVarianceRequest;
 use Nexus\FinanceOperations\DTOs\BudgetVarianceResult;
 use Nexus\FinanceOperations\DTOs\BudgetThresholdRequest;
@@ -93,12 +94,14 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
 
         try {
             // Validate budget availability using rule
-            $ruleResult = $this->budgetAvailableRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'budgetId' => $request->budgetId,
-                'amount' => (string)$request->amount,
-                'costCenterId' => $request->options['cost_center_id'] ?? null,
-            ]);
+            $ruleResult = $this->budgetAvailableRule->check(
+                RuleContext::forBudgetAvailability(
+                    tenantId: $request->tenantId,
+                    budgetId: $request->budgetId,
+                    amount: (string) $request->amount,
+                    costCenterId: $request->options['cost_center_id'] ?? null,
+                )
+            );
 
             // Short-circuit if rule validation fails
             if (!$ruleResult->passed) {

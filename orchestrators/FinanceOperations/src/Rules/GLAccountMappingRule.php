@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Rules;
 
+use Nexus\FinanceOperations\Contracts\GLAccountMappingRepositoryInterface;
+use Nexus\FinanceOperations\Contracts\GLAccountMappingRuleViewInterface;
+use Nexus\FinanceOperations\Contracts\GLAccountQueryInterface;
 use Nexus\FinanceOperations\Contracts\RuleInterface;
+use Nexus\FinanceOperations\Contracts\RuleContextInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -24,25 +28,25 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
 final readonly class GLAccountMappingRule implements RuleInterface
 {
     /**
-     * @param object $chartOfAccountQuery AccountQueryInterface for account validation
-     * @param object $mappingRepository GLMappingRepositoryInterface for mapping lookup
+     * @param GLAccountQueryInterface $chartOfAccountQuery Account query for account validation
+     * @param GLAccountMappingRepositoryInterface $mappingRepository Mapping lookup for subledger transactions
      */
     public function __construct(
-        private object $chartOfAccountQuery,
-        private object $mappingRepository,
+        private GLAccountQueryInterface $chartOfAccountQuery,
+        private GLAccountMappingRepositoryInterface $mappingRepository,
     ) {}
 
     /**
      * @inheritDoc
      *
-     * @param object $context Context containing tenantId, subledgerType, and transactionTypes
+     * @param RuleContextInterface $context Context containing tenantId, subledgerType, and transactionTypes
      * @return RuleResult The rule check result
      */
-    public function check(object $context): RuleResult
+    public function check(RuleContextInterface $context): RuleResult
     {
-        $tenantId = $this->extractTenantId($context);
-        $subledgerType = $this->extractSubledgerType($context);
-        $transactionTypes = $this->extractTransactionTypes($context);
+        $tenantId = $context->getTenantId();
+        $subledgerType = trim((string) $context->getSubledgerType());
+        $transactionTypes = $context->getTransactionTypes();
 
         if (empty($subledgerType)) {
             return RuleResult::failed(
@@ -84,30 +88,30 @@ final readonly class GLAccountMappingRule implements RuleInterface
             // Validate that the mapped account exists and is active
             $account = $this->chartOfAccountQuery->find(
                 $tenantId,
-                $this->getGLAccountCode($mapping)
+                $mapping->getGLAccountCode()
             );
 
             if ($account === null) {
                 $violations[] = [
                     'type' => 'invalid_account',
                     'transaction_type' => $txType,
-                    'account_code' => $this->getGLAccountCode($mapping),
+                    'account_code' => $mapping->getGLAccountCode(),
                     'message' => sprintf(
                         'Mapped GL account "%s" does not exist',
-                        $this->getGLAccountCode($mapping)
+                        $mapping->getGLAccountCode()
                     ),
                 ];
                 continue;
             }
 
-            if (!$this->isAccountActive($account)) {
+            if (!$account->isActive()) {
                 $violations[] = [
                     'type' => 'inactive_account',
                     'transaction_type' => $txType,
-                    'account_code' => $this->getGLAccountCode($mapping),
+                    'account_code' => $mapping->getGLAccountCode(),
                     'message' => sprintf(
                         'Mapped GL account "%s" is inactive',
-                        $this->getGLAccountCode($mapping)
+                        $mapping->getGLAccountCode()
                     ),
                 ];
             }
@@ -138,164 +142,17 @@ final readonly class GLAccountMappingRule implements RuleInterface
     /**
      * Find mapping for a transaction type.
      *
-     * @param array<object> $mappings List of mapping objects
+     * @param array<GLAccountMappingRuleViewInterface> $mappings List of mapping objects
      * @param string $txType Transaction type to find
-     * @return object|null The mapping or null if not found
+     * @return GLAccountMappingRuleViewInterface|null The mapping or null if not found
      */
-    private function findMapping(array $mappings, string $txType): ?object
+    private function findMapping(array $mappings, string $txType): ?GLAccountMappingRuleViewInterface
     {
         foreach ($mappings as $mapping) {
-            if ($this->getTransactionType($mapping) === $txType) {
+            if ($mapping->getTransactionType() === $txType) {
                 return $mapping;
             }
         }
         return null;
-    }
-
-    /**
-     * Extract tenant ID from context.
-     *
-     * @param object $context The context object
-     * @return string The tenant ID
-     */
-    private function extractTenantId(object $context): string
-    {
-        if (method_exists($context, 'getTenantId')) {
-            return $context->getTenantId();
-        }
-
-        if (property_exists($context, 'tenantId')) {
-            return $context->tenantId ?? '';
-        }
-
-        if (property_exists($context, 'tenant_id')) {
-            return $context->tenant_id ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Extract subledger type from context.
-     *
-     * @param object $context The context object
-     * @return string The subledger type
-     */
-    private function extractSubledgerType(object $context): string
-    {
-        if (method_exists($context, 'getSubledgerType')) {
-            return $context->getSubledgerType();
-        }
-
-        if (property_exists($context, 'subledgerType')) {
-            return $context->subledgerType ?? '';
-        }
-
-        if (property_exists($context, 'subledger_type')) {
-            return $context->subledger_type ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Extract transaction types from context.
-     *
-     * @param object $context The context object
-     * @return array<string> The transaction types
-     */
-    private function extractTransactionTypes(object $context): array
-    {
-        if (method_exists($context, 'getTransactionTypes')) {
-            return $context->getTransactionTypes();
-        }
-
-        if (property_exists($context, 'transactionTypes')) {
-            return $context->transactionTypes ?? [];
-        }
-
-        if (property_exists($context, 'transaction_types')) {
-            return $context->transaction_types ?? [];
-        }
-
-        return [];
-    }
-
-    /**
-     * Get transaction type from mapping.
-     *
-     * @param object $mapping The mapping object
-     * @return string The transaction type
-     */
-    private function getTransactionType(object $mapping): string
-    {
-        if (method_exists($mapping, 'getTransactionType')) {
-            return $mapping->getTransactionType();
-        }
-
-        if (property_exists($mapping, 'transactionType')) {
-            return $mapping->transactionType ?? '';
-        }
-
-        if (property_exists($mapping, 'transaction_type')) {
-            return $mapping->transaction_type ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Get GL account code from mapping.
-     *
-     * @param object $mapping The mapping object
-     * @return string The GL account code
-     */
-    private function getGLAccountCode(object $mapping): string
-    {
-        if (method_exists($mapping, 'getGLAccountCode')) {
-            return $mapping->getGLAccountCode();
-        }
-
-        if (method_exists($mapping, 'getAccountCode')) {
-            return $mapping->getAccountCode();
-        }
-
-        if (property_exists($mapping, 'glAccountCode')) {
-            return $mapping->glAccountCode ?? '';
-        }
-
-        if (property_exists($mapping, 'account_code')) {
-            return $mapping->account_code ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Check if the account is active.
-     *
-     * @param object $account The account object
-     * @return bool True if the account is active
-     */
-    private function isAccountActive(object $account): bool
-    {
-        if (method_exists($account, 'isActive')) {
-            return $account->isActive();
-        }
-
-        if (method_exists($account, 'getIsActive')) {
-            return $account->getIsActive();
-        }
-
-        if (property_exists($account, 'isActive')) {
-            return $account->isActive;
-        }
-
-        if (property_exists($account, 'is_active')) {
-            return $account->is_active;
-        }
-
-        // Default to true if we cannot determine status
-        return true;
     }
 }

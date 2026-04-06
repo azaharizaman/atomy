@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Contracts;
 
+use Nexus\FinanceOperations\DTOs\RuleResult;
+
 /**
  * Contract for finance business rules validation.
  *
@@ -16,7 +18,7 @@ namespace Nexus\FinanceOperations\Contracts;
  * - Each rule validates one specific business constraint
  * - Used by coordinators to enforce business policies
  *
- * @see \Nexus\FinanceOperations\DTOs\RuleResult
+ * @see RuleResult
  */
 interface RuleInterface
 {
@@ -28,8 +30,8 @@ interface RuleInterface
     /**
      * Check if the rule passes for the given context.
      *
-     * @param object $context The context to validate (typically a DTO)
-     * @return \Nexus\FinanceOperations\DTOs\RuleResult The rule check result
+     * @param RuleContextInterface $context Typed context for rule validation
+     * @return RuleResult The rule check result
      */
-    public function check(object $context): \Nexus\FinanceOperations\DTOs\RuleResult;
+    public function check(RuleContextInterface $context): RuleResult;
 }
