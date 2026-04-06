@@ -10,5 +10,5 @@ interface NormalizationSourceLineQueryInterface
         string $tenantId,
         string $quoteSubmissionId,
         string $rfqLineItemId
-    ): ?object;
+    ): ?NormalizationSourceLineReadInterface;
 }

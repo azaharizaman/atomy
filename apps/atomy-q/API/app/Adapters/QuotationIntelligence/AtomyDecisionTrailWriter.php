@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Psr\Log\LoggerInterface;
 
-final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
+final readonly class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
 {
     public function __construct(
         private ?LoggerInterface $logger = null,
@@ -73,6 +73,8 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
                     ->max('sequence')) + 1
             );
 
+            $occurredAt = now();
+
             foreach ($entries as $index => $entry) {
                 if (!is_array($entry) || !isset($entry['event_type'], $entry['payload']) || !is_array($entry['payload'])) {
                     $this->logger?->warning('Skipping malformed decision trail entry', [
@@ -95,7 +97,7 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
                     'payload_hash' => $payloadHash,
                     'previous_hash' => $currentPreviousHash,
                     'entry_hash' => $entryHash,
-                    'occurred_at' => now(),
+                    'occurred_at' => $occurredAt,
                 ]);
 
                 $results[] = [
@@ -104,7 +106,7 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
                     'payload_hash' => $payloadHash,
                     'previous_hash' => $currentPreviousHash,
                     'entry_hash' => $entryHash,
-                    'occurred_at' => now()->toIso8601String(),
+                    'occurred_at' => $occurredAt->toIso8601String(),
                 ];
 
                 $currentPreviousHash = $entryHash;

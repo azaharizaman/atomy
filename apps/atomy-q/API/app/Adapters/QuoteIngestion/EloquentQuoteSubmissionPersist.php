@@ -8,7 +8,7 @@ use App\Models\QuoteSubmission;
 use Nexus\QuoteIngestion\Contracts\QuoteSubmissionInterface;
 use Nexus\QuoteIngestion\Contracts\QuoteSubmissionPersistInterface;
 
-final class EloquentQuoteSubmissionPersist implements QuoteSubmissionPersistInterface
+final readonly class EloquentQuoteSubmissionPersist implements QuoteSubmissionPersistInterface
 {
     public function updateStatus(QuoteSubmissionInterface $submission, string $status): void
     {
@@ -35,11 +35,12 @@ final class EloquentQuoteSubmissionPersist implements QuoteSubmissionPersistInte
     public function markCompleted(QuoteSubmissionInterface $submission, string $status, float $confidence, int $lineCount): void
     {
         /** @var QuoteSubmission $submission */
+        $now = now();
         $submission->status = $status;
         $submission->confidence = $confidence;
         $submission->line_items_count = $lineCount;
-        $submission->processing_completed_at = now();
-        $submission->parsed_at = now();
+        $submission->processing_completed_at = $now;
+        $submission->parsed_at = $now;
         $submission->save();
     }
 

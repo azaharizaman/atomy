@@ -80,7 +80,7 @@ final readonly class QuoteIngestionOrchestrator
             $existingLine = $this->sourceLineQuery->findExisting($tenantId, $quoteSubmissionId, $rfqLineId);
 
             if ($existingLine !== null) {
-                $existingRaw = is_array($existingLine->raw_data) ? $existingLine->raw_data : [];
+                $existingRaw = $existingLine->getRawData();
                 if (array_key_exists('override', $existingRaw)) {
                     $this->logger->info('Skipping source line due to existing override', [
                         'tenant_id' => $tenantId,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Adapters\QuoteIngestion;
 
 use App\Models\NormalizationSourceLine;
+use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineReadInterface;
 use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineQueryInterface;
 use Nexus\QuoteIngestion\Contracts\NormalizationSourceLinePersistInterface;
 
@@ -14,7 +15,7 @@ final class EloquentNormalizationSourceLineRepository implements NormalizationSo
         string $tenantId,
         string $quoteSubmissionId,
         string $rfqLineItemId
-    ): ?object {
+    ): ?NormalizationSourceLineReadInterface {
         return NormalizationSourceLine::query()
             ->where('tenant_id', $tenantId)
             ->where('quote_submission_id', $quoteSubmissionId)

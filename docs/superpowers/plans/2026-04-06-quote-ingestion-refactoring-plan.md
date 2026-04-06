@@ -5,21 +5,21 @@
 **Goal:** Refactor the Quote Ingestion and Quotation Intelligence modules to improve type safety, transactional integrity, and contract compliance based on the approved design spec.
 
 **Architecture:** 
-- Introduce `QuoteSubmissionInterface` to replace generic `object` types.
-- Split `NormalizationSourceLineRepositoryInterface` into Query and Persist interfaces.
-- Enhance `AtomyDecisionTrailWriter` with strict row-level locking (`lockForUpdate`).
-- Align `InMemoryUomRepository` with its interface contract by throwing appropriate exceptions.
+- Introduce `\Nexus\QuoteIngestion\Contracts\QuoteSubmissionInterface` to replace generic `object` types.
+- Use `\Nexus\QuoteIngestion\Contracts\NormalizationSourceLineQueryInterface` and `\Nexus\QuoteIngestion\Contracts\NormalizationSourceLinePersistInterface` instead of `\Nexus\QuoteIngestion\Contracts\NormalizationSourceLineRepositoryInterface`.
+- Enhance `\App\Adapters\QuotationIntelligence\AtomyDecisionTrailWriter` with strict row-level locking (`lockForUpdate`).
+- Align `\App\Adapters\QuotationIntelligence\Support\InMemoryUomRepository` with its interface contract by throwing appropriate exceptions.
 
 **Tech Stack:** PHP 8.2+, Laravel, Eloquent ORM.
 
 ---
 
-### Task 1: Define QuoteSubmissionInterface
+## Task 1: Define QuoteSubmissionInterface
 
 **Files:**
 - Create: `orchestrators/QuoteIngestion/src/Contracts/QuoteSubmissionInterface.php`
 
-- [ ] **Step 1: Create the interface**
+- [x] **Step 1: Create the interface**
 
 ```php
 <?php
@@ -37,7 +37,7 @@ interface QuoteSubmissionInterface
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add orchestrators/QuoteIngestion/src/Contracts/QuoteSubmissionInterface.php
@@ -46,13 +46,13 @@ git commit -m "feat(quote-ingestion): add QuoteSubmissionInterface contract"
 
 ---
 
-### Task 2: Update QuoteSubmissionQueryInterface and QuoteSubmissionPersistInterface
+## Task 2: Update QuoteSubmissionQueryInterface and QuoteSubmissionPersistInterface
 
 **Files:**
 - Modify: `orchestrators/QuoteIngestion/src/Contracts/QuoteSubmissionQueryInterface.php`
 - Modify: `orchestrators/QuoteIngestion/src/Contracts/QuoteSubmissionPersistInterface.php`
 
-- [ ] **Step 1: Update QuoteSubmissionQueryInterface**
+- [x] **Step 1: Update QuoteSubmissionQueryInterface**
 
 ```php
 <?php
@@ -67,7 +67,7 @@ interface QuoteSubmissionQueryInterface
 }
 ```
 
-- [ ] **Step 2: Update QuoteSubmissionPersistInterface**
+- [x] **Step 2: Update QuoteSubmissionPersistInterface**
 
 ```php
 <?php
@@ -86,7 +86,7 @@ interface QuoteSubmissionPersistInterface
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add orchestrators/QuoteIngestion/src/Contracts/QuoteSubmissionQueryInterface.php \
@@ -96,14 +96,14 @@ git commit -m "refactor(quote-ingestion): use QuoteSubmissionInterface in query 
 
 ---
 
-### Task 3: Split NormalizationSourceLineRepositoryInterface
+## Task 3: Split NormalizationSourceLineRepositoryInterface
 
 **Files:**
 - Create: `orchestrators/QuoteIngestion/src/Contracts/NormalizationSourceLineQueryInterface.php`
 - Create: `orchestrators/QuoteIngestion/src/Contracts/NormalizationSourceLinePersistInterface.php`
 - Delete: `orchestrators/QuoteIngestion/src/Contracts/NormalizationSourceLineRepositoryInterface.php`
 
-- [ ] **Step 1: Create NormalizationSourceLineQueryInterface**
+- [x] **Step 1: Create NormalizationSourceLineQueryInterface**
 
 ```php
 <?php
@@ -118,11 +118,11 @@ interface NormalizationSourceLineQueryInterface
         string $tenantId,
         string $quoteSubmissionId,
         string $rfqLineItemId
-    ): ?object;
+    ): ?NormalizationSourceLineReadInterface;
 }
 ```
 
-- [ ] **Step 2: Create NormalizationSourceLinePersistInterface**
+- [x] **Step 2: Create NormalizationSourceLinePersistInterface**
 
 ```php
 <?php
@@ -142,7 +142,7 @@ interface NormalizationSourceLinePersistInterface
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add orchestrators/QuoteIngestion/src/Contracts/NormalizationSourceLineQueryInterface.php \
@@ -153,18 +153,18 @@ git commit -m "refactor(quote-ingestion): split NormalizationSourceLineRepositor
 
 ---
 
-### Task 4: Update QuoteIngestionOrchestrator
+## Task 4: Update QuoteIngestionOrchestrator
 
 **Files:**
 - Modify: `orchestrators/QuoteIngestion/src/QuoteIngestionOrchestrator.php`
 
-- [ ] **Step 1: Update dependencies and type hints**
+- [x] **Step 1: Update dependencies and type hints**
 - Update constructor to use split repository interfaces.
 - Update `process`, `persistSourceLines`, `writeDecisionTrail`, and `handleFailure` to use `QuoteSubmissionInterface`.
 - Simplify `calculateAvgConfidence` (remove redundant ternary).
 - Add logging in `persistSourceLines` when skipping overrides.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add orchestrators/QuoteIngestion/src/QuoteIngestionOrchestrator.php
@@ -173,17 +173,17 @@ git commit -m "refactor(quote-ingestion): update orchestrator with typed submiss
 
 ---
 
-### Task 5: Implement Contract Compliance in InMemoryUomRepository
+## Task 5: Implement Contract Compliance in InMemoryUomRepository
 
 **Files:**
 - Modify: `apps/atomy-q/API/app/Adapters/QuotationIntelligence/Support/InMemoryUomRepository.php`
 
-- [ ] **Step 1: Update save methods to throw exceptions**
-- Implement duplicate checks and throw `DuplicateUnitCodeException`, `DuplicateDimensionCodeException`, and `InvalidConversionRatioException`.
+- [x] **Step 1: Update save methods to throw exceptions**
+- Implement duplicate checks and throw `\Nexus\Uom\Exceptions\DuplicateUnitCodeException`, `\Nexus\Uom\Exceptions\DuplicateDimensionCodeException`, and `\Nexus\Uom\Exceptions\InvalidConversionRatioException`.
 - Add `@SuppressWarnings(PHPMD.UnusedFormalParameter)` to `getUnitsBySystem`.
 - Add `reset()` method.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/atomy-q/API/app/Adapters/QuotationIntelligence/Support/InMemoryUomRepository.php
@@ -192,15 +192,16 @@ git commit -m "refactor(uom): enforce interface contract in InMemoryUomRepositor
 
 ---
 
-### Task 6: Secure Decision Trail Writes
+## Task 6: Secure Decision Trail Writes
 
 **Files:**
 - Modify: `apps/atomy-q/API/app/Adapters/QuotationIntelligence/AtomyDecisionTrailWriter.php`
 
-- [ ] **Step 1: Add row-level locking**
+- [x] **Step
+ 1: Add row-level locking**
 - Wrap sequential reads (previous hash, max sequence) in `lockForUpdate()`.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/atomy-q/API/app/Adapters/QuotationIntelligence/AtomyDecisionTrailWriter.php
@@ -209,19 +210,21 @@ git commit -m "fix(quotation-intelligence): add row-level locking for decision t
 
 ---
 
-### Task 7: Update Eloquent Repository and Controller
+## Task 7: Update Eloquent Repository and Controller
 
 **Files:**
 - Modify: `apps/atomy-q/API/app/Adapters/QuoteIngestion/EloquentNormalizationSourceLineRepository.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/QuoteSubmissionController.php`
 
-- [ ] **Step 1: Filter keys in repository**
+- [x] **Step
+ 1: Filter keys in repository**
 - Implement split interfaces and filter `tenant_id`, `quote_submission_id`, `rfq_line_item_id` in `upsert`.
 
-- [ ] **Step 2: Update controller validation**
+- [x] **Step
+ 2: Update controller validation**
 - Use `trim((string)...) !== ''` for `override` and `resolution` checks.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/atomy-q/API/app/Adapters/QuoteIngestion/EloquentNormalizationSourceLineRepository.php \
@@ -231,18 +234,20 @@ git commit -m "refactor: apply repository filtering and controller validation fi
 
 ---
 
-### Task 8: Test Cleanup and Final Verification
+## Task 8: Test Cleanup and Final Verification
 
 **Files:**
 - Modify: `apps/atomy-q/API/tests/Feature/QuoteIngestionIntelligenceTest.php`
 
-- [ ] **Step 1: Implement tearDown in test**
+- [x] **Step
+ 1: Implement tearDown in test**
 - Recursively delete `$testStorageRoot`.
 
-- [ ] **Step 2: Run all tests**
+- [x] **Step
+ 2: Run all tests**
 - `php vendor/bin/phpunit tests/Feature/QuoteIngestionIntelligenceTest.php`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/atomy-q/API/tests/Feature/QuoteIngestionIntelligenceTest.php
