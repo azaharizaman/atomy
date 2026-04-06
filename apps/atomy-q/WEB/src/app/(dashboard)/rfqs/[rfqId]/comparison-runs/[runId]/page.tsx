@@ -330,7 +330,7 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
       >
         {matrix?.clusters?.length ? (
           <div className="space-y-4">
-            {matrix?.clusters?.map((cluster) => (
+            {matrix.clusters.map((cluster) => (
               <MatrixClusterCard key={cluster.clusterKey} cluster={cluster} />
             ))}
           </div>

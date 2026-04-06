@@ -8155,7 +8155,40 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_id": {
+                                                    "type": "string",
+                                                    "format": "ulid"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "reminded_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "rfq_id",
+                                                "status",
+                                                "reminded_at"
+                                            ],
+                                            "additionalProperties": true
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "additionalProperties": true
                                 }
                             }
                         }
