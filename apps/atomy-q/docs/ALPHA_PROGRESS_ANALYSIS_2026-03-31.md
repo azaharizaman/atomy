@@ -51,6 +51,7 @@ There is also active in-flight work in the workspace around quote lifecycle prod
    - Why it matters: the Alpha scope explicitly requires real quote intake and AI-assisted normalization.
    - Evidence: the audit says there is no wired LLM/quotation-intelligence pipeline, reparse is fake, and normalization reads were empty at audit time (`apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_RELEASE_AUDIT.md:31-35`, `apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_RELEASE_AUDIT.md:98-109`).
    - Result: the most differentiated part of the product is still only partially real.
+   - Deferred note: the persistence, tenant scoping, decision trail, and reparse mechanics have now been hardened, but the live LLM/model selection for normalization is intentionally deferred until the alpha-ready model decision is finalized. Revisit the quote-ingestion/AI-normalization gap-closure plan before any alpha declaration and close the remaining mock-backed extraction/mapping work only after the model choice is settled.
 
 5. **Comparison preview/matrix/readiness workflow is still incomplete**
    - Why it matters: Alpha users need to inspect comparison state before freezing and selecting a winner.
@@ -99,6 +100,10 @@ These were all introduced on 2026-03-23 and have not been updated since. They ar
 - `docs/superpowers/plans/2026-03-29-quote-lifecycle-productionization.md`
 
 This is the most relevant current execution plan. It targets the exact live gaps in quote submission, normalization, comparison, awards, and docs. The working tree shows implementation moving in that direction, but the plan itself is not yet closed and the UI/backend are not yet fully consistent.
+
+- `docs/superpowers/plans/2026-04-04-quote-ingestion-ai-normalization-gap-closure-plan.md`
+
+This plan is intentionally paused at the mock-backed extraction/mapping boundary. It should be reopened when the final LLM / AI normalization model is selected so the remaining mock wiring can be replaced with the production processor and mapper.
 
 ## Bottom line
 
