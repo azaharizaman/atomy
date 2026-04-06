@@ -137,6 +137,13 @@ function MatrixClusterCard({
 }: {
   cluster: NonNullable<ReturnType<typeof useComparisonRunMatrix>['data']>['clusters'][number];
 }) {
+  const minNormalizedUnitPrice =
+    typeof cluster.statistics?.minNormalizedUnitPrice === 'number' ? cluster.statistics.minNormalizedUnitPrice : undefined;
+  const avgNormalizedUnitPrice =
+    typeof cluster.statistics?.avgNormalizedUnitPrice === 'number' ? cluster.statistics.avgNormalizedUnitPrice : undefined;
+  const maxNormalizedUnitPrice =
+    typeof cluster.statistics?.maxNormalizedUnitPrice === 'number' ? cluster.statistics.maxNormalizedUnitPrice : undefined;
+
   return (
     <Card className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -154,9 +161,9 @@ function MatrixClusterCard({
       <InfoGrid
         cols={3}
         items={[
-          { label: 'Min price', value: cluster.statistics.minNormalizedUnitPrice.toFixed(2) },
-          { label: 'Avg price', value: cluster.statistics.avgNormalizedUnitPrice.toFixed(2) },
-          { label: 'Max price', value: cluster.statistics.maxNormalizedUnitPrice.toFixed(2) },
+          { label: 'Min price', value: minNormalizedUnitPrice !== undefined ? minNormalizedUnitPrice.toFixed(2) : '—' },
+          { label: 'Avg price', value: avgNormalizedUnitPrice !== undefined ? avgNormalizedUnitPrice.toFixed(2) : '—' },
+          { label: 'Max price', value: maxNormalizedUnitPrice !== undefined ? maxNormalizedUnitPrice.toFixed(2) : '—' },
         ]}
       />
 
@@ -176,9 +183,9 @@ function MatrixClusterCard({
               <tr key={`${cluster.clusterKey}-${offer.vendorId}`} className="border-b border-slate-100">
                 <td className="px-3 py-2 font-medium text-slate-800">{offer.vendorId}</td>
                 <td className="px-3 py-2 text-slate-600">{offer.rfqLineId}</td>
-                <td className="px-3 py-2 text-slate-600">{offer.normalizedUnitPrice.toFixed(2)}</td>
-                <td className="px-3 py-2 text-slate-600">{offer.normalizedQuantity.toFixed(2)}</td>
-                <td className="px-3 py-2 text-slate-600">{Math.round(offer.aiConfidence * 100)}%</td>
+                <td className="px-3 py-2 text-slate-600">{(offer.normalizedUnitPrice ?? 0).toFixed(2)}</td>
+                <td className="px-3 py-2 text-slate-600">{(offer.normalizedQuantity ?? 0).toFixed(2)}</td>
+                <td className="px-3 py-2 text-slate-600">{Math.round((offer.aiConfidence ?? 0) * 100)}%</td>
               </tr>
             ))}
           </tbody>
@@ -241,6 +248,7 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
       <PageHeader
         title={run?.name ?? 'Comparison Run'}
         subtitle={run?.id ?? runId}
+        subtitleTestId="run-label"
         actions={
           <Link
             href={`/rfqs/${encodeURIComponent(rfqId)}/decision-trail`}

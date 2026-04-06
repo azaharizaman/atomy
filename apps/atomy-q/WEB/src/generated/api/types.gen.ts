@@ -1404,8 +1404,43 @@ export type ComparisonRunPreviewResponses = {
             rfq_id: string;
             status: 'preview';
             is_preview: boolean;
-            matrix: string;
-            readiness: string;
+            matrix: {
+                tenant_id: string;
+                rfq_id: string;
+                clusters: Array<{
+                    cluster_key: string;
+                    basis: string;
+                    offers: Array<{
+                        vendor_id: string;
+                        rfq_line_id: string;
+                        taxonomy_code: string;
+                        normalized_unit_price: number;
+                        normalized_quantity: number;
+                        ai_confidence: number;
+                    }>;
+                    statistics: {
+                        min_normalized_unit_price: number;
+                        max_normalized_unit_price: number;
+                        avg_normalized_unit_price: number;
+                    };
+                    recommendation: {
+                        recommended_vendor_id: string;
+                        reason: string;
+                    };
+                }>;
+            };
+            readiness: {
+                is_ready: boolean;
+                is_preview_only: boolean;
+                blockers: Array<{
+                    code: string;
+                    message: string;
+                }>;
+                warnings: Array<{
+                    code: string;
+                    message: string;
+                }>;
+            };
             approval: string;
             created_at: string;
         };
@@ -1470,8 +1505,43 @@ export type ComparisonRunFinalResponses = {
                 currency_meta: string;
                 vendors: Array<unknown>;
             };
-            matrix: string;
-            readiness: string;
+            matrix: {
+                tenant_id: string;
+                rfq_id: string;
+                clusters: Array<{
+                    cluster_key: string;
+                    basis: string;
+                    offers: Array<{
+                        vendor_id: string;
+                        rfq_line_id: string;
+                        taxonomy_code: string;
+                        normalized_unit_price: number;
+                        normalized_quantity: number;
+                        ai_confidence: number;
+                    }>;
+                    statistics: {
+                        min_normalized_unit_price: number;
+                        max_normalized_unit_price: number;
+                        avg_normalized_unit_price: number;
+                    };
+                    recommendation: {
+                        recommended_vendor_id: string;
+                        reason: string;
+                    };
+                }>;
+            };
+            readiness: {
+                is_ready: boolean;
+                is_preview_only: boolean;
+                blockers: Array<{
+                    code: string;
+                    message: string;
+                }>;
+                warnings: Array<{
+                    code: string;
+                    message: string;
+                }>;
+            };
         };
     };
 };
@@ -1532,7 +1602,31 @@ export type ComparisonRunMatrixResponses = {
     200: {
         data: {
             id: string;
-            matrix: string | Array<string>;
+            matrix: {
+                tenant_id: string;
+                rfq_id: string;
+                clusters: Array<{
+                    cluster_key: string;
+                    basis: string;
+                    offers: Array<{
+                        vendor_id: string;
+                        rfq_line_id: string;
+                        taxonomy_code: string;
+                        normalized_unit_price: number;
+                        normalized_quantity: number;
+                        ai_confidence: number;
+                    }>;
+                    statistics: {
+                        min_normalized_unit_price: number;
+                        max_normalized_unit_price: number;
+                        avg_normalized_unit_price: number;
+                    };
+                    recommendation: {
+                        recommended_vendor_id: string;
+                        reason: string;
+                    };
+                }>;
+            };
         };
     };
 };
@@ -1560,7 +1654,18 @@ export type ComparisonRunReadinessResponses = {
     200: {
         data: {
             id: string;
-            readiness: string | Array<string>;
+            readiness: {
+                is_ready: boolean;
+                is_preview_only: boolean;
+                blockers: Array<{
+                    code: string;
+                    message: string;
+                }>;
+                warnings: Array<{
+                    code: string;
+                    message: string;
+                }>;
+            };
         };
     };
 };

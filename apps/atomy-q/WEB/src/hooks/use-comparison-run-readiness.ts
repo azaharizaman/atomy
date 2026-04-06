@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getSeedComparisonRunsByRfqId } from '@/data/seed';
+import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
 export interface ComparisonRunReadinessEntry {
   code: string;
@@ -15,31 +16,6 @@ export interface ComparisonRunReadiness {
   isPreviewOnly: boolean;
   blockers: ComparisonRunReadinessEntry[];
   warnings: ComparisonRunReadinessEntry[];
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function toText(value: unknown): string | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  const text = String(value).trim();
-  return text === '' ? null : text;
-}
-
-function unwrapResponse(payload: unknown): unknown {
-  if (!isObject(payload)) {
-    return payload;
-  }
-
-  if (payload.data !== undefined) {
-    return payload.data;
-  }
-
-  return payload;
 }
 
 function normalizeEntry(entry: unknown, index: number, kind: 'blocker' | 'warning'): ComparisonRunReadinessEntry {

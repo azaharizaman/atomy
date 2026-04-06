@@ -81,7 +81,7 @@
 - [ ] **Step 3: Implement the live comparison wiring**
 
   Update the controller and service bindings so the API uses the existing QuotationIntelligence comparison boundary instead of placeholder responses:
-  - bind `BatchQuoteComparisonCoordinatorInterface`, `ComparisonReadinessValidatorInterface`, `QuoteComparisonMatrixServiceInterface`, and `ApprovalGateServiceInterface` to the package implementations in `AppServiceProvider`
+  - bind `Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface`, `Nexus\QuotationIntelligence\Contracts\ComparisonReadinessValidatorInterface`, `Nexus\QuotationIntelligence\Contracts\QuoteComparisonMatrixServiceInterface`, and `Nexus\QuotationIntelligence\Contracts\ApprovalGateServiceInterface` to the package implementations in `AppServiceProvider`
   - use tenant-scoped quote submission IDs as the document set passed into preview/final comparison runs
   - persist preview and final comparison rows with real `matrix_payload`, `scoring_payload`, `approval_payload`, `readiness_payload`, and `response_payload` values
   - keep `DecisionTrailRecorder` for the final snapshot-frozen audit event
@@ -203,7 +203,7 @@
 
   Update the API and WEB implementation summaries so they describe the live comparison preview, matrix, readiness, and frozen-run behavior. Close the comparison workflow entry in `WEB/BACKEND_API_GAPS.md` and move the remaining comparison controls into the documented beta backlog. Update the alpha analysis doc so comparison workflow gap 5 is no longer listed as a blocking alpha issue.
 
-  If the API response schemas changed, regenerate the OpenAPI export first, then refresh the WEB generated client artifacts before touching tests that depend on the new shapes.
+  If the API response schemas changed, regenerate the OpenAPI export first, then refresh the WEB-generated client artifacts before touching tests that depend on the new shapes.
 
 - [ ] **Step 2: Run final verification commands**
 

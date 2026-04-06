@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getSeedComparisonRunsByRfqId } from '@/data/seed';
+import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
 export interface ComparisonRunMatrixOffer {
   vendorId: string;
@@ -33,19 +34,6 @@ export interface ComparisonRunMatrix {
   clusters: ComparisonRunMatrixCluster[];
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function toText(value: unknown): string | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  const text = String(value).trim();
-  return text === '' ? null : text;
-}
-
 function toRequiredNumber(value: unknown, fieldName: string): number {
   if (value === null || value === undefined || value === '') {
     throw new Error(`Comparison matrix payload is missing ${fieldName}.`);
@@ -57,18 +45,6 @@ function toRequiredNumber(value: unknown, fieldName: string): number {
   }
 
   return numberValue;
-}
-
-function unwrapResponse(payload: unknown): unknown {
-  if (!isObject(payload)) {
-    return payload;
-  }
-
-  if (payload.data !== undefined) {
-    return payload.data;
-  }
-
-  return payload;
 }
 
 function normalizeOffer(payload: unknown, index: number): ComparisonRunMatrixOffer {
@@ -91,9 +67,9 @@ function normalizeOffer(payload: unknown, index: number): ComparisonRunMatrixOff
     vendorId,
     rfqLineId,
     taxonomyCode,
-    normalizedUnitPrice: Number.isFinite(normalizedUnitPrice) ? normalizedUnitPrice : 0,
-    normalizedQuantity: Number.isFinite(normalizedQuantity) ? normalizedQuantity : 0,
-    aiConfidence: Number.isFinite(aiConfidence) ? aiConfidence : 0,
+    normalizedUnitPrice,
+    normalizedQuantity,
+    aiConfidence,
   };
 }
 
@@ -143,9 +119,9 @@ function normalizeCluster(payload: unknown, index: number): ComparisonRunMatrixC
     basis,
     offers,
     statistics: {
-      minNormalizedUnitPrice: Number.isFinite(minNormalizedUnitPrice) ? minNormalizedUnitPrice : 0,
-      maxNormalizedUnitPrice: Number.isFinite(maxNormalizedUnitPrice) ? maxNormalizedUnitPrice : 0,
-      avgNormalizedUnitPrice: Number.isFinite(avgNormalizedUnitPrice) ? avgNormalizedUnitPrice : 0,
+      minNormalizedUnitPrice,
+      maxNormalizedUnitPrice,
+      avgNormalizedUnitPrice,
     },
     recommendation: {
       recommendedVendorId,

@@ -11,7 +11,7 @@ final class ComparisonPreviewRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->tenantId() !== '';
     }
 
     /**
@@ -19,15 +19,20 @@ final class ComparisonPreviewRequest extends FormRequest
      */
     public function rules(): array
     {
-        $tenantId = (string) $this->attributes->get('auth_tenant_id', '');
-        $rfqRule = Rule::exists('rfqs', 'id');
-        if ($tenantId !== '') {
-            $rfqRule = $rfqRule->where('tenant_id', $tenantId);
-        }
+        $tenantId = $this->tenantId();
 
         return [
-            'rfq_id' => ['required', 'string', 'ulid', $rfqRule],
+            'rfq_id' => [
+                'required',
+                'string',
+                'ulid',
+                Rule::exists('rfqs', 'id')->where('tenant_id', $tenantId === '' ? '0' : $tenantId),
+            ],
         ];
     }
-}
 
+    private function tenantId(): string
+    {
+        return trim((string) $this->attributes->get('auth_tenant_id', ''));
+    }
+}

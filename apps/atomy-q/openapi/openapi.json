@@ -3677,10 +3677,170 @@
                                                     "type": "boolean"
                                                 },
                                                 "matrix": {
-                                                    "type": "string"
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "tenant_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "rfq_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "clusters": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "cluster_key": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "basis": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "offers": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "vendor_id": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "rfq_line_id": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "taxonomy_code": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "normalized_unit_price": {
+                                                                                    "type": "number"
+                                                                                },
+                                                                                "normalized_quantity": {
+                                                                                    "type": "number"
+                                                                                },
+                                                                                "ai_confidence": {
+                                                                                    "type": "number"
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "vendor_id",
+                                                                                "rfq_line_id",
+                                                                                "taxonomy_code",
+                                                                                "normalized_unit_price",
+                                                                                "normalized_quantity",
+                                                                                "ai_confidence"
+                                                                            ],
+                                                                            "additionalProperties": true
+                                                                        }
+                                                                    },
+                                                                    "statistics": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "min_normalized_unit_price": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "max_normalized_unit_price": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "avg_normalized_unit_price": {
+                                                                                "type": "number"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "min_normalized_unit_price",
+                                                                            "max_normalized_unit_price",
+                                                                            "avg_normalized_unit_price"
+                                                                        ],
+                                                                        "additionalProperties": true
+                                                                    },
+                                                                    "recommendation": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "recommended_vendor_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "reason": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "recommended_vendor_id",
+                                                                            "reason"
+                                                                        ],
+                                                                        "additionalProperties": true
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "cluster_key",
+                                                                    "basis",
+                                                                    "offers",
+                                                                    "statistics",
+                                                                    "recommendation"
+                                                                ],
+                                                                "additionalProperties": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "tenant_id",
+                                                        "rfq_id",
+                                                        "clusters"
+                                                    ],
+                                                    "additionalProperties": true
                                                 },
                                                 "readiness": {
-                                                    "type": "string"
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is_ready": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "is_preview_only": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "blockers": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "code": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "message": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "code",
+                                                                    "message"
+                                                                ],
+                                                                "additionalProperties": true
+                                                            }
+                                                        },
+                                                        "warnings": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "code": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "message": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "code",
+                                                                    "message"
+                                                                ],
+                                                                "additionalProperties": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is_ready",
+                                                        "is_preview_only",
+                                                        "blockers",
+                                                        "warnings"
+                                                    ],
+                                                    "additionalProperties": true
                                                 },
                                                 "approval": {
                                                     "type": "string"
@@ -3864,10 +4024,170 @@
                                                     ]
                                                 },
                                                 "matrix": {
-                                                    "type": "string"
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "tenant_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "rfq_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "clusters": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "cluster_key": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "basis": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "offers": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "vendor_id": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "rfq_line_id": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "taxonomy_code": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "normalized_unit_price": {
+                                                                                    "type": "number"
+                                                                                },
+                                                                                "normalized_quantity": {
+                                                                                    "type": "number"
+                                                                                },
+                                                                                "ai_confidence": {
+                                                                                    "type": "number"
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "vendor_id",
+                                                                                "rfq_line_id",
+                                                                                "taxonomy_code",
+                                                                                "normalized_unit_price",
+                                                                                "normalized_quantity",
+                                                                                "ai_confidence"
+                                                                            ],
+                                                                            "additionalProperties": true
+                                                                        }
+                                                                    },
+                                                                    "statistics": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "min_normalized_unit_price": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "max_normalized_unit_price": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "avg_normalized_unit_price": {
+                                                                                "type": "number"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "min_normalized_unit_price",
+                                                                            "max_normalized_unit_price",
+                                                                            "avg_normalized_unit_price"
+                                                                        ],
+                                                                        "additionalProperties": true
+                                                                    },
+                                                                    "recommendation": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "recommended_vendor_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "reason": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "recommended_vendor_id",
+                                                                            "reason"
+                                                                        ],
+                                                                        "additionalProperties": true
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "cluster_key",
+                                                                    "basis",
+                                                                    "offers",
+                                                                    "statistics",
+                                                                    "recommendation"
+                                                                ],
+                                                                "additionalProperties": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "tenant_id",
+                                                        "rfq_id",
+                                                        "clusters"
+                                                    ],
+                                                    "additionalProperties": true
                                                 },
                                                 "readiness": {
-                                                    "type": "string"
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is_ready": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "is_preview_only": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "blockers": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "code": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "message": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "code",
+                                                                    "message"
+                                                                ],
+                                                                "additionalProperties": true
+                                                            }
+                                                        },
+                                                        "warnings": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "code": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "message": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "code",
+                                                                    "message"
+                                                                ],
+                                                                "additionalProperties": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is_ready",
+                                                        "is_preview_only",
+                                                        "blockers",
+                                                        "warnings"
+                                                    ],
+                                                    "additionalProperties": true
                                                 }
                                             },
                                             "required": [
@@ -4037,20 +4357,114 @@
                                                     "type": "string"
                                                 },
                                                 "matrix": {
-                                                    "anyOf": [
-                                                        {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "tenant_id": {
                                                             "type": "string"
                                                         },
-                                                        {
+                                                        "rfq_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "clusters": {
                                                             "type": "array",
                                                             "items": {
-                                                                "type": "string"
-                                                            },
-                                                            "minItems": 0,
-                                                            "maxItems": 0,
-                                                            "additionalItems": false
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "cluster_key": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "basis": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "offers": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "vendor_id": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "rfq_line_id": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "taxonomy_code": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "normalized_unit_price": {
+                                                                                    "type": "number"
+                                                                                },
+                                                                                "normalized_quantity": {
+                                                                                    "type": "number"
+                                                                                },
+                                                                                "ai_confidence": {
+                                                                                    "type": "number"
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "vendor_id",
+                                                                                "rfq_line_id",
+                                                                                "taxonomy_code",
+                                                                                "normalized_unit_price",
+                                                                                "normalized_quantity",
+                                                                                "ai_confidence"
+                                                                            ],
+                                                                            "additionalProperties": true
+                                                                        }
+                                                                    },
+                                                                    "statistics": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "min_normalized_unit_price": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "max_normalized_unit_price": {
+                                                                                "type": "number"
+                                                                            },
+                                                                            "avg_normalized_unit_price": {
+                                                                                "type": "number"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "min_normalized_unit_price",
+                                                                            "max_normalized_unit_price",
+                                                                            "avg_normalized_unit_price"
+                                                                        ],
+                                                                        "additionalProperties": true
+                                                                    },
+                                                                    "recommendation": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "recommended_vendor_id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "reason": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "recommended_vendor_id",
+                                                                            "reason"
+                                                                        ],
+                                                                        "additionalProperties": true
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "cluster_key",
+                                                                    "basis",
+                                                                    "offers",
+                                                                    "statistics",
+                                                                    "recommendation"
+                                                                ],
+                                                                "additionalProperties": true
+                                                            }
                                                         }
-                                                    ]
+                                                    },
+                                                    "required": [
+                                                        "tenant_id",
+                                                        "rfq_id",
+                                                        "clusters"
+                                                    ],
+                                                    "additionalProperties": true
                                                 }
                                             },
                                             "required": [
@@ -4120,20 +4534,60 @@
                                                     "type": "string"
                                                 },
                                                 "readiness": {
-                                                    "anyOf": [
-                                                        {
-                                                            "type": "string"
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is_ready": {
+                                                            "type": "boolean"
                                                         },
-                                                        {
+                                                        "is_preview_only": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "blockers": {
                                                             "type": "array",
                                                             "items": {
-                                                                "type": "string"
-                                                            },
-                                                            "minItems": 0,
-                                                            "maxItems": 0,
-                                                            "additionalItems": false
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "code": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "message": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "code",
+                                                                    "message"
+                                                                ],
+                                                                "additionalProperties": true
+                                                            }
+                                                        },
+                                                        "warnings": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "code": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "message": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "code",
+                                                                    "message"
+                                                                ],
+                                                                "additionalProperties": true
+                                                            }
                                                         }
-                                                    ]
+                                                    },
+                                                    "required": [
+                                                        "is_ready",
+                                                        "is_preview_only",
+                                                        "blockers",
+                                                        "warnings"
+                                                    ],
+                                                    "additionalProperties": true
                                                 }
                                             },
                                             "required": [

@@ -23,12 +23,12 @@ Relevant current state:
   - already reads live comparison run list data
 - `apps/atomy-q/WEB/src/hooks/use-comparison-readiness.ts`
   - already computes readiness from live normalization and overview state
-- `orchestrators/QuotationIntelligence`
+  - `orchestrators/QuotationIntelligence`
   - already contains the right domain abstractions:
-    - `BatchQuoteComparisonCoordinator`
-    - `ComparisonReadinessValidatorInterface`
-    - `QuoteComparisonMatrixServiceInterface`
-    - `ComparisonReadinessResultInterface`
+    - `Nexus\QuotationIntelligence\Coordinators\BatchQuoteComparisonCoordinator`
+    - `Nexus\QuotationIntelligence\Contracts\ComparisonReadinessValidatorInterface`
+    - `Nexus\QuotationIntelligence\Contracts\QuoteComparisonMatrixServiceInterface`
+    - `Nexus\QuotationIntelligence\Contracts\ComparisonReadinessResultInterface`
 
 This means the gap is not "invent comparison logic." The gap is to promote the existing Nexus comparison stack into the Atomy-Q alpha surface in a way that is honest, tenant-safe, and useful.
 

@@ -149,12 +149,7 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
         $this->assertSame(true, $response->json('data.readiness.is_ready'));
 
         /** @var ComparisonRun|null $run */
-        $run = ComparisonRun::query()
-            ->where('tenant_id', $user->tenant_id)
-            ->where('rfq_id', $rfq->id)
-            ->where('is_preview', false)
-            ->latest('created_at')
-            ->first();
+        $run = ComparisonRun::query()->find((string) $response->json('data.id'));
 
         $this->assertNotNull($run);
         $this->assertNotEmpty($run?->matrix_payload['clusters'] ?? []);

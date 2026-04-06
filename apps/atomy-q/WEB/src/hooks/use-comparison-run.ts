@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { getSeedComparisonRunsByRfqId } from '@/data/seed';
+import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
 export interface ComparisonRunSnapshotVendor {
   vendorId: string;
@@ -39,19 +40,6 @@ export interface ComparisonRunDetail {
   createdAt: string | null;
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function toText(value: unknown): string | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  const text = String(value).trim();
-  return text === '' ? null : text;
-}
-
 function toRequiredNumber(value: unknown, fieldName: string): number {
   if (value === null || value === undefined || value === '') {
     throw new Error(`Comparison run snapshot is missing ${fieldName}.`);
@@ -63,18 +51,6 @@ function toRequiredNumber(value: unknown, fieldName: string): number {
   }
 
   return numberValue;
-}
-
-function unwrapResponse(payload: unknown): unknown {
-  if (!isObject(payload)) {
-    return payload;
-  }
-
-  if (payload.data !== undefined) {
-    return payload.data;
-  }
-
-  return payload;
 }
 
 function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {

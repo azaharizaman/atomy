@@ -258,6 +258,12 @@ final class ComparisonRunController extends Controller
 
         try {
             $result = DB::transaction(function () use ($tenantId, $request, $rfq, $submissionsWithDocuments, $snapshot, $submissions): array {
+                $comparison = $this->comparisonCoordinator->compareQuotes(
+                    $tenantId,
+                    (string) $rfq->id,
+                    $this->documentIds($submissionsWithDocuments),
+                );
+
                 $run = ComparisonRun::query()->create([
                     'tenant_id' => $tenantId,
                     'rfq_id' => $rfq->id,
@@ -277,20 +283,6 @@ final class ComparisonRunController extends Controller
                     'expires_at' => null,
                     'discarded_at' => null,
                     'discarded_by' => null,
-                ]);
-
-                $comparison = $this->comparisonCoordinator->compareQuotes(
-                    $tenantId,
-                    (string) $rfq->id,
-                    $this->documentIds($submissionsWithDocuments),
-                );
-
-                $run->update([
-                    'matrix_payload' => $comparison['matrix'] ?? [],
-                    'scoring_payload' => $comparison['scoring'] ?? [],
-                    'approval_payload' => $comparison['approval'] ?? [],
-                    'response_payload' => ['snapshot' => $snapshot],
-                    'readiness_payload' => $comparison['readiness'] ?? [],
                 ]);
 
                 $this->decisionTrail->recordSnapshotFrozen(

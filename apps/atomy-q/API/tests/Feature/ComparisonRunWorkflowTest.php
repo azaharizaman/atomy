@@ -204,6 +204,8 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
 
         $response->assertCreated();
         $response->assertJsonPath('data.status', 'final');
+        $response->assertJsonPath('data.matrix.clusters', []);
+        $response->assertJsonPath('data.readiness.is_ready', true);
         $this->assertDatabaseHas('comparison_runs', [
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
