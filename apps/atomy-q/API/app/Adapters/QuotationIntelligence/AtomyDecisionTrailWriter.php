@@ -7,6 +7,7 @@ namespace App\Adapters\QuotationIntelligence;
 use App\Models\ComparisonRun;
 use App\Models\DecisionTrailEntry;
 use App\Models\QuoteSubmission;
+use Illuminate\Support\Facades\DB;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Psr\Log\LoggerInterface;
 
@@ -45,69 +46,73 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
             return [];
         }
 
-        [$resolvedRfqId, $idempotencyKey] = $this->resolveRfqContext($tenantId, $rfqId);
+        return DB::transaction(function () use ($tenantId, $rfqId, $entries, $startingSequence, $previousHash) {
+            [$resolvedRfqId, $idempotencyKey] = $this->resolveRfqContext($tenantId, $rfqId);
 
-        $results = [];
-        $comparisonRunId = $this->resolveComparisonRunId($tenantId, $resolvedRfqId, $idempotencyKey);
+            $results = [];
+            $comparisonRunId = $this->resolveComparisonRunId($tenantId, $resolvedRfqId, $idempotencyKey);
 
-        $currentPreviousHash = $previousHash;
-        if ($currentPreviousHash === '') {
-            $last = DecisionTrailEntry::query()
-                ->where('tenant_id', $tenantId)
-                ->where('comparison_run_id', $comparisonRunId)
-                ->orderByDesc('sequence')
-                ->first();
+            $currentPreviousHash = $previousHash;
+            if ($currentPreviousHash === '') {
+                $last = DecisionTrailEntry::query()
+                    ->where('tenant_id', $tenantId)
+                    ->where('comparison_run_id', $comparisonRunId)
+                    ->orderByDesc('sequence')
+                    ->lockForUpdate()
+                    ->first();
 
-            $currentPreviousHash = $last?->entry_hash ?? str_repeat('0', 64);
-        }
-
-        $nextSequence = max(
-            $startingSequence,
-            ((int) DecisionTrailEntry::query()
-                ->where('tenant_id', $tenantId)
-                ->where('comparison_run_id', $comparisonRunId)
-                ->max('sequence')) + 1
-        );
-
-        foreach ($entries as $index => $entry) {
-            if (!is_array($entry) || !isset($entry['event_type'], $entry['payload']) || !is_array($entry['payload'])) {
-                $this->logger?->warning('Skipping malformed decision trail entry', [
-                    'index' => $index,
-                    'entry' => $entry,
-                ]);
-                continue;
+                $currentPreviousHash = $last?->entry_hash ?? str_repeat('0', 64);
             }
 
-            $payload = $entry['payload'];
-            $payloadHash = hash('sha256', (string) json_encode($payload, JSON_THROW_ON_ERROR));
-            $entryHash = hash('sha256', $currentPreviousHash . $payloadHash . $entry['event_type']);
+            $nextSequence = max(
+                $startingSequence,
+                ((int) DecisionTrailEntry::query()
+                    ->where('tenant_id', $tenantId)
+                    ->where('comparison_run_id', $comparisonRunId)
+                    ->lockForUpdate()
+                    ->max('sequence')) + 1
+            );
 
-            DecisionTrailEntry::create([
-                'tenant_id' => $tenantId,
-                'rfq_id' => $resolvedRfqId,
-                'comparison_run_id' => $comparisonRunId,
-                'sequence' => $nextSequence,
-                'event_type' => $entry['event_type'],
-                'payload_hash' => $payloadHash,
-                'previous_hash' => $currentPreviousHash,
-                'entry_hash' => $entryHash,
-                'occurred_at' => now(),
-            ]);
+            foreach ($entries as $index => $entry) {
+                if (!is_array($entry) || !isset($entry['event_type'], $entry['payload']) || !is_array($entry['payload'])) {
+                    $this->logger?->warning('Skipping malformed decision trail entry', [
+                        'index' => $index,
+                        'entry' => $entry,
+                    ]);
+                    continue;
+                }
 
-            $results[] = [
-                'sequence' => $nextSequence,
-                'event_type' => $entry['event_type'],
-                'payload_hash' => $payloadHash,
-                'previous_hash' => $currentPreviousHash,
-                'entry_hash' => $entryHash,
-                'occurred_at' => now()->toIso8601String(),
-            ];
+                $payload = $entry['payload'];
+                $payloadHash = hash('sha256', (string) json_encode($payload, JSON_THROW_ON_ERROR));
+                $entryHash = hash('sha256', $currentPreviousHash . $payloadHash . $entry['event_type']);
 
-            $currentPreviousHash = $entryHash;
-            $nextSequence++;
-        }
+                DecisionTrailEntry::query()->create([
+                    'tenant_id' => $tenantId,
+                    'rfq_id' => $resolvedRfqId,
+                    'comparison_run_id' => $comparisonRunId,
+                    'sequence' => $nextSequence,
+                    'event_type' => $entry['event_type'],
+                    'payload_hash' => $payloadHash,
+                    'previous_hash' => $currentPreviousHash,
+                    'entry_hash' => $entryHash,
+                    'occurred_at' => now(),
+                ]);
 
-        return $results;
+                $results[] = [
+                    'sequence' => $nextSequence,
+                    'event_type' => $entry['event_type'],
+                    'payload_hash' => $payloadHash,
+                    'previous_hash' => $currentPreviousHash,
+                    'entry_hash' => $entryHash,
+                    'occurred_at' => now()->toIso8601String(),
+                ];
+
+                $currentPreviousHash = $entryHash;
+                $nextSequence++;
+            }
+
+            return $results;
+        });
     }
 
     /**
@@ -153,6 +158,7 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
         $submission = QuoteSubmission::query()
             ->where('tenant_id', $tenantId)
             ->where('id', $rfqId)
+            ->lockForUpdate()
             ->first();
 
         if ($submission === null) {
@@ -171,6 +177,7 @@ final class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
             ->where('rfq_id', $rfqId)
             ->when($idempotencyKey !== null, static fn ($q) => $q->where('idempotency_key', $idempotencyKey))
             ->orderByDesc('created_at')
+            ->lockForUpdate()
             ->first();
 
         if ($comparisonRun !== null) {

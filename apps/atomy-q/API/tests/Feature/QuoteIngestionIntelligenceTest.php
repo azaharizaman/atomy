@@ -21,6 +21,8 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
 {
     use RefreshDatabase;
 
+    private string $testStorageRoot;
+
     public function createApplication(): \Illuminate\Foundation\Application
     {
         $app = parent::createApplication();
@@ -35,13 +37,32 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
         $app['config']->set('logging.default', 'null');
         $app['config']->set('logging.channels.stack.channels', ['null']);
 
-        $testStorageRoot = sys_get_temp_dir() . '/atomy-q-api-test-storage';
-        if (!is_dir($testStorageRoot)) {
-            mkdir($testStorageRoot, 0777, true);
+        $this->testStorageRoot = sys_get_temp_dir() . '/atomy-q-api-test-storage';
+        if (!is_dir($this->testStorageRoot)) {
+            mkdir($this->testStorageRoot, 0777, true);
         }
-        $app['config']->set('filesystems.disks.local.root', $testStorageRoot);
+        $app['config']->set('filesystems.disks.local.root', $this->testStorageRoot);
 
         return $app;
+    }
+
+    protected function tearDown(): void
+    {
+        if (is_dir($this->testStorageRoot)) {
+            $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($this->testStorageRoot, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::CHILD_FIRST
+            );
+
+            foreach ($files as $fileinfo) {
+                $todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
+                $todo($fileinfo->getRealPath());
+            }
+
+            rmdir($this->testStorageRoot);
+        }
+
+        parent::tearDown();
     }
 
     private function createUser(): User

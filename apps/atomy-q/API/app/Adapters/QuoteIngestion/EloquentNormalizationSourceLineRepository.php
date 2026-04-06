@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Adapters\QuoteIngestion;
 
 use App\Models\NormalizationSourceLine;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineRepositoryInterface;
+use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineQueryInterface;
+use Nexus\QuoteIngestion\Contracts\NormalizationSourceLinePersistInterface;
 
-final class EloquentNormalizationSourceLineRepository implements NormalizationSourceLineRepositoryInterface
+final class EloquentNormalizationSourceLineRepository implements NormalizationSourceLineQueryInterface, NormalizationSourceLinePersistInterface
 {
     public function findExisting(
         string $tenantId,
@@ -27,13 +28,15 @@ final class EloquentNormalizationSourceLineRepository implements NormalizationSo
         string $rfqLineItemId,
         array $data
     ): void {
+        $filtered = array_diff_key($data, array_flip(['tenant_id', 'quote_submission_id', 'rfq_line_item_id']));
+
         NormalizationSourceLine::updateOrCreate(
             [
                 'tenant_id' => $tenantId,
                 'quote_submission_id' => $quoteSubmissionId,
                 'rfq_line_item_id' => $rfqLineItemId,
             ],
-            $data
+            $filtered
         );
     }
 }

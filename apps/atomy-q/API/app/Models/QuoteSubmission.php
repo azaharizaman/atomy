@@ -8,8 +8,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Nexus\QuoteIngestion\Contracts\QuoteSubmissionInterface;
 
-class QuoteSubmission extends Model
+class QuoteSubmission extends Model implements QuoteSubmissionInterface
 {
     use HasUlids;
 
@@ -80,5 +81,25 @@ class QuoteSubmission extends Model
     public function blockingIssueCount(): int
     {
         return max((int) ($this->errors_count ?? 0), 0);
+    }
+
+    public function getId(): string
+    {
+        return (string) $this->id;
+    }
+
+    public function getTenantId(): string
+    {
+        return (string) $this->tenant_id;
+    }
+
+    public function getRfqId(): string
+    {
+        return (string) $this->rfq_id;
+    }
+
+    public function getVendorName(): string
+    {
+        return (string) $this->vendor_name;
     }
 }

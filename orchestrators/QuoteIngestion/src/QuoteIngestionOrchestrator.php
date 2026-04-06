@@ -154,12 +154,7 @@ final readonly class QuoteIngestionOrchestrator
             return 0.0;
         }
 
-        $total = 0.0;
-        foreach ($lines as $line) {
-            $total += (float) ($line['ai_confidence'] ?? 0);
-        }
-
-        return $total / count($lines);
+        return array_sum(array_column($lines, 'ai_confidence')) / count($lines);
     }
 
     private function handleFailure(QuoteSubmissionInterface $submission, string $errorCode, ?string $errorMessage): void

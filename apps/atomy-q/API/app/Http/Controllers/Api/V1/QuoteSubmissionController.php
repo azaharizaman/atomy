@@ -256,19 +256,42 @@ final class QuoteSubmissionController extends Controller
 
         foreach ($sourceLines as $line) {
             $raw = is_array($line->raw_data) ? $line->raw_data : [];
-            $hasOverride = array_key_exists('override', $raw);
+            $override = $raw['override'] ?? null;
+            $hasOverride = match (true) {
+                $override === null, $override === '', $override === [] => false,
+                is_string($override) => trim($override) !== '',
+                default => true,
+            };
 
             if ($hasOverride) {
                 continue;
             }
 
-            $hasResolvedConflict = $line->conflicts->contains(static fn ($c): bool => $c->resolution !== null);
+            $hasResolvedConflict = $line->conflicts->contains(
+                static function ($c): bool {
+                    $res = $c->resolution;
+                    return match (true) {
+                        $res === null, $res === '', $res === [] => false,
+                        is_string($res) => trim($res) !== '',
+                        default => true,
+                    };
+                }
+            );
             if ($hasResolvedConflict) {
                 continue;
             }
 
             $isMapped = $line->rfq_line_item_id !== null;
-            $hasUnresolvedConflict = $line->conflicts->contains(static fn ($c): bool => $c->resolution === null);
+            $hasUnresolvedConflict = $line->conflicts->contains(
+                static function ($c): bool {
+                    $res = $c->resolution;
+                    return match (true) {
+                        $res === null, $res === '', $res === [] => true,
+                        is_string($res) => trim($res) === '',
+                        default => false,
+                    };
+                }
+            );
 
             // Delta reparse: only delete lines that are unmapped or still unresolved, and have no manual override.
             if (!$isMapped || $hasUnresolvedConflict) {

@@ -67,7 +67,8 @@ use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 use Nexus\QuoteIngestion\Contracts\QuoteSubmissionQueryInterface;
 use Nexus\QuoteIngestion\Contracts\QuoteSubmissionPersistInterface;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineRepositoryInterface;
+use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineQueryInterface;
+use Nexus\QuoteIngestion\Contracts\NormalizationSourceLinePersistInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorDocumentRepositoryInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorTenantRepositoryInterface;
@@ -163,7 +164,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Nexus QuotationIntelligence: Intelligent quote ingestion pipeline.
-        $this->app->singleton(UomRepositoryInterface::class, InMemoryUomRepository::class);
+        $this->app->bind(UomRepositoryInterface::class, InMemoryUomRepository::class);
         $this->app->singleton(ExchangeRateProviderInterface::class, StaticExchangeRateProvider::class);
         $this->app->singleton(OrchestratorDocumentRepositoryInterface::class, OrchestratorDocumentRepository::class);
         $this->app->singleton(OrchestratorTenantRepositoryInterface::class, OrchestratorTenantRepository::class);
@@ -191,7 +192,8 @@ class AppServiceProvider extends ServiceProvider
         // Nexus QuoteIngestion: Orchestrator for quote submission processing.
         $this->app->singleton(QuoteSubmissionQueryInterface::class, EloquentQuoteSubmissionQuery::class);
         $this->app->singleton(QuoteSubmissionPersistInterface::class, EloquentQuoteSubmissionPersist::class);
-        $this->app->singleton(NormalizationSourceLineRepositoryInterface::class, EloquentNormalizationSourceLineRepository::class);
+        $this->app->singleton(NormalizationSourceLineQueryInterface::class, EloquentNormalizationSourceLineRepository::class);
+        $this->app->singleton(NormalizationSourceLinePersistInterface::class, EloquentNormalizationSourceLineRepository::class);
         $this->app->singleton(QuoteIngestionOrchestrator::class, static function ($app): QuoteIngestionOrchestrator {
             return new QuoteIngestionOrchestrator(
                 $app->make(QuotationIntelligenceCoordinatorInterface::class),
@@ -200,7 +202,8 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(LoggerInterface::class),
                 $app->make(QuoteSubmissionQueryInterface::class),
                 $app->make(QuoteSubmissionPersistInterface::class),
-                $app->make(NormalizationSourceLineRepositoryInterface::class),
+                $app->make(NormalizationSourceLineQueryInterface::class),
+                $app->make(NormalizationSourceLinePersistInterface::class),
             );
         });
 
