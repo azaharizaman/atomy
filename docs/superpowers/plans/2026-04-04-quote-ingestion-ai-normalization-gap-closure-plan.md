@@ -4,6 +4,8 @@
 
 **Goal:** Close the gap in quote ingestion and AI normalization by wiring the `QuotationIntelligence` pipeline and implementing a "Smart Mock" for RFQ-aware extraction and mapping.
 
+**Deferred boundary:** The live extraction/mapping implementation is intentionally paused until the final LLM / AI normalization model is selected. The persistence, tenant isolation, and reparse mechanics in this branch close the non-model portions of the gap; when the model decision is finalized, reopen this plan and replace the mock-backed content processor and semantic mapper with the production implementation.
+
 **Architecture:** Use the Atomy Three-Layer Architecture. Implement bridge adapters in Layer 3 (API) to connect the `QuotationIntelligenceCoordinator` (Layer 2) to live application models. Update the `QuoteIngestionOrchestrator` to coordinate the full intelligence flow.
 
 **Tech Stack:** PHP 8.3, Laravel 12, Nexus Orchestrators, Eloquent ORM.
