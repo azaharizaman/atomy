@@ -18,6 +18,23 @@ export interface ComparisonRunReadiness {
   warnings: ComparisonRunReadinessEntry[];
 }
 
+function parseExplicitBoolean(value: unknown): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value === 1;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return normalized === 'true' || normalized === '1';
+  }
+
+  return false;
+}
+
 function normalizeEntry(entry: unknown, index: number, kind: 'blocker' | 'warning'): ComparisonRunReadinessEntry {
   if (!isObject(entry)) {
     throw new Error(`Comparison readiness ${kind} at index ${index} must be an object.`);
@@ -49,8 +66,8 @@ function normalizeComparisonRunReadiness(payload: unknown): ComparisonRunReadine
 
   return {
     id,
-    isReady: Boolean(readiness.is_ready ?? readiness.isReady ?? false),
-    isPreviewOnly: Boolean(readiness.is_preview_only ?? readiness.isPreviewOnly ?? false),
+    isReady: parseExplicitBoolean(readiness.is_ready ?? readiness.isReady),
+    isPreviewOnly: parseExplicitBoolean(readiness.is_preview_only ?? readiness.isPreviewOnly),
     blockers: blockersRaw.map((entry, index) => normalizeEntry(entry, index, 'blocker')),
     warnings: warningsRaw.map((entry, index) => normalizeEntry(entry, index, 'warning')),
   };

@@ -159,13 +159,19 @@ function normalizeComparisonRun(payload: unknown): ComparisonRunDetail {
   }
 
   const snapshotPayload = raw.snapshot ?? raw.response_payload?.snapshot;
+  const isPreviewValue = raw.is_preview ?? raw.isPreview;
+  const isPreview = typeof isPreviewValue === 'boolean'
+    ? isPreviewValue
+    : typeof isPreviewValue === 'string'
+      ? ['true', '1'].includes(isPreviewValue.trim().toLowerCase())
+      : false;
 
   return {
     id,
     rfqId,
     name: toText(raw.name) ?? 'Comparison Run',
     status: toText(raw.status) ?? 'draft',
-    isPreview: Boolean(raw.is_preview ?? raw.isPreview ?? false),
+    isPreview,
     snapshot: normalizeSnapshot(snapshotPayload),
     createdAt: toText(raw.created_at ?? raw.createdAt),
   };

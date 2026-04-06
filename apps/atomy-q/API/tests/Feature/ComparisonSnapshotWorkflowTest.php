@@ -152,8 +152,10 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
         $run = ComparisonRun::query()->find((string) $response->json('data.id'));
 
         $this->assertNotNull($run);
-        $this->assertNotEmpty($run?->matrix_payload['clusters'] ?? []);
-        $this->assertSame(true, $run?->readiness_payload['is_ready'] ?? false);
+        $this->assertArrayHasKey('clusters', $run->matrix_payload);
+        $this->assertArrayHasKey('is_ready', $run->readiness_payload);
+        $this->assertNotEmpty($run->matrix_payload['clusters']);
+        $this->assertSame(true, $run->readiness_payload['is_ready']);
     }
 
     public function test_approval_cannot_proceed_when_submission_has_blocking_issues(): void

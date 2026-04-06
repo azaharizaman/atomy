@@ -23,7 +23,7 @@ Relevant current state:
   - already reads live comparison run list data
 - `apps/atomy-q/WEB/src/hooks/use-comparison-readiness.ts`
   - already computes readiness from live normalization and overview state
-  - `orchestrators/QuotationIntelligence`
+  - `orchestrators/Nexus\QuotationIntelligence`
   - already contains the right domain abstractions:
     - `Nexus\QuotationIntelligence\Coordinators\BatchQuoteComparisonCoordinator`
     - `Nexus\QuotationIntelligence\Contracts\ComparisonReadinessValidatorInterface`
@@ -36,7 +36,7 @@ References:
 
 - `apps/atomy-q/docs/ALPHA_PROGRESS_ANALYSIS_2026-03-31.md`
 - `apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_RELEASE_AUDIT.md`
-- `orchestrators/QuotationIntelligence/IMPLEMENTATION_SUMMARY.md`
+- `orchestrators/Nexus\QuotationIntelligence/IMPLEMENTATION_SUMMARY.md`
 - `apps/atomy-q/API/IMPLEMENTATION_SUMMARY.md`
 
 ## Problem
@@ -85,7 +85,7 @@ Cons:
 - Encourages duplicated business logic
 - Makes beta evolution harder because the comparison boundary stays embedded in the app
 
-### Option 2: Minimal honest alpha on top of `QuotationIntelligence`
+### Option 2: Minimal honest alpha on top of `Nexus\QuotationIntelligence`
 
 Use the existing orchestrator stack for preview and readiness, then let the app persist and render the result in a simple, live workflow.
 
@@ -227,16 +227,16 @@ Beta rule:
 1. User opens the RFQ comparison runs area.
 2. The UI fetches run list, readiness, and run detail data.
 3. The Laravel controller resolves tenant-scoped run/RFQ state.
-4. The controller delegates preview or readiness work to `QuotationIntelligence`.
+4. The controller delegates preview or readiness work to `Nexus\QuotationIntelligence`.
 5. The orchestrator returns a real readiness result and matrix structure.
 6. For final freeze, the app persists the run and decision-trail state.
 7. The UI renders live data and disables fake controls.
 
 ## Error Handling
 
-- Return `404` when the RFQ or comparison run is missing or belongs to another tenant.
-- Return `422` when readiness blocks preview or freeze.
-- Return `500` for unexpected package or persistence failures.
+- Respond with `404` when the RFQ or comparison run is missing or belongs to another tenant.
+- Use `422` when readiness blocks preview or freeze.
+- Use `500` for unexpected package or persistence failures.
 - Do not synthesize a preview id, matrix rows, or readiness state when the underlying comparison cannot run.
 
 The response should always make it obvious whether a failure is:
@@ -279,8 +279,8 @@ Cover:
 
 If the orchestrator contracts need extension, add tests there first or in parallel:
 
-- `BatchQuoteComparisonCoordinator`
-- `ComparisonReadinessValidator`
+- `Nexus\QuotationIntelligence\Coordinators\BatchQuoteComparisonCoordinator`
+- `Nexus\QuotationIntelligence\Contracts\ComparisonReadinessValidatorInterface`
 - matrix generation
 - preview/final distinction
 

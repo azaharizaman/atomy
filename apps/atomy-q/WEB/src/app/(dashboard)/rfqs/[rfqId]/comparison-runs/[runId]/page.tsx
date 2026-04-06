@@ -334,55 +334,6 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
           />
         )}
       </SectionCard>
-
-      {run?.snapshot?.vendors?.length ? (
-        <SectionCard title="Snapshot vendors" subtitle="Persisted vendor context from the frozen run.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {run.snapshot.vendors.map((vendor) => (
-              <Card key={vendor.vendorId} padding="sm">
-                <p className="text-sm font-semibold text-slate-800">{vendor.vendorName}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{vendor.vendorId}</p>
-                <p className="mt-1 text-xs text-slate-400">Submission {vendor.quoteSubmissionId ?? 'Unavailable'}</p>
-              </Card>
-            ))}
-          </div>
-        </SectionCard>
-      ) : null}
-
-      {run?.snapshot?.normalizedLines?.length ? (
-        <SectionCard title="Snapshot lines" subtitle="Persisted normalization context for the frozen comparison.">
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
-            <table className="min-w-full border-collapse text-sm">
-              <thead className="bg-slate-50">
-                <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  <th className="px-3 py-2">Line item</th>
-                  <th className="px-3 py-2">Description</th>
-                  <th className="px-3 py-2">Vendor</th>
-                  <th className="px-3 py-2">Quantity</th>
-                  <th className="px-3 py-2">Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {run.snapshot.normalizedLines.map((line) => (
-                  <tr key={`${line.rfqLineItemId}-${line.sourceLineId ?? 'line'}`} className="border-b border-slate-100">
-                    <td className="px-3 py-2 font-mono text-xs text-slate-700">{line.rfqLineItemId}</td>
-                    <td className="px-3 py-2 text-slate-700">{line.sourceDescription}</td>
-                    <td className="px-3 py-2 text-slate-600">
-                      {line.vendorId ?? 'Unknown'}
-                      {line.quoteSubmissionId ? <span className="block text-xs text-slate-400">{line.quoteSubmissionId}</span> : null}
-                    </td>
-                    <td className="px-3 py-2 text-slate-600">{line.sourceQuantity ?? '—'}</td>
-                    <td className="px-3 py-2 text-slate-600">
-                      {line.sourceUnitPrice ?? '—'}
-                      {line.sourceUom ? <span className="block text-xs text-slate-400">{line.sourceUom}</span> : null}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </SectionCard>
-      ) : null}
     </div>
   );
 }

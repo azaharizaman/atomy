@@ -3,7 +3,7 @@
     "info": {
         "title": "Atomy-Q API",
         "version": "0.0.1",
-        "description": "Atomy-Q Quote Comparison API \u2014 generated OpenAPI for client tooling (design-partner alpha).\n\n### Idempotency error `code` values\n\nJSON error bodies may include a string `code` for clients and tooling. Idempotency-related values:\n\n| `code` | HTTP | Meaning |\n|--------|------|---------|\n| `idempotency_key_required` | 400 | `Idempotency-Key` header missing or empty |\n| `idempotency_key_invalid` | 400 | Key failed validation (e.g. length) |\n| `idempotency_fingerprint_conflict` | 409 | Same key, different request body |\n| `idempotency_in_progress` | 409 | Same key; prior attempt not finished |\n| `idempotency_operation_ref_missing` | 500 | Route has no name (misconfiguration) |\n| `idempotency_tenant_missing` | 500 | Tenant not on request after auth |\n| `idempotency_replay_missing` | 500 | Replay outcome without stored payload |\n| `idempotency_record_missing` | 500 | Internal idempotency state inconsistency |\n| `idempotency_envelope_too_large` | 500 | Response too large to store for replay |\n"
+        "description": "Atomy-Q Quote Comparison API — generated OpenAPI for client tooling (design-partner alpha).\n\n### Idempotency error `code` values\n\nJSON error bodies may include a string `code` for clients and tooling. Idempotency-related values:\n\n| `code` | HTTP | Meaning |\n|--------|------|---------|\n| `idempotency_key_required` | 400 | `Idempotency-Key` header missing or empty |\n| `idempotency_key_invalid` | 400 | Key failed validation (e.g. length) |\n| `idempotency_fingerprint_conflict` | 409 | Same key, different request body |\n| `idempotency_in_progress` | 409 | Same key; prior attempt not finished |\n| `idempotency_operation_ref_missing` | 500 | Route has no name (misconfiguration) |\n| `idempotency_tenant_missing` | 500 | Tenant not on request after auth |\n| `idempotency_replay_missing` | 500 | Replay outcome without stored payload |\n| `idempotency_record_missing` | 500 | Internal idempotency state inconsistency |\n| `idempotency_envelope_too_large` | 500 | Response too large to store for replay |\n"
     },
     "servers": [
         {
@@ -881,7 +881,7 @@
                                                     },
                                                     "sla": {
                                                         "type": "string",
-                                                        "const": "\u2014"
+                                                        "const": "—"
                                                     },
                                                     "sla_variant": {
                                                         "type": "string",
@@ -895,7 +895,7 @@
                                                             {
                                                                 "type": "string",
                                                                 "enum": [
-                                                                    "\u2014"
+                                                                    "—"
                                                                 ]
                                                             }
                                                         ]
@@ -1168,7 +1168,7 @@
                                                 },
                                                 "sla": {
                                                     "type": "string",
-                                                    "const": "\u2014"
+                                                    "const": "—"
                                                 },
                                                 "sla_variant": {
                                                     "type": "string",
@@ -1182,7 +1182,7 @@
                                                         {
                                                             "type": "string",
                                                             "enum": [
-                                                                "\u2014"
+                                                                "—"
                                                             ]
                                                         }
                                                     ]
@@ -1347,9 +1347,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -1368,6 +1365,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -1444,9 +1444,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -1465,6 +1462,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -1734,7 +1734,7 @@
         "/auth/login": {
             "post": {
                 "operationId": "auth.login",
-                "description": "Tenant is taken from the user row (one user \u2192 one tenant). `tenant_id` in the body is ignored.\n\nPOST /auth/login",
+                "description": "Tenant is taken from the user row (one user → one tenant). `tenant_id` in the body is ignored.\n\nPOST /auth/login",
                 "summary": "Authenticate user with email and password, return JWT tokens",
                 "tags": [
                     "Auth"
@@ -1859,7 +1859,8 @@
                             }
                         }
                     }
-                }
+                },
+                "security": []
             }
         },
         "/auth/sso": {
@@ -1904,62 +1905,6 @@
                     }
                 },
                 "responses": {
-                    "401": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "SSO authentication failed"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "SSO provider unavailable"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -2034,6 +1979,43 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "SSO authentication failed"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -2051,8 +2033,28 @@
                                 }
                             }
                         }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "SSO provider unavailable"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": []
             }
         },
         "/auth/mfa/verify": {
@@ -2086,6 +2088,24 @@
                     }
                 },
                 "responses": {
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "501": {
                         "description": "",
                         "content": {
@@ -2108,32 +2128,15 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/components/schemas/MessageBag"
-                                        }
-                                    },
-                                    "required": [
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
                     }
-                }
+                },
+                "security": []
             }
         },
         "/auth/forgot-password": {
             "post": {
                 "operationId": "auth.forgotPassword",
-                "description": "POST /auth/forgot-password \u2014 body: `email` only. Reset tokens are stored per user tenant (from the user row).",
+                "description": "POST /auth/forgot-password — body: `email` only. Reset tokens are stored per user tenant (from the user row).",
                 "summary": "Request password reset",
                 "tags": [
                     "Auth"
@@ -2195,7 +2198,8 @@
                             }
                         }
                     }
-                }
+                },
+                "security": []
             }
         },
         "/auth/reset-password": {
@@ -2260,25 +2264,6 @@
                             }
                         }
                     },
-                    "500": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Unable to complete password reset. Please try again later."
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -2312,8 +2297,28 @@
                                 }
                             }
                         }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Unable to complete password reset. Please try again later."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": []
             }
         },
         "/auth/refresh": {
@@ -2427,7 +2432,8 @@
                             }
                         }
                     }
-                }
+                },
+                "security": []
             }
         },
         "/auth/logout": {
@@ -2458,7 +2464,8 @@
                             }
                         }
                     }
-                }
+                },
+                "security": []
             }
         },
         "/auth/device-trust": {
@@ -2489,7 +2496,8 @@
                             }
                         }
                     }
-                }
+                },
+                "security": []
             }
         },
         "/awards": {
@@ -3677,170 +3685,10 @@
                                                     "type": "boolean"
                                                 },
                                                 "matrix": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "tenant_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "rfq_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "clusters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "cluster_key": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "basis": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "offers": {
-                                                                        "type": "array",
-                                                                        "items": {
-                                                                            "type": "object",
-                                                                            "properties": {
-                                                                                "vendor_id": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "rfq_line_id": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "taxonomy_code": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "normalized_unit_price": {
-                                                                                    "type": "number"
-                                                                                },
-                                                                                "normalized_quantity": {
-                                                                                    "type": "number"
-                                                                                },
-                                                                                "ai_confidence": {
-                                                                                    "type": "number"
-                                                                                }
-                                                                            },
-                                                                            "required": [
-                                                                                "vendor_id",
-                                                                                "rfq_line_id",
-                                                                                "taxonomy_code",
-                                                                                "normalized_unit_price",
-                                                                                "normalized_quantity",
-                                                                                "ai_confidence"
-                                                                            ],
-                                                                            "additionalProperties": true
-                                                                        }
-                                                                    },
-                                                                    "statistics": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "min_normalized_unit_price": {
-                                                                                "type": "number"
-                                                                            },
-                                                                            "max_normalized_unit_price": {
-                                                                                "type": "number"
-                                                                            },
-                                                                            "avg_normalized_unit_price": {
-                                                                                "type": "number"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "min_normalized_unit_price",
-                                                                            "max_normalized_unit_price",
-                                                                            "avg_normalized_unit_price"
-                                                                        ],
-                                                                        "additionalProperties": true
-                                                                    },
-                                                                    "recommendation": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "recommended_vendor_id": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "reason": {
-                                                                                "type": "string"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "recommended_vendor_id",
-                                                                            "reason"
-                                                                        ],
-                                                                        "additionalProperties": true
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "cluster_key",
-                                                                    "basis",
-                                                                    "offers",
-                                                                    "statistics",
-                                                                    "recommendation"
-                                                                ],
-                                                                "additionalProperties": true
-                                                            }
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "tenant_id",
-                                                        "rfq_id",
-                                                        "clusters"
-                                                    ],
-                                                    "additionalProperties": true
+                                                    "$ref": "#/components/schemas/ComparisonMatrix"
                                                 },
                                                 "readiness": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is_ready": {
-                                                            "type": "boolean"
-                                                        },
-                                                        "is_preview_only": {
-                                                            "type": "boolean"
-                                                        },
-                                                        "blockers": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "code": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "message": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "code",
-                                                                    "message"
-                                                                ],
-                                                                "additionalProperties": true
-                                                            }
-                                                        },
-                                                        "warnings": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "code": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "message": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "code",
-                                                                    "message"
-                                                                ],
-                                                                "additionalProperties": true
-                                                            }
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is_ready",
-                                                        "is_preview_only",
-                                                        "blockers",
-                                                        "warnings"
-                                                    ],
-                                                    "additionalProperties": true
+                                                    "$ref": "#/components/schemas/ComparisonReadiness"
                                                 },
                                                 "approval": {
                                                     "type": "string"
@@ -3868,9 +3716,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -3889,6 +3734,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -4024,170 +3872,10 @@
                                                     ]
                                                 },
                                                 "matrix": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "tenant_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "rfq_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "clusters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "cluster_key": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "basis": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "offers": {
-                                                                        "type": "array",
-                                                                        "items": {
-                                                                            "type": "object",
-                                                                            "properties": {
-                                                                                "vendor_id": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "rfq_line_id": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "taxonomy_code": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "normalized_unit_price": {
-                                                                                    "type": "number"
-                                                                                },
-                                                                                "normalized_quantity": {
-                                                                                    "type": "number"
-                                                                                },
-                                                                                "ai_confidence": {
-                                                                                    "type": "number"
-                                                                                }
-                                                                            },
-                                                                            "required": [
-                                                                                "vendor_id",
-                                                                                "rfq_line_id",
-                                                                                "taxonomy_code",
-                                                                                "normalized_unit_price",
-                                                                                "normalized_quantity",
-                                                                                "ai_confidence"
-                                                                            ],
-                                                                            "additionalProperties": true
-                                                                        }
-                                                                    },
-                                                                    "statistics": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "min_normalized_unit_price": {
-                                                                                "type": "number"
-                                                                            },
-                                                                            "max_normalized_unit_price": {
-                                                                                "type": "number"
-                                                                            },
-                                                                            "avg_normalized_unit_price": {
-                                                                                "type": "number"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "min_normalized_unit_price",
-                                                                            "max_normalized_unit_price",
-                                                                            "avg_normalized_unit_price"
-                                                                        ],
-                                                                        "additionalProperties": true
-                                                                    },
-                                                                    "recommendation": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "recommended_vendor_id": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "reason": {
-                                                                                "type": "string"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "recommended_vendor_id",
-                                                                            "reason"
-                                                                        ],
-                                                                        "additionalProperties": true
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "cluster_key",
-                                                                    "basis",
-                                                                    "offers",
-                                                                    "statistics",
-                                                                    "recommendation"
-                                                                ],
-                                                                "additionalProperties": true
-                                                            }
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "tenant_id",
-                                                        "rfq_id",
-                                                        "clusters"
-                                                    ],
-                                                    "additionalProperties": true
+                                                    "$ref": "#/components/schemas/ComparisonMatrix"
                                                 },
                                                 "readiness": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is_ready": {
-                                                            "type": "boolean"
-                                                        },
-                                                        "is_preview_only": {
-                                                            "type": "boolean"
-                                                        },
-                                                        "blockers": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "code": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "message": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "code",
-                                                                    "message"
-                                                                ],
-                                                                "additionalProperties": true
-                                                            }
-                                                        },
-                                                        "warnings": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "code": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "message": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "code",
-                                                                    "message"
-                                                                ],
-                                                                "additionalProperties": true
-                                                            }
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is_ready",
-                                                        "is_preview_only",
-                                                        "blockers",
-                                                        "warnings"
-                                                    ],
-                                                    "additionalProperties": true
+                                                    "$ref": "#/components/schemas/ComparisonReadiness"
                                                 }
                                             },
                                             "required": [
@@ -4207,9 +3895,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -4228,6 +3913,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -4357,114 +4045,7 @@
                                                     "type": "string"
                                                 },
                                                 "matrix": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "tenant_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "rfq_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "clusters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "cluster_key": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "basis": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "offers": {
-                                                                        "type": "array",
-                                                                        "items": {
-                                                                            "type": "object",
-                                                                            "properties": {
-                                                                                "vendor_id": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "rfq_line_id": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "taxonomy_code": {
-                                                                                    "type": "string"
-                                                                                },
-                                                                                "normalized_unit_price": {
-                                                                                    "type": "number"
-                                                                                },
-                                                                                "normalized_quantity": {
-                                                                                    "type": "number"
-                                                                                },
-                                                                                "ai_confidence": {
-                                                                                    "type": "number"
-                                                                                }
-                                                                            },
-                                                                            "required": [
-                                                                                "vendor_id",
-                                                                                "rfq_line_id",
-                                                                                "taxonomy_code",
-                                                                                "normalized_unit_price",
-                                                                                "normalized_quantity",
-                                                                                "ai_confidence"
-                                                                            ],
-                                                                            "additionalProperties": true
-                                                                        }
-                                                                    },
-                                                                    "statistics": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "min_normalized_unit_price": {
-                                                                                "type": "number"
-                                                                            },
-                                                                            "max_normalized_unit_price": {
-                                                                                "type": "number"
-                                                                            },
-                                                                            "avg_normalized_unit_price": {
-                                                                                "type": "number"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "min_normalized_unit_price",
-                                                                            "max_normalized_unit_price",
-                                                                            "avg_normalized_unit_price"
-                                                                        ],
-                                                                        "additionalProperties": true
-                                                                    },
-                                                                    "recommendation": {
-                                                                        "type": "object",
-                                                                        "properties": {
-                                                                            "recommended_vendor_id": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "reason": {
-                                                                                "type": "string"
-                                                                            }
-                                                                        },
-                                                                        "required": [
-                                                                            "recommended_vendor_id",
-                                                                            "reason"
-                                                                        ],
-                                                                        "additionalProperties": true
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "cluster_key",
-                                                                    "basis",
-                                                                    "offers",
-                                                                    "statistics",
-                                                                    "recommendation"
-                                                                ],
-                                                                "additionalProperties": true
-                                                            }
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "tenant_id",
-                                                        "rfq_id",
-                                                        "clusters"
-                                                    ],
-                                                    "additionalProperties": true
+                                                    "$ref": "#/components/schemas/ComparisonMatrix"
                                                 }
                                             },
                                             "required": [
@@ -4534,60 +4115,7 @@
                                                     "type": "string"
                                                 },
                                                 "readiness": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is_ready": {
-                                                            "type": "boolean"
-                                                        },
-                                                        "is_preview_only": {
-                                                            "type": "boolean"
-                                                        },
-                                                        "blockers": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "code": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "message": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "code",
-                                                                    "message"
-                                                                ],
-                                                                "additionalProperties": true
-                                                            }
-                                                        },
-                                                        "warnings": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "code": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "message": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "code",
-                                                                    "message"
-                                                                ],
-                                                                "additionalProperties": true
-                                                            }
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is_ready",
-                                                        "is_preview_only",
-                                                        "blockers",
-                                                        "warnings"
-                                                    ],
-                                                    "additionalProperties": true
+                                                    "$ref": "#/components/schemas/ComparisonReadiness"
                                                 }
                                             },
                                             "required": [
@@ -4643,6 +4171,25 @@
                     }
                 ],
                 "responses": {
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -4674,25 +4221,6 @@
                                         "code",
                                         "error",
                                         "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -4719,6 +4247,25 @@
                     }
                 ],
                 "responses": {
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -4750,25 +4297,6 @@
                                         "code",
                                         "error",
                                         "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -4795,6 +4323,25 @@
                     }
                 ],
                 "responses": {
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -4826,25 +4373,6 @@
                                         "code",
                                         "error",
                                         "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -7556,9 +7084,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -7577,6 +7102,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -8794,6 +8322,9 @@
                             }
                         }
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "500": {
                         "description": "An error",
                         "content": {
@@ -8813,11 +8344,13 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/projects/{id}": {
@@ -11114,14 +10647,19 @@
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/rfqs/counts": {
             "get": {
                 "operationId": "rfq.counts",
-                "description": "Keys align with WEB sidebar filters: active \u2248 published, archived \u2248 cancelled.",
-                "summary": "GET /rfqs/counts \u2014 tenant-scoped RFQ counts for dashboard nav badges",
+                "description": "Keys align with WEB sidebar filters: active ≈ published, archived ≈ cancelled.",
+                "summary": "GET /rfqs/counts — tenant-scoped RFQ counts for dashboard nav badges",
                 "tags": [
                     "Rfq"
                 ],
@@ -11213,9 +10751,6 @@
                     }
                 },
                 "responses": {
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -11244,6 +10779,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -11481,7 +11019,7 @@
         "/rfqs/{id}/overview": {
             "get": {
                 "operationId": "rfq.overview",
-                "summary": "GET /rfqs/:id/overview \u2014 aggregated summary for the RFQ overview screen",
+                "summary": "GET /rfqs/:id/overview — aggregated summary for the RFQ overview screen",
                 "tags": [
                     "Rfq"
                 ],
@@ -11846,7 +11384,7 @@
         "/rfqs/{rfqId}/activity": {
             "get": {
                 "operationId": "rfq.activity",
-                "summary": "GET /rfqs/:rfqId/activity?limit=20 \u2014 tenant-scoped activity feed (lighter than full overview)",
+                "summary": "GET /rfqs/:rfqId/activity?limit=20 — tenant-scoped activity feed (lighter than full overview)",
                 "tags": [
                     "Rfq"
                 ],
@@ -12099,6 +11637,35 @@
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -12137,37 +11704,13 @@
                                 }
                             }
                         }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "RFQ not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/rfqs/{id}/draft": {
@@ -12500,24 +12043,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/components/schemas/MessageBag"
-                                        }
-                                    },
-                                    "required": [
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -12532,6 +12057,24 @@
                                     },
                                     "required": [
                                         "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "errors"
                                     ]
                                 }
                             }
@@ -15255,6 +14798,9 @@
                             }
                         }
                     },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
@@ -15276,9 +14822,6 @@
                                 }
                             }
                         }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
                     }
                 }
             }
@@ -15706,11 +15249,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -16617,24 +16160,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/components/schemas/MessageBag"
-                                        }
-                                    },
-                                    "required": [
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -16653,8 +16178,31 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/rfqs/{rfqId}/invitations/{invId}/remind": {
@@ -16693,25 +16241,12 @@
                     }
                 ],
                 "responses": {
-                    "412": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Precondition failed"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "error",
-                                        "message"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -16751,12 +16286,25 @@
                             }
                         }
                     },
-                    "200": {
+                    "412": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "const": "Precondition failed"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "error",
+                                        "message"
+                                    ]
                                 }
                             }
                         }
@@ -17068,6 +16616,172 @@
                     "status"
                 ],
                 "title": "RfqStatusTransitionRequest"
+            },
+            "ComparisonMatrix": {
+                "type": "object",
+                "properties": {
+                    "tenant_id": {
+                        "type": "string"
+                    },
+                    "rfq_id": {
+                        "type": "string"
+                    },
+                    "clusters": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "cluster_key": {
+                                    "type": "string"
+                                },
+                                "basis": {
+                                    "type": "string"
+                                },
+                                "offers": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "vendor_id": {
+                                                "type": "string"
+                                            },
+                                            "rfq_line_id": {
+                                                "type": "string"
+                                            },
+                                            "taxonomy_code": {
+                                                "type": "string"
+                                            },
+                                            "normalized_unit_price": {
+                                                "type": "number"
+                                            },
+                                            "normalized_quantity": {
+                                                "type": "number"
+                                            },
+                                            "ai_confidence": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "required": [
+                                            "vendor_id",
+                                            "rfq_line_id",
+                                            "taxonomy_code",
+                                            "normalized_unit_price",
+                                            "normalized_quantity",
+                                            "ai_confidence"
+                                        ],
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "statistics": {
+                                    "type": "object",
+                                    "properties": {
+                                        "min_normalized_unit_price": {
+                                            "type": "number"
+                                        },
+                                        "max_normalized_unit_price": {
+                                            "type": "number"
+                                        },
+                                        "avg_normalized_unit_price": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "min_normalized_unit_price",
+                                        "max_normalized_unit_price",
+                                        "avg_normalized_unit_price"
+                                    ],
+                                    "additionalProperties": true
+                                },
+                                "recommendation": {
+                                    "type": "object",
+                                    "properties": {
+                                        "recommended_vendor_id": {
+                                            "type": "string"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "recommended_vendor_id",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": true
+                                }
+                            },
+                            "required": [
+                                "cluster_key",
+                                "basis",
+                                "offers",
+                                "statistics",
+                                "recommendation"
+                            ],
+                            "additionalProperties": true
+                        }
+                    }
+                },
+                "required": [
+                    "tenant_id",
+                    "rfq_id",
+                    "clusters"
+                ],
+                "additionalProperties": true
+            },
+            "ComparisonReadiness": {
+                "type": "object",
+                "properties": {
+                    "is_ready": {
+                        "type": "boolean"
+                    },
+                    "is_preview_only": {
+                        "type": "boolean"
+                    },
+                    "blockers": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "code",
+                                "message"
+                            ],
+                            "additionalProperties": true
+                        }
+                    },
+                    "warnings": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "code",
+                                "message"
+                            ],
+                            "additionalProperties": true
+                        }
+                    }
+                },
+                "required": [
+                    "is_ready",
+                    "is_preview_only",
+                    "blockers",
+                    "warnings"
+                ],
+                "additionalProperties": true
             }
         },
         "responses": {
@@ -17120,6 +16834,18 @@
                     }
                 }
             }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
         }
-    }
+    },
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ]
 }

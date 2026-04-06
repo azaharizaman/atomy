@@ -5,7 +5,8 @@ export function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 export function toText(value: unknown): string | null {
-  if (value === null || value === undefined) {
+  const type = typeof value;
+  if (value === null || value === undefined || (type !== 'string' && type !== 'number' && type !== 'boolean')) {
     return null;
   }
 
