@@ -83,6 +83,9 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
             'vendor_id' => (string) Str::ulid(),
             'vendor_name' => 'Vendor',
             'status' => 'ready',
+            'file_path' => 'quote-submissions/' . Str::lower((string) Str::ulid()) . '.pdf',
+            'file_type' => 'application/pdf',
+            'original_filename' => 'quote.pdf',
             'submitted_at' => now(),
             'confidence' => 100.0,
             'line_items_count' => 1,
@@ -116,6 +119,20 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'final');
         $this->assertNotNull($response->json('data.snapshot.normalized_lines'));
         $this->assertGreaterThan(0, count((array) $response->json('data.snapshot.normalized_lines')));
+        $this->assertNotEmpty($response->json('data.matrix.clusters'));
+        $this->assertSame(true, $response->json('data.readiness.is_ready'));
+
+        /** @var ComparisonRun|null $run */
+        $run = ComparisonRun::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('rfq_id', $rfq->id)
+            ->where('is_preview', false)
+            ->latest('created_at')
+            ->first();
+
+        $this->assertNotNull($run);
+        $this->assertNotEmpty($run?->matrix_payload['clusters'] ?? []);
+        $this->assertSame(true, $run?->readiness_payload['is_ready'] ?? false);
     }
 
     public function test_approval_cannot_proceed_when_submission_has_blocking_issues(): void

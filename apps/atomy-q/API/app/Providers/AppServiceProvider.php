@@ -98,6 +98,11 @@ use Nexus\QuotationIntelligence\Contracts\OrchestratorProcurementManagerInterfac
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
+use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
+use Nexus\QuotationIntelligence\Contracts\ComparisonReadinessValidatorInterface;
+use Nexus\QuotationIntelligence\Contracts\QuoteComparisonMatrixServiceInterface;
+use Nexus\QuotationIntelligence\Contracts\VendorScoringServiceInterface;
+use Nexus\QuotationIntelligence\Contracts\ApprovalGateServiceInterface;
 use Nexus\Currency\Contracts\ExchangeRateProviderInterface;
 use Nexus\Uom\Contracts\UomRepositoryInterface;
 use App\Adapters\QuotationIntelligence\OrchestratorDocumentRepository;
@@ -112,12 +117,17 @@ use App\Adapters\QuoteIngestion\EloquentQuoteSubmissionQuery;
 use App\Adapters\QuoteIngestion\EloquentQuoteSubmissionPersist;
 use App\Adapters\QuoteIngestion\EloquentNormalizationSourceLineRepository;
 use Nexus\QuotationIntelligence\Coordinators\QuotationIntelligenceCoordinator;
+use Nexus\QuotationIntelligence\Coordinators\BatchQuoteComparisonCoordinator;
 use Nexus\QuotationIntelligence\Contracts\QuoteNormalizationServiceInterface;
 use Nexus\QuotationIntelligence\Contracts\CommercialTermsExtractorInterface;
 use Nexus\QuotationIntelligence\Contracts\RiskAssessmentServiceInterface;
 use Nexus\QuotationIntelligence\Services\QuoteNormalizationService;
 use Nexus\QuotationIntelligence\Services\RegexCommercialTermsExtractor;
 use Nexus\QuotationIntelligence\Services\RuleBasedRiskAssessmentService;
+use Nexus\QuotationIntelligence\Services\ComparisonReadinessValidator;
+use Nexus\QuotationIntelligence\Services\QuoteComparisonMatrixService;
+use Nexus\QuotationIntelligence\Services\WeightedVendorScoringService;
+use Nexus\QuotationIntelligence\Services\HighRiskApprovalGateService;
 use Nexus\ApprovalOperations\Contracts\ApprovalCommentPersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstancePersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
@@ -197,6 +207,26 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(QuoteNormalizationServiceInterface::class, QuoteNormalizationService::class);
         $this->app->singleton(CommercialTermsExtractorInterface::class, RegexCommercialTermsExtractor::class);
         $this->app->singleton(RiskAssessmentServiceInterface::class, RuleBasedRiskAssessmentService::class);
+        $this->app->singleton(QuoteComparisonMatrixServiceInterface::class, QuoteComparisonMatrixService::class);
+        $this->app->singleton(VendorScoringServiceInterface::class, WeightedVendorScoringService::class);
+        $this->app->singleton(ApprovalGateServiceInterface::class, HighRiskApprovalGateService::class);
+        $this->app->singleton(ComparisonReadinessValidatorInterface::class, static function ($app): ComparisonReadinessValidator {
+            return new ComparisonReadinessValidator(
+                $app->make(OrchestratorProcurementManagerInterface::class),
+            );
+        });
+        $this->app->singleton(BatchQuoteComparisonCoordinatorInterface::class, static function ($app): BatchQuoteComparisonCoordinator {
+            return new BatchQuoteComparisonCoordinator(
+                $app->make(QuotationIntelligenceCoordinatorInterface::class),
+                $app->make(QuoteComparisonMatrixServiceInterface::class),
+                $app->make(RiskAssessmentServiceInterface::class),
+                $app->make(VendorScoringServiceInterface::class),
+                $app->make(ApprovalGateServiceInterface::class),
+                $app->make(DecisionTrailWriterInterface::class),
+                $app->make(ComparisonReadinessValidatorInterface::class),
+                $app->make(LoggerInterface::class),
+            );
+        });
         $this->app->singleton(QuotationIntelligenceCoordinatorInterface::class, static function ($app): QuotationIntelligenceCoordinator {
             return new QuotationIntelligenceCoordinator(
                 $app->make(OrchestratorContentProcessorInterface::class),
