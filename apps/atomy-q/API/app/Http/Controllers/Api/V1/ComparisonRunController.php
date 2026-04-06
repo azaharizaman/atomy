@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ComparisonFinalizeRequest;
+use App\Http\Requests\ComparisonPreviewRequest;
 use App\Models\ComparisonRun;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
@@ -15,6 +16,11 @@ use App\Services\QuoteIntake\DecisionTrailRecorder;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
+use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
+use Nexus\QuotationIntelligence\Exceptions\ComparisonNotReadyException;
+use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 
 final class ComparisonRunController extends Controller
 {
@@ -24,6 +30,7 @@ final class ComparisonRunController extends Controller
         private readonly ComparisonSnapshotService $snapshotService,
         private readonly QuoteSubmissionReadinessService $readinessService,
         private readonly DecisionTrailRecorder $decisionTrail,
+        private readonly BatchQuoteComparisonCoordinatorInterface $comparisonCoordinator,
     ) {}
 
     /**
@@ -101,12 +108,80 @@ final class ComparisonRunController extends Controller
      * POST /comparison-runs/preview
      * Scoped by tenant_id.
      */
-    public function preview(Request $request): JsonResponse
+    public function preview(ComparisonPreviewRequest $request): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+        $validated = $request->validated();
+        $rfqId = (string) $validated['rfq_id'];
+
+        $rfq = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $rfqId)
+            ->first();
+        if ($rfq === null) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        $submissions = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfqId)
+            ->whereNotNull('file_path')
+            ->where('file_path', '!=', '')
+            ->get();
+
+        if ($submissions->isEmpty()) {
+            return response()->json([
+                'error' => 'No quote submissions with source documents for this RFQ.',
+                'details' => [],
+            ], 422);
+        }
+
+        try {
+            $comparison = $this->comparisonCoordinator->previewQuotes(
+                $tenantId,
+                $rfqId,
+                $this->documentIds($submissions),
+            );
+        } catch (ComparisonNotReadyException $exception) {
+            return $this->notReadyResponse($exception);
+        } catch (QuotationIntelligenceException $exception) {
+            return $this->comparisonWorkflowErrorResponse($exception);
+        }
+
+        $run = ComparisonRun::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_id' => $rfqId,
+            'name' => 'Preview comparison',
+            'description' => null,
+            'idempotency_key' => null,
+            'is_preview' => true,
+            'created_by' => $this->userId($request),
+            'request_payload' => ['rfq_id' => $rfqId],
+            'matrix_payload' => $comparison['matrix'] ?? [],
+            'scoring_payload' => $comparison['scoring'] ?? [],
+            'approval_payload' => $comparison['approval'] ?? [],
+            'response_payload' => [
+                'documents_processed' => $comparison['documents_processed'] ?? count($submissions),
+                'vendors' => $comparison['vendors'] ?? [],
+            ],
+            'readiness_payload' => $comparison['readiness'] ?? [],
+            'status' => 'preview',
+            'version' => 1,
+            'expires_at' => null,
+            'discarded_at' => null,
+            'discarded_by' => null,
+        ]);
+
         return response()->json([
             'data' => [
-                'id' => 'cr-preview-' . uniqid(),
+                'id' => $run->id,
+                'rfq_id' => $rfqId,
                 'status' => 'preview',
+                'is_preview' => true,
+                'matrix' => $run->matrix_payload,
+                'readiness' => $run->readiness_payload,
+                'approval' => $run->approval_payload,
+                'created_at' => $run->created_at?->toAtomString(),
             ],
         ], 201);
     }
@@ -171,40 +246,66 @@ final class ComparisonRunController extends Controller
 
         $snapshot = $this->snapshotService->freezeForRfq($tenantId, (string) $rfq->id);
 
-        $run = ComparisonRun::query()->create([
-            'tenant_id' => $tenantId,
-            'rfq_id' => $rfq->id,
-            'name' => 'Final comparison',
-            'description' => null,
-            'idempotency_key' => null,
-            'is_preview' => false,
-            'created_by' => $this->userId($request),
-            'request_payload' => ['rfq_id' => $rfq->id],
-            'matrix_payload' => ['rows' => []],
-            'scoring_payload' => [],
-            'approval_payload' => [],
-            'response_payload' => ['snapshot' => $snapshot],
-            'readiness_payload' => [
-                'all_ready' => true,
-                'submission_count' => $submissions->count(),
-            ],
-            'status' => 'final',
-            'version' => 1,
-            'expires_at' => null,
-            'discarded_at' => null,
-            'discarded_by' => null,
-        ]);
+        $submissionsWithDocuments = $submissions
+            ->filter(static fn (QuoteSubmission $submission): bool => is_string($submission->file_path) && trim($submission->file_path) !== '')
+            ->values();
+        if ($submissionsWithDocuments->count() !== $submissions->count()) {
+            return response()->json([
+                'error' => 'All ready quote submissions must include source documents before freezing comparison.',
+                'details' => [],
+            ], 422);
+        }
 
-        $this->decisionTrail->recordSnapshotFrozen(
-            $tenantId,
-            (string) $rfq->id,
-            (string) $run->id,
-            [
-                'comparison_run_id' => $run->id,
-                'quote_submission_count' => $submissions->count(),
-                'normalized_line_count' => count($snapshot['normalized_lines']),
-            ],
-        );
+        try {
+            $result = DB::transaction(function () use ($tenantId, $request, $rfq, $submissionsWithDocuments, $snapshot, $submissions): array {
+                $comparison = $this->comparisonCoordinator->compareQuotes(
+                    $tenantId,
+                    (string) $rfq->id,
+                    $this->documentIds($submissionsWithDocuments),
+                );
+
+                $run = ComparisonRun::query()->create([
+                    'tenant_id' => $tenantId,
+                    'rfq_id' => $rfq->id,
+                    'name' => 'Final comparison',
+                    'description' => null,
+                    'idempotency_key' => null,
+                    'is_preview' => false,
+                    'created_by' => $this->userId($request),
+                    'request_payload' => ['rfq_id' => $rfq->id],
+                    'matrix_payload' => $comparison['matrix'] ?? [],
+                    'scoring_payload' => $comparison['scoring'] ?? [],
+                    'approval_payload' => $comparison['approval'] ?? [],
+                    'response_payload' => ['snapshot' => $snapshot],
+                    'readiness_payload' => $comparison['readiness'] ?? [],
+                    'status' => 'final',
+                    'version' => 1,
+                    'expires_at' => null,
+                    'discarded_at' => null,
+                    'discarded_by' => null,
+                ]);
+
+                $this->decisionTrail->recordSnapshotFrozen(
+                    $tenantId,
+                    (string) $rfq->id,
+                    (string) $run->id,
+                    [
+                        'comparison_run_id' => $run->id,
+                        'quote_submission_count' => $submissions->count(),
+                        'normalized_line_count' => count($snapshot['normalized_lines']),
+                    ],
+                );
+
+                return ['run' => $run];
+            });
+        } catch (ComparisonNotReadyException $exception) {
+            return $this->notReadyResponse($exception);
+        } catch (QuotationIntelligenceException $exception) {
+            return $this->comparisonWorkflowErrorResponse($exception);
+        }
+
+        /** @var ComparisonRun $run */
+        $run = $result['run'];
 
         return response()->json([
             'data' => [
@@ -212,6 +313,8 @@ final class ComparisonRunController extends Controller
                 'rfq_id' => $rfq->id,
                 'status' => 'final',
                 'snapshot' => $snapshot,
+                'matrix' => $run->matrix_payload,
+                'readiness' => $run->readiness_payload,
             ],
         ], 201);
     }
@@ -222,11 +325,15 @@ final class ComparisonRunController extends Controller
      */
     public function matrix(Request $request, string $id): JsonResponse
     {
+        $run = $this->runForTenant($this->tenantId($request), $id);
+        if ($run === null) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
+        }
+
         return response()->json([
             'data' => [
-                'id' => $id,
-                'matrix' => [],
-                'headers' => [],
+                'id' => $run->id,
+                'matrix' => $run->matrix_payload ?? [],
             ],
         ]);
     }
@@ -237,11 +344,15 @@ final class ComparisonRunController extends Controller
      */
     public function readiness(Request $request, string $id): JsonResponse
     {
+        $run = $this->runForTenant($this->tenantId($request), $id);
+        if ($run === null) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
+        }
+
         return response()->json([
             'data' => [
-                'id' => $id,
-                'ready' => false,
-                'issues' => [],
+                'id' => $run->id,
+                'readiness' => $run->readiness_payload ?? [],
             ],
         ]);
     }
@@ -252,12 +363,7 @@ final class ComparisonRunController extends Controller
      */
     public function updateScoringModel(Request $request, string $id): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'id' => $id,
-                'scoring_model' => [],
-            ],
-        ]);
+        return $this->deferredControlResponse($request, $id);
     }
 
     /**
@@ -266,12 +372,7 @@ final class ComparisonRunController extends Controller
      */
     public function lock(Request $request, string $id): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'id' => $id,
-                'locked' => true,
-            ],
-        ]);
+        return $this->deferredControlResponse($request, $id);
     }
 
     /**
@@ -280,11 +381,66 @@ final class ComparisonRunController extends Controller
      */
     public function unlock(Request $request, string $id): JsonResponse
     {
+        return $this->deferredControlResponse($request, $id);
+    }
+
+    /**
+     * @param Collection<int, QuoteSubmission> $submissions
+     * @return array<int, string>
+     */
+    private function documentIds(Collection $submissions): array
+    {
+        return $submissions
+            ->map(static fn (QuoteSubmission $submission): string => (string) $submission->id)
+            ->values()
+            ->all();
+    }
+
+    private function notReadyResponse(ComparisonNotReadyException $exception): JsonResponse
+    {
+        $readiness = $exception->getReadinessResult();
+
         return response()->json([
-            'data' => [
-                'id' => $id,
-                'locked' => false,
+            'error' => 'Comparison is not ready.',
+            'details' => $readiness->getBlockers(),
+            'readiness' => [
+                'is_ready' => $readiness->isReady(),
+                'is_preview_only' => $readiness->isPreviewOnly(),
+                'blockers' => $readiness->getBlockers(),
+                'warnings' => $readiness->getWarnings(),
             ],
-        ]);
+        ], 422);
+    }
+
+    private function comparisonWorkflowErrorResponse(QuotationIntelligenceException $exception): JsonResponse
+    {
+        return response()->json([
+            'code' => class_basename($exception),
+            'error' => $exception->getMessage(),
+        ], 422);
+    }
+
+    private function deferredControlResponse(Request $request, string $id): JsonResponse
+    {
+        $run = $this->runForTenant($this->tenantId($request), $id);
+        if ($run === null) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
+        }
+
+        return response()->json([
+            'code' => 'COMPARISON_CONTROL_DEFERRED',
+            'error' => 'This comparison control is deferred to beta and is not available in alpha.',
+            'data' => [
+                'id' => (string) $run->id,
+            ],
+        ], 422);
+    }
+
+    private function runForTenant(string $tenantId, string $id): ?ComparisonRun
+    {
+        return ComparisonRun::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->first();
     }
 }

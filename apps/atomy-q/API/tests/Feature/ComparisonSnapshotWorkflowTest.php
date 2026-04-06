@@ -53,7 +53,7 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
     }
 
     /**
-     * @return array{0: User, 1: Rfq, 2: RfqLineItem, 3: QuoteSubmission}
+     * @return array{0: User, 1: Rfq, 2: RfqLineItem, 3: QuoteSubmission, 4: QuoteSubmission}
      */
     private function seedReadyQuoteForFinal(User $user): array
     {
@@ -63,6 +63,7 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
             'title' => 'Snapshot RFQ',
             'owner_id' => $user->id,
             'submission_deadline' => now()->addDays(14),
+            'closing_date' => now()->subDay(),
             'status' => 'published',
         ]);
 
@@ -83,6 +84,9 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
             'vendor_id' => (string) Str::ulid(),
             'vendor_name' => 'Vendor',
             'status' => 'ready',
+            'file_path' => 'quote-submissions/' . Str::lower((string) Str::ulid()) . '.pdf',
+            'file_type' => 'application/pdf',
+            'original_filename' => 'quote.pdf',
             'submitted_at' => now(),
             'confidence' => 100.0,
             'line_items_count' => 1,
@@ -99,7 +103,32 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
             'sort_order' => 0,
         ]);
 
-        return [$user, $rfq, $lineItem, $quote];
+        $secondQuote = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Vendor Two',
+            'status' => 'ready',
+            'file_path' => 'quote-submissions/' . Str::lower((string) Str::ulid()) . '.pdf',
+            'file_type' => 'application/pdf',
+            'original_filename' => 'quote-2.pdf',
+            'submitted_at' => now(),
+            'confidence' => 96.0,
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        NormalizationSourceLine::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'quote_submission_id' => $secondQuote->id,
+            'rfq_line_item_id' => $lineItem->id,
+            'source_description' => 'Line',
+            'source_unit_price' => 11,
+            'sort_order' => 0,
+        ]);
+
+        return [$user, $rfq, $lineItem, $quote, $secondQuote];
     }
 
     public function test_final_comparison_run_captures_snapshot_inputs(): void
@@ -116,6 +145,17 @@ final class ComparisonSnapshotWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'final');
         $this->assertNotNull($response->json('data.snapshot.normalized_lines'));
         $this->assertGreaterThan(0, count((array) $response->json('data.snapshot.normalized_lines')));
+        $this->assertNotEmpty($response->json('data.matrix.clusters'));
+        $this->assertSame(true, $response->json('data.readiness.is_ready'));
+
+        /** @var ComparisonRun|null $run */
+        $run = ComparisonRun::query()->find((string) $response->json('data.id'));
+
+        $this->assertNotNull($run);
+        $this->assertArrayHasKey('clusters', $run->matrix_payload);
+        $this->assertArrayHasKey('is_ready', $run->readiness_payload);
+        $this->assertNotEmpty($run->matrix_payload['clusters']);
+        $this->assertSame(true, $run->readiness_payload['is_ready']);
     }
 
     public function test_approval_cannot_proceed_when_submission_has_blocking_issues(): void

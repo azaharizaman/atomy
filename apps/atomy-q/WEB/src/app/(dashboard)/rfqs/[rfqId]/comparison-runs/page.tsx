@@ -5,32 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { StatusBadge } from '@/components/ds/Badge';
-import { VersionChip } from '@/components/ds/Badge';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { useComparisonRuns, type ComparisonRunRow } from '@/hooks/use-comparison-runs';
 import { Button } from '@/components/ds/Button';
 import { Plus } from 'lucide-react';
-
-function OwnerCell({ name }: { name: string }) {
-  const safeName = name.trim() || 'System';
-  const initials = safeName
-    .split(' ')
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600">
-        {initials}
-      </div>
-      <span className="text-sm text-slate-700">{safeName}</span>
-    </div>
-  );
-}
 
 export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
@@ -44,7 +24,16 @@ export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
   ];
 
   const columns: ColumnDef<ComparisonRunRow>[] = [
-    { key: 'runId', label: 'Run ID', render: (row) => <span className="font-mono text-sm font-medium text-slate-800">{row.run_id}</span> },
+    {
+      key: 'name',
+      label: 'Run',
+      render: (row) => (
+        <div className="space-y-0.5">
+          <span className="block text-sm font-medium text-slate-800">{row.name}</span>
+          <span className="block font-mono text-xs text-slate-500">{row.id}</span>
+        </div>
+      ),
+    },
     { key: 'date', label: 'Date', width: '100px', render: (row) => <span className="text-sm text-slate-600">{row.date}</span> },
     {
       key: 'type',
@@ -63,8 +52,6 @@ export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
         />
       ),
     },
-    { key: 'scoringModel', label: 'Scoring model', width: '80px', render: (row) => <VersionChip version={row.scoring_model} /> },
-    { key: 'createdBy', label: 'Created by', render: (row) => <OwnerCell name={row.created_by || 'System'} /> },
   ];
 
   const hasFinalRun = runs.some((r) => r.type === 'final');

@@ -19,13 +19,14 @@
 | **Routing** | ✅ | Added not-found page for undefined routes with design-system styling. |
 | **RFQ Management** | 🚧 | RFQ List + Workspace Overview done; other workspace sections are scaffolded via `/rfqs/[rfqId]/[section]`. **`/rfqs/new` and RFQ Details require `submission_deadline`** (aligned with API NOT NULL). |
 | **Vendor Management** | ❌ | Pending implementation. |
-| **Quote Intake** | ✅ | Quote list, detail, normalize, comparison freeze, award, and approvals screens now consume live API data when `NEXT_PUBLIC_USE_MOCKS=false`. Live quote rows preserve nullable fields, normalize confidence/blocks strictly, reject empty-string unit prices, scope normalization source lines to the active `quoteId`, and expose accessible controlled selection controls on normalization rows. Award debriefs now use user-entered draft text instead of a hard-coded template message. Mock/demo branches remain available for local seed mode. |
+| **Quote Intake** | ✅ | Quote list, detail, normalize, comparison freeze, comparison-run detail, award, and approvals screens now consume live API data when `NEXT_PUBLIC_USE_MOCKS=false`. Live quote rows preserve nullable fields, normalize confidence/blocks strictly, reject empty-string unit prices, scope normalization source lines to the active `quoteId`, and expose accessible controlled selection controls on normalization rows. Award debriefs now use user-entered draft text instead of a hard-coded template message. Mock/demo branches remain available for local seed mode. |
+| **Comparison Runs** | ✅ | `/rfqs/[rfqId]/comparison-runs` and the run detail page render live persisted run, matrix, readiness, and snapshot payloads; the snapshot banner only appears for real final runs and the retired lock/unlock controls are no longer shown in the alpha UI. |
 | **Approvals** | 🚧 | Global queue `/approvals` + detail `/approvals/[id]` call API; RFQ-scoped approval URLs now use the live pending-approval list, forward the RFQ filter to the hook, and normalize backend priority values before rendering. |
 | **Turbopack Root Config** | ✅ | Resolve `tailwindcss` from WEB config dir to avoid parent-root module resolution. |
 
 ## Next Steps
 1.  Replace mocked RFQ list/detail data with real payload mapping (see `BACKEND_API_GAPS.md` for required fields/params).
-2.  Continue refining quote intake, comparison, award, and approval screens as the remaining backend surfaces are productized.
+2.  Continue refining quote intake, comparison, award, and approval screens as the remaining beta-only controls are productized.
 3.  Implement Vendor Management and Invitation lifecycle on top of the now-live quote flow.
 4.  Expand Playwright coverage per workflow slice.
 
