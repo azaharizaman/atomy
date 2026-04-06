@@ -16,9 +16,11 @@ use App\Services\QuoteIntake\DecisionTrailRecorder;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
 use Nexus\QuotationIntelligence\Exceptions\ComparisonNotReadyException;
+use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 
 final class ComparisonRunController extends Controller
 {
@@ -142,6 +144,8 @@ final class ComparisonRunController extends Controller
             );
         } catch (ComparisonNotReadyException $exception) {
             return $this->notReadyResponse($exception);
+        } catch (QuotationIntelligenceException $exception) {
+            return $this->comparisonWorkflowErrorResponse($exception);
         }
 
         $run = ComparisonRun::query()->create([
@@ -253,46 +257,63 @@ final class ComparisonRunController extends Controller
         }
 
         try {
-            $comparison = $this->comparisonCoordinator->previewQuotes(
-                $tenantId,
-                (string) $rfq->id,
-                $this->documentIds($submissionsWithDocuments),
-            );
+            $result = DB::transaction(function () use ($tenantId, $request, $rfq, $submissionsWithDocuments, $snapshot, $submissions): array {
+                $run = ComparisonRun::query()->create([
+                    'tenant_id' => $tenantId,
+                    'rfq_id' => $rfq->id,
+                    'name' => 'Final comparison',
+                    'description' => null,
+                    'idempotency_key' => null,
+                    'is_preview' => false,
+                    'created_by' => $this->userId($request),
+                    'request_payload' => ['rfq_id' => $rfq->id],
+                    'matrix_payload' => $comparison['matrix'] ?? [],
+                    'scoring_payload' => $comparison['scoring'] ?? [],
+                    'approval_payload' => $comparison['approval'] ?? [],
+                    'response_payload' => ['snapshot' => $snapshot],
+                    'readiness_payload' => $comparison['readiness'] ?? [],
+                    'status' => 'final',
+                    'version' => 1,
+                    'expires_at' => null,
+                    'discarded_at' => null,
+                    'discarded_by' => null,
+                ]);
+
+                $comparison = $this->comparisonCoordinator->compareQuotes(
+                    $tenantId,
+                    (string) $rfq->id,
+                    $this->documentIds($submissionsWithDocuments),
+                );
+
+                $run->update([
+                    'matrix_payload' => $comparison['matrix'] ?? [],
+                    'scoring_payload' => $comparison['scoring'] ?? [],
+                    'approval_payload' => $comparison['approval'] ?? [],
+                    'response_payload' => ['snapshot' => $snapshot],
+                    'readiness_payload' => $comparison['readiness'] ?? [],
+                ]);
+
+                $this->decisionTrail->recordSnapshotFrozen(
+                    $tenantId,
+                    (string) $rfq->id,
+                    (string) $run->id,
+                    [
+                        'comparison_run_id' => $run->id,
+                        'quote_submission_count' => $submissions->count(),
+                        'normalized_line_count' => count($snapshot['normalized_lines']),
+                    ],
+                );
+
+                return ['run' => $run];
+            });
         } catch (ComparisonNotReadyException $exception) {
             return $this->notReadyResponse($exception);
+        } catch (QuotationIntelligenceException $exception) {
+            return $this->comparisonWorkflowErrorResponse($exception);
         }
 
-        $run = ComparisonRun::query()->create([
-            'tenant_id' => $tenantId,
-            'rfq_id' => $rfq->id,
-            'name' => 'Final comparison',
-            'description' => null,
-            'idempotency_key' => null,
-            'is_preview' => false,
-            'created_by' => $this->userId($request),
-            'request_payload' => ['rfq_id' => $rfq->id],
-            'matrix_payload' => $comparison['matrix'] ?? [],
-            'scoring_payload' => $comparison['scoring'] ?? [],
-            'approval_payload' => $comparison['approval'] ?? [],
-            'response_payload' => ['snapshot' => $snapshot],
-            'readiness_payload' => $comparison['readiness'] ?? [],
-            'status' => 'final',
-            'version' => 1,
-            'expires_at' => null,
-            'discarded_at' => null,
-            'discarded_by' => null,
-        ]);
-
-        $this->decisionTrail->recordSnapshotFrozen(
-            $tenantId,
-            (string) $rfq->id,
-            (string) $run->id,
-            [
-                'comparison_run_id' => $run->id,
-                'quote_submission_count' => $submissions->count(),
-                'normalized_line_count' => count($snapshot['normalized_lines']),
-            ],
-        );
+        /** @var ComparisonRun $run */
+        $run = $result['run'];
 
         return response()->json([
             'data' => [
@@ -396,6 +417,14 @@ final class ComparisonRunController extends Controller
                 'blockers' => $readiness->getBlockers(),
                 'warnings' => $readiness->getWarnings(),
             ],
+        ], 422);
+    }
+
+    private function comparisonWorkflowErrorResponse(QuotationIntelligenceException $exception): JsonResponse
+    {
+        return response()->json([
+            'code' => class_basename($exception),
+            'error' => $exception->getMessage(),
         ], 422);
     }
 

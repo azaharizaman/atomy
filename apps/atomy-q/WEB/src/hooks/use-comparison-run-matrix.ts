@@ -46,6 +46,19 @@ function toText(value: unknown): string | null {
   return text === '' ? null : text;
 }
 
+function toRequiredNumber(value: unknown, fieldName: string): number {
+  if (value === null || value === undefined || value === '') {
+    throw new Error(`Comparison matrix payload is missing ${fieldName}.`);
+  }
+
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) {
+    throw new Error(`Comparison matrix field ${fieldName} must be numeric.`);
+  }
+
+  return numberValue;
+}
+
 function unwrapResponse(payload: unknown): unknown {
   if (!isObject(payload)) {
     return payload;
@@ -70,9 +83,9 @@ function normalizeOffer(payload: unknown, index: number): ComparisonRunMatrixOff
     throw new Error(`Comparison matrix offer at index ${index} is missing vendor_id, rfq_line_id, or taxonomy_code.`);
   }
 
-  const normalizedUnitPrice = Number(payload.normalized_unit_price ?? payload.normalizedUnitPrice ?? 0);
-  const normalizedQuantity = Number(payload.normalized_quantity ?? payload.normalizedQuantity ?? 0);
-  const aiConfidence = Number(payload.ai_confidence ?? payload.aiConfidence ?? 0);
+  const normalizedUnitPrice = toRequiredNumber(payload.normalized_unit_price ?? payload.normalizedUnitPrice, 'normalized_unit_price');
+  const normalizedQuantity = toRequiredNumber(payload.normalized_quantity ?? payload.normalizedQuantity, 'normalized_quantity');
+  const aiConfidence = toRequiredNumber(payload.ai_confidence ?? payload.aiConfidence, 'ai_confidence');
 
   return {
     vendorId,
@@ -101,14 +114,17 @@ function normalizeCluster(payload: unknown, index: number): ComparisonRunMatrixC
   if (!isObject(payload.statistics)) {
     throw new Error(`Comparison matrix cluster at index ${index} is missing statistics.`);
   }
-  const minNormalizedUnitPrice = Number(
-    payload.statistics.min_normalized_unit_price ?? payload.statistics.minNormalizedUnitPrice ?? 0,
+  const minNormalizedUnitPrice = toRequiredNumber(
+    payload.statistics.min_normalized_unit_price ?? payload.statistics.minNormalizedUnitPrice,
+    'statistics.min_normalized_unit_price',
   );
-  const maxNormalizedUnitPrice = Number(
-    payload.statistics.max_normalized_unit_price ?? payload.statistics.maxNormalizedUnitPrice ?? 0,
+  const maxNormalizedUnitPrice = toRequiredNumber(
+    payload.statistics.max_normalized_unit_price ?? payload.statistics.maxNormalizedUnitPrice,
+    'statistics.max_normalized_unit_price',
   );
-  const avgNormalizedUnitPrice = Number(
-    payload.statistics.avg_normalized_unit_price ?? payload.statistics.avgNormalizedUnitPrice ?? 0,
+  const avgNormalizedUnitPrice = toRequiredNumber(
+    payload.statistics.avg_normalized_unit_price ?? payload.statistics.avgNormalizedUnitPrice,
+    'statistics.avg_normalized_unit_price',
   );
 
   if (!isObject(payload.recommendation)) {

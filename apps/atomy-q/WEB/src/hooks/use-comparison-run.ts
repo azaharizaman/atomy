@@ -52,6 +52,19 @@ function toText(value: unknown): string | null {
   return text === '' ? null : text;
 }
 
+function toRequiredNumber(value: unknown, fieldName: string): number {
+  if (value === null || value === undefined || value === '') {
+    throw new Error(`Comparison run snapshot is missing ${fieldName}.`);
+  }
+
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) {
+    throw new Error(`Comparison run snapshot field ${fieldName} must be numeric.`);
+  }
+
+  return numberValue;
+}
+
 function unwrapResponse(payload: unknown): unknown {
   if (!isObject(payload)) {
     return payload;
@@ -142,11 +155,10 @@ function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {
     };
   });
 
-  const rfqVersionRaw = payload.rfq_version ?? payload.rfqVersion ?? 0;
-  const rfqVersion = Number(rfqVersionRaw);
+  const rfqVersion = toRequiredNumber(payload.rfq_version ?? payload.rfqVersion, 'rfq_version');
 
   return {
-    rfqVersion: Number.isFinite(rfqVersion) ? rfqVersion : 0,
+    rfqVersion,
     normalizedLines,
     resolutions,
     currencyMeta,

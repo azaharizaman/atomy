@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost/api/v1"
+            "url": "http://localhost:8000/api/v1"
         }
     ],
     "paths": {
@@ -3642,6 +3642,16 @@
                 "tags": [
                     "ComparisonRun"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ComparisonPreviewRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
                         "description": "",
@@ -3656,19 +3666,65 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
+                                                "rfq_id": {
+                                                    "type": "string"
+                                                },
                                                 "status": {
                                                     "type": "string",
                                                     "const": "preview"
+                                                },
+                                                "is_preview": {
+                                                    "type": "boolean"
+                                                },
+                                                "matrix": {
+                                                    "type": "string"
+                                                },
+                                                "readiness": {
+                                                    "type": "string"
+                                                },
+                                                "approval": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "status"
+                                                "rfq_id",
+                                                "status",
+                                                "is_preview",
+                                                "matrix",
+                                                "readiness",
+                                                "approval",
+                                                "created_at"
                                             ]
                                         }
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -3806,13 +3862,21 @@
                                                         "currency_meta",
                                                         "vendors"
                                                     ]
+                                                },
+                                                "matrix": {
+                                                    "type": "string"
+                                                },
+                                                "readiness": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "id",
                                                 "rfq_id",
                                                 "status",
-                                                "snapshot"
+                                                "snapshot",
+                                                "matrix",
+                                                "readiness"
                                             ]
                                         }
                                     },
@@ -3973,33 +4037,49 @@
                                                     "type": "string"
                                                 },
                                                 "matrix": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                },
-                                                "headers": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    ]
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "matrix",
-                                                "headers"
+                                                "matrix"
                                             ]
                                         }
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -4039,28 +4119,50 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
-                                                "ready": {
-                                                    "type": "boolean"
-                                                },
-                                                "issues": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
+                                                "readiness": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    ]
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "ready",
-                                                "issues"
+                                                "readiness"
                                             ]
                                         }
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -4087,37 +4189,56 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "422": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
+                                        "code": {
+                                            "type": "string",
+                                            "const": "COMPARISON_CONTROL_DEFERRED"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "const": "This comparison control is deferred to beta and is not available in alpha."
+                                        },
                                         "data": {
                                             "type": "object",
                                             "properties": {
                                                 "id": {
                                                     "type": "string"
-                                                },
-                                                "scoring_model": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
                                                 }
                                             },
                                             "required": [
-                                                "id",
-                                                "scoring_model"
+                                                "id"
                                             ]
                                         }
                                     },
                                     "required": [
+                                        "code",
+                                        "error",
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -4144,31 +4265,56 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "422": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
+                                        "code": {
+                                            "type": "string",
+                                            "const": "COMPARISON_CONTROL_DEFERRED"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "const": "This comparison control is deferred to beta and is not available in alpha."
+                                        },
                                         "data": {
                                             "type": "object",
                                             "properties": {
                                                 "id": {
                                                     "type": "string"
-                                                },
-                                                "locked": {
-                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
-                                                "id",
-                                                "locked"
+                                                "id"
                                             ]
                                         }
                                     },
                                     "required": [
+                                        "code",
+                                        "error",
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -4195,31 +4341,56 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "422": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
+                                        "code": {
+                                            "type": "string",
+                                            "const": "COMPARISON_CONTROL_DEFERRED"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "const": "This comparison control is deferred to beta and is not available in alpha."
+                                        },
                                         "data": {
                                             "type": "object",
                                             "properties": {
                                                 "id": {
                                                     "type": "string"
-                                                },
-                                                "locked": {
-                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
-                                                "id",
-                                                "locked"
+                                                "id"
                                             ]
                                         }
                                     },
                                     "required": [
+                                        "code",
+                                        "error",
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -16068,20 +16239,59 @@
                     }
                 ],
                 "responses": {
-                    "404": {
+                    "412": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "message": {
+                                        "error": {
                                             "type": "string",
-                                            "const": "RFQ not found"
+                                            "const": "Precondition failed"
+                                        },
+                                        "message": {
+                                            "type": "string"
                                         }
                                     },
                                     "required": [
+                                        "error",
                                         "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Invitation not found"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "RFQ not found"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
                                     ]
                                 }
                             }
@@ -16114,6 +16324,18 @@
                     "rfq_id"
                 ],
                 "title": "ComparisonFinalizeRequest"
+            },
+            "ComparisonPreviewRequest": {
+                "type": "object",
+                "properties": {
+                    "rfq_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "rfq_id"
+                ],
+                "title": "ComparisonPreviewRequest"
             },
             "MessageBag": {
                 "type": "object",
@@ -16323,7 +16545,10 @@
                         "maximum": 100
                     },
                     "submission_deadline": {
-                        "type": "string",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "format": "date-time"
                     },
                     "closing_date": {

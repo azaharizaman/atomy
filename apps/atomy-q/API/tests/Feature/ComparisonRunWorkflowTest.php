@@ -13,6 +13,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
+use Nexus\QuotationIntelligence\Exceptions\DocumentAccessDeniedException;
 use Tests\Feature\Api\ApiTestCase;
 
 final class ComparisonRunWorkflowTest extends ApiTestCase
@@ -52,7 +54,7 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
     }
 
     /**
-     * @return array{0: Rfq, 1: QuoteSubmission}
+     * @return array{0: Rfq, 1: QuoteSubmission, 2: QuoteSubmission}
      */
     private function seedReadyComparisonContext(User $user): array
     {
@@ -104,7 +106,34 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
             'sort_order' => 0,
         ]);
 
-        return [$rfq, $quote];
+        $secondQuote = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Vendor Two',
+            'status' => 'ready',
+            'file_path' => 'quote-submissions/' . Str::lower((string) Str::ulid()) . '.pdf',
+            'file_type' => 'application/pdf',
+            'original_filename' => 'quote-2.pdf',
+            'submitted_at' => now(),
+            'confidence' => 97.0,
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        NormalizationSourceLine::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'quote_submission_id' => $secondQuote->id,
+            'rfq_line_item_id' => $lineItem->id,
+            'source_description' => 'Pump assembly',
+            'source_unit_price' => 115.0,
+            'source_quantity' => 1.0,
+            'source_uom' => 'EA',
+            'sort_order' => 0,
+        ]);
+
+        return [$rfq, $quote, $secondQuote];
     }
 
     public function test_preview_comparison_run_returns_real_persisted_id_and_live_payloads(): void
@@ -133,6 +162,81 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
             'rfq_id' => $rfq->id,
             'is_preview' => true,
             'status' => 'preview',
+        ]);
+    }
+
+    public function test_final_comparison_uses_final_coordinator_path(): void
+    {
+        $user = $this->createUser();
+        [$rfq] = $this->seedReadyComparisonContext($user);
+
+        $coordinator = $this->createMock(BatchQuoteComparisonCoordinatorInterface::class);
+        $coordinator->expects($this->once())
+            ->method('compareQuotes')
+            ->with(
+                (string) $user->tenant_id,
+                (string) $rfq->id,
+                $this->callback(static fn (array $documentIds): bool => count($documentIds) === 2),
+            )
+            ->willReturn([
+                'tenant_id' => (string) $user->tenant_id,
+                'rfq_id' => (string) $rfq->id,
+                'documents_processed' => 2,
+                'matrix' => ['clusters' => []],
+                'scoring' => [],
+                'approval' => [],
+                'readiness' => [
+                    'is_ready' => true,
+                    'is_preview_only' => false,
+                    'blockers' => [],
+                    'warnings' => [],
+                ],
+            ]);
+        $coordinator->expects($this->never())->method('previewQuotes');
+
+        $this->app->instance(BatchQuoteComparisonCoordinatorInterface::class, $coordinator);
+
+        $response = $this->postJson(
+            '/api/v1/comparison-runs/final',
+            ['rfq_id' => (string) $rfq->id],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'final');
+        $this->assertDatabaseHas('comparison_runs', [
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'is_preview' => false,
+            'status' => 'final',
+        ]);
+    }
+
+    public function test_final_comparison_rolls_back_when_coordinator_fails(): void
+    {
+        $user = $this->createUser();
+        [$rfq] = $this->seedReadyComparisonContext($user);
+
+        $coordinator = $this->createMock(BatchQuoteComparisonCoordinatorInterface::class);
+        $coordinator->expects($this->once())
+            ->method('compareQuotes')
+            ->willThrowException(new DocumentAccessDeniedException('Document denied'));
+        $coordinator->expects($this->never())->method('previewQuotes');
+
+        $this->app->instance(BatchQuoteComparisonCoordinatorInterface::class, $coordinator);
+
+        $response = $this->postJson(
+            '/api/v1/comparison-runs/final',
+            ['rfq_id' => (string) $rfq->id],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('code', 'DocumentAccessDeniedException');
+        $this->assertDatabaseMissing('comparison_runs', [
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'status' => 'final',
         ]);
     }
 
@@ -275,5 +379,27 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         $unlockResponse->assertStatus(422);
         $unlockResponse->assertJsonPath('code', 'COMPARISON_CONTROL_DEFERRED');
     }
-}
 
+    public function test_preview_maps_quotation_intelligence_domain_errors_to_422(): void
+    {
+        $user = $this->createUser();
+        [$rfq] = $this->seedReadyComparisonContext($user);
+
+        $coordinator = $this->createMock(BatchQuoteComparisonCoordinatorInterface::class);
+        $coordinator->expects($this->once())
+            ->method('previewQuotes')
+            ->willThrowException(new DocumentAccessDeniedException('Document denied'));
+        $coordinator->expects($this->never())->method('compareQuotes');
+
+        $this->app->instance(BatchQuoteComparisonCoordinatorInterface::class, $coordinator);
+
+        $response = $this->postJson(
+            '/api/v1/comparison-runs/preview',
+            ['rfq_id' => (string) $rfq->id],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('code', 'DocumentAccessDeniedException');
+    }
+}

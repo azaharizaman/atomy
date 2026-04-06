@@ -112,4 +112,31 @@ describe('useComparisonRun', () => {
     expect(result.current.error).toBeInstanceOf(Error);
     expect(result.current.error?.message).toMatch(/id/i);
   });
+
+  it('rejects a snapshot payload with a non-numeric rfq version', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: {
+          id: 'run-42',
+          rfq_id: 'rfq-9',
+          status: 'final',
+          is_preview: false,
+          snapshot: {
+            rfq_version: 'not-a-number',
+            normalized_lines: [],
+            resolutions: [],
+            currency_meta: {},
+            vendors: [],
+          },
+        },
+      },
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useComparisonRun('run-42'), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error?.message).toMatch(/rfq_version/i);
+  });
 });

@@ -7,13 +7,11 @@ import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 export interface ComparisonRunRow {
   id: string;
   rfq_id: string;
-  run_id: string;
   date: string;
   type: 'preview' | 'final';
   status: string;
-  scoring_model: string;
-  created_by: string;
   created_at?: string | null;
+  name: string;
 }
 
 function normalizeComparisonRuns(payload: unknown): ComparisonRunRow[] {
@@ -24,22 +22,20 @@ function normalizeComparisonRuns(payload: unknown): ComparisonRunRow[] {
       throw new Error(`Invalid comparison run row at index ${index}: expected object`);
     }
     const row = item as Record<string, unknown>;
-    const runIdRaw = row.run_id ?? row.runId ?? row.name;
-    if (runIdRaw === null || runIdRaw === undefined || String(runIdRaw).trim() === '') {
-      throw new Error(`Missing run_id for comparison row at index ${index}: ${JSON.stringify(row)}`);
+    const id = row.id ?? row.run_id ?? row.runId;
+    if (id === null || id === undefined || String(id).trim() === '') {
+      throw new Error(`Missing id for comparison row at index ${index}: ${JSON.stringify(row)}`);
     }
     return {
-      id: String(row.id ?? ''),
+      id: String(id),
       rfq_id: String(row.rfq_id ?? ''),
-      run_id: String(runIdRaw),
+      name: String(row.name ?? 'Comparison Run'),
       date:
         row.created_at !== undefined && row.created_at !== null
           ? String(row.created_at)
-          : String(row.date ?? ''),
+          : String(row.createdAt ?? ''),
       type: row.is_preview === false || row.mode === 'final' ? 'final' : 'preview',
       status: String(row.status ?? 'generated'),
-      scoring_model: String(row.scoring_model ?? row.scoringModel ?? 'v1'),
-      created_by: String(row.created_by ?? row.createdBy ?? ''),
       created_at: row.created_at !== undefined && row.created_at !== null ? String(row.created_at) : null,
     };
   });
@@ -55,12 +51,11 @@ export function useComparisonRuns(rfqId: string) {
         return getSeedComparisonRunsByRfqId(rfqId).map((r) => ({
           id: r.id,
           rfq_id: r.rfqId,
-          run_id: r.runId,
           date: r.date,
           type: r.type,
           status: r.status,
-          scoring_model: r.scoringModel,
-          created_by: r.createdBy,
+          name: r.type === 'final' ? 'Final comparison' : 'Preview comparison',
+          created_at: null,
         }));
       }
 

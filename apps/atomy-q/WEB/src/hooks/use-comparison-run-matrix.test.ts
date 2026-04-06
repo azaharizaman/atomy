@@ -110,4 +110,48 @@ describe('useComparisonRunMatrix', () => {
 
     expect(result.current.error?.message).toMatch(/cluster/i);
   });
+
+  it('rejects a matrix offer with a non-numeric price', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: {
+          id: 'run-42',
+          matrix: {
+            clusters: [
+              {
+                cluster_key: 'rfq:line-1',
+                basis: 'rfq_line_id',
+                offers: [
+                  {
+                    vendor_id: 'vendor-1',
+                    rfq_line_id: 'line-1',
+                    taxonomy_code: 'PUMP',
+                    normalized_unit_price: 'zero',
+                    normalized_quantity: 2,
+                    ai_confidence: 0.93,
+                  },
+                ],
+                statistics: {
+                  min_normalized_unit_price: 110.5,
+                  max_normalized_unit_price: 110.5,
+                  avg_normalized_unit_price: 110.5,
+                },
+                recommendation: {
+                  recommended_vendor_id: 'vendor-1',
+                  reason: 'lowest_normalized_unit_price',
+                },
+              },
+            ],
+          },
+        },
+      },
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useComparisonRunMatrix('run-42'), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error?.message).toMatch(/normalized_unit_price/i);
+  });
 });

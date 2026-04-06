@@ -34,12 +34,11 @@ describe('ComparisonRunsPage', () => {
         {
           id: 'run-1',
           rfq_id: 'rfq-1',
-          run_id: 'RUN-9001',
           date: 'Today',
           type: 'final' as const,
           status: 'locked',
-          scoring_model: 'v2.0',
-          created_by: 'Alex Kumar',
+          name: 'Final comparison',
+          created_at: '2026-04-06T08:00:00Z',
         },
       ],
     });
@@ -48,7 +47,8 @@ describe('ComparisonRunsPage', () => {
 
     expect(await screen.findByText(/snapshot frozen/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /decision trail/i })).toBeInTheDocument();
-    expect(screen.getByText('RUN-9001')).toBeInTheDocument();
+    expect(screen.getByText('Final comparison')).toBeInTheDocument();
+    expect(screen.getByText('run-1')).toBeInTheDocument();
   });
 
   it('hides the snapshot banner when there are no final runs', async () => {
@@ -57,19 +57,19 @@ describe('ComparisonRunsPage', () => {
         {
           id: 'run-preview-1',
           rfq_id: 'rfq-1',
-          run_id: 'RUN-PREVIEW-1',
           date: 'Today',
           type: 'preview' as const,
           status: 'preview',
-          scoring_model: 'v1',
-          created_by: 'Alex Kumar',
+          name: 'Preview comparison',
+          created_at: '2026-04-06T08:00:00Z',
         },
       ],
     });
 
     renderWithProviders(<ComparisonRunsListContent rfqId="RFQ-2026-0001" />);
 
-    expect(await screen.findByText('RUN-PREVIEW-1')).toBeInTheDocument();
+    expect(await screen.findByText('Preview comparison')).toBeInTheDocument();
+    expect(screen.getByText('run-preview-1')).toBeInTheDocument();
     expect(screen.queryByText(/snapshot frozen/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /decision trail/i })).not.toBeInTheDocument();
   });
