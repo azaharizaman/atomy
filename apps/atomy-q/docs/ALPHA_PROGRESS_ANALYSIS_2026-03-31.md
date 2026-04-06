@@ -12,7 +12,7 @@ The gap to Alpha is not breadth anymore. It is the depth of the golden path:
 - quote intake is not yet fully live end-to-end,
 - awards/winner selection are still incomplete in the committed app surface,
 - vendor master data is stubbed,
-- comparison preview and related workflow endpoints are still stubbed,
+- comparison preview/matrix/readiness are now live and tenant-scoped, with lock/unlock/scoring-model deliberately deferred to beta,
 - tenant/company lifecycle is not first-class,
 - several identity/session/RBAC pieces are still no-op stubs,
 - and production readiness is still held back by build, infra, and mock-fallback debt.
@@ -53,10 +53,11 @@ There is also active in-flight work in the workspace around quote lifecycle prod
    - Result: the most differentiated part of the product is still only partially real.
    - Deferred note: the persistence, tenant scoping, decision trail, and reparse mechanics have now been hardened, but the live LLM/model selection for normalization is intentionally deferred until the alpha-ready model decision is finalized. Revisit the quote-ingestion/AI-normalization gap-closure plan before any alpha declaration and close the remaining mock-backed extraction/mapping work only after the model choice is settled.
 
-5. **Comparison preview/matrix/readiness workflow is still incomplete**
+5. **Comparison preview/matrix/readiness workflow is now live**
    - Why it matters: Alpha users need to inspect comparison state before freezing and selecting a winner.
-   - Evidence: preview still uses `uniqid`, while matrix/readiness/lock were called out as stubbed in the audit (`apps/atomy-q/API/app/Http/Controllers/Api/V1/ComparisonRunController.php:100-112`, `apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_RELEASE_AUDIT.md:74-75`).
-   - Result: the comparison flow is only partially credible outside the final freeze path.
+   - Resolution on 2026-04-06: `POST /comparison-runs/preview` now persists a real preview run and returns live matrix/readiness data, `GET /comparison-runs/{id}/matrix` and `GET /comparison-runs/{id}/readiness` serve the stored payloads, and the comparison detail page renders the live run state instead of a static vendor table.
+   - Deferred note: scoring-model, lock, and unlock are intentionally beta-only controls and now return explicit deferred responses instead of fake state.
+   - Result: gap 5 is closed for the alpha path.
 
 6. **Tenant/company lifecycle is not first-class**
    - Why it matters: Atomy-Q is SaaS, so company/tenant creation and persistence need to exist as real platform primitives.
@@ -99,7 +100,7 @@ These were all introduced on 2026-03-23 and have not been updated since. They ar
 
 - `docs/superpowers/plans/2026-03-29-quote-lifecycle-productionization.md`
 
-This is the most relevant current execution plan. It targets the exact live gaps in quote submission, normalization, comparison, awards, and docs. The working tree shows implementation moving in that direction, but the plan itself is not yet closed and the UI/backend are not yet fully consistent.
+This remains the most relevant execution plan for the remaining quote lifecycle and award work. The comparison preview/matrix/readiness slice has been closed, but the plan is still useful for the beta-only controls, award polish, and doc follow-through.
 
 - `docs/superpowers/plans/2026-04-04-quote-ingestion-ai-normalization-gap-closure-plan.md`
 
@@ -111,7 +112,7 @@ If Alpha were declared today, the biggest risk would not be lack of screens. It 
 
 The repo is close on structure and far from done on honesty. The next phase should focus on:
 
-- closing the quote lifecycle end-to-end,
+- closing the remaining quote lifecycle and award work end-to-end,
 - removing or gating stubs on the golden path,
 - making tenant/company creation first-class,
 - and re-verifying build, queue, storage, and live-mode smoke behavior before any Alpha claim.

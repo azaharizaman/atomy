@@ -84,12 +84,14 @@ The following backend support is now live and consumed by the quote-lifecycle WE
 - [x] `GET /api/v1/quote-submissions` and `GET /api/v1/quote-submissions/{id}` return live quote rows and processing metadata.
 - [x] `POST /api/v1/quote-submissions/{id}/reparse` resets processing state and requeues extraction.
 - [x] `GET /api/v1/normalization/{rfqId}/source-lines`, `GET /api/v1/normalization/{rfqId}/conflicts`, and the mapping/conflict mutation routes return live tenant-scoped normalization data.
+- [x] `POST /api/v1/comparison-runs/preview` persists a real preview comparison run and returns live matrix/readiness payloads.
+- [x] `GET /api/v1/comparison-runs/{id}/matrix` and `GET /api/v1/comparison-runs/{id}/readiness` return the stored run payloads.
 - [x] `POST /api/v1/comparison-runs/final` freezes live comparison snapshots.
 - [x] `GET /api/v1/comparison-runs` returns the live comparison run list for the RFQ workspace.
 - [x] `GET /api/v1/awards` and award mutations (`POST /{id}/signoff`, `POST /{id}/debrief/{vendorId}`) now operate on live award records.
 - [x] `GET /api/v1/approvals` returns the live pending approval queue that the RFQ-scoped approvals page now consumes.
 
-Remaining gaps for the quote lifecycle slice are now mostly UX polish and future workflow extensions, not core transport/API support.
+Remaining gaps for the quote lifecycle slice are now mostly UX polish and future workflow extensions, not core transport/API support. The comparison controls that remain intentionally beta-only are `PATCH /api/v1/comparison-runs/{id}/scoring-model`, `POST /api/v1/comparison-runs/{id}/lock`, and `POST /api/v1/comparison-runs/{id}/unlock`; the alpha UI now treats them as deferred rather than fake state.
 
 ## RFQ lifecycle mutations
 
