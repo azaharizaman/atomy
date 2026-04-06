@@ -328,9 +328,9 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
         title="Matrix"
         subtitle="Comparison clusters from the live matrix payload."
       >
-        {matrix?.clusters.length ? (
+        {matrix?.clusters?.length ? (
           <div className="space-y-4">
-            {matrix.clusters.map((cluster) => (
+            {matrix?.clusters?.map((cluster) => (
               <MatrixClusterCard key={cluster.clusterKey} cluster={cluster} />
             ))}
           </div>

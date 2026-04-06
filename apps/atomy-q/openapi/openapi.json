@@ -3992,23 +3992,7 @@
                         }
                     },
                     "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ComparisonRunNotFound"
                     }
                 }
             }
@@ -4062,23 +4046,7 @@
                         }
                     },
                     "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ComparisonRunNotFound"
                     }
                 }
             }
@@ -4132,23 +4100,7 @@
                         }
                     },
                     "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ComparisonRunNotFound"
                     }
                 }
             }
@@ -4172,59 +4124,10 @@
                 ],
                 "responses": {
                     "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ComparisonRunNotFound"
                     },
                     "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "code": {
-                                            "type": "string",
-                                            "const": "COMPARISON_CONTROL_DEFERRED"
-                                        },
-                                        "error": {
-                                            "type": "string",
-                                            "const": "This comparison control is deferred to beta and is not available in alpha."
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "id"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "code",
-                                        "error",
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ComparisonControlDeferred"
                     }
                 }
             }
@@ -4248,59 +4151,10 @@
                 ],
                 "responses": {
                     "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ComparisonRunNotFound"
                     },
                     "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "code": {
-                                            "type": "string",
-                                            "const": "COMPARISON_CONTROL_DEFERRED"
-                                        },
-                                        "error": {
-                                            "type": "string",
-                                            "const": "This comparison control is deferred to beta and is not available in alpha."
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "id"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "code",
-                                        "error",
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ComparisonControlDeferred"
                     }
                 }
             }
@@ -4324,23 +4178,7 @@
                 ],
                 "responses": {
                     "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ComparisonRunNotFound"
                     },
                     "422": {
                         "description": "",
@@ -16851,6 +16689,61 @@
                             },
                             "required": [
                                 "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ComparisonRunNotFound": {
+                "description": "",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "const": "Comparison run not found"
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ComparisonControlDeferred": {
+                "description": "",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "string",
+                                    "const": "COMPARISON_CONTROL_DEFERRED"
+                                },
+                                "error": {
+                                    "type": "string",
+                                    "const": "This comparison control is deferred to beta and is not available in alpha."
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "code",
+                                "error",
+                                "data"
                             ]
                         }
                     }
