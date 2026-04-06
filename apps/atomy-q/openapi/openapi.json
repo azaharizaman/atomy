@@ -3691,7 +3691,7 @@
                                                     "$ref": "#/components/schemas/ComparisonReadiness"
                                                 },
                                                 "approval": {
-                                                    "type": "string"
+                                                    "$ref": "#/components/schemas/ApprovalPayload"
                                                 },
                                                 "created_at": {
                                                     "type": "string"
@@ -16319,7 +16319,8 @@
                 "type": "object",
                 "properties": {
                     "rfq_id": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "ulid"
                     }
                 },
                 "required": [
@@ -16331,7 +16332,8 @@
                 "type": "object",
                 "properties": {
                     "rfq_id": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "ulid"
                     }
                 },
                 "required": [
@@ -16782,6 +16784,26 @@
                     "warnings"
                 ],
                 "additionalProperties": true
+            },
+            "ApprovalPayload": {
+                "oneOf": [
+                    {
+                        "type": "array",
+                        "items": {}
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "policy_id": {
+                                "type": "string"
+                            },
+                            "status": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalProperties": true
+                    }
+                ]
             }
         },
         "responses": {

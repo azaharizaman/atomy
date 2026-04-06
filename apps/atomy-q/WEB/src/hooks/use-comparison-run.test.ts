@@ -139,4 +139,78 @@ describe('useComparisonRun', () => {
 
     expect(result.current.error?.message).toMatch(/rfq_version/i);
   });
+
+  it('accepts camelCase snapshot containers and response payloads', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: {
+          id: 'run-42',
+          rfq_id: 'rfq-9',
+          name: 'Final comparison',
+          status: 'final',
+          isPreview: 'true',
+          responsePayload: {
+            snapshot: {
+              normalizedLines: [],
+              vendorSummaries: [
+                {
+                  vendorId: 'vendor-1',
+                  vendorName: 'Vendor One',
+                  quoteSubmissionId: 'quote-1',
+                },
+              ],
+              rfqVersion: 123,
+              resolutions: [],
+              currencyMeta: {},
+            },
+          },
+        },
+      },
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useComparisonRun('run-42'), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toMatchObject({
+      isPreview: true,
+      snapshot: {
+        vendors: [
+          {
+            vendorId: 'vendor-1',
+            vendorName: 'Vendor One',
+            quoteSubmissionId: 'quote-1',
+          },
+        ],
+      },
+    });
+  });
+
+  it('fails closed when the fetched run belongs to another rfq', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: {
+          id: 'run-42',
+          rfq_id: 'rfq-9',
+          status: 'final',
+          is_preview: false,
+          snapshot: {
+            rfq_version: 123,
+            normalized_lines: [],
+            resolutions: [],
+            currency_meta: {},
+            vendors: [],
+          },
+        },
+      },
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useComparisonRun('run-42', { rfqId: 'rfq-8' }), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error?.message).toMatch(/does not belong to rfq/i);
+  });
 });

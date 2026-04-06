@@ -177,7 +177,6 @@ describe('ComparisonRunDetailPage', () => {
     renderWithProviders(<ComparisonRunDetailPageContent rfqId="rfq-1" runId="run-42" />);
 
     expect(await screen.findByRole('heading', { name: 'Final comparison' })).toBeInTheDocument();
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
-    expect(screen.getByText('0%')).toBeInTheDocument();
+    expect(screen.getAllByText('—').length).toBeGreaterThan(2);
   });
 });

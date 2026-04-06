@@ -30,6 +30,14 @@ function MetricPill({ label, value }: { label: string; value: React.ReactNode })
   );
 }
 
+function formatOptionalFixed(value: number | null | undefined): string {
+  return typeof value === 'number' ? value.toFixed(2) : '—';
+}
+
+function formatOptionalPercent(value: number | null | undefined): string {
+  return typeof value === 'number' ? `${Math.round(value * 100)}%` : '—';
+}
+
 function ReadinessList({
   title,
   items,
@@ -183,9 +191,9 @@ function MatrixClusterCard({
               <tr key={`${cluster.clusterKey}-${offer.vendorId}`} className="border-b border-slate-100">
                 <td className="px-3 py-2 font-medium text-slate-800">{offer.vendorId}</td>
                 <td className="px-3 py-2 text-slate-600">{offer.rfqLineId}</td>
-                <td className="px-3 py-2 text-slate-600">{(offer.normalizedUnitPrice ?? 0).toFixed(2)}</td>
-                <td className="px-3 py-2 text-slate-600">{(offer.normalizedQuantity ?? 0).toFixed(2)}</td>
-                <td className="px-3 py-2 text-slate-600">{Math.round((offer.aiConfidence ?? 0) * 100)}%</td>
+                <td className="px-3 py-2 text-slate-600">{formatOptionalFixed(offer.normalizedUnitPrice)}</td>
+                <td className="px-3 py-2 text-slate-600">{formatOptionalFixed(offer.normalizedQuantity)}</td>
+                <td className="px-3 py-2 text-slate-600">{formatOptionalPercent(offer.aiConfidence)}</td>
               </tr>
             ))}
           </tbody>

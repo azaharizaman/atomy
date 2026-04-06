@@ -1441,7 +1441,11 @@ export type ComparisonRunPreviewResponses = {
                     message: string;
                 }>;
             };
-            approval: string;
+            approval: Array<unknown> | {
+                policy_id?: string;
+                status?: string;
+                [key: string]: unknown;
+            };
             created_at: string;
         };
     };

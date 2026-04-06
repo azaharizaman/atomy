@@ -110,9 +110,11 @@ function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {
 
   const rawVendors = Array.isArray(payload.vendors)
     ? payload.vendors
-    : Array.isArray(payload.vendor_summaries)
-      ? payload.vendor_summaries
-      : [];
+    : Array.isArray(payload.vendorSummaries)
+      ? payload.vendorSummaries
+      : Array.isArray(payload.vendor_summaries)
+        ? payload.vendor_summaries
+        : [];
   const vendors = rawVendors.map((item: unknown, index: number): ComparisonRunSnapshotVendor => {
     if (!isObject(item)) {
       throw new Error(`Comparison run snapshot vendor at index ${index} must be an object.`);
@@ -158,7 +160,12 @@ function normalizeComparisonRun(payload: unknown): ComparisonRunDetail {
     throw new Error(`Comparison run "${id}" is missing rfq_id.`);
   }
 
-  const snapshotPayload = raw.snapshot ?? raw.response_payload?.snapshot;
+  const responsePayload = isObject(raw.responsePayload)
+    ? raw.responsePayload
+    : isObject(raw.response_payload)
+      ? raw.response_payload
+      : undefined;
+  const snapshotPayload = raw.snapshot ?? responsePayload?.snapshot;
   const isPreviewValue = raw.is_preview ?? raw.isPreview;
   const isPreview = typeof isPreviewValue === 'boolean'
     ? isPreviewValue
@@ -219,7 +226,13 @@ export function useComparisonRun(runId: string, options?: { rfqId?: string }) {
       }
 
       const { data } = await api.get(`/comparison-runs/${encodeURIComponent(runId)}`);
-      return normalizeComparisonRun(data);
+      const normalizedRun = normalizeComparisonRun(data);
+
+      if (options?.rfqId !== undefined && normalizedRun.rfqId !== options.rfqId) {
+        throw new Error(`Comparison run "${normalizedRun.id}" does not belong to RFQ "${options.rfqId}".`);
+      }
+
+      return normalizedRun;
     },
     enabled: Boolean(runId),
   });
