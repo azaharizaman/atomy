@@ -27,13 +27,12 @@ final class AuthController extends Controller
     public function __construct(
         private readonly JwtServiceInterface $jwt,
         private readonly PasswordResetServiceInterface $passwordResetService,
+        private readonly UserAuthenticationCoordinatorInterface $authCoordinator,
     ) {
     }
 
     /**
      * Authenticate user with email and password, return JWT tokens.
-     *
-     * Tenant is taken from the user row (one user → one tenant). `tenant_id` in the body is ignored.
      *
      * POST /auth/login
      */
@@ -54,28 +53,29 @@ final class AuthController extends Controller
         /** @var User|null $user */
         $user = User::query()->where('email', $email)->first();
 
-        if ($user === null || !Hash::check($password, (string) $user->password_hash)) {
+        if ($user === null) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $tenantId = (string) $user->tenant_id;
+        try {
+            $ctx = $this->authCoordinator->authenticate($email, $password, (string) $user->tenant_id);
 
-        $accessToken = $this->jwt->issueAccessToken((string) $user->id, $tenantId);
-        $refreshToken = $this->jwt->issueRefreshToken((string) $user->id, $tenantId);
-
-        return response()->json([
-            'access_token' => $accessToken,
-            'refresh_token' => $refreshToken,
-            'token_type' => 'Bearer',
-            'expires_in' => $this->jwt->getTtlMinutes() * 60,
-            'user' => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'name' => $user->name,
-                'role' => $user->role,
-                'tenantId' => $user->tenant_id,
-            ],
-        ]);
+            return response()->json([
+                'access_token' => $ctx->accessToken,
+                'refresh_token' => $ctx->refreshToken,
+                'token_type' => 'Bearer',
+                'expires_in' => $this->jwt->getTtlMinutes() * 60,
+                'user' => [
+                    'id' => $ctx->userId,
+                    'email' => $ctx->email,
+                    'name' => $ctx->firstName,
+                    'role' => $user->role,
+                    'tenantId' => $ctx->tenantId,
+                ],
+            ]);
+        } catch (\Throwable) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
     }
 
     /**
