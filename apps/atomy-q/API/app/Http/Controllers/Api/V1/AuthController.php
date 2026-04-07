@@ -8,17 +8,21 @@ use App\Contracts\JwtServiceInterface;
 use App\Contracts\PasswordResetServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
-use App\Models\User;
+use App\Services\Identity\AtomyMfaChallengeStore;
+use Nexus\Identity\Exceptions\AccountInactiveException;
+use Nexus\Identity\Exceptions\AccountLockedException;
+use Nexus\Identity\Exceptions\InvalidCredentialsException;
+use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
+use Nexus\Identity\Contracts\UserQueryInterface as IdentityUserQueryInterface;
 use Nexus\IdentityOperations\Contracts\UserAuthenticationCoordinatorInterface;
+use Nexus\IdentityOperations\Services\AuditLoggerInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 /**
- * Login and refresh use Eloquent + {@see JwtServiceInterface} only.
- * SSO resolves {@see UserAuthenticationCoordinatorInterface} lazily; that path requires Nexus Identity
- * container bindings (e.g. {@see \Nexus\Identity\Contracts\UserPersistInterface}).
+ * Login and SSO use {@see UserAuthenticationCoordinatorInterface}; refresh still reissues the app JWTs
+ * for the existing alpha contract.
  */
 final class AuthController extends Controller
 {
@@ -27,7 +31,11 @@ final class AuthController extends Controller
     public function __construct(
         private readonly JwtServiceInterface $jwt,
         private readonly PasswordResetServiceInterface $passwordResetService,
+        private readonly IdentityUserQueryInterface $identityUsers,
         private readonly UserAuthenticationCoordinatorInterface $authCoordinator,
+        private readonly AtomyMfaChallengeStore $mfaChallenges,
+        private readonly MfaVerificationServiceInterface $mfaVerification,
+        private readonly AuditLoggerInterface $auditLogger,
     ) {
     }
 
@@ -50,29 +58,75 @@ final class AuthController extends Controller
         $email = strtolower(trim((string) $request->input('email')));
         $password = (string) $request->input('password');
 
-        /** @var User|null $user */
-        $user = User::query()->where('email', $email)->first();
-
-        if ($user === null) {
+        $user = $this->identityUsers->findByEmailOrNull($email);
+        if ($user === null || $user->getTenantId() === null || trim($user->getTenantId()) === '') {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         try {
-            $ctx = $this->authCoordinator->authenticate($email, $password, (string) $user->tenant_id);
+            $requiresMfa = $user->hasMfaEnabled();
+            if (! $requiresMfa) {
+                foreach ($this->identityUsers->getUserRoles($user->getId(), $user->getTenantId()) as $role) {
+                    if ($role->requiresMfa()) {
+                        $requiresMfa = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($requiresMfa) {
+                $ctx = $this->authCoordinator->authenticateForMfaChallenge($email, $password, $user->getTenantId());
+
+                $challengeId = $this->mfaChallenges->create(
+                    (string) $ctx->userId,
+                    (string) $ctx->tenantId,
+                    'totp',
+                );
+
+                $this->auditLogger->log(
+                    'user.mfa.challenge_issued',
+                    (string) $ctx->userId,
+                    [
+                        'tenant_id' => (string) $ctx->tenantId,
+                        'method' => 'totp',
+                        'challenge_id' => $challengeId,
+                    ]
+                );
+
+                return response()->json([
+                    'message' => 'Multi-factor authentication required',
+                    'challenge_id' => $challengeId,
+                ], 401);
+            }
+
+            $ctx = $this->authCoordinator->authenticate($email, $password, $user->getTenantId());
+            $sid = $ctx->sessionId ?? null;
 
             return response()->json([
-                'access_token' => $ctx->accessToken,
-                'refresh_token' => $ctx->refreshToken,
+                'access_token' => $this->jwt->issueAccessToken(
+                    (string) $ctx->userId,
+                    (string) $ctx->tenantId,
+                    $sid !== null ? ['sid' => $sid] : [],
+                ),
+                'refresh_token' => $this->jwt->issueRefreshToken((string) $ctx->userId, (string) $ctx->tenantId),
                 'token_type' => 'Bearer',
                 'expires_in' => $this->jwt->getTtlMinutes() * 60,
                 'user' => [
                     'id' => $ctx->userId,
                     'email' => $ctx->email,
                     'name' => $ctx->firstName,
-                    'role' => $user->role,
+                    'role' => $ctx->roles[0] ?? null,
                     'tenantId' => $ctx->tenantId,
                 ],
             ]);
+        } catch (InvalidCredentialsException|AccountLockedException|AccountInactiveException $e) {
+            $this->auditLogger->log('user.login.failure', (string) $user->getId(), [
+                'tenant_id' => (string) $user->getTenantId(),
+                'email' => sha1($email),
+                'reason' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Invalid credentials'], 401);
         } catch (\Throwable) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
@@ -99,16 +153,13 @@ final class AuthController extends Controller
         $action = (string) $request->input('action');
         $tenantId = (string) $request->input('tenant_id');
 
-        /** @var UserAuthenticationCoordinatorInterface $identityOps */
-        $identityOps = app(UserAuthenticationCoordinatorInterface::class);
-
         try {
             if ($action === 'init') {
-                $result = $identityOps->initiateSso($tenantId, $this->resolveTenantRedirectUri($tenantId));
+                $result = $this->authCoordinator->initiateSso($tenantId, $this->resolveTenantRedirectUri($tenantId));
                 return response()->json(['data' => $result]);
             }
 
-            $ctx = $identityOps->ssoCallback(
+            $ctx = $this->authCoordinator->ssoCallback(
                 tenantId: $tenantId,
                 code: (string) $request->input('code'),
                 state: (string) $request->input('state'),
@@ -180,10 +231,71 @@ final class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $challengeId = (string) $request->input('challenge_id');
+        $otp = trim((string) $request->input('otp'));
+
+        $challenge = $this->mfaChallenges->find($challengeId);
+        if (
+            $challenge === null
+            || $challenge->consumed_at !== null
+            || $challenge->expires_at === null
+            || $challenge->expires_at->isPast()
+            || (string) $challenge->tenant_id === ''
+        ) {
+            return response()->json(['message' => 'Invalid or expired MFA challenge'], 401);
+        }
+
+        $verified = false;
+
+        try {
+            $verified = $this->mfaVerification->verifyTotp((string) $challenge->user_id, $otp);
+        } catch (\Throwable) {
+            $verified = false;
+        }
+
+        if (! $verified) {
+            try {
+                $verified = $this->mfaVerification->verifyBackupCode((string) $challenge->user_id, $otp);
+            } catch (\Throwable) {
+                $verified = false;
+            }
+        }
+
+        if (! $verified) {
+            $this->mfaChallenges->incrementAttempts($challengeId);
+            $this->auditLogger->log('user.mfa.verification_failed', (string) $challenge->user_id, [
+                'tenant_id' => (string) $challenge->tenant_id,
+                'challenge_id' => $challengeId,
+            ]);
+            return response()->json(['message' => 'Invalid MFA code'], 401);
+        }
+
+        $this->mfaChallenges->consume($challengeId);
+        $this->auditLogger->log('user.mfa.verified', (string) $challenge->user_id, [
+            'tenant_id' => (string) $challenge->tenant_id,
+            'challenge_id' => $challengeId,
+        ]);
+
+        $ctx = $this->authCoordinator->completeMfaLogin((string) $challenge->user_id, (string) $challenge->tenant_id);
+        $sid = $ctx->sessionId ?? null;
+
         return response()->json([
-            'message' => 'MFA verification flow is not implemented yet.',
-            'verified' => false,
-        ], 501);
+            'access_token' => $this->jwt->issueAccessToken(
+                (string) $ctx->userId,
+                (string) $ctx->tenantId,
+                $sid !== null ? ['sid' => $sid] : [],
+            ),
+            'refresh_token' => $this->jwt->issueRefreshToken((string) $ctx->userId, (string) $ctx->tenantId),
+            'token_type' => 'Bearer',
+            'expires_in' => $this->jwt->getTtlMinutes() * 60,
+            'user' => [
+                'id' => $ctx->userId,
+                'email' => $ctx->email,
+                'name' => $ctx->firstName,
+                'role' => $ctx->roles[0] ?? null,
+                'tenantId' => $ctx->tenantId,
+            ],
+        ]);
     }
 
     /**
@@ -300,9 +412,25 @@ final class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
+        $userId = (string) $request->attributes->get('auth_user_id', '');
+        $tenantId = (string) $request->attributes->get('auth_tenant_id', '');
+        $sessionId = $request->attributes->get('auth_session_id');
+
+        if ($userId === '' || $tenantId === '') {
+            return response()->json([
+                'message' => 'Logout flow is not implemented yet.',
+            ], 501);
+        }
+
+        $this->authCoordinator->logout(
+            $userId,
+            is_string($sessionId) && $sessionId !== '' ? $sessionId : null,
+            $tenantId,
+        );
+
         return response()->json([
-            'message' => 'Logout flow is not implemented yet.',
-        ], 501);
+            'message' => 'Logged out successfully.',
+        ]);
     }
 
     /**

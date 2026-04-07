@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Services\Identity\AtomyNoopAuditLogRepository;
 use App\Models\User;
+use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
+use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
+use Nexus\Identity\ValueObjects\WebAuthnAuthenticationOptions;
 use Tests\TestCase;
 
 final class AuthTest extends TestCase
@@ -28,6 +33,75 @@ final class AuthTest extends TestCase
         ]);
 
         return $app;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The audit adapter may not be autoloadable in this worktree yet; keep identity resolution stable for MFA tests.
+        $this->app->instance(AuditLogRepositoryInterface::class, new AtomyNoopAuditLogRepository());
+
+        // Replace the app's MFA verification service with a deterministic fake for feature tests.
+        // The real runtime binding can be swapped later without changing these API-level assertions.
+        $this->app->instance(MfaVerificationServiceInterface::class, new class implements MfaVerificationServiceInterface {
+            public function verifyTotp(string $userId, string $code): bool
+            {
+                if ($code !== '123456') {
+                    throw new \RuntimeException('Invalid TOTP');
+                }
+
+                return true;
+            }
+
+            public function generateWebAuthnAuthenticationOptions(?string $userId = null, bool $requireUserVerification = false): WebAuthnAuthenticationOptions
+            {
+                throw new \BadMethodCallException(__METHOD__ . ' not implemented for tests');
+            }
+
+            public function verifyWebAuthn(string $assertionResponseJson, string $expectedChallenge, string $expectedOrigin, ?string $userId = null): array
+            {
+                throw new \BadMethodCallException(__METHOD__ . ' not implemented for tests');
+            }
+
+            public function verifyBackupCode(string $userId, string $code): bool
+            {
+                if ($code !== 'BACKUP-OK') {
+                    throw new \RuntimeException('Invalid backup code');
+                }
+
+                return true;
+            }
+
+            public function verifyWithFallback(string $userId, array $credentials): array
+            {
+                throw new \BadMethodCallException(__METHOD__ . ' not implemented for tests');
+            }
+
+            public function isRateLimited(string $userId, string $method): bool
+            {
+                return false;
+            }
+
+            public function getRemainingBackupCodesCount(string $userId): int
+            {
+                return 0;
+            }
+
+            public function shouldRegenerateBackupCodes(string $userId): bool
+            {
+                return false;
+            }
+
+            public function recordVerificationAttempt(string $userId, string $method, bool $success, ?string $ipAddress = null, ?string $userAgent = null): void
+            {
+            }
+
+            public function clearRateLimit(string $userId, string $method): bool
+            {
+                return true;
+            }
+        });
     }
 
     public function test_login_validation_error(): void
@@ -212,13 +286,26 @@ final class AuthTest extends TestCase
 
     public function test_mfa_verify_endpoint_returns_message_and_verified(): void
     {
-        $this->postJson('/api/v1/auth/mfa/verify', [
-            'challenge_id' => 'challenge-1',
+        $user = $this->createTestUser(['mfa_enabled' => true]);
+
+        $challengeResponse = $this->postJson('/api/v1/auth/login', [
+            'email' => $user['email'],
+            'password' => $user['password'],
+        ]);
+
+        $challengeResponse->assertStatus(401);
+        $challengeResponse->assertJsonFragment(['message' => 'Multi-factor authentication required']);
+        $challengeId = (string) $challengeResponse->json('challenge_id');
+        $this->assertNotSame('', $challengeId);
+
+        $verify = $this->postJson('/api/v1/auth/mfa/verify', [
+            'challenge_id' => $challengeId,
             'otp' => '123456',
-        ])
-            ->assertStatus(501)
-            ->assertJsonStructure(['message', 'verified'])
-            ->assertJsonFragment(['verified' => false]);
+        ]);
+
+        $verify->assertOk();
+        $this->assertTokenResponse($verify);
+        $verify->assertJsonPath('user.tenantId', $user['tenant_id']);
     }
 
     public function test_forgot_password_requires_email(): void
@@ -272,11 +359,24 @@ final class AuthTest extends TestCase
     /**
      * @return array{tenant_id: string, email: string, password: string}
      */
-    private function createTestUser(): array
+    private function createTestUser(array $overrides = []): array
     {
         $tenantId = (string) Str::ulid();
         $email = 'user-' . Str::lower((string) Str::ulid()) . '@example.com';
         $password = 'password';
+
+        Tenant::query()->create([
+            'id' => $tenantId,
+            'code' => 'tenant-' . Str::lower((string) Str::ulid()),
+            'name' => 'Test Tenant',
+            'email' => 'tenant@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
 
         User::query()->create([
             'tenant_id' => $tenantId,
@@ -288,6 +388,7 @@ final class AuthTest extends TestCase
             'timezone' => 'UTC',
             'locale' => 'en',
             'email_verified_at' => now(),
+            ...$overrides,
         ]);
 
         return [
