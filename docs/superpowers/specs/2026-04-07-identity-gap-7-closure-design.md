@@ -2,10 +2,10 @@
 
 **Topic:** Closing Gap 7 - Identity, Permissions, and Session support for Alpha Release.
 **Date:** 2026-04-07
-**Status:** Draft
+**Status:** Completed by 2026-04-08 extension
 
 ## 1. Executive Summary
-This spec outlines the closure of "Gap 7" in the Atomy-Q Alpha readiness analysis. The current identity implementation in `apps/atomy-q/API` is a minimal stub that bypasses the core Nexus `Identity` (L1) and `IdentityOperations` (L2) packages. This design replaces the stubbed logic with a production-grade, multi-tenant aware identity system supporting MFA (TOTP + Backup Codes), full RBAC, server-side sessions, and comprehensive audit logging.
+This spec outlines the closure of "Gap 7" in the Atomy-Q Alpha readiness analysis. The current identity implementation in `apps/atomy-q/API` was a minimal stub that bypassed the core Nexus `Identity` (L1) and `IdentityOperations` (L2) packages. This design replaced the stubbed logic with a production-grade, multi-tenant aware identity system supporting MFA (TOTP + Backup Codes), full RBAC, server-side sessions, and comprehensive audit logging. The remaining MFA verification and persisted audit logging gaps were closed by the 2026-04-08 extension, so this document now serves as the completed closure baseline.
 
 ## 2. Goals & Success Criteria
 - **Goal:** Replace manual `AuthController` logic with the Nexus `UserAuthenticationCoordinatorInterface`.
@@ -87,7 +87,7 @@ Refactor `AuthController` to use `UserAuthenticationCoordinatorInterface`.
 
 ### 4.3 Audit Logging
 The `IdentityOperationsAdapter` will be wired to the `AuditLogger` package.
-- Events to log: `user.login.success`, `user.login.failure`, `user.locked`, `user.mfa.verified`, `user.logout`, `permission.granted`, `role.assigned`.
+- Events to log: `user.login.success`, `user.login.failure`, `user.locked`, `user.mfa.verified`, `user.logged_out`, `permission.granted`, `role.assigned`.
 
 ## 5. Integration & Adapters
 We will use the existing `IdentityAdapterServiceProvider` from `adapters/Laravel/Identity` to:

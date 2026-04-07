@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Nexus\Laravel\Identity\Adapters;
 
 use App\Models\Session as SessionModel;
+use App\Models\User as UserModel;
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeInterface;
 use Nexus\Identity\Contracts\SessionManagerInterface;
 use Nexus\Identity\Contracts\UserInterface;
+use Nexus\Identity\Exceptions\InvalidSessionException;
 use Nexus\Identity\ValueObjects\SessionToken;
 use Nexus\Laravel\Identity\Mappers\LaravelUserMapper;
 
@@ -14,15 +19,20 @@ final class DatabaseSessionManager implements SessionManagerInterface
 {
     public function createSession(string $userId, array $metadata = []): SessionToken
     {
+        $now = new DateTimeImmutable();
+        $expiresAt = $now->add(new DateInterval('PT1H'));
         $token = bin2hex(random_bytes(32));
-        $expiresAt = new \DateTimeImmutable('+1 hour');
 
-        $session = SessionModel::query()->create([
+        $payload = array_merge($metadata, [
+            'expires_at' => $expiresAt->format(DateTimeInterface::ATOM),
+        ]);
+
+        SessionModel::query()->create([
             'id' => $token,
             'user_id' => $userId,
-            'expires_at' => $expiresAt,
-            'metadata' => $metadata,
-            'last_activity_at' => now(),
+            'tenant_id' => $this->normalizeTenantId($metadata['tenant_id'] ?? null),
+            'payload' => $payload,
+            'last_activity' => $now,
         ]);
 
         return new SessionToken(
@@ -30,19 +40,29 @@ final class DatabaseSessionManager implements SessionManagerInterface
             userId: $userId,
             expiresAt: $expiresAt,
             metadata: $metadata,
-            lastActivityAt: $session->last_activity_at
+            deviceFingerprint: $this->normalizeString($metadata['device_fingerprint'] ?? null),
+            lastActivityAt: $now,
         );
     }
 
     public function validateSession(string $token): UserInterface
     {
-        $session = SessionModel::query()->whereKey($token)->where('expires_at', '>', now())->firstOrFail();
-        return LaravelUserMapper::fromModel($session->user);
+        $session = $this->findActiveSession($token);
+        if ($session === null) {
+            throw new InvalidSessionException('Session not found or expired');
+        }
+
+        $user = UserModel::query()->whereKey($session->user_id)->first();
+        if ($user === null) {
+            throw new InvalidSessionException('Session user not found');
+        }
+
+        return LaravelUserMapper::fromModel($user);
     }
 
     public function isValid(string $token): bool
     {
-        return SessionModel::query()->whereKey($token)->where('expires_at', '>', now())->exists();
+        return $this->findActiveSession($token) !== null;
     }
 
     public function revokeSession(string $token): void
@@ -54,7 +74,7 @@ final class DatabaseSessionManager implements SessionManagerInterface
     {
         SessionModel::query()
             ->whereKey($token)
-            ->where('metadata->tenant_id', $tenantId)
+            ->where('tenant_id', $tenantId)
             ->delete();
     }
 
@@ -67,7 +87,7 @@ final class DatabaseSessionManager implements SessionManagerInterface
     {
         SessionModel::query()
             ->where('user_id', $userId)
-            ->where('metadata->tenant_id', $tenantId)
+            ->where('tenant_id', $tenantId)
             ->delete();
     }
 
@@ -83,48 +103,66 @@ final class DatabaseSessionManager implements SessionManagerInterface
     {
         return SessionModel::query()
             ->where('user_id', $userId)
-            ->where('expires_at', '>', now())
+            ->orderBy('last_activity', 'desc')
             ->get()
-            ->toArray();
+            ->filter(fn (SessionModel $session): bool => $this->sessionIsActive($session))
+            ->map(static fn (SessionModel $session): array => $session->toArray())
+            ->all();
     }
 
     public function refreshSession(string $token): SessionToken
     {
         $session = SessionModel::query()->whereKey($token)->firstOrFail();
-        $expiresAt = new \DateTimeImmutable('+1 hour');
-        $session->update(['expires_at' => $expiresAt]);
+        $now = new DateTimeImmutable();
+        $expiresAt = $now->add(new DateInterval('PT1H'));
+        $payload = $this->sessionPayload($session);
+        $payload['expires_at'] = $expiresAt->format(DateTimeInterface::ATOM);
 
-        return new SessionToken(
-            token: $session->id,
-            userId: $session->user_id,
-            expiresAt: $expiresAt,
-            metadata: $session->metadata,
-            lastActivityAt: $session->last_activity_at
-        );
+        $session->update([
+            'payload' => $payload,
+            'last_activity' => $now,
+        ]);
+
+        return $this->toToken($session, $payload, $now, $expiresAt);
     }
 
     public function cleanupExpiredSessions(): int
     {
-        return SessionModel::query()->where('expires_at', '<', now())->delete();
+        $deleted = 0;
+
+        foreach (SessionModel::query()->get() as $session) {
+            if (! $this->sessionIsActive($session)) {
+                $session->delete();
+                $deleted++;
+            }
+        }
+
+        return $deleted;
     }
 
     public function updateActivity(string $sessionId): void
     {
-        SessionModel::query()->whereKey($sessionId)->update(['last_activity_at' => now()]);
+        SessionModel::query()->whereKey($sessionId)->update(['last_activity' => new DateTimeImmutable()]);
     }
 
     public function enforceMaxSessions(string $userId, int $max): void
     {
+        if ($max < 1) {
+            return;
+        }
+
         $sessions = SessionModel::query()
             ->where('user_id', $userId)
-            ->orderBy('last_activity_at', 'asc')
+            ->orderBy('last_activity', 'asc')
             ->get();
 
-        if ($sessions->count() > $max) {
-            $toDelete = $sessions->take($sessions->count() - $max);
-            foreach ($toDelete as $session) {
-                $session->delete();
-            }
+        $excess = $sessions->count() - $max;
+        if ($excess <= 0) {
+            return;
+        }
+
+        foreach ($sessions->take($excess) as $session) {
+            $session->delete();
         }
     }
 
@@ -132,14 +170,114 @@ final class DatabaseSessionManager implements SessionManagerInterface
     {
         SessionModel::query()
             ->where('user_id', $userId)
-            ->where('device_fingerprint', $fingerprint)
-            ->delete();
+            ->get()
+            ->filter(function (SessionModel $session) use ($fingerprint): bool {
+                $payload = $this->sessionPayload($session);
+                $storedFingerprint = $this->normalizeString($payload['device_fingerprint'] ?? null);
+
+                return $storedFingerprint !== null && $storedFingerprint === $fingerprint;
+            })
+            ->each(static fn (SessionModel $session): bool => (bool) $session->delete());
     }
 
     public function cleanupInactiveSessions(int $inactivityThresholdDays = 7): int
     {
-        return SessionModel::query()
-            ->where('last_activity_at', '<', now()->subDays($inactivityThresholdDays))
-            ->delete();
+        if ($inactivityThresholdDays < 1) {
+            $inactivityThresholdDays = 1;
+        }
+
+        $threshold = new DateTimeImmutable(sprintf('-%d days', $inactivityThresholdDays));
+        $deleted = 0;
+
+        foreach (SessionModel::query()->get() as $session) {
+            $lastActivity = $session->last_activity instanceof DateTimeInterface
+                ? DateTimeImmutable::createFromInterface($session->last_activity)
+                : new DateTimeImmutable((string) $session->last_activity);
+
+            if ($lastActivity < $threshold) {
+                $session->delete();
+                $deleted++;
+            }
+        }
+
+        return $deleted;
+    }
+
+    private function findActiveSession(string $token): ?SessionModel
+    {
+        $session = SessionModel::query()->whereKey($token)->first();
+        if ($session === null || ! $this->sessionIsActive($session)) {
+            return null;
+        }
+
+        return $session;
+    }
+
+    private function sessionIsActive(SessionModel $session): bool
+    {
+        $expiresAt = $this->sessionExpiresAt($session);
+        if ($expiresAt === null) {
+            return false;
+        }
+
+        return $expiresAt > new DateTimeImmutable();
+    }
+
+    private function sessionExpiresAt(SessionModel $session): ?DateTimeImmutable
+    {
+        $payload = $this->sessionPayload($session);
+        $expiresAt = $this->normalizeString($payload['expires_at'] ?? null);
+
+        if ($expiresAt !== null) {
+            try {
+                return new DateTimeImmutable($expiresAt);
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        if ($session->last_activity instanceof DateTimeInterface) {
+            return DateTimeImmutable::createFromInterface($session->last_activity)->add(new DateInterval('PT1H'));
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function sessionPayload(SessionModel $session): array
+    {
+        return is_array($session->payload) ? $session->payload : [];
+    }
+
+    private function toToken(SessionModel $session, array $payload, DateTimeImmutable $lastActivityAt, DateTimeImmutable $expiresAt): SessionToken
+    {
+        return new SessionToken(
+            token: (string) $session->id,
+            userId: (string) $session->user_id,
+            expiresAt: $expiresAt,
+            metadata: $payload,
+            deviceFingerprint: $this->normalizeString($payload['device_fingerprint'] ?? null),
+            lastActivityAt: $lastActivityAt,
+        );
+    }
+
+    private function normalizeTenantId(mixed $tenantId): ?string
+    {
+        $normalized = $this->normalizeString($tenantId);
+
+        return $normalized === null ? null : $normalized;
+    }
+
+    private function normalizeString(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $normalized = trim($value);
+
+        return $normalized === '' ? null : $normalized;
     }
 }

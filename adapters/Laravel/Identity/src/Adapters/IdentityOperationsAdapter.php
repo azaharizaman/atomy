@@ -205,10 +205,16 @@ final readonly class IdentityOperationsAdapter implements
 
     public function log(string $event, string $entityId, array $data = []): void
     {
+        $tenantId = null;
+        if (isset($data['tenant_id']) && is_string($data['tenant_id']) && trim($data['tenant_id']) !== '') {
+            $tenantId = trim($data['tenant_id']);
+        }
+
         $this->auditLogRepository->create([
             'event' => $event,
             'subject_id' => $entityId,
             'subject_type' => 'user',
+            'tenant_id' => $tenantId,
             'properties' => $data,
             'created_at' => new \DateTimeImmutable(),
         ]);
@@ -252,7 +258,7 @@ final readonly class IdentityOperationsAdapter implements
             'email' => $user->getEmail(),
             'first_name' => $user->getName(), // UserInterface has getName, not getFirstName/LastName
             'last_name' => null,
-            'status' => PackageUserStatus::from($user->getStatus()),
+            'status' => PackageUserStatus::from($user->getStatus())->value,
             'permissions' => $permissions,
             'roles' => $roles,
         ];
@@ -269,7 +275,7 @@ final readonly class IdentityOperationsAdapter implements
             (new \DateTimeImmutable())->modify('+1 hour')
         );
         
-        return $token->getValue();
+        return $token->token;
     }
 
     public function generateRefreshToken(string $userId, string $tenantId): string
@@ -281,7 +287,7 @@ final readonly class IdentityOperationsAdapter implements
             (new \DateTimeImmutable())->modify('+30 days')
         );
         
-        return $token->getValue();
+        return $token->token;
     }
 
     public function validateRefreshToken(string $refreshToken, string $tenantId): RefreshTokenPayload
@@ -310,7 +316,7 @@ final readonly class IdentityOperationsAdapter implements
             'tenant_id' => $tenantId,
         ]);
         
-        return $session->getValue();
+        return $session->token;
     }
 
     public function invalidateSession(string $sessionId, string $tenantId): void
@@ -358,7 +364,7 @@ final readonly class IdentityOperationsAdapter implements
             $result = $this->mfaEnrollment->enrollTotp($userId);
             return MfaEnableResult::success(
                 $userId,
-                $result['secret']->getValue(),
+                $result['secret']->secret,
                 $result['qrCodeUri']
             );
         }
@@ -431,6 +437,6 @@ final readonly class IdentityOperationsAdapter implements
     public function generate(string $userId): array
     {
         $codeSet = $this->mfaEnrollment->generateBackupCodes($userId);
-        return array_map(fn($code) => $code->getValue(), $codeSet->getCodes());
+        return array_map(fn($code) => $code->code, $codeSet->getCodes());
     }
 }

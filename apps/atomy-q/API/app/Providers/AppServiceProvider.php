@@ -12,13 +12,13 @@ use App\Adapters\Tenant\EloquentTenantCreator;
 use App\Adapters\Tenant\EloquentTenantPersistence;
 use App\Adapters\Tenant\EloquentTenantValidation;
 use App\Services\Identity\AtomyIdentityTokenManagerStub;
-use App\Services\Identity\AtomyNoopAuditLogRepository;
 use App\Services\Identity\AtomyNoopMfaEnrollmentService;
-use App\Services\Identity\AtomyNoopMfaVerificationService;
 use App\Services\Identity\AtomyPasswordHasher;
 use App\Services\Identity\AtomyPermissionQueryStub;
 use App\Services\Identity\AtomyRoleQueryStub;
 use App\Services\Identity\AtomySessionManagerStub;
+use App\Services\Identity\AtomyMfaVerificationService;
+use App\Services\Identity\AtomyAuditLogRepository;
 use App\Services\Identity\AtomyUserAuthenticator;
 use App\Services\Identity\AtomyUserPersist;
 use App\Services\Identity\AtomyUserQuery;
@@ -58,6 +58,7 @@ use Nexus\Identity\Contracts\TokenManagerInterface as IdentityTokenManagerInterf
 use Nexus\Identity\Contracts\UserAuthenticatorInterface;
 use Nexus\Identity\Contracts\UserPersistInterface;
 use Nexus\Identity\Contracts\UserQueryInterface as IdentityUserQueryInterface;
+use Nexus\Laravel\Identity\DataProviders\LaravelRoleQuery;
 use Nexus\Tenant\Contracts\TenantPersistenceInterface;
 use Nexus\Tenant\Contracts\TenantValidationInterface;
 use Nexus\Project\Contracts\IncompleteTaskCountInterface;
@@ -346,12 +347,18 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PasswordHasherInterface::class, AtomyPasswordHasher::class);
         $this->app->singleton(UserAuthenticatorInterface::class, AtomyUserAuthenticator::class);
         $this->app->singleton(IdentityTokenManagerInterface::class, AtomyIdentityTokenManagerStub::class);
-        $this->app->singleton(SessionManagerInterface::class, AtomySessionManagerStub::class);
+        $this->app->singleton(SessionManagerInterface::class, \Nexus\Laravel\Identity\Adapters\DatabaseSessionManager::class);
         $this->app->singleton(MfaEnrollmentServiceInterface::class, AtomyNoopMfaEnrollmentService::class);
-        $this->app->singleton(MfaVerificationServiceInterface::class, AtomyNoopMfaVerificationService::class);
-        $this->app->singleton(PermissionQueryInterface::class, AtomyPermissionQueryStub::class);
-        $this->app->singleton(RoleQueryInterface::class, AtomyRoleQueryStub::class);
-        $this->app->singleton(AuditLogRepositoryInterface::class, AtomyNoopAuditLogRepository::class);
+        $this->app->singleton(MfaVerificationServiceInterface::class, AtomyMfaVerificationService::class);
+        $this->app->singleton(PermissionQueryInterface::class, static function ($app): PermissionQueryInterface {
+            return $app->make(\Nexus\Identity\Contracts\PermissionRepositoryInterface::class);
+        });
+        $this->app->singleton(RoleQueryInterface::class, static function ($app): RoleQueryInterface {
+            return $app->make(LaravelRoleQuery::class);
+        });
+        // Persist identity audit events (Gap 7 extension) instead of dropping them on the floor.
+        $this->app->singleton(AtomyAuditLogRepository::class);
+        $this->app->singleton(AuditLogRepositoryInterface::class, AtomyAuditLogRepository::class);
     }
 
     /**

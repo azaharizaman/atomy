@@ -13,6 +13,7 @@ use Nexus\Identity\Contracts\UserInterface;
 class User extends Model implements UserInterface
 {
     use HasUlids;
+    use \Illuminate\Database\Eloquent\Factories\HasFactory;
 
     protected $keyType = 'string';
 
@@ -40,8 +41,10 @@ class User extends Model implements UserInterface
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'metadata' => 'array',
         'lockout_expires_at' => 'datetime',
         'mfa_enabled' => 'boolean',
+        'password_changed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

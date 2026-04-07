@@ -60,6 +60,11 @@ final class AuthController extends Controller
 
         $user = $this->identityUsers->findByEmailOrNull($email);
         if ($user === null || $user->getTenantId() === null || trim($user->getTenantId()) === '') {
+            $this->logAuditEvent('user.login.failure', sha1($email), [
+                'email' => sha1($email),
+                'reason' => 'invalid_credentials',
+            ]);
+
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
@@ -83,7 +88,7 @@ final class AuthController extends Controller
                     'totp',
                 );
 
-                $this->auditLogger->log(
+                $this->logAuditEvent(
                     'user.mfa.challenge_issued',
                     (string) $ctx->userId,
                     [
@@ -101,6 +106,11 @@ final class AuthController extends Controller
 
             $ctx = $this->authCoordinator->authenticate($email, $password, $user->getTenantId());
             $sid = $ctx->sessionId ?? null;
+
+            $this->logAuditEvent('user.login.success', (string) $ctx->userId, [
+                'tenant_id' => (string) $ctx->tenantId,
+                'session_id' => $sid,
+            ]);
 
             return response()->json([
                 'access_token' => $this->jwt->issueAccessToken(
@@ -120,7 +130,7 @@ final class AuthController extends Controller
                 ],
             ]);
         } catch (InvalidCredentialsException|AccountLockedException|AccountInactiveException $e) {
-            $this->auditLogger->log('user.login.failure', (string) $user->getId(), [
+            $this->logAuditEvent('user.login.failure', (string) $user->getId(), [
                 'tenant_id' => (string) $user->getTenantId(),
                 'email' => sha1($email),
                 'reason' => $e->getMessage(),
@@ -242,6 +252,34 @@ final class AuthController extends Controller
             || $challenge->expires_at->isPast()
             || (string) $challenge->tenant_id === ''
         ) {
+            $this->logAuditEvent('user.mfa.verification_failed', (string) ($challenge?->user_id ?? $challengeId), [
+                'tenant_id' => $challenge !== null ? (string) $challenge->tenant_id : null,
+                'challenge_id' => $challengeId,
+                'reason' => 'invalid_or_expired_challenge',
+            ]);
+
+            return response()->json(['message' => 'Invalid or expired MFA challenge'], 401);
+        }
+
+        try {
+            $challengeUser = $this->identityUsers->findById((string) $challenge->user_id);
+        } catch (\Throwable) {
+            $this->logAuditEvent('user.mfa.verification_failed', (string) $challenge->user_id, [
+                'tenant_id' => (string) $challenge->tenant_id,
+                'challenge_id' => $challengeId,
+                'reason' => 'user_not_found',
+            ]);
+
+            return response()->json(['message' => 'Invalid or expired MFA challenge'], 401);
+        }
+
+        if (trim((string) $challengeUser->getTenantId()) === '' || $challengeUser->getTenantId() !== (string) $challenge->tenant_id) {
+            $this->logAuditEvent('user.mfa.verification_failed', (string) $challenge->user_id, [
+                'tenant_id' => (string) $challenge->tenant_id,
+                'challenge_id' => $challengeId,
+                'reason' => 'tenant_mismatch',
+            ]);
+
             return response()->json(['message' => 'Invalid or expired MFA challenge'], 401);
         }
 
@@ -263,7 +301,7 @@ final class AuthController extends Controller
 
         if (! $verified) {
             $this->mfaChallenges->incrementAttempts($challengeId);
-            $this->auditLogger->log('user.mfa.verification_failed', (string) $challenge->user_id, [
+            $this->logAuditEvent('user.mfa.verification_failed', (string) $challenge->user_id, [
                 'tenant_id' => (string) $challenge->tenant_id,
                 'challenge_id' => $challengeId,
             ]);
@@ -271,13 +309,20 @@ final class AuthController extends Controller
         }
 
         $this->mfaChallenges->consume($challengeId);
-        $this->auditLogger->log('user.mfa.verified', (string) $challenge->user_id, [
+        $this->logAuditEvent('user.mfa.verified', (string) $challenge->user_id, [
             'tenant_id' => (string) $challenge->tenant_id,
             'challenge_id' => $challengeId,
         ]);
 
         $ctx = $this->authCoordinator->completeMfaLogin((string) $challenge->user_id, (string) $challenge->tenant_id);
         $sid = $ctx->sessionId ?? null;
+
+        $this->logAuditEvent('user.login.success', (string) $ctx->userId, [
+            'tenant_id' => (string) $ctx->tenantId,
+            'session_id' => $sid,
+            'via_mfa' => true,
+            'challenge_id' => $challengeId,
+        ]);
 
         return response()->json([
             'access_token' => $this->jwt->issueAccessToken(
@@ -422,15 +467,35 @@ final class AuthController extends Controller
             ], 501);
         }
 
-        $this->authCoordinator->logout(
+        $loggedOut = $this->authCoordinator->logout(
             $userId,
             is_string($sessionId) && $sessionId !== '' ? $sessionId : null,
             $tenantId,
         );
 
+        if (! $loggedOut) {
+            return response()->json([
+                'message' => 'Logout failed.',
+            ], 500);
+        }
+
         return response()->json([
             'message' => 'Logged out successfully.',
         ]);
+    }
+
+    /**
+     * Best-effort audit logging. Auth responses should not fail because the audit sink is unavailable.
+     *
+     * @param array<string, mixed> $properties
+     */
+    private function logAuditEvent(string $event, string $subjectId, array $properties): void
+    {
+        try {
+            $this->auditLogger->log($event, $subjectId, $properties);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**

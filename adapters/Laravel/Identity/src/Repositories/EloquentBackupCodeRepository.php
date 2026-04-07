@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Laravel\Identity\Adapters;
+namespace Nexus\Laravel\Identity\Repositories;
 
 use App\Models\BackupCode as BackupCodeModel;
 use Nexus\Identity\Contracts\BackupCodePersistInterface;

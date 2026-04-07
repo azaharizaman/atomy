@@ -8,7 +8,10 @@ use Nexus\AuditLogger\Contracts\AuditLogInterface;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 
 /**
- * Drops audit writes on the floor until a persisted audit pipeline is adopted for Atomy-Q.
+ * Legacy no-op implementation kept for compatibility with older Atomy-Q wiring.
+ *
+ * Gap 7 extension binds {@see \Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface} to a persisted
+ * Laravel adapter; this repository should not be used at runtime.
  */
 final class AtomyNoopAuditLogRepository implements AuditLogRepositoryInterface
 {

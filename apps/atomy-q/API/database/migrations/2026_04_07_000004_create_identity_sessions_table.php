@@ -16,9 +16,6 @@ return new class extends Migration
             $table->ulid('tenant_id')->nullable()->index();
             $table->json('payload');
             $table->timestamp('last_activity')->index();
-
-            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
         });
     }
 

@@ -7,9 +7,11 @@ namespace Nexus\Laravel\Identity\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Queue\Queue;
 use Nexus\Identity\Contracts\CacheRepositoryInterface;
+use Nexus\Identity\Contracts\PasswordHasherInterface;
 use Nexus\Identity\Contracts\PermissionCheckerInterface;
 use Nexus\Identity\Contracts\SsoProviderInterface;
 use Nexus\Laravel\Identity\Adapters\CacheRepositoryAdapter;
+use Nexus\Laravel\Identity\Adapters\LaravelPasswordHasher;
 use Nexus\Laravel\Identity\Adapters\PermissionCheckerAdapter;
 use Nexus\Laravel\Identity\Adapters\UserPersistAdapter;
 use Nexus\Laravel\Identity\Sso\OidcSsoProviderAdapter;
@@ -27,6 +29,18 @@ use Nexus\IdentityOperations\DataProviders\UserQueryInterface as OrchestratorUse
 use Nexus\IdentityOperations\DataProviders\PermissionQueryInterface as OrchestratorPermissionQueryInterface;
 use Nexus\Laravel\Identity\DataProviders\LaravelUserQuery;
 use Nexus\Laravel\Identity\DataProviders\LaravelPermissionQuery;
+use Nexus\Identity\Contracts\UserRepositoryInterface;
+use Nexus\Identity\Contracts\RoleRepositoryInterface;
+use Nexus\Identity\Contracts\PermissionRepositoryInterface;
+use Nexus\Identity\Contracts\MfaEnrollmentRepositoryInterface;
+use Nexus\Identity\Contracts\BackupCodeRepositoryInterface;
+use Nexus\Identity\Contracts\SessionManagerInterface;
+use Nexus\Laravel\Identity\Repositories\EloquentUserRepository;
+use Nexus\Laravel\Identity\Repositories\EloquentRoleRepository;
+use Nexus\Laravel\Identity\Repositories\EloquentPermissionRepository;
+use Nexus\Laravel\Identity\Repositories\EloquentMfaEnrollmentRepository;
+use Nexus\Laravel\Identity\Repositories\EloquentBackupCodeRepository;
+use Nexus\Laravel\Identity\Adapters\DatabaseSessionManager;
 
 /**
  * Laravel Service Provider for Identity package adapters.
@@ -38,6 +52,15 @@ class IdentityAdapterServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Register repositories
+        $this->app->singleton(UserRepositoryInterface::class, EloquentUserRepository::class);
+        $this->app->singleton(RoleRepositoryInterface::class, EloquentRoleRepository::class);
+        $this->app->singleton(PermissionRepositoryInterface::class, EloquentPermissionRepository::class);
+        $this->app->singleton(MfaEnrollmentRepositoryInterface::class, EloquentMfaEnrollmentRepository::class);
+        $this->app->singleton(BackupCodeRepositoryInterface::class, EloquentBackupCodeRepository::class);
+        $this->app->singleton(SessionManagerInterface::class, DatabaseSessionManager::class);
+        $this->app->singleton(PasswordHasherInterface::class, LaravelPasswordHasher::class);
+
         // Register UserPersist adapter
         $this->app->singleton(\Nexus\Identity\Contracts\UserPersistInterface::class, function () {
             return new UserPersistAdapter();
@@ -54,6 +77,9 @@ class IdentityAdapterServiceProvider extends ServiceProvider
         // Register permission checker adapter
         $this->app->singleton(PermissionCheckerInterface::class, function ($app) {
             return new PermissionCheckerAdapter(
+                permissionRepository: $app[PermissionRepositoryInterface::class],
+                roleRepository: $app[RoleRepositoryInterface::class],
+                userRepository: $app[UserRepositoryInterface::class],
                 logger: $app['log']
             );
         });
@@ -193,6 +219,12 @@ class IdentityAdapterServiceProvider extends ServiceProvider
     {
         return [
             \Nexus\Identity\Contracts\UserPersistInterface::class,
+            UserRepositoryInterface::class,
+            RoleRepositoryInterface::class,
+            PermissionRepositoryInterface::class,
+            MfaEnrollmentRepositoryInterface::class,
+            BackupCodeRepositoryInterface::class,
+            SessionManagerInterface::class,
             CacheRepositoryInterface::class,
             PermissionCheckerInterface::class,
             \Nexus\Laravel\Identity\Adapters\IdentityOperationsAdapter::class,

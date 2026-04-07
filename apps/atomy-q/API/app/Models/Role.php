@@ -14,21 +14,23 @@ class Role extends Model implements RoleInterface
 {
     use HasUlids;
 
+    protected $table = 'roles';
+
     protected $fillable = [
         'tenant_id',
-        'parent_id',
+        'parent_role_id',
         'name',
         'description',
     ];
 
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Role::class, 'parent_id');
+        return $this->belongsTo(Role::class, 'parent_role_id');
     }
 
     public function permissions(): BelongsToMany
@@ -38,26 +40,59 @@ class Role extends Model implements RoleInterface
 
     public function getId(): string
     {
-        return $this->id;
+        return (string) $this->getKey();
     }
 
-    public function getTenantId(): string
+    public function getTenantId(): ?string
     {
-        return $this->tenant_id;
+        $tenantId = trim((string) ($this->tenant_id ?? ''));
+
+        return $tenantId === '' ? null : $tenantId;
     }
 
     public function getName(): string
     {
-        return $this->name;
+        return (string) $this->name;
     }
 
     public function getDescription(): ?string
     {
-        return $this->description;
+        $description = trim((string) ($this->description ?? ''));
+
+        return $description === '' ? null : $description;
     }
 
     public function getParentRoleId(): ?string
     {
-        return $this->parent_id;
+        $parentRoleId = trim((string) ($this->parent_role_id ?? ''));
+
+        return $parentRoleId === '' ? null : $parentRoleId;
+    }
+
+    public function isSystemRole(): bool
+    {
+        return $this->getTenantId() === null;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        $normalized = strtolower(trim((string) $this->name));
+
+        return in_array($normalized, ['super-admin', 'super_admin', 'superadmin'], true);
+    }
+
+    public function getCreatedAt(): \DateTimeInterface
+    {
+        return $this->created_at?->toImmutable() ?? new \DateTimeImmutable();
+    }
+
+    public function getUpdatedAt(): \DateTimeInterface
+    {
+        return $this->updated_at?->toImmutable() ?? new \DateTimeImmutable();
+    }
+
+    public function requiresMfa(): bool
+    {
+        return $this->isSuperAdmin();
     }
 }

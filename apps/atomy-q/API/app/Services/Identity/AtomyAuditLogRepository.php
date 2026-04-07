@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Nexus\Laravel\AuditLogger\Adapters;
+namespace App\Services\Identity;
 
 use App\Models\AuditLog as AuditLogModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
-use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Nexus\AuditLogger\Contracts\AuditLogInterface;
+use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Laravel implementation of AuditLogRepositoryInterface.
+ * Atomy-Q audit log persistence adapter.
+ *
+ * Note: the monorepo includes a Laravel AuditLogger adapter package, but the Atomy-Q API
+ * composer setup may not autoload it yet. This keeps Gap 7 audit persistence unblocked.
  */
-final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
+final readonly class AtomyAuditLogRepository implements AuditLogRepositoryInterface
 {
-    public function __construct(
-        private readonly LoggerInterface $logger
-    ) {}
+    public function __construct(private LoggerInterface $logger)
+    {
+    }
 
-    /**
-     * {@inheritdoc}
-     */
     public function create(array $data): AuditLogInterface
     {
         $event = $this->normalizeString($data['event'] ?? null);
@@ -69,16 +69,11 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             'id' => $model->getId(),
             'event' => $model->getEvent(),
             'log_name' => $model->getLogName(),
-            'subject_type' => $model->getSubjectType(),
-            'subject_id' => $model->getSubjectId(),
         ]);
 
         return $model;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findById($id): ?AuditLogInterface
     {
         $key = $this->normalizeScalar($id);
@@ -92,15 +87,12 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
         return $log;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function search(
         array $filters = [],
         int $page = 1,
         int $perPage = 50,
         string $sortBy = 'created_at',
-        string $sortDirection = 'desc'
+        string $sortDirection = 'desc',
     ): array {
         $page = $page < 1 ? 1 : $page;
         $perPage = $perPage < 1 ? 1 : $perPage;
@@ -123,9 +115,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
         return ['data' => $rows, 'total' => $total];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBySubject(string $subjectType, $subjectId, int $limit = 100): array
     {
         $limit = $limit < 1 ? 1 : $limit;
@@ -139,9 +128,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             ->all();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getByCauser(string $causerType, $causerId, int $limit = 100): array
     {
         $limit = $limit < 1 ? 1 : $limit;
@@ -155,9 +141,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             ->all();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getByBatchUuid(string $batchUuid): array
     {
         $uuid = $this->normalizeString($batchUuid);
@@ -172,9 +155,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             ->all();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getByLevel(int $level, int $limit = 100): array
     {
         $limit = $limit < 1 ? 1 : $limit;
@@ -187,9 +167,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             ->all();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getByTenant($tenantId, int $limit = 100): array
     {
         $limit = $limit < 1 ? 1 : $limit;
@@ -206,9 +183,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             ->all();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getExpired(?\DateTimeInterface $beforeDate = null, int $limit = 1000): array
     {
         $limit = $limit < 1 ? 1 : $limit;
@@ -223,9 +197,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             ->all();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function deleteExpired(?\DateTimeInterface $beforeDate = null): int
     {
         $before = $beforeDate ?? new \DateTimeImmutable();
@@ -236,9 +207,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             ->delete();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function deleteByIds(array $ids): int
     {
         $normalized = [];
@@ -256,9 +224,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
         return AuditLogModel::query()->whereKey($normalized)->delete();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStatistics(array $filters = []): array
     {
         $builder = AuditLogModel::query();
@@ -284,7 +249,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
             ->pluck('count', 'event')
             ->all();
 
-        // Date grouping is adapter-specific; keep it minimal for now.
         return [
             'total_count' => $total,
             'by_log_name' => $byLogName,
@@ -294,9 +258,6 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function exportToArray(array $filters = [], int $limit = 10000): array
     {
         $limit = $limit < 1 ? 1 : $limit;
@@ -440,3 +401,4 @@ final class AuditLogRepositoryAdapter implements AuditLogRepositoryInterface
         return null;
     }
 }
+

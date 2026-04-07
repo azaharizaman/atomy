@@ -10,6 +10,7 @@ class Session extends Model
 {
     public $incrementing = false;
     protected $keyType = 'string';
+    public $timestamps = false;
 
     protected $table = 'sessions';
     protected $fillable = ['id', 'user_id', 'tenant_id', 'payload', 'last_activity'];

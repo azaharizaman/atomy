@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
-use App\Services\Identity\AtomyNoopAuditLogRepository;
 use App\Models\User;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
 use Nexus\Identity\ValueObjects\WebAuthnAuthenticationOptions;
 use Tests\TestCase;
@@ -38,9 +36,6 @@ final class AuthTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        // The audit adapter may not be autoloadable in this worktree yet; keep identity resolution stable for MFA tests.
-        $this->app->instance(AuditLogRepositoryInterface::class, new AtomyNoopAuditLogRepository());
 
         // Replace the app's MFA verification service with a deterministic fake for feature tests.
         // The real runtime binding can be swapped later without changing these API-level assertions.
