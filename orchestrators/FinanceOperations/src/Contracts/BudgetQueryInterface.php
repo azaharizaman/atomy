@@ -21,4 +21,13 @@ interface BudgetQueryInterface
      * @return iterable Budget entities
      */
     public function getBudgetsByPeriod(string $tenantId, string $periodId, ?string $budgetVersionId = null): iterable;
+
+    /**
+     * Get cost center budget for period analysis.
+     *
+     * @param string $tenantId Tenant identifier
+     * @param string $costCenterId Cost center identifier
+     * @return object Budget projection
+     */
+    public function getCostCenterBudget(string $tenantId, string $costCenterId): object;
 }

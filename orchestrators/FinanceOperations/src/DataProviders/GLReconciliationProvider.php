@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\DataProviders;
 
+use Nexus\FinanceOperations\Contracts\AssetQueryInterface;
 use Nexus\FinanceOperations\Contracts\GLReconciliationProviderInterface;
+use Nexus\FinanceOperations\Contracts\LedgerQueryInterface;
+use Nexus\FinanceOperations\Contracts\PayableQueryInterface;
+use Nexus\FinanceOperations\Contracts\ReceivableQueryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -25,10 +29,10 @@ use Psr\Log\NullLogger;
 final readonly class GLReconciliationProvider implements GLReconciliationProviderInterface
 {
     public function __construct(
-        private object $receivableQuery,  // ReceivableQueryInterface
-        private object $payableQuery,  // PayableQueryInterface
-        private object $assetQuery,  // AssetQueryInterface
-        private object $glQuery,  // LedgerQueryInterface
+        private ReceivableQueryInterface $receivableQuery,
+        private PayableQueryInterface $payableQuery,
+        private AssetQueryInterface $assetQuery,
+        private LedgerQueryInterface $glQuery,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -280,9 +284,6 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
      */
     private function getInventoryBalance(string $tenantId, string $periodId): array
     {
-        // Inventory reconciliation requires an inventory query adapter
-        // The GLReconciliationProvider constructor accepts generic objects,
-        // but inventory queries need to be explicitly handled
         throw new \RuntimeException(
             'Inventory reconciliation is not available. ' .
             'An InventoryQueryInterface adapter must be injected into GLReconciliationProvider ' .
@@ -345,6 +346,7 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
     private function getReceivableDiscrepancies(string $tenantId, string $periodId): array
     {
         $unposted = $this->receivableQuery->getUnpostedTransactions($tenantId, $periodId);
+        $unpostedItems = is_array($unposted) ? $unposted : iterator_to_array($unposted, false);
 
         return array_map(fn($t) => [
             'type' => 'unposted_transaction',
@@ -352,7 +354,7 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
             'amount' => $t->getAmount(),
             'date' => $t->getDate()->format('Y-m-d'),
             'description' => $t->getDescription(),
-        ], $unposted);
+        ], $unpostedItems);
     }
 
     /**
@@ -363,6 +365,7 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
     private function getPayableDiscrepancies(string $tenantId, string $periodId): array
     {
         $unposted = $this->payableQuery->getUnpostedTransactions($tenantId, $periodId);
+        $unpostedItems = is_array($unposted) ? $unposted : iterator_to_array($unposted, false);
 
         return array_map(fn($t) => [
             'type' => 'unposted_transaction',
@@ -370,7 +373,7 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
             'amount' => $t->getAmount(),
             'date' => $t->getDate()->format('Y-m-d'),
             'description' => $t->getDescription(),
-        ], $unposted);
+        ], $unpostedItems);
     }
 
     /**
@@ -381,6 +384,7 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
     private function getAssetDiscrepancies(string $tenantId, string $periodId): array
     {
         $unposted = $this->assetQuery->getUnpostedDepreciation($tenantId, $periodId);
+        $unpostedItems = is_array($unposted) ? $unposted : iterator_to_array($unposted, false);
 
         return array_map(fn($d) => [
             'type' => 'unposted_depreciation',
@@ -388,6 +392,6 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
             'asset_code' => $d->getAssetCode(),
             'amount' => $d->getAmount(),
             'period' => $d->getPeriod(),
-        ], $unposted);
+        ], $unpostedItems);
     }
 }

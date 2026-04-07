@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\DataProviders;
 
+use Nexus\FinanceOperations\Contracts\BudgetQueryInterface;
+use Nexus\FinanceOperations\Contracts\CostAccountingManagerQueryInterface;
 use Nexus\FinanceOperations\Contracts\CostAccountingDataProviderInterface;
+use Nexus\FinanceOperations\Contracts\LedgerQueryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -24,9 +27,9 @@ use Psr\Log\NullLogger;
 final readonly class CostAccountingDataProvider implements CostAccountingDataProviderInterface
 {
     public function __construct(
-        private object $costManager,  // CostAccountingManagerInterface
-        private object $glQuery,  // LedgerQueryInterface
-        private ?object $budgetQuery = null,  // BudgetQueryInterface
+        private CostAccountingManagerQueryInterface $costManager,
+        private LedgerQueryInterface $glQuery,
+        private ?BudgetQueryInterface $budgetQuery = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -42,7 +45,7 @@ final readonly class CostAccountingDataProvider implements CostAccountingDataPro
 
         try {
             $pool = $this->costManager->getCostPool($tenantId, $poolId);
-            $allocations = $this->costManager->getPoolAllocations($tenantId, $poolId);
+            $allocations = $this->normalizeIterable($this->costManager->getPoolAllocations($tenantId, $poolId));
 
             return [
                 'pool_id' => $poolId,
@@ -83,7 +86,7 @@ final readonly class CostAccountingDataProvider implements CostAccountingDataPro
         ]);
 
         try {
-            $allocations = $this->costManager->getPeriodAllocations($tenantId, $periodId);
+            $allocations = $this->normalizeIterable($this->costManager->getPeriodAllocations($tenantId, $periodId));
 
             $byCostCenter = [];
             $totalAllocated = '0';
@@ -232,5 +235,15 @@ final readonly class CostAccountingDataProvider implements CostAccountingDataPro
 
             throw $e;
         }
+    }
+
+    /**
+     * @template T
+     * @param iterable<int, T> $items
+     * @return array<int, T>
+     */
+    private function normalizeIterable(iterable $items): array
+    {
+        return is_array($items) ? $items : iterator_to_array($items, false);
     }
 }
