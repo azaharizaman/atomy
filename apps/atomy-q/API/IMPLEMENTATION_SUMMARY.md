@@ -16,6 +16,14 @@
 - **Does not** use `nexus/identity-operations` for this path.
 - `AuthController` injects `JwtServiceInterface` and `PasswordResetServiceInterface` (bound to `PasswordResetService`) in the constructor (login/refresh do not require Nexus Identity write/query adapters).
 
+### `POST /api/v1/auth/register-company`
+
+- Public alpha onboarding endpoint that creates the first tenant row and first owner user in one transaction.
+- Accepts `tenant_code`, `company_name`, `owner_name`, `owner_email`, `owner_password`, and optional `timezone`, `locale`, `currency`.
+- Delegates to `TenantCompanyOnboardingCoordinatorInterface`, which coordinates `TenantCompanyOnboardingService` in Layer 2 using the tenant creator and admin creator adapter ports.
+- The Layer 3 Laravel adapter persists the tenant through `EloquentTenantPersistence`, the owner through `EloquentAdminCreator`, and returns JWT bootstrap data so the WEB app can sign the owner in immediately.
+- The onboarding path uses the new `tenants` table / `Tenant` model and keeps `tenant_id` as the isolation key for the rest of the app.
+
 ### `POST /api/v1/auth/forgot-password`
 
 - **Request body:** `email` only. Returns **200** with a generic message (no user enumeration). Mail send failures are logged and **do not** change the JSON response. When a user exists, `PasswordResetService` stores a hashed token keyed by **`(tenant_id, email)`** from that user’s row and sends `PasswordResetMail` (TTL text comes from `auth.passwords.users.expire`, minimum 1 minute via `AppServiceProvider`).

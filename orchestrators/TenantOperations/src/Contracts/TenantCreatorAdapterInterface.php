@@ -16,8 +16,22 @@ interface TenantCreatorAdapterInterface
      *
      * @param string $code
      * @param string $name
+     * @param string $email
      * @param string $domain
+     * @param string|null $timezone
+     * @param string|null $locale
+     * @param string|null $currency
+     * @param array<string, mixed>|null $metadata
      * @return string The created tenant ID
      */
-    public function create(string $code, string $name, string $domain): string;
+    public function create(
+        string $code,
+        string $name,
+        string $email,
+        string $domain,
+        ?string $timezone = null,
+        ?string $locale = null,
+        ?string $currency = null,
+        ?array $metadata = null,
+    ): string;
 }

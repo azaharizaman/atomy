@@ -91,9 +91,14 @@ final readonly class AtomyUserPersist implements UserPersistInterface
         return new AtomyIdentityUser($user->fresh() ?? $user);
     }
 
-    public function delete(string $id): bool
+    public function delete(string $id, ?string $tenantId = null): bool
     {
-        return UserModel::query()->whereKey($id)->delete() > 0;
+        $query = UserModel::query()->whereKey($id);
+        if ($tenantId !== null && trim($tenantId) !== '') {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        return $query->delete() > 0;
     }
 
     public function assignRole(string $userId, string $roleId, ?string $tenantId = null): void

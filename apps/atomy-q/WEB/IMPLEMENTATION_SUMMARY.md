@@ -6,6 +6,7 @@
 | :--- | :--- | :--- |
 | **Project Setup** | ✅ | Next.js 16, Tailwind, TypeScript initialized. |
 | **Authentication** | ✅ | JWT Auth with refresh token flow, Zustand store, redesigned login, plus forgot/reset password flows. |
+| **Company onboarding** | ✅ | Public `register-company` flow creates the first tenant + owner user, boots the auth session, and links from the login screen. |
 | **API Client** | ⚠️ | Axios instance in `src/lib/api.ts`; OpenAPI spec at `../openapi/openapi.json` with `npm run generate:api` → `src/generated/api` (@hey-api/client-fetch). Hooks still use manual types until migrated. |
 | **API errors** | ✅ | `src/lib/api-error.ts` normalizes Laravel `errors` / `details` / `message`; login uses `parseApiError`. |
 | **Dashboard** | ✅ | Implemented Screen-Blueprint style dashboard (pipeline stats, savings, activity, approvals, category breakdown, SLA alerts, quick actions). |

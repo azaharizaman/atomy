@@ -132,11 +132,30 @@ final readonly class TenantOnboardingService implements TenantOnboardingServiceI
 
     public function createAdminUser(string $tenantId, TenantOnboardingRequest $request): string
     {
+        [$firstName, $lastName] = $this->splitDisplayName($request->tenantName);
+
         return $this->adminCreator->create(
             tenantId: $tenantId,
             email: $request->adminEmail,
             password: $request->adminPassword,
+            firstName: $firstName,
+            lastName: $lastName,
             isAdmin: true,
+            locale: $request->language,
+            timezone: $request->timezone,
+            metadata: $request->metadata,
         );
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function splitDisplayName(string $name): array
+    {
+        $parts = preg_split('/\s+/', trim($name)) ?: [];
+        $firstName = $parts[0] ?? '';
+        $lastName = count($parts) > 1 ? trim(implode(' ', array_slice($parts, 1))) : '';
+
+        return [$firstName, $lastName];
     }
 }
