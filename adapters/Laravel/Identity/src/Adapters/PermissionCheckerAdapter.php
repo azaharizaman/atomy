@@ -16,6 +16,8 @@ use Psr\Log\LoggerInterface;
 class PermissionCheckerAdapter implements PermissionCheckerInterface
 {
     public function __construct(
+        private readonly \Nexus\Identity\Contracts\PermissionRepositoryInterface $permissionRepository,
+        private readonly \Nexus\Identity\Contracts\UserRepositoryInterface $userRepository,
         private readonly LoggerInterface $logger
     ) {}
 
@@ -24,9 +26,46 @@ class PermissionCheckerAdapter implements PermissionCheckerInterface
      */
     public function hasPermission(UserInterface $user, string $permission): bool
     {
-        // Implementation would use Laravel's Gate
-        // return Gate::forUser($user)->allows($permission);
-        return true;
+        $permissions = $this->getUserPermissions($user);
+
+        if (in_array($permission, $permissions, true) || in_array('*', $permissions, true)) {
+            return true;
+        }
+
+        $parts = explode('.', $permission);
+        if (count($parts) > 1) {
+            $wildcard = $parts[0] . '.*';
+            if (in_array($wildcard, $permissions, true)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getUserPermissions(UserInterface $user): array
+    {
+        $tenantId = $user->getTenantId();
+        $userPermissions = $this->userRepository->getUserPermissions($user->getId(), $tenantId);
+        $userRoles = $this->userRepository->getUserRoles($user->getId(), $tenantId);
+        
+        $permissions = array_map(fn($p) => $p->getName(), $userPermissions);
+        foreach ($userRoles as $role) {
+             // In a real implementation, Roles would have permissions.
+             // Mocking for now as per previous implementation logic.
+        }
+
+        return $permissions;
+    }
+            if (in_array($wildcard, $permissions, true)) {
+                return true;
+            }
+        }
+
+        return in_array('*', $permissions, true);
     }
 
     /**
@@ -82,8 +121,7 @@ class PermissionCheckerAdapter implements PermissionCheckerInterface
      */
     public function getUserPermissions(UserInterface $user): array
     {
-        // Implementation would load from database
-        return [];
+        return $this->permissionRepository->getUserPermissions($user->getId(), $user->getTenantId());
     }
 
     /**
