@@ -5,7 +5,7 @@
 **Nexus\Tenant** is a framework-agnostic multi-tenancy context and isolation engine for the Nexus ERP monorepo. It provides enterprise-grade tenant management with support for multiple identification strategies, parent-child tenant hierarchies, impersonation, lifecycle management, and comprehensive audit trails.
 
 **Package Version:** 1.0.0 (initial skeleton)  
-**Last Updated:** 2025-01-17  
+**Last Updated:** 2026-04-07  
 **Package Type:** Pure PHP Engine (Framework-Agnostic)
 
 ## Architecture
@@ -36,7 +36,8 @@ packages/Tenant/
     │   ├── InvalidIdentificationStrategyException.php
     │   ├── ImpersonationNotAllowedException.php
     │   ├── DuplicateTenantCodeException.php
-    │   └── DuplicateTenantDomainException.php
+    │   ├── DuplicateTenantDomainException.php
+    │   └── DuplicateTenantNameException.php
     ├── ValueObjects/                   # REQUIRED: Immutable value objects (3 classes)
     │   ├── TenantStatus.php            # Five statuses with transition validation
     │   ├── IdentificationStrategy.php  # Five identification strategies
@@ -104,8 +105,9 @@ consuming application (e.g., Laravel app)
 | Code | Requirement | Status |
 |------|-------------|--------|
 | BUS-TEN-0588 | Tenant ID MUST be set before database operations | ✅ `TenantContextManager::requireTenant()`, `TenantScope` |
-| BUS-TEN-0589 | Tenant codes MUST be unique | ✅ `TenantLifecycleService::create()`, unique constraint |
-| BUS-TEN-0590 | Tenant domains MUST be unique | ✅ `TenantLifecycleService::create()`, unique constraint |
+| BUS-TEN-0589 | Tenant codes MUST be unique | ✅ `TenantLifecycleService::createTenant()`, unique constraint |
+| BUS-TEN-0590 | Tenant domains MUST be unique | ✅ `TenantLifecycleService::createTenant()`, unique constraint |
+| BUS-TEN-0590A | Tenant names MUST be unique for company onboarding | ✅ `TenantLifecycleService::createTenant()`, `updateTenant()` and `DuplicateTenantNameException` |
 | BUS-TEN-0591 | Only one tenant context active per request | ✅ `TenantContextManager` (single $currentTenantId property) |
 | BUS-TEN-0592 | Suspended tenants CANNOT access system | ✅ `TenantContextManager::setTenant()` throws `TenantSuspendedException` |
 | BUS-TEN-0593 | Super admin can impersonate any tenant | ✅ `TenantImpersonationService::startImpersonation()` |
@@ -142,13 +144,13 @@ consuming application (e.g., Laravel app)
 | FUN-TEN-0619 | Validate tenant exists and is active before setting context | ✅ `TenantContextManager::setTenant()` validates status |
 | FUN-TEN-0620 | Cache tenant configuration data | ✅ `TenantContextManager` uses `CacheRepositoryInterface` |
 | FUN-TEN-0621 | Support multiple tenant identification strategies | ✅ `IdentificationStrategy` (5 strategies), `TenantResolverService` |
-| FUN-TEN-0622 | Create new tenant with required fields | ✅ `TenantLifecycleService::create()`, `TenantController::store()` |
-| FUN-TEN-0623 | Activate tenant | ✅ `TenantLifecycleService::activate()`, `TenantController::activate()` |
-| FUN-TEN-0624 | Suspend tenant | ✅ `TenantLifecycleService::suspend()`, `TenantController::suspend()` |
-| FUN-TEN-0625 | Reactivate suspended tenant | ✅ `TenantLifecycleService::reactivate()`, `TenantController::reactivate()` |
-| FUN-TEN-0626 | Archive tenant (soft delete) | ✅ `TenantLifecycleService::archive()`, `TenantController::destroy()` |
-| FUN-TEN-0627 | Permanently delete tenant data | ✅ `TenantLifecycleService::delete()`, `TenantController::forceDestroy()` |
-| FUN-TEN-0628 | Update tenant metadata | ✅ `TenantLifecycleService::update()`, `TenantController::update()` |
+| FUN-TEN-0622 | Create new tenant with required fields | ✅ `TenantLifecycleService::createTenant()`, `TenantController::store()` |
+| FUN-TEN-0623 | Activate tenant | ✅ `TenantLifecycleService::activateTenant()`, `TenantController::activate()` |
+| FUN-TEN-0624 | Suspend tenant | ✅ `TenantLifecycleService::suspendTenant()`, `TenantController::suspend()` |
+| FUN-TEN-0625 | Reactivate suspended tenant | ✅ `TenantLifecycleService::reactivateTenant()`, `TenantController::reactivate()` |
+| FUN-TEN-0626 | Archive tenant (soft delete) | ✅ `TenantLifecycleService::archiveTenant()`, `TenantController::destroy()` |
+| FUN-TEN-0627 | Permanently delete tenant data | ✅ `TenantLifecycleService::deleteTenant()`, `TenantController::forceDestroy()` |
+| FUN-TEN-0628 | Update tenant metadata | ✅ `TenantLifecycleService::updateTenant()`, `TenantController::update()` |
 | FUN-TEN-0629 | Retrieve tenant by ID, code, or domain | ✅ `TenantRepositoryInterface::findById()`, `findByCode()`, `findByDomain()` |
 | FUN-TEN-0630 | List all tenants with filtering | ✅ `TenantRepositoryInterface::all()`, `search()`, `TenantController::index()` |
 | FUN-TEN-0631 | Impersonate tenant as support user | ✅ `TenantImpersonationService::startImpersonation()`, `TenantController::impersonate()` |
@@ -182,7 +184,7 @@ consuming application (e.g., Laravel app)
 | Code | User Story | Status |
 |------|------------|--------|
 | USE-TEN-0656 | As a system admin, I want to create new tenants with automated provisioning | ✅ `TenantController::store()`, `TenantEventDispatcher::tenantCreated()` |
-| USE-TEN-0657 | As a system admin, I want to suspend misbehaving tenants immediately | ✅ `TenantController::suspend()`, `TenantLifecycleService::suspend()` |
+| USE-TEN-0657 | As a system admin, I want to suspend misbehaving tenants immediately | ✅ `TenantController::suspend()`, `TenantLifecycleService::suspendTenant()` |
 | USE-TEN-0658 | As a support engineer, I want to impersonate tenants to troubleshoot issues | ✅ `TenantController::impersonate()`, `TenantImpersonationService` |
 | USE-TEN-0659 | As a tenant admin, I want to customize my tenant's branding and settings | ✅ `TenantController::update()`, `TenantSettings` |
 | USE-TEN-0660 | As a developer, I want automatic tenant isolation without manual filtering | ✅ `TenantScope`, `BelongsToTenant` trait (automatic global scope) |
@@ -192,7 +194,11 @@ consuming application (e.g., Laravel app)
 | USE-TEN-0664 | As a tenant user, I want seamless experience without knowing about multi-tenancy | ✅ `IdentifyTenant` middleware (transparent), `TenantScope` (automatic) |
 | USE-TEN-0665 | As a system architect, I want to switch between shared and separate database strategies | ✅ `config/tenant.php::multi_database`, `database_name` column |
 
-**Summary**: 68/90 complete (76%), 22 pending (future enhancements)
+### Alpha onboarding note
+
+The alpha tenant/company onboarding flow now relies on `TenantLifecycleService::createTenant()` rejecting duplicate company names via `TenantValidationInterface::nameExists()` and throwing `DuplicateTenantNameException`. This keeps tenant creation honest for self-service company onboarding while preserving the rest of the lifecycle as a pure package concern.
+
+**Summary**: 69/90 complete (77%), 21 pending (future enhancements)
 
 ## Core Interfaces
 

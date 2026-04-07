@@ -7,6 +7,10 @@ namespace App\Providers;
 use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
 use App\Contracts\PasswordResetServiceInterface;
+use App\Adapters\Identity\EloquentAdminCreator;
+use App\Adapters\Tenant\EloquentTenantCreator;
+use App\Adapters\Tenant\EloquentTenantPersistence;
+use App\Adapters\Tenant\EloquentTenantValidation;
 use App\Services\Identity\AtomyIdentityTokenManagerStub;
 use App\Services\Identity\AtomyNoopAuditLogRepository;
 use App\Services\Identity\AtomyNoopMfaEnrollmentService;
@@ -54,6 +58,8 @@ use Nexus\Identity\Contracts\TokenManagerInterface as IdentityTokenManagerInterf
 use Nexus\Identity\Contracts\UserAuthenticatorInterface;
 use Nexus\Identity\Contracts\UserPersistInterface;
 use Nexus\Identity\Contracts\UserQueryInterface as IdentityUserQueryInterface;
+use Nexus\Tenant\Contracts\TenantPersistenceInterface;
+use Nexus\Tenant\Contracts\TenantValidationInterface;
 use Nexus\Project\Contracts\IncompleteTaskCountInterface;
 use Nexus\Project\Contracts\ProjectManagerInterface;
 use Nexus\Project\Contracts\ProjectPersistInterface;
@@ -85,6 +91,12 @@ use Nexus\Task\Contracts\TaskManagerInterface;
 use Nexus\Task\Contracts\TaskPersistInterface;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
+use Nexus\TenantOperations\Contracts\AdminCreatorAdapterInterface;
+use Nexus\TenantOperations\Contracts\TenantCompanyOnboardingCoordinatorInterface;
+use Nexus\TenantOperations\Contracts\TenantCompanyOnboardingServiceInterface;
+use Nexus\TenantOperations\Contracts\TenantCreatorAdapterInterface;
+use Nexus\TenantOperations\Coordinators\TenantCompanyOnboardingCoordinator;
+use Nexus\TenantOperations\Services\TenantCompanyOnboardingService;
 use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 use Nexus\QuoteIngestion\Contracts\QuoteSubmissionQueryInterface;
@@ -283,6 +295,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(PasswordResetServiceInterface::class, static fn ($app): PasswordResetServiceInterface => $app->make(PasswordResetService::class));
+
+        // Nexus Tenant + TenantOperations: alpha company onboarding and tenant persistence.
+        $this->app->singleton(TenantPersistenceInterface::class, EloquentTenantPersistence::class);
+        $this->app->singleton(TenantValidationInterface::class, EloquentTenantValidation::class);
+        $this->app->singleton(TenantCreatorAdapterInterface::class, EloquentTenantCreator::class);
+        $this->app->singleton(AdminCreatorAdapterInterface::class, EloquentAdminCreator::class);
+        $this->app->singleton(TenantCompanyOnboardingServiceInterface::class, TenantCompanyOnboardingService::class);
+        $this->app->singleton(TenantCompanyOnboardingCoordinatorInterface::class, TenantCompanyOnboardingCoordinator::class);
 
         // Nexus Project: Laravel implementations + package Manager.
         $this->app->bind(ProjectPersistInterface::class, AtomyProjectPersist::class);

@@ -19,6 +19,7 @@ use Nexus\Tenant\Events\TenantSuspendedEvent;
 use Nexus\Tenant\Events\TenantUpdatedEvent;
 use Nexus\Tenant\Exceptions\DuplicateTenantCodeException;
 use Nexus\Tenant\Exceptions\DuplicateTenantDomainException;
+use Nexus\Tenant\Exceptions\DuplicateTenantNameException;
 use Nexus\Tenant\Exceptions\TenantNotFoundException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -65,6 +66,10 @@ final readonly class TenantLifecycleService
         // Validate uniqueness using validation interface
         if ($this->validation->codeExists($code)) {
             throw DuplicateTenantCodeException::code($code);
+        }
+
+        if ($this->validation->nameExists($name)) {
+            throw DuplicateTenantNameException::name($name);
         }
 
         if ($domain && $this->validation->domainExists($domain)) {
@@ -243,6 +248,12 @@ final readonly class TenantLifecycleService
         if (isset($data['domain']) && $data['domain'] !== $tenant->getDomain()) {
             if ($this->validation->domainExists($data['domain'], $tenantId)) {
                 throw DuplicateTenantDomainException::domain($data['domain']);
+            }
+        }
+
+        if (isset($data['name']) && $data['name'] !== $tenant->getName()) {
+            if ($this->validation->nameExists($data['name'], $tenantId)) {
+                throw DuplicateTenantNameException::name($data['name']);
             }
         }
 
