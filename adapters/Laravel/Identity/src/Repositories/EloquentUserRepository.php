@@ -387,16 +387,6 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
         ]);
     }
 
-    private function findUserOrFail(string $id): UserModel
-    {
-        $user = UserModel::query()->whereKey($id)->first();
-        if ($user === null) {
-            throw new UserNotFoundException($id);
-        }
-
-        return $user;
-    }
-
     private function findUserScopedOrFail(string $id, ?string $tenantId): UserModel
     {
         $user = $this->findUserScoped($id, $tenantId);

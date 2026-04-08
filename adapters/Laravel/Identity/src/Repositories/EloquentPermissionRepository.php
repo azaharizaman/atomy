@@ -114,6 +114,10 @@ final readonly class EloquentPermissionRepository implements PermissionRepositor
 
     public function create(array $data): PermissionInterface
     {
+        if (! isset($data['name']) || ! is_string($data['name']) || trim($data['name']) === '') {
+            throw new \InvalidArgumentException('Permission name is required');
+        }
+
         return PermissionModel::query()->create($this->normalizePayload($data));
     }
 

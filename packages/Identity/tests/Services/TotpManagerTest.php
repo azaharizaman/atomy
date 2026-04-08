@@ -37,6 +37,23 @@ class TotpManagerTest extends TestCase
     }
 
     #[Test]
+    public function it_accepts_variable_length_base32_secrets_for_interoperability(): void
+    {
+        $secret = new TotpSecret(
+            secret: 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP',
+            algorithm: 'sha1',
+            period: 30,
+            digits: 6
+        );
+
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
+
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
+    }
+
+    #[Test]
     public function it_generates_totp_secret_with_custom_parameters(): void
     {
         $secret = $this->manager->generateSecret(
@@ -129,21 +146,26 @@ class TotpManagerTest extends TestCase
             digits: 6
         );
 
-        // Generate current code
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
         
         // Verify it
-        $this->assertTrue($this->manager->verifyCode($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
     public function it_rejects_invalid_totp_code(): void
     {
         $secret = $this->manager->generateSecret();
-        
-        $this->assertFalse($this->manager->verifyCode($secret, '000000'));
-        $this->assertFalse($this->manager->verifyCode($secret, '999999'));
-        $this->assertFalse($this->manager->verifyCode($secret, 'ABCDEF'));
+        $timestamp = 1700000000;
+        $validCode = $this->manager->getCurrentCode($secret, $timestamp);
+
+        $replacementDigit = $validCode[0] === '0' ? '1' : '0';
+        $mutatedNumeric = $replacementDigit . substr($validCode, 1);
+        $mutatedAlpha = substr($validCode, 0, max(strlen($validCode) - 1, 0)) . 'A';
+
+        $this->assertFalse($this->manager->verifyCode($secret, $mutatedNumeric, timestamp: $timestamp));
+        $this->assertFalse($this->manager->verifyCode($secret, $mutatedAlpha, timestamp: $timestamp));
     }
 
     #[Test]
@@ -209,20 +231,22 @@ class TotpManagerTest extends TestCase
     public function it_generates_current_code(): void
     {
         $secret = $this->manager->generateSecret();
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
 
         $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
-        $this->assertTrue($this->manager->verifyCode($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
     public function it_generates_current_code_for_8_digits(): void
     {
         $secret = $this->manager->generateSecret(digits: 8);
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
 
         $this->assertMatchesRegularExpression('/^\d{8}$/', $code);
-        $this->assertTrue($this->manager->verifyCode($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
@@ -316,29 +340,34 @@ class TotpManagerTest extends TestCase
     public function it_supports_sha256_algorithm(): void
     {
         $secret = $this->manager->generateSecret(algorithm: 'sha256');
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
 
         $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
-        $this->assertTrue($this->manager->verifyCode($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
     public function it_supports_sha512_algorithm(): void
     {
         $secret = $this->manager->generateSecret(algorithm: 'sha512');
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
 
         $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
-        $this->assertTrue($this->manager->verifyCode($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
     public function it_supports_custom_period(): void
     {
         $secret = $this->manager->generateSecret(period: 60);
-        $code = $this->manager->getCurrentCode($secret);
+        $periodStart = intdiv(time(), 60) * 60;
+        $generationTimestamp = $periodStart + 28;
+        $verificationTimestamp = $periodStart + 59;
+        $code = $this->manager->getCurrentCode($secret, $generationTimestamp);
 
-        // Code should remain valid for full 60-second period
-        $this->assertTrue($this->manager->verifyCode($secret, $code, window: 0));
+        // Must remain valid within the same 60-second period despite crossing a 30-second boundary.
+        $this->assertTrue($this->manager->verifyCode($secret, $code, window: 0, timestamp: $verificationTimestamp));
     }
 }

@@ -231,33 +231,37 @@ final readonly class IdentityOperationsAdapter implements
     {
         $user = $this->userAuthenticator->authenticate(new Credentials($email, $password));
         
-        return $this->mapUserToArray($user);
+        return $this->mapUserToArray($user, $tenantId);
     }
 
     public function getUserById(string $userId): array
     {
         $user = $this->userQuery->findById($userId);
         
-        return $this->mapUserToArray($user);
+        return $this->mapUserToArray($user, $user->getTenantId());
     }
 
     public function getUserByIdAndTenant(string $userId, string $tenantId): array
     {
         $user = $this->userQuery->findById($userId, $tenantId);
 
-        return $this->mapUserToArray($user);
+        return $this->mapUserToArray($user, $tenantId);
     }
 
-    private function mapUserToArray(\Nexus\Identity\Contracts\UserInterface $user): array
+    private function mapUserToArray(\Nexus\Identity\Contracts\UserInterface $user, ?string $tenantId = null): array
     {
+        $resolvedTenantId = is_string($tenantId) && trim($tenantId) !== ''
+            ? trim($tenantId)
+            : $user->getTenantId();
+
         $permissions = array_map(
             fn($p) => $p->getName(),
-            $this->userQuery->getUserPermissions($user->getId())
+            $this->userQuery->getUserPermissions($user->getId(), $resolvedTenantId)
         );
 
         $roles = array_map(
             fn($r) => $r->getName(),
-            $this->userQuery->getUserRoles($user->getId())
+            $this->userQuery->getUserRoles($user->getId(), $resolvedTenantId)
         );
 
         return [

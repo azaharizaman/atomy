@@ -320,3 +320,12 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Root cause:** I relied on prior batch status instead of revalidating every still-open thread against current HEAD and then syncing both code and thread state in one pass.
 - **Action taken:** Implemented tenant-safe middleware/session checks, hardened MFA/user auth persistence paths, fixed permission matching/query edge cases, restored interface-first controller dependency for MFA challenge store, added missing MFA mapper and encryption cast, updated affected call sites, re-ran Gap 7 verification commands, and resolved fixed PR threads while documenting one deferred schema-level FK redesign thread.
 - **Follow-up tasks:** Before claiming PR closure, run an explicit unresolved-thread sweep and require each thread to be either (1) code-fixed and resolved, or (2) intentionally left open with a posted rationale and a tracked follow-up plan.
+
+---
+
+- **Date:** 2026-04-09
+- **PR/Issue ID:** [#349](https://github.com/azaharizaman/atomy/pull/349)
+- **Summary of mistake:** Identity follow-up still had contract and scoping drift: adapter RBAC hydration did not consistently carry tenant context, Layer 2 auth phpdoc referenced a Layer 1 enum type, permission create path allowed blank names to reach persistence, and TOTP tests had non-deterministic verification checks that could mask period-handling bugs.
+- **Root cause:** I accepted earlier "working" behavior without re-checking contract boundaries and determinism assumptions against the latest reviewer concerns and current code paths.
+- **Action taken:** Threaded tenant context through `IdentityOperationsAdapter::mapUserToArray` into permission/role lookups, updated `AuthenticatorInterface` status typing to Layer-2-safe scalar docs, added explicit non-empty name validation in `EloquentPermissionRepository::create`, removed dead `findUserOrFail` from `EloquentUserRepository`, and hardened `TotpManagerTest` with fixed timestamps, mutated-invalid code assertions, and a boundary-sensitive custom-period check.
+- **Follow-up tasks:** For identity review closures, add a mandatory pass for (1) tenant context propagation in all adapter hydration paths, (2) Layer 2 contract isolation from Layer 1 types, and (3) deterministic time-based test vectors that can fail the wrong implementation.
