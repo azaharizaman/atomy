@@ -7,6 +7,7 @@ namespace Nexus\Laravel\Identity\Repositories;
 use App\Models\Permission as PermissionModel;
 use App\Models\Role as RoleModel;
 use App\Models\User as UserModel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Nexus\Identity\Contracts\PermissionInterface;
 use Nexus\Identity\Contracts\RoleInterface;
@@ -348,12 +349,16 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
 
     public function updateLastLogin(string $userId): void
     {
-        UserModel::query()->whereKey($userId)->update(['last_login_at' => now()]);
+        $this->scopedAccountStateQuery($userId)->update(['last_login_at' => now()]);
     }
 
     public function incrementFailedLoginAttempts(string $userId): int
     {
-        $user = $this->findUserOrFail($userId);
+        $user = $this->scopedAccountStateQuery($userId)->first();
+        if ($user === null) {
+            throw new UserNotFoundException($userId);
+        }
+
         $user->failed_login_attempts = (int) ($user->failed_login_attempts ?? 0) + 1;
         $user->save();
 
@@ -362,12 +367,12 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
 
     public function resetFailedLoginAttempts(string $userId): void
     {
-        UserModel::query()->whereKey($userId)->update(['failed_login_attempts' => 0]);
+        $this->scopedAccountStateQuery($userId)->update(['failed_login_attempts' => 0]);
     }
 
     public function lockAccount(string $userId, string $reason): void
     {
-        UserModel::query()->whereKey($userId)->update([
+        $this->scopedAccountStateQuery($userId)->update([
             'status' => 'locked',
             'lockout_reason' => trim($reason) !== '' ? $reason : null,
             'lockout_expires_at' => null,
@@ -376,7 +381,7 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
 
     public function unlockAccount(string $userId): void
     {
-        UserModel::query()->whereKey($userId)->update([
+        $this->scopedAccountStateQuery($userId)->update([
             'status' => 'active',
             'lockout_reason' => null,
             'lockout_expires_at' => null,
@@ -423,6 +428,22 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
         }
 
         return $query->first();
+    }
+
+    /**
+     * Defense-in-depth for account-state mutations: scope writes by the resolved tenant row.
+     *
+     * @return Builder<UserModel>
+     */
+    private function scopedAccountStateQuery(string $userId): Builder
+    {
+        $query = UserModel::query()->whereKey($userId);
+        $tenantId = UserModel::query()->whereKey($userId)->value('tenant_id');
+        if (is_string($tenantId) && trim($tenantId) !== '') {
+            $query->where('tenant_id', trim($tenantId));
+        }
+
+        return $query;
     }
 
     private function mapUser(UserModel $user): UserInterface

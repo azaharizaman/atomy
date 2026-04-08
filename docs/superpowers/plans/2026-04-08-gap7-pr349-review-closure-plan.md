@@ -17,17 +17,19 @@
 - [x] Replace `AtomyAuditLogRepository::exportToArray()` eager load/map with cursor-based bounded iteration.
 
 ## Batch 2 (Should Fix) - contract hardening
-- [ ] Evaluate tenant-scoping defense-in-depth for user account-state updates in `EloquentUserRepository` without breaking package contracts.
-- [ ] Evaluate optional domain exception for role deletion with assigned users; keep backward compatibility if callers rely on boolean failure.
+- [x] Evaluate tenant-scoping defense-in-depth for user account-state updates in `EloquentUserRepository` without breaking package contracts.
+- [x] Evaluate optional domain exception for role deletion with assigned users; keep backward compatibility if callers rely on boolean failure.
+  - Disposition: keep `bool` repository delete behavior for backward compatibility; preserve `RoleInUseException` behavior at `RoleManager` service layer.
 
 ## Batch 3 (Optional) - observability polish
-- [ ] Decide whether MFA verification attempt metadata (`ipAddress`, `userAgent`) should be logged in-process to satisfy static-analysis/readability concerns.
+- [x] Decide whether MFA verification attempt metadata (`ipAddress`, `userAgent`) should be logged in-process to satisfy static-analysis/readability concerns.
+  - Disposition: defer metadata logging; current spec/plan require MFA/audit persistence but do not require IP/User-Agent persistence for verify attempts.
 
 ## Verification Gates
-- [ ] `php artisan test tests/Feature/Api/AuthTest.php tests/Feature/IdentityGap7Test.php --stop-on-failure`
-- [ ] `./vendor/bin/phpunit adapters/Laravel/Identity/tests/Adapters/PermissionCheckerAdapterTest.php`
+- [x] `php artisan test tests/Feature/Api/AuthTest.php tests/Feature/IdentityGap7Test.php --stop-on-failure`
+- [x] `apps/atomy-q/API/vendor/bin/phpunit ../../../adapters/Laravel/Identity/tests/Adapters/PermissionCheckerAdapterTest.php`
 
 ## Completion Criteria
-- [ ] All Batch 1 items merged.
-- [ ] No regression in Gap 7 feature tests.
-- [ ] Review comments addressed or explicitly dispositioned with rationale.
+- [x] All Batch 1 items implemented in this branch.
+- [x] No regression in Gap 7 feature tests.
+- [x] Review comments addressed or explicitly dispositioned with rationale.
