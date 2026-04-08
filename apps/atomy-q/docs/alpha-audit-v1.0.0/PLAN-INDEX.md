@@ -1,4 +1,4 @@
-# Atomy-Q Alpha — 30-Day Execution Plan (Index)
+# Atomy-Q Alpha — Active Mitigation Index
 
 **Product:** Atomy-Q — Intelligent Quotation Comparison System  
 **Objective:** Ship a **working Alpha** where the core flow runs on **real API + real DB**, with a **clear position on AI** (shipped minimal path or documented deferral), **no critical stubs** on the golden path, and **production-capable** deployment.  
@@ -7,15 +7,14 @@
 
 ---
 
-## Weekly plan files
+## Active execution documents
 
-| Week | Calendar days | File | Theme |
-|------|----------------|------|--------|
-| 1 | Days 1–7 | [`PLAN-WEEK-1.md`](./PLAN-WEEK-1.md) | Foundation: triage, build green, tenants/companies, vendors |
-| 2 | Days 8–14 | [`PLAN-WEEK-2.md`](./PLAN-WEEK-2.md) | Golden-path API: normalization reads, RFQ ops, reparse + AI wiring start |
-| 3 | Days 15–21 | [`PLAN-WEEK-3.md`](./PLAN-WEEK-3.md) | AI completion, comparison UX/API alignment, **awards**, mock removal |
-| 4 | Days 22–28 | [`PLAN-WEEK-4.md`](./PLAN-WEEK-4.md) | Staging, infra, security, performance — **release candidate** |
-| 5 | Days 29–30 | [`PLAN-WEEK-5.md`](./PLAN-WEEK-5.md) | Freeze, Alpha launch, comms (marketing, IR, customers) |
+| Type | File | Purpose |
+|------|------|---------|
+| Audit baseline | [`ALPHA_RELEASE_AUDIT.md`](./ALPHA_RELEASE_AUDIT.md) | Source-of-truth gap audit |
+| Scope baseline | [`../ALPHA_SCOPE.md`](../ALPHA_SCOPE.md) | Alpha boundaries and what is explicitly out-of-scope |
+| Progress analysis | [`../ALPHA_PROGRESS_ANALYSIS_2026-03-31.md`](../ALPHA_PROGRESS_ANALYSIS_2026-03-31.md) | Consolidated status readout across the top 10 gaps |
+| Active mitigation | [`ALPHA_GAP_8_9_10_MITIGATION_PLAN_2026-04-09.md`](./ALPHA_GAP_8_9_10_MITIGATION_PLAN_2026-04-09.md) | Current execution plan for production readiness, mock-removal, and docs consolidation |
 
 ---
 
@@ -33,20 +32,24 @@ Each week document is structured for:
 
 ---
 
-## Cross-week dependencies (critical path)
+## Current critical path to alpha
 
-1. **Week 1:** Production build must pass; **tenants** table + creation story exists.  
-2. **Week 2:** Normalization **GET** endpoints return real data; idempotent routes stop lying.  
-3. **Week 3:** **Awards** implemented end-to-end; mocks off for demo path.  
-4. **Week 4:** Staging mirrors prod; security + perf sign-off.  
-5. **Week 5:** Code freeze → tagged Alpha → monitored launch.
-
----
-
-## GitHub Project import
-
-To create **draft items** on [Project #4](https://github.com/users/azaharizaman/projects/4) (week, theme, target date, primary track), see [`github-project/README.md`](./github-project/README.md) and run `github-project/bootstrap-alpha-project.sh` after `gh auth refresh -s read:project -s project`.
+1. Build, lint, and API/WEB test gates are reproducible in CI and staging.
+2. Live mode has no silent seed/mock fallback on golden-path pages.
+3. Queue/storage/env contracts are documented and verified in runbooks.
+4. Gap ownership and closure evidence are maintained in one active mitigation ledger.
 
 ---
 
-*Version: 1.0.0 — aligned with ALPHA_RELEASE_AUDIT.md*
+## Retired artifacts
+
+The weekly execution documents and generated GitHub-project bootstrap artifacts were removed on **2026-04-09** because they were stale and no longer represented active execution state:
+
+- `PLAN-WEEK-1.md` … `PLAN-WEEK-5.md`
+- `github-project/README.md`
+- `github-project/alpha-plan-items.json`
+- `github-project/bootstrap-alpha-project.sh`
+
+---
+
+*Version: 1.1.0 — stale weekly artifacts retired; active mitigation index established*
