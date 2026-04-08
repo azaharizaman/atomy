@@ -130,6 +130,14 @@ final class PermissionCheckerAdapterTest extends TestCase
         self::assertFalse($permissionChecker->isSuperAdmin($user));
     }
 
+    public function testPermissionMatchDoesNotTreatDifferentSpecificPermissionAsEqual(): void
+    {
+        $permission = $this->makePermission('perm-specific', 'rfqs.approve');
+
+        self::assertFalse($permission->matches('rfqs.view'));
+        self::assertTrue($permission->matches('rfqs.approve'));
+    }
+
     private function makeUser(string $id, string $tenantId): UserInterface
     {
         $user = Mockery::mock(UserInterface::class);

@@ -90,8 +90,20 @@ final readonly class EloquentPermissionRepository implements PermissionRepositor
             return [];
         }
 
-        return PermissionModel::query()
-            ->orderBy('name')
+        $segments = explode('.', $normalizedPermission);
+        $resource = trim((string) ($segments[0] ?? ''));
+
+        $query = PermissionModel::query()->orderBy('name');
+        if ($resource !== '') {
+            $query->where(function ($builder) use ($normalizedPermission, $resource): void {
+                $builder
+                    ->where('name', $normalizedPermission)
+                    ->orWhere('name', '*')
+                    ->orWhere('name', $resource . '.*');
+            });
+        }
+
+        return $query
             ->get()
             ->filter(static fn (PermissionModel $permission): bool => $permission->matches($normalizedPermission))
             ->values()

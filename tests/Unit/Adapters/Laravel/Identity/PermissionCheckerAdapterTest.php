@@ -66,6 +66,14 @@ final class PermissionCheckerAdapterTest extends TestCase
         $this->assertTrue($this->adapter->hasPermission($user, 'users.create'));
     }
 
+    public function testPermissionMatcherDoesNotMatchDifferentSpecificPermission(): void
+    {
+        $permission = $this->makePermission('rfqs.approve');
+
+        $this->assertFalse($permission->matches('rfqs.view'));
+        $this->assertTrue($permission->matches('rfqs.approve'));
+    }
+
     public function testHasPermissionMatchesRoleWildcardPermission(): void
     {
         $user = $this->makeUser('user-123', 'tenant-1');

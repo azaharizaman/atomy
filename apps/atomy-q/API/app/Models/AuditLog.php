@@ -48,7 +48,7 @@ final class AuditLog extends Model implements AuditLogInterface
         'updated_at' => 'datetime',
     ];
 
-    public function getId()
+    public function getId(): string
     {
         return (string) $this->getKey();
     }
@@ -178,4 +178,3 @@ final class AuditLog extends Model implements AuditLogInterface
         return $this->getExpiresAt() <= new \DateTimeImmutable();
     }
 }
-

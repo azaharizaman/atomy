@@ -130,12 +130,14 @@ final class DatabaseSessionManager implements SessionManagerInterface
     {
         $deleted = 0;
 
-        foreach (SessionModel::query()->get() as $session) {
-            if (! $this->sessionIsActive($session)) {
-                $session->delete();
-                $deleted++;
+        SessionModel::query()->chunk(500, function ($sessions) use (&$deleted): void {
+            foreach ($sessions as $session) {
+                if (! $this->sessionIsActive($session)) {
+                    $session->delete();
+                    $deleted++;
+                }
             }
-        }
+        });
 
         return $deleted;
     }
@@ -189,16 +191,18 @@ final class DatabaseSessionManager implements SessionManagerInterface
         $threshold = new DateTimeImmutable(sprintf('-%d days', $inactivityThresholdDays));
         $deleted = 0;
 
-        foreach (SessionModel::query()->get() as $session) {
-            $lastActivity = $session->last_activity instanceof DateTimeInterface
-                ? DateTimeImmutable::createFromInterface($session->last_activity)
-                : new DateTimeImmutable((string) $session->last_activity);
+        SessionModel::query()->chunk(500, function ($sessions) use (&$deleted, $threshold): void {
+            foreach ($sessions as $session) {
+                $lastActivity = $session->last_activity instanceof DateTimeInterface
+                    ? DateTimeImmutable::createFromInterface($session->last_activity)
+                    : new DateTimeImmutable((string) $session->last_activity);
 
-            if ($lastActivity < $threshold) {
-                $session->delete();
-                $deleted++;
+                if ($lastActivity < $threshold) {
+                    $session->delete();
+                    $deleted++;
+                }
             }
-        }
+        });
 
         return $deleted;
     }
@@ -265,9 +269,7 @@ final class DatabaseSessionManager implements SessionManagerInterface
 
     private function normalizeTenantId(mixed $tenantId): ?string
     {
-        $normalized = $this->normalizeString($tenantId);
-
-        return $normalized === null ? null : $normalized;
+        return $this->normalizeString($tenantId);
     }
 
     private function normalizeString(mixed $value): ?string

@@ -265,12 +265,24 @@ final readonly class AtomyAuditLogRepository implements AuditLogRepositoryInterf
         $builder = AuditLogModel::query();
         $this->applyFilters($builder, $filters);
 
-        return $builder
+        $rows = [];
+        $count = 0;
+        foreach (
+            $builder
             ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get()
-            ->map(static fn (AuditLogModel $log): array => $log->toArray())
-            ->all();
+            ->cursor() as $log
+        ) {
+            if ($count >= $limit) {
+                break;
+            }
+
+            if ($log instanceof AuditLogModel) {
+                $rows[] = $log->toArray();
+                $count++;
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -401,4 +413,3 @@ final readonly class AtomyAuditLogRepository implements AuditLogRepositoryInterf
         return null;
     }
 }
-

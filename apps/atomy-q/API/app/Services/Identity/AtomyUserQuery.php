@@ -82,17 +82,17 @@ final readonly class AtomyUserQuery implements UserQueryInterface
         $roles = [];
 
         if ($roleIds !== []) {
-            $roles = RoleModel::query()
+            $query = RoleModel::query()
                 ->whereIn('id', $roleIds)
-                ->orderBy('name')
-                ->get()
-                ->filter(static function (RoleModel $role) use ($tenantId): bool {
-                    $roleTenantId = $role->getTenantId();
+                ->orderBy('name');
 
-                    return $tenantId === null || $roleTenantId === null || $roleTenantId === $tenantId;
-                })
-                ->values()
-                ->all();
+            if ($tenantId !== null && trim($tenantId) !== '') {
+                $query->where(static function ($builder) use ($tenantId): void {
+                    $builder->whereNull('tenant_id')->orWhere('tenant_id', $tenantId);
+                });
+            }
+
+            $roles = $query->get()->all();
         }
 
         // Legacy single-role column fallback (pre-RBAC).
@@ -241,10 +241,14 @@ final readonly class AtomyUserQuery implements UserQueryInterface
  */
 final readonly class AtomyLegacyRole implements RoleInterface
 {
+    private \DateTimeImmutable $createdAt;
+
     public function __construct(
         private string $name,
         private ?string $tenantId,
-    ) {}
+    ) {
+        $this->createdAt = new \DateTimeImmutable();
+    }
 
     public function getId(): string
     {
@@ -293,12 +297,12 @@ final readonly class AtomyLegacyRole implements RoleInterface
 
     public function getCreatedAt(): \DateTimeInterface
     {
-        return new \DateTimeImmutable();
+        return $this->createdAt;
     }
 
     public function getUpdatedAt(): \DateTimeInterface
     {
-        return new \DateTimeImmutable();
+        return $this->createdAt;
     }
 
     public function requiresMfa(): bool
