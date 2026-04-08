@@ -68,4 +68,32 @@ describe('useRfqs (live mode)', () => {
     expect(result.current.data?.items[0]?.id).toBe('rfq-1');
     expect(result.current.data?.meta.total).toBe(1);
   });
+
+  it('surfaces an error when API pagination meta is malformed', async () => {
+    getMock.mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            id: 'rfq-1',
+            title: 'Live RFQ',
+            status: 'active',
+            vendors_count: 2,
+            quotes_count: 1,
+          },
+        ],
+        meta: {
+          current_page: 1,
+          per_page: 20,
+          total: '1',
+        },
+      },
+    });
+    const { useRfqs } = await import('@/hooks/use-rfqs');
+    const { Wrapper } = createTestWrapper();
+
+    const { result } = renderHook(() => useRfqs({}), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(Error);
+  });
 });

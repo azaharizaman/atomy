@@ -92,7 +92,7 @@ Verification evidence:
 - Established active mitigation plan for Gaps 8/9/10.
 - Retired stale weekly execution artifacts and bootstrap payloads.
 - Repointed plan index to active, current documentation only.
-- Phase 1 executed: restored `nexus/sourcing-operations` lock/vendor wiring, RFQ lifecycle mutation tests green, WEB build/lint hard errors cleared.
-- Phase 2 started: removed silent live-mode RFQ seed fallback (`use-rfqs`) and added explicit live-mode fail-loud tests.
-- Phase 3 started: vendor API stubs replaced with tenant-scoped live endpoints (`index/show/performance/compliance/history`) plus `VendorWorkflowTest` coverage.
+- Phase 1 complete: restored `nexus/sourcing-operations` lock/vendor wiring, RFQ lifecycle mutation tests green, WEB build/lint hard errors cleared.
+- Phase 2 began with live-path hardening: removed silent live-mode RFQ seed fallback (`use-rfqs`) and added explicit live-mode fail-loud tests.
+- Phase 3 underway: vendor API stubs replaced with tenant-scoped live endpoints (`index/show/performance/compliance/history`) plus `VendorWorkflowTest` coverage.
 - Verification checkpoint refreshed: API targeted matrix and WEB build/lint gates are currently green (lint warnings remain and are tracked as non-blocking).

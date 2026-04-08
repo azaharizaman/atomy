@@ -36,7 +36,7 @@ Verification evidence used:
 ## 3) Current gap status (re-evaluated on 2026-04-09)
 
 | Gap | Title | Status | Risk | Implementation remaining |
-|---|---|---|---|
+|---|---|---|---|---|
 | 1 | Winner selection / award flow | Open (partially live) | High | Yes |
 | 2 | Vendor master data | Open (API baseline now live; OpenAPI/WEB parity pending) | Medium | Yes |
 | 3 | RFQ lifecycle mutations | Closed again (runtime wiring restored) | Medium | No (monitor regression) |

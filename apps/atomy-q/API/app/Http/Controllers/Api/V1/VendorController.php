@@ -84,24 +84,21 @@ final class VendorController extends Controller
             return response()->json(['message' => 'Vendor not found'], 404);
         }
 
-        $quotesSubmitted = QuoteSubmission::query()
+        $quoteMetrics = QuoteSubmission::query()
             ->where('tenant_id', $tenantId)
             ->where('vendor_id', $vendor->id)
-            ->count();
-        $quotesReady = QuoteSubmission::query()
-            ->where('tenant_id', $tenantId)
-            ->where('vendor_id', $vendor->id)
-            ->where('status', 'ready')
-            ->count();
+            ->selectRaw('COUNT(*) AS quotes_submitted')
+            ->selectRaw("SUM(CASE WHEN status = 'ready' THEN 1 ELSE 0 END) AS quotes_ready")
+            ->selectRaw('AVG(confidence) AS average_confidence')
+            ->first();
+
+        $quotesSubmitted = (int) ($quoteMetrics?->quotes_submitted ?? 0);
+        $quotesReady = (int) ($quoteMetrics?->quotes_ready ?? 0);
         $awardsWon = Award::query()
             ->where('tenant_id', $tenantId)
             ->where('vendor_id', $vendor->id)
             ->count();
-        $averageConfidence = QuoteSubmission::query()
-            ->where('tenant_id', $tenantId)
-            ->where('vendor_id', $vendor->id)
-            ->whereNotNull('confidence')
-            ->avg('confidence');
+        $averageConfidence = $quoteMetrics?->average_confidence;
 
         $score = $this->performanceScore($quotesSubmitted, $quotesReady, $awardsWon);
 

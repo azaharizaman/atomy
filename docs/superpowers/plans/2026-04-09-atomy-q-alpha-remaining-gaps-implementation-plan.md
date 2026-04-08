@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Phase 1 PR - Gate Recovery + RFQ Lifecycle Wiring
+## Task 1: Phase 1 PR - Gate Recovery + RFQ Lifecycle Wiring
 
 **Files:**
 - Modify: `apps/atomy-q/API/composer.lock`
@@ -54,7 +54,7 @@ cd apps/atomy-q/WEB && npm run lint
 ```
 Expected: all pass.
 
-### Task 2: Phase 2 PR - Golden-Path Mock Leakage Elimination
+## Task 2: Phase 2 PR - Golden-Path Mock Leakage Elimination
 
 **Files:**
 - Modify: `apps/atomy-q/WEB/src/hooks/use-rfqs.ts`
@@ -67,7 +67,7 @@ Expected: all pass.
 - [x] **Step 3: Update docs to classify mocks as local-only behavior**
 - [x] **Step 4: Run unit/build/lint gates**
 
-### Task 3: Phase 3 PR - Awards + Vendor Productionization
+## Task 3: Phase 3 PR - Awards + Vendor Productionization
 
 **Files:**
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/VendorController.php`
@@ -80,7 +80,7 @@ Expected: all pass.
 - [ ] **Step 3: Add missing award journey closure tests (compare -> award visibility/finalize)**
 - [ ] **Step 4: Regenerate OpenAPI/client and verify WEB compatibility**
 
-### Task 4: Phase 4 PR - Identity Surface Hardening
+## Task 4: Phase 4 PR - Identity Surface Hardening
 
 **Files:**
 - Modify identity Layer 3 bindings/controllers/services in `apps/atomy-q/API/app/...`
@@ -90,7 +90,7 @@ Expected: all pass.
 - [ ] **Step 2: Ensure tenant-safe role/permission/user endpoints (or explicitly gate as out-of-scope)**
 - [ ] **Step 3: Add regression tests and verify `IdentityGap7Test` + related suites**
 
-### Task 5: Phase 5 PR - AI Normalization Production Wiring (Post model-decision gate)
+## Task 5: Phase 5 PR - AI Normalization Production Wiring (Post model-decision gate)
 
 **Files:**
 - Modify: `apps/atomy-q/API/app/Adapters/QuotationIntelligence/*`
@@ -103,7 +103,7 @@ Expected: all pass.
 - [ ] **Step 3: Preserve deterministic CI through test doubles and contract tests**
 - [ ] **Step 4: Verify quote-ingestion and comparison workflow tests**
 
-### Task 6: Cross-cutting Documentation Governance
+## Task 6: Cross-cutting Documentation Governance
 
 **Files:**
 - Modify: `apps/atomy-q/docs/ALPHA_REMAINING_GAPS_IMPLEMENTATION_SPEC_2026-04-09.md`

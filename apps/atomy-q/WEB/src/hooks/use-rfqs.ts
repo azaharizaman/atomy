@@ -163,8 +163,9 @@ export function useRfqs(params: UseRfqsParams) {
       const page = Math.max(1, params.page ?? 1);
 
       if (!useMocks) {
-        const apiParams: Record<string, string | number | undefined> = { ...params };
-        if (params.projectId) apiParams.project_id = params.projectId;
+        const { projectId, ...restParams } = params;
+        const apiParams: Record<string, string | number | undefined> = { ...restParams };
+        if (projectId) apiParams.project_id = projectId;
         const { data } = await api.get('/rfqs', { params: apiParams });
         const items = normalizeRfqsPayload(data).filter((x) => x.id);
         const metaFromApi = parseRfqsMeta(data);

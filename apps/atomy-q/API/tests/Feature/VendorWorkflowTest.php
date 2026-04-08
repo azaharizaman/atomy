@@ -74,7 +74,7 @@ final class VendorWorkflowTest extends ApiTestCase
         return $vendor;
     }
 
-    public function test_index_returns_tenant_scoped_vendor_rows(): void
+    public function testIndexReturnsTenantScopedVendorRows(): void
     {
         $user = $this->createUser();
         $this->createVendor((string) $user->tenant_id, ['name' => 'Vendor A']);
@@ -92,7 +92,7 @@ final class VendorWorkflowTest extends ApiTestCase
         $response->assertJsonMissing(['name' => 'Other Tenant Vendor']);
     }
 
-    public function test_show_returns_404_for_cross_tenant_vendor(): void
+    public function testShowReturns404ForCrossTenantVendor(): void
     {
         $user = $this->createUser();
         $otherTenantVendor = $this->createVendor((string) Str::ulid());
@@ -105,7 +105,7 @@ final class VendorWorkflowTest extends ApiTestCase
         $response->assertNotFound();
     }
 
-    public function test_performance_returns_live_metrics_from_quotes_and_awards(): void
+    public function testPerformanceReturnsLiveMetricsFromQuotesAndAwards(): void
     {
         $user = $this->createUser();
         $vendor = $this->createVendor((string) $user->tenant_id);
@@ -162,7 +162,7 @@ final class VendorWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.metrics.average_confidence', 80);
     }
 
-    public function test_compliance_reads_vendor_metadata(): void
+    public function testComplianceReadsVendorMetadata(): void
     {
         $user = $this->createUser();
         $vendor = $this->createVendor((string) $user->tenant_id, [
@@ -186,7 +186,7 @@ final class VendorWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.last_checked_at', '2026-04-01T00:00:00+00:00');
     }
 
-    public function test_history_returns_tenant_scoped_award_rows(): void
+    public function testHistoryReturnsTenantScopedAwardRows(): void
     {
         $user = $this->createUser();
         $vendor = $this->createVendor((string) $user->tenant_id);
