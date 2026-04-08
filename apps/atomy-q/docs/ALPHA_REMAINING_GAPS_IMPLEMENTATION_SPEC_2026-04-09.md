@@ -1,4 +1,4 @@
-# Atomy-Q Alpha Remaining Gaps — Final Implementation Spec
+# Atomy-Q Alpha Remaining Gaps — Re-evaluated Implementation Spec
 
 Date: 2026-04-09  
 Scope: `apps/atomy-q/`  
@@ -6,36 +6,61 @@ Primary source: `apps/atomy-q/docs/ALPHA_PROGRESS_ANALYSIS_2026-03-31.md`
 
 ## 1) Objective
 
-Consolidate all alpha-analysis gaps into one execution spec that answers:
+Consolidate and re-evaluate all alpha-analysis gaps using current code + verification evidence, and answer:
 
 1. Which gaps are already closed.
 2. Which gaps still require implementation.
-3. What exact closure criteria and verification evidence are required before alpha declaration.
+3. Which previously-closed gaps have regressed.
+4. What exact closure criteria and verification evidence are required before alpha declaration.
 
-## 2) Current gap status (as of 2026-04-09)
+## 2) Method and Coverage (Layer 1/2/3 cascade)
 
-| Gap | Title | Status | Implementation remaining |
+This re-evaluation was done by tracing `apps/atomy-q` through dependent Nexus first-party packages and adapters:
+
+1. Layer 1 (`packages/`): `Sourcing`, `Vendor`, `Identity`, `Tenant`, supporting value objects/contracts.
+2. Layer 2 (`orchestrators/`): `SourcingOperations`, `QuoteIngestion`, `QuotationIntelligence`, `IdentityOperations`, `TenantOperations`.
+3. Layer 3 (`adapters/Laravel/*` + Atomy API/WEB): actual Laravel bindings, controllers, jobs, and frontend hooks/pages.
+
+Verification evidence used:
+
+1. WEB `npm run build` and `npm run lint`.
+2. Targeted API test suite:
+   - `RegisterCompanyTest`
+   - `RfqLifecycleMutationTest`
+   - `AwardWorkflowTest`
+   - `IdentityGap7Test`
+   - `QuoteIngestionPipelineTest`
+   - `QuoteIngestionIntelligenceTest`
+3. Dependency lock audit (`composer.json` vs `composer.lock`) for Nexus packages.
+
+## 3) Current gap status (re-evaluated on 2026-04-09)
+
+| Gap | Title | Status | Risk | Implementation remaining |
 |---|---|---|---|
-| 1 | Winner selection / award flow not fully productized | Open | Yes |
-| 2 | Vendor master data stubbed | Open | Yes |
-| 3 | RFQ lifecycle mutations | Closed | No |
-| 4 | Quote ingestion + AI normalization incomplete | Open (partially deferred by model decision) | Yes |
-| 5 | Comparison preview/matrix/readiness | Closed for alpha path | No |
-| 6 | Tenant/company lifecycle | Closed for alpha baseline onboarding | No (post-alpha enrichments remain) |
-| 7 | Identity/permissions/session still stubbed | Open | Yes |
-| 8 | Production readiness debt | Open | Yes |
-| 9 | Mock fallback leakage | Open | Yes |
-| 10 | Fragmented/stale roadmap docs | In remediation | Minimal (governance + sync only) |
+| 1 | Winner selection / award flow | Open (partially live) | High | Yes |
+| 2 | Vendor master data | Open (stubbed controller despite package/adapter availability) | High | Yes |
+| 3 | RFQ lifecycle mutations | Reopened (runtime wiring regression) | Critical | Yes |
+| 4 | Quote ingestion + AI normalization | Open (pipeline live, intelligence adapters mock-backed) | High | Yes |
+| 5 | Comparison preview/matrix/readiness | Closed for alpha baseline (beta controls deferred intentionally) | Medium | No |
+| 6 | Tenant/company lifecycle | Closed for alpha baseline onboarding | Low | No (post-alpha enrichments remain) |
+| 7 | Identity/permissions/session | Open (mixed: core auth works; several identity surfaces remain stub/no-op) | High | Yes |
+| 8 | Production readiness debt | Open | Critical | Yes |
+| 9 | Mock fallback leakage | Open | Critical | Yes |
+| 10 | Fragmented/stale roadmap docs | Open (improved but not fully governed) | Medium | Yes (lightweight) |
 
-## 3) Closed gaps (no further implementation in alpha scope)
+## 4) Evidence snapshot (what changed in confidence)
 
-Gaps 3, 5, and 6 are treated as closed for alpha baseline and should only receive regression protection:
+1. WEB build is currently failing on real type checks (`comparison-runs/[runId]/page.tsx` snapshot type mismatch).
+2. WEB lint is failing with 12 errors (including generated client and award tests), so current quality gate is red.
+3. API targeted tests mostly pass, but `RfqLifecycleMutationTest` fails due missing `nexus/sourcing-operations` installation in lock/vendor despite being required in `composer.json`.
+4. `composer.json` vs `composer.lock` diff shows `nexus/sourcing-operations` is missing from lock.
+5. Awards API and tests are substantially live; however award creation is not wired end-to-end from final comparison flow in UI journey.
+6. Vendor endpoints in `VendorController` remain explicit stubs with tenant-scoping TODOs, even though Layer 1 Vendor package and Laravel adapter are present.
+7. Quote ingestion pipeline is operational with tests, but Layer 3 still binds `MockContentProcessor` and `MockSemanticMapper` in `AppServiceProvider`.
+8. Identity has meaningful progress (Gap 7 tests pass), but token management and MFA enrollment still use stub/no-op services, and user/role management endpoints are stubbed.
+9. Frontend still has broad mock-mode surface (`NEXT_PUBLIC_USE_MOCKS` in many hooks/pages; seed/mocked behavior remains intertwined with live paths).
 
-1. Keep existing tests green and add coverage only when adjacent changes touch those flows.
-2. Do not reopen scope unless a regression is detected.
-3. Track only validation evidence in release readiness checks.
-
-## 4) Remaining implementation workstreams
+## 5) Layer-cascade findings by open gap
 
 ### WS-A: Gap 1 — Awards end-to-end completion
 
@@ -44,6 +69,12 @@ Required outcomes:
 1. Award flow is fully live in API + WEB with tenant-safe winner selection and persistence.
 2. No seed-only dependency in award finalization path.
 3. End-to-end user path: compare -> select winner -> finalize -> persisted retrieval.
+
+Layer-cascade finding:
+
+1. Layer 3 awards endpoints are implemented and tested.
+2. Comparison finalization does not create/select an award automatically; UI award page expects an existing record.
+3. No orchestrator-managed award lifecycle boundary currently closes this path in one flow.
 
 Closure evidence:
 
@@ -59,13 +90,27 @@ Required outcomes:
 2. Vendor history/performance payloads are stable for dashboard usage.
 3. Contract is reflected in OpenAPI and generated WEB client types.
 
+Layer-cascade finding:
+
+1. Layer 1 `Vendor` contracts/value objects exist.
+2. Layer 3 Laravel Vendor adapter/repository exists and is installable.
+3. Atomy API `VendorController` still returns placeholder payloads and TODO tenant-scoping comments.
+
 Closure evidence:
 
 1. API tests for tenant-scoped browse/detail responses.
 2. Seeder or fixture strategy for deterministic test data.
 3. OpenAPI/client regeneration committed with no drift.
 
-### WS-C: Gap 4 — Quote ingestion + AI normalization completion
+### WS-C: Gap 3 + Gap 4 — RFQ lifecycle regression + quote intelligence completion
+
+Gap 3 required outcomes (reopened):
+
+1. Restore RFQ lifecycle orchestrator runtime wiring in API app.
+2. Ensure `nexus/sourcing-operations` is present in lock/vendor and resolvable in container.
+3. Make `RfqLifecycleMutationTest` green again.
+
+Gap 4 required outcomes:
 
 Required outcomes:
 
@@ -78,9 +123,16 @@ Deferred-control note:
 1. Model/provider selection is a decision gate.
 2. Once selected, implementation proceeds with no mock fallback in live mode.
 
+Layer-cascade finding:
+
+1. Layer 2 quote ingestion + quotation intelligence coordinators are wired and tested.
+2. Layer 3 bindings still use `MockContentProcessor` and `MockSemanticMapper`; AI/env model contract is not productionized.
+3. API env docs do not expose a production AI model/provider contract yet.
+
 Closure evidence:
 
-1. API integration tests with deterministic processor fakes for CI.
+1. Gap 3: `RfqLifecycleMutationTest` passes.
+2. Gap 4: API integration tests with deterministic processor fakes for CI.
 2. Live-mode staging smoke proving end-to-end ingestion and normalization outputs.
 3. Updated runbook for AI env variables and failure modes.
 
@@ -91,6 +143,12 @@ Required outcomes:
 1. Session validation and permission checks are tenant-safe and non-no-op.
 2. Role/permission and MFA/auth paths avoid stub behavior.
 3. Controller/orchestrator boundaries remain interface-first.
+
+Layer-cascade finding:
+
+1. Login/session/MFA verification have meaningful feature-test coverage and pass.
+2. `AtomyIdentityTokenManagerStub` and `AtomyNoopMfaEnrollmentService` are still bound in production container.
+3. User-management APIs (users/roles/delegation endpoints) remain mostly stubbed.
 
 Closure evidence:
 
@@ -106,6 +164,12 @@ Required outcomes:
 2. Queue worker and storage contracts are operationally verified.
 3. API/WEB env/port contract is documented and fail-fast.
 
+Current blockers observed:
+
+1. WEB build red (TypeScript compile error in comparison run page).
+2. WEB lint red (12 errors).
+3. Composer dependency drift for `nexus/sourcing-operations` causes RFQ lifecycle runtime failure in tests.
+
 Closure evidence:
 
 1. CI command matrix output attached to release checklist.
@@ -119,6 +183,12 @@ Required outcomes:
 1. Live-mode golden path never silently falls back to seed/mock data.
 2. Mock mode is explicit local-dev behavior only.
 3. Live API failures surface as user-visible errors (not hidden success UI).
+
+Current blockers observed:
+
+1. Extensive mock flag usage remains across hooks/pages.
+2. `use-rfqs` still silently falls back to seed data on non-schema errors when not in mock mode.
+3. Dashboard and several RFQ flows still carry mixed mock/live behavior.
 
 Closure evidence:
 
@@ -134,33 +204,53 @@ Required outcomes:
 2. Removed weekly-task artifacts stay retired.
 3. Every alpha-impacting PR updates status in active mitigation docs.
 
+Current state:
+
+1. Weekly task artifacts were retired and active index/spec were introduced.
+2. Several foundational alpha docs remain stale by date and need synchronized status wording with actual code/test state.
+
 Closure evidence:
 
 1. `PLAN-INDEX.md` references active docs only.
 2. No lingering references to deleted weekly files as active instructions.
 3. PR template/checklist step added or enforced in review practice.
 
-## 5) Execution order (critical path)
+## 6) Execution order (critical path, updated)
 
-1. WS-F (mock fallback policy) + WS-E (build/env readiness) first to restore honest signal quality.
-2. WS-A (awards) and WS-B (vendors) next to close core product trust gaps.
-3. WS-D (identity/session/RBAC) in parallel with WS-A/WS-B where ownership is independent.
-4. WS-C (AI normalization final wiring) after model decision gate is closed.
-5. WS-G continuously to keep status and scope unambiguous.
+1. WS-E first: recover broken gates (`build`, `lint`, dependency lock/runtime wiring for RFQ lifecycle).
+2. WS-F second: remove silent live-path seed fallback so failures are honest.
+3. WS-C Gap 3 portion third: make RFQ lifecycle mutation path green and stable.
+4. WS-A + WS-B + WS-D next: close remaining core product trust boundaries.
+5. WS-C Gap 4 AI productionization after model decision gate is closed.
+6. WS-G continuously as control plane.
 
-## 6) Alpha release gate (final)
+## 7) Alpha release gate (final)
 
 Alpha is release-eligible only when:
 
 1. All open gaps above are marked closed with evidence links.
-2. Closed gaps (3,5,6) remain regression-safe in the release candidate.
+2. Reopened gaps are re-closed and evidenced in CI/staging.
 3. Golden path runs on live API + DB + queue + storage, with mocks off.
 4. Final docs reflect actual behavior and deferments without ambiguity.
 
-## 7) Single-source operational docs
+## 8) Single-source operational docs
 
 This spec should be used together with:
 
 1. `apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_GAP_8_9_10_MITIGATION_PLAN_2026-04-09.md`
 2. `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md`
 3. `apps/atomy-q/docs/ALPHA_PROGRESS_ANALYSIS_2026-03-31.md`
+
+## 9) Verification run summary (2026-04-09)
+
+1. `cd apps/atomy-q/WEB && npm run build` -> **Fail**
+   - Network fetch for Google fonts fails in sandbox mode.
+2. `cd apps/atomy-q/WEB && npm run build` (network-enabled rerun) -> **Fail**
+   - TypeScript compile error in comparison run detail page (`snapshot` type mismatch).
+3. `cd apps/atomy-q/WEB && npm run lint` -> **Fail**
+   - 12 errors, 8 warnings.
+4. `cd apps/atomy-q/API && php artisan test --filter "...selected gap tests..."` -> **Partial pass**
+   - RegisterCompany / Awards / IdentityGap7 / QuoteIngestion tests pass.
+   - RFQ lifecycle mutation tests fail due missing `nexus/sourcing-operations` runtime package wiring.
+5. Composer lock parity check (`composer.json` vs `composer.lock`) -> **Mismatch**
+   - `nexus/sourcing-operations` required but not present in lock/vendor.
