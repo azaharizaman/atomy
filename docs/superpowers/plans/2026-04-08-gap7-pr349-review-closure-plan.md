@@ -23,7 +23,7 @@
 
 ## Batch 3 (Optional) - observability polish
 - [x] Decide whether MFA verification attempt metadata (`ipAddress`, `userAgent`) should be logged in-process to satisfy static-analysis/readability concerns.
-  - Disposition: defer metadata logging; current spec/plan require MFA/audit persistence but do not require IP/User-Agent persistence for verify attempts.
+  - Disposition: implemented in `AtomyMfaVerificationService` with best-effort request metadata capture and structured MFA attempt logging, without changing interface contracts or persistence schema.
 
 ## Verification Gates
 - [x] `php artisan test tests/Feature/Api/AuthTest.php tests/Feature/IdentityGap7Test.php --stop-on-failure`

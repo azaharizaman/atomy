@@ -9,6 +9,7 @@ use App\Models\MfaEnrollment;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
 use Nexus\Identity\Exceptions\MfaVerificationException;
 use Nexus\Identity\Services\TotpManager;
@@ -29,6 +30,8 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
 
     public function verifyTotp(string $userId, string $code): bool
     {
+        $requestMetadata = $this->resolveRequestMetadata();
+
         $totpEnrollment = MfaEnrollment::query()
             ->where('user_id', $userId)
             ->where('method', 'totp')
@@ -54,7 +57,13 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
         }
 
         $valid = $this->totpManager->verify($secret, $this->normalizeCode($code));
-        $this->recordVerificationAttempt($userId, 'totp', $valid);
+        $this->recordVerificationAttempt(
+            $userId,
+            'totp',
+            $valid,
+            $requestMetadata['ip'],
+            $requestMetadata['user_agent']
+        );
 
         if (! $valid) {
             throw MfaVerificationException::invalidTotpCode($userId);
@@ -89,6 +98,8 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
 
     public function verifyBackupCode(string $userId, string $code): bool
     {
+        $requestMetadata = $this->resolveRequestMetadata();
+
         if ($this->isRateLimited($userId, 'backup_code')) {
             throw MfaVerificationException::rateLimited(
                 $userId,
@@ -109,14 +120,26 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
             });
 
         if ($backupCode === null) {
-            $this->recordVerificationAttempt($userId, 'backup_code', false);
+            $this->recordVerificationAttempt(
+                $userId,
+                'backup_code',
+                false,
+                $requestMetadata['ip'],
+                $requestMetadata['user_agent']
+            );
             throw MfaVerificationException::invalidBackupCode($userId);
         }
 
         $backupCode->used_at = now();
         $backupCode->save();
 
-        $this->recordVerificationAttempt($userId, 'backup_code', true);
+        $this->recordVerificationAttempt(
+            $userId,
+            'backup_code',
+            true,
+            $requestMetadata['ip'],
+            $requestMetadata['user_agent']
+        );
 
         return true;
     }
@@ -181,10 +204,18 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
         ?string $userAgent = null
     ): void {
         $key = $this->rateLimitKey($userId, $method);
+        $normalizedIp = is_string($ipAddress) && trim($ipAddress) !== '' ? trim($ipAddress) : null;
+        $normalizedUserAgent = is_string($userAgent) && trim($userAgent) !== '' ? trim($userAgent) : null;
 
         if ($success) {
             Cache::forget($key);
             Cache::forget($key . ':retry_after');
+            Log::info('MFA verification attempt succeeded', [
+                'user_id' => $userId,
+                'method' => $method,
+                'ip_address' => $normalizedIp,
+                'user_agent' => $normalizedUserAgent,
+            ]);
 
             return;
         }
@@ -192,6 +223,13 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
         $attempts = (int) Cache::get($key, 0);
         Cache::put($key, $attempts + 1, self::RATE_LIMIT_WINDOW_SECONDS);
         Cache::put($key . ':retry_after', self::RATE_LIMIT_WINDOW_SECONDS, self::RATE_LIMIT_WINDOW_SECONDS);
+        Log::warning('MFA verification attempt failed', [
+            'user_id' => $userId,
+            'method' => $method,
+            'ip_address' => $normalizedIp,
+            'user_agent' => $normalizedUserAgent,
+            'attempts' => $attempts + 1,
+        ]);
     }
 
     public function clearRateLimit(string $userId, string $method): bool
@@ -264,5 +302,28 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
         $ttl = (int) Cache::get($key . ':retry_after', self::RATE_LIMIT_WINDOW_SECONDS);
 
         return max(0, $ttl);
+    }
+
+    /**
+     * @return array{ip: ?string, user_agent: ?string}
+     */
+    private function resolveRequestMetadata(): array
+    {
+        try {
+            $request = request();
+            if (! method_exists($request, 'ip') || ! method_exists($request, 'userAgent')) {
+                return ['ip' => null, 'user_agent' => null];
+            }
+
+            $ip = $request->ip();
+            $userAgent = $request->userAgent();
+
+            return [
+                'ip' => is_string($ip) && trim($ip) !== '' ? trim($ip) : null,
+                'user_agent' => is_string($userAgent) && trim($userAgent) !== '' ? trim($userAgent) : null,
+            ];
+        } catch (\Throwable) {
+            return ['ip' => null, 'user_agent' => null];
+        }
     }
 }
