@@ -20,7 +20,7 @@ final class FiscalPeriodLockedRule implements RuleValidationInterface
         }
 
         $periodId = $context['periodId'] ?? null;
-        $operationType = $context['operationType'] ?? PeriodOperationType::TRANSACTION;
+        $operationType = $this->normalizeOperationType($context['operationType'] ?? PeriodOperationType::TRANSACTION);
         $period = $context['period'] ?? null;
 
         if (!$periodId || !$period) {
@@ -28,7 +28,8 @@ final class FiscalPeriodLockedRule implements RuleValidationInterface
         }
 
         $isLocked = $period['isLocked'] ?? false;
-        $isClosed = $period['status'] ?? 'open' === 'closed';
+        $status = is_string($period['status'] ?? null) ? strtolower(trim((string) $period['status'])) : 'open';
+        $isClosed = $status === 'closed';
 
         if ($isClosed) {
             return RuleValidationResult::failure(
@@ -56,5 +57,25 @@ final class FiscalPeriodLockedRule implements RuleValidationInterface
         }
 
         return RuleValidationResult::success();
+    }
+
+    private function normalizeOperationType(mixed $operationType): PeriodOperationType
+    {
+        if ($operationType instanceof PeriodOperationType) {
+            return $operationType;
+        }
+
+        if (is_string($operationType)) {
+            $normalized = strtolower(trim($operationType));
+            if ($normalized !== '') {
+                try {
+                    return PeriodOperationType::from($normalized);
+                } catch (\ValueError) {
+                    // Fall back to transaction when callers send unknown operation values.
+                }
+            }
+        }
+
+        return PeriodOperationType::TRANSACTION;
     }
 }
