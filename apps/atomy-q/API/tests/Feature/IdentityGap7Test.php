@@ -139,6 +139,7 @@ final class IdentityGap7Test extends TestCase
 
         $verify = $this->postJson('/api/v1/auth/mfa/verify', [
             'challenge_id' => $challengeId,
+            'tenant_id' => $tenant->id,
             'otp' => '123456',
         ]);
 
@@ -149,6 +150,7 @@ final class IdentityGap7Test extends TestCase
         // Challenge is single-use.
         $this->postJson('/api/v1/auth/mfa/verify', [
             'challenge_id' => $challengeId,
+            'tenant_id' => $tenant->id,
             'otp' => '123456',
         ])->assertStatus(401);
     }
@@ -186,6 +188,7 @@ final class IdentityGap7Test extends TestCase
 
         $this->postJson('/api/v1/auth/mfa/verify', [
             'challenge_id' => $challengeId,
+            'tenant_id' => $tenant->id,
             'otp' => '000000',
         ])->assertStatus(401)->assertJsonFragment(['message' => 'Invalid MFA code']);
 
@@ -242,6 +245,7 @@ final class IdentityGap7Test extends TestCase
 
         $this->postJson('/api/v1/auth/mfa/verify', [
             'challenge_id' => $tamperedChallengeId,
+            'tenant_id' => $tenant->id,
             'otp' => '123456',
         ])->assertStatus(401)->assertJsonFragment(['message' => 'Invalid or expired MFA challenge']);
 
@@ -259,6 +263,7 @@ final class IdentityGap7Test extends TestCase
 
         $this->postJson('/api/v1/auth/mfa/verify', [
             'challenge_id' => $expiredChallengeId,
+            'tenant_id' => $tenant->id,
             'otp' => '123456',
         ])->assertStatus(401)->assertJsonFragment(['message' => 'Invalid or expired MFA challenge']);
     }
@@ -297,6 +302,7 @@ final class IdentityGap7Test extends TestCase
 
         $verify = $this->postJson('/api/v1/auth/mfa/verify', [
             'challenge_id' => $challengeId,
+            'tenant_id' => $tenant->id,
             'otp' => 'BACKUP-OK',
         ]);
 

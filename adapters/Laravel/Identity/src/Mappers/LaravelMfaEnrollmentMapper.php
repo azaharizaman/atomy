@@ -30,9 +30,10 @@ final readonly class LaravelMfaEnrollmentMapper
 
             public function getMethod(): MfaMethod
             {
-                $method = strtolower(trim((string) $this->model->method));
+                $raw = (string) $this->model->method;
+                $method = strtolower(trim($raw));
 
-                return MfaMethod::tryFrom($method) ?? MfaMethod::TOTP;
+                return MfaMethod::tryFrom($method) ?? throw \Nexus\Identity\Exceptions\MappingException::invalidMfaMethod($raw);
             }
 
             public function getSecret(): array
@@ -56,6 +57,10 @@ final readonly class LaravelMfaEnrollmentMapper
 
             public function isActive(): bool
             {
+                if (isset($this->model->is_active)) {
+                    return (bool) $this->model->is_active;
+                }
+
                 $verified = (bool) ($this->model->verified ?? false);
                 $revoked = (bool) ($this->model->revoked ?? false);
 

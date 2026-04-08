@@ -17,12 +17,16 @@ use Nexus\Laravel\Identity\Mappers\LaravelUserMapper;
 
 final readonly class DatabaseSessionManager implements SessionManagerInterface
 {
+    public function __construct(
+        private \Nexus\Tenant\Contracts\TenantContextInterface $tenantContext
+    ) {}
+
     public function createSession(string $userId, array $metadata = []): SessionToken
     {
         $now = new DateTimeImmutable();
         $expiresAt = $now->add(new DateInterval('PT1H'));
         $token = bin2hex(random_bytes(32));
-        $tenantId = $this->normalizeTenantId($metadata['tenant_id'] ?? null);
+        $tenantId = $this->normalizeTenantId($metadata['tenant_id'] ?? $this->getTenantId());
         $deviceFingerprint = $this->normalizeString($metadata['device_fingerprint'] ?? null);
 
         $payload = array_merge($metadata, [
@@ -160,7 +164,12 @@ final readonly class DatabaseSessionManager implements SessionManagerInterface
 
     public function updateActivity(string $sessionId): void
     {
-        SessionModel::query()->whereKey($sessionId)->update(['last_activity' => new DateTimeImmutable()]);
+        $session = $this->findActiveSession($sessionId);
+        if ($session === null) {
+            throw new InvalidSessionException('Session not found or expired');
+        }
+
+        $session->update(['last_activity' => new DateTimeImmutable()]);
     }
 
     public function enforceMaxSessions(string $userId, int $max): void
@@ -169,10 +178,14 @@ final readonly class DatabaseSessionManager implements SessionManagerInterface
             return;
         }
 
-        $sessions = SessionModel::query()
-            ->where('user_id', $userId)
-            ->orderBy('last_activity', 'asc')
-            ->get();
+        $tenantId = $this->getTenantId();
+
+        $query = SessionModel::query()->where('user_id', $userId);
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $sessions = $query->orderBy('last_activity', 'asc')->get();
 
         $excess = $sessions->count() - $max;
         if ($excess <= 0) {
@@ -186,9 +199,14 @@ final readonly class DatabaseSessionManager implements SessionManagerInterface
 
     public function terminateByDeviceId(string $userId, string $fingerprint): void
     {
-        SessionModel::query()
-            ->where('user_id', $userId)
-            ->get()
+        $tenantId = $this->getTenantId();
+
+        $query = SessionModel::query()->where('user_id', $userId);
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $query->get()
             ->filter(function (SessionModel $session) use ($fingerprint): bool {
                 $payload = $this->sessionPayload($session);
                 $storedFingerprint = $this->normalizeString($payload['device_fingerprint'] ?? null);
@@ -221,6 +239,11 @@ final readonly class DatabaseSessionManager implements SessionManagerInterface
         });
 
         return $deleted;
+    }
+
+    private function getTenantId(): ?string
+    {
+        return $this->tenantContext->getCurrentTenantId();
     }
 
     private function findActiveSession(string $token): ?SessionModel

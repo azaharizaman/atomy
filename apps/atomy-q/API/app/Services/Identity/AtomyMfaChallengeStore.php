@@ -31,22 +31,30 @@ final readonly class AtomyMfaChallengeStore implements MfaChallengeStoreInterfac
         return $challengeId;
     }
 
-    public function find(string $challengeId): ?MfaChallenge
+    public function find(string $challengeId, string $tenantId): ?MfaChallenge
     {
-        return MfaChallenge::query()->whereKey($challengeId)->first();
+        return MfaChallenge::query()
+            ->whereKey($challengeId)
+            ->where('tenant_id', $tenantId)
+            ->first();
     }
 
-    public function consume(string $challengeId): void
+    public function consume(string $challengeId, string $tenantId): void
     {
         MfaChallenge::query()
             ->whereKey($challengeId)
+            ->where('tenant_id', $tenantId)
             ->whereNull('consumed_at')
             ->update(['consumed_at' => new DateTimeImmutable()]);
     }
 
-    public function incrementAttempts(string $challengeId): void
+    public function incrementAttempts(string $challengeId, string $tenantId): void
     {
-        $challenge = MfaChallenge::query()->whereKey($challengeId)->first();
+        $challenge = MfaChallenge::query()
+            ->whereKey($challengeId)
+            ->where('tenant_id', $tenantId)
+            ->first();
+
         if ($challenge === null) {
             return;
         }

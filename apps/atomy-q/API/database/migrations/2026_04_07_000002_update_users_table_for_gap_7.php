@@ -16,6 +16,10 @@ return new class extends Migration
             $table->timestamp('lockout_expires_at')->nullable();
             $table->boolean('mfa_enabled')->default(false);
         });
+
+        \Illuminate\Support\Facades\DB::table('users')
+            ->whereNull('failed_login_attempts')
+            ->update(['failed_login_attempts' => 0]);
     }
 
     public function down(): void

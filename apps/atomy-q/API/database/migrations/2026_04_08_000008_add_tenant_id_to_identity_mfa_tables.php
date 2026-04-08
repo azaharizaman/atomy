@@ -19,25 +19,43 @@ return new class extends Migration
             $table->ulid('tenant_id')->nullable()->after('id')->index();
         });
 
-        DB::statement('
-            UPDATE mfa_enrollments
-            SET tenant_id = (
-                SELECT users.tenant_id
-                FROM users
-                WHERE users.id = mfa_enrollments.user_id
-            )
-            WHERE tenant_id IS NULL
-        ');
+        // Backfill mfa_enrollments
+        DB::table('mfa_enrollments')
+            ->whereNull('tenant_id')
+            ->update([
+                'tenant_id' => DB::table('users')
+                    ->whereColumn('users.id', 'mfa_enrollments.user_id')
+                    ->select('tenant_id')
+                    ->limit(1)
+            ]);
 
-        DB::statement('
-            UPDATE mfa_backup_codes
-            SET tenant_id = (
-                SELECT users.tenant_id
-                FROM users
-                WHERE users.id = mfa_backup_codes.user_id
-            )
-            WHERE tenant_id IS NULL
-        ');
+        // Backfill mfa_backup_codes
+        DB::table('mfa_backup_codes')
+            ->whereNull('tenant_id')
+            ->update([
+                'tenant_id' => DB::table('users')
+                    ->whereColumn('users.id', 'mfa_backup_codes.user_id')
+                    ->select('tenant_id')
+                    ->limit(1)
+            ]);
+
+        // Enforce invariants
+        if (DB::table('mfa_enrollments')->whereNull('tenant_id')->exists()) {
+            throw new \RuntimeException('Migration failed: Some mfa_enrollments could not be matched to a tenant.');
+        }
+
+        if (DB::table('mfa_backup_codes')->whereNull('tenant_id')->exists()) {
+            throw new \RuntimeException('Migration failed: Some mfa_backup_codes could not be matched to a tenant.');
+        }
+
+        // Make non-nullable
+        Schema::table('mfa_enrollments', function (Blueprint $table): void {
+            $table->ulid('tenant_id')->nullable(false)->change();
+        });
+
+        Schema::table('mfa_backup_codes', function (Blueprint $table): void {
+            $table->ulid('tenant_id')->nullable(false)->change();
+        });
     }
 
     public function down(): void

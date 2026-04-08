@@ -17,9 +17,9 @@ use Nexus\Identity\Exceptions\UserNotFoundException;
 
 final readonly class EloquentUserRepository implements UserRepositoryInterface
 {
-    public function findById(string $id): UserInterface
+    public function findById(string $id, ?string $tenantId = null): UserInterface
     {
-        return $this->mapUser($this->findUserOrFail($id));
+        return $this->mapUser($this->findUserScopedOrFail($id, $tenantId));
     }
 
     public function findByEmail(string $email): UserInterface
@@ -123,9 +123,12 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
             return [];
         }
 
-        return PermissionModel::query()
-            ->whereIn('id', $permissionIds)
-            ->orderBy('name')
+        $query = PermissionModel::query()->whereIn('id', $permissionIds);
+        if ($tenantId !== null && trim($tenantId) !== '') {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        return $query->orderBy('name')
             ->get()
             ->all();
     }
@@ -304,13 +307,21 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
     public function assignPermission(string $userId, string $permissionId, ?string $tenantId = null): void
     {
         $user = $this->findUserScopedOrFail($userId, $tenantId);
-        $permission = PermissionModel::query()->whereKey($permissionId)->first();
-        $resolvedPermissionId = $permission?->id ?? $permissionId;
+        $resolvedTenant = $tenantId ?? (string) $user->tenant_id;
+
+        $permission = PermissionModel::query()
+            ->whereKey($permissionId)
+            ->where('tenant_id', $resolvedTenant)
+            ->first();
+
+        if ($permission === null) {
+            throw new \Nexus\Identity\Exceptions\PermissionNotFoundException($permissionId);
+        }
 
         DB::table('user_permissions')->updateOrInsert(
             [
                 'user_id' => $user->id,
-                'permission_id' => $resolvedPermissionId,
+                'permission_id' => $permission->id,
             ],
             [
                 'created_at' => now(),
@@ -339,15 +350,18 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
 
     public function incrementFailedLoginAttempts(string $userId): int
     {
-        $user = $this->scopedAccountStateQuery($userId)->first();
-        if ($user === null) {
+        $query = $this->scopedAccountStateQuery($userId);
+        $affected = $query->update([
+            'failed_login_attempts' => DB::raw('COALESCE(failed_login_attempts, 0) + 1'),
+        ]);
+
+        if ($affected === 0) {
             throw new UserNotFoundException($userId);
         }
 
-        $user->failed_login_attempts = (int) ($user->failed_login_attempts ?? 0) + 1;
-        $user->save();
+        $user = $query->first();
 
-        return (int) $user->failed_login_attempts;
+        return (int) ($user?->failed_login_attempts ?? 0);
     }
 
     public function resetFailedLoginAttempts(string $userId): void

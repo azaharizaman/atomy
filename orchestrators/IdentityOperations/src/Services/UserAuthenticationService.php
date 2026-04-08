@@ -87,13 +87,15 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
             'tenant_id' => $tenantId,
         ]);
 
-        $user = $this->authenticator->getUserById($userId);
-        $resolvedTenantId = isset($user['tenant_id']) && is_string($user['tenant_id']) ? trim($user['tenant_id']) : '';
-        if ($resolvedTenantId === '' || $resolvedTenantId !== $tenantId) {
-            throw new \InvalidArgumentException('User does not belong to the requested tenant');
+        try {
+            $user = $this->authenticator->getUserByIdAndTenant($userId, $tenantId);
+        } catch (\Throwable $e) {
+            // Collapse missing and wrong-tenant cases to the same domain error
+            throw new \Nexus\Identity\Exceptions\InvalidCredentialsException('Invalid MFA session or tenant context');
         }
+
         if (($user['status'] ?? null) !== 'active') {
-            throw new \InvalidArgumentException('User account is not eligible for MFA completion');
+            throw new \Nexus\Identity\Exceptions\AccountInactiveException($user['status'] ?? 'unknown');
         }
 
         $accessToken = $this->tokenManager->generateAccessToken($user['id'], $tenantId);

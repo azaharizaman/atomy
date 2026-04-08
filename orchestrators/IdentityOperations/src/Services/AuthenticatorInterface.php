@@ -17,7 +17,12 @@ interface AuthenticatorInterface
     public function authenticate(string $email, string $password, ?string $tenantId = null): array;
 
     /**
-     * @return array{id: string, email: string, first_name: string|null, last_name: string|null, status: UserStatus, permissions: array, roles: array}
+     * @return array{id: string, email: string, first_name: string|null, last_name: string|null, tenant_id: string|null, status: UserStatus, permissions: array, roles: array}
      */
     public function getUserById(string $userId): array;
+
+    /**
+     * @return array{id: string, email: string, first_name: string|null, last_name: string|null, tenant_id: string|null, status: UserStatus, permissions: array, roles: array}
+     */
+    public function getUserByIdAndTenant(string $userId, string $tenantId): array;
 }

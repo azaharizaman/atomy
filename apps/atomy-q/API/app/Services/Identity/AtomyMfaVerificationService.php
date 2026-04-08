@@ -61,7 +61,7 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
             throw MfaVerificationException::verificationFailed('Stored TOTP secret is invalid');
         }
 
-        $valid = $this->totpManager->verify($secret, $this->normalizeCode($code));
+        $valid = $this->totpManager->verifyCode($secret, $this->normalizeCode($code));
         $this->recordVerificationAttempt(
             $userId,
             'totp',

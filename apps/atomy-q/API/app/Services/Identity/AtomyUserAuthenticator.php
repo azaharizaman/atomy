@@ -22,6 +22,7 @@ final readonly class AtomyUserAuthenticator implements UserAuthenticatorInterfac
 
     public function __construct(
         private PasswordHasherInterface $passwordHasher,
+        private \Nexus\Tenant\Contracts\TenantContextInterface $tenantContext,
     ) {
     }
 
@@ -95,10 +96,16 @@ final readonly class AtomyUserAuthenticator implements UserAuthenticatorInterfac
 
     private function resolveCandidateRow(string $normalizedEmail): ?UserModel
     {
-        $candidates = UserModel::query()
-            ->where('email', $normalizedEmail)
-            ->limit(2)
-            ->get();
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+
+        $query = UserModel::query()
+            ->where('email', $normalizedEmail);
+
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $candidates = $query->limit(2)->get();
 
         if ($candidates->count() !== 1) {
             return null;
@@ -134,7 +141,12 @@ final readonly class AtomyUserAuthenticator implements UserAuthenticatorInterfac
 
     private function incrementFailedAttempts(UserModel $row): int
     {
-        UserModel::query()->whereKey((string) $row->id)->increment('failed_login_attempts');
+        \Illuminate\Support\Facades\DB::table('users')
+            ->where('id', (string) $row->id)
+            ->update([
+                'failed_login_attempts' => \Illuminate\Support\Facades\DB::raw('COALESCE(failed_login_attempts, 0) + 1')
+            ]);
+
         $row->refresh();
 
         return (int) ($row->failed_login_attempts ?? 0);

@@ -241,6 +241,13 @@ final readonly class IdentityOperationsAdapter implements
         return $this->mapUserToArray($user);
     }
 
+    public function getUserByIdAndTenant(string $userId, string $tenantId): array
+    {
+        $user = $this->userQuery->findById($userId, $tenantId);
+
+        return $this->mapUserToArray($user);
+    }
+
     private function mapUserToArray(\Nexus\Identity\Contracts\UserInterface $user): array
     {
         $permissions = array_map(
@@ -297,11 +304,11 @@ final readonly class IdentityOperationsAdapter implements
         
         $tokenTenantId = $user->getTenantId();
         if ($tokenTenantId === null) {
-            throw new \RuntimeException('Token is missing required tenant context');
+            throw new \Nexus\Identity\Exceptions\TokenMissingTenantException();
         }
 
         if ($tokenTenantId !== $tenantId) {
-            throw new \RuntimeException('Token tenant ID mismatch');
+            throw new \Nexus\Identity\Exceptions\TenantMismatchException();
         }
 
         return new RefreshTokenPayload(
@@ -339,7 +346,7 @@ final readonly class IdentityOperationsAdapter implements
             $hashedPassword = $this->passwordHasher->hash($newPassword);
             $this->userPersist->update($userId, ['password_hash' => $hashedPassword]);
         } else {
-            throw new \RuntimeException('Invalid current password');
+            throw new \Nexus\Identity\Exceptions\InvalidCurrentPasswordException();
         }
     }
 

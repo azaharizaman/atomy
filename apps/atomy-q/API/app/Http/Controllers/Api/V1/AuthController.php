@@ -137,8 +137,10 @@ final class AuthController extends Controller
             ]);
 
             return response()->json(['message' => 'Invalid credentials'], 401);
-        } catch (\Throwable) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => 'Internal server error'], 500);
         }
     }
 
@@ -234,6 +236,7 @@ final class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'challenge_id' => ['required', 'string'],
+            'tenant_id' => ['required', 'string'],
             'otp' => ['required', 'string'],
         ]);
 
@@ -242,9 +245,10 @@ final class AuthController extends Controller
         }
 
         $challengeId = (string) $request->input('challenge_id');
+        $tenantId = (string) $request->input('tenant_id');
         $otp = trim((string) $request->input('otp'));
 
-        $challenge = $this->mfaChallenges->find($challengeId);
+        $challenge = $this->mfaChallenges->find($challengeId, $tenantId);
         if (
             $challenge === null
             || $challenge->consumed_at !== null
@@ -300,7 +304,7 @@ final class AuthController extends Controller
         }
 
         if (! $verified) {
-            $this->mfaChallenges->incrementAttempts($challengeId);
+            $this->mfaChallenges->incrementAttempts($challengeId, $tenantId);
             $this->logAuditEvent('user.mfa.verification_failed', (string) $challenge->user_id, [
                 'tenant_id' => (string) $challenge->tenant_id,
                 'challenge_id' => $challengeId,
@@ -308,13 +312,22 @@ final class AuthController extends Controller
             return response()->json(['message' => 'Invalid MFA code'], 401);
         }
 
-        $this->mfaChallenges->consume($challengeId);
+        $this->mfaChallenges->consume($challengeId, $tenantId);
         $this->logAuditEvent('user.mfa.verified', (string) $challenge->user_id, [
             'tenant_id' => (string) $challenge->tenant_id,
             'challenge_id' => $challengeId,
         ]);
 
-        $ctx = $this->authCoordinator->completeMfaLogin((string) $challenge->user_id, (string) $challenge->tenant_id);
+        try {
+            $ctx = $this->authCoordinator->completeMfaLogin((string) $challenge->user_id, (string) $challenge->tenant_id);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'message' => 'Invalid login session or tenant mismatch',
+                'error' => $e->getMessage(),
+                'challenge_id' => $challengeId,
+            ], 403);
+        }
+
         $sid = $ctx->sessionId ?? null;
 
         $this->logAuditEvent('user.login.success', (string) $ctx->userId, [

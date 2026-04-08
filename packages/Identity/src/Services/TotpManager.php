@@ -105,28 +105,19 @@ final readonly class TotpManager implements TotpManagerInterface
      * @param int|null $timestamp Unix timestamp for verification (null = now)
      * @return bool True if code is valid
      */
-    public function verify(
-        TotpSecret $totpSecret,
-        string $userCode,
-        int $window = 1,
-        ?int $timestamp = null
-    ): bool {
-        $totp = TOTP::createFromSecret($totpSecret->getSecret());
-        $totp->setDigits($totpSecret->getDigits());
-        $totp->setPeriod($totpSecret->getPeriod());
-        $totp->setDigest($totpSecret->getAlgorithm());
-        
-        // OTPHP library already uses timing-safe comparison internally
-        return $totp->verify($userCode, $timestamp, $window);
-    }
-
     public function verifyCode(
         TotpSecret $totpSecret,
         string $userCode,
         int $window = 1,
         ?int $timestamp = null
     ): bool {
-        return $this->verify($totpSecret, $userCode, $window, $timestamp);
+        $totp = TOTP::createFromSecret($totpSecret->secret);
+        $totp->setDigits($totpSecret->digits);
+        $totp->setPeriod($totpSecret->period);
+        $totp->setDigest($totpSecret->algorithm);
+        
+        // OTPHP library already uses timing-safe comparison internally
+        return $totp->verify($userCode, $timestamp, $window);
     }
 
     /**
@@ -140,10 +131,10 @@ final readonly class TotpManager implements TotpManagerInterface
      */
     public function getCurrentCode(TotpSecret $totpSecret, ?int $timestamp = null): string
     {
-        $totp = TOTP::createFromSecret($totpSecret->getSecret());
-        $totp->setDigits($totpSecret->getDigits());
-        $totp->setPeriod($totpSecret->getPeriod());
-        $totp->setDigest($totpSecret->getAlgorithm());
+        $totp = TOTP::createFromSecret($totpSecret->secret);
+        $totp->setDigits($totpSecret->digits);
+        $totp->setPeriod($totpSecret->period);
+        $totp->setDigest($totpSecret->algorithm);
         
         return $totp->at($timestamp ?? time());
     }
@@ -160,7 +151,7 @@ final readonly class TotpManager implements TotpManagerInterface
     public function getRemainingSeconds(TotpSecret $totpSecret, ?int $timestamp = null): int
     {
         $timestamp = $timestamp ?? time();
-        $period = $totpSecret->getPeriod();
+        $period = $totpSecret->period;
         
         return $period - ($timestamp % $period);
     }

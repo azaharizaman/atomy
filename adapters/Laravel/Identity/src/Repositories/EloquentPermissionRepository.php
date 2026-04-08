@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\Laravel\Identity\Repositories;
 
-use App\Models\Permission as PermissionModel;
 use Nexus\Identity\Contracts\PermissionInterface;
 use Nexus\Identity\Contracts\PermissionRepositoryInterface;
 use Nexus\Identity\Exceptions\PermissionNotFoundException;
+use App\Models\Permission as PermissionModel;
 
 final readonly class EloquentPermissionRepository implements PermissionRepositoryInterface
 {

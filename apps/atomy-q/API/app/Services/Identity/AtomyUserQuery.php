@@ -19,9 +19,14 @@ use Nexus\Identity\Exceptions\UserNotFoundException;
  */
 final readonly class AtomyUserQuery implements UserQueryInterface
 {
-    public function findById(string $id): UserInterface
+    public function findById(string $id, ?string $tenantId = null): UserInterface
     {
-        $user = UserModel::query()->whereKey($id)->first();
+        $query = UserModel::query()->whereKey($id);
+        if ($tenantId !== null && trim($tenantId) !== '') {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $user = $query->first();
         if ($user === null) {
             throw new UserNotFoundException($id);
         }
@@ -264,80 +269,5 @@ final readonly class AtomyUserQuery implements UserQueryInterface
         }
 
         return $query->first();
-    }
-}
-
-/**
- * @internal
- */
-final readonly class AtomyLegacyRole implements RoleInterface
-{
-    private \DateTimeImmutable $createdAt;
-
-    public function __construct(
-        private string $name,
-        private ?string $tenantId,
-    ) {
-        $this->createdAt = new \DateTimeImmutable();
-    }
-
-    public function getId(): string
-    {
-        // Stable pseudo-id so callers can include this in role lists without requiring a roles row.
-        return 'legacy:' . strtolower(trim($this->name));
-    }
-
-    public function getName(): string
-    {
-        return trim($this->name);
-    }
-
-    public function getDescription(): ?string
-    {
-        return null;
-    }
-
-    public function getTenantId(): ?string
-    {
-        $tenantId = $this->tenantId;
-        if ($tenantId === null) {
-            return null;
-        }
-
-        $normalized = trim($tenantId);
-
-        return $normalized === '' ? null : $normalized;
-    }
-
-    public function isSystemRole(): bool
-    {
-        return false;
-    }
-
-    public function isSuperAdmin(): bool
-    {
-        $normalized = strtolower(trim($this->name));
-
-        return in_array($normalized, ['super-admin', 'super_admin', 'superadmin'], true);
-    }
-
-    public function getParentRoleId(): ?string
-    {
-        return null;
-    }
-
-    public function getCreatedAt(): \DateTimeInterface
-    {
-        return $this->createdAt;
-    }
-
-    public function getUpdatedAt(): \DateTimeInterface
-    {
-        return $this->createdAt;
-    }
-
-    public function requiresMfa(): bool
-    {
-        return $this->isSuperAdmin();
     }
 }

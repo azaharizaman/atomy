@@ -14,8 +14,15 @@ interface TotpManagerInterface
 
     public function generateQrCodeDataUri(TotpSecret $totpSecret, string $issuer, string $accountName, int $size = 300): string;
 
-    public function verify(TotpSecret $totpSecret, string $userCode, int $window = 1, ?int $timestamp = null): bool;
-
+    /**
+     * Verify a TOTP code against a secret.
+     *
+     * @param TotpSecret $totpSecret The TOTP secret
+     * @param string $userCode The 6-digit code provided by user
+     * @param int $window Number of time steps to check before/after (default: 1)
+     * @param int|null $timestamp Unix timestamp for verification (null = now)
+     * @return bool True if code is valid
+     */
     public function verifyCode(TotpSecret $totpSecret, string $userCode, int $window = 1, ?int $timestamp = null): bool;
 
     public function getCurrentCode(TotpSecret $totpSecret, ?int $timestamp = null): string;
