@@ -9,6 +9,7 @@ use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
+use Nexus\Identity\Contracts\TotpManagerInterface;
 use Nexus\Identity\ValueObjects\TotpSecret;
 use OTPHP\TOTP;
 
@@ -18,7 +19,7 @@ use OTPHP\TOTP;
  * Provides secret generation, QR code creation, and verification
  * for authenticator app-based MFA.
  */
-final readonly class TotpManager
+final readonly class TotpManager implements TotpManagerInterface
 {
     /**
      * Generate a new TOTP secret.
@@ -117,6 +118,15 @@ final readonly class TotpManager
         
         // OTPHP library already uses timing-safe comparison internally
         return $totp->verify($userCode, $timestamp, $window);
+    }
+
+    public function verifyCode(
+        TotpSecret $totpSecret,
+        string $userCode,
+        int $window = 1,
+        ?int $timestamp = null
+    ): bool {
+        return $this->verify($totpSecret, $userCode, $window, $timestamp);
     }
 
     /**

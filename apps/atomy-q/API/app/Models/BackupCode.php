@@ -12,6 +12,6 @@ class BackupCode extends Model
     use HasUlids;
 
     protected $table = 'mfa_backup_codes';
-    protected $fillable = ['user_id', 'code_hash', 'used_at'];
+    protected $fillable = ['tenant_id', 'user_id', 'code_hash', 'used_at'];
     protected $casts = ['used_at' => 'datetime'];
 }

@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
+use Nexus\Identity\Contracts\TotpManagerInterface;
+use Nexus\Identity\Exceptions\WebAuthnVerificationException;
 use Nexus\Identity\Exceptions\MfaVerificationException;
-use Nexus\Identity\Services\TotpManager;
 use Nexus\Identity\ValueObjects\TotpSecret;
 use Nexus\Identity\ValueObjects\UserVerificationRequirement;
 use Nexus\Identity\ValueObjects\WebAuthnAuthenticationOptions;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 
 final readonly class AtomyMfaVerificationService implements MfaVerificationServiceInterface
 {
@@ -24,16 +26,27 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
     private const DEFAULT_BACKUP_CODE_THRESHOLD = 2;
 
     public function __construct(
-        private TotpManager $totpManager,
+        private TotpManagerInterface $totpManager,
+        private TenantContextInterface $tenantContext,
     ) {
     }
 
     public function verifyTotp(string $userId, string $code): bool
     {
         $requestMetadata = $this->resolveRequestMetadata();
+        $tenantId = $this->resolveTenantId();
+
+        if ($this->isRateLimited($userId, 'totp')) {
+            throw MfaVerificationException::rateLimited(
+                $userId,
+                'totp',
+                $this->getRateLimitRetryAfter($userId, 'totp')
+            );
+        }
 
         $totpEnrollment = MfaEnrollment::query()
             ->where('user_id', $userId)
+            ->where('tenant_id', $tenantId)
             ->where('method', 'totp')
             ->where('is_active', true)
             ->latest('created_at')
@@ -46,14 +59,6 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
         $secret = $this->resolveTotpSecret((string) $totpEnrollment->secret);
         if ($secret === null) {
             throw MfaVerificationException::verificationFailed('Stored TOTP secret is invalid');
-        }
-
-        if ($this->isRateLimited($userId, 'totp')) {
-            throw MfaVerificationException::rateLimited(
-                $userId,
-                'totp',
-                $this->getRateLimitRetryAfter($userId, 'totp')
-            );
         }
 
         $valid = $this->totpManager->verify($secret, $this->normalizeCode($code));
@@ -93,12 +98,13 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
         string $expectedOrigin,
         ?string $userId = null
     ): array {
-        throw new MfaVerificationException('WebAuthn is not enabled for Atomy-Q');
+        throw WebAuthnVerificationException::webAuthnNotEnabled();
     }
 
     public function verifyBackupCode(string $userId, string $code): bool
     {
         $requestMetadata = $this->resolveRequestMetadata();
+        $tenantId = $this->resolveTenantId();
 
         if ($this->isRateLimited($userId, 'backup_code')) {
             throw MfaVerificationException::rateLimited(
@@ -112,6 +118,7 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
 
         $backupCode = BackupCode::query()
             ->where('user_id', $userId)
+            ->where('tenant_id', $tenantId)
             ->whereNull('used_at')
             ->orderBy('created_at')
             ->get()
@@ -155,20 +162,20 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
             }
 
             try {
-                $verified = $method === 'totp'
-                    ? $this->verifyTotp($userId, $code)
-                    : $this->verifyBackupCode($userId, $code);
+                if ($method === 'totp') {
+                    $this->verifyTotp($userId, $code);
+                } else {
+                    $this->verifyBackupCode($userId, $code);
+                }
             } catch (MfaVerificationException $e) {
                 $lastException = $e;
                 continue;
             }
 
-            if ($verified) {
-                return [
-                    'method' => $method,
-                    'verified' => true,
-                ];
-            }
+            return [
+                'method' => $method,
+                'verified' => true,
+            ];
         }
 
         if ($lastException instanceof MfaVerificationException) {
@@ -185,8 +192,11 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
 
     public function getRemainingBackupCodesCount(string $userId): int
     {
+        $tenantId = $this->resolveTenantId();
+
         return BackupCode::query()
             ->where('user_id', $userId)
+            ->where('tenant_id', $tenantId)
             ->whereNull('used_at')
             ->count();
     }
@@ -222,13 +232,15 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
 
         $attempts = (int) Cache::get($key, 0);
         Cache::put($key, $attempts + 1, self::RATE_LIMIT_WINDOW_SECONDS);
-        Cache::put($key . ':retry_after', self::RATE_LIMIT_WINDOW_SECONDS, self::RATE_LIMIT_WINDOW_SECONDS);
+        $retryAfterEpoch = time() + self::RATE_LIMIT_WINDOW_SECONDS;
+        Cache::put($key . ':retry_after', $retryAfterEpoch, self::RATE_LIMIT_WINDOW_SECONDS);
         Log::warning('MFA verification attempt failed', [
             'user_id' => $userId,
             'method' => $method,
             'ip_address' => $normalizedIp,
             'user_agent' => $normalizedUserAgent,
             'attempts' => $attempts + 1,
+            'retry_after_epoch' => $retryAfterEpoch,
         ]);
     }
 
@@ -299,9 +311,22 @@ final readonly class AtomyMfaVerificationService implements MfaVerificationServi
     private function getRateLimitRetryAfter(string $userId, string $method): int
     {
         $key = $this->rateLimitKey($userId, $method);
-        $ttl = (int) Cache::get($key . ':retry_after', self::RATE_LIMIT_WINDOW_SECONDS);
+        $retryAfterEpoch = (int) Cache::get($key . ':retry_after', 0);
+        if ($retryAfterEpoch <= 0) {
+            return 0;
+        }
 
-        return max(0, $ttl);
+        return max(0, $retryAfterEpoch - time());
+    }
+
+    private function resolveTenantId(): string
+    {
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+        if (! is_string($tenantId) || trim($tenantId) === '') {
+            throw MfaVerificationException::verificationFailed('Tenant context is required for MFA verification');
+        }
+
+        return trim($tenantId);
     }
 
     /**

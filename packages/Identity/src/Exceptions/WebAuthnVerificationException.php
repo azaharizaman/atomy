@@ -47,4 +47,9 @@ final class WebAuthnVerificationException extends RuntimeException
     {
         return new self('User verification required but not performed');
     }
+
+    public static function webAuthnNotEnabled(): self
+    {
+        return new self('WebAuthn is not enabled');
+    }
 }

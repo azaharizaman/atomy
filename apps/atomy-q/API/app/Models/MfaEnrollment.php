@@ -13,6 +13,7 @@ class MfaEnrollment extends Model
 
     protected $table = 'mfa_enrollments';
     protected $fillable = [
+        'tenant_id',
         'user_id',
         'method',
         'secret',

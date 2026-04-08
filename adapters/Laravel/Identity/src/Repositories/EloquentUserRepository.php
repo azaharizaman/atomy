@@ -118,31 +118,6 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
             }
         }
 
-        $roleIds = DB::table('user_roles')
-            ->where('user_id', $user->id)
-            ->pluck('role_id')
-            ->all();
-
-        $legacyRole = trim((string) ($user->role ?? ''));
-        if ($legacyRole !== '' && $legacyRole !== 'user') {
-            $roleIds[] = $legacyRole;
-        }
-
-        $roleIds = array_values(array_unique(array_filter($roleIds, static fn (mixed $value): bool => is_string($value) && trim($value) !== '')));
-
-        if ($roleIds !== []) {
-            foreach (
-                DB::table('role_permissions')
-                    ->whereIn('role_id', $roleIds)
-                    ->pluck('permission_id')
-                    ->all() as $permissionId
-            ) {
-                if (is_string($permissionId) && trim($permissionId) !== '') {
-                    $permissionIds[] = $permissionId;
-                }
-            }
-        }
-
         $permissionIds = array_values(array_unique($permissionIds));
         if ($permissionIds === []) {
             return [];
@@ -258,10 +233,12 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
 
     public function update(string $id, array $data): UserInterface
     {
-        $tenantId = isset($data['tenant_id']) && is_string($data['tenant_id']) && trim($data['tenant_id']) !== ''
-            ? trim($data['tenant_id'])
-            : null;
-        $user = $tenantId !== null ? $this->findUserScopedOrFail($id, $tenantId) : $this->findUserOrFail($id);
+        $tenantId = isset($data['tenant_id']) && is_string($data['tenant_id']) ? trim($data['tenant_id']) : '';
+        if ($tenantId === '') {
+            throw new \InvalidArgumentException('tenant_id is required for user update');
+        }
+
+        $user = $this->findUserScopedOrFail($id, $tenantId);
         $payload = $this->normalizeUserPayload($data, $user);
 
         if ($payload !== []) {
@@ -287,11 +264,14 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
     {
         $user = $this->findUserScopedOrFail($userId, $tenantId);
         $role = $this->findRoleOrNull($roleId, $tenantId ?? $user->tenant_id);
+        if ($role === null) {
+            throw new \DomainException('Role not found for tenant-scoped assignment');
+        }
 
         DB::table('user_roles')->updateOrInsert(
             [
                 'user_id' => $user->id,
-                'role_id' => $role?->id ?? $roleId,
+                'role_id' => $role->id,
             ],
             [
                 'created_at' => now(),
@@ -299,7 +279,7 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
             ],
         );
 
-        $user->role = $role?->id ?? $roleId;
+        $user->role = $role->id;
         $user->save();
     }
 
@@ -486,8 +466,11 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
         if (array_key_exists('name', $data)) {
             $payload['name'] = trim((string) $data['name']);
         } elseif (array_key_exists('first_name', $data) || array_key_exists('last_name', $data)) {
-            $firstName = array_key_exists('first_name', $data) ? trim((string) $data['first_name']) : (string) ($existingUser?->name ?? '');
-            $lastName = array_key_exists('last_name', $data) ? trim((string) $data['last_name']) : '';
+            $existingNameParts = preg_split('/\s+/', trim((string) ($existingUser?->name ?? '')), 2) ?: [];
+            $existingFirstName = trim((string) ($existingNameParts[0] ?? ''));
+            $existingLastName = trim((string) ($existingNameParts[1] ?? ''));
+            $firstName = array_key_exists('first_name', $data) ? trim((string) $data['first_name']) : $existingFirstName;
+            $lastName = array_key_exists('last_name', $data) ? trim((string) $data['last_name']) : $existingLastName;
             $payload['name'] = $this->composeDisplayName($firstName, $lastName, (string) ($existingUser?->email ?? ''));
         }
 

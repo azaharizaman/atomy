@@ -53,10 +53,12 @@ use Nexus\Identity\Contracts\PasswordHasherInterface;
 use Nexus\Identity\Contracts\PermissionQueryInterface;
 use Nexus\Identity\Contracts\RoleQueryInterface;
 use Nexus\Identity\Contracts\SessionManagerInterface;
+use Nexus\Identity\Contracts\TotpManagerInterface;
 use Nexus\Identity\Contracts\TokenManagerInterface as IdentityTokenManagerInterface;
 use Nexus\Identity\Contracts\UserAuthenticatorInterface;
 use Nexus\Identity\Contracts\UserPersistInterface;
 use Nexus\Identity\Contracts\UserQueryInterface as IdentityUserQueryInterface;
+use Nexus\Identity\Services\TotpManager;
 use Nexus\Laravel\Identity\DataProviders\LaravelRoleQuery;
 use Nexus\Tenant\Contracts\TenantPersistenceInterface;
 use Nexus\Tenant\Contracts\TenantValidationInterface;
@@ -348,6 +350,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(IdentityTokenManagerInterface::class, AtomyIdentityTokenManagerStub::class);
         $this->app->singleton(SessionManagerInterface::class, \Nexus\Laravel\Identity\Adapters\DatabaseSessionManager::class);
         $this->app->singleton(MfaEnrollmentServiceInterface::class, AtomyNoopMfaEnrollmentService::class);
+        $this->app->singleton(TotpManagerInterface::class, TotpManager::class);
         $this->app->singleton(MfaVerificationServiceInterface::class, AtomyMfaVerificationService::class);
         $this->app->singleton(MfaChallengeStoreInterface::class, AtomyMfaChallengeStore::class);
         $this->app->singleton(PermissionQueryInterface::class, static function ($app): PermissionQueryInterface {
