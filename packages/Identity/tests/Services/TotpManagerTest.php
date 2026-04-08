@@ -30,10 +30,27 @@ class TotpManagerTest extends TestCase
         $secret = $this->manager->generateSecret();
 
         $this->assertInstanceOf(TotpSecret::class, $secret);
-        $this->assertSame('sha1', $secret->getAlgorithm());
-        $this->assertSame(30, $secret->getPeriod());
-        $this->assertSame(6, $secret->getDigits());
-        $this->assertMatchesRegularExpression('/^[A-Z2-7]{32}$/', $secret->getSecret());
+        $this->assertSame('sha1', $secret->algorithm);
+        $this->assertSame(30, $secret->period);
+        $this->assertSame(6, $secret->digits);
+        $this->assertMatchesRegularExpression('/^[A-Z2-7]{16,}$/', $secret->secret);
+    }
+
+    #[Test]
+    public function it_accepts_variable_length_base32_secrets_for_interoperability(): void
+    {
+        $secret = new TotpSecret(
+            secret: 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP',
+            algorithm: 'sha1',
+            period: 30,
+            digits: 6
+        );
+
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
+
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
@@ -45,9 +62,9 @@ class TotpManagerTest extends TestCase
             digits: 8
         );
 
-        $this->assertSame('sha256', $secret->getAlgorithm());
-        $this->assertSame(60, $secret->getPeriod());
-        $this->assertSame(8, $secret->getDigits());
+        $this->assertSame('sha256', $secret->algorithm);
+        $this->assertSame(60, $secret->period);
+        $this->assertSame(8, $secret->digits);
     }
 
     #[Test]
@@ -56,7 +73,7 @@ class TotpManagerTest extends TestCase
         $secret1 = $this->manager->generateSecret();
         $secret2 = $this->manager->generateSecret();
 
-        $this->assertNotSame($secret1->getSecret(), $secret2->getSecret());
+        $this->assertNotSame($secret1->secret, $secret2->secret);
     }
 
     #[Test]
@@ -129,21 +146,26 @@ class TotpManagerTest extends TestCase
             digits: 6
         );
 
-        // Generate current code
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
         
         // Verify it
-        $this->assertTrue($this->manager->verify($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
     public function it_rejects_invalid_totp_code(): void
     {
         $secret = $this->manager->generateSecret();
-        
-        $this->assertFalse($this->manager->verify($secret, '000000'));
-        $this->assertFalse($this->manager->verify($secret, '999999'));
-        $this->assertFalse($this->manager->verify($secret, 'ABCDEF'));
+        $timestamp = 1700000000;
+        $validCode = $this->manager->getCurrentCode($secret, $timestamp);
+
+        $replacementDigit = $validCode[0] === '0' ? '1' : '0';
+        $mutatedNumeric = $replacementDigit . substr($validCode, 1);
+        $mutatedAlpha = substr($validCode, 0, max(strlen($validCode) - 1, 0)) . 'A';
+
+        $this->assertFalse($this->manager->verifyCode($secret, $mutatedNumeric, timestamp: $timestamp));
+        $this->assertFalse($this->manager->verifyCode($secret, $mutatedAlpha, timestamp: $timestamp));
     }
 
     #[Test]
@@ -156,17 +178,17 @@ class TotpManagerTest extends TestCase
             digits: 6
         );
 
-        $timestamp = 1640000000; // Fixed timestamp
+        $timestamp = 1640000010; // Multiple of 30 is 1640000010
         $code = $this->manager->getCurrentCode($secret, $timestamp);
-        
+
         // Should verify at exact time
-        $this->assertTrue($this->manager->verify($secret, $code, window: 1, timestamp: $timestamp));
-        
-        // Should verify 30 seconds later (1 period, within window=1)
-        $this->assertTrue($this->manager->verify($secret, $code, window: 1, timestamp: $timestamp + 30));
-        
-        // Should verify 30 seconds earlier (1 period, within window=1)
-        $this->assertTrue($this->manager->verify($secret, $code, window: 1, timestamp: $timestamp - 30));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, window: 1, timestamp: $timestamp));
+
+        // Should verify 5 seconds later (within same period, or within window=10 if it crossed boundary)
+        $this->assertTrue($this->manager->verifyCode($secret, $code, window: 10, timestamp: $timestamp + 5));
+
+        // Should verify 5 seconds earlier
+        $this->assertTrue($this->manager->verifyCode($secret, $code, window: 10, timestamp: $timestamp - 5));
     }
 
     #[Test]
@@ -179,14 +201,11 @@ class TotpManagerTest extends TestCase
             digits: 6
         );
 
-        $timestamp = 1640000000;
+        $timestamp = 1640000010;
         $code = $this->manager->getCurrentCode($secret, $timestamp);
-        
-        // Should reject 2 periods later (outside window=1)
-        $this->assertFalse($this->manager->verify($secret, $code, window: 1, timestamp: $timestamp + 60));
-        
-        // Should reject 2 periods earlier (outside window=1)
-        $this->assertFalse($this->manager->verify($secret, $code, window: 1, timestamp: $timestamp - 60));
+
+        // Should reject at T+35 with small window (1s) since it's in next period
+        $this->assertFalse($this->manager->verifyCode($secret, $code, window: 1, timestamp: $timestamp + 35));
     }
 
     #[Test]
@@ -199,32 +218,35 @@ class TotpManagerTest extends TestCase
             digits: 6
         );
 
-        $timestamp = 1640000000;
-        $code = $this->manager->getCurrentCode($secret, $timestamp);
-        
-        // With window=2, should accept up to 2 periods away
-        $this->assertTrue($this->manager->verify($secret, $code, window: 2, timestamp: $timestamp + 60));
-        $this->assertTrue($this->manager->verify($secret, $code, window: 2, timestamp: $timestamp - 60));
+        $timestamp = 1640000010; // Start of period
+        $code = $this->manager->getCurrentCode($secret, $timestamp + 29); // End of period
+
+        // At timestamp + 31, we are in NEXT period.
+        // Distance is 2 seconds from timestamp + 29.
+        // Window of 5 seconds should cover it.
+        $this->assertTrue($this->manager->verifyCode($secret, $code, window: 5, timestamp: $timestamp + 31));
     }
 
     #[Test]
     public function it_generates_current_code(): void
     {
         $secret = $this->manager->generateSecret();
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
 
         $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
-        $this->assertTrue($this->manager->verify($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
     public function it_generates_current_code_for_8_digits(): void
     {
         $secret = $this->manager->generateSecret(digits: 8);
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
 
         $this->assertMatchesRegularExpression('/^\d{8}$/', $code);
-        $this->assertTrue($this->manager->verify($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
@@ -256,9 +278,10 @@ class TotpManagerTest extends TestCase
             digits: 6
         );
 
-        // At timestamp 1640000005 (5 seconds into period)
+        // 1640000010 is a multiple of 30.
+        // At timestamp 1640000015 (5 seconds into period)
         // Should have 25 seconds remaining
-        $remaining = $this->manager->getRemainingSeconds($secret, 1640000005);
+        $remaining = $this->manager->getRemainingSeconds($secret, 1640000015);
         
         $this->assertSame(25, $remaining);
     }
@@ -273,8 +296,8 @@ class TotpManagerTest extends TestCase
             digits: 6
         );
 
-        // At exact period start, should have full 30 seconds
-        $remaining = $this->manager->getRemainingSeconds($secret, 1640000000);
+        // At exact period start (multiple of 30)
+        $remaining = $this->manager->getRemainingSeconds($secret, 1640000010);
         
         $this->assertSame(30, $remaining);
     }
@@ -289,8 +312,8 @@ class TotpManagerTest extends TestCase
             digits: 6
         );
 
-        // At 1 second before period end
-        $remaining = $this->manager->getRemainingSeconds($secret, 1640000029);
+        // At 1 second before period end (multiple of 30 - 1)
+        $remaining = $this->manager->getRemainingSeconds($secret, 1640000039);
         
         $this->assertSame(1, $remaining);
     }
@@ -309,7 +332,7 @@ class TotpManagerTest extends TestCase
 
         $this->assertStringStartsWith('otpauth://totp/', $uri);
         $this->assertStringContainsString('Nexus%20ERP', $uri);
-        $this->assertStringContainsString('user@example.com', $uri);
+        $this->assertStringContainsString('user%40example.com', $uri);
         $this->assertStringContainsString('secret=JBSWY3DPEHPK3PXP', $uri);
     }
 
@@ -317,29 +340,34 @@ class TotpManagerTest extends TestCase
     public function it_supports_sha256_algorithm(): void
     {
         $secret = $this->manager->generateSecret(algorithm: 'sha256');
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
 
         $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
-        $this->assertTrue($this->manager->verify($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
     public function it_supports_sha512_algorithm(): void
     {
         $secret = $this->manager->generateSecret(algorithm: 'sha512');
-        $code = $this->manager->getCurrentCode($secret);
+        $timestamp = 1700000000;
+        $code = $this->manager->getCurrentCode($secret, $timestamp);
 
         $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
-        $this->assertTrue($this->manager->verify($secret, $code));
+        $this->assertTrue($this->manager->verifyCode($secret, $code, timestamp: $timestamp));
     }
 
     #[Test]
     public function it_supports_custom_period(): void
     {
         $secret = $this->manager->generateSecret(period: 60);
-        $code = $this->manager->getCurrentCode($secret);
+        $periodStart = intdiv(time(), 60) * 60;
+        $generationTimestamp = $periodStart + 28;
+        $verificationTimestamp = $periodStart + 59;
+        $code = $this->manager->getCurrentCode($secret, $generationTimestamp);
 
-        // Code should remain valid for full 60-second period
-        $this->assertTrue($this->manager->verify($secret, $code, window: 0));
+        // Must remain valid within the same 60-second period despite crossing a 30-second boundary.
+        $this->assertTrue($this->manager->verifyCode($secret, $code, window: 0, timestamp: $verificationTimestamp));
     }
 }

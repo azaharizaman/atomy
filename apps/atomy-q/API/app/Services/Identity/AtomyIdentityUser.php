@@ -85,11 +85,11 @@ final readonly class AtomyIdentityUser implements UserInterface
 
     public function hasMfaEnabled(): bool
     {
-        return false;
+        return (bool) $this->user->mfa_enabled;
     }
 
     public function getMetadata(): ?array
     {
-        return null;
+        return is_array($this->user->metadata) ? $this->user->metadata : null;
     }
 }

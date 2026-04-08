@@ -16,6 +16,7 @@ final readonly class JwtPayloadDto
         public int $exp,
         public int $iat,
         public string $iss,
+        public ?string $sid = null,
         public array $roles = [],
     ) {}
 
@@ -31,6 +32,7 @@ final readonly class JwtPayloadDto
             exp: $payload->exp,
             iat: $payload->iat,
             iss: $payload->iss,
+            sid: property_exists($payload, 'sid') && is_string($payload->sid) ? $payload->sid : null,
             roles: property_exists($payload, 'roles') ? (array) $payload->roles : [],
         );
     }

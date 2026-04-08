@@ -43,6 +43,26 @@ final readonly class UserAuthenticationCoordinator implements UserAuthentication
         return $this->authService->authenticate($email, $password, $tenantId);
     }
 
+    public function authenticateForMfaChallenge(string $email, string $password, string $tenantId): UserContext
+    {
+        $this->logger->info('Processing MFA challenge authentication', [
+            'email' => hash('sha256', $email),
+            'tenant_id' => $tenantId,
+        ]);
+
+        return $this->authService->authenticateForMfaChallenge($email, $password, $tenantId);
+    }
+
+    public function completeMfaLogin(string $userId, string $tenantId): UserContext
+    {
+        $this->logger->info('Completing MFA login', [
+            'user_id' => $userId,
+            'tenant_id' => $tenantId,
+        ]);
+
+        return $this->authService->completeMfaLogin($userId, $tenantId);
+    }
+
     public function refreshToken(string $refreshToken, string $tenantId): UserContext
     {
         $this->logger->info('Processing token refresh', ['tenant_id' => $tenantId]);

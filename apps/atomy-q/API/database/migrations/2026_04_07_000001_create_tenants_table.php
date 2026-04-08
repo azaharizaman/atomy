@@ -48,6 +48,9 @@ return new class extends Migration
             $table->index('parent_id');
             $table->index('database_name');
             $table->index('retention_hold_until');
+        });
+
+        Schema::table('tenants', function (Blueprint $table): void {
             $table->foreign('parent_id')
                 ->references('id')
                 ->on('tenants')

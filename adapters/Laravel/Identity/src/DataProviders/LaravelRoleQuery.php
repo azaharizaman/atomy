@@ -2,59 +2,60 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Identity;
+namespace Nexus\Laravel\Identity\DataProviders;
 
 use Nexus\Identity\Contracts\RoleInterface;
 use Nexus\Identity\Contracts\RoleQueryInterface;
-use Nexus\Identity\Exceptions\RoleNotFoundException;
+use Nexus\Identity\Contracts\RoleRepositoryInterface;
 
-/**
- * Atomy-Q stores a single `role` string on users; no role master table yet.
- */
-final readonly class AtomyRoleQueryStub implements RoleQueryInterface
+final readonly class LaravelRoleQuery implements RoleQueryInterface
 {
+    public function __construct(private RoleRepositoryInterface $roles)
+    {
+    }
+
     public function findById(string $id): RoleInterface
     {
-        throw new RoleNotFoundException($id);
+        return $this->roles->findById($id);
     }
 
     public function findByName(string $name, ?string $tenantId = null): RoleInterface
     {
-        throw new RoleNotFoundException($name);
+        return $this->roles->findByName($name, $tenantId);
     }
 
     public function findByNameOrNull(string $name, ?string $tenantId = null): ?RoleInterface
     {
-        return null;
+        return $this->roles->findByNameOrNull($name, $tenantId);
     }
 
     public function nameExists(string $name, ?string $tenantId = null, ?string $excludeRoleId = null): bool
     {
-        return false;
+        return $this->roles->nameExists($name, $tenantId, $excludeRoleId);
     }
 
     public function getRolePermissions(string $roleId): array
     {
-        return [];
+        return $this->roles->getRolePermissions($roleId);
     }
 
     public function getAll(?string $tenantId = null): array
     {
-        return [];
+        return $this->roles->getAll($tenantId);
     }
 
     public function getRoleHierarchy(?string $tenantId = null): array
     {
-        return [];
+        return $this->roles->getRoleHierarchy($tenantId);
     }
 
     public function hasUsers(string $roleId): bool
     {
-        return false;
+        return $this->roles->hasUsers($roleId);
     }
 
     public function countUsers(string $roleId): int
     {
-        return 0;
+        return $this->roles->countUsers($roleId);
     }
 }

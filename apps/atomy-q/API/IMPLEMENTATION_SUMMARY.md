@@ -12,9 +12,8 @@
 ### `POST /api/v1/auth/login` (email + password)
 
 - **Request body:** `email`, `password` only. Tenant is **not** sent by the client; it is read from `users.tenant_id` after a successful match (`users.email` is globally unique).
-- Validates credentials against Eloquent `User` (`email`, `password_hash`) and returns JWT access + refresh tokens (claims include the user’s `tenant_id`).
-- **Does not** use `nexus/identity-operations` for this path.
-- `AuthController` injects `JwtServiceInterface` and `PasswordResetServiceInterface` (bound to `PasswordResetService`) in the constructor (login/refresh do not require Nexus Identity write/query adapters).
+- Uses `UserAuthenticationCoordinatorInterface` for credential authentication and session creation, then returns app JWT access + refresh tokens (claims include the user’s `tenant_id` and optional `sid`).
+- `AuthController` injects `JwtServiceInterface`, `PasswordResetServiceInterface`, `IdentityUserQueryInterface`, and `UserAuthenticationCoordinatorInterface` in the constructor; login/password verification stays coordinator-driven while refresh remains token-based.
 
 ### `POST /api/v1/auth/register-company`
 
@@ -41,11 +40,14 @@
 
 ### SSO (`POST /api/v1/auth/sso`) and full Identity coordinator
 
-- `UserAuthenticationCoordinatorInterface` is resolved **only when** the SSO action runs (`app(UserAuthenticationCoordinatorInterface::class)` inside `sso()`).
-- `nexus/laravel-identity-adapter` registers `IdentityAdapterServiceProvider`, which wires `OidcSsoProviderAdapter` and `IdentityOperationsAdapter`.
+- `AuthController` now injects `UserAuthenticationCoordinatorInterface` directly and uses it for both login and SSO; the controller no longer lazy-resolves the coordinator from the container.
+- `nexus/laravel-identity-adapter` registers `IdentityAdapterServiceProvider`, which wires `OidcSsoProviderAdapter`, `IdentityOperationsAdapter`, `LaravelPasswordHasher`, and the repository-backed RBAC query layer.
 - **Atomy-Q bindings** (see `App\Providers\AppServiceProvider` and `App\Services\Identity\*`):
-  - **Eloquent-backed**: `UserPersistInterface`, `UserQueryInterface`, `PasswordHasherInterface`, `UserAuthenticatorInterface` (maps to `users` table; JIT SSO provisioning writes `tenant_id`, `email`, `name`, `password_hash`, `status`, etc.).
-  - **Stubs / no-ops until productized**: Identity `TokenManagerInterface`, `SessionManagerInterface` (JWT remains the app token), MFA enrollment/verification services, `PermissionQueryInterface` / `RoleQueryInterface` (no RBAC catalog tables yet), `AuditLogRepositoryInterface` (in-memory no-op sink so `IdentityOperationsAdapter::log` does not throw).
+  - **Eloquent-backed**: `UserPersistInterface`, `UserQueryInterface`, `PasswordHasherInterface`, `UserAuthenticatorInterface`, `SessionManagerInterface`, `PermissionQueryInterface`, and `RoleQueryInterface`.
+  - **App-backed adapters**: `TokenManagerInterface` and `MfaEnrollmentServiceInterface` are still alpha stubs, while `MfaVerificationServiceInterface` and `AuditLogRepositoryInterface` are runtime implementations. Gap 7’s MFA extension persists `challenge_id`-backed login challenges and audit rows for login success/failure, MFA challenge issuance/verification, and logout.
+- JWT access tokens now carry an optional `sid` claim and `JwtAuthenticate` rejects revoked sessions when that claim is present.
+- `AtomyUserQuery` now exposes real role and permission data through `user_roles`, `role_permissions`, and `user_permissions` pivots, with legacy single-role fallback for seeded alpha users.
+- `AtomyUserAuthenticator` now increments failed-login counters and locks accounts after five failures, and the new identity tests verify both lockout and wildcard RBAC through the real middleware path.
 - `AuthTest::test_sso_*` exercise OIDC init + mock callback (`mock_authorization_code` + `SSO_MOCK_DISCOVERY_DOCUMENT`) end-to-end against these bindings.
 
 ### Environment
@@ -188,6 +190,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 ## Testing & Seed Data
 
 - Added feature test coverage for auth flows, middleware enforcement, and all protected API endpoints.
+- Added identity gap regression coverage for login lockout, wildcard role permissions, and authenticated session revocation.
 - Added quote intake workflow validation contracts for upload payload shape, supported quote submission status values, and normalization/comparison mutation requests.
 - Auth feature tests now validate token semantics and refresh tokens via the login flow using an in-memory SQLite database; protected endpoint auth checks run per-route with unique IDs and assert non-401/403 responses, JWT issuance in API tests resolves via `JwtServiceInterface`, and example tests create users directly without model factories.
 - Added unit tests for `JwtService`, `ExtractsAuthContext`, and core model relationships.

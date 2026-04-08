@@ -7,12 +7,14 @@ namespace App\Http\Middleware;
 use App\Contracts\JwtServiceInterface;
 use Closure;
 use Illuminate\Http\Request;
+use Nexus\IdentityOperations\Services\SessionValidatorInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 final readonly class JwtAuthenticate
 {
     public function __construct(
         private JwtServiceInterface $jwt,
+        private SessionValidatorInterface $sessionValidator,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -34,8 +36,19 @@ final readonly class JwtAuthenticate
             return response()->json(['error' => 'Invalid token type'], 401);
         }
 
+        if (is_string($payload->sid) && $payload->sid !== '') {
+            try {
+                if (! $this->sessionValidator->isValid($payload->sid)) {
+                    return response()->json(['error' => 'Session revoked'], 401);
+                }
+            } catch (\Throwable) {
+                return response()->json(['error' => 'Session validation unavailable'], 503);
+            }
+        }
+
         $request->attributes->set('auth_user_id', $payload->sub);
         $request->attributes->set('auth_tenant_id', $payload->tenant_id);
+        $request->attributes->set('auth_session_id', $payload->sid);
 
         return $next($request);
     }
