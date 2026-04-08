@@ -14,6 +14,7 @@
 | Audit baseline | [`ALPHA_RELEASE_AUDIT.md`](./ALPHA_RELEASE_AUDIT.md) | Source-of-truth gap audit |
 | Scope baseline | [`../ALPHA_SCOPE.md`](../ALPHA_SCOPE.md) | Alpha boundaries and what is explicitly out-of-scope |
 | Progress analysis | [`../ALPHA_PROGRESS_ANALYSIS_2026-03-31.md`](../ALPHA_PROGRESS_ANALYSIS_2026-03-31.md) | Consolidated status readout across the top 10 gaps |
+| Remaining-gaps spec | [`../ALPHA_REMAINING_GAPS_IMPLEMENTATION_SPEC_2026-04-09.md`](../ALPHA_REMAINING_GAPS_IMPLEMENTATION_SPEC_2026-04-09.md) | Combined closure spec for all still-open alpha gaps |
 | Active mitigation | [`ALPHA_GAP_8_9_10_MITIGATION_PLAN_2026-04-09.md`](./ALPHA_GAP_8_9_10_MITIGATION_PLAN_2026-04-09.md) | Current execution plan for production readiness, mock-removal, and docs consolidation |
 
 ---
