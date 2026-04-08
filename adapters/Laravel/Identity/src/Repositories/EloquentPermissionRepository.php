@@ -97,9 +97,11 @@ final readonly class EloquentPermissionRepository implements PermissionRepositor
         if ($resource !== '') {
             $query->where(function ($builder) use ($normalizedPermission, $resource): void {
                 $builder
-                    ->where('name', $normalizedPermission)
-                    ->orWhere('name', '*')
-                    ->orWhere('name', $resource . '.*');
+                    ->where('name', '*')
+                    ->orWhere('name', $resource)
+                    ->orWhere('name', $normalizedPermission)
+                    ->orWhere('name', $resource . '.*')
+                    ->orWhere('name', 'like', $resource . '.%');
             });
         }
 
@@ -144,7 +146,12 @@ final readonly class EloquentPermissionRepository implements PermissionRepositor
         $payload = [];
 
         if (array_key_exists('name', $data)) {
-            $payload['name'] = trim((string) $data['name']);
+            $normalizedName = trim((string) $data['name']);
+            if ($normalizedName !== '') {
+                $payload['name'] = $normalizedName;
+            } elseif ($existingPermission !== null) {
+                $payload['name'] = $existingPermission->getName();
+            }
         } elseif ($existingPermission !== null) {
             $payload['name'] = $existingPermission->getName();
         }

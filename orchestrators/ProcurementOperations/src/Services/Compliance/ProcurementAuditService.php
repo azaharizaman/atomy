@@ -196,14 +196,14 @@ final class ProcurementAuditService implements ProcurementAuditServiceInterface
 
         foreach ($roles as $role) {
             // Get users assigned to this role using userQuery's findByRole
-            $usersWithRole = $this->userQuery->findByRole($role->getId());
+            $usersWithRole = $this->userQuery->findByRole($role->getId(), $tenantId);
 
             foreach ($usersWithRole as $user) {
                 $userId = $user->getId();
 
                 if (!isset($userRoleAssignments[$userId])) {
                     // First time seeing this user, initialize
-                    $userRoles = $this->userQuery->getUserRoles($userId);
+                    $userRoles = $this->userQuery->getUserRoles($userId, $tenantId);
                     $userRoleAssignments[$userId] = [
                         'user_id' => $userId,
                         'user_name' => $user->getEmail(), // Use email as identifier

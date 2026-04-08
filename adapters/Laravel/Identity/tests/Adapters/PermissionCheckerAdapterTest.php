@@ -82,6 +82,10 @@ final class PermissionCheckerAdapterTest extends TestCase
                     default => null,
                 };
             });
+        $permissionRepository->shouldReceive('findMatching')
+            ->andReturnUsing(static function (string $name) use ($wildcardPermission): array {
+                return $name === 'rfqs.approve' ? [$wildcardPermission] : [];
+            });
 
         $permissionChecker = new PermissionCheckerAdapter(
             $permissionRepository,
@@ -117,6 +121,8 @@ final class PermissionCheckerAdapterTest extends TestCase
             ->andReturn([])->zeroOrMoreTimes();
         $roleRepository->shouldReceive('getRoleHierarchy')
             ->andReturn([])->zeroOrMoreTimes();
+        $permissionRepository->shouldReceive('findByNameOrNull')->andReturnNull();
+        $permissionRepository->shouldReceive('findMatching')->andReturn([]);
 
         $permissionChecker = new PermissionCheckerAdapter(
             $permissionRepository,
@@ -175,9 +181,36 @@ final class PermissionCheckerAdapterTest extends TestCase
         $permission->shouldReceive('isWildcard')->andReturn(str_contains($name, '*'));
         $permission->shouldReceive('getCreatedAt')->andReturn(new \DateTimeImmutable());
         $permission->shouldReceive('getUpdatedAt')->andReturn(new \DateTimeImmutable());
-        $permission->shouldReceive('matches')->andReturnUsing(
-            static fn (string $permissionName) => $name === '*' || $name === $permissionName || (str_ends_with($name, '.*') && str_starts_with($permissionName, rtrim($name, '*.') . '.')),
-        );
+        $permission->shouldReceive('matches')->andReturnUsing(static function (string $permissionName) use ($name): bool {
+            $candidate = strtolower(trim($permissionName));
+            $granted = strtolower(trim($name));
+
+            if ($granted === '' || $candidate === '') {
+                return false;
+            }
+
+            if ($granted === '*' || $candidate === '*') {
+                return true;
+            }
+
+            if ($granted === $candidate) {
+                return true;
+            }
+
+            if (str_ends_with($granted, '.*')) {
+                $prefix = substr($granted, 0, -2);
+
+                return $prefix !== '' && ($candidate === $prefix || str_starts_with($candidate, $prefix . '.'));
+            }
+
+            if (str_ends_with($candidate, '.*')) {
+                $prefix = substr($candidate, 0, -2);
+
+                return $prefix !== '' && ($granted === $prefix || str_starts_with($granted, $prefix . '.'));
+            }
+
+            return false;
+        });
 
         return $permission;
     }

@@ -15,34 +15,38 @@ use Nexus\Identity\Exceptions\InvalidSessionException;
 use Nexus\Identity\ValueObjects\SessionToken;
 use Nexus\Laravel\Identity\Mappers\LaravelUserMapper;
 
-final class DatabaseSessionManager implements SessionManagerInterface
+final readonly class DatabaseSessionManager implements SessionManagerInterface
 {
     public function createSession(string $userId, array $metadata = []): SessionToken
     {
         $now = new DateTimeImmutable();
         $expiresAt = $now->add(new DateInterval('PT1H'));
         $token = bin2hex(random_bytes(32));
+        $tenantId = $this->normalizeTenantId($metadata['tenant_id'] ?? null);
+        $deviceFingerprint = $this->normalizeString($metadata['device_fingerprint'] ?? null);
 
         $payload = array_merge($metadata, [
             'expires_at' => $expiresAt->format(DateTimeInterface::ATOM),
         ]);
 
-        SessionModel::query()->create([
-            'id' => $token,
-            'user_id' => $userId,
-            'tenant_id' => $this->normalizeTenantId($metadata['tenant_id'] ?? null),
-            'payload' => $payload,
-            'last_activity' => $now,
-        ]);
-
-        return new SessionToken(
+        $sessionToken = new SessionToken(
             token: $token,
             userId: $userId,
             expiresAt: $expiresAt,
             metadata: $metadata,
-            deviceFingerprint: $this->normalizeString($metadata['device_fingerprint'] ?? null),
+            deviceFingerprint: $deviceFingerprint,
             lastActivityAt: $now,
         );
+
+        SessionModel::query()->create([
+            'id' => $token,
+            'user_id' => $userId,
+            'tenant_id' => $tenantId,
+            'payload' => $payload,
+            'last_activity' => $now,
+        ]);
+
+        return $sessionToken;
     }
 
     public function validateSession(string $token): UserInterface
@@ -52,7 +56,15 @@ final class DatabaseSessionManager implements SessionManagerInterface
             throw new InvalidSessionException('Session not found or expired');
         }
 
-        $user = UserModel::query()->whereKey($session->user_id)->first();
+        $tenantId = $this->normalizeTenantId($session->tenant_id);
+        if ($tenantId === null) {
+            throw new InvalidSessionException('Session tenant context is missing');
+        }
+
+        $user = UserModel::query()
+            ->whereKey($session->user_id)
+            ->where('tenant_id', $tenantId)
+            ->first();
         if ($user === null) {
             throw new InvalidSessionException('Session user not found');
         }
@@ -112,7 +124,11 @@ final class DatabaseSessionManager implements SessionManagerInterface
 
     public function refreshSession(string $token): SessionToken
     {
-        $session = SessionModel::query()->whereKey($token)->firstOrFail();
+        $session = $this->findActiveSession($token);
+        if ($session === null) {
+            throw new InvalidSessionException('Session not found or expired');
+        }
+
         $now = new DateTimeImmutable();
         $expiresAt = $now->add(new DateInterval('PT1H'));
         $payload = $this->sessionPayload($session);
@@ -130,7 +146,7 @@ final class DatabaseSessionManager implements SessionManagerInterface
     {
         $deleted = 0;
 
-        SessionModel::query()->chunk(500, function ($sessions) use (&$deleted): void {
+        SessionModel::query()->chunkById(500, function ($sessions) use (&$deleted): void {
             foreach ($sessions as $session) {
                 if (! $this->sessionIsActive($session)) {
                     $session->delete();
@@ -191,7 +207,7 @@ final class DatabaseSessionManager implements SessionManagerInterface
         $threshold = new DateTimeImmutable(sprintf('-%d days', $inactivityThresholdDays));
         $deleted = 0;
 
-        SessionModel::query()->chunk(500, function ($sessions) use (&$deleted, $threshold): void {
+        SessionModel::query()->chunkById(500, function ($sessions) use (&$deleted, $threshold): void {
             foreach ($sessions as $session) {
                 $lastActivity = $session->last_activity instanceof DateTimeInterface
                     ? DateTimeImmutable::createFromInterface($session->last_activity)

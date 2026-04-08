@@ -22,12 +22,16 @@ final readonly class NexusPermission
         $userId = $request->attributes->get('auth_user_id');
         $tenantId = $request->attributes->get('auth_tenant_id');
 
-        if (!$userId || !$tenantId) {
+        if (! $userId || ! $tenantId) {
             return response()->json(['error' => 'Authentication required'], 401);
         }
 
         try {
             $user = $this->userRepository->findById((string) $userId);
+            if (trim((string) ($user->getTenantId() ?? '')) !== trim((string) $tenantId)) {
+                return response()->json(['error' => 'Forbidden'], 403);
+            }
+
             if ($this->permissionChecker->hasPermission($user, $permission)) {
                 return $next($request);
             }

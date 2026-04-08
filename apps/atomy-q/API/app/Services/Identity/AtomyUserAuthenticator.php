@@ -95,10 +95,16 @@ final readonly class AtomyUserAuthenticator implements UserAuthenticatorInterfac
 
     private function resolveCandidateRow(string $normalizedEmail): ?UserModel
     {
-        return UserModel::query()
+        $candidates = UserModel::query()
             ->where('email', $normalizedEmail)
-            ->orderBy('tenant_id')
-            ->first();
+            ->limit(2)
+            ->get();
+
+        if ($candidates->count() !== 1) {
+            return null;
+        }
+
+        return $candidates->first();
     }
 
     private function normalizeEmail(string $email): string
@@ -128,10 +134,10 @@ final readonly class AtomyUserAuthenticator implements UserAuthenticatorInterfac
 
     private function incrementFailedAttempts(UserModel $row): int
     {
-        $row->failed_login_attempts = (int) ($row->failed_login_attempts ?? 0) + 1;
-        $row->save();
+        UserModel::query()->whereKey((string) $row->id)->increment('failed_login_attempts');
+        $row->refresh();
 
-        return (int) $row->failed_login_attempts;
+        return (int) ($row->failed_login_attempts ?? 0);
     }
 
     private function resetFailedAttempts(UserModel $row): void

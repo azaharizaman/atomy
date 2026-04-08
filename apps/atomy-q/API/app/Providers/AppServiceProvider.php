@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
+use App\Contracts\MfaChallengeStoreInterface;
 use App\Contracts\PasswordResetServiceInterface;
 use App\Adapters\Identity\EloquentAdminCreator;
 use App\Adapters\Tenant\EloquentTenantCreator;
@@ -16,6 +17,7 @@ use App\Services\Identity\AtomyNoopMfaEnrollmentService;
 use App\Services\Identity\AtomyPasswordHasher;
 use App\Services\Identity\AtomyMfaVerificationService;
 use App\Services\Identity\AtomyAuditLogRepository;
+use App\Services\Identity\AtomyMfaChallengeStore;
 use App\Services\Identity\AtomyUserAuthenticator;
 use App\Services\Identity\AtomyUserPersist;
 use App\Services\Identity\AtomyUserQuery;
@@ -347,6 +349,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SessionManagerInterface::class, \Nexus\Laravel\Identity\Adapters\DatabaseSessionManager::class);
         $this->app->singleton(MfaEnrollmentServiceInterface::class, AtomyNoopMfaEnrollmentService::class);
         $this->app->singleton(MfaVerificationServiceInterface::class, AtomyMfaVerificationService::class);
+        $this->app->singleton(MfaChallengeStoreInterface::class, AtomyMfaChallengeStore::class);
         $this->app->singleton(PermissionQueryInterface::class, static function ($app): PermissionQueryInterface {
             return $app->make(\Nexus\Identity\Contracts\PermissionRepositoryInterface::class);
         });

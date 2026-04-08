@@ -16,6 +16,11 @@ return new class extends Migration
             $table->string('method');
             $table->text('secret');
             $table->boolean('is_active')->default(true);
+            $table->boolean('verified')->default(false);
+            $table->boolean('revoked')->default(false);
+            $table->boolean('is_primary')->default(false);
+            $table->timestamp('verified_at')->nullable();
+            $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();

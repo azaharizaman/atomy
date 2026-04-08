@@ -6,13 +6,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MfaEnrollment extends Model
 {
     use HasUlids;
 
     protected $table = 'mfa_enrollments';
-    protected $fillable = ['user_id', 'method', 'secret', 'is_active'];
-    protected $casts = ['is_active' => 'boolean'];
+    protected $fillable = [
+        'user_id',
+        'method',
+        'secret',
+        'is_active',
+        'verified',
+        'revoked',
+        'is_primary',
+        'verified_at',
+        'last_used_at',
+    ];
+    protected $casts = [
+        'secret' => 'encrypted',
+        'is_active' => 'boolean',
+        'verified' => 'boolean',
+        'revoked' => 'boolean',
+        'is_primary' => 'boolean',
+        'verified_at' => 'datetime',
+        'last_used_at' => 'datetime',
+    ];
 }

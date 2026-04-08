@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Identity;
 
+use App\Contracts\MfaChallengeStoreInterface;
 use App\Models\MfaChallenge;
 use DateInterval;
 use DateTimeImmutable;
 
-final readonly class AtomyMfaChallengeStore
+final readonly class AtomyMfaChallengeStore implements MfaChallengeStoreInterface
 {
     private const CHALLENGE_TTL_SECONDS = 600;
     private const MAX_ATTEMPTS = 5;
@@ -59,4 +60,3 @@ final readonly class AtomyMfaChallengeStore
         $challenge->save();
     }
 }
-

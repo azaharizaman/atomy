@@ -99,16 +99,6 @@ class Permission extends Model implements PermissionInterface
             return $prefix !== '' && ($granted === $prefix || str_starts_with($granted, $prefix . '.'));
         }
 
-        $grantedParts = explode('.', $granted);
-        $candidateParts = explode('.', $candidate);
-        $sharedSegments = min(count($grantedParts), count($candidateParts));
-
-        for ($index = 0; $index < $sharedSegments; $index++) {
-            if ($grantedParts[$index] !== $candidateParts[$index]) {
-                return false;
-            }
-        }
-
-        return true;
+        return false;
     }
 }

@@ -207,11 +207,13 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
      */
     public function search(array $criteria): array
     {
-        $query = UserModel::query();
-
-        if (isset($criteria['tenant_id']) && is_string($criteria['tenant_id']) && trim($criteria['tenant_id']) !== '') {
-            $query->where('tenant_id', trim($criteria['tenant_id']));
+        $tenantId = isset($criteria['tenant_id']) && is_string($criteria['tenant_id'])
+            ? trim($criteria['tenant_id'])
+            : '';
+        if ($tenantId === '') {
+            throw new \InvalidArgumentException('tenant_id is required for user search');
         }
+        $query = UserModel::query()->where('tenant_id', $tenantId);
 
         if (isset($criteria['status']) && is_string($criteria['status']) && trim($criteria['status']) !== '') {
             $query->where('status', trim($criteria['status']));
@@ -256,7 +258,10 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
 
     public function update(string $id, array $data): UserInterface
     {
-        $user = $this->findUserOrFail($id);
+        $tenantId = isset($data['tenant_id']) && is_string($data['tenant_id']) && trim($data['tenant_id']) !== ''
+            ? trim($data['tenant_id'])
+            : null;
+        $user = $tenantId !== null ? $this->findUserScopedOrFail($id, $tenantId) : $this->findUserOrFail($id);
         $payload = $this->normalizeUserPayload($data, $user);
 
         if ($payload !== []) {

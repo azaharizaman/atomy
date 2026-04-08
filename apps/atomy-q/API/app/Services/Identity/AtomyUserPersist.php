@@ -145,50 +145,50 @@ final readonly class AtomyUserPersist implements UserPersistInterface
 
     public function incrementFailedLoginAttempts(string $userId): int
     {
-        $user = UserModel::query()->whereKey($userId)->first();
-        if ($user === null) {
+        $updated = UserModel::query()->whereKey($userId)->increment('failed_login_attempts');
+        if ($updated === 0) {
             throw new UserNotFoundException($userId);
         }
 
-        $user->failed_login_attempts = (int) ($user->failed_login_attempts ?? 0) + 1;
-        $user->save();
+        $attempts = UserModel::query()->whereKey($userId)->value('failed_login_attempts');
 
-        return (int) $user->failed_login_attempts;
+        return (int) ($attempts ?? 0);
     }
 
     public function resetFailedLoginAttempts(string $userId): void
     {
-        $updated = UserModel::query()->whereKey($userId)->update(['failed_login_attempts' => 0]);
-        if ($updated === 0) {
+        if (! UserModel::query()->whereKey($userId)->exists()) {
             throw new UserNotFoundException($userId);
         }
+
+        UserModel::query()->whereKey($userId)->update(['failed_login_attempts' => 0]);
     }
 
     public function lockAccount(string $userId, string $reason): void
     {
-        $updated = UserModel::query()->whereKey($userId)->update([
+        if (! UserModel::query()->whereKey($userId)->exists()) {
+            throw new UserNotFoundException($userId);
+        }
+
+        UserModel::query()->whereKey($userId)->update([
             'status' => 'locked',
             'lockout_reason' => trim($reason) !== '' ? $reason : null,
             'lockout_expires_at' => null,
         ]);
-
-        if ($updated === 0) {
-            throw new UserNotFoundException($userId);
-        }
     }
 
     public function unlockAccount(string $userId): void
     {
-        $updated = UserModel::query()->whereKey($userId)->update([
+        if (! UserModel::query()->whereKey($userId)->exists()) {
+            throw new UserNotFoundException($userId);
+        }
+
+        UserModel::query()->whereKey($userId)->update([
             'status' => 'active',
             'lockout_reason' => null,
             'lockout_expires_at' => null,
             'failed_login_attempts' => 0,
         ]);
-
-        if ($updated === 0) {
-            throw new UserNotFoundException($userId);
-        }
     }
 
     private function composeDisplayName(string $firstName, string $lastName, string $fallbackEmail): string

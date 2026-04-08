@@ -88,6 +88,13 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         ]);
 
         $user = $this->authenticator->getUserById($userId);
+        $resolvedTenantId = isset($user['tenant_id']) && is_string($user['tenant_id']) ? trim($user['tenant_id']) : '';
+        if ($resolvedTenantId === '' || $resolvedTenantId !== $tenantId) {
+            throw new \InvalidArgumentException('User does not belong to the requested tenant');
+        }
+        if (($user['status'] ?? null) !== 'active') {
+            throw new \InvalidArgumentException('User account is not eligible for MFA completion');
+        }
 
         $accessToken = $this->tokenManager->generateAccessToken($user['id'], $tenantId);
         $refreshToken = $this->tokenManager->generateRefreshToken($user['id'], $tenantId);

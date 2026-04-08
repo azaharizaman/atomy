@@ -256,6 +256,7 @@ final readonly class IdentityOperationsAdapter implements
         return [
             'id' => $user->getId(),
             'email' => $user->getEmail(),
+            'tenant_id' => $user->getTenantId(),
             'first_name' => $user->getName(), // UserInterface has getName, not getFirstName/LastName
             'last_name' => null,
             'status' => PackageUserStatus::from($user->getStatus())->value,

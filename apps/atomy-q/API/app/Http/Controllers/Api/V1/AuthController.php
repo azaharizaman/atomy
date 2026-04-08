@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\JwtServiceInterface;
+use App\Contracts\MfaChallengeStoreInterface;
 use App\Contracts\PasswordResetServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
-use App\Services\Identity\AtomyMfaChallengeStore;
 use Nexus\Identity\Exceptions\AccountInactiveException;
 use Nexus\Identity\Exceptions\AccountLockedException;
 use Nexus\Identity\Exceptions\InvalidCredentialsException;
@@ -33,7 +33,7 @@ final class AuthController extends Controller
         private readonly PasswordResetServiceInterface $passwordResetService,
         private readonly IdentityUserQueryInterface $identityUsers,
         private readonly UserAuthenticationCoordinatorInterface $authCoordinator,
-        private readonly AtomyMfaChallengeStore $mfaChallenges,
+        private readonly MfaChallengeStoreInterface $mfaChallenges,
         private readonly MfaVerificationServiceInterface $mfaVerification,
         private readonly AuditLoggerInterface $auditLogger,
     ) {

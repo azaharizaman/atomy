@@ -147,6 +147,21 @@ final readonly class AtomyUserQuery implements UserQueryInterface
             static fn (mixed $value): bool => is_string($value) && trim($value) !== '',
         )));
 
+        if ($tenantId !== null && trim($tenantId) !== '' && $roleIds !== []) {
+            $tenantScopedRoleIds = RoleModel::query()
+                ->whereIn('id', $roleIds)
+                ->where(static function ($builder) use ($tenantId): void {
+                    $builder->whereNull('tenant_id')->orWhere('tenant_id', $tenantId);
+                })
+                ->pluck('id')
+                ->all();
+
+            $roleIds = array_values(array_intersect($roleIds, array_map(
+                static fn (mixed $value): string => (string) $value,
+                $tenantScopedRoleIds,
+            )));
+        }
+
         if ($roleIds !== []) {
             foreach (
                 DB::table('role_permissions')
@@ -192,6 +207,22 @@ final readonly class AtomyUserQuery implements UserQueryInterface
      */
     public function findByRole(string $roleId, string $tenantId): array
     {
+        $pivotUsers = UserModel::query()
+            ->where('tenant_id', $tenantId)
+            ->whereExists(static function ($query) use ($roleId): void {
+                $query->selectRaw('1')
+                    ->from('user_roles')
+                    ->whereColumn('user_roles.user_id', 'users.id')
+                    ->where('user_roles.role_id', $roleId);
+            })
+            ->get();
+
+        if ($pivotUsers->isNotEmpty()) {
+            return $pivotUsers
+                ->map(fn (UserModel $u): UserInterface => new AtomyIdentityUser($u))
+                ->all();
+        }
+
         return UserModel::query()
             ->where('tenant_id', $tenantId)
             ->where('role', $roleId)

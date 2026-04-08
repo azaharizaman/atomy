@@ -11,7 +11,6 @@ use Nexus\Identity\Contracts\PasswordHasherInterface;
 use Nexus\Identity\Contracts\PermissionCheckerInterface;
 use Nexus\Identity\Contracts\SsoProviderInterface;
 use Nexus\Laravel\Identity\Adapters\CacheRepositoryAdapter;
-use Nexus\Laravel\Identity\Adapters\LaravelPasswordHasher;
 use Nexus\Laravel\Identity\Adapters\PermissionCheckerAdapter;
 use Nexus\Laravel\Identity\Adapters\UserPersistAdapter;
 use Nexus\Laravel\Identity\Sso\OidcSsoProviderAdapter;
@@ -59,7 +58,6 @@ class IdentityAdapterServiceProvider extends ServiceProvider
         $this->app->singleton(MfaEnrollmentRepositoryInterface::class, EloquentMfaEnrollmentRepository::class);
         $this->app->singleton(BackupCodeRepositoryInterface::class, EloquentBackupCodeRepository::class);
         $this->app->singleton(SessionManagerInterface::class, DatabaseSessionManager::class);
-        $this->app->singleton(PasswordHasherInterface::class, LaravelPasswordHasher::class);
 
         // Register UserPersist adapter
         $this->app->singleton(\Nexus\Identity\Contracts\UserPersistInterface::class, function () {

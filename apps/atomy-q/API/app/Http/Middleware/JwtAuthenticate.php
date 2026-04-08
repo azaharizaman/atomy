@@ -36,8 +36,14 @@ final readonly class JwtAuthenticate
             return response()->json(['error' => 'Invalid token type'], 401);
         }
 
-        if (is_string($payload->sid) && $payload->sid !== '' && ! $this->sessionValidator->isValid($payload->sid)) {
-            return response()->json(['error' => 'Session revoked'], 401);
+        if (is_string($payload->sid) && $payload->sid !== '') {
+            try {
+                if (! $this->sessionValidator->isValid($payload->sid)) {
+                    return response()->json(['error' => 'Session revoked'], 401);
+                }
+            } catch (\Throwable) {
+                return response()->json(['error' => 'Session validation unavailable'], 503);
+            }
         }
 
         $request->attributes->set('auth_user_id', $payload->sub);
