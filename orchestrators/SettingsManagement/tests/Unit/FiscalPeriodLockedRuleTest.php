@@ -16,7 +16,7 @@ final class FiscalPeriodLockedRuleTest extends TestCase
 
         $result = $rule->evaluate([
             'periodId' => 'FY2026-P01',
-            'operationType' => PeriodOperationType::TRANSACTION,
+            'operationType' => PeriodOperationType::TRANSACTION->value,
             'period' => [
                 'status' => 'open',
                 'isLocked' => false,
@@ -33,7 +33,7 @@ final class FiscalPeriodLockedRuleTest extends TestCase
 
         $result = $rule->evaluate([
             'periodId' => 'FY2026-P02',
-            'operationType' => PeriodOperationType::TRANSACTION,
+            'operationType' => PeriodOperationType::TRANSACTION->value,
             'period' => [
                 'isLocked' => false,
             ],
@@ -49,7 +49,7 @@ final class FiscalPeriodLockedRuleTest extends TestCase
 
         $result = $rule->evaluate([
             'periodId' => 'FY2026-P03',
-            'operationType' => PeriodOperationType::TRANSACTION,
+            'operationType' => PeriodOperationType::TRANSACTION->value,
             'period' => [
                 'status' => 'closed',
                 'isLocked' => false,
@@ -85,7 +85,7 @@ final class FiscalPeriodLockedRuleTest extends TestCase
 
         $result = $rule->evaluate([
             'periodId' => 'FY2026-P05',
-            'operationType' => PeriodOperationType::ADJUSTMENT,
+            'operationType' => PeriodOperationType::ADJUSTMENT->value,
             'period' => [
                 'status' => 'open',
                 'isLocked' => true,
@@ -104,7 +104,7 @@ final class FiscalPeriodLockedRuleTest extends TestCase
 
         $result = $rule->evaluate([
             'periodId' => 'FY2026-P06',
-            'operationType' => 'transaction',
+            'operationType' => PeriodOperationType::TRANSACTION->value,
             'period' => [
                 'status' => 'open',
                 'isLocked' => true,

@@ -7,7 +7,6 @@ namespace Nexus\SettingsManagement\Rules;
 use Nexus\SettingsManagement\Contracts\RuleValidationInterface;
 use Nexus\SettingsManagement\Contracts\RuleValidationResult;
 use Nexus\SettingsManagement\DTOs\FiscalPeriod\PeriodOperationType;
-
 /**
  * Validates that a fiscal period is not locked for the requested operation.
  */
