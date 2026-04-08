@@ -163,22 +163,15 @@ export function useRfqs(params: UseRfqsParams) {
       const page = Math.max(1, params.page ?? 1);
 
       if (!useMocks) {
-        try {
-          const apiParams: Record<string, string | number | undefined> = { ...params };
-          if (params.projectId) apiParams.project_id = params.projectId;
-          const { data } = await api.get('/rfqs', { params: apiParams });
-          const items = normalizeRfqsPayload(data).filter((x) => x.id);
-          const metaFromApi = parseRfqsMeta(data);
-          if (metaFromApi === null) {
-            throw new Error('Invalid RFQ list response: pagination meta');
-          }
-          return { items, meta: metaFromApi };
-        } catch (e) {
-          if (e instanceof Error && e.message === 'Invalid RFQ list response: pagination meta') {
-            throw e;
-          }
-          // fallback to seed data on connection error if preferred, or throw
+        const apiParams: Record<string, string | number | undefined> = { ...params };
+        if (params.projectId) apiParams.project_id = params.projectId;
+        const { data } = await api.get('/rfqs', { params: apiParams });
+        const items = normalizeRfqsPayload(data).filter((x) => x.id);
+        const metaFromApi = parseRfqsMeta(data);
+        if (metaFromApi === null) {
+          throw new Error('Invalid RFQ list response: pagination meta');
         }
+        return { items, meta: metaFromApi };
       }
 
       const { getSeedRfqListItems } = await import('@/data/seed');
@@ -196,4 +189,3 @@ export function useRfqs(params: UseRfqsParams) {
     },
   });
 }
-

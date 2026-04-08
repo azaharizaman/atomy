@@ -21,7 +21,7 @@
 
 ## Audience guide
 
-Each week document is structured for:
+Active alpha documents are structured for:
 
 - **Engineering / human developers** — tasks, files, PRs, tests  
 - **AI coding agents** — bounded tasks, acceptance criteria, verification commands  
@@ -36,9 +36,10 @@ Each week document is structured for:
 ## Current critical path to alpha
 
 1. Build, lint, and API/WEB test gates are reproducible in CI and staging.
-2. Live mode has no silent seed/mock fallback on golden-path pages.
-3. Queue/storage/env contracts are documented and verified in runbooks.
-4. Gap ownership and closure evidence are maintained in one active mitigation ledger.
+2. Live mode has no silent seed/mock fallback on golden-path pages (RFQ list path already fail-loud; remaining pages pending).
+3. Vendor API baseline is now tenant-scoped and live; OpenAPI/client parity + award journey closure remain.
+4. Queue/storage/env contracts are documented and verified in runbooks.
+5. Gap ownership and closure evidence are maintained in one active mitigation ledger.
 
 ---
 
@@ -53,4 +54,4 @@ The weekly execution documents and generated GitHub-project bootstrap artifacts 
 
 ---
 
-*Version: 1.1.0 — stale weekly artifacts retired; active mitigation index established*
+*Version: 1.2.0 — vendor API baseline live; critical-path checkpoints refreshed*

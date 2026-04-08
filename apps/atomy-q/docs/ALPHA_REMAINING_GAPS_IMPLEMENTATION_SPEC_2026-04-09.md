@@ -38,24 +38,23 @@ Verification evidence used:
 | Gap | Title | Status | Risk | Implementation remaining |
 |---|---|---|---|
 | 1 | Winner selection / award flow | Open (partially live) | High | Yes |
-| 2 | Vendor master data | Open (stubbed controller despite package/adapter availability) | High | Yes |
-| 3 | RFQ lifecycle mutations | Reopened (runtime wiring regression) | Critical | Yes |
+| 2 | Vendor master data | Open (API baseline now live; OpenAPI/WEB parity pending) | Medium | Yes |
+| 3 | RFQ lifecycle mutations | Closed again (runtime wiring restored) | Medium | No (monitor regression) |
 | 4 | Quote ingestion + AI normalization | Open (pipeline live, intelligence adapters mock-backed) | High | Yes |
 | 5 | Comparison preview/matrix/readiness | Closed for alpha baseline (beta controls deferred intentionally) | Medium | No |
 | 6 | Tenant/company lifecycle | Closed for alpha baseline onboarding | Low | No (post-alpha enrichments remain) |
 | 7 | Identity/permissions/session | Open (mixed: core auth works; several identity surfaces remain stub/no-op) | High | Yes |
-| 8 | Production readiness debt | Open | Critical | Yes |
-| 9 | Mock fallback leakage | Open | Critical | Yes |
+| 8 | Production readiness debt | Open (gates recovered, hardening pending) | High | Yes |
+| 9 | Mock fallback leakage | Open (partially reduced) | High | Yes |
 | 10 | Fragmented/stale roadmap docs | Open (improved but not fully governed) | Medium | Yes (lightweight) |
 
 ## 4) Evidence snapshot (what changed in confidence)
 
-1. WEB build is currently failing on real type checks (`comparison-runs/[runId]/page.tsx` snapshot type mismatch).
-2. WEB lint is failing with 12 errors (including generated client and award tests), so current quality gate is red.
-3. API targeted tests mostly pass, but `RfqLifecycleMutationTest` fails due missing `nexus/sourcing-operations` installation in lock/vendor despite being required in `composer.json`.
-4. `composer.json` vs `composer.lock` diff shows `nexus/sourcing-operations` is missing from lock.
+1. WEB build and lint hard gates were red and are now passing after Phase 1 fixes (type mismatch + lint scope/test typing cleanup).
+2. API RFQ lifecycle regression caused by missing `nexus/sourcing-operations` lock/vendor installation is now resolved; targeted lifecycle tests pass.
+3. Live-mode RFQ list no longer silently falls back to seed data on API failure (`use-rfqs` fail-loud behavior + tests).
 5. Awards API and tests are substantially live; however award creation is not wired end-to-end from final comparison flow in UI journey.
-6. Vendor endpoints in `VendorController` remain explicit stubs with tenant-scoping TODOs, even though Layer 1 Vendor package and Laravel adapter are present.
+6. Vendor endpoints in `VendorController` now return tenant-scoped persisted vendor rows, computed performance metrics, compliance metadata, and award history with feature-test coverage.
 7. Quote ingestion pipeline is operational with tests, but Layer 3 still binds `MockContentProcessor` and `MockSemanticMapper` in `AppServiceProvider`.
 8. Identity has meaningful progress (Gap 7 tests pass), but token management and MFA enrollment still use stub/no-op services, and user/role management endpoints are stubbed.
 9. Frontend still has broad mock-mode surface (`NEXT_PUBLIC_USE_MOCKS` in many hooks/pages; seed/mocked behavior remains intertwined with live paths).
@@ -94,11 +93,12 @@ Layer-cascade finding:
 
 1. Layer 1 `Vendor` contracts/value objects exist.
 2. Layer 3 Laravel Vendor adapter/repository exists and is installable.
-3. Atomy API `VendorController` still returns placeholder payloads and TODO tenant-scoping comments.
+3. Atomy API `VendorController` now serves tenant-scoped data from `vendors`, `quote_submissions`, and `awards` with explicit 404 isolation behavior.
+4. Remaining closure work is contract parity for OpenAPI/client regeneration and any WEB surface that consumes `/vendors/*`.
 
 Closure evidence:
 
-1. API tests for tenant-scoped browse/detail responses.
+1. API tests for tenant-scoped browse/detail/performance/compliance/history responses.
 2. Seeder or fixture strategy for deterministic test data.
 3. OpenAPI/client regeneration committed with no drift.
 
@@ -166,9 +166,8 @@ Required outcomes:
 
 Current blockers observed:
 
-1. WEB build red (TypeScript compile error in comparison run page).
-2. WEB lint red (12 errors).
-3. Composer dependency drift for `nexus/sourcing-operations` causes RFQ lifecycle runtime failure in tests.
+1. Hard build/lint/test gates are currently green for the targeted Phase 1 matrix, but warning cleanup and wider suite coverage are still pending.
+2. Queue/storage/env operational runbook validation is still pending.
 
 Closure evidence:
 
@@ -186,8 +185,8 @@ Required outcomes:
 
 Current blockers observed:
 
-1. Extensive mock flag usage remains across hooks/pages.
-2. `use-rfqs` still silently falls back to seed data on non-schema errors when not in mock mode.
+1. `use-rfqs` fail-loud behavior is now implemented and tested in live mode.
+2. Extensive mock flag usage still remains across other hooks/pages.
 3. Dashboard and several RFQ flows still carry mixed mock/live behavior.
 
 Closure evidence:
@@ -254,3 +253,14 @@ This spec should be used together with:
    - RFQ lifecycle mutation tests fail due missing `nexus/sourcing-operations` runtime package wiring.
 5. Composer lock parity check (`composer.json` vs `composer.lock`) -> **Mismatch**
    - `nexus/sourcing-operations` required but not present in lock/vendor.
+
+## 10) Execution checkpoint (2026-04-09, later pass)
+
+Completed in this session:
+
+1. `cd apps/atomy-q/API && composer update nexus/sourcing-operations` -> lock/vendor repaired.
+2. `cd apps/atomy-q/API && php artisan test --filter "RfqLifecycleMutationTest|AwardWorkflowTest|IdentityGap7Test"` -> **Pass**.
+3. `cd apps/atomy-q/API && php artisan test --filter "VendorWorkflowTest|RfqLifecycleMutationTest|AwardWorkflowTest|IdentityGap7Test"` -> **Pass**.
+4. `cd apps/atomy-q/WEB && npm run build` -> **Pass**.
+5. `cd apps/atomy-q/WEB && npm run lint` -> **Pass with warnings only**.
+6. `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-rfqs.test.ts src/hooks/use-rfqs.live.test.ts` -> **Pass**.
