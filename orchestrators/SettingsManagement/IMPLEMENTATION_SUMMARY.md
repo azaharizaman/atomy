@@ -19,6 +19,15 @@
   - locked-period adjustment behavior is correctly enforced for both string and enum operation inputs.
   - non-adjustment operations on locked periods are rejected.
 
+## Minimal Productionization Baseline (2026-04-10)
+
+- Added package-level Composer scripts in `composer.json`:
+  - `composer test`
+  - `composer test-coverage`
+- Introduced `phpunit.xml` with package-local defaults (autoload bootstrap, testsuite, coverage include for `src/`).
+- Updated `README.md` testing commands to the exact package-local flow (`cd`, `composer install`, `composer test`, `composer test-coverage`).
+- Added package-scoped CI workflow in `.github/workflows/settings-management-ci.yml` to run install + test + coverage-text on SettingsManagement changes.
+
 ## Last updated
 
-2026-04-08
+2026-04-10
