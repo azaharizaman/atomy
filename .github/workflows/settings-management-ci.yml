@@ -25,7 +25,5 @@ jobs:
           coverage: xdebug
       - name: Install dependencies
         run: composer install
-      - name: Run tests
-        run: composer test
       - name: Run coverage text
         run: composer test-coverage

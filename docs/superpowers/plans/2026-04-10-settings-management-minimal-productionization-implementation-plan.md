@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Add package test scripts and PHPUnit config
+## Task 1: Add package test scripts and PHPUnit config
 
 **Files:**
 - Modify: `orchestrators/SettingsManagement/composer.json`
@@ -88,7 +88,7 @@ git add orchestrators/SettingsManagement/composer.json orchestrators/SettingsMan
 git commit -m "chore(settings-management): add package test and coverage scripts"
 ```
 
-### Task 2: Align README with actual runnable commands
+## Task 2: Align README with actual runnable commands
 
 **Files:**
 - Modify: `orchestrators/SettingsManagement/README.md`
@@ -126,7 +126,7 @@ git add orchestrators/SettingsManagement/README.md
 git commit -m "docs(settings-management): align testing docs with composer scripts"
 ```
 
-### Task 3: Add package-scoped CI workflow
+## Task 3: Add package-scoped CI workflow
 
 **Files:**
 - Create: `.github/workflows/settings-management-ci.yml`
@@ -185,7 +185,7 @@ git add .github/workflows/settings-management-ci.yml
 git commit -m "ci(settings-management): add package-scoped test workflow"
 ```
 
-### Task 4: Final verification and handoff
+## Task 4: Final verification and handoff
 
 **Files:**
 - Modify: `orchestrators/SettingsManagement/IMPLEMENTATION_SUMMARY.md`
