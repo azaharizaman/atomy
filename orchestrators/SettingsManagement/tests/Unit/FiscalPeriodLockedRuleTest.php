@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\SettingsManagement\Tests\Unit;
 
+use PHPUnit\Framework\TestCase;
+
 use Nexus\SettingsManagement\DTOs\FiscalPeriod\PeriodOperationType;
 use Nexus\SettingsManagement\Rules\FiscalPeriodLockedRule;
-use PHPUnit\Framework\TestCase;
 
 final class FiscalPeriodLockedRuleTest extends TestCase
 {

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\SettingsManagement\Rules;
 
+use BackedEnum;
+use UnitEnum;
 use Nexus\SettingsManagement\Contracts\RuleValidationInterface;
 use Nexus\SettingsManagement\Contracts\RuleValidationResult;
 use Nexus\SettingsManagement\DTOs\FiscalPeriod\PeriodOperationType;
@@ -27,7 +29,7 @@ final class FiscalPeriodLockedRule implements RuleValidationInterface
         }
 
         $isLocked = $period['isLocked'] ?? false;
-        $status = is_string($period['status'] ?? null) ? strtolower(trim((string) $period['status'])) : 'open';
+        $status = $this->normalizeStatus($period['status'] ?? null);
         $isClosed = $status === 'closed';
 
         if ($isClosed) {
@@ -65,16 +67,40 @@ final class FiscalPeriodLockedRule implements RuleValidationInterface
         }
 
         if (is_string($operationType)) {
-            $normalized = strtolower(trim($operationType));
-            if ($normalized !== '') {
-                try {
-                    return PeriodOperationType::from($normalized);
-                } catch (\ValueError) {
-                    // Fall back to transaction when callers send unknown operation values.
-                }
+            $trimmed = trim($operationType);
+            if ($trimmed !== '') {
+                return PeriodOperationType::tryFrom($trimmed)
+                    ?? PeriodOperationType::tryFrom(strtolower($trimmed))
+                    ?? PeriodOperationType::TRANSACTION;
             }
         }
 
         return PeriodOperationType::TRANSACTION;
+    }
+
+    private function normalizeStatus(mixed $status): string
+    {
+        if (is_string($status)) {
+            $normalized = strtolower(trim($status));
+            if ($normalized !== '') {
+                return $normalized;
+            }
+        }
+
+        if ($status instanceof BackedEnum && is_string($status->value)) {
+            $normalized = strtolower(trim($status->value));
+            if ($normalized !== '') {
+                return $normalized;
+            }
+        }
+
+        if ($status instanceof UnitEnum) {
+            $normalized = strtolower(trim($status->name));
+            if ($normalized !== '') {
+                return $normalized;
+            }
+        }
+
+        return 'open';
     }
 }
