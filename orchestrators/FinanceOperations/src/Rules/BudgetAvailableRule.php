@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Rules;
 
+use Nexus\FinanceOperations\Contracts\BudgetAvailabilityQueryInterface;
 use Nexus\FinanceOperations\Contracts\BudgetAvailableRuleInterface;
-use Nexus\FinanceOperations\Contracts\RuleInterface;
+use Nexus\FinanceOperations\DTOs\RuleContexts\BudgetAvailableRuleContext;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -25,32 +26,45 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
 final readonly class BudgetAvailableRule implements BudgetAvailableRuleInterface
 {
     /**
-     * @param object $budgetQuery BudgetQueryInterface for budget operations
      * @param bool $strictMode If true, fails when budget exceeded; if false, passes with warning
      */
     public function __construct(
-        private object $budgetQuery,
+        private BudgetAvailabilityQueryInterface $budgetQuery,
         private bool $strictMode = true,
     ) {}
 
     /**
      * @inheritDoc
      *
-     * @param object $context Context containing tenantId, budgetId, amount, and optional costCenterId
-     * @return RuleResult The rule check result
      */
-    public function check(object $context): RuleResult
+    public function check(BudgetAvailableRuleContext $context): RuleResult
     {
-        $tenantId = $this->extractTenantId($context);
-        $budgetId = $this->extractBudgetId($context);
-        $requestedAmount = $this->extractAmount($context);
-        $costCenterId = $this->extractCostCenterId($context);
+        $tenantId = trim($context->tenantId);
+        $budgetId = trim($context->budgetId);
+        $requestedAmount = trim($context->amount);
+        $costCenterId = $context->costCenterId;
+
+        if ($tenantId === '') {
+            return RuleResult::failed(
+                $this->getName(),
+                'Tenant ID is required for budget availability validation',
+                ['missing_field' => 'tenantId']
+            );
+        }
 
         if (empty($budgetId)) {
             return RuleResult::failed(
                 $this->getName(),
                 'Budget ID is required for budget availability validation',
                 ['missing_field' => 'budgetId']
+            );
+        }
+
+        if (!is_numeric($requestedAmount)) {
+            return RuleResult::failed(
+                $this->getName(),
+                'Amount must be numeric for budget availability validation',
+                ['invalid_field' => 'amount']
             );
         }
 
@@ -124,98 +138,6 @@ final readonly class BudgetAvailableRule implements BudgetAvailableRuleInterface
     public function getName(): string
     {
         return 'budget_available';
-    }
-
-    /**
-     * Extract tenant ID from context.
-     *
-     * @param object $context The context object
-     * @return string The tenant ID
-     */
-    private function extractTenantId(object $context): string
-    {
-        if (method_exists($context, 'getTenantId')) {
-            return $context->getTenantId();
-        }
-
-        if (property_exists($context, 'tenantId')) {
-            return $context->tenantId ?? '';
-        }
-
-        if (property_exists($context, 'tenant_id')) {
-            return $context->tenant_id ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Extract budget ID from context.
-     *
-     * @param object $context The context object
-     * @return string The budget ID
-     */
-    private function extractBudgetId(object $context): string
-    {
-        if (method_exists($context, 'getBudgetId')) {
-            return $context->getBudgetId();
-        }
-
-        if (property_exists($context, 'budgetId')) {
-            return $context->budgetId ?? '';
-        }
-
-        if (property_exists($context, 'budget_id')) {
-            return $context->budget_id ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Extract amount from context.
-     *
-     * @param object $context The context object
-     * @return string The amount
-     */
-    private function extractAmount(object $context): string
-    {
-        if (method_exists($context, 'getAmount')) {
-            return (string) $context->getAmount();
-        }
-
-        if (property_exists($context, 'amount')) {
-            return (string) $context->amount;
-        }
-
-        if (property_exists($context, 'requestedAmount')) {
-            return (string) $context->requestedAmount;
-        }
-
-        return '0';
-    }
-
-    /**
-     * Extract cost center ID from context.
-     *
-     * @param object $context The context object
-     * @return string|null The cost center ID or null
-     */
-    private function extractCostCenterId(object $context): ?string
-    {
-        if (method_exists($context, 'getCostCenterId')) {
-            return $context->getCostCenterId();
-        }
-
-        if (property_exists($context, 'costCenterId')) {
-            return $context->costCenterId;
-        }
-
-        if (property_exists($context, 'cost_center_id')) {
-            return $context->cost_center_id;
-        }
-
-        return null;
     }
 
     /**

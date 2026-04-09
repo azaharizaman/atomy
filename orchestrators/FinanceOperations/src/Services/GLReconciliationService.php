@@ -46,7 +46,7 @@ final readonly class GLReconciliationService
         $this->logger->info('Starting GL reconciliation', [
             'tenant_id' => $request->tenantId,
             'period_id' => $request->periodId,
-            'subledger_type' => $request->subledgerType,
+            'subledger_type' => $request->subledgerType->value,
         ]);
 
         try {
@@ -54,7 +54,7 @@ final readonly class GLReconciliationService
             $subledgerData = $this->dataProvider->getSubledgerBalance(
                 $request->tenantId,
                 $request->periodId,
-                $request->subledgerType
+                $request->subledgerType->value
             );
 
             // Get GL control account balance
@@ -126,13 +126,13 @@ final readonly class GLReconciliationService
         } catch (\Throwable $e) {
             $this->logger->error('GL reconciliation failed', [
                 'tenant_id' => $request->tenantId,
-                'subledger_type' => $request->subledgerType,
+                'subledger_type' => $request->subledgerType->value,
                 'error' => $e->getMessage(),
             ]);
 
             throw GLReconciliationException::reconciliationMismatch(
                 $request->tenantId,
-                $request->subledgerType,
+                $request->subledgerType->value,
                 '0',
                 '0',
                 $e->getMessage()
@@ -151,7 +151,10 @@ final readonly class GLReconciliationService
         $this->logger->info('Checking GL consistency', [
             'tenant_id' => $request->tenantId,
             'period_id' => $request->periodId,
-            'subledger_types' => implode(', ', $request->subledgerTypes),
+            'subledger_types' => implode(', ', array_map(
+                static fn (SubledgerType $type): string => $type->value,
+                $request->subledgerTypes
+            )),
         ]);
 
         try {

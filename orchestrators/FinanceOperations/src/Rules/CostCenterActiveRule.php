@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Rules;
 
-use Nexus\FinanceOperations\Contracts\RuleInterface;
+use Nexus\FinanceOperations\Contracts\CostCenterActiveRuleInterface;
+use Nexus\FinanceOperations\Contracts\CostCenterQueryInterface;
+use Nexus\FinanceOperations\DTOs\RuleContexts\CostCenterActiveRuleContext;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -21,25 +23,32 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
  * @see ARCHITECTURE.md Section 4 for rule patterns
  * @since 1.0.0
  */
-final readonly class CostCenterActiveRule implements RuleInterface
+final readonly class CostCenterActiveRule implements CostCenterActiveRuleInterface
 {
-    /**
-     * @param object $costCenterQuery CostCenterQueryInterface for cost center lookup
-     */
     public function __construct(
-        private object $costCenterQuery,
+        private CostCenterQueryInterface $costCenterQuery,
     ) {}
 
     /**
      * @inheritDoc
-     *
-     * @param object $context Context containing tenantId and costCenterIds
-     * @return RuleResult The rule check result
      */
-    public function check(object $context): RuleResult
+    public function check(CostCenterActiveRuleContext $context): RuleResult
     {
-        $tenantId = $this->extractTenantId($context);
-        $costCenterIds = $this->extractCostCenterIds($context);
+        $tenantId = trim($context->tenantId);
+        if ($tenantId === '') {
+            return RuleResult::failed(
+                $this->getName(),
+                'Tenant ID is required for cost center validation',
+                ['missing_field' => 'tenantId']
+            );
+        }
+
+        $costCenterIds = array_values(
+            array_filter(
+                $context->costCenterIds,
+                static fn (string $costCenterId): bool => trim($costCenterId) !== ''
+            )
+        );
 
         if (empty($costCenterIds)) {
             return RuleResult::passed($this->getName());
@@ -106,81 +115,6 @@ final readonly class CostCenterActiveRule implements RuleInterface
     public function getName(): string
     {
         return 'cost_center_active';
-    }
-
-    /**
-     * Extract tenant ID from context.
-     *
-     * @param object $context The context object
-     * @return string The tenant ID
-     */
-    private function extractTenantId(object $context): string
-    {
-        if (method_exists($context, 'getTenantId')) {
-            return $context->getTenantId();
-        }
-
-        if (property_exists($context, 'tenantId')) {
-            return $context->tenantId ?? '';
-        }
-
-        if (property_exists($context, 'tenant_id')) {
-            return $context->tenant_id ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Extract cost center IDs from context.
-     *
-     * @param object $context The context object
-     * @return array<string> The cost center IDs
-     */
-    private function extractCostCenterIds(object $context): array
-    {
-        if (method_exists($context, 'getCostCenterIds')) {
-            return $context->getCostCenterIds();
-        }
-
-        if (property_exists($context, 'costCenterIds')) {
-            return $context->costCenterIds ?? [];
-        }
-
-        if (property_exists($context, 'cost_center_ids')) {
-            return $context->cost_center_ids ?? [];
-        }
-
-        // Single cost center ID
-        $singleId = $this->extractSingleCostCenterId($context);
-        if ($singleId !== null) {
-            return [$singleId];
-        }
-
-        return [];
-    }
-
-    /**
-     * Extract a single cost center ID from context.
-     *
-     * @param object $context The context object
-     * @return string|null The cost center ID or null
-     */
-    private function extractSingleCostCenterId(object $context): ?string
-    {
-        if (method_exists($context, 'getCostCenterId')) {
-            return $context->getCostCenterId();
-        }
-
-        if (property_exists($context, 'costCenterId')) {
-            return $context->costCenterId ?? null;
-        }
-
-        if (property_exists($context, 'cost_center_id')) {
-            return $context->cost_center_id ?? null;
-        }
-
-        return null;
     }
 
     /**

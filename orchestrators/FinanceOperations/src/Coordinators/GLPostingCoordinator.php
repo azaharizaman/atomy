@@ -3,17 +3,20 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Coordinators;
 
+use Nexus\FinanceOperations\Contracts\GLAccountMappingRuleInterface;
 use Nexus\FinanceOperations\Contracts\GLPostingCoordinatorInterface;
 use Nexus\FinanceOperations\Contracts\GLReconciliationProviderInterface;
+use Nexus\FinanceOperations\Contracts\SubledgerClosedRuleInterface;
 use Nexus\FinanceOperations\DTOs\GLPostingRequest;
 use Nexus\FinanceOperations\DTOs\GLPostingResult;
 use Nexus\FinanceOperations\DTOs\GLReconciliationRequest;
 use Nexus\FinanceOperations\DTOs\GLReconciliationResult;
 use Nexus\FinanceOperations\DTOs\ConsistencyCheckRequest;
 use Nexus\FinanceOperations\DTOs\ConsistencyCheckResult;
+use Nexus\FinanceOperations\DTOs\RuleContexts\GLAccountMappingRuleContext;
+use Nexus\FinanceOperations\DTOs\RuleContexts\SubledgerClosedRuleContext;
+use Nexus\FinanceOperations\Enums\SubledgerType;
 use Nexus\FinanceOperations\Services\GLReconciliationService;
-use Nexus\FinanceOperations\Rules\SubledgerClosedRule;
-use Nexus\FinanceOperations\Rules\GLAccountMappingRule;
 use Nexus\FinanceOperations\Exceptions\GLReconciliationException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
@@ -41,8 +44,8 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
     public function __construct(
         private GLReconciliationService $reconciliationService,
         private GLReconciliationProviderInterface $reconciliationProvider,
-        private SubledgerClosedRule $subledgerClosedRule,
-        private GLAccountMappingRule $accountMappingRule,
+        private SubledgerClosedRuleInterface $subledgerClosedRule,
+        private GLAccountMappingRuleInterface $accountMappingRule,
         private ?EventDispatcherInterface $eventDispatcher = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
@@ -88,36 +91,43 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
         $this->logger->info('Coordinating GL posting', [
             'tenant_id' => $request->tenantId,
             'period_id' => $request->periodId,
-            'subledger_type' => $request->subledgerType,
+            'subledger_type' => $request->subledgerType->value,
         ]);
 
         try {
             // Validate subledger is closed
-            $closedResult = $this->subledgerClosedRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'periodId' => $request->periodId,
-                'subledgerType' => $request->subledgerType,
-            ]);
+            $closedResult = $this->subledgerClosedRule->check(new SubledgerClosedRuleContext(
+                tenantId: $request->tenantId,
+                periodId: $request->periodId,
+                subledgerType: $request->subledgerType
+            ));
 
             if (!$closedResult->passed) {
                 throw GLReconciliationException::subledgerNotClosed(
                     $request->tenantId,
                     $request->periodId,
-                    $request->subledgerType
+                    $request->subledgerType->value
                 );
             }
 
             // Validate account mappings
-            $mappingResult = $this->accountMappingRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'subledgerType' => $request->subledgerType,
-                'transactionTypes' => $request->options['transaction_types'] ?? [],
-            ]);
+            /** @var list<string> $transactionTypes */
+            $transactionTypes = array_values(
+                array_filter(
+                    (array) ($request->options['transaction_types'] ?? []),
+                    static fn (mixed $transactionType): bool => is_string($transactionType) && trim($transactionType) !== ''
+                )
+            );
+            $mappingResult = $this->accountMappingRule->check(new GLAccountMappingRuleContext(
+                tenantId: $request->tenantId,
+                subledgerType: $request->subledgerType,
+                transactionTypes: $transactionTypes
+            ));
 
             if (!$mappingResult->passed) {
                 throw GLReconciliationException::invalidAccountMapping(
                     $request->tenantId,
-                    $request->subledgerType,
+                    $request->subledgerType->value,
                     'mapping_validation_failed'
                 );
             }
@@ -138,7 +148,7 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
             $balance = $this->reconciliationProvider->getSubledgerBalance(
                 $request->tenantId,
                 $request->periodId,
-                $request->subledgerType
+                $request->subledgerType->value
             );
 
             $postingId = 'POST-' . date('YmdHis') . '-' . bin2hex(random_bytes(4));
@@ -149,7 +159,7 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
             $this->eventDispatcher?->dispatch(new class(
                 $request->tenantId,
                 $request->periodId,
-                $request->subledgerType,
+                $request->subledgerType->value,
                 $postingId
             ) {
                 public function __construct(
@@ -172,13 +182,13 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
         } catch (\Throwable $e) {
             $this->logger->error('GL posting coordination failed', [
                 'tenant_id' => $request->tenantId,
-                'subledger_type' => $request->subledgerType,
+                'subledger_type' => $request->subledgerType->value,
                 'error' => $e->getMessage(),
             ]);
 
             throw GLReconciliationException::postingFailed(
                 $request->tenantId,
-                $request->subledgerType,
+                $request->subledgerType->value,
                 $e->getMessage(),
                 $e
             );
@@ -190,10 +200,20 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
      */
     public function reconcileWithGL(GLReconciliationRequest $request): GLReconciliationResult
     {
+        try {
+            $subledgerType = SubledgerType::fromString($request->subledgerType);
+        } catch (\InvalidArgumentException $e) {
+            throw GLReconciliationException::invalidAccountMapping(
+                $request->tenantId,
+                $request->subledgerType,
+                'invalid_subledger_type'
+            );
+        }
+
         $this->logger->info('Coordinating GL reconciliation', [
             'tenant_id' => $request->tenantId,
             'period_id' => $request->periodId,
-            'subledger_type' => $request->subledgerType,
+            'subledger_type' => $subledgerType->value,
         ]);
 
         try {
@@ -201,7 +221,7 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
             $serviceRequest = new \Nexus\FinanceOperations\DTOs\GLPosting\GLReconciliationRequest(
                 tenantId: $request->tenantId,
                 periodId: $request->periodId,
-                subledgerType: $request->subledgerType,
+                subledgerType: $subledgerType,
                 autoAdjust: $request->options['auto_adjust'] ?? false,
             );
 
@@ -221,7 +241,7 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
             // Dispatch event
             $this->eventDispatcher?->dispatch(new class(
                 $request->tenantId,
-                $request->subledgerType,
+                $subledgerType->value,
                 $result->success
             ) {
                 public function __construct(
@@ -242,7 +262,7 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
 
             throw GLReconciliationException::reconciliationMismatch(
                 $request->tenantId,
-                $request->subledgerType,
+                $subledgerType->value,
                 '0',
                 '0',
                 $e->getMessage()
@@ -261,11 +281,27 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
         ]);
 
         try {
+            /** @var list<SubledgerType> $subledgerTypes */
+            $subledgerTypes = [];
+            foreach ((array) ($request->options['subledger_types'] ?? []) as $value) {
+                if (!is_string($value) || trim($value) === '') {
+                    continue;
+                }
+
+                try {
+                    $subledgerTypes[] = SubledgerType::fromString($value);
+                } catch (\InvalidArgumentException) {
+                    // Ignore unknown subledger values from caller input.
+                }
+            }
+
             // Convert to service DTO
             $serviceRequest = new \Nexus\FinanceOperations\DTOs\GLPosting\ConsistencyCheckRequest(
                 tenantId: $request->tenantId,
                 periodId: $request->periodId,
-                subledgerTypes: $request->options['subledger_types'] ?? [],
+                subledgerTypes: $subledgerTypes !== []
+                    ? $subledgerTypes
+                    : [SubledgerType::RECEIVABLE, SubledgerType::PAYABLE, SubledgerType::ASSET],
             );
 
             // Delegate to service
@@ -298,11 +334,10 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
                 'error' => $e->getMessage(),
             ]);
 
-            return new ConsistencyCheckResult(
-                success: false,
-                isConsistent: false,
-                issues: [],
-                errorMessage: $e->getMessage(),
+            throw GLReconciliationException::consistencyCheckFailed(
+                $request->tenantId,
+                $request->periodId,
+                []
             );
         }
     }

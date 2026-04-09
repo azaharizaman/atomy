@@ -11,8 +11,9 @@ use Nexus\FinanceOperations\DTOs\ProductCostRequest;
 use Nexus\FinanceOperations\DTOs\ProductCostResult;
 use Nexus\FinanceOperations\DTOs\PeriodicAllocationRequest;
 use Nexus\FinanceOperations\DTOs\PeriodicAllocationResult;
+use Nexus\FinanceOperations\DTOs\RuleContexts\CostCenterActiveRuleContext;
 use Nexus\FinanceOperations\Services\CostAllocationService;
-use Nexus\FinanceOperations\Rules\CostCenterActiveRule;
+use Nexus\FinanceOperations\Contracts\CostCenterActiveRuleInterface;
 use Nexus\FinanceOperations\Exceptions\CostAllocationException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
@@ -40,7 +41,7 @@ final readonly class CostAllocationCoordinator implements CostAllocationCoordina
     public function __construct(
         private CostAllocationService $costAllocationService,
         private CostAccountingDataProviderInterface $costDataProvider,
-        private CostCenterActiveRule $costCenterActiveRule,
+        private CostCenterActiveRuleInterface $costCenterActiveRule,
         private ?EventDispatcherInterface $eventDispatcher = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
@@ -91,10 +92,10 @@ final readonly class CostAllocationCoordinator implements CostAllocationCoordina
 
         try {
             // Validate cost centers are active
-            $ruleResult = $this->costCenterActiveRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'costCenterIds' => $request->targetCostCenterIds,
-            ]);
+            $ruleResult = $this->costCenterActiveRule->check(new CostCenterActiveRuleContext(
+                tenantId: $request->tenantId,
+                costCenterIds: $request->targetCostCenterIds,
+            ));
 
             if (!$ruleResult->passed) {
                 throw CostAllocationException::inactiveCostCenter(

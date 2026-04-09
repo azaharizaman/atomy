@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Rules;
 
-use Nexus\FinanceOperations\Contracts\RuleInterface;
+use Nexus\FinanceOperations\Contracts\GLAccountMappingRuleInterface;
+use Nexus\FinanceOperations\Contracts\GLAccountQueryInterface;
+use Nexus\FinanceOperations\Contracts\GLMappingRepositoryInterface;
+use Nexus\FinanceOperations\DTOs\RuleContexts\GLAccountMappingRuleContext;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -21,28 +24,31 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
  * @see ARCHITECTURE.md Section 4 for rule patterns
  * @since 1.0.0
  */
-final readonly class GLAccountMappingRule implements RuleInterface
+final readonly class GLAccountMappingRule implements GLAccountMappingRuleInterface
 {
-    /**
-     * @param object $chartOfAccountQuery AccountQueryInterface for account validation
-     * @param object $mappingRepository GLMappingRepositoryInterface for mapping lookup
-     */
     public function __construct(
-        private object $chartOfAccountQuery,
-        private object $mappingRepository,
+        private GLAccountQueryInterface $chartOfAccountQuery,
+        private GLMappingRepositoryInterface $mappingRepository,
     ) {}
 
     /**
      * @inheritDoc
      *
-     * @param object $context Context containing tenantId, subledgerType, and transactionTypes
      * @return RuleResult The rule check result
      */
-    public function check(object $context): RuleResult
+    public function check(GLAccountMappingRuleContext $context): RuleResult
     {
-        $tenantId = $this->extractTenantId($context);
-        $subledgerType = $this->extractSubledgerType($context);
-        $transactionTypes = $this->extractTransactionTypes($context);
+        $tenantId = trim($context->tenantId);
+        $subledgerType = $context->subledgerType->value;
+        $transactionTypes = $context->transactionTypes;
+
+        if ($tenantId === '') {
+            return RuleResult::failed(
+                $this->getName(),
+                'Tenant ID is required for GL account mapping validation',
+                ['missing_field' => 'tenantId']
+            );
+        }
 
         if (empty($subledgerType)) {
             return RuleResult::failed(
@@ -150,75 +156,6 @@ final readonly class GLAccountMappingRule implements RuleInterface
             }
         }
         return null;
-    }
-
-    /**
-     * Extract tenant ID from context.
-     *
-     * @param object $context The context object
-     * @return string The tenant ID
-     */
-    private function extractTenantId(object $context): string
-    {
-        if (method_exists($context, 'getTenantId')) {
-            return $context->getTenantId();
-        }
-
-        if (property_exists($context, 'tenantId')) {
-            return $context->tenantId ?? '';
-        }
-
-        if (property_exists($context, 'tenant_id')) {
-            return $context->tenant_id ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Extract subledger type from context.
-     *
-     * @param object $context The context object
-     * @return string The subledger type
-     */
-    private function extractSubledgerType(object $context): string
-    {
-        if (method_exists($context, 'getSubledgerType')) {
-            return $context->getSubledgerType();
-        }
-
-        if (property_exists($context, 'subledgerType')) {
-            return $context->subledgerType ?? '';
-        }
-
-        if (property_exists($context, 'subledger_type')) {
-            return $context->subledger_type ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Extract transaction types from context.
-     *
-     * @param object $context The context object
-     * @return array<string> The transaction types
-     */
-    private function extractTransactionTypes(object $context): array
-    {
-        if (method_exists($context, 'getTransactionTypes')) {
-            return $context->getTransactionTypes();
-        }
-
-        if (property_exists($context, 'transactionTypes')) {
-            return $context->transactionTypes ?? [];
-        }
-
-        if (property_exists($context, 'transaction_types')) {
-            return $context->transaction_types ?? [];
-        }
-
-        return [];
     }
 
     /**

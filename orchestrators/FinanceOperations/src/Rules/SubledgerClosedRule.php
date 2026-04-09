@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Rules;
 
-use Nexus\FinanceOperations\Contracts\RuleInterface;
+use Nexus\FinanceOperations\Contracts\SubledgerClosedRuleInterface;
+use Nexus\FinanceOperations\Contracts\SubledgerPeriodStateInterface;
+use Nexus\FinanceOperations\DTOs\RuleContexts\SubledgerClosedRuleContext;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -21,26 +23,28 @@ use Nexus\FinanceOperations\DTOs\RuleResult;
  * @see ARCHITECTURE.md Section 4 for rule patterns
  * @since 1.0.0
  */
-final readonly class SubledgerClosedRule implements RuleInterface
+final readonly class SubledgerClosedRule implements SubledgerClosedRuleInterface
 {
-    /**
-     * @param object $periodManager PeriodManagerInterface for period operations
-     */
     public function __construct(
-        private object $periodManager,
+        private SubledgerPeriodStateInterface $periodManager,
     ) {}
 
     /**
      * @inheritDoc
-     *
-     * @param object $context Context containing tenantId, periodId, and subledgerType
-     * @return RuleResult The rule check result
      */
-    public function check(object $context): RuleResult
+    public function check(SubledgerClosedRuleContext $context): RuleResult
     {
-        $tenantId = $this->extractTenantId($context);
-        $periodId = $this->extractPeriodId($context);
-        $subledgerType = $this->extractSubledgerType($context);
+        $tenantId = trim($context->tenantId);
+        $periodId = trim($context->periodId);
+        $subledgerType = $context->subledgerType->value;
+
+        if ($tenantId === '') {
+            return RuleResult::failed(
+                $this->getName(),
+                'Tenant ID is required for subledger closure validation',
+                ['missing_field' => 'tenantId']
+            );
+        }
 
         if (empty($periodId)) {
             return RuleResult::failed(
@@ -84,74 +88,5 @@ final readonly class SubledgerClosedRule implements RuleInterface
     public function getName(): string
     {
         return 'subledger_closed';
-    }
-
-    /**
-     * Extract tenant ID from context.
-     *
-     * @param object $context The context object
-     * @return string The tenant ID
-     */
-    private function extractTenantId(object $context): string
-    {
-        if (method_exists($context, 'getTenantId')) {
-            return $context->getTenantId();
-        }
-
-        if (property_exists($context, 'tenantId')) {
-            return $context->tenantId ?? '';
-        }
-
-        if (property_exists($context, 'tenant_id')) {
-            return $context->tenant_id ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Extract period ID from context.
-     *
-     * @param object $context The context object
-     * @return string The period ID
-     */
-    private function extractPeriodId(object $context): string
-    {
-        if (method_exists($context, 'getPeriodId')) {
-            return $context->getPeriodId();
-        }
-
-        if (property_exists($context, 'periodId')) {
-            return $context->periodId ?? '';
-        }
-
-        if (property_exists($context, 'period_id')) {
-            return $context->period_id ?? '';
-        }
-
-        return '';
-    }
-
-    /**
-     * Extract subledger type from context.
-     *
-     * @param object $context The context object
-     * @return string The subledger type
-     */
-    private function extractSubledgerType(object $context): string
-    {
-        if (method_exists($context, 'getSubledgerType')) {
-            return $context->getSubledgerType();
-        }
-
-        if (property_exists($context, 'subledgerType')) {
-            return $context->subledgerType ?? '';
-        }
-
-        if (property_exists($context, 'subledger_type')) {
-            return $context->subledger_type ?? '';
-        }
-
-        return '';
     }
 }

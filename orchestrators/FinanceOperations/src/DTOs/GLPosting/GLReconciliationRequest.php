@@ -16,16 +16,28 @@ use Nexus\FinanceOperations\Enums\SubledgerType;
  */
 final readonly class GLReconciliationRequest
 {
+    public string $tenantId;
+
+    public string $periodId;
+
+    public SubledgerType $subledgerType;
+
+    public bool $autoAdjust;
+
     /**
-     * @param string $tenantId Tenant identifier
-     * @param string $periodId Accounting period for reconciliation
-     * @param SubledgerType $subledgerType Subledger type enum
-     * @param bool $autoAdjust Automatically create adjustment entries
+     * @param SubledgerType|string $subledgerType Subledger type enum or legacy string value
      */
     public function __construct(
-        public string $tenantId,
-        public string $periodId,
-        public SubledgerType $subledgerType,
-        public bool $autoAdjust = false,
-    ) {}
+        string $tenantId,
+        string $periodId,
+        SubledgerType|string $subledgerType,
+        bool $autoAdjust = false,
+    ) {
+        $this->tenantId = $tenantId;
+        $this->periodId = $periodId;
+        $this->subledgerType = is_string($subledgerType)
+            ? SubledgerType::fromString($subledgerType)
+            : $subledgerType;
+        $this->autoAdjust = $autoAdjust;
+    }
 }

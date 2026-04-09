@@ -9,10 +9,11 @@ use Nexus\FinanceOperations\DTOs\DepreciationRunRequest;
 use Nexus\FinanceOperations\DTOs\DepreciationRunResult;
 use Nexus\FinanceOperations\DTOs\DepreciationScheduleRequest;
 use Nexus\FinanceOperations\DTOs\DepreciationScheduleResult;
+use Nexus\FinanceOperations\DTOs\RuleContexts\PeriodOpenRuleContext;
 use Nexus\FinanceOperations\DTOs\RevaluationRequest;
 use Nexus\FinanceOperations\DTOs\RevaluationResult;
+use Nexus\FinanceOperations\Contracts\PeriodOpenRuleInterface;
 use Nexus\FinanceOperations\Services\DepreciationRunService;
-use Nexus\FinanceOperations\Rules\PeriodOpenRule;
 use Nexus\FinanceOperations\Exceptions\DepreciationCoordinationException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
@@ -40,7 +41,7 @@ final readonly class DepreciationCoordinator implements DepreciationCoordinatorI
     public function __construct(
         private DepreciationRunService $depreciationService,
         private DepreciationDataProviderInterface $depreciationDataProvider,
-        private PeriodOpenRule $periodOpenRule,
+        private PeriodOpenRuleInterface $periodOpenRule,
         private ?EventDispatcherInterface $eventDispatcher = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
@@ -92,10 +93,10 @@ final readonly class DepreciationCoordinator implements DepreciationCoordinatorI
 
         try {
             // Validate period is open
-            $periodResult = $this->periodOpenRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'periodId' => $request->periodId,
-            ]);
+            $periodResult = $this->periodOpenRule->check(new PeriodOpenRuleContext(
+                tenantId: $request->tenantId,
+                periodId: $request->periodId,
+            ));
 
             if (!$periodResult->passed) {
                 throw DepreciationCoordinationException::periodAlreadyProcessed(
