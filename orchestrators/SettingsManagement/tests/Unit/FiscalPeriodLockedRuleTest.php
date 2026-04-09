@@ -44,6 +44,40 @@ final class FiscalPeriodLockedRuleTest extends TestCase
         self::assertNull($result->error);
     }
 
+    /**
+     * @dataProvider blankStatusProvider
+     */
+    public function testEvaluateTreatsBlankOrWhitespaceStatusAsOpenByDefault(string $status): void
+    {
+        $rule = new FiscalPeriodLockedRule();
+
+        $result = $rule->evaluate([
+            'periodId' => 'FY2026-P02B',
+            'operationType' => PeriodOperationType::TRANSACTION->value,
+            'period' => [
+                'isLocked' => false,
+                'status' => $status,
+            ],
+        ]);
+
+        self::assertTrue($result->passed);
+        self::assertNull($result->error);
+    }
+
+    /**
+     * @return array<string, array<string>>
+     */
+    public static function blankStatusProvider(): array
+    {
+        return [
+            'empty string' => [''],
+            'whitespace' => ['   '],
+            'tab' => ["\t"],
+            'newline' => ["\n"],
+            'mixed whitespace' => [" \t\n "],
+        ];
+    }
+
     public function testEvaluateFailsWhenPeriodIsClosed(): void
     {
         $rule = new FiscalPeriodLockedRule();
