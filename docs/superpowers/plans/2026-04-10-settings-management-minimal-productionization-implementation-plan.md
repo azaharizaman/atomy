@@ -161,9 +161,8 @@ jobs:
         with:
           php-version: "8.3"
           coverage: xdebug
-      - uses: ramsey/composer-install@v3
-      - name: Run tests
-        run: composer test
+      - name: Install dependencies
+        run: composer install
       - name: Run coverage text
         run: composer test-coverage
 ```
