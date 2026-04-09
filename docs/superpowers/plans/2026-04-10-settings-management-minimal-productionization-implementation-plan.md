@@ -161,6 +161,15 @@ jobs:
         with:
           php-version: "8.3"
           coverage: xdebug
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache/files
+            orchestrators/SettingsManagement/vendor
+          key: ${{ runner.os }}-settings-management-composer-${{ hashFiles('orchestrators/SettingsManagement/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-settings-management-composer-
       - name: Install dependencies
         run: composer install
       - name: Run coverage text
