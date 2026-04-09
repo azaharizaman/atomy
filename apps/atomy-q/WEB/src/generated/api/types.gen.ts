@@ -98,6 +98,59 @@ export type RfqStatusTransitionRequest = {
     status: 'draft' | 'published' | 'closed' | 'awarded' | 'cancelled';
 };
 
+export type ComparisonMatrix = {
+    tenant_id: string;
+    rfq_id: string;
+    clusters: Array<{
+        cluster_key: string;
+        basis: string;
+        offers: Array<{
+            vendor_id: string;
+            rfq_line_id: string;
+            taxonomy_code: string;
+            normalized_unit_price: number;
+            normalized_quantity: number;
+            ai_confidence: number;
+            [key: string]: unknown;
+        }>;
+        statistics: {
+            min_normalized_unit_price: number;
+            max_normalized_unit_price: number;
+            avg_normalized_unit_price: number;
+            [key: string]: unknown;
+        };
+        recommendation: {
+            recommended_vendor_id: string;
+            reason: string;
+            [key: string]: unknown;
+        };
+        [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+};
+
+export type ComparisonReadiness = {
+    is_ready: boolean;
+    is_preview_only: boolean;
+    blockers: Array<{
+        code: string;
+        message: string;
+        [key: string]: unknown;
+    }>;
+    warnings: Array<{
+        code: string;
+        message: string;
+        [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+};
+
+export type ApprovalPayload = Array<unknown> | {
+    policy_id?: string;
+    status?: string;
+    [key: string]: unknown;
+};
+
 export type V1AccountProfile0Data = {
     body?: never;
     path?: never;
@@ -1404,48 +1457,9 @@ export type ComparisonRunPreviewResponses = {
             rfq_id: string;
             status: 'preview';
             is_preview: boolean;
-            matrix: {
-                tenant_id: string;
-                rfq_id: string;
-                clusters: Array<{
-                    cluster_key: string;
-                    basis: string;
-                    offers: Array<{
-                        vendor_id: string;
-                        rfq_line_id: string;
-                        taxonomy_code: string;
-                        normalized_unit_price: number;
-                        normalized_quantity: number;
-                        ai_confidence: number;
-                    }>;
-                    statistics: {
-                        min_normalized_unit_price: number;
-                        max_normalized_unit_price: number;
-                        avg_normalized_unit_price: number;
-                    };
-                    recommendation: {
-                        recommended_vendor_id: string;
-                        reason: string;
-                    };
-                }>;
-            };
-            readiness: {
-                is_ready: boolean;
-                is_preview_only: boolean;
-                blockers: Array<{
-                    code: string;
-                    message: string;
-                }>;
-                warnings: Array<{
-                    code: string;
-                    message: string;
-                }>;
-            };
-            approval: Array<unknown> | {
-                policy_id?: string;
-                status?: string;
-                [key: string]: unknown;
-            };
+            matrix: ComparisonMatrix;
+            readiness: ComparisonReadiness;
+            approval: ApprovalPayload;
             created_at: string;
         };
     };
@@ -1509,43 +1523,8 @@ export type ComparisonRunFinalResponses = {
                 currency_meta: string;
                 vendors: Array<unknown>;
             };
-            matrix: {
-                tenant_id: string;
-                rfq_id: string;
-                clusters: Array<{
-                    cluster_key: string;
-                    basis: string;
-                    offers: Array<{
-                        vendor_id: string;
-                        rfq_line_id: string;
-                        taxonomy_code: string;
-                        normalized_unit_price: number;
-                        normalized_quantity: number;
-                        ai_confidence: number;
-                    }>;
-                    statistics: {
-                        min_normalized_unit_price: number;
-                        max_normalized_unit_price: number;
-                        avg_normalized_unit_price: number;
-                    };
-                    recommendation: {
-                        recommended_vendor_id: string;
-                        reason: string;
-                    };
-                }>;
-            };
-            readiness: {
-                is_ready: boolean;
-                is_preview_only: boolean;
-                blockers: Array<{
-                    code: string;
-                    message: string;
-                }>;
-                warnings: Array<{
-                    code: string;
-                    message: string;
-                }>;
-            };
+            matrix: ComparisonMatrix;
+            readiness: ComparisonReadiness;
         };
     };
 };
@@ -1606,31 +1585,7 @@ export type ComparisonRunMatrixResponses = {
     200: {
         data: {
             id: string;
-            matrix: {
-                tenant_id: string;
-                rfq_id: string;
-                clusters: Array<{
-                    cluster_key: string;
-                    basis: string;
-                    offers: Array<{
-                        vendor_id: string;
-                        rfq_line_id: string;
-                        taxonomy_code: string;
-                        normalized_unit_price: number;
-                        normalized_quantity: number;
-                        ai_confidence: number;
-                    }>;
-                    statistics: {
-                        min_normalized_unit_price: number;
-                        max_normalized_unit_price: number;
-                        avg_normalized_unit_price: number;
-                    };
-                    recommendation: {
-                        recommended_vendor_id: string;
-                        reason: string;
-                    };
-                }>;
-            };
+            matrix: ComparisonMatrix;
         };
     };
 };
@@ -1658,18 +1613,7 @@ export type ComparisonRunReadinessResponses = {
     200: {
         data: {
             id: string;
-            readiness: {
-                is_ready: boolean;
-                is_preview_only: boolean;
-                blockers: Array<{
-                    code: string;
-                    message: string;
-                }>;
-                warnings: Array<{
-                    code: string;
-                    message: string;
-                }>;
-            };
+            readiness: ComparisonReadiness;
         };
     };
 };
@@ -3311,6 +3255,13 @@ export type V1ProjectsStoreError = V1ProjectsStoreErrors[keyof V1ProjectsStoreEr
 
 export type V1ProjectsStoreResponses = {
     200: {
+        data: {
+            id: string;
+            rfq_id: string;
+            status: string;
+            reminded_at: string;
+            [key: string]: unknown;
+        };
         [key: string]: unknown;
     };
 };

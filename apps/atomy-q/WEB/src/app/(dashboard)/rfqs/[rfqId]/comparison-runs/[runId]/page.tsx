@@ -304,7 +304,7 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
         </SectionCard>
 
         <SectionCard title="Snapshot context" subtitle="Live freeze payload persisted with the comparison run.">
-          <SnapshotLinesCard snapshot={run?.snapshot} />
+          <SnapshotLinesCard snapshot={run?.snapshot ?? null} />
         </SectionCard>
       </div>
 

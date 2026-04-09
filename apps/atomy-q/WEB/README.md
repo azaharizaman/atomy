@@ -46,7 +46,7 @@ Required:
 - `NEXT_PUBLIC_API_URL`: Base API URL (default used by the app: `http://localhost:8000/api/v1`).
 
 Optional:
-- `NEXT_PUBLIC_USE_MOCKS=true`: Use mocked dashboard data for KPI/activity widgets (including comparison runs from seed data).
+- `NEXT_PUBLIC_USE_MOCKS=true`: Local-only demo mode using seed/mocked data. Do not use for alpha readiness validation.
 - `PLAYWRIGHT_BASE_URL`: Override Playwright base URL (default: `http://localhost:3000`).
 - `PLAYWRIGHT_WEB_SERVER_COMMAND`: Override the Playwright web server command.
 
@@ -111,7 +111,7 @@ npm run test:e2e -- tests/screen-smoke.spec.ts
 
 Playwright tests:
 - Stub `/api/v1/auth/login` and `/api/v1/me` with Playwright route handlers.
-- The dashboard uses `NEXT_PUBLIC_USE_MOCKS=true` (set in `playwright.config.ts`) to avoid API calls for KPIs/activity.
+- Some smoke paths may set `NEXT_PUBLIC_USE_MOCKS=true` for local test isolation; this is not representative of live-mode alpha behavior.
 
 Local manual testing:
 - If the backend is running at `NEXT_PUBLIC_API_URL`, the login page will call `/auth/login` and `/me` against the API.

@@ -92,3 +92,21 @@ Verification evidence:
 - Established active mitigation plan for Gaps 8/9/10.
 - Retired stale weekly execution artifacts and bootstrap payloads.
 - Repointed plan index to active, current documentation only.
+- Completed Phase 1: restored `nexus/sourcing-operations` lock/vendor wiring, RFQ lifecycle mutation tests green, WEB build/lint hard errors cleared.
+- Initiated Phase 2 with live-path hardening: removed silent live-mode RFQ seed fallback (`use-rfqs`) and added explicit live-mode fail-loud tests.
+- Currently executing Phase 3: vendor API stubs replaced with tenant-scoped live endpoints (`index/show/performance/compliance/history`) plus `VendorWorkflowTest` coverage.
+- Verification checkpoint refreshed: API targeted matrix and WEB build/lint gates are currently green (lint warnings remain and are tracked as non-blocking).
+
+## Atomy-Q code review checklist and document pass
+
+- §1 Exception contracts: N/A (markdown documentation file, no code)
+- §2 DI interfaces: N/A (markdown documentation file, no code)
+- §3 Tenant + eager loads: N/A (markdown documentation file, no code)
+- §4 Activity limits: N/A (markdown documentation file, no code)
+- §5 WEB parsing + catch: N/A (markdown documentation file, no code)
+- §6 UI duplication: N/A (markdown documentation file, no code)
+- §7 Playwright CORS: N/A (markdown documentation file, no code)
+- §8 Docs/plans: Pass — Markdown formatting is clean (proper backtick nesting: `nexus/sourcing-operations`, `use-rfqs`, `VendorWorkflowTest`); changelog accurately reflects phases and completion status
+- §9 Password reset: N/A (not applicable to mitigation plan documentation)
+- §10 Verification: Pass — Changelog confirms tests are green (RFQ lifecycle mutation tests, WEB build/lint gates); lint warnings tracked as non-blocking
+- §11 Sourcing lifecycle: Pass — Changelog correctly documents RFQ lifecycle restoration, vendor API migration to tenant-scoped live endpoints, and transaction boundary work alignment with phase completion milestones
