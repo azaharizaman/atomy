@@ -30,7 +30,7 @@ A static scan across `packages/` and `orchestrators/` showed `orchestrators/Fina
 - `PeriodRuleViewInterface`
 - `GLAccountQueryInterface`
 - `GLAccountRuleViewInterface`
-- `GLAccountMappingRepositoryInterface`
+- `GLAccountMappingQueryInterface` (renamed from `GLAccountMappingRepositoryInterface` for CQRS compliance)
 - `GLAccountMappingRuleViewInterface`
 
 ### 3) Refactored rule contracts to typed context
@@ -77,3 +77,28 @@ Rewrote rule tests to use typed test doubles implementing the new contracts:
 
 - Running the full package test suite reveals pre-existing unrelated failures in other FinanceOperations modules (outside the scope of this hardening slice).
 - This pass intentionally focused on high-impact risk reduction in the rule engine path first.
+
+## Breaking Changes & Migration
+
+### Interface Renames
+
+| Old Name | New Name | Migration |
+|---------|---------|----------|
+| `GLAccountMappingRepositoryInterface` | `GLAccountMappingQueryInterface` | Update `use` statements and type hints in consumers |
+
+### Consumer Updates Required
+
+Consumers of `GLAccountMappingRepositoryInterface` must be updated to use `GLAccountMappingQueryInterface`:
+
+- `Rules/GLAccountMappingRule` - Updated
+- Test doubles in `tests/Unit/Rules/GLAccountMappingRuleTest.php` - Updated
+
+If you have external consumers of this interface, update imports from:
+```php
+// Old
+use Nexus\FinanceOperations\Contracts\GLAccountMappingRepositoryInterface;
+// New  
+use Nexus\FinanceOperations\Contracts\GLAccountMappingQueryInterface;
+```
+
+No runtime changes required - the contract method signature is unchanged.

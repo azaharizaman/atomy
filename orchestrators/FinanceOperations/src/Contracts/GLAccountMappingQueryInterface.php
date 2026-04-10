@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Contracts;
 
-interface GLAccountMappingRepositoryInterface
+interface GLAccountMappingQueryInterface
 {
     /**
      * @return array<GLAccountMappingRuleViewInterface>

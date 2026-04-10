@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Tests\Unit\Rules;
 
-use Nexus\FinanceOperations\Contracts\GLAccountMappingRepositoryInterface;
+use Nexus\FinanceOperations\Contracts\GLAccountMappingQueryInterface;
 use Nexus\FinanceOperations\Contracts\GLAccountMappingRuleViewInterface;
 use Nexus\FinanceOperations\Contracts\GLAccountQueryInterface;
 use Nexus\FinanceOperations\Contracts\GLAccountRuleViewInterface;
@@ -141,9 +141,9 @@ final class GLAccountMappingRuleTest extends TestCase
     /**
      * @param array<string, string> $mappings
      */
-    private function mappingRepository(array $mappings): GLAccountMappingRepositoryInterface
+    private function mappingRepository(array $mappings): GLAccountMappingQueryInterface
     {
-        return new class($mappings) implements GLAccountMappingRepositoryInterface {
+        return new class($mappings) implements GLAccountMappingQueryInterface {
             /**
              * @param array<string, string> $mappings
              */

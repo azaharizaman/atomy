@@ -112,6 +112,8 @@ final class CostCenterActiveRuleTest extends TestCase
 
             public function find(string $tenantId, string $costCenterId): ?CostCenterRuleViewInterface
             {
+                // Tenant ID must be validated in real implementations to prevent cross-tenant leakage
+                // This test double simulates tenant-scoped lookup
                 return $this->entries[$costCenterId] ?? null;
             }
         };
