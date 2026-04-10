@@ -162,7 +162,7 @@
 ```bash
 PHPUnit 11.5.55
 
-OK (11 tests, 13 assertions)
+OK (11 tests, 14 assertions)
 ```
 
 **Status:** ✅ GuardEvaluator hardening tests implemented; broader package plan remains pending.
