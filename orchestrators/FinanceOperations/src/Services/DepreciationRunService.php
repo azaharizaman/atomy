@@ -263,7 +263,7 @@ final readonly class DepreciationRunService
                 }
 
                 $depreciationBase = $depreciableAmount / $years;
-                if ($depreciationBase == 0.0) {
+                if (abs($depreciationBase) < 1e-9) {
                     throw DepreciationCoordinationException::runFailed(
                         $tenantId,
                         $periodId,
