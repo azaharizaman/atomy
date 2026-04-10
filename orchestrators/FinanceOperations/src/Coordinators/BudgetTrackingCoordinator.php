@@ -94,10 +94,8 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
 
         try {
             // Validate budget availability using rule
-            $costCenterId = $request->options['cost_center_id'] ?? null;
-            if ($costCenterId === '' || !$costCenterId) {
-                $costCenterId = null;
-            }
+            $rawCostCenterId = $request->options['cost_center_id'] ?? null;
+            $costCenterId = ($rawCostCenterId === '') ? null : $rawCostCenterId;
 
             $ruleResult = $this->budgetAvailableRule->check(
                 RuleContext::forBudgetAvailability(
@@ -129,7 +127,7 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                 tenantId: $request->tenantId,
                 budgetId: $request->budgetId,
                 amount: (string)$request->amount,
-                costCenterId: $request->options['cost_center_id'] ?? null,
+                costCenterId: $costCenterId,
                 accountId: $request->options['account_id'] ?? null,
             );
 

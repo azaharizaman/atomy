@@ -55,7 +55,10 @@ final readonly class GLAccountMappingRule implements RuleInterface
         }
 
         $subledgerType = trim((string) $context->getSubledgerType());
-        $transactionTypes = $context->getTransactionTypes();
+        $transactionTypes = array_filter(
+            array_map(fn($t) => is_string($t) ? trim($t) : null, $context->getTransactionTypes()),
+            fn($t) => $t !== null && $t !== ''
+        );
 
         if (empty($subledgerType)) {
             return RuleResult::failed(

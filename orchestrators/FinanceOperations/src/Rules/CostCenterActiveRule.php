@@ -58,6 +58,12 @@ final readonly class CostCenterActiveRule implements RuleInterface
             }
         }
 
+        // Normalize and filter cost center IDs
+        $costCenterIds = array_filter(
+            array_map(fn($id) => is_string($id) ? trim($id) : null, $costCenterIds),
+            fn($id) => $id !== null && $id !== ''
+        );
+
         if (empty($costCenterIds)) {
             return RuleResult::passed($this->getName());
         }

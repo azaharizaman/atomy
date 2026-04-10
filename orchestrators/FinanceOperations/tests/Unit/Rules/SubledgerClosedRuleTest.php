@@ -66,6 +66,18 @@ final class SubledgerClosedRuleTest extends TestCase
         self::assertSame('subledger_closed', $rule->getName());
     }
 
+    public function testMissingTenantIdFailsValidation(): void
+    {
+        $rule = new SubledgerClosedRule($this->periodManager(isClosed: true));
+
+        $result = $rule->check(
+            RuleContext::forSubledgerClosure('', '2026-01', 'AR')
+        );
+
+        self::assertFalse($result->passed);
+        self::assertStringContainsString('required', $result->message);
+    }
+
     private function periodManager(bool $isClosed, string $expectedTenantId = 'tenant-001', string $expectedPeriodId = '2026-01', string $expectedSubledgerType = 'AR'): PeriodStatusQueryInterface
     {
         return new class($isClosed, $expectedTenantId, $expectedPeriodId, $expectedSubledgerType) implements PeriodStatusQueryInterface {

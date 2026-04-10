@@ -42,7 +42,16 @@ final readonly class BudgetAvailableRule implements BudgetAvailableRuleInterface
      */
     public function check(RuleContextInterface $context): RuleResult
     {
-        $tenantId = $context->getTenantId();
+        $tenantId = trim((string) $context->getTenantId());
+
+        if (empty($tenantId)) {
+            return RuleResult::failed(
+                $this->getName(),
+                'Tenant ID is required for budget availability validation',
+                ['missing_field' => 'tenantId']
+            );
+        }
+
         $budgetId = trim((string) $context->getBudgetId());
         $amount = $context->getAmount();
         $costCenterId = $context->getCostCenterId();

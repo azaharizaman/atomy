@@ -21,7 +21,11 @@ final readonly class RuleContext implements RuleContextInterface
         private ?string $periodId = null,
         private ?string $subledgerType = null,
         private array $transactionTypes = [],
-    ) {}
+    ) {
+        if (trim($tenantId) === '') {
+            throw new \InvalidArgumentException('Tenant ID cannot be empty');
+        }
+    }
 
     public static function forBudgetAvailability(
         string $tenantId,

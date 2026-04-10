@@ -97,6 +97,19 @@ final class BudgetAvailableRuleTest extends TestCase
         self::assertStringContainsString('required', $result->message);
     }
 
+    public function testCostCenterIdIsForwardedToQuery(): void
+    {
+        $rule = new BudgetAvailableRule(
+            budgetQuery: $this->query(active: true, availableAmount: '5000.00', found: true, expectedTenantId: 'tenant-001', expectedBudgetId: 'budget-001', expectedCostCenterId: 'cc-123'),
+        );
+
+        $result = $rule->check(
+            RuleContext::forBudgetAvailability('tenant-001', 'budget-001', '5000.00', 'cc-123')
+        );
+
+        self::assertTrue($result->passed);
+    }
+
     private function query(bool $active, string $availableAmount, bool $found, string $expectedTenantId, string $expectedBudgetId, ?string $expectedCostCenterId = null): BudgetAvailabilityQueryInterface
     {
         return new class($active, $availableAmount, $found, $expectedTenantId, $expectedBudgetId, $expectedCostCenterId) implements BudgetAvailabilityQueryInterface {

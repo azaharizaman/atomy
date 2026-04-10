@@ -43,7 +43,7 @@ final class PeriodOpenRuleTest extends TestCase
     public function testPeriodNotFoundFailsValidation(): void
     {
         $rule = new PeriodOpenRule(
-            $this->periodManager(found: false, open: false, status: 'unknown')
+            $this->periodManager(found: false, open: false, status: 'unknown', expectedPeriodId: 'missing')
         );
 
         $result = $rule->check(
@@ -57,7 +57,7 @@ final class PeriodOpenRuleTest extends TestCase
     public function testClosedPeriodFailsValidation(): void
     {
         $rule = new PeriodOpenRule(
-            $this->periodManager(found: true, open: false, status: 'closed')
+            $this->periodManager(found: true, open: false, status: 'closed', expectedPeriodId: '2025-12')
         );
 
         $result = $rule->check(
