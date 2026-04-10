@@ -23,7 +23,7 @@ final readonly class GuardEvaluator
     public function evaluateAll(array $guards, AnalyticsContextInterface $context): bool
     {
         foreach ($guards as $guardName => $guardConfig) {
-            if (!$this->evaluate($guardName, $guardConfig, $context)) {
+            if (!$this->evaluate((string) $guardName, $guardConfig, $context)) {
                 throw new GuardConditionFailedException(
                     (string) $guardName,
                     'Guard condition not met'

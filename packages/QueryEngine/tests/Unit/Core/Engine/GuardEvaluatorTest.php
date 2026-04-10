@@ -76,6 +76,22 @@ final class GuardEvaluatorTest extends TestCase
     }
 
     #[Test]
+    public function it_handles_numeric_guard_keys_without_type_errors(): void
+    {
+        $evaluator = new GuardEvaluator();
+        $context = $this->createContext();
+
+        $this->expectException(GuardConditionFailedException::class);
+        $this->expectExceptionMessage("Guard condition '0' failed");
+
+        $evaluator->evaluateAll([
+            0 => [
+                'type' => 'unexpected',
+            ],
+        ], $context);
+    }
+
+    #[Test]
     public function it_rejects_tenant_guard_without_required_tenant_id(): void
     {
         $evaluator = new GuardEvaluator();
@@ -134,6 +150,23 @@ final class GuardEvaluatorTest extends TestCase
             'time_window' => [
                 'type' => 'time_window',
                 'start' => 'not-a-date',
+            ],
+        ], $context);
+    }
+
+    #[Test]
+    public function it_rejects_time_window_guard_when_start_is_after_end(): void
+    {
+        $evaluator = new GuardEvaluator();
+        $context = $this->createContext();
+
+        $this->expectException(GuardConditionFailedException::class);
+
+        $evaluator->evaluateAll([
+            'time_window' => [
+                'type' => 'time_window',
+                'start' => (new \DateTimeImmutable('+10 minutes'))->format(\DateTimeInterface::ATOM),
+                'end' => (new \DateTimeImmutable('-10 minutes'))->format(\DateTimeInterface::ATOM),
             ],
         ], $context);
     }
