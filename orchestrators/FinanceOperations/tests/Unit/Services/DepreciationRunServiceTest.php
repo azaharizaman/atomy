@@ -240,6 +240,98 @@ final class DepreciationRunServiceTest extends TestCase
         $this->assertEquals(1, $result->assetsProcessed);
     }
 
+    /**
+     * Test useful_life_months=0 fails with a coordination exception.
+     */
+    public function testExecuteRunWithZeroUsefulLifeMonthsThrowsException(): void
+    {
+        // Arrange
+        $tenantId = 'tenant-001';
+        $periodId = '2026-01';
+
+        $assetData = [
+            [
+                'asset_id' => 'asset-zero-life',
+                'asset_code' => 'FA-ZERO',
+                'asset_name' => 'Zero Life Asset',
+                'book_value' => 50000.0,
+                'original_cost' => 60000.0,
+                'accumulated_depreciation' => 10000.0,
+                'salvage_value' => 5000.0,
+                'useful_life_months' => 0,
+                'depreciation_method' => 'straight_line',
+            ],
+        ];
+
+        $this->dataProviderMock
+            ->expects($this->once())
+            ->method('getAssetBookValues')
+            ->with($tenantId, ['asset-zero-life'])
+            ->willReturn(['assets' => $assetData]);
+
+        $request = new DepreciationRunRequest(
+            tenantId: $tenantId,
+            periodId: $periodId,
+            assetIds: ['asset-zero-life'],
+            postToGL: false,
+            validateOnly: false,
+        );
+
+        // Act & Assert
+        $this->expectException(DepreciationCoordinationException::class);
+        $this->expectExceptionMessage(
+            'Depreciation run failed for period 2026-01: Useful life months must be greater than 0'
+        );
+
+        $this->service->executeRun($request);
+    }
+
+    /**
+     * Test sum-of-years depreciation fails when useful life months resolve to zero years.
+     */
+    public function testExecuteRunWithSumOfYearsAndDerivedZeroYearsThrowsException(): void
+    {
+        // Arrange
+        $tenantId = 'tenant-001';
+        $periodId = '2026-01';
+
+        $assetData = [
+            [
+                'asset_id' => 'asset-short-life',
+                'asset_code' => 'FA-SHORT',
+                'asset_name' => 'Short Life Asset',
+                'book_value' => 50000.0,
+                'original_cost' => 60000.0,
+                'accumulated_depreciation' => 10000.0,
+                'salvage_value' => 5000.0,
+                'useful_life_months' => 11,
+                'depreciation_method' => 'sum_of_years',
+            ],
+        ];
+
+        $this->dataProviderMock
+            ->expects($this->once())
+            ->method('getAssetBookValues')
+            ->with($tenantId, ['asset-short-life'])
+            ->willReturn(['assets' => $assetData]);
+
+        $request = new DepreciationRunRequest(
+            tenantId: $tenantId,
+            periodId: $periodId,
+            assetIds: ['asset-short-life'],
+            postToGL: false,
+            validateOnly: false,
+        );
+
+        // Act & Assert
+        $this->expectException(DepreciationCoordinationException::class);
+        $this->expectExceptionMessage(
+            'Depreciation run failed for period 2026-01: Sum-of-years depreciation requires useful life years greater than 0'
+        );
+
+        $this->service->executeRun($request);
+    }
+
     // =========================================================================
     // Test Suite: executeRun() - Fully Depreciated Asset
     // =========================================================================
@@ -510,6 +602,38 @@ final class DepreciationRunServiceTest extends TestCase
         
         // Verify total depreciation is calculated
         $this->assertGreaterThan(0, (float)$result->totalDepreciation);
+    }
+
+    /**
+     * Test schedule generation fails when useful life years is zero.
+     */
+    public function testGenerateScheduleWithZeroUsefulLifeYearsThrowsException(): void
+    {
+        // Arrange
+        $tenantId = 'tenant-001';
+        $assetId = 'asset-zero-schedule';
+
+        $this->dataProviderMock
+            ->expects($this->once())
+            ->method('getDepreciationSchedules')
+            ->with($tenantId, $assetId)
+            ->willReturn(['schedules' => []]);
+
+        $request = new DepreciationScheduleRequest(
+            tenantId: $tenantId,
+            assetId: $assetId,
+            depreciationMethod: 'straight_line',
+            usefulLifeYears: 0,
+            salvageValue: '10000',
+        );
+
+        // Act & Assert
+        $this->expectException(DepreciationCoordinationException::class);
+        $this->expectExceptionMessage(
+            'Depreciation schedule generation failed for asset asset-zero-schedule: Useful life years must be greater than 0'
+        );
+
+        $this->service->generateSchedule($request);
     }
 
     // =========================================================================
