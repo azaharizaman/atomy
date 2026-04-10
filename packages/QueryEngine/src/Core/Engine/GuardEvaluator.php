@@ -44,21 +44,21 @@ final readonly class GuardEvaluator
      */
     private function evaluate(string $guardName, mixed $guardConfig, AnalyticsContextInterface $context): bool
     {
-        // Implementation would vary based on guard types
-        // Examples: role_required, tenant_match, time_window, etc.
-        
-        if (is_array($guardConfig)) {
-            $type = $guardConfig['type'] ?? 'custom';
-
-            return match ($type) {
-                'role_required' => $this->evaluateRoleGuard($guardConfig, $context),
-                'tenant_match' => $this->evaluateTenantGuard($guardConfig, $context),
-                'time_window' => $this->evaluateTimeWindowGuard($guardConfig),
-                default => true,
-            };
+        if (!is_array($guardConfig)) {
+            return false;
         }
 
-        return true;
+        $type = $guardConfig['type'] ?? $guardName;
+        if (!is_string($type) || $type === '') {
+            return false;
+        }
+
+        return match ($type) {
+            'role_required' => $this->evaluateRoleGuard($guardConfig, $context),
+            'tenant_match' => $this->evaluateTenantGuard($guardConfig, $context),
+            'time_window' => $this->evaluateTimeWindowGuard($guardConfig),
+            default => false,
+        };
     }
 
     /**
@@ -69,16 +69,24 @@ final readonly class GuardEvaluator
      */
     private function evaluateRoleGuard(array $config, AnalyticsContextInterface $context): bool
     {
-        $requiredRoles = $config['roles'] ?? [];
+        $requiredRoles = $config['roles'] ?? null;
+        if (!is_array($requiredRoles) || $requiredRoles === []) {
+            return false;
+        }
+
         $userRoles = $context->getUserRoles();
 
         foreach ($requiredRoles as $role) {
+            if (!is_string($role) || $role === '') {
+                return false;
+            }
+
             if (in_array($role, $userRoles, true)) {
                 return true;
             }
         }
 
-        return empty($requiredRoles);
+        return false;
     }
 
     /**
@@ -90,13 +98,16 @@ final readonly class GuardEvaluator
     private function evaluateTenantGuard(array $config, AnalyticsContextInterface $context): bool
     {
         $requiredTenant = $config['tenant_id'] ?? null;
-        $currentTenant = $context->getTenantId();
-
-        if ($requiredTenant === null) {
-            return true;
+        if (!is_string($requiredTenant) || $requiredTenant === '') {
+            return false;
         }
 
-        return $requiredTenant === $currentTenant;
+        $currentTenant = $context->getTenantId();
+        if (!is_string($currentTenant) || $currentTenant === '') {
+            return false;
+        }
+
+        return hash_equals($requiredTenant, $currentTenant);
     }
 
     /**
@@ -108,16 +119,49 @@ final readonly class GuardEvaluator
     {
         $startTime = $config['start'] ?? null;
         $endTime = $config['end'] ?? null;
-        $now = new \DateTimeImmutable();
 
-        if ($startTime && $now < new \DateTimeImmutable($startTime)) {
+        if ($startTime === null && $endTime === null) {
             return false;
         }
 
-        if ($endTime && $now > new \DateTimeImmutable($endTime)) {
+        if (($startTime !== null && (!is_string($startTime) || $startTime === ''))
+            || ($endTime !== null && (!is_string($endTime) || $endTime === ''))
+        ) {
+            return false;
+        }
+
+        $startDateTime = $startTime !== null ? $this->parseGuardDateTime($startTime) : null;
+        $endDateTime = $endTime !== null ? $this->parseGuardDateTime($endTime) : null;
+
+        if (($startTime !== null && $startDateTime === null)
+            || ($endTime !== null && $endDateTime === null)
+        ) {
+            return false;
+        }
+
+        if ($startDateTime !== null && $endDateTime !== null && $startDateTime > $endDateTime) {
+            return false;
+        }
+
+        $now = new \DateTimeImmutable();
+
+        if ($startDateTime !== null && $now < $startDateTime) {
+            return false;
+        }
+
+        if ($endDateTime !== null && $now > $endDateTime) {
             return false;
         }
 
         return true;
+    }
+
+    private function parseGuardDateTime(string $value): ?\DateTimeImmutable
+    {
+        try {
+            return new \DateTimeImmutable($value);
+        } catch (\Exception) {
+            return null;
+        }
     }
 }
