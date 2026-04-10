@@ -59,10 +59,11 @@ There is also active in-flight work in the workspace around quote lifecycle prod
    - Deferred note: scoring-model, lock, and unlock are intentionally beta-only controls and now return explicit deferred responses instead of fake state.
    - Result: gap 5 is closed for the alpha path.
 
-6. **Tenant/company lifecycle is not first-class**
-   - Why it matters: Atomy-Q is SaaS, so company/tenant creation and persistence need to exist as real platform primitives.
-   - Evidence: the audit says there is no `tenants` migration and no create-company flow, while the plan makes a tenants table a Week 1 blocker (`apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_RELEASE_AUDIT.md:28-29`, `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md:38-39`).
-   - Result: current tenant scoping works as an isolation key, but the lifecycle is still not product-complete.
+6. **Tenant/company lifecycle is now being closed on the alpha branch**
+   - Why it mattered: Atomy-Q is SaaS, so company/tenant creation and persistence needed to exist as real platform primitives.
+   - Evidence from the audit: there was no `tenants` migration and no create-company flow, while the plan made a tenants table a Week 1 blocker (`apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_RELEASE_AUDIT.md:28-29`, `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md:38-39`).
+   - Current branch state: `POST /api/v1/auth/register-company` now creates the tenant and first owner, the WEB app has a `/register-company` onboarding screen, and the alpha scope keeps full tenant administration deferred.
+   - Result: the first-class company onboarding slice is now implemented; richer tenant admin remains a post-alpha concern.
 
 7. **Identity, permissions, and session support are still stubbed**
    - Why it matters: Alpha needs a clear minimum security posture and predictable authorization behavior.
@@ -81,20 +82,15 @@ There is also active in-flight work in the workspace around quote lifecycle prod
 
 10. **The roadmap/docs are fragmented and some are stale**
     - Why it matters: alpha execution depends on a current, unambiguous plan.
-    - Evidence: the core alpha audit/week plans were last updated on 2026-03-23, and the newer quote-lifecycle productionization plan was written on 2026-03-29 but appears to stop at Task 4 docs/visibility cleanup (`apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md`, `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-5.md`, `docs/superpowers/plans/2026-03-29-quote-lifecycle-productionization.md`).
+    - Evidence: as of 2026-03-31, the week-based alpha plans had not advanced since 2026-03-23 and the newer quote-lifecycle productionization plan appeared to stop at Task 4 docs/visibility cleanup (`apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md`, `docs/superpowers/plans/2026-03-29-quote-lifecycle-productionization.md`).
     - Result: the team has direction, but not a single closed execution ledger for what still blocks Alpha.
 
 ## Stalled or stale plan files
 
-### Clearly stale
+### Historical status (recorded 2026-03-31)
 
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-1.md`
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-2.md`
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-3.md`
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md`
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-5.md`
-
-These were all introduced on 2026-03-23 and have not been updated since. They are useful as historical alpha intent, but they are no longer a reliable progress tracker by themselves.
+The weekly plan artifacts identified as stale in this report were retired from the codebase on 2026-04-09 and replaced by a single active mitigation ledger in:
+`apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_GAP_8_9_10_MITIGATION_PLAN_2026-04-09.md`.
 
 ### Active but incomplete
 

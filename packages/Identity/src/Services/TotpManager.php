@@ -9,6 +9,7 @@ use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
+use Nexus\Identity\Contracts\TotpManagerInterface;
 use Nexus\Identity\ValueObjects\TotpSecret;
 use OTPHP\TOTP;
 
@@ -18,7 +19,7 @@ use OTPHP\TOTP;
  * Provides secret generation, QR code creation, and verification
  * for authenticator app-based MFA.
  */
-final readonly class TotpManager
+final readonly class TotpManager implements TotpManagerInterface
 {
     /**
      * Generate a new TOTP secret.
@@ -104,16 +105,16 @@ final readonly class TotpManager
      * @param int|null $timestamp Unix timestamp for verification (null = now)
      * @return bool True if code is valid
      */
-    public function verify(
+    public function verifyCode(
         TotpSecret $totpSecret,
         string $userCode,
         int $window = 1,
         ?int $timestamp = null
     ): bool {
-        $totp = TOTP::createFromSecret($totpSecret->getSecret());
-        $totp->setDigits($totpSecret->getDigits());
-        $totp->setPeriod($totpSecret->getPeriod());
-        $totp->setDigest($totpSecret->getAlgorithm());
+        $totp = TOTP::createFromSecret($totpSecret->secret);
+        $totp->setDigits($totpSecret->digits);
+        $totp->setPeriod($totpSecret->period);
+        $totp->setDigest($totpSecret->algorithm);
         
         // OTPHP library already uses timing-safe comparison internally
         return $totp->verify($userCode, $timestamp, $window);
@@ -130,10 +131,10 @@ final readonly class TotpManager
      */
     public function getCurrentCode(TotpSecret $totpSecret, ?int $timestamp = null): string
     {
-        $totp = TOTP::createFromSecret($totpSecret->getSecret());
-        $totp->setDigits($totpSecret->getDigits());
-        $totp->setPeriod($totpSecret->getPeriod());
-        $totp->setDigest($totpSecret->getAlgorithm());
+        $totp = TOTP::createFromSecret($totpSecret->secret);
+        $totp->setDigits($totpSecret->digits);
+        $totp->setPeriod($totpSecret->period);
+        $totp->setDigest($totpSecret->algorithm);
         
         return $totp->at($timestamp ?? time());
     }
@@ -150,7 +151,7 @@ final readonly class TotpManager
     public function getRemainingSeconds(TotpSecret $totpSecret, ?int $timestamp = null): int
     {
         $timestamp = $timestamp ?? time();
-        $period = $totpSecret->getPeriod();
+        $period = $totpSecret->period;
         
         return $period - ($timestamp % $period);
     }

@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\RecommendationController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\RfqController;
 use App\Http\Controllers\Api\V1\RfqTemplateController;
+use App\Http\Controllers\Api\V1\RegisterCompanyController;
 use App\Http\Controllers\Api\V1\RiskComplianceController;
 use App\Http\Controllers\Api\V1\ScenarioController;
 use App\Http\Controllers\Api\V1\ScoringModelController;
@@ -40,6 +41,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::prefix('auth')->group(function (): void {
+    Route::post('register-company', [RegisterCompanyController::class, 'store']);
     Route::post('login', [AuthController::class, 'login']);
     Route::post('sso', [AuthController::class, 'sso']);
     Route::post('mfa/verify', [AuthController::class, 'mfaVerify']);

@@ -6,15 +6,18 @@ namespace App\Providers;
 
 use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
+use App\Contracts\MfaChallengeStoreInterface;
 use App\Contracts\PasswordResetServiceInterface;
+use App\Adapters\Identity\EloquentAdminCreator;
+use App\Adapters\Tenant\EloquentTenantCreator;
+use App\Adapters\Tenant\EloquentTenantPersistence;
+use App\Adapters\Tenant\EloquentTenantValidation;
 use App\Services\Identity\AtomyIdentityTokenManagerStub;
-use App\Services\Identity\AtomyNoopAuditLogRepository;
 use App\Services\Identity\AtomyNoopMfaEnrollmentService;
-use App\Services\Identity\AtomyNoopMfaVerificationService;
 use App\Services\Identity\AtomyPasswordHasher;
-use App\Services\Identity\AtomyPermissionQueryStub;
-use App\Services\Identity\AtomyRoleQueryStub;
-use App\Services\Identity\AtomySessionManagerStub;
+use App\Services\Identity\AtomyMfaVerificationService;
+use App\Services\Identity\AtomyAuditLogRepository;
+use App\Services\Identity\AtomyMfaChallengeStore;
 use App\Services\Identity\AtomyUserAuthenticator;
 use App\Services\Identity\AtomyUserPersist;
 use App\Services\Identity\AtomyUserQuery;
@@ -50,10 +53,15 @@ use Nexus\Identity\Contracts\PasswordHasherInterface;
 use Nexus\Identity\Contracts\PermissionQueryInterface;
 use Nexus\Identity\Contracts\RoleQueryInterface;
 use Nexus\Identity\Contracts\SessionManagerInterface;
+use Nexus\Identity\Contracts\TotpManagerInterface;
 use Nexus\Identity\Contracts\TokenManagerInterface as IdentityTokenManagerInterface;
 use Nexus\Identity\Contracts\UserAuthenticatorInterface;
 use Nexus\Identity\Contracts\UserPersistInterface;
 use Nexus\Identity\Contracts\UserQueryInterface as IdentityUserQueryInterface;
+use Nexus\Identity\Services\TotpManager;
+use Nexus\Laravel\Identity\DataProviders\LaravelRoleQuery;
+use Nexus\Tenant\Contracts\TenantPersistenceInterface;
+use Nexus\Tenant\Contracts\TenantValidationInterface;
 use Nexus\Project\Contracts\IncompleteTaskCountInterface;
 use Nexus\Project\Contracts\ProjectManagerInterface;
 use Nexus\Project\Contracts\ProjectPersistInterface;
@@ -85,6 +93,12 @@ use Nexus\Task\Contracts\TaskManagerInterface;
 use Nexus\Task\Contracts\TaskPersistInterface;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
+use Nexus\TenantOperations\Contracts\AdminCreatorAdapterInterface;
+use Nexus\TenantOperations\Contracts\TenantCompanyOnboardingCoordinatorInterface;
+use Nexus\TenantOperations\Contracts\TenantCompanyOnboardingServiceInterface;
+use Nexus\TenantOperations\Contracts\TenantCreatorAdapterInterface;
+use Nexus\TenantOperations\Coordinators\TenantCompanyOnboardingCoordinator;
+use Nexus\TenantOperations\Services\TenantCompanyOnboardingService;
 use Nexus\Laravel\Idempotency\Contracts\ReplayResponseFactoryInterface;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 use Nexus\QuoteIngestion\Contracts\QuoteSubmissionQueryInterface;
@@ -284,6 +298,14 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(PasswordResetServiceInterface::class, static fn ($app): PasswordResetServiceInterface => $app->make(PasswordResetService::class));
 
+        // Nexus Tenant + TenantOperations: alpha company onboarding and tenant persistence.
+        $this->app->singleton(TenantPersistenceInterface::class, EloquentTenantPersistence::class);
+        $this->app->singleton(TenantValidationInterface::class, EloquentTenantValidation::class);
+        $this->app->singleton(TenantCreatorAdapterInterface::class, EloquentTenantCreator::class);
+        $this->app->singleton(AdminCreatorAdapterInterface::class, EloquentAdminCreator::class);
+        $this->app->singleton(TenantCompanyOnboardingServiceInterface::class, TenantCompanyOnboardingService::class);
+        $this->app->singleton(TenantCompanyOnboardingCoordinatorInterface::class, TenantCompanyOnboardingCoordinator::class);
+
         // Nexus Project: Laravel implementations + package Manager.
         $this->app->bind(ProjectPersistInterface::class, AtomyProjectPersist::class);
         $this->app->bind(ProjectQueryInterface::class, AtomyProjectQuery::class);
@@ -326,12 +348,20 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PasswordHasherInterface::class, AtomyPasswordHasher::class);
         $this->app->singleton(UserAuthenticatorInterface::class, AtomyUserAuthenticator::class);
         $this->app->singleton(IdentityTokenManagerInterface::class, AtomyIdentityTokenManagerStub::class);
-        $this->app->singleton(SessionManagerInterface::class, AtomySessionManagerStub::class);
+        $this->app->singleton(SessionManagerInterface::class, \Nexus\Laravel\Identity\Adapters\DatabaseSessionManager::class);
         $this->app->singleton(MfaEnrollmentServiceInterface::class, AtomyNoopMfaEnrollmentService::class);
-        $this->app->singleton(MfaVerificationServiceInterface::class, AtomyNoopMfaVerificationService::class);
-        $this->app->singleton(PermissionQueryInterface::class, AtomyPermissionQueryStub::class);
-        $this->app->singleton(RoleQueryInterface::class, AtomyRoleQueryStub::class);
-        $this->app->singleton(AuditLogRepositoryInterface::class, AtomyNoopAuditLogRepository::class);
+        $this->app->singleton(TotpManagerInterface::class, TotpManager::class);
+        $this->app->singleton(MfaVerificationServiceInterface::class, AtomyMfaVerificationService::class);
+        $this->app->singleton(MfaChallengeStoreInterface::class, AtomyMfaChallengeStore::class);
+        $this->app->singleton(PermissionQueryInterface::class, static function ($app): PermissionQueryInterface {
+            return $app->make(\Nexus\Identity\Contracts\PermissionRepositoryInterface::class);
+        });
+        $this->app->singleton(RoleQueryInterface::class, static function ($app): RoleQueryInterface {
+            return $app->make(LaravelRoleQuery::class);
+        });
+        // Persist identity audit events (Gap 7 extension) instead of dropping them on the floor.
+        $this->app->singleton(AtomyAuditLogRepository::class);
+        $this->app->singleton(AuditLogRepositoryInterface::class, AtomyAuditLogRepository::class);
     }
 
     /**

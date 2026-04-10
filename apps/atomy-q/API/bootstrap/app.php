@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'jwt.auth' => JwtAuthenticate::class,
+            'nexus.can' => \App\Http\Middleware\NexusPermission::class,
             'tenant' => TenantContext::class,
             'idempotency' => IdempotencyMiddleware::class,
         ]);

@@ -6,10 +6,12 @@
 # IDEs
 /.idea
 /.vscode
+/.codex
 *.swp
 *.swo
 *~
 .DS_Store
+.codex
 
 # Composer
 /vendor/

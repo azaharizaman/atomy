@@ -17,6 +17,19 @@ interface UserAuthenticationServiceInterface
     public function authenticate(string $email, string $password, string $tenantId): UserContext;
 
     /**
+     * Authenticate credentials for an MFA challenge without minting tokens/sessions.
+     *
+     * This is used by the application to bridge alpha's `challenge_id` flow to the
+     * existing MFA verification service.
+     */
+    public function authenticateForMfaChallenge(string $email, string $password, string $tenantId): UserContext;
+
+    /**
+     * Complete an MFA login after verification, minting tokens and creating a session.
+     */
+    public function completeMfaLogin(string $userId, string $tenantId): UserContext;
+
+    /**
      * Refresh authentication token.
      */
     public function refreshToken(string $refreshToken, string $tenantId): UserContext;

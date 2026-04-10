@@ -1,7 +1,8 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { useForm } from 'react-hook-form';
+import Link from 'next/link';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -29,7 +30,7 @@ function LoginPageContent() {
   const { login } = useAuthStore();
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm<FormData>({
+  const { register, handleSubmit, control, formState: { errors, isSubmitting }, setValue } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       email: '',
@@ -38,7 +39,7 @@ function LoginPageContent() {
     },
   });
 
-  const rememberDevice = watch('remember_device') ?? true;
+  const rememberDevice = useWatch({ control, name: 'remember_device' }) ?? true;
 
   const onSubmit = async (payload: FormData) => {
     setAuthError(null);
@@ -182,7 +183,11 @@ function LoginPageContent() {
       </form>
 
       <p className="text-xs text-slate-500 text-center sm:text-left">
-        Need access? Contact your workspace administrator to provision an account or reset your password.
+        Need access? Contact your workspace administrator to provision an account, or{' '}
+        <Link href="/register-company" className="font-medium text-indigo-600 hover:text-indigo-700">
+          register a new company
+        </Link>
+        .
       </p>
     </div>
   );

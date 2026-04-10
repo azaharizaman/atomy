@@ -216,6 +216,9 @@ This package depends only on:
 ## Testing
 
 ```bash
+cd orchestrators/SettingsManagement
+composer install
+
 # Run unit tests
 composer test
 

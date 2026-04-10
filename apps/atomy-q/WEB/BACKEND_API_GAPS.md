@@ -2,6 +2,15 @@
 
 This file records **missing or ambiguous backend support** discovered while implementing the WEB UI screens so the backend team can action them.
 
+## Public company onboarding (`POST /api/v1/auth/register-company`)
+
+- [x] **Tenant creation**: creates a real tenant row with `tenant_code` and `company_name`
+- [x] **Owner provisioning**: creates the first admin user in the same request
+- [x] **Workspace defaults**: accepts optional `timezone`, `locale`, and `currency`
+- [x] **Bootstrap response**: returns session tokens plus the owner user payload so the WEB app can sign the user in immediately
+
+The alpha WEB flow now uses this endpoint as the first-class company registration path. Full tenant administration remains a deferred post-alpha concern.
+
 ## RFQ List (`GET /api/v1/rfqs`)
 
 ### Query parameters (needed for Screen Blueprint parity)
