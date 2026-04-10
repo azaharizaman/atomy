@@ -12,6 +12,7 @@ use Nexus\FinanceOperations\DTOs\CostAllocation\CostAllocationRequest;
 use Nexus\FinanceOperations\DTOs\CostAllocation\CostAllocationResult;
 use Nexus\FinanceOperations\DTOs\CostAllocation\ProductCostRequest;
 use Nexus\FinanceOperations\DTOs\CostAllocation\ProductCostResult;
+use Nexus\FinanceOperations\Enums\AllocationMethod;
 use Nexus\FinanceOperations\Exceptions\CostAllocationException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -23,7 +24,7 @@ use Psr\Log\NullLogger;
  * - Equal allocation method across cost centers
  * - Proportional allocation with weights
  * - Manual allocation with provided amounts
- * - Invalid allocation method handling (throws \InvalidArgumentException)
+ * - Invalid allocation method handling (throws CostAllocationException)
  * - Product cost calculation with material/labor/overhead breakdown
  * - Empty target cost centers handling
  * - Error handling when data provider throws exceptions
@@ -108,7 +109,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'equal',
+            allocationMethod: AllocationMethod::EQUAL,
         );
 
         // Act
@@ -165,7 +166,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'proportional',
+            allocationMethod: AllocationMethod::PROPORTIONAL,
             options: ['weights' => $weights],
         );
 
@@ -184,6 +185,46 @@ final class CostAllocationServiceTest extends TestCase
         // cc-002 should get 25% (250)
         $this->assertEquals('250', $result->allocations[1]['amount']);
         $this->assertEquals(25.0, $result->allocations[1]['percentage']);
+    }
+
+    /**
+     * Test proportional allocation with zero total weight throws CostAllocationException.
+     */
+    public function testAllocateWithProportionalMethodThrowsExceptionWhenTotalWeightIsZero(): void
+    {
+        // Arrange
+        $tenantId = 'tenant-001';
+        $periodId = '2026-01';
+        $sourceCostPoolId = 'pool-001';
+        $targetCostCenterIds = ['cc-001', 'cc-002'];
+
+        $weights = [0, 0];
+
+        $poolData = [
+            'total_amount' => '1000.00',
+            'pool_name' => 'Test Pool',
+        ];
+
+        $this->dataProviderMock
+            ->expects($this->once())
+            ->method('getCostPoolSummary')
+            ->with($tenantId, $sourceCostPoolId)
+            ->willReturn($poolData);
+
+        $request = new CostAllocationRequest(
+            tenantId: $tenantId,
+            periodId: $periodId,
+            sourceCostPoolId: $sourceCostPoolId,
+            targetCostCenterIds: $targetCostCenterIds,
+            allocationMethod: AllocationMethod::PROPORTIONAL,
+            options: ['weights' => $weights],
+        );
+
+        // Act & Assert
+        $this->expectException(CostAllocationException::class);
+        $this->expectExceptionMessage('Total allocation weight must be greater than zero');
+
+        $this->service->allocate($request);
     }
 
     /**
@@ -213,7 +254,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'proportional',
+            allocationMethod: AllocationMethod::PROPORTIONAL,
         );
 
         // Act
@@ -259,7 +300,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'manual',
+            allocationMethod: AllocationMethod::MANUAL,
             options: ['allocations' => $manualAllocations],
         );
 
@@ -301,7 +342,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'manual',
+            allocationMethod: AllocationMethod::MANUAL,
             options: [], // Empty options - no allocations provided
         );
 
@@ -319,38 +360,29 @@ final class CostAllocationServiceTest extends TestCase
     /**
      * Test invalid allocation method throws CostAllocationException.
      */
-    public function testAllocateWithInvalidMethodThrowsInvalidArgumentException(): void
+    public function testAllocateWithInvalidMethodThrowsCostAllocationException(): void
     {
         // Arrange
         $tenantId = 'tenant-001';
-        $periodId = '2026-01';
         $sourceCostPoolId = 'pool-001';
         $targetCostCenterIds = ['cc-001', 'cc-002'];
-        
-        $poolData = [
-            'total_amount' => '1000.00',
-            'pool_name' => 'Test Pool',
-        ];
 
-        $this->dataProviderMock
-            ->expects($this->once())
-            ->method('getCostPoolSummary')
-            ->with($tenantId, $sourceCostPoolId)
-            ->willReturn($poolData);
-
-        $request = new CostAllocationRequest(
-            tenantId: $tenantId,
-            periodId: $periodId,
-            sourceCostPoolId: $sourceCostPoolId,
-            targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'invalid_method',
-        );
+        $method = new \ReflectionMethod($this->service, 'calculateAllocations');
+        $method->setAccessible(true);
 
         // Act & Assert
         $this->expectException(CostAllocationException::class);
-        $this->expectExceptionMessage('Unknown allocation method: invalid_method');
-        
-        $this->service->allocate($request);
+        $this->expectExceptionMessage('Invalid allocation method "invalid_method". Valid methods: equal, proportional, manual');
+
+        $method->invoke(
+            $this->service,
+            $tenantId,
+            $sourceCostPoolId,
+            1000.0,
+            $targetCostCenterIds,
+            'invalid_method',
+            []
+        );
     }
 
     // =========================================================================
@@ -383,7 +415,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: [], // Empty!
-            allocationMethod: 'equal',
+            allocationMethod: AllocationMethod::EQUAL,
         );
 
         // Act & Assert
@@ -430,7 +462,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'equal',
+            allocationMethod: AllocationMethod::EQUAL,
         );
 
         // Act & Assert
@@ -691,7 +723,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'equal',
+            allocationMethod: AllocationMethod::EQUAL,
         );
 
         // Act
@@ -730,7 +762,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'equal',
+            allocationMethod: AllocationMethod::EQUAL,
         );
 
         // Act
@@ -773,7 +805,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'proportional',
+            allocationMethod: AllocationMethod::PROPORTIONAL,
             options: ['weights' => $weights],
         );
 
@@ -822,7 +854,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'manual',
+            allocationMethod: AllocationMethod::MANUAL,
             options: ['allocations' => $manualAllocations],
         );
 
@@ -903,7 +935,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'equal',
+            allocationMethod: AllocationMethod::EQUAL,
         );
 
         // Act
@@ -947,7 +979,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'equal',
+            allocationMethod: AllocationMethod::EQUAL,
         );
 
         // Act
@@ -982,7 +1014,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'equal',
+            allocationMethod: AllocationMethod::EQUAL,
         );
 
         // Act
@@ -1066,7 +1098,7 @@ final class CostAllocationServiceTest extends TestCase
             periodId: $periodId,
             sourceCostPoolId: $sourceCostPoolId,
             targetCostCenterIds: $targetCostCenterIds,
-            allocationMethod: 'equal',
+            allocationMethod: AllocationMethod::EQUAL,
         );
 
         // Act
