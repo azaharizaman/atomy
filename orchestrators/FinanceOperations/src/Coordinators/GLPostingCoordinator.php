@@ -111,11 +111,19 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
             }
 
             // Validate account mappings
+            $transactionTypes = $request->options['transaction_types'] ?? [];
+            if (is_string($transactionTypes)) {
+                $transactionTypes = [$transactionTypes];
+            } elseif (!is_array($transactionTypes)) {
+                $transactionTypes = [];
+            }
+            $transactionTypes = array_filter($transactionTypes, fn($t) => !empty(trim($t)));
+
             $mappingResult = $this->accountMappingRule->check(
                 RuleContext::forGlAccountMappingValidation(
                     tenantId: $request->tenantId,
                     subledgerType: $request->subledgerType,
-                    transactionTypes: $request->options['transaction_types'] ?? [],
+                    transactionTypes: $transactionTypes,
                 )
             );
 

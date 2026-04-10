@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Nexus\FinanceOperations\Rules;
 
 use Nexus\FinanceOperations\Contracts\PeriodStatusQueryInterface;
-use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\Contracts\RuleContextInterface;
+use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**

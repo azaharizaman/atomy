@@ -103,6 +103,9 @@ final readonly class RuleContext implements RuleContextInterface
         return $this->costCenterId;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getCostCenterIds(): array
     {
         return $this->costCenterIds;
@@ -118,6 +121,9 @@ final readonly class RuleContext implements RuleContextInterface
         return $this->subledgerType;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getTransactionTypes(): array
     {
         return $this->transactionTypes;

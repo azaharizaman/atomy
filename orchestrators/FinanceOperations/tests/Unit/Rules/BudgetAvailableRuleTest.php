@@ -15,7 +15,7 @@ final class BudgetAvailableRuleTest extends TestCase
     public function testBudgetAvailablePassesValidation(): void
     {
         $rule = new BudgetAvailableRule(
-            budgetQuery: $this->query(active: true, availableAmount: '10000.00', found: true),
+            budgetQuery: $this->query(active: true, availableAmount: '10000.00', found: true, expectedTenantId: 'tenant-001', expectedBudgetId: 'budget-001'),
         );
 
         $result = $rule->check(
@@ -28,7 +28,7 @@ final class BudgetAvailableRuleTest extends TestCase
     public function testBudgetNotFoundFailsValidation(): void
     {
         $rule = new BudgetAvailableRule(
-            budgetQuery: $this->query(active: true, availableAmount: '10000.00', found: false),
+            budgetQuery: $this->query(active: true, availableAmount: '10000.00', found: false, expectedTenantId: 'tenant-001', expectedBudgetId: 'missing-budget'),
         );
 
         $result = $rule->check(
@@ -42,7 +42,7 @@ final class BudgetAvailableRuleTest extends TestCase
     public function testInactiveBudgetFailsValidation(): void
     {
         $rule = new BudgetAvailableRule(
-            budgetQuery: $this->query(active: false, availableAmount: '10000.00', found: true),
+            budgetQuery: $this->query(active: false, availableAmount: '10000.00', found: true, expectedTenantId: 'tenant-001', expectedBudgetId: 'budget-001'),
         );
 
         $result = $rule->check(
@@ -56,7 +56,7 @@ final class BudgetAvailableRuleTest extends TestCase
     public function testInsufficientBudgetFailsInStrictMode(): void
     {
         $rule = new BudgetAvailableRule(
-            budgetQuery: $this->query(active: true, availableAmount: '3000.00', found: true),
+            budgetQuery: $this->query(active: true, availableAmount: '3000.00', found: true, expectedTenantId: 'tenant-001', expectedBudgetId: 'budget-001'),
             strictMode: true,
         );
 
@@ -71,7 +71,7 @@ final class BudgetAvailableRuleTest extends TestCase
     public function testInsufficientBudgetPassesWithWarningInNonStrictMode(): void
     {
         $rule = new BudgetAvailableRule(
-            budgetQuery: $this->query(active: true, availableAmount: '3000.00', found: true),
+            budgetQuery: $this->query(active: true, availableAmount: '3000.00', found: true, expectedTenantId: 'tenant-001', expectedBudgetId: 'budget-001'),
             strictMode: false,
         );
 
@@ -86,7 +86,7 @@ final class BudgetAvailableRuleTest extends TestCase
     public function testMissingBudgetIdFailsValidation(): void
     {
         $rule = new BudgetAvailableRule(
-            budgetQuery: $this->query(active: true, availableAmount: '10000.00', found: true),
+            budgetQuery: $this->query(active: true, availableAmount: '10000.00', found: true, expectedTenantId: 'tenant-001', expectedBudgetId: ''),
         );
 
         $result = $rule->check(
@@ -97,17 +97,24 @@ final class BudgetAvailableRuleTest extends TestCase
         self::assertStringContainsString('required', $result->message);
     }
 
-    private function query(bool $active, string $availableAmount, bool $found): BudgetAvailabilityQueryInterface
+    private function query(bool $active, string $availableAmount, bool $found, string $expectedTenantId, string $expectedBudgetId, ?string $expectedCostCenterId = null): BudgetAvailabilityQueryInterface
     {
-        return new class($active, $availableAmount, $found) implements BudgetAvailabilityQueryInterface {
+        return new class($active, $availableAmount, $found, $expectedTenantId, $expectedBudgetId, $expectedCostCenterId) implements BudgetAvailabilityQueryInterface {
             public function __construct(
                 private bool $active,
                 private string $availableAmount,
                 private bool $found,
+                private string $expectedTenantId,
+                private string $expectedBudgetId,
+                private ?string $expectedCostCenterId,
             ) {}
 
             public function getBudget(string $tenantId, string $budgetId): ?BudgetRuleViewInterface
             {
+                if ($tenantId !== $this->expectedTenantId || $budgetId !== $this->expectedBudgetId) {
+                    throw new \InvalidArgumentException("Unexpected tenant or budget: got $tenantId/$budgetId, expected {$this->expectedTenantId}/{$this->expectedBudgetId}");
+                }
+
                 if (!$this->found) {
                     return null;
                 }
@@ -127,6 +134,10 @@ final class BudgetAvailableRuleTest extends TestCase
                 string $budgetId,
                 ?string $costCenterId = null,
             ): string {
+                if ($tenantId !== $this->expectedTenantId || $budgetId !== $this->expectedBudgetId || $costCenterId !== $this->expectedCostCenterId) {
+                    throw new \InvalidArgumentException("Unexpected parameters: tenant $tenantId/$budgetId/$costCenterId vs expected {$this->expectedTenantId}/{$this->expectedBudgetId}/{$this->expectedCostCenterId}");
+                }
+
                 return $this->availableAmount;
             }
         };

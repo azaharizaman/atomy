@@ -94,6 +94,7 @@ Consumers of `GLAccountMappingRepositoryInterface` must be updated to use `GLAcc
 - Test doubles in `tests/Unit/Rules/GLAccountMappingRuleTest.php` - Updated
 
 If you have external consumers of this interface, update imports from:
+
 ```php
 // Old
 use Nexus\FinanceOperations\Contracts\GLAccountMappingRepositoryInterface;

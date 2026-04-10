@@ -7,8 +7,8 @@ namespace Nexus\FinanceOperations\Rules;
 use Nexus\FinanceOperations\Contracts\GLAccountMappingQueryInterface;
 use Nexus\FinanceOperations\Contracts\GLAccountMappingRuleViewInterface;
 use Nexus\FinanceOperations\Contracts\GLAccountQueryInterface;
-use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\Contracts\RuleContextInterface;
+use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -44,7 +44,16 @@ final readonly class GLAccountMappingRule implements RuleInterface
      */
     public function check(RuleContextInterface $context): RuleResult
     {
-        $tenantId = $context->getTenantId();
+        $tenantId = trim((string) $context->getTenantId());
+
+        if (empty($tenantId)) {
+            return RuleResult::failed(
+                $this->getName(),
+                'Tenant ID is required for GL account mapping validation',
+                ['missing_field' => 'tenantId']
+            );
+        }
+
         $subledgerType = trim((string) $context->getSubledgerType());
         $transactionTypes = $context->getTransactionTypes();
 

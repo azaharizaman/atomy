@@ -66,10 +66,10 @@ final class SubledgerClosedRuleTest extends TestCase
         self::assertSame('subledger_closed', $rule->getName());
     }
 
-    private function periodManager(bool $isClosed): PeriodStatusQueryInterface
+    private function periodManager(bool $isClosed, string $expectedTenantId = 'tenant-001', string $expectedPeriodId = '2026-01', string $expectedSubledgerType = 'AR'): PeriodStatusQueryInterface
     {
-        return new class($isClosed) implements PeriodStatusQueryInterface {
-            public function __construct(private bool $isClosed) {}
+        return new class($isClosed, $expectedTenantId, $expectedPeriodId, $expectedSubledgerType) implements PeriodStatusQueryInterface {
+            public function __construct(private bool $isClosed, private string $expectedTenantId, private string $expectedPeriodId, private string $expectedSubledgerType) {}
 
             public function getPeriod(string $tenantId, string $periodId): ?PeriodRuleViewInterface
             {
@@ -78,6 +78,10 @@ final class SubledgerClosedRuleTest extends TestCase
 
             public function isSubledgerClosed(string $tenantId, string $periodId, string $subledgerType): bool
             {
+                if ($tenantId !== $this->expectedTenantId || $periodId !== $this->expectedPeriodId || $subledgerType !== $this->expectedSubledgerType) {
+                    throw new \InvalidArgumentException("Unexpected params: $tenantId/$periodId/$subledgerType vs expected {$this->expectedTenantId}/{$this->expectedPeriodId}/{$this->expectedSubledgerType}");
+                }
+
                 return $this->isClosed;
             }
         };

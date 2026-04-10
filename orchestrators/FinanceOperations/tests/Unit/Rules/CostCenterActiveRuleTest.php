@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Tests\Unit\Rules;
 
+use PHPUnit\Framework\TestCase;
+
 use Nexus\FinanceOperations\Contracts\CostCenterQueryInterface;
 use Nexus\FinanceOperations\Contracts\CostCenterRuleViewInterface;
 use Nexus\FinanceOperations\DTOs\RuleContext;
 use Nexus\FinanceOperations\Rules\CostCenterActiveRule;
-use PHPUnit\Framework\TestCase;
 
 final class CostCenterActiveRuleTest extends TestCase
 {
@@ -18,7 +19,7 @@ final class CostCenterActiveRuleTest extends TestCase
             $this->query([
                 'cc-001' => $this->view('Primary', true, true),
                 'cc-002' => $this->view('Secondary', true, true),
-            ])
+            ], 'tenant-001')
         );
 
         $result = $rule->check(
@@ -30,7 +31,7 @@ final class CostCenterActiveRuleTest extends TestCase
 
     public function testEmptyCostCenterListPassesValidation(): void
     {
-        $rule = new CostCenterActiveRule($this->query([]));
+        $rule = new CostCenterActiveRule($this->query([], 'tenant-001'));
 
         $result = $rule->check(
             RuleContext::forCostCenterValidation('tenant-001', [])
@@ -41,7 +42,7 @@ final class CostCenterActiveRuleTest extends TestCase
 
     public function testMissingCostCenterFailsValidation(): void
     {
-        $rule = new CostCenterActiveRule($this->query([]));
+        $rule = new CostCenterActiveRule($this->query([], 'tenant-001'));
 
         $result = $rule->check(
             RuleContext::forCostCenterValidation('tenant-001', ['unknown'])
@@ -55,8 +56,8 @@ final class CostCenterActiveRuleTest extends TestCase
     {
         $rule = new CostCenterActiveRule(
             $this->query([
-                'cc-001' => $this->view('Inactive', false, true),
-            ])
+                'cc-001' => $this->view('Primary', false, true),
+            ], 'tenant-001')
         );
 
         $result = $rule->check(
@@ -71,8 +72,8 @@ final class CostCenterActiveRuleTest extends TestCase
     {
         $rule = new CostCenterActiveRule(
             $this->query([
-                'cc-001' => $this->view('Restricted', true, false),
-            ])
+                'cc-001' => $this->view('Primary', true, false),
+            ], 'tenant-001')
         );
 
         $result = $rule->check(
@@ -87,8 +88,8 @@ final class CostCenterActiveRuleTest extends TestCase
     {
         $rule = new CostCenterActiveRule(
             $this->query([
-                'cc-001' => $this->view('Single', true, true),
-            ])
+                'cc-001' => $this->view('Primary', true, true),
+            ], 'tenant-001')
         );
 
         $result = $rule->check(new RuleContext(
@@ -102,18 +103,19 @@ final class CostCenterActiveRuleTest extends TestCase
     /**
      * @param array<string, CostCenterRuleViewInterface> $entries
      */
-    private function query(array $entries): CostCenterQueryInterface
+    private function query(array $entries, string $expectedTenantId): CostCenterQueryInterface
     {
-        return new class($entries) implements CostCenterQueryInterface {
+        return new class($entries, $expectedTenantId) implements CostCenterQueryInterface {
             /**
              * @param array<string, CostCenterRuleViewInterface> $entries
              */
-            public function __construct(private array $entries) {}
+            public function __construct(private array $entries, private string $expectedTenantId) {}
 
             public function find(string $tenantId, string $costCenterId): ?CostCenterRuleViewInterface
             {
-                // Tenant ID must be validated in real implementations to prevent cross-tenant leakage
-                // This test double simulates tenant-scoped lookup
+                if ($tenantId !== $this->expectedTenantId) {
+                    throw new \InvalidArgumentException("Unexpected tenant: got $tenantId, expected {$this->expectedTenantId}");
+                }
                 return $this->entries[$costCenterId] ?? null;
             }
         };

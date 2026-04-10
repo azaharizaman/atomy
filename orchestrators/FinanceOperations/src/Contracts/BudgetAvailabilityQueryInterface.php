@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Contracts;
 
+use Nexus\FinanceOperations\Contracts\BudgetRuleViewInterface;
+
 interface BudgetAvailabilityQueryInterface
 {
     public function getBudget(string $tenantId, string $budgetId): ?BudgetRuleViewInterface;

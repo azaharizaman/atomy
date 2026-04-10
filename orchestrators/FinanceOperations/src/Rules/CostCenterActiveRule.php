@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Nexus\FinanceOperations\Rules;
 
 use Nexus\FinanceOperations\Contracts\CostCenterQueryInterface;
-use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\Contracts\RuleContextInterface;
+use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -40,7 +40,16 @@ final readonly class CostCenterActiveRule implements RuleInterface
      */
     public function check(RuleContextInterface $context): RuleResult
     {
-        $tenantId = $context->getTenantId();
+        $tenantId = trim((string) $context->getTenantId());
+
+        if (empty($tenantId)) {
+            return RuleResult::failed(
+                $this->getName(),
+                'Tenant ID is required for cost center validation',
+                ['missing_field' => 'tenantId']
+            );
+        }
+
         $costCenterIds = $context->getCostCenterIds();
         if ($costCenterIds === []) {
             $singleId = $context->getCostCenterId();

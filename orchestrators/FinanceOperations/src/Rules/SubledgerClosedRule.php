@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Nexus\FinanceOperations\Rules;
 
 use Nexus\FinanceOperations\Contracts\PeriodStatusQueryInterface;
-use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\Contracts\RuleContextInterface;
+use Nexus\FinanceOperations\Contracts\RuleInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**
@@ -40,9 +40,17 @@ final readonly class SubledgerClosedRule implements RuleInterface
      */
     public function check(RuleContextInterface $context): RuleResult
     {
-        $tenantId = $context->getTenantId();
+        $tenantId = trim((string) $context->getTenantId());
         $periodId = trim((string) $context->getPeriodId());
         $subledgerType = trim((string) $context->getSubledgerType());
+
+        if (empty($tenantId)) {
+            return RuleResult::failed(
+                $this->getName(),
+                'Tenant ID is required for subledger closure validation',
+                ['missing_field' => 'tenantId']
+            );
+        }
 
         if (empty($periodId)) {
             return RuleResult::failed(

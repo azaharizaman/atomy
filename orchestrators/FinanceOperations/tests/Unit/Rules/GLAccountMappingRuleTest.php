@@ -112,16 +112,20 @@ final class GLAccountMappingRuleTest extends TestCase
     /**
      * @param array<string, bool> $accountStatuses
      */
-    private function accountQuery(array $accountStatuses): GLAccountQueryInterface
+    private function accountQuery(array $accountStatuses, string $expectedTenantId = 'tenant-001'): GLAccountQueryInterface
     {
-        return new class($accountStatuses) implements GLAccountQueryInterface {
+        return new class($accountStatuses, $expectedTenantId) implements GLAccountQueryInterface {
             /**
              * @param array<string, bool> $accountStatuses
              */
-            public function __construct(private array $accountStatuses) {}
+            public function __construct(private array $accountStatuses, private string $expectedTenantId) {}
 
             public function find(string $tenantId, string $accountCode): ?GLAccountRuleViewInterface
             {
+                if ($tenantId !== $this->expectedTenantId) {
+                    throw new \InvalidArgumentException("Unexpected tenant: got $tenantId, expected {$this->expectedTenantId}");
+                }
+
                 if (!array_key_exists($accountCode, $this->accountStatuses)) {
                     return null;
                 }
@@ -141,16 +145,20 @@ final class GLAccountMappingRuleTest extends TestCase
     /**
      * @param array<string, string> $mappings
      */
-    private function mappingRepository(array $mappings): GLAccountMappingQueryInterface
+    private function mappingRepository(array $mappings, string $expectedTenantId = 'tenant-001', string $expectedSubledgerType = 'AR'): GLAccountMappingQueryInterface
     {
-        return new class($mappings) implements GLAccountMappingQueryInterface {
+        return new class($mappings, $expectedTenantId, $expectedSubledgerType) implements GLAccountMappingQueryInterface {
             /**
              * @param array<string, string> $mappings
              */
-            public function __construct(private array $mappings) {}
+            public function __construct(private array $mappings, private string $expectedTenantId, private string $expectedSubledgerType) {}
 
             public function getMappingsForSubledger(string $tenantId, string $subledgerType): array
             {
+                if ($tenantId !== $this->expectedTenantId || $subledgerType !== $this->expectedSubledgerType) {
+                    throw new \InvalidArgumentException("Unexpected params: tenant $tenantId/$subledgerType vs expected {$this->expectedTenantId}/{$this->expectedSubledgerType}");
+                }
+
                 $items = [];
                 foreach ($this->mappings as $transactionType => $accountCode) {
                     $items[] = new class($transactionType, $accountCode) implements GLAccountMappingRuleViewInterface {
