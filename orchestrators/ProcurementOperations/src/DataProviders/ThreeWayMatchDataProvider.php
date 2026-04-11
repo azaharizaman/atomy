@@ -45,7 +45,7 @@ final readonly class ThreeWayMatchDataProvider
         }
 
         // Fetch purchase order
-        $purchaseOrder = $this->purchaseOrderQuery->findById($purchaseOrderId);
+        $purchaseOrder = $this->purchaseOrderQuery->findById($tenantId, $purchaseOrderId);
         if ($purchaseOrder === null) {
             throw PurchaseOrderException::notFound($purchaseOrderId);
         }

@@ -76,7 +76,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
 
         try {
             // 1. Validate PO exists and is open for receipts
-            $purchaseOrder = $this->purchaseOrderQuery->findById($request->purchaseOrderId);
+            $purchaseOrder = $this->purchaseOrderQuery->findById($request->tenantId, $request->purchaseOrderId);
             if ($purchaseOrder === null) {
                 throw PurchaseOrderException::notFound($request->purchaseOrderId);
             }

@@ -97,7 +97,7 @@ final readonly class PurchaseOrderCoordinator implements PurchaseOrderCoordinato
     public function sendToVendor(string $tenantId, string $purchaseOrderId, string $sentBy, string $deliveryMethod = 'email', ?string $deliveryAddress = null): PurchaseOrderResult
     {
         try {
-            $po = $this->poQuery->findById($purchaseOrderId);
+            $po = $this->poQuery->findById($tenantId, $purchaseOrderId);
             if (!$po) {
                 throw PurchaseOrderException::notFound($purchaseOrderId);
             }
@@ -111,7 +111,7 @@ final readonly class PurchaseOrderCoordinator implements PurchaseOrderCoordinato
             ]);
 
             // Re-fetch
-            $po = $this->poQuery->findById($purchaseOrderId);
+            $po = $this->poQuery->findById($tenantId, $purchaseOrderId);
 
             return PurchaseOrderResult::success(
                 purchaseOrderId: $purchaseOrderId,
@@ -132,7 +132,7 @@ final readonly class PurchaseOrderCoordinator implements PurchaseOrderCoordinato
     public function amend(string $tenantId, string $purchaseOrderId, array $amendments, string $amendedBy, string $reason): PurchaseOrderResult
     {
         try {
-            $po = $this->poQuery->findById($purchaseOrderId);
+            $po = $this->poQuery->findById($tenantId, $purchaseOrderId);
             if (!$po) {
                 throw PurchaseOrderException::notFound($purchaseOrderId);
             }
@@ -161,7 +161,7 @@ final readonly class PurchaseOrderCoordinator implements PurchaseOrderCoordinato
     public function cancel(string $tenantId, string $purchaseOrderId, string $cancelledBy, string $reason): PurchaseOrderResult
     {
         try {
-            $po = $this->poQuery->findById($purchaseOrderId);
+            $po = $this->poQuery->findById($tenantId, $purchaseOrderId);
             if (!$po) {
                 throw PurchaseOrderException::notFound($purchaseOrderId);
             }
@@ -169,7 +169,7 @@ final readonly class PurchaseOrderCoordinator implements PurchaseOrderCoordinato
             $this->poManager->cancel($purchaseOrderId, $reason);
 
             // Re-fetch
-            $po = $this->poQuery->findById($purchaseOrderId);
+            $po = $this->poQuery->findById($tenantId, $purchaseOrderId);
 
             return PurchaseOrderResult::success(
                 purchaseOrderId: $purchaseOrderId,
@@ -190,7 +190,7 @@ final readonly class PurchaseOrderCoordinator implements PurchaseOrderCoordinato
     public function close(string $tenantId, string $purchaseOrderId, string $closedBy, ?string $reason = null): PurchaseOrderResult
     {
         try {
-            $po = $this->poQuery->findById($purchaseOrderId);
+            $po = $this->poQuery->findById($tenantId, $purchaseOrderId);
             if (!$po) {
                 throw PurchaseOrderException::notFound($purchaseOrderId);
             }
@@ -198,7 +198,7 @@ final readonly class PurchaseOrderCoordinator implements PurchaseOrderCoordinato
             $this->poManager->close($purchaseOrderId, $reason);
 
             // Re-fetch
-            $po = $this->poQuery->findById($purchaseOrderId);
+            $po = $this->poQuery->findById($tenantId, $purchaseOrderId);
 
             return PurchaseOrderResult::success(
                 purchaseOrderId: $purchaseOrderId,
