@@ -4,47 +4,16 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementOperations\Tests\Unit\Coordinators;
 
-use Nexus\Procurement\Contracts\GoodsReceiptPersistInterface;
-use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\ProcurementOperations\Coordinators\GoodsReceiptCoordinator;
-use Nexus\ProcurementOperations\DataProviders\GoodsReceiptContextProvider;
 use Nexus\ProcurementOperations\DTOs\RecordGoodsReceiptRequest;
-use Nexus\ProcurementOperations\Rules\GoodsReceipt\GoodsReceiptRuleRegistry;
-use Nexus\ProcurementOperations\Services\AccrualCalculationService;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
 #[CoversClass(GoodsReceiptCoordinator::class)]
 final class GoodsReceiptCoordinatorTest extends TestCase
 {
-    private GoodsReceiptContextProvider&MockObject $contextProviderMock;
-    private GoodsReceiptRuleRegistry&MockObject $ruleRegistryMock;
-    private AccrualCalculationService&MockObject $accrualServiceMock;
-    private PurchaseOrderQueryInterface&MockObject $poQueryMock;
-    private GoodsReceiptPersistInterface&MockObject $grPersistMock;
-    private GoodsReceiptCoordinator $coordinator;
-
-    protected function setUp(): void
-    {
-        $this->contextProviderMock = $this->createMock(GoodsReceiptContextProvider::class);
-        $this->ruleRegistryMock = $this->createMock(GoodsReceiptRuleRegistry::class);
-        $this->accrualServiceMock = $this->createMock(AccrualCalculationService::class);
-        $this->poQueryMock = $this->createMock(PurchaseOrderQueryInterface::class);
-        $this->grPersistMock = $this->createMock(GoodsReceiptPersistInterface::class);
-
-        $this->coordinator = new GoodsReceiptCoordinator(
-            contextProvider: $this->contextProviderMock,
-            ruleRegistry: $this->ruleRegistryMock,
-            accrualService: $this->accrualServiceMock,
-            purchaseOrderQuery: $this->poQueryMock,
-            goodsReceiptPersist: $this->grPersistMock,
-            logger: new NullLogger(),
-        );
-    }
-
     #[Test]
     public function recordUsesTenantScopedPurchaseOrderLookup(): void
     {
@@ -61,14 +30,65 @@ final class GoodsReceiptCoordinatorTest extends TestCase
             ]],
         );
 
-        $this->poQueryMock->expects($this->once())
-            ->method('findById')
-            ->with('tenant-1', 'po-123')
-            ->willReturn(null);
-        $this->contextProviderMock->expects($this->never())->method('getPreReceiptContext');
-        $this->grPersistMock->expects($this->never())->method('create');
+        $coordinator = new GoodsReceiptCoordinator(
+            contextProvider: new class () {
+                public function getPreReceiptContext(string $tenantId, string $purchaseOrderId, string $warehouseId, array $lineItems): never
+                {
+                    throw new \RuntimeException('Should not fetch pre-receipt context when PO is missing.');
+                }
 
-        $result = $this->coordinator->record($request);
+                public function getOutstandingQuantities(string $tenantId, string $purchaseOrderId): array
+                {
+                    return [];
+                }
+
+                public function getContext(string $tenantId, string $goodsReceiptId): never
+                {
+                    throw new \RuntimeException('Not used in this test.');
+                }
+            },
+            ruleRegistry: new class () {
+                public function validateOrFail(object $context): void
+                {
+                }
+            },
+            accrualService: new class () {
+                public function postGoodsReceiptAccrual(
+                    string $tenantId,
+                    string $goodsReceiptId,
+                    string $purchaseOrderId,
+                    array $lineItems,
+                    string $receivedBy
+                ): string {
+                    return 'accrual-1';
+                }
+            },
+            purchaseOrderQuery: new class () {
+                public ?array $lastFindArgs = null;
+
+                public function findById(string $tenantId, string $id): ?object
+                {
+                    $this->lastFindArgs = [$tenantId, $id];
+                    return null;
+                }
+            },
+            goodsReceiptPersist: new class () {
+                public bool $createCalled = false;
+
+                public function create(array $data): string
+                {
+                    $this->createCalled = true;
+                    return 'gr-1';
+                }
+
+                public function reverse(string $goodsReceiptId, string $reversedBy, string $reason): void
+                {
+                }
+            },
+            logger: new NullLogger(),
+        );
+
+        $result = $coordinator->record($request);
 
         $this->assertFalse($result->success);
         $this->assertSame('Purchase order not found: po-123', $result->message);

@@ -143,7 +143,7 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
 
             // 9. Update PO status if fully received
             if ($poFullyReceived && $this->purchaseOrderPersist !== null) {
-                $this->purchaseOrderPersist->updateStatus($request->purchaseOrderId, 'received');
+                $this->purchaseOrderPersist->updateStatus($request->purchaseOrderId, 'received', $request->tenantId);
             }
 
             // 10. Dispatch events for side effects

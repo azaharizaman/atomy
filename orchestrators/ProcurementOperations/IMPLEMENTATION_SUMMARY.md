@@ -22,6 +22,7 @@
 - Aligns Layer 2 behavior with tenant-scoped Layer 1 query contracts.
 - Reduces accidental cross-tenant data access from ID-only lookups.
 - Adds tests to prevent regression to one-argument `findById` calls.
+- Fixes purchase-order status write to include tenant context when marking a fully received PO.
 
 ### Remaining follow-up
 - `SODComplianceDataProvider` still uses ID-only PO reads because its current API does not carry tenant context. A follow-up should thread tenant context through SOD validation APIs and update those queries to tenant-scoped reads.
