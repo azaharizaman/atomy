@@ -2,10 +2,27 @@
     "name": "nexus/quote-ingestion",
     "description": "Quote ingestion orchestration - extraction, normalization, persistence",
     "type": "library",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../packages/*",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../orchestrators/*",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require": {
         "php": "^8.3",
-        "nexus/machine-learning": "*@dev",
-        "laravel/framework": "^11.0|^12.0"
+        "nexus/quotation-intelligence": "*@dev",
+        "nexus/tenant": "*@dev",
+        "psr/log": "^3.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"
