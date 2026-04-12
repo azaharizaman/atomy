@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Tests\Unit\Rules;
 
+use InvalidArgumentException;
 use Nexus\FinanceOperations\Contracts\BudgetAvailabilityQueryInterface;
 use Nexus\FinanceOperations\Contracts\BudgetRuleViewInterface;
 use Nexus\FinanceOperations\DTOs\RuleContext;
@@ -125,7 +126,7 @@ final class BudgetAvailableRuleTest extends TestCase
             public function getBudget(string $tenantId, string $budgetId): ?BudgetRuleViewInterface
             {
                 if ($tenantId !== $this->expectedTenantId || $budgetId !== $this->expectedBudgetId) {
-                    throw new \InvalidArgumentException("Unexpected tenant or budget: got $tenantId/$budgetId, expected {$this->expectedTenantId}/{$this->expectedBudgetId}");
+                    throw new InvalidArgumentException("Unexpected tenant or budget: got $tenantId/$budgetId, expected {$this->expectedTenantId}/{$this->expectedBudgetId}");
                 }
 
                 if (!$this->found) {
@@ -148,7 +149,7 @@ final class BudgetAvailableRuleTest extends TestCase
                 ?string $costCenterId = null,
             ): string {
                 if ($tenantId !== $this->expectedTenantId || $budgetId !== $this->expectedBudgetId || $costCenterId !== $this->expectedCostCenterId) {
-                    throw new \InvalidArgumentException("Unexpected parameters: tenant $tenantId/$budgetId/$costCenterId vs expected {$this->expectedTenantId}/{$this->expectedBudgetId}/{$this->expectedCostCenterId}");
+                    throw new InvalidArgumentException("Unexpected parameters: tenant $tenantId/$budgetId/$costCenterId vs expected {$this->expectedTenantId}/{$this->expectedBudgetId}/{$this->expectedCostCenterId}");
                 }
 
                 return $this->availableAmount;

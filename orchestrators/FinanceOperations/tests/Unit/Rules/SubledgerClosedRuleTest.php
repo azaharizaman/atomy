@@ -68,14 +68,9 @@ final class SubledgerClosedRuleTest extends TestCase
 
     public function testMissingTenantIdFailsValidation(): void
     {
-        $rule = new SubledgerClosedRule($this->periodManager(isClosed: true));
+        $this->expectException(\InvalidArgumentException::class);
 
-        $result = $rule->check(
-            RuleContext::forSubledgerClosure('', '2026-01', 'AR')
-        );
-
-        self::assertFalse($result->passed);
-        self::assertStringContainsString('required', $result->message);
+        RuleContext::forSubledgerClosure('', '2026-01', 'AR');
     }
 
     private function periodManager(bool $isClosed, string $expectedTenantId = 'tenant-001', string $expectedPeriodId = '2026-01', string $expectedSubledgerType = 'AR'): PeriodStatusQueryInterface

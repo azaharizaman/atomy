@@ -118,7 +118,7 @@ final class PeriodOpenRuleTest extends TestCase
 
             public function isSubledgerClosed(string $tenantId, string $periodId, string $subledgerType): bool
             {
-                return false;
+                throw new \BadMethodCallException("Unexpected call to isSubledgerClosed($tenantId, $periodId, $subledgerType)");
             }
         };
     }

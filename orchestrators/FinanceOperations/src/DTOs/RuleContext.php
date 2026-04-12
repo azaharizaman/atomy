@@ -8,12 +8,14 @@ use Nexus\FinanceOperations\Contracts\RuleContextInterface;
 
 final readonly class RuleContext implements RuleContextInterface
 {
+    private string $tenantId;
+
     /**
      * @param array<string> $costCenterIds
      * @param array<string> $transactionTypes
      */
     public function __construct(
-        private string $tenantId,
+        string $tenantId,
         private ?string $budgetId = null,
         private ?string $amount = null,
         private ?string $costCenterId = null,
@@ -22,9 +24,11 @@ final readonly class RuleContext implements RuleContextInterface
         private ?string $subledgerType = null,
         private array $transactionTypes = [],
     ) {
-        if (trim($tenantId) === '') {
+        $trimmedTenantId = trim($tenantId);
+        if ($trimmedTenantId === '') {
             throw new \InvalidArgumentException('Tenant ID cannot be empty');
         }
+        $this->tenantId = $trimmedTenantId;
     }
 
     public static function forBudgetAvailability(
