@@ -17,10 +17,20 @@ interface RuleContextInterface
 
     public function getAmount(): ?string;
 
+    /**
+     * Get the primary/legacy cost center ID (if single cost center context).
+     *
+     * @return string|null The primary cost center ID or null if not applicable
+     */
     public function getCostCenterId(): ?string;
 
     /**
-     * @return array<string>
+     * Get all applicable cost center IDs for validation.
+     *
+     * Note: If getCostCenterId() returns a value, it should be included
+     * in this array for consistency.
+     *
+     * @return array<string> All cost center IDs
      */
     public function getCostCenterIds(): array;
 

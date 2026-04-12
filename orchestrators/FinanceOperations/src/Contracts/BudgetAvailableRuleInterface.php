@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\Contracts;
 
-use Nexus\FinanceOperations\Contracts\RuleContextInterface;
 use Nexus\FinanceOperations\DTOs\RuleResult;
 
 /**

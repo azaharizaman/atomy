@@ -58,9 +58,12 @@ final readonly class CostCenterActiveRule implements RuleInterface
             }
         }
 
-        // Normalize and filter cost center IDs
+        // Normalize and filter cost center IDs (accept both string and numeric)
         $costCenterIds = array_filter(
-            array_map(fn($id) => is_string($id) ? trim($id) : null, $costCenterIds),
+            array_map(
+                fn($id) => is_scalar($id) ? trim((string) $id) : null,
+                $costCenterIds
+            ),
             fn($id) => $id !== null && $id !== ''
         );
 

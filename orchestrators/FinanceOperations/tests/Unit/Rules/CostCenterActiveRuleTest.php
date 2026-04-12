@@ -49,6 +49,7 @@ final class CostCenterActiveRuleTest extends TestCase
         );
 
         self::assertFalse($result->passed);
+        self::assertNotEmpty($result->violations);
         self::assertSame('not_found', $result->violations[0]['type']);
     }
 
@@ -65,6 +66,7 @@ final class CostCenterActiveRuleTest extends TestCase
         );
 
         self::assertFalse($result->passed);
+        self::assertNotEmpty($result->violations);
         self::assertSame('inactive', $result->violations[0]['type']);
     }
 
@@ -81,6 +83,7 @@ final class CostCenterActiveRuleTest extends TestCase
         );
 
         self::assertFalse($result->passed);
+        self::assertNotEmpty($result->violations);
         self::assertSame('cannot_receive', $result->violations[0]['type']);
     }
 

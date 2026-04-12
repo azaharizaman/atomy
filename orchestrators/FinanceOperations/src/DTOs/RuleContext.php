@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\DTOs;
 
-use Nexus\FinanceOperations\Contracts\RuleContextInterface;
 use InvalidArgumentException;
+use Nexus\FinanceOperations\Contracts\RuleContextInterface;
 
 final readonly class RuleContext implements RuleContextInterface
 {
@@ -38,10 +38,18 @@ final readonly class RuleContext implements RuleContextInterface
         string $amount,
         ?string $costCenterId = null,
     ): self {
+        $trimmedBudgetId = trim($budgetId);
+        $trimmedAmount = trim($amount);
+        if ($trimmedBudgetId === '') {
+            throw new InvalidArgumentException('Budget ID cannot be empty');
+        }
+        if ($trimmedAmount === '') {
+            throw new InvalidArgumentException('Amount cannot be empty');
+        }
         return new self(
             tenantId: $tenantId,
-            budgetId: $budgetId,
-            amount: $amount,
+            budgetId: $trimmedBudgetId,
+            amount: $trimmedAmount,
             costCenterId: $costCenterId,
         );
     }
@@ -59,9 +67,13 @@ final readonly class RuleContext implements RuleContextInterface
 
     public static function forPeriodValidation(string $tenantId, string $periodId): self
     {
+        $trimmedPeriodId = trim($periodId);
+        if ($trimmedPeriodId === '') {
+            throw new InvalidArgumentException('Period ID cannot be empty');
+        }
         return new self(
             tenantId: $tenantId,
-            periodId: $periodId,
+            periodId: $trimmedPeriodId,
         );
     }
 
@@ -70,10 +82,18 @@ final readonly class RuleContext implements RuleContextInterface
         string $periodId,
         string $subledgerType,
     ): self {
+        $trimmedPeriodId = trim($periodId);
+        $trimmedSubledgerType = trim($subledgerType);
+        if ($trimmedPeriodId === '') {
+            throw new InvalidArgumentException('Period ID cannot be empty');
+        }
+        if ($trimmedSubledgerType === '') {
+            throw new InvalidArgumentException('Subledger type cannot be empty');
+        }
         return new self(
             tenantId: $tenantId,
-            periodId: $periodId,
-            subledgerType: $subledgerType,
+            periodId: $trimmedPeriodId,
+            subledgerType: $trimmedSubledgerType,
         );
     }
 
