@@ -18,6 +18,7 @@ final readonly class QuoteIngestionOrchestrator
 {
     private const DECISION_ACTION_AUTO_MAP = 'auto_map';
     private const CONFIDENCE_THRESHOLD = 80.0;
+    private const FAILURE_MESSAGE_GENERIC = 'Quote intelligence processing failed.';
 
     public function __construct(
         private QuotationIntelligenceCoordinatorInterface $coordinator,
@@ -59,7 +60,12 @@ final readonly class QuoteIngestionOrchestrator
             $this->submissionPersist->markCompleted($submission, $finalStatus, $avgConfidence, $persistedLineCount);
 
         } catch (\Throwable $e) {
-            $this->handleFailure($submission, 'INTELLIGENCE_FAILED', $e->getMessage());
+            $this->logger->error('Quote intelligence processing failed', [
+                'tenant_id' => $tenantId,
+                'quote_submission_id' => $quoteSubmissionId,
+                'error_class' => $e::class,
+            ]);
+            $this->handleFailure($submission, 'INTELLIGENCE_FAILED', self::FAILURE_MESSAGE_GENERIC);
         } finally {
             $this->tenantContext->clearTenant();
         }

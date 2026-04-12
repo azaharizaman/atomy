@@ -15,6 +15,7 @@
    - Uses persisted line count (not raw payload count) when marking completion.
    - Computes average confidence from finite numeric values only.
    - Normalizes scalar checks for source description, uom, taxonomy code, and mapping version.
+   - Sanitizes failure messages before persistence to avoid leaking internal error details.
 3. Added unit tests for core orchestration behavior and failure paths.
 
 ## Verification coverage added

@@ -191,7 +191,60 @@ final class QuoteIngestionOrchestratorTest extends TestCase
         $submissionPersist->expects(self::never())->method('markCompleted');
         $submissionPersist->expects(self::once())
             ->method('markFailed')
-            ->with($submission, 'INTELLIGENCE_FAILED', 'upstream failed');
+            ->with($submission, 'INTELLIGENCE_FAILED', 'Quote intelligence processing failed.');
+
+        $orchestrator = new QuoteIngestionOrchestrator(
+            $coordinator,
+            $decisionTrailWriter,
+            $tenantContext,
+            $logger,
+            $submissionQuery,
+            $submissionPersist,
+            $sourceLineQuery,
+            $sourceLinePersist,
+        );
+
+        $orchestrator->process($submissionId, $tenantId);
+    }
+
+    public function testProcessLogsExceptionDetailsAndUsesSanitizedFailureMessage(): void
+    {
+        $tenantId = 'tenant-1';
+        $submissionId = 'submission-1';
+        $submission = $this->createSubmission($submissionId, $tenantId, 'rfq-123', 'Vendor A');
+
+        $coordinator = $this->createMock(QuotationIntelligenceCoordinatorInterface::class);
+        $decisionTrailWriter = $this->createMock(DecisionTrailWriterInterface::class);
+        $tenantContext = $this->createMock(TenantContextInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $submissionQuery = $this->createMock(QuoteSubmissionQueryInterface::class);
+        $submissionPersist = $this->createMock(QuoteSubmissionPersistInterface::class);
+        $sourceLineQuery = $this->createMock(NormalizationSourceLineQueryInterface::class);
+        $sourceLinePersist = $this->createMock(NormalizationSourceLinePersistInterface::class);
+
+        $submissionQuery->method('find')->willReturn($submission);
+        $coordinator->expects(self::once())
+            ->method('processQuote')
+            ->with($tenantId, $submissionId)
+            ->willThrowException(new \RuntimeException('sensitive upstream details'));
+
+        $logger->expects(self::once())
+            ->method('error')
+            ->with(
+                'Quote intelligence processing failed',
+                self::callback(static fn (array $context): bool => $context['tenant_id'] === $tenantId
+                    && $context['quote_submission_id'] === $submissionId
+                    && $context['error_class'] === \RuntimeException::class)
+            );
+
+        $submissionPersist->expects(self::once())->method('markExtracting')->with($submission);
+        $submissionPersist->expects(self::once())
+            ->method('markFailed')
+            ->with($submission, 'INTELLIGENCE_FAILED', 'Quote intelligence processing failed.');
+        $submissionPersist->expects(self::never())->method('markCompleted');
+
+        $tenantContext->expects(self::once())->method('setTenant')->with($tenantId);
+        $tenantContext->expects(self::once())->method('clearTenant');
 
         $orchestrator = new QuoteIngestionOrchestrator(
             $coordinator,
