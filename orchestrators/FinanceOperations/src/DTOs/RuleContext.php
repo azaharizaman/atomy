@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\FinanceOperations\DTOs;
 
 use Nexus\FinanceOperations\Contracts\RuleContextInterface;
+use InvalidArgumentException;
 
 final readonly class RuleContext implements RuleContextInterface
 {
@@ -26,7 +27,7 @@ final readonly class RuleContext implements RuleContextInterface
     ) {
         $trimmedTenantId = trim($tenantId);
         if ($trimmedTenantId === '') {
-            throw new \InvalidArgumentException('Tenant ID cannot be empty');
+            throw new InvalidArgumentException('Tenant ID cannot be empty');
         }
         $this->tenantId = $trimmedTenantId;
     }

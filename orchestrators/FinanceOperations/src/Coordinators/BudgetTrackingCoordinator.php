@@ -244,12 +244,18 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
         ]);
 
         try {
+            $rawCostCenterId = $request->options['cost_center_id'] ?? null;
+            $costCenterId = null;
+            if (is_string($rawCostCenterId) && trim($rawCostCenterId) !== '') {
+                $costCenterId = (string) trim($rawCostCenterId);
+            }
+
             // Convert to service DTO
             $serviceRequest = new \Nexus\FinanceOperations\DTOs\BudgetTracking\BudgetThresholdRequest(
                 tenantId: $request->tenantId,
                 periodId: $request->options['period_id'] ?? '',
                 thresholds: $request->options['thresholds'] ?? [80, 90, 100],
-                costCenterId: $request->options['cost_center_id'] ?? null,
+                costCenterId: $costCenterId,
             );
 
             // Delegate to service
