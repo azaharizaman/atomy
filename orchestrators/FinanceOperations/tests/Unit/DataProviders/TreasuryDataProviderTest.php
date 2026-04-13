@@ -68,6 +68,7 @@ final class TreasuryDataProviderTest extends TestCase
         $receivableQuery
             ->expects($this->once())
             ->method('getExpectedReceipts')
+            ->with('tenant-1', '2026-05')
             ->willReturn([
                 new class {
                     public function getExpectedDate(): \DateTimeImmutable { return new \DateTimeImmutable('2026-05-01'); }
@@ -81,6 +82,7 @@ final class TreasuryDataProviderTest extends TestCase
         $payableQuery
             ->expects($this->once())
             ->method('getExpectedPayments')
+            ->with('tenant-1', '2026-05')
             ->willReturn([
                 new class {
                     public function getDueDate(): \DateTimeImmutable { return new \DateTimeImmutable('2026-05-02'); }

@@ -45,7 +45,8 @@ interface LedgerQueryInterface
      *
      * @param string $tenantId Tenant identifier
      * @param string $costCenterId Cost center identifier
+     * @param string $periodId Period identifier
      * @return object Balance projection
      */
-    public function getCostCenterBalance(string $tenantId, string $costCenterId): object;
+    public function getCostCenterBalance(string $tenantId, string $costCenterId, string $periodId): object;
 }

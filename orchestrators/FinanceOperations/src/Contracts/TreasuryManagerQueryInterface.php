@@ -29,4 +29,13 @@ interface TreasuryManagerQueryInterface
      * @return iterable<int, object> Bank-account projections
      */
     public function getBankAccounts(string $tenantId): iterable;
+
+    /**
+     * Get bank account by ID with GL account mapping.
+     *
+     * @param string $tenantId Tenant identifier
+     * @param string $bankAccountId Bank account identifier
+     * @return BankAccountProjectionInterface|null Bank account projection with GL account code
+     */
+    public function getBankAccountById(string $tenantId, string $bankAccountId): ?BankAccountProjectionInterface;
 }

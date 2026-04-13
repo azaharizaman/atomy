@@ -149,11 +149,18 @@ final readonly class TreasuryDataProvider implements TreasuryDataProviderInterfa
         ]);
 
         try {
+            // Get bank account projection to resolve GL account code
+            $bankAccount = $this->treasuryManager->getBankAccountById($tenantId, $bankAccountId);
+            if ($bankAccount === null) {
+                throw new \RuntimeException("Bank account not found: {$bankAccountId}");
+            }
+            $glAccountCode = $bankAccount->getGLAccountCode();
+
             // Get bank statement lines from Treasury
             $statementLines = $this->iterableToArray($this->treasuryManager->getStatementLines($tenantId, $bankAccountId));
 
-            // Get GL transactions for the bank account
-            $glTransactions = $this->iterableToArray($this->journalEntryQuery->getAccountTransactions($tenantId, $bankAccountId));
+            // Get GL transactions using the resolved GL account code
+            $glTransactions = $this->iterableToArray($this->journalEntryQuery->getAccountTransactions($tenantId, $glAccountCode));
 
             return [
                 'bank_account_id' => $bankAccountId,

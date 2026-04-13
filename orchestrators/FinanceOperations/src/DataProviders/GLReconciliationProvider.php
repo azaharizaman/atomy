@@ -346,14 +346,14 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
     private function getReceivableDiscrepancies(string $tenantId, string $periodId): array
     {
         $unposted = $this->receivableQuery->getUnpostedTransactions($tenantId, $periodId);
-        $unpostedItems = is_array($unposted) ? $unposted : iterator_to_array($unposted, false);
+        $unpostedItems = $this->normalizeIterable($unposted);
 
-        return array_map(fn($t) => [
+        return array_map(fn($transaction) => [
             'type' => 'unposted_transaction',
-            'reference' => $t->getReference(),
-            'amount' => $t->getAmount(),
-            'date' => $t->getDate()->format('Y-m-d'),
-            'description' => $t->getDescription(),
+            'reference' => $transaction->getReference(),
+            'amount' => $transaction->getAmount(),
+            'date' => $transaction->getDate()->format('Y-m-d'),
+            'description' => $transaction->getDescription(),
         ], $unpostedItems);
     }
 
@@ -365,14 +365,14 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
     private function getPayableDiscrepancies(string $tenantId, string $periodId): array
     {
         $unposted = $this->payableQuery->getUnpostedTransactions($tenantId, $periodId);
-        $unpostedItems = is_array($unposted) ? $unposted : iterator_to_array($unposted, false);
+        $unpostedItems = $this->normalizeIterable($unposted);
 
-        return array_map(fn($t) => [
+        return array_map(fn($payable) => [
             'type' => 'unposted_transaction',
-            'reference' => $t->getReference(),
-            'amount' => $t->getAmount(),
-            'date' => $t->getDate()->format('Y-m-d'),
-            'description' => $t->getDescription(),
+            'reference' => $payable->getReference(),
+            'amount' => $payable->getAmount(),
+            'date' => $payable->getDate()->format('Y-m-d'),
+            'description' => $payable->getDescription(),
         ], $unpostedItems);
     }
 
@@ -384,14 +384,26 @@ final readonly class GLReconciliationProvider implements GLReconciliationProvide
     private function getAssetDiscrepancies(string $tenantId, string $periodId): array
     {
         $unposted = $this->assetQuery->getUnpostedDepreciation($tenantId, $periodId);
-        $unpostedItems = is_array($unposted) ? $unposted : iterator_to_array($unposted, false);
+        $unpostedItems = $this->normalizeIterable($unposted);
 
-        return array_map(fn($d) => [
+        return array_map(fn($depreciation) => [
             'type' => 'unposted_depreciation',
-            'asset_id' => $d->getAssetId(),
-            'asset_code' => $d->getAssetCode(),
-            'amount' => $d->getAmount(),
-            'period' => $d->getPeriod(),
+            'asset_id' => $depreciation->getAssetId(),
+            'asset_code' => $depreciation->getAssetCode(),
+            'amount' => $depreciation->getAmount(),
+            'period' => $depreciation->getPeriod(),
         ], $unpostedItems);
+    }
+
+    /**
+     * Normalize iterable to array.
+     *
+     * @template T
+     * @param iterable<T> $items
+     * @return array<int, T>
+     */
+    private function normalizeIterable(iterable $items): array
+    {
+        return is_array($items) ? $items : iterator_to_array($items, false);
     }
 }

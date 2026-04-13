@@ -12,16 +12,16 @@ interface ReceivableQueryInterface
     /**
      * Expected incoming receipts for forecast.
      *
-     * @return iterable<int, object> Receipt projections
+     * @return iterable<int, ReceiptProjection> Receipt projections
      */
     public function getExpectedReceipts(string $tenantId, string $periodId): iterable;
 
     /**
      * Total receivable balance for subledger reconciliation.
      *
-     * @return object Balance projection
+     * @return BalanceProjection Balance projection
      */
-    public function getTotalBalance(string $tenantId, string $periodId): object;
+    public function getTotalBalance(string $tenantId, string $periodId): BalanceProjection;
 
     /**
      * GL control account code for receivable subledger.
@@ -31,7 +31,7 @@ interface ReceivableQueryInterface
     /**
      * Unposted receivable movements for reconciliation detail.
      *
-     * @return iterable<int, object> Movement projections
+     * @return iterable<int, MovementProjection> Movement projections
      */
     public function getUnpostedTransactions(string $tenantId, string $periodId): iterable;
 }

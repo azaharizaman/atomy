@@ -52,7 +52,7 @@ final class CostAccountingDataProviderTest extends TestCase
         $budgetQuery
             ->expects($this->once())
             ->method('getCostCenterBudget')
-            ->with('tenant-1', 'cc-1')
+            ->with('tenant-1', 'cc-1', '2026-04')
             ->willReturn($budget);
 
         $this->costManager
@@ -64,7 +64,7 @@ final class CostAccountingDataProviderTest extends TestCase
         $this->ledgerQuery
             ->expects($this->once())
             ->method('getCostCenterBalance')
-            ->with('tenant-1', 'cc-1')
+            ->with('tenant-1', 'cc-1', '2026-04')
             ->willReturn($actualBalance);
 
         $provider = new CostAccountingDataProvider(
@@ -74,7 +74,7 @@ final class CostAccountingDataProviderTest extends TestCase
             $this->logger
         );
 
-        $result = $provider->getCostCenterSummary('tenant-1', 'cc-1');
+        $result = $provider->getCostCenterSummary('tenant-1', 'cc-1', '2026-04');
 
         $this->assertSame('cc-1', $result['cost_center_id']);
         $this->assertSame('20.00', $result['variance']);
@@ -141,11 +141,13 @@ final class CostAccountingDataProviderTest extends TestCase
         $this->costManager
             ->expects($this->once())
             ->method('getCostCenter')
+            ->with('tenant-1', 'cc-1')
             ->willReturn($costCenter);
 
         $this->ledgerQuery
             ->expects($this->once())
             ->method('getCostCenterBalance')
+            ->with('tenant-1', 'cc-1', '2026-05')
             ->willReturn($actualBalance);
 
         $provider = new CostAccountingDataProvider(
@@ -155,7 +157,7 @@ final class CostAccountingDataProviderTest extends TestCase
             $this->logger
         );
 
-        $result = $provider->getCostCenterSummary('tenant-1', 'cc-1');
+        $result = $provider->getCostCenterSummary('tenant-1', 'cc-1', '2026-05');
 
         $this->assertNull($result['budget']);
         $this->assertNull($result['variance']);

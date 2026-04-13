@@ -177,21 +177,22 @@ final readonly class CostAccountingDataProvider implements CostAccountingDataPro
     /**
      * @inheritDoc
      */
-    public function getCostCenterSummary(string $tenantId, string $costCenterId): array
+    public function getCostCenterSummary(string $tenantId, string $costCenterId, string $periodId, ?string $budgetVersionId = null): array
     {
         $this->logger->debug('Fetching cost center summary', [
             'tenant_id' => $tenantId,
             'cost_center_id' => $costCenterId,
+            'period_id' => $periodId,
         ]);
 
         try {
             $costCenter = $this->costManager->getCostCenter($tenantId, $costCenterId);
-            $actualCosts = $this->glQuery->getCostCenterBalance($tenantId, $costCenterId);
+            $actualCosts = $this->glQuery->getCostCenterBalance($tenantId, $costCenterId, $periodId);
 
             $budgetData = null;
             if ($this->budgetQuery !== null) {
                 try {
-                    $budget = $this->budgetQuery->getCostCenterBudget($tenantId, $costCenterId);
+                    $budget = $this->budgetQuery->getCostCenterBudget($tenantId, $costCenterId, $periodId, $budgetVersionId);
                     $budgetData = [
                         'amount' => $budget->getAmount(),
                         'currency' => $budget->getCurrency(),

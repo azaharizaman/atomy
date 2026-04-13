@@ -155,16 +155,16 @@ No runtime changes required - the contract method signature is unchanged.
     Nexus\FinanceOperations\Services\CostAllocationService       100.00% ( 8/ 8)  100.00% (159/159)
     Nexus\FinanceOperations\Services\DepreciationRunService      100.00% ( 9/ 9)  100.00% (196/196)
     Nexus\FinanceOperations\Services\GLReconciliationService     100.00% ( 7/ 7)  100.00% (248/248)
-    ```
-# FinanceOperations implementation summary
-
+     ```
 ## 2026-04-07 - Layer 2 hardening pass (type-safe provider boundaries)
 
 ### Why this slice was selected
+
 - `orchestrators/FinanceOperations` had concentrated high-impact gaps: critical data providers in cash-flow, GL reconciliation, and cost accounting accepted generic `object` dependencies.
 - Generic dependency typing weakens contract safety and can hide adapter mismatches until runtime in financial workflows.
 
 ### What was improved
+
 - Replaced generic constructor dependencies in:
   - `TreasuryDataProvider`
   - `GLReconciliationProvider`
@@ -180,6 +180,7 @@ No runtime changes required - the contract method signature is unchanged.
   - `AssetQueryInterface` now includes reconciliation query methods (`getNetBookValueTotal`, `getControlAccountCode`, `getUnpostedDepreciation`).
 
 ### Regression tests added
+
 - `tests/Unit/DataProviders/TreasuryDataProviderTest.php`
 - `tests/Unit/DataProviders/GLReconciliationProviderTest.php`
 - `tests/Unit/DataProviders/CostAccountingDataProviderTest.php`

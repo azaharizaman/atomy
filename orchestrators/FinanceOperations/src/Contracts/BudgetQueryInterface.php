@@ -27,7 +27,9 @@ interface BudgetQueryInterface
      *
      * @param string $tenantId Tenant identifier
      * @param string $costCenterId Cost center identifier
-     * @return object Budget projection
+     * @param string $periodId Period identifier
+     * @param string|null $budgetVersionId Optional budget version identifier
+     * @return BudgetProjectionInterface Budget projection for the given period/version
      */
-    public function getCostCenterBudget(string $tenantId, string $costCenterId): object;
+    public function getCostCenterBudget(string $tenantId, string $costCenterId, string $periodId, ?string $budgetVersionId = null): BudgetProjectionInterface;
 }
