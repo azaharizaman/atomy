@@ -78,11 +78,7 @@ npm run test:e2e:report     # View HTML report
 - **CQRS**: Split repositories into `*QueryInterface` and `*PersistInterface`
 
 ### Naming Conventions
-- **Classes**: `PascalCase` (e.g., `ProjectManager`)
-- **Interfaces**: `PascalCase` with `Interface` suffix (e.g., `ProjectManagerInterface`)
-- **Exceptions**: `*Exception` suffix (e.g., `TenantNotFoundException`)
-- **Value Objects**: `*Id`, `*VO`, or descriptive names (e.g., `ProjectId`, `Money`)
-- **Methods**: `camelCase`, verb-first (e.g., `createProject`, `getActiveProjects`)
+Refer to [NAMING_CONVENTIONS.md](docs/project/NAMING_CONVENTIONS.md)
 
 ### Imports
 - Use fully-qualified class names or explicit `use` statements
