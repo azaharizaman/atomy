@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 
 export type NormalizationConflictRow = {
   id: string;
@@ -36,9 +37,12 @@ export function useNormalizationReview(rfqId: string, options?: { enabled?: bool
   const query = useQuery({
     queryKey: ['normalization-conflicts', rfqId],
     queryFn: async (): Promise<ConflictsResponse> => {
-      const { data } = await api.get<ConflictsResponse>(
+      const data = await fetchLiveOrFail<ConflictsResponse>(
         `/normalization/${encodeURIComponent(rfqId)}/conflicts`,
       );
+      if (data === undefined) {
+        return { data: [], meta: {} };
+      }
       return data;
     },
     enabled,
