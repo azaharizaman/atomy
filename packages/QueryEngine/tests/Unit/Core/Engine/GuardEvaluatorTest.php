@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Nexus\QueryEngine\Tests\Unit\Core\Engine;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Nexus\QueryEngine\Contracts\AnalyticsContextInterface;
+use Nexus\QueryEngine\Contracts\ClockInterface;
+use Nexus\QueryEngine\Core\Engine\DefaultClock;
 use Nexus\QueryEngine\Core\Engine\GuardEvaluator;
 use Nexus\QueryEngine\Exceptions\GuardConditionFailedException;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -17,7 +21,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_allows_role_guard_when_user_has_required_role(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext(userRoles: ['analyst']);
 
         $result = $evaluator->evaluateAll([
@@ -33,7 +37,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_rejects_role_guard_when_user_lacks_required_role(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext(userRoles: ['viewer']);
 
         $this->expectException(GuardConditionFailedException::class);
@@ -50,7 +54,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_supports_role_guard_without_explicit_type(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext(userRoles: ['manager']);
 
         $result = $evaluator->evaluateAll([
@@ -65,7 +69,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_rejects_unknown_guard_types(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext();
 
         $this->expectException(GuardConditionFailedException::class);
@@ -81,7 +85,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_rejects_non_array_guard_configuration(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext();
 
         $this->expectException(GuardConditionFailedException::class);
@@ -95,7 +99,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_handles_numeric_guard_keys_without_type_errors(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext();
 
         $this->expectException(GuardConditionFailedException::class);
@@ -111,7 +115,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_rejects_tenant_guard_without_required_tenant_id(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext(tenantId: 'tenant-a');
 
         $this->expectException(GuardConditionFailedException::class);
@@ -126,7 +130,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_rejects_tenant_guard_when_current_tenant_is_missing(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext(tenantId: null);
 
         $this->expectException(GuardConditionFailedException::class);
@@ -142,7 +146,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_allows_tenant_guard_when_tenant_matches(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext(tenantId: 'tenant-a');
 
         $result = $evaluator->evaluateAll([
@@ -158,7 +162,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_rejects_tenant_guard_when_tenant_does_not_match(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext(tenantId: 'tenant-b');
 
         $this->expectException(GuardConditionFailedException::class);
@@ -175,7 +179,7 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_rejects_time_window_guard_with_invalid_date_format(): void
     {
-        $evaluator = new GuardEvaluator();
+        $evaluator = GuardEvaluator::withDefaultClock();
         $context = $this->createContext();
 
         $this->expectException(GuardConditionFailedException::class);
@@ -191,7 +195,19 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_rejects_time_window_guard_when_start_is_after_end(): void
     {
-        $evaluator = new GuardEvaluator();
+        $clock = new class (new DateTimeImmutable('2024-01-01T00:00:00+00:00')) implements ClockInterface {
+            public function __construct(
+                private readonly DateTimeImmutable $frozenTime
+            ) {
+            }
+
+            public function now(): DateTimeImmutable
+            {
+                return $this->frozenTime;
+            }
+        };
+
+        $evaluator = new GuardEvaluator($clock);
         $context = $this->createContext();
 
         $this->expectException(GuardConditionFailedException::class);
@@ -199,8 +215,8 @@ final class GuardEvaluatorTest extends TestCase
         $evaluator->evaluateAll([
             'time_window' => [
                 'type' => 'time_window',
-                'start' => (new \DateTimeImmutable('+10 minutes'))->format(\DateTimeInterface::ATOM),
-                'end' => (new \DateTimeImmutable('-10 minutes'))->format(\DateTimeInterface::ATOM),
+                'start' => (new DateTimeImmutable('+10 minutes'))->format(DateTimeInterface::ATOM),
+                'end' => (new DateTimeImmutable('-10 minutes'))->format(DateTimeInterface::ATOM),
             ],
         ], $context);
     }
@@ -208,14 +224,27 @@ final class GuardEvaluatorTest extends TestCase
     #[Test]
     public function it_allows_time_window_guard_when_current_time_is_in_range(): void
     {
-        $evaluator = new GuardEvaluator();
+        $fixedTime = new DateTimeImmutable('2024-01-15T12:00:00+00:00');
+        $clock = new class ($fixedTime) implements ClockInterface {
+            public function __construct(
+                private readonly DateTimeImmutable $frozenTime
+            ) {
+            }
+
+            public function now(): DateTimeImmutable
+            {
+                return $this->frozenTime;
+            }
+        };
+
+        $evaluator = new GuardEvaluator($clock);
         $context = $this->createContext();
 
         $result = $evaluator->evaluateAll([
             'time_window' => [
                 'type' => 'time_window',
-                'start' => (new \DateTimeImmutable('-10 minutes'))->format(\DateTimeInterface::ATOM),
-                'end' => (new \DateTimeImmutable('+10 minutes'))->format(\DateTimeInterface::ATOM),
+                'start' => (new DateTimeImmutable('2024-01-01T00:00:00+00:00'))->format(DateTimeInterface::ATOM),
+                'end' => (new DateTimeImmutable('2024-12-31T23:59:59+00:00'))->format(DateTimeInterface::ATOM),
             ],
         ], $context);
 

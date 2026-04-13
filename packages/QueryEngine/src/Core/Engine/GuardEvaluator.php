@@ -4,21 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\QueryEngine\Core\Engine;
 
+use DateTimeImmutable;
 use Nexus\QueryEngine\Contracts\AnalyticsContextInterface;
+use Nexus\QueryEngine\Contracts\ClockInterface;
 use Nexus\QueryEngine\Exceptions\GuardConditionFailedException;
-
-interface ClockInterface
-{
-    public function now(): \DateTimeImmutable;
-}
-
-final class DefaultClock implements ClockInterface
-{
-    public function now(): \DateTimeImmutable
-    {
-        return new \DateTimeImmutable();
-    }
-}
 
 /**
  * Evaluates guard conditions before query execution
@@ -26,9 +15,15 @@ final class DefaultClock implements ClockInterface
 final readonly class GuardEvaluator
 {
     public function __construct(
-        private ClockInterface $clock = new DefaultClock()
+        private ClockInterface $clock
     ) {
     }
+
+    public static function withDefaultClock(): self
+    {
+        return new self(new DefaultClock());
+    }
+
     /**
      * Evaluate all guard conditions
      *
@@ -91,13 +86,21 @@ final readonly class GuardEvaluator
             return false;
         }
 
-        $userRoles = $context->getUserRoles();
-
+        $validRoles = [];
         foreach ($requiredRoles as $role) {
             if (!is_string($role) || $role === '') {
                 return false;
             }
+            $validRoles[] = $role;
+        }
 
+        if ($validRoles === []) {
+            return false;
+        }
+
+        $userRoles = $context->getUserRoles();
+
+        foreach ($validRoles as $role) {
             if (in_array($role, $userRoles, true)) {
                 return true;
             }
@@ -173,10 +176,10 @@ final readonly class GuardEvaluator
         return true;
     }
 
-    private function parseGuardDateTime(string $value): ?\DateTimeImmutable
+    private function parseGuardDateTime(string $value): ?DateTimeImmutable
     {
         try {
-            return new \DateTimeImmutable($value);
+            return new DateTimeImmutable($value);
         } catch (\Exception) {
             return null;
         }

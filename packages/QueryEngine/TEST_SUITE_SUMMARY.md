@@ -7,6 +7,7 @@
 ## Test Coverage Metrics
 
 ### Overall Coverage
+
 - **Line Coverage:** 76.00% (GuardEvaluator tests active)
 - **Function Coverage:** 100.00% (GuardEvaluator tests active)
 - **Class Coverage:** 100.00% (GuardEvaluator tested)
