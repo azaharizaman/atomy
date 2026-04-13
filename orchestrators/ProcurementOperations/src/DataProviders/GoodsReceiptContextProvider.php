@@ -42,7 +42,7 @@ final readonly class GoodsReceiptContextProvider
      */
     public function getContext(string $tenantId, string $goodsReceiptId): GoodsReceiptContext
     {
-        $goodsReceipt = $this->goodsReceiptQuery->findById($goodsReceiptId);
+        $goodsReceipt = $this->goodsReceiptQuery->findByTenantAndId($tenantId, $goodsReceiptId);
 
         if ($goodsReceipt === null) {
             throw GoodsReceiptException::notFound($goodsReceiptId);
@@ -188,7 +188,7 @@ final readonly class GoodsReceiptContextProvider
         }
 
         // Get all receipts for this PO
-        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($purchaseOrderId, $tenantId);
+        $receipts = $this->goodsReceiptQuery->findByPurchaseOrder($tenantId, $purchaseOrderId);
 
         // Aggregate received quantities by PO line
         $receivedByLine = [];

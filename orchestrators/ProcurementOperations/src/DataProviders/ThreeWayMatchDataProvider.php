@@ -39,13 +39,13 @@ final readonly class ThreeWayMatchDataProvider
         array $goodsReceiptIds
     ): ThreeWayMatchContext {
         // Fetch invoice
-        $vendorBill = $this->vendorBillQuery->findById($vendorBillId);
+        $vendorBill = $this->vendorBillQuery->findByTenantAndId($tenantId, $vendorBillId);
         if ($vendorBill === null) {
             throw MatchingException::invoiceNotFound($vendorBillId);
         }
 
         // Fetch purchase order
-        $purchaseOrder = $this->purchaseOrderQuery->findById($purchaseOrderId);
+        $purchaseOrder = $this->purchaseOrderQuery->findById($tenantId, $purchaseOrderId);
         if ($purchaseOrder === null) {
             throw PurchaseOrderException::notFound($purchaseOrderId);
         }
@@ -73,7 +73,7 @@ final readonly class ThreeWayMatchDataProvider
         // Fetch and aggregate goods receipts
         $goodsReceipts = [];
         foreach ($goodsReceiptIds as $grId) {
-            $gr = $this->goodsReceiptQuery->findById($grId);
+            $gr = $this->goodsReceiptQuery->findByTenantAndId($tenantId, $grId);
             if ($gr !== null) {
                 $goodsReceipts[] = $gr;
             }

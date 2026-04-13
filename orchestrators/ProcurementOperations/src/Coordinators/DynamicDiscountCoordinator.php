@@ -35,7 +35,7 @@ final readonly class DynamicDiscountCoordinator
         \DateTimeImmutable $paymentDate,
         float $targetApr = 18.0
     ): array {
-        $bill = $this->billRepository->findById($billId);
+        $bill = $this->billRepository->findByTenantAndId($tenantId, $billId);
         
         if (!$bill) {
             throw new \RuntimeException("Bill not found: {$billId}");

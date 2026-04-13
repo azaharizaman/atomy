@@ -9,7 +9,7 @@ namespace Nexus\CashManagement\Contracts;
  *
  * Contract for bank account persistence operations.
  */
-interface BankAccountRepositoryInterface
+interface BankAccountRepositoryInterface extends BankAccountQueryInterface
 {
     /**
      * Find bank account by ID

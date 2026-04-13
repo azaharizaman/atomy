@@ -30,8 +30,9 @@ final readonly class BankFileGenerationResult
         public array $failedPayments,
         public bool $success,
         public ?string $errorMessage = null,
-        public \DateTimeImmutable $generatedAt,
+        public \DateTimeImmutable $generatedAt = new \DateTimeImmutable(),
         public array $metadata = [],
+        public ?string $messageType = null,
     ) {}
 
     /**

@@ -36,18 +36,23 @@ final readonly class ReturnToVendorCoordinator implements ReturnToVendorCoordina
         ]);
 
         try {
-            $gr = $this->grQuery->findById($request->goodsReceiptId);
+            $gr = $this->grQuery->findByTenantAndId($request->tenantId, $request->goodsReceiptId);
             if (!$gr) {
                 return ReturnToVendorResult::failure('Goods receipt not found.');
             }
 
             // 1. Record the return in Procurement package
             // Note: Implementation assumed to exist in atomic package persist layer
-            $returnId = $this->grPersist->createReturn($request->goodsReceiptId, $request->lineItems, [
-                'initiated_by' => $request->initiatedBy,
-                'notes' => $request->notes,
-                'metadata' => $request->metadata,
-            ]);
+            $returnId = $this->grPersist->createReturn(
+                $request->tenantId,
+                $request->goodsReceiptId,
+                $request->lineItems,
+                [
+                    'initiated_by' => $request->initiatedBy,
+                    'notes' => $request->notes,
+                    'metadata' => $request->metadata,
+                ]
+            );
 
             // 2. Adjust inventory to reflect the return (reduce stock)
             foreach ($request->lineItems as $item) {
@@ -83,7 +88,7 @@ final readonly class ReturnToVendorCoordinator implements ReturnToVendorCoordina
     {
         try {
             // Update status to shipped
-            $this->grPersist->updateReturnStatus($returnId, 'shipped', [
+            $this->grPersist->updateReturnStatus($tenantId, $returnId, 'shipped', [
                 'shipped_by' => $shippedBy,
                 'tracking_number' => $trackingNumber,
                 'shipped_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
@@ -102,7 +107,7 @@ final readonly class ReturnToVendorCoordinator implements ReturnToVendorCoordina
     {
         try {
             // Close the return cycle
-            $this->grPersist->updateReturnStatus($returnId, 'completed', [
+            $this->grPersist->updateReturnStatus($tenantId, $returnId, 'completed', [
                 'credit_memo_id' => $creditMemoId,
                 'completed_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
             ]);

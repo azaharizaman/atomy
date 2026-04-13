@@ -57,6 +57,7 @@ interface AccrualManagementServiceInterface
      * Match accrual with received invoice
      *
      * @param string $accrualId Accrual to match
+     * @param string $tenantId Tenant identifier
      * @param string $invoiceId Invoice document ID
      * @param string $invoiceNumber Invoice number
      * @param Money $invoiceAmount Invoice amount
@@ -66,6 +67,7 @@ interface AccrualManagementServiceInterface
      */
     public function matchWithInvoice(
         string $accrualId,
+        string $tenantId,
         string $invoiceId,
         string $invoiceNumber,
         Money $invoiceAmount,
@@ -79,6 +81,7 @@ interface AccrualManagementServiceInterface
      * Used when invoice amount differs from accrual amount
      *
      * @param string $accrualId Accrual to match
+     * @param string $tenantId Tenant identifier
      * @param string $invoiceId Invoice document ID
      * @param string $invoiceNumber Invoice number
      * @param Money $matchedAmount Amount being matched
@@ -89,6 +92,7 @@ interface AccrualManagementServiceInterface
      */
     public function partialMatchWithInvoice(
         string $accrualId,
+        string $tenantId,
         string $invoiceId,
         string $invoiceNumber,
         Money $matchedAmount,
@@ -101,6 +105,7 @@ interface AccrualManagementServiceInterface
      * Write off aged accrual
      *
      * @param string $accrualId Accrual to write off
+     * @param string $tenantId Tenant identifier
      * @param string $writeOffReason Reason for write-off
      * @param string $writeOffBy User authorizing write-off
      * @param string|null $writeOffAccountId GL account for write-off
@@ -108,6 +113,7 @@ interface AccrualManagementServiceInterface
      */
     public function writeOffAccrual(
         string $accrualId,
+        string $tenantId,
         string $writeOffReason,
         string $writeOffBy,
         ?string $writeOffAccountId = null,
@@ -258,12 +264,14 @@ interface AccrualManagementServiceInterface
      * Reverse accrual (e.g., for returned goods)
      *
      * @param string $accrualId Accrual to reverse
+     * @param string $tenantId Tenant identifier
      * @param string $reversalReason Reason for reversal
      * @param string $reversedBy User authorizing reversal
      * @return GrIrAccrualData Reversal accrual record
      */
     public function reverseAccrual(
         string $accrualId,
+        string $tenantId,
         string $reversalReason,
         string $reversedBy,
     ): GrIrAccrualData;
@@ -272,9 +280,10 @@ interface AccrualManagementServiceInterface
      * Get accrual by ID
      *
      * @param string $accrualId Accrual identifier
+     * @param string $tenantId Tenant identifier
      * @return GrIrAccrualData|null Accrual data or null if not found
      */
-    public function getAccrual(string $accrualId): ?GrIrAccrualData;
+    public function getAccrual(string $accrualId, string $tenantId): ?GrIrAccrualData;
 
     /**
      * Calculate period accrual entries for GL posting
