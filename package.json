@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@openai/codex": "^0.117.0",
-    "axios": "^1.13.5"
+    "axios": "^1.15.0",
+    "opencode-ai": "^1.4.3"
   }
 }

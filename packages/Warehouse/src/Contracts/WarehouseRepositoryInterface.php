@@ -7,7 +7,7 @@ namespace Nexus\Warehouse\Contracts;
 /**
  * Warehouse repository contract
  */
-interface WarehouseRepositoryInterface
+interface WarehouseRepositoryInterface extends WarehouseQueryInterface
 {
     /**
      * Find warehouse by ID

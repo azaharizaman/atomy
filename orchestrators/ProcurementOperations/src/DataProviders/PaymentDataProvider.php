@@ -62,7 +62,7 @@ final readonly class PaymentDataProvider
         $vendorTotals = [];
 
         foreach ($vendorBillIds as $billId) {
-            $bill = $this->vendorBillQuery->findById($billId);
+            $bill = $this->vendorBillQuery->findByTenantAndId($tenantId, $billId);
             if ($bill === null) {
                 continue;
             }
@@ -154,7 +154,7 @@ final readonly class PaymentDataProvider
         $result = [];
 
         foreach ($vendorBillIds as $billId) {
-            $bill = $this->vendorBillQuery->findById($billId);
+            $bill = $this->vendorBillQuery->findByTenantAndId($tenantId, $billId);
 
             if ($bill === null) {
                 $result[$billId] = [
@@ -186,12 +186,12 @@ final readonly class PaymentDataProvider
      *
      * @return array<string, string> Map of bill ID to existing payment ID
      */
-    public function checkDuplicatePayments(array $vendorBillIds): array
+    public function checkDuplicatePayments(string $tenantId, array $vendorBillIds): array
     {
         $duplicates = [];
 
         foreach ($vendorBillIds as $billId) {
-            $bill = $this->vendorBillQuery->findById($billId);
+            $bill = $this->vendorBillQuery->findByTenantAndId($tenantId, $billId);
 
             if ($bill !== null && $bill->isPaid()) {
                 $paymentInfo = $bill->getPaymentInfo();
@@ -220,7 +220,7 @@ final readonly class PaymentDataProvider
         $bills = [];
 
         foreach ($vendorBillIds as $billId) {
-            $bill = $this->vendorBillQuery->findById($billId);
+            $bill = $this->vendorBillQuery->findByTenantAndId($tenantId, $billId);
 
             if ($bill === null) {
                 continue;

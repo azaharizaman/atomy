@@ -71,7 +71,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
 
         try {
             // 1. Validate invoice exists and is not already matched
-            $this->validateInvoiceStatus($request->vendorBillId);
+            $this->validateInvoiceStatus($request->tenantId, $request->vendorBillId);
 
             // 2. Validate goods receipts are provided
             if (empty($request->goodsReceiptIds)) {
@@ -147,7 +147,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
 
         try {
             // Validate invoice status
-            $this->validateInvoiceStatus($vendorBillId);
+            $this->validateInvoiceStatus($tenantId, $vendorBillId);
 
             // Build context with empty GR array
             $context = $this->dataProvider->buildContext(
@@ -223,7 +223,7 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
      */
     public function getMatchStatus(string $tenantId, string $vendorBillId): array
     {
-        $vendorBill = $this->vendorBillQuery->findById($vendorBillId);
+        $vendorBill = $this->vendorBillQuery->findByTenantAndId($tenantId, $vendorBillId);
 
         if ($vendorBill === null) {
             throw MatchingException::invoiceNotFound($vendorBillId);
@@ -363,9 +363,9 @@ final readonly class InvoiceMatchingCoordinator implements InvoiceMatchingCoordi
     /**
      * Validate invoice is in a matchable state.
      */
-    private function validateInvoiceStatus(string $vendorBillId): void
+    private function validateInvoiceStatus(string $tenantId, string $vendorBillId): void
     {
-        $vendorBill = $this->vendorBillQuery->findById($vendorBillId);
+        $vendorBill = $this->vendorBillQuery->findByTenantAndId($tenantId, $vendorBillId);
 
         if ($vendorBill === null) {
             throw MatchingException::invoiceNotFound($vendorBillId);

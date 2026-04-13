@@ -45,4 +45,4 @@ Nexus is a large system. Agents should follow these coordination patterns:
 
 ## Naming Conventions
 
-Refer to [NAMING_CONVENTIONS.md](NAMING_CONVENTIONS.md) for detailed naming standards across the codebase.
+Refer to [NAMING_CONVENTIONS.md](docs/project/NAMING_CONVENTIONS.md) for detailed naming standards across the codebase.

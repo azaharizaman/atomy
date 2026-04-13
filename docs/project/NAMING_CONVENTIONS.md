@@ -18,7 +18,7 @@ This document outlines the naming conventions for all aspects of the codebase, e
 ### Classes
 
 *   **Services:** PascalCase. Suffix with `Service` (e.g., `AccountConsolidationService`).
-*   **Value Objects (VOs):** PascalCase, often singular nouns representing a concept (e.g., `Money`, `TenantId`, `PeriodId`). Should be `final readonly class`.
+*   **Value Objects (VOs):** PascalCase, often singular nouns representing a concept (e.g., `Money`, `TenantId`, `PeriodId`). MUST be `final readonly class`.
 *   **Enums:** PascalCase, often plural or representing a set of values (e.g., `Status`, `SubledgerType`).
 *   **Contracts:** PascalCase. Suffix with `Interface` or `Contract` (e.g., `AccountConsolidationInterface`, `SubledgerTypeInterface`).
 *   **Exceptions:** PascalCase. Suffix with `Exception` (e.g., `InvalidArgumentException`, `DomainException`). Domain-specific exceptions should be prefixed with relevant domain or package name (e.g., `Nexus\FinanceOperations\Exceptions\InvalidRuleContextException`).

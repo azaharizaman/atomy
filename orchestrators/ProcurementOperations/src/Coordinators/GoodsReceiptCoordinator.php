@@ -98,19 +98,22 @@ final readonly class GoodsReceiptCoordinator implements GoodsReceiptCoordinatorI
             $grNumber = $this->generateGoodsReceiptNumber($request->tenantId);
 
             // 5. Record goods receipt
-            $goodsReceiptId = $this->goodsReceiptPersist->create([
-                'tenant_id' => $request->tenantId,
-                'receipt_number' => $grNumber,
-                'purchase_order_id' => $request->purchaseOrderId,
-                'warehouse_id' => $request->warehouseId,
-                'received_by' => $request->receivedBy,
-                'receipt_date' => $request->receiptDate ?? new \DateTimeImmutable(),
-                'delivery_note_number' => $request->deliveryNoteNumber,
-                'carrier_name' => $request->carrierName,
-                'notes' => $request->notes,
-                'line_items' => $this->transformLineItems($request->lineItems),
-                'metadata' => $request->metadata,
-            ]);
+            $goodsReceipt = $this->goodsReceiptPersist->create(
+                $request->tenantId,
+                $request->purchaseOrderId,
+                $request->receivedBy,
+                [
+                    'receipt_number' => $grNumber,
+                    'warehouse_id' => $request->warehouseId,
+                    'receipt_date' => $request->receiptDate ?? new \DateTimeImmutable(),
+                    'delivery_note_number' => $request->deliveryNoteNumber,
+                    'carrier_name' => $request->carrierName,
+                    'notes' => $request->notes,
+                    'line_items' => $this->transformLineItems($request->lineItems),
+                    'metadata' => $request->metadata,
+                ]
+            );
+            $goodsReceiptId = $goodsReceipt->getId();
 
             // 6. Calculate total received value and prepare for accrual
             $lineItems = $this->prepareLineItemsForAccrual($request->lineItems, $purchaseOrder);

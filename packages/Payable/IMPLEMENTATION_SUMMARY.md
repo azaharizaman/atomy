@@ -709,3 +709,19 @@ The Nexus\Payable implementation is **complete and ready for testing**. All core
 - ✅ Full API with 16 endpoints
 
 **Next milestone**: Run migrations, test all API endpoints, verify GL integration.
+
+---
+
+## 2026-04-13 - Tenant-Scoped Contract Corrections
+
+### Changes
+
+- **VendorBillQueryInterface** - Added tenant-scoped query interface with methods: `findByTenantAndId`, `findByBillNumber`, `getByVendor`, `getByStatus`, `getPendingMatching`, `getReadyForPosting`, `getForAgingReport`
+- **VendorBillRepositoryInterface** - Updated to extend `VendorBillQueryInterface`, keeping persist methods (`save`, `delete`)
+- Deprecated `findById(string $id)` in favor of `findByTenantAndId(string $tenantId, string $id)`
+
+### Architecture Impact
+
+- Completes tenant-scoped contract chain for vendor bill operations in Layer 2 orchestrators
+- Enables ProcurementOperations to use tenant-scoped vendor bill lookups for three-way matching
+- Follows three-layer architecture: query interfaces in packages, consumed by orchestrators

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementOperations\Tests\Unit\Coordinators;
 
+use Nexus\Procurement\Contracts\GoodsReceiptNoteInterface;
+use Nexus\Procurement\Contracts\GoodsReceiptQueryInterface;
+use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\ProcurementOperations\Coordinators\GoodsReceiptCoordinator;
 use Nexus\ProcurementOperations\DataProviders\GoodsReceiptContextProvider;
 use Nexus\ProcurementOperations\DTOs\RecordGoodsReceiptRequest;
@@ -11,6 +14,7 @@ use Nexus\ProcurementOperations\Rules\GoodsReceipt\GoodsReceiptRuleRegistry;
 use Nexus\ProcurementOperations\Services\AccrualCalculationService;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -33,20 +37,13 @@ final class GoodsReceiptCoordinatorTest extends TestCase
             ]],
         );
 
-        $purchaseOrderQueryStub = new class {
-            public ?array $lastFindArgs = null;
+        $purchaseOrderQueryStub = $this->createMock(PurchaseOrderQueryInterface::class);
+        $purchaseOrderQueryStub->method('findById')
+            ->willReturn(null);
 
-            public function findById(string $tenantId, string $id): ?object {
-                $this->lastFindArgs = [$tenantId, $id];
-                return null;
-            }
-        };
-
-        $goodsReceiptQueryStub = new class {
-            public function findById(string $id): ?object {
-                return null;
-            }
-        };
+        $goodsReceiptQueryStub = $this->createMock(GoodsReceiptQueryInterface::class);
+        $goodsReceiptQueryStub->method('findByTenantAndId')
+            ->willReturn(null);
 
         $contextProvider = new GoodsReceiptContextProvider(
             goodsReceiptQuery: $goodsReceiptQueryStub,
@@ -55,29 +52,13 @@ final class GoodsReceiptCoordinatorTest extends TestCase
 
         $ruleRegistry = new GoodsReceiptRuleRegistry();
 
-        $accrualServiceStub = new class {
-            public function postGoodsReceiptAccrual(
-                string $tenantId,
-                string $goodsReceiptId,
-                string $purchaseOrderId,
-                array $lineItems,
-                string $receivedBy
-            ): string {
-                return 'accrual-1';
-            }
-        };
+        $accrualServiceStub = $this->createMock(AccrualCalculationService::class);
 
-        $goodsReceiptPersistStub = new class {
-            public bool $createCalled = false;
-
-            public function create(array $data): string {
-                $this->createCalled = true;
-                return 'gr-1';
-            }
-
-            public function reverse(string $goodsReceiptId, string $reversedBy, string $reason): void {
-            }
-        };
+        $goodsReceiptPersistStub = $this->createMock(\Nexus\Procurement\Contracts\GoodsReceiptPersistInterface::class);
+        $goodsReceiptPersistStub->method('create')
+            ->willReturn($this->createMock(GoodsReceiptNoteInterface::class));
+        $goodsReceiptPersistStub->method('reverse')
+            ->willReturn(null);
 
         $coordinator = new GoodsReceiptCoordinator(
             contextProvider: $contextProvider,
@@ -115,6 +96,8 @@ final class GoodsReceiptCoordinatorTest extends TestCase
         $purchaseOrderStub = new class {
             public function getStatus() { return 'closed'; }
             public function getId(): string { return 'po-123'; }
+            public function getVendorId(): string { return 'vendor-1'; }
+            public function getCurrency(): string { return 'USD'; }
         };
 
         $purchaseOrderQueryStub = new class($purchaseOrderStub) {
@@ -125,7 +108,7 @@ final class GoodsReceiptCoordinatorTest extends TestCase
         };
 
         $goodsReceiptQueryStub = new class {
-            public function findById(string $id): ?object {
+            public function findByTenantAndId(string $tenantId, string $id): ?object {
                 return null;
             }
         };
@@ -137,9 +120,11 @@ final class GoodsReceiptCoordinatorTest extends TestCase
 
         $goodsReceiptPersistStub = new class {
             public bool $createCalled = false;
-            public function create(array $data): string {
+            public function create(string $tenantId, string $purchaseOrderId, string $receiverId, array $data): object {
                 $this->createCalled = true;
-                return 'gr-1';
+                return new class {
+                    public function getId(): string { return 'gr-1'; }
+                };
             }
         };
 
@@ -157,5 +142,30 @@ final class GoodsReceiptCoordinatorTest extends TestCase
         $this->assertFalse($result->success);
         $this->assertStringContainsString('not open', $result->message);
         $this->assertFalse($goodsReceiptPersistStub->createCalled);
+    }
+
+    #[Test]
+    public function it_asserts_tenant_on_goods_receipt_lookup(): void
+    {
+        $goodsReceiptQueryStub = new class {
+            public ?array $lastFindArgs = null;
+            public function findByTenantAndId(string $tenantId, string $id): ?object {
+                $this->lastFindArgs = [$tenantId, $id];
+                return null;
+            }
+        };
+
+        $purchaseOrderQueryStub = $this->createMock(PurchaseOrderQueryInterface::class);
+        $purchaseOrderQueryStub->method('findById')
+            ->willReturn(null);
+
+        $contextProvider = new GoodsReceiptContextProvider(
+            goodsReceiptQuery: $goodsReceiptQueryStub,
+            purchaseOrderQuery: $purchaseOrderQueryStub,
+        );
+
+        $contextProvider->getContext('tenant-abc', 'gr-123');
+
+        $this->assertSame(['tenant-abc', 'gr-123'], $goodsReceiptQueryStub->lastFindArgs);
     }
 }

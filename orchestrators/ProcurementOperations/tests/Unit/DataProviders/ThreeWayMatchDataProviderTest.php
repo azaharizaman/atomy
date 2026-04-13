@@ -37,26 +37,34 @@ final class ThreeWayMatchDataProviderTest extends TestCase
     }
 
     #[Test]
-    public function buildContextUsesTenantScopedPurchaseOrderLookup(): void
+    public function buildContextUsesTenantScopedLookups(): void
     {
+        $tenantId = 'tenant-1';
+        $vendorBillId = 'bill-123';
+        $purchaseOrderId = 'po-123';
+        $goodsReceiptId = 'gr-1';
+
         $this->vendorBillQueryMock->expects($this->once())
-            ->method('findById')
-            ->with('bill-123')
+            ->method('findByTenantAndId')
+            ->with($tenantId, $vendorBillId)
             ->willReturn($this->createMock(VendorBillInterface::class));
+
         $this->purchaseOrderQueryMock->expects($this->once())
             ->method('findById')
-            ->with('tenant-1', 'po-123')
+            ->with($tenantId, $purchaseOrderId)
             ->willReturn(null);
-        $this->goodsReceiptQueryMock->expects($this->never())->method('findById');
+
+        $this->goodsReceiptQueryMock->expects($this->never())
+            ->method('findByTenantAndId');
 
         $this->expectException(PurchaseOrderException::class);
-        $this->expectExceptionMessage('Purchase order not found: po-123');
+        $this->expectExceptionMessage("Purchase order not found: {$purchaseOrderId}");
 
         $this->provider->buildContext(
-            tenantId: 'tenant-1',
-            vendorBillId: 'bill-123',
-            purchaseOrderId: 'po-123',
-            goodsReceiptIds: ['gr-1'],
+            tenantId: $tenantId,
+            vendorBillId: $vendorBillId,
+            purchaseOrderId: $purchaseOrderId,
+            goodsReceiptIds: [$goodsReceiptId],
         );
     }
 }
