@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface ProjectListItem {
   id: string;
@@ -47,7 +47,7 @@ export function useProjects(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['projects'],
     queryFn: async (): Promise<ProjectListItem[]> => {
-      const { data } = await api.get('/projects');
+      const data = await fetchLiveOrFail<ProjectListItem[]>('/projects');
       return normalizeProjectsPayload(data);
     },
     enabled,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedVendorsByRfqId } from '@/data/seed';
 
 export interface RfqVendorRow {
@@ -45,7 +45,7 @@ export function useRfqVendors(rfqId: string) {
           contact: v.email,
         }));
       }
-      const { data } = await api.get(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
+      const data = await fetchLiveOrFail<RfqVendorRow[]>(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
       return normalizeInvitationPayload(data);
     },
     enabled: Boolean(rfqId),

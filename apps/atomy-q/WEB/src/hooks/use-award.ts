@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { api } from '@/lib/api';
 import { getSeedAwardByRfqId } from '@/data/seed';
 
@@ -124,7 +125,7 @@ export function useAward(rfqId: string) {
         ];
       }
 
-      const { data } = await api.get('/awards', { params: { rfq_id: rfqId } });
+      const data = await fetchLiveOrFail<AwardRecord[]>(`/awards?rfq_id=${encodeURIComponent(rfqId)}`);
       return normalizeAwardRows(data);
     },
     enabled: Boolean(rfqId),
