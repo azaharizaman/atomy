@@ -485,12 +485,4 @@ final class VendorSelectionServiceTest extends TestCase
         $this->assertFalse($result['qualifies']);
         $this->assertCount(4, $result['reasons']);
     }
-
-    private function assertFloatEquals(float $expected, float $actual, float $delta): void
-    {
-        $this->assertTrue(
-            abs($expected - $actual) <= $delta,
-            sprintf('Expected %.2f to equal %.2f within delta %.2f', $actual, $expected, $delta)
-        );
-    }
 }

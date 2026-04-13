@@ -13,6 +13,7 @@ use Nexus\ProcurementOperations\Events\DuplicateCheckPassedEvent;
 use Nexus\ProcurementOperations\Events\DuplicateInvoiceDetectedEvent;
 use Nexus\ProcurementOperations\Services\DuplicateInvoiceDetectionService;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -39,17 +40,18 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         );
     }
 
-    public function test_returns_no_duplicates_when_none_found(): void
+    #[Test]
+    public function it_returns_no_duplicates_when_none_found(): void
     {
         $request = $this->createRequest();
 
-        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
-        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
-        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
-        $this->invoiceQuery->method('findByAmount')->willReturn([]);
-        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
-        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
-        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
+        $this->invoiceQuery->expects($this->once())->method('findByExactInvoiceNumber')->with('tenant-1', 'vendor-1', 'INV-2024-001')->willReturn([]);
+        $this->invoiceQuery->expects($this->once())->method('findByNormalizedInvoiceNumber')->with('tenant-1', 'vendor-1', 'INV2024001')->willReturn([]);
+        $this->invoiceQuery->expects($this->once())->method('findByAmountAndDate')->with('tenant-1', 'vendor-1', 1000.0, 'MYR', $this->isInstanceOf(\DateTimeImmutable::class))->willReturn([]);
+        $this->invoiceQuery->expects($this->once())->method('findByAmount')->with('tenant-1', 'vendor-1', 1000.0, 'MYR', $this->isInstanceOf(\DateTimeImmutable::class))->willReturn([]);
+        $this->invoiceQuery->expects($this->once())->method('findByPOReference')->with('tenant-1', null)->willReturn([]);
+        $this->invoiceQuery->expects($this->once())->method('findByDocumentHash')->with('tenant-1', null)->willReturn([]);
+        $this->invoiceQuery->expects($this->once())->method('findByFingerprint')->with('tenant-1', null)->willReturn([]);
 
         $this->initService();
 
@@ -65,11 +67,13 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertEquals('none', $result->highestRiskLevel);
     }
 
-    public function test_detects_exact_duplicate(): void
+    #[Test]
+    public function it_detects_exact_duplicate(): void
     {
         $request = $this->createRequest();
 
-        $this->invoiceQuery->method('findByExactInvoiceNumber')
+        $this->invoiceQuery->expects($this->once())->method('findByExactInvoiceNumber')
+            ->with('tenant-1', 'vendor-1', 'INV-2024-001')
             ->willReturn([
                 [
                     'id' => 'inv-existing-1',
@@ -102,11 +106,13 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertEquals(DuplicateMatchType::EXACT_MATCH, $result->matches[0]->matchType);
     }
 
-    public function test_detects_invoice_number_match_with_different_amount(): void
+    #[Test]
+    public function it_detects_invoice_number_match_with_different_amount(): void
     {
         $request = $this->createRequest();
 
-        $this->invoiceQuery->method('findByExactInvoiceNumber')
+        $this->invoiceQuery->expects($this->once())->method('findByExactInvoiceNumber')
+            ->with('tenant-1', 'vendor-1', 'INV-2024-001')
             ->willReturn([
                 [
                     'id' => 'inv-existing-1',
@@ -134,12 +140,14 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertEquals('high', $result->highestRiskLevel);
     }
 
-    public function test_detects_normalized_invoice_number_match(): void
+    #[Test]
+    public function it_detects_normalized_invoice_number_match(): void
     {
         $request = $this->createRequest();
 
         $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
-        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')
+        $this->invoiceQuery->expects($this->once())->method('findByNormalizedInvoiceNumber')
+            ->with('tenant-1', 'vendor-1', 'INV2024001')
             ->willReturn([
                 [
                     'id' => 'inv-normalized-1',
@@ -165,13 +173,15 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertArrayHasKey('original_number', $result->matches[0]->matchDetails);
     }
 
-    public function test_detects_amount_date_match(): void
+    #[Test]
+    public function it_detects_amount_date_match(): void
     {
         $request = $this->createRequest();
 
         $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
         $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
-        $this->invoiceQuery->method('findByAmountAndDate')
+        $this->invoiceQuery->expects($this->once())->method('findByAmountAndDate')
+            ->with('tenant-1', 'vendor-1', 1000.0, 'MYR', $this->isInstanceOf(\DateTimeImmutable::class))
             ->willReturn([
                 [
                     'id' => 'inv-existing-1',
@@ -197,14 +207,16 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertEquals('medium', $result->highestRiskLevel);
     }
 
-    public function test_detects_amount_vendor_match(): void
+    #[Test]
+    public function it_detects_amount_vendor_match(): void
     {
         $request = $this->createRequest();
 
         $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
         $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
         $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
-        $this->invoiceQuery->method('findByAmount')
+        $this->invoiceQuery->expects($this->once())->method('findByAmount')
+            ->with('tenant-1', 'vendor-1', 1000.0, 'MYR', $this->isInstanceOf(\DateTimeImmutable::class))
             ->willReturn([
                 [
                     'id' => 'inv-existing-1',
@@ -227,7 +239,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertEquals(DuplicateMatchType::AMOUNT_VENDOR_MATCH, $result->matches[0]->matchType);
     }
 
-    public function test_detects_po_reference_match(): void
+    #[Test]
+    public function it_detects_po_reference_match(): void
     {
         $request = new DuplicateCheckRequest(
             tenantId: 'tenant-1',
@@ -242,7 +255,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
         $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
         $this->invoiceQuery->method('findByAmount')->willReturn([]);
-        $this->invoiceQuery->method('findByPOReference')
+        $this->invoiceQuery->expects($this->once())->method('findByPOReference')
+            ->with('tenant-1', 'PO-12345')
             ->willReturn([
                 [
                     'id' => 'inv-po-1',
@@ -266,7 +280,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertEquals('PO-12345', $result->matches[0]->matchDetails['po_number']);
     }
 
-    public function test_detects_hash_collision(): void
+    #[Test]
+    public function it_detects_hash_collision(): void
     {
         $request = new DuplicateCheckRequest(
             tenantId: 'tenant-1',
@@ -282,7 +297,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
         $this->invoiceQuery->method('findByAmount')->willReturn([]);
         $this->invoiceQuery->method('findByPOReference')->willReturn([]);
-        $this->invoiceQuery->method('findByDocumentHash')
+        $this->invoiceQuery->expects($this->once())->method('findByDocumentHash')
+            ->with('tenant-1', 'some-hash')
             ->willReturn([
                 [
                     'id' => 'inv-hash-1',
@@ -303,7 +319,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertEquals(DuplicateMatchType::HASH_COLLISION, $result->matches[0]->matchType);
     }
 
-    public function test_detects_fingerprint_match(): void
+    #[Test]
+    public function it_detects_fingerprint_match(): void
     {
         $request = $this->createRequest();
 
@@ -313,7 +330,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->invoiceQuery->method('findByAmount')->willReturn([]);
         $this->invoiceQuery->method('findByPOReference')->willReturn([]);
         $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
-        $this->invoiceQuery->method('findByFingerprint')
+        $this->invoiceQuery->expects($this->once())->method('findByFingerprint')
+            ->with('tenant-1', null)
             ->willReturn([
                 [
                     'id' => 'inv-fp-1',
@@ -334,7 +352,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertEquals('fingerprint', $result->matches[0]->matchDetails['match_source']);
     }
 
-    public function test_strict_mode_blocks_any_match(): void
+    #[Test]
+    public function it_strict_mode_blocks_any_match(): void
     {
         $request = new DuplicateCheckRequest(
             tenantId: 'tenant-1',
@@ -348,7 +367,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
         $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
         $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
-        $this->invoiceQuery->method('findByAmount')
+        $this->invoiceQuery->expects($this->once())->method('findByAmount')
+            ->with('tenant-1', 'vendor-1', 1000.0, 'MYR', $this->isInstanceOf(\DateTimeImmutable::class))
             ->willReturn([
                 [
                     'id' => 'inv-existing-1',
@@ -371,14 +391,16 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertTrue($result->shouldBlock); // Blocked because strict mode
     }
 
-    public function test_multiple_match_types_sorted_by_confidence(): void
+    #[Test]
+    public function it_multiple_match_types_sorted_by_confidence(): void
     {
         $request = $this->createRequest();
 
         // Multiple match types returned
         $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
         $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
-        $this->invoiceQuery->method('findByAmountAndDate')
+        $this->invoiceQuery->expects($this->once())->method('findByAmountAndDate')
+            ->with('tenant-1', 'vendor-1', 1000.0, 'MYR', $this->isInstanceOf(\DateTimeImmutable::class))
             ->willReturn([
                 [
                     'id' => 'inv-1',
@@ -389,7 +411,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
                     'status' => 'approved',
                 ],
             ]);
-        $this->invoiceQuery->method('findByAmount')
+        $this->invoiceQuery->expects($this->once())->method('findByAmount')
+            ->with('tenant-1', 'vendor-1', 1000.0, 'MYR', $this->isInstanceOf(\DateTimeImmutable::class))
             ->willReturn([
                 [
                     'id' => 'inv-2',

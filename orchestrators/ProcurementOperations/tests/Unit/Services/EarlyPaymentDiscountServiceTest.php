@@ -8,6 +8,8 @@ use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\DTOs\Financial\EarlyPaymentDiscountData;
 use Nexus\ProcurementOperations\DTOs\Financial\VolumeDiscountResult;
 use Nexus\ProcurementOperations\Services\EarlyPaymentDiscountService;
+use Nexus\ProcurementOperations\Services\VolumeDiscountService;
+use Nexus\ProcurementOperations\Exceptions\VolumeDiscountUnavailableException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -18,13 +20,16 @@ use Psr\Log\NullLogger;
 final class EarlyPaymentDiscountServiceTest extends TestCase
 {
     private EarlyPaymentDiscountService $service;
+    private VolumeDiscountService $volumeDiscountService;
     private EventDispatcherInterface $eventDispatcher;
 
     protected function setUp(): void
     {
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $this->volumeDiscountService = $this->createMock(VolumeDiscountService::class);
         $this->service = new EarlyPaymentDiscountService(
             eventDispatcher: $this->eventDispatcher,
+            volumeDiscountService: $this->volumeDiscountService,
             logger: new NullLogger(),
         );
     }
@@ -119,37 +124,35 @@ final class EarlyPaymentDiscountServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_empty_volume_discount_tiers(): void
+    public function it_throws_exception_for_get_volume_discount_tiers(): void
     {
-        $this->assertSame([], $this->service->getVolumeDiscountTiers('t1', 'v1'));
+        $this->expectException(VolumeDiscountUnavailableException::class);
+        $this->service->getVolumeDiscountTiers('t1', 'v1');
     }
 
     #[Test]
-    public function it_returns_no_discount_for_calculate_volume_discount(): void
+    public function it_throws_exception_for_calculate_volume_discount(): void
     {
-        // Positional arguments: string $tenantId, string $vendorId, Money $purchaseAmount
-        $result = $this->service->calculateVolumeDiscount(
+        $this->expectException(VolumeDiscountUnavailableException::class);
+        $this->service->calculateVolumeDiscount(
             't1',
             'v1',
             Money::of(100, 'USD')
         );
-        $this->assertInstanceOf(VolumeDiscountResult::class, $result);
-        $this->assertFalse($result->hasDiscount);
     }
 
     #[Test]
-    public function it_returns_zero_ytd_purchase_total(): void
+    public function it_throws_exception_for_get_ytd_purchase_total(): void
     {
-        $total = $this->service->getYtdPurchaseTotal('t1', 'v1');
-        $this->assertEquals(0, $total->getAmount());
+        $this->expectException(VolumeDiscountUnavailableException::class);
+        $this->service->getYtdPurchaseTotal('t1', 'v1');
     }
 
     #[Test]
-    public function it_returns_empty_potential_discount_savings(): void
+    public function it_throws_exception_for_estimate_potential_discount_savings(): void
     {
-        $result = $this->service->estimatePotentialDiscountSavings('t1');
-        $this->assertEquals(0, $result['total_potential_savings']->getAmount());
-        $this->assertSame(0, $result['invoice_count']);
+        $this->expectException(VolumeDiscountUnavailableException::class);
+        $this->service->estimatePotentialDiscountSavings('t1');
     }
 
     #[Test]

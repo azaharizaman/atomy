@@ -7,6 +7,8 @@ namespace Nexus\ProcurementOperations\Tests\Unit\Services;
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\DTOs\Financial\GrIrAccrualData;
 use Nexus\ProcurementOperations\Services\GrIrAccrualService;
+use Nexus\ProcurementOperations\Contracts\GrIrAccrualRepositoryInterface;
+use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -16,14 +18,17 @@ use Psr\Log\NullLogger;
 #[CoversClass(GrIrAccrualService::class)]
 final class GrIrAccrualServiceTest extends TestCase
 {
-    private MockableGrIrAccrualService $service;
+    private GrIrAccrualService $service;
+    private GrIrAccrualRepositoryInterface $repository;
     private EventDispatcherInterface $eventDispatcher;
 
     protected function setUp(): void
     {
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
-        $this->service = new MockableGrIrAccrualService(
+        $this->repository = $this->createMock(GrIrAccrualRepositoryInterface::class);
+        $this->service = new GrIrAccrualService(
             eventDispatcher: $this->eventDispatcher,
+            repository: $this->repository,
             logger: new NullLogger(),
         );
     }
@@ -47,6 +52,7 @@ final class GrIrAccrualServiceTest extends TestCase
 
         $this->assertInstanceOf(GrIrAccrualData::class, $accrual);
         $this->assertEquals('PO-1', $accrual->purchaseOrderId);
+        $this->assertEquals('tenant-1', $accrual->metadata['tenant_id']);
     }
 
     #[Test]
@@ -73,8 +79,9 @@ final class GrIrAccrualServiceTest extends TestCase
     #[Test]
     public function it_generates_id_without_generator(): void
     {
-        $service = new MockableGrIrAccrualService(
+        $service = new GrIrAccrualService(
             eventDispatcher: $this->eventDispatcher,
+            repository: $this->repository,
             logger: new NullLogger(),
             idGenerator: null
         );
@@ -99,10 +106,12 @@ final class GrIrAccrualServiceTest extends TestCase
             goodsReceiptDate: new \DateTimeImmutable()
         );
 
-        $this->service->setAccrual($accrual);
+        $this->repository->method('getAccrual')->with('accr-1', 'tenant-1')->willReturn($accrual);
+        $this->repository->expects($this->once())->method('save');
 
         $result = $this->service->matchWithInvoice(
             'accr-1',
+            'tenant-1',
             'inv-1',
             'inv-num',
             Money::of(100, 'USD'),
@@ -131,13 +140,14 @@ final class GrIrAccrualServiceTest extends TestCase
             goodsReceiptDate: new \DateTimeImmutable()
         );
 
-        $this->service->setAccrual($accrual);
+        $this->repository->method('getAccrual')->with('accr-1', 'tenant-1')->willReturn($accrual);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Cannot match accrual');
 
         $this->service->matchWithInvoice(
             'accr-1',
+            'tenant-1',
             'inv-1',
             'inv-num',
             Money::of(100, 'USD'),
@@ -162,10 +172,12 @@ final class GrIrAccrualServiceTest extends TestCase
             goodsReceiptDate: new \DateTimeImmutable()
         );
 
-        $this->service->setAccrual($accrual);
+        $this->repository->method('getAccrual')->with('accr-1', 'tenant-1')->willReturn($accrual);
+        $this->repository->expects($this->once())->method('save');
 
         $result = $this->service->partialMatchWithInvoice(
             'accr-1',
+            'tenant-1',
             'inv-1',
             'inv-num',
             Money::of(50, 'USD'),
@@ -175,6 +187,9 @@ final class GrIrAccrualServiceTest extends TestCase
         );
 
         $this->assertEquals(50, $result->invoiceAmount->getAmount());
+        $this->assertEquals(50, $result->varianceAmount->getAmount());
+        $this->assertEquals('Partial', $result->varianceReason);
+        $this->assertTrue($result->isPartiallyMatched());
     }
 
     #[Test]
@@ -193,9 +208,10 @@ final class GrIrAccrualServiceTest extends TestCase
             goodsReceiptDate: new \DateTimeImmutable()
         );
 
-        $this->service->setAccrual($accrual);
+        $this->repository->method('getAccrual')->with('accr-1', 'tenant-1')->willReturn($accrual);
+        $this->repository->expects($this->once())->method('save');
 
-        $result = $this->service->writeOffAccrual('accr-1', 'Lost', 'user-1');
+        $result = $this->service->writeOffAccrual('accr-1', 'tenant-1', 'Lost', 'user-1');
         $this->assertTrue($result->isWrittenOff());
     }
 
@@ -215,20 +231,25 @@ final class GrIrAccrualServiceTest extends TestCase
             goodsReceiptDate: new \DateTimeImmutable()
         );
 
-        $this->service->setAccrual($accrual);
+        $this->repository->method('getAccrual')->with('accr-1', 'tenant-1')->willReturn($accrual);
+        $this->repository->expects($this->once())->method('save');
 
-        $result = $this->service->reverseAccrual('accr-1', 'Error', 'user-1');
+        $result = $this->service->reverseAccrual('accr-1', 'tenant-1', 'Error', 'user-1');
         $this->assertEquals('accr-1', $result->accrualId);
+        $this->assertEquals('reversed', $result->accrualStatus);
     }
 
     #[Test]
     public function it_throws_exception_matching_non_existent_accrual(): void
     {
+        $this->repository->method('getAccrual')->willReturn(null);
+
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Accrual not found');
 
         $this->service->matchWithInvoice(
             'non-existent',
+            'tenant-1',
             'inv-1',
             'inv-1-num',
             Money::of(100, 'USD'),
@@ -238,28 +259,41 @@ final class GrIrAccrualServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_empty_results_for_queries(): void
+    public function it_returns_real_results_for_queries(): void
     {
-        $this->assertSame([], $this->service->getUnmatchedAccruals('tenant-1'));
-        $this->assertSame([], $this->service->getAgedAccruals('tenant-1'));
-        $this->assertSame([], $this->service->getAccrualsByVendor('tenant-1', 'v-1'));
-        $this->assertSame([], $this->service->getAccrualsByPurchaseOrder('tenant-1', 'po-1'));
-        $this->assertEquals(0, $this->service->getTotalAccrualBalance('tenant-1')->getAmount());
+        $accrual = GrIrAccrualData::fromGoodsReceipt('accr-1', 'PO-1', 'L1', 'V-1', 'P-1', 1.0, 'EA', Money::of(100, 'USD'), 'GR-1', new \DateTimeImmutable());
+        
+        $this->repository->method('findUnmatched')->with('tenant-1')->willReturn([$accrual]);
+        $this->repository->method('findAged')->with('tenant-1', 30)->willReturn([$accrual]);
+        $this->repository->method('findByVendor')->with('tenant-1', 'v-1')->willReturn([$accrual]);
+        $this->repository->method('findByPurchaseOrder')->with('tenant-1', 'po-1')->willReturn([$accrual]);
+        $this->repository->method('getTotalBalance')->with('tenant-1')->willReturn(Money::of(100, 'USD'));
+
+        $this->assertNotEmpty($this->service->getUnmatchedAccruals('tenant-1'));
+        $this->assertNotEmpty($this->service->getAgedAccruals('tenant-1'));
+        $this->assertNotEmpty($this->service->getAccrualsByVendor('tenant-1', 'v-1'));
+        $this->assertNotEmpty($this->service->getAccrualsByPurchaseOrder('tenant-1', 'po-1'));
+        $this->assertEquals(100, $this->service->getTotalAccrualBalance('tenant-1')->getAmount());
     }
 
     #[Test]
     public function it_generates_aging_report(): void
     {
+        $this->repository->method('getTotalBalance')->willReturn(Money::of(500, 'USD'));
+        
         $report = $this->service->generateAgingReport('tenant-1', new \DateTimeImmutable());
         $this->assertArrayHasKey('as_of_date', $report);
+        $this->assertEquals(500, $report['total_accrual_balance']->getAmount());
     }
 
     #[Test]
     public function it_suggests_matches_and_auto_matches(): void
     {
-        $this->assertSame([], $this->service->suggestMatchingInvoices('accr-1'));
+        $this->repository->method('suggestMatches')->willReturn([['invoice_id' => 'inv-1', 'score' => 0.9]]);
+        
+        $this->assertNotEmpty($this->service->suggestMatchingInvoices('accr-1'));
         $result = $this->service->autoMatchAccruals('tenant-1');
-        $this->assertEquals(0, $result['matched_count']);
+        $this->assertEquals(0, $result['matched_count']); // Auto-match logic is still a stub in service
     }
 
     #[Test]
@@ -270,30 +304,9 @@ final class GrIrAccrualServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_hits_base_get_accrual(): void
+    public function it_hits_get_accrual(): void
     {
-        // This hits line 272 in parent class
-        $this->assertNull($this->service->getAccrual('any'));
-    }
-}
-
-/**
- * Helper class to allow mocking getAccrual
- */
-class MockableGrIrAccrualService extends GrIrAccrualService
-{
-    private ?GrIrAccrualData $mockAccrual = null;
-
-    public function setAccrual(?GrIrAccrualData $accrual): void
-    {
-        $this->mockAccrual = $accrual;
-    }
-
-    public function getAccrual(string $accrualId): ?GrIrAccrualData
-    {
-        if ($this->mockAccrual && $this->mockAccrual->accrualId === $accrualId) {
-            return $this->mockAccrual;
-        }
-        return parent::getAccrual($accrualId);
+        $this->repository->expects($this->once())->method('getAccrual')->with('any', 'tenant-1')->willReturn(null);
+        $this->assertNull($this->service->getAccrual('any', 'tenant-1'));
     }
 }

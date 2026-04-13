@@ -8,6 +8,7 @@ use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\DiscountCalculationServiceInterface;
 use Nexus\ProcurementOperations\DTOs\Financial\EarlyPaymentDiscountData;
 use Nexus\ProcurementOperations\DTOs\Financial\VolumeDiscountResult;
+use Nexus\ProcurementOperations\Exceptions\VolumeDiscountUnavailableException;
 use Nexus\ProcurementOperations\Events\Financial\EarlyPaymentDiscountCapturedEvent;
 use Nexus\ProcurementOperations\Events\Financial\EarlyPaymentDiscountMissedEvent;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -30,10 +31,12 @@ final readonly class EarlyPaymentDiscountService implements DiscountCalculationS
 {
     /**
      * @param EventDispatcherInterface $eventDispatcher Dispatcher for discount events
+     * @param VolumeDiscountService $volumeDiscountService Service for volume-based discounts
      * @param LoggerInterface $logger Logger for calculation audits
      */
     public function __construct(
         private EventDispatcherInterface $eventDispatcher,
+        private VolumeDiscountService $volumeDiscountService,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -62,7 +65,7 @@ final readonly class EarlyPaymentDiscountService implements DiscountCalculationS
             return Money::of(0, $invoiceAmount->getCurrency());
         }
 
-        return $discountTerms->discountAmount ?? Money::of(0, $invoiceAmount->getCurrency());
+        return $discountTerms->computeDiscountFor($invoiceAmount);
     }
 
     /**
@@ -102,9 +105,7 @@ final readonly class EarlyPaymentDiscountService implements DiscountCalculationS
         string $vendorId,
         ?string $productCategoryId = null,
     ): array {
-        // This service focuses on early payment discounts.
-        // For volume discounts, use VolumeDiscountService.
-        return [];
+        throw VolumeDiscountUnavailableException::forVendor($vendorId, 'Method getVolumeDiscountTiers not yet implemented in VolumeDiscountService');
     }
 
     /**
@@ -118,14 +119,7 @@ final readonly class EarlyPaymentDiscountService implements DiscountCalculationS
         ?string $productCategoryId = null,
         ?\DateTimeImmutable $asOfDate = null,
     ): VolumeDiscountResult {
-        // This service focuses on early payment discounts.
-        // For volume discounts, use VolumeDiscountService.
-        return VolumeDiscountResult::noDiscount(
-            vendorId: $vendorId,
-            productCategoryId: $productCategoryId ?? 'ALL',
-            quantity: $quantity ?? 1.0,
-            amount: $purchaseAmount
-        );
+        throw VolumeDiscountUnavailableException::forVendor($vendorId, 'Method calculateVolumeDiscount not yet implemented in VolumeDiscountService');
     }
 
     /**
@@ -136,7 +130,7 @@ final readonly class EarlyPaymentDiscountService implements DiscountCalculationS
         string $vendorId,
         ?string $productCategoryId = null,
     ): Money {
-        return Money::of(0, 'USD');
+        throw VolumeDiscountUnavailableException::forVendor($vendorId, 'Method getYtdPurchaseTotal not yet implemented in VolumeDiscountService');
     }
 
     /**
@@ -146,12 +140,7 @@ final readonly class EarlyPaymentDiscountService implements DiscountCalculationS
         string $tenantId,
         ?\DateTimeImmutable $asOfDate = null,
     ): array {
-        return [
-            'total_potential_savings' => Money::of(0, 'USD'),
-            'invoice_count' => 0,
-            'average_annualized_return' => 0.0,
-            'invoices_with_discounts' => []
-        ];
+        throw VolumeDiscountUnavailableException::forTenant($tenantId, 'Method estimatePotentialDiscountSavings not yet implemented in VolumeDiscountService');
     }
 
     /**
