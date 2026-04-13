@@ -7,11 +7,28 @@ namespace Nexus\QueryEngine\Core\Engine;
 use Nexus\QueryEngine\Contracts\AnalyticsContextInterface;
 use Nexus\QueryEngine\Exceptions\GuardConditionFailedException;
 
+interface ClockInterface
+{
+    public function now(): \DateTimeImmutable;
+}
+
+final class DefaultClock implements ClockInterface
+{
+    public function now(): \DateTimeImmutable
+    {
+        return new \DateTimeImmutable();
+    }
+}
+
 /**
  * Evaluates guard conditions before query execution
  */
 final readonly class GuardEvaluator
 {
+    public function __construct(
+        private ClockInterface $clock = new DefaultClock()
+    ) {
+    }
     /**
      * Evaluate all guard conditions
      *
@@ -143,7 +160,7 @@ final readonly class GuardEvaluator
             return false;
         }
 
-        $now = new \DateTimeImmutable();
+        $now = $this->clock->now();
 
         if ($startDateTime !== null && $now < $startDateTime) {
             return false;

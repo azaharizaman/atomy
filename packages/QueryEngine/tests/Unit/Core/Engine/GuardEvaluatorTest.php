@@ -31,6 +31,23 @@ final class GuardEvaluatorTest extends TestCase
     }
 
     #[Test]
+    public function it_rejects_role_guard_when_user_lacks_required_role(): void
+    {
+        $evaluator = new GuardEvaluator();
+        $context = $this->createContext(userRoles: ['viewer']);
+
+        $this->expectException(GuardConditionFailedException::class);
+        $this->expectExceptionMessage("Guard condition 'role_required' failed");
+
+        $evaluator->evaluateAll([
+            'role_required' => [
+                'type' => 'role_required',
+                'roles' => ['admin', 'analyst'],
+            ],
+        ], $context);
+    }
+
+    #[Test]
     public function it_supports_role_guard_without_explicit_type(): void
     {
         $evaluator = new GuardEvaluator();
@@ -136,6 +153,23 @@ final class GuardEvaluatorTest extends TestCase
         ], $context);
 
         self::assertTrue($result);
+    }
+
+    #[Test]
+    public function it_rejects_tenant_guard_when_tenant_does_not_match(): void
+    {
+        $evaluator = new GuardEvaluator();
+        $context = $this->createContext(tenantId: 'tenant-b');
+
+        $this->expectException(GuardConditionFailedException::class);
+        $this->expectExceptionMessage("Guard condition 'tenant_match' failed");
+
+        $evaluator->evaluateAll([
+            'tenant_match' => [
+                'type' => 'tenant_match',
+                'tenant_id' => 'tenant-a',
+            ],
+        ], $context);
     }
 
     #[Test]
