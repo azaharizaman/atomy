@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
@@ -94,7 +95,11 @@ export function useComparisonRunReadiness(runId: string, options?: { rfqId?: str
         return buildMockReadiness(runId, options?.rfqId);
       }
 
-      const { data } = await api.get(`/comparison-runs/${encodeURIComponent(runId)}/readiness`);
+      const data = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}/readiness`);
+      if (data === undefined) {
+        return buildMockReadiness(runId, options?.rfqId);
+      }
+
       return normalizeComparisonRunReadiness(data);
     },
     enabled: Boolean(runId),
