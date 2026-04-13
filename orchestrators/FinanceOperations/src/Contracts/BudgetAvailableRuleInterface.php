@@ -19,10 +19,10 @@ interface BudgetAvailableRuleInterface
     /**
      * Check if budget is available for the given context.
      *
-     * @param object $context Context containing tenantId, budgetId, amount, and optional costCenterId
+     * @param RuleContextInterface $context Context containing tenantId, budgetId, amount, and optional costCenterId
      * @return RuleResult The rule check result
      */
-    public function check(object $context): RuleResult;
+    public function check(RuleContextInterface $context): RuleResult;
 
     /**
      * Get the rule name.

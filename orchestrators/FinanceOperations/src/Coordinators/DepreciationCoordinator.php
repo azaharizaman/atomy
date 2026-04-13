@@ -11,6 +11,7 @@ use Nexus\FinanceOperations\DTOs\DepreciationScheduleRequest;
 use Nexus\FinanceOperations\DTOs\DepreciationScheduleResult;
 use Nexus\FinanceOperations\DTOs\RevaluationRequest;
 use Nexus\FinanceOperations\DTOs\RevaluationResult;
+use Nexus\FinanceOperations\DTOs\RuleContext;
 use Nexus\FinanceOperations\Services\DepreciationRunService;
 use Nexus\FinanceOperations\Rules\PeriodOpenRule;
 use Nexus\FinanceOperations\Exceptions\DepreciationCoordinationException;
@@ -92,10 +93,12 @@ final readonly class DepreciationCoordinator implements DepreciationCoordinatorI
 
         try {
             // Validate period is open
-            $periodResult = $this->periodOpenRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'periodId' => $request->periodId,
-            ]);
+            $periodResult = $this->periodOpenRule->check(
+                RuleContext::forPeriodValidation(
+                    tenantId: $request->tenantId,
+                    periodId: $request->periodId,
+                )
+            );
 
             if (!$periodResult->passed) {
                 throw DepreciationCoordinationException::periodAlreadyProcessed(

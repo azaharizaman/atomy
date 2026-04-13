@@ -7,6 +7,7 @@ namespace Nexus\FinanceOperations\Tests\Unit\Services;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Nexus\FinanceOperations\Services\CashPositionService;
+use Nexus\FinanceOperations\Contracts\CurrencyConverterInterface;
 use Nexus\FinanceOperations\Contracts\TreasuryDataProviderInterface;
 use Nexus\FinanceOperations\DTOs\CashFlow\CashPositionRequest;
 use Nexus\FinanceOperations\DTOs\CashFlow\CashPositionResult;
@@ -20,7 +21,7 @@ use Psr\Log\NullLogger;
  * Simple test double for currency conversion.
  * Used to mock currency conversion in tests.
  */
-class TestCurrencyConverter
+final class TestCurrencyConverter implements CurrencyConverterInterface
 {
     public function convert(string $amount, string $fromCurrency, string $toCurrency): string
     {
@@ -139,7 +140,7 @@ final class CashPositionServiceTest extends TestCase
         $this->assertTrue($result->success);
         $this->assertSame('tenant-001', $result->tenantId);
         $this->assertCount(1, $result->positions);
-        $this->assertSame('15000', $result->consolidatedBalance);
+        $this->assertSame('15000.00', $result->consolidatedBalance);
         $this->assertSame('USD', $result->currency);
     }
 
@@ -204,7 +205,48 @@ final class CashPositionServiceTest extends TestCase
         $this->assertTrue($result->success);
         $this->assertSame('tenant-001', $result->tenantId);
         $this->assertCount(2, $result->positions);
-        $this->assertSame('15000', $result->consolidatedBalance);
+        $this->assertSame('15000.00', $result->consolidatedBalance);
+    }
+
+    /**
+     * Tests getPosition skips bank account records without an ID key.
+     */
+    public function testGetPositionForAllAccountsSkipsEntriesWithoutId(): void
+    {
+        $request = new CashPositionRequest(
+            tenantId: 'tenant-001',
+            bankAccountId: null,
+            currency: 'USD'
+        );
+
+        $bankAccounts = [
+            ['name' => 'Missing Id Account'],
+            ['id' => 'account-001', 'name' => 'Primary Checking'],
+        ];
+
+        $positionData = [
+            'accountId' => 'account-001',
+            'balance' => '10000.00',
+            'currency' => 'USD',
+        ];
+
+        $this->dataProviderMock
+            ->expects($this->once())
+            ->method('getBankAccounts')
+            ->with('tenant-001')
+            ->willReturn($bankAccounts);
+
+        $this->dataProviderMock
+            ->expects($this->once())
+            ->method('getCashPosition')
+            ->with('tenant-001', 'account-001')
+            ->willReturn($positionData);
+
+        $result = $this->service->getPosition($request);
+
+        $this->assertTrue($result->success);
+        $this->assertCount(1, $result->positions);
+        $this->assertSame('10000.00', $result->consolidatedBalance);
     }
 
     /**
@@ -263,7 +305,7 @@ final class CashPositionServiceTest extends TestCase
 
         // Assert
         $this->assertInstanceOf(CashPositionResult::class, $result);
-        $this->assertSame('15500', $result->consolidatedBalance);
+        $this->assertSame('15500.00', $result->consolidatedBalance);
     }
 
     /**
@@ -316,13 +358,10 @@ final class CashPositionServiceTest extends TestCase
                 ['tenant-001', 'account-002', $positionData2],
             ]);
 
-        // Act
-        $result = $service->getPosition($request);
+        $this->expectException(CashFlowException::class);
+        $this->expectExceptionMessage('currency mismatch');
 
-        // Assert
-        $this->assertInstanceOf(CashPositionResult::class, $result);
-        // Without converter, EUR balance is still added as-is (5000)
-        $this->assertSame('15000', $result->consolidatedBalance);
+        $service->getPosition($request);
     }
 
     /**
@@ -388,7 +427,7 @@ final class CashPositionServiceTest extends TestCase
         // Assert
         $this->assertInstanceOf(CashPositionResult::class, $result);
         $this->assertTrue($result->success);
-        $this->assertSame('0', $result->consolidatedBalance);
+        $this->assertSame('0.00', $result->consolidatedBalance);
     }
 
     /**
@@ -484,7 +523,7 @@ final class CashPositionServiceTest extends TestCase
         $this->assertArrayHasKey('currency', $result);
         $this->assertArrayHasKey('account_count', $result);
         $this->assertCount(2, $result['positions']);
-        $this->assertSame('15000', $result['consolidated_balance']);
+        $this->assertSame('15000.00', $result['consolidated_balance']);
         $this->assertSame('USD', $result['currency']);
         $this->assertSame(2, $result['account_count']);
     }
@@ -538,7 +577,7 @@ final class CashPositionServiceTest extends TestCase
         // Assert
 
         // Assert
-        $this->assertSame('15500', $result['consolidated_balance']);
+        $this->assertSame('15500.00', $result['consolidated_balance']);
     }
 
     /**
@@ -733,7 +772,7 @@ final class CashPositionServiceTest extends TestCase
         $this->assertSame('tenant-001', $result->tenantId);
         $this->assertCount(2, $result->inflows);
         $this->assertCount(2, $result->outflows);
-        $this->assertSame('10000', $result->netCashFlow); // 15000 - 5000
+        $this->assertSame('10000.00', $result->netCashFlow); // 15000 - 5000
     }
 
     /**
@@ -769,7 +808,7 @@ final class CashPositionServiceTest extends TestCase
         // Assert
         $this->assertInstanceOf(CashFlowForecastResult::class, $result);
         $this->assertTrue($result->success);
-        $this->assertSame('0', $result->netCashFlow);
+        $this->assertSame('0.00', $result->netCashFlow);
         $this->assertCount(0, $result->inflows);
         $this->assertCount(0, $result->outflows);
     }
@@ -803,7 +842,7 @@ final class CashPositionServiceTest extends TestCase
         // Assert
         $this->assertInstanceOf(CashFlowForecastResult::class, $result);
         $this->assertTrue($result->success);
-        $this->assertSame('0', $result->netCashFlow);
+        $this->assertSame('0.00', $result->netCashFlow);
     }
 
     /**
@@ -843,7 +882,7 @@ final class CashPositionServiceTest extends TestCase
         // Assert
         $this->assertInstanceOf(CashFlowForecastResult::class, $result);
         // 15000.75 - 3000.75 = 12000.00
-        $this->assertSame('12000', $result->netCashFlow);
+        $this->assertSame('12000.00', $result->netCashFlow);
     }
 
     /**
@@ -915,7 +954,7 @@ final class CashPositionServiceTest extends TestCase
         $result = $this->service->getPosition($request);
 
         // Assert
-        $this->assertSame('15000', $result->consolidatedBalance);
+        $this->assertSame('15000.00', $result->consolidatedBalance);
     }
 
     /**
@@ -1025,8 +1064,8 @@ final class CashPositionServiceTest extends TestCase
         $result = $this->service->getPosition($request);
 
         // Assert
-        // 10000.333 + 5000.667 = 15001.00 (rounded)
-        $this->assertSame('15001', $result->consolidatedBalance);
+        // bcadd with scale 2 truncates extra precision per addition.
+        $this->assertSame('15000.99', $result->consolidatedBalance);
     }
 
     /**
