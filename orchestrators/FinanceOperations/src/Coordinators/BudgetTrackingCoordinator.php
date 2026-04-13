@@ -8,6 +8,7 @@ use Nexus\FinanceOperations\Contracts\BudgetTrackingCoordinatorInterface;
 use Nexus\FinanceOperations\Contracts\BudgetVarianceProviderInterface;
 use Nexus\FinanceOperations\DTOs\BudgetCheckRequest;
 use Nexus\FinanceOperations\DTOs\BudgetCheckResult;
+use Nexus\FinanceOperations\DTOs\RuleContext;
 use Nexus\FinanceOperations\DTOs\BudgetVarianceRequest;
 use Nexus\FinanceOperations\DTOs\BudgetVarianceResult;
 use Nexus\FinanceOperations\DTOs\BudgetThresholdRequest;
@@ -93,12 +94,16 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
 
         try {
             // Validate budget availability using rule
-            $ruleResult = $this->budgetAvailableRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'budgetId' => $request->budgetId,
-                'amount' => (string)$request->amount,
-                'costCenterId' => $request->options['cost_center_id'] ?? null,
-            ]);
+            $costCenterId = $this->normalizeCostCenterId($request->options['cost_center_id'] ?? null);
+
+            $ruleResult = $this->budgetAvailableRule->check(
+                RuleContext::forBudgetAvailability(
+                    tenantId: $request->tenantId,
+                    budgetId: $request->budgetId,
+                    amount: (string) $request->amount,
+                    costCenterId: $costCenterId,
+                )
+            );
 
             // Short-circuit if rule validation fails
             if (!$ruleResult->passed) {
@@ -121,7 +126,7 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                 tenantId: $request->tenantId,
                 budgetId: $request->budgetId,
                 amount: (string)$request->amount,
-                costCenterId: $request->options['cost_center_id'] ?? null,
+                costCenterId: $costCenterId,
                 accountId: $request->options['account_id'] ?? null,
             );
 
@@ -235,12 +240,14 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
         ]);
 
         try {
+            $costCenterId = $this->normalizeCostCenterId($request->options['cost_center_id'] ?? null);
+
             // Convert to service DTO
             $serviceRequest = new \Nexus\FinanceOperations\DTOs\BudgetTracking\BudgetThresholdRequest(
                 tenantId: $request->tenantId,
                 periodId: $request->options['period_id'] ?? '',
                 thresholds: $request->options['thresholds'] ?? [80, 90, 100],
-                costCenterId: $request->options['cost_center_id'] ?? null,
+                costCenterId: $costCenterId,
             );
 
             // Delegate to service
@@ -287,5 +294,16 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                 $e
             );
         }
+    }
+
+    /**
+     * Normalize cost center ID.
+     */
+    private function normalizeCostCenterId(mixed $rawId): ?string
+    {
+        if (is_string($rawId) && trim($rawId) !== '') {
+            return trim($rawId);
+        }
+        return null;
     }
 }

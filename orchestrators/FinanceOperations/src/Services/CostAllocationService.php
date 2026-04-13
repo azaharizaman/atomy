@@ -216,14 +216,6 @@ final readonly class CostAllocationService
         $count = count($targetCostCenterIds);
         $methodValue = $method instanceof AllocationMethod ? $method->value : $method;
 
-        if ($count === 0) {
-            throw CostAllocationException::allocationFailed(
-                $tenantId,
-                $sourceCostPoolId,
-                'No target cost centers specified'
-            );
-        }
-
         switch ($methodValue) {
             case 'equal':
                 $perCenter = $totalAmount / $count;

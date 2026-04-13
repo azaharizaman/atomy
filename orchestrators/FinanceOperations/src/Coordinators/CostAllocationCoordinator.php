@@ -11,6 +11,7 @@ use Nexus\FinanceOperations\DTOs\ProductCostRequest;
 use Nexus\FinanceOperations\DTOs\ProductCostResult;
 use Nexus\FinanceOperations\DTOs\PeriodicAllocationRequest;
 use Nexus\FinanceOperations\DTOs\PeriodicAllocationResult;
+use Nexus\FinanceOperations\DTOs\RuleContext;
 use Nexus\FinanceOperations\Services\CostAllocationService;
 use Nexus\FinanceOperations\Rules\CostCenterActiveRule;
 use Nexus\FinanceOperations\Exceptions\CostAllocationException;
@@ -91,10 +92,12 @@ final readonly class CostAllocationCoordinator implements CostAllocationCoordina
 
         try {
             // Validate cost centers are active
-            $ruleResult = $this->costCenterActiveRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'costCenterIds' => $request->targetCostCenterIds,
-            ]);
+            $ruleResult = $this->costCenterActiveRule->check(
+                RuleContext::forCostCenterValidation(
+                    tenantId: $request->tenantId,
+                    costCenterIds: $request->targetCostCenterIds,
+                )
+            );
 
             if (!$ruleResult->passed) {
                 throw CostAllocationException::inactiveCostCenter(
