@@ -2,6 +2,29 @@
 
 Complete skeleton for the Nexus Analytics package and consuming application implementation.
 
+## 🔐 2026-04 Guard Hardening Update
+
+To reduce authorization bypass risk from malformed guard payloads, `Core/Engine/GuardEvaluator.php`
+was hardened to fail closed.
+
+### Security hardening implemented
+
+- Guard entries that are not arrays are now rejected.
+- Unknown guard types are now rejected instead of implicitly passing.
+- Missing/invalid `tenant_id` in `tenant_match` now fails instead of passing.
+- Missing/invalid role list in `role_required` now fails instead of passing.
+- `time_window` now rejects empty windows, invalid timestamps, and reversed ranges.
+- Guard `type` now falls back to the guard key name for backward compatibility with existing payloads.
+
+### Test coverage added
+
+- Added `tests/Unit/Core/Engine/GuardEvaluatorTest.php` with security regression cases for:
+  - unknown guard type rejection
+  - malformed guard config rejection
+  - tenant guard validation behavior
+  - role guard compatibility and validation behavior
+  - time window validation behavior
+
 ## 📦 Package Structure (packages/Analytics/)
 
 ```
