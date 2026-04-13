@@ -19,7 +19,6 @@ type FormData = z.infer<typeof schema>;
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const [status, setStatus] = React.useState<'idle' | 'sent'>('idle');
   const [error, setError] = React.useState<string | null>(null);
 
@@ -40,7 +39,7 @@ export default function ForgotPasswordPage() {
       toast.success('Reset link sent. Check your inbox.');
     } catch (err: unknown) {
       const axiosish = err as { response?: { status?: number; data?: Record<string, unknown> } };
-      if (useMocks || axiosish?.response?.status === 501) {
+      if (axiosish?.response?.status === 501) {
         setStatus('sent');
         toast.success('Reset link simulated for development.');
         return;

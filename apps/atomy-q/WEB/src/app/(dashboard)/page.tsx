@@ -14,7 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import {
   ActivitySummaryCard,
   type ActivitySummaryItem,
@@ -48,12 +48,12 @@ type DashboardActivityRaw = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   const { data: kpis, isLoading: isLoadingKpis } = useQuery({
     queryKey: ['dashboard', 'kpis'],
     queryFn: async () => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<DashboardKpis>('/dashboard/kpis');
+      if (!data) {
         return {
           active_rfqs: 12,
           pending_approvals: 5,
@@ -61,14 +61,15 @@ export default function DashboardPage() {
           avg_cycle_time_days: '14 days',
         } satisfies DashboardKpis;
       }
-      return (await api.get('/dashboard/kpis')).data as DashboardKpis;
+      return data;
     },
   });
 
   const { data: activity, isLoading: isLoadingActivity } = useQuery({
     queryKey: ['dashboard', 'activity'],
     queryFn: async () => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<{ data?: DashboardActivityRaw[] }>('/dashboard/recent-activity');
+      if (!data) {
         return [
           { id: 'act-1', timestamp: '2 hours ago', actor: 'Alex Kumar', action: 'published RFQ', rfqId: 'RFQ-2407' },
           { id: 'act-2', timestamp: '4 hours ago', actor: 'Priya Nair', action: 'requested approval', rfqId: 'RFQ-2404' },
@@ -76,8 +77,6 @@ export default function DashboardPage() {
           { id: 'act-4', timestamp: 'Yesterday', actor: 'Marcus Webb', action: 'invited vendors', rfqId: 'RFQ-2408' },
         ] as ActivitySummaryItem[];
       }
-
-      const { data } = await api.get('/dashboard/recent-activity');
       const items = Array.isArray(data) ? data : (data?.data ?? []);
       return items.map((item: DashboardActivityRaw, index: number) => ({
         id: String(item.id ?? index),
@@ -92,39 +91,20 @@ export default function DashboardPage() {
   const pipeline = {
     active: Number(kpis?.active_rfqs ?? 0),
     pending: Number(kpis?.pending_approvals ?? 0),
-    intake: useMocks ? 8 : 0,
-    awards: useMocks ? 2 : 0,
+    intake: 0,
+    awards: 0,
   };
 
-  const savingsValue = useMocks
-    ? '$1.2M'
-    : typeof kpis?.total_savings === 'number'
+  const savingsValue =
+    typeof kpis?.total_savings === 'number'
       ? `$${kpis.total_savings.toLocaleString('en-US')}`
       : kpis?.total_savings ?? '$0';
 
-  const approvals: PendingApprovalItem[] = useMocks
-    ? [
-        { id: 'apr-1', rfqId: 'RFQ-2404', rfqTitle: 'Network Security Audit', type: 'Quote approval', assignee: 'James Okonkwo', submittedAt: '2h ago' },
-        { id: 'apr-2', rfqId: 'RFQ-2401', rfqTitle: 'Server Infrastructure Refresh', type: 'Comparison approval', assignee: 'Sarah Chen', submittedAt: 'Yesterday' },
-        { id: 'apr-3', rfqId: 'RFQ-2408', rfqTitle: 'IT Support Annual', type: 'Award approval', assignee: 'Alex Kumar', submittedAt: '2 days ago' },
-      ]
-    : [];
+  const approvals: PendingApprovalItem[] = [];
 
-  const categories: CategoryMetricItem[] = useMocks
-    ? [
-        { category: 'IT Hardware', count: 6, estValue: '$2.4M', pct: 72 },
-        { category: 'Software', count: 4, estValue: '$980K', pct: 52 },
-        { category: 'Facilities', count: 3, estValue: '$420K', pct: 34 },
-        { category: 'Security', count: 2, estValue: '$180K', pct: 18 },
-      ]
-    : [];
+  const categories: CategoryMetricItem[] = [];
 
-  const alerts = useMocks
-    ? [
-        { id: 'sla-1', title: 'Approval SLA expiring', rfqId: 'RFQ-2404', timeRemaining: '6h remaining', urgency: 'high', assignee: 'Marcus Webb' },
-        { id: 'sla-2', title: 'Vendor response overdue', rfqId: 'RFQ-2402', timeRemaining: '18h remaining', urgency: 'medium', assignee: 'Sarah Chen' },
-      ]
-    : [];
+  const alerts: { id: string; title: string; rfqId: string; timeRemaining: string; urgency: 'high' | 'medium' | 'low'; assignee: string }[] = [];
 
   const quickActions = [
     { id: 'qa-1', icon: <FileText size={16} />, title: 'Create RFQ', description: 'Launch a new requisition with guided intake.', actionLabel: 'Start', onAction: () => router.push('/rfqs/new') },
@@ -176,8 +156,8 @@ export default function DashboardPage() {
           <SavingsHighlightCard
             title="YTD Savings"
             value={isLoadingKpis ? '...' : String(savingsValue)}
-            subtitle={useMocks ? '12% above target' : 'Savings impact across all RFQs'}
-            trend={useMocks ? { value: 12, label: '+12% vs last quarter' } : undefined}
+            subtitle="Savings impact across all RFQs"
+            trend={undefined}
           />
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.06)] animate-fade-up" style={{ animationDelay: '200ms' }}>
@@ -223,7 +203,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-[1.1fr,1.3fr]">
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-slate-800">SLA Alerts</h3>
-          {alerts.length === 0 && !useMocks ? (
+          {alerts.length === 0 ? (
             <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">
               No SLA alerts for the current period.
             </div>
@@ -263,7 +243,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {!useMocks && !isLoadingKpis && (!activity || activity.length === 0) && (
+      {!isLoadingKpis && (!activity || activity.length === 0) && (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-500">
           Dashboard data is still syncing. Once activity is available, you will see KPI snapshots and SLA alerts here.
         </div>

@@ -27,7 +27,6 @@ type FormData = z.infer<typeof schema>;
 function ResetPasswordPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const [status, setStatus] = React.useState<'idle' | 'done'>('idle');
   const [error, setError] = React.useState<string | null>(null);
 
@@ -50,7 +49,8 @@ function ResetPasswordPageContent() {
       setStatus('done');
       toast.success('Password updated successfully');
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 501) {
+      const axiosish = err as { response?: { status?: number } };
+      if (axiosish?.response?.status === 501) {
         setStatus('done');
         toast.success('Password updated (simulated)');
         return;
