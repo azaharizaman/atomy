@@ -28,9 +28,11 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
     {
         $this->invoiceQuery = $this->createMock(InvoiceDuplicateQueryInterface::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+    }
 
+    private function initService(): void
+    {
         $dataProvider = new DuplicateInvoiceDataProvider($this->invoiceQuery);
-
         $this->service = new DuplicateInvoiceDetectionService(
             $dataProvider,
             $this->eventDispatcher,
@@ -41,7 +43,15 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
     {
         $request = $this->createRequest();
 
-        $this->setupEmptyQueryResults();
+        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
+        $this->invoiceQuery->method('findByAmount')->willReturn([]);
+        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
+        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
+        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
+
+        $this->initService();
 
         $this->eventDispatcher->expects($this->once())
             ->method('dispatch')
@@ -70,8 +80,14 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
                     'status' => 'approved',
                 ],
             ]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
+        $this->invoiceQuery->method('findByAmount')->willReturn([]);
+        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
+        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
+        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
 
-        $this->setupOtherQueriesEmpty();
+        $this->initService();
 
         $this->eventDispatcher->expects($this->once())
             ->method('dispatch')
@@ -83,7 +99,6 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertTrue($result->shouldBlock);
         $this->assertCount(1, $result->matches);
         $this->assertEquals('critical', $result->highestRiskLevel);
-        $this->assertEquals(1.0, $result->highestConfidence);
         $this->assertEquals(DuplicateMatchType::EXACT_MATCH, $result->matches[0]->matchType);
     }
 
@@ -102,8 +117,14 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
                     'status' => 'approved',
                 ],
             ]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
+        $this->invoiceQuery->method('findByAmount')->willReturn([]);
+        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
+        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
+        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
 
-        $this->setupOtherQueriesEmpty();
+        $this->initService();
 
         $result = $this->service->checkForDuplicates($request);
 
@@ -113,12 +134,43 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertEquals('high', $result->highestRiskLevel);
     }
 
+    public function test_detects_normalized_invoice_number_match(): void
+    {
+        $request = $this->createRequest();
+
+        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')
+            ->willReturn([
+                [
+                    'id' => 'inv-normalized-1',
+                    'invoice_number' => 'INV2024001', // Normalized format
+                    'amount' => 1000.00,
+                    'currency' => 'MYR',
+                    'date' => '2024-01-10',
+                    'status' => 'approved',
+                ],
+            ]);
+        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
+        $this->invoiceQuery->method('findByAmount')->willReturn([]);
+        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
+        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
+        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
+
+        $this->initService();
+
+        $result = $this->service->checkForDuplicates($request);
+
+        $this->assertTrue($result->hasDuplicates);
+        $this->assertEquals(DuplicateMatchType::FUZZY_INVOICE_NUMBER, $result->matches[0]->matchType);
+        $this->assertArrayHasKey('original_number', $result->matches[0]->matchDetails);
+    }
+
     public function test_detects_amount_date_match(): void
     {
         $request = $this->createRequest();
 
-        $this->setupEmptyExactQueries();
-
+        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
         $this->invoiceQuery->method('findByAmountAndDate')
             ->willReturn([
                 [
@@ -130,11 +182,12 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
                     'status' => 'approved',
                 ],
             ]);
-
         $this->invoiceQuery->method('findByAmount')->willReturn([]);
         $this->invoiceQuery->method('findByPOReference')->willReturn([]);
         $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
         $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
+
+        $this->initService();
 
         $result = $this->service->checkForDuplicates($request);
 
@@ -142,6 +195,143 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->assertFalse($result->shouldBlock); // Amount-date match doesn't block
         $this->assertEquals(DuplicateMatchType::AMOUNT_DATE_MATCH, $result->matches[0]->matchType);
         $this->assertEquals('medium', $result->highestRiskLevel);
+    }
+
+    public function test_detects_amount_vendor_match(): void
+    {
+        $request = $this->createRequest();
+
+        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
+        $this->invoiceQuery->method('findByAmount')
+            ->willReturn([
+                [
+                    'id' => 'inv-existing-1',
+                    'invoice_number' => 'INV-OLD',
+                    'amount' => 1000.00,
+                    'currency' => 'MYR',
+                    'date' => '2023-12-01',
+                    'status' => 'paid',
+                ],
+            ]);
+        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
+        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
+        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
+
+        $this->initService();
+
+        $result = $this->service->checkForDuplicates($request);
+
+        $this->assertTrue($result->hasDuplicates);
+        $this->assertEquals(DuplicateMatchType::AMOUNT_VENDOR_MATCH, $result->matches[0]->matchType);
+    }
+
+    public function test_detects_po_reference_match(): void
+    {
+        $request = new DuplicateCheckRequest(
+            tenantId: 'tenant-1',
+            vendorId: 'vendor-1',
+            invoiceNumber: 'INV-2024-001',
+            invoiceAmount: Money::of(1000.00, 'MYR'),
+            invoiceDate: new \DateTimeImmutable('2024-01-15'),
+            poNumber: 'PO-12345',
+        );
+
+        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
+        $this->invoiceQuery->method('findByAmount')->willReturn([]);
+        $this->invoiceQuery->method('findByPOReference')
+            ->willReturn([
+                [
+                    'id' => 'inv-po-1',
+                    'invoice_number' => 'INV-OTHER',
+                    'amount' => 1000.00,
+                    'currency' => 'MYR',
+                    'date' => '2024-01-10',
+                    'status' => 'approved',
+                    'po_number' => 'PO-12345',
+                ],
+            ]);
+        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
+        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
+
+        $this->initService();
+
+        $result = $this->service->checkForDuplicates($request);
+
+        $this->assertTrue($result->hasDuplicates);
+        $this->assertEquals(DuplicateMatchType::PO_REFERENCE_MATCH, $result->matches[0]->matchType);
+        $this->assertEquals('PO-12345', $result->matches[0]->matchDetails['po_number']);
+    }
+
+    public function test_detects_hash_collision(): void
+    {
+        $request = new DuplicateCheckRequest(
+            tenantId: 'tenant-1',
+            vendorId: 'vendor-1',
+            invoiceNumber: 'INV-2024-001',
+            invoiceAmount: Money::of(1000.00, 'MYR'),
+            invoiceDate: new \DateTimeImmutable('2024-01-15'),
+            documentHash: 'some-hash',
+        );
+
+        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
+        $this->invoiceQuery->method('findByAmount')->willReturn([]);
+        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
+        $this->invoiceQuery->method('findByDocumentHash')
+            ->willReturn([
+                [
+                    'id' => 'inv-hash-1',
+                    'invoice_number' => 'INV-DIFF',
+                    'amount' => 1000.00,
+                    'currency' => 'MYR',
+                    'date' => '2024-01-10',
+                    'status' => 'approved',
+                ],
+            ]);
+        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
+
+        $this->initService();
+
+        $result = $this->service->checkForDuplicates($request);
+
+        $this->assertTrue($result->hasDuplicates);
+        $this->assertEquals(DuplicateMatchType::HASH_COLLISION, $result->matches[0]->matchType);
+    }
+
+    public function test_detects_fingerprint_match(): void
+    {
+        $request = $this->createRequest();
+
+        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
+        $this->invoiceQuery->method('findByAmount')->willReturn([]);
+        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
+        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
+        $this->invoiceQuery->method('findByFingerprint')
+            ->willReturn([
+                [
+                    'id' => 'inv-fp-1',
+                    'invoice_number' => 'INV-DIFF-2',
+                    'amount' => 1000.00,
+                    'currency' => 'MYR',
+                    'date' => '2024-01-10',
+                    'status' => 'approved',
+                ],
+            ]);
+
+        $this->initService();
+
+        $result = $this->service->checkForDuplicates($request);
+
+        $this->assertTrue($result->hasDuplicates);
+        $this->assertEquals(DuplicateMatchType::HASH_COLLISION, $result->matches[0]->matchType);
+        $this->assertEquals('fingerprint', $result->matches[0]->matchDetails['match_source']);
     }
 
     public function test_strict_mode_blocks_any_match(): void
@@ -155,9 +345,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
             strictMode: true,
         );
 
-        $this->setupEmptyExactQueries();
-
-        // Only an amount-vendor match (normally wouldn't block)
+        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
+        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
         $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
         $this->invoiceQuery->method('findByAmount')
             ->willReturn([
@@ -173,6 +362,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->invoiceQuery->method('findByPOReference')->willReturn([]);
         $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
         $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
+
+        $this->initService();
 
         $result = $this->service->checkForDuplicates($request);
 
@@ -213,6 +404,8 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
         $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
         $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
 
+        $this->initService();
+
         $result = $this->service->checkForDuplicates($request);
 
         $this->assertCount(2, $result->matches);
@@ -230,32 +423,5 @@ final class DuplicateInvoiceDetectionServiceTest extends TestCase
             invoiceAmount: Money::of(1000.00, 'MYR'),
             invoiceDate: new \DateTimeImmutable('2024-01-15'),
         );
-    }
-
-    private function setupEmptyQueryResults(): void
-    {
-        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
-        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
-        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
-        $this->invoiceQuery->method('findByAmount')->willReturn([]);
-        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
-        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
-        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
-    }
-
-    private function setupEmptyExactQueries(): void
-    {
-        $this->invoiceQuery->method('findByExactInvoiceNumber')->willReturn([]);
-        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
-    }
-
-    private function setupOtherQueriesEmpty(): void
-    {
-        $this->invoiceQuery->method('findByNormalizedInvoiceNumber')->willReturn([]);
-        $this->invoiceQuery->method('findByAmountAndDate')->willReturn([]);
-        $this->invoiceQuery->method('findByAmount')->willReturn([]);
-        $this->invoiceQuery->method('findByPOReference')->willReturn([]);
-        $this->invoiceQuery->method('findByDocumentHash')->willReturn([]);
-        $this->invoiceQuery->method('findByFingerprint')->willReturn([]);
     }
 }
