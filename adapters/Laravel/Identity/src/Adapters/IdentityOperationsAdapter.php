@@ -205,10 +205,16 @@ final readonly class IdentityOperationsAdapter implements
 
     public function log(string $event, string $entityId, array $data = []): void
     {
+        $tenantId = null;
+        if (isset($data['tenant_id']) && is_string($data['tenant_id']) && trim($data['tenant_id']) !== '') {
+            $tenantId = trim($data['tenant_id']);
+        }
+
         $this->auditLogRepository->create([
             'event' => $event,
             'subject_id' => $entityId,
             'subject_type' => 'user',
+            'tenant_id' => $tenantId,
             'properties' => $data,
             'created_at' => new \DateTimeImmutable(),
         ]);
@@ -225,34 +231,46 @@ final readonly class IdentityOperationsAdapter implements
     {
         $user = $this->userAuthenticator->authenticate(new Credentials($email, $password));
         
-        return $this->mapUserToArray($user);
+        return $this->mapUserToArray($user, $tenantId);
     }
 
     public function getUserById(string $userId): array
     {
         $user = $this->userQuery->findById($userId);
         
-        return $this->mapUserToArray($user);
+        return $this->mapUserToArray($user, $user->getTenantId());
     }
 
-    private function mapUserToArray(\Nexus\Identity\Contracts\UserInterface $user): array
+    public function getUserByIdAndTenant(string $userId, string $tenantId): array
     {
+        $user = $this->userQuery->findById($userId, $tenantId);
+
+        return $this->mapUserToArray($user, $tenantId);
+    }
+
+    private function mapUserToArray(\Nexus\Identity\Contracts\UserInterface $user, ?string $tenantId = null): array
+    {
+        $resolvedTenantId = is_string($tenantId) && trim($tenantId) !== ''
+            ? trim($tenantId)
+            : $user->getTenantId();
+
         $permissions = array_map(
             fn($p) => $p->getName(),
-            $this->userQuery->getUserPermissions($user->getId())
+            $this->userQuery->getUserPermissions($user->getId(), $resolvedTenantId)
         );
 
         $roles = array_map(
             fn($r) => $r->getName(),
-            $this->userQuery->getUserRoles($user->getId())
+            $this->userQuery->getUserRoles($user->getId(), $resolvedTenantId)
         );
 
         return [
             'id' => $user->getId(),
             'email' => $user->getEmail(),
+            'tenant_id' => $user->getTenantId(),
             'first_name' => $user->getName(), // UserInterface has getName, not getFirstName/LastName
             'last_name' => null,
-            'status' => PackageUserStatus::from($user->getStatus()),
+            'status' => PackageUserStatus::from($user->getStatus())->value,
             'permissions' => $permissions,
             'roles' => $roles,
         ];
@@ -269,7 +287,7 @@ final readonly class IdentityOperationsAdapter implements
             (new \DateTimeImmutable())->modify('+1 hour')
         );
         
-        return $token->getValue();
+        return $token->token;
     }
 
     public function generateRefreshToken(string $userId, string $tenantId): string
@@ -281,7 +299,7 @@ final readonly class IdentityOperationsAdapter implements
             (new \DateTimeImmutable())->modify('+30 days')
         );
         
-        return $token->getValue();
+        return $token->token;
     }
 
     public function validateRefreshToken(string $refreshToken, string $tenantId): RefreshTokenPayload
@@ -290,11 +308,11 @@ final readonly class IdentityOperationsAdapter implements
         
         $tokenTenantId = $user->getTenantId();
         if ($tokenTenantId === null) {
-            throw new \RuntimeException('Token is missing required tenant context');
+            throw new \Nexus\Identity\Exceptions\TokenMissingTenantException();
         }
 
         if ($tokenTenantId !== $tenantId) {
-            throw new \RuntimeException('Token tenant ID mismatch');
+            throw new \Nexus\Identity\Exceptions\TenantMismatchException();
         }
 
         return new RefreshTokenPayload(
@@ -310,7 +328,7 @@ final readonly class IdentityOperationsAdapter implements
             'tenant_id' => $tenantId,
         ]);
         
-        return $session->getValue();
+        return $session->token;
     }
 
     public function invalidateSession(string $sessionId, string $tenantId): void
@@ -332,7 +350,7 @@ final readonly class IdentityOperationsAdapter implements
             $hashedPassword = $this->passwordHasher->hash($newPassword);
             $this->userPersist->update($userId, ['password_hash' => $hashedPassword]);
         } else {
-            throw new \RuntimeException('Invalid current password');
+            throw new \Nexus\Identity\Exceptions\InvalidCurrentPasswordException();
         }
     }
 
@@ -358,7 +376,7 @@ final readonly class IdentityOperationsAdapter implements
             $result = $this->mfaEnrollment->enrollTotp($userId);
             return MfaEnableResult::success(
                 $userId,
-                $result['secret']->getValue(),
+                $result['secret']->secret,
                 $result['qrCodeUri']
             );
         }
@@ -431,6 +449,6 @@ final readonly class IdentityOperationsAdapter implements
     public function generate(string $userId): array
     {
         $codeSet = $this->mfaEnrollment->generateBackupCodes($userId);
-        return array_map(fn($code) => $code->getValue(), $codeSet->getCodes());
+        return array_map(fn($code) => $code->code, $codeSet->getCodes());
     }
 }

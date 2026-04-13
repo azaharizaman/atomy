@@ -107,6 +107,37 @@ final readonly class TaxValidationError
         );
     }
 
+    public static function totalMismatch(\Nexus\Common\ValueObjects\Money $expected, \Nexus\Common\ValueObjects\Money $actual): self
+    {
+        return new self(
+            code: 'TAX_TOTAL_MISMATCH',
+            message: sprintf(
+                'Invoice total mismatch: expected %s, actual %s.',
+                $expected->format(),
+                $actual->format(),
+            ),
+            field: 'total_amount',
+            actualValue: $actual->getAmount(),
+            expectedValue: $expected->getAmount(),
+        );
+    }
+
+    public static function lineItemTaxMismatch(TaxLineItem $lineItem, \Nexus\Common\ValueObjects\Money $expected, \Nexus\Common\ValueObjects\Money $actual): self
+    {
+        return new self(
+            code: 'LINE_ITEM_TAX_MISMATCH',
+            message: sprintf(
+                'Line item %s tax mismatch: expected %s, actual %s.',
+                $lineItem->productId ?? $lineItem->description ?? 'Unknown',
+                $expected->format(),
+                $actual->format(),
+            ),
+            field: 'line_item_tax',
+            actualValue: $actual->getAmount(),
+            expectedValue: $expected->getAmount(),
+        );
+    }
+
     /**
      * @return array<string, mixed>
      */

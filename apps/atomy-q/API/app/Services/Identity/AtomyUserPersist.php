@@ -145,24 +145,50 @@ final readonly class AtomyUserPersist implements UserPersistInterface
 
     public function incrementFailedLoginAttempts(string $userId): int
     {
-        return 0;
+        $updated = UserModel::query()->whereKey($userId)->increment('failed_login_attempts');
+        if ($updated === 0) {
+            throw new UserNotFoundException($userId);
+        }
+
+        $attempts = UserModel::query()->whereKey($userId)->value('failed_login_attempts');
+
+        return (int) ($attempts ?? 0);
     }
 
     public function resetFailedLoginAttempts(string $userId): void
     {
+        if (! UserModel::query()->whereKey($userId)->exists()) {
+            throw new UserNotFoundException($userId);
+        }
+
+        UserModel::query()->whereKey($userId)->update(['failed_login_attempts' => 0]);
     }
 
     public function lockAccount(string $userId, string $reason): void
     {
-        if ($reason === '') {
-            // Reason is optional for storage today; reserved for audit integration.
+        if (! UserModel::query()->whereKey($userId)->exists()) {
+            throw new UserNotFoundException($userId);
         }
-        UserModel::query()->whereKey($userId)->update(['status' => 'locked']);
+
+        UserModel::query()->whereKey($userId)->update([
+            'status' => 'locked',
+            'lockout_reason' => trim($reason) !== '' ? $reason : null,
+            'lockout_expires_at' => null,
+        ]);
     }
 
     public function unlockAccount(string $userId): void
     {
-        UserModel::query()->whereKey($userId)->update(['status' => 'active']);
+        if (! UserModel::query()->whereKey($userId)->exists()) {
+            throw new UserNotFoundException($userId);
+        }
+
+        UserModel::query()->whereKey($userId)->update([
+            'status' => 'active',
+            'lockout_reason' => null,
+            'lockout_expires_at' => null,
+            'failed_login_attempts' => 0,
+        ]);
     }
 
     private function composeDisplayName(string $firstName, string $lastName, string $fallbackEmail): string

@@ -18,16 +18,43 @@ use Nexus\Identity\ValueObjects\Credentials;
  */
 final readonly class AtomyUserAuthenticator implements UserAuthenticatorInterface
 {
+    private const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+
     public function __construct(
         private PasswordHasherInterface $passwordHasher,
+        private \Nexus\Tenant\Contracts\TenantContextInterface $tenantContext,
     ) {
     }
 
     public function authenticate(Credentials $credentials): UserInterface
     {
-        $user = $this->resolveUserForPassword($credentials->email, $credentials->password);
+        $normalized = $this->normalizeEmail($credentials->email);
+        $row = $this->resolveCandidateRow($normalized);
+        if ($row === null) {
+            throw new InvalidCredentialsException();
+        }
+
+        if ($this->rowIsLocked($row)) {
+            throw new AccountLockedException();
+        }
+
+        if (! $this->passwordHasher->verify($credentials->password, (string) $row->password_hash)) {
+            $attempts = $this->incrementFailedAttempts($row);
+
+            if ($attempts >= self::MAX_FAILED_LOGIN_ATTEMPTS) {
+                $this->lockAccount($row, 'too_many_failed_login_attempts');
+                throw new AccountLockedException();
+            }
+
+            throw new InvalidCredentialsException();
+        }
+
+        // Successful login: clear counters and any temporary lock metadata.
+        $this->resetFailedAttempts($row);
+
+        $user = new AtomyIdentityUser($row->fresh() ?? $row);
         if (! $this->canAuthenticate($user)) {
-            if ($user->isLocked()) {
+            if ($this->isAccountLocked($user->getId())) {
                 throw new AccountLockedException();
             }
             throw new AccountInactiveException($user->getStatus());
@@ -38,37 +65,106 @@ final readonly class AtomyUserAuthenticator implements UserAuthenticatorInterfac
 
     public function verifyCredentials(Credentials $credentials): bool
     {
-        try {
-            $this->resolveUserForPassword($credentials->email, $credentials->password);
-        } catch (InvalidCredentialsException) {
+        $row = $this->resolveCandidateRow($this->normalizeEmail($credentials->email));
+        if ($row === null) {
             return false;
         }
 
-        return true;
+        if ($this->rowIsLocked($row) || ! $this->canAuthenticate(new AtomyIdentityUser($row))) {
+            return false;
+        }
+
+        return $this->passwordHasher->verify($credentials->password, (string) $row->password_hash);
     }
 
     public function isAccountLocked(string $userId): bool
     {
         $row = UserModel::query()->whereKey($userId)->first();
 
-        return $row !== null && (string) $row->status === 'locked';
+        return $row !== null && $this->rowIsLocked($row);
     }
 
     public function canAuthenticate(UserInterface $user): bool
     {
-        return $user->isActive() && ! $user->isLocked();
-    }
-
-    private function resolveUserForPassword(string $email, string $password): UserInterface
-    {
-        $normalized = strtolower(trim($email));
-        $candidates = UserModel::query()->where('email', $normalized)->get();
-        foreach ($candidates as $row) {
-            if ($this->passwordHasher->verify($password, (string) $row->password_hash)) {
-                return new AtomyIdentityUser($row);
-            }
+        if (! $user->isActive()) {
+            return false;
         }
 
-        throw new InvalidCredentialsException();
+        // `AtomyIdentityUser` does not currently account for timed lockout; enforce against the DB row.
+        return ! $this->isAccountLocked($user->getId());
+    }
+
+    private function resolveCandidateRow(string $normalizedEmail): ?UserModel
+    {
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+
+        $query = UserModel::query()
+            ->where('email', $normalizedEmail);
+
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $candidates = $query->limit(2)->get();
+
+        if ($candidates->count() !== 1) {
+            return null;
+        }
+
+        return $candidates->first();
+    }
+
+    private function normalizeEmail(string $email): string
+    {
+        return strtolower(trim($email));
+    }
+
+    private function rowIsLocked(UserModel $row): bool
+    {
+        if ((string) $row->status === 'locked') {
+            // Allow timed unlock if lockout_expires_at has passed.
+            if ($row->lockout_expires_at !== null && $row->lockout_expires_at->isPast()) {
+                $row->status = 'active';
+                $row->lockout_reason = null;
+                $row->lockout_expires_at = null;
+                $row->failed_login_attempts = 0;
+                $row->save();
+
+                return false;
+            }
+
+            return true;
+        }
+
+        return $row->lockout_expires_at !== null && $row->lockout_expires_at->isFuture();
+    }
+
+    private function incrementFailedAttempts(UserModel $row): int
+    {
+        \Illuminate\Support\Facades\DB::table('users')
+            ->where('id', (string) $row->id)
+            ->update([
+                'failed_login_attempts' => \Illuminate\Support\Facades\DB::raw('COALESCE(failed_login_attempts, 0) + 1')
+            ]);
+
+        $row->refresh();
+
+        return (int) ($row->failed_login_attempts ?? 0);
+    }
+
+    private function resetFailedAttempts(UserModel $row): void
+    {
+        $row->failed_login_attempts = 0;
+        $row->lockout_reason = null;
+        $row->lockout_expires_at = null;
+        $row->save();
+    }
+
+    private function lockAccount(UserModel $row, string $reason): void
+    {
+        $row->status = 'locked';
+        $row->lockout_reason = trim($reason) !== '' ? $reason : null;
+        $row->lockout_expires_at = null;
+        $row->save();
     }
 }

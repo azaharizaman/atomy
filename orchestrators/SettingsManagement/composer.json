@@ -22,6 +22,10 @@
             "Nexus\\SettingsManagement\\Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "test": "vendor/bin/phpunit -c phpunit.xml",
+        "test-coverage": "vendor/bin/phpunit -c phpunit.xml --coverage-text"
+    },
     "repositories": [
         {
             "type": "path",

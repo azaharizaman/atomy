@@ -82,20 +82,15 @@ There is also active in-flight work in the workspace around quote lifecycle prod
 
 10. **The roadmap/docs are fragmented and some are stale**
     - Why it matters: alpha execution depends on a current, unambiguous plan.
-    - Evidence: the core alpha audit/week plans were last updated on 2026-03-23, and the newer quote-lifecycle productionization plan was written on 2026-03-29 but appears to stop at Task 4 docs/visibility cleanup (`apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md`, `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-5.md`, `docs/superpowers/plans/2026-03-29-quote-lifecycle-productionization.md`).
+    - Evidence: as of 2026-03-31, the week-based alpha plans had not advanced since 2026-03-23 and the newer quote-lifecycle productionization plan appeared to stop at Task 4 docs/visibility cleanup (`apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-INDEX.md`, `docs/superpowers/plans/2026-03-29-quote-lifecycle-productionization.md`).
     - Result: the team has direction, but not a single closed execution ledger for what still blocks Alpha.
 
 ## Stalled or stale plan files
 
-### Clearly stale
+### Historical status (recorded 2026-03-31)
 
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-1.md`
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-2.md`
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-3.md`
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-4.md`
-- `apps/atomy-q/docs/alpha-audit-v1.0.0/PLAN-WEEK-5.md`
-
-These were all introduced on 2026-03-23 and have not been updated since. They are useful as historical alpha intent, but they are no longer a reliable progress tracker by themselves.
+The weekly plan artifacts identified as stale in this report were retired from the codebase on 2026-04-09 and replaced by a single active mitigation ledger in:
+`apps/atomy-q/docs/alpha-audit-v1.0.0/ALPHA_GAP_8_9_10_MITIGATION_PLAN_2026-04-09.md`.
 
 ### Active but incomplete
 

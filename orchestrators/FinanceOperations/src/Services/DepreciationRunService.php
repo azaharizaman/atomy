@@ -80,7 +80,11 @@ final readonly class DepreciationRunService
             $journalEntries = [];
 
             foreach ($bookValues as $assetData) {
-                $depreciation = $this->calculateDepreciation($assetData);
+                $depreciation = $this->calculateDepreciation(
+                    $request->tenantId,
+                    $request->periodId,
+                    $assetData
+                );
 
                 if ($depreciation > 0) {
                     $totalDepreciation += $depreciation;
@@ -199,7 +203,7 @@ final readonly class DepreciationRunService
      * @param array<string, mixed> $assetData Asset data including book values
      * @return float Calculated depreciation amount
      */
-    private function calculateDepreciation(array $assetData): float
+    private function calculateDepreciation(string $tenantId, string $periodId, array $assetData): float
     {
         $bookValue = (float)($assetData['book_value'] ?? $assetData['net_book_value'] ?? 0);
         $accumulatedDepreciation = (float)($assetData['accumulated_depreciation'] ?? 0);
@@ -220,6 +224,14 @@ final readonly class DepreciationRunService
             return 0.0;
         }
 
+        if ($usefulLifeMonths <= 0) {
+            throw DepreciationCoordinationException::runFailed(
+                $tenantId,
+                $periodId,
+                'Useful life months must be greater than 0'
+            );
+        }
+
         switch ($method) {
             case 'straight_line':
                 // Monthly depreciation
@@ -233,8 +245,26 @@ final readonly class DepreciationRunService
 
             case 'sum_of_years':
                 $years = (int)($usefulLifeMonths / 12);
+                if ($years <= 0) {
+                    throw DepreciationCoordinationException::runFailed(
+                        $tenantId,
+                        $periodId,
+                        'Sum-of-years depreciation requires useful life years greater than 0'
+                    );
+                }
+
                 $sumOfYears = ($years * ($years + 1)) / 2;
-                $currentYear = (int)(($accumulatedDepreciation / ($depreciableAmount / $years)) + 1);
+
+                $depreciationBase = $depreciableAmount / $years;
+                if (abs($depreciationBase) < 1e-9) {
+                    throw DepreciationCoordinationException::runFailed(
+                        $tenantId,
+                        $periodId,
+                        'Sum-of-years depreciation requires a non-zero depreciation base'
+                    );
+                }
+
+                $currentYear = (int)(($accumulatedDepreciation / $depreciationBase) + 1);
                 $yearDepreciation = ($depreciableAmount * ($years - $currentYear + 1)) / $sumOfYears;
                 return min($yearDepreciation / 12, $remainingAmount);
 
@@ -275,6 +305,14 @@ final readonly class DepreciationRunService
             $originalCost = $salvageValue * 2;
         }
         
+        if ($usefulLifeYears <= 0) {
+            throw DepreciationCoordinationException::scheduleGenerationFailed(
+                $request->tenantId,
+                $request->assetId,
+                'Useful life years must be greater than 0'
+            );
+        }
+
         $depreciableAmount = $originalCost - $salvageValue;
         $annualDepreciation = $depreciableAmount / $usefulLifeYears;
         $monthlyDepreciation = $annualDepreciation / 12;

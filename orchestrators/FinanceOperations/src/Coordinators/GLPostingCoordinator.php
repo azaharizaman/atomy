@@ -11,6 +11,7 @@ use Nexus\FinanceOperations\DTOs\GLReconciliationRequest;
 use Nexus\FinanceOperations\DTOs\GLReconciliationResult;
 use Nexus\FinanceOperations\DTOs\ConsistencyCheckRequest;
 use Nexus\FinanceOperations\DTOs\ConsistencyCheckResult;
+use Nexus\FinanceOperations\DTOs\RuleContext;
 use Nexus\FinanceOperations\Services\GLReconciliationService;
 use Nexus\FinanceOperations\Rules\SubledgerClosedRule;
 use Nexus\FinanceOperations\Rules\GLAccountMappingRule;
@@ -93,11 +94,13 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
 
         try {
             // Validate subledger is closed
-            $closedResult = $this->subledgerClosedRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'periodId' => $request->periodId,
-                'subledgerType' => $request->subledgerType,
-            ]);
+            $closedResult = $this->subledgerClosedRule->check(
+                RuleContext::forSubledgerClosure(
+                    tenantId: $request->tenantId,
+                    periodId: $request->periodId,
+                    subledgerType: $request->subledgerType,
+                )
+            );
 
             if (!$closedResult->passed) {
                 throw GLReconciliationException::subledgerNotClosed(
@@ -108,11 +111,24 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
             }
 
             // Validate account mappings
-            $mappingResult = $this->accountMappingRule->check((object)[
-                'tenantId' => $request->tenantId,
-                'subledgerType' => $request->subledgerType,
-                'transactionTypes' => $request->options['transaction_types'] ?? [],
-            ]);
+            $transactionTypes = $request->options['transaction_types'] ?? [];
+            if (is_string($transactionTypes)) {
+                $transactionTypes = [$transactionTypes];
+            } elseif (!is_array($transactionTypes)) {
+                $transactionTypes = [];
+            }
+            $transactionTypes = array_values(array_filter(
+                array_map(fn($t) => is_string($t) ? trim($t) : null, $transactionTypes),
+                fn($t) => $t !== null && $t !== ''
+            ));
+
+            $mappingResult = $this->accountMappingRule->check(
+                RuleContext::forGlAccountMappingValidation(
+                    tenantId: $request->tenantId,
+                    subledgerType: $request->subledgerType,
+                    transactionTypes: $transactionTypes,
+                )
+            );
 
             if (!$mappingResult->passed) {
                 throw GLReconciliationException::invalidAccountMapping(

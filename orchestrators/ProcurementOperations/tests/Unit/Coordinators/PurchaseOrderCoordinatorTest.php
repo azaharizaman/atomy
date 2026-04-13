@@ -6,7 +6,6 @@ namespace Nexus\ProcurementOperations\Tests\Unit\Coordinators;
 
 use Nexus\ProcurementOperations\Coordinators\PurchaseOrderCoordinator;
 use Nexus\ProcurementOperations\DTOs\CreatePurchaseOrderRequest;
-use Nexus\ProcurementOperations\DTOs\PurchaseOrderResult;
 use Nexus\Procurement\Contracts\PurchaseOrderManagerInterface;
 use Nexus\Procurement\Contracts\PurchaseOrderQueryInterface;
 use Nexus\Procurement\Contracts\RequisitionQueryInterface;
@@ -76,5 +75,23 @@ final class PurchaseOrderCoordinatorTest extends TestCase
 
         $this->assertTrue($result->success);
         $this->assertSame('po-123', $result->purchaseOrderId);
+    }
+
+    #[Test]
+    public function sendToVendorUsesTenantScopedPurchaseOrderLookup(): void
+    {
+        $this->poQueryMock->expects($this->once())
+            ->method('findById')
+            ->with('tenant-1', 'po-123')
+            ->willReturn(null);
+
+        $result = $this->coordinator->sendToVendor(
+            tenantId: 'tenant-1',
+            purchaseOrderId: 'po-123',
+            sentBy: 'user-1'
+        );
+
+        $this->assertFalse($result->success);
+        $this->assertSame('Purchase order not found: po-123', $result->message);
     }
 }

@@ -48,6 +48,10 @@ const mockAward = {
 
 import { RfqAwardPageContent } from './page';
 
+type UseAwardReturn = ReturnType<typeof useAward>;
+type UseComparisonRunsReturn = ReturnType<typeof useComparisonRuns>;
+type UseRfqVendorsReturn = ReturnType<typeof useRfqVendors>;
+
 describe('RfqAwardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -58,18 +62,18 @@ describe('RfqAwardPage', () => {
       signoff: { mutate: vi.fn(), isPending: false, isError: false },
       debrief: { mutate: vi.fn(), isPending: false, isError: false },
       store: { mutate: vi.fn(), isPending: false, isError: false },
-    } as any);
+    } as unknown as UseAwardReturn);
 
     vi.mocked(useComparisonRuns).mockReturnValue({
       data: [{ id: 'run-1', type: 'final', status: 'frozen' }],
-    } as any);
+    } as unknown as UseComparisonRunsReturn);
 
     vi.mocked(useRfqVendors).mockReturnValue({
       data: [
         { id: 'inv-1', vendor_id: 'vendor-1', name: 'Winner Vendor', status: 'responded' },
         { id: 'inv-2', vendor_id: 'vendor-2', name: 'Other Vendor', status: 'responded' },
       ],
-    } as any);
+    } as unknown as UseRfqVendorsReturn);
   });
 
   it('renders live award data and action buttons', async () => {
@@ -99,11 +103,11 @@ describe('RfqAwardPage', () => {
       signoff: { mutate: vi.fn(), isPending: false, isError: false },
       debrief: { mutate: vi.fn(), isPending: false, isError: false },
       store: { mutate: vi.fn(), isPending: false, isError: false },
-    } as any);
+    } as unknown as UseAwardReturn);
     
     vi.mocked(useComparisonRuns).mockReturnValue({
       data: [{ id: 'run-1', type: 'final', status: 'frozen' }],
-    } as any);
+    } as unknown as UseComparisonRunsReturn);
 
     renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
 

@@ -6,8 +6,8 @@ This document serves as the absolute source of truth for Gemini CLI agents worki
 
 All development MUST strictly adhere to the project's **Three-Layer Architecture** and **Coding Standards**.
 
-- **Source of Truth**: Refer to [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architectural rules, coding standards (PHP 8.3), and security guidelines.
-- **Package Reference**: Consult [NEXUS_PACKAGES_REFERENCE.md](NEXUS_PACKAGES_REFERENCE.md) before implementing any feature to prevent duplication.
+- **Source of Truth**: Refer to [ARCHITECTURE.md](docs/project/ARCHITECTURE.md) for detailed architectural rules, coding standards (PHP 8.3), and security guidelines.
+- **Package Reference**: Consult [NEXUS_PACKAGES_REFERENCE.md](docs/project/NEXUS_PACKAGES_REFERENCE.md) before implementing any feature to prevent duplication.
 
 ### Quick Mandates:
 - **Strict Typing**: `declare(strict_types=1);` is mandatory in every file.
@@ -28,7 +28,13 @@ All development MUST strictly adhere to the project's **Three-Layer Architecture
 - **Multi-Tenancy**: Always filter by `tenantId`. Guard against cross-tenant data leakage.
 - **Zero-Check**: Guard against division by zero and empty array operations.
 
-## 👥 Multi-Agent Coordination
+## 🔍 Code review (superpowers: requesting-code-review)
+
+When dispatching the **code-reviewer** subagent for changes that touch **`apps/atomy-q/`**, the reviewer **must** walk the checklist in [`docs/superpowers/CODE_REVIEW_GUIDELINES_ATOMY_Q.md`](docs/superpowers/CODE_REVIEW_GUIDELINES_ATOMY_Q.md) and append **`### Atomy-Q guideline pass`** to the review. The superpowers template **`requesting-code-review/code-reviewer.md`** (in your skills install) embeds this requirement.
+
+---
+
+## Multi-Agent Coordination
 
 Nexus is a large system. Agents should follow these coordination patterns:
 
@@ -37,35 +43,6 @@ Nexus is a large system. Agents should follow these coordination patterns:
 - **QA Agent**: Responsible for testing, verification, and regression analysis.
 - **Maintenance Agent**: Handles dependency updates, documentation syncing, and refactoring.
 
-## 🚫 Common Anti-Patterns to Avoid
+## Naming Conventions
 
-### Type Safety
-- **AVOID**: Using generic `object` or `?object` for dependencies. Use specific interfaces.
-
-### PHP 8.3 Readonly
-- **AVOID**: Mutable arrays in readonly classes. Use `ArrayObject` for internal mutation if necessary, or native arrays for true immutability.
-- **AVOID**: Using `private readonly` on promoted properties (readonly implies private).
-
-### Method Implementation
-- **AVOID**: Methods that ignore passed parameters.
-- **AVOID**: Delete methods that only log and don't remove from storage.
-
-### Algorithms
-- **AVOID**: Division without zero-check.
-- **AVOID**: Index access without normalization (use modulo).
-
-### Multi-Tenancy
-- **AVOID**: Ignoring tenant ID in queries.
-
-### Exception Handling
-- **AVOID**: Returning synthetic IDs (e.g., `QUO-' . uniqid()`) instead of throwing exceptions when a service is unavailable.
-
-## ✅ Quality Checklist
-- [ ] All dependencies use specific interface types (not `object`)
-- [ ] All classes use `readonly` when appropriate (PHP 8.3+)
-- [ ] All methods actually apply their parameters
-- [ ] All delete methods remove from storage
-- [ ] Division operations have zero guards
-- [ ] Array indices are normalized with modulo
-- [ ] Tenant filtering is applied in multi-tenant contexts
-- [ ] Failures throw domain exceptions, not return synthetic values
+Refer to [NAMING_CONVENTIONS.md](NAMING_CONVENTIONS.md) for detailed naming standards across the codebase.

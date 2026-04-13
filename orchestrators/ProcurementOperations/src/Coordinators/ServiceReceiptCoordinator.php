@@ -34,7 +34,7 @@ final readonly class ServiceReceiptCoordinator implements ServiceReceiptCoordina
         ]);
 
         try {
-            $po = $this->poQuery->findById($request->purchaseOrderId);
+            $po = $this->poQuery->findById($request->tenantId, $request->purchaseOrderId);
             if (!$po) {
                 return ServiceReceiptResult::failure('Purchase order not found.');
             }

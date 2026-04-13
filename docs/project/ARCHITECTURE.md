@@ -17,6 +17,7 @@ This document serves as the single source of truth for the architectural integri
 9. [Decision Matrix: Where Does Logic Go?](#9-decision-matrix-where-does-logic-go)
 10. [Correct vs Incorrect Execution Examples](#10-correct-vs-incorrect-execution-examples)
 11. [Testing Final Readonly Classes](#11-testing-final-readonly-classes)
+12. [Naming Conventions](#12-naming-conventions)
 
 ---
 
@@ -1428,7 +1429,7 @@ final class StockManagerTest extends TestCase
 | Testing a final class implementation | Use **real or stub implementations** | Tests actual behavior |
 | Complex dependency behavior | Create a **test stub class** | Reusable, explicit |
 | Simple one-off dependency | Use **anonymous class** | Quick, inline |
-| Need to verify method calls | Use PHPUnit **mock on interface** | Asserts behavior |
+| Need to verify interactions | Use PHPUnit **mock on interface** | Asserts behavior |
 
 ### 11.7 Layer 1 Package Testing Guidelines
 
@@ -1524,13 +1525,19 @@ final class FakePaymentGateway implements PaymentGatewayInterface
 ### 11.10 Summary
 
 | Problem | Solution |
-|---------|----------|
+|----------|----------|
 | Cannot mock final class | Mock the **interface** instead |
 | Need to test final class directly | Use **real or stub implementations** |
 | Complex mock setup | Create a **test fake/stub** |
 | Verifying interactions | Mock **interface** with PHPUnit |
 
 **Remember**: The `final readonly` constraint enforces good design. If you can't test it easily, the design likely needs adjustment, not the test approach.
+
+---
+
+## 12. Naming Conventions
+
+Refer to [NAMING_CONVENTIONS.md](NAMING_CONVENTIONS.md) for detailed naming standards across the codebase.
 
 ---
 

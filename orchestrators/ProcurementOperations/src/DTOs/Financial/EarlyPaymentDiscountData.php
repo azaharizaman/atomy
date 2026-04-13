@@ -101,6 +101,17 @@ final readonly class EarlyPaymentDiscountData
     }
 
     /**
+     * Compute discount for a specific invoice amount based on this term's percentage
+     *
+     * @param Money $invoiceAmount The invoice amount to price
+     * @return Money The calculated discount amount
+     */
+    public function computeDiscountFor(Money $invoiceAmount): Money
+    {
+        return $invoiceAmount->multiply($this->discountPercentage / 100);
+    }
+
+    /**
      * Get discount deadline date
      */
     public function getDiscountDeadline(): \DateTimeImmutable

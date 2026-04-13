@@ -8,6 +8,7 @@ use Nexus\FinanceOperations\DTOs\CostAllocation\CostAllocationRequest;
 use Nexus\FinanceOperations\DTOs\CostAllocation\CostAllocationResult;
 use Nexus\FinanceOperations\DTOs\CostAllocation\ProductCostRequest;
 use Nexus\FinanceOperations\DTOs\CostAllocation\ProductCostResult;
+use Nexus\FinanceOperations\Enums\AllocationMethod;
 use Nexus\FinanceOperations\Exceptions\CostAllocationException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -44,7 +45,7 @@ final readonly class CostAllocationService
         $this->logger->info('Processing cost allocation', [
             'tenant_id' => $request->tenantId,
             'source_pool_id' => $request->sourceCostPoolId,
-            'method' => $request->allocationMethod,
+            'method' => $request->allocationMethod->value,
         ]);
 
         try {
@@ -67,6 +68,8 @@ final readonly class CostAllocationService
 
             // Calculate allocations based on method
             $allocations = $this->calculateAllocations(
+                $request->tenantId,
+                $request->sourceCostPoolId,
                 $totalAmount,
                 $request->targetCostCenterIds,
                 $request->allocationMethod,
@@ -192,23 +195,28 @@ final readonly class CostAllocationService
     /**
      * Calculate allocations based on method.
      *
+     * @param string $tenantId Tenant identifier for error reporting
+     * @param string $sourceCostPoolId Source cost pool identifier for error reporting
      * @param float $totalAmount Total amount to allocate
      * @param array<string> $targetCostCenterIds Target cost center IDs
-     * @param string $method Allocation method ('equal', 'proportional', 'manual')
+     * @param AllocationMethod|string $method Allocation method enum or raw method value
      * @param array<string, mixed> $options Additional allocation options
      * @return array<int, array{costCenterId: string, amount: string, percentage: float}> Allocation breakdown
-     * @throws \InvalidArgumentException If unknown allocation method
+     * @throws CostAllocationException If allocation validation fails
      */
     private function calculateAllocations(
+        string $tenantId,
+        string $sourceCostPoolId,
         float $totalAmount,
         array $targetCostCenterIds,
-        string $method,
+        AllocationMethod|string $method,
         array $options
     ): array {
         $allocations = [];
         $count = count($targetCostCenterIds);
+        $methodValue = $method instanceof AllocationMethod ? $method->value : $method;
 
-        switch ($method) {
+        switch ($methodValue) {
             case 'equal':
                 $perCenter = $totalAmount / $count;
                 foreach ($targetCostCenterIds as $costCenterId) {
@@ -224,6 +232,14 @@ final readonly class CostAllocationService
                 // Use provided weights or equal distribution
                 $weights = $options['weights'] ?? array_fill(0, $count, 1);
                 $totalWeight = (float)array_sum($weights);
+
+                if ($totalWeight <= 0.0) {
+                    throw CostAllocationException::allocationFailed(
+                        $tenantId,
+                        $sourceCostPoolId,
+                        'Total allocation weight must be greater than zero'
+                    );
+                }
                 
                 foreach ($targetCostCenterIds as $index => $costCenterId) {
                     $weight = (float)($weights[$index] ?? 1);
@@ -242,7 +258,11 @@ final readonly class CostAllocationService
                 // Manual allocations must be provided in options
                 $manualAllocations = $options['allocations'] ?? [];
                 if (empty($manualAllocations)) {
-                    throw new \InvalidArgumentException('Manual allocation requires allocations in options');
+                    throw CostAllocationException::allocationFailed(
+                        $tenantId,
+                        $sourceCostPoolId,
+                        'Manual allocation requires allocations in options'
+                    );
                 }
                 
                 foreach ($targetCostCenterIds as $index => $costCenterId) {
@@ -258,7 +278,11 @@ final readonly class CostAllocationService
                 break;
 
             default:
-                throw new \InvalidArgumentException("Unknown allocation method: {$method}");
+                throw CostAllocationException::invalidAllocationMethod(
+                    $tenantId,
+                    $methodValue,
+                    ['equal', 'proportional', 'manual']
+                );
         }
 
         return $allocations;

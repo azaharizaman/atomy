@@ -36,6 +36,7 @@ final readonly class GrIrAccrualData
         public ?string $matchedBy = null,
         public ?string $periodId = null,
         public ?string $glAccountId = null,
+        public ?string $writeOffAccountId = null,
         public array $metadata = [],
     ) {}
 
@@ -55,6 +56,7 @@ final readonly class GrIrAccrualData
         \DateTimeImmutable $goodsReceiptDate,
         ?string $periodId = null,
         ?string $glAccountId = null,
+        ?string $writeOffAccountId = null,
     ): self {
         $totalAmount = $unitCost->multiply($quantity);
 
@@ -73,6 +75,7 @@ final readonly class GrIrAccrualData
             goodsReceiptId: $goodsReceiptId,
             periodId: $periodId,
             glAccountId: $glAccountId,
+            writeOffAccountId: $writeOffAccountId,
         );
     }
 
@@ -142,12 +145,14 @@ final readonly class GrIrAccrualData
         Money $invoiceAmount,
         string $matchedBy,
         ?\DateTimeImmutable $matchedAt = null,
+        ?Money $varianceAmount = null,
+        ?string $varianceReason = null,
     ): self {
-        $variance = $invoiceAmount->subtract($this->totalAccrualAmount);
-        $varianceReason = null;
+        $variance = $varianceAmount ?? $invoiceAmount->subtract($this->totalAccrualAmount);
+        $reason = $varianceReason;
 
-        if (!$variance->isZero()) {
-            $varianceReason = $variance->isPositive() ? 'invoice_higher' : 'invoice_lower';
+        if ($reason === null && !$variance->isZero()) {
+            $reason = $variance->isPositive() ? 'invoice_higher' : 'invoice_lower';
         }
 
         return new self(
@@ -167,11 +172,12 @@ final readonly class GrIrAccrualData
             invoiceDate: $invoiceDate,
             invoiceAmount: $invoiceAmount,
             varianceAmount: $variance,
-            varianceReason: $varianceReason,
+            varianceReason: $reason,
             matchedAt: $matchedAt ?? new \DateTimeImmutable(),
             matchedBy: $matchedBy,
             periodId: $this->periodId,
             glAccountId: $this->glAccountId,
+            writeOffAccountId: $this->writeOffAccountId,
             metadata: $this->metadata,
         );
     }
@@ -182,6 +188,7 @@ final readonly class GrIrAccrualData
     public function withWriteOff(
         string $reason,
         string $writtenOffBy,
+        ?string $writeOffAccountId = null,
         ?\DateTimeImmutable $writtenOffAt = null,
     ): self {
         return new self(
@@ -206,6 +213,7 @@ final readonly class GrIrAccrualData
             matchedBy: $writtenOffBy,
             periodId: $this->periodId,
             glAccountId: $this->glAccountId,
+            writeOffAccountId: $writeOffAccountId ?? $this->writeOffAccountId,
             metadata: array_merge($this->metadata, ['written_off' => true]),
         );
     }
@@ -237,6 +245,7 @@ final readonly class GrIrAccrualData
             'matched_by' => $this->matchedBy,
             'period_id' => $this->periodId,
             'gl_account_id' => $this->glAccountId,
+            'write_off_account_id' => $this->writeOffAccountId,
             'days_since_receipt' => $this->getDaysSinceReceipt(),
             'is_aged' => $this->isAged(),
         ];

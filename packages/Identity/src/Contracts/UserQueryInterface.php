@@ -15,9 +15,11 @@ interface UserQueryInterface
     /**
      * Find a user by their unique identifier
      *
+     * @param string $id User identifier
+     * @param string|null $tenantId Tenant ID for tenant-scoped queries
      * @throws \Nexus\Identity\Exceptions\UserNotFoundException
      */
-    public function findById(string $id): UserInterface;
+    public function findById(string $id, ?string $tenantId = null): UserInterface;
 
     /**
      * Find a user by their email address

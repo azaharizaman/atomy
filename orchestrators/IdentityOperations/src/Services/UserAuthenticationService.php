@@ -59,6 +59,70 @@ final readonly class UserAuthenticationService implements UserAuthenticationServ
         );
     }
 
+    public function authenticateForMfaChallenge(string $email, string $password, string $tenantId): UserContext
+    {
+        $this->logger->info('Authenticating user for MFA challenge', [
+            'email' => hash('sha256', $email),
+            'tenant_id' => $tenantId,
+        ]);
+
+        $user = $this->authenticator->authenticate($email, $password, $tenantId);
+
+        return new UserContext(
+            userId: $user['id'],
+            email: $user['email'],
+            firstName: $user['first_name'] ?? null,
+            lastName: $user['last_name'] ?? null,
+            tenantId: $tenantId,
+            status: $user['status'],
+            permissions: $user['permissions'] ?? [],
+            roles: $user['roles'] ?? [],
+        );
+    }
+
+    public function completeMfaLogin(string $userId, string $tenantId): UserContext
+    {
+        $this->logger->info('Completing MFA login', [
+            'user_id' => $userId,
+            'tenant_id' => $tenantId,
+        ]);
+
+        try {
+            $user = $this->authenticator->getUserByIdAndTenant($userId, $tenantId);
+        } catch (\Throwable $e) {
+            // Collapse missing and wrong-tenant cases to the same domain error
+            throw new \Nexus\Identity\Exceptions\InvalidCredentialsException('Invalid MFA session or tenant context');
+        }
+
+        if (($user['status'] ?? null) !== 'active') {
+            throw new \Nexus\Identity\Exceptions\AccountInactiveException($user['status'] ?? 'unknown');
+        }
+
+        $accessToken = $this->tokenManager->generateAccessToken($user['id'], $tenantId);
+        $refreshToken = $this->tokenManager->generateRefreshToken($user['id'], $tenantId);
+        $sessionId = $this->tokenManager->createSession($user['id'], $accessToken, $tenantId);
+
+        $this->auditLogger->log(
+            'user.authenticated',
+            $user['id'],
+            ['tenant_id' => $tenantId, 'mfa' => true]
+        );
+
+        return new UserContext(
+            userId: $user['id'],
+            email: $user['email'],
+            firstName: $user['first_name'] ?? null,
+            lastName: $user['last_name'] ?? null,
+            tenantId: $tenantId,
+            status: $user['status'],
+            permissions: $user['permissions'] ?? [],
+            roles: $user['roles'] ?? [],
+            sessionId: $sessionId,
+            accessToken: $accessToken,
+            refreshToken: $refreshToken,
+        );
+    }
+
     public function refreshToken(string $refreshToken, string $tenantId): UserContext
     {
         $this->logger->info('Refreshing token');

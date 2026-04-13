@@ -78,11 +78,7 @@ npm run test:e2e:report     # View HTML report
 - **CQRS**: Split repositories into `*QueryInterface` and `*PersistInterface`
 
 ### Naming Conventions
-- **Classes**: `PascalCase` (e.g., `ProjectManager`)
-- **Interfaces**: `PascalCase` with `Interface` suffix (e.g., `ProjectManagerInterface`)
-- **Exceptions**: `*Exception` suffix (e.g., `TenantNotFoundException`)
-- **Value Objects**: `*Id`, `*VO`, or descriptive names (e.g., `ProjectId`, `Money`)
-- **Methods**: `camelCase`, verb-first (e.g., `createProject`, `getActiveProjects`)
+Refer to [NAMING_CONVENTIONS.md](docs/project/NAMING_CONVENTIONS.md)
 
 ### Imports
 - Use fully-qualified class names or explicit `use` statements
@@ -302,3 +298,30 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Root cause:** I verified the happy-path transaction fix but did not pressure-test larger suffix values, retry-exhaustion behavior, or the adapter’s fallback/error branches. I also let a reviewer-driven “unused parameter” concern obscure the intended Layer 2 ownership of line-item copy orchestration instead of explicitly documenting that boundary.
 - **Action taken:** Switched RFQ number lookup to numeric-suffix ordering with prefix-aware parsing, wrapped exhausted duplicate-number failures in a new `DuplicateRfqNumberException`, made unsupported adapter bulk actions throw a domain exception instead of returning `0`, strengthened adapter tests for reminder email shape and duplicate-number behavior, renamed the PHPUnit methods to camelCase, refreshed the sourcing implementation summary wording, and extended Atomy-Q review guidance to cover numeric ordering, domain-exception mapping, and coordinator-owned copy boundaries.
 - **Follow-up tasks:** Before future persistence changes, explicitly review (1) numeric ordering versus lexicographic ordering for composite identifiers, (2) retry-exhaustion exception mapping, (3) adapter dead-code fallback branches returning synthetic values, (4) email/notification payload contract assertions, and (5) whether a suggested “fix” would incorrectly pull coordinator-owned orchestration into a single adapter.
+
+---
+
+- **Date:** 2026-04-08
+- **PR/Issue ID:** [#349](https://github.com/azaharizaman/atomy/pull/349)
+- **Summary of mistake:** Identity adapter follow-up left avoidable review friction: account-state writes were not consistently tenant-scoped for defense-in-depth, and closure decisions (repository delete contract behavior and MFA metadata logging scope) were not explicitly dispositioned in the plan.
+- **Root cause:** I closed functional requirements first, then deferred contract-hardening and disposition documentation, which forced reviewers to infer intent from implementation details.
+- **Action taken:** Added tenant-scoped account-state mutation query path in `EloquentUserRepository`, re-ran Gap 7 feature and adapter permission tests, and updated the PR349 closure plan with explicit compatibility and scope dispositions plus verification evidence.
+- **Follow-up tasks:** For future identity review closures, require a final pass that includes (1) write-path tenant-scope checks, (2) explicit compatibility disposition for contract-adjacent suggestions, and (3) verification-gate command reproducibility from the current workspace layout.
+
+---
+
+- **Date:** 2026-04-08
+- **PR/Issue ID:** [#349](https://github.com/azaharizaman/atomy/pull/349)
+- **Summary of mistake:** Review-thread closure lag hid several unresolved hardening items across session validation, permission matching, MFA data mapping, and tenant-scoped query paths.
+- **Root cause:** I relied on prior batch status instead of revalidating every still-open thread against current HEAD and then syncing both code and thread state in one pass.
+- **Action taken:** Implemented tenant-safe middleware/session checks, hardened MFA/user auth persistence paths, fixed permission matching/query edge cases, restored interface-first controller dependency for MFA challenge store, added missing MFA mapper and encryption cast, updated affected call sites, re-ran Gap 7 verification commands, and resolved fixed PR threads while documenting one deferred schema-level FK redesign thread.
+- **Follow-up tasks:** Before claiming PR closure, run an explicit unresolved-thread sweep and require each thread to be either (1) code-fixed and resolved, or (2) intentionally left open with a posted rationale and a tracked follow-up plan.
+
+---
+
+- **Date:** 2026-04-09
+- **PR/Issue ID:** [#349](https://github.com/azaharizaman/atomy/pull/349)
+- **Summary of mistake:** Identity follow-up still had contract and scoping drift: adapter RBAC hydration did not consistently carry tenant context, Layer 2 auth phpdoc referenced a Layer 1 enum type, permission create path allowed blank names to reach persistence, and TOTP tests had non-deterministic verification checks that could mask period-handling bugs.
+- **Root cause:** I accepted earlier "working" behavior without re-checking contract boundaries and determinism assumptions against the latest reviewer concerns and current code paths.
+- **Action taken:** Threaded tenant context through `IdentityOperationsAdapter::mapUserToArray` into permission/role lookups, updated `AuthenticatorInterface` status typing to Layer-2-safe scalar docs, added explicit non-empty name validation in `EloquentPermissionRepository::create`, removed dead `findUserOrFail` from `EloquentUserRepository`, and hardened `TotpManagerTest` with fixed timestamps, mutated-invalid code assertions, and a boundary-sensitive custom-period check.
+- **Follow-up tasks:** For identity review closures, add a mandatory pass for (1) tenant context propagation in all adapter hydration paths, (2) Layer 2 contract isolation from Layer 1 types, and (3) deterministic time-based test vectors that can fail the wrong implementation.

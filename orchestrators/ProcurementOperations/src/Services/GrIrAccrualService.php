@@ -6,6 +6,7 @@ namespace Nexus\ProcurementOperations\Services;
 
 use Nexus\Common\ValueObjects\Money;
 use Nexus\ProcurementOperations\Contracts\AccrualManagementServiceInterface;
+use Nexus\ProcurementOperations\Contracts\GrIrAccrualRepositoryInterface;
 use Nexus\ProcurementOperations\Contracts\SecureIdGeneratorInterface;
 use Nexus\ProcurementOperations\DTOs\Financial\GrIrAccrualData;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -14,30 +15,12 @@ use Psr\Log\NullLogger;
 
 /**
  * Service for managing GR/IR (Goods Receipt / Invoice Receipt) accruals.
- *
- * This service handles:
- * - Creating accruals when goods are received before invoice
- * - Matching accruals with invoices (full and partial)
- * - Writing off aged or unmatchable accruals
- * - Generating accrual aging reports
- * - Suggesting matches for unmatched accruals
- *
- * GR/IR Accrual Process:
- * 1. Goods Receipt → Create GR/IR Accrual (DR GR/IR Clearing, CR Accrued Liability)
- * 2. Invoice Receipt → Match Accrual (DR Accrued Liability, CR Accounts Payable)
- * 3. Aged/Unmatched → Write-off (DR GR/IR Clearing, CR Expense/Income)
- *
- * @package Nexus\ProcurementOperations\Services
  */
 final readonly class GrIrAccrualService implements AccrualManagementServiceInterface
 {
-    /**
-     * Default aging threshold in days for flagging aged accruals.
-     */
-    private const DEFAULT_AGING_THRESHOLD_DAYS = 90;
-
     public function __construct(
         private EventDispatcherInterface $eventDispatcher,
+        private GrIrAccrualRepositoryInterface $repository,
         private LoggerInterface $logger = new NullLogger(),
         private ?SecureIdGeneratorInterface $idGenerator = null,
     ) {}
@@ -47,47 +30,64 @@ final readonly class GrIrAccrualService implements AccrualManagementServiceInter
      */
     public function createAccrual(
         string $tenantId,
-        string $goodsReceiptId,
-        string $goodsReceiptNumber,
         string $purchaseOrderId,
         string $purchaseOrderNumber,
+        string $goodsReceiptId,
+        string $goodsReceiptNumber,
+        \DateTimeImmutable $receiptDate,
         string $vendorId,
         string $vendorName,
         Money $accrualAmount,
-        string $productId,
-        string $productName,
-        float $quantity,
-        string $uom,
-        ?string $costCenterId = null,
-        ?string $projectId = null,
-        array $metadata = [],
+        int $lineCount,
+        string $createdBy,
     ): GrIrAccrualData {
         $accrual = GrIrAccrualData::fromGoodsReceipt(
             accrualId: $this->generateAccrualId(),
-            tenantId: $tenantId,
-            goodsReceiptId: $goodsReceiptId,
-            goodsReceiptNumber: $goodsReceiptNumber,
             purchaseOrderId: $purchaseOrderId,
-            purchaseOrderNumber: $purchaseOrderNumber,
+            purchaseOrderLineId: 'CONS-' . $purchaseOrderId,
             vendorId: $vendorId,
-            vendorName: $vendorName,
-            accrualAmount: $accrualAmount,
-            productId: $productId,
-            productName: $productName,
-            quantity: $quantity,
-            uom: $uom,
-            goodsReceiptDate: new \DateTimeImmutable(),
-            costCenterId: $costCenterId,
-            projectId: $projectId,
-            metadata: $metadata,
+            productId: 'N/A',
+            quantity: (float)$lineCount,
+            uom: 'LINE',
+            unitCost: $accrualAmount->divide($lineCount > 0 ? $lineCount : 1),
+            goodsReceiptId: $goodsReceiptId,
+            goodsReceiptDate: $receiptDate,
         );
+
+        // Add additional metadata provided by the caller
+        $accrual = new GrIrAccrualData(
+            accrualId: $accrual->accrualId,
+            purchaseOrderId: $accrual->purchaseOrderId,
+            purchaseOrderLineId: $accrual->purchaseOrderLineId,
+            vendorId: $accrual->vendorId,
+            productId: $accrual->productId,
+            quantity: $accrual->quantity,
+            uom: $accrual->uom,
+            unitCost: $accrual->unitCost,
+            totalAccrualAmount: $accrual->totalAccrualAmount,
+            accrualStatus: $accrual->accrualStatus,
+            goodsReceiptDate: $accrual->goodsReceiptDate,
+            goodsReceiptId: $accrual->goodsReceiptId,
+            periodId: $accrual->periodId,
+            glAccountId: $accrual->glAccountId,
+            metadata: array_merge($accrual->metadata, [
+                'tenant_id' => $tenantId,
+                'purchase_order_number' => $purchaseOrderNumber,
+                'goods_receipt_number' => $goodsReceiptNumber,
+                'vendor_name' => $vendorName,
+                'created_by' => $createdBy,
+                'created_at' => (new \DateTimeImmutable())->format('c'),
+            ]),
+        );
+
+        $this->repository->save($accrual);
 
         $this->logger->info('GR/IR accrual created', [
             'accrual_id' => $accrual->accrualId,
+            'tenant_id' => $tenantId,
             'goods_receipt_id' => $goodsReceiptId,
             'purchase_order_id' => $purchaseOrderId,
             'amount' => $accrualAmount->getAmount(),
-            'vendor_id' => $vendorId,
         ]);
 
         return $accrual;
@@ -97,33 +97,39 @@ final readonly class GrIrAccrualService implements AccrualManagementServiceInter
      * {@inheritDoc}
      */
     public function matchWithInvoice(
-        GrIrAccrualData $accrual,
+        string $accrualId,
+        string $tenantId,
         string $invoiceId,
         string $invoiceNumber,
         Money $invoiceAmount,
         \DateTimeImmutable $invoiceDate,
-        ?string $matchedBy = null,
+        string $matchedBy,
     ): GrIrAccrualData {
-        if ($accrual->status !== 'OPEN') {
+        $accrual = $this->getAccrual($accrualId, $tenantId);
+        if ($accrual === null) {
+            throw new \InvalidArgumentException("Accrual not found for tenant: {$accrualId}");
+        }
+
+        if (!$accrual->isOpen()) {
             throw new \InvalidArgumentException(
-                "Cannot match accrual {$accrual->accrualId}: status is {$accrual->status}"
+                "Cannot match accrual {$accrual->accrualId}: status is {$accrual->accrualStatus}"
             );
         }
 
         $matchedAccrual = $accrual->withInvoiceMatch(
             invoiceId: $invoiceId,
-            invoiceNumber: $invoiceNumber,
-            invoiceAmount: $invoiceAmount,
             invoiceDate: $invoiceDate,
+            invoiceAmount: $invoiceAmount,
+            matchedBy: $matchedBy,
         );
+
+        $this->repository->save($matchedAccrual);
 
         $this->logger->info('GR/IR accrual matched with invoice', [
             'accrual_id' => $accrual->accrualId,
+            'tenant_id' => $tenantId,
             'invoice_id' => $invoiceId,
             'invoice_number' => $invoiceNumber,
-            'invoice_amount' => $invoiceAmount->getAmount(),
-            'accrual_amount' => $accrual->accrualAmount->getAmount(),
-            'variance' => $matchedAccrual->varianceAmount?->getAmount(),
             'matched_by' => $matchedBy,
         ]);
 
@@ -134,126 +140,90 @@ final readonly class GrIrAccrualService implements AccrualManagementServiceInter
      * {@inheritDoc}
      */
     public function partialMatchWithInvoice(
-        GrIrAccrualData $accrual,
+        string $accrualId,
+        string $tenantId,
         string $invoiceId,
         string $invoiceNumber,
         Money $matchedAmount,
-        \DateTimeImmutable $invoiceDate,
-        ?string $matchedBy = null,
-    ): array {
-        if ($accrual->status !== 'OPEN') {
-            throw new \InvalidArgumentException(
-                "Cannot partial match accrual {$accrual->accrualId}: status is {$accrual->status}"
-            );
+        Money $varianceAmount,
+        string $varianceReason,
+        string $matchedBy,
+    ): GrIrAccrualData {
+        $accrual = $this->getAccrual($accrualId, $tenantId);
+        if ($accrual === null) {
+            throw new \InvalidArgumentException("Accrual not found for tenant: {$accrualId}");
         }
 
-        if ($matchedAmount->getAmount() >= $accrual->accrualAmount->getAmount()) {
-            throw new \InvalidArgumentException(
-                'Matched amount must be less than accrual amount for partial match'
-            );
-        }
-
-        // Create matched portion
-        $matchedPortion = GrIrAccrualData::fromGoodsReceipt(
-            accrualId: $this->generateAccrualId(),
-            tenantId: $accrual->tenantId,
-            goodsReceiptId: $accrual->goodsReceiptId,
-            goodsReceiptNumber: $accrual->goodsReceiptNumber,
-            purchaseOrderId: $accrual->purchaseOrderId,
-            purchaseOrderNumber: $accrual->purchaseOrderNumber,
-            vendorId: $accrual->vendorId,
-            vendorName: $accrual->vendorName,
-            accrualAmount: $matchedAmount,
-            productId: $accrual->productId,
-            productName: $accrual->productName,
-            quantity: $accrual->quantity * ($matchedAmount->getAmount() / $accrual->accrualAmount->getAmount()),
-            uom: $accrual->uom,
-            goodsReceiptDate: $accrual->goodsReceiptDate,
-            costCenterId: $accrual->costCenterId,
-            projectId: $accrual->projectId,
-            metadata: array_merge($accrual->metadata, [
-                'partial_match_from' => $accrual->accrualId,
-                'partial_match_type' => 'matched',
-            ]),
-        )->withInvoiceMatch(
+        $matchedAccrual = $accrual->withInvoiceMatch(
             invoiceId: $invoiceId,
-            invoiceNumber: $invoiceNumber,
+            invoiceDate: new \DateTimeImmutable(),
             invoiceAmount: $matchedAmount,
-            invoiceDate: $invoiceDate,
+            matchedBy: $matchedBy,
+            varianceAmount: $varianceAmount,
+            varianceReason: $varianceReason,
         );
 
-        // Create remaining portion
-        $remainingAmount = Money::of(
-            $accrual->accrualAmount->getAmount() - $matchedAmount->getAmount(),
-            $accrual->accrualAmount->getCurrency()
+        // Update status to partially_matched explicitly if needed, although withInvoiceMatch sets 'matched'
+        // GrIrAccrualData constructor is used in withInvoiceMatch, so let's adjust it if it should be partial
+        $partialAccrual = new GrIrAccrualData(
+            accrualId: $matchedAccrual->accrualId,
+            purchaseOrderId: $matchedAccrual->purchaseOrderId,
+            purchaseOrderLineId: $matchedAccrual->purchaseOrderLineId,
+            vendorId: $matchedAccrual->vendorId,
+            productId: $matchedAccrual->productId,
+            quantity: $matchedAccrual->quantity,
+            uom: $matchedAccrual->uom,
+            unitCost: $matchedAccrual->unitCost,
+            totalAccrualAmount: $matchedAccrual->totalAccrualAmount,
+            accrualStatus: 'partially_matched',
+            goodsReceiptDate: $matchedAccrual->goodsReceiptDate,
+            goodsReceiptId: $matchedAccrual->goodsReceiptId,
+            invoiceId: $matchedAccrual->invoiceId,
+            invoiceDate: $matchedAccrual->invoiceDate,
+            invoiceAmount: $matchedAccrual->invoiceAmount,
+            varianceAmount: $matchedAccrual->varianceAmount,
+            varianceReason: $matchedAccrual->varianceReason,
+            matchedAt: $matchedAccrual->matchedAt,
+            matchedBy: $matchedAccrual->matchedBy,
+            periodId: $matchedAccrual->periodId,
+            glAccountId: $matchedAccrual->glAccountId,
+            writeOffAccountId: $matchedAccrual->writeOffAccountId,
+            metadata: $matchedAccrual->metadata,
         );
 
-        $remainingPortion = GrIrAccrualData::fromGoodsReceipt(
-            accrualId: $this->generateAccrualId(),
-            tenantId: $accrual->tenantId,
-            goodsReceiptId: $accrual->goodsReceiptId,
-            goodsReceiptNumber: $accrual->goodsReceiptNumber,
-            purchaseOrderId: $accrual->purchaseOrderId,
-            purchaseOrderNumber: $accrual->purchaseOrderNumber,
-            vendorId: $accrual->vendorId,
-            vendorName: $accrual->vendorName,
-            accrualAmount: $remainingAmount,
-            productId: $accrual->productId,
-            productName: $accrual->productName,
-            quantity: $accrual->quantity * ($remainingAmount->getAmount() / $accrual->accrualAmount->getAmount()),
-            uom: $accrual->uom,
-            goodsReceiptDate: $accrual->goodsReceiptDate,
-            costCenterId: $accrual->costCenterId,
-            projectId: $accrual->projectId,
-            metadata: array_merge($accrual->metadata, [
-                'partial_match_from' => $accrual->accrualId,
-                'partial_match_type' => 'remaining',
-            ]),
-        );
+        $this->repository->save($partialAccrual);
 
-        $this->logger->info('GR/IR accrual partially matched', [
-            'original_accrual_id' => $accrual->accrualId,
-            'matched_accrual_id' => $matchedPortion->accrualId,
-            'remaining_accrual_id' => $remainingPortion->accrualId,
-            'matched_amount' => $matchedAmount->getAmount(),
-            'remaining_amount' => $remainingAmount->getAmount(),
-            'matched_by' => $matchedBy,
-        ]);
-
-        return [
-            'matched' => $matchedPortion,
-            'remaining' => $remainingPortion,
-        ];
+        return $partialAccrual;
     }
 
     /**
      * {@inheritDoc}
      */
     public function writeOffAccrual(
-        GrIrAccrualData $accrual,
+        string $accrualId,
+        string $tenantId,
         string $writeOffReason,
         string $writeOffBy,
         ?string $writeOffAccountId = null,
-        ?string $approvalReference = null,
     ): GrIrAccrualData {
-        if ($accrual->status !== 'OPEN') {
-            throw new \InvalidArgumentException(
-                "Cannot write off accrual {$accrual->accrualId}: status is {$accrual->status}"
-            );
+        $accrual = $this->getAccrual($accrualId, $tenantId);
+        if ($accrual === null) {
+            throw new \InvalidArgumentException("Accrual not found for tenant: {$accrualId}");
         }
 
         $writtenOff = $accrual->withWriteOff(
-            writeOffReason: $writeOffReason,
-            writeOffBy: $writeOffBy,
+            reason: $writeOffReason,
+            writtenOffBy: $writeOffBy,
             writeOffAccountId: $writeOffAccountId,
         );
 
+        $this->repository->save($writtenOff);
+
         $this->logger->warning('GR/IR accrual written off', [
             'accrual_id' => $accrual->accrualId,
-            'amount' => $accrual->accrualAmount->getAmount(),
+            'tenant_id' => $tenantId,
             'reason' => $writeOffReason,
             'written_off_by' => $writeOffBy,
-            'approval_reference' => $approvalReference,
         ]);
 
         return $writtenOff;
@@ -262,249 +232,149 @@ final readonly class GrIrAccrualService implements AccrualManagementServiceInter
     /**
      * {@inheritDoc}
      */
-    public function getUnmatchedAccruals(
-        string $tenantId,
-        ?string $vendorId = null,
-        ?string $purchaseOrderId = null,
-        ?\DateTimeImmutable $fromDate = null,
-        ?\DateTimeImmutable $toDate = null,
-    ): array {
-        // This would typically query a repository
-        // Returning empty array - actual implementation would filter stored accruals
-        $this->logger->debug('Querying unmatched accruals', [
-            'tenant_id' => $tenantId,
-            'vendor_id' => $vendorId,
-            'purchase_order_id' => $purchaseOrderId,
-        ]);
-
-        return [];
+    public function getUnmatchedAccruals(string $tenantId, ?\DateTimeImmutable $asOfDate = null): array
+    {
+        return $this->repository->findUnmatched($tenantId, $asOfDate);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getAgedAccruals(
-        string $tenantId,
-        int $agingThresholdDays = self::DEFAULT_AGING_THRESHOLD_DAYS,
-        ?string $vendorId = null,
-    ): array {
-        // This would typically query a repository for accruals older than threshold
-        $this->logger->debug('Querying aged accruals', [
-            'tenant_id' => $tenantId,
-            'threshold_days' => $agingThresholdDays,
-            'vendor_id' => $vendorId,
-        ]);
-
-        return [];
+    public function getAgedAccruals(string $tenantId, int $agingThresholdDays = 30, ?\DateTimeImmutable $asOfDate = null): array
+    {
+        return $this->repository->findAged($tenantId, $agingThresholdDays, $asOfDate);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function generateAgingReport(
-        string $tenantId,
-        \DateTimeImmutable $asOfDate,
-        ?string $vendorId = null,
-        array $agingBuckets = [30, 60, 90, 120],
-    ): array {
-        // Initialize buckets
-        $bucketResults = [];
-        $previousBoundary = 0;
+    public function getAccrualsByVendor(string $tenantId, string $vendorId, bool $unmatchedOnly = true): array
+    {
+        return $this->repository->findByVendor($tenantId, $vendorId, $unmatchedOnly);
+    }
 
-        foreach ($agingBuckets as $days) {
-            $bucketKey = "{$previousBoundary}-{$days}";
-            $bucketResults[$bucketKey] = [
-                'label' => "{$previousBoundary}-{$days} days",
-                'count' => 0,
-                'total_amount' => Money::of(0, 'USD'),
-                'accruals' => [],
-            ];
-            $previousBoundary = $days;
-        }
+    /**
+     * {@inheritDoc}
+     */
+    public function getAccrualsByPurchaseOrder(string $tenantId, string $purchaseOrderId): array
+    {
+        return $this->repository->findByPurchaseOrder($tenantId, $purchaseOrderId);
+    }
 
-        // Add overflow bucket
-        $bucketResults["{$previousBoundary}+"] = [
-            'label' => "Over {$previousBoundary} days",
-            'count' => 0,
-            'total_amount' => Money::of(0, 'USD'),
-            'accruals' => [],
-        ];
+    /**
+     * {@inheritDoc}
+     */
+    public function getTotalAccrualBalance(string $tenantId, ?\DateTimeImmutable $asOfDate = null): Money
+    {
+        return $this->repository->getTotalBalance($tenantId, $asOfDate);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function generateAgingReport(string $tenantId, \DateTimeImmutable $asOfDate, array $agingBuckets = [30, 60, 90]): array
+    {
+        $accruals = $this->repository->findUnmatched($tenantId, $asOfDate);
+        $totalBalance = $this->repository->getTotalBalance($tenantId, $asOfDate);
+        
+        // This is a stub for the actual report generation logic
         return [
             'as_of_date' => $asOfDate->format('Y-m-d'),
-            'tenant_id' => $tenantId,
-            'vendor_id' => $vendorId,
-            'total_open_accruals' => 0,
-            'total_open_amount' => Money::of(0, 'USD'),
-            'buckets' => $bucketResults,
-            'summary' => [
-                'current' => Money::of(0, 'USD'),
-                'overdue' => Money::of(0, 'USD'),
-                'critical' => Money::of(0, 'USD'),
-            ],
+            'total_accrual_balance' => $totalBalance,
+            'aging_buckets' => $agingBuckets,
+            'unmatched_count' => count($accruals),
         ];
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritDoc}Suggest matches for an accrual.
      */
-    public function suggestMatchingInvoices(
-        GrIrAccrualData $accrual,
-        float $amountTolerancePercentage = 5.0,
-        int $dateRangeDays = 30,
-    ): array {
-        // This would typically query vendor invoices that could match this accrual
-        // Based on PO reference, amount within tolerance, and date range
-        
-        $this->logger->debug('Suggesting matching invoices for accrual', [
-            'accrual_id' => $accrual->accrualId,
-            'vendor_id' => $accrual->vendorId,
-            'po_number' => $accrual->purchaseOrderNumber,
-            'accrual_amount' => $accrual->accrualAmount->getAmount(),
-            'amount_tolerance' => $amountTolerancePercentage,
-            'date_range_days' => $dateRangeDays,
-        ]);
+    public function suggestMatchingInvoices(string $accrualId, float $tolerancePercent = 5.0): array
+    {
+        return $this->repository->suggestMatches($accrualId, $tolerancePercent);
+    }
 
+    /**
+     * {@inheritDoc}Automatically match accruals.
+     */
+    public function autoMatchAccruals(string $tenantId, float $tolerancePercent = 0.01, string $matchedBy = 'SYSTEM'): array
+    {
+        // This would call suggestMatchingInvoices for all open accruals and apply matches
         return [
-            'accrual_id' => $accrual->accrualId,
-            'suggested_invoices' => [],
-            'match_criteria' => [
-                'vendor_id' => $accrual->vendorId,
-                'purchase_order' => $accrual->purchaseOrderNumber,
-                'amount_range' => [
-                    'min' => $accrual->accrualAmount->getAmount() * (1 - $amountTolerancePercentage / 100),
-                    'max' => $accrual->accrualAmount->getAmount() * (1 + $amountTolerancePercentage / 100),
-                ],
-                'date_range' => [
-                    'from' => $accrual->goodsReceiptDate->modify("-{$dateRangeDays} days")->format('Y-m-d'),
-                    'to' => (new \DateTimeImmutable())->modify("+{$dateRangeDays} days")->format('Y-m-d'),
-                ],
-            ],
+            'matched_count' => 0,
+            'total_matched_amount' => Money::of(0, 'USD'),
+            'matches' => []
         ];
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritDoc}Reverse an accrual.
      */
-    public function autoMatchAccruals(
-        string $tenantId,
-        ?string $vendorId = null,
-        float $amountTolerancePercentage = 0.0,
-        bool $exactMatchOnly = true,
-    ): array {
-        $matchedCount = 0;
-        $matchedAmount = Money::of(0, 'USD');
-        $unmatchedCount = 0;
-        $errors = [];
-
-        $this->logger->info('Auto-matching accruals', [
-            'tenant_id' => $tenantId,
-            'vendor_id' => $vendorId,
-            'exact_match_only' => $exactMatchOnly,
-            'tolerance' => $amountTolerancePercentage,
-        ]);
-
-        // This would iterate through unmatched accruals and invoices
-        // performing automatic matching based on criteria
-
-        return [
-            'matched_count' => $matchedCount,
-            'matched_amount' => $matchedAmount,
-            'unmatched_count' => $unmatchedCount,
-            'errors' => $errors,
-            'match_criteria' => [
-                'exact_match_only' => $exactMatchOnly,
-                'amount_tolerance_percentage' => $amountTolerancePercentage,
-            ],
-        ];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function reverseAccrual(
-        GrIrAccrualData $accrual,
-        string $reversalReason,
-        string $reversedBy,
-    ): GrIrAccrualData {
-        if ($accrual->status !== 'OPEN') {
-            throw new \InvalidArgumentException(
-                "Cannot reverse accrual {$accrual->accrualId}: status is {$accrual->status}"
-            );
+    public function reverseAccrual(string $accrualId, string $tenantId, string $reversalReason, string $reversedBy): GrIrAccrualData
+    {
+        $accrual = $this->getAccrual($accrualId, $tenantId);
+        if ($accrual === null) {
+            throw new \InvalidArgumentException("Accrual not found for tenant: {$accrualId}");
         }
 
-        // Create reversal entry
-        $reversedAccrual = GrIrAccrualData::fromGoodsReceipt(
-            accrualId: $this->generateAccrualId(),
-            tenantId: $accrual->tenantId,
-            goodsReceiptId: $accrual->goodsReceiptId,
-            goodsReceiptNumber: $accrual->goodsReceiptNumber . '-REV',
+        $reversedAccrual = new GrIrAccrualData(
+            accrualId: $accrual->accrualId,
             purchaseOrderId: $accrual->purchaseOrderId,
-            purchaseOrderNumber: $accrual->purchaseOrderNumber,
+            purchaseOrderLineId: $accrual->purchaseOrderLineId,
             vendorId: $accrual->vendorId,
-            vendorName: $accrual->vendorName,
-            accrualAmount: Money::of(
-                -$accrual->accrualAmount->getAmount(),
-                $accrual->accrualAmount->getCurrency()
-            ),
             productId: $accrual->productId,
-            productName: $accrual->productName,
-            quantity: -$accrual->quantity,
+            quantity: $accrual->quantity,
             uom: $accrual->uom,
-            goodsReceiptDate: new \DateTimeImmutable(),
-            costCenterId: $accrual->costCenterId,
-            projectId: $accrual->projectId,
-            metadata: [
-                'reversal_of' => $accrual->accrualId,
+            unitCost: $accrual->unitCost,
+            totalAccrualAmount: $accrual->totalAccrualAmount,
+            accrualStatus: 'reversed',
+            goodsReceiptDate: $accrual->goodsReceiptDate,
+            goodsReceiptId: $accrual->goodsReceiptId,
+            invoiceId: $accrual->invoiceId,
+            invoiceDate: $accrual->invoiceDate,
+            invoiceAmount: $accrual->invoiceAmount,
+            varianceAmount: $accrual->varianceAmount,
+            varianceReason: $reversalReason,
+            matchedAt: new \DateTimeImmutable(),
+            matchedBy: $reversedBy,
+            periodId: $accrual->periodId,
+            glAccountId: $accrual->glAccountId,
+            writeOffAccountId: $accrual->writeOffAccountId,
+            metadata: array_merge($accrual->metadata, [
                 'reversal_reason' => $reversalReason,
                 'reversed_by' => $reversedBy,
-            ],
+                'reversed_at' => (new \DateTimeImmutable())->format('c'),
+            ]),
         );
 
-        $this->logger->info('GR/IR accrual reversed', [
-            'original_accrual_id' => $accrual->accrualId,
-            'reversal_accrual_id' => $reversedAccrual->accrualId,
-            'amount' => $accrual->accrualAmount->getAmount(),
-            'reason' => $reversalReason,
-            'reversed_by' => $reversedBy,
-        ]);
+        $this->repository->save($reversedAccrual);
 
         return $reversedAccrual;
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritDoc}Get a single accrual.
      */
-    public function calculatePeriodAccrualEntries(
-        string $tenantId,
-        \DateTimeImmutable $periodEndDate,
-        ?string $costCenterId = null,
-    ): array {
-        // This would calculate journal entries needed for period-end accruals
-        $this->logger->info('Calculating period accrual entries', [
-            'tenant_id' => $tenantId,
-            'period_end' => $periodEndDate->format('Y-m-d'),
-            'cost_center_id' => $costCenterId,
-        ]);
-
-        return [
-            'period_end_date' => $periodEndDate->format('Y-m-d'),
-            'journal_entries' => [],
-            'total_accrual_amount' => Money::of(0, 'USD'),
-            'total_reversal_amount' => Money::of(0, 'USD'),
-            'net_impact' => Money::of(0, 'USD'),
-        ];
+    public function getAccrual(string $accrualId, string $tenantId): ?GrIrAccrualData
+    {
+        return $this->repository->getAccrual($accrualId, $tenantId);
     }
 
     /**
-     * Generate unique accrual ID.
+     * {@inheritDoc}Calculate entries.
      */
-    private function generateAccrualId(): string
+    public function calculatePeriodAccrualEntries(string $tenantId, \DateTimeImmutable $periodEndDate): array
     {
-        if ($this->idGenerator !== null) {
-            return $this->idGenerator->generateId('accr-', 12);
-        }
+        return [
+            'period_end_date' => $periodEndDate->format('Y-m-d'),
+            'accrual_entries' => [],
+            'total_debit' => Money::of(0, 'USD'),
+            'total_credit' => Money::of(0, 'USD')
+        ];
+    }
 
-        return 'accr-' . bin2hex(random_bytes(12));
+    public function generateAccrualId(): string
+    {
+        return $this->idGenerator?->generateId('accr-', 12) ?? ('accr-' . bin2hex(random_bytes(12)));
     }
 }
