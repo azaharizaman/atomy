@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Nexus\ProcurementOperations\Tests\Unit\Coordinators;
 
 use Nexus\ProcurementOperations\Coordinators\GoodsReceiptCoordinator;
+use Nexus\ProcurementOperations\DataProviders\GoodsReceiptContextProvider;
 use Nexus\ProcurementOperations\DTOs\RecordGoodsReceiptRequest;
+use Nexus\ProcurementOperations\Rules\GoodsReceipt\GoodsReceiptRuleRegistry;
+use Nexus\ProcurementOperations\Services\AccrualCalculationService;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -30,61 +33,58 @@ final class GoodsReceiptCoordinatorTest extends TestCase
             ]],
         );
 
+        $purchaseOrderQueryStub = new class {
+            public ?array $lastFindArgs = null;
+
+            public function findById(string $tenantId, string $id): ?object {
+                $this->lastFindArgs = [$tenantId, $id];
+                return null;
+            }
+        };
+
+        $goodsReceiptQueryStub = new class {
+            public function findById(string $id): ?object {
+                return null;
+            }
+        };
+
+        $contextProvider = new GoodsReceiptContextProvider(
+            goodsReceiptQuery: $goodsReceiptQueryStub,
+            purchaseOrderQuery: $purchaseOrderQueryStub,
+        );
+
+        $ruleRegistry = new GoodsReceiptRuleRegistry();
+
+        $accrualServiceStub = new class {
+            public function postGoodsReceiptAccrual(
+                string $tenantId,
+                string $goodsReceiptId,
+                string $purchaseOrderId,
+                array $lineItems,
+                string $receivedBy
+            ): string {
+                return 'accrual-1';
+            }
+        };
+
+        $goodsReceiptPersistStub = new class {
+            public bool $createCalled = false;
+
+            public function create(array $data): string {
+                $this->createCalled = true;
+                return 'gr-1';
+            }
+
+            public function reverse(string $goodsReceiptId, string $reversedBy, string $reason): void {
+            }
+        };
+
         $coordinator = new GoodsReceiptCoordinator(
-            contextProvider: new class () {
-                public function getPreReceiptContext(string $tenantId, string $purchaseOrderId, string $warehouseId, array $lineItems): never
-                {
-                    throw new \RuntimeException('Should not fetch pre-receipt context when PO is missing.');
-                }
-
-                public function getOutstandingQuantities(string $tenantId, string $purchaseOrderId): array
-                {
-                    return [];
-                }
-
-                public function getContext(string $tenantId, string $goodsReceiptId): never
-                {
-                    throw new \RuntimeException('Not used in this test.');
-                }
-            },
-            ruleRegistry: new class () {
-                public function validateOrFail(object $context): void
-                {
-                }
-            },
-            accrualService: new class () {
-                public function postGoodsReceiptAccrual(
-                    string $tenantId,
-                    string $goodsReceiptId,
-                    string $purchaseOrderId,
-                    array $lineItems,
-                    string $receivedBy
-                ): string {
-                    return 'accrual-1';
-                }
-            },
-            purchaseOrderQuery: new class () {
-                public ?array $lastFindArgs = null;
-
-                public function findById(string $tenantId, string $id): ?object
-                {
-                    $this->lastFindArgs = [$tenantId, $id];
-                    return null;
-                }
-            },
-            goodsReceiptPersist: new class () {
-                public bool $createCalled = false;
-
-                public function create(array $data): string
-                {
-                    $this->createCalled = true;
-                    return 'gr-1';
-                }
-
-                public function reverse(string $goodsReceiptId, string $reversedBy, string $reason): void
-                {
-                }
-            },
+            contextProvider: $contextProvider,
+            ruleRegistry: $ruleRegistry,
+            accrualService: $accrualServiceStub,
+            purchaseOrderQuery: $purchaseOrderQueryStub,
+            goodsReceiptPersist: $goodsReceiptPersistStub,
             logger: new NullLogger(),
         );
 
@@ -92,5 +92,6 @@ final class GoodsReceiptCoordinatorTest extends TestCase
 
         $this->assertFalse($result->success);
         $this->assertSame('Purchase order not found: po-123', $result->message);
+        $this->assertSame(['tenant-1', 'po-123'], $purchaseOrderQueryStub->lastFindArgs);
     }
 }
