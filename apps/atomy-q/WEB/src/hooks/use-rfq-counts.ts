@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface RfqNavCounts {
   draft: number;
@@ -60,7 +61,7 @@ export function useRfqNavCounts() {
   return useQuery({
     queryKey: ['rfqs', 'counts'],
     queryFn: async (): Promise<RfqNavCounts> => {
-      const { data } = await api.get<{ data?: Partial<RfqNavCounts> }>('/rfqs/counts');
+      const data = await fetchLiveOrFail<{ data?: Partial<RfqNavCounts> }>('/rfqs/counts');
       const d = data?.data;
       const published = parseCount(d?.published) ?? 0;
       const cancelled = parseCount(d?.cancelled) ?? 0;

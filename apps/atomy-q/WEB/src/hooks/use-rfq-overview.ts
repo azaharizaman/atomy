@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import type { RfqStatus } from '@/hooks/use-rfqs';
 
 export interface RfqOverviewRfq {
@@ -245,15 +246,12 @@ export function useRfqOverview(rfqId: string) {
       }
 
       const [overviewRes, activityRes] = await Promise.all([
-        api.get(`/rfqs/${encodeURIComponent(rfqId)}/overview`),
-        api
-          .get(`/rfqs/${encodeURIComponent(rfqId)}/activity`, { params: { limit: 50 } })
-          .catch(() => null),
+        fetchLiveOrFail<unknown>(`/rfqs/${encodeURIComponent(rfqId)}/overview`),
+        fetchLiveOrFail<unknown[]>(`/rfqs/${encodeURIComponent(rfqId)}/activity?limit=50`).catch(() => undefined),
       ]);
-      const base = normalizeOverviewPayload(overviewRes.data);
-      if (activityRes?.data && typeof activityRes.data === 'object') {
-        const body = activityRes.data as Record<string, unknown>;
-        const fromEndpoint = normalizeActivityList(body.data);
+      const base = normalizeOverviewPayload(overviewRes);
+      if (activityRes && Array.isArray(activityRes)) {
+        const fromEndpoint = normalizeActivityList(activityRes);
         if (fromEndpoint.length > 0) {
           return { ...base, activity: fromEndpoint };
         }

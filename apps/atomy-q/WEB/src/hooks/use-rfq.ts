@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { type RfqStatus, isValidRfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
 
 export interface RfqDetail {
@@ -84,7 +85,7 @@ export function useRfq(rfqId: string) {
         return normalizeRfq(detail);
       }
 
-      const { data } = await api.get(`/rfqs/${encodeURIComponent(rfqId)}`);
+      const data = await fetchLiveOrFail<unknown>(`/rfqs/${encodeURIComponent(rfqId)}`);
       return normalizeRfq(data);
     },
   });
