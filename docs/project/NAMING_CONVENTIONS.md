@@ -109,7 +109,7 @@ This document outlines the naming conventions for all aspects of the codebase, e
 *   **Traits:** PascalCase, suffix `Trait`, e.g., `TenantAwareTrait`.
 *   **File Names:** Use PascalCase for files named after a single primary class/interface (e.g., `GrIrAccrualService.php`, `RuleContextInterface.php`). Use snake_case for directories (e.g., `procurement-operations/`).
 *   **Namespaces:** PascalCase. Follow the pattern `Nexus\PackageName\SubNamespace` (e.g., `Nexus\FinanceOperations\Coordinators`).
-*   **Test files and methods:** Test files must end in `Test.php` (e.g., `StockManagerTest.php`). Test classes must end in `Test`. Use descriptive method names, e.g., `it_should_receive_stock_correctly()` or `testReceiveStockWhenValid()`.
+*   **Test files and methods:** Test files must end in `Test.php` (e.g., `StockManagerTest.php`). Test classes must end in `Test`. Test method names must use snake_case with `it_` prefix (e.g., `it_calculates_value_scores_correctly()`, `it_returns_empty_array_when_vendors_list_is_empty()`). Avoid PascalCase or camelCase prefixes like `testItCalculateValueScoresCorrectly` or `TestItCalculateValueScoresCorrectly`.
 *   **Abstract/Base classes:** Prefix with `Abstract` or `Base` (e.g., `AbstractFinanceWorkflow`, `BaseRepository`).
 *   **Configuration files:** snake_case for filenames (e.g., `payment_config.php`, `database.php`).
 *   **Properties:** camelCase.
