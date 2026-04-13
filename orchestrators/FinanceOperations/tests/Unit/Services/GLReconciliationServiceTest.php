@@ -336,6 +336,9 @@ final class GLReconciliationServiceTest extends TestCase
         $this->assertInstanceOf(GLReconciliationResult::class, $result);
         $this->assertFalse($result->success, 'Auto-adjustment should return a pending proposal');
         $this->assertEquals('500.00', $result->variance, 'Variance remains until proposal is approved and posted');
+        $this->assertNotEmpty($result->discrepancies);
+        $this->assertArrayHasKey('type', $result->discrepancies[0]);
+        $this->assertSame('adjustment_proposal', $result->discrepancies[0]['type']);
     }
 
     /**
@@ -373,6 +376,7 @@ final class GLReconciliationServiceTest extends TestCase
         $this->assertFalse($result->success);
         $this->assertEquals('-500.00', $result->variance);
         $this->assertNotEmpty($result->discrepancies);
+        $this->assertArrayHasKey('type', $result->discrepancies[0]);
         $this->assertSame('adjustment_proposal', $result->discrepancies[0]['type']);
     }
 

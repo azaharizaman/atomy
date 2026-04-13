@@ -8,6 +8,7 @@ use Nexus\FinanceOperations\Contracts\WorkflowStepInterface;
 use Nexus\FinanceOperations\DTOs\WorkflowResult;
 use Nexus\FinanceOperations\DTOs\WorkflowStepContext;
 use Nexus\FinanceOperations\DTOs\WorkflowStepResult;
+use Nexus\FinanceOperations\Exceptions\CoordinationException;
 use Nexus\FinanceOperations\Workflows\AbstractFinanceWorkflow;
 use PHPUnit\Framework\TestCase;
 
@@ -40,8 +41,14 @@ final class AbstractFinanceWorkflowTest extends TestCase
 
         self::assertTrue($result->success);
         self::assertArrayHasKey('step_results', $result->data);
+        
+        // Guard nested keys access
+        self::assertArrayHasKey('gather', $result->data['step_results']);
         self::assertSame(2, $result->data['step_results']['gather']['records']);
+        
+        self::assertArrayHasKey('post', $result->data['step_results']);
         self::assertSame(3, $result->data['step_results']['post']['journal_entries']);
+        
         self::assertNotEmpty($result->data['execution_log']);
         self::assertStringStartsWith('WF-', $result->workflowId);
         self::assertFalse($firstStep->compensated);
@@ -61,9 +68,17 @@ final class AbstractFinanceWorkflowTest extends TestCase
         $result = $workflow->execute(['tenant_id' => 'tenant-1']);
 
         self::assertFalse($result->success);
+        
+        // Guard errors array access
+        self::assertArrayHasKey('failed_step', $result->errors);
         self::assertSame('second', $result->errors['failed_step']);
+        
+        self::assertArrayHasKey('error', $result->errors);
         self::assertSame('validation failed', $result->errors['error']);
+        
+        self::assertArrayHasKey('executed_steps', $result->errors);
         self::assertSame(['first'], $result->errors['executed_steps']);
+        
         self::assertTrue($firstStep->compensated);
         self::assertFalse($secondStep->compensated);
     }
@@ -83,7 +98,10 @@ final class AbstractFinanceWorkflowTest extends TestCase
         self::assertFalse($result->success);
         self::assertArrayHasKey('exception', $result->errors);
         self::assertStringContainsString('step exception', $result->errors['exception']);
+        
+        self::assertArrayHasKey('executed_steps', $result->errors);
         self::assertSame(['first'], $result->errors['executed_steps']);
+        
         self::assertTrue($firstStep->compensated);
     }
 
@@ -176,7 +194,7 @@ final class TestWorkflowStep implements WorkflowStepInterface
     public function execute(WorkflowStepContext $context): WorkflowStepResult
     {
         if ($this->throwsOnExecute) {
-            throw new \RuntimeException('step exception');
+            throw CoordinationException::workflowFailed('TestCoordinator', $context->workflowId, $this->name, 'step exception');
         }
 
         if ($this->failWith !== null) {

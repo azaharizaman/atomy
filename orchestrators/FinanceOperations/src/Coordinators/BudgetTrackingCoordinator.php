@@ -94,11 +94,7 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
 
         try {
             // Validate budget availability using rule
-            $rawCostCenterId = $request->options['cost_center_id'] ?? null;
-            $costCenterId = null;
-            if (is_string($rawCostCenterId) && trim($rawCostCenterId) !== '') {
-                $costCenterId = (string) trim($rawCostCenterId);
-            }
+            $costCenterId = $this->normalizeCostCenterId($request->options['cost_center_id'] ?? null);
 
             $ruleResult = $this->budgetAvailableRule->check(
                 RuleContext::forBudgetAvailability(
@@ -244,11 +240,7 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
         ]);
 
         try {
-            $rawCostCenterId = $request->options['cost_center_id'] ?? null;
-            $costCenterId = null;
-            if (is_string($rawCostCenterId) && trim($rawCostCenterId) !== '') {
-                $costCenterId = (string) trim($rawCostCenterId);
-            }
+            $costCenterId = $this->normalizeCostCenterId($request->options['cost_center_id'] ?? null);
 
             // Convert to service DTO
             $serviceRequest = new \Nexus\FinanceOperations\DTOs\BudgetTracking\BudgetThresholdRequest(
@@ -302,5 +294,16 @@ final readonly class BudgetTrackingCoordinator implements BudgetTrackingCoordina
                 $e
             );
         }
+    }
+
+    /**
+     * Normalize cost center ID.
+     */
+    private function normalizeCostCenterId(mixed $rawId): ?string
+    {
+        if (is_string($rawId) && trim($rawId) !== '') {
+            return trim($rawId);
+        }
+        return null;
     }
 }

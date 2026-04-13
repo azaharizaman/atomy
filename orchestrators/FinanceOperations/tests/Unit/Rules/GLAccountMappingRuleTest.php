@@ -72,6 +72,7 @@ final class GLAccountMappingRuleTest extends TestCase
         );
 
         self::assertFalse($result->passed);
+        self::assertNotEmpty($result->violations);
         self::assertSame('missing_mapping', $result->violations[0]['type']);
     }
 
@@ -89,6 +90,7 @@ final class GLAccountMappingRuleTest extends TestCase
         );
 
         self::assertFalse($result->passed);
+        self::assertNotEmpty($result->violations);
         self::assertSame('invalid_account', $result->violations[0]['type']);
     }
 
@@ -106,6 +108,7 @@ final class GLAccountMappingRuleTest extends TestCase
         );
 
         self::assertFalse($result->passed);
+        self::assertNotEmpty($result->violations);
         self::assertSame('inactive_account', $result->violations[0]['type']);
     }
 

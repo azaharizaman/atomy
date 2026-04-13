@@ -56,7 +56,7 @@ final readonly class BudgetAvailableRule implements BudgetAvailableRuleInterface
         $amount = $context->getAmount();
         $costCenterId = $context->getCostCenterId();
 
-        if ($amount === null || trim($amount) === '' || !is_numeric($amount)) {
+        if ($amount === null || trim((string) $amount) === '' || !is_numeric($amount)) {
             return RuleResult::failed(
                 $this->getName(),
                 'Amount is required and must be numeric for budget availability validation',
@@ -64,7 +64,7 @@ final readonly class BudgetAvailableRule implements BudgetAvailableRuleInterface
             );
         }
 
-        $requestedAmount = trim($amount);
+        $requestedAmount = trim((string) $amount);
 
         if (empty($budgetId)) {
             return RuleResult::failed(

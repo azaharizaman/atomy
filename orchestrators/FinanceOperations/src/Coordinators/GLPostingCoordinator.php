@@ -117,10 +117,10 @@ final readonly class GLPostingCoordinator implements GLPostingCoordinatorInterfa
             } elseif (!is_array($transactionTypes)) {
                 $transactionTypes = [];
             }
-            $transactionTypes = array_filter(
+            $transactionTypes = array_values(array_filter(
                 array_map(fn($t) => is_string($t) ? trim($t) : null, $transactionTypes),
                 fn($t) => $t !== null && $t !== ''
-            );
+            ));
 
             $mappingResult = $this->accountMappingRule->check(
                 RuleContext::forGlAccountMappingValidation(

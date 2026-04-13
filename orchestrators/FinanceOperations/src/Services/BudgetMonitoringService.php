@@ -197,8 +197,8 @@ final readonly class BudgetMonitoringService
             }
 
             // Calculate totals using BCMath for precision
-            $totalBudgeted = '0';
-            $totalActual = '0';
+            $totalBudgeted = '0.00';
+            $totalActual = '0.00';
             
             foreach ($variances as $v) {
                 $totalBudgeted = bcadd($totalBudgeted, (string)($v['budgeted'] ?? '0'), 2);

@@ -152,7 +152,7 @@ final readonly class GLReconciliationService
     public function checkConsistency(ConsistencyCheckRequest $request): ConsistencyCheckResult
     {
         $subledgerTypeValues = array_map(
-            static fn(mixed $type): string => $type instanceof SubledgerType ? $type->value : (string) $type,
+            static fn(SubledgerType $type): string => $type->value,
             $request->subledgerTypes
         );
 
@@ -173,7 +173,7 @@ final readonly class GLReconciliationService
             $inconsistencies = [];
 
             foreach ($request->subledgerTypes as $type) {
-                $typeValue = $type instanceof SubledgerType ? $type->value : (string) $type;
+                $typeValue = $type->value;
                 $typeStatus = $status['details'][$typeValue] ?? $status[$typeValue] ?? null;
                 
                 if ($typeStatus === null) {

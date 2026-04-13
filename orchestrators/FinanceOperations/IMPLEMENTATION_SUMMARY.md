@@ -19,6 +19,8 @@ A static scan across `packages/` and `orchestrators/` showed `orchestrators/Fina
   - `forPeriodValidation(...)`
   - `forSubledgerClosure(...)`
   - `forGlAccountMappingValidation(...)`
+- Hardened `RuleContext` with explicit normalization (trimming) and validation using domain-specific `InvalidRuleContextException`.
+- Ensured all array parameters (cost centers, transaction types) are sequentially re-indexed.
 
 ### 2) Added explicit dependency/view contracts for rule engine
 
@@ -42,7 +44,7 @@ A static scan across `packages/` and `orchestrators/` showed `orchestrators/Fina
 
 Updated all rule implementations to use explicit interfaces and typed context access instead of reflection-style `method_exists/property_exists` on generic objects:
 
-- `Rules/BudgetAvailableRule`
+- `Rules/BudgetAvailableRule` (hardened with string-casting for numeric validation).
 - `Rules/CostCenterActiveRule`
 - `Rules/GLAccountMappingRule`
 - `Rules/PeriodOpenRule`
@@ -52,10 +54,10 @@ Updated all rule implementations to use explicit interfaces and typed context ac
 
 Replaced ad-hoc `(object)[...]` contexts with `RuleContext` constructors:
 
-- `Coordinators/BudgetTrackingCoordinator`
+- `Coordinators/BudgetTrackingCoordinator` (extracted `normalizeCostCenterId` helper for deduplication).
 - `Coordinators/CostAllocationCoordinator`
 - `Coordinators/DepreciationCoordinator`
-- `Coordinators/GLPostingCoordinator`
+- `Coordinators/GLPostingCoordinator` (added re-indexing for filtered transaction types).
 
 ### 6) Rebuilt and aligned rule unit tests
 
@@ -63,7 +65,7 @@ Rewrote rule tests to use typed test doubles implementing the new contracts:
 
 - `tests/Unit/Rules/BudgetAvailableRuleTest.php`
 - `tests/Unit/Rules/CostCenterActiveRuleTest.php`
-- `tests/Unit/Rules/GLAccountMappingRuleTest.php`
+- `tests/Unit/Rules/GLAccountMappingRuleTest.php` (hardened with non-empty violations assertions).
 - `tests/Unit/Rules/PeriodOpenRuleTest.php`
 - `tests/Unit/Rules/SubledgerClosedRuleTest.php`
 
@@ -118,7 +120,7 @@ No runtime changes required - the contract method signature is unchanged.
   - Exception path with compensation of already-executed steps.
   - Manual `compensate()` behavior and metadata helper methods.
 - Validation:
-  - `./vendor/bin/phpunit tests/Unit/Workflows/AbstractFinanceWorkflowTest.php` => **OK (6 tests, 31 assertions)**.
+  - `./vendor/bin/phpunit tests/Unit/Workflows/AbstractFinanceWorkflowTest.php` => **OK (6 tests, 39 assertions)**.
   - `./vendor/bin/phpunit --coverage-text` line coverage improved from **18.30%** to **22.16%** for `orchestrators/FinanceOperations`.
 - Note: full suite still has pre-existing failures in unrelated test files; coverage improvement is confirmed despite those existing failures.
 
@@ -136,14 +138,21 @@ No runtime changes required - the contract method signature is unchanged.
   - Depreciation remaining-amount zero path, unknown-method fallback path, non-zero-base guard path, and schedule path with explicit `originalCost`.
   - GL negative-variance auto-adjust proposal path.
 - Service hardening updates made while aligning tests with typed contracts:
-  - `GLReconciliationService` now consistently passes subledger **string values** to provider/exception boundaries and reconciles via absolute-variance tolerance (`abs(variance) <= 0.01`).
+  - `GLReconciliationService` now consistently passes subledger string values to provider/exception boundaries and reconciles via absolute-variance tolerance (`abs(variance) <= 0.01`).
   - `GLReconciliationService::checkConsistency()` now logs and iterates safely for enum and legacy string subledger values.
   - Removed unreachable duplicate guard in `CostAllocationService::calculateAllocations()` (already enforced in `allocate()`).
-  - Removed unreachable denominator guard in `DepreciationRunService` sum-of-years branch.
+  - Removed unreachable denominator guard in `DepreciationRunService` sum-of-years branch (redundant with module-level invariant enforcement added April 10).
 - Verification:
-  - `./vendor/bin/phpunit tests/Unit/Services/BudgetMonitoringServiceTest.php` => OK
-  - `./vendor/bin/phpunit tests/Unit/Services/CashPositionServiceTest.php` => OK
-  - `./vendor/bin/phpunit tests/Unit/Services/CostAllocationServiceTest.php` => OK
-  - `./vendor/bin/phpunit tests/Unit/Services/DepreciationRunServiceTest.php` => OK
-  - `./vendor/bin/phpunit tests/Unit/Services/GLReconciliationServiceTest.php` => OK
-  - `./vendor/bin/phpunit tests/Unit/Services --coverage-text` => all `Services/*` classes at 100/100.
+  - `./vendor/bin/phpunit tests/Unit/Services/BudgetMonitoringServiceTest.php` => **OK (15 tests, 108 assertions)**
+  - `./vendor/bin/phpunit tests/Unit/Services/CashPositionServiceTest.php` => **OK (10 tests, 62 assertions)**
+  - `./vendor/bin/phpunit tests/Unit/Services/CostAllocationServiceTest.php` => **OK (30 tests, 212 assertions)**
+  - `./vendor/bin/phpunit tests/Unit/Services/DepreciationRunServiceTest.php` => **OK (60 tests, 421 assertions)**
+  - `./vendor/bin/phpunit tests/Unit/Services/GLReconciliationServiceTest.php` => **OK (23 tests, 174 assertions)**
+  - Coverage snippet:
+    ```
+    Nexus\FinanceOperations\Services\BudgetMonitoringService    100.00% ( 6/ 6)  100.00% (200/200)
+    Nexus\FinanceOperations\Services\CashPositionService         100.00% ( 7/ 7)  100.00% (142/142)
+    Nexus\FinanceOperations\Services\CostAllocationService       100.00% ( 8/ 8)  100.00% (159/159)
+    Nexus\FinanceOperations\Services\DepreciationRunService      100.00% ( 9/ 9)  100.00% (196/196)
+    Nexus\FinanceOperations\Services\GLReconciliationService     100.00% ( 7/ 7)  100.00% (248/248)
+    ```
