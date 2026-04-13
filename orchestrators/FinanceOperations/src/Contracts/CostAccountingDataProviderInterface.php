@@ -49,7 +49,9 @@ interface CostAccountingDataProviderInterface
      *
      * @param string $tenantId The tenant identifier
      * @param string $costCenterId The cost center identifier
+     * @param string $periodId The period identifier
+     * @param string|null $budgetVersionId Optional budget version identifier
      * @return array<string, mixed> Cost center summary data
      */
-    public function getCostCenterSummary(string $tenantId, string $costCenterId): array;
+    public function getCostCenterSummary(string $tenantId, string $costCenterId, string $periodId, ?string $budgetVersionId = null): array;
 }

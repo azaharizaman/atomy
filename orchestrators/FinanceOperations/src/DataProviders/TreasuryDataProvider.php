@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Nexus\FinanceOperations\DataProviders;
 
+use Nexus\FinanceOperations\Contracts\LedgerQueryInterface;
+use Nexus\FinanceOperations\Contracts\PayableQueryInterface;
+use Nexus\FinanceOperations\Contracts\ReceivableQueryInterface;
+use Nexus\FinanceOperations\Contracts\TreasuryManagerQueryInterface;
 use Nexus\FinanceOperations\Contracts\TreasuryDataProviderInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -25,10 +29,10 @@ use Psr\Log\NullLogger;
 final readonly class TreasuryDataProvider implements TreasuryDataProviderInterface
 {
     public function __construct(
-        private object $treasuryManager,  // TreasuryManagerInterface from atomic package
-        private object $journalEntryQuery,  // JournalEntryQueryInterface from atomic package
-        private ?object $receivableQuery = null,  // ReceivableQueryInterface
-        private ?object $payableQuery = null,  // PayableQueryInterface
+        private TreasuryManagerQueryInterface $treasuryManager,
+        private LedgerQueryInterface $journalEntryQuery,
+        private ?ReceivableQueryInterface $receivableQuery = null,
+        private ?PayableQueryInterface $payableQuery = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
@@ -145,11 +149,18 @@ final readonly class TreasuryDataProvider implements TreasuryDataProviderInterfa
         ]);
 
         try {
-            // Get bank statement lines from Treasury
-            $statementLines = $this->treasuryManager->getStatementLines($tenantId, $bankAccountId);
+            // Get bank account projection to resolve GL account code
+            $bankAccount = $this->treasuryManager->getBankAccountById($tenantId, $bankAccountId);
+            if ($bankAccount === null) {
+                throw new \RuntimeException("Bank account not found: {$bankAccountId}");
+            }
+            $glAccountCode = $bankAccount->getGLAccountCode();
 
-            // Get GL transactions for the bank account
-            $glTransactions = $this->journalEntryQuery->getAccountTransactions($tenantId, $bankAccountId);
+            // Get bank statement lines from Treasury
+            $statementLines = $this->iterableToArray($this->treasuryManager->getStatementLines($tenantId, $bankAccountId));
+
+            // Get GL transactions using the resolved GL account code
+            $glTransactions = $this->iterableToArray($this->journalEntryQuery->getAccountTransactions($tenantId, $glAccountCode));
 
             return [
                 'bank_account_id' => $bankAccountId,
@@ -189,7 +200,7 @@ final readonly class TreasuryDataProvider implements TreasuryDataProviderInterfa
         $this->logger->debug('Fetching bank accounts', ['tenant_id' => $tenantId]);
 
         try {
-            $accounts = $this->treasuryManager->getBankAccounts($tenantId);
+            $accounts = $this->iterableToArray($this->treasuryManager->getBankAccounts($tenantId));
             $result = [];
 
             foreach ($accounts as $account) {
@@ -267,5 +278,16 @@ final readonly class TreasuryDataProvider implements TreasuryDataProviderInterfa
             $balance += (float) $txn->getAmount();
         }
         return (string) $balance;
+    }
+
+    /**
+     * Normalize iterable query results to array for array_* helpers.
+     *
+     * @param iterable<int, object> $items
+     * @return array<int, object>
+     */
+    private function iterableToArray(iterable $items): array
+    {
+        return is_array($items) ? $items : iterator_to_array($items, false);
     }
 }
