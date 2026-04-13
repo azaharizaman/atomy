@@ -64,6 +64,7 @@ final readonly class QuoteIngestionOrchestrator
                 'tenant_id' => $tenantId,
                 'quote_submission_id' => $quoteSubmissionId,
                 'error_class' => $e::class,
+                'error_message' => $e->getMessage(),
             ]);
             $this->handleFailure($submission, 'INTELLIGENCE_FAILED', self::FAILURE_MESSAGE_GENERIC);
         } finally {
