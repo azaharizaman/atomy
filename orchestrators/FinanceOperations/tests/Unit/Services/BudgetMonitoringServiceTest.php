@@ -107,7 +107,7 @@ final class BudgetMonitoringServiceTest extends TestCase
         $this->assertEquals('1000.00', $result->budgeted);
         $this->assertEquals('200.00', $result->actual);
         $this->assertEquals('100.00', $result->committed);
-        $this->assertEquals('700', $result->availableAmount);
+        $this->assertEquals('700.00', $result->availableAmount);
         $this->assertEquals(30.0, $result->utilizationPercent);
         $this->assertNull($result->warning, 'No warning should be set when utilization is below 80%');
     }
@@ -244,8 +244,49 @@ final class BudgetMonitoringServiceTest extends TestCase
         $this->assertEquals('500.00', $result->budgeted);
         $this->assertEquals('200.00', $result->actual);
         $this->assertEquals('50.00', $result->committed);
-        $this->assertEquals('250', $result->availableAmount);
+        $this->assertEquals('250.00', $result->availableAmount);
         $this->assertEquals(50.0, $result->utilizationPercent);
+    }
+
+    /**
+     * Tests budget check when data is returned in the "budgets" structure.
+     */
+    public function testCheckAvailabilityWithBudgetsArray(): void
+    {
+        $request = new BudgetCheckRequest(
+            tenantId: 'tenant-001',
+            budgetId: 'budget-001',
+            costCenterId: null,
+            accountId: null,
+            amount: '100.00'
+        );
+
+        $budgetData = [
+            'budgets' => [
+                [
+                    'budget_id' => 'budget-001',
+                    'cost_center_id' => 'cc-001',
+                    'account_id' => 'acc-001',
+                    'budgeted_amount' => '1000.00',
+                    'actual' => '300.00',
+                    'committed' => '100.00',
+                ],
+            ],
+        ];
+
+        $this->dataProviderMock
+            ->expects($this->once())
+            ->method('getBudgetData')
+            ->with('tenant-001', '', 'budget-001')
+            ->willReturn($budgetData);
+
+        $result = $this->service->checkAvailability($request);
+
+        $this->assertTrue($result->available);
+        $this->assertEquals('1000.00', $result->budgeted);
+        $this->assertEquals('300.00', $result->actual);
+        $this->assertEquals('100.00', $result->committed);
+        $this->assertEquals('600.00', $result->availableAmount);
     }
 
     /**
@@ -456,9 +497,9 @@ final class BudgetMonitoringServiceTest extends TestCase
         $this->assertTrue($result->success);
         $this->assertCount(1, $result->variances, 'Should only return variances for the specified cost center');
         $this->assertEquals('cc-001', $result->variances[0]['cost_center_id']);
-        $this->assertEquals('5000', $result->totalBudgeted);
-        $this->assertEquals('4500', $result->totalActual);
-        $this->assertEquals('500', $result->totalVariance);
+        $this->assertEquals('5000.00', $result->totalBudgeted);
+        $this->assertEquals('4500.00', $result->totalActual);
+        $this->assertEquals('500.00', $result->totalVariance);
     }
 
     /**
@@ -553,9 +594,9 @@ final class BudgetMonitoringServiceTest extends TestCase
         $this->assertInstanceOf(BudgetVarianceResult::class, $result);
         $this->assertTrue($result->success);
         $this->assertCount(2, $result->variances);
-        $this->assertEquals('8000', $result->totalBudgeted);
-        $this->assertEquals('7300', $result->totalActual);
-        $this->assertEquals('700', $result->totalVariance);
+        $this->assertEquals('8000.00', $result->totalBudgeted);
+        $this->assertEquals('7300.00', $result->totalActual);
+        $this->assertEquals('700.00', $result->totalVariance);
     }
 
     /**
@@ -624,7 +665,7 @@ final class BudgetMonitoringServiceTest extends TestCase
         $this->assertCount(0, $result->variances);
         $this->assertEquals('0', $result->totalBudgeted);
         $this->assertEquals('0', $result->totalActual);
-        $this->assertEquals('0', $result->totalVariance);
+        $this->assertEquals('0.00', $result->totalVariance);
     }
 
     /**
@@ -987,7 +1028,7 @@ final class BudgetMonitoringServiceTest extends TestCase
         $this->assertInstanceOf(BudgetCheckResult::class, $result);
         $this->assertFalse($result->available);
         $this->assertEquals(0.0, $result->utilizationPercent);
-        $this->assertEquals('0', $result->availableAmount);
+        $this->assertEquals('0.00', $result->availableAmount);
     }
 
     /**
@@ -1084,8 +1125,8 @@ final class BudgetMonitoringServiceTest extends TestCase
         // Assert
         $this->assertInstanceOf(BudgetVarianceResult::class, $result);
         $this->assertTrue($result->success);
-        $this->assertEquals('0', $result->totalBudgeted);
-        $this->assertEquals('0', $result->totalActual);
+        $this->assertEquals('0.00', $result->totalBudgeted);
+        $this->assertEquals('0.00', $result->totalActual);
     }
 
     /**

@@ -43,10 +43,12 @@ final readonly class GLReconciliationService
      */
     public function reconcile(GLReconciliationRequest $request): GLReconciliationResult
     {
+        $subledgerType = $request->subledgerType->value;
+
         $this->logger->info('Starting GL reconciliation', [
             'tenant_id' => $request->tenantId,
             'period_id' => $request->periodId,
-            'subledger_type' => $request->subledgerType,
+            'subledger_type' => $subledgerType,
         ]);
 
         try {
@@ -54,7 +56,7 @@ final readonly class GLReconciliationService
             $subledgerData = $this->dataProvider->getSubledgerBalance(
                 $request->tenantId,
                 $request->periodId,
-                $request->subledgerType
+                $subledgerType
             );
 
             // Get GL control account balance
@@ -69,7 +71,8 @@ final readonly class GLReconciliationService
             $glBalance = $glData['balance'] ?? '0';
             $variance = bcsub($subledgerBalance, $glBalance, 2);
 
-            $isReconciled = bccomp($variance, '0.01', 2) < 0 || bccomp($variance, '-0.01', 2) === 0;
+            $absoluteVariance = bccomp($variance, '0', 2) >= 0 ? $variance : bcmul($variance, '-1', 2);
+            $isReconciled = bccomp($absoluteVariance, '0.01', 2) <= 0;
 
             if (!$isReconciled && $request->autoAdjust) {
                 // Attempt automatic adjustment
@@ -126,13 +129,13 @@ final readonly class GLReconciliationService
         } catch (\Throwable $e) {
             $this->logger->error('GL reconciliation failed', [
                 'tenant_id' => $request->tenantId,
-                'subledger_type' => $request->subledgerType,
+                'subledger_type' => $subledgerType,
                 'error' => $e->getMessage(),
             ]);
 
             throw GLReconciliationException::reconciliationMismatch(
                 $request->tenantId,
-                $request->subledgerType,
+                $subledgerType,
                 '0',
                 '0',
                 $e->getMessage()
@@ -148,10 +151,15 @@ final readonly class GLReconciliationService
      */
     public function checkConsistency(ConsistencyCheckRequest $request): ConsistencyCheckResult
     {
+        $subledgerTypeValues = array_map(
+            static fn(mixed $type): string => $type instanceof SubledgerType ? $type->value : (string) $type,
+            $request->subledgerTypes
+        );
+
         $this->logger->info('Checking GL consistency', [
             'tenant_id' => $request->tenantId,
             'period_id' => $request->periodId,
-            'subledger_types' => implode(', ', $request->subledgerTypes),
+            'subledger_types' => implode(', ', $subledgerTypeValues),
         ]);
 
         try {
@@ -165,7 +173,7 @@ final readonly class GLReconciliationService
             $inconsistencies = [];
 
             foreach ($request->subledgerTypes as $type) {
-                $typeValue = $type->value;
+                $typeValue = $type instanceof SubledgerType ? $type->value : (string) $type;
                 $typeStatus = $status['details'][$typeValue] ?? $status[$typeValue] ?? null;
                 
                 if ($typeStatus === null) {

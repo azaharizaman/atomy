@@ -12,6 +12,7 @@ use Nexus\FinanceOperations\DTOs\GLPosting\GLReconciliationRequest;
 use Nexus\FinanceOperations\DTOs\GLPosting\GLReconciliationResult;
 use Nexus\FinanceOperations\DTOs\GLPosting\ConsistencyCheckRequest;
 use Nexus\FinanceOperations\DTOs\GLPosting\ConsistencyCheckResult;
+use Nexus\FinanceOperations\Enums\SubledgerType;
 use Nexus\FinanceOperations\Exceptions\GLReconciliationException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -109,7 +110,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -122,7 +123,7 @@ final class GLReconciliationServiceTest extends TestCase
         $this->assertEquals($subledgerType, $result->subledgerType);
         $this->assertEquals($balance, $result->subledgerBalance);
         $this->assertEquals($balance, $result->glBalance);
-        $this->assertEquals('0', $result->variance);
+        $this->assertEquals('0.00', $result->variance);
         $this->assertEmpty($result->discrepancies);
     }
 
@@ -156,7 +157,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -182,7 +183,7 @@ final class GLReconciliationServiceTest extends TestCase
         $subledgerType = 'AR';
         $subledgerBalance = '10000.00';
         $glBalance = '9500.00';
-        $expectedVariance = '500';
+        $expectedVariance = '500.00';
 
         $subledgerData = ['balance' => $subledgerBalance];
         $glData = ['balance' => $glBalance];
@@ -213,7 +214,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -240,7 +241,7 @@ final class GLReconciliationServiceTest extends TestCase
         $subledgerType = 'AP';
         $subledgerBalance = '8000.00';
         $glBalance = '8500.00';
-        $expectedVariance = '-500'; // Negative variance
+        $expectedVariance = '-500.00'; // Negative variance
 
         $subledgerData = ['balance' => $subledgerBalance];
         $glData = ['balance' => $glBalance];
@@ -266,7 +267,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -324,7 +325,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: true, // Enable auto-adjustment
         );
 
@@ -333,8 +334,46 @@ final class GLReconciliationServiceTest extends TestCase
 
         // Assert
         $this->assertInstanceOf(GLReconciliationResult::class, $result);
-        $this->assertTrue($result->success, 'Auto-adjustment should succeed');
-        $this->assertEquals('0', $result->variance, 'Variance should be zeroed after adjustment');
+        $this->assertFalse($result->success, 'Auto-adjustment should return a pending proposal');
+        $this->assertEquals('500.00', $result->variance, 'Variance remains until proposal is approved and posted');
+    }
+
+    /**
+     * Test auto-adjustment proposal for negative variance uses credit direction.
+     */
+    public function testReconcileWithAutoAdjustCreatesCreditDirectionProposal(): void
+    {
+        $tenantId = 'tenant-001';
+        $periodId = '2026-01';
+        $subledgerType = 'AP';
+        $subledgerBalance = '8000.00';
+        $glBalance = '8500.00';
+
+        $this->dataProviderMock
+            ->expects($this->once())
+            ->method('getSubledgerBalance')
+            ->with($tenantId, $periodId, $subledgerType)
+            ->willReturn(['balance' => $subledgerBalance]);
+
+        $this->dataProviderMock
+            ->expects($this->once())
+            ->method('getGLBalance')
+            ->with($tenantId, $periodId, 'AP_CONTROL')
+            ->willReturn(['balance' => $glBalance]);
+
+        $request = new GLReconciliationRequest(
+            tenantId: $tenantId,
+            periodId: $periodId,
+            subledgerType: SubledgerType::fromString($subledgerType),
+            autoAdjust: true,
+        );
+
+        $result = $this->service->reconcile($request);
+
+        $this->assertFalse($result->success);
+        $this->assertEquals('-500.00', $result->variance);
+        $this->assertNotEmpty($result->discrepancies);
+        $this->assertSame('adjustment_proposal', $result->discrepancies[0]['type']);
     }
 
     // =========================================================================
@@ -370,7 +409,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -410,7 +449,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -450,7 +489,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -490,7 +529,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -530,7 +569,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -576,7 +615,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -612,7 +651,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -654,7 +693,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 
@@ -666,7 +705,7 @@ final class GLReconciliationServiceTest extends TestCase
         // When both are empty/zero, variance is '0' and getDiscrepancies is NOT called
         $this->assertEquals('0', $result->subledgerBalance);
         $this->assertEquals('0', $result->glBalance);
-        $this->assertEquals('0', $result->variance);
+        $this->assertEquals('0.00', $result->variance);
     }
 
     // =========================================================================
@@ -1088,7 +1127,7 @@ final class GLReconciliationServiceTest extends TestCase
         $request = new GLReconciliationRequest(
             tenantId: $tenantId,
             periodId: $periodId,
-            subledgerType: $subledgerType,
+            subledgerType: SubledgerType::fromString($subledgerType),
             autoAdjust: false,
         );
 

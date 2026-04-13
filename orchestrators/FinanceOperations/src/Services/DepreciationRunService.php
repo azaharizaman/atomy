@@ -254,13 +254,6 @@ final readonly class DepreciationRunService
                 }
 
                 $sumOfYears = ($years * ($years + 1)) / 2;
-                if ($sumOfYears <= 0) {
-                    throw DepreciationCoordinationException::runFailed(
-                        $tenantId,
-                        $periodId,
-                        'Sum-of-years depreciation requires a positive sum-of-years denominator'
-                    );
-                }
 
                 $depreciationBase = $depreciableAmount / $years;
                 if (abs($depreciationBase) < 1e-9) {
