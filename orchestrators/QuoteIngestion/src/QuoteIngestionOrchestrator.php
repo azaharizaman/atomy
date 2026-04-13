@@ -18,6 +18,7 @@ final readonly class QuoteIngestionOrchestrator
 {
     private const DECISION_ACTION_AUTO_MAP = 'auto_map';
     private const CONFIDENCE_THRESHOLD = 80.0;
+    private const FAILURE_MESSAGE_GENERIC = 'Quote intelligence processing failed.';
 
     public function __construct(
         private QuotationIntelligenceCoordinatorInterface $coordinator,
@@ -51,33 +52,59 @@ final readonly class QuoteIngestionOrchestrator
 
             $this->submissionPersist->markNormalizing($submission);
 
-            $lines = $result['lines'] ?? [];
-            $this->persistSourceLines($submission, $lines);
+            $lines = is_array($result['lines'] ?? null) ? $result['lines'] : [];
+            ['persisted_count' => $persistedLineCount, 'confidences' => $confidences] = $this->persistSourceLines($submission, $lines);
 
-            $avgConfidence = $this->calculateAvgConfidence($lines);
+            $avgConfidence = $this->calculateAvgConfidence($confidences);
             $finalStatus = $avgConfidence >= self::CONFIDENCE_THRESHOLD ? 'ready' : 'needs_review';
-            $this->submissionPersist->markCompleted($submission, $finalStatus, $avgConfidence, count($lines));
+            $this->submissionPersist->markCompleted($submission, $finalStatus, $avgConfidence, $persistedLineCount);
 
         } catch (\Throwable $e) {
-            $this->handleFailure($submission, 'INTELLIGENCE_FAILED', $e->getMessage());
+            $this->logger->error('Quote intelligence processing failed', [
+                'tenant_id' => $tenantId,
+                'quote_submission_id' => $quoteSubmissionId,
+                'error_class' => $e::class,
+                'error_message' => $e->getMessage(),
+            ]);
+            $this->handleFailure($submission, 'INTELLIGENCE_FAILED', self::FAILURE_MESSAGE_GENERIC);
         } finally {
             $this->tenantContext->clearTenant();
         }
     }
 
-    private function persistSourceLines(QuoteSubmissionInterface $submission, array $lines): void
+    /**
+     * @return array{persisted_count: int, confidences: array<int, float>}
+     */
+    private function persistSourceLines(QuoteSubmissionInterface $submission, array $lines): array
     {
         $sortOrder = 0;
+        $persistedLineCount = 0;
+        $persistedConfidences = [];
         $tenantId = $submission->getTenantId();
         $quoteSubmissionId = $submission->getId();
         $vendorName = $submission->getVendorName();
 
-        foreach ($lines as $line) {
-            $rfqLineId = $line['rfq_line_id'] ?? null;
-            if ($rfqLineId === null) {
+        foreach ($lines as $lineIndex => $line) {
+            if (!is_array($line)) {
+                $this->logger->warning('Skipping malformed quote line payload', [
+                    'tenant_id' => $tenantId,
+                    'quote_submission_id' => $quoteSubmissionId,
+                    'line_index' => $lineIndex,
+                ]);
                 continue;
             }
 
+            $rfqLineIdRaw = $line['rfq_line_id'] ?? null;
+            if (!is_scalar($rfqLineIdRaw) || (string) $rfqLineIdRaw === '') {
+                $this->logger->warning('Skipping quote line without valid rfq line id', [
+                    'tenant_id' => $tenantId,
+                    'quote_submission_id' => $quoteSubmissionId,
+                    'line_index' => $lineIndex,
+                ]);
+                continue;
+            }
+
+            $rfqLineId = (string) $rfqLineIdRaw;
             $existingLine = $this->sourceLineQuery->findExisting($tenantId, $quoteSubmissionId, $rfqLineId);
 
             if ($existingLine !== null) {
@@ -105,13 +132,24 @@ final readonly class QuoteIngestionOrchestrator
                 $line
             );
 
+            $confidence = $this->extractFiniteConfidence($line);
+            if ($confidence !== null) {
+                $persistedConfidences[] = $confidence;
+            }
+
             $sortOrder++;
+            $persistedLineCount++;
         }
+
+        return [
+            'persisted_count' => $persistedLineCount,
+            'confidences' => $persistedConfidences,
+        ];
     }
 
     private function writeDecisionTrail(QuoteSubmissionInterface $submission, string $rfqLineId, array $line): void
     {
-        $confidence = (float) ($line['ai_confidence'] ?? 0);
+        $confidence = $this->extractFiniteConfidence($line) ?? 0.0;
         if ($confidence >= self::CONFIDENCE_THRESHOLD) {
             $this->decisionTrailWriter->write(
                 $submission->getTenantId(),
@@ -122,9 +160,9 @@ final readonly class QuoteIngestionOrchestrator
                         'payload' => [
                             'quote_submission_id' => $submission->getId(),
                             'rfq_line_item_id' => $rfqLineId,
-                            'taxonomy_code' => $line['taxonomy_code'] ?? '',
+                            'taxonomy_code' => $this->extractStringValue($line, 'taxonomy_code'),
                             'confidence' => $confidence,
-                            'mapping_version' => $line['metadata']['mapping_version'] ?? '',
+                            'mapping_version' => $this->extractMappingVersion($line),
                         ],
                     ],
                 ]
@@ -132,13 +170,16 @@ final readonly class QuoteIngestionOrchestrator
         }
     }
 
-    private function calculateAvgConfidence(array $lines): float
+    /**
+     * @param array<int, float> $confidences
+     */
+    private function calculateAvgConfidence(array $confidences): float
     {
-        if ($lines === []) {
+        if ($confidences === []) {
             return 0.0;
         }
 
-        return array_sum(array_column($lines, 'ai_confidence')) / count($lines);
+        return array_sum($confidences) / count($confidences);
     }
 
     private function handleFailure(QuoteSubmissionInterface $submission, string $errorCode, ?string $errorMessage): void
@@ -169,6 +210,10 @@ final readonly class QuoteIngestionOrchestrator
             $missingFields[] = 'quoted_unit_price';
         }
 
+        if (!array_key_exists('vendor_description', $line)) {
+            $missingFields[] = 'vendor_description';
+        }
+
         if ($missingFields !== []) {
             $this->logger->warning('Missing upstream quote data for normalization source line', [
                 'tenant_id' => $submission->getTenantId(),
@@ -181,9 +226,9 @@ final readonly class QuoteIngestionOrchestrator
 
         return [
             'source_vendor' => $vendorName,
-            'source_description' => $line['vendor_description'],
+            'source_description' => $this->extractStringValue($line, 'vendor_description'),
             'source_quantity' => (float) ($line['quoted_quantity'] ?? 0),
-            'source_uom' => $line['quoted_unit'] ?? 'EA',
+            'source_uom' => $this->extractStringValue($line, 'quoted_unit', 'EA'),
             'source_unit_price' => (float) ($line['quoted_unit_price'] ?? 0),
             'raw_data' => [
                 'quoted_quantity' => $line['quoted_quantity'] ?? null,
@@ -193,9 +238,42 @@ final readonly class QuoteIngestionOrchestrator
                 'normalized_unit_price' => $line['normalized_unit_price'] ?? null,
             ],
             'sort_order' => $sortOrder,
-            'ai_confidence' => (float) ($line['ai_confidence'] ?? 0),
-            'taxonomy_code' => $line['taxonomy_code'] ?? '',
-            'mapping_version' => $line['metadata']['mapping_version'] ?? '',
+            'ai_confidence' => $this->extractFiniteConfidence($line) ?? 0.0,
+            'taxonomy_code' => $this->extractStringValue($line, 'taxonomy_code'),
+            'mapping_version' => $this->extractMappingVersion($line),
         ];
+    }
+
+    private function extractFiniteConfidence(array $line): ?float
+    {
+        if (!is_numeric($line['ai_confidence'] ?? null)) {
+            return null;
+        }
+
+        $confidence = (float) $line['ai_confidence'];
+        if (!is_finite($confidence)) {
+            return null;
+        }
+
+        return $confidence;
+    }
+
+    private function extractMappingVersion(array $line): string
+    {
+        $metadata = $line['metadata'] ?? null;
+        if (!is_array($metadata) || !is_scalar($metadata['mapping_version'] ?? null)) {
+            return '';
+        }
+
+        return (string) $metadata['mapping_version'];
+    }
+
+    private function extractStringValue(array $line, string $key, string $default = ''): string
+    {
+        if (!is_scalar($line[$key] ?? null)) {
+            return $default;
+        }
+
+        return (string) $line[$key];
     }
 }
