@@ -97,6 +97,17 @@ Verification evidence:
 - Currently executing Phase 3: vendor API stubs replaced with tenant-scoped live endpoints (`index/show/performance/compliance/history`) plus `VendorWorkflowTest` coverage.
 - Verification checkpoint refreshed: API targeted matrix and WEB build/lint gates are currently green (lint warnings remain and are tracked as non-blocking).
 
+## Gap 9 Implementation Plans (2026-04-14)
+
+Gap 9 (Mock Fallback Elimination) implementation is underway. See spec and plans:
+
+- **Spec:** `docs/superpowers/specs/2026-04-14-gap-9-fail-loud-design.md`
+- **Plan - Phase 1 (Comparison):** `docs/superpowers/plans/2026-04-14-gap-9-fail-loud-comparison.md`
+- **Plan - Phase 2a (Quote Intake):** `docs/superpowers/plans/2026-04-14-gap-9-fail-loud-quote-intake.md`
+- **Plan - Phase 2b (RFQ Details):** `docs/superpowers/plans/2026-04-14-gap-9-fail-loud-rfq-details.md`
+- **Plan - Phase 3 (Awards/Vendors/Projects):** `docs/superpowers/plans/2026-04-14-gap-9-fail-loud-awards-vendors-projects.md`
+- **Plan - Phase 4 (Approvals/Auth/Dashboard):** `docs/superpowers/plans/2026-04-14-gap-9-fail-loud-approvals-auth-dashboard.md`
+
 ## Atomy-Q code review checklist and document pass
 
 - §1 Exception contracts: N/A (markdown documentation file, no code)
