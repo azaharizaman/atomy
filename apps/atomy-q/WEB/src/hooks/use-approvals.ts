@@ -224,7 +224,7 @@ export function useApprovalDetail(id: string | undefined) {
 
       const r = data?.data;
       if (!r || typeof r !== 'object') throw new Error('Not found');
-      const rec = r as Record<string, unknown>;
+      const rec = r as unknown as Record<string, unknown>;
       const base = normalizeApprovalRows({ data: [rec] })[0];
       return {
         ...base,

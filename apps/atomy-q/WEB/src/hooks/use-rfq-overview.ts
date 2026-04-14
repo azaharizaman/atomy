@@ -247,7 +247,7 @@ export function useRfqOverview(rfqId: string) {
       const normalized = normalizeOverviewPayload(data);
       const activityRes = await fetchLiveOrFail<{ data: unknown[] }>(`/rfqs/${encodeURIComponent(rfqId)}/activity`, { params: { limit: 50 } });
       if (activityRes?.data && typeof activityRes.data === 'object') {
-        const body = activityRes.data as Record<string, unknown>;
+        const body = activityRes.data as unknown as Record<string, unknown>;
         const fromEndpoint = normalizeActivityList(body.data);
         if (fromEndpoint.length > 0) {
           return { ...normalized, activity: fromEndpoint };
