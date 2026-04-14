@@ -437,6 +437,50 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
   return cachedSeed;
 }
 
+export interface SeedProject {
+  id: string;
+  name: string;
+  status: string;
+  clientId?: string;
+  clientName?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+const SEED_PROJECTS: SeedProject[] = [
+  {
+    id: 'proj-001',
+    name: 'Q2 Server Infrastructure Refresh',
+    status: 'active',
+    clientId: 'client-001',
+    clientName: 'Acme Corp',
+    startDate: '2024-04-01',
+    endDate: '2024-09-30',
+  },
+  {
+    id: 'proj-002',
+    name: 'Office Renovation 2024',
+    status: 'planning',
+    clientId: 'client-002',
+    clientName: 'TechStart Inc',
+    startDate: '2024-06-01',
+    endDate: '2024-12-31',
+  },
+  {
+    id: 'proj-003',
+    name: 'Cloud Migration Phase 2',
+    status: 'active',
+    clientId: 'client-001',
+    clientName: 'Acme Corp',
+    startDate: '2024-03-15',
+    endDate: '2024-08-15',
+  },
+];
+
+export function getSeedProjects(): SeedProject[] {
+  return SEED_PROJECTS;
+}
+
 export function getSeedRfqs(): SeedRfq[] {
   return buildSeed().rfqs;
 }

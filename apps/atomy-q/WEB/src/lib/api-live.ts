@@ -3,10 +3,13 @@
 
 import { api } from '@/lib/api';
 
+export type FetchResponseType = 'json' | 'text' | 'blob' | 'arrayBuffer';
+
 export interface FetchLiveOrFailOptions {
   signal?: AbortSignal;
   headers?: Record<string, string>;
   params?: Record<string, string | number | undefined>;
+  responseType?: FetchResponseType;
 }
 
 /**
@@ -28,6 +31,17 @@ export async function fetchLiveOrFail<T>(
     return data as T;
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
-    throw new Error(`Failed to load ${endpoint}: ${message}`);
+    const err = new Error(`Failed to load ${endpoint}: ${message}`);
+    if (e instanceof Error) {
+      err.cause = e;
+    }
+    const axiosErr = e as { response?: { status?: number; data?: unknown }; status?: number };
+    if (axiosErr.response) {
+      (err as Record<string, unknown>).status = axiosErr.response.status;
+      (err as Record<string, unknown>).response = axiosErr.response.data;
+    } else if (axiosErr.status) {
+      (err as Record<string, unknown>).status = axiosErr.status;
+    }
+    throw err;
   }
 }

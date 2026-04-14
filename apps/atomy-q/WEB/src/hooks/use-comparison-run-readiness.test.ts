@@ -41,7 +41,8 @@ describe('useComparisonRunReadiness', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockGet).toHaveBeenCalledWith('/comparison-runs/run-42/readiness');
+    expect(mockGet).toHaveBeenCalledTimes(1);
+expect(mockGet.mock.calls[0][0]).toBe('/comparison-runs/run-42/readiness');
     expect(result.current.data).toEqual({
       id: 'run-42',
       isReady: false,

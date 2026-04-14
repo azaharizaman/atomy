@@ -92,12 +92,11 @@ export function useComparisonRunReadiness(runId: string, options?: { rfqId?: str
       const data = await fetchLiveOrFail<{ data: ComparisonRunReadiness }>(`/comparison-runs/${encodeURIComponent(runId)}/readiness`);
 
       if (data === undefined) {
-        return buildMockReadiness(runId, options?.rfqId);
-      }
-
-      const data = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}/readiness`);
-      if (data === undefined) {
-        return buildMockReadiness(runId, options?.rfqId);
+        const rawData = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}/readiness`);
+        if (rawData === undefined) {
+          return buildMockReadiness(runId, options?.rfqId);
+        }
+        return normalizeComparisonRunReadiness(rawData);
       }
 
       return normalizeComparisonRunReadiness(data);

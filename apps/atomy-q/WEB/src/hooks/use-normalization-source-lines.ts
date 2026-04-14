@@ -92,14 +92,6 @@ export function useNormalizationSourceLines(rfqId: string, options?: { enabled?:
         return [];
       }
 
-      const data = await fetchLiveOrFail<{ data: NormalizationSourceLineRow[] }>(
-        `/normalization/${encodeURIComponent(rfqId)}/source-lines`
-      );
-
-      if (data === undefined) {
-        return [];
-      }
-
       return normalizeSourceLines(data);
     },
     enabled,

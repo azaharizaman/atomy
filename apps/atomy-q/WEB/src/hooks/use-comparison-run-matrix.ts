@@ -166,12 +166,11 @@ export function useComparisonRunMatrix(runId: string, options?: { rfqId?: string
       const data = await fetchLiveOrFail<{ data: ComparisonRunMatrix }>(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
 
       if (data === undefined) {
-        return buildMockMatrix(runId, options?.rfqId);
-      }
-
-      const data = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
-      if (data === undefined) {
-        return buildMockMatrix(runId, options?.rfqId);
+        const rawData = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
+        if (rawData === undefined) {
+          return buildMockMatrix(runId, options?.rfqId);
+        }
+        return normalizeComparisonRunMatrix(rawData);
       }
 
       return normalizeComparisonRunMatrix(data);

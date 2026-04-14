@@ -37,6 +37,14 @@ export interface RfqUpdateBody {
   financial_review_due_at?: string | null;
 }
 
+function parseMaybeNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string' && value.trim() === '') return undefined;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return undefined;
+  return n;
+}
+
 function normalizeRfq(payload: unknown): RfqDetail {
   let raw = payload as Record<string, unknown> | null | undefined;
   while (raw?.data) {
@@ -57,8 +65,8 @@ function normalizeRfq(payload: unknown): RfqDetail {
           })(),
     status,
     rfq_number: raw?.rfq_number != null ? String(raw.rfq_number) : undefined,
-    vendorsCount: (raw?.vendorsCount ?? raw?.vendors_count) as number | undefined,
-    quotesCount: (raw?.quotesCount ?? raw?.quotes_count) as number | undefined,
+    vendorsCount: parseMaybeNumber(raw?.vendorsCount ?? raw?.vendors_count),
+    quotesCount: parseMaybeNumber(raw?.quotesCount ?? raw?.quotes_count),
     estValue: est !== null && est !== undefined ? String(est) : undefined,
     savings: raw?.savings != null ? String(raw.savings) : undefined,
     projectId: (raw?.project_id ?? raw?.projectId) as string | null | undefined,
@@ -85,7 +93,6 @@ export function useRfq(rfqId: string) {
         return normalizeRfq(detail);
       }
 
-      const data = await fetchLiveOrFail<unknown>(`/rfqs/${encodeURIComponent(rfqId)}`);
       return normalizeRfq(data);
     },
   });

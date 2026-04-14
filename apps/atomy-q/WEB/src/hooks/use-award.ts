@@ -127,7 +127,6 @@ export function useAward(rfqId: string) {
         ];
       }
 
-      const data = await fetchLiveOrFail<AwardRecord[]>(`/awards?rfq_id=${encodeURIComponent(rfqId)}`);
       return normalizeAwardRows(data);
     },
     enabled: Boolean(rfqId),

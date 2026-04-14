@@ -94,17 +94,6 @@ export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolea
           vendor_name: 'Vendor',
         };
       }
-      const data = await fetchLiveOrFail<{ data: QuoteSubmissionSummary }>(
-        `/quote-submissions/${encodeURIComponent(quoteId)}`
-      );
-      if (data === undefined) {
-        return {
-          id: quoteId,
-          status: 'ready',
-          blocking_issue_count: 0,
-          vendor_name: 'Vendor',
-        };
-      }
       return normalizeQuoteSubmission(data);
     },
     enabled,

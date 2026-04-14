@@ -223,24 +223,25 @@ export function useComparisonRun(runId: string, options?: { rfqId?: string }) {
       const data = await fetchLiveOrFail<{ data: ComparisonRunDetail }>(`/comparison-runs/${encodeURIComponent(runId)}`);
 
       if (data === undefined) {
-        return buildMockComparisonRun(runId, options?.rfqId);
+        const rawData = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}`);
+        if (rawData === undefined) {
+          return buildMockComparisonRun(runId, options?.rfqId);
+        }
+        return normalizeAndValidateComparisonRun(rawData, options?.rfqId);
       }
 
-      const data = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}`);
-      if (data === undefined) {
-        return buildMockComparisonRun(runId, options?.rfqId);
-      }
-
-      const normalizedRun = normalizeComparisonRun(data);
-
-      if (options?.rfqId !== undefined && normalizedRun.rfqId !== options.rfqId) {
-        throw new Error(`Comparison run "${normalizedRun.id}" does not belong to RFQ "${options.rfqId}".`);
-      }
-
-      return normalizedRun;
+      return normalizeAndValidateComparisonRun(data, options?.rfqId);
     },
     enabled: Boolean(runId),
   });
+}
+
+function normalizeAndValidateComparisonRun(data: unknown, rfqId?: string): ComparisonRunDetail {
+  const normalizedRun = normalizeComparisonRun(data);
+  if (rfqId !== undefined && normalizedRun.rfqId !== rfqId) {
+    throw new Error(`Comparison run "${normalizedRun.id}" does not belong to RFQ "${rfqId}".`);
+  }
+  return normalizedRun;
 }
 
 export { normalizeComparisonRun, normalizeSnapshot };

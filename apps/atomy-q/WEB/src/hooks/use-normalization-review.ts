@@ -3,7 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { api } from '@/lib/api';
-import { fetchLiveOrFail } from '@/lib/api-live';
 
 export type NormalizationConflictRow = {
   id: string;
@@ -68,11 +67,19 @@ export function useNormalizationReview(rfqId: string, options?: { enabled?: bool
   });
 
   const meta = query.data?.meta;
+  const rawBlocking = meta?.blocking_issue_count;
+  let blockingIssueCount = 0;
+  if (rawBlocking !== null && rawBlocking !== undefined) {
+    const n = Number(rawBlocking);
+    if (Number.isFinite(n)) {
+      blockingIssueCount = Math.round(n);
+    }
+  }
   return {
     ...query,
     conflicts: query.data?.data ?? [],
     hasBlockingIssues: Boolean(meta?.has_blocking_issues),
-    blockingIssueCount: Number(meta?.blocking_issue_count ?? 0),
+    blockingIssueCount,
     resolveConflict,
   };
 }

@@ -62,16 +62,7 @@ export function useRfqNavCounts() {
       const data = await fetchLiveOrFail<{ data?: Partial<RfqNavCounts> }>('/rfqs/counts');
 
       if (data === undefined) {
-        return {
-          draft: 0,
-          published: 0,
-          closed: 0,
-          awarded: 0,
-          cancelled: 0,
-          active: 0,
-          pending: 0,
-          archived: 0,
-        };
+        return { ...emptyCounts };
       }
 
       const d = data?.data;

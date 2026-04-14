@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
-import { api } from '@/lib/api';
 
 export interface ApprovalsListMeta {
   current_page: number;

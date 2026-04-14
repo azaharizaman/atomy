@@ -36,16 +36,6 @@ export function useRfqVendors(rfqId: string) {
     queryFn: async (): Promise<RfqVendorRow[]> => {
       const data = await fetchLiveOrFail<{ data: RfqVendorRow[] }>(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
 
-      if (data === undefined) {
-        return getSeedVendorsByRfqId(rfqId).map((v) => ({
-          id: v.id,
-          vendor_id: v.id,
-          name: v.name,
-          status: v.status,
-          contact: v.email,
-        }));
-      }
-      const data = await fetchLiveOrFail<RfqVendorRow[]>(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
       return normalizeInvitationPayload(data);
     },
     enabled: Boolean(rfqId),
