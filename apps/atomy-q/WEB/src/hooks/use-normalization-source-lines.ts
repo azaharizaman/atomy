@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface NormalizationSourceLineRow {
@@ -86,6 +87,14 @@ export function useNormalizationSourceLines(rfqId: string, options?: { enabled?:
     queryKey: ['normalization-source-lines', rfqId],
     queryFn: async (): Promise<NormalizationSourceLineRow[]> => {
       const data = await fetchLiveOrFail<{ data: NormalizationSourceLineRow[] }>('/normalization/' + encodeURIComponent(rfqId) + '/source-lines');
+
+      if (data === undefined) {
+        return [];
+      }
+
+      const data = await fetchLiveOrFail<{ data: NormalizationSourceLineRow[] }>(
+        `/normalization/${encodeURIComponent(rfqId)}/source-lines`
+      );
 
       if (data === undefined) {
         return [];

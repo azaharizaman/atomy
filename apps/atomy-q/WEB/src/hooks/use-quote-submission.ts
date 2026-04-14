@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface QuoteSubmissionSummary {
@@ -85,6 +86,17 @@ export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolea
     queryFn: async (): Promise<QuoteSubmissionSummary> => {
       const data = await fetchLiveOrFail<{ data: QuoteSubmissionSummary }>(`/quote-submissions/${encodeURIComponent(quoteId)}`);
 
+      if (data === undefined) {
+        return {
+          id: quoteId,
+          status: 'ready',
+          blocking_issue_count: 0,
+          vendor_name: 'Vendor',
+        };
+      }
+      const data = await fetchLiveOrFail<{ data: QuoteSubmissionSummary }>(
+        `/quote-submissions/${encodeURIComponent(quoteId)}`
+      );
       if (data === undefined) {
         return {
           id: quoteId,

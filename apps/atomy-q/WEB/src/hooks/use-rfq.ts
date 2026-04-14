@@ -85,6 +85,7 @@ export function useRfq(rfqId: string) {
         return normalizeRfq(detail);
       }
 
+      const data = await fetchLiveOrFail<unknown>(`/rfqs/${encodeURIComponent(rfqId)}`);
       return normalizeRfq(data);
     },
   });

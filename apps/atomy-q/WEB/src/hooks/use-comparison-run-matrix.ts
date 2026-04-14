@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
@@ -164,6 +165,11 @@ export function useComparisonRunMatrix(runId: string, options?: { rfqId?: string
     queryFn: async (): Promise<ComparisonRunMatrix> => {
       const data = await fetchLiveOrFail<{ data: ComparisonRunMatrix }>(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
 
+      if (data === undefined) {
+        return buildMockMatrix(runId, options?.rfqId);
+      }
+
+      const data = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
       if (data === undefined) {
         return buildMockMatrix(runId, options?.rfqId);
       }

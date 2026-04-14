@@ -45,6 +45,7 @@ export function useRfqVendors(rfqId: string) {
           contact: v.email,
         }));
       }
+      const data = await fetchLiveOrFail<RfqVendorRow[]>(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
       return normalizeInvitationPayload(data);
     },
     enabled: Boolean(rfqId),
