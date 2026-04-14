@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedVendorsByRfqId } from '@/data/seed';
 
 export interface RfqVendorRow {
@@ -11,8 +11,6 @@ export interface RfqVendorRow {
   status: 'invited' | 'responded';
   contact: string;
 }
-
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
 function normalizeInvitationPayload(payload: unknown): RfqVendorRow[] {
   const raw = payload as { data?: unknown[] };
@@ -36,7 +34,9 @@ export function useRfqVendors(rfqId: string) {
   return useQuery({
     queryKey: ['rfqs', rfqId, 'vendors'],
     queryFn: async (): Promise<RfqVendorRow[]> => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<{ data: RfqVendorRow[] }>(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
+
+      if (data === undefined) {
         return getSeedVendorsByRfqId(rfqId).map((v) => ({
           id: v.id,
           vendor_id: v.id,
@@ -45,7 +45,6 @@ export function useRfqVendors(rfqId: string) {
           contact: v.email,
         }));
       }
-      const { data } = await api.get(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
       return normalizeInvitationPayload(data);
     },
     enabled: Boolean(rfqId),

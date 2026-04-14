@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 
 export interface ComparisonRunRow {
@@ -42,12 +42,14 @@ function normalizeComparisonRuns(payload: unknown): ComparisonRunRow[] {
 }
 
 export function useComparisonRuns(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['comparison-runs', rfqId],
     queryFn: async (): Promise<ComparisonRunRow[]> => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<{ data: ComparisonRunRow[] }>(
+        `/comparison-runs?rfq_id=${rfqId}`
+      );
+
+      if (data === undefined) {
         return getSeedComparisonRunsByRfqId(rfqId).map((r) => ({
           id: r.id,
           rfq_id: r.rfqId,
@@ -58,10 +60,6 @@ export function useComparisonRuns(rfqId: string) {
           created_at: null,
         }));
       }
-
-      const { data } = await api.get('/comparison-runs', {
-        params: { rfq_id: rfqId },
-      });
 
       return normalizeComparisonRuns(data);
     },

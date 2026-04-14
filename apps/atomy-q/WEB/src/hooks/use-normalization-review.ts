@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { api } from '@/lib/api';
 
 export type NormalizationConflictRow = {
@@ -30,15 +31,17 @@ export function conflictTypeLabel(conflictType: string): string {
 
 export function useNormalizationReview(rfqId: string, options?: { enabled?: boolean }) {
   const qc = useQueryClient();
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-  const enabled = (options?.enabled ?? true) && Boolean(rfqId) && !useMocks;
+  const enabled = (options?.enabled ?? true) && Boolean(rfqId);
 
   const query = useQuery({
     queryKey: ['normalization-conflicts', rfqId],
     queryFn: async (): Promise<ConflictsResponse> => {
-      const { data } = await api.get<ConflictsResponse>(
-        `/normalization/${encodeURIComponent(rfqId)}/conflicts`,
-      );
+      const data = await fetchLiveOrFail<ConflictsResponse>(`/normalization/${encodeURIComponent(rfqId)}/conflicts`);
+
+      if (data === undefined) {
+        return { data: [], meta: {} };
+      }
+
       return data;
     },
     enabled,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
@@ -159,16 +159,15 @@ function buildMockMatrix(runId: string, rfqId?: string): ComparisonRunMatrix {
 }
 
 export function useComparisonRunMatrix(runId: string, options?: { rfqId?: string }) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['comparison-run-matrix', options?.rfqId ?? runId, runId],
     queryFn: async (): Promise<ComparisonRunMatrix> => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<{ data: ComparisonRunMatrix }>(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
+
+      if (data === undefined) {
         return buildMockMatrix(runId, options?.rfqId);
       }
 
-      const { data } = await api.get(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
       return normalizeComparisonRunMatrix(data);
     },
     enabled: Boolean(runId),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { type RfqStatus, isValidRfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
 
 export interface RfqDetail {
@@ -72,19 +72,18 @@ function normalizeRfq(payload: unknown): RfqDetail {
 }
 
 export function useRfq(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['rfqs', rfqId],
     queryFn: async () => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<{ data: RfqDetail }>(`/rfqs/${encodeURIComponent(rfqId)}`);
+
+      if (data === undefined) {
         const { getSeedRfqDetail } = await import('@/data/seed');
         const detail = getSeedRfqDetail(rfqId);
         if (!detail) throw new Error('RFQ not found');
         return normalizeRfq(detail);
       }
 
-      const { data } = await api.get(`/rfqs/${encodeURIComponent(rfqId)}`);
       return normalizeRfq(data);
     },
   });

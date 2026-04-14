@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface ProjectListItem {
   id: string;
@@ -42,12 +42,16 @@ function normalizeProjectsPayload(payload: unknown): ProjectListItem[] {
 }
 
 export function useProjects(options?: { enabled?: boolean }) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-  const enabled = (options?.enabled ?? true) && !useMocks;
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: ['projects'],
     queryFn: async (): Promise<ProjectListItem[]> => {
-      const { data } = await api.get('/projects');
+      const data = await fetchLiveOrFail<{ data: ProjectListItem[] }>('/projects');
+
+      if (data === undefined) {
+        return [];
+      }
+
       return normalizeProjectsPayload(data);
     },
     enabled,

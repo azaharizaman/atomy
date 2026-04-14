@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedQuotesByRfqId } from '@/data/seed';
 
 export interface QuoteSubmissionRow {
@@ -95,12 +95,14 @@ function normalizeRequiredString(value: unknown, field: string, index: number): 
 }
 
 export function useQuoteSubmissions(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['quote-submissions', 'list', rfqId],
     queryFn: async (): Promise<QuoteSubmissionRow[]> => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<{ data: QuoteSubmissionRow[] }>('/quote-submissions', {
+        params: { rfq_id: rfqId },
+      });
+
+      if (data === undefined) {
         return getSeedQuotesByRfqId(rfqId).map((q) => ({
           id: q.id,
           rfq_id: q.rfqId,
@@ -114,10 +116,6 @@ export function useQuoteSubmissions(rfqId: string) {
           original_filename: q.fileName,
         }));
       }
-
-      const { data } = await api.get('/quote-submissions', {
-        params: { rfq_id: rfqId },
-      });
 
       return normalizeQuoteSubmissionRows(data);
     },

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedAwardByRfqId } from '@/data/seed';
 
 export interface AwardRecord {
@@ -89,13 +89,14 @@ function normalizeAwardRows(payload: unknown): AwardRecord[] {
 }
 
 export function useAward(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const qc = useQueryClient();
 
   const query = useQuery({
     queryKey: ['awards', rfqId],
     queryFn: async (): Promise<AwardRecord[]> => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<{ data: AwardRecord[] }>('/awards', { params: { rfq_id: rfqId } });
+
+      if (data === undefined) {
         const seed = getSeedAwardByRfqId(rfqId);
         if (!seed) return [];
         return [
@@ -124,7 +125,6 @@ export function useAward(rfqId: string) {
         ];
       }
 
-      const { data } = await api.get('/awards', { params: { rfq_id: rfqId } });
       return normalizeAwardRows(data);
     },
     enabled: Boolean(rfqId),

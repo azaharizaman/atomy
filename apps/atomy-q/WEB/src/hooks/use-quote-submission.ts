@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface QuoteSubmissionSummary {
   id: string;
@@ -78,13 +78,14 @@ function normalizeNullableNumber(value: unknown, field: string): number | null |
 }
 
 export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolean }) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const enabled = (options?.enabled ?? true) && Boolean(quoteId);
 
   return useQuery({
     queryKey: ['quote-submissions', quoteId],
     queryFn: async (): Promise<QuoteSubmissionSummary> => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<{ data: QuoteSubmissionSummary }>(`/quote-submissions/${encodeURIComponent(quoteId)}`);
+
+      if (data === undefined) {
         return {
           id: quoteId,
           status: 'ready',
@@ -92,9 +93,8 @@ export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolea
           vendor_name: 'Vendor',
         };
       }
-      const { data } = await api.get(`/quote-submissions/${encodeURIComponent(quoteId)}`);
       return normalizeQuoteSubmission(data);
     },
-    enabled: enabled && (useMocks || Boolean(quoteId)),
+    enabled,
   });
 }

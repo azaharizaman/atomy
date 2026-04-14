@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 import type { RfqStatus } from '@/hooks/use-rfqs';
 
 export interface RfqOverviewRfq {
@@ -181,12 +181,12 @@ function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
 }
 
 export function useRfqOverview(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['rfqs', rfqId, 'overview'],
     queryFn: async (): Promise<RfqOverviewData> => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<RfqOverviewData>(`/rfqs/${encodeURIComponent(rfqId)}/overview`);
+
+      if (data === undefined) {
         const { getSeedRfqDetail } = await import('@/data/seed');
         const detail = getSeedRfqDetail(rfqId);
         const vendorsCount = detail?.vendorsCount ?? 0;
@@ -244,21 +244,16 @@ export function useRfqOverview(rfqId: string) {
         };
       }
 
-      const [overviewRes, activityRes] = await Promise.all([
-        api.get(`/rfqs/${encodeURIComponent(rfqId)}/overview`),
-        api
-          .get(`/rfqs/${encodeURIComponent(rfqId)}/activity`, { params: { limit: 50 } })
-          .catch(() => null),
-      ]);
-      const base = normalizeOverviewPayload(overviewRes.data);
+      const normalized = normalizeOverviewPayload(data);
+      const activityRes = await fetchLiveOrFail<{ data: unknown[] }>(`/rfqs/${encodeURIComponent(rfqId)}/activity`, { params: { limit: 50 } });
       if (activityRes?.data && typeof activityRes.data === 'object') {
         const body = activityRes.data as Record<string, unknown>;
         const fromEndpoint = normalizeActivityList(body.data);
         if (fromEndpoint.length > 0) {
-          return { ...base, activity: fromEndpoint };
+          return { ...normalized, activity: fromEndpoint };
         }
       }
-      return base;
+      return normalized;
     },
     enabled: Boolean(rfqId),
   });

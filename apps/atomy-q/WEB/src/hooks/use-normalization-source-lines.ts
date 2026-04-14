@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface NormalizationSourceLineRow {
   id: string;
@@ -80,17 +80,17 @@ function parseOptionalNumber(value: unknown): number | null {
 }
 
 export function useNormalizationSourceLines(rfqId: string, options?: { enabled?: boolean }) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-  const enabled = (options?.enabled ?? true) && Boolean(rfqId) && !useMocks;
+  const enabled = (options?.enabled ?? true) && Boolean(rfqId);
 
   return useQuery({
     queryKey: ['normalization-source-lines', rfqId],
     queryFn: async (): Promise<NormalizationSourceLineRow[]> => {
-      if (useMocks) {
+      const data = await fetchLiveOrFail<{ data: NormalizationSourceLineRow[] }>('/normalization/' + encodeURIComponent(rfqId) + '/source-lines');
+
+      if (data === undefined) {
         return [];
       }
 
-      const { data } = await api.get('/normalization/' + encodeURIComponent(rfqId) + '/source-lines');
       return normalizeSourceLines(data);
     },
     enabled,
