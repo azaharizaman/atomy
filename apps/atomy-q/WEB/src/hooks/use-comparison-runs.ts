@@ -46,7 +46,7 @@ export function useComparisonRuns(rfqId: string) {
     queryKey: ['comparison-runs', rfqId],
     queryFn: async (): Promise<ComparisonRunRow[]> => {
       const data = await fetchLiveOrFail<{ data: ComparisonRunRow[] }>(
-        `/comparison-runs?rfq_id=${rfqId}`
+        `/comparison-runs?rfq_id=${encodeURIComponent(rfqId)}`
       );
 
       if (data === undefined) {

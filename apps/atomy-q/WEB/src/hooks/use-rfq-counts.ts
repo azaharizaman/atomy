@@ -55,24 +55,22 @@ function parseCount(raw: unknown): number | undefined {
 }
 
 export function useRfqNavCounts() {
-  const emptyCounts: RfqNavCounts = {
-    draft: 0,
-    published: 0,
-    closed: 0,
-    awarded: 0,
-    cancelled: 0,
-    active: 0,
-    pending: 0,
-    archived: 0,
-  };
-
   return useQuery({
     queryKey: ['rfqs', 'counts'],
     queryFn: async (): Promise<RfqNavCounts> => {
       const data = await fetchLiveOrFail<{ data?: Partial<RfqNavCounts> }>('/rfqs/counts');
 
       if (data === undefined) {
-        return emptyCounts;
+        return {
+          draft: 0,
+          published: 0,
+          closed: 0,
+          awarded: 0,
+          cancelled: 0,
+          active: 0,
+          pending: 0,
+          archived: 0,
+        };
       }
 
       const d = data?.data;
