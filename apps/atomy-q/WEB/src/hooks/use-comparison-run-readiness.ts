@@ -1,9 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
-import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
 export interface ComparisonRunReadinessEntry {
@@ -74,17 +72,6 @@ function normalizeComparisonRunReadiness(payload: unknown): ComparisonRunReadine
   };
 }
 
-function buildMockReadiness(runId: string, rfqId?: string): ComparisonRunReadiness {
-  const run = rfqId ? getSeedComparisonRunsByRfqId(rfqId).find((item) => item.id === runId || item.runId === runId) : null;
-  return {
-    id: run?.id ?? runId,
-    isReady: true,
-    isPreviewOnly: run?.type !== 'final',
-    blockers: [],
-    warnings: [],
-  };
-}
-
 export function useComparisonRunReadiness(runId: string, options?: { rfqId?: string }) {
   return useQuery({
     queryKey: ['comparison-run-readiness', options?.rfqId ?? runId, runId],
@@ -92,11 +79,7 @@ export function useComparisonRunReadiness(runId: string, options?: { rfqId?: str
       const data = await fetchLiveOrFail<{ data: ComparisonRunReadiness }>(`/comparison-runs/${encodeURIComponent(runId)}/readiness`);
 
       if (data === undefined) {
-        const rawData = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}/readiness`);
-        if (rawData === undefined) {
-          return buildMockReadiness(runId, options?.rfqId);
-        }
-        return normalizeComparisonRunReadiness(rawData);
+        throw new Error(`Comparison readiness unavailable for run "${runId}".`);
       }
 
       return normalizeComparisonRunReadiness(data);

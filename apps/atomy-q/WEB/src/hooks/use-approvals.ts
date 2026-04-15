@@ -125,17 +125,9 @@ export function useApprovalsList(params: UseApprovalsParams) {
       page: params.page ?? 1,
     }],
     queryFn: async (): Promise<ApprovalsListResult> => {
+      const isMock = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
       const page = Math.max(1, params.page ?? 1);
-      const data = await fetchLiveOrFail<{ data: ApprovalListRow[] }>('/approvals', {
-        params: {
-          rfq_id: params.rfq_id || undefined,
-          status: params.status || undefined,
-          type: params.type || undefined,
-          page,
-        },
-      });
-
-      if (data === undefined) {
+      if (isMock) {
         const { getSeedPendingApprovals } = await import('@/data/seed');
         const seed = getSeedPendingApprovals();
         let rows: ApprovalListRow[] = seed.map((a) => ({
@@ -171,6 +163,18 @@ export function useApprovalsList(params: UseApprovalsParams) {
         };
       }
 
+      const data = await fetchLiveOrFail<{ data: ApprovalListRow[] }>('/approvals', {
+        params: {
+          rfq_id: params.rfq_id || undefined,
+          status: params.status || undefined,
+          type: params.type || undefined,
+          page,
+        },
+      });
+      if (data === undefined) {
+        throw new Error('Approvals list unavailable');
+      }
+
       const items = normalizeApprovalRows(data);
       const meta = parseApprovalsMeta(data);
       if (meta === null) {
@@ -199,9 +203,7 @@ export function useApprovalDetail(id: string | undefined) {
     queryFn: async (): Promise<ApprovalDetail> => {
       if (!id) throw new Error('Approval id required');
 
-      const data = await fetchLiveOrFail<{ data: ApprovalDetail }>(`/approvals/${encodeURIComponent(id)}`);
-
-      if (data === undefined) {
+      if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
         const { getSeedPendingApprovals } = await import('@/data/seed');
         const row = getSeedPendingApprovals().find((a) => a.id === id);
         if (!row) throw new Error('Not found');
@@ -219,6 +221,11 @@ export function useApprovalDetail(id: string | undefined) {
           requested_at: null,
           comparison_run: null,
         };
+      }
+
+      const data = await fetchLiveOrFail<{ data: ApprovalDetail }>(`/approvals/${encodeURIComponent(id)}`);
+      if (data === undefined) {
+        throw new Error('Approval detail unavailable');
       }
 
       const r = data?.data;
@@ -254,13 +261,17 @@ export function useApprovalDetail(id: string | undefined) {
 export function useRfqPendingApprovalCount(rfqId: string | undefined) {
   return useQuery({
     queryKey: ['approvals', 'pending-count', rfqId],
-    queryFn: async (): Promise<number> => {
+    queryFn: async (): Promise<number | undefined> => {
+      if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+        return undefined;
+      }
+
       const data = await fetchLiveOrFail<{ data: ApprovalListRow[] }>('/approvals', {
         params: { status: 'pending', rfq_id: rfqId, per_page: 1, page: 1 },
       });
 
       if (data === undefined) {
-        return 2;
+        return undefined;
       }
 
       const meta = parseApprovalsMeta(data);

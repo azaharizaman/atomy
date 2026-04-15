@@ -36,3 +36,14 @@
 - Project ACL save flow now blocks empty ACL submissions both in button-disabled state and at click handler guard.
 - `use-update-project-acl` now validates mapped roles at runtime against canonical allowed roles and fails fast on invalid payloads.
 - Seed data now includes realistic enterprise RFQ presets (software renewal, SOC services, WAN upgrade, facilities maintenance, HRIS partner) in addition to generated lifecycle data.
+
+## 2026-04-15 PR Review Remediation
+- Aligned seeded project IDs with the RFQ generator project ID pool (`01J...`) so project-linked seed lookups no longer miss.
+- Removed duplicate `fetchLiveOrFail` import in `use-award.ts`.
+- Stopped fabricated approval pending-count values (`2`) and propagated unavailable live data as `undefined` instead.
+- Removed live-path seed fallbacks in approvals list/detail and RFQ overview hooks; seed logic now runs only in explicit mock mode.
+- Removed duplicate readiness fetch + mock fallback in `use-comparison-run-readiness.ts`; live unavailability now surfaces as an error.
+- Removed duplicate fetch retry in `use-comparison-run.ts`; undefined live responses now fall back directly to the mock builder.
+- Added seeded fallbacks for mock mode in quote submissions and RFQ invitations so normalizers always receive valid payloads.
+- Corrected `FetchResponseType` to use Axios-compatible `'arraybuffer'`.
+- Cleaned unused imports and fixed assertion indentation consistency in comparison run test files.

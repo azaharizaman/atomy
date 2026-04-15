@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
@@ -223,11 +222,7 @@ export function useComparisonRun(runId: string, options?: { rfqId?: string }) {
       const data = await fetchLiveOrFail<{ data: ComparisonRunDetail }>(`/comparison-runs/${encodeURIComponent(runId)}`);
 
       if (data === undefined) {
-        const rawData = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}`);
-        if (rawData === undefined) {
-          return buildMockComparisonRun(runId, options?.rfqId);
-        }
-        return normalizeAndValidateComparisonRun(rawData, options?.rfqId);
+        return buildMockComparisonRun(runId, options?.rfqId);
       }
 
       return normalizeAndValidateComparisonRun(data, options?.rfqId);

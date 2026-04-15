@@ -3,10 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Eye, FileText, List, Users, Inbox, GitCompareArrows, ShieldCheck, HandCoins, FolderArchive, ShieldAlert, History, Award } from 'lucide-react';
+import { Eye, FileText, List, Users, Inbox, GitCompareArrows, ShieldCheck, HandCoins, FolderArchive, ShieldAlert, Award } from 'lucide-react';
 
 import { Button } from '@/components/ds/Button';
-import { CountBadge, StatusBadge, StatusDot } from '@/components/ds/Badge';
+import { StatusBadge } from '@/components/ds/Badge';
 import { NavigationLink } from '@/components/layout/sidebar';
 import { type RfqStatus } from '@/hooks/use-rfqs';
 import { useRfqPendingApprovalCount } from '@/hooks/use-approvals';
@@ -26,10 +26,8 @@ export interface ActiveRfqRecord {
 export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
   const pathname = usePathname();
   const { data: pendingApprovalCount } = useRfqPendingApprovalCount(record.id);
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-  const normalizedPending = useMocks
-    ? 2
-    : typeof pendingApprovalCount === 'number' && Number.isFinite(pendingApprovalCount)
+  const normalizedPending =
+    typeof pendingApprovalCount === 'number' && Number.isFinite(pendingApprovalCount)
       ? pendingApprovalCount
       : undefined;
   const approvalsBadge =
@@ -119,4 +117,3 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
     </div>
   );
 }
-

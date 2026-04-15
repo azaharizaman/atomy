@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import type { RfqStatus } from '@/hooks/use-rfqs';
 
@@ -188,61 +187,7 @@ export function useRfqOverview(rfqId: string) {
       const data = await fetchLiveOrFail<RfqOverviewData>(`/rfqs/${encodeURIComponent(rfqId)}/overview`);
 
       if (data === undefined) {
-        const { getSeedRfqDetail } = await import('@/data/seed');
-        const detail = getSeedRfqDetail(rfqId);
-        const vendorsCount = detail?.vendorsCount ?? 0;
-        const quotesCount = detail?.quotesCount ?? 0;
-        const accepted = Math.round(quotesCount * 0.75);
-        return {
-          rfq: {
-            id: detail?.id ?? rfqId,
-            rfq_number: detail?.id ?? rfqId,
-            title: detail?.title ?? 'Requisition',
-            description: detail?.description ?? null,
-            status: (detail?.status as RfqStatus) ?? 'active',
-            owner: null,
-            submission_deadline: new Date(Date.now() + 86400000 * 5).toISOString(),
-            closing_date: new Date(Date.now() + 86400000 * 12).toISOString(),
-            expected_award_at: new Date(Date.now() + 86400000 * 45).toISOString(),
-            technical_review_due_at: new Date(Date.now() + 86400000 * 18).toISOString(),
-            financial_review_due_at: new Date(Date.now() + 86400000 * 28).toISOString(),
-            category: null,
-            estimated_value: detail?.estValue,
-            estValue: detail?.estValue,
-            savings: detail?.savings ?? null,
-            vendors_count: vendorsCount,
-            quotes_count: quotesCount,
-          },
-          expected_quotes: vendorsCount,
-          normalization: {
-            accepted_count: accepted,
-            total_quotes: quotesCount,
-            progress_pct: quotesCount > 0 ? Math.round((accepted / quotesCount) * 100) : 0,
-            uploaded_count: Math.max(0, quotesCount - accepted),
-            needs_review_count: 0,
-            ready_count: accepted,
-          },
-          comparison: {
-            id: 'run-1',
-            name: 'Run #004',
-            status: 'preview',
-            is_preview: true,
-            created_at: new Date().toISOString(),
-          },
-          approvals: {
-            pending_count: 0,
-            approved_count: 0,
-            rejected_count: 0,
-            overall: 'none',
-          },
-          activity: [
-            { id: '1', type: 'quote', actor: 'Dell Technologies', action: 'Quote submitted (accepted)', timestamp: new Date(Date.now() - 7200000).toISOString() },
-            { id: '2', type: 'invitation', actor: 'System', action: 'Invitation sent to HP Enterprise', timestamp: new Date(Date.now() - 14400000).toISOString() },
-            { id: '3', type: 'comparison', actor: 'System', action: 'Comparison run: Run #004 (preview)', timestamp: new Date(Date.now() - 86400000).toISOString() },
-            { id: '4', type: 'system', actor: 'System', action: 'RFQ published and vendors notified', timestamp: new Date(Date.now() - 259200000).toISOString() },
-            { id: '5', type: 'creation', actor: 'User', action: `Created ${rfqId}`, timestamp: new Date(Date.now() - 518400000).toISOString() },
-          ],
-        };
+        throw new Error(`RFQ overview unavailable for "${rfqId}".`);
       }
 
       const normalized = normalizeOverviewPayload(data);

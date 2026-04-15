@@ -449,7 +449,7 @@ export interface SeedProject {
 
 const SEED_PROJECTS: SeedProject[] = [
   {
-    id: 'proj-001',
+    id: '01JNE4ZHT9S0VQ7E2GQW1QYJ7B',
     name: 'Q2 Server Infrastructure Refresh',
     status: 'active',
     clientId: 'client-001',
@@ -458,7 +458,7 @@ const SEED_PROJECTS: SeedProject[] = [
     endDate: '2024-09-30',
   },
   {
-    id: 'proj-002',
+    id: '01JNE4ZHTA4H0W8S8P3H7C9X2M',
     name: 'Office Renovation 2024',
     status: 'planning',
     clientId: 'client-002',
@@ -467,7 +467,7 @@ const SEED_PROJECTS: SeedProject[] = [
     endDate: '2024-12-31',
   },
   {
-    id: 'proj-003',
+    id: '01JNE4ZHTB0RZ3W2F6N9J5K1Q8',
     name: 'Cloud Migration Phase 2',
     status: 'active',
     clientId: 'client-001',

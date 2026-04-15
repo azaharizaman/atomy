@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedQuotesByRfqId } from '@/data/seed';
 
@@ -102,6 +101,22 @@ export function useQuoteSubmissions(rfqId: string) {
       const data = await fetchLiveOrFail<{ data: QuoteSubmissionRow[] }>('/quote-submissions', {
         params: { rfq_id: rfqId },
       });
+
+      if (data === undefined) {
+        const seedRows = getSeedQuotesByRfqId(rfqId).map((row) => ({
+          id: row.id,
+          rfq_id: row.rfqId,
+          vendor_id: row.vendorId,
+          vendor_name: row.vendorName,
+          file_name: row.fileName,
+          status: row.status,
+          confidence: row.confidence,
+          submitted_at: row.uploadedAt,
+          blocking_issue_count: 0,
+          original_filename: row.fileName,
+        }));
+        return normalizeQuoteSubmissionRows({ data: seedRows });
+      }
 
       return normalizeQuoteSubmissionRows(data);
     },

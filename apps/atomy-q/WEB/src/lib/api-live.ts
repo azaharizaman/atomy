@@ -3,7 +3,7 @@
 
 import { api } from '@/lib/api';
 
-export type FetchResponseType = 'json' | 'text' | 'blob' | 'arrayBuffer';
+export type FetchResponseType = 'json' | 'text' | 'blob' | 'arraybuffer';
 
 export interface FetchLiveOrFailOptions {
   signal?: AbortSignal;
