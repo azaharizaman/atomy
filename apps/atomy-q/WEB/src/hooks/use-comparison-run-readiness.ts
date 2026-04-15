@@ -73,6 +73,8 @@ function normalizeComparisonRunReadiness(payload: unknown): ComparisonRunReadine
 }
 
 export function useComparisonRunReadiness(runId: string, options?: { rfqId?: string }) {
+  const isMock = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
   return useQuery({
     queryKey: ['comparison-run-readiness', options?.rfqId ?? runId, runId],
     queryFn: async (): Promise<ComparisonRunReadiness> => {
@@ -84,7 +86,7 @@ export function useComparisonRunReadiness(runId: string, options?: { rfqId?: str
 
       return normalizeComparisonRunReadiness(data);
     },
-    enabled: Boolean(runId),
+    enabled: Boolean(runId) && !isMock,
   });
 }
 

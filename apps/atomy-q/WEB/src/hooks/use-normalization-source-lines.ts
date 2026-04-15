@@ -81,6 +81,7 @@ function parseOptionalNumber(value: unknown): number | null {
 
 export function useNormalizationSourceLines(rfqId: string, options?: { enabled?: boolean }) {
   const enabled = (options?.enabled ?? true) && Boolean(rfqId);
+  const isMock = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   return useQuery({
     queryKey: ['normalization-source-lines', rfqId],
@@ -88,7 +89,10 @@ export function useNormalizationSourceLines(rfqId: string, options?: { enabled?:
       const data = await fetchLiveOrFail<{ data: NormalizationSourceLineRow[] }>('/normalization/' + encodeURIComponent(rfqId) + '/source-lines');
 
       if (data === undefined) {
-        return [];
+        if (isMock) {
+          return [];
+        }
+        throw new Error(`Normalization source lines unavailable for RFQ "${rfqId}".`);
       }
 
       return normalizeSourceLines(data);
