@@ -56,12 +56,15 @@ function parseCount(raw: unknown): number | undefined {
 }
 
 export function useRfqNavCounts() {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['rfqs', 'counts'],
     queryFn: async (): Promise<RfqNavCounts> => {
       const data = await fetchLiveOrFail<{ data?: Partial<RfqNavCounts> }>('/rfqs/counts');
+
+      if (data === undefined) {
+        return { ...emptyCounts };
+      }
+
       const d = data?.data;
       const published = parseCount(d?.published) ?? 0;
       const cancelled = parseCount(d?.cancelled) ?? 0;
@@ -76,7 +79,5 @@ export function useRfqNavCounts() {
         archived: parseCount(d?.archived) ?? cancelled,
       };
     },
-    enabled: !useMocks,
-    initialData: useMocks ? emptyCounts : undefined,
   });
 }

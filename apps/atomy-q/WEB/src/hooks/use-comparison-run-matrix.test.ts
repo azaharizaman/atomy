@@ -60,7 +60,8 @@ describe('useComparisonRunMatrix', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockGet).toHaveBeenCalledWith('/comparison-runs/run-42/matrix');
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockGet.mock.calls[0][0]).toBe('/comparison-runs/run-42/matrix');
     expect(result.current.data).toEqual({
       id: 'run-42',
       clusters: [

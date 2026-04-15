@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { getSeedQuotesByRfqId } from '@/data/seed';
 
@@ -96,43 +95,27 @@ function normalizeRequiredString(value: unknown, field: string, index: number): 
 }
 
 export function useQuoteSubmissions(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['quote-submissions', 'list', rfqId],
     queryFn: async (): Promise<QuoteSubmissionRow[]> => {
-      if (useMocks) {
-        return getSeedQuotesByRfqId(rfqId).map((q) => ({
-          id: q.id,
-          rfq_id: q.rfqId,
-          vendor_id: q.vendorId,
-          vendor_name: q.vendorName,
-          file_name: q.fileName,
-          status: q.status,
-          confidence: q.confidence,
-          uploaded_at: q.uploadedAt,
-          blocking_issue_count: q.status === 'error' ? 1 : 0,
-          original_filename: q.fileName,
-        }));
-      }
-
-      const data = await fetchLiveOrFail<{ data: QuoteSubmissionRow[] }>(
-        `/quote-submissions?rfq_id=${encodeURIComponent(rfqId)}`
-      );
+      const data = await fetchLiveOrFail<{ data: QuoteSubmissionRow[] }>('/quote-submissions', {
+        params: { rfq_id: rfqId },
+      });
 
       if (data === undefined) {
-        return getSeedQuotesByRfqId(rfqId).map((q) => ({
-          id: q.id,
-          rfq_id: q.rfqId,
-          vendor_id: q.vendorId,
-          vendor_name: q.vendorName,
-          file_name: q.fileName,
-          status: q.status,
-          confidence: q.confidence,
-          uploaded_at: q.uploadedAt,
-          blocking_issue_count: q.status === 'error' ? 1 : 0,
-          original_filename: q.fileName,
+        const seedRows = getSeedQuotesByRfqId(rfqId).map((row) => ({
+          id: row.id,
+          rfq_id: row.rfqId,
+          vendor_id: row.vendorId,
+          vendor_name: row.vendorName,
+          file_name: row.fileName,
+          status: row.status,
+          confidence: row.confidence,
+          submitted_at: row.uploadedAt,
+          blocking_issue_count: 0,
+          original_filename: row.fileName,
         }));
+        return normalizeQuoteSubmissionRows({ data: seedRows });
       }
 
       return normalizeQuoteSubmissionRows(data);

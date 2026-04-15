@@ -79,23 +79,13 @@ function normalizeNullableNumber(value: unknown, field: string): number | null |
 }
 
 export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolean }) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const enabled = (options?.enabled ?? true) && Boolean(quoteId);
 
   return useQuery({
     queryKey: ['quote-submissions', quoteId],
     queryFn: async (): Promise<QuoteSubmissionSummary> => {
-      if (useMocks) {
-        return {
-          id: quoteId,
-          status: 'ready',
-          blocking_issue_count: 0,
-          vendor_name: 'Vendor',
-        };
-      }
-      const data = await fetchLiveOrFail<{ data: QuoteSubmissionSummary }>(
-        `/quote-submissions/${encodeURIComponent(quoteId)}`
-      );
+      const data = await fetchLiveOrFail<{ data: QuoteSubmissionSummary }>(`/quote-submissions/${encodeURIComponent(quoteId)}`);
+
       if (data === undefined) {
         return {
           id: quoteId,
@@ -106,6 +96,6 @@ export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolea
       }
       return normalizeQuoteSubmission(data);
     },
-    enabled: enabled && (useMocks || Boolean(quoteId)),
+    enabled,
   });
 }

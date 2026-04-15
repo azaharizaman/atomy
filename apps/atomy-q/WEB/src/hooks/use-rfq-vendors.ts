@@ -12,8 +12,6 @@ export interface RfqVendorRow {
   contact: string;
 }
 
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
 function normalizeInvitationPayload(payload: unknown): RfqVendorRow[] {
   const raw = payload as { data?: unknown[] };
   const list = Array.isArray(raw?.data) ? raw.data : [];
@@ -36,16 +34,21 @@ export function useRfqVendors(rfqId: string) {
   return useQuery({
     queryKey: ['rfqs', rfqId, 'vendors'],
     queryFn: async (): Promise<RfqVendorRow[]> => {
-      if (useMocks) {
-        return getSeedVendorsByRfqId(rfqId).map((v) => ({
-          id: v.id,
-          vendor_id: v.id,
-          name: v.name,
-          status: v.status,
-          contact: v.email,
-        }));
+      const data = await fetchLiveOrFail<{ data: RfqVendorRow[] }>(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
+
+      if (data === undefined) {
+        const seededPayload = {
+          data: getSeedVendorsByRfqId(rfqId).map((vendor) => ({
+            id: vendor.id,
+            vendor_id: vendor.id,
+            vendor_name: vendor.name,
+            status: vendor.status,
+            vendor_email: vendor.email,
+          })),
+        };
+        return normalizeInvitationPayload(seededPayload);
       }
-      const data = await fetchLiveOrFail<RfqVendorRow[]>(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
+
       return normalizeInvitationPayload(data);
     },
     enabled: Boolean(rfqId),

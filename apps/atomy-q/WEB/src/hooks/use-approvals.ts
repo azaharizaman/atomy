@@ -125,16 +125,9 @@ export function useApprovalsList(params: UseApprovalsParams) {
       page: params.page ?? 1,
     }],
     queryFn: async (): Promise<ApprovalsListResult> => {
+      const isMock = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
       const page = Math.max(1, params.page ?? 1);
-      const resp = await fetchLiveOrFail<{ data?: Record<string, unknown> }>(
-        `/approvals?${new URLSearchParams({
-          ...(params.rfq_id && { rfq_id: params.rfq_id }),
-          ...(params.status && { status: params.status }),
-          ...(params.type && { type: params.type }),
-          page: String(page),
-        }).toString()}`
-      );
-      if (!resp) {
+      if (isMock) {
         const { getSeedPendingApprovals } = await import('@/data/seed');
         const seed = getSeedPendingApprovals();
         let rows: ApprovalListRow[] = seed.map((a) => ({
@@ -169,8 +162,21 @@ export function useApprovalsList(params: UseApprovalsParams) {
           meta: { current_page: page, per_page: perPage, total, total_pages: totalPages },
         };
       }
-      const items = normalizeApprovalRows(resp);
-      const meta = parseApprovalsMeta(resp);
+
+      const data = await fetchLiveOrFail<{ data: ApprovalListRow[] }>('/approvals', {
+        params: {
+          rfq_id: params.rfq_id || undefined,
+          status: params.status || undefined,
+          type: params.type || undefined,
+          page,
+        },
+      });
+      if (data === undefined) {
+        throw new Error('Approvals list unavailable');
+      }
+
+      const items = normalizeApprovalRows(data);
+      const meta = parseApprovalsMeta(data);
       if (meta === null) {
         throw new Error('Invalid approvals list response: pagination meta');
       }
@@ -196,8 +202,8 @@ export function useApprovalDetail(id: string | undefined) {
     queryKey: ['approvals', 'detail', id],
     queryFn: async (): Promise<ApprovalDetail> => {
       if (!id) throw new Error('Approval id required');
-      const data = await fetchLiveOrFail<{ data?: Record<string, unknown> }>(`/approvals/${encodeURIComponent(id)}`);
-      if (!data) {
+
+      if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
         const { getSeedPendingApprovals } = await import('@/data/seed');
         const row = getSeedPendingApprovals().find((a) => a.id === id);
         if (!row) throw new Error('Not found');
@@ -216,9 +222,15 @@ export function useApprovalDetail(id: string | undefined) {
           comparison_run: null,
         };
       }
+
+      const data = await fetchLiveOrFail<{ data: ApprovalDetail }>(`/approvals/${encodeURIComponent(id)}`);
+      if (data === undefined) {
+        throw new Error('Approval detail unavailable');
+      }
+
       const r = data?.data;
       if (!r || typeof r !== 'object') throw new Error('Not found');
-      const rec = r as Record<string, unknown>;
+      const rec = r as unknown as Record<string, unknown>;
       const base = normalizeApprovalRows({ data: [rec] })[0];
       return {
         ...base,
@@ -249,14 +261,20 @@ export function useApprovalDetail(id: string | undefined) {
 export function useRfqPendingApprovalCount(rfqId: string | undefined) {
   return useQuery({
     queryKey: ['approvals', 'pending-count', rfqId],
-    queryFn: async (): Promise<number> => {
-      const resp = await fetchLiveOrFail<{ data?: Record<string, unknown> }>(
-        `/approvals?${new URLSearchParams({ status: 'pending', rfq_id: rfqId ?? '', per_page: '1', page: '1' }).toString()}`
-      );
-      if (!resp) {
-        return rfqId ? 2 : 0;
+    queryFn: async (): Promise<number | undefined> => {
+      if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
+        return undefined;
       }
-      const meta = parseApprovalsMeta(resp);
+
+      const data = await fetchLiveOrFail<{ data: ApprovalListRow[] }>('/approvals', {
+        params: { status: 'pending', rfq_id: rfqId, per_page: 1, page: 1 },
+      });
+
+      if (data === undefined) {
+        return undefined;
+      }
+
+      const meta = parseApprovalsMeta(data);
       if (meta === null) {
         throw new Error('Invalid approvals pending-count response: pagination meta');
       }

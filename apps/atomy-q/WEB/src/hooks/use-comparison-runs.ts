@@ -42,14 +42,12 @@ function normalizeComparisonRuns(payload: unknown): ComparisonRunRow[] {
 }
 
 export function useComparisonRuns(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['comparison-runs', rfqId],
     queryFn: async (): Promise<ComparisonRunRow[]> => {
-      const data = await fetchLiveOrFail<{ data: ComparisonRunRow[] }>(
-        `/comparison-runs?rfq_id=${rfqId}`
-      );
+      const data = await fetchLiveOrFail<{ data: ComparisonRunRow[] }>('/comparison-runs', {
+        params: { rfq_id: rfqId },
+      });
 
       if (data === undefined) {
         return getSeedComparisonRunsByRfqId(rfqId).map((r) => ({

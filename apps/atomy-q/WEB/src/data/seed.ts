@@ -437,6 +437,68 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
   return cachedSeed;
 }
 
+export interface SeedProject {
+  id: string;
+  name: string;
+  status: string;
+  clientId?: string;
+  clientName?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+const SEED_PROJECTS: SeedProject[] = [
+  {
+    id: '01JNE4ZHT9S0VQ7E2GQW1QYJ7B',
+    name: 'Q2 Server Infrastructure Refresh',
+    status: 'active',
+    clientId: 'client-001',
+    clientName: 'Acme Corp',
+    startDate: '2024-04-01',
+    endDate: '2024-09-30',
+  },
+  {
+    id: '01JNE4ZHTA4H0W8S8P3H7C9X2M',
+    name: 'Office Renovation 2024',
+    status: 'planning',
+    clientId: 'client-002',
+    clientName: 'TechStart Inc',
+    startDate: '2024-06-01',
+    endDate: '2024-12-31',
+  },
+  {
+    id: '01JNE4ZHTB0RZ3W2F6N9J5K1Q8',
+    name: 'Cloud Migration Phase 2',
+    status: 'active',
+    clientId: 'client-001',
+    clientName: 'Acme Corp',
+    startDate: '2024-03-15',
+    endDate: '2024-08-15',
+  },
+  {
+    id: '01JNE4ZHTC7D1P6M3T8V2R0L5N',
+    name: 'Regional Network Reliability Upgrade',
+    status: 'active',
+    clientId: 'client-003',
+    clientName: 'Northwind Logistics',
+    startDate: '2024-05-01',
+    endDate: '2024-11-30',
+  },
+  {
+    id: '01JNE4ZHTDNN6E9B4Y1S7U3P0C',
+    name: 'Enterprise Data Governance Rollout',
+    status: 'planning',
+    clientId: 'client-004',
+    clientName: 'Globex Holdings',
+    startDate: '2024-07-01',
+    endDate: '2025-01-31',
+  },
+];
+
+export function getSeedProjects(): SeedProject[] {
+  return SEED_PROJECTS;
+}
+
 export function getSeedRfqs(): SeedRfq[] {
   return buildSeed().rfqs;
 }

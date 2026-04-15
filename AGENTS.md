@@ -325,3 +325,21 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Root cause:** I accepted earlier "working" behavior without re-checking contract boundaries and determinism assumptions against the latest reviewer concerns and current code paths.
 - **Action taken:** Threaded tenant context through `IdentityOperationsAdapter::mapUserToArray` into permission/role lookups, updated `AuthenticatorInterface` status typing to Layer-2-safe scalar docs, added explicit non-empty name validation in `EloquentPermissionRepository::create`, removed dead `findUserOrFail` from `EloquentUserRepository`, and hardened `TotpManagerTest` with fixed timestamps, mutated-invalid code assertions, and a boundary-sensitive custom-period check.
 - **Follow-up tasks:** For identity review closures, add a mandatory pass for (1) tenant context propagation in all adapter hydration paths, (2) Layer 2 contract isolation from Layer 1 types, and (3) deterministic time-based test vectors that can fail the wrong implementation.
+
+---
+
+- **Date:** 2026-04-15
+- **PR/Issue ID:** WEB PR review follow-up (seed/live fallback hygiene)
+- **Summary of mistake:** Several hooks mixed live-mode and mock-mode behaviors by silently falling back to seed data (or fabricated counts) when live responses were unavailable, while seed project IDs also diverged from the RFQ seed project ID pool.
+- **Root cause:** I optimized for resilient demo behavior without enforcing a strict separation between mock-only data paths and live-query error semantics, and I did not keep seed ID pools centrally aligned.
+- **Action taken:** Aligned `SEED_PROJECTS` IDs to the RFQ generator `01J...` pool; removed fabricated pending-approval counts; moved approvals seed usage into explicit mock branches; removed hidden seed fallback from RFQ overview live path; removed duplicate readiness/live refetch fallback; kept seed fallbacks only where explicitly required for mock mode (quote submissions, RFQ invitations); and cleaned related import/typing/test-format issues.
+- **Follow-up tasks:** Before future frontend merges, run a checklist for (1) mock-vs-live branch separation, (2) no synthetic fallback values in live hooks, (3) canonical seed ID reuse across generators/accessors, and (4) nullable hook return types reflected in consumers.
+
+---
+
+- **Date:** 2026-04-15
+- **PR/Issue ID:** WEB PR review follow-up (readiness/mock gating and seed pool completeness)
+- **Summary of mistake:** Comparison-run readiness handling treated mock-mode `fetchLiveOrFail` undefined as a hard error, seed projects still missed two IDs from the RFQ generator pool, and navigation child-record badges retained hardcoded placeholder counts.
+- **Root cause:** I applied fail-loud behavior without preserving an explicit mock-mode guard for readiness and did not re-check all project IDs or placeholder UI counts after the previous remediation pass.
+- **Action taken:** Added mock-mode query disabling in `use-comparison-run-readiness`, kept live-mode fail-loud behavior for undefined responses, added the two missing seed project IDs, removed unsupported hardcoded child-record badges in `active-record-menu`, and tightened implementation summary wording to explicitly document `use-comparison-run.ts` fetch-retry behavior across mock vs live mode.
+- **Follow-up tasks:** For future review closures, run a final matrix check across (1) mock-mode enabled behavior, (2) live-mode fail-loud behavior, (3) central seed ID pool completeness, and (4) removal or wiring of placeholder UI counters before declaring comments resolved.

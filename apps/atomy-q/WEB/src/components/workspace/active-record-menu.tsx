@@ -3,10 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Eye, FileText, List, Users, Inbox, GitCompareArrows, ShieldCheck, HandCoins, FolderArchive, ShieldAlert, History, Award } from 'lucide-react';
+import { Eye, FileText, List, Users, Inbox, GitCompareArrows, ShieldCheck, HandCoins, FolderArchive, ShieldAlert, Award } from 'lucide-react';
 
 import { Button } from '@/components/ds/Button';
-import { CountBadge, StatusBadge, StatusDot } from '@/components/ds/Badge';
+import { StatusBadge } from '@/components/ds/Badge';
 import { NavigationLink } from '@/components/layout/sidebar';
 import { type RfqStatus } from '@/hooks/use-rfqs';
 import { useRfqPendingApprovalCount } from '@/hooks/use-approvals';
@@ -26,10 +26,8 @@ export interface ActiveRfqRecord {
 export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
   const pathname = usePathname();
   const { data: pendingApprovalCount } = useRfqPendingApprovalCount(record.id);
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-  const normalizedPending = useMocks
-    ? 2
-    : typeof pendingApprovalCount === 'number' && Number.isFinite(pendingApprovalCount)
+  const normalizedPending =
+    typeof pendingApprovalCount === 'number' && Number.isFinite(pendingApprovalCount)
       ? pendingApprovalCount
       : undefined;
   const approvalsBadge =
@@ -47,12 +45,12 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
 
   const childLinks = [
     { id: 'quote-intake', label: 'Quote Intake', href: `${rfqBase}/quote-intake`, icon: <Inbox size={14} />, badge: record.quotesCount },
-    { id: 'comparison-runs', label: 'Comparison Runs', href: `${rfqBase}/comparison-runs`, icon: <GitCompareArrows size={14} />, badge: 3 },
+    { id: 'comparison-runs', label: 'Comparison Runs', href: `${rfqBase}/comparison-runs`, icon: <GitCompareArrows size={14} /> },
     { id: 'approvals', label: 'Approvals', href: `${rfqBase}/approvals`, icon: <ShieldCheck size={14} />, badge: approvalsBadge },
-    { id: 'negotiations', label: 'Negotiations', href: `${rfqBase}/negotiations`, icon: <HandCoins size={14} />, badge: 1 },
-    { id: 'documents', label: 'Documents', href: `${rfqBase}/documents`, icon: <FolderArchive size={14} />, badge: 12 },
+    { id: 'negotiations', label: 'Negotiations', href: `${rfqBase}/negotiations`, icon: <HandCoins size={14} /> },
+    { id: 'documents', label: 'Documents', href: `${rfqBase}/documents`, icon: <FolderArchive size={14} /> },
     { id: 'risk', label: 'Risk & Compliance', href: `${rfqBase}/risk`, icon: <ShieldAlert size={14} />, statusDot: 'green' as const },
-    { id: 'decision-trail', label: 'Decision Trail', href: `${rfqBase}/decision-trail`, icon: <List size={14} />, badge: 5 },
+    { id: 'decision-trail', label: 'Decision Trail', href: `${rfqBase}/decision-trail`, icon: <List size={14} /> },
   ];
 
   return (
@@ -119,4 +117,3 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
     </div>
   );
 }
-
