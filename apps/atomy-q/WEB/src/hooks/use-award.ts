@@ -151,6 +151,20 @@ export function useAward(rfqId: string) {
     },
   });
 
+  const store = useMutation({
+    mutationFn: async (input: { rfqId: string; comparisonRunId: string; vendorId: string }) => {
+      const { data } = await api.post('/awards', {
+        rfq_id: input.rfqId,
+        comparison_run_id: input.comparisonRunId,
+        vendor_id: input.vendorId,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['awards', rfqId] });
+    },
+  });
+
   const awards = query.data ?? [];
   return {
     ...query,
@@ -158,5 +172,6 @@ export function useAward(rfqId: string) {
     award: awards[0] ?? null,
     signoff,
     debrief,
+    store,
   };
 }

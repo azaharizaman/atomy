@@ -236,7 +236,7 @@ final class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'challenge_id' => ['required', 'string'],
-            'tenant_id' => ['required', 'string'],
+            'tenant_id' => ['sometimes', 'string'],
             'otp' => ['required', 'string'],
         ]);
 
@@ -245,10 +245,15 @@ final class AuthController extends Controller
         }
 
         $challengeId = (string) $request->input('challenge_id');
-        $tenantId = (string) $request->input('tenant_id');
         $otp = trim((string) $request->input('otp'));
+        $suppliedTenantId = $request->input('tenant_id');
+        $suppliedTenantId = is_string($suppliedTenantId) ? trim($suppliedTenantId) : '';
 
-        $challenge = $this->mfaChallenges->find($challengeId, $tenantId);
+        $challenge = $suppliedTenantId !== ''
+            ? $this->mfaChallenges->find($challengeId, $suppliedTenantId)
+            : $this->mfaChallenges->findByChallengeId($challengeId);
+        $tenantId = $challenge !== null ? (string) $challenge->tenant_id : '';
+
         if (
             $challenge === null
             || $challenge->consumed_at !== null

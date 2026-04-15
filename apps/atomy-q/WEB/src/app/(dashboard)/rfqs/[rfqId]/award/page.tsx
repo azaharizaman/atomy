@@ -9,7 +9,9 @@ import { StatusBadge } from '@/components/ds/Badge';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useAward } from '@/hooks/use-award';
+import { useComparisonRuns } from '@/hooks/use-comparison-runs';
 import { useRfq } from '@/hooks/use-rfq';
+import { useRfqVendors } from '@/hooks/use-rfq-vendors';
 
 const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
@@ -36,15 +38,35 @@ function awardBadge(status: string | null | undefined): { status: 'pending' | 'a
 export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const { data: rfq } = useRfq(rfqId);
-  const { award, debrief, signoff } = useAward(rfqId);
+  const { award, debrief, signoff, store } = useAward(rfqId);
+  const { data: comparisonRuns = [] } = useComparisonRuns(rfqId);
+  const { data: vendors = [] } = useRfqVendors(rfqId);
   const [debriefMessage, setDebriefMessage] = React.useState('');
+  const [selectedVendorId, setSelectedVendorId] = React.useState('');
+  const [awardError, setAwardError] = React.useState('');
+  const awardVendorSelectId = React.useId();
   const displayAward = award ?? null;
   const awardStatus = awardBadge(displayAward?.status);
   const isFinalized = awardStatus.status === 'approved';
+  const finalRun = comparisonRuns.find((run) => run.type === 'final' && ['frozen', 'final', 'completed'].includes(run.status));
+  const awardCandidates = React.useMemo(
+    () => vendors.filter((vendor) => vendor.vendor_id !== null && vendor.vendor_id.trim() !== ''),
+    [vendors],
+  );
   const nonWinners = displayAward?.comparison?.vendors?.length
     ? displayAward.comparison.vendors.filter((vendor) => vendor.vendor_id !== '' && vendor.vendor_id !== displayAward.vendor_id)
     : [];
   const awardAmount = formatAmount(displayAward?.amount ?? null, displayAward?.currency ?? null);
+
+  React.useEffect(() => {
+    if (selectedVendorId === '' && awardCandidates[0]?.vendor_id) {
+      setSelectedVendorId(awardCandidates[0].vendor_id);
+    }
+  }, [awardCandidates, selectedVendorId]);
+
+  React.useEffect(() => {
+    setAwardError('');
+  }, [selectedVendorId]);
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -84,11 +106,65 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
               <p className="text-xs text-slate-600">
                 {displayAward
                   ? `${isFinalized ? 'Amount' : 'Proposed amount'}: ${awardAmount}`
-                  : 'Freeze a comparison run to create an award record.'}
+                  : finalRun
+                    ? 'Create an award from the final comparison run.'
+                    : 'Freeze a comparison run to create an award record.'}
               </p>
               <StatusBadge status={awardStatus.status} label={displayAward ? (isFinalized ? awardStatus.label : 'Recommended') : 'Recommended'} />
             </div>
           </SectionCard>
+          {!displayAward && finalRun ? (
+            <SectionCard title="Create award">
+              <div className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  Select a vendor to award the contract based on the final comparison run.
+                </p>
+                {awardCandidates.length > 0 ? (
+                  <label htmlFor={awardVendorSelectId} className="block space-y-1">
+                    <span className="text-xs font-medium text-slate-600">Award vendor</span>
+                    <select
+                      id={awardVendorSelectId}
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      value={selectedVendorId}
+                      onChange={(event) => setSelectedVendorId(event.target.value)}
+                    >
+                      {awardCandidates.map((vendor) => (
+                        <option key={vendor.id} value={vendor.vendor_id ?? ''}>
+                          {vendor.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <p className="text-sm text-slate-500">No vendors available for award selection.</p>
+                )}
+                <Button
+                  size="sm"
+                  variant="primary"
+                  disabled={selectedVendorId === '' || store.isPending || useMocks}
+                  onClick={() => {
+                    if (selectedVendorId !== '') {
+                      setAwardError('');
+                      store.mutate(
+                        { rfqId, comparisonRunId: finalRun.id, vendorId: selectedVendorId },
+                        {
+                          onError: (error) => {
+                            setAwardError(error instanceof Error ? error.message : 'Award creation failed.');
+                          },
+                          onSuccess: () => {
+                            setAwardError('');
+                          },
+                        },
+                      );
+                    }
+                  }}
+                >
+                  Create Award
+                </Button>
+                {awardError !== '' ? <p className="text-xs text-red-600">{awardError}</p> : null}
+              </div>
+            </SectionCard>
+          ) : null}
           <SectionCard title="Sign-off">
             <div className="space-y-3">
               <Button

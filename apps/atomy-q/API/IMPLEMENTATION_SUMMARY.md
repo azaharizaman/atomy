@@ -49,6 +49,7 @@
 - `AtomyUserQuery` now exposes real role and permission data through `user_roles`, `role_permissions`, and `user_permissions` pivots, with legacy single-role fallback for seeded alpha users.
 - `AtomyUserAuthenticator` now increments failed-login counters and locks accounts after five failures, and the new identity tests verify both lockout and wildcard RBAC through the real middleware path.
 - `AuthTest::test_sso_*` exercise OIDC init + mock callback (`mock_authorization_code` + `SSO_MOCK_DISCOVERY_DOCUMENT`) end-to-end against these bindings.
+- MFA verification now resolves tenant context from the persisted challenge record. `tenant_id` is optional on `POST /api/v1/auth/mfa/verify`; when supplied and mismatched, the endpoint returns the generic invalid-challenge response without exposing cross-tenant state.
 
 ### Environment
 
@@ -79,6 +80,13 @@
 - Draft saves now preserve explicit nulls for nullable fields that are actually present in the request instead of falling back through `??` to old values.
 - Duplicate RFQs now create `rfq_number` and insert inside a single transaction with retry on unique-key conflicts, closing the atomicity gap between number generation and persistence.
 - Bulk-action execution now rejects preloaded record sets that do not exactly match the requested RFQ ids, preventing writes against unvalidated identifiers.
+
+## Alpha Task 1 rectification (2026-04-15)
+
+- Quote upload happy-path tests now include a valid RFQ line-item fixture, proving the mock processor can mark uploads `ready`; no-line upload coverage proves missing RFQ line context does not masquerade as ready.
+- `Award::creator()` is available as a relation mapped to the current `signed_off_by` schema while preserving `signedOffByUser()`.
+- Sourcing adapter tests mirror the production RFQ schema for project/schedule fields, and duplicate RFQ number exhaustion maps SQLite unique violations to `DuplicateRfqNumberException`.
+- Verification: API alpha matrix passes with 93 tests / 522 assertions; full API suite passes with 425 tests / 1131 assertions.
 
 ## Endpoint Coverage
 

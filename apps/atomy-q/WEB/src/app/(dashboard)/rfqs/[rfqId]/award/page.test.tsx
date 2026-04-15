@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeAll, describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 
 import { useAward } from '@/hooks/use-award';
@@ -97,12 +97,13 @@ describe('RfqAwardPage', () => {
   });
 
   it('shows award creation UI when no award exists', async () => {
+    const storeMutate = vi.fn();
     vi.mocked(useAward).mockReturnValue({
       award: null,
       awards: [],
       signoff: { mutate: vi.fn(), isPending: false, isError: false },
       debrief: { mutate: vi.fn(), isPending: false, isError: false },
-      store: { mutate: vi.fn(), isPending: false, isError: false },
+      store: { mutate: storeMutate, isPending: false, isError: false },
     } as unknown as UseAwardReturn);
     
     vi.mocked(useComparisonRuns).mockReturnValue({
@@ -112,6 +113,25 @@ describe('RfqAwardPage', () => {
     renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
 
     expect(await screen.findByText(/Select a vendor to award the contract based on the final comparison run/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create award/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /create award/i }));
+
+    expect(storeMutate).toHaveBeenCalledWith(
+      { rfqId: 'rfq-1', comparisonRunId: 'run-1', vendorId: 'vendor-1' },
+      expect.objectContaining({
+        onError: expect.any(Function),
+        onSuccess: expect.any(Function),
+      }),
+    );
+    const callbacks = storeMutate.mock.calls[0]?.[1] as { onError: (error: Error) => void; onSuccess: () => void };
+
+    act(() => {
+      callbacks.onError(new Error('Award creation rejected'));
+    });
+    expect(screen.getByText('Award creation rejected')).toBeInTheDocument();
+
+    act(() => {
+      callbacks.onSuccess();
+    });
+    expect(screen.queryByText('Award creation rejected')).not.toBeInTheDocument();
   });
 });

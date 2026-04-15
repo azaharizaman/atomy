@@ -173,7 +173,7 @@ final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPort
         $message = strtolower($exception->getMessage());
 
         // Only return true for unique-index violations on the RFQ number constraint
-        $isUniqueViolation = $errorCode === '23505' || $driverCode === '1062';
+        $isUniqueViolation = $errorCode === '23505' || $errorCode === '23000' || $driverCode === '1062' || $driverCode === '19';
         $isRfqNumberConstraint = str_contains($message, 'rfqs_tenant_id_rfq_number_unique')
             || str_contains($message, 'rfqs.tenant_id, rfqs.rfq_number');
 
