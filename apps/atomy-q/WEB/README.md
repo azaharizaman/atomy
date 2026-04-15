@@ -2,7 +2,7 @@
 
 This is the Next.js frontend for the Atomy-Q Quote Comparison & Procurement platform.
 
-**Design-partner alpha:** Supported vs stubbed flows for external pilots are documented in [`../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md`](../ALPHA_DESIGN_PARTNER_SUPPORTED_FLOWS.md).
+**Design-partner alpha:** Current scope, release gates, and deferred surfaces are documented in [`../docs/ALPHA_RELEASE_PLAN_2026-04-15.md`](../docs/ALPHA_RELEASE_PLAN_2026-04-15.md).
 
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router)
