@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
+use App\Models\RfqLineItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -227,6 +228,16 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'submission_deadline' => now()->addDays(14),
             'status' => 'draft',
         ]);
+        RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Pump seal kit',
+            'quantity' => 2,
+            'uom' => 'EA',
+            'unit_price' => 100,
+            'currency' => 'USD',
+            'sort_order' => 1,
+        ]);
 
         $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
             ->post('/api/v1/quote-submissions/upload', [
@@ -251,6 +262,40 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         ]);
     }
 
+    public function test_quote_submission_upload_without_rfq_lines_does_not_become_ready(): void
+    {
+        Storage::fake('local');
+
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-2002',
+            'title' => 'Upload RFQ Without Lines',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'draft',
+        ]);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Upload Vendor',
+                'file' => UploadedFile::fake()->create('quote.txt', 12, 'text/plain'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'failed');
+
+        $quoteId = (string) $response->json('data.id');
+        $this->assertDatabaseHas('quote_submissions', [
+            'id' => $quoteId,
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'status' => 'failed',
+        ]);
+    }
+
     public function test_quote_submission_show_returns_404_for_other_tenant(): void
     {
         $owner = $this->createUser();
@@ -258,7 +303,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
 
         $rfq = Rfq::query()->create([
             'tenant_id' => $owner->tenant_id,
-            'rfq_number' => 'RFQ-2002',
+            'rfq_number' => 'RFQ-2003',
             'title' => 'Tenant scoped RFQ',
             'owner_id' => $owner->id,
             'submission_deadline' => now()->addDays(14),
@@ -295,7 +340,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
 
         $rfqA = Rfq::query()->create([
             'tenant_id' => $user->tenant_id,
-            'rfq_number' => 'RFQ-2003',
+            'rfq_number' => 'RFQ-2004',
             'title' => 'List RFQ A',
             'owner_id' => $user->id,
             'submission_deadline' => now()->addDays(14),
@@ -304,7 +349,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
 
         $rfqB = Rfq::query()->create([
             'tenant_id' => $user->tenant_id,
-            'rfq_number' => 'RFQ-2004',
+            'rfq_number' => 'RFQ-2005',
             'title' => 'List RFQ B',
             'owner_id' => $user->id,
             'submission_deadline' => now()->addDays(14),

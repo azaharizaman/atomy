@@ -303,6 +303,26 @@ final class AuthTest extends TestCase
         $verify->assertJsonPath('user.tenantId', $user['tenant_id']);
     }
 
+    public function test_mfa_verify_rejects_mismatched_optional_tenant_id(): void
+    {
+        $user = $this->createTestUser(['mfa_enabled' => true]);
+
+        $challengeResponse = $this->postJson('/api/v1/auth/login', [
+            'email' => $user['email'],
+            'password' => $user['password'],
+        ]);
+
+        $challengeResponse->assertStatus(401);
+        $challengeId = (string) $challengeResponse->json('challenge_id');
+
+        $this->postJson('/api/v1/auth/mfa/verify', [
+            'challenge_id' => $challengeId,
+            'tenant_id' => (string) \Illuminate\Support\Str::ulid(),
+            'otp' => '123456',
+        ])->assertStatus(401)
+            ->assertJsonPath('message', 'Invalid or expired MFA challenge');
+    }
+
     public function test_forgot_password_requires_email(): void
     {
         $this->postJson('/api/v1/auth/forgot-password', [])

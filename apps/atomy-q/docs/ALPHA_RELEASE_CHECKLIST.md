@@ -7,9 +7,22 @@
 
 ## Executive Status
 
-Alpha is **not release-ready** on this baseline. The current blockers are concentrated in WEB build/unit health and API alpha-matrix failures rather than missing infrastructure startup.
+Task 1 rectification is **green locally as of 2026-04-15**. The WEB lint/build/unit gates, API alpha matrix, and API full suite now pass after the rectification pass documented below.
 
-The strongest signal is that many alpha-critical backend flows pass independently: company registration, RFQ lifecycle, invitations, comparison, awards, vendor workflow, identity gap tests, normalization review, quote ingestion pipeline, and operational approvals all have passing coverage in the alpha matrix. The release gate is still blocked by specific regressions that must be fixed before staging smoke can be meaningful.
+The original baseline captured in this document was **not release-ready**. Those failure details are retained as historical context underneath the current evidence.
+
+The strongest rectification signal is that the alpha-critical backend flows pass together in the matrix: company registration, RFQ lifecycle, invitations, comparison, awards, vendor workflow, identity gap tests, normalization review, quote ingestion pipeline, and operational approvals. Remaining non-Task-1 alpha work should continue from the broader release plan before staging smoke.
+
+## Latest Rectification Evidence - 2026-04-15
+
+- `cd apps/atomy-q/WEB && npm run lint`: PASS. Exit 0 with 7 existing warnings:
+  `negotiations/page.tsx` unused `SectionCard`, `overview/page.tsx` missing `comparison` dependency in `useMemo`, `rfqs/page.tsx` unused `_ids`, `settings/page.tsx` unused `Settings`, and unused `api` imports in `use-comparison-run-matrix.ts`, `use-quote-submission.ts`, and `use-rfq-counts.ts`.
+- `cd apps/atomy-q/WEB && npm run build`: PASS.
+- `cd apps/atomy-q/WEB && npm run test:unit`: PASS. 33 files, 87 tests.
+- `cd apps/atomy-q/API && php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest"`: PASS. 93 tests, 522 assertions.
+- `cd apps/atomy-q/API && php artisan test`: PASS. 425 tests, 1131 assertions.
+
+## Historical Baseline Evidence
 
 ## Gate Summary
 

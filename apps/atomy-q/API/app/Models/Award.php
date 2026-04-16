@@ -62,7 +62,15 @@ class Award extends Model
      */
     public function signedOffByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'signed_off_by');
+        return $this->signedOffByRelation('signedOffByUser');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->signedOffByRelation('creator');
     }
 
     /**
@@ -71,5 +79,13 @@ class Award extends Model
     public function handoffs(): HasMany
     {
         return $this->hasMany(Handoff::class, 'award_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    private function signedOffByRelation(string $relation): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'signed_off_by', 'id', $relation);
     }
 }

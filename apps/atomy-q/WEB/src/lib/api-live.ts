@@ -12,6 +12,11 @@ export interface FetchLiveOrFailOptions {
   responseType?: FetchResponseType;
 }
 
+type LiveApiError = Error & {
+  status?: number;
+  response?: unknown;
+};
+
 /**
  * Fetches from API in live mode, throwing a descriptive error on failure.
  * In mock mode, returns undefined to signal the caller should use seed data.
@@ -31,16 +36,16 @@ export async function fetchLiveOrFail<T>(
     return data as T;
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
-    const err = new Error(`Failed to load ${endpoint}: ${message}`);
+    const err: LiveApiError = new Error(`Failed to load ${endpoint}: ${message}`);
     if (e instanceof Error) {
       err.cause = e;
     }
     const axiosErr = e as { response?: { status?: number; data?: unknown }; status?: number };
     if (axiosErr.response) {
-      (err as Record<string, unknown>).status = axiosErr.response.status;
-      (err as Record<string, unknown>).response = axiosErr.response.data;
+      err.status = axiosErr.response.status;
+      err.response = axiosErr.response.data;
     } else if (axiosErr.status) {
-      (err as Record<string, unknown>).status = axiosErr.status;
+      err.status = axiosErr.status;
     }
     throw err;
   }

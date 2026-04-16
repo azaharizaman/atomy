@@ -39,6 +39,13 @@ final readonly class AtomyMfaChallengeStore implements MfaChallengeStoreInterfac
             ->first();
     }
 
+    public function findByChallengeId(string $challengeId): ?MfaChallenge
+    {
+        return MfaChallenge::query()
+            ->whereKey($challengeId)
+            ->first();
+    }
+
     public function consume(string $challengeId, string $tenantId): void
     {
         MfaChallenge::query()

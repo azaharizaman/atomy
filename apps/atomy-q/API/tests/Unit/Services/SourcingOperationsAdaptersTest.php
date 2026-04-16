@@ -40,6 +40,7 @@ final class SourcingOperationsAdaptersTest extends TestCase
         Schema::create('rfqs', static function ($table): void {
             $table->ulid('id')->primary();
             $table->ulid('tenant_id')->index();
+            $table->ulid('project_id')->nullable()->index();
             $table->string('rfq_number');
             $table->string('title');
             $table->text('description')->nullable();
@@ -51,6 +52,9 @@ final class SourcingOperationsAdaptersTest extends TestCase
             $table->decimal('savings_percentage', 5, 2)->default(0);
             $table->timestamp('submission_deadline')->nullable();
             $table->timestamp('closing_date')->nullable();
+            $table->timestamp('expected_award_at')->nullable();
+            $table->timestamp('technical_review_due_at')->nullable();
+            $table->timestamp('financial_review_due_at')->nullable();
             $table->string('payment_terms')->nullable();
             $table->string('evaluation_method')->nullable();
             $table->timestamps();

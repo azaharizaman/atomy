@@ -48,3 +48,10 @@
 - Added seeded fallbacks for mock mode in quote submissions and RFQ invitations so normalizers always receive valid payloads.
 - Corrected `FetchResponseType` to use Axios-compatible `'arraybuffer'`.
 - Cleaned unused imports and fixed assertion indentation consistency in comparison run test files.
+
+## 2026-04-15 Alpha Task 1 Rectification
+
+- `fetchLiveOrFail` now decorates live API failures through a typed `LiveApiError` shape, preserving status/response metadata without unsafe `Error` casts.
+- The RFQ award page now exposes a live create-award path when no award exists and a final comparison run is available, using real comparison-run and RFQ-vendor hook data. Mock mode still disables the mutation.
+- `useAward` now returns a `store` mutation for `POST /awards` and invalidates the RFQ award query after creation.
+- Verification: `npm run lint` exits 0 with the documented existing warnings; `npm run build` and `npm run test:unit` pass.

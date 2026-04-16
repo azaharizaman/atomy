@@ -133,6 +133,8 @@ After this task, stakeholders should have a simple release checklist showing whi
 **Files:**
 - Modify: `apps/atomy-q/docs/ALPHA_RELEASE_PLAN_2026-04-15.md`
 - Create: `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md`
+- Follow-up spec: [`ALPHA_TASK1_RECTIFICATION_SPEC_2026-04-15.md`](./ALPHA_TASK1_RECTIFICATION_SPEC_2026-04-15.md)
+- Follow-up plan: [`ALPHA_TASK1_RECTIFICATION_IMPLEMENTATION_PLAN_2026-04-15.md`](./ALPHA_TASK1_RECTIFICATION_IMPLEMENTATION_PLAN_2026-04-15.md)
 
 - [x] Run WEB gates: `cd apps/atomy-q/WEB && npm run lint && npm run build && npm run test:unit`.
 - [x] Run API gates: `cd apps/atomy-q/API && php artisan test`.
