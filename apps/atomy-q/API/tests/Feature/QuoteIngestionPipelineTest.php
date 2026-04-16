@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Adapters\QuotationIntelligence\MockContentProcessor;
-use App\Adapters\QuotationIntelligence\MockSemanticMapper;
+use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
+use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
+use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;
+use App\Adapters\QuotationIntelligence\DormantLlmSemanticMapper;
 use App\Jobs\ProcessQuoteSubmissionJob;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
@@ -170,8 +172,8 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
         config()->set('atomy', $contract);
         $this->resetQuoteIntelligenceBindings();
-        self::assertInstanceOf(MockContentProcessor::class, app()->make(OrchestratorContentProcessorInterface::class));
-        self::assertInstanceOf(MockSemanticMapper::class, app()->make(SemanticMapperInterface::class));
+        self::assertInstanceOf(DeterministicContentProcessor::class, app()->make(OrchestratorContentProcessorInterface::class));
+        self::assertInstanceOf(DeterministicSemanticMapper::class, app()->make(SemanticMapperInterface::class));
 
         $user = $this->createUser();
         $rfq = $this->createRfq($user);
@@ -200,8 +202,8 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $contentProcessor = app()->make(OrchestratorContentProcessorInterface::class);
         $semanticMapper = app()->make(SemanticMapperInterface::class);
 
-        self::assertNotInstanceOf(MockContentProcessor::class, $contentProcessor);
-        self::assertNotInstanceOf(MockSemanticMapper::class, $semanticMapper);
+        self::assertInstanceOf(DormantLlmContentProcessor::class, $contentProcessor);
+        self::assertInstanceOf(DormantLlmSemanticMapper::class, $semanticMapper);
 
         $user = $this->createUser();
         $rfq = $this->createRfq($user);
@@ -227,10 +229,29 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
         $semanticMapper = app()->make(SemanticMapperInterface::class);
 
-        self::assertNotInstanceOf(MockSemanticMapper::class, $semanticMapper);
+        self::assertInstanceOf(DormantLlmSemanticMapper::class, $semanticMapper);
 
         $this->expectException(QuotationIntelligenceException::class);
         $semanticMapper->mapToTaxonomy('Pump assembly', (string) Str::ulid());
+    }
+
+    public function test_quote_intelligence_llm_mode_with_provider_config_fails_until_adapter_exists(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'llm');
+        config()->set('atomy.quote_intelligence.llm.provider', 'openai');
+        config()->set('atomy.quote_intelligence.llm.model', 'gpt-5');
+        config()->set('atomy.quote_intelligence.llm.base_url', 'https://api.example.test/v1');
+        config()->set('atomy.quote_intelligence.llm.api_key', 'test-key');
+
+        $contentProcessor = app()->make(OrchestratorContentProcessorInterface::class);
+
+        self::assertInstanceOf(DormantLlmContentProcessor::class, $contentProcessor);
+
+        $this->expectException(QuotationIntelligenceException::class);
+        $this->expectExceptionMessage('Quote intelligence LLM mode is configured but no production adapter is implemented yet.');
+
+        $contentProcessor->analyze(storage_path('app/quote-submissions/configured-llm.pdf'));
     }
 
     public function test_unsupported_quote_intelligence_mode_fails_safe_through_pipeline(): void
@@ -241,8 +262,8 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $contentProcessor = app()->make(OrchestratorContentProcessorInterface::class);
         $semanticMapper = app()->make(SemanticMapperInterface::class);
 
-        self::assertNotInstanceOf(MockContentProcessor::class, $contentProcessor);
-        self::assertNotInstanceOf(MockSemanticMapper::class, $semanticMapper);
+        self::assertNotInstanceOf(DeterministicContentProcessor::class, $contentProcessor);
+        self::assertNotInstanceOf(DeterministicSemanticMapper::class, $semanticMapper);
 
         $user = $this->createUser();
         $rfq = $this->createRfq($user);

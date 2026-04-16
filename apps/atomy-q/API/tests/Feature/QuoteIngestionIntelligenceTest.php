@@ -132,6 +132,8 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
 
     public function test_orchestrator_creates_source_lines_with_rfq_line_item_ids(): void
     {
+        config()->set('atomy.quote_intelligence.mode', 'deterministic');
+
         $user = $this->createUser();
         $rfq = $this->createRfqWithLineItems($user);
 
@@ -184,6 +186,10 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
             self::assertNotSame('', (string) $sourceLine->taxonomy_code, 'taxonomy_code should be non-empty');
             self::assertNotNull($sourceLine->mapping_version, 'mapping_version should be populated');
             self::assertNotSame('', (string) $sourceLine->mapping_version, 'mapping_version should be non-empty');
+            self::assertIsArray($sourceLine->raw_data, 'raw_data should be persisted');
+            self::assertArrayHasKey('quoted_quantity', $sourceLine->raw_data, 'raw_data should include quoted_quantity');
+            self::assertArrayHasKey('quoted_unit', $sourceLine->raw_data, 'raw_data should include quoted_unit');
+            self::assertArrayHasKey('quoted_unit_price', $sourceLine->raw_data, 'raw_data should include quoted_unit_price');
 
             $rfqLineItem = $rfq->lineItems()->where('id', $sourceLine->rfq_line_item_id)->first();
             self::assertNotNull($rfqLineItem, 'rfq_line_item_id should reference a valid RFQ line item');

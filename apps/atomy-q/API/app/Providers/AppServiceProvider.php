@@ -123,8 +123,10 @@ use App\Adapters\QuotationIntelligence\OrchestratorDocumentRepository;
 use App\Adapters\QuotationIntelligence\OrchestratorTenantRepository;
 use App\Adapters\QuotationIntelligence\OrchestratorProcurementManager;
 use App\Adapters\QuotationIntelligence\AtomyDecisionTrailWriter;
-use App\Adapters\QuotationIntelligence\MockContentProcessor;
-use App\Adapters\QuotationIntelligence\MockSemanticMapper;
+use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
+use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
+use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;
+use App\Adapters\QuotationIntelligence\DormantLlmSemanticMapper;
 use App\Adapters\QuotationIntelligence\Support\InMemoryUomRepository;
 use App\Adapters\QuotationIntelligence\Support\StaticExchangeRateProvider;
 use App\Adapters\QuoteIngestion\EloquentQuoteSubmissionQuery;
@@ -221,20 +223,11 @@ class AppServiceProvider extends ServiceProvider
             $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
 
             if ($mode === 'deterministic') {
-                return new MockContentProcessor();
+                return new DeterministicContentProcessor();
             }
 
             if ($mode === 'llm') {
-                $message = $this->quoteIntelligenceLlmFailureMessage();
-
-                return new class($message) implements OrchestratorContentProcessorInterface {
-                    public function __construct(private readonly string $message) {}
-
-                    public function analyze(string $storagePath): object
-                    {
-                        throw new QuotationIntelligenceException($this->message);
-                    }
-                };
+                return new DormantLlmContentProcessor($this->quoteIntelligenceLlmConfig());
             }
 
             $message = 'Unsupported quote intelligence mode.';
@@ -252,25 +245,11 @@ class AppServiceProvider extends ServiceProvider
             $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
 
             if ($mode === 'deterministic') {
-                return new MockSemanticMapper();
+                return new DeterministicSemanticMapper();
             }
 
             if ($mode === 'llm') {
-                $message = $this->quoteIntelligenceLlmFailureMessage();
-
-                return new class($message) implements SemanticMapperInterface {
-                    public function __construct(private readonly string $message) {}
-
-                    public function mapToTaxonomy(string $description, string $tenantId): array
-                    {
-                        throw new QuotationIntelligenceException($this->message);
-                    }
-
-                    public function validateCode(string $code, string $version): bool
-                    {
-                        throw new QuotationIntelligenceException($this->message);
-                    }
-                };
+                return new DormantLlmSemanticMapper($this->quoteIntelligenceLlmConfig());
             }
 
             $message = 'Unsupported quote intelligence mode.';
@@ -445,28 +424,11 @@ class AppServiceProvider extends ServiceProvider
         ]);
     }
 
-    private function quoteIntelligenceLlmFailureMessage(): string
-    {
-        $llmConfig = (array) config('atomy.quote_intelligence.llm', []);
-
-        if (!$this->hasRequiredQuoteIntelligenceLlmConfig($llmConfig)) {
-            return 'Quote intelligence LLM provider configuration is missing or incomplete.';
-        }
-
-        return 'Quote intelligence LLM mode is configured but no production adapter is implemented yet.';
-    }
-
     /**
-     * @param array<string, mixed> $llmConfig
+     * @return array<string, mixed>
      */
-    private function hasRequiredQuoteIntelligenceLlmConfig(array $llmConfig): bool
+    private function quoteIntelligenceLlmConfig(): array
     {
-        foreach (['provider', 'model', 'base_url', 'api_key'] as $key) {
-            if (!is_string($llmConfig[$key] ?? null) || trim((string) $llmConfig[$key]) === '') {
-                return false;
-            }
-        }
-
-        return true;
+        return (array) config('atomy.quote_intelligence.llm', []);
     }
 }
