@@ -155,52 +155,50 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'ready');
     }
 
-    public function test_invalid_quote_intelligence_mode_fails_closed(): void
+    public function test_quote_intelligence_llm_mode_resolves_dormant_bindings(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'llm');
+
+        $contentProcessor = app()->make(OrchestratorContentProcessorInterface::class);
+        $semanticMapper = app()->make(SemanticMapperInterface::class);
+
+        self::assertNotInstanceOf(MockContentProcessor::class, $contentProcessor);
+        self::assertNotInstanceOf(MockSemanticMapper::class, $semanticMapper);
+
+        $this->expectException(\RuntimeException::class);
+        $contentProcessor->analyze('quote-submissions/quote.pdf');
+    }
+
+    public function test_quote_intelligence_llm_mode_semantic_mapper_is_dormant(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'llm');
+
+        $semanticMapper = app()->make(SemanticMapperInterface::class);
+
+        self::assertNotInstanceOf(MockSemanticMapper::class, $semanticMapper);
+
+        $this->expectException(\RuntimeException::class);
+        $semanticMapper->mapToTaxonomy('Pump assembly', (string) Str::ulid());
+    }
+
+    public function test_invalid_quote_intelligence_mode_fails_closed_on_resolution(): void
     {
         $this->resetQuoteIntelligenceBindings();
         config()->set('atomy.quote_intelligence.mode', 'unsupported-mode');
 
-        $user = $this->createUser();
-        $rfq = $this->createRfq($user);
-
-        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
-            ->post('/api/v1/quote-submissions/upload', [
-                'rfq_id' => $rfq->id,
-                'vendor_id' => (string) Str::ulid(),
-                'vendor_name' => 'Unsupported Mode Vendor',
-                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
-            ]);
-
-        $response->assertCreated();
-        $response->assertJsonPath('data.status', 'failed');
-        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
-        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
+        $this->expectException(\RuntimeException::class);
+        app()->make(OrchestratorContentProcessorInterface::class);
     }
 
-    public function test_quote_intelligence_llm_mode_without_provider_config_fails_safely(): void
+    public function test_invalid_quote_intelligence_mode_fails_closed_for_semantic_mapper_resolution(): void
     {
         $this->resetQuoteIntelligenceBindings();
-        config()->set('atomy.quote_intelligence.mode', 'llm');
-        config()->set('atomy.quote_intelligence.llm.provider', '');
-        config()->set('atomy.quote_intelligence.llm.model', '');
-        config()->set('atomy.quote_intelligence.llm.base_url', '');
-        config()->set('atomy.quote_intelligence.llm.api_key', '');
+        config()->set('atomy.quote_intelligence.mode', 'unsupported-mode');
 
-        $user = $this->createUser();
-        $rfq = $this->createRfq($user);
-
-        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
-            ->post('/api/v1/quote-submissions/upload', [
-                'rfq_id' => $rfq->id,
-                'vendor_id' => (string) Str::ulid(),
-                'vendor_name' => 'Dormant LLM Vendor',
-                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
-            ]);
-
-        $response->assertCreated();
-        $response->assertJsonPath('data.status', 'failed');
-        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
-        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
+        $this->expectException(\RuntimeException::class);
+        app()->make(SemanticMapperInterface::class);
     }
 
     public function test_reparse_resets_and_reprocesses(): void

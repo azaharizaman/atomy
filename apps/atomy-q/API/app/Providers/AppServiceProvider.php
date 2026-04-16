@@ -232,12 +232,7 @@ class AppServiceProvider extends ServiceProvider
                 };
             }
 
-            return new class implements OrchestratorContentProcessorInterface {
-                public function analyze(string $storagePath): object
-                {
-                    throw new \RuntimeException('Unsupported quote intelligence mode.');
-                }
-            };
+            throw new \RuntimeException('Unsupported quote intelligence mode.');
         });
         $this->app->singleton(SemanticMapperInterface::class, static function (): SemanticMapperInterface {
             $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
@@ -260,17 +255,7 @@ class AppServiceProvider extends ServiceProvider
                 };
             }
 
-            return new class implements SemanticMapperInterface {
-                public function mapToTaxonomy(string $description, string $tenantId): array
-                {
-                    throw new \RuntimeException('Unsupported quote intelligence mode.');
-                }
-
-                public function validateCode(string $code, string $version): bool
-                {
-                    throw new \RuntimeException('Unsupported quote intelligence mode.');
-                }
-            };
+            throw new \RuntimeException('Unsupported quote intelligence mode.');
         });
         $this->app->singleton(QuoteNormalizationServiceInterface::class, QuoteNormalizationService::class);
         $this->app->singleton(CommercialTermsExtractorInterface::class, RegexCommercialTermsExtractor::class);
