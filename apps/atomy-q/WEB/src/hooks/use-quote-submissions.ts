@@ -17,7 +17,7 @@ export interface QuoteSubmissionRow {
   original_filename?: string | null;
 }
 
-function normalizeQuoteSubmissionRows(payload: unknown): QuoteSubmissionRow[] {
+function normalizeQuoteSubmissionRows(payload: unknown, isMockMode = false): QuoteSubmissionRow[] {
   if (!isObject(payload)) {
     throw new Error('Invalid quote submission response: expected object envelope with data array.');
   }
@@ -43,14 +43,27 @@ function normalizeQuoteSubmissionRows(payload: unknown): QuoteSubmissionRow[] {
     const confidence = normalizeConfidence(row.confidence, index);
     const blockingIssueCount = normalizeFiniteNumber(row.blocking_issue_count, 'blocking_issue_count', index);
     const uploadedAt = normalizeRequiredString(row.submitted_at, 'submitted_at', index);
+
+    const fileNameSource = row.original_filename ?? row.file_name ?? row.file_path;
+    const statusSource = row.status;
+    if (!isMockMode && (fileNameSource === undefined || fileNameSource === null || String(fileNameSource).trim() === '')) {
+      throw new Error(`Invalid quote submission row at index ${index}: missing file_name, original_filename, or file_path`);
+    }
+    if (!isMockMode && (statusSource === undefined || statusSource === null || String(statusSource).trim() === '')) {
+      throw new Error(`Invalid quote submission row at index ${index}: missing status`);
+    }
+
+    const finalFileName = isMockMode
+      ? (String(fileNameSource ?? '').trim() || `Quote ${index + 1}`)
+      : String(fileNameSource);
+    const finalStatus = isMockMode ? String(statusSource ?? 'uploaded') : String(statusSource);
     return {
       id,
       rfq_id: rfqId,
       vendor_id: vendorId,
       vendor_name: vendorName,
-      file_name:
-        String(row.original_filename ?? row.file_name ?? row.file_path ?? '').trim() || `Quote ${index + 1}`,
-      status: String(row.status ?? 'uploaded'),
+      file_name: finalFileName,
+      status: finalStatus,
       confidence,
       uploaded_at: uploadedAt,
       blocking_issue_count: blockingIssueCount,
@@ -129,7 +142,7 @@ export function useQuoteSubmissions(rfqId: string) {
           blocking_issue_count: 0,
           original_filename: row.fileName,
         }));
-        return normalizeQuoteSubmissionRows({ data: seedRows });
+        return normalizeQuoteSubmissionRows({ data: seedRows }, true);
       }
 
       const data = await fetchLiveOrFail<{ data: QuoteSubmissionRow[] }>('/quote-submissions', {
@@ -140,7 +153,7 @@ export function useQuoteSubmissions(rfqId: string) {
         throw new Error(`Quote submissions unavailable for RFQ "${rfqId}".`);
       }
 
-      return normalizeQuoteSubmissionRows(data);
+      return normalizeQuoteSubmissionRows(data, false);
     },
     enabled: Boolean(rfqId),
   });

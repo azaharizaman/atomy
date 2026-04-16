@@ -34,16 +34,21 @@ function normalizeInvitationPayload(payload: unknown): RfqVendorRow[] {
       throw new Error(`Invalid RFQ vendor row at index ${index}: missing id, vendor_name, or contact`);
     }
 
-    const status = row.status === 'accepted' || row.status === 'responded' ? 'responded' : row.status === 'invited' ? 'invited' : null;
-    if (status === null) {
+    const rawStatus = row.status;
+    const normalizedStatus = rawStatus === 'accepted' || rawStatus === 'responded'
+      ? 'responded'
+      : rawStatus === 'invited'
+        ? 'invited'
+        : null;
+    if (normalizedStatus === null) {
       throw new Error(`Invalid RFQ vendor row at index ${index}: invalid status`);
     }
 
     return {
       id,
-      vendor_id: row.vendor_id !== undefined && row.vendor_id !== null ? String(row.vendor_id) : null,
+      vendor_id: toText(row.vendor_id),
       name,
-      status,
+      status: normalizedStatus,
       contact,
     };
   });

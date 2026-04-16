@@ -43,6 +43,16 @@ function normalizeConflictRow(item: unknown, index: number): NormalizationConfli
   };
 }
 
+function parseBlockingIssueCount(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string' && value.trim() === '') return undefined;
+  const count = Number(value);
+  if (!Number.isFinite(count)) {
+    throw new Error('Invalid normalization review response: invalid blocking_issue_count.');
+  }
+  return count;
+}
+
 function normalizeConflictsResponse(payload: unknown): ConflictsResponse {
   if (!isObject(payload)) {
     throw new Error('Invalid normalization review response: expected object envelope.');
@@ -62,16 +72,7 @@ function normalizeConflictsResponse(payload: unknown): ConflictsResponse {
       rfq_id: toText(payload.meta.rfq_id ?? payload.meta.rfqId) ?? undefined,
       has_blocking_issues:
         typeof payload.meta.has_blocking_issues === 'boolean' ? payload.meta.has_blocking_issues : undefined,
-      blocking_issue_count:
-        payload.meta.blocking_issue_count === null || payload.meta.blocking_issue_count === undefined
-          ? undefined
-          : (() => {
-              const count = Number(payload.meta.blocking_issue_count);
-              if (!Number.isFinite(count)) {
-                throw new Error('Invalid normalization review response: invalid blocking_issue_count.');
-              }
-              return count;
-            })(),
+      blocking_issue_count: parseBlockingIssueCount(payload.meta.blocking_issue_count),
     },
   };
 }
@@ -123,14 +124,7 @@ export function useNormalizationReview(rfqId: string, options?: { enabled?: bool
   });
 
   const meta = query.data?.meta;
-  const rawBlocking = meta?.blocking_issue_count;
-  let blockingIssueCount = 0;
-  if (rawBlocking !== null && rawBlocking !== undefined) {
-    const n = Number(rawBlocking);
-    if (Number.isFinite(n)) {
-      blockingIssueCount = Math.round(n);
-    }
-  }
+  const blockingIssueCount = meta?.blocking_issue_count ?? 0;
   return {
     ...query,
     conflicts: query.data?.data ?? [],

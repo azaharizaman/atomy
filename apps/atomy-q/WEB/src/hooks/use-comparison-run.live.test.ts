@@ -89,7 +89,7 @@ describe('useComparisonRun (live mode)', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(Error);
-    expect((result.current.error as Error).message).toContain('id');
+    expect((result.current.error as Error).message).toContain('missing id');
   });
 });
 

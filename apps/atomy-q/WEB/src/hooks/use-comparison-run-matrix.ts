@@ -165,7 +165,22 @@ export function useComparisonRunMatrix(runId: string, options?: { rfqId?: string
           : null;
         return {
           id: seedRun?.id ?? runId,
-          clusters: [],
+          clusters: [
+            {
+              clusterKey: 'default',
+              basis: 'Sample cluster for demo',
+              offers: [],
+              statistics: {
+                minNormalizedUnitPrice: 0,
+                maxNormalizedUnitPrice: 0,
+                avgNormalizedUnitPrice: 0,
+              },
+              recommendation: {
+                recommendedVendorId: 'demo-vendor',
+                reason: 'Demo mode - no comparison data',
+              },
+            },
+          ],
         };
       }
 

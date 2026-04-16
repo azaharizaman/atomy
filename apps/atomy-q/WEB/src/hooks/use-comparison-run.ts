@@ -200,6 +200,9 @@ function normalizeComparisonRun(payload: unknown): ComparisonRunDetail {
 }
 
 async function buildMockComparisonRun(runId: string, rfqId?: string): Promise<ComparisonRunDetail> {
+  // This mock payload is intentionally minimal/non-functional for award-evidence checks in mock mode.
+  // In mock mode, hasCompleteAwardPricingEvidence (see use-award.ts) will always return false.
+  // A real seed-derived snapshot would require getSeedComparisonRunsByRfqId and buildMockComparisonRun logic.
   const { getSeedComparisonRunsByRfqId } = await import('@/data/seed');
   const run = rfqId ? getSeedComparisonRunsByRfqId(rfqId).find((item) => item.id === runId || item.runId === runId) : null;
   if (!run) {

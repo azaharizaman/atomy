@@ -117,12 +117,11 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   const objDataObj = objData && typeof objData === 'object' ? (objData as Record<string, unknown>) : null;
   const arraySource = asArray(payload) ?? asArray(objData) ?? asArray(objDataObj?.data);
 
-  // common shapes: [] or { data: [] } or { data: { data: [] } }
-  if (!arraySource && obj !== null) {
+  if (!arraySource) {
     throw new Error('Invalid RFQ list response: expected data array.');
   }
 
-  const list = arraySource ?? [];
+  const list = arraySource;
 
   if (list.length === 0) return [];
 

@@ -50,7 +50,7 @@ function parseMaybeNumber(value: unknown): number | undefined {
 
 function normalizeRfq(payload: unknown): RfqDetail {
   let raw = unwrapResponse(payload);
-  while (isObject(raw) && isObject(raw.data)) {
+  if (isObject(raw) && !('id' in raw) && isObject(raw.data)) {
     raw = raw.data;
   }
 
@@ -106,6 +106,7 @@ export function useRfq(rfqId: string) {
 
   return useQuery({
     queryKey: ['rfqs', rfqId],
+    enabled: Boolean(rfqId),
     queryFn: async () => {
       if (useMocks) {
         const { getSeedRfqDetail } = await import('@/data/seed');
