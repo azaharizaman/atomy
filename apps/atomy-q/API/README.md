@@ -4,6 +4,12 @@ This is the backend API for the Atomy‑Q Quote Comparison & Procurement platfor
 
 **Design-partner alpha:** Current scope, release gates, and deferred surfaces are documented in [`../docs/ALPHA_RELEASE_PLAN_2026-04-15.md`](../docs/ALPHA_RELEASE_PLAN_2026-04-15.md).
 
+## Quote intelligence modes
+
+- `deterministic` is the supported alpha default and is the mode used when `QUOTE_INTELLIGENCE_MODE` is unset.
+- `llm` is defined in the environment contract, but it remains dormant until a production provider adapter is wired in.
+- In live operation, alpha does not silently fall back from `llm` to deterministic mode; invalid or unimplemented `llm` settings fail through the quote-intelligence exception path.
+
 ## Requirements
 - PHP 8.3+
 - Composer
