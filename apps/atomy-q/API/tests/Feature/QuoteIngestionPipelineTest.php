@@ -21,6 +21,7 @@ use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterfa
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
+use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Tests\Feature\Api\ApiTestCase;
 
 final class QuoteIngestionPipelineTest extends ApiTestCase
@@ -228,7 +229,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
         self::assertNotInstanceOf(MockSemanticMapper::class, $semanticMapper);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(QuotationIntelligenceException::class);
         $semanticMapper->mapToTaxonomy('Pump assembly', (string) Str::ulid());
     }
 

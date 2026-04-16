@@ -14,6 +14,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
+use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Nexus\QuotationIntelligence\Exceptions\DocumentAccessDeniedException;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -51,6 +54,14 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         ]);
 
         return $user;
+    }
+
+    private function resetQuotationIntelligenceBindings(): void
+    {
+        app()->forgetInstance(BatchQuoteComparisonCoordinatorInterface::class);
+        app()->forgetInstance(QuotationIntelligenceCoordinatorInterface::class);
+        app()->forgetInstance(OrchestratorContentProcessorInterface::class);
+        app()->forgetInstance(SemanticMapperInterface::class);
     }
 
     /**
@@ -240,6 +251,29 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
             'rfq_id' => $rfq->id,
             'status' => 'final',
         ]);
+    }
+
+    public function test_preview_comparison_run_returns_stable_422_when_llm_mode_has_no_provider_config(): void
+    {
+        $this->resetQuotationIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'llm');
+        config()->set('atomy.quote_intelligence.llm.provider', '');
+        config()->set('atomy.quote_intelligence.llm.model', '');
+        config()->set('atomy.quote_intelligence.llm.base_url', '');
+        config()->set('atomy.quote_intelligence.llm.api_key', '');
+
+        $user = $this->createUser();
+        [$rfq] = $this->seedReadyComparisonContext($user);
+
+        $response = $this->postJson(
+            '/api/v1/comparison-runs/preview',
+            ['rfq_id' => (string) $rfq->id],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('code', 'QuotationIntelligenceException');
+        $response->assertJsonPath('error', 'Quote intelligence LLM provider configuration is missing or incomplete.');
     }
 
     public function test_matrix_and_readiness_endpoints_return_stored_payloads_for_tenant(): void

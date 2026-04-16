@@ -160,6 +160,7 @@ use Nexus\PolicyEngine\Contracts\PolicyValidatorInterface;
 use Nexus\PolicyEngine\Services\PolicyEvaluator;
 use Nexus\PolicyEngine\Services\JsonPolicyDecoder;
 use Nexus\PolicyEngine\Services\PolicyValidator;
+use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Psr\Log\LoggerInterface;
 
 class AppServiceProvider extends ServiceProvider
@@ -216,7 +217,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(OrchestratorTenantRepositoryInterface::class, OrchestratorTenantRepository::class);
         $this->app->singleton(OrchestratorProcurementManagerInterface::class, OrchestratorProcurementManager::class);
         $this->app->singleton(DecisionTrailWriterInterface::class, AtomyDecisionTrailWriter::class);
-        $this->app->singleton(OrchestratorContentProcessorInterface::class, static function (): OrchestratorContentProcessorInterface {
+        $this->app->singleton(OrchestratorContentProcessorInterface::class, function (): OrchestratorContentProcessorInterface {
             $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
 
             if ($mode === 'deterministic') {
@@ -224,22 +225,30 @@ class AppServiceProvider extends ServiceProvider
             }
 
             if ($mode === 'llm') {
-                return new class implements OrchestratorContentProcessorInterface {
+                $message = $this->quoteIntelligenceLlmFailureMessage();
+
+                return new class($message) implements OrchestratorContentProcessorInterface {
+                    public function __construct(private readonly string $message) {}
+
                     public function analyze(string $storagePath): object
                     {
-                        throw new \RuntimeException('Quote intelligence LLM mode is dormant.');
+                        throw new QuotationIntelligenceException($this->message);
                     }
                 };
             }
 
-            return new class implements OrchestratorContentProcessorInterface {
+            $message = 'Unsupported quote intelligence mode.';
+
+            return new class($message) implements OrchestratorContentProcessorInterface {
+                public function __construct(private readonly string $message) {}
+
                 public function analyze(string $storagePath): object
                 {
-                    throw new \RuntimeException('Unsupported quote intelligence mode.');
+                    throw new QuotationIntelligenceException($this->message);
                 }
             };
         });
-        $this->app->singleton(SemanticMapperInterface::class, static function (): SemanticMapperInterface {
+        $this->app->singleton(SemanticMapperInterface::class, function (): SemanticMapperInterface {
             $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
 
             if ($mode === 'deterministic') {
@@ -247,28 +256,36 @@ class AppServiceProvider extends ServiceProvider
             }
 
             if ($mode === 'llm') {
-                return new class implements SemanticMapperInterface {
+                $message = $this->quoteIntelligenceLlmFailureMessage();
+
+                return new class($message) implements SemanticMapperInterface {
+                    public function __construct(private readonly string $message) {}
+
                     public function mapToTaxonomy(string $description, string $tenantId): array
                     {
-                        throw new \RuntimeException('Quote intelligence LLM mode is dormant.');
+                        throw new QuotationIntelligenceException($this->message);
                     }
 
                     public function validateCode(string $code, string $version): bool
                     {
-                        throw new \RuntimeException('Quote intelligence LLM mode is dormant.');
+                        throw new QuotationIntelligenceException($this->message);
                     }
                 };
             }
 
-            return new class implements SemanticMapperInterface {
+            $message = 'Unsupported quote intelligence mode.';
+
+            return new class($message) implements SemanticMapperInterface {
+                public function __construct(private readonly string $message) {}
+
                 public function mapToTaxonomy(string $description, string $tenantId): array
                 {
-                    throw new \RuntimeException('Unsupported quote intelligence mode.');
+                    throw new QuotationIntelligenceException($this->message);
                 }
 
                 public function validateCode(string $code, string $version): bool
                 {
-                    throw new \RuntimeException('Unsupported quote intelligence mode.');
+                    throw new QuotationIntelligenceException($this->message);
                 }
             };
         });
@@ -426,5 +443,30 @@ class AppServiceProvider extends ServiceProvider
         Scramble::configure()->withDocumentTransformers([
             IdempotencyErrorCodesDocumentTransformer::class,
         ]);
+    }
+
+    private function quoteIntelligenceLlmFailureMessage(): string
+    {
+        $llmConfig = (array) config('atomy.quote_intelligence.llm', []);
+
+        if (!$this->hasRequiredQuoteIntelligenceLlmConfig($llmConfig)) {
+            return 'Quote intelligence LLM provider configuration is missing or incomplete.';
+        }
+
+        return 'Quote intelligence LLM mode is configured but no production adapter is implemented yet.';
+    }
+
+    /**
+     * @param array<string, mixed> $llmConfig
+     */
+    private function hasRequiredQuoteIntelligenceLlmConfig(array $llmConfig): bool
+    {
+        foreach (['provider', 'model', 'base_url', 'api_key'] as $key) {
+            if (!is_string($llmConfig[$key] ?? null) || trim((string) $llmConfig[$key]) === '') {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
