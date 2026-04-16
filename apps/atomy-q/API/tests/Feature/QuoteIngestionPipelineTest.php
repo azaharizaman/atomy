@@ -282,6 +282,35 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
     }
 
+    public function test_job_failed_path_sanitizes_retry_exhaustion_error_message(): void
+    {
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $submission = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Sensitive Vendor',
+            'status' => 'uploaded',
+            'file_path' => 'quote-submissions/test.pdf',
+            'submitted_at' => now(),
+            'confidence' => 0.0,
+            'line_items_count' => 0,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $job = new ProcessQuoteSubmissionJob($submission->id);
+        $job->failed(new \RuntimeException('Retry exhausted for secret backend endpoint https://sensitive.example.test'));
+
+        $submission->refresh();
+
+        self::assertSame('failed', $submission->status);
+        self::assertSame('MAX_RETRIES_EXCEEDED', $submission->error_code);
+        self::assertSame('Quote intelligence processing failed.', $submission->error_message);
+    }
+
     public function test_reparse_resets_and_reprocesses(): void
     {
         $user = $this->createUser();

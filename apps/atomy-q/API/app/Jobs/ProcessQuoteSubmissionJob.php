@@ -17,6 +17,8 @@ class ProcessQuoteSubmissionJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    private const GENERIC_FAILURE_MESSAGE = 'Quote intelligence processing failed.';
+
     public int $tries = 3;
     public array $backoff = [10, 60, 300];
 
@@ -49,9 +51,15 @@ class ProcessQuoteSubmissionJob implements ShouldQueue
         $submission = QuoteSubmission::find($this->quoteSubmissionId);
         
         if ($submission !== null) {
+            Log::error('ProcessQuoteSubmissionJob exhausted retries', [
+                'quote_submission_id' => $this->quoteSubmissionId,
+                'error_class' => $exception::class,
+                'error_message' => $exception->getMessage(),
+            ]);
+
             $submission->status = 'failed';
             $submission->error_code = 'MAX_RETRIES_EXCEEDED';
-            $submission->error_message = $exception->getMessage();
+            $submission->error_message = self::GENERIC_FAILURE_MESSAGE;
             $submission->processing_completed_at = now();
             $submission->save();
         }
