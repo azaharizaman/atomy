@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use App\Adapters\QuotationIntelligence\MockContentProcessor;
+use App\Adapters\QuotationIntelligence\MockSemanticMapper;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Tests\Feature\Api\ApiTestCase;
@@ -134,6 +136,10 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
     {
         $this->resetQuoteIntelligenceBindings();
 
+        self::assertSame('deterministic', config('atomy.quote_intelligence.mode'));
+        self::assertInstanceOf(MockContentProcessor::class, app()->make(OrchestratorContentProcessorInterface::class));
+        self::assertInstanceOf(MockSemanticMapper::class, app()->make(SemanticMapperInterface::class));
+
         $user = $this->createUser();
         $rfq = $this->createRfq($user);
 
@@ -147,6 +153,28 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
         $response->assertCreated();
         $response->assertJsonPath('data.status', 'ready');
+    }
+
+    public function test_invalid_quote_intelligence_mode_fails_closed(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'unsupported-mode');
+
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Unsupported Mode Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'failed');
+        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
+        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
     }
 
     public function test_quote_intelligence_llm_mode_without_provider_config_fails_safely(): void

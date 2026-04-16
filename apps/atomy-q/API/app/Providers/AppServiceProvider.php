@@ -219,6 +219,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(OrchestratorContentProcessorInterface::class, static function (): OrchestratorContentProcessorInterface {
             $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
 
+            if ($mode === 'deterministic') {
+                return new MockContentProcessor();
+            }
+
             if ($mode === 'llm') {
                 return new class implements OrchestratorContentProcessorInterface {
                     public function analyze(string $storagePath): object
@@ -228,10 +232,19 @@ class AppServiceProvider extends ServiceProvider
                 };
             }
 
-            return new MockContentProcessor();
+            return new class implements OrchestratorContentProcessorInterface {
+                public function analyze(string $storagePath): object
+                {
+                    throw new \RuntimeException('Unsupported quote intelligence mode.');
+                }
+            };
         });
         $this->app->singleton(SemanticMapperInterface::class, static function (): SemanticMapperInterface {
             $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
+
+            if ($mode === 'deterministic') {
+                return new MockSemanticMapper();
+            }
 
             if ($mode === 'llm') {
                 return new class implements SemanticMapperInterface {
@@ -247,7 +260,17 @@ class AppServiceProvider extends ServiceProvider
                 };
             }
 
-            return new MockSemanticMapper();
+            return new class implements SemanticMapperInterface {
+                public function mapToTaxonomy(string $description, string $tenantId): array
+                {
+                    throw new \RuntimeException('Unsupported quote intelligence mode.');
+                }
+
+                public function validateCode(string $code, string $version): bool
+                {
+                    throw new \RuntimeException('Unsupported quote intelligence mode.');
+                }
+            };
         });
         $this->app->singleton(QuoteNormalizationServiceInterface::class, QuoteNormalizationService::class);
         $this->app->singleton(CommercialTermsExtractorInterface::class, RegexCommercialTermsExtractor::class);
