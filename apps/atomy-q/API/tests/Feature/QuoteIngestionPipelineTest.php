@@ -16,6 +16,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
@@ -309,6 +310,23 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         self::assertSame('failed', $submission->status);
         self::assertSame('MAX_RETRIES_EXCEEDED', $submission->error_code);
         self::assertSame(QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE, $submission->error_message);
+    }
+
+    public function test_job_failed_path_logs_retry_exhaustion_when_submission_is_missing(): void
+    {
+        Log::spy();
+
+        $job = new ProcessQuoteSubmissionJob('missing-quote-submission-id');
+        $job->failed(new \RuntimeException('Retry exhausted for secret backend endpoint https://sensitive.example.test'));
+
+        Log::shouldHaveReceived('error')
+            ->once()
+            ->withArgs(static function (string $message, array $context): bool {
+                return $message === 'ProcessQuoteSubmissionJob exhausted retries'
+                    && $context['quote_submission_id'] === 'missing-quote-submission-id'
+                    && $context['error_class'] === \RuntimeException::class
+                    && $context['error_message'] === 'Retry exhausted for secret backend endpoint https://sensitive.example.test';
+            });
     }
 
     public function test_reparse_resets_and_reprocesses(): void

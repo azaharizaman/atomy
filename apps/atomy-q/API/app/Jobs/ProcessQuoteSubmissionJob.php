@@ -47,14 +47,14 @@ class ProcessQuoteSubmissionJob implements ShouldQueue
     public function failed(\Throwable $exception): void
     {
         $submission = QuoteSubmission::find($this->quoteSubmissionId);
-        
-        if ($submission !== null) {
-            Log::error('ProcessQuoteSubmissionJob exhausted retries', [
-                'quote_submission_id' => $this->quoteSubmissionId,
-                'error_class' => $exception::class,
-                'error_message' => $exception->getMessage(),
-            ]);
 
+        Log::error('ProcessQuoteSubmissionJob exhausted retries', [
+            'quote_submission_id' => $this->quoteSubmissionId,
+            'error_class' => $exception::class,
+            'error_message' => $exception->getMessage(),
+        ]);
+
+        if ($submission !== null) {
             $submission->status = 'failed';
             $submission->error_code = 'MAX_RETRIES_EXCEEDED';
             $submission->error_message = QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE;
