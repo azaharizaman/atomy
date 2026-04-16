@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Adapters\QuotationIntelligence\MockContentProcessor;
+use App\Adapters\QuotationIntelligence\MockSemanticMapper;
 use App\Jobs\ProcessQuoteSubmissionJob;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
@@ -15,8 +17,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
-use App\Adapters\QuotationIntelligence\MockContentProcessor;
-use App\Adapters\QuotationIntelligence\MockSemanticMapper;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Tests\Feature\Api\ApiTestCase;
@@ -135,8 +135,10 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
     public function test_quote_intelligence_defaults_to_deterministic_mode(): void
     {
         $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence', []);
 
-        self::assertSame('deterministic', config('atomy.quote_intelligence.mode'));
+        self::assertNull(config('atomy.quote_intelligence.mode'));
+        self::assertSame('deterministic', config('atomy.quote_intelligence.mode', 'deterministic'));
         self::assertInstanceOf(MockContentProcessor::class, app()->make(OrchestratorContentProcessorInterface::class));
         self::assertInstanceOf(MockSemanticMapper::class, app()->make(SemanticMapperInterface::class));
 
@@ -155,10 +157,14 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'ready');
     }
 
-    public function test_quote_intelligence_llm_mode_resolves_dormant_bindings(): void
+    public function test_quote_intelligence_llm_mode_without_provider_config_fails_safely(): void
     {
         $this->resetQuoteIntelligenceBindings();
         config()->set('atomy.quote_intelligence.mode', 'llm');
+        config()->set('atomy.quote_intelligence.llm.provider', '');
+        config()->set('atomy.quote_intelligence.llm.model', '');
+        config()->set('atomy.quote_intelligence.llm.base_url', '');
+        config()->set('atomy.quote_intelligence.llm.api_key', '');
 
         $contentProcessor = app()->make(OrchestratorContentProcessorInterface::class);
         $semanticMapper = app()->make(SemanticMapperInterface::class);
@@ -183,22 +189,32 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $semanticMapper->mapToTaxonomy('Pump assembly', (string) Str::ulid());
     }
 
-    public function test_invalid_quote_intelligence_mode_fails_closed_on_resolution(): void
+    public function test_unsupported_quote_intelligence_mode_fails_safe_through_pipeline(): void
     {
         $this->resetQuoteIntelligenceBindings();
         config()->set('atomy.quote_intelligence.mode', 'unsupported-mode');
 
-        $this->expectException(\RuntimeException::class);
-        app()->make(OrchestratorContentProcessorInterface::class);
-    }
+        $contentProcessor = app()->make(OrchestratorContentProcessorInterface::class);
+        $semanticMapper = app()->make(SemanticMapperInterface::class);
 
-    public function test_invalid_quote_intelligence_mode_fails_closed_for_semantic_mapper_resolution(): void
-    {
-        $this->resetQuoteIntelligenceBindings();
-        config()->set('atomy.quote_intelligence.mode', 'unsupported-mode');
+        self::assertNotInstanceOf(MockContentProcessor::class, $contentProcessor);
+        self::assertNotInstanceOf(MockSemanticMapper::class, $semanticMapper);
 
-        $this->expectException(\RuntimeException::class);
-        app()->make(SemanticMapperInterface::class);
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Unsupported Mode Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'failed');
+        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
+        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
     }
 
     public function test_reparse_resets_and_reprocesses(): void
