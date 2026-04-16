@@ -133,7 +133,6 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
     public function test_quote_intelligence_defaults_to_deterministic_mode(): void
     {
         $this->resetQuoteIntelligenceBindings();
-        config()->set('atomy.quote_intelligence.mode', 'deterministic');
 
         $user = $this->createUser();
         $rfq = $this->createRfq($user);
