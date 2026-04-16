@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { api } from '@/lib/api';
+import { isObject, toText } from '@/hooks/normalize-utils';
 
 export type NormalizationConflictRow = {
   id: string;
@@ -19,6 +20,61 @@ type ConflictsResponse = {
     blocking_issue_count?: number;
   };
 };
+
+function normalizeConflictRow(item: unknown, index: number): NormalizationConflictRow {
+  if (!isObject(item)) {
+    throw new Error(`Invalid normalization conflict at index ${index}: expected object.`);
+  }
+
+  const id = toText(item.id);
+  const conflictType = toText(item.conflict_type ?? item.conflictType);
+  const normalizationSourceLineId = toText(item.normalization_source_line_id ?? item.normalizationSourceLineId);
+  if (id === null || conflictType === null || normalizationSourceLineId === null) {
+    throw new Error(`Invalid normalization conflict at index ${index}: missing required fields.`);
+  }
+
+  const resolution = item.resolution === null || item.resolution === undefined ? null : toText(item.resolution);
+
+  return {
+    id,
+    conflict_type: conflictType,
+    resolution,
+    normalization_source_line_id: normalizationSourceLineId,
+  };
+}
+
+function normalizeConflictsResponse(payload: unknown): ConflictsResponse {
+  if (!isObject(payload)) {
+    throw new Error('Invalid normalization review response: expected object envelope.');
+  }
+
+  if (!Array.isArray(payload.data)) {
+    throw new Error('Invalid normalization review response: expected data array.');
+  }
+
+  if (!isObject(payload.meta)) {
+    throw new Error('Invalid normalization review response: expected meta object.');
+  }
+
+  return {
+    data: payload.data.map((item, index) => normalizeConflictRow(item, index)),
+    meta: {
+      rfq_id: toText(payload.meta.rfq_id ?? payload.meta.rfqId) ?? undefined,
+      has_blocking_issues:
+        typeof payload.meta.has_blocking_issues === 'boolean' ? payload.meta.has_blocking_issues : undefined,
+      blocking_issue_count:
+        payload.meta.blocking_issue_count === null || payload.meta.blocking_issue_count === undefined
+          ? undefined
+          : (() => {
+              const count = Number(payload.meta.blocking_issue_count);
+              if (!Number.isFinite(count)) {
+                throw new Error('Invalid normalization review response: invalid blocking_issue_count.');
+              }
+              return count;
+            })(),
+    },
+  };
+}
 
 export function conflictTypeLabel(conflictType: string): string {
   const t = conflictType.toLowerCase();
@@ -39,10 +95,10 @@ export function useNormalizationReview(rfqId: string, options?: { enabled?: bool
       const data = await fetchLiveOrFail<ConflictsResponse>(`/normalization/${encodeURIComponent(rfqId)}/conflicts`);
 
       if (data === undefined) {
-        return { data: [], meta: {} };
+        throw new Error(`Normalization review unavailable for RFQ "${rfqId}".`);
       }
 
-      return data;
+      return normalizeConflictsResponse(data);
     },
     enabled,
   });

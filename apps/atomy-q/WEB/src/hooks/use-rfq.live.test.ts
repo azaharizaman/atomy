@@ -57,4 +57,33 @@ describe('useRfq (live mode)', () => {
     expect(result.current.data?.id).toBe('rfq-1');
     expect(result.current.data?.title).toBe('Live RFQ');
   });
+
+  it('throws when the live API resolves to undefined', async () => {
+    getMock.mockResolvedValueOnce({ data: undefined });
+    const { useRfq } = await import('@/hooks/use-rfq');
+    const { Wrapper } = createTestWrapper();
+
+    const { result } = renderHook(() => useRfq('rfq-1'), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect((result.current.error as Error).message).toContain('RFQ');
+  });
+
+  it('rejects malformed live payloads that omit an id', async () => {
+    getMock.mockResolvedValueOnce({
+      data: {
+        title: 'Malformed RFQ',
+        status: 'active',
+      },
+    });
+    const { useRfq } = await import('@/hooks/use-rfq');
+    const { Wrapper } = createTestWrapper();
+
+    const { result } = renderHook(() => useRfq('rfq-1'), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect((result.current.error as Error).message).toContain('id');
+  });
 });

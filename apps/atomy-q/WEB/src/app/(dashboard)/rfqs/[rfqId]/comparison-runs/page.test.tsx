@@ -73,4 +73,19 @@ describe('ComparisonRunsPage', () => {
     expect(screen.queryByText(/snapshot frozen/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /decision trail/i })).not.toBeInTheDocument();
   });
+
+  it('renders an explicit unavailable state when comparison runs fail to load', async () => {
+    mockUseComparisonRuns.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: true,
+      error: new Error('Comparison runs unavailable'),
+    });
+
+    renderWithProviders(<ComparisonRunsListContent rfqId="RFQ-2026-0001" />);
+
+    expect(await screen.findByText(/could not load comparison runs/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Comparison runs unavailable' })).toBeInTheDocument();
+    expect(screen.queryByText(/snapshot frozen/i)).not.toBeInTheDocument();
+  });
 });

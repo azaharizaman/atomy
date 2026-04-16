@@ -1,9 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
-import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
 export interface ComparisonRunMatrixOffer {
@@ -143,7 +141,10 @@ function normalizeComparisonRunMatrix(payload: unknown): ComparisonRunMatrix {
   }
 
   const matrix = isObject(raw.matrix) ? raw.matrix : raw;
-  const clustersRaw = Array.isArray(matrix.clusters) ? matrix.clusters : [];
+  if (!Array.isArray(matrix.clusters)) {
+    throw new Error('Comparison matrix payload is missing clusters.');
+  }
+  const clustersRaw = matrix.clusters;
 
   return {
     id,
@@ -151,26 +152,27 @@ function normalizeComparisonRunMatrix(payload: unknown): ComparisonRunMatrix {
   };
 }
 
-function buildMockMatrix(runId: string, rfqId?: string): ComparisonRunMatrix {
-  const seedRun = rfqId ? getSeedComparisonRunsByRfqId(rfqId).find((item) => item.id === runId || item.runId === runId) : null;
-  return {
-    id: seedRun?.id ?? runId,
-    clusters: [],
-  };
-}
-
 export function useComparisonRunMatrix(runId: string, options?: { rfqId?: string }) {
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
   return useQuery({
     queryKey: ['comparison-run-matrix', options?.rfqId ?? runId, runId],
     queryFn: async (): Promise<ComparisonRunMatrix> => {
+      if (useMocks) {
+        const { getSeedComparisonRunsByRfqId } = await import('@/data/seed');
+        const seedRun = options?.rfqId
+          ? getSeedComparisonRunsByRfqId(options.rfqId).find((item) => item.id === runId || item.runId === runId)
+          : null;
+        return {
+          id: seedRun?.id ?? runId,
+          clusters: [],
+        };
+      }
+
       const data = await fetchLiveOrFail<{ data: ComparisonRunMatrix }>(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
 
       if (data === undefined) {
-        const rawData = await fetchLiveOrFail(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
-        if (rawData === undefined) {
-          return buildMockMatrix(runId, options?.rfqId);
-        }
-        return normalizeComparisonRunMatrix(rawData);
+        throw new Error(`Comparison matrix "${runId}" is unavailable from the live API.`);
       }
 
       return normalizeComparisonRunMatrix(data);

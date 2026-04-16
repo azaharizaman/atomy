@@ -3,19 +3,22 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { createTestWrapper } from '@/test/utils';
 
 const getMock = vi.hoisted(() => vi.fn());
+const putMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/api', () => ({
   api: {
     get: getMock,
+    put: putMock,
   },
 }));
 
-describe('useRfqVendors (live mode)', () => {
+describe('useNormalizationReview (live mode)', () => {
   const originalMocks = process.env.NEXT_PUBLIC_USE_MOCKS;
 
   beforeEach(() => {
     process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
     getMock.mockReset();
+    putMock.mockReset();
   });
 
   afterEach(() => {
@@ -26,12 +29,12 @@ describe('useRfqVendors (live mode)', () => {
     }
   });
 
-  it('surfaces API errors instead of silently falling back to seed data', async () => {
+  it('surfaces API errors to consumers', async () => {
     getMock.mockRejectedValueOnce(new Error('Network unavailable'));
-    const { useRfqVendors } = await import('@/hooks/use-rfq-vendors');
+    const { useNormalizationReview } = await import('@/hooks/use-normalization-review');
     const { Wrapper } = createTestWrapper();
 
-    const { result } = renderHook(() => useRfqVendors('rfq-1'), { wrapper: Wrapper });
+    const { result } = renderHook(() => useNormalizationReview('rfq-1'), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(Error);
@@ -43,50 +46,57 @@ describe('useRfqVendors (live mode)', () => {
       data: {
         data: [
           {
-            id: 'inv-1',
-            vendor_id: 'vendor-1',
-            vendor_name: 'Live Vendor',
-            status: 'responded',
-            vendor_email: 'vendor@example.com',
+            id: 'conflict-1',
+            conflict_type: 'price_mismatch',
+            resolution: null,
+            normalization_source_line_id: 'line-1',
           },
         ],
+        meta: {
+          rfq_id: 'rfq-1',
+          has_blocking_issues: true,
+          blocking_issue_count: 2,
+        },
       },
     });
-    const { useRfqVendors } = await import('@/hooks/use-rfq-vendors');
+    const { useNormalizationReview } = await import('@/hooks/use-normalization-review');
     const { Wrapper } = createTestWrapper();
 
-    const { result } = renderHook(() => useRfqVendors('rfq-1'), { wrapper: Wrapper });
+    const { result } = renderHook(() => useNormalizationReview('rfq-1'), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toHaveLength(1);
-    expect(result.current.data?.[0].id).toBe('inv-1');
+    expect(result.current.conflicts).toHaveLength(1);
+    expect(result.current.hasBlockingIssues).toBe(true);
+    expect(result.current.blockingIssueCount).toBe(2);
   });
 
   it('throws when the live API resolves to undefined', async () => {
     getMock.mockResolvedValueOnce({ data: undefined });
-    const { useRfqVendors } = await import('@/hooks/use-rfq-vendors');
+    const { useNormalizationReview } = await import('@/hooks/use-normalization-review');
     const { Wrapper } = createTestWrapper();
 
-    const { result } = renderHook(() => useRfqVendors('rfq-1'), { wrapper: Wrapper });
+    const { result } = renderHook(() => useNormalizationReview('rfq-1'), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(Error);
-    expect((result.current.error as Error).message.toLowerCase()).toContain('vendor');
+    expect((result.current.error as Error).message).toContain('Normalization');
   });
 
-  it('rejects malformed invitation rows', async () => {
+  it('rejects malformed conflict payloads', async () => {
     getMock.mockResolvedValueOnce({
       data: {
         data: ['bad-row'],
+        meta: {},
       },
     });
-    const { useRfqVendors } = await import('@/hooks/use-rfq-vendors');
+    const { useNormalizationReview } = await import('@/hooks/use-normalization-review');
     const { Wrapper } = createTestWrapper();
 
-    const { result } = renderHook(() => useRfqVendors('rfq-1'), { wrapper: Wrapper });
+    const { result } = renderHook(() => useNormalizationReview('rfq-1'), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(Error);
-    expect((result.current.error as Error).message).toContain('expected object');
+    expect((result.current.error as Error).message.toLowerCase()).toContain('conflict');
   });
 });
+

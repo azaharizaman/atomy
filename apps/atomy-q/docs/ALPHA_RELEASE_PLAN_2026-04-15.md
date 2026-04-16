@@ -203,11 +203,15 @@ After this task, the golden-path hooks should have clear separation between loca
 - Modify: `apps/atomy-q/WEB/src/hooks/use-comparison-run-matrix.ts`
 - Modify: `apps/atomy-q/WEB/src/hooks/use-comparison-run-readiness.ts`
 - Modify: `apps/atomy-q/WEB/src/hooks/use-award.ts`
+- Follow-up spec: [`ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_SPEC_2026-04-17.md`](./ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_SPEC_2026-04-17.md)
+- Follow-up plan: [`ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_IMPLEMENTATION_PLAN_2026-04-17.md`](./ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_IMPLEMENTATION_PLAN_2026-04-17.md)
 
-- [ ] For each hook, keep seed imports inside explicit `NEXT_PUBLIC_USE_MOCKS === 'true'` branches only.
-- [ ] Add or keep `.live.test.ts` coverage that rejects API failures instead of falling back.
-- [ ] Ensure live `undefined` responses fail loudly unless the API contract explicitly allows `null`/empty data.
-- [ ] Keep local mock mode usable for demos, but label it local-only in docs and test names.
+- [x] For each hook, keep seed imports inside explicit `NEXT_PUBLIC_USE_MOCKS === 'true'` branches only.
+- [x] Add or keep `.live.test.ts` coverage that rejects API failures instead of falling back.
+- [x] Ensure live `undefined` responses fail loudly unless the API contract explicitly allows `null`/empty data.
+- [x] Keep local mock mode usable for demos, but label it local-only in docs and test names.
+- [x] Update RFQ golden-path pages to render explicit unavailable/recovery states when the live hooks error (instead of collapsing to empty states).
+- [x] Record Task 4 verification evidence in [`ALPHA_RELEASE_CHECKLIST.md`](./ALPHA_RELEASE_CHECKLIST.md) and close blocker A3 only when the full live-hook matrix, page tests, and `npm run build` pass with mock mode disabled.
 
 ### Task 5: Hide Or Defer Non-Alpha Surfaces
 

@@ -4,24 +4,45 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/ds/FilterBar';
+import { EmptyState, SectionCard } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { useComparisonRuns, type ComparisonRunRow } from '@/hooks/use-comparison-runs';
 import { Button } from '@/components/ds/Button';
-import { Plus } from 'lucide-react';
+import { AlertTriangle, Layers3, Plus } from 'lucide-react';
 
 export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
-  const { data: rfq } = useRfq(rfqId);
-  const { data: runs = [] } = useComparisonRuns(rfqId);
+  const rfqQuery = useRfq(rfqId);
+  const runsQuery = useComparisonRuns(rfqId);
+  const rfq = rfqQuery.data;
+  const runs = runsQuery.data ?? [];
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
     { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
     { label: 'Comparison Runs' },
   ];
+
+  if (rfqQuery.isError || runsQuery.isError) {
+    const pageError = rfqQuery.error ?? runsQuery.error;
+    const errorMessage = pageError instanceof Error ? pageError.message : 'The live comparison-run list could not be loaded.';
+    return (
+      <div className="space-y-5">
+        <WorkspaceBreadcrumbs items={breadcrumbItems} />
+        <PageHeader title="Comparison Runs" subtitle="Comparison runs unavailable" />
+        <SectionCard title="Comparison runs unavailable">
+          <EmptyState
+            icon={<AlertTriangle size={20} />}
+            title="Could not load comparison runs"
+            description={errorMessage}
+          />
+        </SectionCard>
+      </div>
+    );
+  }
 
   const columns: ColumnDef<ComparisonRunRow>[] = [
     {
@@ -86,7 +107,15 @@ export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
       <DataTable
         columns={columns}
         rows={runs}
+        loading={runsQuery.isLoading}
         onRowClick={(row) => router.push(`/rfqs/${encodeURIComponent(rfqId)}/comparison-runs/${encodeURIComponent(row.id)}`)}
+        emptyState={
+          <EmptyState
+            icon={<Layers3 size={20} />}
+            title="No comparison runs yet"
+            description="Freeze a comparison run after normalization to generate comparison evidence."
+          />
+        }
       />
     </div>
   );

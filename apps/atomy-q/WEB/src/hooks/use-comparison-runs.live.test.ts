@@ -64,6 +64,18 @@ describe('useComparisonRuns (live mode)', () => {
     expect(result.current.data).toHaveLength(1);
   });
 
+  it('throws when the live API resolves to undefined', async () => {
+    getMock.mockResolvedValueOnce({ data: undefined });
+    const { useComparisonRuns } = await import('./use-comparison-runs');
+    const { Wrapper } = createTestWrapper();
+
+    const { result } = renderHook(() => useComparisonRuns('rfq-1'), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect((result.current.error as Error).message.toLowerCase()).toContain('comparison');
+  });
+
   it('rejects malformed live envelopes when data is not an array', async () => {
     getMock.mockResolvedValueOnce({
       data: { data: { id: 'run-1' } },

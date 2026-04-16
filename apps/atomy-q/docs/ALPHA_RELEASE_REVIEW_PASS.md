@@ -1,98 +1,117 @@
-# Repo Wide Review Pass
+# Atomy-Q Alpha Release Review Pass
 
-### Post Task 3
+**Date:** 2026-04-17  
+**Scope:** Task 4 live-mode fail-loud slice plus release-plan fit review for the Atomy-Q WEB alpha golden path.  
+**Primary references:**  
+- `apps/atomy-q/docs/ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_SPEC_2026-04-17.md`
+- `apps/atomy-q/docs/ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_IMPLEMENTATION_PLAN_2026-04-17.md`
+- `apps/atomy-q/docs/ALPHA_RELEASE_PLAN_2026-04-15.md`
 
-**Date:** 2026-04-17
+## Final Assessment
 
-### Verification Commands
+Task 4 is fit for the alpha release plan and satisfies the stated spec boundary.
+
+The current implementation now enforces the intended live/mock split on the RFQ golden path:
+
+- live mode does not silently fall back to seed or fabricated business data
+- `undefined` live responses fail loudly
+- malformed live payloads fail loudly through hook normalizers
+- page-level consumers render explicit unavailable states instead of misleading empty-success states
+- mock mode remains explicit and isolated behind `NEXT_PUBLIC_USE_MOCKS === 'true'`
+
+No blocking correctness issues were found in the Task 4 slice during this pass.
+
+## Review Findings
+
+### Open findings
+
+None within the Task 4 spec boundary.
+
+### Residual risk
+
+- This pass confirms WEB-side fail-loud behavior only. It does not change or newly verify Laravel-side quote-processing semantics beyond the existing alpha release checklist evidence.
+- Several CodeRabbit comments were style or wider architecture preferences rather than Task 4 blockers. Those were intentionally not expanded into follow-on work to avoid scope creep.
+
+## CodeRabbit Review Triage
+
+Command run:
 
 ```bash
-# API - Full test suite
-cd apps/atomy-q/API && php artisan test
-
-# API - Quote Intelligence and Award tests
-cd apps/atomy-q/API && php artisan test --filter "QuoteIngestion|AwardWorkflow"
-
-# WEB - Lint
-cd apps/atomy-q/WEB && npm run lint
-
-# WEB - Unit tests
-cd apps/atomy-q/WEB && npm run test:unit -- --run
+cr review --agent --type uncommitted
 ```
 
-### Results
+Result:
 
-| Suite | Tests | Assertions | Status |
-|-------|-------|------------|--------|
-| API (full) | 438 passed | 1210 | ✅ |
-| API Quote/Award | 26 passed | 211 | ✅ |
-| WEB Unit | 107 passed | - | ✅ |
-| WEB Lint | 0 errors | 7 warnings | ✅ |
+- Review completed with 26 findings.
+- Applied only the findings that improved Task 4 correctness, fail-loud clarity, test precision, or release documentation.
 
-### Lint Warnings (Pre-existing, unrelated to Tasks 2/3)
+### Applied
 
-The following warnings exist in files outside the Task 2/3 scope:
+- Clarified readiness payload errors in `use-comparison-run-readiness.ts` so invalid `blockers` and `warnings` explicitly report the expected array contract.
+- Tightened readiness live-test assertions to verify the exact malformed-payload failure message.
+- Updated live-test descriptions in:
+  - `apps/atomy-q/WEB/src/hooks/use-rfqs.live.test.ts`
+  - `apps/atomy-q/WEB/src/hooks/use-normalization-source-lines.live.test.ts`
+  - `apps/atomy-q/WEB/src/hooks/use-comparison-run-readiness.live.test.ts`
+- Tightened unavailable-state assertions in:
+  - `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/vendors/page.test.tsx`
+  - `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.test.tsx`
+- Consolidated duplicate Task 4 entries in `apps/atomy-q/WEB/IMPLEMENTATION_SUMMARY.md`.
+- Clarified the Blocker A3 closure note in `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md`.
 
-| File | Warning |
-|------|---------|
-| `negotiations/page.tsx` | unused import `SectionCard` |
-| `overview/page.tsx` | missing useMemo dependency `comparison` |
-| `rfqs/page.tsx` | unused variable `_ids` |
-| `settings/page.tsx` | unused import `Settings` |
-| `use-comparison-run-matrix.ts` | unused import `api` |
-| `use-quote-submission.ts` | unused import `api` |
-| `use-rfq-counts.ts` | unused import `api` |
+### Deferred as not applicable or out of scope
 
-### PR Changes Summary
+- Hook refactors that only changed `enabled` wiring in mock mode without changing live-mode correctness.
+- Readability-only refactors such as status lookup helpers.
+- Extra assertion additions that did not materially improve Task 4 fail-loud coverage.
+- Normalization cleanup suggestions unrelated to the fail-loud release rule.
+- Broader mock-mode query restructuring beyond the implementation-plan boundary.
 
-#### Task 2: Quote Intelligence Mode Cleanup
+## Repo-Wide Review Pass
 
-| Change | Files Modified |
-|--------|---------------|
-| Config contract with 6 env vars | `config/atomy.php` |
-| Mode-based container bindings | `app/Providers/AppServiceProvider.php` |
-| Deterministic processors (honest naming) | `DeterministicContentProcessor.php`, `DeterministicSemanticMapper.php` |
-| Dormant LLM placeholders | `DormantLlmContentProcessor.php`, `DormantLlmSemanticMapper.php` |
-| Failure sanitization | `ProcessQuoteSubmissionJob.php` |
-| Feature tests | `QuoteIngestionPipelineTest.php`, `QuoteIngestionIntelligenceTest.php` |
-| Documentation | `.env.example`, `README.md`, `IMPLEMENTATION_SUMMARY.md` |
+Checks performed:
 
-#### Task 2 PR Review Fixes
+- Manual diff audit against the Task 4 spec and implementation plan
+- Release-plan fit check against Section 9 Task 4 of `ALPHA_RELEASE_PLAN_2026-04-15.md`
+- `git diff --check`
+- CodeRabbit review triage
 
-| Fix | Reason | Files Modified |
-|-----|--------|----------------|
-| Log sanitization | Spec §8 requires sanitized logs | `ProcessQuoteSubmissionJob.php` |
-| `validateCode` includes `DEFAULT_CODE` | Correctness bug fix | `DeterministicSemanticMapper.php` |
-| Import ordering | Documented convention (Nexus before App) | `QuoteIngestionPipelineTest.php` |
-| Exception-safe test state restoration | Correctness/reliability | `QuoteIngestionPipelineTest.php` |
+Repo-wide review result:
 
-#### Task 3: Award End-to-End
+- No whitespace or patch-format issues were found by `git diff --check`.
+- No newly identified blockers were found outside the already intended Task 4 file set.
+- The modified files remain tightly aligned to the live-mode fail-loud goal and do not introduce obvious scope creep into unrelated alpha tasks.
 
-| Change | Status |
-|--------|--------|
-| API decision-trail for award actions | ✅ Implemented |
-| Final-run enforcement for award creation | ✅ Implemented |
-| Live create-award payload derivation | ✅ Implemented |
-| Visible create/signoff failure states | ✅ Implemented |
-| Tenant-safe retrieval and cross-tenant isolation | ✅ Implemented |
+## Verification Evidence
 
-#### Task 3 Spec Alignment
+```bash
+cd apps/atomy-q/WEB && npx vitest run \
+  'src/hooks/use-rfq.live.test.ts' \
+  'src/hooks/use-rfqs.live.test.ts' \
+  'src/hooks/use-rfq-vendors.live.test.ts' \
+  'src/hooks/use-quote-submissions.live.test.ts' \
+  'src/hooks/use-normalization-source-lines.live.test.ts' \
+  'src/hooks/use-normalization-review.live.test.ts' \
+  'src/hooks/use-comparison-runs.live.test.ts' \
+  'src/hooks/use-comparison-run.live.test.ts' \
+  'src/hooks/use-comparison-run-matrix.live.test.ts' \
+  'src/hooks/use-comparison-run-readiness.live.test.ts' \
+  'src/hooks/use-award.live.test.ts' \
+  'src/app/(dashboard)/rfqs/[rfqId]/vendors/page.test.tsx' \
+  'src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.test.tsx' \
+  'src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx' \
+  'src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.test.tsx' \
+  'src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx'
+```
 
-| Decision | Rationale |
-|----------|-----------|
-| Candidate list from comparison snapshot | Provides better UX by showing only awardable vendors |
-| Documented in spec §8.2 | Design note added 2026-04-17 |
+- PASS. 16 files, 76 tests.
 
-### Blocker Status
+```bash
+cd apps/atomy-q/WEB && npm run build
+```
 
-| Blocker | Status |
-|---------|--------|
-| A1: Quote intelligence naming | ✅ Resolved (Task 2) |
-| A2: Award E2E proof | ✅ Resolved (Task 3) |
+- PASS.
 
-### Sign-off
+## Ship Decision
 
-- [ ] API tests pass (438 tests)
-- [ ] WEB unit tests pass (107 tests)
-- [ ] WEB lint passes (0 errors)
-- [ ] Documentation updated
+Proceed with commit, push, and PR creation for the Task 4 branch.

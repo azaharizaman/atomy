@@ -82,6 +82,18 @@ describe('useAward (live mode)', () => {
     expect(result.current.awards[0].id).toBe('award-1');
   });
 
+  it('throws when the live API resolves to undefined', async () => {
+    getMock.mockResolvedValueOnce({ data: undefined });
+    const { useAward } = await import('@/hooks/use-award');
+    const { Wrapper } = createTestWrapper();
+
+    const { result } = renderHook(() => useAward('rfq-1'), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect((result.current.error as Error).message.toLowerCase()).toContain('award');
+  });
+
   it('accepts existing award rows that omit comparison data', async () => {
     getMock.mockResolvedValueOnce({
       data: {
@@ -239,6 +251,7 @@ describe('useAward (live mode)', () => {
                     source_description: 'Line 1',
                   },
                 ],
+                resolutions: [],
                 currency_meta: { 'line-1': 'USD' },
                 vendors: [{ vendor_id: 'vendor-1', vendor_name: 'Live Vendor' }],
               },
@@ -324,6 +337,7 @@ describe('useAward (live mode)', () => {
                     source_description: 'Line 2',
                   },
                 ],
+                resolutions: [],
                 currency_meta: { 'line-1': 'USD', 'line-2': 'USD' },
                 vendors: [{ vendor_id: 'vendor-1', vendor_name: 'Live Vendor' }],
               },
@@ -397,6 +411,7 @@ describe('useAward (live mode)', () => {
                     source_description: 'Line 1',
                   },
                 ],
+                resolutions: [],
                 currency_meta: {},
                 vendors: [{ vendor_id: 'vendor-1', vendor_name: 'Live Vendor' }],
               },
