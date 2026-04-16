@@ -216,8 +216,39 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(OrchestratorTenantRepositoryInterface::class, OrchestratorTenantRepository::class);
         $this->app->singleton(OrchestratorProcurementManagerInterface::class, OrchestratorProcurementManager::class);
         $this->app->singleton(DecisionTrailWriterInterface::class, AtomyDecisionTrailWriter::class);
-        $this->app->singleton(OrchestratorContentProcessorInterface::class, MockContentProcessor::class);
-        $this->app->singleton(SemanticMapperInterface::class, MockSemanticMapper::class);
+        $this->app->singleton(OrchestratorContentProcessorInterface::class, static function (): OrchestratorContentProcessorInterface {
+            $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
+
+            if ($mode === 'llm') {
+                return new class implements OrchestratorContentProcessorInterface {
+                    public function analyze(string $storagePath): object
+                    {
+                        throw new \RuntimeException('Quote intelligence LLM mode is dormant.');
+                    }
+                };
+            }
+
+            return new MockContentProcessor();
+        });
+        $this->app->singleton(SemanticMapperInterface::class, static function (): SemanticMapperInterface {
+            $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
+
+            if ($mode === 'llm') {
+                return new class implements SemanticMapperInterface {
+                    public function mapToTaxonomy(string $description, string $tenantId): array
+                    {
+                        throw new \RuntimeException('Quote intelligence LLM mode is dormant.');
+                    }
+
+                    public function validateCode(string $code, string $version): bool
+                    {
+                        throw new \RuntimeException('Quote intelligence LLM mode is dormant.');
+                    }
+                };
+            }
+
+            return new MockSemanticMapper();
+        });
         $this->app->singleton(QuoteNormalizationServiceInterface::class, QuoteNormalizationService::class);
         $this->app->singleton(CommercialTermsExtractorInterface::class, RegexCommercialTermsExtractor::class);
         $this->app->singleton(RiskAssessmentServiceInterface::class, RuleBasedRiskAssessmentService::class);

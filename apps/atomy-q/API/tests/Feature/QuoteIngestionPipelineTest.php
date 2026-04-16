@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Tests\Feature\Api\ApiTestCase;
 
 final class QuoteIngestionPipelineTest extends ApiTestCase
@@ -101,6 +103,12 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         return $rfq;
     }
 
+    private function resetQuoteIntelligenceBindings(): void
+    {
+        app()->forgetInstance(OrchestratorContentProcessorInterface::class);
+        app()->forgetInstance(SemanticMapperInterface::class);
+    }
+
     public function test_upload_triggers_job(): void
     {
         $user = $this->createUser();
@@ -120,6 +128,52 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $submission = QuoteSubmission::first();
         self::assertNotNull($submission);
         self::assertEquals('ready', $submission->status);
+    }
+
+    public function test_quote_intelligence_defaults_to_deterministic_mode(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'deterministic');
+
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Deterministic Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'ready');
+    }
+
+    public function test_quote_intelligence_llm_mode_without_provider_config_fails_safely(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'llm');
+        config()->set('atomy.quote_intelligence.llm.provider', '');
+        config()->set('atomy.quote_intelligence.llm.model', '');
+        config()->set('atomy.quote_intelligence.llm.base_url', '');
+        config()->set('atomy.quote_intelligence.llm.api_key', '');
+
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Dormant LLM Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'failed');
+        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
+        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
     }
 
     public function test_reparse_resets_and_reprocesses(): void
