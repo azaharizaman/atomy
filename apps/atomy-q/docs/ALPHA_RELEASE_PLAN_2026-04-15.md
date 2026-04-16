@@ -176,8 +176,10 @@ After this task, the API and WEB should support the full compare-to-award path, 
 - Test: `apps/atomy-q/API/tests/Feature/AwardWorkflowTest.php`
 - Test: `apps/atomy-q/WEB/src/hooks/use-award.live.test.ts`
 - Test: `apps/atomy-q/WEB/tests/rfq-lifecycle-e2e.spec.ts`
+- Follow-up spec: [`ALPHA_TASK3_AWARD_E2E_SPEC_2026-04-16.md`](./ALPHA_TASK3_AWARD_E2E_SPEC_2026-04-16.md)
+- Follow-up plan: [`ALPHA_TASK3_AWARD_E2E_IMPLEMENTATION_PLAN_2026-04-16.md`](./ALPHA_TASK3_AWARD_E2E_IMPLEMENTATION_PLAN_2026-04-16.md)
 
-- [ ] Add a test fixture that freezes a comparison, creates an award from selected vendor/line split, signs it off, and verifies tenant-scoped retrieval.
+- [ ] Add a test fixture that freezes a comparison, creates a single-winner award from the selected vendor, signs it off, and verifies tenant-scoped retrieval.
 - [ ] Ensure the WEB award page can create an award when no award exists but a final comparison run is available.
 - [ ] Persist debrief/decision-trail evidence for award actions.
 - [ ] Add live-mode UI failure states for award create/signoff.
