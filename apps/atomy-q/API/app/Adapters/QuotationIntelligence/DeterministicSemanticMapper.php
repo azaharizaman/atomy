@@ -47,10 +47,14 @@ final readonly class DeterministicSemanticMapper implements SemanticMapperInterf
     }
 
     /**
-     * The interface requires a version argument; this deterministic validator only checks known codes.
+     * The interface requires a version argument; this deterministic validator checks known codes
+     * and allows the DEFAULT_CODE fallback used by mapToTaxonomy when no keyword matches.
      */
     public function validateCode(string $code, string $version): bool
     {
-        return in_array($code, array_map('strval', array_keys(self::UNSPSC_CODES)), true);
+        $validCodes = array_map('strval', array_keys(self::UNSPSC_CODES));
+        $validCodes[] = self::DEFAULT_CODE;
+
+        return in_array($code, $validCodes, true);
     }
 }

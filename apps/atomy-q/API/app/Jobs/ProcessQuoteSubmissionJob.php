@@ -51,7 +51,7 @@ class ProcessQuoteSubmissionJob implements ShouldQueue
         Log::error('ProcessQuoteSubmissionJob exhausted retries', [
             'quote_submission_id' => $this->quoteSubmissionId,
             'error_class' => $exception::class,
-            'error_message' => $exception->getMessage(),
+            'error_message' => self::sanitizeExceptionMessage($exception),
         ]);
 
         if ($submission !== null) {
@@ -61,6 +61,21 @@ class ProcessQuoteSubmissionJob implements ShouldQueue
             $submission->processing_completed_at = now();
             $submission->save();
         }
+    }
+
+    private static function sanitizeExceptionMessage(\Throwable $exception): string
+    {
+        $message = $exception->getMessage();
+
+        $message = preg_replace('/https?:\/\/[^\s\'"]*/i', '[REDACTED_URL]', $message) ?? $message;
+
+        $message = preg_replace('/(api[_-]?key|apikey|secret|password|token|auth)[=:]\s*[\'"]?([A-Za-z0-9_\-]{4})[^\s\'"]*/i', '$1=[REDACTED]', $message);
+
+        if (strlen($message) > 200) {
+            $message = substr($message, 0, 200) . '...[TRUNCATED]';
+        }
+
+        return $message;
     }
 
     public function runSync(QuoteIngestionOrchestrator $orchestrator): void

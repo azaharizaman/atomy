@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
+use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
+use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
+use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
+use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
 use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
 use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;
@@ -13,18 +25,6 @@ use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Str;
-use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
-use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
-use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
-use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
-use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
-use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Tests\Feature\Api\ApiTestCase;
 
 final class QuoteIngestionPipelineTest extends ApiTestCase
@@ -125,20 +125,38 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
      */
     private function loadAtomyConfigContractWithoutQuoteIntelligenceMode(): array
     {
-        $previousMode = getenv('QUOTE_INTELLIGENCE_MODE');
+        $previousEnv = getenv('QUOTE_INTELLIGENCE_MODE');
+        $previousEnvExisted = $previousEnv !== false;
+        $previousEnvValue = $previousEnv !== false ? $previousEnv : '';
 
-        putenv('QUOTE_INTELLIGENCE_MODE');
-        unset($_ENV['QUOTE_INTELLIGENCE_MODE'], $_SERVER['QUOTE_INTELLIGENCE_MODE']);
+        $previousEnvKey = 'QUOTE_INTELLIGENCE_MODE';
+        $envKeyExists = isset($_ENV[$previousEnvKey]);
+        $serverKeyExists = isset($_SERVER[$previousEnvKey]);
+        $previousEnvStored = $_ENV[$previousEnvKey] ?? null;
+        $previousServerStored = $_SERVER[$previousEnvKey] ?? null;
 
-        /** @var array<string, mixed> $config */
-        $config = require config_path('atomy.php');
+        try {
+            putenv($previousEnvKey);
+            unset($_ENV[$previousEnvKey], $_SERVER[$previousEnvKey]);
 
-        if ($previousMode === false) {
-            putenv('QUOTE_INTELLIGENCE_MODE');
-        } else {
-            putenv('QUOTE_INTELLIGENCE_MODE=' . $previousMode);
-            $_ENV['QUOTE_INTELLIGENCE_MODE'] = $previousMode;
-            $_SERVER['QUOTE_INTELLIGENCE_MODE'] = $previousMode;
+            /** @var array<string, mixed> $config */
+            $config = require config_path('atomy.php');
+        } finally {
+            if ($previousEnvExisted) {
+                putenv($previousEnvKey . '=' . $previousEnvValue);
+                $_ENV[$previousEnvKey] = $previousEnvValue;
+                $_SERVER[$previousEnvKey] = $previousEnvValue;
+            } else {
+                putenv($previousEnvKey);
+                unset($_ENV[$previousEnvKey], $_SERVER[$previousEnvKey]);
+            }
+
+            if ($envKeyExists) {
+                $_ENV[$previousEnvKey] = $previousEnvStored;
+            }
+            if ($serverKeyExists) {
+                $_SERVER[$previousEnvKey] = $previousServerStored;
+            }
         }
 
         return $config;
@@ -325,7 +343,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
                 return $message === 'ProcessQuoteSubmissionJob exhausted retries'
                     && $context['quote_submission_id'] === 'missing-quote-submission-id'
                     && $context['error_class'] === \RuntimeException::class
-                    && $context['error_message'] === 'Retry exhausted for secret backend endpoint https://sensitive.example.test';
+                    && $context['error_message'] === 'Retry exhausted for secret backend endpoint [REDACTED_URL]';
             });
     }
 
