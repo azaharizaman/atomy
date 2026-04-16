@@ -17,7 +17,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -109,6 +111,33 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
     {
         app()->forgetInstance(OrchestratorContentProcessorInterface::class);
         app()->forgetInstance(SemanticMapperInterface::class);
+        app()->forgetInstance(QuotationIntelligenceCoordinatorInterface::class);
+        app()->forgetInstance(QuoteIngestionOrchestrator::class);
+        app()->forgetInstance(BatchQuoteComparisonCoordinatorInterface::class);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function loadAtomyConfigContractWithoutQuoteIntelligenceMode(): array
+    {
+        $previousMode = getenv('QUOTE_INTELLIGENCE_MODE');
+
+        putenv('QUOTE_INTELLIGENCE_MODE');
+        unset($_ENV['QUOTE_INTELLIGENCE_MODE'], $_SERVER['QUOTE_INTELLIGENCE_MODE']);
+
+        /** @var array<string, mixed> $config */
+        $config = require config_path('atomy.php');
+
+        if ($previousMode === false) {
+            putenv('QUOTE_INTELLIGENCE_MODE');
+        } else {
+            putenv('QUOTE_INTELLIGENCE_MODE=' . $previousMode);
+            $_ENV['QUOTE_INTELLIGENCE_MODE'] = $previousMode;
+            $_SERVER['QUOTE_INTELLIGENCE_MODE'] = $previousMode;
+        }
+
+        return $config;
     }
 
     public function test_upload_triggers_job(): void
@@ -134,11 +163,12 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
     public function test_quote_intelligence_defaults_to_deterministic_mode(): void
     {
-        $this->resetQuoteIntelligenceBindings();
-        config()->set('atomy.quote_intelligence', []);
+        $contract = $this->loadAtomyConfigContractWithoutQuoteIntelligenceMode();
 
-        self::assertNull(config('atomy.quote_intelligence.mode'));
-        self::assertSame('deterministic', config('atomy.quote_intelligence.mode', 'deterministic'));
+        self::assertSame('deterministic', $contract['quote_intelligence']['mode']);
+
+        config()->set('atomy', $contract);
+        $this->resetQuoteIntelligenceBindings();
         self::assertInstanceOf(MockContentProcessor::class, app()->make(OrchestratorContentProcessorInterface::class));
         self::assertInstanceOf(MockSemanticMapper::class, app()->make(SemanticMapperInterface::class));
 
