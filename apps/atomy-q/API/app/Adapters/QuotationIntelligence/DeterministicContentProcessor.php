@@ -6,8 +6,9 @@ namespace App\Adapters\QuotationIntelligence;
 
 use App\Models\QuoteSubmission;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 
-final class DeterministicContentProcessor implements OrchestratorContentProcessorInterface
+final readonly class DeterministicContentProcessor implements OrchestratorContentProcessorInterface
 {
     private const VARIATIONS = [
         ' (Alpha Deterministic Match)',
@@ -17,11 +18,25 @@ final class DeterministicContentProcessor implements OrchestratorContentProcesso
         ' (Professional Series)',
     ];
 
+    public function __construct(private TenantContextInterface $tenantContext)
+    {
+    }
+
     public function analyze(string $storagePath): object
     {
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+        if ($tenantId === null || $tenantId === '') {
+            return $this->extractedLinesResult([]);
+        }
+
         $submission = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
             ->where('file_path', $this->resolveRelativePath($storagePath))
-            ->with(['rfq.lineItems' => fn ($q) => $q->orderBy('sort_order')])
+            ->with([
+                'rfq.lineItems' => fn ($q) => $q
+                    ->where('tenant_id', $tenantId)
+                    ->orderBy('sort_order'),
+            ])
             ->first();
 
         $lines = [];
@@ -52,6 +67,24 @@ final class DeterministicContentProcessor implements OrchestratorContentProcesso
             }
         }
 
+        return $this->extractedLinesResult($lines);
+    }
+
+    private function resolveRelativePath(string $storagePath): string
+    {
+        $prefix = storage_path('app') . DIRECTORY_SEPARATOR;
+        if (str_starts_with($storagePath, $prefix)) {
+            return substr($storagePath, strlen($prefix));
+        }
+
+        return basename($storagePath);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $lines
+     */
+    private function extractedLinesResult(array $lines): object
+    {
         return new class($lines) {
             /**
              * @param array<int, array<string, mixed>> $lines
@@ -63,15 +96,5 @@ final class DeterministicContentProcessor implements OrchestratorContentProcesso
                 return $field === 'lines' ? $this->lines : $default;
             }
         };
-    }
-
-    private function resolveRelativePath(string $storagePath): string
-    {
-        $prefix = storage_path('app') . DIRECTORY_SEPARATOR;
-        if (str_starts_with($storagePath, $prefix)) {
-            return substr($storagePath, strlen($prefix));
-        }
-
-        return basename($storagePath);
     }
 }

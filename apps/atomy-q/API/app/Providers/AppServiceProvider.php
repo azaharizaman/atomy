@@ -219,11 +219,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(OrchestratorTenantRepositoryInterface::class, OrchestratorTenantRepository::class);
         $this->app->singleton(OrchestratorProcurementManagerInterface::class, OrchestratorProcurementManager::class);
         $this->app->singleton(DecisionTrailWriterInterface::class, AtomyDecisionTrailWriter::class);
-        $this->app->singleton(OrchestratorContentProcessorInterface::class, function (): OrchestratorContentProcessorInterface {
+        $this->app->bind(OrchestratorContentProcessorInterface::class, function (): OrchestratorContentProcessorInterface {
             $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
 
             if ($mode === 'deterministic') {
-                return new DeterministicContentProcessor();
+                return new DeterministicContentProcessor($this->app->make(TenantContextInterface::class));
             }
 
             if ($mode === 'llm') {

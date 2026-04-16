@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
 use App\Jobs\ProcessQuoteSubmissionJob;
 use App\Models\DecisionTrailEntry;
 use App\Models\QuoteSubmission;
@@ -15,6 +16,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use Nexus\Tenant\Contracts\TenantContextInterface;
 use Tests\Feature\Api\ApiTestCase;
 
 final class QuoteIngestionIntelligenceTest extends ApiTestCase
@@ -193,6 +195,79 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
 
             $rfqLineItem = $rfq->lineItems()->where('id', $sourceLine->rfq_line_item_id)->first();
             self::assertNotNull($rfqLineItem, 'rfq_line_item_id should reference a valid RFQ line item');
+        }
+    }
+
+    public function test_deterministic_processor_scopes_same_path_lookup_to_current_tenant(): void
+    {
+        $otherUser = $this->createUser();
+        $otherRfq = $this->createRfqWithLineItems($otherUser);
+        $targetUser = $this->createUser();
+        $targetRfq = $this->createRfqWithLineItems($targetUser);
+        $sharedPath = 'quote-submissions/shared-same-path.pdf';
+
+        $otherRfq->lineItems()->update([
+            'description' => 'Other Tenant Exclusive Pump',
+            'uom' => 'BOX',
+            'currency' => 'EUR',
+        ]);
+
+        $targetRfq->lineItems()->update([
+            'description' => 'Target Tenant Exclusive Valve',
+            'uom' => 'SET',
+            'currency' => 'MYR',
+        ]);
+
+        QuoteSubmission::query()->create([
+            'tenant_id' => $otherUser->tenant_id,
+            'rfq_id' => $otherRfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Other Tenant Vendor',
+            'status' => 'uploaded',
+            'file_path' => $sharedPath,
+            'file_type' => 'application/pdf',
+            'original_filename' => 'other.pdf',
+            'submitted_at' => now(),
+            'confidence' => 0.0,
+            'line_items_count' => 0,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        QuoteSubmission::query()->create([
+            'tenant_id' => $targetUser->tenant_id,
+            'rfq_id' => $targetRfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Target Tenant Vendor',
+            'status' => 'uploaded',
+            'file_path' => $sharedPath,
+            'file_type' => 'application/pdf',
+            'original_filename' => 'target.pdf',
+            'submitted_at' => now(),
+            'confidence' => 0.0,
+            'line_items_count' => 0,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        app(TenantContextInterface::class)->setTenant($targetUser->tenant_id);
+
+        /** @var DeterministicContentProcessor $processor */
+        $processor = app(DeterministicContentProcessor::class);
+        $result = $processor->analyze(storage_path('app/' . $sharedPath));
+        $lines = $result->getExtractedField('lines', []);
+
+        self::assertNotEmpty($lines);
+
+        $targetLineItemIds = $targetRfq->lineItems()->pluck('id')->all();
+        $otherLineItemIds = $otherRfq->lineItems()->pluck('id')->all();
+
+        foreach ($lines as $line) {
+            self::assertContains($line['rfq_line_id'], $targetLineItemIds);
+            self::assertNotContains($line['rfq_line_id'], $otherLineItemIds);
+            self::assertStringContainsString('Target Tenant Exclusive Valve', (string) $line['description']);
+            self::assertSame('SET', $line['unit']);
+            self::assertSame('MYR', $line['currency']);
         }
     }
 
