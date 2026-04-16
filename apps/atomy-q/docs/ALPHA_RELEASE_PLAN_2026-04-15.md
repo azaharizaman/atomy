@@ -154,6 +154,8 @@ After this task, quote ingestion should produce persisted normalization source l
 - Modify: `apps/atomy-q/API/README.md`
 - Test: `apps/atomy-q/API/tests/Feature/QuoteIngestionIntelligenceTest.php`
 - Test: `apps/atomy-q/API/tests/Feature/QuoteIngestionPipelineTest.php`
+- Follow-up spec: [`ALPHA_TASK2_QUOTE_INTELLIGENCE_SPEC_2026-04-16.md`](./ALPHA_TASK2_QUOTE_INTELLIGENCE_SPEC_2026-04-16.md)
+- Follow-up plan: [`ALPHA_TASK2_QUOTE_INTELLIGENCE_IMPLEMENTATION_PLAN_2026-04-16.md`](./ALPHA_TASK2_QUOTE_INTELLIGENCE_IMPLEMENTATION_PLAN_2026-04-16.md)
 
 - [ ] Decide the alpha processor mode: production LLM provider or deterministic alpha processor.
 - [ ] If using production LLM, add explicit provider/model/env contract and adapter-level timeout/error handling.
