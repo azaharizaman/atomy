@@ -4,17 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
+use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
+use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
+use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
+use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
+use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
+use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
+use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;
+use App\Adapters\QuotationIntelligence\DormantLlmSemanticMapper;
 use App\Jobs\ProcessQuoteSubmissionJob;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Str;
-use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 use Tests\Feature\Api\ApiTestCase;
 
 final class QuoteIngestionPipelineTest extends ApiTestCase
@@ -101,6 +111,57 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         return $rfq;
     }
 
+    private function resetQuoteIntelligenceBindings(): void
+    {
+        app()->forgetInstance(OrchestratorContentProcessorInterface::class);
+        app()->forgetInstance(SemanticMapperInterface::class);
+        app()->forgetInstance(QuotationIntelligenceCoordinatorInterface::class);
+        app()->forgetInstance(QuoteIngestionOrchestrator::class);
+        app()->forgetInstance(BatchQuoteComparisonCoordinatorInterface::class);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function loadAtomyConfigContractWithoutQuoteIntelligenceMode(): array
+    {
+        $previousEnv = getenv('QUOTE_INTELLIGENCE_MODE');
+        $previousEnvExisted = $previousEnv !== false;
+        $previousEnvValue = $previousEnv !== false ? $previousEnv : '';
+
+        $previousEnvKey = 'QUOTE_INTELLIGENCE_MODE';
+        $envKeyExists = isset($_ENV[$previousEnvKey]);
+        $serverKeyExists = isset($_SERVER[$previousEnvKey]);
+        $previousEnvStored = $_ENV[$previousEnvKey] ?? null;
+        $previousServerStored = $_SERVER[$previousEnvKey] ?? null;
+
+        try {
+            putenv($previousEnvKey);
+            unset($_ENV[$previousEnvKey], $_SERVER[$previousEnvKey]);
+
+            /** @var array<string, mixed> $config */
+            $config = require config_path('atomy.php');
+        } finally {
+            if ($previousEnvExisted) {
+                putenv($previousEnvKey . '=' . $previousEnvValue);
+                $_ENV[$previousEnvKey] = $previousEnvValue;
+                $_SERVER[$previousEnvKey] = $previousEnvValue;
+            } else {
+                putenv($previousEnvKey);
+                unset($_ENV[$previousEnvKey], $_SERVER[$previousEnvKey]);
+            }
+
+            if ($envKeyExists) {
+                $_ENV[$previousEnvKey] = $previousEnvStored;
+            }
+            if ($serverKeyExists) {
+                $_SERVER[$previousEnvKey] = $previousServerStored;
+            }
+        }
+
+        return $config;
+    }
+
     public function test_upload_triggers_job(): void
     {
         $user = $this->createUser();
@@ -120,6 +181,170 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $submission = QuoteSubmission::first();
         self::assertNotNull($submission);
         self::assertEquals('ready', $submission->status);
+    }
+
+    public function test_quote_intelligence_defaults_to_deterministic_mode(): void
+    {
+        $contract = $this->loadAtomyConfigContractWithoutQuoteIntelligenceMode();
+
+        self::assertSame('deterministic', $contract['quote_intelligence']['mode']);
+
+        config()->set('atomy', $contract);
+        $this->resetQuoteIntelligenceBindings();
+        self::assertInstanceOf(DeterministicContentProcessor::class, app()->make(OrchestratorContentProcessorInterface::class));
+        self::assertInstanceOf(DeterministicSemanticMapper::class, app()->make(SemanticMapperInterface::class));
+
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Deterministic Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'ready');
+    }
+
+    public function test_quote_intelligence_llm_mode_without_provider_config_fails_safely(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'llm');
+        config()->set('atomy.quote_intelligence.llm.provider', '');
+        config()->set('atomy.quote_intelligence.llm.model', '');
+        config()->set('atomy.quote_intelligence.llm.base_url', '');
+        config()->set('atomy.quote_intelligence.llm.api_key', '');
+
+        $contentProcessor = app()->make(OrchestratorContentProcessorInterface::class);
+        $semanticMapper = app()->make(SemanticMapperInterface::class);
+
+        self::assertInstanceOf(DormantLlmContentProcessor::class, $contentProcessor);
+        self::assertInstanceOf(DormantLlmSemanticMapper::class, $semanticMapper);
+
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Dormant LLM Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'failed');
+        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
+        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
+    }
+
+    public function test_quote_intelligence_llm_mode_semantic_mapper_is_dormant(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'llm');
+
+        $semanticMapper = app()->make(SemanticMapperInterface::class);
+
+        self::assertInstanceOf(DormantLlmSemanticMapper::class, $semanticMapper);
+
+        $this->expectException(QuotationIntelligenceException::class);
+        $semanticMapper->mapToTaxonomy('Pump assembly', (string) Str::ulid());
+    }
+
+    public function test_quote_intelligence_llm_mode_with_provider_config_fails_until_adapter_exists(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'llm');
+        config()->set('atomy.quote_intelligence.llm.provider', 'openai');
+        config()->set('atomy.quote_intelligence.llm.model', 'gpt-5');
+        config()->set('atomy.quote_intelligence.llm.base_url', 'https://api.example.test/v1');
+        config()->set('atomy.quote_intelligence.llm.api_key', 'test-key');
+
+        $contentProcessor = app()->make(OrchestratorContentProcessorInterface::class);
+
+        self::assertInstanceOf(DormantLlmContentProcessor::class, $contentProcessor);
+
+        $this->expectException(QuotationIntelligenceException::class);
+        $this->expectExceptionMessage('Quote intelligence LLM mode is configured but no production adapter is implemented yet.');
+
+        $contentProcessor->analyze(storage_path('app/quote-submissions/configured-llm.pdf'));
+    }
+
+    public function test_unsupported_quote_intelligence_mode_fails_safe_through_pipeline(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.quote_intelligence.mode', 'unsupported-mode');
+
+        $contentProcessor = app()->make(OrchestratorContentProcessorInterface::class);
+        $semanticMapper = app()->make(SemanticMapperInterface::class);
+
+        self::assertNotInstanceOf(DeterministicContentProcessor::class, $contentProcessor);
+        self::assertNotInstanceOf(DeterministicSemanticMapper::class, $semanticMapper);
+
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Unsupported Mode Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'failed');
+        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
+        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
+    }
+
+    public function test_job_failed_path_sanitizes_retry_exhaustion_error_message(): void
+    {
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $submission = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Sensitive Vendor',
+            'status' => 'uploaded',
+            'file_path' => 'quote-submissions/test.pdf',
+            'submitted_at' => now(),
+            'confidence' => 0.0,
+            'line_items_count' => 0,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $job = new ProcessQuoteSubmissionJob($submission->id);
+        $job->failed(new \RuntimeException('Retry exhausted for secret backend endpoint https://sensitive.example.test'));
+
+        $submission->refresh();
+
+        self::assertSame('failed', $submission->status);
+        self::assertSame('MAX_RETRIES_EXCEEDED', $submission->error_code);
+        self::assertSame(QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE, $submission->error_message);
+    }
+
+    public function test_job_failed_path_logs_retry_exhaustion_when_submission_is_missing(): void
+    {
+        Log::spy();
+
+        $job = new ProcessQuoteSubmissionJob('missing-quote-submission-id');
+        $job->failed(new \RuntimeException('Retry exhausted for secret backend endpoint https://sensitive.example.test'));
+
+        Log::shouldHaveReceived('error')
+            ->once()
+            ->withArgs(static function (string $message, array $context): bool {
+                return $message === 'ProcessQuoteSubmissionJob exhausted retries'
+                    && $context['quote_submission_id'] === 'missing-quote-submission-id'
+                    && $context['error_class'] === \RuntimeException::class
+                    && $context['error_message'] === 'Retry exhausted for secret backend endpoint [REDACTED_URL]';
+            });
     }
 
     public function test_reparse_resets_and_reprocesses(): void

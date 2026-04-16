@@ -4,30 +4,45 @@ declare(strict_types=1);
 
 namespace App\Adapters\QuotationIntelligence;
 
-use App\Models\QuoteSubmission;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\Tenant\Contracts\TenantContextInterface;
+use App\Models\QuoteSubmission;
 
-final class MockContentProcessor implements OrchestratorContentProcessorInterface
+final readonly class DeterministicContentProcessor implements OrchestratorContentProcessorInterface
 {
     private const VARIATIONS = [
-        ' (Mock Variation)',
+        ' (Alpha Deterministic Match)',
         ' - Premium Grade',
         ' (Industrial Grade)',
         ' - Standard Model',
         ' (Professional Series)',
     ];
 
+    public function __construct(private TenantContextInterface $tenantContext)
+    {
+    }
+
     public function analyze(string $storagePath): object
     {
+        $tenantId = $this->tenantContext->getCurrentTenantId();
+        if ($tenantId === null || $tenantId === '') {
+            return $this->extractedLinesResult([]);
+        }
+
         $submission = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
             ->where('file_path', $this->resolveRelativePath($storagePath))
-            ->with(['rfq.lineItems' => fn ($q) => $q->orderBy('sort_order')])
+            ->whereHas('rfq', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->with([
+                'rfq.lineItems' => fn ($q) => $q
+                    ->where('tenant_id', $tenantId)
+                    ->orderBy('sort_order'),
+            ])
             ->first();
 
         $lines = [];
 
         if ($submission && $submission->rfq && $submission->rfq->lineItems->isNotEmpty()) {
-            // Hard stop on tenant mismatch to avoid cross-tenant leakage through mocks.
             if ((string) $submission->rfq->tenant_id !== (string) $submission->tenant_id) {
                 $submission = null;
             }
@@ -53,12 +68,7 @@ final class MockContentProcessor implements OrchestratorContentProcessorInterfac
             }
         }
 
-        return new class($lines) {
-            public function __construct(private array $lines) {}
-            public function getExtractedField(string $field, mixed $default = null): mixed {
-                return $field === 'lines' ? $this->lines : $default;
-            }
-        };
+        return $this->extractedLinesResult($lines);
     }
 
     private function resolveRelativePath(string $storagePath): string
@@ -69,5 +79,23 @@ final class MockContentProcessor implements OrchestratorContentProcessorInterfac
         }
 
         return basename($storagePath);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $lines
+     */
+    private function extractedLinesResult(array $lines): object
+    {
+        return new class($lines) {
+            /**
+             * @param array<int, array<string, mixed>> $lines
+             */
+            public function __construct(private array $lines) {}
+
+            public function getExtractedField(string $field, mixed $default = null): mixed
+            {
+                return $field === 'lines' ? $this->lines : $default;
+            }
+        };
     }
 }

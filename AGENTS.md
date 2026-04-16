@@ -343,3 +343,12 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Root cause:** I applied fail-loud behavior without preserving an explicit mock-mode guard for readiness and did not re-check all project IDs or placeholder UI counts after the previous remediation pass.
 - **Action taken:** Added mock-mode query disabling in `use-comparison-run-readiness`, kept live-mode fail-loud behavior for undefined responses, added the two missing seed project IDs, removed unsupported hardcoded child-record badges in `active-record-menu`, and tightened implementation summary wording to explicitly document `use-comparison-run.ts` fetch-retry behavior across mock vs live mode.
 - **Follow-up tasks:** For future review closures, run a final matrix check across (1) mock-mode enabled behavior, (2) live-mode fail-loud behavior, (3) central seed ID pool completeness, and (4) removal or wiring of placeholder UI counters before declaring comments resolved.
+
+---
+
+- **Date:** 2026-04-16
+- **PR/Issue ID:** Alpha Task 2 quote intelligence review follow-up
+- **Summary of mistake:** The deterministic quote-intelligence path tenant-scoped the submission and line items but left the parent RFQ eager load unconstrained, while the API docs also under-described the `QUOTE_INTELLIGENCE_*` contract and dormant-`llm` failure behavior.
+- **Root cause:** I relied on downstream defensive checks and a short mode summary instead of making the parent eager-load boundary and operator-facing contract explicit in the same pass.
+- **Action taken:** Added tenant scoping to the parent RFQ eager load in `DeterministicContentProcessor`, strengthened the tenant-scoping regression test, cleaned up deterministic/dormant adapter declarations, and expanded API docs plus `IMPLEMENTATION_SUMMARY.md` to describe the env contract and sanitized dormant-`llm` failure path.
+- **Follow-up tasks:** Before closing future review threads on ingestion flows, verify that all eagerly loaded parent relations are tenant-scoped and that README/env docs describe the exact runtime failure shape for config-gated modes.

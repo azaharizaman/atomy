@@ -123,8 +123,10 @@ use App\Adapters\QuotationIntelligence\OrchestratorDocumentRepository;
 use App\Adapters\QuotationIntelligence\OrchestratorTenantRepository;
 use App\Adapters\QuotationIntelligence\OrchestratorProcurementManager;
 use App\Adapters\QuotationIntelligence\AtomyDecisionTrailWriter;
-use App\Adapters\QuotationIntelligence\MockContentProcessor;
-use App\Adapters\QuotationIntelligence\MockSemanticMapper;
+use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
+use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
+use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;
+use App\Adapters\QuotationIntelligence\DormantLlmSemanticMapper;
 use App\Adapters\QuotationIntelligence\Support\InMemoryUomRepository;
 use App\Adapters\QuotationIntelligence\Support\StaticExchangeRateProvider;
 use App\Adapters\QuoteIngestion\EloquentQuoteSubmissionQuery;
@@ -160,6 +162,7 @@ use Nexus\PolicyEngine\Contracts\PolicyValidatorInterface;
 use Nexus\PolicyEngine\Services\PolicyEvaluator;
 use Nexus\PolicyEngine\Services\JsonPolicyDecoder;
 use Nexus\PolicyEngine\Services\PolicyValidator;
+use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Psr\Log\LoggerInterface;
 
 class AppServiceProvider extends ServiceProvider
@@ -216,8 +219,55 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(OrchestratorTenantRepositoryInterface::class, OrchestratorTenantRepository::class);
         $this->app->singleton(OrchestratorProcurementManagerInterface::class, OrchestratorProcurementManager::class);
         $this->app->singleton(DecisionTrailWriterInterface::class, AtomyDecisionTrailWriter::class);
-        $this->app->singleton(OrchestratorContentProcessorInterface::class, MockContentProcessor::class);
-        $this->app->singleton(SemanticMapperInterface::class, MockSemanticMapper::class);
+        $this->app->bind(OrchestratorContentProcessorInterface::class, function (): OrchestratorContentProcessorInterface {
+            $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
+
+            if ($mode === 'deterministic') {
+                return new DeterministicContentProcessor($this->app->make(TenantContextInterface::class));
+            }
+
+            if ($mode === 'llm') {
+                return new DormantLlmContentProcessor($this->quoteIntelligenceLlmConfig());
+            }
+
+            $message = 'Unsupported quote intelligence mode.';
+
+            return new class($message) implements OrchestratorContentProcessorInterface {
+                public function __construct(private readonly string $message) {}
+
+                public function analyze(string $storagePath): object
+                {
+                    throw new QuotationIntelligenceException($this->message);
+                }
+            };
+        });
+        $this->app->singleton(SemanticMapperInterface::class, function (): SemanticMapperInterface {
+            $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
+
+            if ($mode === 'deterministic') {
+                return new DeterministicSemanticMapper();
+            }
+
+            if ($mode === 'llm') {
+                return new DormantLlmSemanticMapper($this->quoteIntelligenceLlmConfig());
+            }
+
+            $message = 'Unsupported quote intelligence mode.';
+
+            return new class($message) implements SemanticMapperInterface {
+                public function __construct(private readonly string $message) {}
+
+                public function mapToTaxonomy(string $description, string $tenantId): array
+                {
+                    throw new QuotationIntelligenceException($this->message);
+                }
+
+                public function validateCode(string $code, string $version): bool
+                {
+                    throw new QuotationIntelligenceException($this->message);
+                }
+            };
+        });
         $this->app->singleton(QuoteNormalizationServiceInterface::class, QuoteNormalizationService::class);
         $this->app->singleton(CommercialTermsExtractorInterface::class, RegexCommercialTermsExtractor::class);
         $this->app->singleton(RiskAssessmentServiceInterface::class, RuleBasedRiskAssessmentService::class);
@@ -372,5 +422,13 @@ class AppServiceProvider extends ServiceProvider
         Scramble::configure()->withDocumentTransformers([
             IdempotencyErrorCodesDocumentTransformer::class,
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function quoteIntelligenceLlmConfig(): array
+    {
+        return (array) config('atomy.quote_intelligence.llm', []);
     }
 }

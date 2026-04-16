@@ -35,4 +35,15 @@ return [
         'min_vendors_preview' => (int) env('ATOMY_MIN_VENDORS_PREVIEW', 1),
         'confidence_threshold' => (float) env('ATOMY_CONFIDENCE_THRESHOLD', 0.7),
     ],
+
+    'quote_intelligence' => [
+        'mode' => (string) env('QUOTE_INTELLIGENCE_MODE', 'deterministic'),
+        'llm' => [
+            'provider' => (string) env('QUOTE_INTELLIGENCE_LLM_PROVIDER', ''),
+            'model' => (string) env('QUOTE_INTELLIGENCE_LLM_MODEL', ''),
+            'base_url' => (string) env('QUOTE_INTELLIGENCE_LLM_BASE_URL', ''),
+            'api_key' => (string) env('QUOTE_INTELLIGENCE_LLM_API_KEY', ''),
+            'timeout_seconds' => (int) env('QUOTE_INTELLIGENCE_LLM_TIMEOUT_SECONDS', 30),
+        ],
+    ],
 ];

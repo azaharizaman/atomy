@@ -6,7 +6,7 @@ namespace App\Adapters\QuotationIntelligence;
 
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 
-final class MockSemanticMapper implements SemanticMapperInterface
+final readonly class DeterministicSemanticMapper implements SemanticMapperInterface
 {
     private const UNSPSC_CODES = [
         '20101507' => ['pump', 'valve', 'compressor', 'motor'],
@@ -20,6 +20,9 @@ final class MockSemanticMapper implements SemanticMapperInterface
 
     private const DEFAULT_CODE = '20101507';
 
+    /**
+     * Deterministic alpha taxonomy mapping is intentionally tenant-agnostic.
+     */
     public function mapToTaxonomy(string $description, string $tenantId): array
     {
         $lowerDesc = strtolower($description);
@@ -28,8 +31,7 @@ final class MockSemanticMapper implements SemanticMapperInterface
             foreach ($keywords as $keyword) {
                 if (str_contains($lowerDesc, $keyword)) {
                     return [
-                        'code' => $code,
-                        // Stable percent-like confidence (0-100) for the Alpha state machine.
+                        'code' => (string) $code,
                         'confidence' => 92.0,
                         'version' => 'v25.0',
                     ];
@@ -44,9 +46,15 @@ final class MockSemanticMapper implements SemanticMapperInterface
         ];
     }
 
+    /**
+     * The interface requires a version argument; this deterministic validator checks known codes
+     * and allows the DEFAULT_CODE fallback used by mapToTaxonomy when no keyword matches.
+     */
     public function validateCode(string $code, string $version): bool
     {
-        return in_array($code, array_keys(self::UNSPSC_CODES), true)
-            || $code === self::DEFAULT_CODE;
+        $validCodes = array_map('strval', array_keys(self::UNSPSC_CODES));
+        $validCodes[] = self::DEFAULT_CODE;
+
+        return in_array($code, $validCodes, true);
     }
 }

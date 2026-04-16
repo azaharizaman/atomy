@@ -62,7 +62,7 @@ This plan was produced after tracing the Atomy-Q stack through the active codeba
 
 | ID | Blocker | Risk | Required closure |
 |---|---|---|---|
-| A1 | Quote intelligence still binds `MockContentProcessor` and `MockSemanticMapper` in `AppServiceProvider`. | High | Replace with production processor/mapper or a clearly named deterministic alpha processor accepted for design partners; no hidden mock behavior in live mode. |
+| A1 | Quote intelligence still needed an honestly named deterministic alpha binding in `AppServiceProvider`. | High | Keep the deterministic default, leave `llm` dormant until a production provider exists, and avoid hidden mock behavior in live mode. |
 | A2 | Award journey is implemented in pieces but not proven as compare -> select winner -> persist award -> signoff -> decision trail from WEB. | High | Add API + WEB + E2E coverage for the complete user journey. |
 | A3 | WEB still has many `NEXT_PUBLIC_USE_MOCKS` branches and seed imports. Several have live tests, but the full golden path needs fail-loud verification. | High | Add a live-mode no-seed regression matrix for RFQ, vendors, submissions, normalization, comparison, awards, approvals, dashboard shell. |
 | A4 | Broad non-alpha controllers still return placeholder data or 501/deferred responses: negotiations, settings writes, account subscription/payment, reports, integrations, recommendations, scenarios, risk, documents/handoff. | Medium | Hide from alpha navigation or return explicit deferred responses with no golden-path dependency. |
@@ -83,7 +83,7 @@ Layer 1 is strong enough for alpha if the app stays narrow.
 - `packages/PolicyEngine` supports operational approval policy decisions and is already wired into the approval operations path.
 - `packages/Notifier`, `Outbox`, `Document`, `MachineLearning`, and `Procurement` contain reusable primitives, but alpha should only pull them where the golden path requires them.
 
-Layer 1 action: do not expand domain scope before alpha. Only add contracts if needed to replace mock quote intelligence cleanly or to formalize award lifecycle semantics.
+Layer 1 action: do not expand domain scope before alpha. Only add contracts if needed to keep quote intelligence honestly named and deterministic or to formalize award lifecycle semantics.
 
 ## 6. Layer 2 Findings
 
@@ -103,7 +103,7 @@ Layer 2 action: keep orchestration interface-first. Do not let Atomy-Q controlle
 
 Layer 3 is where most alpha risk remains.
 
-- `apps/atomy-q/API/app/Providers/AppServiceProvider.php` correctly wires many live adapters, but still binds quote intelligence to `MockContentProcessor` and `MockSemanticMapper` and MFA enrollment to `AtomyNoopMfaEnrollmentService`.
+- `apps/atomy-q/API/app/Providers/AppServiceProvider.php` correctly wires many live adapters, and quote intelligence is now bound through honestly named deterministic and dormant LLM adapters while MFA enrollment still uses `AtomyNoopMfaEnrollmentService`.
 - Laravel API controllers have mixed maturity. RFQ, quote submission, normalization, comparison, awards, vendors, projects/tasks, auth, tenant onboarding, and operational approvals have real behavior. Reports, risk, integrations, documents, handoffs, recommendations, scenarios, settings writes, negotiation, account subscription/payment, and user-management endpoints are placeholder/deferred surfaces.
 - `apps/atomy-q/WEB/src/lib/api-live.ts` deliberately returns `undefined` in mock mode and throws in live mode. Hooks must preserve that contract and must not catch live failures into seed success.
 - `apps/atomy-q/WEB/src/data/seed.ts` is still useful for local demo mode, but it must be impossible to confuse seed-backed screens with alpha-ready live behavior.
@@ -143,7 +143,7 @@ After this task, stakeholders should have a simple release checklist showing whi
 
 ### Task 2: Replace Mock Quote Intelligence Binding
 
-This task addresses the highest-risk product credibility gap: quote normalization must not look live while still depending on mock intelligence classes. The work either wires a production intelligence provider or explicitly names and documents a deterministic alpha processor so there is no hidden mock behavior in live mode.
+This task addresses the highest-risk product credibility gap: quote normalization must not look live while still depending on hidden mock intelligence classes. The shipped follow-up docs now describe the supported deterministic alpha default, the dormant `llm` contract, and the env wiring that keeps the mode honest.
 
 After this task, quote ingestion should produce persisted normalization source lines through an honest, supportable processor path, and failures should be visible, sanitized, and operationally traceable.
 
@@ -157,11 +157,11 @@ After this task, quote ingestion should produce persisted normalization source l
 - Follow-up spec: [`ALPHA_TASK2_QUOTE_INTELLIGENCE_SPEC_2026-04-16.md`](./ALPHA_TASK2_QUOTE_INTELLIGENCE_SPEC_2026-04-16.md)
 - Follow-up plan: [`ALPHA_TASK2_QUOTE_INTELLIGENCE_IMPLEMENTATION_PLAN_2026-04-16.md`](./ALPHA_TASK2_QUOTE_INTELLIGENCE_IMPLEMENTATION_PLAN_2026-04-16.md)
 
-- [ ] Decide the alpha processor mode: production LLM provider or deterministic alpha processor.
-- [ ] If using production LLM, add explicit provider/model/env contract and adapter-level timeout/error handling.
-- [ ] If using deterministic alpha processor, rename classes so they do not contain `Mock`, document the limitation, and keep CI deterministic.
-- [ ] Ensure live ingestion failures mark quote submissions failed with sanitized error messages.
-- [ ] Verify normalization source lines are persisted with tenant, RFQ, quote submission, vendor, mapping confidence, and evidence metadata.
+- [x] Decide the alpha processor mode: alpha now ships with the deterministic processor path, while `llm` remains a documented dormant mode until provider budget and runtime config are available.
+- [x] Define the production LLM env contract now so a future adapter can be wired in without changing the ingestion boundary or operator docs.
+- [x] Use honestly named deterministic adapters, document the limitation, and keep CI deterministic.
+- [x] Ensure live ingestion failures mark quote submissions failed with sanitized error messages.
+- [x] Verify normalization source lines are persisted with tenant, RFQ, quote submission, vendor, mapping confidence, and evidence metadata.
 
 ### Task 3: Prove Award End-To-End
 
