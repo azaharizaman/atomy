@@ -172,8 +172,21 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         self::assertNotInstanceOf(MockContentProcessor::class, $contentProcessor);
         self::assertNotInstanceOf(MockSemanticMapper::class, $semanticMapper);
 
-        $this->expectException(\RuntimeException::class);
-        $contentProcessor->analyze('quote-submissions/quote.pdf');
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Dormant LLM Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'failed');
+        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
+        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
     }
 
     public function test_quote_intelligence_llm_mode_semantic_mapper_is_dormant(): void
