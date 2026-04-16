@@ -16,6 +16,7 @@
    - Computes average confidence from finite numeric values only.
    - Normalizes scalar checks for source description, uom, taxonomy code, and mapping version.
    - Sanitizes failure messages before persistence to avoid leaking internal error details.
+   - Exposes the generic failure message as a shared constant reused by the retry-exhaustion job path.
 3. Added unit tests for core orchestration behavior and failure paths.
 
 ## Verification coverage added

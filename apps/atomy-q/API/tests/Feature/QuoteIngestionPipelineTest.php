@@ -308,7 +308,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
         self::assertSame('failed', $submission->status);
         self::assertSame('MAX_RETRIES_EXCEEDED', $submission->error_code);
-        self::assertSame('Quote intelligence processing failed.', $submission->error_message);
+        self::assertSame(QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE, $submission->error_message);
     }
 
     public function test_reparse_resets_and_reprocesses(): void
