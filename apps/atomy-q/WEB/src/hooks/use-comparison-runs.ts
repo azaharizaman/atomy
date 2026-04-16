@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
-import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 
 export interface ComparisonRunRow {
   id: string;
@@ -77,14 +76,13 @@ function normalizeComparisonRuns(payload: unknown): ComparisonRunRow[] {
 }
 
 export function useComparisonRuns(rfqId: string) {
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
   return useQuery({
     queryKey: ['comparison-runs', rfqId],
     queryFn: async (): Promise<ComparisonRunRow[]> => {
-      const data = await fetchLiveOrFail<{ data: ComparisonRunRow[] }>('/comparison-runs', {
-        params: { rfq_id: rfqId },
-      });
-
-      if (data === undefined) {
+      if (useMocks) {
+        const { getSeedComparisonRunsByRfqId } = await import('@/data/seed');
         return getSeedComparisonRunsByRfqId(rfqId).map((r) => ({
           id: r.id,
           rfq_id: r.rfqId,
@@ -94,6 +92,14 @@ export function useComparisonRuns(rfqId: string) {
           name: r.type === 'final' ? 'Final comparison' : 'Preview comparison',
           created_at: null,
         }));
+      }
+
+      const data = await fetchLiveOrFail<{ data: ComparisonRunRow[] }>('/comparison-runs', {
+        params: { rfq_id: rfqId },
+      });
+
+      if (data === undefined) {
+        throw new Error(`Comparison runs unavailable for RFQ "${rfqId}".`);
       }
 
       return normalizeComparisonRuns(data);

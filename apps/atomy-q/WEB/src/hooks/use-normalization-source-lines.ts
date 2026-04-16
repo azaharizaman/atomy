@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
+import { isObject, toText } from '@/hooks/normalize-utils';
 
 export interface NormalizationSourceLineRow {
   id: string;
@@ -26,8 +27,15 @@ export interface NormalizationSourceLineRow {
 }
 
 function normalizeSourceLines(payload: unknown): NormalizationSourceLineRow[] {
-  const raw = payload && typeof payload === 'object' ? (payload as { data?: unknown }) : null;
-  const list = Array.isArray(raw?.data) ? raw.data : [];
+  if (!isObject(payload)) {
+    throw new Error('Invalid normalization source line response: expected object envelope with data array.');
+  }
+
+  if (!Array.isArray(payload.data)) {
+    throw new Error('Invalid normalization source line response: expected data array.');
+  }
+
+  const list = payload.data;
 
   return list.map((item: unknown, index: number) => {
     if (item === null || typeof item !== 'object' || Array.isArray(item)) {
@@ -35,12 +43,21 @@ function normalizeSourceLines(payload: unknown): NormalizationSourceLineRow[] {
     }
 
     const row = item as Record<string, unknown>;
+    const id = toText(row.id);
+    const quoteSubmissionId = toText(row.quote_submission_id);
+    const vendorId = toText(row.vendor_id);
+    const vendorName = toText(row.vendor_name);
+    const sourceDescription = toText(row.source_description);
+    if (id === null || quoteSubmissionId === null || vendorId === null || vendorName === null || sourceDescription === null) {
+      throw new Error(`Invalid normalization source line at index ${index}: missing required fields`);
+    }
+
     return {
-      id: String(row.id ?? ''),
-      quote_submission_id: String(row.quote_submission_id ?? ''),
-      vendor_id: String(row.vendor_id ?? ''),
-      vendor_name: String(row.vendor_name ?? ''),
-      source_description: String(row.source_description ?? ''),
+      id,
+      quote_submission_id: quoteSubmissionId,
+      vendor_id: vendorId,
+      vendor_name: vendorName,
+      source_description: sourceDescription,
       source_quantity:
         row.source_quantity !== undefined && row.source_quantity !== null ? String(row.source_quantity) : null,
       source_uom: row.source_uom !== undefined && row.source_uom !== null ? String(row.source_uom) : null,
@@ -86,7 +103,9 @@ export function useNormalizationSourceLines(rfqId: string, options?: { enabled?:
   return useQuery({
     queryKey: ['normalization-source-lines', rfqId],
     queryFn: async (): Promise<NormalizationSourceLineRow[]> => {
-      const data = await fetchLiveOrFail<{ data: NormalizationSourceLineRow[] }>('/normalization/' + encodeURIComponent(rfqId) + '/source-lines');
+      const data = await fetchLiveOrFail<{ data: NormalizationSourceLineRow[] }>(
+        '/normalization/' + encodeURIComponent(rfqId) + '/source-lines',
+      );
 
       if (data === undefined) {
         if (isMock) {

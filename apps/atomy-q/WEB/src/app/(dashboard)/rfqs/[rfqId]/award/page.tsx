@@ -38,7 +38,8 @@ function awardBadge(status: string | null | undefined): { status: 'pending' | 'a
 
 export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
-  const { data: rfq } = useRfq(rfqId);
+  const rfqQuery = useRfq(rfqId);
+  const rfq = rfqQuery.data;
   const awardQuery = useAward(rfqId);
   const comparisonRunsQuery = useComparisonRuns(rfqId);
   const { award, debrief, signoff, store } = awardQuery;
@@ -96,12 +97,14 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
 
   const comparisonRunsError = !displayAward ? comparisonRunsQuery.error : null;
   const loadError =
+    rfqQuery.error ??
     awardQuery.error ??
     comparisonRunsError ??
     (shouldLoadFinalRunEvidence ? finalRunDetailQuery.error : null) ??
     (shouldLoadFinalRunEvidence ? finalRunMatrixQuery.error : null);
 
   if (
+    rfqQuery.isError ||
     awardQuery.isError ||
     (!displayAward && comparisonRunsQuery.isError) ||
     (shouldLoadFinalRunEvidence && (finalRunDetailQuery.isError || finalRunMatrixQuery.isError))

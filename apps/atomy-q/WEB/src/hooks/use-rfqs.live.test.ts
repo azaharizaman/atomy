@@ -96,4 +96,15 @@ describe('useRfqs (live mode)', () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(Error);
   });
+
+  it('surfaces an error when the live API resolves to undefined', async () => {
+    getMock.mockResolvedValueOnce({ data: undefined });
+    const { useRfqs } = await import('@/hooks/use-rfqs');
+    const { Wrapper } = createTestWrapper();
+
+    const { result } = renderHook(() => useRfqs({}), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(Error);
+  });
 });

@@ -66,3 +66,16 @@
   - `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-award.live.test.ts` -> PASS, 13 tests.
   - `cd apps/atomy-q/WEB && npx vitest run 'src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx'` -> PASS, 8 tests.
   - `cd apps/atomy-q/WEB && PLAYWRIGHT_USE_EXISTING_SERVER=1 PLAYWRIGHT_BASE_URL=http://localhost:3100 NEXT_PUBLIC_USE_MOCKS=false npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts` -> PASS, 1 passed / 1 skipped.
+
+## 2026-04-17 Alpha Task 4 Live-Mode Fail-Loud
+
+- Golden-path hooks now keep seed access inside explicit `NEXT_PUBLIC_USE_MOCKS === 'true'` branches only, and never return seed-backed or fabricated business data in live mode.
+- Live-mode golden-path hooks now fail loudly instead of falling back to seed or fabricated success states when the API returns `undefined` or malformed payloads.
+- In live mode, `undefined` payloads now throw explicit unavailable errors across RFQ detail, vendor invitations, quote submissions, normalization review, comparison runs, comparison detail, comparison matrix, comparison readiness, and award reads.
+- Hook normalizers reject malformed live payloads (missing required fields, wrong envelope types, wrong primitives for required fields) so broken contracts surface as React Query errors instead of silent empty states.
+- RFQ vendors, quote intake, normalize, comparison runs, and award pages now render explicit unavailable/recovery states when live dependencies error instead of collapsing to empty-state success.
+- Added and extended `.live.test.ts` coverage for RFQ detail, RFQs list, vendor invitations, quote submissions, normalization source lines, normalization review, comparison runs, comparison detail, comparison matrix, comparison readiness, and awards.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-rfq.live.test.ts src/hooks/use-rfqs.live.test.ts src/hooks/use-rfq-vendors.live.test.ts src/hooks/use-quote-submissions.live.test.ts src/hooks/use-normalization-source-lines.live.test.ts src/hooks/use-normalization-review.live.test.ts src/hooks/use-comparison-runs.live.test.ts src/hooks/use-comparison-run.live.test.ts src/hooks/use-comparison-run-matrix.live.test.ts src/hooks/use-comparison-run-readiness.live.test.ts src/hooks/use-award.live.test.ts` -> PASS, 57 tests.
+  - `cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/vendors/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx` -> PASS, 19 tests.
+  - `cd apps/atomy-q/WEB && npm run build` -> PASS.

@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
-import { getSeedComparisonRunsByRfqId } from '@/data/seed';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
 export interface ComparisonRunSnapshotVendor {
@@ -66,7 +65,10 @@ function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {
     ? payload.normalized_lines
     : Array.isArray(payload.normalizedLines)
       ? payload.normalizedLines
-      : [];
+      : null;
+  if (!Array.isArray(rawNormalizedLines)) {
+    throw new Error('Comparison run snapshot is missing normalized_lines.');
+  }
 
   const normalizedLines = rawNormalizedLines.map((item: unknown, index: number): ComparisonRunSnapshotNormalizedLine => {
     if (!isObject(item)) {
@@ -90,7 +92,14 @@ function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {
     };
   });
 
-  const rawResolutions = Array.isArray(payload.resolutions) ? payload.resolutions : Array.isArray(payload.resolution) ? payload.resolution : [];
+  const rawResolutions = Array.isArray(payload.resolutions)
+    ? payload.resolutions
+    : Array.isArray(payload.resolution)
+      ? payload.resolution
+      : null;
+  if (!Array.isArray(rawResolutions)) {
+    throw new Error('Comparison run snapshot is missing resolutions.');
+  }
   const resolutions = rawResolutions
     .filter(isObject)
     .map((item) => ({ ...item }));
@@ -99,7 +108,10 @@ function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {
     ? payload.currency_meta
     : isObject(payload.currencyMeta)
       ? payload.currencyMeta
-      : {};
+      : null;
+  if (!isObject(rawCurrencyMeta)) {
+    throw new Error('Comparison run snapshot is missing currency_meta.');
+  }
   const currencyMeta: Record<string, string> = {};
   Object.entries(rawCurrencyMeta).forEach(([key, value]) => {
     const currency = toText(value);
@@ -114,7 +126,10 @@ function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {
       ? payload.vendorSummaries
       : Array.isArray(payload.vendor_summaries)
         ? payload.vendor_summaries
-        : [];
+        : null;
+  if (!Array.isArray(rawVendors)) {
+    throw new Error('Comparison run snapshot is missing vendors.');
+  }
   const vendors = rawVendors.map((item: unknown, index: number): ComparisonRunSnapshotVendor => {
     if (!isObject(item)) {
       throw new Error(`Comparison run snapshot vendor at index ${index} must be an object.`);
@@ -184,7 +199,11 @@ function normalizeComparisonRun(payload: unknown): ComparisonRunDetail {
   };
 }
 
-function buildMockComparisonRun(runId: string, rfqId?: string): ComparisonRunDetail {
+async function buildMockComparisonRun(runId: string, rfqId?: string): Promise<ComparisonRunDetail> {
+  // This mock payload is intentionally minimal/non-functional for award-evidence checks in mock mode.
+  // In mock mode, hasCompleteAwardPricingEvidence (see use-award.ts) will always return false.
+  // A real seed-derived snapshot would require getSeedComparisonRunsByRfqId and buildMockComparisonRun logic.
+  const { getSeedComparisonRunsByRfqId } = await import('@/data/seed');
   const run = rfqId ? getSeedComparisonRunsByRfqId(rfqId).find((item) => item.id === runId || item.runId === runId) : null;
   if (!run) {
     return {
@@ -216,13 +235,19 @@ function buildMockComparisonRun(runId: string, rfqId?: string): ComparisonRunDet
 }
 
 export function useComparisonRun(runId: string, options?: { rfqId?: string }) {
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
   return useQuery({
     queryKey: ['comparison-run', options?.rfqId ?? runId, runId],
     queryFn: async (): Promise<ComparisonRunDetail> => {
+      if (useMocks) {
+        return buildMockComparisonRun(runId, options?.rfqId);
+      }
+
       const data = await fetchLiveOrFail<{ data: ComparisonRunDetail }>(`/comparison-runs/${encodeURIComponent(runId)}`);
 
       if (data === undefined) {
-        return buildMockComparisonRun(runId, options?.rfqId);
+        throw new Error(`Comparison run "${runId}" is unavailable from the live API.`);
       }
 
       return normalizeAndValidateComparisonRun(data, options?.rfqId);

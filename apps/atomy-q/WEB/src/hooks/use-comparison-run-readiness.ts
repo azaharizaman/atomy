@@ -60,8 +60,14 @@ function normalizeComparisonRunReadiness(payload: unknown): ComparisonRunReadine
   }
 
   const readiness = isObject(raw.readiness) ? raw.readiness : raw;
-  const blockersRaw = Array.isArray(readiness.blockers) ? readiness.blockers : [];
-  const warningsRaw = Array.isArray(readiness.warnings) ? readiness.warnings : [];
+  if (!Array.isArray(readiness.blockers)) {
+    throw new Error('Comparison readiness payload has invalid blockers: expected array.');
+  }
+  if (!Array.isArray(readiness.warnings)) {
+    throw new Error('Comparison readiness payload has invalid warnings: expected array.');
+  }
+  const blockersRaw = readiness.blockers;
+  const warningsRaw = readiness.warnings;
 
   return {
     id,

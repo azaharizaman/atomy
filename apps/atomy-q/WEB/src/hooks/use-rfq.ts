@@ -3,7 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
-import { type RfqStatus, isValidRfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
+import { type RfqStatus, isValidRfqStatus } from '@/hooks/use-rfqs';
+import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
 export interface RfqDetail {
   id: string;
@@ -41,56 +42,83 @@ function parseMaybeNumber(value: unknown): number | undefined {
   if (value === null || value === undefined) return undefined;
   if (typeof value === 'string' && value.trim() === '') return undefined;
   const n = Number(value);
-  if (!Number.isFinite(n)) return undefined;
+  if (!Number.isFinite(n)) {
+    throw new Error('RFQ detail payload has an invalid numeric field.');
+  }
   return n;
 }
 
 function normalizeRfq(payload: unknown): RfqDetail {
-  let raw = payload as Record<string, unknown> | null | undefined;
-  while (raw?.data) {
-    raw = raw.data as Record<string, unknown>;
+  let raw = unwrapResponse(payload);
+  if (isObject(raw) && !('id' in raw) && isObject(raw.data)) {
+    raw = raw.data;
   }
-  const rawStatus = raw?.status;
-  const status: RfqStatus = isValidRfqStatus(rawStatus) ? rawStatus : RFQ_STATUSES.ACTIVE;
-  const est = raw?.estValue ?? raw?.estimated_value ?? raw?.estimatedValue;
+
+  if (!isObject(raw)) {
+    throw new Error('RFQ detail payload must be an object.');
+  }
+
+  const id = toText(raw.id ?? raw.rfqId);
+  if (id === null) {
+    throw new Error('RFQ detail payload is missing id.');
+  }
+
+  const title = toText(raw.title ?? raw.name);
+  if (title === null) {
+    throw new Error(`RFQ "${id}" is missing title.`);
+  }
+
+  const rawStatus = raw.status;
+  if (!isValidRfqStatus(rawStatus)) {
+    throw new Error(`RFQ "${id}" has invalid status.`);
+  }
+
+  const est = raw.estValue ?? raw.estimated_value ?? raw.estimatedValue;
   return {
-    id: String(raw?.id ?? raw?.rfqId ?? ''),
-    title: String(raw?.title ?? raw?.name ?? 'Requisition'),
+    id,
+    title,
     description:
-      raw?.description === null || raw?.description === undefined
+      raw.description === null || raw.description === undefined
         ? null
         : (() => {
             const s = String(raw.description).trim();
             return s === '' ? null : s;
           })(),
-    status,
-    rfq_number: raw?.rfq_number != null ? String(raw.rfq_number) : undefined,
-    vendorsCount: parseMaybeNumber(raw?.vendorsCount ?? raw?.vendors_count),
-    quotesCount: parseMaybeNumber(raw?.quotesCount ?? raw?.quotes_count),
+    status: rawStatus,
+    rfq_number: raw.rfq_number != null ? String(raw.rfq_number) : undefined,
+    vendorsCount: parseMaybeNumber(raw.vendorsCount ?? raw.vendors_count),
+    quotesCount: parseMaybeNumber(raw.quotesCount ?? raw.quotes_count),
     estValue: est !== null && est !== undefined ? String(est) : undefined,
-    savings: raw?.savings != null ? String(raw.savings) : undefined,
-    projectId: (raw?.project_id ?? raw?.projectId) as string | null | undefined,
-    projectName: (raw?.project_name ?? raw?.projectName) as string | null | undefined,
-    category: raw?.category != null ? String(raw.category) : null,
-    submission_deadline: (raw?.submission_deadline as string | null | undefined) ?? null,
-    closing_date: (raw?.closing_date as string | null | undefined) ?? null,
-    expected_award_at: (raw?.expected_award_at as string | null | undefined) ?? null,
-    technical_review_due_at: (raw?.technical_review_due_at as string | null | undefined) ?? null,
-    financial_review_due_at: (raw?.financial_review_due_at as string | null | undefined) ?? null,
+    savings: raw.savings != null ? String(raw.savings) : undefined,
+    projectId: (raw.project_id ?? raw.projectId) as string | null | undefined,
+    projectName: (raw.project_name ?? raw.projectName) as string | null | undefined,
+    category: raw.category != null ? String(raw.category) : null,
+    submission_deadline: (raw.submission_deadline as string | null | undefined) ?? null,
+    closing_date: (raw.closing_date as string | null | undefined) ?? null,
+    expected_award_at: (raw.expected_award_at as string | null | undefined) ?? null,
+    technical_review_due_at: (raw.technical_review_due_at as string | null | undefined) ?? null,
+    financial_review_due_at: (raw.financial_review_due_at as string | null | undefined) ?? null,
   };
 }
 
 export function useRfq(rfqId: string) {
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
   return useQuery({
     queryKey: ['rfqs', rfqId],
+    enabled: Boolean(rfqId),
     queryFn: async () => {
-      const data = await fetchLiveOrFail<{ data: RfqDetail }>(`/rfqs/${encodeURIComponent(rfqId)}`);
-
-      if (data === undefined) {
+      if (useMocks) {
         const { getSeedRfqDetail } = await import('@/data/seed');
         const detail = getSeedRfqDetail(rfqId);
         if (!detail) throw new Error('RFQ not found');
         return normalizeRfq(detail);
+      }
+
+      const data = await fetchLiveOrFail<{ data: RfqDetail }>(`/rfqs/${encodeURIComponent(rfqId)}`);
+
+      if (data === undefined) {
+        throw new Error(`RFQ "${rfqId}" is unavailable from the live API.`);
       }
 
       return normalizeRfq(data);
@@ -112,4 +140,3 @@ export function useUpdateRfq(rfqId: string) {
     },
   });
 }
-

@@ -52,9 +52,11 @@ const STATUS_FILTER_OPTIONS = [
 
 export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
-  const { data: rfq } = useRfq(rfqId);
+  const rfqQuery = useRfq(rfqId);
+  const rfq = rfqQuery.data;
   const norm = useNormalizationReview(rfqId, { enabled: !useMocks });
-  const { data: submissions = [] } = useQuoteSubmissions(rfqId);
+  const submissionsQuery = useQuoteSubmissions(rfqId);
+  const submissions = submissionsQuery.data ?? [];
   const [statusFilter, setStatusFilter] = React.useState('');
   const [vendorFilter, setVendorFilter] = React.useState('');
 
@@ -63,6 +65,21 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
     { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
     { label: 'Quote Intake' },
   ];
+
+  if (rfqQuery.isError || submissionsQuery.isError || (!useMocks && norm.isError)) {
+    const pageError = rfqQuery.error ?? submissionsQuery.error ?? norm.error;
+    const errorMessage = pageError instanceof Error ? pageError.message : 'Live quote intake data is unavailable.';
+    return (
+      <div className="space-y-5">
+        <WorkspaceBreadcrumbs items={breadcrumbItems} />
+        <PageHeader title="Quote Intake" subtitle="Quote intake unavailable" />
+        <Card className="p-4 space-y-2">
+          <p className="text-sm text-slate-700">The live quote-intake workspace could not be loaded.</p>
+          <p className="text-sm text-red-600">{errorMessage}</p>
+        </Card>
+      </div>
+    );
+  }
 
   const rows = submissions.filter((q) => {
     if (statusFilter && mapQuoteStatus(q.status).badge !== statusFilter) return false;
@@ -147,6 +164,7 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
       <DataTable
         columns={columns}
         rows={rows}
+        loading={submissionsQuery.isLoading}
         onRowClick={(row) => router.push(`/rfqs/${encodeURIComponent(rfqId)}/quote-intake/${encodeURIComponent(row.id)}`)}
         emptyState={
           <EmptyState

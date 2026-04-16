@@ -3,7 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { api } from '@/lib/api';
-import { getSeedAwardByRfqId } from '@/data/seed';
 import type { ComparisonRunSnapshot } from '@/hooks/use-comparison-run';
 import { normalizeComparisonRun } from '@/hooks/use-comparison-run';
 import type { ComparisonRunMatrix, ComparisonRunMatrixOffer } from '@/hooks/use-comparison-run-matrix';
@@ -263,13 +262,13 @@ async function buildAwardCreatePayload(input: { rfqId: string; comparisonRunId: 
 
 export function useAward(rfqId: string) {
   const qc = useQueryClient();
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   const query = useQuery({
     queryKey: ['awards', rfqId],
     queryFn: async (): Promise<AwardRecord[]> => {
-      const data = await fetchLiveOrFail<{ data: AwardRecord[] }>('/awards', { params: { rfq_id: rfqId } });
-
-      if (data === undefined) {
+      if (useMocks) {
+        const { getSeedAwardByRfqId } = await import('@/data/seed');
         const seed = getSeedAwardByRfqId(rfqId);
         if (!seed) return [];
         return [
@@ -296,6 +295,12 @@ export function useAward(rfqId: string) {
             },
           },
         ];
+      }
+
+      const data = await fetchLiveOrFail<{ data: AwardRecord[] }>('/awards', { params: { rfq_id: rfqId } });
+
+      if (data === undefined) {
+        throw new Error(`Award data unavailable for RFQ "${rfqId}".`);
       }
 
       return normalizeAwardRows(data);

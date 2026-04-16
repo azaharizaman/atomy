@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { SectionCard, Card } from '@/components/ds/Card';
+import { SectionCard, Card, EmptyState } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
 import { StatusBadge } from '@/components/ds/Badge';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
@@ -13,7 +13,7 @@ import {
 } from '@/hooks/use-normalization-review';
 import { type NormalizationSourceLineRow, useNormalizationSourceLines } from '@/hooks/use-normalization-source-lines';
 import { useFreezeComparison } from '@/hooks/use-freeze-comparison';
-import { Lock, Unlock } from 'lucide-react';
+import { AlertTriangle, Lock, Unlock } from 'lucide-react';
 
 const MOCK_SOURCE_LINES = [
   { id: '1', lineNo: 1, description: 'PowerEdge R750 Server', qty: 12, unit: 'units', unitPrice: 4200, confidence: 'high' as const, conflict: false },
@@ -24,12 +24,39 @@ const MOCK_SOURCE_LINES = [
 const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
 export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: string }) {
-  const { data: rfq } = useRfq(rfqId);
+  const rfqQuery = useRfq(rfqId);
+  const rfq = rfqQuery.data;
   const normLive = useNormalizationReview(rfqId, { enabled: !useMocks });
-  const { data: liveSourceLines = [] } = useNormalizationSourceLines(rfqId, { enabled: !useMocks });
+  const sourceLinesQuery = useNormalizationSourceLines(rfqId, { enabled: !useMocks });
+  const liveSourceLines = sourceLinesQuery.data ?? [];
   const freeze = useFreezeComparison();
   const [locked, setLocked] = React.useState(false);
   const [selectedLineIds, setSelectedLineIds] = React.useState<string[]>([]);
+
+  const breadcrumbItems = [
+    { label: 'RFQs', href: '/rfqs' },
+    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
+    { label: 'Quote Intake', href: `/rfqs/${encodeURIComponent(rfqId)}/quote-intake` },
+    { label: 'Quote', href: `/rfqs/${encodeURIComponent(rfqId)}/quote-intake/${encodeURIComponent(quoteId)}` },
+    { label: 'Normalize' },
+  ];
+
+  if (rfqQuery.isError || (!useMocks && (normLive.isError || sourceLinesQuery.isError))) {
+    const pageError = rfqQuery.error ?? normLive.error ?? sourceLinesQuery.error;
+    const errorMessage = pageError instanceof Error ? pageError.message : 'The live normalization workspace could not be loaded.';
+    return (
+      <div className="space-y-5">
+        <WorkspaceBreadcrumbs items={breadcrumbItems} />
+        <SectionCard title="Normalize workspace unavailable" subtitle="Unable to load live normalization payloads.">
+          <EmptyState
+            icon={<AlertTriangle size={20} />}
+            title="Could not load normalize workspace"
+            description={errorMessage}
+          />
+        </SectionCard>
+      </div>
+    );
+  }
 
   const mockBlocking = useMocks && MOCK_SOURCE_LINES.some((l) => l.conflict);
   const hasBlockingIssues = useMocks ? mockBlocking : normLive.hasBlockingIssues;
@@ -68,14 +95,6 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
   function checkboxId(section: 'source' | 'mapping', lineId: string): string {
     return `${section}-${lineId}`;
   }
-
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Quote Intake', href: `/rfqs/${encodeURIComponent(rfqId)}/quote-intake` },
-    { label: 'Quote', href: `/rfqs/${encodeURIComponent(rfqId)}/quote-intake/${encodeURIComponent(quoteId)}` },
-    { label: 'Normalize' },
-  ];
 
   const freezeDisabled = hasBlockingIssues || freeze.isPending;
 
