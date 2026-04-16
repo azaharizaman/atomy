@@ -29,6 +29,70 @@ const buildCorsHeaders = (origin: string) => ({
 
 async function stubAuth(page: import('@playwright/test').Page) {
   let origin = 'http://localhost:3000';
+  let currentAward:
+    | null
+    | {
+        id: string;
+        rfq_id: string;
+        rfq_title: string;
+        rfq_number: string;
+        comparison_run_id: string;
+        vendor_id: string;
+        vendor_name: string;
+        status: 'pending' | 'signed_off';
+        amount: number;
+        currency: string;
+        split_details: [];
+        protest_id: null;
+        signoff_at: string | null;
+        signed_off_by: string | null;
+        comparison: {
+          vendors: Array<{
+            vendor_id: string;
+            vendor_name: string;
+            quote_submission_id: string | null;
+          }>;
+        };
+      } = null;
+  const sentDebriefs: Array<{ awardId: string; vendorId: string; message: string }> = [];
+
+  await page.route('**/api/v1/auth/login', async (route) => {
+    const cors = buildCorsHeaders(origin);
+    await route.fulfill({
+      status: 200,
+      headers: cors,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        access_token: 'e2e-access-token',
+        refresh_token: 'e2e-refresh-token',
+        user: {
+          id: 'e2e-user-1',
+          name: 'QA User',
+          email: mockUser.email,
+          role: 'admin',
+          tenantId: mockUser.tenantId,
+        },
+      }),
+    });
+  });
+
+  await page.route('**/api/v1/me', async (route) => {
+    const cors = buildCorsHeaders(origin);
+    await route.fulfill({
+      status: 200,
+      headers: cors,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          id: 'e2e-user-1',
+          name: 'QA User',
+          email: mockUser.email,
+          role: 'admin',
+          tenantId: mockUser.tenantId,
+        },
+      }),
+    });
+  });
 
   await page.route('**/api/v1/rfqs**', async (route) => {
     const cors = buildCorsHeaders(origin);
@@ -36,8 +100,115 @@ async function stubAuth(page: import('@playwright/test').Page) {
       await route.fulfill({ status: 204, headers: cors });
       return;
     }
-    const url = route.request().url();
-    if (url.includes(E2E_RFQ_ID) || url.endsWith('/rfqs/' + E2E_RFQ_ID)) {
+    const requestUrl = new URL(route.request().url());
+    const pathname = requestUrl.pathname;
+
+    if (pathname.endsWith(`/rfqs/${E2E_RFQ_ID}/overview`)) {
+      await route.fulfill({
+        status: 200,
+        headers: cors,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            rfq: {
+              id: E2E_RFQ_ID,
+              rfq_number: E2E_RFQ_ID,
+              title: E2E_RFQ_TITLE,
+              status: 'active',
+              owner: { id: 'u1', name: 'QA User', email: mockUser.email },
+              deadline: '2026-04-15',
+              category: 'IT Hardware',
+              estimated_value: 50000,
+              estValue: 50000,
+              savings_percentage: 12,
+              savings: '12%',
+              vendors_count: 2,
+              quotes_count: 2,
+              vendorsCount: 2,
+              quotesCount: 2,
+            },
+            expected_quotes: 2,
+            normalization: {
+              accepted_count: 2,
+              total_quotes: 2,
+              progress_pct: 100,
+              uploaded_count: 0,
+              needs_review_count: 0,
+              ready_count: 2,
+            },
+            comparison: {
+              id: 'run-final-e2e',
+              name: 'Final comparison',
+              status: 'frozen',
+              is_preview: false,
+              created_at: '2026-04-16T10:00:00Z',
+            },
+            approvals: {
+              pending_count: 1,
+              approved_count: 0,
+              rejected_count: 0,
+              overall: 'pending',
+            },
+            activity: [
+              {
+                id: 'activity-1',
+                type: 'comparison',
+                actor: 'QA User',
+                action: 'Comparison snapshot frozen',
+                timestamp: '2026-04-16T10:00:00Z',
+              },
+            ],
+          },
+        }),
+      });
+      return;
+    }
+    if (pathname.endsWith(`/rfqs/${E2E_RFQ_ID}/activity`)) {
+      await route.fulfill({
+        status: 200,
+        headers: cors,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: 'activity-1',
+              type: 'comparison',
+              actor: 'QA User',
+              action: 'Comparison snapshot frozen',
+              timestamp: '2026-04-16T10:00:00Z',
+            },
+          ],
+        }),
+      });
+      return;
+    }
+    if (pathname.endsWith(`/rfqs/${E2E_RFQ_ID}/invitations`)) {
+      await route.fulfill({
+        status: 200,
+        headers: cors,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: 'inv-1',
+              vendor_id: 'vendor-e2e-1',
+              vendor_name: 'E2E Vendor',
+              vendor_email: 'vendor-1@atomy.test',
+              status: 'accepted',
+            },
+            {
+              id: 'inv-2',
+              vendor_id: 'vendor-e2e-2',
+              vendor_name: 'Runner Up Vendor',
+              vendor_email: 'vendor-2@atomy.test',
+              status: 'accepted',
+            },
+          ],
+        }),
+      });
+      return;
+    }
+    if (pathname.includes(E2E_RFQ_ID) || pathname.endsWith('/rfqs/' + E2E_RFQ_ID)) {
       await route.fulfill({
         status: 200,
         headers: cors,
@@ -55,9 +226,9 @@ async function stubAuth(page: import('@playwright/test').Page) {
             estValue: 50000,
             savings_percentage: 12,
             savings: '12%',
-            vendors_count: 3,
+            vendors_count: 2,
             quotes_count: 2,
-            vendorsCount: 3,
+            vendorsCount: 2,
             quotesCount: 2,
           },
         }),
@@ -89,10 +260,353 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
   });
 
-  await page.goto('/login');
+  await page.route('**/api/v1/normalization/**', async (route) => {
+    const cors = buildCorsHeaders(origin);
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: cors });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      headers: cors,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [],
+        meta: { rfq_id: E2E_RFQ_ID, has_blocking_issues: false, blocking_issue_count: 0 },
+      }),
+    });
+  });
+
+  await page.route('**/api/v1/quote-submissions**', async (route) => {
+    const cors = buildCorsHeaders(origin);
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: cors });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      headers: cors,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            id: 'quote-e2e-1',
+            rfq_id: E2E_RFQ_ID,
+            vendor_id: 'vendor-e2e-1',
+            vendor_name: 'E2E Vendor',
+            original_filename: 'e2e-vendor-1.pdf',
+            status: 'ready',
+            confidence: 95,
+            submitted_at: '2026-04-16T09:00:00Z',
+            blocking_issue_count: 0,
+          },
+          {
+            id: 'quote-e2e-2',
+            rfq_id: E2E_RFQ_ID,
+            vendor_id: 'vendor-e2e-2',
+            vendor_name: 'Runner Up Vendor',
+            original_filename: 'e2e-vendor-2.pdf',
+            status: 'ready',
+            confidence: 92,
+            submitted_at: '2026-04-16T09:05:00Z',
+            blocking_issue_count: 0,
+          },
+        ],
+      }),
+    });
+  });
+
+  await page.route('**/api/v1/comparison-runs**', async (route) => {
+    const cors = buildCorsHeaders(origin);
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: cors });
+      return;
+    }
+
+    const requestUrl = new URL(route.request().url());
+    const pathname = requestUrl.pathname;
+
+    if (pathname.endsWith('/comparison-runs')) {
+      await route.fulfill({
+        status: 200,
+        headers: cors,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: 'run-final-e2e',
+              rfq_id: E2E_RFQ_ID,
+              name: 'Final comparison',
+              type: 'final',
+              status: 'frozen',
+              created_at: '2026-04-16T10:00:00Z',
+            },
+          ],
+        }),
+      });
+      return;
+    }
+
+    if (pathname.endsWith('/comparison-runs/run-final-e2e/matrix')) {
+      await route.fulfill({
+        status: 200,
+        headers: cors,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: 'run-final-e2e',
+            clusters: [
+              {
+                clusterKey: 'line-1',
+                basis: 'price',
+                offers: [
+                  {
+                    vendorId: 'vendor-e2e-1',
+                    rfqLineId: 'line-1',
+                    taxonomyCode: 'HW-1',
+                    normalizedUnitPrice: 100,
+                    normalizedQuantity: 5,
+                    aiConfidence: 0.98,
+                  },
+                  {
+                    vendorId: 'vendor-e2e-2',
+                    rfqLineId: 'line-1',
+                    taxonomyCode: 'HW-1',
+                    normalizedUnitPrice: 125,
+                    normalizedQuantity: 5,
+                    aiConfidence: 0.96,
+                  },
+                ],
+                statistics: {
+                  minNormalizedUnitPrice: 100,
+                  maxNormalizedUnitPrice: 125,
+                  avgNormalizedUnitPrice: 112.5,
+                },
+                recommendation: {
+                  recommendedVendorId: 'vendor-e2e-1',
+                  reason: 'Lowest evaluated total',
+                },
+              },
+            ],
+          },
+        }),
+      });
+      return;
+    }
+
+    if (pathname.endsWith('/comparison-runs/run-final-e2e')) {
+      await route.fulfill({
+        status: 200,
+        headers: cors,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: 'run-final-e2e',
+            rfq_id: E2E_RFQ_ID,
+            name: 'Final comparison',
+            status: 'frozen',
+            is_preview: false,
+            created_at: '2026-04-16T10:00:00Z',
+            snapshot: {
+              rfqVersion: 1,
+              normalizedLines: [
+                {
+                  rfqLineItemId: 'line-1',
+                  sourceDescription: 'Dell PowerEdge R750',
+                  sourceLineId: 'source-line-1',
+                  quoteSubmissionId: 'quote-e2e-1',
+                  vendorId: 'vendor-e2e-1',
+                  sourceUnitPrice: '100',
+                  sourceUom: 'units',
+                  sourceQuantity: '5',
+                },
+              ],
+              resolutions: [],
+              currencyMeta: {
+                'line-1': 'USD',
+              },
+              vendors: [
+                {
+                  vendorId: 'vendor-e2e-1',
+                  vendorName: 'E2E Vendor',
+                  quoteSubmissionId: 'quote-e2e-1',
+                },
+                {
+                  vendorId: 'vendor-e2e-2',
+                  vendorName: 'Runner Up Vendor',
+                  quoteSubmissionId: 'quote-e2e-2',
+                },
+              ],
+            },
+          },
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 404,
+      headers: cors,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Comparison run route not stubbed' }),
+    });
+  });
+
+  await page.route('**/api/v1/approvals**', async (route) => {
+    const cors = buildCorsHeaders(origin);
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: cors });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      headers: cors,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            id: 'approval-e2e-1',
+            rfq_id: E2E_RFQ_ID,
+            rfq_title: E2E_RFQ_TITLE,
+            type: 'award_signoff',
+            type_label: 'Award signoff',
+            status: 'pending',
+            priority: 'high',
+            summary: 'Final award decision awaiting sign-off',
+            assignee: 'QA User',
+            requested_at: '2026-04-16T10:05:00Z',
+          },
+        ],
+        meta: { total: 1, total_pages: 1, current_page: 1, per_page: 20 },
+      }),
+    });
+  });
+
+  await page.route('**/api/v1/awards**', async (route) => {
+    const cors = buildCorsHeaders(origin);
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: cors });
+      return;
+    }
+
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        headers: cors,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: currentAward ? [currentAward] : [] }),
+      });
+      return;
+    }
+
+    if (route.request().method() === 'POST') {
+      const payload = route.request().postDataJSON() as {
+        comparison_run_id: string;
+        vendor_id: string;
+        amount: number;
+        currency: string;
+      };
+      currentAward = {
+        id: 'award-e2e-1',
+        rfq_id: E2E_RFQ_ID,
+        rfq_title: E2E_RFQ_TITLE,
+        rfq_number: E2E_RFQ_ID,
+        comparison_run_id: payload.comparison_run_id,
+        vendor_id: payload.vendor_id,
+        vendor_name: 'E2E Vendor',
+        status: 'pending',
+        amount: payload.amount,
+        currency: payload.currency,
+        split_details: [],
+        protest_id: null,
+        signoff_at: null,
+        signed_off_by: null,
+        comparison: {
+          vendors: [
+            { vendor_id: 'vendor-e2e-1', vendor_name: 'E2E Vendor', quote_submission_id: 'quote-e2e-1' },
+            { vendor_id: 'vendor-e2e-2', vendor_name: 'Runner Up Vendor', quote_submission_id: 'quote-e2e-2' },
+          ],
+        },
+      };
+      await route.fulfill({
+        status: 201,
+        headers: cors,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: currentAward }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 405,
+      headers: cors,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Unsupported award method' }),
+    });
+  });
+
+  await page.route('**/api/v1/awards/award-e2e-1/signoff', async (route) => {
+    const cors = buildCorsHeaders(origin);
+    currentAward = currentAward
+      ? {
+          ...currentAward,
+          status: 'signed_off',
+          signoff_at: '2026-04-16T10:10:00Z',
+          signed_off_by: mockUser.name,
+        }
+      : null;
+    await route.fulfill({
+      status: 200,
+      headers: cors,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: currentAward }),
+    });
+  });
+
+  await page.route('**/api/v1/awards/award-e2e-1/debrief/**', async (route) => {
+    const cors = buildCorsHeaders(origin);
+    const payload = route.request().postDataJSON() as { message?: string };
+    const vendorId = route.request().url().split('/').pop() ?? '';
+    sentDebriefs.push({
+      awardId: 'award-e2e-1',
+      vendorId,
+      message: payload.message ?? '',
+    });
+    await route.fulfill({
+      status: 200,
+      headers: cors,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: currentAward }),
+    });
+  });
+
+  await page.addInitScript((user) => {
+    window.localStorage.setItem(
+      'auth-storage',
+      JSON.stringify({
+        state: {
+          user,
+          token: 'playwright-access-token',
+          refreshToken: null,
+          isAuthenticated: true,
+          isLoading: false,
+        },
+        version: 0,
+      }),
+    );
+  }, mockUser);
+
+  await page.goto('/');
   origin = new URL(page.url()).origin;
-  await page.getByRole('button', { name: /use mock account/i }).click();
   await expect(page).toHaveURL('/');
+
+  return {
+    getCurrentAward: () => currentAward,
+    getSentDebriefs: () => sentDebriefs,
+  };
 }
 
 function firstRfqTableDataRow(page: import('@playwright/test').Page) {
@@ -109,7 +623,7 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     page,
   }) => {
     test.setTimeout(120_000);
-    await stubAuth(page);
+    const lifecycleApi = await stubAuth(page);
 
     // 1) Creation entry point: New RFQ page
     await page.goto('/rfqs/new');
@@ -128,7 +642,7 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     await expect(page).toHaveURL(/\/rfqs\/.+\/overview/, { timeout: 15000 });
 
     // 3) Overview
-    await expect(page.getByText('Activity timeline', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible();
 
     // 4) Details
     await workspaceNavLink(page, 'details').click();
@@ -153,7 +667,7 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     // 8) Comparison Runs
     await workspaceNavLink(page, 'comparison-runs').click();
     await expect(page).toHaveURL(/\/rfqs\/.+\/comparison-runs/, { timeout: 15000 });
-    await expect(page.getByRole('heading', { name: 'Comparison Runs' })).toBeVisible();
+    await expect(page.locator('h1').filter({ hasText: 'Comparison Runs' })).toBeVisible();
     if ((await page.getByText(/snapshot frozen/i).count()) > 0) {
       await expect(page.getByText(/snapshot frozen/i).first()).toBeVisible();
       await expect(workspaceNavLink(page, 'decision-trail')).toBeVisible();
@@ -162,12 +676,29 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     // 9) Approvals
     await workspaceNavLink(page, 'approvals').click();
     await expect(page).toHaveURL(/\/rfqs\/.+\/approvals/, { timeout: 15000 });
-    await expect(page.getByRole('heading', { name: 'Approvals' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Approvals' })).toBeVisible();
 
     // 10) Award
     await workspaceNavLink(page, 'award').click();
     await expect(page).toHaveURL(/\/rfqs\/.+\/award/, { timeout: 15000 });
-    await expect(page.getByRole('heading', { name: 'Sign-off' })).toBeVisible();
+    await expect(page.getByText(/select a vendor to award the contract based on the final comparison run/i)).toBeVisible();
+    await page.getByRole('button', { name: /create award/i }).click();
+    await expect.poll(() => lifecycleApi.getCurrentAward()?.status ?? null).toBe('pending');
+    await expect(page.getByText(/recommended for e2e vendor/i)).toBeVisible();
+
+    await page.getByLabel(/debrief message/i).fill('Thanks for your proposal.');
+    await page.getByRole('button', { name: /send debrief/i }).click();
+    await expect.poll(() => lifecycleApi.getSentDebriefs().length).toBe(1);
+    expect(lifecycleApi.getSentDebriefs()[0]).toEqual({
+      awardId: 'award-e2e-1',
+      vendorId: 'vendor-e2e-2',
+      message: 'Thanks for your proposal.',
+    });
+
+    await page.getByRole('button', { name: /finalize award/i }).click();
+    await expect.poll(() => lifecycleApi.getCurrentAward()?.status ?? null).toBe('signed_off');
+    await expect(page.getByRole('status', { name: 'Signed off' }).first()).toBeVisible();
+    await expect(page.getByText(/awarded to e2e vendor/i)).toBeVisible();
   });
 
   const useRealApi = process.env.E2E_USE_REAL_API === '1';

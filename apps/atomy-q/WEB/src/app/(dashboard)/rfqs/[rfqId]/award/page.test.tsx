@@ -4,6 +4,8 @@ import { act, fireEvent, screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 
 import { useAward } from '@/hooks/use-award';
+import { useComparisonRun } from '@/hooks/use-comparison-run';
+import { useComparisonRunMatrix } from '@/hooks/use-comparison-run-matrix';
 import { useComparisonRuns } from '@/hooks/use-comparison-runs';
 import { useRfqVendors } from '@/hooks/use-rfq-vendors';
 
@@ -19,7 +21,15 @@ vi.mock('@/hooks/use-rfq', () => ({
   useRfq: () => ({ data: { title: 'RFQ', rfq_number: 'RFQ-1' } }),
 }));
 
-vi.mock('@/hooks/use-award');
+vi.mock('@/hooks/use-award', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks/use-award')>('@/hooks/use-award');
+  return {
+    ...actual,
+    useAward: vi.fn(),
+  };
+});
+vi.mock('@/hooks/use-comparison-run');
+vi.mock('@/hooks/use-comparison-run-matrix');
 vi.mock('@/hooks/use-comparison-runs');
 vi.mock('@/hooks/use-rfq-vendors');
 
@@ -49,6 +59,8 @@ const mockAward = {
 import { RfqAwardPageContent } from './page';
 
 type UseAwardReturn = ReturnType<typeof useAward>;
+type UseComparisonRunReturn = ReturnType<typeof useComparisonRun>;
+type UseComparisonRunMatrixReturn = ReturnType<typeof useComparisonRunMatrix>;
 type UseComparisonRunsReturn = ReturnType<typeof useComparisonRuns>;
 type UseRfqVendorsReturn = ReturnType<typeof useRfqVendors>;
 
@@ -68,6 +80,69 @@ describe('RfqAwardPage', () => {
       data: [{ id: 'run-1', type: 'final', status: 'frozen' }],
     } as unknown as UseComparisonRunsReturn);
 
+    vi.mocked(useComparisonRun).mockReturnValue({
+      data: {
+        id: 'run-1',
+        rfqId: 'rfq-1',
+        name: 'Final comparison',
+        status: 'frozen',
+        isPreview: false,
+        createdAt: null,
+        snapshot: {
+          rfqVersion: 1,
+          normalizedLines: [
+            {
+              rfqLineItemId: 'line-1',
+              sourceDescription: 'Line 1',
+              sourceLineId: null,
+              quoteSubmissionId: null,
+              vendorId: null,
+              sourceUnitPrice: null,
+              sourceUom: null,
+              sourceQuantity: null,
+            },
+          ],
+          resolutions: [],
+          currencyMeta: { 'line-1': 'USD' },
+          vendors: [
+            { vendorId: 'vendor-1', vendorName: 'Winner Vendor', quoteSubmissionId: 'quote-1' },
+            { vendorId: 'vendor-2', vendorName: 'Other Vendor', quoteSubmissionId: 'quote-2' },
+          ],
+        },
+      },
+    } as unknown as UseComparisonRunReturn);
+
+    vi.mocked(useComparisonRunMatrix).mockReturnValue({
+      data: {
+        id: 'run-1',
+        clusters: [
+          {
+            clusterKey: 'cluster-1',
+            basis: 'price',
+            offers: [
+              {
+                vendorId: 'vendor-1',
+                rfqLineId: 'line-1',
+                taxonomyCode: 'CAT-1',
+                normalizedUnitPrice: 100,
+                normalizedQuantity: 10,
+                aiConfidence: 0.9,
+              },
+            ],
+            statistics: {
+              minNormalizedUnitPrice: 100,
+              maxNormalizedUnitPrice: 100,
+              avgNormalizedUnitPrice: 100,
+            },
+            recommendation: {
+              recommendedVendorId: 'vendor-1',
+              reason: 'lowest total',
+            },
+          },
+        ],
+      },
+    } as unknown as UseComparisonRunMatrixReturn);
+
     vi.mocked(useRfqVendors).mockReturnValue({
       data: [
         { id: 'inv-1', vendor_id: 'vendor-1', name: 'Winner Vendor', status: 'responded' },
@@ -81,6 +156,20 @@ describe('RfqAwardPage', () => {
 
     expect(await screen.findByText('Winner Vendor', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
+  });
+
+  it('renders existing award data when comparison runs fail to load', async () => {
+    vi.mocked(useComparisonRuns).mockReturnValue({
+      data: [],
+      error: new Error('Comparison run snapshot missing'),
+      isError: true,
+    } as unknown as UseComparisonRunsReturn);
+
+    renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
+
+    expect(await screen.findByText('Winner Vendor', { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
+    expect(screen.queryByText('Comparison run snapshot missing')).not.toBeInTheDocument();
   });
 
   it('allows sending debrief messages', async () => {
@@ -113,6 +202,8 @@ describe('RfqAwardPage', () => {
     renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
 
     expect(await screen.findByText(/Select a vendor to award the contract based on the final comparison run/i)).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Winner Vendor' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Other Vendor' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /create award/i }));
 
     expect(storeMutate).toHaveBeenCalledWith(
@@ -133,5 +224,174 @@ describe('RfqAwardPage', () => {
       callbacks.onSuccess();
     });
     expect(screen.queryByText('Award creation rejected')).not.toBeInTheDocument();
+  });
+
+  it('shows a signoff error when finalization fails', async () => {
+    const signoffMutate = vi.fn();
+
+    vi.mocked(useAward).mockReturnValue({
+      award: mockAward,
+      awards: [mockAward],
+      signoff: { mutate: signoffMutate, isPending: false, isError: false },
+      debrief: { mutate: vi.fn(), isPending: false, isError: false },
+      store: { mutate: vi.fn(), isPending: false, isError: false },
+    } as unknown as UseAwardReturn);
+
+    renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /finalize award/i }));
+
+    const callbacks = signoffMutate.mock.calls[0]?.[1] as { onError: (error: Error) => void };
+    act(() => {
+      callbacks.onError(new Error('Award signoff rejected'));
+    });
+
+    expect(screen.getByText('Award signoff rejected')).toBeInTheDocument();
+  });
+
+  it('renders an explicit error path when award data fails to load', async () => {
+    vi.mocked(useAward).mockReturnValue({
+      award: null,
+      awards: [],
+      error: new Error('Award payload rejected'),
+      isError: true,
+      signoff: { mutate: vi.fn(), isPending: false, isError: false },
+      debrief: { mutate: vi.fn(), isPending: false, isError: false },
+      store: { mutate: vi.fn(), isPending: false, isError: false },
+    } as unknown as UseAwardReturn);
+
+    renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
+
+    expect(await screen.findByText('Award payload rejected')).toBeInTheDocument();
+    expect(screen.queryByText('No award record yet')).not.toBeInTheDocument();
+    expect(screen.queryByText('Freeze a comparison run to create an award record.')).not.toBeInTheDocument();
+  });
+
+  it('renders an explicit error path when comparison runs fail to load and no award exists', async () => {
+    vi.mocked(useAward).mockReturnValue({
+      award: null,
+      awards: [],
+      signoff: { mutate: vi.fn(), isPending: false, isError: false },
+      debrief: { mutate: vi.fn(), isPending: false, isError: false },
+      store: { mutate: vi.fn(), isPending: false, isError: false },
+    } as unknown as UseAwardReturn);
+
+    vi.mocked(useComparisonRuns).mockReturnValue({
+      data: [],
+      error: new Error('Comparison run snapshot missing'),
+      isError: true,
+    } as unknown as UseComparisonRunsReturn);
+
+    renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
+
+    expect(await screen.findByText('Comparison run snapshot missing')).toBeInTheDocument();
+    expect(screen.queryByText('No award record yet')).not.toBeInTheDocument();
+    expect(screen.queryByText('Freeze a comparison run to create an award record.')).not.toBeInTheDocument();
+  });
+
+  it('hides vendors without complete finalized pricing coverage from the create-award selection', async () => {
+    const storeMutate = vi.fn();
+
+    vi.mocked(useAward).mockReturnValue({
+      award: null,
+      awards: [],
+      signoff: { mutate: vi.fn(), isPending: false, isError: false },
+      debrief: { mutate: vi.fn(), isPending: false, isError: false },
+      store: { mutate: storeMutate, isPending: false, isError: false },
+    } as unknown as UseAwardReturn);
+
+    vi.mocked(useComparisonRun).mockReturnValue({
+      data: {
+        id: 'run-1',
+        rfqId: 'rfq-1',
+        name: 'Final comparison',
+        status: 'frozen',
+        isPreview: false,
+        createdAt: null,
+        snapshot: {
+          rfqVersion: 1,
+          normalizedLines: [
+            {
+              rfqLineItemId: 'line-1',
+              sourceDescription: 'Line 1',
+              sourceLineId: null,
+              quoteSubmissionId: null,
+              vendorId: null,
+              sourceUnitPrice: null,
+              sourceUom: null,
+              sourceQuantity: null,
+            },
+            {
+              rfqLineItemId: 'line-2',
+              sourceDescription: 'Line 2',
+              sourceLineId: null,
+              quoteSubmissionId: null,
+              vendorId: null,
+              sourceUnitPrice: null,
+              sourceUom: null,
+              sourceQuantity: null,
+            },
+          ],
+          resolutions: [],
+          currencyMeta: { 'line-1': 'USD', 'line-2': 'USD' },
+          vendors: [
+            { vendorId: 'vendor-1', vendorName: 'Winner Vendor', quoteSubmissionId: 'quote-1' },
+            { vendorId: 'vendor-2', vendorName: 'Other Vendor', quoteSubmissionId: 'quote-2' },
+          ],
+        },
+      },
+    } as unknown as UseComparisonRunReturn);
+
+    vi.mocked(useComparisonRunMatrix).mockReturnValue({
+      data: {
+        id: 'run-1',
+        clusters: [
+          {
+            clusterKey: 'cluster-1',
+            basis: 'price',
+            offers: [
+              {
+                vendorId: 'vendor-1',
+                rfqLineId: 'line-1',
+                taxonomyCode: 'CAT-1',
+                normalizedUnitPrice: 100,
+                normalizedQuantity: 10,
+                aiConfidence: 0.9,
+              },
+              {
+                vendorId: 'vendor-1',
+                rfqLineId: 'line-2',
+                taxonomyCode: 'CAT-2',
+                normalizedUnitPrice: 50,
+                normalizedQuantity: 5,
+                aiConfidence: 0.9,
+              },
+              {
+                vendorId: 'vendor-2',
+                rfqLineId: 'line-1',
+                taxonomyCode: 'CAT-1',
+                normalizedUnitPrice: 90,
+                normalizedQuantity: 10,
+                aiConfidence: 0.9,
+              },
+            ],
+            statistics: {
+              minNormalizedUnitPrice: 50,
+              maxNormalizedUnitPrice: 100,
+              avgNormalizedUnitPrice: 80,
+            },
+            recommendation: {
+              recommendedVendorId: 'vendor-1',
+              reason: 'lowest complete total',
+            },
+          },
+        ],
+      },
+    } as unknown as UseComparisonRunMatrixReturn);
+
+    renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
+
+    expect(await screen.findByRole('option', { name: 'Winner Vendor' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Other Vendor' })).not.toBeInTheDocument();
   });
 });

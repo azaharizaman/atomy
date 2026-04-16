@@ -14,6 +14,7 @@ use App\Models\Rfq;
 use App\Services\QuoteIntake\DecisionTrailRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class AwardController extends Controller
@@ -60,12 +61,12 @@ final class AwardController extends Controller
      *
      * Create an award. Returns 201.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, DecisionTrailRecorder $decisionTrail): JsonResponse
     {
         $tenantId = $this->tenantId($request);
         $validated = $request->validate([
             'rfq_id' => ['required', 'string'],
-            'comparison_run_id' => ['nullable', 'string'],
+            'comparison_run_id' => ['required', 'string'],
             'vendor_id' => ['required', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['required', 'string', 'size:3'],
@@ -91,30 +92,49 @@ final class AwardController extends Controller
             return response()->json(['message' => 'Vendor not found'], 404);
         }
 
-        if (! empty($validated['comparison_run_id'])) {
-            $run = ComparisonRun::query()
-                ->where('tenant_id', $tenantId)
-                ->where('id', $validated['comparison_run_id'])
-                ->where('rfq_id', $rfq->id)
-                ->first();
-            if ($run === null) {
-                return response()->json(['message' => 'Comparison run not found'], 404);
-            }
+        $run = ComparisonRun::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $validated['comparison_run_id'])
+            ->where('rfq_id', $rfq->id)
+            ->first();
+        if ($run === null) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
         }
 
-        $award = Award::query()->create([
-            'tenant_id' => $tenantId,
-            'rfq_id' => $rfq->id,
-            'comparison_run_id' => $validated['comparison_run_id'] ?? null,
-            'vendor_id' => $validated['vendor_id'],
-            'status' => 'pending',
-            'amount' => $validated['amount'],
-            'currency' => strtoupper((string) $validated['currency']),
-            'split_details' => $validated['split_details'] ?? null,
-            'protest_id' => null,
-            'signoff_at' => null,
-            'signed_off_by' => null,
-        ]);
+        if (! in_array($run->status, ['frozen', 'final', 'completed'], true)) {
+            return response()->json(['message' => 'Comparison run is not finalized for award creation'], 422);
+        }
+
+        /** @var Award $award */
+        $award = DB::transaction(function () use ($tenantId, $rfq, $validated, $decisionTrail): Award {
+            /** @var Award $award */
+            $award = Award::query()->create([
+                'tenant_id' => $tenantId,
+                'rfq_id' => $rfq->id,
+                'comparison_run_id' => $validated['comparison_run_id'],
+                'vendor_id' => $validated['vendor_id'],
+                'status' => 'pending',
+                'amount' => $validated['amount'],
+                'currency' => strtoupper((string) $validated['currency']),
+                'split_details' => $validated['split_details'] ?? null,
+                'protest_id' => null,
+                'signoff_at' => null,
+                'signed_off_by' => null,
+            ]);
+
+            $decisionTrail->recordAwardCreated(
+                $tenantId,
+                $award->rfq_id,
+                $award->comparison_run_id,
+                [
+                    'award_id' => $award->id,
+                    'vendor_id' => $award->vendor_id,
+                    'status' => $award->status,
+                ],
+            );
+
+            return $award;
+        });
 
         return response()->json([
             'data' => $this->serializeAward($award),
@@ -169,31 +189,37 @@ final class AwardController extends Controller
             return response()->json(['message' => 'Vendor not found'], 404);
         }
 
-        $debrief = Debrief::query()->firstOrCreate(
-            [
-                'tenant_id' => $tenantId,
-                'award_id' => $award->id,
-                'vendor_id' => $vendorId,
-            ],
-            [
-                'rfq_id' => $award->rfq_id,
-                'message' => $validated['message'] ?? null,
-                'debriefed_at' => now(),
-            ],
-        );
-
-        if ($debrief->wasRecentlyCreated && $award->comparison_run_id !== null) {
-            $decisionTrail->recordAwardDebriefed(
-                $tenantId,
-                $award->rfq_id,
-                $award->comparison_run_id,
+        /** @var Debrief $debrief */
+        $debrief = DB::transaction(function () use ($tenantId, $award, $vendorId, $validated, $decisionTrail): Debrief {
+            /** @var Debrief $debrief */
+            $debrief = Debrief::query()->firstOrCreate(
                 [
+                    'tenant_id' => $tenantId,
                     'award_id' => $award->id,
                     'vendor_id' => $vendorId,
-                    'message_present' => array_key_exists('message', $validated),
+                ],
+                [
+                    'rfq_id' => $award->rfq_id,
+                    'message' => $validated['message'] ?? null,
+                    'debriefed_at' => now(),
                 ],
             );
-        }
+
+            if ($debrief->wasRecentlyCreated && $award->comparison_run_id !== null) {
+                $decisionTrail->recordAwardDebriefed(
+                    $tenantId,
+                    $award->rfq_id,
+                    $award->comparison_run_id,
+                    [
+                        'award_id' => $award->id,
+                        'vendor_id' => $vendorId,
+                        'message_present' => array_key_exists('message', $validated),
+                    ],
+                );
+            }
+
+            return $debrief;
+        });
 
         return response()->json([
             'data' => [
@@ -257,7 +283,7 @@ final class AwardController extends Controller
     /**
      * POST /awards/:id/signoff
      */
-    public function signoff(Request $request, string $id): JsonResponse
+    public function signoff(Request $request, string $id, DecisionTrailRecorder $decisionTrail): JsonResponse
     {
         $tenantId = $this->tenantId($request);
 
@@ -272,10 +298,46 @@ final class AwardController extends Controller
             ]);
         }
 
-        $award->status = 'signed_off';
-        $award->signoff_at = now();
-        $award->signed_off_by = $this->userId($request);
-        $award->save();
+        /** @var Award|null $award */
+        $award = DB::transaction(function () use ($tenantId, $request, $id, $decisionTrail): ?Award {
+            $award = Award::query()
+                ->where('tenant_id', $tenantId)
+                ->where('id', $id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($award === null) {
+                return null;
+            }
+
+            if ($award->status === 'signed_off' && $award->signoff_at !== null) {
+                return $award;
+            }
+
+            $award->status = 'signed_off';
+            $award->signoff_at = now();
+            $award->signed_off_by = $this->userId($request);
+            $award->save();
+
+            if ($award->comparison_run_id !== null) {
+                $decisionTrail->recordAwardSignedOff(
+                    $tenantId,
+                    $award->rfq_id,
+                    $award->comparison_run_id,
+                    [
+                        'award_id' => $award->id,
+                        'signed_off_by' => $award->signed_off_by,
+                        'status' => $award->status,
+                    ],
+                );
+            }
+
+            return $award;
+        });
+
+        if ($award === null) {
+            return response()->json(['message' => 'Award not found'], 404);
+        }
 
         return response()->json([
             'data' => $this->serializeAward($award),

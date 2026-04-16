@@ -22,6 +22,14 @@ The strongest rectification signal is that the alpha-critical backend flows pass
 - `cd apps/atomy-q/API && php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest"`: PASS. 93 tests, 522 assertions.
 - `cd apps/atomy-q/API && php artisan test`: PASS. 425 tests, 1131 assertions.
 
+## Latest Award End-To-End Evidence - 2026-04-16
+
+- `cd apps/atomy-q/API && php artisan test --filter AwardWorkflowTest`: PASS. 9 tests, 49 assertions.
+- `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-award.live.test.ts`: PASS. 13 tests.
+- `cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx`: PASS. 8 tests.
+- `cd apps/atomy-q/WEB && PLAYWRIGHT_USE_EXISTING_SERVER=1 PLAYWRIGHT_BASE_URL=http://localhost:3100 NEXT_PUBLIC_USE_MOCKS=false npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts`: PASS. 1 passed, 1 skipped. The verified path is the deterministic mocked-API lifecycle flow; the real-API scenario remains skipped unless `E2E_USE_REAL_API=1` is provided. This run intentionally uses `NEXT_PUBLIC_USE_MOCKS=false` because the award create/signoff controls are disabled in mock mode, while determinism is preserved through explicit route stubs for award create, debrief, and signoff.
+- Blocker `A2` status: closed locally for the single-winner alpha path. API feature coverage, WEB live-hook/page coverage, and lifecycle Playwright coverage now all prove compare -> create award -> debrief -> signoff on the award screen.
+
 ## Historical Baseline Evidence
 
 ## Gate Summary
@@ -161,7 +169,7 @@ Failing alpha-critical tests:
 | Blocker | Status | Evidence | Owner |
 |---|---|---|---|
 | A1: Replace mock quote intelligence binding | Open | Not directly validated by Task 1; related ingestion tests include one quote upload failure while quote ingestion intelligence/pipeline tests pass. | Backend / AI integration |
-| A2: Prove award end-to-end | Open | WEB award empty-state unit test fails; API `AwardWorkflowTest` passes. | WEB + API |
+| A2: Prove award end-to-end | Closed locally | `AwardWorkflowTest`, `use-award.live.test.ts`, `award/page.test.tsx`, and the focused lifecycle Playwright flow now pass, including create award, debrief, and signoff. | WEB + API |
 | A3: Eliminate live-mode seed fallback on golden path | Open | WEB build fails in `api-live.ts`; quote upload workflow returns `failed` instead of expected `ready`. | WEB + Backend quote intake |
 | A4: Hide/defer non-alpha surfaces | Open | Not executed in Task 1. | Product + WEB/API |
 | A5: Decide minimal Users/Roles scope | Open | API `AuthTest` MFA legacy path requires `tenant_id`; identity gap suite passes, but endpoint contract remains inconsistent. | Backend identity |
@@ -185,4 +193,8 @@ cd apps/atomy-q/WEB && npm run build
 cd apps/atomy-q/WEB && npm run test:unit
 cd apps/atomy-q/API && php artisan test
 cd apps/atomy-q/API && php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest"
+cd apps/atomy-q/API && php artisan test --filter AwardWorkflowTest
+cd apps/atomy-q/WEB && npx vitest run src/hooks/use-award.live.test.ts
+cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx
+cd apps/atomy-q/WEB && PLAYWRIGHT_USE_EXISTING_SERVER=1 PLAYWRIGHT_BASE_URL=http://localhost:3100 NEXT_PUBLIC_USE_MOCKS=false npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts
 ```

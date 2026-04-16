@@ -31,7 +31,7 @@ export default defineConfig({
           reuseExistingServer: !isCI,
           timeout: 120000,
           env: {
-            NEXT_PUBLIC_USE_MOCKS: 'true',
+            NEXT_PUBLIC_USE_MOCKS: process.env.NEXT_PUBLIC_USE_MOCKS ?? 'true',
           },
         },
       }),

@@ -178,6 +178,7 @@ After this task, the API and WEB should support the full compare-to-award path, 
 - Test: `apps/atomy-q/WEB/tests/rfq-lifecycle-e2e.spec.ts`
 - Follow-up spec: [`ALPHA_TASK3_AWARD_E2E_SPEC_2026-04-16.md`](./ALPHA_TASK3_AWARD_E2E_SPEC_2026-04-16.md)
 - Follow-up plan: [`ALPHA_TASK3_AWARD_E2E_IMPLEMENTATION_PLAN_2026-04-16.md`](./ALPHA_TASK3_AWARD_E2E_IMPLEMENTATION_PLAN_2026-04-16.md)
+- Verification update (2026-04-16): focused API, Vitest, and Playwright evidence for the single-winner award path is recorded in [`ALPHA_RELEASE_CHECKLIST.md`](./ALPHA_RELEASE_CHECKLIST.md); the Task 3 spec/plan links above remain the active references.
 
 - [ ] Add a test fixture that freezes a comparison, creates a single-winner award from the selected vendor, signs it off, and verifies tenant-scoped retrieval.
 - [ ] Ensure the WEB award page can create an award when no award exists but a final comparison run is available.
