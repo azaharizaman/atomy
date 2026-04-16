@@ -84,5 +84,16 @@ The duplicate-number tests must then reach their intended assertions: highest nu
 - `cd apps/atomy-q/WEB && npm run build` passes.
 - `cd apps/atomy-q/WEB && npm run test:unit` passes.
 - `cd apps/atomy-q/API && php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest"` passes.
-- `cd apps/atomy-q/API && php artisan test` passes or has only explicitly documented unrelated failures.
+- `cd apps/atomy-q/API && php artisan test` passes with zero failures.
 - `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md` is updated with new evidence after the rectification is implemented.
+
+## 7. Risk Acceptance / Exceptions
+
+No tolerated exceptions are accepted for Task 1 rectification at spec time.
+
+If a future execution of `cd apps/atomy-q/API && php artisan test` encounters an unrelated failure that the release owner wants to tolerate, it must be documented here with:
+
+- exact failing command and test/class name
+- rationale for treating it as unrelated to Task 1 rectification
+- owner responsible for follow-up
+- mitigation plan and expected resolution timing

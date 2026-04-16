@@ -24,7 +24,7 @@
 - Modify `apps/atomy-q/API/app/Models/Award.php`: add the expected `creator()` relation mapped to the current schema.
 - Modify `apps/atomy-q/API/tests/Unit/Services/SourcingOperationsAdaptersTest.php`: add nullable `project_id` to the in-memory RFQ schema.
 - Modify `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md`: replace Task 1 failure evidence after verification.
-- Modify package/app `IMPLEMENTATION_SUMMARY.md` files only where code behavior changes need documentation.
+- Update the affected package/app `IMPLEMENTATION_SUMMARY.md` after every code change in that package/app.
 
 ## Task 1: Fix WEB Build Error Metadata Typing
 
@@ -34,6 +34,7 @@
 - [ ] **Step 1: Run the failing build gate**
 
 Run:
+
 ```bash
 cd apps/atomy-q/WEB && npm run build
 ```
@@ -69,6 +70,7 @@ Keep the existing endpoint/message behavior unchanged.
 - [ ] **Step 3: Verify the build gate moves past this failure**
 
 Run:
+
 ```bash
 cd apps/atomy-q/WEB && npm run build
 ```
@@ -85,6 +87,7 @@ Expected after this task: the previous `api-live.ts` type error is gone. If the 
 - [ ] **Step 1: Run the focused failing unit test**
 
 Run:
+
 ```bash
 cd apps/atomy-q/WEB && npx vitest run 'src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx'
 ```
@@ -206,6 +209,7 @@ expect(storeMutate).toHaveBeenCalledWith({ rfqId: 'rfq-1', comparisonRunId: 'run
 - [ ] **Step 6: Verify WEB unit tests**
 
 Run:
+
 ```bash
 cd apps/atomy-q/WEB && npm run test:unit
 ```
@@ -223,6 +227,7 @@ Expected: all Vitest tests pass.
 - [ ] **Step 1: Run the focused failing test**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test --filter AuthTest::test_mfa_verify_endpoint_returns_message_and_verified
 ```
@@ -310,6 +315,7 @@ public function test_mfa_verify_rejects_mismatched_optional_tenant_id(): void
 - [ ] **Step 6: Verify focused and matrix tests**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test --filter AuthTest
 ```
@@ -324,6 +330,7 @@ Expected: Auth feature tests pass.
 - [ ] **Step 1: Run the focused failing test**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test --filter QuoteSubmissionWorkflowTest::test_quote_submission_upload_persists_uploaded_state_and_tenant_id
 ```
@@ -365,6 +372,7 @@ The fixture should now satisfy the mock processor and prove the alpha upload hap
 - [ ] **Step 4: Verify quote workflow tests**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test --filter QuoteSubmissionWorkflowTest
 ```
@@ -379,6 +387,7 @@ Expected: all quote submission workflow tests pass.
 - [ ] **Step 1: Run the focused relation failure**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test --filter ModelRelationsTest
 ```
@@ -404,6 +413,7 @@ Keep `signedOffByUser()` unchanged for existing call sites.
 - [ ] **Step 3: Verify model relations**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test --filter ModelRelationsTest
 ```
@@ -418,6 +428,7 @@ Expected: model relation tests pass.
 - [ ] **Step 1: Run the focused adapter tests**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test --filter SourcingOperationsAdaptersTest
 ```
@@ -437,6 +448,7 @@ This mirrors the production RFQ schema and lets `AtomyRfqLifecyclePersist::creat
 - [ ] **Step 3: Verify adapter tests**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test --filter SourcingOperationsAdaptersTest
 ```
@@ -452,6 +464,7 @@ Expected: adapter tests pass, including numeric suffix and duplicate exception b
 - [ ] **Step 1: Run WEB lint**
 
 Run:
+
 ```bash
 cd apps/atomy-q/WEB && npm run lint
 ```
@@ -461,6 +474,7 @@ Expected: exit 0. Existing warnings may remain only if they are non-blocking and
 - [ ] **Step 2: Run WEB build**
 
 Run:
+
 ```bash
 cd apps/atomy-q/WEB && npm run build
 ```
@@ -470,6 +484,7 @@ Expected: exit 0.
 - [ ] **Step 3: Run WEB unit tests**
 
 Run:
+
 ```bash
 cd apps/atomy-q/WEB && npm run test:unit
 ```
@@ -479,6 +494,7 @@ Expected: exit 0.
 - [ ] **Step 4: Run API alpha matrix**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest"
 ```
@@ -488,6 +504,7 @@ Expected: exit 0.
 - [ ] **Step 5: Run API full suite**
 
 Run:
+
 ```bash
 cd apps/atomy-q/API && php artisan test
 ```
