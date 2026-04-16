@@ -241,6 +241,8 @@ final class AwardWorkflowTest extends ApiTestCase
         ]);
 
         $events = DecisionTrailEntry::query()
+            ->where('tenant_id', $run->tenant_id)
+            ->where('rfq_id', $rfq->id)
             ->where('comparison_run_id', $run->id)
             ->orderBy('sequence')
             ->pluck('event_type')

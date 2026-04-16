@@ -71,7 +71,7 @@ function normalizeComparisonRuns(payload: unknown): ComparisonRunRow[] {
       date,
       type: normalizeRunType(row, index),
       status: requireTextField(row.status, 'status', index),
-      created_at: row.created_at !== undefined && row.created_at !== null ? String(row.created_at) : null,
+      created_at: String(row.created_at ?? row.createdAt ?? null),
     };
   });
 }

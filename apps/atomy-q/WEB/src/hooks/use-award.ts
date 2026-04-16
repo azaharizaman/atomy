@@ -231,16 +231,25 @@ async function buildAwardCreatePayload(input: { rfqId: string; comparisonRunId: 
   }
 
   const contributingOffers = requiredLineIds.flatMap((lineId) => vendorOffersByLine.get(lineId) ?? []);
-  const amount = contributingOffers.reduce((sum, offer) => sum + (offer.normalizedUnitPrice * offer.normalizedQuantity), 0);
+  const totalCents = contributingOffers.reduce(
+    (sum, offer) => sum + Math.round(offer.normalizedUnitPrice * 100) * offer.normalizedQuantity,
+    0,
+  );
+  const amount = Number((totalCents / 100).toFixed(2));
 
   const currencies = new Set(
     requiredLineIds
-      .map((lineId) => snapshot.currencyMeta[lineId] ?? '')
-      .filter((currency) => currency.trim() !== ''),
+      .map((lineId) => snapshot.currencyMeta[lineId]?.trim() ?? '')
+      .filter((currency) => currency !== ''),
   );
 
   if (currencies.size !== 1) {
     throw new Error('Award creation requires one resolved comparison currency.');
+  }
+
+  const currency = [...currencies][0];
+  if (currency.length !== 3) {
+    throw new Error('Award creation requires a canonical 3-character currency code.');
   }
 
   return {
@@ -248,7 +257,7 @@ async function buildAwardCreatePayload(input: { rfqId: string; comparisonRunId: 
     comparison_run_id: input.comparisonRunId,
     vendor_id: input.vendorId,
     amount,
-    currency: [...currencies][0],
+    currency,
   };
 }
 

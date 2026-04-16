@@ -27,8 +27,26 @@ const buildCorsHeaders = (origin: string) => ({
   'access-control-allow-methods': 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
 });
 
+function getRequestOrigin(request: import('@playwright/test').APIRequestContext): string {
+  const url = new URL(request.url());
+  return url.origin;
+}
+
+function fulfillJsonRoute(
+  route: import('@playwright/test').Route,
+  body: unknown,
+  status?: number,
+) {
+  const origin = getRequestOrigin(route.request());
+  const cors = buildCorsHeaders(origin);
+  return route.fulfill({
+    status: status ?? 200,
+    headers: { ...cors, 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
 async function stubAuth(page: import('@playwright/test').Page) {
-  let origin = 'http://localhost:3000';
   let currentAward:
     | null
     | {
@@ -57,164 +75,44 @@ async function stubAuth(page: import('@playwright/test').Page) {
   const sentDebriefs: Array<{ awardId: string; vendorId: string; message: string }> = [];
 
   await page.route('**/api/v1/auth/login', async (route) => {
-    const cors = buildCorsHeaders(origin);
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        access_token: 'e2e-access-token',
-        refresh_token: 'e2e-refresh-token',
-        user: {
-          id: 'e2e-user-1',
-          name: 'QA User',
-          email: mockUser.email,
-          role: 'admin',
-          tenantId: mockUser.tenantId,
-        },
-      }),
+    await fulfillJsonRoute(route, {
+      access_token: 'e2e-access-token',
+      refresh_token: 'e2e-refresh-token',
+      user: {
+        id: 'e2e-user-1',
+        name: 'QA User',
+        email: mockUser.email,
+        role: 'admin',
+        tenantId: mockUser.tenantId,
+      },
     });
   });
 
   await page.route('**/api/v1/me', async (route) => {
-    const cors = buildCorsHeaders(origin);
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: {
-          id: 'e2e-user-1',
-          name: 'QA User',
-          email: mockUser.email,
-          role: 'admin',
-          tenantId: mockUser.tenantId,
-        },
-      }),
+    await fulfillJsonRoute(route, {
+      data: {
+        id: 'e2e-user-1',
+        name: 'QA User',
+        email: mockUser.email,
+        role: 'admin',
+        tenantId: mockUser.tenantId,
+      },
     });
   });
 
   await page.route('**/api/v1/rfqs**', async (route) => {
-    const cors = buildCorsHeaders(origin);
     if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: cors });
+      const origin = getRequestOrigin(route.request());
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
     const requestUrl = new URL(route.request().url());
     const pathname = requestUrl.pathname;
 
     if (pathname.endsWith(`/rfqs/${E2E_RFQ_ID}/overview`)) {
-      await route.fulfill({
-        status: 200,
-        headers: cors,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: {
-            rfq: {
-              id: E2E_RFQ_ID,
-              rfq_number: E2E_RFQ_ID,
-              title: E2E_RFQ_TITLE,
-              status: 'active',
-              owner: { id: 'u1', name: 'QA User', email: mockUser.email },
-              deadline: '2026-04-15',
-              category: 'IT Hardware',
-              estimated_value: 50000,
-              estValue: 50000,
-              savings_percentage: 12,
-              savings: '12%',
-              vendors_count: 2,
-              quotes_count: 2,
-              vendorsCount: 2,
-              quotesCount: 2,
-            },
-            expected_quotes: 2,
-            normalization: {
-              accepted_count: 2,
-              total_quotes: 2,
-              progress_pct: 100,
-              uploaded_count: 0,
-              needs_review_count: 0,
-              ready_count: 2,
-            },
-            comparison: {
-              id: 'run-final-e2e',
-              name: 'Final comparison',
-              status: 'frozen',
-              is_preview: false,
-              created_at: '2026-04-16T10:00:00Z',
-            },
-            approvals: {
-              pending_count: 1,
-              approved_count: 0,
-              rejected_count: 0,
-              overall: 'pending',
-            },
-            activity: [
-              {
-                id: 'activity-1',
-                type: 'comparison',
-                actor: 'QA User',
-                action: 'Comparison snapshot frozen',
-                timestamp: '2026-04-16T10:00:00Z',
-              },
-            ],
-          },
-        }),
-      });
-      return;
-    }
-    if (pathname.endsWith(`/rfqs/${E2E_RFQ_ID}/activity`)) {
-      await route.fulfill({
-        status: 200,
-        headers: cors,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: [
-            {
-              id: 'activity-1',
-              type: 'comparison',
-              actor: 'QA User',
-              action: 'Comparison snapshot frozen',
-              timestamp: '2026-04-16T10:00:00Z',
-            },
-          ],
-        }),
-      });
-      return;
-    }
-    if (pathname.endsWith(`/rfqs/${E2E_RFQ_ID}/invitations`)) {
-      await route.fulfill({
-        status: 200,
-        headers: cors,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: [
-            {
-              id: 'inv-1',
-              vendor_id: 'vendor-e2e-1',
-              vendor_name: 'E2E Vendor',
-              vendor_email: 'vendor-1@atomy.test',
-              status: 'accepted',
-            },
-            {
-              id: 'inv-2',
-              vendor_id: 'vendor-e2e-2',
-              vendor_name: 'Runner Up Vendor',
-              vendor_email: 'vendor-2@atomy.test',
-              status: 'accepted',
-            },
-          ],
-        }),
-      });
-      return;
-    }
-    if (pathname.includes(E2E_RFQ_ID) || pathname.endsWith('/rfqs/' + E2E_RFQ_ID)) {
-      await route.fulfill({
-        status: 200,
-        headers: cors,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: {
+      await fulfillJsonRoute(route, {
+        data: {
+          rfq: {
             id: E2E_RFQ_ID,
             rfq_number: E2E_RFQ_ID,
             title: E2E_RFQ_TITLE,
@@ -231,90 +129,163 @@ async function stubAuth(page: import('@playwright/test').Page) {
             vendorsCount: 2,
             quotesCount: 2,
           },
-        }),
+          expected_quotes: 2,
+          normalization: {
+            accepted_count: 2,
+            total_quotes: 2,
+            progress_pct: 100,
+            uploaded_count: 0,
+            needs_review_count: 0,
+            ready_count: 2,
+          },
+          comparison: {
+            id: 'run-final-e2e',
+            name: 'Final comparison',
+            status: 'frozen',
+            is_preview: false,
+            created_at: '2026-04-16T10:00:00Z',
+          },
+          approvals: {
+            pending_count: 1,
+            approved_count: 0,
+            rejected_count: 0,
+            overall: 'pending',
+          },
+          activity: [
+            {
+              id: 'activity-1',
+              type: 'comparison',
+              actor: 'QA User',
+              action: 'Comparison snapshot frozen',
+              timestamp: '2026-04-16T10:00:00Z',
+            },
+          ],
+        },
       });
       return;
     }
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify({
+    if (pathname.endsWith(`/rfqs/${E2E_RFQ_ID}/activity`)) {
+      await fulfillJsonRoute(route, {
         data: [
           {
-            id: E2E_RFQ_ID,
-            rfq_number: E2E_RFQ_ID,
-            title: E2E_RFQ_TITLE,
-            status: 'active',
-            owner: { name: 'QA User', email: mockUser.email },
-            deadline: '2026-04-15',
-            category: 'IT Hardware',
-            estValue: 50000,
-            vendorsCount: 3,
-            quotesCount: 2,
-            savings: '12%',
+            id: 'activity-1',
+            type: 'comparison',
+            actor: 'QA User',
+            action: 'Comparison snapshot frozen',
+            timestamp: '2026-04-16T10:00:00Z',
           },
         ],
-        meta: { total: 1, total_pages: 1, current_page: 1, per_page: 25 },
-      }),
+      });
+      return;
+    }
+    if (pathname.endsWith(`/rfqs/${E2E_RFQ_ID}/invitations`)) {
+      await fulfillJsonRoute(route, {
+        data: [
+          {
+            id: 'inv-1',
+            vendor_id: 'vendor-e2e-1',
+            vendor_name: 'E2E Vendor',
+            vendor_email: 'vendor-1@atomy.test',
+            status: 'accepted',
+          },
+          {
+            id: 'inv-2',
+            vendor_id: 'vendor-e2e-2',
+            vendor_name: 'Runner Up Vendor',
+            vendor_email: 'vendor-2@atomy.test',
+            status: 'accepted',
+          },
+        ],
+      });
+      return;
+    }
+    if (pathname.includes(E2E_RFQ_ID) || pathname.endsWith('/rfqs/' + E2E_RFQ_ID)) {
+      await fulfillJsonRoute(route, {
+        data: {
+          id: E2E_RFQ_ID,
+          rfq_number: E2E_RFQ_ID,
+          title: E2E_RFQ_TITLE,
+          status: 'active',
+          owner: { id: 'u1', name: 'QA User', email: mockUser.email },
+          deadline: '2026-04-15',
+          category: 'IT Hardware',
+          estimated_value: 50000,
+          estValue: 50000,
+          savings_percentage: 12,
+          savings: '12%',
+          vendors_count: 2,
+          quotes_count: 2,
+          vendorsCount: 2,
+          quotesCount: 2,
+        },
+      });
+      return;
+    }
+    await fulfillJsonRoute(route, {
+      data: [
+        {
+          id: E2E_RFQ_ID,
+          rfq_number: E2E_RFQ_ID,
+          title: E2E_RFQ_TITLE,
+          status: 'active',
+          owner: { name: 'QA User', email: mockUser.email },
+          deadline: '2026-04-15',
+          category: 'IT Hardware',
+          estValue: 50000,
+          vendorsCount: 3,
+          quotesCount: 2,
+          savings: '12%',
+        },
+      ],
+      meta: { total: 1, total_pages: 1, current_page: 1, per_page: 25 },
     });
   });
 
   await page.route('**/api/v1/normalization/**', async (route) => {
-    const cors = buildCorsHeaders(origin);
     if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: cors });
+      const origin = getRequestOrigin(route.request());
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
 
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: [],
-        meta: { rfq_id: E2E_RFQ_ID, has_blocking_issues: false, blocking_issue_count: 0 },
-      }),
+    await fulfillJsonRoute(route, {
+      data: [],
+      meta: { rfq_id: E2E_RFQ_ID, has_blocking_issues: false, blocking_issue_count: 0 },
     });
   });
 
   await page.route('**/api/v1/quote-submissions**', async (route) => {
-    const cors = buildCorsHeaders(origin);
     if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: cors });
+      const origin = getRequestOrigin(route.request());
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
 
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: [
-          {
-            id: 'quote-e2e-1',
-            rfq_id: E2E_RFQ_ID,
-            vendor_id: 'vendor-e2e-1',
-            vendor_name: 'E2E Vendor',
-            original_filename: 'e2e-vendor-1.pdf',
-            status: 'ready',
-            confidence: 95,
-            submitted_at: '2026-04-16T09:00:00Z',
-            blocking_issue_count: 0,
-          },
-          {
-            id: 'quote-e2e-2',
-            rfq_id: E2E_RFQ_ID,
-            vendor_id: 'vendor-e2e-2',
-            vendor_name: 'Runner Up Vendor',
-            original_filename: 'e2e-vendor-2.pdf',
-            status: 'ready',
-            confidence: 92,
-            submitted_at: '2026-04-16T09:05:00Z',
-            blocking_issue_count: 0,
-          },
-        ],
-      }),
+    await fulfillJsonRoute(route, {
+      data: [
+        {
+          id: 'quote-e2e-1',
+          rfq_id: E2E_RFQ_ID,
+          vendor_id: 'vendor-e2e-1',
+          vendor_name: 'E2E Vendor',
+          original_filename: 'e2e-vendor-1.pdf',
+          status: 'ready',
+          confidence: 95,
+          submitted_at: '2026-04-16T09:00:00Z',
+          blocking_issue_count: 0,
+        },
+        {
+          id: 'quote-e2e-2',
+          rfq_id: E2E_RFQ_ID,
+          vendor_id: 'vendor-e2e-2',
+          vendor_name: 'Runner Up Vendor',
+          original_filename: 'e2e-vendor-2.pdf',
+          status: 'ready',
+          confidence: 92,
+          submitted_at: '2026-04-16T09:05:00Z',
+          blocking_issue_count: 0,
+        },
+      ],
     });
   });
 
@@ -350,155 +321,136 @@ async function stubAuth(page: import('@playwright/test').Page) {
     }
 
     if (pathname.endsWith('/comparison-runs/run-final-e2e/matrix')) {
-      await route.fulfill({
-        status: 200,
-        headers: cors,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: {
-            id: 'run-final-e2e',
-            clusters: [
-              {
-                clusterKey: 'line-1',
-                basis: 'price',
-                offers: [
-                  {
-                    vendorId: 'vendor-e2e-1',
-                    rfqLineId: 'line-1',
-                    taxonomyCode: 'HW-1',
-                    normalizedUnitPrice: 100,
-                    normalizedQuantity: 5,
-                    aiConfidence: 0.98,
-                  },
-                  {
-                    vendorId: 'vendor-e2e-2',
-                    rfqLineId: 'line-1',
-                    taxonomyCode: 'HW-1',
-                    normalizedUnitPrice: 125,
-                    normalizedQuantity: 5,
-                    aiConfidence: 0.96,
-                  },
-                ],
-                statistics: {
-                  minNormalizedUnitPrice: 100,
-                  maxNormalizedUnitPrice: 125,
-                  avgNormalizedUnitPrice: 112.5,
+      await fulfillJsonRoute(route, {
+        data: {
+          id: 'run-final-e2e',
+          clusters: [
+            {
+              clusterKey: 'line-1',
+              basis: 'price',
+              offers: [
+                {
+                  vendorId: 'vendor-e2e-1',
+                  rfqLineId: 'line-1',
+                  taxonomyCode: 'HW-1',
+                  normalizedUnitPrice: 100,
+                  normalizedQuantity: 5,
+                  aiConfidence: 0.98,
                 },
-                recommendation: {
-                  recommendedVendorId: 'vendor-e2e-1',
-                  reason: 'Lowest evaluated total',
+                {
+                  vendorId: 'vendor-e2e-2',
+                  rfqLineId: 'line-1',
+                  taxonomyCode: 'HW-1',
+                  normalizedUnitPrice: 125,
+                  normalizedQuantity: 5,
+                  aiConfidence: 0.96,
                 },
+              ],
+              statistics: {
+                minNormalizedUnitPrice: 100,
+                maxNormalizedUnitPrice: 125,
+                avgNormalizedUnitPrice: 112.5,
               },
-            ],
-          },
-        }),
+              recommendation: {
+                recommendedVendorId: 'vendor-e2e-1',
+                reason: 'Lowest evaluated total',
+              },
+            },
+          ],
+        },
       });
       return;
     }
 
     if (pathname.endsWith('/comparison-runs/run-final-e2e')) {
-      await route.fulfill({
-        status: 200,
-        headers: cors,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: {
-            id: 'run-final-e2e',
-            rfq_id: E2E_RFQ_ID,
-            name: 'Final comparison',
-            status: 'frozen',
-            is_preview: false,
-            created_at: '2026-04-16T10:00:00Z',
-            snapshot: {
-              rfqVersion: 1,
-              normalizedLines: [
-                {
-                  rfqLineItemId: 'line-1',
-                  sourceDescription: 'Dell PowerEdge R750',
-                  sourceLineId: 'source-line-1',
-                  quoteSubmissionId: 'quote-e2e-1',
-                  vendorId: 'vendor-e2e-1',
-                  sourceUnitPrice: '100',
-                  sourceUom: 'units',
-                  sourceQuantity: '5',
-                },
-              ],
-              resolutions: [],
-              currencyMeta: {
-                'line-1': 'USD',
+      await fulfillJsonRoute(route, {
+        data: {
+          id: 'run-final-e2e',
+          rfq_id: E2E_RFQ_ID,
+          name: 'Final comparison',
+          status: 'frozen',
+          is_preview: false,
+          created_at: '2026-04-16T10:00:00Z',
+          snapshot: {
+            rfqVersion: 1,
+            normalizedLines: [
+              {
+                rfqLineItemId: 'line-1',
+                sourceDescription: 'Dell PowerEdge R750',
+                sourceLineId: 'source-line-1',
+                quoteSubmissionId: 'quote-e2e-1',
+                vendorId: 'vendor-e2e-1',
+                sourceUnitPrice: '100',
+                sourceUom: 'units',
+                sourceQuantity: '5',
               },
-              vendors: [
-                {
-                  vendorId: 'vendor-e2e-1',
-                  vendorName: 'E2E Vendor',
-                  quoteSubmissionId: 'quote-e2e-1',
-                },
-                {
-                  vendorId: 'vendor-e2e-2',
-                  vendorName: 'Runner Up Vendor',
-                  quoteSubmissionId: 'quote-e2e-2',
-                },
-              ],
+            ],
+            resolutions: [],
+            currencyMeta: {
+              'line-1': 'USD',
             },
+            vendors: [
+              {
+                vendorId: 'vendor-e2e-1',
+                vendorName: 'E2E Vendor',
+                quoteSubmissionId: 'quote-e2e-1',
+              },
+              {
+                vendorId: 'vendor-e2e-2',
+                vendorName: 'Runner Up Vendor',
+                quoteSubmissionId: 'quote-e2e-2',
+              },
+            ],
           },
-        }),
+        },
       });
       return;
     }
 
+    const origin = getRequestOrigin(route.request());
     await route.fulfill({
       status: 404,
-      headers: cors,
+      headers: buildCorsHeaders(origin),
       contentType: 'application/json',
       body: JSON.stringify({ message: 'Comparison run route not stubbed' }),
     });
   });
 
   await page.route('**/api/v1/approvals**', async (route) => {
-    const cors = buildCorsHeaders(origin);
     if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: cors });
+      const origin = getRequestOrigin(route.request());
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
 
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: [
-          {
-            id: 'approval-e2e-1',
-            rfq_id: E2E_RFQ_ID,
-            rfq_title: E2E_RFQ_TITLE,
-            type: 'award_signoff',
-            type_label: 'Award signoff',
-            status: 'pending',
-            priority: 'high',
-            summary: 'Final award decision awaiting sign-off',
-            assignee: 'QA User',
-            requested_at: '2026-04-16T10:05:00Z',
-          },
-        ],
-        meta: { total: 1, total_pages: 1, current_page: 1, per_page: 20 },
-      }),
+    await fulfillJsonRoute(route, {
+      data: [
+        {
+          id: 'approval-e2e-1',
+          rfq_id: E2E_RFQ_ID,
+          rfq_title: E2E_RFQ_TITLE,
+          type: 'award_signoff',
+          type_label: 'Award signoff',
+          status: 'pending',
+          priority: 'high',
+          summary: 'Final award decision awaiting sign-off',
+          assignee: 'QA User',
+          requested_at: '2026-04-16T10:05:00Z',
+        },
+      ],
+      meta: { total: 1, total_pages: 1, current_page: 1, per_page: 20 },
     });
   });
 
   await page.route('**/api/v1/awards**', async (route) => {
-    const cors = buildCorsHeaders(origin);
     if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: cors });
+      const origin = getRequestOrigin(route.request());
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
 
     if (route.request().method() === 'GET') {
-      await route.fulfill({
-        status: 200,
-        headers: cors,
-        contentType: 'application/json',
-        body: JSON.stringify({ data: currentAward ? [currentAward] : [] }),
-      });
+      await fulfillJsonRoute(route, { data: currentAward ? [currentAward] : [] });
       return;
     }
 
@@ -531,25 +483,20 @@ async function stubAuth(page: import('@playwright/test').Page) {
           ],
         },
       };
-      await route.fulfill({
-        status: 201,
-        headers: cors,
-        contentType: 'application/json',
-        body: JSON.stringify({ data: currentAward }),
-      });
+      await fulfillJsonRoute(route, { data: currentAward }, 201);
       return;
     }
 
+    const origin = getRequestOrigin(route.request());
     await route.fulfill({
       status: 405,
-      headers: cors,
+      headers: buildCorsHeaders(origin),
       contentType: 'application/json',
       body: JSON.stringify({ message: 'Unsupported award method' }),
     });
   });
 
   await page.route('**/api/v1/awards/award-e2e-1/signoff', async (route) => {
-    const cors = buildCorsHeaders(origin);
     currentAward = currentAward
       ? {
           ...currentAward,
@@ -558,16 +505,10 @@ async function stubAuth(page: import('@playwright/test').Page) {
           signed_off_by: mockUser.name,
         }
       : null;
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: currentAward }),
-    });
+    await fulfillJsonRoute(route, { data: currentAward });
   });
 
   await page.route('**/api/v1/awards/award-e2e-1/debrief/**', async (route) => {
-    const cors = buildCorsHeaders(origin);
     const payload = route.request().postDataJSON() as { message?: string };
     const vendorId = route.request().url().split('/').pop() ?? '';
     sentDebriefs.push({
@@ -575,12 +516,7 @@ async function stubAuth(page: import('@playwright/test').Page) {
       vendorId,
       message: payload.message ?? '',
     });
-    await route.fulfill({
-      status: 200,
-      headers: cors,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: currentAward }),
-    });
+    await fulfillJsonRoute(route, { data: currentAward });
   });
 
   await page.addInitScript((user) => {
@@ -600,7 +536,6 @@ async function stubAuth(page: import('@playwright/test').Page) {
   }, mockUser);
 
   await page.goto('/');
-  origin = new URL(page.url()).origin;
   await expect(page).toHaveURL('/');
 
   return {

@@ -93,39 +93,30 @@ final readonly class DecisionTrailRecorder
         string $eventType,
         array $summary,
     ): void {
-        DB::transaction(function () use ($tenantId, $rfqId, $comparisonRunId, $eventType, $summary): void {
-            $previous = DecisionTrailEntry::query()
-                ->where('tenant_id', $tenantId)
-                ->where('comparison_run_id', $comparisonRunId)
-                ->orderByDesc('sequence')
-                ->lockForUpdate()
-                ->first();
+        $previous = DecisionTrailEntry::query()
+            ->where('tenant_id', $tenantId)
+            ->where('comparison_run_id', $comparisonRunId)
+            ->orderByDesc('sequence')
+            ->lockForUpdate()
+            ->first();
 
-            $sequence = max(
-                1,
-                ((int) DecisionTrailEntry::query()
-                    ->where('tenant_id', $tenantId)
-                    ->where('comparison_run_id', $comparisonRunId)
-                    ->lockForUpdate()
-                    ->max('sequence')) + 1
-            );
-            $previousHash = $previous?->entry_hash ?? hash('sha256', 'genesis:' . $comparisonRunId);
+        $sequence = max(1, ((int) ($previous?->sequence ?? 0)) + 1);
+        $previousHash = $previous?->entry_hash ?? hash('sha256', 'genesis:' . $comparisonRunId);
 
-            $payloadJson = json_encode($summary, JSON_THROW_ON_ERROR);
-            $payloadHash = hash('sha256', $payloadJson);
-            $entryHash = hash('sha256', $previousHash . $payloadHash . $sequence);
+        $payloadJson = json_encode($summary, JSON_THROW_ON_ERROR);
+        $payloadHash = hash('sha256', $payloadJson);
+        $entryHash = hash('sha256', $previousHash . $payloadHash . $sequence);
 
-            DecisionTrailEntry::query()->create([
-                'tenant_id' => $tenantId,
-                'comparison_run_id' => $comparisonRunId,
-                'rfq_id' => $rfqId,
-                'sequence' => $sequence,
-                'event_type' => $eventType,
-                'payload_hash' => $payloadHash,
-                'previous_hash' => $previousHash,
-                'entry_hash' => $entryHash,
-                'occurred_at' => now(),
-            ]);
-        });
+        DecisionTrailEntry::query()->create([
+            'tenant_id' => $tenantId,
+            'comparison_run_id' => $comparisonRunId,
+            'rfq_id' => $rfqId,
+            'sequence' => $sequence,
+            'event_type' => $eventType,
+            'payload_hash' => $payloadHash,
+            'previous_hash' => $previousHash,
+            'entry_hash' => $entryHash,
+            'occurred_at' => now(),
+        ]);
     }
 }
