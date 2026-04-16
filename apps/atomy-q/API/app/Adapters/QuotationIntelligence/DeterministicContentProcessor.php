@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapters\QuotationIntelligence;
 
-use App\Models\QuoteSubmission;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
+use App\Models\QuoteSubmission;
 
 final readonly class DeterministicContentProcessor implements OrchestratorContentProcessorInterface
 {
@@ -32,6 +32,7 @@ final readonly class DeterministicContentProcessor implements OrchestratorConten
         $submission = QuoteSubmission::query()
             ->where('tenant_id', $tenantId)
             ->where('file_path', $this->resolveRelativePath($storagePath))
+            ->whereHas('rfq', fn ($q) => $q->where('tenant_id', $tenantId))
             ->with([
                 'rfq.lineItems' => fn ($q) => $q
                     ->where('tenant_id', $tenantId)

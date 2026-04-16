@@ -46,7 +46,7 @@
 - Modify: `apps/atomy-q/API/app/Providers/AppServiceProvider.php`
 - Test: `apps/atomy-q/API/tests/Feature/QuoteIngestionPipelineTest.php`
 
-- [ ] **Step 1: Write the failing mode-selection test**
+- [x] **Step 1: Write the failing mode-selection test**
 
 Add a focused feature test that proves alpha defaults to deterministic mode when no quote-intelligence env is set and that `llm` mode without provider config fails through the ingestion pipeline.
 
@@ -96,13 +96,13 @@ public function test_quote_intelligence_llm_mode_without_provider_config_fails_s
 }
 ```
 
-- [ ] **Step 2: Run the focused test to verify the new assertions fail**
+- [x] **Step 2: Run the focused test to verify the new assertions fail**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter QuoteIngestionPipelineTest`
 
 Expected: FAIL because no `atomy.quote_intelligence` config contract or mode-specific binding exists yet.
 
-- [ ] **Step 3: Add the config contract in `config/atomy.php`**
+- [x] **Step 3: Add the config contract in `config/atomy.php`**
 
 Extend the existing `atomy` config file instead of creating a new config namespace.
 
@@ -119,7 +119,7 @@ Extend the existing `atomy` config file instead of creating a new config namespa
 ],
 ```
 
-- [ ] **Step 4: Implement mode-based bindings in `AppServiceProvider.php`**
+- [x] **Step 4: Implement mode-based bindings in `AppServiceProvider.php`**
 
 Replace direct `Mock*` bindings with a config-driven branch that selects deterministic adapters by default and dormant-LLM placeholders only when `mode=llm`.
 
@@ -147,13 +147,13 @@ if ($mode === 'llm') {
 }
 ```
 
-- [ ] **Step 5: Re-run the focused pipeline test**
+- [x] **Step 5: Re-run the focused pipeline test**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter QuoteIngestionPipelineTest`
 
 Expected: deterministic-mode assertions now pass, while LLM-mode assertions still fail until the dormant adapters and sanitization behavior are implemented in later tasks.
 
-- [ ] **Step 6: Commit the config-and-binding slice**
+- [x] **Step 6: Commit the config-and-binding slice**
 
 ```bash
 git add apps/atomy-q/API/config/atomy.php \
@@ -173,7 +173,7 @@ git commit -m "feat(api): add quote intelligence mode selection"
 - Test: `apps/atomy-q/API/tests/Feature/QuoteIngestionIntelligenceTest.php`
 - Test: `apps/atomy-q/API/tests/Feature/QuoteIngestionPipelineTest.php`
 
-- [ ] **Step 1: Write failing tests for deterministic metadata persistence and dormant-LLM failure**
+- [x] **Step 1: Write failing tests for deterministic metadata persistence and dormant-LLM failure**
 
 Add assertions that deterministic processing still persists the existing alpha metadata and that dormant-LLM bindings raise controlled ingestion failures instead of pretending to work.
 
@@ -219,13 +219,13 @@ public function test_deterministic_mode_persists_normalization_metadata(): void
 }
 ```
 
-- [ ] **Step 2: Run the intelligence and pipeline tests to verify the new assertions fail**
+- [x] **Step 2: Run the intelligence and pipeline tests to verify the new assertions fail**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter "QuoteIngestion(Intelligence|Pipeline)Test"`
 
 Expected: FAIL because the new adapter classes do not exist and LLM-mode bindings still have no fail-fast implementation.
 
-- [ ] **Step 3: Create the deterministic adapter replacements**
+- [x] **Step 3: Create the deterministic adapter replacements**
 
 Copy the current behavior from the `Mock*` adapters into new, honestly named classes without changing the deterministic extraction and taxonomy logic.
 
@@ -334,7 +334,7 @@ final class DeterministicSemanticMapper implements SemanticMapperInterface
 }
 ```
 
-- [ ] **Step 4: Create dormant-LLM placeholder adapters that fail with a domain exception**
+- [x] **Step 4: Create dormant-LLM placeholder adapters that fail with a domain exception**
 
 Do not attempt provider calls. These adapters should validate config and throw a quote-intelligence exception with a safe operator-facing message whenever `llm` mode is selected before a real provider adapter exists.
 
@@ -366,7 +366,7 @@ final readonly class DormantLlmContentProcessor implements OrchestratorContentPr
 
 Use the same fail-fast pattern in `DormantLlmSemanticMapper`, even if `analyze()` will usually fail first. That keeps both interfaces mode-safe.
 
-- [ ] **Step 5: Update the provider bindings to construct dormant adapters with config**
+- [x] **Step 5: Update the provider bindings to construct dormant adapters with config**
 
 ```php
 $llmConfig = (array) config('atomy.quote_intelligence.llm', []);
@@ -382,13 +382,13 @@ $this->app->singleton(
 );
 ```
 
-- [ ] **Step 6: Re-run the focused tests**
+- [x] **Step 6: Re-run the focused tests**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter "QuoteIngestion(Intelligence|Pipeline)Test"`
 
 Expected: deterministic metadata assertions pass; dormant-LLM mode now fails through the quote-ingestion pipeline instead of fabricating success.
 
-- [ ] **Step 7: Commit the adapter slice**
+- [x] **Step 7: Commit the adapter slice**
 
 ```bash
 git add apps/atomy-q/API/app/Adapters/QuotationIntelligence/DeterministicContentProcessor.php \
@@ -407,7 +407,7 @@ git commit -m "refactor(api): rename deterministic quote intelligence adapters"
 - Modify: `apps/atomy-q/API/app/Jobs/ProcessQuoteSubmissionJob.php`
 - Modify: `apps/atomy-q/API/tests/Feature/QuoteIngestionPipelineTest.php`
 
-- [ ] **Step 1: Add the failing retry-exhaustion sanitization test**
+- [x] **Step 1: Add the failing retry-exhaustion sanitization test**
 
 Add a test that calls the job `failed()` path directly with a noisy exception and verifies the persisted quote submission still stores only the generic error message.
 
@@ -442,13 +442,13 @@ public function test_job_failed_path_sanitizes_retry_exhaustion_error_message():
 }
 ```
 
-- [ ] **Step 2: Run the focused pipeline test**
+- [x] **Step 2: Run the focused pipeline test**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter QuoteIngestionPipelineTest`
 
 Expected: FAIL because `ProcessQuoteSubmissionJob::failed()` still persists raw exception messages.
 
-- [ ] **Step 3: Replace raw retry-exhaustion messaging with the shared generic message**
+- [x] **Step 3: Replace raw retry-exhaustion messaging with the shared generic message**
 
 Keep operator detail in logs, but store only the generic message on the submission record.
 
@@ -478,13 +478,13 @@ final class ProcessQuoteSubmissionJob implements ShouldQueue
 }
 ```
 
-- [ ] **Step 4: Re-run the pipeline test**
+- [x] **Step 4: Re-run the pipeline test**
 
 Run: `cd apps/atomy-q/API && php artisan test --filter QuoteIngestionPipelineTest`
 
 Expected: PASS with the job failure path now matching the orchestrator’s sanitized API-visible behavior.
 
-- [ ] **Step 5: Commit the failure-handling slice**
+- [x] **Step 5: Commit the failure-handling slice**
 
 ```bash
 git add apps/atomy-q/API/app/Jobs/ProcessQuoteSubmissionJob.php \
@@ -500,7 +500,7 @@ git commit -m "fix(api): sanitize quote ingestion terminal failures"
 - Modify: `apps/atomy-q/API/IMPLEMENTATION_SUMMARY.md`
 - Modify: `apps/atomy-q/docs/ALPHA_RELEASE_PLAN_2026-04-15.md`
 
-- [ ] **Step 1: Add the quote-intelligence env contract to `.env.example`**
+- [x] **Step 1: Add the quote-intelligence env contract to `.env.example`**
 
 Insert the new deterministic-default and dormant-LLM variables near the existing alpha config section.
 
@@ -513,7 +513,7 @@ QUOTE_INTELLIGENCE_LLM_API_KEY=
 QUOTE_INTELLIGENCE_LLM_TIMEOUT_SECONDS=30
 ```
 
-- [ ] **Step 2: Update the API README**
+- [x] **Step 2: Update the API README**
 
 Add a short section that states deterministic mode is the current alpha path and that `llm` mode is defined but dormant until provider wiring exists.
 
@@ -525,7 +525,7 @@ Add a short section that states deterministic mode is the current alpha path and
 - Alpha does not silently fall back from `llm` mode to deterministic mode in live operation.
 ```
 
-- [ ] **Step 3: Update `IMPLEMENTATION_SUMMARY.md`**
+- [x] **Step 3: Update `IMPLEMENTATION_SUMMARY.md`**
 
 Append a short section documenting the shipped behavior.
 
@@ -533,7 +533,7 @@ Append a short section documenting the shipped behavior.
 **Quote intelligence mode cleanup (April 2026):** Atomy-Q now binds an explicit quote-intelligence runtime mode through `config/atomy.php`. The alpha default is a deterministic processor and semantic mapper with honest non-`Mock` naming. A dormant `llm` mode is documented through env contract and fail-fast placeholder adapters so live mode does not silently pretend external AI is available. Quote-ingestion terminal failures now persist the generic user-facing message `Quote intelligence processing failed.` while logs retain operator detail.
 ```
 
-- [ ] **Step 4: Link the Task 2 spec and plan from the release plan**
+- [x] **Step 4: Link the Task 2 spec and plan from the release plan**
 
 Add the follow-up references directly under Section 9 Task 2.
 
@@ -549,7 +549,7 @@ Add the follow-up references directly under Section 9 Task 2.
 - Follow-up plan: [`ALPHA_TASK2_QUOTE_INTELLIGENCE_IMPLEMENTATION_PLAN_2026-04-16.md`](./ALPHA_TASK2_QUOTE_INTELLIGENCE_IMPLEMENTATION_PLAN_2026-04-16.md)
 ```
 
-- [ ] **Step 5: Run the minimum Task 2 verification commands**
+- [x] **Step 5: Run the minimum Task 2 verification commands**
 
 Run:
 
@@ -560,7 +560,7 @@ cd apps/atomy-q/API && php artisan test --filter QuoteIngestionPipelineTest
 
 Expected: PASS for both targeted feature suites.
 
-- [ ] **Step 6: Commit the documentation slice**
+- [x] **Step 6: Commit the documentation slice**
 
 ```bash
 git add apps/atomy-q/API/.env.example \

@@ -8,7 +8,7 @@ This is the backend API for the Atomy‑Q Quote Comparison & Procurement platfor
 
 - `deterministic` is the supported alpha default and is the mode used when `QUOTE_INTELLIGENCE_MODE` is unset.
 - `llm` is defined in the environment contract, but it remains dormant until a production provider adapter is wired in.
-- In live operation, alpha does not silently fall back from `llm` to deterministic mode; invalid or unimplemented `llm` settings fail through the quote-intelligence exception path.
+- In live operation, alpha does not silently fall back from `llm` to deterministic mode; misconfigured or unimplemented `llm` settings fail through the quote-intelligence exception path, are logged server-side, and return the existing sanitized API failure shape for the calling workflow.
 
 ## Requirements
 - PHP 8.3+
@@ -97,6 +97,12 @@ Optional: set `API_VERSION` in `.env` for the `info.version` field in the export
 - `ATOMY_MIN_VENDORS_FINAL`
 - `ATOMY_MIN_VENDORS_PREVIEW`
 - `ATOMY_CONFIDENCE_THRESHOLD`
+- `QUOTE_INTELLIGENCE_MODE` (`deterministic` by default; `llm` stays dormant until a real provider adapter is wired in)
+- `QUOTE_INTELLIGENCE_LLM_PROVIDER`
+- `QUOTE_INTELLIGENCE_LLM_MODEL`
+- `QUOTE_INTELLIGENCE_LLM_BASE_URL`
+- `QUOTE_INTELLIGENCE_LLM_API_KEY`
+- `QUOTE_INTELLIGENCE_LLM_TIMEOUT_SECONDS`
 - **`FEATURE_PROJECTS_ENABLED`** / **`FEATURE_TASKS_ENABLED`** (default `false`): when `false`, `GET /projects` and related routes **return 404** (feature hidden). Set to `true` in local `.env` for Atomy-Q WEB Projects / Tasks screens.
 
 ## Quote intake & comparison (pilot)

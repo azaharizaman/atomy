@@ -157,11 +157,11 @@ After this task, quote ingestion should produce persisted normalization source l
 - Follow-up spec: [`ALPHA_TASK2_QUOTE_INTELLIGENCE_SPEC_2026-04-16.md`](./ALPHA_TASK2_QUOTE_INTELLIGENCE_SPEC_2026-04-16.md)
 - Follow-up plan: [`ALPHA_TASK2_QUOTE_INTELLIGENCE_IMPLEMENTATION_PLAN_2026-04-16.md`](./ALPHA_TASK2_QUOTE_INTELLIGENCE_IMPLEMENTATION_PLAN_2026-04-16.md)
 
-- [ ] Decide the alpha processor mode: production LLM provider or deterministic alpha processor.
-- [ ] If using production LLM, add explicit provider/model/env contract and adapter-level timeout/error handling.
-- [ ] If using deterministic alpha processor, use honestly named deterministic adapters, document the limitation, and keep CI deterministic.
-- [ ] Ensure live ingestion failures mark quote submissions failed with sanitized error messages.
-- [ ] Verify normalization source lines are persisted with tenant, RFQ, quote submission, vendor, mapping confidence, and evidence metadata.
+- [x] Decide the alpha processor mode: alpha now ships with the deterministic processor path, while `llm` remains a documented dormant mode until provider budget and runtime config are available.
+- [x] Define the production LLM env contract now so a future adapter can be wired in without changing the ingestion boundary or operator docs.
+- [x] Use honestly named deterministic adapters, document the limitation, and keep CI deterministic.
+- [x] Ensure live ingestion failures mark quote submissions failed with sanitized error messages.
+- [x] Verify normalization source lines are persisted with tenant, RFQ, quote submission, vendor, mapping confidence, and evidence metadata.
 
 ### Task 3: Prove Award End-To-End
 

@@ -30,7 +30,7 @@ final readonly class DormantLlmContentProcessor implements OrchestratorContentPr
     private static function resolveFailureMessage(array $llmConfig): string
     {
         foreach (['provider', 'model', 'base_url', 'api_key'] as $key) {
-            if (!is_string($llmConfig[$key] ?? null) || trim((string) $llmConfig[$key]) === '') {
+            if (!is_string($llmConfig[$key] ?? null) || trim($llmConfig[$key]) === '') {
                 return 'Quote intelligence LLM provider configuration is missing or incomplete.';
             }
         }

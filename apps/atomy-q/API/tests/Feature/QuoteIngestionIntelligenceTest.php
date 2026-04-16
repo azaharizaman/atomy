@@ -258,9 +258,9 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
         $lines = $result->getExtractedField('lines', []);
 
         self::assertNotEmpty($lines);
-
         $targetLineItemIds = $targetRfq->lineItems()->pluck('id')->all();
         $otherLineItemIds = $otherRfq->lineItems()->pluck('id')->all();
+        self::assertCount(count($targetLineItemIds), $lines);
 
         foreach ($lines as $line) {
             self::assertContains($line['rfq_line_id'], $targetLineItemIds);
