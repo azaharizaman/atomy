@@ -14,29 +14,64 @@ export interface ComparisonRunRow {
   name: string;
 }
 
+function requireTextField(value: unknown, fieldName: string, rowIndex: number): string {
+  if (value === null || value === undefined) {
+    throw new Error(`Invalid comparison run row at index ${rowIndex}: missing ${fieldName}`);
+  }
+
+  const text = String(value).trim();
+  if (text === '') {
+    throw new Error(`Invalid comparison run row at index ${rowIndex}: missing ${fieldName}`);
+  }
+
+  return text;
+}
+
+function normalizeRunType(row: Record<string, unknown>, index: number): 'preview' | 'final' {
+  const typeValue = row.type;
+  if (typeValue === 'preview' || typeValue === 'final') {
+    return typeValue;
+  }
+
+  const modeValue = row.mode;
+  if (modeValue === 'preview' || modeValue === 'final') {
+    return modeValue;
+  }
+
+  const isPreviewValue = row.is_preview;
+  if (typeof isPreviewValue === 'boolean') {
+    return isPreviewValue ? 'preview' : 'final';
+  }
+
+  throw new Error(`Invalid comparison run row at index ${index}: missing type`);
+}
+
 function normalizeComparisonRuns(payload: unknown): ComparisonRunRow[] {
-  const raw = payload && typeof payload === 'object' ? (payload as { data?: unknown }) : null;
-  const list = Array.isArray(raw?.data) ? raw?.data : [];
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Invalid comparison runs response: expected object envelope with data array.');
+  }
+
+  const raw = payload as { data?: unknown };
+  if (!Array.isArray(raw.data)) {
+    throw new Error('Invalid comparison runs response: expected data array.');
+  }
+
+  const list = raw.data;
   return list.map((item: unknown, index: number) => {
     if (item === null || typeof item !== 'object' || Array.isArray(item)) {
       throw new Error(`Invalid comparison run row at index ${index}: expected object`);
     }
     const row = item as Record<string, unknown>;
-    const id = row.id ?? row.run_id ?? row.runId;
-    if (id === null || id === undefined || String(id).trim() === '') {
-      throw new Error(`Missing id for comparison row at index ${index}: ${JSON.stringify(row)}`);
-    }
+    const id = requireTextField(row.id ?? row.run_id ?? row.runId, 'id', index);
+    const date = requireTextField(row.created_at ?? row.createdAt, 'date', index);
     return {
-      id: String(id),
-      rfq_id: String(row.rfq_id ?? ''),
-      name: String(row.name ?? 'Comparison Run'),
-      date:
-        row.created_at !== undefined && row.created_at !== null
-          ? String(row.created_at)
-          : String(row.createdAt ?? ''),
-      type: row.is_preview === false || row.mode === 'final' ? 'final' : 'preview',
-      status: String(row.status ?? 'generated'),
-      created_at: row.created_at !== undefined && row.created_at !== null ? String(row.created_at) : null,
+      id,
+      rfq_id: requireTextField(row.rfq_id, 'rfq_id', index),
+      name: requireTextField(row.name, 'name', index),
+      date,
+      type: normalizeRunType(row, index),
+      status: requireTextField(row.status, 'status', index),
+      created_at: String(row.created_at ?? row.createdAt ?? null),
     };
   });
 }

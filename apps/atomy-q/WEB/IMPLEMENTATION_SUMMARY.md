@@ -55,3 +55,14 @@
 - The RFQ award page now exposes a live create-award path when no award exists and a final comparison run is available, using real comparison-run and RFQ-vendor hook data. Mock mode still disables the mutation.
 - `useAward` now returns a `store` mutation for `POST /awards` and invalidates the RFQ award query after creation.
 - Verification: `npm run lint` exits 0 with the documented existing warnings; `npm run build` and `npm run test:unit` pass.
+
+## 2026-04-16 Alpha Task 3 Award End-To-End
+
+- `use-award.ts` now derives live create-award payloads from finalized comparison snapshot and matrix evidence, rejects malformed live award envelopes/rows, and requires complete vendor pricing coverage plus resolved currency metadata.
+- `use-comparison-runs.ts` now rejects malformed live comparison-run envelopes and rows instead of silently defaulting missing type/date fields.
+- The RFQ award page now surfaces explicit live-mode load, create, and signoff errors, restricts award candidates to vendors backed by complete final-run evidence, and keeps the existing-award view independent from final-run detail reloads.
+- `rfq-lifecycle-e2e.spec.ts` now boots a persisted live-mode auth session, stubs explicit RFQ/comparison/approval/award routes, and executes the single-winner alpha award path end to end: create award, send debrief for the losing vendor, and finalize signoff on the award screen.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-award.live.test.ts` -> PASS, 13 tests.
+  - `cd apps/atomy-q/WEB && npx vitest run 'src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx'` -> PASS, 8 tests.
+  - `cd apps/atomy-q/WEB && PLAYWRIGHT_USE_EXISTING_SERVER=1 PLAYWRIGHT_BASE_URL=http://localhost:3100 NEXT_PUBLIC_USE_MOCKS=false npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts` -> PASS, 1 passed / 1 skipped.

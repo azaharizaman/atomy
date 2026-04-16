@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\QuoteIntake;
 
 use App\Models\DecisionTrailEntry;
+use Illuminate\Support\Facades\DB;
 
 final readonly class DecisionTrailRecorder
 {
@@ -49,6 +50,42 @@ final readonly class DecisionTrailRecorder
     /**
      * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
      */
+    public function recordAwardCreated(
+        string $tenantId,
+        string $rfqId,
+        string $comparisonRunId,
+        array $summary,
+    ): void {
+        $this->record(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $comparisonRunId,
+            eventType: 'award_created',
+            summary: $summary,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
+    public function recordAwardSignedOff(
+        string $tenantId,
+        string $rfqId,
+        string $comparisonRunId,
+        array $summary,
+    ): void {
+        $this->record(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $comparisonRunId,
+            eventType: 'award_signed_off',
+            summary: $summary,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
     private function record(
         string $tenantId,
         string $rfqId,
@@ -57,11 +94,13 @@ final readonly class DecisionTrailRecorder
         array $summary,
     ): void {
         $previous = DecisionTrailEntry::query()
+            ->where('tenant_id', $tenantId)
             ->where('comparison_run_id', $comparisonRunId)
             ->orderByDesc('sequence')
+            ->lockForUpdate()
             ->first();
 
-        $sequence = $previous === null ? 1 : ((int) $previous->sequence) + 1;
+        $sequence = max(1, ((int) ($previous?->sequence ?? 0)) + 1);
         $previousHash = $previous?->entry_hash ?? hash('sha256', 'genesis:' . $comparisonRunId);
 
         $payloadJson = json_encode($summary, JSON_THROW_ON_ERROR);

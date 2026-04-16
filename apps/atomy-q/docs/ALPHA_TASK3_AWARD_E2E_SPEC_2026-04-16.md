@@ -173,7 +173,11 @@ If no final comparison run exists, the screen may show prerequisite guidance onl
 
 ### 8.2 Candidate vendor source
 
-The primary candidate list should come from the RFQ vendor roster already exposed to the WEB. The linked comparison snapshot remains the evidence context for the decision and the source for identifying non-winning vendors after creation.
+The primary candidate list is derived from the comparison snapshot vendors (vendors with priced offers in the frozen final comparison run). This provides a better user experience by showing only vendors who are eligible for award selection, rather than the full RFQ vendor roster which may include vendors who have not yet submitted quotes.
+
+The linked comparison snapshot remains the evidence context for the decision and the source for identifying non-winning vendors after creation.
+
+> **Design note (2026-04-17):** Intentionally deriving the candidate list from the comparison snapshot rather than the RFQ vendor roster was made to improve user experience. Users see only vendors who have submitted quotes and can be awarded, avoiding confusion from seeing invited vendors who have not yet participated.
 
 Task 3 does not require a new split-allocation picker or per-line winner assignment UI.
 

@@ -202,7 +202,6 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 **Seed flow (Task 8):** `atomy:seed-rfq-flow` calls `syncNormalizationLinesForQuotes()` after HTTP uploads so comparison final can pass pilot gates.
 
 ## Testing & Seed Data
-
 - Added feature test coverage for auth flows, middleware enforcement, and all protected API endpoints.
 - Added identity gap regression coverage for login lockout, wildcard role permissions, and authenticated session revocation.
 - Added quote intake workflow validation contracts for upload payload shape, supported quote submission status values, and normalization/comparison mutation requests.
@@ -218,6 +217,15 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Account profile endpoints now return real user data (including tenant/role) for seeded logins.
 - Seeder can use `ATOMY_SEED_TENANT_ID` for a predictable tenant in local environments.
 - PHPUnit is configured to use PostgreSQL (port `5433`) with JWT + Redis env defaults for tests.
+
+## 2026-04-16 - Alpha Task 3 Award End-To-End
+
+- `AwardController` now requires `comparison_run_id` on create, rejects non-finalized comparison runs for award creation, and preserves tenant-safe `404` behavior for cross-tenant reads and mutations.
+- Award create, debrief, and signoff are now backed by decision-trail evidence through explicit `award_created`, `award_debriefed`, and `award_signed_off` events.
+- Debrief remains available as soon as an award record exists; signoff remains idempotent and records only the first successful signoff event.
+- `DecisionTrailRecorder` now allocates per-run event sequences under transaction/lock so concurrent award workflow writes do not race on `(comparison_run_id, sequence)`.
+- Verification:
+  - `cd apps/atomy-q/API && php artisan test --filter AwardWorkflowTest` -> PASS, 9 tests, 49 assertions.
 
 ## Middleware
 

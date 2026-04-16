@@ -8,10 +8,11 @@ import { Card, SectionCard } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
-import { useAward } from '@/hooks/use-award';
+import { hasCompleteAwardPricingEvidence, useAward } from '@/hooks/use-award';
+import { useComparisonRun } from '@/hooks/use-comparison-run';
+import { useComparisonRunMatrix } from '@/hooks/use-comparison-run-matrix';
 import { useComparisonRuns } from '@/hooks/use-comparison-runs';
 import { useRfq } from '@/hooks/use-rfq';
-import { useRfqVendors } from '@/hooks/use-rfq-vendors';
 
 const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
@@ -38,29 +39,48 @@ function awardBadge(status: string | null | undefined): { status: 'pending' | 'a
 export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const { data: rfq } = useRfq(rfqId);
-  const { award, debrief, signoff, store } = useAward(rfqId);
-  const { data: comparisonRuns = [] } = useComparisonRuns(rfqId);
-  const { data: vendors = [] } = useRfqVendors(rfqId);
+  const awardQuery = useAward(rfqId);
+  const comparisonRunsQuery = useComparisonRuns(rfqId);
+  const { award, debrief, signoff, store } = awardQuery;
+  const { data: comparisonRuns = [] } = comparisonRunsQuery;
   const [debriefMessage, setDebriefMessage] = React.useState('');
   const [selectedVendorId, setSelectedVendorId] = React.useState('');
   const [awardError, setAwardError] = React.useState('');
+  const [signoffError, setSignoffError] = React.useState('');
   const awardVendorSelectId = React.useId();
   const displayAward = award ?? null;
   const awardStatus = awardBadge(displayAward?.status);
   const isFinalized = awardStatus.status === 'approved';
   const finalRun = comparisonRuns.find((run) => run.type === 'final' && ['frozen', 'final', 'completed'].includes(run.status));
+  const shouldLoadFinalRunEvidence = !displayAward && finalRun !== undefined;
+  const finalRunId = shouldLoadFinalRunEvidence ? finalRun.id : '';
+  const finalRunDetailQuery = useComparisonRun(finalRunId, { rfqId });
+  const finalRunMatrixQuery = useComparisonRunMatrix(finalRunId, { rfqId });
   const awardCandidates = React.useMemo(
-    () => vendors.filter((vendor) => vendor.vendor_id !== null && vendor.vendor_id.trim() !== ''),
-    [vendors],
+    () => {
+      const snapshot = finalRunDetailQuery.data?.snapshot;
+      const matrix = finalRunMatrixQuery.data;
+      const snapshotVendors = finalRunDetailQuery.data?.snapshot?.vendors ?? [];
+      return snapshotVendors.filter(
+        (vendor) => vendor.vendorId !== '' && hasCompleteAwardPricingEvidence(snapshot, matrix, vendor.vendorId),
+      );
+    },
+    [finalRunDetailQuery.data?.snapshot, finalRunMatrixQuery.data],
   );
   const nonWinners = displayAward?.comparison?.vendors?.length
     ? displayAward.comparison.vendors.filter((vendor) => vendor.vendor_id !== '' && vendor.vendor_id !== displayAward.vendor_id)
     : [];
   const awardAmount = formatAmount(displayAward?.amount ?? null, displayAward?.currency ?? null);
+  const isFinalEvidenceLoading = shouldLoadFinalRunEvidence && (finalRunDetailQuery.isLoading || finalRunMatrixQuery.isLoading);
 
   React.useEffect(() => {
-    if (selectedVendorId === '' && awardCandidates[0]?.vendor_id) {
-      setSelectedVendorId(awardCandidates[0].vendor_id);
+    if (selectedVendorId === '' && awardCandidates[0]?.vendorId) {
+      setSelectedVendorId(awardCandidates[0].vendorId);
+      return;
+    }
+
+    if (selectedVendorId !== '' && !awardCandidates.some((vendor) => vendor.vendorId === selectedVendorId)) {
+      setSelectedVendorId(awardCandidates[0]?.vendorId ?? '');
     }
   }, [awardCandidates, selectedVendorId]);
 
@@ -73,6 +93,42 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
     { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
     { label: 'Award' },
   ];
+
+  const comparisonRunsError = !displayAward ? comparisonRunsQuery.error : null;
+  const loadError =
+    awardQuery.error ??
+    comparisonRunsError ??
+    (shouldLoadFinalRunEvidence ? finalRunDetailQuery.error : null) ??
+    (shouldLoadFinalRunEvidence ? finalRunMatrixQuery.error : null);
+
+  if (
+    awardQuery.isError ||
+    (!displayAward && comparisonRunsQuery.isError) ||
+    (shouldLoadFinalRunEvidence && (finalRunDetailQuery.isError || finalRunMatrixQuery.isError))
+  ) {
+    const errorMessage = loadError instanceof Error ? loadError.message : 'Award data failed to load.';
+
+    return (
+      <div className="space-y-5">
+        <WorkspaceBreadcrumbs items={breadcrumbItems} />
+        <PageHeader
+          title="Award"
+          subtitle="Award data unavailable"
+          actions={
+            <Button size="sm" variant="outline" onClick={() => router.push(`/rfqs/${encodeURIComponent(rfqId)}/comparison-runs`)}>
+              Comparison runs
+            </Button>
+          }
+        />
+        <SectionCard title="Award data unavailable">
+          <div className="space-y-2">
+            <p className="text-sm text-slate-700">The award workflow could not load the latest live data for this RFQ.</p>
+            <p className="text-sm text-red-600">{errorMessage}</p>
+          </div>
+        </SectionCard>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -119,6 +175,9 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                 <p className="text-sm text-slate-600">
                   Select a vendor to award the contract based on the final comparison run.
                 </p>
+                {isFinalEvidenceLoading ? (
+                  <p className="text-sm text-slate-500">Loading final comparison evidence…</p>
+                ) : null}
                 {awardCandidates.length > 0 ? (
                   <label htmlFor={awardVendorSelectId} className="block space-y-1">
                     <span className="text-xs font-medium text-slate-600">Award vendor</span>
@@ -129,19 +188,19 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                       onChange={(event) => setSelectedVendorId(event.target.value)}
                     >
                       {awardCandidates.map((vendor) => (
-                        <option key={vendor.id} value={vendor.vendor_id ?? ''}>
-                          {vendor.name}
+                        <option key={vendor.vendorId} value={vendor.vendorId}>
+                          {vendor.vendorName}
                         </option>
                       ))}
                     </select>
                   </label>
-                ) : (
+                ) : !isFinalEvidenceLoading ? (
                   <p className="text-sm text-slate-500">No vendors available for award selection.</p>
-                )}
+                ) : null}
                 <Button
                   size="sm"
                   variant="primary"
-                  disabled={selectedVendorId === '' || store.isPending || useMocks}
+                  disabled={selectedVendorId === '' || store.isPending || useMocks || isFinalEvidenceLoading}
                   onClick={() => {
                     if (selectedVendorId !== '') {
                       setAwardError('');
@@ -173,12 +232,21 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                 disabled={!displayAward || displayAward.status === 'signed_off' || signoff.isPending || useMocks}
                 onClick={() => {
                   if (displayAward) {
-                    signoff.mutate(displayAward.id);
+                    setSignoffError('');
+                    signoff.mutate(displayAward.id, {
+                      onError: (error) => {
+                        setSignoffError(error instanceof Error ? error.message : 'Award signoff failed.');
+                      },
+                      onSuccess: () => {
+                        setSignoffError('');
+                      },
+                    });
                   }
                 }}
               >
                 Finalize Award
               </Button>
+              {signoffError !== '' ? <p className="text-xs text-red-600">{signoffError}</p> : null}
               <p className="text-xs text-slate-500">
                 {displayAward?.signoff_at ? `Signed off at ${displayAward.signoff_at}` : 'No sign-off recorded yet.'}
               </p>
